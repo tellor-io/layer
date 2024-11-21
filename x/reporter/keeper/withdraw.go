@@ -183,23 +183,23 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 	// loop through the selectors' tokens (validator, amount) that were part of the report and remove tokens from relevant delegations
 	// amount should be proportional to the total tokens the reporter had at the time of the report
 	for i, del := range report.TokenOrigins {
-		delegatorShare := math.LegacyNewDecFromInt(del.Amount).Quo(math.LegacyNewDecFromInt(totalTokens)).Mul(math.LegacyNewDecFromInt(amt))
-		leftover = leftover.Sub(delegatorShare.TruncateInt())
+		delegatorShare := math.LegacyNewDecFromInt(del.Amount).Quo(math.LegacyNewDecFromInt(totalTokens)).Mul(math.LegacyNewDecFromInt(amt)).RoundInt()
+		leftover = leftover.Sub(delegatorShare)
 
 		// leftover amount is taken from the last selector in the iteration
 		if i == len(report.TokenOrigins)-1 {
-			delegatorShare.Add(leftover.ToLegacyDec())
+			delegatorShare = delegatorShare.Add(leftover)
 		}
 
 		delAddr := sdk.AccAddress(del.DelegatorAddress)
 		valAddr := sdk.ValAddress(del.ValidatorAddress)
 
-		remaining, err := k.undelegate(ctx, delAddr, valAddr, delegatorShare)
+		remaining, err := k.undelegate(ctx, delAddr, valAddr, delegatorShare.ToLegacyDec())
 		if err != nil {
 			return err
 		}
 
-		storedAmount := delegatorShare.TruncateInt().Sub(remaining)
+		storedAmount := delegatorShare.Sub(remaining)
 		if !storedAmount.IsZero() {
 			disputeTokens = append(disputeTokens, &types.TokenOriginInfo{
 				DelegatorAddress: del.DelegatorAddress,
@@ -306,7 +306,7 @@ func (k Keeper) deductFromdelegation(ctx context.Context, delAddr sdk.AccAddress
 	currentTokens := validator.TokensFromShares(del.Shares)
 	shares := del.Shares
 	if currentTokens.GTE(delTokens) {
-		shares, err = validator.SharesFromTokens(delTokens.TruncateInt())
+		shares, err = validator.SharesFromTokens(delTokens.RoundInt())
 		if err != nil {
 			return math.LegacyDec{}, err
 		}
@@ -353,7 +353,6 @@ func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr 
 	if err != nil {
 		return math.Int{}, err
 	}
-
 	// if tokens are still remaining after removing from delegation, then it could be one of two cases
 	// the delegator is unbonding or the delegator has redelegated to another validator
 	if remainingFromdel.IsZero() {
