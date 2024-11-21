@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"strconv"
 	"strings"
@@ -81,7 +82,6 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 				c.logger.Error("read:", err)
 				panic(err)
 			}
-			c.logger.Info("Websocket message: ", string(message))
 			var data WebsocketReponse
 			err = json.Unmarshal(message, &data)
 			if err != nil {
@@ -89,18 +89,19 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 				c.logger.Info("Response data: ", message)
 				panic(err)
 			}
-			c.logger.Info("Data response: ", len(data.Result.Data.Value.Events))
 
-			if len(message) == 0 {
-				c.logger.Info("EMPTY MESSAGE RECEIVED")
+			if len(data.Result.Data.Value.Events) == 0 {
 				continue
 			}
 
+			events := data.Result.Data.Value.Events
+
 			var event Event
-			for i := 0; i < len(data.Events); i++ {
-				c.logger.Info("Attribute read from events: ", data.Events[i].Type)
-				if data.Events[i].Type == "rotating-cyclelist-with-next-query" {
-					event = data.Events[i]
+			for i := 0; i < len(events); i++ {
+				c.logger.Info(fmt.Sprintf("Event read from events: %s", events[i].Type))
+				if events[i].Type == "rotating-cyclelist-with-next-query" {
+					c.logger.Info("Found the rotate queries event!!!")
+					event = events[i]
 				}
 			}
 
@@ -125,6 +126,7 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 				continue
 			}
 			qd := queryIdToQueryDataMap[queryId]
+			c.logger.Info(fmt.Sprintf("Query data: %s, QueryId: %s", string(qd), queryId))
 
 			nextId, err := strconv.Atoi(querymetaId)
 			if err != nil {
@@ -132,9 +134,10 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 				return
 			}
 			go func(query_data []byte, querymetaId uint64) {
+
 				err := c.GenerateAndBroadcastCyclelistReport(ctx, query_data, querymetaId)
 				if err != nil {
-					c.logger.Error("Error broadcasting cyclelist message: ", err)
+					c.logger.Error(fmt.Sprintf("Error broadcasting cyclelist message: %v", err))
 				}
 			}(qd, uint64(nextId))
 		}
