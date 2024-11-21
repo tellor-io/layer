@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	layertypes "github.com/tellor-io/layer/types"
@@ -31,6 +32,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("(SubmitValue) reporterStake: ", reporterStake)
 	params, err := k.keeper.Params.Get(ctx)
 	if err != nil {
 		return nil, err
@@ -41,7 +43,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	}
 
 	votingPower := reporterStake.Quo(layertypes.PowerReduction).Uint64()
-
+	fmt.Println("(SubmitValue) votingPower: ", votingPower)
 	query, err := k.keeper.CurrentQuery(ctx, queryId)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {

@@ -311,9 +311,7 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	if !val.IsBonded() {
 		return nil, errors.New("chosen validator must be bonded")
 	}
-	sharesDec := k.LegacyDecFromMathUint(shares.Value)
-	amtToDelegateDec := sharesDec.Quo(math.LegacyNewDec(1e6))
-	amtToDelegate := k.TruncateUint(amtToDelegateDec)
+	amtToDelegate := shares.TruncateInt()
 	if amtToDelegate.IsZero() {
 		return nil, errors.New("no tips to withdraw")
 	}
@@ -322,14 +320,15 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 		return nil, err
 	}
 
-	remainder := shares.Value.Sub(amtToDelegate.MulUint64(1e6))
+	// isolate decimals from shares
+	remainder := shares.Sub(shares.TruncateDec())
 	if remainder.IsZero() {
 		err = k.Keeper.SelectorTips.Remove(ctx, delAddr)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		err = k.Keeper.SelectorTips.Set(ctx, delAddr, types.BigUint{Value: remainder})
+		err = k.Keeper.SelectorTips.Set(ctx, delAddr, remainder)
 		if err != nil {
 			return nil, err
 		}

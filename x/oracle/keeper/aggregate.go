@@ -45,7 +45,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		if err != nil {
 			return err
 		}
-
+		// enter if query has expired
 		if query.Expiration <= blockHeight {
 
 			reportsIterator, err := k.Reports.Indexes.Id.MatchExact(ctx, query.Id)
@@ -73,6 +73,8 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			}
 
 			if !query.Amount.IsZero() {
+				fmt.Println("(SetAggregatedReport) query.Amount: ", query.Amount)
+				// query.Amount is number of loya
 				err = k.AllocateRewards(ctx, []*types.Aggregate{report}, query.Amount, types.ModuleName)
 				if err != nil {
 					return err
@@ -94,7 +96,9 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		return nil
 	}
 	// Process time-based rewards for reporters.
+	// tbr is in loya
 	tbr := k.GetTimeBasedRewards(ctx)
+	fmt.Println("(SetAggregatedReport) tbr: ", tbr)
 	// Allocate time-based rewards to all eligible reporters.
 	return k.AllocateRewards(ctx, reportersToPay, tbr, minttypes.TimeBasedRewards)
 }

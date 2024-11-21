@@ -34,6 +34,7 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	queryId := utils.QueryIDFromData(queryData)
+	fmt.Println("(SetValue) power: ", power)
 	report := types.MicroReport{
 		Reporter:        reporter.String(),
 		Power:           power,
