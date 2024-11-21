@@ -32,18 +32,15 @@ type (
 		bankKeeper                         types.BankKeeper
 		oracleKeeper                       types.OracleKeeper
 		reporterKeeper                     types.ReporterKeeper
-		Disputes                           *collections.IndexedMap[uint64, types.Dispute, DisputesIndex] // dispute id -> dispute
-		Votes                              collections.Map[uint64, types.Vote]
-		Voter                              *collections.IndexedMap[collections.Pair[uint64, []byte], types.Voter, VotersVoteIndex]
-		TeamVoter                          collections.Map[uint64, bool]
-		UsersGroup                         collections.Map[collections.Pair[uint64, []byte], math.Int]
-		ReportersGroup                     collections.Map[collections.Pair[uint64, []byte], math.Int]
-		ReportersWithDelegatorsVotedBefore collections.Map[collections.Pair[[]byte, uint64], math.Int]
-		BlockInfo                          collections.Map[[]byte, types.BlockInfo]
-		DisputeFeePayer                    collections.Map[collections.Pair[uint64, []byte], types.PayerInfo]
+		Disputes                           *collections.IndexedMap[uint64, types.Dispute, DisputesIndex]                           // key: dispute id
+		Votes                              collections.Map[uint64, types.Vote]                                                     // key: dispute id
+		Voter                              *collections.IndexedMap[collections.Pair[uint64, []byte], types.Voter, VotersVoteIndex] // key: dispute id + voter address
+		ReportersWithDelegatorsVotedBefore collections.Map[collections.Pair[[]byte, uint64], math.Int]                             // key: reporter address + dispute id
+		BlockInfo                          collections.Map[[]byte, types.BlockInfo]                                                // key: dispute.HashId
+		DisputeFeePayer                    collections.Map[collections.Pair[uint64, []byte], types.PayerInfo]                      // key: dispute id + payer address
 		// dust is extra tokens leftover after truncating decimals, stored as fixed256x12
 		Dust              collections.Item[math.Int]
-		VoteCountsByGroup collections.Map[uint64, types.StakeholderVoteCounts]
+		VoteCountsByGroup collections.Map[uint64, types.StakeholderVoteCounts] // key: dispute id
 	}
 )
 
@@ -57,24 +54,40 @@ func NewKeeper(
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	return Keeper{
-		cdc:                                cdc,
-		Params:                             collections.NewItem(sb, types.ParamsKeyPrefix(), "params", codec.CollValue[types.Params](cdc)),
-		storeService:                       storeService,
-		accountKeeper:                      accountKeeper,
-		bankKeeper:                         bankKeeper,
-		oracleKeeper:                       oracleKeeper,
-		reporterKeeper:                     reporterKeeper,
-		Disputes:                           collections.NewIndexedMap(sb, types.DisputesPrefix, "disputes", collections.Uint64Key, codec.CollValue[types.Dispute](cdc), NewDisputesIndex(sb)),
-		Votes:                              collections.NewMap(sb, types.VotesPrefix, "votes", collections.Uint64Key, codec.CollValue[types.Vote](cdc)),
-		Voter:                              collections.NewIndexedMap(sb, types.VoterVotePrefix, "voter_vote", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), codec.CollValue[types.Voter](cdc), NewVotersIndex(sb)),
-		ReportersWithDelegatorsVotedBefore: collections.NewMap(sb, types.ReportersWithDelegatorsVotedBeforePrefix, "reporters_with_delegators_voted_before", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), sdk.IntValue),
-		ReportersGroup:                     collections.NewMap(sb, types.ReporterPowerIndexPrefix, "reporters_group", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), sdk.IntValue),
-		TeamVoter:                          collections.NewMap(sb, types.TeamVoterPrefix, "team_voter", collections.Uint64Key, collections.BoolValue),
-		UsersGroup:                         collections.NewMap(sb, types.UsersGroupPrefix, "users_group", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), sdk.IntValue),
-		BlockInfo:                          collections.NewMap(sb, types.BlockInfoPrefix, "block_info", collections.BytesKey, codec.CollValue[types.BlockInfo](cdc)),
-		DisputeFeePayer:                    collections.NewMap(sb, types.DisputeFeePayerPrefix, "dispute_fee_payer", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), codec.CollValue[types.PayerInfo](cdc)),
-		Dust:                               collections.NewItem(sb, types.DustKeyPrefix, "dust", sdk.IntValue),
-		VoteCountsByGroup:                  collections.NewMap(sb, types.VoteCountsByGroupPrefix, "vote_counts_by_group", collections.Uint64Key, codec.CollValue[types.StakeholderVoteCounts](cdc)),
+		cdc:            cdc,
+		Params:         collections.NewItem(sb, types.ParamsKeyPrefix(), "params", codec.CollValue[types.Params](cdc)),
+		storeService:   storeService,
+		accountKeeper:  accountKeeper,
+		bankKeeper:     bankKeeper,
+		oracleKeeper:   oracleKeeper,
+		reporterKeeper: reporterKeeper,
+		// maps dispute id to dispute, and indexes disputes by reporter, open status, and pending execution
+		Disputes: collections.NewIndexedMap(sb, types.DisputesPrefix, "disputes", collections.Uint64Key, codec.CollValue[types.Dispute](cdc), NewDisputesIndex(sb)),
+		// maps dispute id to vote
+		Votes: collections.NewMap(sb, types.VotesPrefix, "votes", collections.Uint64Key, codec.CollValue[types.Vote](cdc)),
+		// maps dispute id + voter address to voter's vote info and indexes voters by id, used for tallying votes
+		Voter: collections.NewIndexedMap(sb,
+			types.VoterVotePrefix,
+			"voter_vote",
+			collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey),
+			codec.CollValue[types.Voter](cdc),
+			NewVotersIndex(sb),
+		),
+		// maps reporter address + dispute id to reporter's stake - selectors' belonging to the reporter share that individually voted
+		ReportersWithDelegatorsVotedBefore: collections.NewMap(sb,
+			types.ReportersWithDelegatorsVotedBeforePrefix,
+			"reporters_with_delegators_voted_before",
+			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+			sdk.IntValue,
+		),
+		// maps dispute hash to block info, stores total reporting stake and total user tips at the time of dispute start
+		BlockInfo: collections.NewMap(sb, types.BlockInfoPrefix, "block_info", collections.BytesKey, codec.CollValue[types.BlockInfo](cdc)),
+		// maps dispute id + payer address to payer info, used to track who paid the dispute fee, how much and how (ie from stake or not)
+		DisputeFeePayer: collections.NewMap(sb, types.DisputeFeePayerPrefix, "dispute_fee_payer", collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), codec.CollValue[types.PayerInfo](cdc)),
+		// a place to store dust fractions of tokens that remains during fee refunds, burned when they become whole amounts
+		Dust: collections.NewItem(sb, types.DustKeyPrefix, "dust", sdk.IntValue),
+		// maps dispute id to voter groups' vote counts, used to tally votes
+		VoteCountsByGroup: collections.NewMap(sb, types.VoteCountsByGroupPrefix, "vote_counts_by_group", collections.Uint64Key, codec.CollValue[types.StakeholderVoteCounts](cdc)),
 	}
 }
 
