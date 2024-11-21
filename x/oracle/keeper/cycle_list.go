@@ -79,6 +79,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 		}
 		querymeta.CycleList = true
 		querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
+		emitRotateQueriesEvent(sdkCtx, string(queryId), strconv.Itoa(int(querymeta.Id)))
 		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 
 	}
@@ -89,6 +90,7 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 		if querymeta.Expiration <= uint64(blockHeight) && !querymeta.HasRevealedReports { // wrong, shouldn't use same query if expired
 			querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
 		}
+		emitRotateQueriesEvent(sdkCtx, string(queryId), strconv.Itoa(int(querymeta.Id)))
 
 		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 	}
@@ -97,20 +99,23 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			"rotating-cyclelist-with-existing-nontipped-query",
-			sdk.NewAttribute("query_id", string(queryId)),
-			sdk.NewAttribute("Old QueryMeta Id", strconv.Itoa(int(querymeta.Id))),
-			sdk.NewAttribute("New QueryMeta Id", strconv.Itoa(int(nextId))),
-		),
-	})
+	emitRotateQueriesEvent(sdkCtx, string(queryId), strconv.Itoa(int(nextId)))
 	querymeta.Id = nextId
 	querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
 	querymeta.HasRevealedReports = false
 	querymeta.CycleList = true
 
 	return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
+}
+
+func emitRotateQueriesEvent(sdkCtx sdk.Context, queryId, nextId string) {
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"rotating-cyclelist-with-next-query",
+			sdk.NewAttribute("query_id", queryId),
+			sdk.NewAttribute("New QueryMeta Id", nextId),
+		),
+	})
 }
 
 func (k Keeper) ClearOldqueries(ctx context.Context, queryId []byte) error {
