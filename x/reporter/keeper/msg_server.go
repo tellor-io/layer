@@ -315,7 +315,7 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	if amtToDelegate.IsZero() {
 		return nil, errors.New("no tips to withdraw")
 	}
-	_, err = k.Keeper.stakingKeeper.Delegate(ctx, delAddr, math.NewInt(int64(amtToDelegate.Uint64())), val.Status, val, false)
+	_, err = k.Keeper.stakingKeeper.Delegate(ctx, delAddr, amtToDelegate, val.Status, val, false)
 	if err != nil {
 		return nil, err
 	}

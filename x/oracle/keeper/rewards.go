@@ -118,10 +118,14 @@ func (k Keeper) GetTimeBasedRewardsAccount(ctx context.Context) sdk.ModuleAccoun
 }
 
 func CalculateRewardAmount(reporterPower, reportsCount, totalPower uint64, reward math.Int) math.LegacyDec {
-	power := math.LegacyNewDec(int64(reporterPower) * int64(reportsCount))
+	rPower := math.LegacyNewDec(int64(reporterPower))
+	rcount := math.LegacyNewDec(int64(reportsCount))
+	tPower := math.LegacyNewDec(int64(totalPower))
+
+	power := rPower.Mul(rcount)
 	// reward is in loya
 	// amount = (power/TotalPower) * reward
-	amount := power.Quo(math.LegacyNewDec(int64(totalPower))).Mul(math.LegacyNewDecFromInt(reward))
+	amount := power.Quo(tPower).Mul(reward.ToLegacyDec())
 	return amount
 }
 

@@ -43,8 +43,10 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 
 	for _, del := range delAddrs.TokenOrigins {
 		// delegator share = netReward * selector's share / total shares
-		delegatorShare := netReward.Mul(math.LegacyNewDecFromInt(del.Amount)).Quo(math.LegacyNewDecFromInt(delAddrs.Total))
-		delegatorShare = delegatorShare.TruncateDec()
+		delAmountDec := del.Amount.ToLegacyDec()
+		delTotalDec := delAddrs.Total.ToLegacyDec()
+		delegatorShare := netReward.Mul(delAmountDec).Quo(delTotalDec)
+
 		if bytes.Equal(del.DelegatorAddress, reporterAddr.Bytes()) {
 			delegatorShare = delegatorShare.Add(commission)
 		}
@@ -108,7 +110,7 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []
 		shareAmt := math.LegacyNewDecFromInt(source.Amount)
 		if winningpurse.IsPositive() {
 			// convert args needed for calculations to legacy decimals
-			shareAmt = math.LegacyNewDecFromInt(source.Amount).Quo(math.LegacyNewDecFromInt(snapshot.Total)).Mul(math.LegacyNewDecFromInt(amt))
+			shareAmt = shareAmt.Quo(math.LegacyNewDecFromInt(snapshot.Total)).Mul(math.LegacyNewDecFromInt(amt))
 		}
 		// set token source to bonded if validator is bonded
 		// if not, set to unbonded
