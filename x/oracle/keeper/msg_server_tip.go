@@ -101,6 +101,7 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 			sdk.NewAttribute("query_id", hex.EncodeToString(queryId)),
 			sdk.NewAttribute("tipper", tipper.String()),
 			sdk.NewAttribute("amount", tip.Amount.String()),
+			sdk.NewAttribute("querymeta_id", strconv.Itoa(int(query.Id)))
 		),
 	})
 	return &types.MsgTipResponse{}, nil
