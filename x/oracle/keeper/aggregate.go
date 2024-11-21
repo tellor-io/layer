@@ -73,7 +73,6 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			}
 
 			if !query.Amount.IsZero() {
-				fmt.Println("(SetAggregatedReport) query.Amount: ", query.Amount)
 				// query.Amount is number of loya
 				err = k.AllocateRewards(ctx, []*types.Aggregate{report}, query.Amount, types.ModuleName)
 				if err != nil {
@@ -98,7 +97,6 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	// Process time-based rewards for reporters.
 	// tbr is in loya
 	tbr := k.GetTimeBasedRewards(ctx)
-	fmt.Println("(SetAggregatedReport) tbr: ", tbr)
 	// Allocate time-based rewards to all eligible reporters.
 	return k.AllocateRewards(ctx, reportersToPay, tbr, minttypes.TimeBasedRewards)
 }

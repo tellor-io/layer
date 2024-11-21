@@ -340,9 +340,11 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{reporterPower})
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
+
 	qId := utils.QueryIDFromData(ethQueryData)
 	stake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0], qId)
 	s.NoError(err)
+
 	// send timebasedrewards tokens to oracle module to pay reporters with
 	tipper := s.newKeysWithTokens()
 	reward := math.NewInt(100)
@@ -351,7 +353,6 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 
 	// testing for a query id and check if the reporter gets the reward, bypassing the commit/reveal process
 	value := []string{"000001"}
-
 	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0]}, value, []uint64{reporterPower}, qId)
 
 	_, err = s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:1], 1)
@@ -371,7 +372,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 
 	tip, err := s.Setup.Reporterkeeper.SelectorTips.Get(s.Setup.Ctx, repAccs[0].Bytes())
 	s.NoError(err)
-	s.Equal(tip.Value, math.NewUint(reward.Uint64()*1e6), "reporter should get the reward")
+	s.Equal(tip.TruncateInt(), reward, "reporter should get the reward")
 	// withdraw the reward
 	repServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	_, err = repServer.WithdrawTip(s.Setup.Ctx, &reportertypes.MsgWithdrawTip{SelectorAddress: repAccs[0].String(), ValidatorAddress: valAddrs[0].String()})
@@ -416,14 +417,14 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 			name:                 "reporter with 1 voting power",
 			reporterIndex:        0,
 			beforeBalance:        reporterStake,
-			afterBalanceIncrease: math.Int(keeper.CalculateRewardAmount(reporterPower1, 1, totalReporterPower, reward).Value.QuoUint64(1e6)),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower1, 1, totalReporterPower, reward).TruncateInt(),
 			delegator:            repAccs[0],
 		},
 		{
 			name:                 "reporter with 2 voting power",
 			reporterIndex:        1,
 			beforeBalance:        reporterStake2,
-			afterBalanceIncrease: math.Int(keeper.CalculateRewardAmount(reporterPower2, 1, totalReporterPower, reward).Value.QuoUint64(1e6)),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower2, 1, totalReporterPower, reward).TruncateInt(),
 			delegator:            repAccs[1],
 		},
 	}
@@ -491,21 +492,21 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 			name:                 "reporter with 100 voting power",
 			reporterIndex:        0,
 			beforeBalance:        reporterStake,
-			afterBalanceIncrease: math.Int(keeper.CalculateRewardAmount(reporterPower1, 1, totalPower, reward).Value.QuoUint64(1e6)),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower1, 1, totalPower, reward).TruncateInt(),
 			delegator:            repAccs[0],
 		},
 		{
 			name:                 "reporter with 200 voting power",
 			reporterIndex:        1,
 			beforeBalance:        reporterStake2,
-			afterBalanceIncrease: math.Int(keeper.CalculateRewardAmount(reporterPower2, 1, totalPower, reward).Value.QuoUint64(1e6)),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower2, 1, totalPower, reward).TruncateInt(),
 			delegator:            repAccs[1],
 		},
 		{
 			name:                 "reporter with 300 voting power",
 			reporterIndex:        2,
 			beforeBalance:        reporterStake3,
-			afterBalanceIncrease: math.Int(keeper.CalculateRewardAmount(reporterPower3, 1, totalPower, reward).Value.QuoUint64(1e6)),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower3, 1, totalPower, reward).TruncateInt(),
 			delegator:            repAccs[2],
 		},
 	}

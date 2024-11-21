@@ -26,7 +26,6 @@ import (
 // 6. Adds the commission to the reporter's share if the reporter is also a selector.
 // 7. Updates the selectors' tips with the new calculated shares.
 func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.LegacyDec, queryId []byte, height uint64) error {
-	fmt.Println("(DivvyingTips) reward: ", reward)
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err != nil {
 		return err
@@ -34,10 +33,8 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 
 	// selector's commission = reporter's commission rate * reward
 	commission := reward.Mul(reporter.CommissionRate)
-	fmt.Println("(DivvyingTips) commission: ", commission)
 	// Calculate net reward
 	netReward := reward.Sub(commission)
-	fmt.Println("(DivvyingTips) netReward: ", netReward)
 
 	delAddrs, err := k.Report.Get(ctx, collections.Join(queryId, collections.Join(reporterAddr.Bytes(), height)))
 	if err != nil {
@@ -47,9 +44,7 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 	for _, del := range delAddrs.TokenOrigins {
 		// delegator share = netReward * selector's share / total shares
 		delegatorShare := netReward.Mul(math.LegacyNewDecFromInt(del.Amount)).Quo(math.LegacyNewDecFromInt(delAddrs.Total))
-		fmt.Println("(DivvyingTips) delegatorShare: ", delegatorShare)
 		delegatorShare = delegatorShare.TruncateDec()
-		fmt.Println("(DivvyingTips) delegatorShare after truncation: ", delegatorShare)
 		if bytes.Equal(del.DelegatorAddress, reporterAddr.Bytes()) {
 			delegatorShare = delegatorShare.Add(commission)
 		}

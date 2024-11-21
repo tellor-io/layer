@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"sort"
 
 	layer "github.com/tellor-io/layer/types"
@@ -26,7 +25,6 @@ type ReportersReportCount struct {
 // It calculates the reward amount for each reporter and allocates the rewards.
 // Finally, it sends the allocated rewards to the apprppopriate module based on the source of the reward.
 func (k Keeper) AllocateRewards(ctx context.Context, reports []*types.Aggregate, reward math.Int, fromPool string) error {
-	fmt.Println("(AllocateRewards) reward: ", reward)
 	if reward.IsZero() {
 		return nil
 	}
@@ -76,10 +74,6 @@ func (k Keeper) AllocateRewards(ctx context.Context, reports []*types.Aggregate,
 	// Process rewards in deterministic order
 	totaldist := math.LegacyZeroDec()
 	for i, reporter := range sortedReporters {
-		fmt.Println("(AllocateRewards) reporter.data.Power: ", reporter.data.Power)
-		fmt.Println("(AllocateRewards) reporter.data.Reports: ", reporter.data.Reports)
-		fmt.Println("(AllocateRewards) totalPower: ", totalPower)
-		fmt.Println("(AllocateRewards) reward: ", reward)
 		amount := CalculateRewardAmount(
 			reporter.data.Power,
 			reporter.data.Reports,
@@ -87,9 +81,7 @@ func (k Keeper) AllocateRewards(ctx context.Context, reports []*types.Aggregate,
 			// reward is in loya
 			reward,
 		)
-		fmt.Println("(AllocateRewards) amount: ", amount)
 		totaldist = totaldist.Add(amount)
-		fmt.Println("(AllocateRewards) totaldist: ", totaldist)
 
 		reporterAddr, err := sdk.AccAddressFromBech32(reporter.address)
 		if err != nil {
@@ -118,7 +110,6 @@ func (k Keeper) AllocateRewards(ctx context.Context, reports []*types.Aggregate,
 func (k Keeper) GetTimeBasedRewards(ctx context.Context) math.Int {
 	tbrAccount := k.GetTimeBasedRewardsAccount(ctx)
 	balance := k.bankKeeper.GetBalance(ctx, tbrAccount.GetAddress(), layer.BondDenom)
-	fmt.Println("(GetTimeBasedRewards) balance: ", balance)
 	return balance.Amount
 }
 
@@ -126,19 +117,14 @@ func (k Keeper) GetTimeBasedRewardsAccount(ctx context.Context) sdk.ModuleAccoun
 	return k.accountKeeper.GetModuleAccount(ctx, minttypes.TimeBasedRewards)
 }
 
-func CalculateRewardAmount(reporterPower, reportsCount, totalPower uint64, reward math.Int)  math.LegacyDec {
-	fmt.Println("(CalculateRewardAmount) reporterPower: ", reporterPower)
-	fmt.Println("(CalculateRewardAmount) totalPower: ", totalPower)
-	fmt.Println("(CalculateRewardAmount) reward: ", reward)
+func CalculateRewardAmount(reporterPower, reportsCount, totalPower uint64, reward math.Int) math.LegacyDec {
 	power := math.LegacyNewDec(int64(reporterPower) * int64(reportsCount))
 	// reward is in loya
 	// amount = (power/TotalPower) * reward
 	amount := power.Quo(math.LegacyNewDec(int64(totalPower))).Mul(math.LegacyNewDecFromInt(reward))
-	fmt.Println("(CalculateRewardAmount) amount: ", amount)
 	return amount
 }
 
 func (k Keeper) AllocateTip(ctx context.Context, addr, queryId []byte, amount math.LegacyDec, height uint64) error {
-	fmt.Println("(AllocateTip) amount: ", amount)
 	return k.reporterKeeper.DivvyingTips(ctx, addr, amount, queryId, height)
 }
