@@ -1,21 +1,19 @@
 package integration_test
 
-// import (
-// 	"fmt"
-// 	"time"
+import (
+	"fmt"
+	"time"
 
-// 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-// 	"github.com/tellor-io/layer/testutil/sample"
-// 	"github.com/tellor-io/layer/x/reporter/keeper"
-// 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+	layertypes "github.com/tellor-io/layer/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
-// 	"cosmossdk.io/math"
-
-// 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-// 	sdk "github.com/cosmos/cosmos-sdk/types"
-// 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-// 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-// )
+	// 	"fmt"
+	// 	"time"
+	// 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	// 	"github.com/tellor-io/layer/testutil/sample"
+	// 	"github.com/tellor-io/layer/x/reporter/keeper"
+	"cosmossdk.io/math"
+)
 
 // func (s *IntegrationTestSuite) TestCreatingReporter() {
 // 	msgServer := keeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
@@ -392,3 +390,82 @@ package integration_test
 // 	_, err = sk.Slash(ctx, sdk.ConsAddress(cmtPk.Address()).Bytes(), blockHeightAtFullPower, valPower, math.LegacyNewDecWithPrec(5, 1))
 // 	s.NoError(err)
 // }
+
+func (s *IntegrationTestSuite) TestEscrowReporterStake() {
+	ctx := s.Setup.Ctx
+	rk := s.Setup.Reporterkeeper
+	ctx = ctx.WithBlockTime(time.Now())
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	height := uint64(ctx.BlockHeight())
+	s.Equal(height, uint64(1))
+
+	delAddr, valAddrs, _ := s.createValidatorAccs([]uint64{100, 200, 300, 400, 500})
+	for _, val := range valAddrs {
+		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(ctx, val.String(), []byte("not real"))
+		s.NoError(err)
+	}
+	reporter := delAddr[0]
+	delAddr = delAddr[1:]
+
+	err := rk.Reporters.Set(ctx, reporter, reportertypes.OracleReporter{
+		MinTokensRequired: reportertypes.DefaultMinTrb,
+		CommissionRate:    reportertypes.DefaultMinCommissionRate,
+	})
+	s.NoError(err)
+
+	for _, selector := range delAddr {
+		err = rk.Selectors.Set(ctx, selector, reportertypes.Selection{
+			Reporter:         reporter,
+			DelegationsCount: 1,
+		})
+		s.NoError(err)
+	}
+
+	reporterStake, err := rk.ReporterStake(ctx, reporter, []byte("queryid1"))
+	s.NoError(err)
+	s.Equal(math.NewInt(2_800_000_000), reporterStake)
+	// -------------------------------------------------
+	err = rk.EscrowReporterStake(ctx, reporter, math.NewInt(2_800_000_000).Quo(layertypes.PowerReduction).Uint64(), height, math.NewInt(800), []byte("queryid1"), []byte("hashId"))
+	s.NoError(err)
+
+	reporterStake, err = rk.ReporterStake(ctx, reporter, []byte("queryid2"))
+	s.NoError(err)
+	stakeleft := 2_800_000_000 - 800
+	s.Equal(math.NewInt(int64(stakeleft)), reporterStake)
+	// -------------------------------------------------
+	err = rk.EscrowReporterStake(ctx, reporter, reporterStake.Quo(layertypes.PowerReduction).Uint64(), height, math.NewInt(8000), []byte("queryid2"), []byte("hashId2"))
+	s.NoError(err)
+
+	reporterStake, err = rk.ReporterStake(ctx, reporter, []byte("queryid3"))
+	s.NoError(err)
+	stakeleft -= 8000
+	s.Equal(math.NewInt(int64(stakeleft)), reporterStake)
+	// -------------------------------------------------
+	err = rk.EscrowReporterStake(ctx, reporter, reporterStake.Quo(layertypes.PowerReduction).Uint64(), height, math.NewInt(1234), []byte("queryid3"), []byte("hashId3"))
+	s.NoError(err)
+
+	reporterStake, err = rk.ReporterStake(ctx, reporter, []byte("queryid4"))
+	s.NoError(err)
+	stakeleft -= 1234
+	s.Equal(math.NewInt(int64(stakeleft)), reporterStake)
+	// -------------------------------------------------
+	err = rk.EscrowReporterStake(ctx, reporter, reporterStake.Quo(layertypes.PowerReduction).Uint64(), height, math.NewInt(85023), []byte("queryid4"), []byte("hashId4"))
+	s.NoError(err)
+
+	reporterStake, err = rk.ReporterStake(ctx, reporter, []byte("queryid5"))
+	s.NoError(err)
+	stakeleft -= 85023
+	s.Equal(math.NewInt(int64(stakeleft)), reporterStake)
+	// -------------------------------------------------
+	rPower := reporterStake.Quo(layertypes.PowerReduction)
+	err = rk.EscrowReporterStake(ctx, reporter, rPower.Uint64(), height, rPower.Mul(layertypes.PowerReduction), []byte("queryid5"), []byte("hashId5"))
+	s.NoError(err)
+
+	reporterStake, err = rk.ReporterStake(ctx, reporter, []byte("queryid6"))
+	s.NoError(err)
+	s.True(reporterStake.LT(math.NewIntWithDecimal(1, 6)))
+	// leftover less than 1 trb
+	leftover := reporterStake.ToLegacyDec().Sub(reporterStake.Quo(layertypes.PowerReduction).ToLegacyDec()).TruncateInt()
+	fmt.Println(reporterStake)
+	s.Equal(leftover, reporterStake)
+}
