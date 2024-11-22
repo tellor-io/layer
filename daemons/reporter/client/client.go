@@ -32,6 +32,8 @@ var (
 	depositReportMap = make(map[string]bool)
 )
 
+var mutex = &sync.RWMutex{}
+
 type Client struct {
 	// reporter account name
 	AccountName string
