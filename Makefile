@@ -154,7 +154,7 @@ test:
 	@go test -v ./... -short
 
 e2e:
-	@cd e2e && go test -v ./... -timeout 20m
+	@cd e2e && go test -v -race ./... -timeout 20m
 
 .PHONY: test e2e
 ###############################################################################

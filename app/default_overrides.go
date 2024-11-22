@@ -3,6 +3,8 @@ package app
 import (
 	"encoding/json"
 
+	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
+	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
 	"github.com/strangelove-ventures/globalfee/x/globalfee"
 	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
 
@@ -100,6 +102,18 @@ type globalFeeModule struct {
 func (globalFeeModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	genState := globalfeetypes.DefaultGenesisState()
 	genState.Params.MinimumGasPrices = sdk.NewDecCoins(sdk.NewDecCoinFromDec(BondDenom, math.LegacyNewDecWithPrec(25, 4)))
+
+	return cdc.MustMarshalJSON(genState)
+}
+
+type icqcustomModule struct {
+	icq.AppModule
+}
+
+// DefaultGenesis returns custom x/globalfee module genesis state.
+func (icqcustomModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	genState := icqtypes.DefaultGenesis()
+	genState.Params.AllowQueries = []string{"/layer.oracle.Query/GetCurrentAggregateReport"}
 
 	return cdc.MustMarshalJSON(genState)
 }
