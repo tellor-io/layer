@@ -32,19 +32,6 @@ func (k Keeper) SetStartVote(ctx sdk.Context, id uint64) error {
 	return k.Votes.Set(ctx, id, vote)
 }
 
-func (k Keeper) TeamVote(ctx context.Context, id uint64) (math.Int, error) {
-	teamTally := math.ZeroInt()
-	voted, err := k.TeamVoter.Has(ctx, id)
-	if err != nil {
-		return math.Int{}, err
-	}
-	if voted {
-		teamTally = math.OneInt()
-	}
-
-	return teamTally, nil
-}
-
 func (k Keeper) GetTeamAddress(ctx context.Context) (sdk.AccAddress, error) {
 	params, err := k.Params.Get(ctx)
 	if err != nil {
@@ -79,7 +66,7 @@ func (k Keeper) SetTeamVote(ctx context.Context, id uint64, voter sdk.AccAddress
 		if err != nil {
 			return math.Int{}, err
 		}
-		return math.NewInt(25000000), k.TeamVoter.Set(ctx, id, true)
+		return math.NewInt(25000000), nil
 	}
 	return math.ZeroInt(), nil
 }
@@ -119,7 +106,7 @@ func (k Keeper) SetVoterTips(ctx context.Context, id uint64, voter sdk.AccAddres
 		if err != nil {
 			return math.Int{}, err
 		}
-		return tips, k.UsersGroup.Set(ctx, collections.Join(id, voter.Bytes()), tips)
+		return tips, nil
 	}
 	return math.ZeroInt(), nil
 }

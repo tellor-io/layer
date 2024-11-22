@@ -60,9 +60,5 @@ func (k Keeper) WeightedMode(ctx context.Context, reports []types.MicroReport, m
 		MetaId:               metaId,
 	}
 
-	err := k.SetAggregate(ctx, &aggregateReport)
-	if err != nil {
-		return nil, err
-	}
 	return &aggregateReport, nil
 }
