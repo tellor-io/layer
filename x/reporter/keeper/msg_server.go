@@ -58,8 +58,8 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 		return nil, errors.New("address already exists")
 	}
 
-	if msg.CommissionRate.GT(math.NewUint(1e6)) {
-		return nil, errors.New("commission rate must be below 1000000 as that is a 100 percent commission rate")
+	if msg.CommissionRate.GT(math.LegacyNewDec(100)) {
+		return nil, errors.New("commission rate must be LTE 100 as that is a 100 percent commission rate")
 	}
 	// set the reporter and set the self selector
 	if err := k.Keeper.Reporters.Set(goCtx, addr.Bytes(), types.NewReporter(msg.CommissionRate, msg.MinTokensRequired)); err != nil {
@@ -311,25 +311,24 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	if !val.IsBonded() {
 		return nil, errors.New("chosen validator must be bonded")
 	}
-	sharesDec := k.LegacyDecFromMathUint(shares.Value)
-	amtToDelegateDec := sharesDec.Quo(math.LegacyNewDec(1e6))
-	amtToDelegate := k.TruncateUint(amtToDelegateDec)
+	amtToDelegate := shares.TruncateInt()
 	if amtToDelegate.IsZero() {
 		return nil, errors.New("no tips to withdraw")
 	}
-	_, err = k.Keeper.stakingKeeper.Delegate(ctx, delAddr, math.NewInt(int64(amtToDelegate.Uint64())), val.Status, val, false)
+	_, err = k.Keeper.stakingKeeper.Delegate(ctx, delAddr, amtToDelegate, val.Status, val, false)
 	if err != nil {
 		return nil, err
 	}
 
-	remainder := shares.Value.Sub(amtToDelegate.MulUint64(1e6))
+	// isolate decimals from shares
+	remainder := shares.Sub(shares.TruncateDec())
 	if remainder.IsZero() {
 		err = k.Keeper.SelectorTips.Remove(ctx, delAddr)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		err = k.Keeper.SelectorTips.Set(ctx, delAddr, types.BigUint{Value: remainder})
+		err = k.Keeper.SelectorTips.Set(ctx, delAddr, remainder)
 		if err != nil {
 			return nil, err
 		}

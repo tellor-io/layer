@@ -9,8 +9,6 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
-
 	types "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -20,11 +18,11 @@ type ReporterKeeper struct {
 }
 
 // DivvyingTips provides a mock function with given fields: ctx, reporterAddr, reward, queryId, height
-func (_m *ReporterKeeper) DivvyingTips(ctx context.Context, reporterAddr types.AccAddress, reward reportertypes.BigUint, queryId []byte, height uint64) error {
+func (_m *ReporterKeeper) DivvyingTips(ctx context.Context, reporterAddr types.AccAddress, reward math.LegacyDec, queryId []byte, height uint64) error {
 	ret := _m.Called(ctx, reporterAddr, reward, queryId, height)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, reportertypes.BigUint, []byte, uint64) error); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, math.LegacyDec, []byte, uint64) error); ok {
 		r0 = rf(ctx, reporterAddr, reward, queryId, height)
 	} else {
 		r0 = ret.Error(0)
