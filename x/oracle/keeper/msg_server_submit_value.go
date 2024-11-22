@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"strings"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
@@ -15,13 +14,29 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// SubmitValue: allow a reporter to submit a value for a query.
+// accepts QueryData (bytes), Value (string)
+// QueryData undergoes multiple checks to ensure it is a valid query
+// 1. Check if the queryData is decodable
+// 2. Check if the queryData is a TRBBridgeQueryType
+//   - If it is, check if it is a bridge withdrawal (not accepted) or deposit report
+//
+// 3. Check if the reporter has enough stake to submit the value
+// 4. Fetch the queryMeta for the queryId (hash(queryData)) if it exists
+//   - If it does not exist and it is a bridge deposit, generate a new queryMeta.
+//     Note: Bridge deposit reports are always accepted and do not require to have a tip or be in the cycle list
+//
+// 5. Check if the queryMeta has a tip or is in the cycle list and is not expired
+// 6. Further checks to validate the value is decodable to the expected spec type.
+// 7. Set queryMeta.HasRevealedReports to true
+// 8. Emit an event for the new report
 func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (*types.MsgSubmitValueResponse, error) {
 	reporterAddr, err := msg.GetSignerAndValidateMsg()
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.keeper.PreventBridgeWithdrawalReport(msg.QueryData)
+	isTokenBridgeDeposit, err := k.keeper.PreventBridgeWithdrawalReport(msg.QueryData)
 	if err != nil {
 		return nil, err
 	}
@@ -40,13 +55,17 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 		return nil, errorsmod.Wrapf(types.ErrNotEnoughStake, "reporter has %s, required %s", reporterStake, params.MinStakeAmount)
 	}
 
-	votingPower := reporterStake.Quo(layertypes.PowerReduction).Uint64()
+	reportingPower := reporterStake.Quo(layertypes.PowerReduction).Uint64()
+
 	query, err := k.keeper.CurrentQuery(ctx, queryId)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return nil, err
 		}
-		query, err = k.keeper.TokenBridgeDepositCheck(ctx, msg.QueryData)
+		if !isTokenBridgeDeposit {
+			return nil, types.ErrNotTokenDeposit
+		}
+		query, err = k.keeper.TokenBridgeDepositQuery(ctx, msg.QueryData)
 		if err != nil {
 			return nil, err
 		}
@@ -55,14 +74,14 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 		if err != nil {
 			return nil, err
 		}
-		err = k.keeper.HandleBridgeDepositDirectReveal(ctx, query, msg.QueryData, reporterAddr, msg.Value, votingPower)
+		err = k.keeper.HandleBridgeDepositDirectReveal(ctx, query, msg.QueryData, reporterAddr, msg.Value, reportingPower)
 		if err != nil {
 			return nil, err
 		}
 		return &types.MsgSubmitValueResponse{}, nil
 	}
-	isBridgeDeposit := strings.EqualFold(query.QueryType, TRBBridgeQueryType)
-	err = k.keeper.DirectReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, votingPower, isBridgeDeposit)
+
+	err = k.keeper.DirectReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, reportingPower, isTokenBridgeDeposit)
 	if err != nil {
 		return nil, err
 	}

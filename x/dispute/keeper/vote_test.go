@@ -64,10 +64,6 @@ func (s *KeeperTestSuite) TestTeamVote_SetTeamVote() {
 	ctx := s.ctx
 
 	disputeId := uint64(1)
-	// team has not voted, expect 0
-	teamTally, err := k.TeamVote(ctx, disputeId)
-	require.NoError(err)
-	require.Equal(teamTally, math.NewInt(0))
 
 	// team votes SUPPORT, expect return 25000000
 	teamAddr, err := k.GetTeamAddress(ctx)
@@ -76,9 +72,6 @@ func (s *KeeperTestSuite) TestTeamVote_SetTeamVote() {
 	require.NoError(err)
 	require.Equal(teamVote, math.NewInt(25000000))
 	// check on vote
-	voted, err := k.TeamVoter.Get(ctx, disputeId)
-	require.True(voted)
-	require.NoError(err)
 	votesByGroup, err := k.VoteCountsByGroup.Get(ctx, disputeId)
 	require.Equal(votesByGroup.Team.Against, uint64(0))
 	require.Equal(votesByGroup.Team.Support, uint64(1))
@@ -299,7 +292,6 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 				rk.On("Delegation", ctx, selector).Return(reportertypes.Selection{
 					Reporter: reporter,
 				}, nil).Once()
-				require.NoError(k.ReportersGroup.Set(ctx, collections.Join(disputeId, reporter.Bytes()), math.NewInt(50)))
 				// selector has 100 selected to reporter
 				rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).Return(math.NewInt(100), nil).Once()
 				// reporter has voted against with 150

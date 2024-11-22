@@ -19,38 +19,45 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// Get dispute by reporter key
+// GetDisputeByReporter assembles dispute key for reporter given the params and fetches the current dispute (the last generated one for this specific dispute)
+// and returns the dispute object
 func (k Keeper) GetDisputeByReporter(ctx sdk.Context, r oracletypes.MicroReport, c types.DisputeCategory) (types.Dispute, error) {
 	key := []byte(k.ReporterKey(ctx, r, c))
-
-	iter, err := k.Disputes.Indexes.DisputeByReporter.MatchExact(ctx, key)
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](key).Descending()
+	// returns iterator for all the dispute ids sorted in descending order
+	iter, err := k.Disputes.Indexes.DisputeByReporter.Iterate(ctx, rng)
 	if err != nil {
 		return types.Dispute{}, err
 	}
-	var id uint64
 	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
-		id, err = iter.PrimaryKey()
-		if err != nil {
-			return types.Dispute{}, err
-		}
+	if !iter.Valid() {
+		return types.Dispute{}, collections.ErrNotFound
+	}
+	// get the first dispute id
+	id, err := iter.PrimaryKey()
+	if err != nil {
+		return types.Dispute{}, err
 	}
 	return k.Disputes.Get(ctx, id)
 }
 
-// Get next dispute id
+// NextDisputeId fetches an iterator for all disputes in descending order and increments the first returned dispute id by 1
 func (k Keeper) NextDisputeId(ctx sdk.Context) uint64 {
-	rng := new(collections.Range[uint64]).EndExclusive(gomath.MaxUint64).Descending()
-	// start dispute count at 1
-	id := uint64(1)
-	err := k.Disputes.Walk(ctx, rng, func(k uint64, _ types.Dispute) (stop bool, err error) {
-		id = k + 1
-		return true, nil
-	})
+	rng := new(collections.Range[uint64]).Descending()
+	iter, err := k.Disputes.Iterate(ctx, rng)
 	if err != nil {
 		return 0
 	}
-	return id
+	defer iter.Close()
+	// for the first dispute id, return 1
+	if !iter.Valid() {
+		return 1
+	}
+	currentId, err := iter.Key()
+	if err != nil {
+		return 0
+	}
+	return currentId + 1
 }
 
 // Generate hash id

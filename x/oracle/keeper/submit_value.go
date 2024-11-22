@@ -16,6 +16,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// SetValue sets the value for a query and stores the report.
+// 1. Decode queryData to get query type string
+// 2. Get data spec from registry by query type
+// 3. Soft validate value using value type from data spec
+// 4. Create a new MicroReport object with the provided data
+// 5. Set query.HasRevealedReports to true
+// 6. Set the query in the store
+// 7. Emit a new_report event
+// 8. Set the micro report in the store
 func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query types.QueryMeta, val string, queryData []byte, power uint64, incycle bool) error {
 	// decode query data hex to get query type, returns interface array
 	queryType, _, err := regTypes.DecodeQueryType(queryData)
