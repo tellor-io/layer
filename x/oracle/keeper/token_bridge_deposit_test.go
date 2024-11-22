@@ -5,7 +5,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/utils"
-	"github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/math"
 )
@@ -19,9 +18,9 @@ func (s *KeeperTestSuite) TestGetTokenBridgeDeposit() {
 	// try trb/usd spot price, should err with NotTokenDeposit
 	queryBytes, err := utils.QueryBytesFromString(queryData)
 	require.NoError(err)
-	res, err := k.TokenBridgeDepositCheck(ctx, queryBytes)
-	require.ErrorContains(err, types.ErrNotTokenDeposit.Error())
-	require.Equal(types.QueryMeta{}, res)
+	res, err := k.PreventBridgeWithdrawalReport(queryBytes)
+	require.NoError(err)
+	require.False(res, "should not be a token deposit")
 
 	// build TRBBridge queryData with method from x/bridge/withdraw_tokens.go
 	queryTypeString := "TRBBridge"
@@ -52,13 +51,13 @@ func (s *KeeperTestSuite) TestGetTokenBridgeDeposit() {
 	queryDataEncoded, err := finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
 	require.NoError(err)
 
-	res, err = k.TokenBridgeDepositCheck(ctx, queryDataEncoded)
+	resp, err := k.TokenBridgeDepositQuery(ctx, queryDataEncoded)
 
 	require.NoError(err)
-	require.Equal(res.QueryType, "TRBBridge")
-	require.Equal(res.Amount, math.NewInt(0))
-	require.Equal(res.Expiration, uint64(2000))
-	require.Equal(res.RegistrySpecBlockWindow, uint64(2000))
+	require.Equal(resp.QueryType, "TRBBridge")
+	require.Equal(resp.Amount, math.NewInt(0))
+	require.Equal(resp.Expiration, uint64(2000))
+	require.Equal(resp.RegistrySpecBlockWindow, uint64(2000))
 
 	// try TRBBridge but toLayer is false
 	toLayerBool = false
@@ -67,9 +66,9 @@ func (s *KeeperTestSuite) TestGetTokenBridgeDeposit() {
 	require.NoError(err)
 	queryDataEncoded, err = finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
 	require.NoError(err)
-	res, err = k.TokenBridgeDepositCheck(ctx, queryDataEncoded)
-	require.ErrorContains(err, types.ErrNotTokenDeposit.Error())
-	require.Equal(types.QueryMeta{}, res)
+	res, err = k.PreventBridgeWithdrawalReport(queryDataEncoded)
+	require.ErrorContains(err, "cannot report token bridge withdrawal")
+	require.False(res)
 }
 
 // func (s *KeeperTestSuite) TestHandleBridgeDepositCommit() {

@@ -73,8 +73,6 @@ func (s *IntegrationTestSuite) TestTipping() {
 	s.NoError(err)
 	s.Equal(tip.Sub(twoPercent).Amount, tips)
 
-	userQueryTips, _ := s.Setup.Oraclekeeper.Tips.Get(s.Setup.Ctx, collections.Join(btcQueryId, addr.Bytes()))
-	s.Equal(userQueryTips, tips)
 	userTips, err = s.Setup.Oraclekeeper.GetUserTips(s.Setup.Ctx, addr)
 	s.NoError(err)
 	s.Equal(userTips, tips.Add(tips).Add(tips))
@@ -354,7 +352,9 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 
 	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0]}, value, []uint64{reporterPower}, qId)
 
-	_, err = s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:1], 1)
+	aggregateReport, err := s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:1], 1)
+	s.NoError(err)
+	err = s.Setup.Oraclekeeper.SetAggregate(s.Setup.Ctx, aggregateReport)
 	s.NoError(err)
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
 	res, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
@@ -427,9 +427,10 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 			delegator:            repAccs[1],
 		},
 	}
-	_, err = s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports, 1)
+	aggregateReport, err := s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports, 1)
 	s.NoError(err)
-
+	err = s.Setup.Oraclekeeper.SetAggregate(s.Setup.Ctx, aggregateReport)
+	s.NoError(err)
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
 	res, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.NoError(err, "error getting aggregated report")
@@ -509,9 +510,10 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 			delegator:            repAccs[2],
 		},
 	}
-	_, err = s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:3], 1)
+	aggregateReport, err := s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:3], 1)
 	s.NoError(err)
-
+	err = s.Setup.Oraclekeeper.SetAggregate(s.Setup.Ctx, aggregateReport)
+	s.NoError(err)
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
 	res, _ := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	tbr, _ := queryServer.GetTimeBasedRewards(s.Setup.Ctx, &types.QueryGetTimeBasedRewardsRequest{})
@@ -757,52 +759,6 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	s.NoError(err)
 	s.Equal(len(agg.Reporters), 1)
 }
-
-// func (s *IntegrationTestSuite) TestCommitQueryMixed() {
-// 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
-// 	repAccs, _, _ := s.createValidatorAccs([]uint64{100})
-// 	s.NoError(s.Setup.Oraclekeeper.RotateQueries(s.Setup.Ctx))
-// 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
-// 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
-// 	_, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0])
-// 	s.NoError(err)
-// 	queryData1, err := s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
-// 	s.Nil(err)
-
-// 	queryData2, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
-// 	queryData3, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
-
-// 	tipper := s.newKeysWithTokens()
-// 	msg := types.MsgTip{
-// 		Tipper:    tipper.String(),
-// 		QueryData: queryData2,
-// 		Amount:    sdk.NewCoin(s.Setup.Denom, math.NewInt(1000)),
-// 	}
-// 	_, err = msgServer.Tip(s.Setup.Ctx, &msg)
-// 	s.Nil(err)
-
-// 	userTips, err := s.Setup.Oraclekeeper.GetUserTips(s.Setup.Ctx, tipper)
-// 	s.Nil(err)
-// 	// tip should be 1000 minus 2% burned
-// 	s.Equal(userTips, math.NewInt(980))
-// 	value := "000000000000000000000000000000000000000000000058528649cf0ee0000"
-// 	salt, err := oracleutils.Salt(32)
-// 	s.Nil(err)
-// 	hash := oracleutils.CalculateCommitment(value, salt)
-// 	s.Nil(err)
-// 	// commit report with query data in cycle list
-// 	commit, _ := report(repAccs[0].String(), value, salt, hash, queryData1)
-// 	_, err = msgServer.CommitReport(s.Setup.Ctx, &commit)
-// 	s.Nil(err)
-// 	// commit report with query data not in cycle list but has a tip
-// 	commit, _ = report(repAccs[0].String(), value, salt, hash, queryData2)
-// 	_, err = msgServer.CommitReport(s.Setup.Ctx, &commit)
-// 	s.Nil(err)
-// 	// commit report with query data not in cycle list and has no tip
-// 	commit, _ = report(repAccs[0].String(), value, salt, hash, queryData3)
-// 	_, err = msgServer.CommitReport(s.Setup.Ctx, &commit)
-// 	s.ErrorContains(err, "query doesn't exist plus not a bridge deposit: not a token deposit")
-// }
 
 // test tipping a query id not in cycle list and observe the reporters' delegators stake increase in staking module
 func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {

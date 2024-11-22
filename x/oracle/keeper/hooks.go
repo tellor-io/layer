@@ -19,6 +19,7 @@ func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
+// this hook is called whenever a data spec in x/registry is updated
 func (h Hooks) AfterDataSpecUpdated(ctx context.Context, querytype string, dataspec rtypes.DataSpec) error {
 	return h.k.UpdateQuery(ctx, querytype, dataspec.ReportBlockWindow)
 }

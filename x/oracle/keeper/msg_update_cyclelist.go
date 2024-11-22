@@ -12,6 +12,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// UpdateCyclelist updates the cyclelist with the provided list of queryData.
+// Gated function that can only be called by the x/gov.
+// Deletes entire current cyclelist queries and initializes the new cyclelist queries.
+// Emits a cyclelist_updated event.
 func (k msgServer) UpdateCyclelist(ctx context.Context, req *types.MsgUpdateCyclelist) (*types.MsgUpdateCyclelistResponse, error) {
 	if k.keeper.GetAuthority() != req.Authority {
 		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.keeper.GetAuthority(), req.Authority)

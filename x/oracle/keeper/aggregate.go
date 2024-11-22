@@ -12,16 +12,18 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
-	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// SetAggregatedReport calculates and allocates rewards to reporters based on aggregated reports.
-// at a specific blockchain height (to be ran in end-blocker)
-// It retrieves the revealed reports from the reports store, by query.
-// calculates the aggregate report for each query using either the weighted-median or weighted-mode method.
-// Rewards based on the source are then allocated to the reporters.
+// SetAggregatedReport (called in EndBlocker) fetches the Query iterator for queries
+// that have revealed reports, then iterates over the queries and checks whether the query has expired.
+// If the query has expired, it fetches all the microReports for a query.Id and aggregates them based
+// on the query spec's aggregate method.
+// If the query has a tip then that tip is distributed to the micro-reports' reporters,
+// proportional to their reporting power.
+// In addition, all the micro-reports that are part of a cyclelist are gathered and their reporters are
+// rewarded with the time-based rewards.
 func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	// aggregate
 	idsIterator, err := k.Query.Indexes.HasReveals.MatchExact(ctx, true)
@@ -52,13 +54,12 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			if err != nil {
 				return err
 			}
-			defer reportsIterator.Close()
-			reports, err := indexes.CollectValues(ctx, k.Reports, reportsIterator)
+			microReports, err := indexes.CollectValues(ctx, k.Reports, reportsIterator)
 			if err != nil {
 				return err
 			}
 			// there should always be at least one report otherwise how did the query set hasrevealedreports to true
-			if reports[0].AggregateMethod == "weighted-median" {
+			if microReports[0].AggregateMethod == "weighted-median" {
 				// Calculate the aggregated report.
 				aggrFunc = k.WeightedMedian
 			} else {
@@ -67,22 +68,23 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 				aggrFunc = k.WeightedMode
 			}
 
-			report, err := aggrFunc(ctx, reports, query.Id)
+			aggregateReport, err := aggrFunc(ctx, microReports, query.Id)
 			if err != nil {
 				return err
 			}
-
+			err = k.SetAggregate(ctx, aggregateReport)
+			if err != nil {
+				return err
+			}
 			if !query.Amount.IsZero() {
-				err = k.AllocateRewards(ctx, []*types.Aggregate{report}, query.Amount, types.ModuleName)
+				err = k.AllocateRewards(ctx, []*types.Aggregate{aggregateReport}, query.Amount, types.ModuleName)
 				if err != nil {
 					return err
 				}
-				// zero out the amount in the query
-				query.Amount = math.ZeroInt()
 			}
 			// Add reporters to the tbr payment list.
-			if reports[0].Cyclelist {
-				reportersToPay = append(reportersToPay, report)
+			if microReports[0].Cyclelist {
+				reportersToPay = append(reportersToPay, aggregateReport)
 			}
 			err = k.Query.Remove(ctx, key)
 			if err != nil {
@@ -99,6 +101,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	return k.AllocateRewards(ctx, reportersToPay, tbr, minttypes.TimeBasedRewards)
 }
 
+// SetAggregate increments the queryId's report index plus sets the timestamp and blockHeight and stores the aggregate report
 func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error {
 	nonce, err := k.Nonces.Get(ctx, report.QueryId)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
