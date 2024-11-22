@@ -77,7 +77,7 @@ func (c *Client) generateDepositmessages(ctx context.Context) error {
 // 	return nil
 // }
 
-func (c *Client) GenerateAndBroadcastCyclelistReport(ctx context.Context, qd []byte, querymetaId uint64) error {
+func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []byte, querymetaId uint64) error {
 	value, err := c.median(qd)
 	if err != nil {
 		return fmt.Errorf("error getting median from median client': %w", err)
@@ -99,24 +99,57 @@ func (c *Client) GenerateAndBroadcastCyclelistReport(ctx context.Context, qd []b
 	return nil
 }
 
-func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []byte, querymeta *oracletypes.QueryMeta) error {
-	value, err := c.median(qd)
-	if err != nil {
-		return fmt.Errorf("error getting median from median client': %w", err)
+func (c *Client) GenerateAndBroadcastTippedQueries(ctx context.Context, qds [][]byte, querymetaIds []uint64) error {
+	if len(qds) != len(querymetaIds) {
+		c.logger.Error("ERROR length of query data array and querymeta Id array must be equal")
+		return fmt.Errorf("length of array parameters must be equal")
 	}
 
-	msg := &oracletypes.MsgSubmitValue{
-		Creator:   c.accAddr.String(),
-		QueryData: qd,
-		Value:     value,
+	submitValueMsgs := make([]*oracletypes.MsgSubmitValue, 0)
+	for i := 0; i < len(qds); i++ {
+		value, err := c.median(qds[i])
+		if err != nil {
+			return fmt.Errorf("error getting median from median client': %w", err)
+		}
+
+		msg := &oracletypes.MsgSubmitValue{
+			Creator:   c.accAddr.String(),
+			QueryData: qds[i],
+			Value:     value,
+		}
+		submitValueMsgs = append(submitValueMsgs, msg)
 	}
 
-	resp, err := c.sendTx(ctx, msg)
+	resp, err := c.sendTx(ctx, submitValueMsgs)
 	if err != nil {
 		return fmt.Errorf("error sending tx: %w", err)
 	}
 	fmt.Println("response after submit message", resp.TxResult.Code)
-	commitedIds[querymeta.Id] = true
+	for i := 0; i < len(querymetaIds); i++ {
+		commitedIds[querymetaIds[i]] = true
+	}
 
 	return nil
 }
+
+// func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []byte, querymeta *oracletypes.QueryMeta) error {
+// 	value, err := c.median(qd)
+// 	if err != nil {
+// 		return fmt.Errorf("error getting median from median client': %w", err)
+// 	}
+
+// 	msg := &oracletypes.MsgSubmitValue{
+// 		Creator:   c.accAddr.String(),
+// 		QueryData: qd,
+// 		Value:     value,
+// 	}
+
+// 	resp, err := c.sendTx(ctx, msg)
+// 	if err != nil {
+// 		return fmt.Errorf("error sending tx: %w", err)
+// 	}
+// 	fmt.Println("response after submit message", resp.TxResult.Code)
+// 	commitedIds[querymeta.Id] = true
+
+// 	return nil
+// }

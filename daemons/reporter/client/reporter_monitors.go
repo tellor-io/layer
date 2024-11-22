@@ -6,15 +6,11 @@ import (
 	"fmt"
 	"net/url"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/tellor-io/layer/utils"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-
-	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 type Params struct {
@@ -101,7 +97,10 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 				c.logger.Info(fmt.Sprintf("Event read from events: %s", events[i].Type))
 				if events[i].Type == "rotating-cyclelist-with-next-query" {
 					c.logger.Info("Found the rotate queries event!!!")
-					event = events[i]
+					go c.HandleCyclelistEvents(ctx, events[i], queryIdToQueryDataMap)
+				} else if events[i].Type == "tip_added" {
+					c.logger.Info("Found a tipped query")
+					go c.HandleTippedQueryEvents(ctx, events[i], queryIdToQueryDataMap)
 				}
 			}
 
@@ -109,37 +108,6 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 				c.logger.Error("rotate cyclelist event not found")
 				continue
 			}
-
-			var queryId string
-			var querymetaId string
-			for i := 0; i < len(event.Attributes); i++ {
-				if event.Attributes[i].Key == "query_id" {
-					queryId = event.Attributes[i].Value
-				} else if event.Attributes[i].Key == "New QueryMeta Id" {
-					querymetaId = event.Attributes[i].Value
-				}
-			}
-			c.logger.Info("Message received on websocket: ", event)
-
-			if queryId == "" || querymetaId == "" {
-				c.logger.Error("No attribute found for query_id: ", event.Attributes)
-				continue
-			}
-			qd := queryIdToQueryDataMap[queryId]
-			c.logger.Info(fmt.Sprintf("Query data: %s, QueryId: %s", string(qd), queryId))
-
-			nextId, err := strconv.Atoi(querymetaId)
-			if err != nil {
-				c.logger.Error("error converting id attribute to int: ", err)
-				return
-			}
-			go func(query_data []byte, querymetaId uint64) {
-
-				err := c.GenerateAndBroadcastCyclelistReport(ctx, query_data, querymetaId)
-				if err != nil {
-					c.logger.Error(fmt.Sprintf("Error broadcasting cyclelist message: %v", err))
-				}
-			}(qd, uint64(nextId))
 		}
 	}(&localWG)
 
@@ -178,6 +146,67 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 	localWG.Wait()
 }
 
+func (c *Client) HandleCyclelistEvents(ctx context.Context, e Event, qIdToQueryData map[string][]byte) {
+	var queryId string
+	var querymetaId string
+	for i := 0; i < len(e.Attributes); i++ {
+		if e.Attributes[i].Key == "query_id" {
+			queryId = e.Attributes[i].Value
+		} else if e.Attributes[i].Key == "New QueryMeta Id" {
+			querymetaId = e.Attributes[i].Value
+		}
+	}
+	c.logger.Info("Message received on websocket: ", e)
+
+	if queryId == "" || querymetaId == "" {
+		c.logger.Error("No attribute found for query_id: ", e.Attributes)
+		return
+	}
+	qd := qIdToQueryData[queryId]
+	c.logger.Info(fmt.Sprintf("Query data: %s, QueryId: %s", string(qd), queryId))
+
+	nextId, err := strconv.Atoi(querymetaId)
+	if err != nil {
+		c.logger.Error("error converting id attribute to int: ", err)
+		return
+	}
+
+	err = c.GenerateAndBroadcastSpotPriceReport(ctx, qd, uint64(nextId))
+	if err != nil {
+		c.logger.Error(fmt.Sprintf("Error broadcasting cyclelist message: %v", err))
+	}
+}
+
+func (c *Client) HandleTippedQueryEvents(ctx context.Context, e Event, qIdToQueryData map[string][]byte) {
+	var queryId string
+	var querymetaId string
+	for i := 0; i < len(e.Attributes); i++ {
+		if e.Attributes[i].Key == "query_id" {
+			queryId = e.Attributes[i].Value
+		} else if e.Attributes[i].Key == "querymeta_id" {
+			querymetaId = e.Attributes[i].Value
+		}
+	}
+
+	if queryId == "" || querymetaId == "" {
+		c.logger.Error("No attribute found for query_id: ", e.Attributes)
+		return
+	}
+	qd := qIdToQueryData[queryId]
+	c.logger.Info(fmt.Sprintf("Query data: %s, QueryId: %s", string(qd), queryId))
+
+	nextId, err := strconv.Atoi(querymetaId)
+	if err != nil {
+		c.logger.Error("error converting id attribute to int: ", err)
+		return
+	}
+
+	err = c.GenerateAndBroadcastSpotPriceReport(ctx, qd, uint64(nextId))
+	if err != nil {
+		c.logger.Error(fmt.Sprintf("Error broadcasting cyclelist message: %v", err))
+	}
+}
+
 func (c *Client) MonitorTokenBridgeReports(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var localWG sync.WaitGroup
@@ -193,58 +222,6 @@ func (c *Client) MonitorTokenBridgeReports(ctx context.Context, wg *sync.WaitGro
 		localWG.Wait()
 
 		time.Sleep(4 * time.Minute)
-	}
-}
-
-func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
-	var localWG sync.WaitGroup
-	for {
-		res, err := c.OracleQueryClient.TippedQueries(ctx, &oracletypes.QueryTippedQueriesRequest{
-			Pagination: &query.PageRequest{
-				Offset: 0,
-			},
-		})
-		if err != nil {
-			c.logger.Error("Error querying for TippedQueries: ", err)
-			time.Sleep(200 * time.Millisecond)
-			continue
-		}
-		if len(res.Queries) == 0 {
-			time.Sleep(200 * time.Millisecond)
-			continue
-		}
-		status, err := c.cosmosCtx.Client.Status(ctx)
-		if err != nil {
-			c.logger.Info("Error getting status from client: ", err)
-		}
-		height := uint64(status.SyncInfo.LatestBlockHeight)
-		for i := 0; i < len(res.Queries); i++ {
-			if height > res.Queries[i].Expiration || strings.EqualFold(res.Queries[i].QueryType, "SpotPrice") {
-				if len(res.Queries) == 1 || i == (len(res.Queries)-1) {
-					time.Sleep(200 * time.Millisecond)
-				}
-				continue
-			}
-			if commitedIds[res.Queries[i].Id] {
-				if len(res.Queries) == 1 || i == (len(res.Queries)-1) {
-					time.Sleep(200 * time.Millisecond)
-				}
-				continue
-			}
-
-			localWG.Add(1)
-			go func(query *oracletypes.QueryMeta) {
-				defer localWG.Done()
-				err := c.GenerateAndBroadcastSpotPriceReport(ctx, query.QueryData, query)
-				if err != nil {
-					c.logger.Error("Error generating report for tipped query: ", err)
-				} else {
-					c.logger.Info("Broadcasted report for tipped query")
-				}
-			}(res.Queries[i])
-		}
-		localWG.Wait()
 	}
 }
 
