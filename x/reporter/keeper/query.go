@@ -149,5 +149,5 @@ func (k Querier) AvailableTips(ctx context.Context, req *types.QueryAvailableTip
 	if err != nil {
 		return nil, err
 	}
-	return &types.QueryAvailableTipsResponse{AvailableTips: rewards.Value.QuoUint64(1e6)}, nil
+	return &types.QueryAvailableTipsResponse{AvailableTips: rewards}, nil
 }

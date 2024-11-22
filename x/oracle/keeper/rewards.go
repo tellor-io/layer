@@ -72,24 +72,25 @@ func (k Keeper) AllocateRewards(ctx context.Context, reports []*types.Aggregate,
 	})
 
 	// Process rewards in deterministic order
-	totaldist := math.ZeroUint()
+	totaldist := math.LegacyZeroDec()
 	for i, reporter := range sortedReporters {
 		amount := CalculateRewardAmount(
 			reporter.data.Power,
 			reporter.data.Reports,
 			totalPower,
+			// reward is in loya
 			reward,
 		)
-		totaldist = totaldist.Add(amount.Value)
+		totaldist = totaldist.Add(amount)
 
 		reporterAddr, err := sdk.AccAddressFromBech32(reporter.address)
 		if err != nil {
 			return err
 		}
 
-		// Handle final reporter
+		// final reporter gets total reward - total distributed so far
 		if i == len(sortedReporters)-1 {
-			amount.Value = amount.Value.Add(math.NewUint(reward.Uint64()).MulUint64(1e6)).Sub(totaldist)
+			amount = amount.Add(math.LegacyNewDecFromInt(reward).Sub(totaldist))
 		}
 
 		err = k.AllocateTip(ctx, reporterAddr.Bytes(), reporter.data.queryId, amount, reporter.data.Height)
@@ -116,13 +117,18 @@ func (k Keeper) GetTimeBasedRewardsAccount(ctx context.Context) sdk.ModuleAccoun
 	return k.accountKeeper.GetModuleAccount(ctx, minttypes.TimeBasedRewards)
 }
 
-func CalculateRewardAmount(reporterPower, reportsCount, totalPower uint64, reward math.Int) reportertypes.BigUint {
-	norm_reward := math.NewUint(reward.Uint64())
-	norm_reward = norm_reward.MulUint64(reporterPower).MulUint64(reportsCount).MulUint64(1e6)
-	amount := norm_reward.Quo(math.NewUint(totalPower))
-	return reportertypes.BigUint{Value: amount}
+func CalculateRewardAmount(reporterPower, reportsCount, totalPower uint64, reward math.Int) math.LegacyDec {
+	rPower := math.LegacyNewDec(int64(reporterPower))
+	rcount := math.LegacyNewDec(int64(reportsCount))
+	tPower := math.LegacyNewDec(int64(totalPower))
+
+	power := rPower.Mul(rcount)
+	// reward is in loya
+	// amount = (power/TotalPower) * reward
+	amount := power.Quo(tPower).Mul(reward.ToLegacyDec())
+	return amount
 }
 
-func (k Keeper) AllocateTip(ctx context.Context, addr, queryId []byte, amount reportertypes.BigUint, height uint64) error {
+func (k Keeper) AllocateTip(ctx context.Context, addr, queryId []byte, amount math.LegacyDec, height uint64) error {
 	return k.reporterKeeper.DivvyingTips(ctx, addr, amount, queryId, height)
 }

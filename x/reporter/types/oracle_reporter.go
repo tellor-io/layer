@@ -4,7 +4,7 @@ import (
 	"cosmossdk.io/math"
 )
 
-func NewReporter(commission math.Uint, minTokensRequired math.Int) OracleReporter {
+func NewReporter(commission math.LegacyDec, minTokensRequired math.Int) OracleReporter {
 	return OracleReporter{
 		MinTokensRequired: minTokensRequired,
 		CommissionRate:    commission,
