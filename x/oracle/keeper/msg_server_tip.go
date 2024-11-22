@@ -62,29 +62,15 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 		query.Amount = math.ZeroInt()
 		query.Expiration = uint64(ctx.BlockHeight()) + query.RegistrySpecBlockWindow
 	}
-	// prevAmt := query.Amount
+
 	query.Amount = query.Amount.Add(tip.Amount)
 
 	// expired submission window
-	if query.Expiration <= uint64(ctx.BlockHeight()) {
+	if query.Expiration < uint64(ctx.BlockHeight()) {
 		// query expired, create new expiration time
 		query.Expiration = uint64(ctx.BlockHeight()) + query.RegistrySpecBlockWindow
 		// if reporting window is expired that means the query is not in cycle
 		query.CycleList = false
-		// when report is expired and aggregated the query struct is removed
-		// so when is this condition true?
-		// when a cycle list query hasn't been reported and the time is expired (time=expiration+Offset)
-		// and before it becomes in cycle a tip comes in then a new query is created to identify the tip
-		// if prevAmt.IsZero() {
-		// 	id, err := k.keeper.QuerySequencer.Next(ctx)
-		// 	if err != nil {
-		// 		return nil, err
-		// 	}
-		// 	query.Id = id
-		// 	query.Amount = tip.Amount
-		// 	query.HasRevealedReports = false
-
-		// }
 	}
 	err = k.keeper.Query.Set(ctx, collections.Join(queryId, query.Id), query)
 	if err != nil {
@@ -98,18 +84,7 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	if err := k.keeper.AddtoTotalTips(ctx, tip.Amount); err != nil {
 		return nil, err
 	}
-	// prevTip, err := k.keeper.Tips.Get(ctx, collections.Join(queryId, tipper.Bytes()))
-	// if err != nil && !errors.Is(err, collections.ErrNotFound) {
-	// 	return nil, fmt.Errorf("failed to get previous tip: %w", err)
-	// }
 
-	// if !prevTip.IsNil() {
-	// 	tip = tip.AddAmount(prevTip)
-	// }
-	// err = k.keeper.Tips.Set(ctx, collections.Join(queryId, tipper.Bytes()), tip.Amount)
-	// if err != nil {
-	// 	return nil, err
-	// }
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"tip_added",

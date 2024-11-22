@@ -111,27 +111,6 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 
 		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 	}
-
-	// todo: should not reach here
-	// if query has no tip generate a new query window
-	// nextId, err := k.QuerySequencer.Next(ctx)
-	// if err != nil {
-	// 	return err
-	// }
-	// sdkCtx.EventManager().EmitEvents(sdk.Events{
-	// 	sdk.NewEvent(
-	// 		"rotating-cyclelist-with-existing-nontipped-query",
-	// 		sdk.NewAttribute("query_id", string(queryId)),
-	// 		sdk.NewAttribute("Old QueryMeta Id", strconv.Itoa(int(querymeta.Id))),
-	// 		sdk.NewAttribute("New QueryMeta Id", strconv.Itoa(int(nextId))),
-	// 	),
-	// })
-	// querymeta.Id = nextId
-	// querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
-	// querymeta.HasRevealedReports = false
-	// querymeta.CycleList = true
-
-	// return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 	return nil
 }
 

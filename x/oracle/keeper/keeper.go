@@ -20,8 +20,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// var offset = time.Second * 6
-
 type (
 	Keeper struct {
 		cdc                codec.BinaryCodec
@@ -32,16 +30,15 @@ type (
 		registryKeeper     types.RegistryKeeper
 		reporterKeeper     types.ReporterKeeper
 		Schema             collections.Schema
-		CyclelistSequencer collections.Sequence
-		// Tips               *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, types.TipsIndex]                       // key: queryId, tipper
-		TipperTotal    collections.Map[collections.Pair[[]byte, uint64], math.Int]                                                // key: tipperAcc, blockNumber
-		TotalTips      collections.Map[uint64, math.Int]                                                                          // key: blockNumber
-		Nonces         collections.Map[[]byte, uint64]                                                                            // key: queryId
-		Reports        *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, types.ReportsIndex] // key: queryId, reporter, queryMeta.id
-		QuerySequencer collections.Sequence
-		Query          *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, types.QueryMetaIndex]  // key: queryId, id
-		Aggregates     *collections.IndexedMap[collections.Pair[[]byte, uint64], types.Aggregate, types.AggregatesIndex] // key: queryId, timestamp
-		Cyclelist      collections.Map[[]byte, []byte]                                                                   // key: queryId
+		CyclelistSequencer collections.Sequence                                                                                       // key: queryId, tipper
+		TipperTotal        collections.Map[collections.Pair[[]byte, uint64], math.Int]                                                // key: tipperAcc, blockNumber
+		TotalTips          collections.Map[uint64, math.Int]                                                                          // key: blockNumber
+		Nonces             collections.Map[[]byte, uint64]                                                                            // key: queryId
+		Reports            *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, types.ReportsIndex] // key: queryId, reporter, queryMeta.id
+		QuerySequencer     collections.Sequence
+		Query              *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, types.QueryMetaIndex]  // key: queryId, id
+		Aggregates         *collections.IndexedMap[collections.Pair[[]byte, uint64], types.Aggregate, types.AggregatesIndex] // key: queryId, timestamp
+		Cyclelist          collections.Map[[]byte, []byte]                                                                   // key: queryId
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		authority string
@@ -75,13 +72,6 @@ func NewKeeper(
 
 		authority: authority,
 
-		// Tips: collections.NewIndexedMap(sb,
-		// 	types.TipsPrefix,
-		// 	"tips",
-		// 	collections.PairKeyCodec(collections.BytesKey, collections.BytesKey),
-		// 	sdk.IntValue,
-		// 	types.NewTipsIndex(sb),
-		// ),
 		// TotalTips maps the block number to the total tips added up till that point. Used for calculating voting power during a dispute
 		TotalTips: collections.NewMap(sb, types.TotalTipsPrefix, "total_tips", collections.Uint64Key, sdk.IntValue),
 		// Nonces maps the queryId to the nonce that increments with each aggregate report

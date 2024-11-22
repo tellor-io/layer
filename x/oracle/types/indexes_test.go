@@ -10,23 +10,6 @@ import (
 	"cosmossdk.io/collections/colltest"
 )
 
-// func TestIndexesList_Tips(t *testing.T) {
-// 	storeService, _ := colltest.MockStore()
-// 	schema := collections.NewSchemaBuilder(storeService)
-
-// 	im := types.NewTipsIndex(schema)
-// 	index := im.IndexesList()
-// 	require.NotNil(t, index)
-// }
-
-// func TestNewTipsIndex(t *testing.T) {
-// 	storeService, _ := colltest.MockStore()
-// 	schema := collections.NewSchemaBuilder(storeService)
-
-// 	im := types.NewTipsIndex(schema)
-// 	require.NotNil(t, im.Tipper)
-// }
-
 func TestIndexesList_Aggregates(t *testing.T) {
 	storeService, _ := colltest.MockStore()
 	schema := collections.NewSchemaBuilder(storeService)
@@ -77,20 +60,3 @@ func TestNewQueryIndex(t *testing.T) {
 	im := types.NewQueryIndex(schema)
 	require.NotNil(t, im)
 }
-
-// func TestIndexesList_Tippers(t *testing.T) {
-// 	storeService, _ := colltest.MockStore()
-// 	schema := collections.NewSchemaBuilder(storeService)
-
-// 	im := types.NewTippersIndex(schema)
-// 	index := im.IndexesList()
-// 	require.NotNil(t, index)
-// }
-
-// func TestNewTippersIndex(t *testing.T) {
-// 	storeService, _ := colltest.MockStore()
-// 	schema := collections.NewSchemaBuilder(storeService)
-
-// 	im := types.NewTippersIndex(schema)
-// 	require.NotNil(t, im)
-// }
