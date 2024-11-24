@@ -183,6 +183,11 @@ contract TellorPlayground {
         oracleMintRecipient = _oracle;
     }
 
+    function resetTotalSupply(uint256 totalSupply_) external {
+        require(msg.sender == deployer, "only deployer can reset total supply");
+        _totalSupply = totalSupply_;
+    }
+
     /**
      * @dev A mock function to submit a value to be read without reporter staking needed
      * @param _queryId the ID to associate the value to
