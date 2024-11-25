@@ -13,7 +13,6 @@ func IsValueDecodable(value, datatype string) error {
 	if err != nil {
 		return fmt.Errorf("failed to unpack value: %w", err)
 	}
-	// fmt.Println("Decoded value: ", result[0]) todo: do we still need this ?
 	return nil
 }
 

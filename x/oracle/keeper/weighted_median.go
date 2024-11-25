@@ -52,9 +52,5 @@ func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport,
 		}
 	}
 
-	err := k.SetAggregate(ctx, &medianReport)
-	if err != nil {
-		return nil, err
-	}
 	return &medianReport, nil
 }

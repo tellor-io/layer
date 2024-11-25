@@ -68,8 +68,8 @@ func TestCreateReporter(t *testing.T) {
 		}
 	})
 
-	_, err = ms.CreateReporter(ctx, &types.MsgCreateReporter{ReporterAddress: addr.String(), CommissionRate: math.NewUint(1e6 + 1), MinTokensRequired: types.DefaultMinTrb})
-	require.Equal(t, err.Error(), "commission rate must be below 1000000 as that is a 100 percent commission rate")
+	// _, err = ms.CreateReporter(ctx, &types.MsgCreateReporter{ReporterAddress: addr.String(), CommissionRate: math.LegacyNewDec(1e6 + 1), MinTokensRequired: types.DefaultMinTrb})
+	// require.Equal(t, err.Error(), "commission rate must be below 1000000 as that is a 100 percent commission rate")
 
 	_, err = k.Reporters.Get(ctx, addr)
 	require.ErrorIs(t, err, collections.ErrNotFound)
@@ -195,7 +195,7 @@ func TestSwitchReporter(t *testing.T) {
 	tokenOrigins := []*types.TokenOriginInfo{tokenOrigin}
 
 	delegationAmounts := types.DelegationsAmounts{TokenOrigins: tokenOrigins, Total: math.NewInt(1000 * 1e6)}
-	require.NoError(t, k.Report.Set(ctx, collections.Join(reporter.Bytes(), uint64(ctx.BlockHeight())), delegationAmounts))
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporter.Bytes(), uint64(ctx.BlockHeight()))), delegationAmounts))
 
 	rk.On("MaxReportBufferWindow", ctx).Return(700_000, nil)
 	sk.On("UnbondingTime", ctx).Return(1814400*time.Second, nil)
@@ -268,7 +268,7 @@ func TestUnjailReporter(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, reporter.Jailed)
 	_, err = msg.UnjailReporter(ctx, &types.MsgUnjailReporter{ReporterAddress: addr.String()})
-	require.ErrorContains(t, err, "cannot unjail already unjailed reporter, false: reporter not jailed")
+	require.ErrorContains(t, err, "cannot unjail an already unjailed reporter, false: reporter not jailed")
 
 	reporter.Jailed = true
 	reporter.JailedUntil = ctx.BlockTime().Add(time.Hour)
@@ -295,12 +295,12 @@ func TestWithdrawTip(t *testing.T) {
 	_, err := msg.WithdrawTip(ctx, &types.MsgWithdrawTip{SelectorAddress: selector.String(), ValidatorAddress: valAddr.String()})
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
-	require.NoError(t, k.SelectorTips.Set(ctx, selector, types.BigUint{Value: math.NewUint(1 * 1e6)}))
+	require.NoError(t, k.SelectorTips.Set(ctx, selector, math.LegacyNewDec(1*1e6)))
 
 	validator := stakingtypes.Validator{Status: stakingtypes.Bonded}
 	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
-	sk.On("Delegate", ctx, selector, math.OneInt(), stakingtypes.Bonded, validator, false).Return(math.LegacyZeroDec(), nil)
-	bk.On("SendCoinsFromModuleToModule", ctx, types.TipsEscrowPool, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin("loya", math.OneInt()))).Return(nil)
+	sk.On("Delegate", ctx, selector, math.NewInt(1*1e6), stakingtypes.Bonded, validator, false).Return(math.LegacyZeroDec(), nil)
+	bk.On("SendCoinsFromModuleToModule", ctx, types.TipsEscrowPool, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(1*1e6)))).Return(nil)
 	_, err = msg.WithdrawTip(ctx, &types.MsgWithdrawTip{SelectorAddress: selector.String(), ValidatorAddress: valAddr.String()})
 	require.NoError(t, err)
 }

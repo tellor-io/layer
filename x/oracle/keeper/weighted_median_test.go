@@ -35,8 +35,9 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	currentReporters := reporters[:5]
 	reports := testutil.GenerateReports(currentReporters, values, powers, qId)
 
-	_, err := s.oracleKeeper.WeightedMedian(s.ctx, reports, 1)
+	aggregateReport, err := s.oracleKeeper.WeightedMedian(s.ctx, reports, 1)
 	s.NoError(err)
+	s.NoError(s.oracleKeeper.SetAggregate(s.ctx, aggregateReport))
 	res, err := s.queryClient.GetCurrentAggregateReport(s.ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
 	s.Equal(res.Aggregate.QueryId, qId, "query id is not correct")
@@ -67,8 +68,9 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	}
 	expectedPower = sumPowers
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
-	_, err = s.oracleKeeper.WeightedMedian(s.ctx, reports, 2)
+	aggregateReport, err = s.oracleKeeper.WeightedMedian(s.ctx, reports, 2)
 	s.NoError(err)
+	s.NoError(s.oracleKeeper.SetAggregate(s.ctx, aggregateReport))
 	res, err = s.queryClient.GetCurrentAggregateReport(s.ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
 	s.Nil(err)
@@ -100,8 +102,9 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	}
 	expectedPower = sumPowers
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
-	_, err = s.oracleKeeper.WeightedMedian(s.ctx, reports, 3)
+	aggregateReport, err = s.oracleKeeper.WeightedMedian(s.ctx, reports, 3)
 	s.NoError(err)
+	s.NoError(s.oracleKeeper.SetAggregate(s.ctx, aggregateReport))
 	res, err = s.queryClient.GetCurrentAggregateReport(s.ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
 	s.Nil(err)
@@ -132,8 +135,9 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	}
 	expectedPower = sumPowers
 	reports = testutil.GenerateReports(currentReporters, values, powers, qId)
-	_, err = s.oracleKeeper.WeightedMedian(s.ctx, reports, 4)
+	aggregateReport, err = s.oracleKeeper.WeightedMedian(s.ctx, reports, 4)
 	s.NoError(err)
+	s.NoError(s.oracleKeeper.SetAggregate(s.ctx, aggregateReport))
 	res, err = s.queryClient.GetCurrentAggregateReport(s.ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.Nil(err)
 	s.Nil(err)
@@ -301,6 +305,7 @@ func (s *KeeperTestSuite) TestWeightedMedianBigNumbers() {
 				reports = append(reports, report)
 			}
 			weightedMedian, err := s.oracleKeeper.WeightedMedian(s.ctx, reports, metaId)
+			require.NoError(s.oracleKeeper.SetAggregate(s.ctx, weightedMedian))
 			require.Equal(tc.expectedAggregateReport, weightedMedian)
 			if tc.expectedError {
 				require.Error(err)
@@ -402,6 +407,7 @@ func (s *KeeperTestSuite) TestWeightedMedianBigNumbers() {
 				reports = append(reports, report)
 			}
 			weightedMedian, err := s.oracleKeeper.WeightedMedian(s.ctx, reports, metaId)
+			require.NoError(s.oracleKeeper.SetAggregate(s.ctx, weightedMedian))
 			require.Equal(tc.expectedAggregateReport, weightedMedian)
 			if tc.expectedError {
 				require.Error(err)

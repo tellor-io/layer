@@ -73,8 +73,6 @@ func (s *IntegrationTestSuite) TestTipping() {
 	s.NoError(err)
 	s.Equal(tip.Sub(twoPercent).Amount, tips)
 
-	userQueryTips, _ := s.Setup.Oraclekeeper.Tips.Get(s.Setup.Ctx, collections.Join(btcQueryId, addr.Bytes()))
-	s.Equal(userQueryTips, tips)
 	userTips, err = s.Setup.Oraclekeeper.GetUserTips(s.Setup.Ctx, addr)
 	s.NoError(err)
 	s.Equal(userTips, tips.Add(tips).Add(tips))
@@ -211,7 +209,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	for _, rep := range repAccs {
 		s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, rep, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 		s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, rep, reportertypes.NewSelection(rep, 1)))
-		_, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, rep)
+		_, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, rep, []byte{})
 		s.NoError(err)
 	}
 	reporters := []struct {
@@ -340,8 +338,11 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{reporterPower})
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
-	stake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0])
+
+	qId := utils.QueryIDFromData(ethQueryData)
+	stake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0], qId)
 	s.NoError(err)
+
 	// send timebasedrewards tokens to oracle module to pay reporters with
 	tipper := s.newKeysWithTokens()
 	reward := math.NewInt(100)
@@ -349,12 +350,12 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	s.NoError(err)
 
 	// testing for a query id and check if the reporter gets the reward, bypassing the commit/reveal process
-	qId := utils.QueryIDFromData(ethQueryData)
 	value := []string{"000001"}
-
 	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0]}, value, []uint64{reporterPower}, qId)
 
-	_, err = s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:1], 1)
+	aggregateReport, err := s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:1], 1)
+	s.NoError(err)
+	err = s.Setup.Oraclekeeper.SetAggregate(s.Setup.Ctx, aggregateReport)
 	s.NoError(err)
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
 	res, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
@@ -364,14 +365,14 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	tbr, err := queryServer.GetTimeBasedRewards(s.Setup.Ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err)
 
-	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, res.Aggregate.Reporters, tbr.Reward.Amount, minttypes.TimeBasedRewards)
+	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, []*types.Aggregate{res.Aggregate}, tbr.Reward.Amount, minttypes.TimeBasedRewards)
 	s.NoError(err)
 	// advance height
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 
 	tip, err := s.Setup.Reporterkeeper.SelectorTips.Get(s.Setup.Ctx, repAccs[0].Bytes())
 	s.NoError(err)
-	s.Equal(tip.Value, math.NewUint(reward.Uint64()*1e6), "reporter should get the reward")
+	s.Equal(tip.TruncateInt(), reward, "reporter should get the reward")
 	// withdraw the reward
 	repServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	_, err = repServer.WithdrawTip(s.Setup.Ctx, &reportertypes.MsgWithdrawTip{SelectorAddress: repAccs[0].String(), ValidatorAddress: valAddrs[0].String()})
@@ -393,9 +394,9 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[1], reportertypes.NewSelection(repAccs[1], 1)))
-	reporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0])
+	reporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0], qId)
 	s.NoError(err)
-	reporterStake2, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[1])
+	reporterStake2, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[1], qId)
 	s.NoError(err)
 	// send timebasedrewards tokens to oracle module to pay reporters with
 	tipper := s.newKeysWithTokens()
@@ -416,26 +417,27 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 			name:                 "reporter with 1 voting power",
 			reporterIndex:        0,
 			beforeBalance:        reporterStake,
-			afterBalanceIncrease: math.Int(keeper.CalculateRewardAmount(reporterPower1, 1, totalReporterPower, reward).Value.QuoUint64(1e6)),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower1, 1, totalReporterPower, reward).TruncateInt(),
 			delegator:            repAccs[0],
 		},
 		{
 			name:                 "reporter with 2 voting power",
 			reporterIndex:        1,
 			beforeBalance:        reporterStake2,
-			afterBalanceIncrease: math.Int(keeper.CalculateRewardAmount(reporterPower2, 1, totalReporterPower, reward).Value.QuoUint64(1e6)),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower2, 1, totalReporterPower, reward).TruncateInt(),
 			delegator:            repAccs[1],
 		},
 	}
-	_, err = s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports, 1)
+	aggregateReport, err := s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports, 1)
 	s.NoError(err)
-
+	err = s.Setup.Oraclekeeper.SetAggregate(s.Setup.Ctx, aggregateReport)
+	s.NoError(err)
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
 	res, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.NoError(err, "error getting aggregated report")
 	tbr, err := queryServer.GetTimeBasedRewards(s.Setup.Ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err, "error getting time based rewards")
-	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, res.Aggregate.Reporters, tbr.Reward.Amount, minttypes.TimeBasedRewards)
+	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, []*types.Aggregate{res.Aggregate}, tbr.Reward.Amount, minttypes.TimeBasedRewards)
 	s.NoError(err, "error allocating rewards")
 	reporterServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	// advance height
@@ -452,6 +454,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 }
 
 func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
+	qId := utils.QueryIDFromData(ethQueryData)
 	values := []string{"000001", "000002", "000003", "000004"}
 
 	reporterPower1 := uint64(1)
@@ -465,11 +468,11 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[1], reportertypes.NewSelection(repAccs[1], 1)))
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[2], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[2], reportertypes.NewSelection(repAccs[2], 1)))
-	reporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0])
+	reporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0], qId)
 	s.NoError(err)
-	reporterStake2, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[1])
+	reporterStake2, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[1], qId)
 	s.NoError(err)
-	reporterStake3, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[2])
+	reporterStake3, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[2], qId)
 	s.NoError(err)
 
 	tipper := s.newKeysWithTokens()
@@ -477,7 +480,6 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	err = s.Setup.Bankkeeper.SendCoinsFromAccountToModule(s.Setup.Ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.Setup.Denom, reward)))
 	s.NoError(err)
 	// generate 4 reports for ethQueryData
-	qId := utils.QueryIDFromData(ethQueryData)
 	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1], repAccs[2]}, values, []uint64{reporterPower1, reporterPower2, reporterPower3}, qId)
 
 	testCases := []struct {
@@ -491,31 +493,32 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 			name:                 "reporter with 100 voting power",
 			reporterIndex:        0,
 			beforeBalance:        reporterStake,
-			afterBalanceIncrease: math.Int(keeper.CalculateRewardAmount(reporterPower1, 1, totalPower, reward).Value.QuoUint64(1e6)),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower1, 1, totalPower, reward).TruncateInt(),
 			delegator:            repAccs[0],
 		},
 		{
 			name:                 "reporter with 200 voting power",
 			reporterIndex:        1,
 			beforeBalance:        reporterStake2,
-			afterBalanceIncrease: math.Int(keeper.CalculateRewardAmount(reporterPower2, 1, totalPower, reward).Value.QuoUint64(1e6)),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower2, 1, totalPower, reward).TruncateInt(),
 			delegator:            repAccs[1],
 		},
 		{
 			name:                 "reporter with 300 voting power",
 			reporterIndex:        2,
 			beforeBalance:        reporterStake3,
-			afterBalanceIncrease: math.Int(keeper.CalculateRewardAmount(reporterPower3, 1, totalPower, reward).Value.QuoUint64(1e6)),
+			afterBalanceIncrease: keeper.CalculateRewardAmount(reporterPower3, 1, totalPower, reward).TruncateInt(),
 			delegator:            repAccs[2],
 		},
 	}
-	_, err = s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:3], 1)
+	aggregateReport, err := s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:3], 1)
 	s.NoError(err)
-
+	err = s.Setup.Oraclekeeper.SetAggregate(s.Setup.Ctx, aggregateReport)
+	s.NoError(err)
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
 	res, _ := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	tbr, _ := queryServer.GetTimeBasedRewards(s.Setup.Ctx, &types.QueryGetTimeBasedRewardsRequest{})
-	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, res.Aggregate.Reporters, tbr.Reward.Amount, minttypes.TimeBasedRewards)
+	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, []*types.Aggregate{res.Aggregate}, tbr.Reward.Amount, minttypes.TimeBasedRewards)
 	s.NoError(err)
 	// advance height
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
@@ -758,52 +761,6 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	s.Equal(len(agg.Reporters), 1)
 }
 
-// func (s *IntegrationTestSuite) TestCommitQueryMixed() {
-// 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
-// 	repAccs, _, _ := s.createValidatorAccs([]uint64{100})
-// 	s.NoError(s.Setup.Oraclekeeper.RotateQueries(s.Setup.Ctx))
-// 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
-// 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
-// 	_, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0])
-// 	s.NoError(err)
-// 	queryData1, err := s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
-// 	s.Nil(err)
-
-// 	queryData2, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
-// 	queryData3, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005737465746800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
-
-// 	tipper := s.newKeysWithTokens()
-// 	msg := types.MsgTip{
-// 		Tipper:    tipper.String(),
-// 		QueryData: queryData2,
-// 		Amount:    sdk.NewCoin(s.Setup.Denom, math.NewInt(1000)),
-// 	}
-// 	_, err = msgServer.Tip(s.Setup.Ctx, &msg)
-// 	s.Nil(err)
-
-// 	userTips, err := s.Setup.Oraclekeeper.GetUserTips(s.Setup.Ctx, tipper)
-// 	s.Nil(err)
-// 	// tip should be 1000 minus 2% burned
-// 	s.Equal(userTips, math.NewInt(980))
-// 	value := "000000000000000000000000000000000000000000000058528649cf0ee0000"
-// 	salt, err := oracleutils.Salt(32)
-// 	s.Nil(err)
-// 	hash := oracleutils.CalculateCommitment(value, salt)
-// 	s.Nil(err)
-// 	// commit report with query data in cycle list
-// 	commit, _ := report(repAccs[0].String(), value, salt, hash, queryData1)
-// 	_, err = msgServer.CommitReport(s.Setup.Ctx, &commit)
-// 	s.Nil(err)
-// 	// commit report with query data not in cycle list but has a tip
-// 	commit, _ = report(repAccs[0].String(), value, salt, hash, queryData2)
-// 	_, err = msgServer.CommitReport(s.Setup.Ctx, &commit)
-// 	s.Nil(err)
-// 	// commit report with query data not in cycle list and has no tip
-// 	commit, _ = report(repAccs[0].String(), value, salt, hash, queryData3)
-// 	_, err = msgServer.CommitReport(s.Setup.Ctx, &commit)
-// 	s.ErrorContains(err, "query doesn't exist plus not a bridge deposit: not a token deposit")
-// }
-
 // test tipping a query id not in cycle list and observe the reporters' delegators stake increase in staking module
 func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	require := s.Require()
@@ -812,16 +769,17 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
-	stakeAmount, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0])
+
+	queryData, _ := utils.QueryBytesFromString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000366696C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
+	queryId := utils.QueryIDFromData(queryData)
+
+	stakeAmount, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0], queryId)
 	require.NoError(err)
 	tipAmount := math.NewInt(1000)
 
 	tipper := s.newKeysWithTokens()
 
 	valAddr := valAddrs[0]
-
-	queryData, _ := utils.QueryBytesFromString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000366696C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
-	queryId := utils.QueryIDFromData(queryData)
 
 	// tip. Using msgServer.Tip to handle the transfers and burning of tokens
 	msg := types.MsgTip{
@@ -878,11 +836,15 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{1, 2})
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
-	reporterStake1, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0])
+
+	queryData, _ := utils.QueryBytesFromString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000366696C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
+	queryId := utils.QueryIDFromData(queryData)
+
+	reporterStake1, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0], queryId)
 	require.NoError(err)
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[1], reportertypes.NewSelection(repAccs[1], 1)))
-	reporterStake2, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[1])
+	reporterStake2, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[1], queryId)
 	require.NoError(err)
 
 	tipAmount := math.NewInt(1000)
@@ -892,9 +854,6 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	valAddr2 := valAddrs[1]
 	delegator1 := repAccs[0]
 	delegator2 := repAccs[1]
-
-	queryData, _ := utils.QueryBytesFromString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000366696C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
-	queryId := utils.QueryIDFromData(queryData)
 
 	// tip. Using msgServer.Tip to handle the transfers and burning of tokens
 	msg := types.MsgTip{

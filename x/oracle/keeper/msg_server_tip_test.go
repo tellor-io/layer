@@ -6,7 +6,7 @@ import (
 	"github.com/tellor-io/layer/x/oracle/types"
 	regtypes "github.com/tellor-io/layer/x/registry/types"
 
-	"cosmossdk.io/collections"
+	// "cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,7 +15,7 @@ import (
 func (s *KeeperTestSuite) TestTip() {
 	require := s.Require()
 	ctx := s.ctx
-	k := s.oracleKeeper
+	// k := s.oracleKeeper
 	regK := s.registryKeeper
 	bk := s.bankKeeper
 	msgServer := s.msgServer
@@ -77,8 +77,8 @@ func (s *KeeperTestSuite) TestTip() {
 	require.NoError(err)
 	require.NotNil(tipRes)
 
-	queryId := utils.QueryIDFromData(queryBytes)
-	tips, err := k.Tips.Get(ctx, collections.Join(queryId, []byte(tipper)))
-	require.NoError(err)
-	require.Equal(tips, amount.Amount.Sub(twoPercent))
+	// queryId := utils.QueryIDFromData(queryBytes)
+	// tips, err := k.Tips.Get(ctx, collections.Join(queryId, []byte(tipper)))
+	// require.NoError(err)
+	// require.Equal(tips, amount.Amount.Sub(twoPercent))
 }

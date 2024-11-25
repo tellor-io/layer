@@ -58,6 +58,7 @@ func (k Keeper) ClaimReward(ctx sdk.Context, addr sdk.AccAddress, id uint64) err
 	return nil
 }
 
+// CalculateReward calculates the dispute reward for a given voter and disputeId
 func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64) (math.Int, error) {
 	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
@@ -97,6 +98,7 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 		if err != nil {
 			return math.Int{}, err
 		}
+		// Add up the global power for each group
 		globalReporterPower = globalReporterPower.Add(math.NewIntFromUint64(pastVoteCounts.Reporters.Support)).
 			Add(math.NewIntFromUint64(pastVoteCounts.Reporters.Against)).Add(math.NewIntFromUint64(pastVoteCounts.Reporters.Invalid))
 		globalUserPower = globalUserPower.Add(math.NewIntFromUint64(pastVoteCounts.Users.Support)).
@@ -104,7 +106,7 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 		globalTokenholderPower = globalTokenholderPower.Add(math.NewIntFromUint64(pastVoteCounts.Tokenholders.Support)).
 			Add(math.NewIntFromUint64(pastVoteCounts.Tokenholders.Against)).Add(math.NewIntFromUint64(pastVoteCounts.Tokenholders.Invalid))
 	}
-
+	// nice way to handle zero division and zero votes
 	totalGroups := int64(3)
 	if globalReporterPower.IsZero() {
 		globalReporterPower = math.NewInt(1)

@@ -57,13 +57,13 @@ func (_m *ReporterKeeper) Delegation(ctx context.Context, delegator types.AccAdd
 	return r0, r1
 }
 
-// EscrowReporterStake provides a mock function with given fields: ctx, reporterAddr, power, height, amt, hashId
-func (_m *ReporterKeeper) EscrowReporterStake(ctx context.Context, reporterAddr types.AccAddress, power uint64, height uint64, amt math.Int, hashId []byte) error {
-	ret := _m.Called(ctx, reporterAddr, power, height, amt, hashId)
+// EscrowReporterStake provides a mock function with given fields: ctx, reporterAddr, power, height, amt, queryId, hashId
+func (_m *ReporterKeeper) EscrowReporterStake(ctx context.Context, reporterAddr types.AccAddress, power uint64, height uint64, amt math.Int, queryId []byte, hashId []byte) error {
+	ret := _m.Called(ctx, reporterAddr, power, height, amt, queryId, hashId)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64, uint64, math.Int, []byte) error); ok {
-		r0 = rf(ctx, reporterAddr, power, height, amt, hashId)
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64, uint64, math.Int, []byte, []byte) error); ok {
+		r0 = rf(ctx, reporterAddr, power, height, amt, queryId, hashId)
 	} else {
 		r0 = ret.Error(0)
 	}
