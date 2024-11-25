@@ -30,8 +30,8 @@ var (
 			UidGid:     "1025:1025",
 		},
 	}
-	numValsOne       = 2
-	numFullNodesZero = 0
+	numVals      = 1
+	numFullNodes = 0
 
 	baseBech32 = "tellor"
 
@@ -48,7 +48,7 @@ func LayerSpinup(t *testing.T) *cosmos.CosmosChain {
 	cosmos.SetSDKConfig(baseBech32)
 
 	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
-		LayerChainSpec(numValsOne, numFullNodesZero, "layer-1"),
+		LayerChainSpec(numVals, numFullNodes, "layer-1"),
 	})
 
 	chains, err := cf.Chains(t.Name())
@@ -223,6 +223,10 @@ type Proposal struct {
 	Expedited bool                     `json:"expedited"`
 }
 
+type CurrentTipsResponse struct {
+	Tips math.Int `json:"tips"`
+}
+
 // HELPERS FOR TESTING AGAINST THE CHAIN
 
 func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos.ChainNode) (string, error) {
@@ -248,19 +252,28 @@ func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos
 	return tn.ExecTx(ctx, keyName, command...)
 }
 
-func GetValIAddress(ctx context.Context, layer *cosmos.CosmosChain) (*cosmos.ChainNode, string, string, error) {
-	validatorI := layer.Validators[0]
-	valAccAddress, err := validatorI.AccountKeyBech32(ctx, "validator")
-	if err != nil {
-		panic("error getting validator account address (tellor...)")
+func GetValAddresses(ctx context.Context, layer *cosmos.CosmosChain) ([]*cosmos.ChainNode, []string, []string, error) {
+	var valAccAddresses []string
+	var valAddresses []string
+
+	for i, validator := range layer.Validators {
+		valAccAddress, err := validator.AccountKeyBech32(ctx, "validator")
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("error getting validator account address: %w", err)
+		}
+		valAccAddresses = append(valAccAddresses, valAccAddress)
+
+		valAddress, err := validator.KeyBech32(ctx, "validator", "val")
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("error getting validator address: %w", err)
+		}
+		valAddresses = append(valAddresses, valAddress)
+
+		fmt.Printf("valAccAddress%d: %s\n", i, valAccAddress)
+		fmt.Printf("valAddress%d: %s\n", i, valAddress)
 	}
-	fmt.Println("valAccAddr: ", valAccAddress)
-	valAddress, err := validatorI.KeyBech32(ctx, "validator", "val")
-	fmt.Println("valAddress: ", valAddress)
-	if err != nil {
-		panic("error getting validator address (tellorvaloper...)")
-	}
-	return validatorI, valAccAddress, valAddress, nil
+
+	return layer.Validators, valAccAddresses, valAddresses, nil
 }
 
 func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *cosmos.ChainNode) error {
@@ -298,6 +311,7 @@ func GetTxHashFromExec(stdout []byte) (string, error) {
 	if err != nil {
 		panic("error unmarshalling stdout")
 	}
+	fmt.Println("RawLog: ", output.RawLog)
 	if output.Code != 0 {
 		return output.TxHash, fmt.Errorf("transaction failed with code %d: %s", output.Code, output.RawLog)
 	}

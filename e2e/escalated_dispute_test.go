@@ -23,11 +23,15 @@ func TestEscalatedDispute(t *testing.T) {
 	layer := e2e.LayerSpinup(t)
 
 	// get a validator
-	validatorI, valAccAddress, valAddress, err := e2e.GetValIAddress(ctx, layer)
+	validators, valAccAddresses, valAddresses, err := e2e.GetValAddresses(ctx, layer)
 	require.NoError(err)
+	validatorI := validators[0]
+	valAccAddress := valAccAddresses[0]
+	valAddress := valAddresses[0]
 
 	// make a user account with 100 trb
 	user1 := interchaintest.GetAndFundTestUsers(t, ctx, "user1", math.NewInt(900_000*1e6), layer)[0]
+	
 	user1Addr := user1.FormattedAddress()
 	fmt.Println("User1 address: ", user1Addr)
 
