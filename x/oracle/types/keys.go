@@ -47,6 +47,9 @@ var (
 	TipsBlockIndexPrefix             = collections.NewPrefix(20)
 	TipperTotalPrefix                = collections.NewPrefix(21)
 	AggregatesMicroHeightIndexPrefix = collections.NewPrefix(22)
+	ValuesWeightSumPrefix            = collections.NewPrefix(25)
+	ValuesPrefix                     = collections.NewPrefix(26)
+	MedianPrefix                     = collections.NewPrefix(27)
 )
 
 func KeyPrefix(p string) []byte {

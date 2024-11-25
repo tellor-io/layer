@@ -7,4 +7,10 @@ message AggregateReporter {
   string reporter = 1;
   uint64 power = 2;
   uint64 block_number = 3;
+  string value = 4;
+}
+
+message Median {
+  string value = 1;
+  uint64 crossover_weight = 2;
 }

@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"testing"
 	"time"
 
@@ -132,6 +133,7 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 
 	value := testutil.EncodeValue(29266)
 	reveal := report(repAccs[0].String(), value, ethQueryData)
+	query, _ := s.Setup.Oraclekeeper.CurrentQuery(s.Setup.Ctx, (queryId))
 	_, err = msgServer.SubmitValue(s.Setup.Ctx, &reveal)
 	s.Nil(err)
 	// advance time to expire the query and aggregate report
@@ -142,6 +144,8 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
 	res, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(queryId)})
 	s.Nil(err)
+	med, _ := s.Setup.Oraclekeeper.Median.Get(s.Setup.Ctx, query.Id)
+	fmt.Println(med.Value, res.Aggregate.AggregateValue)
 	s.Equal(res.Aggregate.AggregateReporter, repAccs[0].String())
 	// tip should be 0 after aggregated report
 	tips, err = s.Setup.Oraclekeeper.GetQueryTip(s.Setup.Ctx, queryId)
@@ -281,6 +285,9 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	expectedMedianReporter := addr[expectedMedianReporterIndex].String()
 	s.Equal(expectedMedianReporter, res.Aggregate.AggregateReporter)
 	s.Equal(reporters[expectedMedianReporterIndex].value, res.Aggregate.AggregateValue)
+	query, _ := s.Setup.Oraclekeeper.CurrentQuery(s.Setup.Ctx, qId)
+	med, _ := s.Setup.Oraclekeeper.Median.Get(s.Setup.Ctx, query.Id)
+	fmt.Println(med.Value, res.Aggregate.AggregateValue)
 }
 
 func report(creator, value string, qdata []byte) types.MsgSubmitValue {

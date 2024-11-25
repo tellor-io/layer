@@ -30,3 +30,7 @@ message MicroReport {
   // block number of when the report was created
   uint64 block_number = 9;
 }
+message ValueStored {
+  uint64 cumulative_power = 1;
+  MicroReport report = 2;
+}

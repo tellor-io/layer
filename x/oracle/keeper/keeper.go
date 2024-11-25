@@ -42,6 +42,10 @@ type (
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		authority string
+		Values    collections.Map[collections.Pair[uint64, string], types.ValueStored] // key: queryMeta.Id, valueHexstring  value: reporter's power
+		Median    collections.Map[uint64, types.Median]                                // key: queryMeta.Id
+		// // maintain a total weight for each querymeta.id
+		ValuesWeightSum collections.Map[uint64, uint64] // key: queryMeta.Id value: totalWeight
 	}
 )
 
@@ -70,8 +74,10 @@ func NewKeeper(
 		registryKeeper: registryKeeper,
 		reporterKeeper: reporterKeeper,
 
-		authority: authority,
-
+		authority:       authority,
+		Values:          collections.NewMap(sb, types.ValuesPrefix, "values", collections.PairKeyCodec(collections.Uint64Key, collections.StringKey), codec.CollValue[types.ValueStored](cdc)),
+		Median:          collections.NewMap(sb, types.MedianPrefix, "median", collections.Uint64Key, codec.CollValue[types.Median](cdc)),
+		ValuesWeightSum: collections.NewMap(sb, types.ValuesWeightSumPrefix, "values_weight_sum", collections.Uint64Key, collections.Uint64Value),
 		// TotalTips maps the block number to the total tips added up till that point. Used for calculating voting power during a dispute
 		TotalTips: collections.NewMap(sb, types.TotalTipsPrefix, "total_tips", collections.Uint64Key, sdk.IntValue),
 		// Nonces maps the queryId to the nonce that increments with each aggregate report
