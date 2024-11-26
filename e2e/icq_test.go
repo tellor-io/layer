@@ -160,11 +160,11 @@ func TestIbcInterchainQuery(t *testing.T) {
 	require.NoError(t, err)
 
 	// tip query
-	_, err = layer2validator.ExecTx(ctx, "validator", "oracle", "tip", valAddress, qData, "1000000loya", "--keyring-dir", layer2.HomeDir())
+	_, err = layer2validator.ExecTx(ctx, "validator", "oracle", "tip", valAddress, bchusdQData, "1000000loya", "--keyring-dir", layer2.HomeDir())
 	require.NoError(t, err)
 
 	// submit value
-	_, err = layer2validator.ExecTx(ctx, "validator", "oracle", "submit-value", valAddress, qData, value, "--keyring-dir", layer2.HomeDir())
+	_, err = layer2validator.ExecTx(ctx, "validator", "oracle", "submit-value", valAddress, bchusdValue, "--keyring-dir", layer2.HomeDir())
 	require.NoError(t, err)
 
 	// Query for the recently created channel-id.
@@ -189,7 +189,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 	require.NotEmpty(t, chanID)
 
 	// get aggreate report
-	qidbz, err := utils.QueryIDFromDataString(qData)
+	qidbz, err := utils.QueryIDFromDataString(bchusdQData)
 	require.NoError(t, err)
 
 	cmd := []string{
@@ -224,7 +224,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 	fmt.Println(string(response), "response")
 	require.NoError(t, err)
 	// Validate response
-	var aggReport AggregateReport
+	var aggReport e2e.AggregateReport
 	err = json.Unmarshal(response, &aggReport)
 	require.NoError(t, err)
 	fmt.Println("Aggregate report: ", aggReport)

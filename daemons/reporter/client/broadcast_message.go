@@ -32,7 +32,10 @@ func (c *Client) generateDepositmessages(ctx context.Context) error {
 	}
 
 	queryId := hex.EncodeToString(utils.QueryIDFromData(depositQuerydata))
-	if depositReportMap[queryId] {
+	mutex.RLock()
+	depositReported := depositReportMap[queryId]
+	mutex.RUnlock()
+	if depositReported {
 		return fmt.Errorf("already reported for this bridge deposit tx")
 	}
 	msg := oracletypes.MsgSubmitValue{
@@ -45,7 +48,9 @@ func (c *Client) generateDepositmessages(ctx context.Context) error {
 		c.logger.Error("sending submit deposit transaction", "error", err)
 	}
 	c.logger.Info(fmt.Sprintf("Response from bridge tx report: %v", resp.TxResult))
+	mutex.Lock()
 	depositReportMap[queryId] = true
+	mutex.Unlock()
 
 	return nil
 }
@@ -94,7 +99,9 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 		return fmt.Errorf("error sending tx: %w", err)
 	}
 	fmt.Println("response after submit message", resp.TxResult.Code)
+	mutex.Lock()
 	commitedIds[querymeta.Id] = true
+	mutex.Unlock()
 
 	return nil
 }

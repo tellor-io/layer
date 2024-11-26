@@ -14,24 +14,24 @@ import (
 func TestParams_NewParams(t *testing.T) {
 	require := require.New(t)
 
-	params := NewParams(math.NewUint(5), math.NewInt(1))
+	params := NewParams(math.LegacyNewDec(5), math.NewInt(1))
 	require.NoError(params.Validate())
-	require.Equal(params.MinCommissionRate, math.NewUint(5))
+	require.Equal(params.MinCommissionRate, math.LegacyNewDec(5))
 	require.Equal(params.MinTrb, math.NewInt(1))
 
-	params = NewParams(math.NewUint(0), math.NewInt(0))
+	params = NewParams(math.LegacyZeroDec(), math.NewInt(0))
 	require.NoError(params.Validate())
-	require.Equal(params.MinCommissionRate, math.ZeroUint())
+	require.Equal(params.MinCommissionRate, math.LegacyZeroDec())
 	require.Equal(params.MinTrb, math.NewInt(0))
 
-	params = NewParams(math.NewUint(100), math.NewInt(100))
+	params = NewParams(math.LegacyNewDec(100), math.NewInt(100))
 	require.NoError(params.Validate())
-	require.Equal(params.MinCommissionRate, math.NewUint(100))
+	require.Equal(params.MinCommissionRate, math.LegacyNewDec(100))
 	require.Equal(params.MinTrb, math.NewInt(100))
 
-	params = NewParams(math.NewUint(100), math.NewInt(1000))
+	params = NewParams(math.LegacyNewDec(100), math.NewInt(1000))
 	require.NoError(params.Validate())
-	require.Equal(params.MinCommissionRate, math.NewUint(100))
+	require.Equal(params.MinCommissionRate, math.LegacyNewDec(100))
 	require.Equal(params.MinTrb, math.NewInt(1000))
 }
 

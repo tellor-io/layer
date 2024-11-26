@@ -11,15 +11,18 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-func (k Keeper) PreventBridgeWithdrawalReport(queryData []byte) error {
+// PreventBridgeWithdrawalReport verifies if the queryData is a TRBBridgeQueryType. If not, it returns false, nil.
+// If it is, then it further checks whether it is a withdrawal or deposit report. If it is a withdrawal report, it returns an error
+// indicating that such reports should not be processed.
+func (k Keeper) PreventBridgeWithdrawalReport(queryData []byte) (bool, error) {
 	// decode query data partial
 	StringType, err := abi.NewType("string", "", nil)
 	if err != nil {
-		return err
+		return false, err
 	}
 	BytesType, err := abi.NewType("bytes", "", nil)
 	if err != nil {
-		return err
+		return false, err
 	}
 	initialArgs := abi.Arguments{
 		{Type: StringType},
@@ -27,26 +30,26 @@ func (k Keeper) PreventBridgeWithdrawalReport(queryData []byte) error {
 	}
 	queryDataDecodedPartial, err := initialArgs.Unpack(queryData)
 	if err != nil {
-		return types.ErrInvalidQueryData.Wrapf("failed to unpack query data: %v", err)
+		return false, types.ErrInvalidQueryData.Wrapf("failed to unpack query data: %v", err)
 	}
 	if len(queryDataDecodedPartial) != 2 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data length")
+		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data length")
 	}
 	// check if first arg is a string
 	if reflect.TypeOf(queryDataDecodedPartial[0]).Kind() != reflect.String {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data type")
+		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data type")
 	}
 	if queryDataDecodedPartial[0].(string) != TRBBridgeQueryType {
-		return nil
+		return false, nil
 	}
 	// decode query data arguments
 	BoolType, err := abi.NewType("bool", "", nil)
 	if err != nil {
-		return err
+		return false, err
 	}
 	Uint256Type, err := abi.NewType("uint256", "", nil)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	queryDataArgs := abi.Arguments{
@@ -56,20 +59,20 @@ func (k Keeper) PreventBridgeWithdrawalReport(queryData []byte) error {
 
 	queryDataArgsDecoded, err := queryDataArgs.Unpack(queryDataDecodedPartial[1].([]byte))
 	if err != nil {
-		return types.ErrInvalidQueryData.Wrapf("failed to unpack query data arguments: %v", err)
+		return false, types.ErrInvalidQueryData.Wrapf("failed to unpack query data arguments: %v", err)
 	}
 
 	if len(queryDataArgsDecoded) != 2 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data arguments length")
+		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data arguments length")
 	}
 
 	// check if first arg is a bool
 	if reflect.TypeOf(queryDataArgsDecoded[0]).Kind() != reflect.Bool {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data arguments type")
+		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data arguments type")
 	}
 
 	if !queryDataArgsDecoded[0].(bool) {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid report type, cannot report token bridge withdrawal")
+		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid report type, cannot report token bridge withdrawal")
 	}
-	return nil
+	return true, nil
 }

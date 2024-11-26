@@ -28,6 +28,8 @@ type QueryClient interface {
 	TeamVote(ctx context.Context, in *QueryTeamVoteRequest, opts ...grpc.CallOption) (*QueryTeamVoteResponse, error)
 	// team address queries the team address.
 	TeamAddress(ctx context.Context, in *QueryTeamAddressRequest, opts ...grpc.CallOption) (*QueryTeamAddressResponse, error)
+	// Tally queries the vote count of a dispute
+	Tally(ctx context.Context, in *QueryDisputesTallyRequest, opts ...grpc.CallOption) (*QueryDisputesTallyResponse, error)
 }
 
 type queryClient struct {
@@ -83,6 +85,15 @@ func (c *queryClient) TeamAddress(ctx context.Context, in *QueryTeamAddressReque
 	return out, nil
 }
 
+func (c *queryClient) Tally(ctx context.Context, in *QueryDisputesTallyRequest, opts ...grpc.CallOption) (*QueryDisputesTallyResponse, error) {
+	out := new(QueryDisputesTallyResponse)
+	err := c.cc.Invoke(ctx, "/layer.dispute.Query/Tally", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -97,6 +108,8 @@ type QueryServer interface {
 	TeamVote(context.Context, *QueryTeamVoteRequest) (*QueryTeamVoteResponse, error)
 	// team address queries the team address.
 	TeamAddress(context.Context, *QueryTeamAddressRequest) (*QueryTeamAddressResponse, error)
+	// Tally queries the vote count of a dispute
+	Tally(context.Context, *QueryDisputesTallyRequest) (*QueryDisputesTallyResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -118,6 +131,9 @@ func (UnimplementedQueryServer) TeamVote(context.Context, *QueryTeamVoteRequest)
 }
 func (UnimplementedQueryServer) TeamAddress(context.Context, *QueryTeamAddressRequest) (*QueryTeamAddressResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TeamAddress not implemented")
+}
+func (UnimplementedQueryServer) Tally(context.Context, *QueryDisputesTallyRequest) (*QueryDisputesTallyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Tally not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -222,6 +238,24 @@ func _Query_TeamAddress_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Tally_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDisputesTallyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Tally(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.dispute.Query/Tally",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Tally(ctx, req.(*QueryDisputesTallyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -248,6 +282,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TeamAddress",
 			Handler:    _Query_TeamAddress_Handler,
+		},
+		{
+			MethodName: "Tally",
+			Handler:    _Query_Tally_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

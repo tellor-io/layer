@@ -9,6 +9,8 @@ import (
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (s *KeeperTestSuite) TestDisputesQuery() {
@@ -170,4 +172,52 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 	require.NotNil(resp)
 	fmt.Println(resp)
 	require.Equal(2, len(resp.OpenDisputes.Ids))
+}
+
+func (s *KeeperTestSuite) TestTallyQuery() {
+	require := s.Require()
+	k := s.disputeKeeper
+	q := keeper.NewQuerier(k)
+	require.NotNil(q)
+	ctx := s.ctx
+
+	require.NoError(k.Disputes.Set(ctx, 1, types.Dispute{
+		HashId:           []byte{1},
+		DisputeId:        1,
+		DisputeCategory:  types.Warning,
+		DisputeFee:       math.NewInt(1000000),
+		DisputeStatus:    types.Voting,
+		DisputeStartTime: time.Now(),
+		DisputeEndTime:   time.Now().Add(time.Hour * 24),
+		Open:             true,
+		DisputeRound:     1,
+		SlashAmount:      math.NewInt(1000000),
+		BurnAmount:       math.NewInt(100),
+		InitialEvidence: oracletypes.MicroReport{
+			Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
+			Timestamp: time.Now(),
+		},
+	}))
+
+	require.NoError(k.VoteCountsByGroup.Set(ctx, 1, types.StakeholderVoteCounts{
+		Users:        types.VoteCounts{Support: 1000, Against: 100, Invalid: 500},
+		Reporters:    types.VoteCounts{Support: 10000, Against: 100, Invalid: 560},
+		Tokenholders: types.VoteCounts{Support: 50000, Against: 1000, Invalid: 500},
+		Team:         types.VoteCounts{Support: 1000, Against: 0, Invalid: 0},
+	}))
+
+	require.NoError(q.BlockInfo.Set(ctx, []byte{1}, types.BlockInfo{TotalReporterPower: math.NewInt(25000), TotalUserTips: math.NewInt(5000)}))
+
+	s.bankKeeper.On("GetSupply", ctx, "loya").Return(sdk.NewCoin("loya", math.NewInt(100000)))
+
+	res, err := q.Tally(ctx, &types.QueryDisputesTallyRequest{DisputeId: 1})
+	require.NoError(err)
+
+	require.Equal(res.Users.TotalPowerVoted, uint64(1600))
+	require.Equal(res.Reporters.TotalPowerVoted, uint64(10660))
+	require.Equal(res.Tokenholders.TotalPowerVoted, uint64(51500))
+
+	require.Equal(res.Users.TotalGroupPower, uint64(5000))
+	require.Equal(res.Reporters.TotalGroupPower, uint64(25000))
+	require.Equal(res.Tokenholders.TotalGroupPower, uint64(100000))
 }

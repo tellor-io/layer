@@ -59,6 +59,10 @@ func (h Hooks) AfterDelegationModified(_ context.Context, _ sdk.AccAddress, _ sd
 	return nil
 }
 
+// this hook is called in the staking module when a delegation is being created and its implemented here to update a selector's delegations count
+// in the event that a selector delegates to a new validator (new relationship)
+// purpose of keeping count of delegations for a selector is to short circuit the stake calcuation process that is necessary
+// to calculate a reporters stake total; otherwise every bonded validator is checked for delegations from a selector
 func (h Hooks) BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddress, _ sdk.ValAddress) error {
 	selector, err := h.k.Selectors.Get(ctx, delAddr.Bytes())
 	if err != nil {
@@ -72,6 +76,7 @@ func (h Hooks) BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddre
 	return h.k.Selectors.Set(ctx, delAddr.Bytes(), selector)
 }
 
+// decrement a selector's delegations count when a delegation is removed
 func (h Hooks) BeforeDelegationRemoved(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	selector, err := h.k.Selectors.Get(ctx, delAddr.Bytes())
 	if err != nil {

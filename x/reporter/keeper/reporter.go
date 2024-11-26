@@ -14,6 +14,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// HasMin checks if an AccAddress has the minimum amount of tokens required with a BONDED validator
 func (k Keeper) HasMin(ctx context.Context, addr sdk.AccAddress, minRequired math.Int) (bool, error) {
 	tokens := math.ZeroInt()
 	var iterError error
@@ -31,9 +32,10 @@ func (k Keeper) HasMin(ctx context.Context, addr sdk.AccAddress, minRequired mat
 		if !val.IsBonded() {
 			return false
 		}
+		// convert del shares to token amount
 		delTokens := val.TokensFromShares(delegation.Shares).TruncateInt()
 		tokens = tokens.Add(delTokens)
-
+		// short circuit if we have enough tokens
 		return tokens.GTE(minRequired)
 	})
 	if err != nil {
@@ -42,9 +44,10 @@ func (k Keeper) HasMin(ctx context.Context, addr sdk.AccAddress, minRequired mat
 	return tokens.GTE(minRequired), iterError
 }
 
-// Reporter returns the total power of a reporter that is bonded at time of the call
-// Store the set of delegations for the reporter at the current block height for dispute purposes to be referenced by block height
-func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math.Int, error) {
+// ReporterStake counts the total amount of BONDED tokens for a given reporter's selectors
+// at the time of reporting and returns the total amount plus stores
+// the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties
+func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, queryId []byte) (math.Int, error) {
 	reporter, err := k.Reporters.Get(ctx, repAddr.Bytes())
 	if err != nil {
 		return math.Int{}, err
@@ -74,10 +77,13 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math
 		if err != nil {
 			return math.Int{}, err
 		}
+		// skip selectors that are locked out for switching reporters
 		if selector.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
 			continue
 		}
 		var iterError error
+		// compare how many delegations a selector has to the max validators to detemine if you should short circuit and iterate the counts number of times
+		// or iterate over all bonded validators for a selector in the case they have more delegations (with multiple validators, bonded or not) than the max bonded validators
 		if selector.DelegationsCount > uint64(maxValSet) {
 			// iterate over bonded validators
 			err = valSet.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
@@ -131,7 +137,7 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math
 			return math.Int{}, iterError
 		}
 	}
-	err = k.Report.Set(ctx, collections.Join(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
+	err = k.Report.Set(ctx, collections.Join(queryId, collections.Join(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
 	if err != nil {
 		return math.Int{}, err
 	}
@@ -143,6 +149,7 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math
 func (k Keeper) CheckSelectorsDelegations(ctx context.Context, addr sdk.AccAddress) (math.Int, int64, error) {
 	tokens := math.ZeroInt()
 	var count int64
+	// todo: is this itererror necessary?
 	var iterError error
 	err := k.stakingKeeper.IterateDelegatorDelegations(ctx, addr, func(delegation stakingtypes.Delegation) (stop bool) {
 		valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
@@ -171,20 +178,23 @@ func (k Keeper) CheckSelectorsDelegations(ctx context.Context, addr sdk.AccAddre
 	return tokens, count, nil
 }
 
+// TotalReporterPower returns the total amount of BONDED tokens in the network
 func (k Keeper) TotalReporterPower(ctx context.Context) (math.Int, error) {
 	valSet := k.stakingKeeper.GetValidatorSet()
 	return valSet.TotalBondedTokens(ctx)
 }
 
-// alias
+// Delegation returns a selector's reporter, delegations count, and locked time information
 func (k Keeper) Delegation(ctx context.Context, delegator sdk.AccAddress) (types.Selection, error) {
 	return k.Selectors.Get(ctx, delegator)
 }
 
+// Reporter returns a reporter's minimum bond requirement, commission rate, jailed status, and locked time information
 func (k Keeper) Reporter(ctx context.Context, reporter sdk.AccAddress) (types.OracleReporter, error) {
 	return k.Reporters.Get(ctx, reporter.Bytes())
 }
 
+// GetNumOfSelectors returns the number of selectors a reporter currently has
 func (k Keeper) GetNumOfSelectors(ctx context.Context, repAddr sdk.AccAddress) (int, error) {
 	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr.Bytes())
 	if err != nil {

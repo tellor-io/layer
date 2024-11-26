@@ -216,11 +216,11 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	// quorum not reached case
 	if vote.VoteEnd.Before(sdkctx.BlockTime()) {
 		dispute.DisputeStatus = types.Unresolved
+		dispute.PendingExecution = true
 		// check if rounds have been exhausted or dispute has expired in order to disperse funds
 		if dispute.DisputeEndTime.Before(sdkctx.BlockTime()) {
 			dispute.DisputeStatus = types.Resolved
 			dispute.Open = false
-			dispute.PendingExecution = true
 		}
 		allvoters, err := k.GetVoters(ctx, id)
 		if err != nil {

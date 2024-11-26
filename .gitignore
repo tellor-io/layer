@@ -27,3 +27,6 @@ secrets.yaml
 prod-sim
 
 dist/
+
+interchaintest/
+heighliner/

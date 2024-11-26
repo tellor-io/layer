@@ -605,6 +605,1037 @@ func (x *fastReflection_Tally) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var (
+	md_VoteCounts         protoreflect.MessageDescriptor
+	fd_VoteCounts_support protoreflect.FieldDescriptor
+	fd_VoteCounts_against protoreflect.FieldDescriptor
+	fd_VoteCounts_invalid protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_dispute_tally_proto_init()
+	md_VoteCounts = File_layer_dispute_tally_proto.Messages().ByName("VoteCounts")
+	fd_VoteCounts_support = md_VoteCounts.Fields().ByName("support")
+	fd_VoteCounts_against = md_VoteCounts.Fields().ByName("against")
+	fd_VoteCounts_invalid = md_VoteCounts.Fields().ByName("invalid")
+}
+
+var _ protoreflect.Message = (*fastReflection_VoteCounts)(nil)
+
+type fastReflection_VoteCounts VoteCounts
+
+func (x *VoteCounts) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_VoteCounts)(x)
+}
+
+func (x *VoteCounts) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_dispute_tally_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_VoteCounts_messageType fastReflection_VoteCounts_messageType
+var _ protoreflect.MessageType = fastReflection_VoteCounts_messageType{}
+
+type fastReflection_VoteCounts_messageType struct{}
+
+func (x fastReflection_VoteCounts_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_VoteCounts)(nil)
+}
+func (x fastReflection_VoteCounts_messageType) New() protoreflect.Message {
+	return new(fastReflection_VoteCounts)
+}
+func (x fastReflection_VoteCounts_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_VoteCounts
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_VoteCounts) Descriptor() protoreflect.MessageDescriptor {
+	return md_VoteCounts
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_VoteCounts) Type() protoreflect.MessageType {
+	return _fastReflection_VoteCounts_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_VoteCounts) New() protoreflect.Message {
+	return new(fastReflection_VoteCounts)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_VoteCounts) Interface() protoreflect.ProtoMessage {
+	return (*VoteCounts)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_VoteCounts) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Support != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Support)
+		if !f(fd_VoteCounts_support, value) {
+			return
+		}
+	}
+	if x.Against != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Against)
+		if !f(fd_VoteCounts_against, value) {
+			return
+		}
+	}
+	if x.Invalid != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Invalid)
+		if !f(fd_VoteCounts_invalid, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_VoteCounts) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.dispute.VoteCounts.support":
+		return x.Support != uint64(0)
+	case "layer.dispute.VoteCounts.against":
+		return x.Against != uint64(0)
+	case "layer.dispute.VoteCounts.invalid":
+		return x.Invalid != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteCounts"))
+		}
+		panic(fmt.Errorf("message layer.dispute.VoteCounts does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_VoteCounts) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.dispute.VoteCounts.support":
+		x.Support = uint64(0)
+	case "layer.dispute.VoteCounts.against":
+		x.Against = uint64(0)
+	case "layer.dispute.VoteCounts.invalid":
+		x.Invalid = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteCounts"))
+		}
+		panic(fmt.Errorf("message layer.dispute.VoteCounts does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_VoteCounts) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.dispute.VoteCounts.support":
+		value := x.Support
+		return protoreflect.ValueOfUint64(value)
+	case "layer.dispute.VoteCounts.against":
+		value := x.Against
+		return protoreflect.ValueOfUint64(value)
+	case "layer.dispute.VoteCounts.invalid":
+		value := x.Invalid
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteCounts"))
+		}
+		panic(fmt.Errorf("message layer.dispute.VoteCounts does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_VoteCounts) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.dispute.VoteCounts.support":
+		x.Support = value.Uint()
+	case "layer.dispute.VoteCounts.against":
+		x.Against = value.Uint()
+	case "layer.dispute.VoteCounts.invalid":
+		x.Invalid = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteCounts"))
+		}
+		panic(fmt.Errorf("message layer.dispute.VoteCounts does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_VoteCounts) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.dispute.VoteCounts.support":
+		panic(fmt.Errorf("field support of message layer.dispute.VoteCounts is not mutable"))
+	case "layer.dispute.VoteCounts.against":
+		panic(fmt.Errorf("field against of message layer.dispute.VoteCounts is not mutable"))
+	case "layer.dispute.VoteCounts.invalid":
+		panic(fmt.Errorf("field invalid of message layer.dispute.VoteCounts is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteCounts"))
+		}
+		panic(fmt.Errorf("message layer.dispute.VoteCounts does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_VoteCounts) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.dispute.VoteCounts.support":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.dispute.VoteCounts.against":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.dispute.VoteCounts.invalid":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteCounts"))
+		}
+		panic(fmt.Errorf("message layer.dispute.VoteCounts does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_VoteCounts) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.dispute.VoteCounts", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_VoteCounts) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_VoteCounts) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_VoteCounts) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_VoteCounts) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*VoteCounts)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Support != 0 {
+			n += 1 + runtime.Sov(uint64(x.Support))
+		}
+		if x.Against != 0 {
+			n += 1 + runtime.Sov(uint64(x.Against))
+		}
+		if x.Invalid != 0 {
+			n += 1 + runtime.Sov(uint64(x.Invalid))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*VoteCounts)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Invalid != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Invalid))
+			i--
+			dAtA[i] = 0x18
+		}
+		if x.Against != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Against))
+			i--
+			dAtA[i] = 0x10
+		}
+		if x.Support != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Support))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*VoteCounts)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: VoteCounts: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: VoteCounts: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Support", wireType)
+				}
+				x.Support = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Support |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Against", wireType)
+				}
+				x.Against = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Against |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Invalid", wireType)
+				}
+				x.Invalid = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Invalid |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_GroupTally                 protoreflect.MessageDescriptor
+	fd_GroupTally_voteCount       protoreflect.FieldDescriptor
+	fd_GroupTally_totalPowerVoted protoreflect.FieldDescriptor
+	fd_GroupTally_totalGroupPower protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_dispute_tally_proto_init()
+	md_GroupTally = File_layer_dispute_tally_proto.Messages().ByName("GroupTally")
+	fd_GroupTally_voteCount = md_GroupTally.Fields().ByName("voteCount")
+	fd_GroupTally_totalPowerVoted = md_GroupTally.Fields().ByName("totalPowerVoted")
+	fd_GroupTally_totalGroupPower = md_GroupTally.Fields().ByName("totalGroupPower")
+}
+
+var _ protoreflect.Message = (*fastReflection_GroupTally)(nil)
+
+type fastReflection_GroupTally GroupTally
+
+func (x *GroupTally) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_GroupTally)(x)
+}
+
+func (x *GroupTally) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_dispute_tally_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_GroupTally_messageType fastReflection_GroupTally_messageType
+var _ protoreflect.MessageType = fastReflection_GroupTally_messageType{}
+
+type fastReflection_GroupTally_messageType struct{}
+
+func (x fastReflection_GroupTally_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_GroupTally)(nil)
+}
+func (x fastReflection_GroupTally_messageType) New() protoreflect.Message {
+	return new(fastReflection_GroupTally)
+}
+func (x fastReflection_GroupTally_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_GroupTally
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_GroupTally) Descriptor() protoreflect.MessageDescriptor {
+	return md_GroupTally
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_GroupTally) Type() protoreflect.MessageType {
+	return _fastReflection_GroupTally_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_GroupTally) New() protoreflect.Message {
+	return new(fastReflection_GroupTally)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_GroupTally) Interface() protoreflect.ProtoMessage {
+	return (*GroupTally)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_GroupTally) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.VoteCount != nil {
+		value := protoreflect.ValueOfMessage(x.VoteCount.ProtoReflect())
+		if !f(fd_GroupTally_voteCount, value) {
+			return
+		}
+	}
+	if x.TotalPowerVoted != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.TotalPowerVoted)
+		if !f(fd_GroupTally_totalPowerVoted, value) {
+			return
+		}
+	}
+	if x.TotalGroupPower != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.TotalGroupPower)
+		if !f(fd_GroupTally_totalGroupPower, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_GroupTally) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.dispute.GroupTally.voteCount":
+		return x.VoteCount != nil
+	case "layer.dispute.GroupTally.totalPowerVoted":
+		return x.TotalPowerVoted != uint64(0)
+	case "layer.dispute.GroupTally.totalGroupPower":
+		return x.TotalGroupPower != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.GroupTally"))
+		}
+		panic(fmt.Errorf("message layer.dispute.GroupTally does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_GroupTally) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.dispute.GroupTally.voteCount":
+		x.VoteCount = nil
+	case "layer.dispute.GroupTally.totalPowerVoted":
+		x.TotalPowerVoted = uint64(0)
+	case "layer.dispute.GroupTally.totalGroupPower":
+		x.TotalGroupPower = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.GroupTally"))
+		}
+		panic(fmt.Errorf("message layer.dispute.GroupTally does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_GroupTally) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.dispute.GroupTally.voteCount":
+		value := x.VoteCount
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "layer.dispute.GroupTally.totalPowerVoted":
+		value := x.TotalPowerVoted
+		return protoreflect.ValueOfUint64(value)
+	case "layer.dispute.GroupTally.totalGroupPower":
+		value := x.TotalGroupPower
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.GroupTally"))
+		}
+		panic(fmt.Errorf("message layer.dispute.GroupTally does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_GroupTally) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.dispute.GroupTally.voteCount":
+		x.VoteCount = value.Message().Interface().(*VoteCounts)
+	case "layer.dispute.GroupTally.totalPowerVoted":
+		x.TotalPowerVoted = value.Uint()
+	case "layer.dispute.GroupTally.totalGroupPower":
+		x.TotalGroupPower = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.GroupTally"))
+		}
+		panic(fmt.Errorf("message layer.dispute.GroupTally does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_GroupTally) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.dispute.GroupTally.voteCount":
+		if x.VoteCount == nil {
+			x.VoteCount = new(VoteCounts)
+		}
+		return protoreflect.ValueOfMessage(x.VoteCount.ProtoReflect())
+	case "layer.dispute.GroupTally.totalPowerVoted":
+		panic(fmt.Errorf("field totalPowerVoted of message layer.dispute.GroupTally is not mutable"))
+	case "layer.dispute.GroupTally.totalGroupPower":
+		panic(fmt.Errorf("field totalGroupPower of message layer.dispute.GroupTally is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.GroupTally"))
+		}
+		panic(fmt.Errorf("message layer.dispute.GroupTally does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_GroupTally) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.dispute.GroupTally.voteCount":
+		m := new(VoteCounts)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "layer.dispute.GroupTally.totalPowerVoted":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.dispute.GroupTally.totalGroupPower":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.GroupTally"))
+		}
+		panic(fmt.Errorf("message layer.dispute.GroupTally does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_GroupTally) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.dispute.GroupTally", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_GroupTally) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_GroupTally) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_GroupTally) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_GroupTally) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*GroupTally)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.VoteCount != nil {
+			l = options.Size(x.VoteCount)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.TotalPowerVoted != 0 {
+			n += 1 + runtime.Sov(uint64(x.TotalPowerVoted))
+		}
+		if x.TotalGroupPower != 0 {
+			n += 1 + runtime.Sov(uint64(x.TotalGroupPower))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*GroupTally)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.TotalGroupPower != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.TotalGroupPower))
+			i--
+			dAtA[i] = 0x18
+		}
+		if x.TotalPowerVoted != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.TotalPowerVoted))
+			i--
+			dAtA[i] = 0x10
+		}
+		if x.VoteCount != nil {
+			encoded, err := options.Marshal(x.VoteCount)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*GroupTally)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: GroupTally: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: GroupTally: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VoteCount", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.VoteCount == nil {
+					x.VoteCount = &VoteCounts{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.VoteCount); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TotalPowerVoted", wireType)
+				}
+				x.TotalPowerVoted = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.TotalPowerVoted |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TotalGroupPower", wireType)
+				}
+				x.TotalGroupPower = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.TotalGroupPower |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -669,6 +1700,108 @@ func (x *Tally) GetInvalid() *VoterClasses {
 	return nil
 }
 
+type VoteCounts struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Support uint64 `protobuf:"varint,1,opt,name=support,proto3" json:"support,omitempty"`
+	Against uint64 `protobuf:"varint,2,opt,name=against,proto3" json:"against,omitempty"`
+	Invalid uint64 `protobuf:"varint,3,opt,name=invalid,proto3" json:"invalid,omitempty"`
+}
+
+func (x *VoteCounts) Reset() {
+	*x = VoteCounts{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_dispute_tally_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *VoteCounts) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VoteCounts) ProtoMessage() {}
+
+// Deprecated: Use VoteCounts.ProtoReflect.Descriptor instead.
+func (*VoteCounts) Descriptor() ([]byte, []int) {
+	return file_layer_dispute_tally_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *VoteCounts) GetSupport() uint64 {
+	if x != nil {
+		return x.Support
+	}
+	return 0
+}
+
+func (x *VoteCounts) GetAgainst() uint64 {
+	if x != nil {
+		return x.Against
+	}
+	return 0
+}
+
+func (x *VoteCounts) GetInvalid() uint64 {
+	if x != nil {
+		return x.Invalid
+	}
+	return 0
+}
+
+type GroupTally struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	VoteCount       *VoteCounts `protobuf:"bytes,1,opt,name=voteCount,proto3" json:"voteCount,omitempty"`
+	TotalPowerVoted uint64      `protobuf:"varint,2,opt,name=totalPowerVoted,proto3" json:"totalPowerVoted,omitempty"`
+	TotalGroupPower uint64      `protobuf:"varint,3,opt,name=totalGroupPower,proto3" json:"totalGroupPower,omitempty"`
+}
+
+func (x *GroupTally) Reset() {
+	*x = GroupTally{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_dispute_tally_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GroupTally) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GroupTally) ProtoMessage() {}
+
+// Deprecated: Use GroupTally.ProtoReflect.Descriptor instead.
+func (*GroupTally) Descriptor() ([]byte, []int) {
+	return file_layer_dispute_tally_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GroupTally) GetVoteCount() *VoteCounts {
+	if x != nil {
+		return x.VoteCount
+	}
+	return nil
+}
+
+func (x *GroupTally) GetTotalPowerVoted() uint64 {
+	if x != nil {
+		return x.TotalPowerVoted
+	}
+	return 0
+}
+
+func (x *GroupTally) GetTotalGroupPower() uint64 {
+	if x != nil {
+		return x.TotalGroupPower
+	}
+	return 0
+}
+
 var File_layer_dispute_tally_proto protoreflect.FileDescriptor
 
 var file_layer_dispute_tally_proto_rawDesc = []byte{
@@ -688,18 +1821,33 @@ var file_layer_dispute_tally_proto_rawDesc = []byte{
 	0x73, 0x12, 0x35, 0x0a, 0x07, 0x49, 0x6e, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01,
 	0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75,
 	0x74, 0x65, 0x2e, 0x56, 0x6f, 0x74, 0x65, 0x72, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73, 0x52,
-	0x07, 0x49, 0x6e, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x42, 0xa2, 0x01, 0x0a, 0x11, 0x63, 0x6f, 0x6d,
-	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x42, 0x0a,
-	0x54, 0x61, 0x6c, 0x6c, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x67, 0x69,
-	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d,
-	0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x44, 0x58,
-	0xaa, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
-	0xca, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
-	0xe2, 0x02, 0x19, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
-	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0e, 0x4c,
-	0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x07, 0x49, 0x6e, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x22, 0x5a, 0x0a, 0x0a, 0x56, 0x6f, 0x74, 0x65,
+	0x43, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x73, 0x75, 0x70, 0x70, 0x6f, 0x72,
+	0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x73, 0x75, 0x70, 0x70, 0x6f, 0x72, 0x74,
+	0x12, 0x18, 0x0a, 0x07, 0x61, 0x67, 0x61, 0x69, 0x6e, 0x73, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x07, 0x61, 0x67, 0x61, 0x69, 0x6e, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x69, 0x6e,
+	0x76, 0x61, 0x6c, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x69, 0x6e, 0x76,
+	0x61, 0x6c, 0x69, 0x64, 0x22, 0x99, 0x01, 0x0a, 0x0a, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x54, 0x61,
+	0x6c, 0x6c, 0x79, 0x12, 0x37, 0x0a, 0x09, 0x76, 0x6f, 0x74, 0x65, 0x43, 0x6f, 0x75, 0x6e, 0x74,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64,
+	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x56, 0x6f, 0x74, 0x65, 0x43, 0x6f, 0x75, 0x6e, 0x74,
+	0x73, 0x52, 0x09, 0x76, 0x6f, 0x74, 0x65, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x28, 0x0a, 0x0f,
+	0x74, 0x6f, 0x74, 0x61, 0x6c, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x56, 0x6f, 0x74, 0x65, 0x64, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0f, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x50, 0x6f, 0x77, 0x65,
+	0x72, 0x56, 0x6f, 0x74, 0x65, 0x64, 0x12, 0x28, 0x0a, 0x0f, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x47,
+	0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x0f, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x77, 0x65, 0x72,
+	0x42, 0xa2, 0x01, 0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64,
+	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x42, 0x0a, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75,
+	0x74, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x44, 0x58, 0xaa, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xca, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72,
+	0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xe2, 0x02, 0x19, 0x4c, 0x61, 0x79, 0x65, 0x72,
+	0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x44, 0x69,
+	0x73, 0x70, 0x75, 0x74, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -714,20 +1862,23 @@ func file_layer_dispute_tally_proto_rawDescGZIP() []byte {
 	return file_layer_dispute_tally_proto_rawDescData
 }
 
-var file_layer_dispute_tally_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_layer_dispute_tally_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_layer_dispute_tally_proto_goTypes = []interface{}{
 	(*Tally)(nil),        // 0: layer.dispute.Tally
-	(*VoterClasses)(nil), // 1: layer.dispute.VoterClasses
+	(*VoteCounts)(nil),   // 1: layer.dispute.VoteCounts
+	(*GroupTally)(nil),   // 2: layer.dispute.GroupTally
+	(*VoterClasses)(nil), // 3: layer.dispute.VoterClasses
 }
 var file_layer_dispute_tally_proto_depIdxs = []int32{
-	1, // 0: layer.dispute.Tally.forVotes:type_name -> layer.dispute.VoterClasses
-	1, // 1: layer.dispute.Tally.againstVotes:type_name -> layer.dispute.VoterClasses
-	1, // 2: layer.dispute.Tally.Invalid:type_name -> layer.dispute.VoterClasses
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	3, // 0: layer.dispute.Tally.forVotes:type_name -> layer.dispute.VoterClasses
+	3, // 1: layer.dispute.Tally.againstVotes:type_name -> layer.dispute.VoterClasses
+	3, // 2: layer.dispute.Tally.Invalid:type_name -> layer.dispute.VoterClasses
+	1, // 3: layer.dispute.GroupTally.voteCount:type_name -> layer.dispute.VoteCounts
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_layer_dispute_tally_proto_init() }
@@ -749,6 +1900,30 @@ func file_layer_dispute_tally_proto_init() {
 				return nil
 			}
 		}
+		file_layer_dispute_tally_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*VoteCounts); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_dispute_tally_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GroupTally); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -756,7 +1931,7 @@ func file_layer_dispute_tally_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_dispute_tally_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
