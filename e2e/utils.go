@@ -31,7 +31,7 @@ var (
 		},
 	}
 	numVals      = 1
-	numFullNodes = 0
+	numFullNodes = 1
 
 	baseBech32 = "tellor"
 
@@ -227,6 +227,12 @@ type CurrentTipsResponse struct {
 	Tips math.Int `json:"tips"`
 }
 
+type Spec struct {
+	Registrar string `json:"registrar"`
+	QueryType string `json:"query_type"`
+	Spec      string `json:"spec"`
+}
+
 // HELPERS FOR TESTING AGAINST THE CHAIN
 
 func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos.ChainNode) (string, error) {
@@ -252,9 +258,7 @@ func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos
 	return tn.ExecTx(ctx, keyName, command...)
 }
 
-func GetValAddresses(ctx context.Context, layer *cosmos.CosmosChain) ([]*cosmos.ChainNode, []string, []string, error) {
-	var valAccAddresses []string
-	var valAddresses []string
+func GetValAddresses(ctx context.Context, layer *cosmos.CosmosChain) (validators []*cosmos.ChainNode, valAccAddresses []string, valAddresses []string, err error) {
 
 	for i, validator := range layer.Validators {
 		valAccAddress, err := validator.AccountKeyBech32(ctx, "validator")
@@ -316,4 +320,19 @@ func GetTxHashFromExec(stdout []byte) (string, error) {
 		return output.TxHash, fmt.Errorf("transaction failed with code %d: %s", output.Code, output.RawLog)
 	}
 	return output.TxHash, nil
+}
+
+func RegisterDataSpec(ctx context.Context, layer *cosmos.CosmosChain, validatorI *cosmos.ChainNode, queryData []byte) error {
+	// abiComponents := []*registrytypes.ABIComponent{
+	// 	{Name: "asset", FieldType: "string"},
+	// 	{Name: "currency", FieldType: "string"},
+	// }
+	// dataspec := registrytypes.DataSpec{
+	// 	ResponseValueType: "uint256",
+	// 	AggregationMethod: "weighted-median",
+	// 	Registrar:         validatorI.AccountKeyBech32(ctx, "validator"),
+	// 	AbiComponents:     abiComponents,
+	// 	ReportBlockWindow: 1,
+	// }
+	return nil
 }

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
-	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,7 +27,7 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 	layer := e2e.LayerSpinup(t)
 
 	// get a validator
-	validators, _, _, err := e2e.GetValAddresses(ctx, layer)
+	validators, valAccAddresses, _, err := e2e.GetValAddresses(ctx, layer)
 	require.NoError(err)
 	validatorI := validators[0]
 	// validatorII := validators[1]
@@ -39,7 +38,7 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 	// Create and fund n users that are tipping t amount
 	n := 10
 	var userTips []UserTip
-	expectedTipTotal := math.NewInt(0)
+	expectedTipTotal := math.ZeroInt()
 	for i := 0; i < n; i++ {
 		userName := fmt.Sprintf("user%d", i+1)
 		user := interchaintest.GetAndFundTestUsers(t, ctx, userName, math.NewInt(900_000*1e6), layer)[0]
@@ -54,11 +53,19 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 			Tip:     randomTip,
 		})
 
-		fmt.Printf("User%d address: %s is going to tip %s\n", i+1, user.FormattedAddress(), randomTip.String())
-		tipAfterBurn := randomTip.Amount.MulRaw(98).QuoRaw(100)
-		expectedTipTotal = expectedTipTotal.Add(tipAfterBurn)
+		twoPercent := randomTip.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100))
+		expectedTipTotal = expectedTipTotal.Add(randomTip.Amount.Sub(twoPercent))
 	}
 	fmt.Println("Expected tip total: ", expectedTipTotal.String())
+
+	// create data specs that expire every 2 blocks
+	// create a data spec
+	registrar := valAccAddresses[0]
+	queryType := "TWAP"
+	spec := e2e.RegisterDataSpec(ctx, layer, validatorI, []byte(queryType))
+	txHash, err := validatorI.ExecTx(ctx, "validator", "registry", "register-spec", registrar, queryType, spec, "--keyring-dir", "/var/cosmos-chain/layer-1")
+	require.NoError(err)
+	fmt.Println("TX Hash (create data spec): ", txHash)
 
 	var currentHeight int64
 	var txHashes []string
@@ -76,16 +83,7 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 		txHash, err := validatorI.ExecTx(ctx, userName, "oracle", "tip", userAddr, ltcusdQData, randomTip.String(), "--keyring-dir", "/var/cosmos-chain/layer-1")
 		require.NoError(err)
 		txHashes = append(txHashes, txHash)
-		// Wait for the block height to change
-		for {
-			time.Sleep(300 * time.Millisecond)
-			newHeight, err := validatorI.Height(ctx)
-			require.NoError(err)
-			if newHeight != currentHeight {
-				currentHeight = newHeight
-				break
-			}
-		}
+		fmt.Printf("TX Hash (user %d tip %s): %s\n", i+1, randomTip.String(), txHash)
 	}
 
 	// query available tips
