@@ -52,6 +52,7 @@ func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, sdk.Context, *mocks
 		ok,
 		bk,
 		rk,
+		"gov",
 	)
 
 	app := NewAppModule(

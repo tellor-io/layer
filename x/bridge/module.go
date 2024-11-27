@@ -193,6 +193,7 @@ func ProvideModule(in BridgeInputs) BridgeOutputs {
 		in.Oraclekeeper,
 		in.BankKeeper,
 		in.ReporterKeeper,
+		"gov",
 	)
 	m := NewAppModule(
 		in.Cdc,
