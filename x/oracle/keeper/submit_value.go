@@ -28,6 +28,7 @@ import (
 // 7. Emit a new_report event
 // 8. Set the micro report in the store
 func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query types.QueryMeta, val string, queryData []byte, power uint64, incycle bool) error {
+	// todo: block reporter that has already submitted a report for this query
 	// decode query data hex to get query type, returns interface array
 	queryType, _, err := regTypes.DecodeQueryType(queryData)
 	if err != nil {
@@ -197,6 +198,8 @@ func (k Keeper) TraverseLeft(
 			if crossoverWeight < halfTotal {
 				// don't go anymore left
 				// return the median
+				// put the power back
+				crossoverWeight += leftPower
 				return k.Median.Set(ctx, id, types.Median{CrossoverWeight: crossoverWeight, Value: medianValue})
 			}
 			continue
