@@ -14,6 +14,7 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
+	layerutil "github.com/tellor-io/layer/testutil"
 )
 
 const (
@@ -29,8 +30,9 @@ type UserTip struct {
 }
 
 type QueryDataStorage struct {
-	QueryType string
-	QueryData string
+	QueryType     string
+	QueryData     string
+	ExpectedValue string
 }
 
 func TestLotsOfAggregatesInSameBlock(t *testing.T) {
@@ -42,12 +44,18 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 	validators, valAccAddresses, _, err := e2e.GetValAddresses(ctx, layer)
 	require.NoError(err)
 	validatorI := validators[0]
+	valIAccAddress := valAccAddresses[0]
 	// validatorII := validators[1]
 
 	// submit minting proposal and vote yes on it from all validators
 	require.NoError(e2e.TurnOnMinting(ctx, layer, validatorI))
 
-	// Create and fund n users that are tipping a random amount
+	// validatorI becomes a reporter
+	txHash, err := validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", "/var/cosmos-chain/layer-1")
+	require.NoError(err)
+	fmt.Println("TX HASH (validatorI becomes a reporter): ", txHash)
+
+	// Create and fund n users, set how much they are going to tip
 	n := 5
 	var userTips []UserTip
 	expectedTipTotal := math.ZeroInt()
@@ -70,7 +78,13 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 	}
 	fmt.Println("Expected tip total: ", expectedTipTotal.String())
 
-	// create data specs that expire 6 blocks apart
+	// create data specs that expire 4 blocks apart
+	// store the query data for each spec
+	// 4 blocks apart because we want to see a bunch of aggregates happen on the same end block z
+	// .ExecTx takes 2 blocks to complete
+	// queryType1 is tipped on block n, submitted for on n+2, queryType2 is tipped on block n+4, submitted for on n+6, ...
+	// So queryType1 to be tipped on block z - n,
+
 	registrar := valAccAddresses[0]
 	var queryDatas []QueryDataStorage
 	for i := 1; i <= 5; i++ {
@@ -78,18 +92,16 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 		require.NoError(err)
 		fmt.Println("Current height: ", currentHeight)
 
-		expirationWindow := i * 6
+		expirationWindow := i * 4
 		dataSpec, err := e2e.CreateDataSpec(expirationWindow, registrar)
 		require.NoError(err)
 		jsonSpec, err := json.Marshal(dataSpec)
 		require.NoError(err)
-
-		queryType := fmt.Sprintf("type%d", expirationWindow)
+		queryType := fmt.Sprintf("queryType%d", expirationWindow)
 		txHash, err := validatorI.ExecTx(ctx, "validator", "registry", "register-spec", queryType, string(jsonSpec), "--keyring-dir", "/var/cosmos-chain/layer-1")
 		require.NoError(err)
 		fmt.Printf("TX Hash (create data spec with expiration %d): %s\n", expirationWindow, txHash)
 
-		// generate query data for the spec
 		queryDataBz, _, err := validatorI.ExecQuery(ctx, "registry", "generate-querydata", queryType, "[\"trb\", \"usd\"]")
 		require.NoError(err)
 		var qData e2e.GenerateQueryDataResponse
@@ -102,33 +114,42 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 		})
 	}
 
+	// Send a tip from a user on block n, submit a value on block n+2 in reverse order
 	var currentHeight int64
 	var txHashes []string
-	for i := 0; i < len(userTips); i++ {
-		// Get the current block height
+	for i := len(userTips) - 1; i >= 0; i-- { // Reverse iteration
 		currentHeight, err = validatorI.Height(ctx)
 		require.NoError(err)
 		fmt.Println("Current height: ", currentHeight)
 
 		queryData := queryDatas[i].QueryData
-
-		// Send a tip for query type i from user i
 		userAddr := userTips[i].Address
 		randomTip := userTips[i].Tip
 		userName := fmt.Sprintf("user%d", i+1)
-
 		txHash, err := validatorI.ExecTx(ctx, userName, "oracle", "tip", userAddr, string(queryData), randomTip.String(), "--keyring-dir", "/var/cosmos-chain/layer-1")
 		require.NoError(err)
 		txHashes = append(txHashes, txHash)
 		fmt.Printf("TX Hash (user %d tip %s): %s\n", i+1, randomTip.String(), txHash)
+
+		// query tip for the query
+		tip, err := e2e.QueryTips(string(queryData), ctx, validatorI)
+		require.NoError(err)
+		fmt.Println("Tip: ", tip.Tips.String())
+
+		value := layerutil.EncodeValue(rand.Float64() * 100)
+		queryDatas[i].ExpectedValue = value
+		txHash, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", valIAccAddress, string(queryData), value, "--keyring-dir", "/var/cosmos-chain/layer-1")
+		require.NoError(err)
+		fmt.Printf("TX Hash (validator submits value for query %d): %s\n", i+1, txHash)
 	}
 
 	// query available tips
-	require.NoError(testutil.WaitForBlocks(ctx, 4, validatorI))
-	availableTips, _, err := validatorI.ExecQuery(ctx, "oracle", "get-current-tip", string(queryDatas[0].QueryData))
+	allTips, _, err := validatorI.ExecQuery(ctx, "oracle", "tipped-queries")
 	require.NoError(err)
-	var getCurrentTips e2e.CurrentTipsResponse
-	require.NoError(json.Unmarshal(availableTips, &getCurrentTips))
+	fmt.Println("All tips: ", allTips)
+
+	// wait for aggregates to be set
+	require.NoError(testutil.WaitForBlocks(ctx, 10, validatorI))
 
 	// query data spec
 	// getSpecResponse, _, err := validatorI.ExecQuery(ctx, "registry", "data-spec", queryType)
@@ -150,6 +171,6 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 	// require.NoError(err)
 	// fmt.Println("Block num: ", blockResult)
 
-	fmt.Println("Current tips: ", getCurrentTips.Tips.String())
-	fmt.Println("Expected tip total: ", expectedTipTotal.String())
+	// fmt.Println("Current tips: ", getCurrentTips.Tips.String())
+	// fmt.Println("Expected tip total: ", expectedTipTotal.String())
 }

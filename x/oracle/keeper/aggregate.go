@@ -73,6 +73,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 				return err
 			}
 			err = k.SetAggregate(ctx, aggregateReport)
+			k.Logger(ctx).Info("Aggregate report set", "query_type", query.QueryType, "aggregate_value", aggregateReport.AggregateValue)
 			if err != nil {
 				return err
 			}
