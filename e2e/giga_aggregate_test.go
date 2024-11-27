@@ -2,6 +2,7 @@ package e2e_test
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -15,10 +16,21 @@ import (
 	"github.com/tellor-io/layer/e2e"
 )
 
+const (
+	type6qData  = "0x000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005747970653600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000001610000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000016200000000000000000000000000000000000000000000000000000000000000"
+	typ6qId     = "0x3309f88571c671b353c0082cd4219096885b6805b58a9e6aa086c4a46ddbdcde"
+	type12qData = "0x000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000006747970653132000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000001610000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000016200000000000000000000000000000000000000000000000000000000000000"
+)
+
 // Hold user addr and tip amount
 type UserTip struct {
 	Address string
 	Tip     sdk.Coin
+}
+
+type QueryDataStorage struct {
+	QueryType string
+	QueryData string
 }
 
 func TestLotsOfAggregatesInSameBlock(t *testing.T) {
@@ -35,8 +47,8 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 	// submit minting proposal and vote yes on it from all validators
 	require.NoError(e2e.TurnOnMinting(ctx, layer, validatorI))
 
-	// Create and fund n users that are tipping t amount
-	n := 10
+	// Create and fund n users that are tipping a random amount
+	n := 5
 	var userTips []UserTip
 	expectedTipTotal := math.ZeroInt()
 	for i := 0; i < n; i++ {
@@ -58,14 +70,38 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 	}
 	fmt.Println("Expected tip total: ", expectedTipTotal.String())
 
-	// create data specs that expire every 2 blocks
-	// create a data spec
+	// create data specs that expire 6 blocks apart
 	registrar := valAccAddresses[0]
-	queryType := "TWAP"
-	spec := e2e.RegisterDataSpec(ctx, layer, validatorI, []byte(queryType))
-	txHash, err := validatorI.ExecTx(ctx, "validator", "registry", "register-spec", registrar, queryType, spec, "--keyring-dir", "/var/cosmos-chain/layer-1")
-	require.NoError(err)
-	fmt.Println("TX Hash (create data spec): ", txHash)
+	var queryDatas []QueryDataStorage
+	for i := 1; i <= 5; i++ {
+		currentHeight, err := validatorI.Height(ctx)
+		require.NoError(err)
+		fmt.Println("Current height: ", currentHeight)
+
+		expirationWindow := i * 6
+		dataSpec, err := e2e.CreateDataSpec(expirationWindow, registrar)
+		require.NoError(err)
+		jsonSpec, err := json.Marshal(dataSpec)
+		require.NoError(err)
+
+		queryType := fmt.Sprintf("type%d", expirationWindow)
+		txHash, err := validatorI.ExecTx(ctx, "validator", "registry", "register-spec", queryType, string(jsonSpec), "--keyring-dir", "/var/cosmos-chain/layer-1")
+		require.NoError(err)
+		fmt.Printf("TX Hash (create data spec with expiration %d): %s\n", expirationWindow, txHash)
+
+		// generate query data for the spec
+		queryDataBz, _, err := validatorI.ExecQuery(ctx, "registry", "generate-querydata", queryType, "[\"trb\", \"usd\"]")
+		require.NoError(err)
+		fmt.Println("Query data bytes: ", queryDataBz)
+
+		queryData := hex.EncodeToString(queryDataBz)
+		fmt.Println("Query data string: ", queryData)
+
+		queryDatas = append(queryDatas, QueryDataStorage{
+			QueryType: queryType,
+			QueryData: queryData,
+		})
+	}
 
 	var currentHeight int64
 	var txHashes []string
@@ -75,12 +111,15 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 		require.NoError(err)
 		fmt.Println("Current height: ", currentHeight)
 
-		// Send a tip from user i
+		// queryType := fmt.Sprintf("type%d", expirationWindow)
+		queryData := queryDatas[i].QueryData
+
+		// Send a tip for query type i from user i
 		userAddr := userTips[i].Address
 		randomTip := userTips[i].Tip
 		userName := fmt.Sprintf("user%d", i+1)
 
-		txHash, err := validatorI.ExecTx(ctx, userName, "oracle", "tip", userAddr, ltcusdQData, randomTip.String(), "--keyring-dir", "/var/cosmos-chain/layer-1")
+		txHash, err := validatorI.ExecTx(ctx, userName, "oracle", "tip", userAddr, queryData, randomTip.String(), "--keyring-dir", "/var/cosmos-chain/layer-1")
 		require.NoError(err)
 		txHashes = append(txHashes, txHash)
 		fmt.Printf("TX Hash (user %d tip %s): %s\n", i+1, randomTip.String(), txHash)
@@ -88,10 +127,17 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 
 	// query available tips
 	require.NoError(testutil.WaitForBlocks(ctx, 4, validatorI))
-	availableTips, _, err := validatorI.ExecQuery(ctx, "oracle", "get-current-tip", ltcusdQData)
+	availableTips, _, err := validatorI.ExecQuery(ctx, "oracle", "get-current-tip", string(queryDatas[0].QueryData))
 	require.NoError(err)
 	var getCurrentTips e2e.CurrentTipsResponse
 	require.NoError(json.Unmarshal(availableTips, &getCurrentTips))
+
+	// query data spec
+	// getSpecResponse, _, err := validatorI.ExecQuery(ctx, "registry", "data-spec", queryType)
+	// require.NoError(err)
+	// var getSpec e2e.GetDataSpecResponse
+	// require.NoError(json.Unmarshal(getSpecResponse, &getSpec))
+	// fmt.Println("Data spec: ", getSpec)
 
 	// for _, txHash := range txHashes {
 	// 	resp, err := layer.GetTransaction(txHash)

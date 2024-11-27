@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
@@ -18,6 +19,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 )
 
 // HELPERS FOR BUILDING THE CHAIN
@@ -227,10 +230,28 @@ type CurrentTipsResponse struct {
 	Tips math.Int `json:"tips"`
 }
 
-type Spec struct {
-	Registrar string `json:"registrar"`
-	QueryType string `json:"query_type"`
-	Spec      string `json:"spec"`
+type DataSpec struct {
+	DocumentHash      string                        `json:"document_hash,omitempty"`
+	ResponseValueType string                        `json:"response_value_type,omitempty"`
+	AbiComponents     []*registrytypes.ABIComponent `json:"abi_components,omitempty"`
+	AggregationMethod string                        `json:"aggregation_method,omitempty"`
+	Registrar         string                        `json:"registrar,omitempty"`
+	ReportBlockWindow int                           `json:"report_block_window,omitempty"`
+}
+
+type DataSpecResponse struct {
+	DocumentHash      string                        `json:"document_hash,omitempty"`
+	ResponseValueType string                        `json:"response_value_type,omitempty"`
+	AbiComponents     []*registrytypes.ABIComponent `json:"abi_components,omitempty"`
+	AggregationMethod string                        `json:"aggregation_method,omitempty"`
+	Registrar         string                        `json:"registrar,omitempty"`
+	ReportBlockWindow string                        `json:"report_block_window,omitempty"`
+}
+
+type GetDataSpecResponse struct {
+	Registrar string           `json:"registrar"`
+	QueryType string           `json:"query_type"`
+	Spec      DataSpecResponse `json:"spec"`
 }
 
 // HELPERS FOR TESTING AGAINST THE CHAIN
@@ -256,28 +277,6 @@ func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos
 	}
 
 	return tn.ExecTx(ctx, keyName, command...)
-}
-
-func GetValAddresses(ctx context.Context, layer *cosmos.CosmosChain) (validators []*cosmos.ChainNode, valAccAddresses []string, valAddresses []string, err error) {
-
-	for i, validator := range layer.Validators {
-		valAccAddress, err := validator.AccountKeyBech32(ctx, "validator")
-		if err != nil {
-			return nil, nil, nil, fmt.Errorf("error getting validator account address: %w", err)
-		}
-		valAccAddresses = append(valAccAddresses, valAccAddress)
-
-		valAddress, err := validator.KeyBech32(ctx, "validator", "val")
-		if err != nil {
-			return nil, nil, nil, fmt.Errorf("error getting validator address: %w", err)
-		}
-		valAddresses = append(valAddresses, valAddress)
-
-		fmt.Printf("valAccAddress%d: %s\n", i, valAccAddress)
-		fmt.Printf("valAddress%d: %s\n", i, valAddress)
-	}
-
-	return layer.Validators, valAccAddresses, valAddresses, nil
 }
 
 func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *cosmos.ChainNode) error {
@@ -309,6 +308,28 @@ func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *c
 	return nil
 }
 
+func GetValAddresses(ctx context.Context, layer *cosmos.CosmosChain) (validators []*cosmos.ChainNode, valAccAddresses []string, valAddresses []string, err error) {
+
+	for i, validator := range layer.Validators {
+		valAccAddress, err := validator.AccountKeyBech32(ctx, "validator")
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("error getting validator account address: %w", err)
+		}
+		valAccAddresses = append(valAccAddresses, valAccAddress)
+
+		valAddress, err := validator.KeyBech32(ctx, "validator", "val")
+		if err != nil {
+			return nil, nil, nil, fmt.Errorf("error getting validator address: %w", err)
+		}
+		valAddresses = append(valAddresses, valAddress)
+
+		fmt.Printf("valAccAddress%d: %s\n", i, valAccAddress)
+		fmt.Printf("valAddress%d: %s\n", i, valAddress)
+	}
+
+	return layer.Validators, valAccAddresses, valAddresses, nil
+}
+
 func GetTxHashFromExec(stdout []byte) (string, error) {
 	output := cosmos.CosmosTx{}
 	err := json.Unmarshal([]byte(stdout), &output)
@@ -322,17 +343,19 @@ func GetTxHashFromExec(stdout []byte) (string, error) {
 	return output.TxHash, nil
 }
 
-func RegisterDataSpec(ctx context.Context, layer *cosmos.CosmosChain, validatorI *cosmos.ChainNode, queryData []byte) error {
-	// abiComponents := []*registrytypes.ABIComponent{
-	// 	{Name: "asset", FieldType: "string"},
-	// 	{Name: "currency", FieldType: "string"},
-	// }
-	// dataspec := registrytypes.DataSpec{
-	// 	ResponseValueType: "uint256",
-	// 	AggregationMethod: "weighted-median",
-	// 	Registrar:         validatorI.AccountKeyBech32(ctx, "validator"),
-	// 	AbiComponents:     abiComponents,
-	// 	ReportBlockWindow: 1,
-	// }
-	return nil
+func CreateDataSpec(reportBlockWindow int, registrar string) (DataSpec, error) {
+	docHash := rand.Str(32)
+	spec := DataSpec{
+		DocumentHash:      docHash,
+		ResponseValueType: "uint256",
+		AbiComponents: []*registrytypes.ABIComponent{
+			{Name: "asset", FieldType: "string"},
+			{Name: "currency", FieldType: "string"},
+		},
+		AggregationMethod: "weighted-median",
+		Registrar:         registrar,
+		ReportBlockWindow: reportBlockWindow,
+	}
+
+	return spec, nil
 }
