@@ -254,6 +254,10 @@ type GetDataSpecResponse struct {
 	Spec      DataSpecResponse `json:"spec"`
 }
 
+type GenerateQueryDataResponse struct {
+	QueryData []byte `json:"query_data"`
+}
+
 // HELPERS FOR TESTING AGAINST THE CHAIN
 
 func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos.ChainNode) (string, error) {

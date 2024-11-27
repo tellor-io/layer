@@ -30,7 +30,7 @@ type UserTip struct {
 
 type QueryDataStorage struct {
 	QueryType string
-	QueryData string
+	QueryData []byte
 }
 
 func TestLotsOfAggregatesInSameBlock(t *testing.T) {
@@ -97,9 +97,15 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 		queryData := hex.EncodeToString(queryDataBz)
 		fmt.Println("Query data string: ", queryData)
 
+		var qData e2e.GenerateQueryDataResponse
+		require.NoError(json.Unmarshal(queryDataBz, &qData))
+
+		queryDataHex := hex.EncodeToString(qData.QueryData)
+		fmt.Println("Query data hex: ", queryDataHex)
+
 		queryDatas = append(queryDatas, QueryDataStorage{
 			QueryType: queryType,
-			QueryData: queryData,
+			QueryData: queryDataHex,
 		})
 	}
 
@@ -119,7 +125,7 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 		randomTip := userTips[i].Tip
 		userName := fmt.Sprintf("user%d", i+1)
 
-		txHash, err := validatorI.ExecTx(ctx, userName, "oracle", "tip", userAddr, queryData, randomTip.String(), "--keyring-dir", "/var/cosmos-chain/layer-1")
+		txHash, err := validatorI.ExecTx(ctx, userName, "oracle", "tip", userAddr, string(queryData), randomTip.String(), "--keyring-dir", "/var/cosmos-chain/layer-1")
 		require.NoError(err)
 		txHashes = append(txHashes, txHash)
 		fmt.Printf("TX Hash (user %d tip %s): %s\n", i+1, randomTip.String(), txHash)
