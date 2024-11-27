@@ -30,7 +30,7 @@ type UserTip struct {
 
 type QueryDataStorage struct {
 	QueryType string
-	QueryData []byte
+	QueryData string
 }
 
 func TestLotsOfAggregatesInSameBlock(t *testing.T) {
@@ -92,20 +92,13 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 		// generate query data for the spec
 		queryDataBz, _, err := validatorI.ExecQuery(ctx, "registry", "generate-querydata", queryType, "[\"trb\", \"usd\"]")
 		require.NoError(err)
-		fmt.Println("Query data bytes: ", queryDataBz)
-
-		queryData := hex.EncodeToString(queryDataBz)
-		fmt.Println("Query data string: ", queryData)
-
 		var qData e2e.GenerateQueryDataResponse
 		require.NoError(json.Unmarshal(queryDataBz, &qData))
-
-		queryDataHex := hex.EncodeToString(qData.QueryData)
-		fmt.Println("Query data hex: ", queryDataHex)
+		queryDataHexString := hex.EncodeToString(qData.QueryData)
 
 		queryDatas = append(queryDatas, QueryDataStorage{
 			QueryType: queryType,
-			QueryData: queryDataHex,
+			QueryData: queryDataHexString,
 		})
 	}
 
@@ -117,7 +110,6 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 		require.NoError(err)
 		fmt.Println("Current height: ", currentHeight)
 
-		// queryType := fmt.Sprintf("type%d", expirationWindow)
 		queryData := queryDatas[i].QueryData
 
 		// Send a tip for query type i from user i

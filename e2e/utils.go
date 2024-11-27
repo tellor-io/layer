@@ -363,3 +363,16 @@ func CreateDataSpec(reportBlockWindow int, registrar string) (DataSpec, error) {
 
 	return spec, nil
 }
+
+func QueryTips(queryData string, ctx context.Context, validatorI *cosmos.ChainNode) (CurrentTipsResponse, error) {
+	availableTips, _, err := validatorI.ExecQuery(ctx, "oracle", "get-current-tip", string(queryData))
+	if err != nil {
+		return CurrentTipsResponse{}, err
+	}
+	var currentTips CurrentTipsResponse
+	err = json.Unmarshal(availableTips, &currentTips)
+	if err != nil {
+		return CurrentTipsResponse{}, err
+	}
+	return currentTips, nil
+}
