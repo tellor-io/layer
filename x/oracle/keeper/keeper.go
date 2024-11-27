@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	gomath "math"
@@ -42,10 +41,12 @@ type (
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		authority string
-		Values    collections.Map[collections.Pair[uint64, string], types.ValueStored] // key: queryMeta.Id, valueHexstring  value: reporter's power
-		Median    collections.Map[uint64, types.Median]                                // key: queryMeta.Id
-		// // maintain a total weight for each querymeta.id
+		Values    *collections.IndexedMap[collections.Pair[uint64, string], types.ValueStored, types.ValuesIndex] // key: queryMeta.Id, valueHexstring  value: reporter's power
+		Median    collections.Map[uint64, types.Median]                                                           // key: queryMeta.Id
+		// maintain a total weight for each querymeta.id
 		ValuesWeightSum collections.Map[uint64, uint64] // key: queryMeta.Id value: totalWeight
+		// storage for values that are aggregated via weighted mode
+		ValuesWeightedMode collections.Map[collections.Pair[uint64, string], uint64] // key: queryMeta.Id, valueHexstring  value: total power of reporters that submitted the value
 	}
 )
 
@@ -74,8 +75,12 @@ func NewKeeper(
 		registryKeeper: registryKeeper,
 		reporterKeeper: reporterKeeper,
 
-		authority:       authority,
-		Values:          collections.NewMap(sb, types.ValuesPrefix, "values", collections.PairKeyCodec(collections.Uint64Key, collections.StringKey), codec.CollValue[types.ValueStored](cdc)),
+		authority: authority,
+		Values: collections.NewIndexedMap(sb,
+			types.ValuesPrefix, "values",
+			collections.PairKeyCodec(collections.Uint64Key, collections.StringKey),
+			codec.CollValue[types.ValueStored](cdc), types.NewValuesIndex(sb),
+		),
 		Median:          collections.NewMap(sb, types.MedianPrefix, "median", collections.Uint64Key, codec.CollValue[types.Median](cdc)),
 		ValuesWeightSum: collections.NewMap(sb, types.ValuesWeightSumPrefix, "values_weight_sum", collections.Uint64Key, collections.Uint64Value),
 		// TotalTips maps the block number to the total tips added up till that point. Used for calculating voting power during a dispute
@@ -207,28 +212,23 @@ func (k Keeper) UpdateQuery(ctx context.Context, queryType string, newBlockWindo
 }
 
 func (k Keeper) FlagAggregateReport(ctx context.Context, report types.MicroReport) error {
-	iter, err := k.Aggregates.Indexes.MicroHeight.MatchExact(ctx, report.BlockNumber)
+	reporter := sdk.MustAccAddressFromBech32(report.Reporter)
+	iter, err := k.Aggregates.Indexes.Reporter.MatchExact(ctx, collections.Join3(reporter.Bytes(), report.QueryId, report.BlockNumber))
 	if err != nil {
 		return err
 	}
 	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
+	if iter.Valid() {
 		aggregatekey, err := iter.PrimaryKey()
 		if err != nil {
 			return err
 		}
-		if bytes.Equal(aggregatekey.K1(), report.QueryId) {
-			aggregate, err := k.Aggregates.Get(ctx, aggregatekey)
-			if err != nil {
-				return err
-			}
-			reporter := aggregate.Reporters[aggregate.AggregateReportIndex].Reporter
-			if sdk.MustAccAddressFromBech32(reporter).Equals(sdk.MustAccAddressFromBech32(report.Reporter)) {
-				aggregate.Flagged = true
-				return k.Aggregates.Set(ctx, aggregatekey, aggregate)
-			}
+		aggregate, err := k.Aggregates.Get(ctx, aggregatekey)
+		if err != nil {
+			return err
 		}
+		aggregate.Flagged = true
+		return k.Aggregates.Set(ctx, aggregatekey, aggregate)
 	}
-
 	return nil
 }

@@ -114,16 +114,16 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 
 	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryId, rep1.Bytes(), queryData.Id), report_one)
 	s.NoError(err)
-	s.oracleKeeper.AddReport(ctx, queryData.Id, report_one)
+	s.NoError(s.oracleKeeper.AddReport(ctx, queryData.Id, report_one))
 	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryId, rep2.Bytes(), queryData.Id), report_two)
 	s.NoError(err)
-	s.oracleKeeper.AddReport(ctx, queryData.Id, report_two)
+	s.NoError(s.oracleKeeper.AddReport(ctx, queryData.Id, report_two))
 	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryId, rep3.Bytes(), queryData.Id), report_three)
 	s.NoError(err)
-	s.oracleKeeper.AddReport(ctx, queryData.Id, report_three)
+	s.NoError(s.oracleKeeper.AddReport(ctx, queryData.Id, report_three))
 	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryId, rep4.Bytes(), queryData.Id), report_four)
 	s.NoError(err)
-	s.oracleKeeper.AddReport(ctx, queryData.Id, report_four)
+	s.NoError(s.oracleKeeper.AddReport(ctx, queryData.Id, report_four))
 
 	// use auth types GetModule Account
 	add := sample.AccAddressBytes()
@@ -282,7 +282,7 @@ func (s *KeeperTestSuite) TestGetTimestampBefore() {
 				err := s.oracleKeeper.Aggregates.Set(
 					s.ctx,
 					collections.Join(queryId, uint64(v.UnixMilli())),
-					types.Aggregate{},
+					types.Aggregate{AggregateReporter: sample.AccAddress()},
 				)
 				s.Require().NoError(err)
 			}
@@ -360,7 +360,7 @@ func (s *KeeperTestSuite) TestGetTimestampAfter() {
 				err := s.oracleKeeper.Aggregates.Set(
 					s.ctx,
 					collections.Join(queryId, uint64(v.UnixMilli())),
-					types.Aggregate{},
+					types.Aggregate{AggregateReporter: sample.AccAddress()},
 				)
 				s.Require().NoError(err)
 			}

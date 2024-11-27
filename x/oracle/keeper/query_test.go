@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -53,7 +54,7 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 	require.NoError(k.Aggregates.Set(s.ctx, collections.Join(qId, uint64(0)), types.Aggregate{
 		QueryId:           qId,
 		AggregateValue:    "100",
-		AggregateReporter: "reporter",
+		AggregateReporter: sdk.AccAddress("reporter").String(),
 		ReporterPower:     100,
 	}))
 	res, err = q.GetCurrentAggregateReport(s.ctx, &req)
@@ -61,7 +62,7 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 	require.NotNil(res)
 	require.Equal(res.Aggregate.QueryId, qId)
 	require.Equal(res.Aggregate.AggregateValue, "100")
-	require.Equal(res.Aggregate.AggregateReporter, "reporter")
+	require.Equal(res.Aggregate.AggregateReporter, sdk.AccAddress("reporter").String())
 	require.Equal(res.Aggregate.ReporterPower, uint64(100))
 }
 
@@ -96,7 +97,7 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 	agg = &types.Aggregate{
 		QueryId:              []byte(queryId),
 		AggregateValue:       "10_000",
-		AggregateReporter:    "reporter1",
+		AggregateReporter:    sdk.AccAddress("reporter1").String(),
 		ReporterPower:        100,
 		Reporters:            []*types.AggregateReporter{{}},
 		Flagged:              false,
@@ -156,7 +157,7 @@ func TestRetreiveData(t *testing.T) {
 				require.NoError(t, k.Aggregates.Set(ctx, collections.Join(qId, uint64(0)), types.Aggregate{
 					QueryId:           qId,
 					AggregateValue:    "100",
-					AggregateReporter: "reporter",
+					AggregateReporter: sdk.AccAddress("reporter").String(),
 					ReporterPower:     100,
 				}))
 			},

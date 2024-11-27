@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -69,6 +70,14 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 		if err != nil {
 			fmt.Printf("failed to add report: %v", err)
 		}
+	} else {
+		err = k.AddReportWeightedMode(ctx, query.Id, report)
+		if err == nil {
+			fmt.Println("report for weight mode added successfully!!!")
+		}
+		if err != nil {
+			fmt.Printf("failed to add report for weight mode: %v", err)
+		}
 	}
 	sdkCtx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -98,7 +107,6 @@ func (k Keeper) GetDataSpec(ctx context.Context, queryType string) (regTypes.Dat
 func (k Keeper) AddReport(ctx context.Context, id uint64, report types.MicroReport) error {
 	// check if same value is already reported
 	value := report.Value
-	fmt.Println("value", value)
 	power := report.Power
 	existingValue, err := k.Values.Get(ctx, collections.Join(id, value))
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
@@ -107,7 +115,6 @@ func (k Keeper) AddReport(ctx context.Context, id uint64, report types.MicroRepo
 	existingValue.CumulativePower += power
 	existingValue.Report = &report
 	// todo: update reporter
-	newPower := existingValue.CumulativePower + power
 
 	if err := k.Values.Set(ctx, collections.Join(id, value), existingValue); err != nil {
 		return fmt.Errorf("failed to update valuesMap: %w", err)
@@ -131,7 +138,7 @@ func (k Keeper) AddReport(ctx context.Context, id uint64, report types.MicroRepo
 		if errors.Is(err, collections.ErrNotFound) {
 			fmt.Println("no median found")
 			// If no median exists, set the new value as the initial median
-			if err := k.Median.Set(ctx, id, types.Median{Value: value, CrossoverWeight: newPower}); err != nil {
+			if err := k.Median.Set(ctx, id, types.Median{Value: value, CrossoverWeight: power}); err != nil {
 				return fmt.Errorf("failed to set initial median: %w", err)
 			}
 			return nil
@@ -142,7 +149,6 @@ func (k Keeper) AddReport(ctx context.Context, id uint64, report types.MicroRepo
 	if value < currentMedian.Value {
 		// If the new value is smaller, update cumulative weight
 		cumulativeWeight += power
-		fmt.Println("new cumulative weight", cumulativeWeight)
 		if cumulativeWeight >= halfTotal {
 			// Median might shift left, perform left traversal
 			return k.TraverseLeft(ctx, id, currentMedian.Value, cumulativeWeight, halfTotal)
@@ -152,7 +158,6 @@ func (k Keeper) AddReport(ctx context.Context, id uint64, report types.MicroRepo
 		if cumulativeWeight < halfTotal {
 			return k.TraverseRight(ctx, id, currentMedian.Value, cumulativeWeight, halfTotal)
 		}
-		return k.TraverseLeft(ctx, id, currentMedian.Value, cumulativeWeight, halfTotal)
 	} else {
 		// If the new value is equal to the current median, update cumulative weight
 		cumulativeWeight += power
@@ -165,9 +170,7 @@ func (k Keeper) AddReport(ctx context.Context, id uint64, report types.MicroRepo
 
 func (k Keeper) TraverseLeft(
 	ctx context.Context,
-	// valuesMap collections.Map[collections.Pair[uint64, string], uint64],
 	id uint64, medianValue string, crossoverWeight, halfTotal uint64,
-	//  cweightMap collections.Map[uint64, types.Median]
 ) error {
 	fmt.Println("traversing left")
 	currentValue := medianValue
@@ -177,7 +180,6 @@ func (k Keeper) TraverseLeft(
 		return err
 	}
 
-	// [1,2,3,4,5,6]
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		leftkey, err := iter.Key()
@@ -190,7 +192,6 @@ func (k Keeper) TraverseLeft(
 		}
 		leftPower := leftValue.CumulativePower
 		if leftkey.K2() == currentValue {
-			fmt.Println("cross over weight after current value subtraction", crossoverWeight-leftPower, halfTotal)
 			crossoverWeight -= leftPower
 			// check if you should keep going left
 			if crossoverWeight < halfTotal {
@@ -200,10 +201,10 @@ func (k Keeper) TraverseLeft(
 			}
 			continue
 		}
-		fmt.Println("cross over weight", crossoverWeight)
+
 		// you reduce by this item's power to see if you should keep going left
 		crossoverWeight -= leftPower
-		fmt.Println("new left crossover weight", crossoverWeight)
+
 		if crossoverWeight < halfTotal {
 			// don't go anymore left
 			// put the power back
@@ -217,9 +218,7 @@ func (k Keeper) TraverseLeft(
 
 func (k Keeper) TraverseRight(
 	ctx context.Context,
-	// valuesMap collections.Map[collections.Pair[uint64, string], uint64],
 	id uint64, medianValue string, crossoverWeight, halfTotal uint64,
-	// cweightMap collections.Map[uint64, types.Median]
 ) error {
 	fmt.Println("traversing right")
 	incomingWeight := crossoverWeight
@@ -254,4 +253,65 @@ func (k Keeper) TraverseRight(
 	}
 	fmt.Println("is value changing", crossoverWeight, medianValue)
 	return k.Median.Set(ctx, id, types.Median{CrossoverWeight: crossoverWeight, Value: medianValue})
+}
+
+func (k Keeper) AddReportWeightedMode(ctx context.Context, id uint64, report types.MicroReport) error {
+	value := report.Value
+	power := report.Power
+	existingValue, err := k.Values.Get(ctx, collections.Join(id, value))
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return fmt.Errorf("failed to get existing value: %w", err)
+	}
+	existingValue.CumulativePower += power
+	existingValue.Report = &report
+	if err := k.Values.Set(ctx, collections.Join(id, value), existingValue); err != nil {
+		return fmt.Errorf("failed to update valuesMap: %w", err)
+	}
+	// update total power
+	totalPower, err := k.ValuesWeightSum.Get(ctx, id)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return fmt.Errorf("failed to get total power: %w", err)
+		}
+		totalPower = 0
+	}
+	totalPower += power
+	if err := k.ValuesWeightSum.Set(ctx, id, totalPower); err != nil {
+		return fmt.Errorf("failed to update total power: %w", err)
+	}
+	// get current median
+	currentMedian, err := k.Median.Get(ctx, id)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			// If no median exists, set the new value as the initial median
+			if err := k.Median.Set(ctx, id, types.Median{Value: value, CrossoverWeight: power}); err != nil {
+				return fmt.Errorf("failed to set initial median: %w", err)
+			}
+			return nil
+		}
+		return fmt.Errorf("failed to get current median: %w", err)
+	}
+	// check if the new value power is greater than the current median power
+	// if it is not do nothing and return else update the median
+	if currentMedian.CrossoverWeight > power {
+		return nil
+	}
+	rng := collections.NewPrefixedPairRange[collections.Pair[uint64, uint64], collections.Pair[uint64, string]](collections.Join(id, uint64(math.MaxUint64))).Descending()
+	iter, err := k.Values.Indexes.Power.Iterate(ctx, rng)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+	if iter.Valid() {
+		pk, err := iter.PrimaryKey()
+		if err != nil {
+			return err
+		}
+		maxValue, err := k.Values.Get(ctx, pk)
+		if err != nil {
+			return err
+		}
+		return k.Median.Set(ctx, id, types.Median{Value: maxValue.Report.Value, CrossoverWeight: maxValue.CumulativePower})
+	}
+	return nil
 }

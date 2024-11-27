@@ -161,17 +161,20 @@ func (s *KeeperTestSuite) TestFlagAggregateReport() {
 	k := s.oracleKeeper
 	ctx := s.ctx
 
-	// no matches
-	require.NoError(k.FlagAggregateReport(ctx, types.MicroReport{}))
-
 	// set aggregate
 	queryId := utils.QueryIDFromData([]byte("queryId"))
 	reporter1 := sample.AccAddress()
 	reporter2 := sample.AccAddress()
+	// no matches
+	require.NoError(k.FlagAggregateReport(ctx, types.MicroReport{Reporter: reporter1}))
+
 	require.NoError(k.Aggregates.Set(
 		s.ctx,
 		collections.Join(queryId, uint64(ctx.BlockTime().UnixMilli())),
 		types.Aggregate{
+			AggregateReporter: reporter1,
+			MicroHeight:       0,
+			QueryId:           queryId,
 			Reporters: []*types.AggregateReporter{
 				{
 					Reporter: reporter1,

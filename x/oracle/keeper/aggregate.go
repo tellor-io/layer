@@ -26,80 +26,63 @@ import (
 // rewarded with the time-based rewards.
 func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	// aggregate
-	idsIterator, err := k.Query.Indexes.HasReveals.MatchExact(ctx, true)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	blockHeight := uint64(sdkCtx.BlockHeight())
+	// add 1 to blockHeight because range is exclusive
+	// rng for queries that have expired and have revealed reports
+	rng := collections.NewPrefixUntilPairRange[collections.Pair[bool, uint64], collections.Pair[[]byte, uint64]](collections.Join(true, blockHeight+1)).Descending()
+	idsIterator, err := k.Query.Indexes.Expiration.Iterate(ctx, rng)
 	if err != nil {
 		return err
 	}
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockHeight := uint64(sdkCtx.BlockHeight())
-
-	var aggrFunc func(ctx context.Context, reports []types.MicroReport, metaId uint64) (*types.Aggregate, error)
-	reportersToPay := make([]*types.Aggregate, 0)
+	// no queries to aggregate ie no queries in the store
+	if !idsIterator.Valid() {
+		return nil
+	}
 
 	defer idsIterator.Close()
 	for ; idsIterator.Valid(); idsIterator.Next() {
-		key, err := idsIterator.PrimaryKey()
+		fullKey, err := idsIterator.FullKey()
 		if err != nil {
 			return err
 		}
-		query, err := k.Query.Get(ctx, key)
+		if !fullKey.K1().K1() {
+			return nil
+		}
+		query, err := k.Query.Get(ctx, fullKey.K2())
 		if err != nil {
 			return err
 		}
 		// enter if query has expired
+		// todo: remove this check since ranger only returns expired queries
 		if query.Expiration <= blockHeight {
-
-			reportsIterator, err := k.Reports.Indexes.Id.MatchExact(ctx, query.Id)
-			if err != nil {
-				return err
-			}
-			microReports, err := indexes.CollectValues(ctx, k.Reports, reportsIterator)
-			if err != nil {
-				return err
-			}
-			// there should always be at least one report otherwise how did the query set hasrevealedreports to true
-			if microReports[0].AggregateMethod == "weighted-median" {
-				// Calculate the aggregated report.
-				aggrFunc = k.WeightedMedian
-			} else {
-				// default to weighted-mode aggregation method.
-				// Calculate the aggregated report.
-				aggrFunc = k.WeightedMode
-			}
-
-			aggregateReport, err := aggrFunc(ctx, microReports, query.Id)
-			if err != nil {
-				return err
-			}
-			err = k.SetAggregate(ctx, aggregateReport)
+			aggregateReport, isCyclelist, err := k.AggregateReport(ctx, query.Id)
 			if err != nil {
 				return err
 			}
 			if !query.Amount.IsZero() {
-				err = k.AllocateRewards(ctx, []*types.Aggregate{aggregateReport}, query.Amount, types.ModuleName)
+				err = k.AllocateRewards(ctx, &aggregateReport, query.Amount, types.ModuleName)
 				if err != nil {
 					return err
 				}
 			}
-			// Add reporters to the tbr payment list.
-			if microReports[0].Cyclelist {
-				reportersToPay = append(reportersToPay, aggregateReport)
+			// todo: shouldn't there be only one queryId per block that is a cyclelist?
+			if isCyclelist {
+				tbr := k.GetTimeBasedRewards(ctx)
+				err = k.AllocateRewards(ctx, &aggregateReport, tbr, minttypes.TimeBasedRewards)
+				if err != nil {
+					return err
+				}
+
 			}
-			err = k.Query.Remove(ctx, key)
+			err = k.Query.Remove(ctx, fullKey.K2())
 			if err != nil {
 				return err
 			}
 		}
 	}
-	if len(reportersToPay) == 0 {
-		return nil
-	}
-	// Process time-based rewards for reporters.
-	// tbr is in loya
-	tbr := k.GetTimeBasedRewards(ctx)
-	// Allocate time-based rewards to all eligible reporters.
-	return k.AllocateRewards(ctx, reportersToPay, tbr, minttypes.TimeBasedRewards)
+
+	return nil
 }
 
 // SetAggregate increments the queryId's report index plus sets the timestamp and blockHeight and stores the aggregate report
@@ -129,6 +112,37 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 		),
 	})
 	return k.Aggregates.Set(ctx, collections.Join(report.QueryId, currentTimestamp), *report)
+}
+
+func (k Keeper) AggregateReport(ctx context.Context, id uint64) (types.Aggregate, bool, error) {
+	median, err := k.Median.Get(ctx, id)
+	if err != nil {
+		return types.Aggregate{}, false, err // return nil and log error ?
+	}
+	medianReport, err := k.Values.Get(ctx, collections.Join(id, median.Value))
+	if err != nil {
+		return types.Aggregate{}, false, err // return nil and log error ?
+	}
+	tPower, err := k.ValuesWeightSum.Get(ctx, id)
+	if err != nil {
+		// print error
+		return types.Aggregate{}, false, err
+	}
+
+	microReport := medianReport.Report
+	aggregateReport := &types.Aggregate{
+		QueryId:           microReport.QueryId,
+		AggregateValue:    microReport.Value,
+		AggregateReporter: microReport.Reporter,
+		ReporterPower:     tPower,
+		MicroHeight:       microReport.BlockNumber,
+		MetaId:            id,
+	}
+	err = k.SetAggregate(ctx, aggregateReport)
+	if err != nil {
+		return types.Aggregate{}, false, err
+	}
+	return *aggregateReport, microReport.Cyclelist, nil
 }
 
 func (k Keeper) GetTimestampBefore(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error) {

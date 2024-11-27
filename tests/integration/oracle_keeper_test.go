@@ -359,11 +359,19 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	// testing for a query id and check if the reporter gets the reward, bypassing the commit/reveal process
 	value := []string{"000001"}
 	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0]}, value, []uint64{reporterPower}, qId)
-
-	aggregateReport, err := s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:1], 1)
-	s.NoError(err)
-	err = s.Setup.Oraclekeeper.SetAggregate(s.Setup.Ctx, aggregateReport)
-	s.NoError(err)
+	s.NoError(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, collections.Join(qId, uint64(1)), types.QueryMeta{
+		Id:                 1,
+		HasRevealedReports: true,
+	}))
+	for _, r := range reports[:1] {
+		s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(qId, sdk.MustAccAddressFromBech32(r.Reporter).Bytes(), uint64(1)), r))
+		s.NoError(s.Setup.Oraclekeeper.AddReport(s.Setup.Ctx, 1, r))
+	}
+	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
+	// aggregateReport, err := s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:1], 1)
+	// s.NoError(err)
+	// err = s.Setup.Oraclekeeper.SetAggregate(s.Setup.Ctx, aggregateReport)
+	// s.NoError(err)
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
 	res, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.NoError(err)
@@ -372,7 +380,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	tbr, err := queryServer.GetTimeBasedRewards(s.Setup.Ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err)
 
-	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, []*types.Aggregate{res.Aggregate}, tbr.Reward.Amount, minttypes.TimeBasedRewards)
+	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, res.Aggregate, tbr.Reward.Amount, minttypes.TimeBasedRewards)
 	s.NoError(err)
 	// advance height
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
@@ -435,16 +443,25 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 			delegator:            repAccs[1],
 		},
 	}
-	aggregateReport, err := s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports, 1)
-	s.NoError(err)
-	err = s.Setup.Oraclekeeper.SetAggregate(s.Setup.Ctx, aggregateReport)
-	s.NoError(err)
+	s.NoError(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, collections.Join(qId, uint64(1)), types.QueryMeta{
+		Id:                 1,
+		HasRevealedReports: true,
+	}))
+	for _, r := range reports[:2] {
+		s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(qId, sdk.MustAccAddressFromBech32(r.Reporter).Bytes(), uint64(1)), r))
+		s.NoError(s.Setup.Oraclekeeper.AddReport(s.Setup.Ctx, 1, r))
+	}
+	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
+	// aggregateReport, err := s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports, 1)
+	// s.NoError(err)
+	// err = s.Setup.Oraclekeeper.SetAggregate(s.Setup.Ctx, aggregateReport)
+	// s.NoError(err)
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
 	res, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.NoError(err, "error getting aggregated report")
 	tbr, err := queryServer.GetTimeBasedRewards(s.Setup.Ctx, &types.QueryGetTimeBasedRewardsRequest{})
 	s.NoError(err, "error getting time based rewards")
-	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, []*types.Aggregate{res.Aggregate}, tbr.Reward.Amount, minttypes.TimeBasedRewards)
+	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, res.Aggregate, tbr.Reward.Amount, minttypes.TimeBasedRewards)
 	s.NoError(err, "error allocating rewards")
 	reporterServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	// advance height
@@ -487,6 +504,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	err = s.Setup.Bankkeeper.SendCoinsFromAccountToModule(s.Setup.Ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.Setup.Denom, reward)))
 	s.NoError(err)
 	// generate 4 reports for ethQueryData
+
 	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1], repAccs[2]}, values, []uint64{reporterPower1, reporterPower2, reporterPower3}, qId)
 
 	testCases := []struct {
@@ -518,14 +536,25 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 			delegator:            repAccs[2],
 		},
 	}
-	aggregateReport, err := s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:3], 1)
-	s.NoError(err)
-	err = s.Setup.Oraclekeeper.SetAggregate(s.Setup.Ctx, aggregateReport)
-	s.NoError(err)
+	s.NoError(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, collections.Join(qId, uint64(1)), types.QueryMeta{
+		Id:                 1,
+		HasRevealedReports: true,
+	}))
+	for _, r := range reports[:3] {
+		s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(qId, sdk.MustAccAddressFromBech32(r.Reporter).Bytes(), uint64(1)), r))
+		s.NoError(s.Setup.Oraclekeeper.AddReport(s.Setup.Ctx, 1, r))
+	}
+	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx))
+	// aggregateReport, err := s.Setup.Oraclekeeper.WeightedMedian(s.Setup.Ctx, reports[:3], 1)
+	// s.NoError(err)
+	// err = s.Setup.Oraclekeeper.SetAggregate(s.Setup.Ctx, aggregateReport)
+	// s.NoError(err)
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
-	res, _ := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
-	tbr, _ := queryServer.GetTimeBasedRewards(s.Setup.Ctx, &types.QueryGetTimeBasedRewardsRequest{})
-	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, []*types.Aggregate{res.Aggregate}, tbr.Reward.Amount, minttypes.TimeBasedRewards)
+	res, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
+	s.NoError(err)
+	tbr, err := queryServer.GetTimeBasedRewards(s.Setup.Ctx, &types.QueryGetTimeBasedRewardsRequest{})
+	s.NoError(err)
+	err = s.Setup.Oraclekeeper.AllocateRewards(s.Setup.Ctx, res.Aggregate, tbr.Reward.Amount, minttypes.TimeBasedRewards)
 	s.NoError(err)
 	// advance height
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
@@ -635,7 +664,8 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	agg, _, err = ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
 	s.NoError(err)
-	s.Equal(len(agg.Reporters), 4)
+	// s.Equal(len(agg.Reporters), 4)
+	s.Equal(agg.QueryId, crypto.Keccak256(querydata))
 
 	// new report that starts a new cycle
 	msgSubmitValue = types.MsgSubmitValue{
@@ -655,7 +685,8 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 
 	agg, _, err = ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
 	s.NoError(err)
-	s.Equal(len(agg.Reporters), 1)
+	// s.Equal(len(agg.Reporters), 1)
+	s.Equal(agg.AggregateReporter, reporter5.String())
 }
 
 func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
@@ -745,7 +776,9 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	_, _ = app.EndBlocker(ctx)
 	agg, _, err = ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
 	s.NoError(err)
-	s.Equal(len(agg.Reporters), 4)
+	// s.Equal(len(agg.Reporters), 4)
+	s.Equal(agg.QueryId, crypto.Keccak256(querydata))
+	s.Equal(agg.AggregateReporter, reporter4.String()) // todo: should it be the last reporter or first reporter
 
 	// new report that starts a new cycle
 	msgSubmitValue = types.MsgSubmitValue{
@@ -765,7 +798,8 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 
 	agg, _, err = ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
 	s.NoError(err)
-	s.Equal(len(agg.Reporters), 1)
+	// s.Equal(len(agg.Reporters), 1)
+	s.Equal(agg.QueryId, crypto.Keccak256(querydata))
 }
 
 // test tipping a query id not in cycle list and observe the reporters' delegators stake increase in staking module
@@ -811,6 +845,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	s.Nil(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, collections.Join(queryId, query.Id), query))
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(queryId, repAccs[0].Bytes(), query.Id), reports[0])
 	s.Nil(err)
+	s.NoError(s.Setup.Oraclekeeper.AddReport(s.Setup.Ctx, query.Id, reports[0]))
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 3) // bypassing offset that expires time to commit/reveal
 	err = s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx)
 	s.Nil(err)
@@ -890,8 +925,10 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	s.NoError(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, collections.Join(queryId, query.Id), query))
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(queryId, repAccs[0].Bytes(), query.Id), reports[0])
 	s.Nil(err)
+	s.NoError(s.Setup.Oraclekeeper.AddReport(s.Setup.Ctx, query.Id, reports[0]))
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(queryId, repAccs[1].Bytes(), query.Id), reports[1])
 	s.Nil(err)
+	s.NoError(s.Setup.Oraclekeeper.AddReport(s.Setup.Ctx, query.Id, reports[1]))
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 3) // bypassing offset that expires time to commit/reveal
 	err = s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx)
 	s.Nil(err)

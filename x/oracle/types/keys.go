@@ -50,6 +50,8 @@ var (
 	ValuesWeightSumPrefix            = collections.NewPrefix(25)
 	ValuesPrefix                     = collections.NewPrefix(26)
 	MedianPrefix                     = collections.NewPrefix(27)
+	ValuesPowerPrefix                = collections.NewPrefix(28)
+	QueryByExpirationPrefix          = collections.NewPrefix(29)
 )
 
 func KeyPrefix(p string) []byte {

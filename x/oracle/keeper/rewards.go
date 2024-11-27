@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"sort"
 
 	layer "github.com/tellor-io/layer/types"
@@ -9,6 +10,7 @@ import (
 	"github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,37 +26,49 @@ type ReportersReportCount struct {
 // AllocateRewards distributes rewards to reporters based on their power and number of reports.
 // It calculates the reward amount for each reporter and allocates the rewards.
 // Finally, it sends the allocated rewards to the apprppopriate module based on the source of the reward.
-func (k Keeper) AllocateRewards(ctx context.Context, reports []*types.Aggregate, reward math.Int, fromPool string) error {
+func (k Keeper) AllocateRewards(ctx context.Context, report *types.Aggregate, reward math.Int, fromPool string) error {
 	if reward.IsZero() {
 		return nil
 	}
 	// Initialize totalPower to keep track of the total power of all reporters.
 	totalPower := uint64(0)
-
+	// First pass: collect data in map
+	reportersMap := make(map[string]ReportersReportCount)
 	// Use a struct to hold reporter info
 	type ReporterInfo struct {
 		address string
 		data    ReportersReportCount
 	}
+	iter, err := k.Reports.Indexes.IdQueryId.MatchExact(ctx, collections.Join(report.MetaId, report.QueryId))
+	if err != nil {
+		fmt.Println("error getting reports", err)
+		return err
+	}
 
-	// First pass: collect data in map
-	reportersMap := make(map[string]ReportersReportCount)
-	for _, report := range reports {
-		for _, r := range report.Reporters {
-			reporter, found := reportersMap[r.Reporter]
-			if found {
-				reporter.Reports++
-			} else {
-				reporter = ReportersReportCount{
-					Power:   r.Power,
-					Reports: 1,
-					Height:  r.BlockNumber,
-					queryId: report.QueryId,
-				}
-			}
-			reportersMap[r.Reporter] = reporter
-			totalPower += r.Power
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		reporterk, err := iter.PrimaryKey()
+		if err != nil {
+			return err
 		}
+		report, err := k.Reports.Get(ctx, reporterk)
+		if err != nil {
+			return err
+		}
+		reporter, found := reportersMap[report.Reporter]
+		if found {
+			fmt.Println("found reporter", reporter)
+			reporter.Reports++
+		} else {
+			reporter = ReportersReportCount{
+				Power:   report.Power,
+				Reports: 1,
+				Height:  report.BlockNumber,
+				queryId: report.QueryId,
+			}
+		}
+		reportersMap[report.Reporter] = reporter
+		totalPower += report.Power
 	}
 
 	// Convert to sorted slice for deterministic iteration

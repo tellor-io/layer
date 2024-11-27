@@ -10,7 +10,6 @@ import (
 
 	"cosmossdk.io/collections"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -28,17 +27,23 @@ func (k Querier) GetReportsByAggregate(ctx context.Context, req *types.QueryGetR
 	}
 
 	metaId := agg.MetaId
-	reporters := agg.Reporters
 
 	microreports := make([]types.MicroReport, 0)
 	pageRes := &query.PageResponse{
 		NextKey: nil,
-		Total:   uint64(len(reporters)),
+		Total:   uint64(0),
 	}
 
-	for _, reporter := range reporters {
-		reporterAddr := sdk.MustAccAddressFromBech32(reporter.Reporter)
-		key := collections.Join3(queryId, reporterAddr.Bytes(), metaId)
+	iter, err := k.keeper.Reports.Indexes.IdQueryId.MatchExact(ctx, collections.Join(metaId, queryId))
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		key, err := iter.PrimaryKey()
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
 		rep, err := k.keeper.Reports.Get(ctx, key)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
@@ -49,6 +54,7 @@ func (k Querier) GetReportsByAggregate(ctx context.Context, req *types.QueryGetR
 			break
 		}
 	}
+	pageRes.Total = uint64(len(microreports))
 
 	return &types.QueryGetReportsByAggregateResponse{MicroReports: microreports, Pagination: pageRes}, nil
 }
