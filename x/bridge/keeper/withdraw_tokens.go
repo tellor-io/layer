@@ -76,15 +76,14 @@ func (k Keeper) CreateWithdrawalAggregate(goCtx context.Context, amount sdk.Coin
 	reporterPower := totalBondedTokens.Uint64()
 
 	aggregate := &oracletypes.Aggregate{
-		QueryId:              queryId,
-		AggregateValue:       hex.EncodeToString(reportValue),
-		AggregateReporter:    "",
-		AggregatePower:       reporterPower,
-		Flagged:              false,
-		Index:                0,
-		AggregateReportIndex: 0,
-		Height:               uint64(ctx.BlockHeight()),
-		MicroHeight:          uint64(ctx.BlockHeight()),
+		QueryId:           queryId,
+		AggregateValue:    hex.EncodeToString(reportValue),
+		AggregateReporter: "",
+		AggregatePower:    reporterPower,
+		Flagged:           false,
+		Index:             0,
+		Height:            uint64(ctx.BlockHeight()),
+		MicroHeight:       uint64(ctx.BlockHeight()),
 	}
 	return aggregate, nil
 }

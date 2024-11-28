@@ -181,7 +181,6 @@ func (s *E2ETestSuite) TestDisputes() {
 	queryServer := oraclekeeper.NewQuerier(s.Setup.Oraclekeeper)
 	result, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
 	require.NoError(err)
-	require.Equal(uint64(0), result.Aggregate.AggregateReportIndex)
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)
@@ -352,7 +351,6 @@ func (s *E2ETestSuite) TestDisputes() {
 	// aggregated report is stored correctly
 	result, err = queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
 	require.NoError(err)
-	require.Equal(uint64(0), result.Aggregate.AggregateReportIndex)
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)
@@ -530,7 +528,6 @@ func (s *E2ETestSuite) TestDisputes() {
 	// check that aggregated report is stored correctly
 	result, err = queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
 	require.NoError(err)
-	require.Equal(uint64(0), result.Aggregate.AggregateReportIndex)
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)
@@ -838,7 +835,6 @@ func (s *E2ETestSuite) TestDisputeFromDelegatorPayFromBond() {
 	queryServer := oraclekeeper.NewQuerier(s.Setup.Oraclekeeper)
 	result, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
 	require.NoError(err)
-	require.Equal(uint64(0), result.Aggregate.AggregateReportIndex)
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(rickyAccAddr.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)

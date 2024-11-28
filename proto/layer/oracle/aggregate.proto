@@ -28,8 +28,6 @@ message Aggregate {
   uint64 micro_height = 8;
   // meta_id is the id of the querymeta iterator
   uint64 meta_id = 9;
-  // aggregate_report_index is the index of the aggregate report in the micro reports
-  uint64 aggregate_report_index = 10;
 }
 
 message AvailableTimestamps {

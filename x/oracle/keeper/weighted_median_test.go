@@ -6,10 +6,11 @@ import (
 	"math"
 	"time"
 
-	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -322,7 +323,6 @@ func (s *KeeperTestSuite) TestWeightedMedianBigNumbers() {
 			cyclelist:       true,
 			blocknumber:     1,
 			expectedAggregateReport: &types.Aggregate{
-
 				QueryId:           qId,
 				AggregateReporter: reporters[2].String(),
 				AggregateValue:    "29a2241af62c0000",

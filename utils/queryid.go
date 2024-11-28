@@ -2,9 +2,8 @@ package utils
 
 import (
 	"encoding/hex"
-	"strings"
-
 	"errors"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/crypto"
 )

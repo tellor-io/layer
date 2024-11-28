@@ -54,15 +54,14 @@ func TestMsgWithdrawTokens(t *testing.T) {
 	bk.On("SendCoinsFromAccountToModule", ctx, creatorAddr, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
 	bk.On("BurnCoins", ctx, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
 	_ = oracletypes.Aggregate{
-		QueryId:              []byte("withdrawTokens"),
-		AggregateValue:       "10 * 1e6",
-		AggregateReporter:    "reporter1",
-		AggregatePower:       uint64(100),
-		Flagged:              false,
-		Index:                uint64(0),
-		AggregateReportIndex: uint64(0),
-		Height:               uint64(10_000),
-		MicroHeight:          uint64(0),
+		QueryId:           []byte("withdrawTokens"),
+		AggregateValue:    "10 * 1e6",
+		AggregateReporter: "reporter1",
+		AggregatePower:    uint64(100),
+		Flagged:           false,
+		Index:             uint64(0),
+		Height:            uint64(10_000),
+		MicroHeight:       uint64(0),
 	}
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(10*1e6), nil)
 	// ok.On("SetAggregate", ctx, &aggregate).Return(nil)
