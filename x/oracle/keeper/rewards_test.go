@@ -122,10 +122,6 @@ func (s *KeeperTestSuite) TestAllocateRewards() {
 	rep2 := sample.AccAddress()
 	reporters := types.Aggregate{
 		QueryId: []byte{},
-		Reporters: []*types.AggregateReporter{
-			{Reporter: rep1, Power: 10, BlockNumber: 0},
-			{Reporter: rep2, Power: 10, BlockNumber: 0},
-		},
 	}
 
 	reward = math.NewInt(100)

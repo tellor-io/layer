@@ -50,7 +50,7 @@ func TestCreateWithdrawalAggregate(t *testing.T) {
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100), nil).Once()
 	agg, err := k.CreateWithdrawalAggregate(ctx, sdk.Coin{Amount: math.NewInt(100), Denom: "loya"}, sdk.AccAddress("operatorAddr1"), []byte("evmAddress1"), 1)
 	require.NoError(t, err)
-	require.Equal(t, agg.ReporterPower, uint64(100))
+	require.Equal(t, agg.AggregatePower, uint64(100))
 	require.Equal(t, agg.AggregateReportIndex, uint64(0))
 	require.Equal(t, agg.Height, uint64(0))
 	require.Equal(t, agg.Flagged, false)

@@ -108,7 +108,7 @@ func TestEndBlock(t *testing.T) {
 			Height:         1,
 			QueryId:        []byte("queryId"),
 			AggregateValue: "5000",
-			ReporterPower:  uint64(100),
+			AggregatePower: uint64(100),
 		},
 	}, nil)
 	queryId := []byte("queryId")
@@ -120,7 +120,7 @@ func TestEndBlock(t *testing.T) {
 	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, timestamp).Return(oracletypes.Aggregate{
 		QueryId:        queryId,
 		AggregateValue: "5000",
-		ReporterPower:  uint64(100),
+		AggregatePower: uint64(100),
 	}, nil)
 
 	err := k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{

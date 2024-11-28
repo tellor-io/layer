@@ -66,8 +66,7 @@ func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Tim
 		QueryId:           queryId,
 		AggregateValue:    encodeValue(96.50),
 		AggregateReporter: rep1.String(),
-		ReporterPower:     math.NewInt(200000000).Mul(layertypes.PowerReduction).Uint64(),
-		Reporters:         []*types.AggregateReporter{{Reporter: rep1.String(), Power: 100000000}, {Reporter: rep2.String(), Power: 100000000}},
+		AggregatePower:    math.NewInt(200000000).Mul(layertypes.PowerReduction).Uint64(),
 		Flagged:           false,
 		Height:            10,
 	}
@@ -176,8 +175,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 		QueryId:           queryId,
 		AggregateValue:    encodeValue(96.50),
 		AggregateReporter: reporter.String(),
-		ReporterPower:     100000000,
-		Reporters:         []*types.AggregateReporter{{Reporter: reporter.String(), Power: 100000000}},
+		AggregatePower:    100000000,
 		Flagged:           false,
 	}
 
@@ -187,7 +185,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 	res, err := s.oracleKeeper.Aggregates.Get(s.ctx, collections.Join(queryId, uint64(timestamp.UnixMilli())))
 	s.NoError(err)
 	s.Equal(encodeValue(96.50), res.AggregateValue)
-	s.Equal(uint64(100000000), res.ReporterPower)
+	s.Equal(uint64(100000000), res.AggregatePower)
 }
 
 func (s *KeeperTestSuite) TestGetDataBefore() {

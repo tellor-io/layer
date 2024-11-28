@@ -7,13 +7,12 @@ import (
 	"fmt"
 	"math"
 
+	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -65,19 +64,13 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 	}
 	if dataSpec.AggregationMethod == "weighted-median" {
 		err = k.AddReport(ctx, query.Id, report)
-		if err == nil {
-			fmt.Println("report added successfully!!!")
-		}
 		if err != nil {
-			fmt.Printf("failed to add report: %v", err)
+			return fmt.Errorf("failed to add report: %w", err)
 		}
 	} else {
 		err = k.AddReportWeightedMode(ctx, query.Id, report)
-		if err == nil {
-			fmt.Println("report for weight mode added successfully!!!")
-		}
 		if err != nil {
-			fmt.Printf("failed to add report for weight mode: %v", err)
+			return fmt.Errorf("failed to add report: %w", err)
 		}
 	}
 	sdkCtx.EventManager().EmitEvents(sdk.Events{
@@ -106,16 +99,19 @@ func (k Keeper) GetDataSpec(ctx context.Context, queryType string) (regTypes.Dat
 }
 
 func (k Keeper) AddReport(ctx context.Context, id uint64, report types.MicroReport) error {
-	// check if same value is already reported
-	value := report.Value
+	// normalize value for accurate comparison and storage
+	value, err := utils.FormatUint256(report.Value)
+	if err != nil {
+		return fmt.Errorf("failed to format value: %w", err)
+	}
 	power := report.Power
+	// check if same value is already reported
 	existingValue, err := k.Values.Get(ctx, collections.Join(id, value))
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return fmt.Errorf("failed to get existing value: %w", err)
 	}
-	existingValue.CumulativePower += power
-	existingValue.Report = &report
-	// todo: update reporter
+	existingValue.CrossoverWeight += power
+	existingValue.MicroReport = &report
 
 	if err := k.Values.Set(ctx, collections.Join(id, value), existingValue); err != nil {
 		return fmt.Errorf("failed to update valuesMap: %w", err)
@@ -134,35 +130,34 @@ func (k Keeper) AddReport(ctx context.Context, id uint64, report types.MicroRepo
 	}
 	halfTotal := totalPower / 2
 	// get current median
-	currentMedian, err := k.Median.Get(ctx, id)
+	currentMedian, err := k.AggregateValue.Get(ctx, id)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
-			fmt.Println("no median found")
 			// If no median exists, set the new value as the initial median
-			if err := k.Median.Set(ctx, id, types.Median{Value: value, CrossoverWeight: power}); err != nil {
+			if err := k.AggregateValue.Set(ctx, id, types.RunningAggregate{Value: value, CrossoverWeight: power}); err != nil {
 				return fmt.Errorf("failed to set initial median: %w", err)
 			}
 			return nil
 		}
 		return fmt.Errorf("failed to get current median: %w", err)
 	}
-	cumulativeWeight := currentMedian.CrossoverWeight
+	crossoverPower := currentMedian.CrossoverWeight
 	if value < currentMedian.Value {
 		// If the new value is smaller, update cumulative weight
-		cumulativeWeight += power
-		if cumulativeWeight >= halfTotal {
+		crossoverPower += power
+		if crossoverPower >= halfTotal {
 			// Median might shift left, perform left traversal
-			return k.TraverseLeft(ctx, id, currentMedian.Value, cumulativeWeight, halfTotal)
+			return k.TraverseLeft(ctx, id, currentMedian.Value, crossoverPower, halfTotal)
 		}
 	} else if value > currentMedian.Value {
 		// If the new value is larger, perform right traversal only if needed
-		if cumulativeWeight < halfTotal {
-			return k.TraverseRight(ctx, id, currentMedian.Value, cumulativeWeight, halfTotal)
+		if crossoverPower < halfTotal {
+			return k.TraverseRight(ctx, id, currentMedian.Value, crossoverPower, halfTotal)
 		}
 	} else {
 		// If the new value is equal to the current median, update cumulative weight
-		cumulativeWeight += power
-		return k.Median.Set(ctx, id, types.Median{Value: currentMedian.Value, CrossoverWeight: cumulativeWeight})
+		crossoverPower += power
+		return k.AggregateValue.Set(ctx, id, types.RunningAggregate{Value: currentMedian.Value, CrossoverWeight: crossoverPower})
 	}
 
 	// No changes needed if crossover weight remains valid
@@ -191,7 +186,7 @@ func (k Keeper) TraverseLeft(
 		if err != nil {
 			return err
 		}
-		leftPower := leftValue.CumulativePower
+		leftPower := leftValue.CrossoverWeight
 		if leftkey.K2() == currentValue {
 			crossoverWeight -= leftPower
 			// check if you should keep going left
@@ -200,7 +195,7 @@ func (k Keeper) TraverseLeft(
 				// return the median
 				// put the power back
 				crossoverWeight += leftPower
-				return k.Median.Set(ctx, id, types.Median{CrossoverWeight: crossoverWeight, Value: medianValue})
+				return k.AggregateValue.Set(ctx, id, types.RunningAggregate{CrossoverWeight: crossoverWeight, Value: medianValue})
 			}
 			continue
 		}
@@ -212,11 +207,11 @@ func (k Keeper) TraverseLeft(
 			// don't go anymore left
 			// put the power back
 			crossoverWeight += leftPower
-			return k.Median.Set(ctx, id, types.Median{CrossoverWeight: crossoverWeight, Value: leftkey.K2()})
+			return k.AggregateValue.Set(ctx, id, types.RunningAggregate{CrossoverWeight: crossoverWeight, Value: leftkey.K2()})
 		}
 	}
-	fmt.Println("transversing left", crossoverWeight, medianValue)
-	return k.Median.Set(ctx, id, types.Median{CrossoverWeight: crossoverWeight, Value: medianValue})
+
+	return k.AggregateValue.Set(ctx, id, types.RunningAggregate{CrossoverWeight: crossoverWeight, Value: medianValue})
 }
 
 func (k Keeper) TraverseRight(
@@ -240,9 +235,9 @@ func (k Keeper) TraverseRight(
 		if err != nil {
 			return err
 		}
-		rightPower := rightValue.CumulativePower
+		rightPower := rightValue.CrossoverWeight
 		crossoverWeight += rightPower
-		fmt.Println("new right crossover weight", crossoverWeight, rightkey.K2())
+
 		if crossoverWeight < halfTotal {
 			medianValue = rightkey.K2()
 		} else {
@@ -254,8 +249,8 @@ func (k Keeper) TraverseRight(
 			break
 		}
 	}
-	fmt.Println("is value changing", crossoverWeight, medianValue)
-	return k.Median.Set(ctx, id, types.Median{CrossoverWeight: crossoverWeight, Value: medianValue})
+
+	return k.AggregateValue.Set(ctx, id, types.RunningAggregate{CrossoverWeight: crossoverWeight, Value: medianValue})
 }
 
 func (k Keeper) AddReportWeightedMode(ctx context.Context, id uint64, report types.MicroReport) error {
@@ -265,8 +260,8 @@ func (k Keeper) AddReportWeightedMode(ctx context.Context, id uint64, report typ
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return fmt.Errorf("failed to get existing value: %w", err)
 	}
-	existingValue.CumulativePower += power
-	existingValue.Report = &report
+	existingValue.CrossoverWeight += power
+	existingValue.MicroReport = &report
 	if err := k.Values.Set(ctx, collections.Join(id, value), existingValue); err != nil {
 		return fmt.Errorf("failed to update valuesMap: %w", err)
 	}
@@ -283,11 +278,11 @@ func (k Keeper) AddReportWeightedMode(ctx context.Context, id uint64, report typ
 		return fmt.Errorf("failed to update total power: %w", err)
 	}
 	// get current median
-	currentMedian, err := k.Median.Get(ctx, id)
+	currentMedian, err := k.AggregateValue.Get(ctx, id)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			// If no median exists, set the new value as the initial median
-			if err := k.Median.Set(ctx, id, types.Median{Value: value, CrossoverWeight: power}); err != nil {
+			if err := k.AggregateValue.Set(ctx, id, types.RunningAggregate{Value: value, CrossoverWeight: power}); err != nil {
 				return fmt.Errorf("failed to set initial median: %w", err)
 			}
 			return nil
@@ -314,7 +309,7 @@ func (k Keeper) AddReportWeightedMode(ctx context.Context, id uint64, report typ
 		if err != nil {
 			return err
 		}
-		return k.Median.Set(ctx, id, types.Median{Value: maxValue.Report.Value, CrossoverWeight: maxValue.CumulativePower})
+		return k.AggregateValue.Set(ctx, id, types.RunningAggregate{Value: maxValue.MicroReport.Value, CrossoverWeight: maxValue.CrossoverWeight})
 	}
 	return nil
 }

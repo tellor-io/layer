@@ -107,7 +107,6 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 			"aggregate_report",
 			sdk.NewAttribute("query_id", hex.EncodeToString(report.QueryId)),
 			sdk.NewAttribute("value", report.AggregateValue),
-			sdk.NewAttribute("number_of_reporters", fmt.Sprintf("%d", len(report.Reporters))),
 			sdk.NewAttribute("micro_report_height", fmt.Sprintf("%d", report.MicroHeight)),
 		),
 	})
@@ -115,11 +114,11 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 }
 
 func (k Keeper) AggregateReport(ctx context.Context, id uint64) (types.Aggregate, bool, error) {
-	median, err := k.Median.Get(ctx, id)
+	median, err := k.AggregateValue.Get(ctx, id)
 	if err != nil {
 		return types.Aggregate{}, false, err // return nil and log error ?
 	}
-	medianReport, err := k.Values.Get(ctx, collections.Join(id, median.Value))
+	aggregateValue, err := k.Values.Get(ctx, collections.Join(id, median.Value))
 	if err != nil {
 		return types.Aggregate{}, false, err // return nil and log error ?
 	}
@@ -129,12 +128,12 @@ func (k Keeper) AggregateReport(ctx context.Context, id uint64) (types.Aggregate
 		return types.Aggregate{}, false, err
 	}
 
-	microReport := medianReport.Report
+	microReport := aggregateValue.MicroReport
 	aggregateReport := &types.Aggregate{
 		QueryId:           microReport.QueryId,
 		AggregateValue:    microReport.Value,
 		AggregateReporter: microReport.Reporter,
-		ReporterPower:     tPower,
+		AggregatePower:    tPower,
 		MicroHeight:       microReport.BlockNumber,
 		MetaId:            id,
 	}

@@ -31,21 +31,19 @@ func (k Keeper) WeightedMedian(ctx context.Context, reports []types.MicroReport,
 	totalReporterPower := cosmomath.LegacyZeroDec()
 	for _, r := range reports {
 		totalReporterPower = totalReporterPower.Add(cosmomath.LegacyNewDec(int64(r.Power)))
-		medianReport.Reporters = append(medianReport.Reporters, &types.AggregateReporter{Reporter: r.Reporter, Power: r.Power, BlockNumber: r.BlockNumber})
 	}
 
 	halfTotalPower := totalReporterPower.Quo(cosmomath.LegacyNewDec(2))
 	cumulativePower := cosmomath.LegacyZeroDec()
 
 	// Find the weighted median
-	for i, s := range reports {
+	for _, s := range reports {
 		cumulativePower = cumulativePower.Add(cosmomath.LegacyNewDec(int64(s.Power)))
 		if cumulativePower.BigInt().Cmp(halfTotalPower.BigInt()) >= 0 {
-			medianReport.ReporterPower = uint64(totalReporterPower.TruncateInt64())
+			medianReport.AggregatePower = uint64(totalReporterPower.TruncateInt64())
 			medianReport.AggregateReporter = s.Reporter
 			medianReport.AggregateValue = s.Value
 			medianReport.QueryId = s.QueryId
-			medianReport.AggregateReportIndex = uint64(i)
 			medianReport.MicroHeight = s.BlockNumber
 			medianReport.MetaId = metaId
 			break

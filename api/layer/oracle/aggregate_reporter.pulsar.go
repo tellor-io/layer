@@ -17,7 +17,6 @@ var (
 	fd_AggregateReporter_reporter     protoreflect.FieldDescriptor
 	fd_AggregateReporter_power        protoreflect.FieldDescriptor
 	fd_AggregateReporter_block_number protoreflect.FieldDescriptor
-	fd_AggregateReporter_value        protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -26,7 +25,6 @@ func init() {
 	fd_AggregateReporter_reporter = md_AggregateReporter.Fields().ByName("reporter")
 	fd_AggregateReporter_power = md_AggregateReporter.Fields().ByName("power")
 	fd_AggregateReporter_block_number = md_AggregateReporter.Fields().ByName("block_number")
-	fd_AggregateReporter_value = md_AggregateReporter.Fields().ByName("value")
 }
 
 var _ protoreflect.Message = (*fastReflection_AggregateReporter)(nil)
@@ -112,12 +110,6 @@ func (x *fastReflection_AggregateReporter) Range(f func(protoreflect.FieldDescri
 			return
 		}
 	}
-	if x.Value != "" {
-		value := protoreflect.ValueOfString(x.Value)
-		if !f(fd_AggregateReporter_value, value) {
-			return
-		}
-	}
 }
 
 // Has reports whether a field is populated.
@@ -139,8 +131,6 @@ func (x *fastReflection_AggregateReporter) Has(fd protoreflect.FieldDescriptor) 
 		return x.Power != uint64(0)
 	case "layer.oracle.AggregateReporter.block_number":
 		return x.BlockNumber != uint64(0)
-	case "layer.oracle.AggregateReporter.value":
-		return x.Value != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.AggregateReporter"))
@@ -163,8 +153,6 @@ func (x *fastReflection_AggregateReporter) Clear(fd protoreflect.FieldDescriptor
 		x.Power = uint64(0)
 	case "layer.oracle.AggregateReporter.block_number":
 		x.BlockNumber = uint64(0)
-	case "layer.oracle.AggregateReporter.value":
-		x.Value = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.AggregateReporter"))
@@ -190,9 +178,6 @@ func (x *fastReflection_AggregateReporter) Get(descriptor protoreflect.FieldDesc
 	case "layer.oracle.AggregateReporter.block_number":
 		value := x.BlockNumber
 		return protoreflect.ValueOfUint64(value)
-	case "layer.oracle.AggregateReporter.value":
-		value := x.Value
-		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.AggregateReporter"))
@@ -219,8 +204,6 @@ func (x *fastReflection_AggregateReporter) Set(fd protoreflect.FieldDescriptor, 
 		x.Power = value.Uint()
 	case "layer.oracle.AggregateReporter.block_number":
 		x.BlockNumber = value.Uint()
-	case "layer.oracle.AggregateReporter.value":
-		x.Value = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.AggregateReporter"))
@@ -247,8 +230,6 @@ func (x *fastReflection_AggregateReporter) Mutable(fd protoreflect.FieldDescript
 		panic(fmt.Errorf("field power of message layer.oracle.AggregateReporter is not mutable"))
 	case "layer.oracle.AggregateReporter.block_number":
 		panic(fmt.Errorf("field block_number of message layer.oracle.AggregateReporter is not mutable"))
-	case "layer.oracle.AggregateReporter.value":
-		panic(fmt.Errorf("field value of message layer.oracle.AggregateReporter is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.AggregateReporter"))
@@ -268,8 +249,6 @@ func (x *fastReflection_AggregateReporter) NewField(fd protoreflect.FieldDescrip
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.oracle.AggregateReporter.block_number":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "layer.oracle.AggregateReporter.value":
-		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.AggregateReporter"))
@@ -349,10 +328,6 @@ func (x *fastReflection_AggregateReporter) ProtoMethods() *protoiface.Methods {
 		if x.BlockNumber != 0 {
 			n += 1 + runtime.Sov(uint64(x.BlockNumber))
 		}
-		l = len(x.Value)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -381,13 +356,6 @@ func (x *fastReflection_AggregateReporter) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.Value) > 0 {
-			i -= len(x.Value)
-			copy(dAtA[i:], x.Value)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Value)))
-			i--
-			dAtA[i] = 0x22
 		}
 		if x.BlockNumber != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.BlockNumber))
@@ -525,38 +493,6 @@ func (x *fastReflection_AggregateReporter) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-			case 4:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.Value = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -593,27 +529,27 @@ func (x *fastReflection_AggregateReporter) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_Median                  protoreflect.MessageDescriptor
-	fd_Median_value            protoreflect.FieldDescriptor
-	fd_Median_crossover_weight protoreflect.FieldDescriptor
+	md_RunningAggregate                  protoreflect.MessageDescriptor
+	fd_RunningAggregate_value            protoreflect.FieldDescriptor
+	fd_RunningAggregate_crossover_weight protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_oracle_aggregate_reporter_proto_init()
-	md_Median = File_layer_oracle_aggregate_reporter_proto.Messages().ByName("Median")
-	fd_Median_value = md_Median.Fields().ByName("value")
-	fd_Median_crossover_weight = md_Median.Fields().ByName("crossover_weight")
+	md_RunningAggregate = File_layer_oracle_aggregate_reporter_proto.Messages().ByName("RunningAggregate")
+	fd_RunningAggregate_value = md_RunningAggregate.Fields().ByName("value")
+	fd_RunningAggregate_crossover_weight = md_RunningAggregate.Fields().ByName("crossover_weight")
 }
 
-var _ protoreflect.Message = (*fastReflection_Median)(nil)
+var _ protoreflect.Message = (*fastReflection_RunningAggregate)(nil)
 
-type fastReflection_Median Median
+type fastReflection_RunningAggregate RunningAggregate
 
-func (x *Median) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_Median)(x)
+func (x *RunningAggregate) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_RunningAggregate)(x)
 }
 
-func (x *Median) slowProtoReflect() protoreflect.Message {
+func (x *RunningAggregate) slowProtoReflect() protoreflect.Message {
 	mi := &file_layer_oracle_aggregate_reporter_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -625,43 +561,43 @@ func (x *Median) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_Median_messageType fastReflection_Median_messageType
-var _ protoreflect.MessageType = fastReflection_Median_messageType{}
+var _fastReflection_RunningAggregate_messageType fastReflection_RunningAggregate_messageType
+var _ protoreflect.MessageType = fastReflection_RunningAggregate_messageType{}
 
-type fastReflection_Median_messageType struct{}
+type fastReflection_RunningAggregate_messageType struct{}
 
-func (x fastReflection_Median_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_Median)(nil)
+func (x fastReflection_RunningAggregate_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_RunningAggregate)(nil)
 }
-func (x fastReflection_Median_messageType) New() protoreflect.Message {
-	return new(fastReflection_Median)
+func (x fastReflection_RunningAggregate_messageType) New() protoreflect.Message {
+	return new(fastReflection_RunningAggregate)
 }
-func (x fastReflection_Median_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_Median
+func (x fastReflection_RunningAggregate_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_RunningAggregate
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_Median) Descriptor() protoreflect.MessageDescriptor {
-	return md_Median
+func (x *fastReflection_RunningAggregate) Descriptor() protoreflect.MessageDescriptor {
+	return md_RunningAggregate
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_Median) Type() protoreflect.MessageType {
-	return _fastReflection_Median_messageType
+func (x *fastReflection_RunningAggregate) Type() protoreflect.MessageType {
+	return _fastReflection_RunningAggregate_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_Median) New() protoreflect.Message {
-	return new(fastReflection_Median)
+func (x *fastReflection_RunningAggregate) New() protoreflect.Message {
+	return new(fastReflection_RunningAggregate)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_Median) Interface() protoreflect.ProtoMessage {
-	return (*Median)(x)
+func (x *fastReflection_RunningAggregate) Interface() protoreflect.ProtoMessage {
+	return (*RunningAggregate)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -669,16 +605,16 @@ func (x *fastReflection_Median) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_Median) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_RunningAggregate) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Value != "" {
 		value := protoreflect.ValueOfString(x.Value)
-		if !f(fd_Median_value, value) {
+		if !f(fd_RunningAggregate_value, value) {
 			return
 		}
 	}
 	if x.CrossoverWeight != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.CrossoverWeight)
-		if !f(fd_Median_crossover_weight, value) {
+		if !f(fd_RunningAggregate_crossover_weight, value) {
 			return
 		}
 	}
@@ -695,17 +631,17 @@ func (x *fastReflection_Median) Range(f func(protoreflect.FieldDescriptor, proto
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_Median) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_RunningAggregate) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.oracle.Median.value":
+	case "layer.oracle.RunningAggregate.value":
 		return x.Value != ""
-	case "layer.oracle.Median.crossover_weight":
+	case "layer.oracle.RunningAggregate.crossover_weight":
 		return x.CrossoverWeight != uint64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Median"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.RunningAggregate"))
 		}
-		panic(fmt.Errorf("message layer.oracle.Median does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.oracle.RunningAggregate does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -715,17 +651,17 @@ func (x *fastReflection_Median) Has(fd protoreflect.FieldDescriptor) bool {
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Median) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_RunningAggregate) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.oracle.Median.value":
+	case "layer.oracle.RunningAggregate.value":
 		x.Value = ""
-	case "layer.oracle.Median.crossover_weight":
+	case "layer.oracle.RunningAggregate.crossover_weight":
 		x.CrossoverWeight = uint64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Median"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.RunningAggregate"))
 		}
-		panic(fmt.Errorf("message layer.oracle.Median does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.oracle.RunningAggregate does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -735,19 +671,19 @@ func (x *fastReflection_Median) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_Median) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_RunningAggregate) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.oracle.Median.value":
+	case "layer.oracle.RunningAggregate.value":
 		value := x.Value
 		return protoreflect.ValueOfString(value)
-	case "layer.oracle.Median.crossover_weight":
+	case "layer.oracle.RunningAggregate.crossover_weight":
 		value := x.CrossoverWeight
 		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Median"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.RunningAggregate"))
 		}
-		panic(fmt.Errorf("message layer.oracle.Median does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message layer.oracle.RunningAggregate does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -761,17 +697,17 @@ func (x *fastReflection_Median) Get(descriptor protoreflect.FieldDescriptor) pro
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Median) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_RunningAggregate) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.oracle.Median.value":
+	case "layer.oracle.RunningAggregate.value":
 		x.Value = value.Interface().(string)
-	case "layer.oracle.Median.crossover_weight":
+	case "layer.oracle.RunningAggregate.crossover_weight":
 		x.CrossoverWeight = value.Uint()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Median"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.RunningAggregate"))
 		}
-		panic(fmt.Errorf("message layer.oracle.Median does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.oracle.RunningAggregate does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -785,44 +721,44 @@ func (x *fastReflection_Median) Set(fd protoreflect.FieldDescriptor, value proto
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Median) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_RunningAggregate) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.oracle.Median.value":
-		panic(fmt.Errorf("field value of message layer.oracle.Median is not mutable"))
-	case "layer.oracle.Median.crossover_weight":
-		panic(fmt.Errorf("field crossover_weight of message layer.oracle.Median is not mutable"))
+	case "layer.oracle.RunningAggregate.value":
+		panic(fmt.Errorf("field value of message layer.oracle.RunningAggregate is not mutable"))
+	case "layer.oracle.RunningAggregate.crossover_weight":
+		panic(fmt.Errorf("field crossover_weight of message layer.oracle.RunningAggregate is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Median"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.RunningAggregate"))
 		}
-		panic(fmt.Errorf("message layer.oracle.Median does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.oracle.RunningAggregate does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_Median) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_RunningAggregate) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.oracle.Median.value":
+	case "layer.oracle.RunningAggregate.value":
 		return protoreflect.ValueOfString("")
-	case "layer.oracle.Median.crossover_weight":
+	case "layer.oracle.RunningAggregate.crossover_weight":
 		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Median"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.RunningAggregate"))
 		}
-		panic(fmt.Errorf("message layer.oracle.Median does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.oracle.RunningAggregate does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_Median) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_RunningAggregate) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.oracle.Median", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in layer.oracle.RunningAggregate", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -830,7 +766,7 @@ func (x *fastReflection_Median) WhichOneof(d protoreflect.OneofDescriptor) proto
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_Median) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_RunningAggregate) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -841,7 +777,7 @@ func (x *fastReflection_Median) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Median) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_RunningAggregate) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -853,7 +789,7 @@ func (x *fastReflection_Median) SetUnknown(fields protoreflect.RawFields) {
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_Median) IsValid() bool {
+func (x *fastReflection_RunningAggregate) IsValid() bool {
 	return x != nil
 }
 
@@ -863,9 +799,9 @@ func (x *fastReflection_Median) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_Median) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_RunningAggregate) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*Median)
+		x := input.Message.Interface().(*RunningAggregate)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -894,7 +830,7 @@ func (x *fastReflection_Median) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*Median)
+		x := input.Message.Interface().(*RunningAggregate)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -936,7 +872,7 @@ func (x *fastReflection_Median) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*Median)
+		x := input.Message.Interface().(*RunningAggregate)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -968,10 +904,10 @@ func (x *fastReflection_Median) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Median: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: RunningAggregate: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Median: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: RunningAggregate: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -1081,7 +1017,6 @@ type AggregateReporter struct {
 	Reporter    string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
 	Power       uint64 `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`
 	BlockNumber uint64 `protobuf:"varint,3,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
-	Value       string `protobuf:"bytes,4,opt,name=value,proto3" json:"value,omitempty"`
 }
 
 func (x *AggregateReporter) Reset() {
@@ -1125,14 +1060,7 @@ func (x *AggregateReporter) GetBlockNumber() uint64 {
 	return 0
 }
 
-func (x *AggregateReporter) GetValue() string {
-	if x != nil {
-		return x.Value
-	}
-	return ""
-}
-
-type Median struct {
+type RunningAggregate struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -1141,8 +1069,8 @@ type Median struct {
 	CrossoverWeight uint64 `protobuf:"varint,2,opt,name=crossover_weight,json=crossoverWeight,proto3" json:"crossover_weight,omitempty"`
 }
 
-func (x *Median) Reset() {
-	*x = Median{}
+func (x *RunningAggregate) Reset() {
+	*x = RunningAggregate{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_layer_oracle_aggregate_reporter_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1150,25 +1078,25 @@ func (x *Median) Reset() {
 	}
 }
 
-func (x *Median) String() string {
+func (x *RunningAggregate) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Median) ProtoMessage() {}
+func (*RunningAggregate) ProtoMessage() {}
 
-// Deprecated: Use Median.ProtoReflect.Descriptor instead.
-func (*Median) Descriptor() ([]byte, []int) {
+// Deprecated: Use RunningAggregate.ProtoReflect.Descriptor instead.
+func (*RunningAggregate) Descriptor() ([]byte, []int) {
 	return file_layer_oracle_aggregate_reporter_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *Median) GetValue() string {
+func (x *RunningAggregate) GetValue() string {
 	if x != nil {
 		return x.Value
 	}
 	return ""
 }
 
-func (x *Median) GetCrossoverWeight() uint64 {
+func (x *RunningAggregate) GetCrossoverWeight() uint64 {
 	if x != nil {
 		return x.CrossoverWeight
 	}
@@ -1181,31 +1109,30 @@ var file_layer_oracle_aggregate_reporter_proto_rawDesc = []byte{
 	0x0a, 0x25, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2f, 0x61,
 	0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65,
 	0x72, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x0c, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f,
-	0x72, 0x61, 0x63, 0x6c, 0x65, 0x22, 0x7e, 0x0a, 0x11, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61,
+	0x72, 0x61, 0x63, 0x6c, 0x65, 0x22, 0x68, 0x0a, 0x11, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61,
 	0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65,
 	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65,
 	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18,
 	0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x12, 0x21, 0x0a, 0x0c,
 	0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x04, 0x52, 0x0b, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x12,
-	0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
-	0x76, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x49, 0x0a, 0x06, 0x4d, 0x65, 0x64, 0x69, 0x61, 0x6e, 0x12,
-	0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05,
-	0x76, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x29, 0x0a, 0x10, 0x63, 0x72, 0x6f, 0x73, 0x73, 0x6f, 0x76,
-	0x65, 0x72, 0x5f, 0x77, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52,
-	0x0f, 0x63, 0x72, 0x6f, 0x73, 0x73, 0x6f, 0x76, 0x65, 0x72, 0x57, 0x65, 0x69, 0x67, 0x68, 0x74,
-	0x42, 0xa8, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f,
-	0x72, 0x61, 0x63, 0x6c, 0x65, 0x42, 0x16, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65,
-	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
-	0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c,
-	0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f,
-	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xa2, 0x02, 0x03, 0x4c,
-	0x4f, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x4f, 0x72, 0x61, 0x63, 0x6c,
-	0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65,
-	0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x5c,
-	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61,
-	0x79, 0x65, 0x72, 0x3a, 0x3a, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x28, 0x04, 0x52, 0x0b, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x22,
+	0x53, 0x0a, 0x10, 0x52, 0x75, 0x6e, 0x6e, 0x69, 0x6e, 0x67, 0x41, 0x67, 0x67, 0x72, 0x65, 0x67,
+	0x61, 0x74, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x29, 0x0a, 0x10, 0x63, 0x72, 0x6f,
+	0x73, 0x73, 0x6f, 0x76, 0x65, 0x72, 0x5f, 0x77, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x0f, 0x63, 0x72, 0x6f, 0x73, 0x73, 0x6f, 0x76, 0x65, 0x72, 0x57, 0x65,
+	0x69, 0x67, 0x68, 0x74, 0x42, 0xa8, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x42, 0x16, 0x41, 0x67, 0x67, 0x72, 0x65,
+	0x67, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x50, 0x72, 0x6f, 0x74,
+	0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
+	0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65,
+	0xa2, 0x02, 0x03, 0x4c, 0x4f, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x4f,
+	0x72, 0x61, 0x63, 0x6c, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72,
+	0x61, 0x63, 0x6c, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61,
+	0x63, 0x6c, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
+	0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1223,7 +1150,7 @@ func file_layer_oracle_aggregate_reporter_proto_rawDescGZIP() []byte {
 var file_layer_oracle_aggregate_reporter_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_layer_oracle_aggregate_reporter_proto_goTypes = []interface{}{
 	(*AggregateReporter)(nil), // 0: layer.oracle.AggregateReporter
-	(*Median)(nil),            // 1: layer.oracle.Median
+	(*RunningAggregate)(nil),  // 1: layer.oracle.RunningAggregate
 }
 var file_layer_oracle_aggregate_reporter_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -1252,7 +1179,7 @@ func file_layer_oracle_aggregate_reporter_proto_init() {
 			}
 		}
 		file_layer_oracle_aggregate_reporter_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Median); i {
+			switch v := v.(*RunningAggregate); i {
 			case 0:
 				return &v.state
 			case 1:

@@ -922,27 +922,27 @@ func (x *fastReflection_MicroReport) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_ValueStored                  protoreflect.MessageDescriptor
-	fd_ValueStored_cumulative_power protoreflect.FieldDescriptor
-	fd_ValueStored_report           protoreflect.FieldDescriptor
+	md_Value                  protoreflect.MessageDescriptor
+	fd_Value_crossover_weight protoreflect.FieldDescriptor
+	fd_Value_micro_report     protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_oracle_micro_report_proto_init()
-	md_ValueStored = File_layer_oracle_micro_report_proto.Messages().ByName("ValueStored")
-	fd_ValueStored_cumulative_power = md_ValueStored.Fields().ByName("cumulative_power")
-	fd_ValueStored_report = md_ValueStored.Fields().ByName("report")
+	md_Value = File_layer_oracle_micro_report_proto.Messages().ByName("Value")
+	fd_Value_crossover_weight = md_Value.Fields().ByName("crossover_weight")
+	fd_Value_micro_report = md_Value.Fields().ByName("micro_report")
 }
 
-var _ protoreflect.Message = (*fastReflection_ValueStored)(nil)
+var _ protoreflect.Message = (*fastReflection_Value)(nil)
 
-type fastReflection_ValueStored ValueStored
+type fastReflection_Value Value
 
-func (x *ValueStored) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_ValueStored)(x)
+func (x *Value) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_Value)(x)
 }
 
-func (x *ValueStored) slowProtoReflect() protoreflect.Message {
+func (x *Value) slowProtoReflect() protoreflect.Message {
 	mi := &file_layer_oracle_micro_report_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -954,43 +954,43 @@ func (x *ValueStored) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_ValueStored_messageType fastReflection_ValueStored_messageType
-var _ protoreflect.MessageType = fastReflection_ValueStored_messageType{}
+var _fastReflection_Value_messageType fastReflection_Value_messageType
+var _ protoreflect.MessageType = fastReflection_Value_messageType{}
 
-type fastReflection_ValueStored_messageType struct{}
+type fastReflection_Value_messageType struct{}
 
-func (x fastReflection_ValueStored_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_ValueStored)(nil)
+func (x fastReflection_Value_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_Value)(nil)
 }
-func (x fastReflection_ValueStored_messageType) New() protoreflect.Message {
-	return new(fastReflection_ValueStored)
+func (x fastReflection_Value_messageType) New() protoreflect.Message {
+	return new(fastReflection_Value)
 }
-func (x fastReflection_ValueStored_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_ValueStored
+func (x fastReflection_Value_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_Value
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_ValueStored) Descriptor() protoreflect.MessageDescriptor {
-	return md_ValueStored
+func (x *fastReflection_Value) Descriptor() protoreflect.MessageDescriptor {
+	return md_Value
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_ValueStored) Type() protoreflect.MessageType {
-	return _fastReflection_ValueStored_messageType
+func (x *fastReflection_Value) Type() protoreflect.MessageType {
+	return _fastReflection_Value_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_ValueStored) New() protoreflect.Message {
-	return new(fastReflection_ValueStored)
+func (x *fastReflection_Value) New() protoreflect.Message {
+	return new(fastReflection_Value)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_ValueStored) Interface() protoreflect.ProtoMessage {
-	return (*ValueStored)(x)
+func (x *fastReflection_Value) Interface() protoreflect.ProtoMessage {
+	return (*Value)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -998,16 +998,16 @@ func (x *fastReflection_ValueStored) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_ValueStored) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.CumulativePower != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.CumulativePower)
-		if !f(fd_ValueStored_cumulative_power, value) {
+func (x *fastReflection_Value) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.CrossoverWeight != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.CrossoverWeight)
+		if !f(fd_Value_crossover_weight, value) {
 			return
 		}
 	}
-	if x.Report != nil {
-		value := protoreflect.ValueOfMessage(x.Report.ProtoReflect())
-		if !f(fd_ValueStored_report, value) {
+	if x.MicroReport != nil {
+		value := protoreflect.ValueOfMessage(x.MicroReport.ProtoReflect())
+		if !f(fd_Value_micro_report, value) {
 			return
 		}
 	}
@@ -1024,17 +1024,17 @@ func (x *fastReflection_ValueStored) Range(f func(protoreflect.FieldDescriptor, 
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_ValueStored) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_Value) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "layer.oracle.ValueStored.cumulative_power":
-		return x.CumulativePower != uint64(0)
-	case "layer.oracle.ValueStored.report":
-		return x.Report != nil
+	case "layer.oracle.Value.crossover_weight":
+		return x.CrossoverWeight != uint64(0)
+	case "layer.oracle.Value.micro_report":
+		return x.MicroReport != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.ValueStored"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Value"))
 		}
-		panic(fmt.Errorf("message layer.oracle.ValueStored does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.oracle.Value does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1044,17 +1044,17 @@ func (x *fastReflection_ValueStored) Has(fd protoreflect.FieldDescriptor) bool {
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ValueStored) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_Value) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "layer.oracle.ValueStored.cumulative_power":
-		x.CumulativePower = uint64(0)
-	case "layer.oracle.ValueStored.report":
-		x.Report = nil
+	case "layer.oracle.Value.crossover_weight":
+		x.CrossoverWeight = uint64(0)
+	case "layer.oracle.Value.micro_report":
+		x.MicroReport = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.ValueStored"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Value"))
 		}
-		panic(fmt.Errorf("message layer.oracle.ValueStored does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.oracle.Value does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1064,19 +1064,19 @@ func (x *fastReflection_ValueStored) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_ValueStored) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_Value) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "layer.oracle.ValueStored.cumulative_power":
-		value := x.CumulativePower
+	case "layer.oracle.Value.crossover_weight":
+		value := x.CrossoverWeight
 		return protoreflect.ValueOfUint64(value)
-	case "layer.oracle.ValueStored.report":
-		value := x.Report
+	case "layer.oracle.Value.micro_report":
+		value := x.MicroReport
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.ValueStored"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Value"))
 		}
-		panic(fmt.Errorf("message layer.oracle.ValueStored does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message layer.oracle.Value does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1090,17 +1090,17 @@ func (x *fastReflection_ValueStored) Get(descriptor protoreflect.FieldDescriptor
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ValueStored) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_Value) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "layer.oracle.ValueStored.cumulative_power":
-		x.CumulativePower = value.Uint()
-	case "layer.oracle.ValueStored.report":
-		x.Report = value.Message().Interface().(*MicroReport)
+	case "layer.oracle.Value.crossover_weight":
+		x.CrossoverWeight = value.Uint()
+	case "layer.oracle.Value.micro_report":
+		x.MicroReport = value.Message().Interface().(*MicroReport)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.ValueStored"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Value"))
 		}
-		panic(fmt.Errorf("message layer.oracle.ValueStored does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.oracle.Value does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1114,48 +1114,48 @@ func (x *fastReflection_ValueStored) Set(fd protoreflect.FieldDescriptor, value 
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ValueStored) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_Value) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.oracle.ValueStored.report":
-		if x.Report == nil {
-			x.Report = new(MicroReport)
+	case "layer.oracle.Value.micro_report":
+		if x.MicroReport == nil {
+			x.MicroReport = new(MicroReport)
 		}
-		return protoreflect.ValueOfMessage(x.Report.ProtoReflect())
-	case "layer.oracle.ValueStored.cumulative_power":
-		panic(fmt.Errorf("field cumulative_power of message layer.oracle.ValueStored is not mutable"))
+		return protoreflect.ValueOfMessage(x.MicroReport.ProtoReflect())
+	case "layer.oracle.Value.crossover_weight":
+		panic(fmt.Errorf("field crossover_weight of message layer.oracle.Value is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.ValueStored"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Value"))
 		}
-		panic(fmt.Errorf("message layer.oracle.ValueStored does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.oracle.Value does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_ValueStored) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_Value) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "layer.oracle.ValueStored.cumulative_power":
+	case "layer.oracle.Value.crossover_weight":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "layer.oracle.ValueStored.report":
+	case "layer.oracle.Value.micro_report":
 		m := new(MicroReport)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.ValueStored"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.Value"))
 		}
-		panic(fmt.Errorf("message layer.oracle.ValueStored does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message layer.oracle.Value does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_ValueStored) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_Value) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.oracle.ValueStored", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in layer.oracle.Value", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1163,7 +1163,7 @@ func (x *fastReflection_ValueStored) WhichOneof(d protoreflect.OneofDescriptor) 
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_ValueStored) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_Value) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -1174,7 +1174,7 @@ func (x *fastReflection_ValueStored) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_ValueStored) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_Value) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -1186,7 +1186,7 @@ func (x *fastReflection_ValueStored) SetUnknown(fields protoreflect.RawFields) {
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_ValueStored) IsValid() bool {
+func (x *fastReflection_Value) IsValid() bool {
 	return x != nil
 }
 
@@ -1196,9 +1196,9 @@ func (x *fastReflection_ValueStored) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_ValueStored) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_Value) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*ValueStored)
+		x := input.Message.Interface().(*Value)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1210,11 +1210,11 @@ func (x *fastReflection_ValueStored) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.CumulativePower != 0 {
-			n += 1 + runtime.Sov(uint64(x.CumulativePower))
+		if x.CrossoverWeight != 0 {
+			n += 1 + runtime.Sov(uint64(x.CrossoverWeight))
 		}
-		if x.Report != nil {
-			l = options.Size(x.Report)
+		if x.MicroReport != nil {
+			l = options.Size(x.MicroReport)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -1227,7 +1227,7 @@ func (x *fastReflection_ValueStored) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*ValueStored)
+		x := input.Message.Interface().(*Value)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1246,8 +1246,8 @@ func (x *fastReflection_ValueStored) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Report != nil {
-			encoded, err := options.Marshal(x.Report)
+		if x.MicroReport != nil {
+			encoded, err := options.Marshal(x.MicroReport)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1260,8 +1260,8 @@ func (x *fastReflection_ValueStored) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x12
 		}
-		if x.CumulativePower != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.CumulativePower))
+		if x.CrossoverWeight != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.CrossoverWeight))
 			i--
 			dAtA[i] = 0x8
 		}
@@ -1276,7 +1276,7 @@ func (x *fastReflection_ValueStored) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*ValueStored)
+		x := input.Message.Interface().(*Value)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1308,17 +1308,17 @@ func (x *fastReflection_ValueStored) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ValueStored: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Value: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ValueStored: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Value: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
 				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CumulativePower", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CrossoverWeight", wireType)
 				}
-				x.CumulativePower = 0
+				x.CrossoverWeight = 0
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -1328,14 +1328,14 @@ func (x *fastReflection_ValueStored) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.CumulativePower |= uint64(b&0x7F) << shift
+					x.CrossoverWeight |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Report", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MicroReport", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -1362,10 +1362,10 @@ func (x *fastReflection_ValueStored) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Report == nil {
-					x.Report = &MicroReport{}
+				if x.MicroReport == nil {
+					x.MicroReport = &MicroReport{}
 				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Report); err != nil {
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.MicroReport); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -1526,17 +1526,17 @@ func (x *MicroReport) GetBlockNumber() uint64 {
 	return 0
 }
 
-type ValueStored struct {
+type Value struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	CumulativePower uint64       `protobuf:"varint,1,opt,name=cumulative_power,json=cumulativePower,proto3" json:"cumulative_power,omitempty"`
-	Report          *MicroReport `protobuf:"bytes,2,opt,name=report,proto3" json:"report,omitempty"`
+	CrossoverWeight uint64       `protobuf:"varint,1,opt,name=crossover_weight,json=crossoverWeight,proto3" json:"crossover_weight,omitempty"`
+	MicroReport     *MicroReport `protobuf:"bytes,2,opt,name=micro_report,json=microReport,proto3" json:"micro_report,omitempty"`
 }
 
-func (x *ValueStored) Reset() {
-	*x = ValueStored{}
+func (x *Value) Reset() {
+	*x = Value{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_layer_oracle_micro_report_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1544,27 +1544,27 @@ func (x *ValueStored) Reset() {
 	}
 }
 
-func (x *ValueStored) String() string {
+func (x *Value) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ValueStored) ProtoMessage() {}
+func (*Value) ProtoMessage() {}
 
-// Deprecated: Use ValueStored.ProtoReflect.Descriptor instead.
-func (*ValueStored) Descriptor() ([]byte, []int) {
+// Deprecated: Use Value.ProtoReflect.Descriptor instead.
+func (*Value) Descriptor() ([]byte, []int) {
 	return file_layer_oracle_micro_report_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *ValueStored) GetCumulativePower() uint64 {
+func (x *Value) GetCrossoverWeight() uint64 {
 	if x != nil {
-		return x.CumulativePower
+		return x.CrossoverWeight
 	}
 	return 0
 }
 
-func (x *ValueStored) GetReport() *MicroReport {
+func (x *Value) GetMicroReport() *MicroReport {
 	if x != nil {
-		return x.Report
+		return x.MicroReport
 	}
 	return nil
 }
@@ -1598,25 +1598,25 @@ var file_layer_oracle_micro_report_proto_rawDesc = []byte{
 	0x6c, 0x69, 0x73, 0x74, 0x18, 0x08, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x63, 0x79, 0x63, 0x6c,
 	0x65, 0x6c, 0x69, 0x73, 0x74, 0x12, 0x21, 0x0a, 0x0c, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x6e,
 	0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x09, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0b, 0x62, 0x6c, 0x6f,
-	0x63, 0x6b, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x22, 0x6b, 0x0a, 0x0b, 0x56, 0x61, 0x6c, 0x75,
-	0x65, 0x53, 0x74, 0x6f, 0x72, 0x65, 0x64, 0x12, 0x29, 0x0a, 0x10, 0x63, 0x75, 0x6d, 0x75, 0x6c,
-	0x61, 0x74, 0x69, 0x76, 0x65, 0x5f, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x04, 0x52, 0x0f, 0x63, 0x75, 0x6d, 0x75, 0x6c, 0x61, 0x74, 0x69, 0x76, 0x65, 0x50, 0x6f, 0x77,
-	0x65, 0x72, 0x12, 0x31, 0x0a, 0x06, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x02, 0x20, 0x01,
+	0x63, 0x6b, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x22, 0x70, 0x0a, 0x05, 0x56, 0x61, 0x6c, 0x75,
+	0x65, 0x12, 0x29, 0x0a, 0x10, 0x63, 0x72, 0x6f, 0x73, 0x73, 0x6f, 0x76, 0x65, 0x72, 0x5f, 0x77,
+	0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0f, 0x63, 0x72, 0x6f,
+	0x73, 0x73, 0x6f, 0x76, 0x65, 0x72, 0x57, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x3c, 0x0a, 0x0c,
+	0x6d, 0x69, 0x63, 0x72, 0x6f, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x02, 0x20, 0x01,
 	0x28, 0x0b, 0x32, 0x19, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c,
-	0x65, 0x2e, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x06, 0x72,
-	0x65, 0x70, 0x6f, 0x72, 0x74, 0x42, 0xa2, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x42, 0x10, 0x4d, 0x69, 0x63, 0x72,
-	0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b,
-	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f,
-	0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x4f,
-	0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65,
-	0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xe2,
-	0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x5c, 0x47,
-	0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79,
-	0x65, 0x72, 0x3a, 0x3a, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x65, 0x2e, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x0b, 0x6d,
+	0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x42, 0xa2, 0x01, 0x0a, 0x10, 0x63,
+	0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x42,
+	0x10, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x50, 0x72, 0x6f, 0x74,
+	0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
+	0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65,
+	0xa2, 0x02, 0x03, 0x4c, 0x4f, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x4f,
+	0x72, 0x61, 0x63, 0x6c, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72,
+	0x61, 0x63, 0x6c, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61,
+	0x63, 0x6c, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
+	0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1634,12 +1634,12 @@ func file_layer_oracle_micro_report_proto_rawDescGZIP() []byte {
 var file_layer_oracle_micro_report_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_layer_oracle_micro_report_proto_goTypes = []interface{}{
 	(*MicroReport)(nil),           // 0: layer.oracle.MicroReport
-	(*ValueStored)(nil),           // 1: layer.oracle.ValueStored
+	(*Value)(nil),                 // 1: layer.oracle.Value
 	(*timestamppb.Timestamp)(nil), // 2: google.protobuf.Timestamp
 }
 var file_layer_oracle_micro_report_proto_depIdxs = []int32{
 	2, // 0: layer.oracle.MicroReport.timestamp:type_name -> google.protobuf.Timestamp
-	0, // 1: layer.oracle.ValueStored.report:type_name -> layer.oracle.MicroReport
+	0, // 1: layer.oracle.Value.micro_report:type_name -> layer.oracle.MicroReport
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name
@@ -1666,7 +1666,7 @@ func file_layer_oracle_micro_report_proto_init() {
 			}
 		}
 		file_layer_oracle_micro_report_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ValueStored); i {
+			switch v := v.(*Value); i {
 			case 0:
 				return &v.state
 			case 1:

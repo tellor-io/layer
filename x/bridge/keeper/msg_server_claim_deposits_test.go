@@ -53,7 +53,7 @@ func TestMsgClaimDeposits(t *testing.T) {
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
 		AggregateReportIndex: uint64(0),
-		ReporterPower:        uint64(68),
+		AggregatePower:       uint64(68),
 	}
 	powerThreshold := uint64(67)
 	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)

@@ -773,7 +773,7 @@ func (s *E2ETestSuite) TestAggregateOverMultipleBlocks() {
 	require.Equal(aggregate.AggregateValue, testutil.EncodeValue(100_000))
 	require.Equal(aggregate.AggregateReporter, romanAccAddr.String())
 	require.Equal(aggregate.Height, uint64(7))
-	require.Equal(aggregate.ReporterPower, uint64(850))
+	require.Equal(aggregate.AggregatePower, uint64(850))
 	require.Equal(aggregate.QueryId, queryId)
 	require.Equal(aggregate.MetaId, uint64(2))
 

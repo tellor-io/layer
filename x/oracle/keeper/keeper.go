@@ -40,9 +40,9 @@ type (
 		Cyclelist          collections.Map[[]byte, []byte]                                                                   // key: queryId
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
-		authority string
-		Values    *collections.IndexedMap[collections.Pair[uint64, string], types.ValueStored, types.ValuesIndex] // key: queryMeta.Id, valueHexstring  value: reporter's power
-		Median    collections.Map[uint64, types.Median]                                                           // key: queryMeta.Id
+		authority      string
+		Values         *collections.IndexedMap[collections.Pair[uint64, string], types.Value, types.ValuesIndex] // key: queryMeta.Id, valueHexstring  value: reporter's power
+		AggregateValue collections.Map[uint64, types.RunningAggregate]                                           // key: queryMeta.Id
 		// maintain a total weight for each querymeta.id
 		ValuesWeightSum collections.Map[uint64, uint64] // key: queryMeta.Id value: totalWeight
 		// storage for values that are aggregated via weighted mode
@@ -79,9 +79,9 @@ func NewKeeper(
 		Values: collections.NewIndexedMap(sb,
 			types.ValuesPrefix, "values",
 			collections.PairKeyCodec(collections.Uint64Key, collections.StringKey),
-			codec.CollValue[types.ValueStored](cdc), types.NewValuesIndex(sb),
+			codec.CollValue[types.Value](cdc), types.NewValuesIndex(sb),
 		),
-		Median:          collections.NewMap(sb, types.MedianPrefix, "median", collections.Uint64Key, codec.CollValue[types.Median](cdc)),
+		AggregateValue:  collections.NewMap(sb, types.AggregateValuePrefix, "aggregate_value", collections.Uint64Key, codec.CollValue[types.RunningAggregate](cdc)),
 		ValuesWeightSum: collections.NewMap(sb, types.ValuesWeightSumPrefix, "values_weight_sum", collections.Uint64Key, collections.Uint64Value),
 		// TotalTips maps the block number to the total tips added up till that point. Used for calculating voting power during a dispute
 		TotalTips: collections.NewMap(sb, types.TotalTipsPrefix, "total_tips", collections.Uint64Key, sdk.IntValue),

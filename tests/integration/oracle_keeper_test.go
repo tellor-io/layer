@@ -144,7 +144,7 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
 	res, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(queryId)})
 	s.Nil(err)
-	med, _ := s.Setup.Oraclekeeper.Median.Get(s.Setup.Ctx, query.Id)
+	med, _ := s.Setup.Oraclekeeper.AggregateValue.Get(s.Setup.Ctx, query.Id)
 	fmt.Println(med.Value, res.Aggregate.AggregateValue)
 	s.Equal(res.Aggregate.AggregateReporter, repAccs[0].String())
 	// tip should be 0 after aggregated report
@@ -286,7 +286,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	s.Equal(expectedMedianReporter, res.Aggregate.AggregateReporter)
 	s.Equal(reporters[expectedMedianReporterIndex].value, res.Aggregate.AggregateValue)
 	query, _ := s.Setup.Oraclekeeper.CurrentQuery(s.Setup.Ctx, qId)
-	med, _ := s.Setup.Oraclekeeper.Median.Get(s.Setup.Ctx, query.Id)
+	med, _ := s.Setup.Oraclekeeper.AggregateValue.Get(s.Setup.Ctx, query.Id)
 	fmt.Println(med.Value, res.Aggregate.AggregateValue)
 }
 

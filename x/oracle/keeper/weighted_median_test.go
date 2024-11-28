@@ -6,6 +6,7 @@ import (
 	"math"
 	"time"
 
+	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -43,12 +44,20 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	s.Equal(res.Aggregate.QueryId, qId, "query id is not correct")
 	s.Equal(res.Aggregate.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Aggregate.AggregateValue, expectedValue, "aggregate value is not correct")
-	s.Equal(res.Aggregate.ReporterPower, expectedPower, "reporter power is not correct")
-	s.Equal(res.Aggregate.AggregateReportIndex, uint64(expectedIndex), "report index is not correct")
+	s.Equal(res.Aggregate.AggregatePower, expectedPower, "reporter power is not correct")
 	s.Equal(res.Aggregate.MetaId, uint64(1), "report meta id is not correct")
 	//  check list of reporters in the aggregate report
-	for i, reporter := range currentReporters {
-		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
+	iter, err := s.oracleKeeper.Reports.Indexes.IdQueryId.MatchExact(s.ctx, collections.Join(res.Aggregate.MetaId, res.Aggregate.QueryId))
+	s.NoError(err)
+	i := 0
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		k, err := iter.PrimaryKey()
+		s.NoError(err)
+		microreport, err := s.oracleKeeper.Reports.Get(s.ctx, k)
+		s.NoError(err)
+		s.Equal(microreport.Reporter, currentReporters[i].String(), "reporter is not correct")
+		i++
 	}
 	// weightedMean := testutil.CalculateWeightedMean(valuesInt, powers)
 
@@ -77,12 +86,20 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	s.Equal(res.Aggregate.QueryId, qId, "query id is not correct")
 	s.Equal(res.Aggregate.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Aggregate.AggregateValue, expectedValue, "aggregate value is not correct")
-	s.Equal(res.Aggregate.ReporterPower, expectedPower, "reporter power is not correct")
-	s.Equal(res.Aggregate.AggregateReportIndex, uint64(expectedIndex), "report index is not correct")
+	s.Equal(res.Aggregate.AggregatePower, expectedPower, "reporter power is not correct")
 	s.Equal(res.Aggregate.MetaId, uint64(2), "report meta id is not correct")
 	// //  check list of reporters in the aggregate report
-	for i, reporter := range currentReporters {
-		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
+	iter, err = s.oracleKeeper.Reports.Indexes.IdQueryId.MatchExact(s.ctx, collections.Join(res.Aggregate.MetaId, res.Aggregate.QueryId))
+	s.NoError(err)
+	i = 0
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		k, err := iter.PrimaryKey()
+		s.NoError(err)
+		microreport, err := s.oracleKeeper.Reports.Get(s.ctx, k)
+		s.NoError(err)
+		s.Equal(microreport.Reporter, currentReporters[i].String(), "reporter is not correct")
+		i++
 	}
 	// weightedMean = testutil.CalculateWeightedMean(valuesInt, powers)
 
@@ -111,12 +128,20 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	s.Equal(res.Aggregate.QueryId, qId, "query id is not correct")
 	s.Equal(res.Aggregate.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Aggregate.AggregateValue, expectedValue, "aggregate value is not correct")
-	s.Equal(res.Aggregate.ReporterPower, expectedPower, "reporter power is not correct")
-	s.Equal(res.Aggregate.AggregateReportIndex, uint64(expectedIndex), "report index is not correct")
+	s.Equal(res.Aggregate.AggregatePower, expectedPower, "reporter power is not correct")
 	s.Equal(res.Aggregate.MetaId, uint64(3), "report meta id is not correct")
 	// //  check list of reporters in the aggregate report
-	for i, reporter := range currentReporters {
-		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
+	iter, err = s.oracleKeeper.Reports.Indexes.IdQueryId.MatchExact(s.ctx, collections.Join(res.Aggregate.MetaId, res.Aggregate.QueryId))
+	s.NoError(err)
+	i = 0
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		k, err := iter.PrimaryKey()
+		s.NoError(err)
+		microreport, err := s.oracleKeeper.Reports.Get(s.ctx, k)
+		s.NoError(err)
+		s.Equal(microreport.Reporter, currentReporters[i].String(), "reporter is not correct")
+		i++
 	}
 	// weightedMean = testutil.CalculateWeightedMean(valuesInt, powers)
 
@@ -144,12 +169,21 @@ func (s *KeeperTestSuite) TestWeightedMedian() {
 	s.Equal(res.Aggregate.QueryId, qId, "query id is not correct")
 	s.Equal(res.Aggregate.AggregateReporter, expectedReporter, "aggregate reporter is not correct")
 	s.Equal(res.Aggregate.AggregateValue, expectedValue, "aggregate value is not correct")
-	s.Equal(res.Aggregate.ReporterPower, expectedPower, "reporter power is not correct")
-	s.Equal(res.Aggregate.AggregateReportIndex, uint64(expectedIndex), "report index is not correct")
+	s.Equal(res.Aggregate.AggregatePower, expectedPower, "reporter power is not correct")
+
 	s.Equal(res.Aggregate.MetaId, uint64(4), "report meta id is not correct")
 	// //  check list of reporters in the aggregate report
-	for i, reporter := range currentReporters {
-		s.Equal(res.Aggregate.Reporters[i].Reporter, reporter.String(), "reporter is not correct")
+	iter, err = s.oracleKeeper.Reports.Indexes.IdQueryId.MatchExact(s.ctx, collections.Join(res.Aggregate.MetaId, res.Aggregate.QueryId))
+	s.NoError(err)
+	i = 0
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		k, err := iter.PrimaryKey()
+		s.NoError(err)
+		microreport, err := s.oracleKeeper.Reports.Get(s.ctx, k)
+		s.NoError(err)
+		s.Equal(microreport.Reporter, currentReporters[i].String(), "reporter is not correct")
+		i++
 	}
 	// weightedMean = testutil.CalculateWeightedMean(valuesInt, powers)
 }
@@ -192,43 +226,15 @@ func (s *KeeperTestSuite) TestWeightedMedianBigNumbers() {
 			cyclelist:       true,
 			blocknumber:     1,
 			expectedAggregateReport: &types.Aggregate{
-				Reporters: []*types.AggregateReporter{
-					{
-						Reporter:    reporters[0].String(),
-						Power:       10,
-						BlockNumber: 1,
-					},
-					{
-						Reporter:    reporters[1].String(),
-						Power:       10,
-						BlockNumber: 1,
-					},
-					{
-						Reporter:    reporters[2].String(),
-						Power:       10,
-						BlockNumber: 1,
-					},
-					{
-						Reporter:    reporters[3].String(),
-						Power:       10,
-						BlockNumber: 1,
-					},
-					{
-						Reporter:    reporters[4].String(),
-						Power:       10,
-						BlockNumber: 1,
-					},
-				},
-				QueryId:              qId,
-				AggregateReporter:    reporters[2].String(),
-				AggregateValue:       testutil.IntToHex([]int{12})[0],
-				ReporterPower:        50,
-				AggregateReportIndex: 2,
-				MetaId:               1,
-				Flagged:              false,
-				Index:                1,
-				Height:               1,
-				MicroHeight:          1,
+				QueryId:           qId,
+				AggregateReporter: reporters[2].String(),
+				AggregateValue:    testutil.IntToHex([]int{12})[0],
+				AggregatePower:    50,
+				MetaId:            1,
+				Flagged:           false,
+				Index:             1,
+				Height:            1,
+				MicroHeight:       1,
 			},
 		},
 		{
@@ -244,43 +250,15 @@ func (s *KeeperTestSuite) TestWeightedMedianBigNumbers() {
 			cyclelist:       true,
 			blocknumber:     1,
 			expectedAggregateReport: &types.Aggregate{
-				Reporters: []*types.AggregateReporter{
-					{
-						Reporter:    reporters[0].String(),
-						Power:       10,
-						BlockNumber: 1,
-					},
-					{
-						Reporter:    reporters[1].String(),
-						Power:       10,
-						BlockNumber: 1,
-					},
-					{
-						Reporter:    reporters[2].String(),
-						Power:       10,
-						BlockNumber: 1,
-					},
-					{
-						Reporter:    reporters[3].String(),
-						Power:       10,
-						BlockNumber: 1,
-					},
-					{
-						Reporter:    reporters[4].String(),
-						Power:       10,
-						BlockNumber: 1,
-					},
-				},
-				QueryId:              qId,
-				AggregateReporter:    reporters[2].String(),
-				AggregateValue:       testutil.IntToHex([]int{3 * 1e18})[0],
-				ReporterPower:        50,
-				AggregateReportIndex: 2,
-				MetaId:               2,
-				Flagged:              false,
-				Index:                2,
-				Height:               1,
-				MicroHeight:          1,
+				QueryId:           qId,
+				AggregateReporter: reporters[2].String(),
+				AggregateValue:    testutil.IntToHex([]int{3 * 1e18})[0],
+				AggregatePower:    50,
+				MetaId:            2,
+				Flagged:           false,
+				Index:             2,
+				Height:            1,
+				MicroHeight:       1,
 			},
 		},
 	}
@@ -344,43 +322,16 @@ func (s *KeeperTestSuite) TestWeightedMedianBigNumbers() {
 			cyclelist:       true,
 			blocknumber:     1,
 			expectedAggregateReport: &types.Aggregate{
-				Reporters: []*types.AggregateReporter{
-					{
-						Reporter:    reporters[0].String(),
-						Power:       1 * 1e17,
-						BlockNumber: 1,
-					},
-					{
-						Reporter:    reporters[1].String(),
-						Power:       1 * 1e17,
-						BlockNumber: 1,
-					},
-					{
-						Reporter:    reporters[2].String(),
-						Power:       1 * 1e17,
-						BlockNumber: 1,
-					},
-					{
-						Reporter:    reporters[3].String(),
-						Power:       1 * 1e17,
-						BlockNumber: 1,
-					},
-					{
-						Reporter:    reporters[4].String(),
-						Power:       1 * 1e17,
-						BlockNumber: 1,
-					},
-				},
-				QueryId:              qId,
-				AggregateReporter:    reporters[2].String(),
-				AggregateValue:       "29a2241af62c0000",
-				ReporterPower:        5 * 1e17,
-				AggregateReportIndex: 2,
-				MetaId:               3,
-				Flagged:              false,
-				Index:                3,
-				Height:               1,
-				MicroHeight:          1,
+
+				QueryId:           qId,
+				AggregateReporter: reporters[2].String(),
+				AggregateValue:    "29a2241af62c0000",
+				AggregatePower:    5 * 1e17,
+				MetaId:            3,
+				Flagged:           false,
+				Index:             3,
+				Height:            1,
+				MicroHeight:       1,
 			},
 		},
 	}

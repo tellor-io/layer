@@ -185,7 +185,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)
-	require.Equal(uint64(4000), result.Aggregate.ReporterPower)
+	require.Equal(uint64(4000), result.Aggregate.AggregatePower)
 	require.Equal(uint64(3), result.Aggregate.Height)
 
 	//---------------------------------------------------------------------------
@@ -356,7 +356,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)
-	require.Equal(uint64(4000)-slashAmount.Quo(sdk.DefaultPowerReduction).Uint64(), result.Aggregate.ReporterPower)
+	require.Equal(uint64(4000)-slashAmount.Quo(sdk.DefaultPowerReduction).Uint64(), result.Aggregate.AggregatePower)
 	require.Equal(uint64(7), result.Aggregate.Height)
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
@@ -842,7 +842,7 @@ func (s *E2ETestSuite) TestDisputeFromDelegatorPayFromBond() {
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(rickyAccAddr.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)
-	require.Equal(uint64(1000), result.Aggregate.ReporterPower)
+	require.Equal(uint64(1000), result.Aggregate.AggregatePower)
 	require.Equal(uint64(6), result.Aggregate.Height)
 
 	//---------------------------------------------------------------------------

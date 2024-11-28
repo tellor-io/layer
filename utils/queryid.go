@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"strings"
 
+	"errors"
+
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
@@ -37,4 +39,23 @@ func Remove0xPrefix(hexString string) string {
 // From: https://github.com/ethereum/go-ethereum/blob/5c6f4b9f0d4270fcc56df681bf003e6a74f11a6b/common/bytes.go#L51
 func has0xPrefix(str string) bool {
 	return len(str) >= 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')
+}
+
+func FormatUint256(hexStr string) (string, error) {
+	// Remove "0x" prefix if present
+	if has0xPrefix(hexStr) {
+		hexStr = hexStr[2:]
+	}
+
+	// Ensure the length is at most 64
+	if len(hexStr) > 64 {
+		return "", errors.New("hex string is too long")
+	}
+
+	// Pad with leading zeros if less than 64 characters
+	for len(hexStr) < 64 {
+		hexStr = "0" + hexStr
+	}
+
+	return hexStr, nil
 }

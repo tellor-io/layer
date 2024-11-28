@@ -100,11 +100,11 @@ func NewQueryIndex(sb *collections.SchemaBuilder) QueryMetaIndex {
 
 type ValuesIndex struct {
 	// todo: what do you do when two powers have the same power?
-	Power *indexes.Multi[collections.Pair[uint64, uint64], collections.Pair[uint64, string], ValueStored]
+	Power *indexes.Multi[collections.Pair[uint64, uint64], collections.Pair[uint64, string], Value]
 }
 
-func (a ValuesIndex) IndexesList() []collections.Index[collections.Pair[uint64, string], ValueStored] {
-	return []collections.Index[collections.Pair[uint64, string], ValueStored]{
+func (a ValuesIndex) IndexesList() []collections.Index[collections.Pair[uint64, string], Value] {
+	return []collections.Index[collections.Pair[uint64, string], Value]{
 		a.Power,
 	}
 }
@@ -114,8 +114,8 @@ func NewValuesIndex(sb *collections.SchemaBuilder) ValuesIndex {
 		Power: indexes.NewMulti(
 			sb, ValuesPowerPrefix, "values_by_power",
 			collections.PairKeyCodec(collections.Uint64Key, collections.Uint64Key), collections.PairKeyCodec(collections.Uint64Key, collections.StringKey),
-			func(k collections.Pair[uint64, string], v ValueStored) (collections.Pair[uint64, uint64], error) {
-				return collections.Join(k.K1(), v.CumulativePower), nil
+			func(k collections.Pair[uint64, string], v Value) (collections.Pair[uint64, uint64], error) {
+				return collections.Join(k.K1(), v.CrossoverWeight), nil
 			},
 		),
 	}
