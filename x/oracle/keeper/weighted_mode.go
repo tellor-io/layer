@@ -12,57 +12,32 @@ func (k Keeper) WeightedMode(ctx context.Context, reports []types.MicroReport, m
 	}
 
 	var modeReport types.MicroReport
-	var modeReporters []*types.AggregateReporter
-	maxWeight := uint64(0)
-	maxFrequency := 0
-	var mode string
-	frequencyMap := make(map[string]int)
-
 	var totalReporterPower uint64
+
+	var maxFrequency uint64
+	var maxWeight uint64
 	// populate frequency map
+	frequencyMap := make(map[string]uint64)
 	for _, r := range reports {
-		modeReporters = append(modeReporters, &types.AggregateReporter{Reporter: r.Reporter, Power: r.Power, BlockNumber: r.BlockNumber})
-		entries := r.Power
-		for i := uint64(0); i < entries; i++ {
-			frequencyMap[r.Value]++
-		}
+		frequencyMap[r.Value] += r.Power
 		totalReporterPower += r.Power
-	}
-
-	// find the max frequency
-	for value, frequency := range frequencyMap {
-		if frequency > maxFrequency {
-			maxFrequency = frequency
-			mode = value
-		}
-	}
-
-	// set mode report from most powerful reporter who submitted mode value
-	var modeReportIndex uint64
-	for i, r := range reports {
-		if mode == r.Value {
+		if frequencyMap[r.Value] > maxFrequency {
+			maxFrequency = frequencyMap[r.Value]
 			if r.Power > maxWeight {
 				maxWeight = r.Power
 				modeReport = r
-				modeReportIndex = uint64(i)
 			}
 		}
 	}
 
 	aggregateReport := types.Aggregate{
-		QueryId:              modeReport.QueryId,
-		AggregateValue:       modeReport.Value,
-		AggregateReporter:    modeReport.Reporter,
-		ReporterPower:        totalReporterPower,
-		Reporters:            modeReporters,
-		AggregateReportIndex: modeReportIndex,
-		MicroHeight:          modeReport.BlockNumber,
-		MetaId:               metaId,
+		QueryId:           modeReport.QueryId,
+		AggregateValue:    modeReport.Value,
+		AggregateReporter: modeReport.Reporter,
+		AggregatePower:    totalReporterPower,
+		MicroHeight:       modeReport.BlockNumber,
+		MetaId:            metaId,
 	}
 
-	err := k.SetAggregate(ctx, &aggregateReport)
-	if err != nil {
-		return nil, err
-	}
 	return &aggregateReport, nil
 }

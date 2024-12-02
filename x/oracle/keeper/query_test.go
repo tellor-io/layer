@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -53,16 +54,16 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 	require.NoError(k.Aggregates.Set(s.ctx, collections.Join(qId, uint64(0)), types.Aggregate{
 		QueryId:           qId,
 		AggregateValue:    "100",
-		AggregateReporter: "reporter",
-		ReporterPower:     100,
+		AggregateReporter: sdk.AccAddress("reporter").String(),
+		AggregatePower:    100,
 	}))
 	res, err = q.GetCurrentAggregateReport(s.ctx, &req)
 	require.NoError(err)
 	require.NotNil(res)
 	require.Equal(res.Aggregate.QueryId, qId)
 	require.Equal(res.Aggregate.AggregateValue, "100")
-	require.Equal(res.Aggregate.AggregateReporter, "reporter")
-	require.Equal(res.Aggregate.ReporterPower, uint64(100))
+	require.Equal(res.Aggregate.AggregateReporter, sdk.AccAddress("reporter").String())
+	require.Equal(res.Aggregate.AggregatePower, uint64(100))
 }
 
 func TestGetCurrentAggregateReport(t *testing.T) {
@@ -94,16 +95,14 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 	require.Nil(t, getCurrentAggResponse)
 
 	agg = &types.Aggregate{
-		QueryId:              []byte(queryId),
-		AggregateValue:       "10_000",
-		AggregateReporter:    "reporter1",
-		ReporterPower:        100,
-		Reporters:            []*types.AggregateReporter{{}},
-		Flagged:              false,
-		Index:                uint64(0),
-		AggregateReportIndex: 0,
-		Height:               0,
-		MicroHeight:          0,
+		QueryId:           []byte(queryId),
+		AggregateValue:    "10_000",
+		AggregateReporter: sdk.AccAddress("reporter1").String(),
+		AggregatePower:    100,
+		Flagged:           false,
+		Index:             uint64(0),
+		Height:            0,
+		MicroHeight:       0,
 	}
 
 	require.NoError(t, k.Aggregates.Set(ctx, collections.Join(qIdBz, uint64(timestamp.UnixMilli())), *agg))
@@ -115,10 +114,9 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 	require.Equal(t, getCurrentAggResponse.Aggregate.QueryId, agg.QueryId)
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateValue, agg.AggregateValue)
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateReporter, agg.AggregateReporter)
-	require.Equal(t, getCurrentAggResponse.Aggregate.ReporterPower, agg.ReporterPower)
+	require.Equal(t, getCurrentAggResponse.Aggregate.AggregatePower, agg.AggregatePower)
 	require.Equal(t, getCurrentAggResponse.Aggregate.Flagged, agg.Flagged)
 	require.Equal(t, getCurrentAggResponse.Aggregate.Index, agg.Index)
-	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateReportIndex, agg.AggregateReportIndex)
 	require.Equal(t, getCurrentAggResponse.Aggregate.Height, agg.Height)
 }
 
@@ -156,8 +154,8 @@ func TestRetreiveData(t *testing.T) {
 				require.NoError(t, k.Aggregates.Set(ctx, collections.Join(qId, uint64(0)), types.Aggregate{
 					QueryId:           qId,
 					AggregateValue:    "100",
-					AggregateReporter: "reporter",
-					ReporterPower:     100,
+					AggregateReporter: sdk.AccAddress("reporter").String(),
+					AggregatePower:    100,
 				}))
 			},
 			expectedError: "",

@@ -56,7 +56,12 @@ var (
 	AggregatesMicroHeightIndexPrefix = collections.NewPrefix(22)
 	AggregateIbcResponsePrefix       = collections.NewPrefix(23)
 	LastPacketSequencePrefix         = collections.NewPrefix(24)
-	PortIDPrefix                     = collections.NewPrefix(25)
+	ValuesWeightSumPrefix            = collections.NewPrefix(25)
+	ValuesPrefix                     = collections.NewPrefix(26)
+	AggregateValuePrefix             = collections.NewPrefix(27)
+	ValuesPowerPrefix                = collections.NewPrefix(28)
+	QueryByExpirationPrefix          = collections.NewPrefix(29)
+	PortIDPrefix                     = collections.NewPrefix(30)
 )
 
 func KeyPrefix(p string) []byte {

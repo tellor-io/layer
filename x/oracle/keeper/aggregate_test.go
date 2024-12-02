@@ -66,8 +66,7 @@ func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Tim
 		QueryId:           queryId,
 		AggregateValue:    encodeValue(96.50),
 		AggregateReporter: rep1.String(),
-		ReporterPower:     math.NewInt(200000000).Mul(layertypes.PowerReduction).Uint64(),
-		Reporters:         []*types.AggregateReporter{{Reporter: rep1.String(), Power: 100000000}, {Reporter: rep2.String(), Power: 100000000}},
+		AggregatePower:    math.NewInt(200000000).Mul(layertypes.PowerReduction).Uint64(),
 		Flagged:           false,
 		Height:            10,
 	}
@@ -114,12 +113,16 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 
 	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryId, rep1.Bytes(), queryData.Id), report_one)
 	s.NoError(err)
+	s.NoError(s.oracleKeeper.AddReport(ctx, queryData.Id, report_one))
 	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryId, rep2.Bytes(), queryData.Id), report_two)
 	s.NoError(err)
+	s.NoError(s.oracleKeeper.AddReport(ctx, queryData.Id, report_two))
 	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryId, rep3.Bytes(), queryData.Id), report_three)
 	s.NoError(err)
+	s.NoError(s.oracleKeeper.AddReport(ctx, queryData.Id, report_three))
 	err = s.oracleKeeper.Reports.Set(ctx, collections.Join3(queryId, rep4.Bytes(), queryData.Id), report_four)
 	s.NoError(err)
+	s.NoError(s.oracleKeeper.AddReport(ctx, queryData.Id, report_four))
 
 	// use auth types GetModule Account
 	add := sample.AccAddressBytes()
@@ -132,7 +135,7 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	s.accountKeeper.On("GetModuleAccount", ctx, minttypes.TimeBasedRewards).Return(testModuleAccount)
 	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, layertypes.BondDenom).Return(sdk.Coin{Amount: math.NewInt(1 * 1e6)})
 	s.bankKeeper.On("SendCoinsFromModuleToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	s.reporterKeeper.On("DivvyingTips", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	s.reporterKeeper.On("DivvyingTips", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	s.reporterKeeper.On("AllocateTokensToReporter", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	err = s.oracleKeeper.SetAggregatedReport(ctx)
@@ -172,8 +175,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 		QueryId:           queryId,
 		AggregateValue:    encodeValue(96.50),
 		AggregateReporter: reporter.String(),
-		ReporterPower:     100000000,
-		Reporters:         []*types.AggregateReporter{{Reporter: reporter.String(), Power: 100000000}},
+		AggregatePower:    100000000,
 		Flagged:           false,
 	}
 
@@ -183,7 +185,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 	res, err := s.oracleKeeper.Aggregates.Get(s.ctx, collections.Join(queryId, uint64(timestamp.UnixMilli())))
 	s.NoError(err)
 	s.Equal(encodeValue(96.50), res.AggregateValue)
-	s.Equal(uint64(100000000), res.ReporterPower)
+	s.Equal(uint64(100000000), res.AggregatePower)
 }
 
 func (s *KeeperTestSuite) TestGetDataBefore() {
@@ -278,7 +280,7 @@ func (s *KeeperTestSuite) TestGetTimestampBefore() {
 				err := s.oracleKeeper.Aggregates.Set(
 					s.ctx,
 					collections.Join(queryId, uint64(v.UnixMilli())),
-					types.Aggregate{},
+					types.Aggregate{AggregateReporter: sample.AccAddress()},
 				)
 				s.Require().NoError(err)
 			}
@@ -356,7 +358,7 @@ func (s *KeeperTestSuite) TestGetTimestampAfter() {
 				err := s.oracleKeeper.Aggregates.Set(
 					s.ctx,
 					collections.Join(queryId, uint64(v.UnixMilli())),
-					types.Aggregate{},
+					types.Aggregate{AggregateReporter: sample.AccAddress()},
 				)
 				s.Require().NoError(err)
 			}

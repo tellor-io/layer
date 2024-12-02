@@ -43,7 +43,7 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 			msg: &stakingtypes.MsgCreateValidator{
 				Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(100)},
 			},
-			err: errors.New("amount increases total stake by more than the allowed 5% in a twelve hour period"),
+			err: errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period"),
 		},
 		{
 			name: "Delegate",
@@ -71,7 +71,7 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				ValidatorAddress: sample.AccAddressBytes().String(),
 				Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(100)},
 			},
-			err: errors.New("amount increases total stake by more than the allowed 5% in a twelve hour period"),
+			err: errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period"),
 		},
 		{
 			name: "Undelegate",
@@ -80,7 +80,7 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				ValidatorAddress: sample.AccAddressBytes().String(),
 				Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(95)},
 			},
-			err: errors.New("amount decreases total stake by more than the allowed 5% in a twelve hour period"),
+			err: errors.New("total stake decrease exceeds the allowed 5% threshold within a twelve-hour period"),
 		},
 		{
 			name: "Other message type",

@@ -825,7 +825,7 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 		queryId,
 		aggReport.AggregateValue,
 		uint64(timestamp.UnixMilli()),
-		aggReport.ReporterPower,
+		aggReport.AggregatePower,
 		uint64(tsBefore.UnixMilli()),
 		uint64(tsAfter.UnixMilli()),
 		validatorCheckpoint.Checkpoint,

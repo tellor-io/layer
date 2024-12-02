@@ -9,8 +9,6 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
-
 	types "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -19,13 +17,13 @@ type ReporterKeeper struct {
 	mock.Mock
 }
 
-// DivvyingTips provides a mock function with given fields: ctx, reporterAddr, reward, height
-func (_m *ReporterKeeper) DivvyingTips(ctx context.Context, reporterAddr types.AccAddress, reward reportertypes.BigUint, height uint64) error {
-	ret := _m.Called(ctx, reporterAddr, reward, height)
+// DivvyingTips provides a mock function with given fields: ctx, reporterAddr, reward, queryId, height
+func (_m *ReporterKeeper) DivvyingTips(ctx context.Context, reporterAddr types.AccAddress, reward math.LegacyDec, queryId []byte, height uint64) error {
+	ret := _m.Called(ctx, reporterAddr, reward, queryId, height)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, reportertypes.BigUint, uint64) error); ok {
-		r0 = rf(ctx, reporterAddr, reward, height)
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, math.LegacyDec, []byte, uint64) error); ok {
+		r0 = rf(ctx, reporterAddr, reward, queryId, height)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -33,23 +31,23 @@ func (_m *ReporterKeeper) DivvyingTips(ctx context.Context, reporterAddr types.A
 	return r0
 }
 
-// ReporterStake provides a mock function with given fields: ctx, repAddress
-func (_m *ReporterKeeper) ReporterStake(ctx context.Context, repAddress types.AccAddress) (math.Int, error) {
-	ret := _m.Called(ctx, repAddress)
+// ReporterStake provides a mock function with given fields: ctx, repAddress, queryId
+func (_m *ReporterKeeper) ReporterStake(ctx context.Context, repAddress types.AccAddress, queryId []byte) (math.Int, error) {
+	ret := _m.Called(ctx, repAddress, queryId)
 
 	var r0 math.Int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (math.Int, error)); ok {
-		return rf(ctx, repAddress)
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, []byte) (math.Int, error)); ok {
+		return rf(ctx, repAddress, queryId)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) math.Int); ok {
-		r0 = rf(ctx, repAddress)
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, []byte) math.Int); ok {
+		r0 = rf(ctx, repAddress, queryId)
 	} else {
 		r0 = ret.Get(0).(math.Int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, types.AccAddress) error); ok {
-		r1 = rf(ctx, repAddress)
+	if rf, ok := ret.Get(1).(func(context.Context, types.AccAddress, []byte) error); ok {
+		r1 = rf(ctx, repAddress, queryId)
 	} else {
 		r1 = ret.Error(1)
 	}

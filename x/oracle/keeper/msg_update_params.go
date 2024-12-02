@@ -8,6 +8,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 )
 
+// UpdateParams updates the oracle module's parameters.
+// Gated function that can only be called by the x/gov.
+// Note: Only param is the `MinStakeAmount`
 func (k msgServer) UpdateParams(ctx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if k.keeper.GetAuthority() != req.Authority {
 		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.keeper.GetAuthority(), req.Authority)

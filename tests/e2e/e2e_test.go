@@ -146,7 +146,7 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 	require.NoError(err)
 	val, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddr)
 	require.NoError(err)
-	oracleReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAddr.Bytes())
+	oracleReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAddr.Bytes(), []byte{})
 	require.NoError(err)
 	require.Equal(oracleReporterStake, val.Tokens)
 	require.Equal(oracleReporter.Jailed, false)

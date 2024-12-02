@@ -50,7 +50,7 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64,
 		return err
 	}
 	powerThreshold := valsetCheckpointParams.PowerThreshold
-	if aggregate.ReporterPower < powerThreshold {
+	if aggregate.AggregatePower < powerThreshold {
 		return types.ErrInsufficientReporterPower
 	}
 	// ensure can't claim deposit until report is old enough

@@ -181,11 +181,10 @@ func (s *E2ETestSuite) TestDisputes() {
 	queryServer := oraclekeeper.NewQuerier(s.Setup.Oraclekeeper)
 	result, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
 	require.NoError(err)
-	require.Equal(uint64(0), result.Aggregate.AggregateReportIndex)
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)
-	require.Equal(uint64(4000), result.Aggregate.ReporterPower)
+	require.Equal(uint64(4000), result.Aggregate.AggregatePower)
 	require.Equal(uint64(3), result.Aggregate.Height)
 
 	//---------------------------------------------------------------------------
@@ -201,7 +200,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(reporter.Jailed, false)
 	freeFloatingBalanceBefore := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, reporterAccount, s.Setup.Denom)
 
-	balBeforeDispute, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount)
+	balBeforeDispute, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount, []byte{})
 	require.NoError(err)
 	onePercent := balBeforeDispute.Mul(math.NewInt(1)).Quo(math.NewInt(100))
 	disputeFee := sdk.NewCoin(s.Setup.Denom, onePercent) // warning should be 1% of bonded tokens
@@ -352,11 +351,10 @@ func (s *E2ETestSuite) TestDisputes() {
 	// aggregated report is stored correctly
 	result, err = queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
 	require.NoError(err)
-	require.Equal(uint64(0), result.Aggregate.AggregateReportIndex)
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)
-	require.Equal(uint64(4000)-slashAmount.Quo(sdk.DefaultPowerReduction).Uint64(), result.Aggregate.ReporterPower)
+	require.Equal(uint64(4000)-slashAmount.Quo(sdk.DefaultPowerReduction).Uint64(), result.Aggregate.AggregatePower)
 	require.Equal(uint64(7), result.Aggregate.Height)
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
@@ -370,7 +368,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
-	balBeforeDispute, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount)
+	balBeforeDispute, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount, queryId)
 	fmt.Println("Balance before dispute: ", balBeforeDispute)
 	require.NoError(err)
 	fivePercent := balBeforeDispute.Mul(math.NewInt(5)).Quo(math.NewInt(100))
@@ -530,7 +528,6 @@ func (s *E2ETestSuite) TestDisputes() {
 	// check that aggregated report is stored correctly
 	result, err = queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
 	require.NoError(err)
-	require.Equal(uint64(0), result.Aggregate.AggregateReportIndex)
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)
@@ -551,7 +548,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 	require.Equal(reporter.Jailed, false)
 
-	oneHundredPercent, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount)
+	oneHundredPercent, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount, queryId)
 	require.NoError(err)
 	disputeFee = sdk.NewCoin(s.Setup.Denom, oneHundredPercent)
 
@@ -838,11 +835,10 @@ func (s *E2ETestSuite) TestDisputeFromDelegatorPayFromBond() {
 	queryServer := oraclekeeper.NewQuerier(s.Setup.Oraclekeeper)
 	result, err := queryServer.GetCurrentAggregateReport(s.Setup.Ctx, &getAggReportRequest)
 	require.NoError(err)
-	require.Equal(uint64(0), result.Aggregate.AggregateReportIndex)
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(rickyAccAddr.String(), result.Aggregate.AggregateReporter)
 	require.Equal(queryId, result.Aggregate.QueryId)
-	require.Equal(uint64(1000), result.Aggregate.ReporterPower)
+	require.Equal(uint64(1000), result.Aggregate.AggregatePower)
 	require.Equal(uint64(6), result.Aggregate.Height)
 
 	//---------------------------------------------------------------------------
@@ -853,7 +849,7 @@ func (s *E2ETestSuite) TestDisputeFromDelegatorPayFromBond() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
-	rickyReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, rickyAccAddr)
+	rickyReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, rickyAccAddr, queryId)
 	require.NoError(err)
 
 	report := oracletypes.MicroReport{
@@ -926,7 +922,7 @@ func (s *E2ETestSuite) TestOpenDisputePrecision() {
 	_, err = s.Setup.CreateReporter(ctx, annaAccAddr, reportertypes.DefaultMinCommissionRate, math.NewInt(1*1e6))
 	require.NoError(err)
 	// verify anna's reporter power
-	annaReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(ctx, annaAccAddr)
+	annaReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(ctx, annaAccAddr, []byte{})
 	require.NoError(err)
 	require.Equal(math.NewInt(annaInitialStake).String(), annaReporterStake.String())
 
@@ -934,7 +930,7 @@ func (s *E2ETestSuite) TestOpenDisputePrecision() {
 	_, err = s.Setup.CreateReporter(ctx, bobAccAddr, reportertypes.DefaultMinCommissionRate, math.NewInt(1*1e6))
 	require.NoError(err)
 	// verify bobs reporter power
-	bobReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(ctx, bobAccAddr)
+	bobReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(ctx, bobAccAddr, []byte{})
 	require.NoError(err)
 	require.Equal(math.NewInt(bobInitialStake).String(), bobReporterStake.String())
 
@@ -974,7 +970,7 @@ func (s *E2ETestSuite) TestOpenDisputePrecision() {
 	require.NoError(err)
 	require.Equal(randomAmountLoya, chrisDelegation.GetShares().TruncateInt64())
 	// check on selection from chris to anna reporter
-	annaReporterStake, err = s.Setup.Reporterkeeper.ReporterStake(ctx, annaAccAddr)
+	annaReporterStake, err = s.Setup.Reporterkeeper.ReporterStake(ctx, annaAccAddr, []byte{})
 	require.NoError(err)
 	expectedAnnaPower := math.NewInt(randomAmountLoya).Add(math.NewInt(annaInitialStake))
 	require.Equal(expectedAnnaPower.String(), annaReporterStake.String())
@@ -1169,7 +1165,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 
 	val, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valsValAddrs[0])
 	require.NoError(err)
-	repTokens, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, badReporter)
+	repTokens, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, badReporter, []byte{})
 	require.NoError(err)
 	require.Equal(repTokens, val.Tokens)
 
@@ -1341,7 +1337,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	report = oracletypes.MicroReport{
 		Reporter:    repsAccs[0].String(),
 		Power:       repTokens.Quo(sdk.DefaultPowerReduction).Uint64(),
-		QueryId:     queryId,
+		QueryId:     utils.QueryIDFromData(reveal.QueryData),
 		Value:       value,
 		Timestamp:   revealTime,
 		BlockNumber: uint64(revealBlock),

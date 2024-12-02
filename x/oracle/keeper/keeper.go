@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	gomath "math"
@@ -22,8 +21,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// var offset = time.Second * 6
-
 type (
 	Keeper struct {
 		ics4Wrapper    types.ICS4Wrapper
@@ -37,18 +34,17 @@ type (
 		bankKeeper     types.BankKeeper
 		registryKeeper types.RegistryKeeper
 		reporterKeeper types.ReporterKeeper
-		Schema         collections.Schema                                                                          // key: reporter, queryid
-		Tips           *collections.IndexedMap[collections.Pair[[]byte, []byte], math.Int, types.TipsIndex]        // key: queryId, tipper
-		TipperTotal    *collections.IndexedMap[collections.Pair[[]byte, uint64], math.Int, types.TipperTotalIndex] // key: tipperAcc, blockNumber
+		Schema         collections.Schema // key: reporter, queryid
 		// total tips given over time
-		TotalTips          collections.Map[uint64, math.Int]                                                                          // key: blockNumber, value: total tips                                  // key: queryId, timestamp
+		CyclelistSequencer collections.Sequence                                                                                       // key: queryId, tipper
+		TipperTotal        collections.Map[collections.Pair[[]byte, uint64], math.Int]                                                // key: tipperAcc, blockNumber
+		TotalTips          collections.Map[uint64, math.Int]                                                                          // key: blockNumber
 		Nonces             collections.Map[[]byte, uint64]                                                                            // key: queryId
-		Reports            *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, types.ReportsIndex] // key: queryId, reporter, query.id
+		Reports            *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, types.ReportsIndex] // key: queryId, reporter, queryMeta.id
 		QuerySequencer     collections.Sequence
-		Query              *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, types.QueryMetaIndex]  // key: queryId
-		Aggregates         *collections.IndexedMap[collections.Pair[[]byte, uint64], types.Aggregate, types.AggregatesIndex] // key: queryId, timestamp                                                                    // key: queryId                                                                  // keep track of the current cycle
-		Cyclelist          collections.Map[[]byte, []byte]
-		CyclelistSequencer collections.Sequence
+		Query              *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, types.QueryMetaIndex]  // key: queryId, id
+		Aggregates         *collections.IndexedMap[collections.Pair[[]byte, uint64], types.Aggregate, types.AggregatesIndex] // key: queryId, timestamp
+		Cyclelist          collections.Map[[]byte, []byte]                                                                   // key: queryId
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		authority string
@@ -58,6 +54,13 @@ type (
 		AggregateIbcResponse collections.Map[uint64, types.Aggregate] // key: sequence
 		LastPacketSequence   collections.Item[uint64]                 // key: last packet sequence
 		PortKey              collections.Item[string]
+
+		Values         *collections.IndexedMap[collections.Pair[uint64, string], types.Value, types.ValuesIndex] // key: queryMeta.Id, valueHexstring  value: reporter's power
+		AggregateValue collections.Map[uint64, types.RunningAggregate]                                           // key: queryMeta.Id
+		// maintain a total weight for each querymeta.id
+		ValuesWeightSum collections.Map[uint64, uint64] // key: queryMeta.Id value: totalWeight
+		// storage for values that are aggregated via weighted mode
+		ValuesWeightedMode collections.Map[collections.Pair[uint64, string], uint64] // key: queryMeta.Id, valueHexstring  value: total power of reporters that submitted the value
 	}
 )
 
@@ -95,17 +98,29 @@ func NewKeeper(
 		scopedKeeper:   scopedKeeper,
 
 		authority: authority,
-
-		Tips: collections.NewIndexedMap(sb,
-			types.TipsPrefix,
-			"tips",
-			collections.PairKeyCodec(collections.BytesKey, collections.BytesKey),
-			sdk.IntValue,
-			types.NewTipsIndex(sb),
+		Values: collections.NewIndexedMap(sb,
+			types.ValuesPrefix, "values",
+			collections.PairKeyCodec(collections.Uint64Key, collections.StringKey),
+			codec.CollValue[types.Value](cdc), types.NewValuesIndex(sb),
 		),
-		TotalTips:  collections.NewMap(sb, types.TotalTipsPrefix, "total_tips", collections.Uint64Key, sdk.IntValue),
-		Nonces:     collections.NewMap(sb, types.NoncesPrefix, "nonces", collections.BytesKey, collections.Uint64Value),
-		Aggregates: collections.NewIndexedMap(sb, types.AggregatesPrefix, "aggregates", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), codec.CollValue[types.Aggregate](cdc), types.NewAggregatesIndex(sb)),
+		AggregateValue:  collections.NewMap(sb, types.AggregateValuePrefix, "aggregate_value", collections.Uint64Key, codec.CollValue[types.RunningAggregate](cdc)),
+		ValuesWeightSum: collections.NewMap(sb, types.ValuesWeightSumPrefix, "values_weight_sum", collections.Uint64Key, collections.Uint64Value),
+		// TotalTips maps the block number to the total tips added up till that point. Used for calculating voting power during a dispute
+		TotalTips: collections.NewMap(sb, types.TotalTipsPrefix, "total_tips", collections.Uint64Key, sdk.IntValue),
+		// Nonces maps the queryId to the nonce that increments with each aggregate report
+		Nonces: collections.NewMap(sb, types.NoncesPrefix, "nonces", collections.BytesKey, collections.Uint64Value),
+		// Aggregates maps the queryId:timestamp to the aggregate report plus indexes the key by the aggregate report's height
+		// and the microReport's height (the microReport that becomes the median)
+		// the microReport's height is needed to be able to flag the aggregate report in the case of a dispute
+		Aggregates: collections.NewIndexedMap(sb,
+			types.AggregatesPrefix,
+			"aggregates",
+			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+			codec.CollValue[types.Aggregate](cdc),
+			types.NewAggregatesIndex(sb),
+		),
+		// Reports maps the queryId:reporter:queryMeta.id to the microReport
+		// indexes the key by the reporter (for a getter that gets all microReports by a reporter) and the queryMeta.id to fetch all microReports for a specific query during aggregation
 		Reports: collections.NewIndexedMap(sb,
 			types.ReportsPrefix,
 			"reports",
@@ -113,7 +128,11 @@ func NewKeeper(
 			codec.CollValue[types.MicroReport](cdc),
 			types.NewReportsIndex(sb),
 		),
+		// QuerySequencer is an id generator for queryMeta that increments with each new query to distinguish between expired queries and new queries
 		QuerySequencer: collections.NewSequence(sb, types.QuerySeqPrefix, "sequencer"),
+		// Query maps the queryId:id to the queryMeta (holds information about the query and the tip, expiration time, tip amount, query spec reporting window etc.)
+		// indexes the key by the query's queryType (ie SpotPrice, etc.) for purposes of updating the query's reporting spec (ie reporting block window)
+		// also indexes by a boolean to distinguish between queries that have reports to be aggregated and not
 		Query: collections.NewIndexedMap(sb,
 			types.QueryTipPrefix,
 			"query",
@@ -121,15 +140,17 @@ func NewKeeper(
 			codec.CollValue[types.QueryMeta](cdc),
 			types.NewQueryIndex(sb),
 		),
-		Cyclelist:          collections.NewMap(sb, types.CyclelistPrefix, "cyclelist", collections.BytesKey, collections.BytesValue),
+		// Cyclelist maps the queryId (hash of the query data) to the queryData for queries that are in the cycle list
+		Cyclelist: collections.NewMap(sb, types.CyclelistPrefix, "cyclelist", collections.BytesKey, collections.BytesValue),
+		// CyclelistSequencer is an id generator for cycle list queries that increments when called until the max of len(cycleListQueries) is reached
+		// then it resets.
 		CyclelistSequencer: collections.NewSequence(sb, types.CycleSeqPrefix, "cycle_sequencer"),
-
-		TipperTotal: collections.NewIndexedMap(sb,
+		// TipperTotal maps the tipperAcc:blockNumber to the total tips the tipper has added up till that point. Used for calculating voting power during a dispute
+		TipperTotal: collections.NewMap(sb,
 			types.TipperTotalPrefix,
 			"tipper_total",
 			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
 			sdk.IntValue,
-			types.NewTippersIndex(sb),
 		),
 		AggregateIbcResponse: collections.NewMap(sb, types.AggregateIbcResponsePrefix, "aggregate_ibc_response", collections.Uint64Key, codec.CollValue[types.Aggregate](cdc)),
 		LastPacketSequence:   collections.NewItem(sb, types.LastPacketSequencePrefix, "last_packet_sequence", collections.Uint64Value),
@@ -155,7 +176,8 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// initialize query for a given query data
+// initialize query for a given query data.
+// set the id, queryType, and reporting window
 func (k Keeper) InitializeQuery(ctx context.Context, querydata []byte) (types.QueryMeta, error) {
 	// initialize query tip first time
 
@@ -215,29 +237,24 @@ func (k Keeper) UpdateQuery(ctx context.Context, queryType string, newBlockWindo
 }
 
 func (k Keeper) FlagAggregateReport(ctx context.Context, report types.MicroReport) error {
-	iter, err := k.Aggregates.Indexes.MicroHeight.MatchExact(ctx, report.BlockNumber)
+	reporter := sdk.MustAccAddressFromBech32(report.Reporter)
+	iter, err := k.Aggregates.Indexes.Reporter.MatchExact(ctx, collections.Join3(reporter.Bytes(), report.QueryId, report.BlockNumber))
 	if err != nil {
 		return err
 	}
 	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
+	if iter.Valid() {
 		aggregatekey, err := iter.PrimaryKey()
 		if err != nil {
 			return err
 		}
-		if bytes.Equal(aggregatekey.K1(), report.QueryId) {
-			aggregate, err := k.Aggregates.Get(ctx, aggregatekey)
-			if err != nil {
-				return err
-			}
-			reporter := aggregate.Reporters[aggregate.AggregateReportIndex].Reporter
-			if sdk.MustAccAddressFromBech32(reporter).Equals(sdk.MustAccAddressFromBech32(report.Reporter)) {
-				aggregate.Flagged = true
-				return k.Aggregates.Set(ctx, aggregatekey, aggregate)
-			}
+		aggregate, err := k.Aggregates.Get(ctx, aggregatekey)
+		if err != nil {
+			return err
 		}
+		aggregate.Flagged = true
+		return k.Aggregates.Set(ctx, aggregatekey, aggregate)
 	}
-
 	return nil
 }
 

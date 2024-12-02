@@ -7,7 +7,6 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	rktypes "github.com/tellor-io/layer/x/registry/types"
-	reptypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/math"
 
@@ -69,8 +68,8 @@ type RegistryKeeper interface {
 
 type ReporterKeeper interface {
 	// Methods imported from reporter should be defined here
-	ReporterStake(ctx context.Context, repAddress sdk.AccAddress) (math.Int, error)
-	DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward reptypes.BigUint, height uint64) error
+	ReporterStake(ctx context.Context, repAddress sdk.AccAddress, queryId []byte) (math.Int, error)
+	DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.LegacyDec, queryId []byte, height uint64) error
 }
 
 type RegistryHooks interface {
