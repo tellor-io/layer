@@ -922,7 +922,6 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 	}
 	// make this a governance param
 	snapshotLimit, err := k.SnapshotLimit.Get(ctx)
-	k.Logger(ctx).Info("snapshot limit", "limit", snapshotLimit.Limit)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting snapshot limit", "error", err)
 		return err
