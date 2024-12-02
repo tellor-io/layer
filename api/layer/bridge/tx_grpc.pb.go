@@ -21,6 +21,7 @@ type MsgClient interface {
 	RequestAttestations(ctx context.Context, in *MsgRequestAttestations, opts ...grpc.CallOption) (*MsgRequestAttestationsResponse, error)
 	WithdrawTokens(ctx context.Context, in *MsgWithdrawTokens, opts ...grpc.CallOption) (*MsgWithdrawTokensResponse, error)
 	ClaimDeposits(ctx context.Context, in *MsgClaimDepositsRequest, opts ...grpc.CallOption) (*MsgClaimDepositsResponse, error)
+	UpdateSnapshotLimit(ctx context.Context, in *MsgUpdateSnapshotLimit, opts ...grpc.CallOption) (*MsgUpdateSnapshotLimitResponse, error)
 }
 
 type msgClient struct {
@@ -58,6 +59,15 @@ func (c *msgClient) ClaimDeposits(ctx context.Context, in *MsgClaimDepositsReque
 	return out, nil
 }
 
+func (c *msgClient) UpdateSnapshotLimit(ctx context.Context, in *MsgUpdateSnapshotLimit, opts ...grpc.CallOption) (*MsgUpdateSnapshotLimitResponse, error) {
+	out := new(MsgUpdateSnapshotLimitResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Msg/UpdateSnapshotLimit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -65,6 +75,7 @@ type MsgServer interface {
 	RequestAttestations(context.Context, *MsgRequestAttestations) (*MsgRequestAttestationsResponse, error)
 	WithdrawTokens(context.Context, *MsgWithdrawTokens) (*MsgWithdrawTokensResponse, error)
 	ClaimDeposits(context.Context, *MsgClaimDepositsRequest) (*MsgClaimDepositsResponse, error)
+	UpdateSnapshotLimit(context.Context, *MsgUpdateSnapshotLimit) (*MsgUpdateSnapshotLimitResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -80,6 +91,9 @@ func (UnimplementedMsgServer) WithdrawTokens(context.Context, *MsgWithdrawTokens
 }
 func (UnimplementedMsgServer) ClaimDeposits(context.Context, *MsgClaimDepositsRequest) (*MsgClaimDepositsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClaimDeposits not implemented")
+}
+func (UnimplementedMsgServer) UpdateSnapshotLimit(context.Context, *MsgUpdateSnapshotLimit) (*MsgUpdateSnapshotLimitResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateSnapshotLimit not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -148,6 +162,24 @@ func _Msg_ClaimDeposits_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateSnapshotLimit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateSnapshotLimit)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateSnapshotLimit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Msg/UpdateSnapshotLimit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateSnapshotLimit(ctx, req.(*MsgUpdateSnapshotLimit))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -166,6 +198,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ClaimDeposits",
 			Handler:    _Msg_ClaimDeposits_Handler,
+		},
+		{
+			MethodName: "UpdateSnapshotLimit",
+			Handler:    _Msg_UpdateSnapshotLimit_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

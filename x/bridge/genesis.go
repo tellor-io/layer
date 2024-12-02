@@ -13,6 +13,9 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err := k.Params.Set(ctx, genState.Params); err != nil {
 		panic(err)
 	}
+	if err := k.SnapshotLimit.Set(ctx, types.SnapshotLimit{Limit: genState.SnapshotLimit}); err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns the module's exported genesis
