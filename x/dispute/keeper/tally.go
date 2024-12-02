@@ -147,7 +147,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		scaledInvalidDec = scaledInvalidDec.Add(usersInvalidVotesDec.Mul(powerReductionDec).Quo(userVoteSumDec))
 	}
 
-	// replace logic above with this
 	tallies.ForVotes.Reporters = math.NewIntFromUint64(voteCounts.Reporters.Support)
 	tallies.AgainstVotes.Reporters = math.NewIntFromUint64(voteCounts.Reporters.Against)
 	tallies.Invalid.Reporters = math.NewIntFromUint64(voteCounts.Reporters.Invalid)
@@ -186,7 +185,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 
 	tokenSupply := k.GetTotalSupply(ctx)
 
-	// replace logic above with this
 	tallies.ForVotes.TokenHolders = math.NewIntFromUint64(voteCounts.Tokenholders.Support)
 	tallies.AgainstVotes.TokenHolders = math.NewIntFromUint64(voteCounts.Tokenholders.Against)
 	tallies.Invalid.TokenHolders = math.NewIntFromUint64(voteCounts.Tokenholders.Invalid)
