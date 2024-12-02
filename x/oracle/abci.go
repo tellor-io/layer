@@ -4,10 +4,14 @@ import (
 	"context"
 
 	// "github.com/tellor-io/layer/utils"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/tellor-io/layer/x/oracle/keeper"
+	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 func EndBlocker(ctx context.Context, k keeper.Keeper) error {
+	start := telemetry.Now()
+	defer telemetry.ModuleMeasureSince(types.ModuleName, start, telemetry.MetricKeyEndBlocker)
 	// currentHeight := sdk.UnwrapSDKContext(ctx).BlockHeight()
 	// currentCycleListQuery, err := k.GetCurrentQueryInCycleList(ctx)
 	// if err != nil {

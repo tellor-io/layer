@@ -258,6 +258,29 @@ type GenerateQueryDataResponse struct {
 	QueryData []byte `json:"query_data"`
 }
 
+type TippedQueriesResponse struct {
+	Queries []QueryMeta `json:"queries"`
+}
+
+type QueryMeta struct {
+	// unique id of the query that changes after query's lifecycle ends
+	Id string `json:"id,omitempty"`
+	// amount of tokens that was tipped
+	Amount string `json:"amount"`
+	// expiration time of the query
+	Expiration string `json:"expiration,omitempty"`
+	// timeframe of the query according to the data spec
+	RegistrySpecBlockWindow string `json:"registry_spec_block_window,omitempty"`
+	// indicates whether query has revealed reports
+	HasRevealedReports bool `json:"has_revealed_reports,omitempty"`
+	// query_data: decodable bytes to field of the data spec
+	QueryData string `json:"query_data,omitempty"`
+	// string identifier of the data spec
+	QueryType string `json:"query_type,omitempty"`
+	// bool cycle list query
+	CycleList bool `json:"cycle_list,omitempty"`
+}
+
 // HELPERS FOR TESTING AGAINST THE CHAIN
 
 func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos.ChainNode) (string, error) {

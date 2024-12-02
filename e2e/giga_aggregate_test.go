@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/rand"
 	"testing"
+	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,79 +16,54 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
 	layerutil "github.com/tellor-io/layer/testutil"
-)
 
-const (
-	type6qData  = "0x000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005747970653600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000001610000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000016200000000000000000000000000000000000000000000000000000000000000"
-	typ6qId     = "0x3309f88571c671b353c0082cd4219096885b6805b58a9e6aa086c4a46ddbdcde"
-	type12qData = "0x000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000006747970653132000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000001610000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000016200000000000000000000000000000000000000000000000000000000000000"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
-
-// Hold user addr and tip amount
-type UserTip struct {
-	Address string
-	Tip     sdk.Coin
-}
 
 type QueryDataStorage struct {
 	QueryType     string
 	QueryData     string
 	ExpectedValue string
+	TipAmount     sdk.Coin
 }
 
+// ~22 min to run 100 aggregates...
 func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 	require := require.New(t)
 	ctx := context.Background()
 	layer := e2e.LayerSpinup(t)
 
-	// get a validator
+	numAggregates := 100
+
+	// get a validator to call upon
+	telemetry.MeasureSince(time.Now(), "get val addresses")
 	validators, valAccAddresses, _, err := e2e.GetValAddresses(ctx, layer)
 	require.NoError(err)
 	validatorI := validators[0]
 	valIAccAddress := valAccAddresses[0]
-	// validatorII := validators[1]
 
 	// submit minting proposal and vote yes on it from all validators
 	require.NoError(e2e.TurnOnMinting(ctx, layer, validatorI))
+	telemetry.MeasureSince(time.Now(), "turn on minting")
 
 	// validatorI becomes a reporter
 	txHash, err := validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", "/var/cosmos-chain/layer-1")
 	require.NoError(err)
 	fmt.Println("TX HASH (validatorI becomes a reporter): ", txHash)
-
-	// Create and fund n users, set how much they are going to tip
-	n := 5
-	var userTips []UserTip
-	expectedTipTotal := math.ZeroInt()
-	for i := 0; i < n; i++ {
-		userName := fmt.Sprintf("user%d", i+1)
-		user := interchaintest.GetAndFundTestUsers(t, ctx, userName, math.NewInt(900_000*1e6), layer)[0]
-
-		// Generate a random tip amount
-		randomTipInt := rand.Int63n(1000000) + 1
-		randomTip := sdk.NewCoin("loya", math.NewInt(randomTipInt))
-
-		// Store the user's address and the random tip amount
-		userTips = append(userTips, UserTip{
-			Address: user.FormattedAddress(),
-			Tip:     randomTip,
-		})
-
-		twoPercent := randomTip.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100))
-		expectedTipTotal = expectedTipTotal.Add(randomTip.Amount.Sub(twoPercent))
-	}
-	fmt.Println("Expected tip total: ", expectedTipTotal.String())
+	telemetry.MeasureSince(time.Now(), "validatorI becomes a reporter")
+	// Create and fund a user who will be tipping
+	userName := "user1"
+	userStartingBalance := math.NewInt(999_999 * 1e6)
+	user := interchaintest.GetAndFundTestUsers(t, ctx, userName, userStartingBalance, layer)[0]
 
 	// create data specs that expire 4 blocks apart
-	// store the query data for each spec
-	// 4 blocks apart because we want to see a bunch of aggregates happen on the same end block z
-	// .ExecTx takes 2 blocks to complete
-	// queryType1 is tipped on block n, submitted for on n+2, queryType2 is tipped on block n+4, submitted for on n+6, ...
-	// So queryType1 to be tipped on block z - n,
-
+	// store necessary tip/submit values for each query in a struct
+	// 4 blocks apart because we want to see a bunch of aggregates happen on the same end block .ExecTx takes 2 blocks to complete
+	// set a random tip and value for each query
+	expectedTipTotal := math.ZeroInt()
 	registrar := valAccAddresses[0]
 	var queryDatas []QueryDataStorage
-	for i := 1; i <= 5; i++ {
+	for i := 1; i <= numAggregates; i++ {
 		currentHeight, err := validatorI.Height(ctx)
 		require.NoError(err)
 		fmt.Println("Current height: ", currentHeight)
@@ -108,69 +84,62 @@ func TestLotsOfAggregatesInSameBlock(t *testing.T) {
 		require.NoError(json.Unmarshal(queryDataBz, &qData))
 		queryDataHexString := hex.EncodeToString(qData.QueryData)
 
-		queryDatas = append(queryDatas, QueryDataStorage{
-			QueryType: queryType,
-			QueryData: queryDataHexString,
-		})
-	}
+		// generate a random tip amount
+		randomTipInt := rand.Int63n(1000000) + 1
+		randomTip := sdk.NewCoin("loya", math.NewInt(randomTipInt))
 
-	// Send a tip from a user on block n, submit a value on block n+2 in reverse order
+		value := layerutil.EncodeValue(rand.Float64() * 100)
+
+		queryDatas = append(queryDatas, QueryDataStorage{
+			QueryType:     queryType,
+			QueryData:     queryDataHexString,
+			TipAmount:     randomTip,
+			ExpectedValue: value,
+		})
+
+		twoPercent := randomTip.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100))
+		expectedTipTotal = expectedTipTotal.Add(randomTip.Amount.Sub(twoPercent))
+	}
+	fmt.Println("Expected tip total: ", expectedTipTotal.String())
+
+	// Send a tip from a user on block n, submit a value on block n+2, submit next tip on block n+4, etc
+	// reverse iterate so the query with the longest expiry is tipped first
+	// do not add queries or computations to this loop or else it may throw off 4 block cycle
+	// 4 block cycle is still not guaranteed
 	var currentHeight int64
 	var txHashes []string
-	for i := len(userTips) - 1; i >= 0; i-- { // Reverse iteration
+	for i := len(queryDatas) - 1; i >= 0; i-- {
 		currentHeight, err = validatorI.Height(ctx)
 		require.NoError(err)
 		fmt.Println("Current height: ", currentHeight)
 
-		queryData := queryDatas[i].QueryData
-		userAddr := userTips[i].Address
-		randomTip := userTips[i].Tip
-		userName := fmt.Sprintf("user%d", i+1)
-		txHash, err := validatorI.ExecTx(ctx, userName, "oracle", "tip", userAddr, string(queryData), randomTip.String(), "--keyring-dir", "/var/cosmos-chain/layer-1")
+		// tip for query
+		txHash, err := validatorI.ExecTx(ctx, userName, "oracle", "tip", user.FormattedAddress(), string(queryDatas[i].QueryData), queryDatas[i].TipAmount.String(), "--keyring-dir", "/var/cosmos-chain/layer-1")
 		require.NoError(err)
 		txHashes = append(txHashes, txHash)
-		fmt.Printf("TX Hash (user %d tip %s): %s\n", i+1, randomTip.String(), txHash)
+		fmt.Printf("TX Hash (user tip %s): %s\n", queryDatas[i].TipAmount.String(), txHash)
 
-		// query tip for the query
-		tip, err := e2e.QueryTips(string(queryData), ctx, validatorI)
-		require.NoError(err)
-		fmt.Println("Tip: ", tip.Tips.String())
+		// query tip for the query type
+		// tip, err := e2e.QueryTips(string(queryDatas[i].QueryData), ctx, validatorI)
+		// require.NoError(err)
+		// fmt.Println("Tip: ", tip.Tips.String())
 
-		value := layerutil.EncodeValue(rand.Float64() * 100)
-		queryDatas[i].ExpectedValue = value
-		txHash, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", valIAccAddress, string(queryData), value, "--keyring-dir", "/var/cosmos-chain/layer-1")
+		// submit value for query
+		txHash, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", valIAccAddress, string(queryDatas[i].QueryData), queryDatas[i].ExpectedValue, "--keyring-dir", "/var/cosmos-chain/layer-1")
 		require.NoError(err)
 		fmt.Printf("TX Hash (validator submits value for query %d): %s\n", i+1, txHash)
 	}
 
-	// query available tips
-	allTips, _, err := validatorI.ExecQuery(ctx, "oracle", "tipped-queries")
-	require.NoError(err)
-	fmt.Println("All tips: ", allTips)
+	// query available tips as sanity check, all queries should be open still
+	// allTips, _, err := validatorI.ExecQuery(ctx, "oracle", "tipped-queries")
+	// require.NoError(err)
+	// fmt.Println("All tips: ", string(allTips))
+	// var tippedQueries e2e.TippedQueriesResponse
+	// require.NoError(json.Unmarshal(allTips, &tippedQueries))
+	// fmt.Println("Tipped queries: ", tippedQueries)
 
 	// wait for aggregates to be set
-	require.NoError(testutil.WaitForBlocks(ctx, 10, validatorI))
+	require.NoError(testutil.WaitForBlocks(ctx, 4, validatorI))
 
-	// query data spec
-	// getSpecResponse, _, err := validatorI.ExecQuery(ctx, "registry", "data-spec", queryType)
-	// require.NoError(err)
-	// var getSpec e2e.GetDataSpecResponse
-	// require.NoError(json.Unmarshal(getSpecResponse, &getSpec))
-	// fmt.Println("Data spec: ", getSpec)
-
-	// for _, txHash := range txHashes {
-	// 	resp, err := layer.GetTransaction(txHash)
-	// 	// require.NoError(err)
-	// 	fmt.Println("tx response: ", resp)
-	// 	fmt.Println("tx hash: ", txHash)
-	// 	fmt.Println("err: ", err)
-	// }
-
-	// // get block num from tx hashes
-	// blockResult, err := validatorI.Client.BlockResults(ctx, &currentHeight)
-	// require.NoError(err)
-	// fmt.Println("Block num: ", blockResult)
-
-	// fmt.Println("Current tips: ", getCurrentTips.Tips.String())
-	// fmt.Println("Expected tip total: ", expectedTipTotal.String())
+	// todo: claim tbr and tip rewards, check balances
 }
