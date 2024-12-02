@@ -16,4 +16,5 @@ var (
 	ErrInvalidDepositReportValue         = sdkerrors.Register(ModuleName, 1105, "invalid deposit report value")
 	ErrDepositAlreadyClaimed             = sdkerrors.Register(ModuleName, 1106, "deposit already claimed")
 	ErrInvalidDepositIdsAndIndicesLength = sdkerrors.Register(ModuleName, 1107, "invalid deposit ids and indices length")
+	ErrInvalidSigner                     = sdkerrors.Register(ModuleName, 1108, "invalid signer")
 )

@@ -23,7 +23,7 @@ contract LayerTransition {
         token = ITellorMaster(_token);
     }
 
-    /// @notice this is needed because it's called when mintingToTeam.  We hijack it to keep it in the bridge
+    /// @notice this is needed because it's called when calling mintToOracle.  We hijack it to keep it in the bridge
     /// @param _amount the amount of staking rewards to add to the token contract
     function addStakingRewards(uint256 _amount) external {
         token.transferFrom(msg.sender, address(this), _amount);

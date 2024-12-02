@@ -102,6 +102,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Execute the ClaimDeposits RPC method",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "deposit_ids"}, {ProtoField: "indices"}},
 				},
+				{
+					RpcMethod:      "UpdateSnapshotLimit",
+					Use:            "update-snapshot-limit [limit]",
+					Short:          "Execute the UpdateSnapshotLimit RPC method",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "limit"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},

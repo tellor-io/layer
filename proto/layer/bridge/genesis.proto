@@ -9,4 +9,5 @@ option go_package = "github.com/tellor-io/layer/x/bridge/types";
 // GenesisState defines the bridge module's genesis state.
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
+  uint64 snapshot_limit = 2;
 }

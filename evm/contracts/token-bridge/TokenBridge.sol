@@ -52,15 +52,6 @@ contract TokenBridge is LayerTransition{
     event Withdraw(uint256 _depositId, string _sender, address _recipient, uint256 _amount);
 
     // Functions
-    /**
-     * @dev Initializes system parameters
-     * @param _token address of token used for staking and rewards
-     * @param _reportingLock base amount of time (seconds) before reporter is able to report again
-     * @param _stakeAmountDollarTarget fixed USD amount that stakeAmount targets on updateStakeAmount
-     * @param _stakingTokenPrice current price of staking token in USD (18 decimals)
-     * @param _stakingTokenPriceQueryId queryId where staking token price is reported
-     */
-
     /*Functions*/
     /// @notice constructor
     /// @param _token address of tellor token for bridging
@@ -108,6 +99,8 @@ contract TokenBridge is LayerTransition{
         emit Deposit(depositId, msg.sender, _layerRecipient, _amount, _tip);
     }
 
+    /// @notice temporarily pauses the bridge, only once and only by guardian at a great cost
+    /// @dev guardian is the only one who can pause the bridge
     function pauseBridge() external {
         require(msg.sender == bridge.guardian(), "TokenBridge: only guardian can pause bridge");
         require(bridgeState == BridgeState.NORMAL, "TokenBridge: can only pause once");
@@ -117,6 +110,7 @@ contract TokenBridge is LayerTransition{
         emit BridgeStateUpdated(BridgeState.PAUSED);
     }
 
+    /// @notice unpauses the bridge after the pause period has passed, can be called by anyone
     function unpauseBridge() external {
         require(bridgeState == BridgeState.PAUSED, "TokenBridge: bridge is not paused");
         require(block.timestamp - bridgeStateUpdateTime > PAUSE_PERIOD, "TokenBridge: must wait before unpausing");

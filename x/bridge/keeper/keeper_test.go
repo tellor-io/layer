@@ -25,6 +25,17 @@ import (
 func setupKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, *mocks.OracleKeeper, *mocks.ReporterKeeper, *mocks.StakingKeeper, context.Context) {
 	tb.Helper()
 	k, ak, bk, ok, rk, sk, ctx := keepertest.BridgeKeeper(tb)
+
+	// Initialize genesis state with default snapshot limit
+	err := k.SnapshotLimit.Set(ctx, types.SnapshotLimit{
+		Limit: types.DefaultSnapshotLimit,
+	})
+	require.NoError(tb, err)
+
+	// Initialize default params
+	err = k.Params.Set(ctx, types.DefaultParams())
+	require.NoError(tb, err)
+
 	return k, ak, bk, ok, rk, sk, ctx
 }
 

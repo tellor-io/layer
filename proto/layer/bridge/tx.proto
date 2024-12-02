@@ -14,6 +14,7 @@ service Msg {
   rpc RequestAttestations(MsgRequestAttestations) returns (MsgRequestAttestationsResponse);
   rpc WithdrawTokens(MsgWithdrawTokens) returns (MsgWithdrawTokensResponse);
   rpc ClaimDeposits(MsgClaimDepositsRequest) returns (MsgClaimDepositsResponse);
+  rpc UpdateSnapshotLimit(MsgUpdateSnapshotLimit) returns (MsgUpdateSnapshotLimitResponse);
 }
 
 message MsgRequestAttestations {
@@ -45,3 +46,12 @@ message MsgClaimDepositsRequest {
 }
 
 message MsgClaimDepositsResponse {}
+
+message MsgUpdateSnapshotLimit {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  string authority = 1;
+  uint64 limit = 2;
+}
+
+message MsgUpdateSnapshotLimitResponse {}
