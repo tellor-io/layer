@@ -28,9 +28,9 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	// aggregate
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := uint64(sdkCtx.BlockHeight())
-	// add 1 to blockHeight because range is exclusive
 	// rng for queries that have expired and have revealed reports
-	rng := collections.NewPrefixUntilPairRange[collections.Pair[bool, uint64], collections.Pair[[]byte, uint64]](collections.Join(true, blockHeight+1)).Descending()
+	// ranger is inclusive and descending
+	rng := collections.NewPrefixUntilPairRange[collections.Pair[bool, uint64], collections.Pair[[]byte, uint64]](collections.Join(true, blockHeight)).Descending()
 	idsIterator, err := k.Query.Indexes.Expiration.Iterate(ctx, rng)
 	if err != nil {
 		return err
@@ -53,32 +53,29 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		if err != nil {
 			return err
 		}
-		// enter if query has expired
-		// todo: remove this check since ranger only returns expired queries
-		if query.Expiration <= blockHeight {
-			aggregateReport, isCyclelist, err := k.AggregateReport(ctx, query.Id)
-			if err != nil {
-				return err
-			}
-			if !query.Amount.IsZero() {
-				err = k.AllocateRewards(ctx, &aggregateReport, query.Amount, types.ModuleName)
-				if err != nil {
-					return err
-				}
-			}
-			// todo: shouldn't there be only one queryId per block that is a cyclelist?
-			if isCyclelist {
-				tbr := k.GetTimeBasedRewards(ctx)
-				err = k.AllocateRewards(ctx, &aggregateReport, tbr, minttypes.TimeBasedRewards)
-				if err != nil {
-					return err
-				}
 
-			}
-			err = k.Query.Remove(ctx, fullKey.K2())
+		aggregateReport, isCyclelist, err := k.AggregateReport(ctx, query.Id)
+		if err != nil {
+			return err
+		}
+		if !query.Amount.IsZero() {
+			err = k.AllocateRewards(ctx, &aggregateReport, query.Amount, types.ModuleName)
 			if err != nil {
 				return err
 			}
+		}
+		// if the query is part of a cyclelist, allocate time-based rewards
+		if isCyclelist {
+			tbr := k.GetTimeBasedRewards(ctx)
+			err = k.AllocateRewards(ctx, &aggregateReport, tbr, minttypes.TimeBasedRewards)
+			if err != nil {
+				return err
+			}
+
+		}
+		err = k.Query.Remove(ctx, fullKey.K2())
+		if err != nil {
+			return err
 		}
 	}
 

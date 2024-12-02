@@ -3,7 +3,9 @@ package keeper_test
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
+	"math/big"
+	"sort"
+	"strings"
 	"testing"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -423,9 +425,10 @@ func (s *KeeperTestSuite) TestAddReport() {
 			if i == len(tc.values)-1 {
 				median, err := s.oracleKeeper.AggregateValue.Get(s.ctx, tc.id)
 				s.Equal(tc.median, median.Value)
-				fmt.Println(median.CrossoverWeight)
 				s.Equal(tc.crossoverWeight, median.CrossoverWeight)
 				s.NoError(err)
+				calculatedMedian := WeightedMedian(tc.values, tc.powers)
+				s.True(strings.EqualFold(calculatedMedian, median.Value))
 			}
 		}
 	}
@@ -442,8 +445,12 @@ func (s *KeeperTestSuite) TestReportIndexedMap() {
 	s.NoError(k.Query.Set(s.ctx, collections.Join([]byte("queryid6"), uint64(6)), types.QueryMeta{Expiration: 10}))
 	s.NoError(k.Query.Set(s.ctx, collections.Join([]byte("queryid7"), uint64(7)), types.QueryMeta{Expiration: 10, HasRevealedReports: true}))
 	s.NoError(k.Query.Set(s.ctx, collections.Join([]byte("queryid8"), uint64(8)), types.QueryMeta{Expiration: 10, HasRevealedReports: true}))
+	// has revealed reports but not expired
+	s.NoError(k.Query.Set(s.ctx, collections.Join([]byte("queryid9"), uint64(9)), types.QueryMeta{Expiration: 12, HasRevealedReports: true}))
+	// expired but no revealed reports
+	s.NoError(k.Query.Set(s.ctx, collections.Join([]byte("queryid10"), uint64(10)), types.QueryMeta{Expiration: 9}))
 
-	rng := collections.NewPrefixUntilPairRange[collections.Pair[bool, uint64], collections.Pair[[]byte, uint64]](collections.Join(true, uint64(11))).Descending()
+	rng := collections.NewPrefixUntilPairRange[collections.Pair[bool, uint64], collections.Pair[[]byte, uint64]](collections.Join(true, uint64(12))).Descending()
 	iter, err := k.Query.Indexes.Expiration.Iterate(s.ctx, rng)
 	s.NoError(err)
 	expiredRevealedCount := 0
@@ -457,4 +464,42 @@ func (s *KeeperTestSuite) TestReportIndexedMap() {
 		expiredRevealedCount++
 	}
 	s.Equal(2, expiredRevealedCount)
+}
+
+// helper function that intakes a list of hex strings(uint256) with their corresponding powers
+// and returns the weighted median
+func WeightedMedian(values []string, powers []uint64) string {
+	type HexValue struct {
+		Value  *big.Int
+		Weight uint64
+	}
+	hexValues := make([]HexValue, len(values))
+	for i, v := range values {
+		val, ok := new(big.Int).SetString(v, 16)
+		if !ok {
+			return "failed to parse value"
+		}
+		hexValues[i] = HexValue{Value: val, Weight: powers[i]}
+	}
+
+	sort.Slice(hexValues, func(i, j int) bool {
+		return hexValues[i].Value.Cmp(hexValues[j].Value) < 0
+	})
+
+	totalReporterPower := uint64(0)
+	for _, p := range powers {
+		totalReporterPower += p
+	}
+
+	halfWeight := totalReporterPower / 2
+	cumulativePower := uint64(0)
+	for _, v := range hexValues {
+		cumulativePower += v.Weight
+		if cumulativePower >= halfWeight {
+			resp, _ := utils.FormatUint256(v.Value.Text(16))
+
+			return resp
+		}
+	}
+	return ""
 }

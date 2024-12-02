@@ -25,10 +25,18 @@ import (
 // 4. Create a new MicroReport object with the provided data
 // 5. Set query.HasRevealedReports to true
 // 6. Set the query in the store
+// 7. Check if the new value changes the aggregate value and update it if needed
 // 7. Emit a new_report event
 // 8. Set the micro report in the store
 func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query types.QueryMeta, val string, queryData []byte, power uint64, incycle bool) error {
-	// todo: block reporter that has already submitted a report for this query
+	queryId := utils.QueryIDFromData(queryData)
+	alreadyReported, err := k.Reports.Has(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id))
+	if err != nil {
+		return err
+	}
+	if alreadyReported {
+		return status.Error(codes.InvalidArgument, "reporter has already submitted a report for this query")
+	}
 	// decode query data hex to get query type, returns interface array
 	queryType, _, err := regTypes.DecodeQueryType(queryData)
 	if err != nil {
@@ -45,7 +53,7 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	queryId := utils.QueryIDFromData(queryData)
+
 	report := types.MicroReport{
 		Reporter:        reporter.String(),
 		Power:           power,
@@ -169,7 +177,6 @@ func (k Keeper) TraverseLeft(
 	ctx context.Context,
 	id uint64, medianValue string, crossoverWeight, halfTotal uint64,
 ) error {
-	fmt.Println("traversing left")
 	currentValue := medianValue
 	rng := collections.NewPrefixedPairRange[uint64, string](id).EndInclusive(medianValue).Descending() // inclusive to get the current median value's actual power
 	iter, err := k.Values.Iterate(ctx, rng)
@@ -219,7 +226,6 @@ func (k Keeper) TraverseRight(
 	ctx context.Context,
 	id uint64, medianValue string, crossoverWeight, halfTotal uint64,
 ) error {
-	fmt.Println("traversing right")
 	incomingWeight := crossoverWeight
 	rng := collections.NewPrefixedPairRange[uint64, string](id).StartExclusive(medianValue)
 	iter, err := k.Values.Iterate(ctx, rng)
