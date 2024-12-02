@@ -4,13 +4,14 @@ package types
 
 // DefaultIndex is the default global index
 const DefaultIndex uint64 = 1
+const DefaultSnapshotLimit uint64 = 1000
 
 // DefaultGenesis returns the default genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
 		// this line is used by starport scaffolding # genesis/types/default
 		Params:        DefaultParams(),
-		SnapshotLimit: 1000,
+		SnapshotLimit: DefaultSnapshotLimit,
 	}
 }
 

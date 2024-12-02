@@ -65,6 +65,9 @@ func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, sdk.Context, *mocks
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 	require.NoError(t, k.Params.Set(ctx, types.DefaultParams()))
 
+	require.NoError(t, k.SnapshotLimit.Set(ctx, types.SnapshotLimit{
+		Limit: types.DefaultSnapshotLimit,
+	}))
 	return app, k, ctx, sk, ok
 }
 
