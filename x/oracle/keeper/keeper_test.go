@@ -450,7 +450,7 @@ func (s *KeeperTestSuite) TestReportIndexedMap() {
 	// expired but no revealed reports
 	s.NoError(k.Query.Set(s.ctx, collections.Join([]byte("queryid10"), uint64(10)), types.QueryMeta{Expiration: 9}))
 
-	rng := collections.NewPrefixUntilPairRange[collections.Pair[bool, uint64], collections.Pair[[]byte, uint64]](collections.Join(true, uint64(12))).Descending()
+	rng := collections.NewPrefixUntilPairRange[collections.Pair[bool, uint64], collections.Pair[[]byte, uint64]](collections.Join(true, uint64(11))).Descending()
 	iter, err := k.Query.Indexes.Expiration.Iterate(s.ctx, rng)
 	s.NoError(err)
 	expiredRevealedCount := 0

@@ -22,6 +22,10 @@ type ReportersReportCount struct {
 	Height  uint64
 	queryId []byte
 }
+type ReporterInfo struct {
+	address string
+	data    ReportersReportCount
+}
 
 // AllocateRewards distributes rewards to reporters based on their power and number of reports.
 // It calculates the reward amount for each reporter and allocates the rewards.
@@ -35,10 +39,6 @@ func (k Keeper) AllocateRewards(ctx context.Context, report *types.Aggregate, re
 	// First pass: collect data in map
 	reportersMap := make(map[string]ReportersReportCount)
 	// Use a struct to hold reporter info
-	type ReporterInfo struct {
-		address string
-		data    ReportersReportCount
-	}
 	iter, err := k.Reports.Indexes.IdQueryId.MatchExact(ctx, collections.Join(report.MetaId, report.QueryId))
 	if err != nil {
 		fmt.Println("error getting reports", err)
@@ -70,8 +70,6 @@ func (k Keeper) AllocateRewards(ctx context.Context, report *types.Aggregate, re
 		reportersMap[report.Reporter] = reporter
 		totalPower += report.Power
 	}
-
-	// Convert to sorted slice for deterministic iteration
 	sortedReporters := make([]ReporterInfo, 0, len(reportersMap))
 	for addr, data := range reportersMap {
 		sortedReporters = append(sortedReporters, ReporterInfo{
@@ -84,7 +82,70 @@ func (k Keeper) AllocateRewards(ctx context.Context, report *types.Aggregate, re
 	sort.Slice(sortedReporters, func(i, j int) bool {
 		return sortedReporters[i].address < sortedReporters[j].address
 	})
+	return k.Allocate(ctx, sortedReporters, totalPower, reward, fromPool)
+}
 
+func (k Keeper) AllocateTBR(ctx context.Context, reports []types.Aggregate) error {
+	if len(reports) == 0 {
+		return nil
+	}
+
+	totalPower := uint64(0)
+	reportersMap := make(map[string]ReportersReportCount)
+
+	for _, aggRep := range reports {
+		iter, err := k.Reports.Indexes.IdQueryId.MatchExact(ctx, collections.Join(aggRep.MetaId, aggRep.QueryId))
+		if err != nil {
+			return err
+		}
+
+		defer iter.Close()
+		for ; iter.Valid(); iter.Next() {
+			reporterk, err := iter.PrimaryKey()
+			if err != nil {
+				return err
+			}
+			report, err := k.Reports.Get(ctx, reporterk)
+			if err != nil {
+				return err
+			}
+			reporter, found := reportersMap[report.Reporter]
+			if found {
+				fmt.Println("found reporter", reporter)
+				reporter.Reports++
+			} else {
+				reporter = ReportersReportCount{
+					Power:   report.Power,
+					Reports: 1,
+					Height:  report.BlockNumber,
+					queryId: report.QueryId,
+				}
+			}
+			reportersMap[report.Reporter] = reporter
+			totalPower += report.Power
+		}
+		sortedReporters := make([]ReporterInfo, 0, len(reportersMap))
+		for addr, data := range reportersMap {
+			sortedReporters = append(sortedReporters, ReporterInfo{
+				address: addr,
+				data:    data,
+			})
+		}
+
+		// Sort by address for deterministic ordering
+		sort.Slice(sortedReporters, func(i, j int) bool {
+			return sortedReporters[i].address < sortedReporters[j].address
+		})
+		tbr := k.GetTimeBasedRewards(ctx)
+		err = k.Allocate(ctx, sortedReporters, totalPower, tbr, minttypes.TimeBasedRewards)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k Keeper) Allocate(ctx context.Context, sortedReporters []ReporterInfo, totalPower uint64, reward math.Int, fromPool string) error {
 	// Process rewards in deterministic order
 	totaldist := math.LegacyZeroDec()
 	for i, reporter := range sortedReporters {
