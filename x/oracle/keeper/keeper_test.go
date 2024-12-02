@@ -37,6 +37,7 @@ type KeeperTestSuite struct {
 	ctx            sdk.Context
 	oracleKeeper   keeper.Keeper
 	bankKeeper     *mocks.BankKeeper
+	bridgeKeeper   *mocks.BridgeKeeper
 	accountKeeper  *mocks.AccountKeeper
 	registryKeeper *mocks.RegistryKeeper
 	reporterKeeper *mocks.ReporterKeeper
@@ -53,6 +54,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		s.registryKeeper,
 		s.accountKeeper,
 		s.bankKeeper,
+		s.bridgeKeeper,
 		s.ctx = keepertest.OracleKeeper(s.T())
 
 	s.msgServer = keeper.NewMsgServerImpl(s.oracleKeeper)
@@ -60,6 +62,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	// Initialize params
 	s.NoError(s.oracleKeeper.SetParams(s.ctx, types.DefaultParams()))
+	s.oracleKeeper.SetBridgeKeeper(s.bridgeKeeper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

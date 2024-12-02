@@ -26,6 +26,7 @@ type (
 		Params             collections.Item[types.Params]
 		accountKeeper      types.AccountKeeper
 		bankKeeper         types.BankKeeper
+		bridgeKeeper       types.BridgeKeeper
 		registryKeeper     types.RegistryKeeper
 		reporterKeeper     types.ReporterKeeper
 		Schema             collections.Schema
@@ -149,6 +150,10 @@ func (k Keeper) GetAuthority() string {
 func (k Keeper) Logger(ctx context.Context) log.Logger {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return sdkCtx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k *Keeper) SetBridgeKeeper(bk types.BridgeKeeper) {
+	k.bridgeKeeper = bk
 }
 
 // initialize query for a given query data.

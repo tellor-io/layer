@@ -60,7 +60,7 @@ func TestLogger(t *testing.T) {
 }
 
 func TestSetHooksAndHooks(t *testing.T) {
-	_k2, _, _, _, _, _ := keepertest.OracleKeeper(t)
+	_k2, _, _, _, _, _, _ := keepertest.OracleKeeper(t)
 	_, _, k := setupMsgServer(t)
 	k.SetHooks(_k2.Hooks())
 	_h := k.Hooks()

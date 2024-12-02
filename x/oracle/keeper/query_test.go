@@ -19,7 +19,7 @@ import (
 )
 
 func TestNewQuerier(t *testing.T) {
-	k, _, _, _, _, _ := testkeeper.OracleKeeper(t)
+	k, _, _, _, _, _, _ := testkeeper.OracleKeeper(t)
 	q := keeper.NewQuerier(k)
 	require.NotNil(t, q)
 }
@@ -67,7 +67,7 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 }
 
 func TestGetCurrentAggregateReport(t *testing.T) {
-	k, _, _, _, _, ctx := testkeeper.OracleKeeper(t)
+	k, _, _, _, _, _, ctx := testkeeper.OracleKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -121,7 +121,7 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 }
 
 func TestRetreiveData(t *testing.T) {
-	k, _, _, _, _, ctx := testkeeper.OracleKeeper(t)
+	k, _, _, _, _, _, ctx := testkeeper.OracleKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 

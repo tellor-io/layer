@@ -616,7 +616,7 @@ func New(
 		app.BankKeeper,
 		app.ReporterKeeper,
 	)
-
+	app.OracleKeeper.SetBridgeKeeper(app.BridgeKeeper)
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	appFlags := appflags.GetFlagValuesFromOptions(appOpts)
 	// Panic if this is not a full node and gRPC is disabled.
