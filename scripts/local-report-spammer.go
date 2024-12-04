@@ -12,10 +12,10 @@ import (
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
-var COMMAND_PATH = "/Users/caleb/layer/layerd"
-var LAYER_PATH = "/Users/caleb/.layer"
+var COMMAND_PATH = "ENTER PATH TO layerd"
+var LAYER_PATH = "ENTER PATH TO NODE FOLDER (where in .layer your node info is)"
 var FAUCET_ADDRESS = "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp"
-var VALIDATOR_ADDRESS = "tellorvaloper1dct4uwgcfjxqaphjmfzjv2yz733n9fycxdz2m6"
+var VALIDATOR_ADDRESS = "tellorvaloper1dct4uwgcfjxqaphjmfzjv2yz733n9fycxdz2m6" // this can be any
 
 var NUM_OF_REPORTERS = 50
 
@@ -54,7 +54,7 @@ type CyclelistQueryResponse struct {
 }
 
 func GetCurrentQueryInCyclelist() (string, error) {
-	cmd := exec.Command(COMMAND_PATH, "query", "oracle", "current-cyclelist-query", "--node", "http://54.209.172.1:26657")
+	cmd := exec.Command(COMMAND_PATH, "query", "oracle", "current-cyclelist-query", "--node", "http://54.234.103.186:26657")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Println("ERROR getting current cyclelist query: ", err)
