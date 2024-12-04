@@ -615,6 +615,7 @@ func New(
 		app.OracleKeeper,
 		app.BankKeeper,
 		app.ReporterKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	app.OracleKeeper.SetBridgeKeeper(app.BridgeKeeper)
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
