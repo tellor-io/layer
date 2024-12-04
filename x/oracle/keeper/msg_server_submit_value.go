@@ -36,7 +36,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 		return nil, err
 	}
 
-	isTokenBridgeDeposit, err := k.keeper.PreventBridgeWithdrawalReport(msg.QueryData)
+	isTokenBridgeDeposit, err := k.keeper.PreventBridgeWithdrawalReport(ctx, msg.QueryData)
 	if err != nil {
 		return nil, err
 	}

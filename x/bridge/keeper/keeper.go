@@ -782,7 +782,11 @@ func (k Keeper) GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr 
 func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := sdkCtx.BlockHeight()
-
+	snapshotlimit, err := k.SnapshotLimit.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting snapshot limit", "error", err)
+		return err
+	}
 	reports := k.oracleKeeper.GetAggregatedReportsByHeight(ctx, uint64(blockHeight))
 	for _, report := range reports {
 		queryId := report.QueryId
@@ -795,6 +799,10 @@ func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		if snapshotlimit.Limit == 0 {
+			break
+		}
+		snapshotlimit.Limit--
 	}
 	return nil
 }
@@ -831,7 +839,7 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 		queryId,
 		aggReport.AggregateValue,
 		uint64(timestamp.UnixMilli()),
-		aggReport.ReporterPower,
+		aggReport.AggregatePower,
 		uint64(tsBefore.UnixMilli()),
 		uint64(tsAfter.UnixMilli()),
 		validatorCheckpoint.Checkpoint,

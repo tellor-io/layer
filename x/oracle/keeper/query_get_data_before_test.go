@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -36,7 +37,7 @@ func (s *KeeperTestSuite) TestQueryGetDataBefore() {
 	queryId := "1234abcd"
 	qIdBz, err := utils.QueryBytesFromString(queryId)
 	s.NoError(err)
-	agg := types.Aggregate{QueryId: qIdBz}
+	agg := types.Aggregate{QueryId: qIdBz, AggregateReporter: sample.AccAddress()}
 	s.NoError(s.oracleKeeper.Aggregates.Set(s.ctx, collections.Join(qIdBz, uint64(timestamp.UnixMilli())), agg))
 	getDataBeforeResponse, err = querier.GetDataBefore(ctx, &types.QueryGetDataBeforeRequest{
 		QueryId:   queryId,

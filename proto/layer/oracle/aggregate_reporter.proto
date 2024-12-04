@@ -8,3 +8,8 @@ message AggregateReporter {
   uint64 power = 2;
   uint64 block_number = 3;
 }
+
+message RunningAggregate {
+  string value = 1;
+  uint64 crossover_weight = 2;
+}

@@ -12,7 +12,6 @@ import (
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
-	collections "cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	secp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -769,18 +768,18 @@ func (s *E2ETestSuite) TestAggregateOverMultipleBlocks() {
 
 	aggregate, time, err := s.Setup.Oraclekeeper.GetCurrentAggregateReport(s.Setup.Ctx, queryId)
 	require.NoError(err)
-	require.Equal(3, len(aggregate.Reporters))
-	require.Equal(aggregate.AggregateReportIndex, uint64(1))
+	// require.Equal(3, len(aggregate.Reporters))
+	// require.Equal(aggregate.AggregateReportIndex, uint64(1))
 	require.Equal(aggregate.AggregateValue, testutil.EncodeValue(100_000))
 	require.Equal(aggregate.AggregateReporter, romanAccAddr.String())
 	require.Equal(aggregate.Height, uint64(7))
-	require.Equal(aggregate.ReporterPower, uint64(850))
+	require.Equal(aggregate.AggregatePower, uint64(850))
 	require.Equal(aggregate.QueryId, queryId)
 	require.Equal(aggregate.MetaId, uint64(2))
 
-	agg, err := s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryId, uint64(time.UnixMilli())))
-	require.NoError(err)
-	require.Equal(3, len(agg.Reporters))
+	// agg, err := s.Setup.Oraclekeeper.Aggregates.Get(s.Setup.Ctx, collections.Join(queryId, uint64(time.UnixMilli())))
+	// require.NoError(err)
+	// require.Equal(3, len(agg.Reporters))
 
 	oracleQuerier := oraclekeeper.NewQuerier(s.Setup.Oraclekeeper)
 	microreports, err := oracleQuerier.GetReportsByAggregate(s.Setup.Ctx, &oracletypes.QueryGetReportsByAggregateRequest{

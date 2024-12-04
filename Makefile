@@ -183,6 +183,7 @@ mock-gen-mint:
 mock-gen-oracle:
 	@go run github.com/vektra/mockery/v2 --name=AccountKeeper --dir=$(CURDIR)/x/oracle/types --recursive --output=./x/oracle/mocks
 	@go run github.com/vektra/mockery/v2 --name=BankKeeper --dir=$(CURDIR)/x/oracle/types --recursive --output=./x/oracle/mocks
+	@go run github.com/vektra/mockery/v2 --name=BridgeKeeper --dir=$(CURDIR)/x/oracle/types --recursive --output=./x/oracle/mocks
 	@go run github.com/vektra/mockery/v2 --name=RegistryKeeper --dir=$(CURDIR)/x/oracle/types --recursive --output=./x/oracle/mocks
 	@go run github.com/vektra/mockery/v2 --name=ReporterKeeper --dir=$(CURDIR)/x/oracle/types --recursive --output=./x/oracle/mocks
 

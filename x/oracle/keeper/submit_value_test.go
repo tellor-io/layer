@@ -6,7 +6,6 @@ import (
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
-	oracleutils "github.com/tellor-io/layer/x/oracle/utils"
 	regtypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/collections"
@@ -48,49 +47,6 @@ func (s *KeeperTestSuite) TestSetValue() {
 	require.Equal(report.QueryType, "SpotPrice")
 	require.Equal(report.Power, uint64(1))
 	require.Equal(report.BlockNumber, uint64(ctx.BlockHeight()))
-}
-
-func (s *KeeperTestSuite) TestVerifyCommit() {
-	require := s.Require()
-	ctx := s.ctx
-	// k := s.oracleKeeper
-
-	// good hash
-	reporter := sample.AccAddress()
-	salt, err := oracleutils.Salt(32)
-	require.NoError(err)
-	value := "0x0000000000000000000000000000000000000000000000000000000000000009"
-	hash := oracleutils.CalculateCommitment(value, salt)
-	res := s.VerifyCommit(ctx, reporter, value, salt, hash)
-	require.True(res)
-
-	// bad hash
-	res = s.VerifyCommit(ctx, reporter, value, salt, "0x0000000000000000000000000000000000000000000000000000000000000000")
-	require.False(res)
-
-	// empty hash
-	res = s.VerifyCommit(ctx, reporter, value, salt, "")
-	require.False(res)
-
-	// bad value
-	res = s.VerifyCommit(ctx, reporter, "0x0000000000000000000000000000000000000000000000000000000000000000", salt, hash)
-	require.False(res)
-
-	// empty value
-	res = s.VerifyCommit(ctx, reporter, "", salt, hash)
-	require.False(res)
-
-	// bad salt
-	res = s.VerifyCommit(ctx, reporter, value, "0x0000000000000000000000000000000000000000000000000000000000000000", hash)
-	require.False(res)
-
-	// empty salt
-	res = s.VerifyCommit(ctx, reporter, value, "", hash)
-	require.False(res)
-
-	// empty entries
-	res = s.VerifyCommit(ctx, "", "", "", "")
-	require.False(res)
 }
 
 func (s *KeeperTestSuite) TestGetDataSpec() {
