@@ -1018,7 +1018,7 @@ func (app *App) preBlocker(ph *ProposalHandler) func(sdk.Context, *abci.RequestF
 }
 
 func (app *App) RegisterUpgradeHandlers() {
-	const UpgradeName = "v2.0.0-alpha2"
+	const UpgradeName = "v2.0.0-audit"
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
