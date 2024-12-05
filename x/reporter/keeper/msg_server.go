@@ -50,6 +50,7 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 		return nil, errors.New("reporters chosen min to join must be gte the min requirement")
 	}
 	// the commission rate must be less than 100%
+	k.Logger().Info("commission rate: ", "commission rate", msg.CommissionRate.String())
 	if msg.CommissionRate.GT(math.LegacyNewDec(100)) {
 		return nil, errors.New("commission rate must be LTE 100 as that is a 100 percent commission rate")
 	}

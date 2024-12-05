@@ -32,6 +32,7 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 	}
 
 	// selector's commission = reporter's commission rate * reward
+	fmt.Println("reporter.CommissionRate: ", reporter.CommissionRate)
 	commission := reward.Mul(reporter.CommissionRate)
 	// Calculate net reward
 	netReward := reward.Sub(commission)
