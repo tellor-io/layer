@@ -49,6 +49,10 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if msg.MinTokensRequired.LT(params.MinTrb) {
 		return nil, errors.New("reporters chosen min to join must be gte the min requirement")
 	}
+	// the commission rate must be less than 100%
+	if msg.CommissionRate.GT(math.LegacyNewDec(100)) {
+		return nil, errors.New("commission rate must be LTE 100 as that is a 100 percent commission rate")
+	}
 	// reporter can't be previously a selector or a reporter
 	alreadyExists, err := k.Keeper.Selectors.Has(goCtx, addr)
 	if err != nil {
@@ -58,9 +62,6 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 		return nil, errors.New("address already exists")
 	}
 
-	if msg.CommissionRate.GT(math.LegacyNewDec(100)) {
-		return nil, errors.New("commission rate must be LTE 100 as that is a 100 percent commission rate")
-	}
 	// set the reporter and set the self selector
 	if err := k.Keeper.Reporters.Set(goCtx, addr.Bytes(), types.NewReporter(msg.CommissionRate, msg.MinTokensRequired)); err != nil {
 		return nil, err

@@ -19,6 +19,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 )
@@ -262,6 +263,13 @@ type TippedQueriesResponse struct {
 	Queries []QueryMeta `json:"queries"`
 }
 
+type QueryDelegatorDelegationsResponse struct {
+	DelegationResponses []stakingtypes.DelegationResponse `json:"delegation_responses"`
+	Pagination          struct {
+		Total string `json:"total"` // Change from uint64 to string
+	} `json:"pagination"`
+}
+
 type QueryMeta struct {
 	// unique id of the query that changes after query's lifecycle ends
 	Id string `json:"id,omitempty"`
@@ -279,6 +287,24 @@ type QueryMeta struct {
 	QueryType string `json:"query_type,omitempty"`
 	// bool cycle list query
 	CycleList bool `json:"cycle_list,omitempty"`
+}
+
+type ReportersResponse struct {
+	Reporters []*Reporter `json:"reporters"`
+}
+
+type Reporter struct {
+	Address  string          `json:"address"`
+	Metadata *OracleReporter `json:"metadata"`
+}
+
+type OracleReporter struct {
+	CommissionRate string `json:"commission_rate"`
+	MinTokens      string `json:"min_tokens_required"`
+}
+
+type QuerySelectorReporterResponse struct {
+	Reporter string `json:"reporter"`
 }
 
 // HELPERS FOR TESTING AGAINST THE CHAIN
@@ -337,7 +363,7 @@ func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *c
 
 func GetValAddresses(ctx context.Context, layer *cosmos.CosmosChain) (validators []*cosmos.ChainNode, valAccAddresses []string, valAddresses []string, err error) {
 
-	for i, validator := range layer.Validators {
+	for _, validator := range layer.Validators {
 		valAccAddress, err := validator.AccountKeyBech32(ctx, "validator")
 		if err != nil {
 			return nil, nil, nil, fmt.Errorf("error getting validator account address: %w", err)
@@ -350,8 +376,8 @@ func GetValAddresses(ctx context.Context, layer *cosmos.CosmosChain) (validators
 		}
 		valAddresses = append(valAddresses, valAddress)
 
-		fmt.Printf("valAccAddress%d: %s\n", i, valAccAddress)
-		fmt.Printf("valAddress%d: %s\n", i, valAddress)
+		fmt.Printf("valAccAddress: %s\n", valAccAddress)
+		fmt.Printf("valValAddress: %s\n", valAddress)
 	}
 
 	return layer.Validators, valAccAddresses, valAddresses, nil
