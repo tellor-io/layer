@@ -33,7 +33,7 @@ func TestMaxMins(t *testing.T) {
 
 	// validatorI sends a create reporter tx with commiss rate > 100...
 	// layerd tx reporter create-reporter commission-rate min-tokens-required
-	txHash, err := validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(500*1e10).String(), math.NewUint(1*1e6).String(), "--keyring-dir", "/var/cosmos-chain/layer-1")
+	txHash, err := validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(9*1e18).String(), math.NewUint(1*1e6).String(), "--keyring-dir", "/var/cosmos-chain/layer-1")
 	require.NoError(err)
 	fmt.Println("TX HASH (validatorI becomes a reporter): ", txHash)
 	// check if reporter exists
