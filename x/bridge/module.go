@@ -114,6 +114,10 @@ func NewAppModule(
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
+	cfg.RegisterMigration("bridge", 1, func(ctx sdk.Context) error {
+		migrator := keeper.NewMigrator(am.keeper)
+		return migrator.Migrate1to2(context.Background())
+	})
 }
 
 // RegisterInvariants registers the invariants of the module. If an invariant deviates from its predicted value, the InvariantRegistry triggers appropriate logic (most often the chain will be halted)
