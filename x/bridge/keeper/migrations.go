@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	v2 "github.com/tellor-io/layer/x/bridge/migrations/v2"
+	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	v2 "github.com/tellor-io/layer/x/bridge/migrations/v2"
 )
 
 type Migrator struct {
@@ -18,6 +18,6 @@ func NewMigrator(keeper Keeper) Migrator {
 }
 
 // Migrate1to2 migrates from version 1 to 2.
-func (m Migrator) Migrate1to2(ctx sdk.Context) error {
+func (m Migrator) Migrate1to2(ctx context.Context) error {
 	return v2.MigrateStoreFromV1ToV2(ctx, m.keeper.storeService, m.keeper)
 }

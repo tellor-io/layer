@@ -2,17 +2,29 @@ package v2
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 
-	"github.com/tellor-io/layer/x/bridge/keeper"
-	"github.com/tellor-io/layer/x/bridge/types"
+	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
+
+	"cosmossdk.io/core/store"
 )
 
-func MigrateStoreFromV1ToV2(ctx context.Context, keeper keeper.Keeper) error {
+type SnapshotLimit struct {
+	Limit uint64 `protobuf:"varint,1,opt,name=limit,proto3"`
+}
 
-	err := keeper.SnapshotLimit.Set(ctx, types.SnapshotLimit{Limit: 1000})
+func MigrateStoreFromV1ToV2(ctx context.Context, storeService store.KVStoreService) error {
+	kvStore := storeService.OpenKVStore(ctx)
+
+	limit := bridgetypes.SnapshotLimit{Limit: 1000}
+	data, err := json.Marshal(limit)
 	if err != nil {
-		fmt.Println("error setting new snapshot limit: ", err)
+		return err
+	}
+
+	key := []byte("SnapshotLimit")
+	err = kvStore.Set(key, data)
+	if err != nil {
 		return err
 	}
 
