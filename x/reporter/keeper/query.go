@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/reporter/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -139,13 +140,18 @@ func (k Querier) SpaceAvailableByReporter(ctx context.Context, req *types.QueryS
 	return &types.QuerySpaceAvailableByReporterResponse{SpaceAvailable: int32(remaining)}, nil
 }
 
-func (k Querier) AvailableTips(ctx context.Context, req *types.QueryAvailableTipsRequest) (*types.QueryAvailableTipsResponse, error) {
+func (k Querier) AvailableTipsByQuery(ctx context.Context, req *types.QueryAvailableTipsRequest) (*types.QueryAvailableTipsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	selectorAcc := sdk.MustAccAddressFromBech32(req.SelectorAddress)
+	reporterAcc := sdk.MustAccAddressFromBech32(req.ReporterAddress)
+	queryId, err := utils.QueryIDFromDataString(req.QueryId)
+	if err != nil {
+		return nil, err
+	}
 
-	rewards, err := k.Keeper.SelectorTips.Get(ctx, selectorAcc)
+	rewards, err := k.Keeper.RewardByReporter(ctx, selectorAcc, reporterAcc, req.MetaId, queryId)
 	if err != nil {
 		return nil, err
 	}

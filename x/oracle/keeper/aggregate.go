@@ -31,8 +31,9 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := uint64(sdkCtx.BlockHeight())
 	totalPowerTbr := uint64(0)
-	metaIds := make([]uint64, 0)
 	transferAmount := math.ZeroInt()
+	// does cyclist query exist
+	cyclelistQuery := false
 	// rng for queries that have expired and have revealed reports
 	// ranger is inclusive and descending
 	rng := collections.NewPrefixUntilPairRange[collections.Pair[bool, uint64], collections.Pair[[]byte, uint64]](collections.Join(true, blockHeight)).Descending()
@@ -63,17 +64,25 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		if err != nil {
 			return err
 		}
+
+		tip := query.Amount
+		if tip.IsNil() {
+			tip = math.ZeroInt()
+		}
+
+		reward := types.Reward{TotalPower: aggregateReport.AggregatePower, Amount: tip.ToLegacyDec(), CycleList: isCyclelist, BlockHeight: blockHeight}
+		err = k.reporterKeeper.AddTip(ctx, query.Id, reward)
+		if err != nil {
+			return err
+		}
 		if !query.Amount.IsZero() {
-			err = k.reporterKeeper.AddTip(ctx, query.Id, types.Reward{TotalPower: aggregateReport.AggregatePower, Amount: query.Amount.ToLegacyDec()})
-			if err != nil {
-				return err
-			}
 			transferAmount = transferAmount.Add(query.Amount)
 		}
+
 		// if the query is part of a cyclelist, allocate time-based rewards
 		if isCyclelist {
+			cyclelistQuery = isCyclelist
 			totalPowerTbr += aggregateReport.AggregatePower
-			metaIds = append(metaIds, query.Id)
 		}
 		err = k.Query.Remove(ctx, fullKey.K2())
 		if err != nil {
@@ -86,17 +95,12 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		)
 	}
 
-	if len(metaIds) == 0 {
+	if !cyclelistQuery {
 		return nil
 	}
 
 	tbrAmount := k.GetTimeBasedRewards(ctx)
-	for _, metaId := range metaIds {
-		err = k.reporterKeeper.AddTbr(ctx, metaId, types.Reward{Amount: tbrAmount.ToLegacyDec(), TotalPower: totalPowerTbr})
-		if err != nil {
-			return err
-		}
-	}
+	err = k.reporterKeeper.AddTbr(ctx, blockHeight, types.Reward{Amount: tbrAmount.ToLegacyDec(), TotalPower: totalPowerTbr})
 
 	return k.bankKeeper.SendCoinsFromModuleToModule(
 		ctx, minttypes.TimeBasedRewards, reportertypes.TipsEscrowPool, sdk.NewCoins(sdk.NewCoin("loya", tbrAmount)),

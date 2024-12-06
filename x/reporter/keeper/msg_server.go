@@ -296,19 +296,14 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	selectorAddr := sdk.MustAccAddressFromBech32(msg.SelectorAddress)
 	repAddr := sdk.MustAccAddressFromBech32(msg.ReporterAddress)
-	// ensure the selector hasn't claimed tips already
-	claimed, err := k.ClaimStatus.Has(ctx, collections.Join(selectorAddr.Bytes(), msg.Id))
-	if err != nil {
-		return nil, err
-	}
-	if claimed {
-		return nil, errors.New("tip for query already claimed")
-	}
+
 	shares, err := k.Keeper.RewardByReporter(ctx, selectorAddr, repAddr, msg.Id, msg.QueryId)
 	if err != nil {
 		return nil, err
 	}
-
+	if shares.IsZero() {
+		return nil, errors.New("no tips to withdraw")
+	}
 	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 	if err != nil {
 		return nil, err

@@ -3,7 +3,6 @@ package keeper
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -32,8 +31,8 @@ type (
 		DisputedDelegationAmounts collections.Map[[]byte, types.DelegationsAmounts]                                                                                         // key: dispute hashId
 		FeePaidFromStake          collections.Map[[]byte, types.DelegationsAmounts]                                                                                         // key: dispute hashId
 		Report                    *collections.IndexedMap[collections.Pair[[]byte, collections.Pair[[]byte, uint64]], types.DelegationsAmounts, ReporterBlockNumberIndexes] // key: queryId, (reporter AccAddress, blockNumber)
-		Tip                       collections.Map[uint64, oracletypes.Reward]
-		Tbr                       collections.Map[uint64, oracletypes.Reward]
+		Tip                       collections.Map[uint64, oracletypes.Reward]                                                                                               // key: QueryMeta.Id
+		Tbr                       collections.Map[uint64, oracletypes.Reward]                                                                                               // key: blockNumer
 		ClaimStatus               collections.Map[collections.Pair[[]byte, uint64], bool]
 
 		Schema collections.Schema
@@ -203,50 +202,38 @@ func (k Keeper) TrackStakeChange(ctx context.Context) error {
 }
 
 func (k Keeper) AddTip(ctx context.Context, metaId uint64, tip oracletypes.Reward) error {
-	if tip.Amount.IsPositive() {
-		err := k.Tip.Set(ctx, metaId, tip)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return k.Tip.Set(ctx, metaId, tip)
 }
 
 func (k Keeper) AddTbr(ctx context.Context, metaId uint64, tbr oracletypes.Reward) error {
-	if tbr.Amount.IsPositive() {
-		err := k.Tbr.Set(ctx, metaId, tbr)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
+	return k.Tbr.Set(ctx, metaId, tbr)
 }
 
 func (k Keeper) RewardByReporter(ctx context.Context, selAddr, repAddr sdk.AccAddress, metaId uint64, queryId []byte) (math.LegacyDec, error) {
+	// ensure the selector hasn't claimed tips already
+	claimed, err := k.ClaimStatus.Has(ctx, collections.Join(selAddr.Bytes(), metaId))
+	if err != nil {
+		return math.LegacyDec{}, err
+	}
+	if claimed {
+		return math.LegacyZeroDec(), nil
+	}
+
 	report, err := k.oracleKeeper.MicroReport(ctx, collections.Join3(queryId, repAddr.Bytes(), metaId))
 	if err != nil {
 		return math.LegacyDec{}, err
 	}
-	tipobj, err := k.Tip.Get(ctx, metaId)
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return math.LegacyDec{}, err
-		}
-		tipobj.Amount = math.LegacyZeroDec()
-	}
-
-	tbrobj, err := k.Tbr.Get(ctx, metaId)
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return math.LegacyDec{}, err
-		}
-		tbrobj.Amount = math.LegacyZeroDec()
-	}
-	tip := tipobj.Amount
-
-	tbr := tbrobj.Amount
 
 	reporterTipAmount := math.LegacyZeroDec()
+	reporterTbrAmount := math.LegacyZeroDec()
+
+	// a tip object should always exist for a legit metaId set during aggregation even if amount is 0
+	tipobj, err := k.Tip.Get(ctx, metaId)
+	if err != nil {
+		return math.LegacyDec{}, err
+	}
+
+	tip := tipobj.Amount
 	if tip.IsPositive() {
 		reporterTipAmount = CalculateRewardAmount(
 			report.Power,
@@ -254,13 +241,21 @@ func (k Keeper) RewardByReporter(ctx context.Context, selAddr, repAddr sdk.AccAd
 			tip.TruncateInt(),
 		)
 	}
-	reporterTbrAmount := math.LegacyZeroDec()
-	if tbr.IsPositive() {
-		reporterTbrAmount = CalculateRewardAmount(
-			report.Power,
-			tbrobj.TotalPower,
-			tbr.TruncateInt(),
-		)
+
+	if tipobj.CycleList {
+		// if query is part of cyclist then tbr amount and total power should've been set
+		tbrobj, err := k.Tbr.Get(ctx, tipobj.BlockHeight)
+		if err != nil {
+			return math.LegacyDec{}, err
+		}
+		tbr := tbrobj.Amount
+		if tbr.IsPositive() {
+			reporterTbrAmount = CalculateRewardAmount(
+				report.Power,
+				tbrobj.TotalPower,
+				tbr.TruncateInt(),
+			)
+		}
 	}
 
 	reporter, err := k.Reporters.Get(ctx, repAddr)
@@ -284,8 +279,7 @@ func (k Keeper) RewardByReporter(ctx context.Context, selAddr, repAddr sdk.AccAd
 	selectorsTotalDec := selectors.Total.ToLegacyDec()
 	var selectorPortion types.TokenOriginInfo
 	for _, selector := range selectors.TokenOrigins {
-		// delegator share = netReward * selector's share / total shares
-		if bytes.Equal(selector.DelegatorAddress, selAddr) {
+		if bytes.Equal(selector.DelegatorAddress, selAddr.Bytes()) {
 			selectorPortion = *selector
 			break
 		}

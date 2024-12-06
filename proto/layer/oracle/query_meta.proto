@@ -41,4 +41,8 @@ message reward {
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
+  // cycle_list indicates if a reward should also include timebasedRewards(tbr)
+  bool cycle_list = 3;
+  // if cyclist then tbr amount can be fetched by this height
+  uint64 block_height = 4;
 }

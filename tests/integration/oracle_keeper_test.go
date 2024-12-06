@@ -363,13 +363,15 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	// testing for a query id and check if the reporter gets the reward, bypassing the commit/reveal process
 	value := []string{"000001"}
 	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0]}, value, []uint64{reporterPower}, qId)
-	s.NoError(s.Setup.Oraclekeeper.Query.Set(ctx, collections.Join(qId, uint64(1)), types.QueryMeta{
+	queryMetaId := uint64(1)
+	s.NoError(s.Setup.Oraclekeeper.Query.Set(ctx, collections.Join(qId, queryMetaId), types.QueryMeta{
 		Id:                 1,
 		HasRevealedReports: true,
 	}))
 	for _, r := range reports[:1] {
-		s.NoError(s.Setup.Oraclekeeper.Reports.Set(ctx, collections.Join3(qId, sdk.MustAccAddressFromBech32(r.Reporter).Bytes(), uint64(1)), r))
-		s.NoError(s.Setup.Oraclekeeper.AddReport(ctx, 1, r))
+		r.Cyclelist = true
+		s.NoError(s.Setup.Oraclekeeper.Reports.Set(ctx, collections.Join3(qId, sdk.MustAccAddressFromBech32(r.Reporter).Bytes(), queryMetaId), r))
+		s.NoError(s.Setup.Oraclekeeper.AddReport(ctx, queryMetaId, r))
 	}
 	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
 
@@ -377,10 +379,6 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	res, err := queryServer.GetCurrentAggregateReport(ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.NoError(err)
 
-	tbr, err := queryServer.GetTimeBasedRewards(ctx, &types.QueryGetTimeBasedRewardsRequest{})
-	s.NoError(err)
-	s.NoError(s.Setup.Reporterkeeper.AddTbr(ctx, res.Aggregate.MetaId, types.Reward{TotalPower: res.Aggregate.AggregatePower, Amount: tbr.Reward.Amount.ToLegacyDec()}))
-	s.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToModule(ctx, minttypes.TimeBasedRewards, reportertypes.TipsEscrowPool, sdk.NewCoins(tbr.Reward)))
 	// advance height
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	// withdraw the reward
