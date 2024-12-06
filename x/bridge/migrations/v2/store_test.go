@@ -1,9 +1,9 @@
 package v2_test
 
-import (
-	"testing"
-)
+// import (
+// 	"testing"
+// )
 
-func TestMigrateStoreFromV1ToV2(t *testing.T) {
+// func TestMigrateStoreFromV1ToV2(t *testing.T) {
 
-}
+// }
