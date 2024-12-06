@@ -9,6 +9,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	bridgemodulev1 "github.com/tellor-io/layer/api/layer/bridge/module"
 	"github.com/tellor-io/layer/x/bridge/keeper"
+	v2 "github.com/tellor-io/layer/x/bridge/migrations/v2"
 	"github.com/tellor-io/layer/x/bridge/types"
 
 	"cosmossdk.io/core/appmodule"
@@ -115,8 +116,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 	cfg.RegisterMigration("bridge", 1, func(ctx sdk.Context) error {
-		migrator := keeper.NewMigrator(am.keeper)
-		return migrator.Migrate1to2(context.Background())
+		return v2.MigrateStoreFromV1ToV2(context.Background(), am.keeper)
 	})
 }
 
