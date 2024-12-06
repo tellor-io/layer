@@ -13,7 +13,7 @@ import (
 )
 
 func TestReporterDelegatorIndex(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 
 	repAddr := sample.AccAddressBytes()
 	// set reporter
@@ -57,7 +57,7 @@ func TestReporterDelegatorIndex(t *testing.T) {
 }
 
 func TestNewSelectorsIndex(t *testing.T) {
-	_, _, _, _, _, store := setupKeeper(t)
+	_, _, _, _, _, _, store := setupKeeper(t)
 	require := require.New(t)
 
 	sb := collections.NewSchemaBuilder(store)
@@ -66,7 +66,7 @@ func TestNewSelectorsIndex(t *testing.T) {
 }
 
 func TestIndexesList(t *testing.T) {
-	_, _, _, _, _, store := setupKeeper(t)
+	_, _, _, _, _, _, store := setupKeeper(t)
 	require := require.New(t)
 
 	sb := collections.NewSchemaBuilder(store)

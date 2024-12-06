@@ -6,6 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/timestamp.proto";
+import "amino/amino.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
@@ -31,4 +32,13 @@ message QueryMeta {
   string query_type = 7;
   // bool cycle list query
   bool cycle_list = 8;
+}
+
+message reward {
+  uint64 totalPower = 1;
+  string amount = 2 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
 }

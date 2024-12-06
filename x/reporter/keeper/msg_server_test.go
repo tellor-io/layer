@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/mocks"
 	"github.com/tellor-io/layer/x/reporter/types"
@@ -19,24 +20,25 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func setupMsgServer(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, *mocks.RegistryKeeper, types.MsgServer, sdk.Context) {
+func setupMsgServer(tb testing.TB) (keeper.Keeper, *mocks.OracleKeeper, *mocks.StakingKeeper, *mocks.BankKeeper, *mocks.RegistryKeeper, types.MsgServer, sdk.Context) {
 	tb.Helper()
-	k, sk, bk, rk, ctx, _ := setupKeeper(tb)
-	return k, sk, bk, rk, keeper.NewMsgServerImpl(k), ctx
+	k, ok, sk, bk, rk, ctx, _ := setupKeeper(tb)
+	return k, ok, sk, bk, rk, keeper.NewMsgServerImpl(k), ctx
 }
 
 func TestMsgServer(t *testing.T) {
-	k, sk, bk, rk, ms, ctx := setupMsgServer(t)
+	k, ok, sk, bk, rk, ms, ctx := setupMsgServer(t)
 	require.NotNil(t, ms)
 	require.NotNil(t, ctx)
 	require.NotEmpty(t, k)
+	require.NotNil(t, ok)
 	require.NotNil(t, sk)
 	require.NotNil(t, bk)
 	require.NotNil(t, rk)
 }
 
 func TestCreateReporter(t *testing.T) {
-	k, sk, _, _, ms, ctx := setupMsgServer(t)
+	k, _, sk, _, _, ms, ctx := setupMsgServer(t)
 	addr := sample.AccAddressBytes()
 	sk.On("IterateDelegatorDelegations", ctx, addr, mock.Anything).Return(nil)
 	_, err := ms.CreateReporter(ctx, &types.MsgCreateReporter{ReporterAddress: addr.String(), CommissionRate: types.DefaultMinCommissionRate, MinTokensRequired: types.DefaultMinTrb})
@@ -83,7 +85,7 @@ func TestCreateReporter(t *testing.T) {
 }
 
 func TestSelectReporter(t *testing.T) {
-	k, sk, _, _, ms, ctx := setupMsgServer(t)
+	k, _, sk, _, _, ms, ctx := setupMsgServer(t)
 	selector, reporter := sample.AccAddressBytes(), sample.AccAddressBytes()
 	require.NoError(t, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb)))
 	sk.On("IterateDelegatorDelegations", ctx, selector, mock.Anything).Return(nil)
@@ -129,7 +131,7 @@ func TestSelectReporter(t *testing.T) {
 }
 
 func TestSwitchReporter(t *testing.T) {
-	k, sk, _, rk, ms, ctx := setupMsgServer(t)
+	k, _, sk, _, rk, ms, ctx := setupMsgServer(t)
 	ctx = ctx.WithBlockTime(time.Now())
 	selector, reporter, reporter2 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
 
@@ -210,7 +212,7 @@ func TestSwitchReporter(t *testing.T) {
 }
 
 func TestRemoveSelector(t *testing.T) {
-	k, sk, _, _, ms, ctx := setupMsgServer(t)
+	k, _, sk, _, _, ms, ctx := setupMsgServer(t)
 	reporter, selector := sample.AccAddressBytes(), sample.AccAddressBytes()
 	require.NoError(t, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb)))
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporter, 1)))
@@ -261,7 +263,7 @@ func TestRemoveSelector(t *testing.T) {
 }
 
 func TestUnjailReporter(t *testing.T) {
-	k, _, _, _, msg, ctx := setupMsgServer(t)
+	k, _, _, _, _, msg, ctx := setupMsgServer(t)
 	addr := sample.AccAddressBytes()
 	require.NoError(t, k.Reporters.Set(ctx, addr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb)))
 	reporter, err := k.Reporters.Get(ctx, addr)
@@ -287,20 +289,43 @@ func TestUnjailReporter(t *testing.T) {
 }
 
 func TestWithdrawTip(t *testing.T) {
-	k, sk, bk, _, msg, ctx := setupMsgServer(t)
+	k, ok, sk, bk, _, msg, ctx := setupMsgServer(t)
+
+	report := oracletypes.MicroReport{}
+	ok.On("MicroReport", mock.Anything, mock.Anything).Return(report, collections.ErrNotFound).Once()
 	selector, valAddr := sample.AccAddressBytes(), sdk.ValAddress(sample.AccAddressBytes())
 
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(selector, 1)))
 
-	_, err := msg.WithdrawTip(ctx, &types.MsgWithdrawTip{SelectorAddress: selector.String(), ValidatorAddress: valAddr.String()})
+	_, err := msg.WithdrawTip(ctx, &types.MsgWithdrawTip{
+		SelectorAddress: selector.String(), ValidatorAddress: valAddr.String(),
+		ReporterAddress: selector.String(), QueryId: []byte(""),
+	})
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
 	require.NoError(t, k.SelectorTips.Set(ctx, selector, math.LegacyNewDec(1*1e6)))
-
+	require.NoError(t, k.Reporters.Set(ctx, selector, types.OracleReporter{CommissionRate: types.DefaultMinCommissionRate}))
+	require.NoError(t, k.Report.Set(
+		ctx, collections.Join([]byte("queryid"), collections.Join(selector.Bytes(), uint64(0))),
+		types.DelegationsAmounts{
+			TokenOrigins: []*types.TokenOriginInfo{
+				{
+					DelegatorAddress: selector,
+					Amount:           math.OneInt(),
+				},
+			},
+			Total: math.OneInt(),
+		}))
+	require.NoError(t, k.AddTip(ctx, uint64(1), oracletypes.Reward{TotalPower: uint64(1), Amount: math.NewInt(1 * 1e6).ToLegacyDec()}))
 	validator := stakingtypes.Validator{Status: stakingtypes.Bonded}
 	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
 	sk.On("Delegate", ctx, selector, math.NewInt(1*1e6), stakingtypes.Bonded, validator, false).Return(math.LegacyZeroDec(), nil)
 	bk.On("SendCoinsFromModuleToModule", ctx, types.TipsEscrowPool, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(1*1e6)))).Return(nil)
-	_, err = msg.WithdrawTip(ctx, &types.MsgWithdrawTip{SelectorAddress: selector.String(), ValidatorAddress: valAddr.String()})
+	report = oracletypes.MicroReport{Power: uint64(1), BlockNumber: 0}
+	ok.On("MicroReport", mock.Anything, mock.Anything).Return(report, nil).Once()
+	_, err = msg.WithdrawTip(ctx, &types.MsgWithdrawTip{
+		SelectorAddress: selector.String(), ValidatorAddress: valAddr.String(),
+		ReporterAddress: selector.String(), QueryId: []byte("queryid"), Id: uint64(1),
+	})
 	require.NoError(t, err)
 }

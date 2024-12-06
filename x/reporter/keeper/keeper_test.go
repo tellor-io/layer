@@ -18,21 +18,22 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func setupKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, *mocks.RegistryKeeper, sdk.Context, store.KVStoreService) {
+func setupKeeper(tb testing.TB) (keeper.Keeper, *mocks.OracleKeeper, *mocks.StakingKeeper, *mocks.BankKeeper, *mocks.RegistryKeeper, sdk.Context, store.KVStoreService) {
 	tb.Helper()
 	return keepertest.ReporterKeeper(tb)
 }
 
 func TestKeeper(t *testing.T) {
-	k, sk, bk, _, ctx, _ := keepertest.ReporterKeeper(t)
+	k, ok, sk, bk, _, ctx, _ := keepertest.ReporterKeeper(t)
 	require.NotNil(t, ctx)
 	require.NotEmpty(t, k)
+	require.NotNil(t, ok)
 	require.NotNil(t, sk)
 	require.NotNil(t, bk)
 }
 
 func TestGetAuthority(t *testing.T) {
-	k, _, _, _, _, _ := setupKeeper(t)
+	k, _, _, _, _, _, _ := setupKeeper(t)
 	authority := k.GetAuthority()
 	require.NotEmpty(t, authority)
 
@@ -42,12 +43,12 @@ func TestGetAuthority(t *testing.T) {
 }
 
 func TestLogger(t *testing.T) {
-	k, _, _, _, _, _ := setupKeeper(t)
+	k, _, _, _, _, _, _ := setupKeeper(t)
 	require.NotNil(t, k.Logger())
 }
 
 func TestGetDelegatorTokensAtBlock(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	delAddr, val1Address, val2Address := sample.AccAddressBytes(), sdk.ValAddress(sample.AccAddressBytes()), sdk.ValAddress(sample.AccAddressBytes())
 	require.NoError(t, k.Selectors.Set(ctx, delAddr, types.NewSelection(delAddr, 2)))
 
@@ -70,7 +71,7 @@ func TestGetDelegatorTokensAtBlock(t *testing.T) {
 }
 
 func TestGetReporterTokensAtBlock(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	reporter := sample.AccAddressBytes()
 	tokens, err := k.GetReporterTokensAtBlock(ctx, reporter, uint64(ctx.BlockHeight()))
 	require.NoError(t, err)
@@ -88,7 +89,7 @@ func TestGetReporterTokensAtBlock(t *testing.T) {
 }
 
 func TestTrackStakeChange(t *testing.T) {
-	k, sk, _, _, ctx, _ := setupKeeper(t)
+	k, _, sk, _, _, ctx, _ := setupKeeper(t)
 	expiration := ctx.BlockTime().Add(1)
 	err := k.Tracker.Set(ctx, types.StakeTracker{Expiration: &expiration, Amount: math.NewInt(1000)})
 	require.NoError(t, err)
@@ -107,7 +108,7 @@ func TestTrackStakeChange(t *testing.T) {
 }
 
 func TestReportIndexedMap(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	keys := []collections.Pair[[]byte, collections.Pair[[]byte, uint64]]{
 		collections.Join([]byte("queryid1"), collections.Join([]byte("reporterA"), uint64(1))),
 		collections.Join([]byte("queryid2"), collections.Join([]byte("reporterA"), uint64(1))),

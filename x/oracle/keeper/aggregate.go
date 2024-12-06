@@ -7,10 +7,13 @@ import (
 	"fmt"
 	"time"
 
+	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -27,7 +30,9 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	// aggregate
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := uint64(sdkCtx.BlockHeight())
-	cyclist := make([]types.Aggregate, 0)
+	totalPowerTbr := uint64(0)
+	metaIds := make([]uint64, 0)
+	transferAmount := math.ZeroInt()
 	// rng for queries that have expired and have revealed reports
 	// ranger is inclusive and descending
 	rng := collections.NewPrefixUntilPairRange[collections.Pair[bool, uint64], collections.Pair[[]byte, uint64]](collections.Join(true, blockHeight)).Descending()
@@ -47,7 +52,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			return err
 		}
 		if !fullKey.K1().K1() {
-			return nil
+			break
 		}
 		query, err := k.Query.Get(ctx, fullKey.K2())
 		if err != nil {
@@ -59,21 +64,43 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			return err
 		}
 		if !query.Amount.IsZero() {
-			err = k.AllocateRewards(ctx, &aggregateReport, query.Amount, types.ModuleName)
+			err = k.reporterKeeper.AddTip(ctx, query.Id, types.Reward{TotalPower: aggregateReport.AggregatePower, Amount: query.Amount.ToLegacyDec()})
 			if err != nil {
 				return err
 			}
+			transferAmount = transferAmount.Add(query.Amount)
 		}
 		// if the query is part of a cyclelist, allocate time-based rewards
 		if isCyclelist {
-			cyclist = append(cyclist, aggregateReport)
+			totalPowerTbr += aggregateReport.AggregatePower
+			metaIds = append(metaIds, query.Id)
 		}
 		err = k.Query.Remove(ctx, fullKey.K2())
 		if err != nil {
 			return err
 		}
 	}
-	return k.AllocateTBR(ctx, cyclist)
+	if transferAmount.IsPositive() {
+		return k.bankKeeper.SendCoinsFromModuleToModule(
+			ctx, types.ModuleName, reportertypes.TipsEscrowPool, sdk.NewCoins(sdk.NewCoin("loya", transferAmount)),
+		)
+	}
+
+	if len(metaIds) == 0 {
+		return nil
+	}
+
+	tbrAmount := k.GetTimeBasedRewards(ctx)
+	for _, metaId := range metaIds {
+		err = k.reporterKeeper.AddTbr(ctx, metaId, types.Reward{Amount: tbrAmount.ToLegacyDec(), TotalPower: totalPowerTbr})
+		if err != nil {
+			return err
+		}
+	}
+
+	return k.bankKeeper.SendCoinsFromModuleToModule(
+		ctx, minttypes.TimeBasedRewards, reportertypes.TipsEscrowPool, sdk.NewCoins(sdk.NewCoin("loya", tbrAmount)),
+	)
 }
 
 // SetAggregate increments the queryId's report index plus sets the timestamp and blockHeight and stores the aggregate report

@@ -10,6 +10,7 @@ import (
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -293,8 +294,17 @@ func (k msgServer) UnjailReporter(goCtx context.Context, msg *types.MsgUnjailRep
 // Msg: WithdrawTip, allows selectors to directly withdraw reporting rewards and stake them with a BONDED validator
 func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip) (*types.MsgWithdrawTipResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	delAddr := sdk.MustAccAddressFromBech32(msg.SelectorAddress)
-	shares, err := k.Keeper.SelectorTips.Get(ctx, delAddr)
+	selectorAddr := sdk.MustAccAddressFromBech32(msg.SelectorAddress)
+	repAddr := sdk.MustAccAddressFromBech32(msg.ReporterAddress)
+	// ensure the selector hasn't claimed tips already
+	claimed, err := k.ClaimStatus.Has(ctx, collections.Join(selectorAddr.Bytes(), msg.Id))
+	if err != nil {
+		return nil, err
+	}
+	if claimed {
+		return nil, errors.New("tip for query already claimed")
+	}
+	shares, err := k.Keeper.RewardByReporter(ctx, selectorAddr, repAddr, msg.Id, msg.QueryId)
 	if err != nil {
 		return nil, err
 	}
@@ -315,27 +325,40 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	if amtToDelegate.IsZero() {
 		return nil, errors.New("no tips to withdraw")
 	}
-	_, err = k.Keeper.stakingKeeper.Delegate(ctx, delAddr, amtToDelegate, val.Status, val, false)
+	_, err = k.Keeper.stakingKeeper.Delegate(ctx, selectorAddr, amtToDelegate, val.Status, val, false)
 	if err != nil {
 		return nil, err
 	}
 
 	// isolate decimals from shares
 	remainder := shares.Sub(shares.TruncateDec())
-	if remainder.IsZero() {
-		err = k.Keeper.SelectorTips.Remove(ctx, delAddr)
+	dust, err := k.Keeper.SelectorTips.Get(ctx, selectorAddr)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return nil, err
+		}
+		if dust.IsNil() {
+			dust = math.LegacyZeroDec()
+		}
+	}
+	if remainder.IsPositive() {
+		dust = dust.Add(remainder)
+		err = k.Keeper.SelectorTips.Set(ctx, selectorAddr, dust)
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		err = k.Keeper.SelectorTips.Set(ctx, delAddr, remainder)
-		if err != nil {
-			return nil, err
-		}
+		// todo: if fractions become whole transfer tokens
 	}
 
 	// send coins
-	err = k.Keeper.bankKeeper.SendCoinsFromModuleToModule(ctx, types.TipsEscrowPool, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, math.NewInt(int64(amtToDelegate.Uint64())))))
+	err = k.Keeper.bankKeeper.SendCoinsFromModuleToModule(ctx,
+		types.TipsEscrowPool, stakingtypes.BondedPoolName,
+		sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amtToDelegate)),
+	)
+	if err != nil {
+		return nil, err
+	}
+	err = k.ClaimStatus.Set(ctx, collections.Join(selectorAddr.Bytes(), msg.Id), true)
 	if err != nil {
 		return nil, err
 	}

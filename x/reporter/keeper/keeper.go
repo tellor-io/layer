@@ -3,10 +3,12 @@ package keeper
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	layertypes "github.com/tellor-io/layer/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
@@ -30,6 +32,9 @@ type (
 		DisputedDelegationAmounts collections.Map[[]byte, types.DelegationsAmounts]                                                                                         // key: dispute hashId
 		FeePaidFromStake          collections.Map[[]byte, types.DelegationsAmounts]                                                                                         // key: dispute hashId
 		Report                    *collections.IndexedMap[collections.Pair[[]byte, collections.Pair[[]byte, uint64]], types.DelegationsAmounts, ReporterBlockNumberIndexes] // key: queryId, (reporter AccAddress, blockNumber)
+		Tip                       collections.Map[uint64, oracletypes.Reward]
+		Tbr                       collections.Map[uint64, oracletypes.Reward]
+		ClaimStatus               collections.Map[collections.Pair[[]byte, uint64], bool]
 
 		Schema collections.Schema
 		logger log.Logger
@@ -41,6 +46,7 @@ type (
 		stakingKeeper  types.StakingKeeper
 		bankKeeper     types.BankKeeper
 		registryKeeper types.RegistryKeeper
+		oracleKeeper   types.OracleKeeper
 	}
 )
 
@@ -73,6 +79,9 @@ func NewKeeper(
 			sb, types.ReporterPrefix, "report",
 			collections.PairKeyCodec(collections.BytesKey, collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)), codec.CollValue[types.DelegationsAmounts](cdc), newReportIndexes(sb),
 		),
+		Tip:            collections.NewMap(sb, types.TipPrefix, "tips", collections.Uint64Key, codec.CollValue[oracletypes.Reward](cdc)),
+		Tbr:            collections.NewMap(sb, types.TbrPrefix, "tbr", collections.Uint64Key, codec.CollValue[oracletypes.Reward](cdc)),
+		ClaimStatus:    collections.NewMap(sb, types.ClaimStatusPrefix, "claim_status", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), collections.BoolValue),
 		authority:      authority,
 		logger:         logger,
 		stakingKeeper:  stakingKeeper,
@@ -90,6 +99,10 @@ func NewKeeper(
 // GetAuthority returns the module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+func (k *Keeper) SetOracleKeeper(o types.OracleKeeper) {
+	k.oracleKeeper = o
 }
 
 // Logger returns a module-specific logger.
@@ -187,4 +200,114 @@ func (k Keeper) TrackStakeChange(ctx context.Context) error {
 	maxStake.Expiration = &newExpiration
 	maxStake.Amount = total
 	return k.Tracker.Set(ctx, maxStake)
+}
+
+func (k Keeper) AddTip(ctx context.Context, metaId uint64, tip oracletypes.Reward) error {
+	if tip.Amount.IsPositive() {
+		err := k.Tip.Set(ctx, metaId, tip)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k Keeper) AddTbr(ctx context.Context, metaId uint64, tbr oracletypes.Reward) error {
+	if tbr.Amount.IsPositive() {
+		err := k.Tbr.Set(ctx, metaId, tbr)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k Keeper) RewardByReporter(ctx context.Context, selAddr, repAddr sdk.AccAddress, metaId uint64, queryId []byte) (math.LegacyDec, error) {
+	report, err := k.oracleKeeper.MicroReport(ctx, collections.Join3(queryId, repAddr.Bytes(), metaId))
+	if err != nil {
+		return math.LegacyDec{}, err
+	}
+	tipobj, err := k.Tip.Get(ctx, metaId)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return math.LegacyDec{}, err
+		}
+		tipobj.Amount = math.LegacyZeroDec()
+	}
+
+	tbrobj, err := k.Tbr.Get(ctx, metaId)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return math.LegacyDec{}, err
+		}
+		tbrobj.Amount = math.LegacyZeroDec()
+	}
+	tip := tipobj.Amount
+
+	tbr := tbrobj.Amount
+
+	reporterTipAmount := math.LegacyZeroDec()
+	if tip.IsPositive() {
+		reporterTipAmount = CalculateRewardAmount(
+			report.Power,
+			tipobj.TotalPower,
+			tip.TruncateInt(),
+		)
+	}
+	reporterTbrAmount := math.LegacyZeroDec()
+	if tbr.IsPositive() {
+		reporterTbrAmount = CalculateRewardAmount(
+			report.Power,
+			tbrobj.TotalPower,
+			tbr.TruncateInt(),
+		)
+	}
+
+	reporter, err := k.Reporters.Get(ctx, repAddr)
+	if err != nil {
+		return math.LegacyDec{}, err
+	}
+	reporterAmount := reporterTipAmount.Add(reporterTbrAmount)
+
+	if reporterAmount.IsZero() {
+		return reporterAmount, nil
+	}
+	// selector's commission = reporter's commission rate * reward
+	commission := reporterAmount.Mul(reporter.CommissionRate)
+	// Calculate net reward
+	netReward := reporterAmount.Sub(commission)
+
+	selectors, err := k.Report.Get(ctx, collections.Join(queryId, collections.Join(repAddr.Bytes(), report.BlockNumber)))
+	if err != nil {
+		return math.LegacyDec{}, err
+	}
+	selectorsTotalDec := selectors.Total.ToLegacyDec()
+	var selectorPortion types.TokenOriginInfo
+	for _, selector := range selectors.TokenOrigins {
+		// delegator share = netReward * selector's share / total shares
+		if bytes.Equal(selector.DelegatorAddress, selAddr) {
+			selectorPortion = *selector
+			break
+		}
+	}
+
+	// check if selector found
+	if selectorPortion.Amount.IsNil() {
+		return math.LegacyZeroDec(), nil
+	}
+	selAmountDec := selectorPortion.Amount.ToLegacyDec()
+	selectorShare := netReward.Mul(selAmountDec).Quo(selectorsTotalDec)
+
+	if selAddr.Equals(repAddr) {
+		selectorShare = selectorShare.Add(commission)
+	}
+	fmt.Println("selector share", selectorShare)
+	return selectorShare, nil
+}
+
+func CalculateRewardAmount(reporterPower, totalPower uint64, reward math.Int) math.LegacyDec {
+	rPower := math.LegacyNewDec(int64(reporterPower))
+	tPower := math.LegacyNewDec(int64(totalPower))
+	amount := rPower.Quo(tPower).Mul(reward.ToLegacyDec())
+	return amount
 }
