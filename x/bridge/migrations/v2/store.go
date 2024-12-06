@@ -2,6 +2,7 @@ package v2
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
@@ -35,6 +36,7 @@ func MigrateStoreFromV1ToV2(ctx context.Context, keeper keeper.Keeper) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("Set snapshot limit in migration")
 
 	return nil
 }
