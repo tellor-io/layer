@@ -30,7 +30,7 @@ type SnapshotLimit struct {
 // 	return nil
 // }
 
-func MigrateStoreFromV1ToV2(ctx context.Context, keeper keeper.Keeper) error {
+func MigrateStoreFromV1ToV2(ctx context.Context, keeper *keeper.Keeper) error {
 	limit := bridgetypes.SnapshotLimit{Limit: 1000}
 	err := keeper.SnapshotLimit.Set(ctx, limit)
 	if err != nil {
