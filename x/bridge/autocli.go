@@ -77,6 +77,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query snapshots by report",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "snapshot"}},
 				},
+				{
+					RpcMethod:      "GetSnapshotLimit",
+					Use:            "get-snapshot-limit",
+					Short:          "Query snapshot limit",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},

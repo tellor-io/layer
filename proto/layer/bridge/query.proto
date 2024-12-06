@@ -75,6 +75,11 @@ service Query {
   rpc GetCurrentValidatorSetTimestamp(QueryGetCurrentValidatorSetTimestampRequest) returns (QueryGetCurrentValidatorSetTimestampResponse) {
     option (google.api.http).get = "/layer/bridge/get_current_validator_set_timestamp";
   }
+
+  // Queries the snapshot limit
+  rpc GetSnapshotLimit(QueryGetSnapshotLimitRequest) returns (QueryGetSnapshotLimitResponse) {
+    option (google.api.http).get = "/layer/bridge/get_snapshot_limit";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -221,4 +226,10 @@ message QueryGetCurrentValidatorSetTimestampRequest {}
 
 message QueryGetCurrentValidatorSetTimestampResponse {
   uint64 timestamp = 1;
+}
+
+message QueryGetSnapshotLimitRequest {}
+
+message QueryGetSnapshotLimitResponse {
+  uint64 limit = 1;
 }
