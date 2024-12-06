@@ -49,11 +49,13 @@ type (
 		SnapshotToAttestationsMap    collections.Map[[]byte, types.OracleAttestations]
 		AttestRequestsByHeightMap    collections.Map[uint64, types.AttestationRequests]
 		DepositIdClaimedMap          collections.Map[uint64, types.DepositClaimed]
+		SnapshotLimit                collections.Item[types.SnapshotLimit] // limit of number of attestation requests per block
 
 		stakingKeeper  types.StakingKeeper
 		oracleKeeper   types.OracleKeeper
 		bankKeeper     types.BankKeeper
 		reporterKeeper types.ReporterKeeper
+		authority      string
 	}
 )
 
@@ -64,6 +66,7 @@ func NewKeeper(
 	oracleKeeper types.OracleKeeper,
 	bankKeeper types.BankKeeper,
 	reporterKeeper types.ReporterKeeper,
+	authority string,
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
@@ -85,11 +88,13 @@ func NewKeeper(
 		SnapshotToAttestationsMap:    collections.NewMap(sb, types.SnapshotToAttestationsMapKey, "snapshot_to_attestations_map", collections.BytesKey, codec.CollValue[types.OracleAttestations](cdc)),
 		AttestRequestsByHeightMap:    collections.NewMap(sb, types.AttestRequestsByHeightMapKey, "attest_requests_by_height_map", collections.Uint64Key, codec.CollValue[types.AttestationRequests](cdc)),
 		DepositIdClaimedMap:          collections.NewMap(sb, types.DepositIdClaimedMapKey, "deposit_id_claimed_map", collections.Uint64Key, codec.CollValue[types.DepositClaimed](cdc)),
+		SnapshotLimit:                collections.NewItem(sb, types.SnapshotLimitKey, "snapshot_limit", codec.CollValue[types.SnapshotLimit](cdc)), // attestation requests per block limit
 
 		stakingKeeper:  stakingKeeper,
 		oracleKeeper:   oracleKeeper,
 		bankKeeper:     bankKeeper,
 		reporterKeeper: reporterKeeper,
+		authority:      authority,
 	}
 
 	schema, err := sb.Build()
@@ -378,7 +383,8 @@ func (k Keeper) CalculateValidatorSetCheckpoint(
 	return checkpoint, nil
 }
 
-// check whether last saved validator set is too old (more than 2 weeks)
+// check whether last saved validator set is too old (more than 2 weeks). we set this to 2 weeks
+// to give bridge relayer enough time to update the validator set in bridge contracts before expiration
 func (k Keeper) LastSavedValidatorSetStale(ctx context.Context) (bool, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// get current block timestamp
@@ -914,7 +920,13 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 		k.Logger(ctx).Info("Error getting attestation requests by height", "error", err)
 		return err
 	}
-	if isExternalRequest && len(attestRequests.Requests) > 40 {
+	// make this a governance param
+	snapshotLimit, err := k.SnapshotLimit.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting snapshot limit", "error", err)
+		return err
+	}
+	if isExternalRequest && len(attestRequests.Requests) > int(snapshotLimit.Limit) {
 		return errors.New("too many external requests")
 	}
 	request := types.AttestationRequest{
@@ -1050,4 +1062,9 @@ func (k Keeper) GetValidatorSetTimestampBefore(ctx context.Context, targetTimest
 		return 0, fmt.Errorf("no validator set timestamp found before %d", targetTimestamp)
 	}
 	return mostRecentTimestamp, nil
+}
+
+// GetAuthority returns the module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
 }
