@@ -5077,6 +5077,9 @@ var (
 	md_MsgWithdrawTip                   protoreflect.MessageDescriptor
 	fd_MsgWithdrawTip_selector_address  protoreflect.FieldDescriptor
 	fd_MsgWithdrawTip_validator_address protoreflect.FieldDescriptor
+	fd_MsgWithdrawTip_reporter_address  protoreflect.FieldDescriptor
+	fd_MsgWithdrawTip_id                protoreflect.FieldDescriptor
+	fd_MsgWithdrawTip_query_id          protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -5084,6 +5087,9 @@ func init() {
 	md_MsgWithdrawTip = File_layer_reporter_tx_proto.Messages().ByName("MsgWithdrawTip")
 	fd_MsgWithdrawTip_selector_address = md_MsgWithdrawTip.Fields().ByName("selector_address")
 	fd_MsgWithdrawTip_validator_address = md_MsgWithdrawTip.Fields().ByName("validator_address")
+	fd_MsgWithdrawTip_reporter_address = md_MsgWithdrawTip.Fields().ByName("reporter_address")
+	fd_MsgWithdrawTip_id = md_MsgWithdrawTip.Fields().ByName("id")
+	fd_MsgWithdrawTip_query_id = md_MsgWithdrawTip.Fields().ByName("query_id")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgWithdrawTip)(nil)
@@ -5163,6 +5169,24 @@ func (x *fastReflection_MsgWithdrawTip) Range(f func(protoreflect.FieldDescripto
 			return
 		}
 	}
+	if x.ReporterAddress != "" {
+		value := protoreflect.ValueOfString(x.ReporterAddress)
+		if !f(fd_MsgWithdrawTip_reporter_address, value) {
+			return
+		}
+	}
+	if x.Id != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Id)
+		if !f(fd_MsgWithdrawTip_id, value) {
+			return
+		}
+	}
+	if len(x.QueryId) != 0 {
+		value := protoreflect.ValueOfBytes(x.QueryId)
+		if !f(fd_MsgWithdrawTip_query_id, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -5182,6 +5206,12 @@ func (x *fastReflection_MsgWithdrawTip) Has(fd protoreflect.FieldDescriptor) boo
 		return x.SelectorAddress != ""
 	case "layer.reporter.MsgWithdrawTip.validator_address":
 		return x.ValidatorAddress != ""
+	case "layer.reporter.MsgWithdrawTip.reporter_address":
+		return x.ReporterAddress != ""
+	case "layer.reporter.MsgWithdrawTip.id":
+		return x.Id != uint64(0)
+	case "layer.reporter.MsgWithdrawTip.query_id":
+		return len(x.QueryId) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgWithdrawTip"))
@@ -5202,6 +5232,12 @@ func (x *fastReflection_MsgWithdrawTip) Clear(fd protoreflect.FieldDescriptor) {
 		x.SelectorAddress = ""
 	case "layer.reporter.MsgWithdrawTip.validator_address":
 		x.ValidatorAddress = ""
+	case "layer.reporter.MsgWithdrawTip.reporter_address":
+		x.ReporterAddress = ""
+	case "layer.reporter.MsgWithdrawTip.id":
+		x.Id = uint64(0)
+	case "layer.reporter.MsgWithdrawTip.query_id":
+		x.QueryId = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgWithdrawTip"))
@@ -5224,6 +5260,15 @@ func (x *fastReflection_MsgWithdrawTip) Get(descriptor protoreflect.FieldDescrip
 	case "layer.reporter.MsgWithdrawTip.validator_address":
 		value := x.ValidatorAddress
 		return protoreflect.ValueOfString(value)
+	case "layer.reporter.MsgWithdrawTip.reporter_address":
+		value := x.ReporterAddress
+		return protoreflect.ValueOfString(value)
+	case "layer.reporter.MsgWithdrawTip.id":
+		value := x.Id
+		return protoreflect.ValueOfUint64(value)
+	case "layer.reporter.MsgWithdrawTip.query_id":
+		value := x.QueryId
+		return protoreflect.ValueOfBytes(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgWithdrawTip"))
@@ -5248,6 +5293,12 @@ func (x *fastReflection_MsgWithdrawTip) Set(fd protoreflect.FieldDescriptor, val
 		x.SelectorAddress = value.Interface().(string)
 	case "layer.reporter.MsgWithdrawTip.validator_address":
 		x.ValidatorAddress = value.Interface().(string)
+	case "layer.reporter.MsgWithdrawTip.reporter_address":
+		x.ReporterAddress = value.Interface().(string)
+	case "layer.reporter.MsgWithdrawTip.id":
+		x.Id = value.Uint()
+	case "layer.reporter.MsgWithdrawTip.query_id":
+		x.QueryId = value.Bytes()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgWithdrawTip"))
@@ -5272,6 +5323,12 @@ func (x *fastReflection_MsgWithdrawTip) Mutable(fd protoreflect.FieldDescriptor)
 		panic(fmt.Errorf("field selector_address of message layer.reporter.MsgWithdrawTip is not mutable"))
 	case "layer.reporter.MsgWithdrawTip.validator_address":
 		panic(fmt.Errorf("field validator_address of message layer.reporter.MsgWithdrawTip is not mutable"))
+	case "layer.reporter.MsgWithdrawTip.reporter_address":
+		panic(fmt.Errorf("field reporter_address of message layer.reporter.MsgWithdrawTip is not mutable"))
+	case "layer.reporter.MsgWithdrawTip.id":
+		panic(fmt.Errorf("field id of message layer.reporter.MsgWithdrawTip is not mutable"))
+	case "layer.reporter.MsgWithdrawTip.query_id":
+		panic(fmt.Errorf("field query_id of message layer.reporter.MsgWithdrawTip is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgWithdrawTip"))
@@ -5289,6 +5346,12 @@ func (x *fastReflection_MsgWithdrawTip) NewField(fd protoreflect.FieldDescriptor
 		return protoreflect.ValueOfString("")
 	case "layer.reporter.MsgWithdrawTip.validator_address":
 		return protoreflect.ValueOfString("")
+	case "layer.reporter.MsgWithdrawTip.reporter_address":
+		return protoreflect.ValueOfString("")
+	case "layer.reporter.MsgWithdrawTip.id":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.reporter.MsgWithdrawTip.query_id":
+		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgWithdrawTip"))
@@ -5366,6 +5429,17 @@ func (x *fastReflection_MsgWithdrawTip) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		l = len(x.ReporterAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Id != 0 {
+			n += 1 + runtime.Sov(uint64(x.Id))
+		}
+		l = len(x.QueryId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -5394,6 +5468,25 @@ func (x *fastReflection_MsgWithdrawTip) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.QueryId) > 0 {
+			i -= len(x.QueryId)
+			copy(dAtA[i:], x.QueryId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.QueryId)))
+			i--
+			dAtA[i] = 0x2a
+		}
+		if x.Id != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Id))
+			i--
+			dAtA[i] = 0x20
+		}
+		if len(x.ReporterAddress) > 0 {
+			i -= len(x.ReporterAddress)
+			copy(dAtA[i:], x.ReporterAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ReporterAddress)))
+			i--
+			dAtA[i] = 0x1a
 		}
 		if len(x.ValidatorAddress) > 0 {
 			i -= len(x.ValidatorAddress)
@@ -5521,6 +5614,91 @@ func (x *fastReflection_MsgWithdrawTip) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				x.ValidatorAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ReporterAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ReporterAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+				}
+				x.Id = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Id |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.QueryId = append(x.QueryId[:0], dAtA[iNdEx:postIndex]...)
+				if x.QueryId == nil {
+					x.QueryId = []byte{}
+				}
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -6369,6 +6547,9 @@ type MsgWithdrawTip struct {
 
 	SelectorAddress  string `protobuf:"bytes,1,opt,name=selector_address,json=selectorAddress,proto3" json:"selector_address,omitempty"`
 	ValidatorAddress string `protobuf:"bytes,2,opt,name=validator_address,json=validatorAddress,proto3" json:"validator_address,omitempty"`
+	ReporterAddress  string `protobuf:"bytes,3,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
+	Id               uint64 `protobuf:"varint,4,opt,name=id,proto3" json:"id,omitempty"`
+	QueryId          []byte `protobuf:"bytes,5,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 }
 
 func (x *MsgWithdrawTip) Reset() {
@@ -6403,6 +6584,27 @@ func (x *MsgWithdrawTip) GetValidatorAddress() string {
 		return x.ValidatorAddress
 	}
 	return ""
+}
+
+func (x *MsgWithdrawTip) GetReporterAddress() string {
+	if x != nil {
+		return x.ReporterAddress
+	}
+	return ""
+}
+
+func (x *MsgWithdrawTip) GetId() uint64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *MsgWithdrawTip) GetQueryId() []byte {
+	if x != nil {
+		return x.QueryId
+	}
+	return nil
 }
 
 // MsgWithdrawTipResponse defines the Msg/WithdrawTip response type.
@@ -6533,7 +6735,7 @@ var file_layer_reporter_tx_proto_rawDesc = []byte{
 	0x2a, 0x10, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65,
 	0x73, 0x73, 0x22, 0x1b, 0x0a, 0x19, 0x4d, 0x73, 0x67, 0x55, 0x6e, 0x6a, 0x61, 0x69, 0x6c, 0x52,
 	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
-	0xbc, 0x01, 0x0a, 0x0e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54,
+	0xac, 0x02, 0x0a, 0x0e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54,
 	0x69, 0x70, 0x12, 0x43, 0x0a, 0x10, 0x73, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x5f, 0x61,
 	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
 	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
@@ -6543,7 +6745,14 @@ var file_layer_reporter_tx_proto_rawDesc = []byte{
 	0x28, 0x09, 0x42, 0x21, 0xd2, 0xb4, 0x2d, 0x1d, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x56,
 	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
 	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x3a, 0x15, 0x82, 0xe7, 0xb0, 0x2a, 0x10, 0x73, 0x65,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x43, 0x0a, 0x10, 0x72, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0f, 0x72, 0x65, 0x70,
+	0x6f, 0x72, 0x74, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x0e, 0x0a, 0x02,
+	0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12, 0x19, 0x0a, 0x08,
+	0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x07,
+	0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x3a, 0x15, 0x82, 0xe7, 0xb0, 0x2a, 0x10, 0x73, 0x65,
 	0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x18,
 	0x0a, 0x16, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x69, 0x70,
 	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0x9d, 0x05, 0x0a, 0x03, 0x4d, 0x73, 0x67,

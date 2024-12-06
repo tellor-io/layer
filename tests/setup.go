@@ -255,6 +255,7 @@ func (s *SharedSetup) SetupTest(t *testing.T) {
 	require.NoError(t, err)
 	s.Ctx = sdk.UnwrapSDKContext(app.BaseApp.NewContextLegacy(false, tmproto.Header{Time: time.Now()}))
 	s.Oraclekeeper.SetBridgeKeeper(s.Bridgekeeper)
+	s.Reporterkeeper.SetOracleKeeper(s.Oraclekeeper)
 	s.require.NoError(err)
 
 	s.fetchStoreKey = app.UnsafeFindStoreKey

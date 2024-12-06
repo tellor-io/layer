@@ -13,7 +13,7 @@ import (
 )
 
 func TestBeforeDelegationCreated(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	delAddr, valAddr := sample.AccAddressBytes(), sdk.ValAddress(sample.AccAddressBytes())
 	require.NoError(t, k.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr))
 
@@ -29,7 +29,7 @@ func TestBeforeDelegationCreated(t *testing.T) {
 }
 
 func TestBeforeDelegationRemoved(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	delAddr, valAddr := sample.AccAddressBytes(), sdk.ValAddress(sample.AccAddressBytes())
 	require.NoError(t, k.Hooks().BeforeDelegationRemoved(ctx, delAddr, valAddr))
 
