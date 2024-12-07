@@ -937,7 +937,9 @@ func New(
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
 	// Make sure it's called after `app.ModuleManager` and `app.configurator` are set.
-	app.RegisterUpgradeHandlers()
+	// app.RegisterUpgradeHandlers()
+	app.setupUpgradeHandlers()
+	app.setupUpgradeStoreLoaders()
 
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
 	reflectionSvc, err := runtimeservices.NewReflectionService()
@@ -1018,7 +1020,7 @@ func (app *App) preBlocker(ph *ProposalHandler) func(sdk.Context, *abci.RequestF
 }
 
 func (app *App) RegisterUpgradeHandlers() {
-	const UpgradeName = "v1.6.0"
+	const UpgradeName = "v2.0.0-audit"
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,
