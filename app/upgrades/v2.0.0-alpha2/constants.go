@@ -1,9 +1,9 @@
 package v_2_0_0_alpha2
 
 import (
-	store "cosmossdk.io/store/types"
-
 	"github.com/tellor-io/layer/app/upgrades"
+
+	store "cosmossdk.io/store/types"
 )
 
 const (

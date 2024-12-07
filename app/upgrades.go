@@ -3,17 +3,17 @@ package app
 import (
 	"fmt"
 
+	"github.com/tellor-io/layer/app/upgrades"
 	v_2_0 "github.com/tellor-io/layer/app/upgrades/v2.0.0-alpha2"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/tellor-io/layer/app/upgrades"
 )
 
 var (
 	// `Upgrades` defines the upgrade handlers and store loaders for the application.
 	// New upgrades should be added to this slice after they are implemented.
-	Upgrades = []upgrades.Upgrade{
-		v_2_0.Upgrade,
+	Upgrades = []*upgrades.Upgrade{
+		&v_2_0.Upgrade,
 	}
 	Forks = []upgrades.Fork{}
 )
