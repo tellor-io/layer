@@ -48,8 +48,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
 				},
 				{
-					RpcMethod:      "AvailableTips",
-					Use:            "available-tips",
+					RpcMethod:      "AvailableTipsByQuery",
+					Use:            "available-tips-by-query",
 					Short:          "Query how much how much tips a selector has",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}},
 				},
@@ -95,10 +95,16 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
 				},
 				{
-					RpcMethod:      "WithdrawTip",
-					Use:            "withdraw-tip [selector-address] [validator-address]",
-					Short:          "Send a WithdrawTip tx",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}, {ProtoField: "validator_address"}},
+					RpcMethod: "WithdrawTip",
+					Use:       "withdraw-tip [selector-address] [validator-address] [reporter-address] [id] [query-id]",
+					Short:     "Send a WithdrawTip tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "selector_address"},
+						{ProtoField: "validator_address"},
+						{ProtoField: "reporter_address"},
+						{ProtoField: "id"},
+						{ProtoField: "query_id"},
+					},
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},

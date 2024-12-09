@@ -598,7 +598,7 @@ func New(
 		app.ReporterKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-
+	app.ReporterKeeper.SetOracleKeeper(app.OracleKeeper)
 	app.DisputeKeeper = disputemodulekeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[disputemoduletypes.StoreKey]),
