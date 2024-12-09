@@ -67,8 +67,8 @@ func TestIbcInterchainQuery(t *testing.T) {
 				NoHostMount:    false,
 				Images: []ibc.DockerImage{
 					{
-						Repository: "ghcr.io/akremstudy/layer-icq", // source code ibc branch
-						Version:    "latest",
+						Repository: "layer-icq", // source code ibc branch
+						Version:    "local",
 						UidGid:     "1025:1025",
 					},
 				},
