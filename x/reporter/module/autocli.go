@@ -99,8 +99,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "withdraw-tip [selector-address] [validator-address] [reporter-address] [id] [query-id]",
 					Short:     "Send a WithdrawTip tx",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "selector_address"}, {ProtoField: "validator_address"},
-						{ProtoField: "reporter_address"}, {ProtoField: "id"}, {ProtoField: "query_id"}},
+						{ProtoField: "selector_address"},
+						{ProtoField: "validator_address"},
+						{ProtoField: "reporter_address"},
+						{ProtoField: "id"},
+						{ProtoField: "query_id"},
+					},
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
