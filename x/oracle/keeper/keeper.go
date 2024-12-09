@@ -36,6 +36,7 @@ type (
 		reporterKeeper types.ReporterKeeper
 		Schema         collections.Schema // key: reporter, queryid
 		// total tips given over time
+		bridgeKeeper       types.BridgeKeeper
 		CyclelistSequencer collections.Sequence                                                                                       // key: queryId, tipper
 		TipperTotal        collections.Map[collections.Pair[[]byte, uint64], math.Int]                                                // key: tipperAcc, blockNumber
 		TotalTips          collections.Map[uint64, math.Int]                                                                          // key: blockNumber
@@ -174,6 +175,10 @@ func (k Keeper) GetAuthority() string {
 func (k Keeper) Logger(ctx context.Context) log.Logger {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	return sdkCtx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
+}
+
+func (k *Keeper) SetBridgeKeeper(bk types.BridgeKeeper) {
+	k.bridgeKeeper = bk
 }
 
 // initialize query for a given query data.

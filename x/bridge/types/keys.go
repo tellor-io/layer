@@ -34,4 +34,5 @@ var (
 	AttestRequestsByHeightMapKey    = collections.NewPrefix(14) // Prefix for attest_requests_by_height_map key
 	WithdrawalIdKey                 = collections.NewPrefix(15) // Prefix for withdrawal_id key
 	DepositIdClaimedMapKey          = collections.NewPrefix(16) // Prefix for deposit_id_claimed_map key
+	SnapshotLimitKey                = collections.NewPrefix(17) // Prefix for snapshot_limit key
 )

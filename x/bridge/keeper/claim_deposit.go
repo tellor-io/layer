@@ -193,3 +193,11 @@ func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string
 
 	return layerRecipientAddress, amountCoins, tipCoins, nil
 }
+
+func (k Keeper) GetDepositStatus(ctx context.Context, depositId uint64) (bool, error) {
+	claimed, err := k.DepositIdClaimedMap.Get(ctx, depositId)
+	if err != nil {
+		return false, err
+	}
+	return claimed.Claimed, nil
+}

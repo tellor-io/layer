@@ -37,6 +37,7 @@ type KeeperTestSuite struct {
 	ctx            sdk.Context
 	oracleKeeper   keeper.Keeper
 	bankKeeper     *mocks.BankKeeper
+	bridgeKeeper   *mocks.BridgeKeeper
 	accountKeeper  *mocks.AccountKeeper
 	registryKeeper *mocks.RegistryKeeper
 	reporterKeeper *mocks.ReporterKeeper
@@ -53,6 +54,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		s.registryKeeper,
 		s.accountKeeper,
 		s.bankKeeper,
+		s.bridgeKeeper,
 		s.ctx = keepertest.OracleKeeper(s.T())
 
 	s.msgServer = keeper.NewMsgServerImpl(s.oracleKeeper)
@@ -60,6 +62,7 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	// Initialize params
 	s.NoError(s.oracleKeeper.SetParams(s.ctx, types.DefaultParams()))
+	s.oracleKeeper.SetBridgeKeeper(s.bridgeKeeper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
@@ -450,7 +453,7 @@ func (s *KeeperTestSuite) TestReportIndexedMap() {
 	// expired but no revealed reports
 	s.NoError(k.Query.Set(s.ctx, collections.Join([]byte("queryid10"), uint64(10)), types.QueryMeta{Expiration: 9}))
 
-	rng := collections.NewPrefixUntilPairRange[collections.Pair[bool, uint64], collections.Pair[[]byte, uint64]](collections.Join(true, uint64(12))).Descending()
+	rng := collections.NewPrefixUntilPairRange[collections.Pair[bool, uint64], collections.Pair[[]byte, uint64]](collections.Join(true, uint64(11))).Descending()
 	iter, err := k.Query.Indexes.Expiration.Iterate(s.ctx, rng)
 	s.NoError(err)
 	expiredRevealedCount := 0

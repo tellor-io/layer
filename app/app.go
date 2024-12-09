@@ -606,6 +606,7 @@ func New(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	oracleAppmodule := oraclemodule.NewAppModule(appCodec, app.OracleKeeper, app.AccountKeeper, app.BankKeeper)
+	app.ReporterKeeper.SetOracleKeeper(app.OracleKeeper)
 	app.DisputeKeeper = disputemodulekeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[disputemoduletypes.StoreKey]),
@@ -622,8 +623,9 @@ func New(
 		app.OracleKeeper,
 		app.BankKeeper,
 		app.ReporterKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-
+	app.OracleKeeper.SetBridgeKeeper(app.BridgeKeeper)
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	appFlags := appflags.GetFlagValuesFromOptions(appOpts)
 	// Panic if this is not a full node and gRPC is disabled.
