@@ -36,7 +36,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 		return nil, err
 	}
 
-	isTokenBridgeDeposit, err := k.keeper.PreventBridgeWithdrawalReport(msg.QueryData)
+	isTokenBridgeDeposit, err := k.keeper.PreventBridgeWithdrawalReport(ctx, msg.QueryData)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	if err != nil {
 		return nil, err
 	}
-	return &types.MsgSubmitValueResponse{}, nil
+	return &types.MsgSubmitValueResponse{Id: query.Id}, nil
 }
 
 func (k Keeper) DirectReveal(ctx context.Context,

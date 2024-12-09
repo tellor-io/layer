@@ -183,6 +183,7 @@ mock-gen-mint:
 mock-gen-oracle:
 	@go run github.com/vektra/mockery/v2 --name=AccountKeeper --dir=$(CURDIR)/x/oracle/types --recursive --output=./x/oracle/mocks
 	@go run github.com/vektra/mockery/v2 --name=BankKeeper --dir=$(CURDIR)/x/oracle/types --recursive --output=./x/oracle/mocks
+	@go run github.com/vektra/mockery/v2 --name=BridgeKeeper --dir=$(CURDIR)/x/oracle/types --recursive --output=./x/oracle/mocks
 	@go run github.com/vektra/mockery/v2 --name=RegistryKeeper --dir=$(CURDIR)/x/oracle/types --recursive --output=./x/oracle/mocks
 	@go run github.com/vektra/mockery/v2 --name=ReporterKeeper --dir=$(CURDIR)/x/oracle/types --recursive --output=./x/oracle/mocks
 
@@ -194,6 +195,7 @@ mock-gen-registry:
 mock-gen-reporter:
 	@go run github.com/vektra/mockery/v2 --name=AccountKeeper --dir=$(CURDIR)/x/reporter/types --recursive --output=./x/reporter/mocks
 	@go run github.com/vektra/mockery/v2 --name=BankKeeper --dir=$(CURDIR)/x/reporter/types --recursive --output=./x/reporter/mocks
+	@go run github.com/vektra/mockery/v2 --name=OracleKeeper --dir=$(CURDIR)/x/reporter/types --recursive --output=./x/reporter/mocks
 	@go run github.com/vektra/mockery/v2 --name=StakingKeeper --dir=$(CURDIR)/x/reporter/types --recursive --output=./x/reporter/mocks
 	@go run github.com/vektra/mockery/v2 --name=StakingHooks --dir=$(CURDIR)/x/reporter/types --recursive --output=./x/reporter/mocks
 	@go run github.com/vektra/mockery/v2 --name=RegistryKeeper --dir=$(CURDIR)/x/reporter/types --recursive --output=./x/reporter/mocks

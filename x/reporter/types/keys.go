@@ -27,4 +27,7 @@ var (
 	FeePaidFromStakePrefix          = collections.NewPrefix(16)
 	StakeTrackerPrefix              = collections.NewPrefix(17)
 	ReporterPrefix                  = collections.NewPrefix(18)
+	TipPrefix                       = collections.NewPrefix(19)
+	TbrPrefix                       = collections.NewPrefix(20)
+	ClaimStatusPrefix               = collections.NewPrefix(21)
 )

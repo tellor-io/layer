@@ -1,12 +1,15 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/testutil/sample"
+	layertypes "github.com/tellor-io/layer/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/mocks"
 	"github.com/tellor-io/layer/x/reporter/types"
@@ -18,21 +21,22 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func setupKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, *mocks.RegistryKeeper, sdk.Context, store.KVStoreService) {
+func setupKeeper(tb testing.TB) (keeper.Keeper, *mocks.OracleKeeper, *mocks.StakingKeeper, *mocks.BankKeeper, *mocks.RegistryKeeper, sdk.Context, store.KVStoreService) {
 	tb.Helper()
 	return keepertest.ReporterKeeper(tb)
 }
 
 func TestKeeper(t *testing.T) {
-	k, sk, bk, _, ctx, _ := keepertest.ReporterKeeper(t)
+	k, ok, sk, bk, _, ctx, _ := keepertest.ReporterKeeper(t)
 	require.NotNil(t, ctx)
 	require.NotEmpty(t, k)
+	require.NotNil(t, ok)
 	require.NotNil(t, sk)
 	require.NotNil(t, bk)
 }
 
 func TestGetAuthority(t *testing.T) {
-	k, _, _, _, _, _ := setupKeeper(t)
+	k, _, _, _, _, _, _ := setupKeeper(t)
 	authority := k.GetAuthority()
 	require.NotEmpty(t, authority)
 
@@ -42,12 +46,12 @@ func TestGetAuthority(t *testing.T) {
 }
 
 func TestLogger(t *testing.T) {
-	k, _, _, _, _, _ := setupKeeper(t)
+	k, _, _, _, _, _, _ := setupKeeper(t)
 	require.NotNil(t, k.Logger())
 }
 
 func TestGetDelegatorTokensAtBlock(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	delAddr, val1Address, val2Address := sample.AccAddressBytes(), sdk.ValAddress(sample.AccAddressBytes()), sdk.ValAddress(sample.AccAddressBytes())
 	require.NoError(t, k.Selectors.Set(ctx, delAddr, types.NewSelection(delAddr, 2)))
 
@@ -70,7 +74,7 @@ func TestGetDelegatorTokensAtBlock(t *testing.T) {
 }
 
 func TestGetReporterTokensAtBlock(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	reporter := sample.AccAddressBytes()
 	tokens, err := k.GetReporterTokensAtBlock(ctx, reporter, uint64(ctx.BlockHeight()))
 	require.NoError(t, err)
@@ -88,7 +92,7 @@ func TestGetReporterTokensAtBlock(t *testing.T) {
 }
 
 func TestTrackStakeChange(t *testing.T) {
-	k, sk, _, _, ctx, _ := setupKeeper(t)
+	k, _, sk, _, _, ctx, _ := setupKeeper(t)
 	expiration := ctx.BlockTime().Add(1)
 	err := k.Tracker.Set(ctx, types.StakeTracker{Expiration: &expiration, Amount: math.NewInt(1000)})
 	require.NoError(t, err)
@@ -107,7 +111,7 @@ func TestTrackStakeChange(t *testing.T) {
 }
 
 func TestReportIndexedMap(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	keys := []collections.Pair[[]byte, collections.Pair[[]byte, uint64]]{
 		collections.Join([]byte("queryid1"), collections.Join([]byte("reporterA"), uint64(1))),
 		collections.Join([]byte("queryid2"), collections.Join([]byte("reporterA"), uint64(1))),
@@ -149,4 +153,518 @@ func TestReportIndexedMap(t *testing.T) {
 	repAkeys, err := iter.Keys()
 	require.NoError(t, err)
 	require.Equal(t, 5, len(repAkeys))
+}
+
+func TestRewardTip(t *testing.T) {
+	k, ok, _, _, _, ctx, _ := setupKeeper(t)
+	// make three reporters, each with power of 15 and total power of 45
+	// make each reporter have three selectors each with power of 5 which makes the reporters power 15
+	// reporter1
+	reward := math.NewInt(100)
+	_ = reward
+	metaId := uint64(1)
+	queryId := []byte("queryid")
+	height := uint64(ctx.BlockHeight())
+	reporter1, selector1b, selector1c := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	require.NoError(t, k.Report.Set(ctx, collections.Join(queryId, collections.Join(reporter1.Bytes(), height)), types.DelegationsAmounts{
+		Total: math.NewInt(15).Mul(layertypes.PowerReduction),
+		TokenOrigins: []*types.TokenOriginInfo{
+			{
+				DelegatorAddress: reporter1,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector1b,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector1c,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+		},
+	}))
+
+	reporter2, selector2b, selector2c := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	require.NoError(t, k.Report.Set(ctx, collections.Join(queryId, collections.Join(reporter2.Bytes(), height)), types.DelegationsAmounts{
+		Total: math.NewInt(15).Mul(layertypes.PowerReduction),
+		TokenOrigins: []*types.TokenOriginInfo{
+			{
+				DelegatorAddress: reporter2,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector2b,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector2c,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+		},
+	}))
+
+	reporter3, selector3b, selector3c := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	require.NoError(t, k.Report.Set(ctx, collections.Join(queryId, collections.Join(reporter3.Bytes(), height)), types.DelegationsAmounts{
+		Total: math.NewInt(15).Mul(layertypes.PowerReduction),
+		TokenOrigins: []*types.TokenOriginInfo{
+			{
+				DelegatorAddress: reporter3,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector3b,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector3c,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+		},
+	}))
+
+	reporters := []sdk.AccAddress{reporter1, reporter2, reporter3}
+	for _, r := range reporters {
+		require.NoError(t, k.Reporters.Set(ctx, r, types.OracleReporter{CommissionRate: math.LegacyMustNewDecFromStr("0.5")})) // 50%
+	}
+	// query id gets aggregated then AddTip, skip tbr for now
+	require.NoError(t, k.AddTip(ctx, metaId, oracletypes.Reward{
+		TotalPower:  45,
+		Amount:      reward.ToLegacyDec(),
+		CycleList:   false,
+		BlockHeight: height + 1,
+	}))
+
+	// microreports
+	ok.On("MicroReport", ctx, collections.Join3(queryId, reporter1.Bytes(), metaId)).Return(oracletypes.MicroReport{
+		BlockNumber: height,
+		Power:       uint64(15),
+	}, nil)
+
+	ok.On("MicroReport", ctx, collections.Join3(queryId, reporter2.Bytes(), metaId)).Return(oracletypes.MicroReport{
+		BlockNumber: height,
+		Power:       uint64(15),
+	}, nil)
+
+	ok.On("MicroReport", ctx, collections.Join3(queryId, reporter3.Bytes(), metaId)).Return(oracletypes.MicroReport{
+		BlockNumber: height,
+		Power:       uint64(15),
+	}, nil)
+
+	type Reporter struct {
+		selectors []sdk.AccAddress
+	}
+	reporterA := Reporter{
+		selectors: []sdk.AccAddress{reporter1, selector1b, selector1c},
+	}
+	reporterB := Reporter{
+		selectors: []sdk.AccAddress{reporter2, selector2b, selector2c},
+	}
+	reporterC := Reporter{
+		selectors: []sdk.AccAddress{reporter3, selector3b, selector3c},
+	}
+	all := append([]Reporter{reporterA}, reporterB, reporterC)
+	total := math.LegacyZeroDec()
+	for i, r := range all {
+		for _, s := range r.selectors {
+			share, err := k.RewardByReporter(ctx, s, reporters[i], metaId, queryId)
+			require.NoError(t, err)
+			total = total.Add(share)
+		}
+	}
+	fmt.Println("total", total)
+	require.True(t, total.Equal(reward.ToLegacyDec()))
+}
+
+func TestRewardTrb(t *testing.T) {
+	k, ok, _, _, _, ctx, _ := setupKeeper(t)
+	reward := math.NewInt(100)
+
+	metaId := uint64(1)
+	queryId := []byte("queryid")
+	height := uint64(ctx.BlockHeight())
+	reporter1, selector1b, selector1c := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	require.NoError(t, k.Report.Set(ctx, collections.Join(queryId, collections.Join(reporter1.Bytes(), height)), types.DelegationsAmounts{
+		Total: math.NewInt(15).Mul(layertypes.PowerReduction),
+		TokenOrigins: []*types.TokenOriginInfo{
+			{
+				DelegatorAddress: reporter1,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector1b,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector1c,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+		},
+	}))
+
+	reporter2, selector2b, selector2c := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	require.NoError(t, k.Report.Set(ctx, collections.Join(queryId, collections.Join(reporter2.Bytes(), height)), types.DelegationsAmounts{
+		Total: math.NewInt(15).Mul(layertypes.PowerReduction),
+		TokenOrigins: []*types.TokenOriginInfo{
+			{
+				DelegatorAddress: reporter2,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector2b,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector2c,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+		},
+	}))
+
+	reporter3, selector3b, selector3c := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	require.NoError(t, k.Report.Set(ctx, collections.Join(queryId, collections.Join(reporter3.Bytes(), height)), types.DelegationsAmounts{
+		Total: math.NewInt(15).Mul(layertypes.PowerReduction),
+		TokenOrigins: []*types.TokenOriginInfo{
+			{
+				DelegatorAddress: reporter3,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector3b,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector3c,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+		},
+	}))
+
+	reporters := []sdk.AccAddress{reporter1, reporter2, reporter3}
+	for _, r := range reporters {
+		require.NoError(t, k.Reporters.Set(ctx, r, types.OracleReporter{CommissionRate: math.LegacyMustNewDecFromStr("0.5")})) // 50%
+	}
+
+	require.NoError(t, k.AddTip(ctx, metaId, oracletypes.Reward{
+		TotalPower:  45,
+		Amount:      math.LegacyZeroDec(),
+		CycleList:   true,
+		BlockHeight: height + 1,
+	}))
+
+	require.NoError(t, k.AddTbr(ctx, metaId, oracletypes.Reward{
+		TotalPower:  45,
+		Amount:      reward.ToLegacyDec(),
+		CycleList:   true,
+		BlockHeight: height + 1,
+	}))
+
+	// microreports
+	ok.On("MicroReport", ctx, collections.Join3(queryId, reporter1.Bytes(), metaId)).Return(oracletypes.MicroReport{
+		BlockNumber: height,
+		Power:       uint64(15),
+	}, nil)
+
+	ok.On("MicroReport", ctx, collections.Join3(queryId, reporter2.Bytes(), metaId)).Return(oracletypes.MicroReport{
+		BlockNumber: height,
+		Power:       uint64(15),
+	}, nil)
+
+	ok.On("MicroReport", ctx, collections.Join3(queryId, reporter3.Bytes(), metaId)).Return(oracletypes.MicroReport{
+		BlockNumber: height,
+		Power:       uint64(15),
+	}, nil)
+
+	type Reporter struct {
+		selectors []sdk.AccAddress
+	}
+	reporterA := Reporter{
+		selectors: []sdk.AccAddress{reporter1, selector1b, selector1c},
+	}
+	reporterB := Reporter{
+		selectors: []sdk.AccAddress{reporter2, selector2b, selector2c},
+	}
+	reporterC := Reporter{
+		selectors: []sdk.AccAddress{reporter3, selector3b, selector3c},
+	}
+	all := append([]Reporter{reporterA}, reporterB, reporterC)
+	total := math.LegacyZeroDec()
+	for i, r := range all {
+		for _, s := range r.selectors {
+			share, err := k.RewardByReporter(ctx, s, reporters[i], metaId, queryId)
+			require.NoError(t, err)
+			total = total.Add(share)
+		}
+	}
+	require.True(t, total.Equal(reward.ToLegacyDec()))
+}
+
+func TestRewardTrbTip(t *testing.T) {
+	k, ok, _, _, _, ctx, _ := setupKeeper(t)
+	tip := math.NewInt(100)
+	tbr := math.NewInt(50)
+	reward := tip.Add(tbr)
+	metaId := uint64(1)
+	queryId := []byte("queryid")
+	height := uint64(ctx.BlockHeight())
+	reporter1, selector1b, selector1c := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	require.NoError(t, k.Report.Set(ctx, collections.Join(queryId, collections.Join(reporter1.Bytes(), height)), types.DelegationsAmounts{
+		Total: math.NewInt(15).Mul(layertypes.PowerReduction),
+		TokenOrigins: []*types.TokenOriginInfo{
+			{
+				DelegatorAddress: reporter1,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector1b,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector1c,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+		},
+	}))
+
+	reporter2, selector2b, selector2c := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	require.NoError(t, k.Report.Set(ctx, collections.Join(queryId, collections.Join(reporter2.Bytes(), height)), types.DelegationsAmounts{
+		Total: math.NewInt(15).Mul(layertypes.PowerReduction),
+		TokenOrigins: []*types.TokenOriginInfo{
+			{
+				DelegatorAddress: reporter2,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector2b,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector2c,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+		},
+	}))
+
+	reporter3, selector3b, selector3c := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	require.NoError(t, k.Report.Set(ctx, collections.Join(queryId, collections.Join(reporter3.Bytes(), height)), types.DelegationsAmounts{
+		Total: math.NewInt(15).Mul(layertypes.PowerReduction),
+		TokenOrigins: []*types.TokenOriginInfo{
+			{
+				DelegatorAddress: reporter3,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector3b,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+			{
+				DelegatorAddress: selector3c,
+				Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+			},
+		},
+	}))
+
+	reporters := []sdk.AccAddress{reporter1, reporter2, reporter3}
+	for _, r := range reporters {
+		require.NoError(t, k.Reporters.Set(ctx, r, types.OracleReporter{CommissionRate: math.LegacyMustNewDecFromStr("0.5")})) // 50%
+	}
+
+	require.NoError(t, k.AddTip(ctx, metaId, oracletypes.Reward{
+		TotalPower:  45,
+		Amount:      tip.ToLegacyDec(),
+		CycleList:   true,
+		BlockHeight: height + 1,
+	}))
+
+	require.NoError(t, k.AddTbr(ctx, height+1, oracletypes.Reward{
+		TotalPower:  45,
+		Amount:      tbr.ToLegacyDec(),
+		CycleList:   true,
+		BlockHeight: height + 1,
+	}))
+
+	// microreports
+	ok.On("MicroReport", ctx, collections.Join3(queryId, reporter1.Bytes(), metaId)).Return(oracletypes.MicroReport{
+		BlockNumber: height,
+		Power:       uint64(15),
+	}, nil)
+
+	ok.On("MicroReport", ctx, collections.Join3(queryId, reporter2.Bytes(), metaId)).Return(oracletypes.MicroReport{
+		BlockNumber: height,
+		Power:       uint64(15),
+	}, nil)
+
+	ok.On("MicroReport", ctx, collections.Join3(queryId, reporter3.Bytes(), metaId)).Return(oracletypes.MicroReport{
+		BlockNumber: height,
+		Power:       uint64(15),
+	}, nil)
+
+	type Reporter struct {
+		selectors []sdk.AccAddress
+	}
+	reporterA := Reporter{
+		selectors: []sdk.AccAddress{reporter1, selector1b, selector1c},
+	}
+	reporterB := Reporter{
+		selectors: []sdk.AccAddress{reporter2, selector2b, selector2c},
+	}
+	reporterC := Reporter{
+		selectors: []sdk.AccAddress{reporter3, selector3b, selector3c},
+	}
+	all := append([]Reporter{reporterA}, reporterB, reporterC)
+	total := math.LegacyZeroDec()
+	for i, r := range all {
+		for _, s := range r.selectors {
+			share, err := k.RewardByReporter(ctx, s, reporters[i], metaId, queryId)
+			require.NoError(t, err)
+			total = total.Add(share)
+		}
+	}
+	fmt.Println(total)
+	require.True(t, total.Equal(reward.ToLegacyDec()))
+}
+
+// two queryids one cyclelist only and the other both tip n tbr
+func TestRewardMix(t *testing.T) {
+	k, ok, _, _, _, ctx, _ := setupKeeper(t)
+	tip := math.NewInt(100)
+	tbr := math.NewInt(50)
+	metaIds := []uint64{1, 2}
+	queryIds := [][]byte{
+		[]byte("queryid"),
+		[]byte("queryid2"),
+	}
+
+	height := uint64(ctx.BlockHeight())
+	reporter1, selector1b, selector1c := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	for _, queryId := range queryIds {
+		require.NoError(t, k.Report.Set(ctx, collections.Join(queryId, collections.Join(reporter1.Bytes(), height)), types.DelegationsAmounts{
+			Total: math.NewInt(15).Mul(layertypes.PowerReduction),
+			TokenOrigins: []*types.TokenOriginInfo{
+				{
+					DelegatorAddress: reporter1,
+					Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+				},
+				{
+					DelegatorAddress: selector1b,
+					Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+				},
+				{
+					DelegatorAddress: selector1c,
+					Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+				},
+			},
+		}))
+	}
+
+	reporter2, selector2b, selector2c := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	for _, queryId := range queryIds {
+		require.NoError(t, k.Report.Set(ctx, collections.Join(queryId, collections.Join(reporter2.Bytes(), height)), types.DelegationsAmounts{
+			Total: math.NewInt(15).Mul(layertypes.PowerReduction),
+			TokenOrigins: []*types.TokenOriginInfo{
+				{
+					DelegatorAddress: reporter2,
+					Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+				},
+				{
+					DelegatorAddress: selector2b,
+					Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+				},
+				{
+					DelegatorAddress: selector2c,
+					Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+				},
+			},
+		}))
+	}
+	reporter3, selector3b, selector3c := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	for _, queryId := range queryIds {
+		require.NoError(t, k.Report.Set(ctx, collections.Join(queryId, collections.Join(reporter3.Bytes(), height)), types.DelegationsAmounts{
+			Total: math.NewInt(15).Mul(layertypes.PowerReduction),
+			TokenOrigins: []*types.TokenOriginInfo{
+				{
+					DelegatorAddress: reporter3,
+					Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+				},
+				{
+					DelegatorAddress: selector3b,
+					Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+				},
+				{
+					DelegatorAddress: selector3c,
+					Amount:           math.NewInt(5).Mul(layertypes.PowerReduction),
+				},
+			},
+		}))
+	}
+
+	reporters := []sdk.AccAddress{reporter1, reporter2, reporter3}
+	for _, r := range reporters {
+		require.NoError(t, k.Reporters.Set(ctx, r, types.OracleReporter{CommissionRate: math.LegacyMustNewDecFromStr("0.5")})) // 50%
+	}
+
+	require.NoError(t, k.AddTip(ctx, metaIds[0], oracletypes.Reward{
+		TotalPower:  45,
+		Amount:      math.LegacyZeroDec(),
+		CycleList:   true,
+		BlockHeight: height + 1,
+	}))
+
+	require.NoError(t, k.AddTip(ctx, metaIds[1], oracletypes.Reward{
+		TotalPower:  45,
+		Amount:      tip.ToLegacyDec(),
+		CycleList:   true,
+		BlockHeight: height + 1,
+	}))
+
+	require.NoError(t, k.AddTbr(ctx, height+1, oracletypes.Reward{
+		TotalPower:  90,
+		Amount:      tbr.ToLegacyDec(),
+		CycleList:   true,
+		BlockHeight: height + 1,
+	}))
+
+	// microreports
+	for i, queryId := range queryIds {
+		ok.On("MicroReport", ctx, collections.Join3(queryId, reporter1.Bytes(), metaIds[i])).Return(oracletypes.MicroReport{
+			BlockNumber: height,
+			Power:       uint64(15),
+		}, nil)
+	}
+	for i, queryId := range queryIds {
+		ok.On("MicroReport", ctx, collections.Join3(queryId, reporter2.Bytes(), metaIds[i])).Return(oracletypes.MicroReport{
+			BlockNumber: height,
+			Power:       uint64(15),
+		}, nil)
+	}
+	for i, queryId := range queryIds {
+		ok.On("MicroReport", ctx, collections.Join3(queryId, reporter3.Bytes(), metaIds[i])).Return(oracletypes.MicroReport{
+			BlockNumber: height,
+			Power:       uint64(15),
+		}, nil)
+	}
+	type Reporter struct {
+		selectors []sdk.AccAddress
+	}
+	reporterA := Reporter{
+		selectors: []sdk.AccAddress{reporter1, selector1b, selector1c},
+	}
+	reporterB := Reporter{
+		selectors: []sdk.AccAddress{reporter2, selector2b, selector2c},
+	}
+	reporterC := Reporter{
+		selectors: []sdk.AccAddress{reporter3, selector3b, selector3c},
+	}
+	all := []Reporter{reporterA, reporterB, reporterC}
+	total := math.LegacyZeroDec()
+	for m, queryId := range queryIds {
+		for i, r := range all {
+			for _, s := range r.selectors {
+				share, err := k.RewardByReporter(ctx, s, reporters[i], metaIds[m], queryId)
+				require.NoError(t, err)
+				total = total.Add(share)
+			}
+		}
+	}
+	fmt.Println(total)
+	require.True(t, total.Equal(tip.Add(tbr).ToLegacyDec()))
 }

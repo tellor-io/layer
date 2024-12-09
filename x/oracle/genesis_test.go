@@ -17,7 +17,7 @@ func TestGenesis(t *testing.T) {
 		// this line is used by starport scaffolding # genesis/test/state
 	}
 
-	k, _, _, _, _, ctx := keepertest.OracleKeeper(t)
+	k, _, _, _, _, _, ctx := keepertest.OracleKeeper(t)
 	oracle.InitGenesis(ctx, k, genesisState)
 	got := oracle.ExportGenesis(ctx, k)
 	require.NotNil(t, got)

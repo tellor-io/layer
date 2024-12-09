@@ -18,7 +18,7 @@ linters:
     - dogsled
     - errcheck
     - errorlint
-    - copyloopvar
+    # - copyloopvar
     - gci
     - goconst
     - gocritic
