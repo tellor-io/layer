@@ -11,6 +11,7 @@
 - 2024-04-02: clarity
 - 2024-04-05: clarity/spelling
 - 2024-08-03: clarity
+- 1014-12-06: bridge deposits
 
 ## Context
 
@@ -21,6 +22,8 @@ a) subsidizes users' tips
 b) provides a heartbeat for the system in the absence of tips (reporters are then ready to report and we can all see they are reporting accurately)
 
 The issue in just distributing inflationary rewards to all reported data is that there becomes an incentive to report more (unneeded) data in order to increase the amount of rewards given to your reporter.  For instance, if you have 10 reporters (equal weight) and they all report for BTC/USD, then they would split the inflationary rewards (if they have unequal weight it would be distributed based upon reporting weight).  The problem is what happens when one of those parties reports for a query that only they support.  For calculation purposes, let's say they don't just do it for one, but report for 9 new queries that only they support.  If the inflation is split based on total reported queries, they had 9 reports(all ones they only support) and all other reporters (equal weight) also had 9 (just for BTC/USD).  In this scenario, if you split the time based reward by weight given, the attacker would get 50% of the rewards. In order to prevent this, we only give inflationary rewards to cycle list queries (queries that have been voted on by governance that everyone should support at a base level).  
+
+Note that bridge deposits are also part of the cycle list (reporters report deposits on the Ethereum bridge contract)
 
  ![ADR1003: rewards](./graphics/adr1003.png)
 
