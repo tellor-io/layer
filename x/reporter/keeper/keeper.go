@@ -223,64 +223,16 @@ func (k Keeper) RewardByReporter(ctx context.Context, selAddr, repAddr sdk.AccAd
 	if err != nil {
 		return math.LegacyDec{}, err
 	}
-
-	reporterTipAmount := math.LegacyZeroDec()
-	reporterTbrAmount := math.LegacyZeroDec()
-
-	// a tip object should always exist for a legit metaId set during aggregation even if amount is 0
-	tipobj, err := k.Tip.Get(ctx, metaId)
-	if err != nil {
-		return math.LegacyDec{}, err
-	}
-
-	tip := tipobj.Amount
-	if tip.IsPositive() {
-		reporterTipAmount = CalculateRewardAmount(
-			report.Power,
-			tipobj.TotalPower,
-			tip.TruncateInt(),
-		)
-	}
-
-	if tipobj.CycleList {
-		// if query is part of cyclist then tbr amount and total power should've been set
-		tbrobj, err := k.Tbr.Get(ctx, tipobj.BlockHeight)
-		if err != nil {
-			return math.LegacyDec{}, err
-		}
-		tbr := tbrobj.Amount
-		if tbr.IsPositive() {
-			reporterTbrAmount = CalculateRewardAmount(
-				report.Power,
-				tbrobj.TotalPower,
-				tbr.TruncateInt(),
-			)
-		}
-	}
-
-	reporter, err := k.Reporters.Get(ctx, repAddr)
-	if err != nil {
-		return math.LegacyDec{}, err
-	}
-	reporterAmount := reporterTipAmount.Add(reporterTbrAmount)
-
-	if reporterAmount.IsZero() {
-		return reporterAmount, nil
-	}
-	// selector's commission = reporter's commission rate * reward
-	commission := reporterAmount.Mul(reporter.CommissionRate)
-	// Calculate net reward
-	netReward := reporterAmount.Sub(commission)
-
 	selectors, err := k.Report.Get(ctx, collections.Join(queryId, collections.Join(repAddr.Bytes(), report.BlockNumber)))
 	if err != nil {
 		return math.LegacyDec{}, err
 	}
-	selectorsTotalDec := selectors.Total.ToLegacyDec()
 	var selectorPortion types.TokenOriginInfo
+	selectorPower := math.LegacyZeroDec()
 	for _, selector := range selectors.TokenOrigins {
 		if bytes.Equal(selector.DelegatorAddress, selAddr.Bytes()) {
 			selectorPortion = *selector
+			selectorPower = selector.Amount.ToLegacyDec()
 			break
 		}
 	}
@@ -289,14 +241,87 @@ func (k Keeper) RewardByReporter(ctx context.Context, selAddr, repAddr sdk.AccAd
 	if selectorPortion.Amount.IsNil() {
 		return math.LegacyZeroDec(), nil
 	}
+	selectorsTotalDec := selectors.Total.ToLegacyDec()
 	selAmountDec := selectorPortion.Amount.ToLegacyDec()
-	selectorShare := netReward.Mul(selAmountDec).Quo(selectorsTotalDec)
 
-	if selAddr.Equals(repAddr) {
-		selectorShare = selectorShare.Add(commission)
+	normalizedSelectorPower := selectorPower.Quo(layertypes.PowerReduction.ToLegacyDec())
+
+	tipobj, err := k.Tip.Get(ctx, metaId)
+	if err != nil {
+		return math.LegacyDec{}, err
 	}
-	fmt.Println("selector share", selectorShare)
-	return selectorShare, nil
+
+	reporter, err := k.Reporters.Get(ctx, repAddr)
+	if err != nil {
+		return math.LegacyDec{}, err
+	}
+
+	tip := tipobj.Amount
+
+	selectorShareTip := math.LegacyZeroDec()
+	if tip.IsPositive() {
+		reporterTipAmount := CalculateRewardAmount(
+			report.Power,
+			tipobj.TotalPower,
+			tip.TruncateInt(),
+		)
+		commission := reporterTipAmount.Mul(reporter.CommissionRate)
+		netRewardtip := reporterTipAmount.Sub(commission)
+		selectorShareTip = netRewardtip.Mul(selAmountDec).Quo(selectorsTotalDec)
+		if selAddr.Equals(repAddr) {
+			selectorShareTip = selectorShareTip.Add(commission)
+		}
+		tipobj.PowerPaidOut = normalizedSelectorPower.Add(tipobj.PowerPaidOut)
+		if tipobj.PowerPaidOut.Equal(math.LegacyNewDec(int64(tipobj.TotalPower))) {
+			selectorShareTip = tipobj.Amount.Sub(tipobj.AmountPaidOut)
+		} else {
+			tipobj.AmountPaidOut = tipobj.AmountPaidOut.Add(selectorShareTip)
+		}
+		if err := k.Tip.Set(ctx, metaId, tipobj); err != nil {
+			return math.LegacyDec{}, err
+		}
+	}
+
+	// calculate tbr if any
+	selectorShareTbr := math.LegacyZeroDec()
+	if tipobj.CycleList {
+		// if query is part of cyclist then tbr amount and total power should've been set
+		tbrobj, err := k.Tbr.Get(ctx, tipobj.BlockHeight)
+		if err != nil {
+			return math.LegacyDec{}, err
+		}
+		tbr := tbrobj.Amount
+		if tbr.IsPositive() {
+			reporterTbrAmount := CalculateRewardAmount(
+				report.Power,
+				tbrobj.TotalPower,
+				tbr.TruncateInt(),
+			)
+			commission := reporterTbrAmount.Mul(reporter.CommissionRate)
+			netRewardtbr := reporterTbrAmount.Sub(commission)
+			selectorShareTbr = netRewardtbr.Mul(selAmountDec).Quo(selectorsTotalDec)
+
+			if selAddr.Equals(repAddr) {
+				selectorShareTbr = selectorShareTbr.Add(commission)
+			}
+
+			tbrobj.PowerPaidOut = normalizedSelectorPower.Add(tbrobj.PowerPaidOut)
+
+			if tbrobj.PowerPaidOut.Equal(math.LegacyNewDec(int64(tbrobj.TotalPower))) {
+				selectorShareTbr = tbrobj.Amount.Sub(tbrobj.AmountPaidOut)
+			} else {
+				tbrobj.AmountPaidOut = tbrobj.AmountPaidOut.Add(selectorShareTbr)
+			}
+
+			if err := k.Tbr.Set(ctx, tipobj.BlockHeight, tbrobj); err != nil {
+				return math.LegacyDec{}, err
+			}
+		}
+	}
+
+	fmt.Println("selector sharetip", selectorShareTip)
+	fmt.Println("selector sharetbr", selectorShareTbr)
+	return selectorShareTip.Add(selectorShareTbr), nil
 }
 
 func CalculateRewardAmount(reporterPower, totalPower uint64, reward math.Int) math.LegacyDec {

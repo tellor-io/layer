@@ -1,13 +1,16 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/reporter/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 
@@ -151,9 +154,92 @@ func (k Querier) AvailableTipsByQuery(ctx context.Context, req *types.QueryAvail
 		return nil, err
 	}
 
-	rewards, err := k.Keeper.RewardByReporter(ctx, selectorAcc, reporterAcc, req.MetaId, queryId)
+	// ensure the selector hasn't claimed tips already
+	claimed, err := k.ClaimStatus.Has(ctx, collections.Join(selectorAcc.Bytes(), req.MetaId))
 	if err != nil {
 		return nil, err
 	}
-	return &types.QueryAvailableTipsResponse{AvailableTips: rewards}, nil
+	if claimed {
+		return nil, nil
+	}
+
+	report, err := k.oracleKeeper.MicroReport(ctx, collections.Join3(queryId, reporterAcc.Bytes(), req.MetaId))
+	if err != nil {
+		return nil, err
+	}
+
+	reporterTipAmount := math.LegacyZeroDec()
+	reporterTbrAmount := math.LegacyZeroDec()
+
+	// a tip object should always exist for a legit metaId set during aggregation even if amount is 0
+	tipobj, err := k.Tip.Get(ctx, req.MetaId)
+	if err != nil {
+		return nil, err
+	}
+
+	tip := tipobj.Amount
+	if tip.IsPositive() {
+		reporterTipAmount = CalculateRewardAmount(
+			report.Power,
+			tipobj.TotalPower,
+			tip.TruncateInt(),
+		)
+	}
+
+	if tipobj.CycleList {
+		// if query is part of cyclist then tbr amount and total power should've been set
+		tbrobj, err := k.Tbr.Get(ctx, tipobj.BlockHeight)
+		if err != nil {
+			return nil, err
+		}
+		tbr := tbrobj.Amount
+		if tbr.IsPositive() {
+			reporterTbrAmount = CalculateRewardAmount(
+				report.Power,
+				tbrobj.TotalPower,
+				tbr.TruncateInt(),
+			)
+		}
+	}
+
+	reporter, err := k.Keeper.Reporters.Get(ctx, reporterAcc)
+	if err != nil {
+		return nil, err
+	}
+	reporterAmount := reporterTipAmount.Add(reporterTbrAmount)
+
+	if reporterAmount.IsZero() {
+		return nil, nil
+	}
+	// selector's commission = reporter's commission rate * reward
+	commission := reporterAmount.Mul(reporter.CommissionRate)
+	// Calculate net reward
+	netReward := reporterAmount.Sub(commission)
+
+	selectors, err := k.Report.Get(ctx, collections.Join(queryId, collections.Join(reporterAcc.Bytes(), report.BlockNumber)))
+	if err != nil {
+		return nil, err
+	}
+	selectorsTotalDec := selectors.Total.ToLegacyDec()
+	var selectorPortion types.TokenOriginInfo
+	for _, selector := range selectors.TokenOrigins {
+		if bytes.Equal(selector.DelegatorAddress, selectorAcc.Bytes()) {
+			selectorPortion = *selector
+			break
+		}
+	}
+
+	// check if selector found
+	if selectorPortion.Amount.IsNil() {
+		return nil, nil
+	}
+	selAmountDec := selectorPortion.Amount.ToLegacyDec()
+	selectorShare := netReward.Mul(selAmountDec).Quo(selectorsTotalDec)
+
+	if selectorAcc.Equals(reporterAcc) {
+		selectorShare = selectorShare.Add(commission)
+	}
+	fmt.Println("selector share", selectorShare)
+
+	return &types.QueryAvailableTipsResponse{AvailableTips: selectorShare}, nil
 }

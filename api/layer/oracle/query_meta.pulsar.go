@@ -820,11 +820,13 @@ func (x *fastReflection_QueryMeta) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_Reward              protoreflect.MessageDescriptor
-	fd_Reward_totalPower   protoreflect.FieldDescriptor
-	fd_Reward_amount       protoreflect.FieldDescriptor
-	fd_Reward_cycle_list   protoreflect.FieldDescriptor
-	fd_Reward_block_height protoreflect.FieldDescriptor
+	md_Reward                 protoreflect.MessageDescriptor
+	fd_Reward_totalPower      protoreflect.FieldDescriptor
+	fd_Reward_amount          protoreflect.FieldDescriptor
+	fd_Reward_cycle_list      protoreflect.FieldDescriptor
+	fd_Reward_block_height    protoreflect.FieldDescriptor
+	fd_Reward_power_paid_out  protoreflect.FieldDescriptor
+	fd_Reward_amount_paid_out protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -834,6 +836,8 @@ func init() {
 	fd_Reward_amount = md_Reward.Fields().ByName("amount")
 	fd_Reward_cycle_list = md_Reward.Fields().ByName("cycle_list")
 	fd_Reward_block_height = md_Reward.Fields().ByName("block_height")
+	fd_Reward_power_paid_out = md_Reward.Fields().ByName("power_paid_out")
+	fd_Reward_amount_paid_out = md_Reward.Fields().ByName("amount_paid_out")
 }
 
 var _ protoreflect.Message = (*fastReflection_Reward)(nil)
@@ -925,6 +929,18 @@ func (x *fastReflection_Reward) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
+	if x.PowerPaidOut != "" {
+		value := protoreflect.ValueOfString(x.PowerPaidOut)
+		if !f(fd_Reward_power_paid_out, value) {
+			return
+		}
+	}
+	if x.AmountPaidOut != "" {
+		value := protoreflect.ValueOfString(x.AmountPaidOut)
+		if !f(fd_Reward_amount_paid_out, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -948,6 +964,10 @@ func (x *fastReflection_Reward) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.CycleList != false
 	case "layer.oracle.reward.block_height":
 		return x.BlockHeight != uint64(0)
+	case "layer.oracle.reward.power_paid_out":
+		return x.PowerPaidOut != ""
+	case "layer.oracle.reward.amount_paid_out":
+		return x.AmountPaidOut != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.reward"))
@@ -972,6 +992,10 @@ func (x *fastReflection_Reward) Clear(fd protoreflect.FieldDescriptor) {
 		x.CycleList = false
 	case "layer.oracle.reward.block_height":
 		x.BlockHeight = uint64(0)
+	case "layer.oracle.reward.power_paid_out":
+		x.PowerPaidOut = ""
+	case "layer.oracle.reward.amount_paid_out":
+		x.AmountPaidOut = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.reward"))
@@ -1000,6 +1024,12 @@ func (x *fastReflection_Reward) Get(descriptor protoreflect.FieldDescriptor) pro
 	case "layer.oracle.reward.block_height":
 		value := x.BlockHeight
 		return protoreflect.ValueOfUint64(value)
+	case "layer.oracle.reward.power_paid_out":
+		value := x.PowerPaidOut
+		return protoreflect.ValueOfString(value)
+	case "layer.oracle.reward.amount_paid_out":
+		value := x.AmountPaidOut
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.reward"))
@@ -1028,6 +1058,10 @@ func (x *fastReflection_Reward) Set(fd protoreflect.FieldDescriptor, value proto
 		x.CycleList = value.Bool()
 	case "layer.oracle.reward.block_height":
 		x.BlockHeight = value.Uint()
+	case "layer.oracle.reward.power_paid_out":
+		x.PowerPaidOut = value.Interface().(string)
+	case "layer.oracle.reward.amount_paid_out":
+		x.AmountPaidOut = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.reward"))
@@ -1056,6 +1090,10 @@ func (x *fastReflection_Reward) Mutable(fd protoreflect.FieldDescriptor) protore
 		panic(fmt.Errorf("field cycle_list of message layer.oracle.reward is not mutable"))
 	case "layer.oracle.reward.block_height":
 		panic(fmt.Errorf("field block_height of message layer.oracle.reward is not mutable"))
+	case "layer.oracle.reward.power_paid_out":
+		panic(fmt.Errorf("field power_paid_out of message layer.oracle.reward is not mutable"))
+	case "layer.oracle.reward.amount_paid_out":
+		panic(fmt.Errorf("field amount_paid_out of message layer.oracle.reward is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.reward"))
@@ -1077,6 +1115,10 @@ func (x *fastReflection_Reward) NewField(fd protoreflect.FieldDescriptor) protor
 		return protoreflect.ValueOfBool(false)
 	case "layer.oracle.reward.block_height":
 		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.oracle.reward.power_paid_out":
+		return protoreflect.ValueOfString("")
+	case "layer.oracle.reward.amount_paid_out":
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.reward"))
@@ -1159,6 +1201,14 @@ func (x *fastReflection_Reward) ProtoMethods() *protoiface.Methods {
 		if x.BlockHeight != 0 {
 			n += 1 + runtime.Sov(uint64(x.BlockHeight))
 		}
+		l = len(x.PowerPaidOut)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.AmountPaidOut)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -1187,6 +1237,20 @@ func (x *fastReflection_Reward) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.AmountPaidOut) > 0 {
+			i -= len(x.AmountPaidOut)
+			copy(dAtA[i:], x.AmountPaidOut)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.AmountPaidOut)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.PowerPaidOut) > 0 {
+			i -= len(x.PowerPaidOut)
+			copy(dAtA[i:], x.PowerPaidOut)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.PowerPaidOut)))
+			i--
+			dAtA[i] = 0x2a
 		}
 		if x.BlockHeight != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.BlockHeight))
@@ -1354,6 +1418,70 @@ func (x *fastReflection_Reward) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PowerPaidOut", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PowerPaidOut = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AmountPaidOut", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.AmountPaidOut = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1507,10 +1635,14 @@ type Reward struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	TotalPower  uint64 `protobuf:"varint,1,opt,name=totalPower,proto3" json:"totalPower,omitempty"`
-	Amount      string `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
-	CycleList   bool   `protobuf:"varint,3,opt,name=cycle_list,json=cycleList,proto3" json:"cycle_list,omitempty"`
-	BlockHeight uint64 `protobuf:"varint,4,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
+	TotalPower uint64 `protobuf:"varint,1,opt,name=totalPower,proto3" json:"totalPower,omitempty"`
+	Amount     string `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
+	// cycle_list indicates if a reward should also include timebasedRewards(tbr)
+	CycleList bool `protobuf:"varint,3,opt,name=cycle_list,json=cycleList,proto3" json:"cycle_list,omitempty"`
+	// if cyclist then tbr amount can be fetched by this height
+	BlockHeight   uint64 `protobuf:"varint,4,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
+	PowerPaidOut  string `protobuf:"bytes,5,opt,name=power_paid_out,json=powerPaidOut,proto3" json:"power_paid_out,omitempty"`
+	AmountPaidOut string `protobuf:"bytes,6,opt,name=amount_paid_out,json=amountPaidOut,proto3" json:"amount_paid_out,omitempty"`
 }
 
 func (x *Reward) Reset() {
@@ -1561,6 +1693,20 @@ func (x *Reward) GetBlockHeight() uint64 {
 	return 0
 }
 
+func (x *Reward) GetPowerPaidOut() string {
+	if x != nil {
+		return x.PowerPaidOut
+	}
+	return ""
+}
+
+func (x *Reward) GetAmountPaidOut() string {
+	if x != nil {
+		return x.AmountPaidOut
+	}
+	return ""
+}
+
 var File_layer_oracle_query_meta_proto protoreflect.FileDescriptor
 
 var file_layer_oracle_query_meta_proto_rawDesc = []byte{
@@ -1596,7 +1742,7 @@ var file_layer_oracle_query_meta_proto_rawDesc = []byte{
 	0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x54, 0x79,
 	0x70, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x5f, 0x6c, 0x69, 0x73, 0x74,
 	0x18, 0x08, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x4c, 0x69, 0x73,
-	0x74, 0x22, 0xb5, 0x01, 0x0a, 0x06, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x12, 0x1e, 0x0a, 0x0a,
+	0x74, 0x22, 0xe9, 0x02, 0x0a, 0x06, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x12, 0x1e, 0x0a, 0x0a,
 	0x74, 0x6f, 0x74, 0x61, 0x6c, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04,
 	0x52, 0x0a, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x12, 0x49, 0x0a, 0x06,
 	0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x31, 0xc8, 0xde,
@@ -1607,18 +1753,29 @@ var file_layer_oracle_query_meta_proto_rawDesc = []byte{
 	0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x63, 0x79, 0x63,
 	0x6c, 0x65, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x21, 0x0a, 0x0c, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f,
 	0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0b, 0x62, 0x6c,
-	0x6f, 0x63, 0x6b, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x42, 0xa0, 0x01, 0x0a, 0x10, 0x63, 0x6f,
-	0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x42, 0x0e,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x4d, 0x65, 0x74, 0x61, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
-	0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c,
-	0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69,
-	0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xa2, 0x02, 0x03,
-	0x4c, 0x4f, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x4f, 0x72, 0x61, 0x63,
-	0x6c, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c,
-	0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65,
-	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c,
-	0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x6f, 0x63, 0x6b, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x57, 0x0a, 0x0e, 0x70, 0x6f, 0x77,
+	0x65, 0x72, 0x5f, 0x70, 0x61, 0x69, 0x64, 0x5f, 0x6f, 0x75, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x31, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67,
+	0x61, 0x63, 0x79, 0x44, 0x65, 0x63, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x44, 0x65, 0x63, 0x52, 0x0c, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x50, 0x61, 0x69, 0x64, 0x4f,
+	0x75, 0x74, 0x12, 0x59, 0x0a, 0x0f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x70, 0x61, 0x69,
+	0x64, 0x5f, 0x6f, 0x75, 0x74, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x42, 0x31, 0xc8, 0xde, 0x1f,
+	0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69,
+	0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63,
+	0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x52, 0x0d,
+	0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x50, 0x61, 0x69, 0x64, 0x4f, 0x75, 0x74, 0x42, 0xa0, 0x01,
+	0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63,
+	0x6c, 0x65, 0x42, 0x0e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4d, 0x65, 0x74, 0x61, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c,
+	0x65, 0xa2, 0x02, 0x03, 0x4c, 0x4f, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f,
+	0x72, 0x61, 0x63, 0x6c, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72,
+	0x61, 0x63, 0x6c, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

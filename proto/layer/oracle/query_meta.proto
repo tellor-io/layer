@@ -45,4 +45,14 @@ message reward {
   bool cycle_list = 3;
   // if cyclist then tbr amount can be fetched by this height
   uint64 block_height = 4;
+  string power_paid_out = 5 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+  string amount_paid_out = 6 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
 }

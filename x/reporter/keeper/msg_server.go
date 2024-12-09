@@ -59,8 +59,8 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 		return nil, errors.New("address already exists")
 	}
 
-	if msg.CommissionRate.GT(math.LegacyNewDec(100)) {
-		return nil, errors.New("commission rate must be LTE 100 as that is a 100 percent commission rate")
+	if msg.CommissionRate.GT(math.LegacyOneDec()) {
+		return nil, errors.New("commission rate must be LTE 1 as that is a 100 percent commission rate")
 	}
 	// set the reporter and set the self selector
 	if err := k.Keeper.Reporters.Set(goCtx, addr.Bytes(), types.NewReporter(msg.CommissionRate, msg.MinTokensRequired)); err != nil {
@@ -316,35 +316,41 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	if !val.IsBonded() {
 		return nil, errors.New("chosen validator must be bonded")
 	}
+
 	amtToDelegate := shares.TruncateInt()
 	if amtToDelegate.IsZero() {
 		return nil, errors.New("no tips to withdraw")
+	}
+	// remainder ie .1234 = 1.1234 - 1
+	remainder := shares.Sub(shares.TruncateDec())
+	prevRemainder, err := k.Keeper.SelectorTips.Get(ctx, selectorAddr)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return nil, err
+	}
+	if prevRemainder.IsNil() {
+		prevRemainder = math.LegacyZeroDec()
+	}
+
+	if remainder.IsPositive() {
+		newRemainder := prevRemainder.Add(remainder)
+		whole := newRemainder.TruncateInt()
+		if whole.IsPositive() {
+			amtToDelegate = amtToDelegate.Add(whole)
+			newRemainder = newRemainder.Sub(newRemainder.TruncateDec())
+		}
+		if newRemainder.IsPositive() {
+			err = k.Keeper.SelectorTips.Set(ctx, selectorAddr, newRemainder)
+		} else {
+			err = k.Keeper.SelectorTips.Remove(ctx, selectorAddr)
+		}
+		if err != nil {
+			return nil, err
+		}
 	}
 	_, err = k.Keeper.stakingKeeper.Delegate(ctx, selectorAddr, amtToDelegate, val.Status, val, false)
 	if err != nil {
 		return nil, err
 	}
-
-	// isolate decimals from shares
-	remainder := shares.Sub(shares.TruncateDec())
-	dust, err := k.Keeper.SelectorTips.Get(ctx, selectorAddr)
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return nil, err
-		}
-		if dust.IsNil() {
-			dust = math.LegacyZeroDec()
-		}
-	}
-	if remainder.IsPositive() {
-		dust = dust.Add(remainder)
-		err = k.Keeper.SelectorTips.Set(ctx, selectorAddr, dust)
-		if err != nil {
-			return nil, err
-		}
-		// todo: if fractions become whole transfer tokens
-	}
-
 	// send coins
 	err = k.Keeper.bankKeeper.SendCoinsFromModuleToModule(ctx,
 		types.TipsEscrowPool, stakingtypes.BondedPoolName,

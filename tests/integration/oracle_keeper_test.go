@@ -474,7 +474,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	reporterPower1 := uint64(1)
 	reporterPower2 := uint64(2)
 	reporterPower3 := uint64(3)
-	totalPower := reporterPower1 + reporterPower2 + reporterPower3
+	totalPower := uint64(12)
 	repAccs, _, _ := s.createValidatorAccs([]uint64{reporterPower1, reporterPower2, reporterPower3})
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
@@ -495,34 +495,30 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	s.NoError(err)
 	// generate 4 reports for ethQueryData
 
-	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1], repAccs[2]}, values, []uint64{reporterPower1, reporterPower2, reporterPower3}, qId)
+	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1], repAccs[2]}, values, []uint64{2, 4, 6}, qId)
 
 	testCases := []struct {
 		name                 string
-		reporterIndex        int
 		beforeBalance        math.Int
 		afterBalanceIncrease math.Int
 		delegator            sdk.AccAddress
 	}{
 		{
 			name:                 "reporter with 100 voting power",
-			reporterIndex:        0,
 			beforeBalance:        reporterStake,
-			afterBalanceIncrease: reporterkeeper.CalculateRewardAmount(reporterPower1, totalPower, reward).TruncateInt(),
+			afterBalanceIncrease: reporterkeeper.CalculateRewardAmount(2, totalPower, reward).TruncateInt(),
 			delegator:            repAccs[0],
 		},
 		{
 			name:                 "reporter with 200 voting power",
-			reporterIndex:        1,
 			beforeBalance:        reporterStake2,
-			afterBalanceIncrease: reporterkeeper.CalculateRewardAmount(reporterPower2, totalPower, reward).TruncateInt(),
+			afterBalanceIncrease: reporterkeeper.CalculateRewardAmount(4, totalPower, reward).TruncateInt(),
 			delegator:            repAccs[1],
 		},
 		{
 			name:                 "reporter with 300 voting power",
-			reporterIndex:        2,
 			beforeBalance:        reporterStake3,
-			afterBalanceIncrease: reporterkeeper.CalculateRewardAmount(reporterPower3, totalPower, reward).TruncateInt(),
+			afterBalanceIncrease: reporterkeeper.CalculateRewardAmount(6, totalPower, reward).TruncateInt(),
 			delegator:            repAccs[2],
 		},
 	}
@@ -964,3 +960,5 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	s.Nil(err)
 	s.True(del2After.GetShares().Equal(del2Before.GetShares().Add(math.LegacyNewDec(653))), "delegation 2 shares should be half the tip minus 50 percent reporter commission")
 }
+
+// func (s IntegrationTestSuite) TestNewFlow
