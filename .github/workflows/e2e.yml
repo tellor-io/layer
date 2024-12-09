@@ -36,7 +36,10 @@ jobs:
           path: ${{ env.TAR_PATH }}
 
       # Build the second image (icq)
-      - name: Checkout ibc Branch
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Switch to ibc branch
         run: |
           git fetch --all
           git checkout ibc
