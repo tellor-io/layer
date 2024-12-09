@@ -106,4 +106,4 @@ echo "Collecting gentxs..."
 
 
 echo "Starting chain for alice..."
-./layerd start --home ~/.layer/alice --key-name alice --api.enable --api.swagger --keyring-backend test
+#./layerd start --home ~/.layer/alice --key-name alice --api.enable --api.swagger --keyring-backend test
