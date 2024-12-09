@@ -12,9 +12,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+
+  build-primary:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Build Primary Docker Image
         uses: strangelove-ventures/heighliner-build-action@v1.0.3
         with:
@@ -35,11 +39,15 @@ jobs:
           name: layer-docker-image
           path: ${{ env.TAR_PATH }}
 
-      # Build the second image (icq)
+  # Second job: Build the IBC image, depends on the primary image job
+  build-ibc:
+    runs-on: ubuntu-latest
+    needs: build-primary
+    steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Switch to ibc branch
+      - name: Switch to IBC branch
         run: |
           git fetch --all
           git checkout ibc
@@ -64,8 +72,12 @@ jobs:
           name: layer-icq-docker-image
           path: ${{ env.IBC_TAR_PATH }}
 
+  # Prepare job (depends on both build jobs)
   prepare:
     runs-on: ubuntu-latest
+    needs: 
+      - build-primary
+      - build-ibc
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -83,11 +95,11 @@ jobs:
           TESTS=$(cd e2e && go test -list . | grep -v "^ok " | jq -R -s -c 'split("\n")[:-1]')
           echo "matrix=${TESTS}" >> $GITHUB_OUTPUT
 
+  # Test job (depends on prepare, which in turn depends on both build jobs)
   test:
-    needs:
-      - build
-      - prepare
     runs-on: ubuntu-latest
+    needs:
+      - prepare
     strategy:
       matrix:
         test: ${{ fromJson(needs.prepare.outputs.matrix) }}
