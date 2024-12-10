@@ -22,11 +22,10 @@ import (
 const (
 	haltHeightDelta    = 10 // will propose upgrade this many blocks in the future
 	blocksAfterUpgrade = 10
-	votingPeriod       = "10s"
-	maxDepositPeriod   = "10s"
 )
 
 func TestLayerUpgrade(t *testing.T) {
+	t.Skip("needs to switch between binaries to run successfully")
 	ChainUpgradeTest(t, "layer", "layerup", "local", "v2.0.1")
 }
 
@@ -100,6 +99,20 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	t.Cleanup(func() {
 		_ = ic.Close()
 	})
+	validatorI := chain.Validators[0]
+	valAddress, err := validatorI.AccountKeyBech32(ctx, "validator")
+	require.NoError(t, err)
+
+	_, err = validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", chain.HomeDir())
+	require.NoError(t, err)
+
+	_, _, err = validatorI.Exec(ctx, validatorI.TxCommand("validator", "oracle", "tip", valAddress, qData, "1000000loya", "--keyring-dir", chain.HomeDir()), validatorI.Chain.Config().Env)
+	require.NoError(t, err)
+	err = testutil.WaitForBlocks(ctx, 1, validatorI)
+	require.NoError(t, err)
+
+	_, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", valAddress, qData, value, "--keyring-dir", chain.HomeDir())
+	require.NoError(t, err)
 
 	userFunds := math.NewInt(10_000_000_000)
 	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, chain)
@@ -160,7 +173,13 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 
 	timeoutCtx, timeoutCtxCancel = context.WithTimeout(ctx, time.Second*45)
 	defer timeoutCtxCancel()
+	_, _, err = validatorI.Exec(ctx, validatorI.TxCommand("validator", "oracle", "tip", valAddress, qData, "1000000loya", "--keyring-dir", chain.HomeDir()), validatorI.Chain.Config().Env)
+	require.NoError(t, err)
+	err = testutil.WaitForBlocks(ctx, 1, validatorI)
+	require.NoError(t, err)
 
+	_, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", valAddress, qData, value, "--keyring-dir", chain.HomeDir())
+	require.NoError(t, err)
 	err = testutil.WaitForBlocks(timeoutCtx, int(blocksAfterUpgrade), chain)
 	require.NoError(t, err, "chain did not produce blocks after upgrade")
 }

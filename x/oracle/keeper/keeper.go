@@ -95,7 +95,7 @@ func NewKeeper(
 			types.AggregatesPrefix,
 			"aggregates",
 			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
-			codec.CollValue[types.Aggregate](cdc),
+			AggregateValueCodec(cdc),
 			types.NewAggregatesIndex(sb),
 		),
 		// Reports maps the queryId:reporter:queryMeta.id to the microReport
