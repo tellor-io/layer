@@ -73,4 +73,5 @@ docker cp $upgrade_binary_path $CONTAINER_3:/bin/
 docker cp $upgrade_binary_path $CONTAINER_4:/bin/
 
 # all done! 
-echo Done! "Restart the docker containers via docker desktop to verify that the upgrade was successsful."
+echo "Done!"
+echo "Restart the docker containers via docker desktop to verify that the upgrade was successsful."
