@@ -40,7 +40,7 @@ type ReporterKeeper interface {
 	// Methods imported from reporter should be defined here
 	ReporterStake(ctx context.Context, repAddress sdk.AccAddress, queryId []byte) (math.Int, error)
 	AddTip(ctx context.Context, metaId uint64, tip Reward) error
-	AddTbr(ctx context.Context, metaId uint64, tbr Reward) error
+	AddTbr(ctx context.Context, height uint64, tbr Reward) error
 }
 
 type RegistryHooks interface {

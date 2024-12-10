@@ -205,8 +205,8 @@ func (k Keeper) AddTip(ctx context.Context, metaId uint64, tip oracletypes.Rewar
 	return k.Tip.Set(ctx, metaId, tip)
 }
 
-func (k Keeper) AddTbr(ctx context.Context, metaId uint64, tbr oracletypes.Reward) error {
-	return k.Tbr.Set(ctx, metaId, tbr)
+func (k Keeper) AddTbr(ctx context.Context, height uint64, tbr oracletypes.Reward) error {
+	return k.Tbr.Set(ctx, height, tbr)
 }
 
 func (k Keeper) RewardByReporter(ctx context.Context, selAddr, repAddr sdk.AccAddress, metaId uint64, queryId []byte) (math.LegacyDec, error) {

@@ -18,13 +18,13 @@ type ReporterKeeper struct {
 	mock.Mock
 }
 
-// AddTbr provides a mock function with given fields: ctx, metaId, tbr
-func (_m *ReporterKeeper) AddTbr(ctx context.Context, metaId uint64, tbr types.Reward) error {
-	ret := _m.Called(ctx, metaId, tbr)
+// AddTbr provides a mock function with given fields: ctx, height, tbr
+func (_m *ReporterKeeper) AddTbr(ctx context.Context, height uint64, tbr types.Reward) error {
+	ret := _m.Called(ctx, height, tbr)
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, uint64, types.Reward) error); ok {
-		r0 = rf(ctx, metaId, tbr)
+		r0 = rf(ctx, height, tbr)
 	} else {
 		r0 = ret.Error(0)
 	}

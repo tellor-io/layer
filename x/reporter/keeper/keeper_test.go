@@ -351,7 +351,7 @@ func TestRewardTrb(t *testing.T) {
 		BlockHeight: height + 1,
 	}))
 
-	require.NoError(t, k.AddTbr(ctx, metaId, oracletypes.Reward{
+	require.NoError(t, k.AddTbr(ctx, height+1, oracletypes.Reward{
 		TotalPower:  45,
 		Amount:      reward.ToLegacyDec(),
 		CycleList:   true,

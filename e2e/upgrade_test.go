@@ -31,6 +31,7 @@ func TestLayerUpgrade(t *testing.T) {
 }
 
 func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVersion, upgradeName string) {
+	t.Helper()
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
