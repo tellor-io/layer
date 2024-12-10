@@ -43,7 +43,20 @@ Here you will find a detailed breakdown for how to join a chain as a node and ho
 
 Run the chain locally in a docker container, powered by [local-ic](https://github.com/strangelove-ventures/interchaintest/tree/main/local-interchain)
 
+Install heighliner:
 ```sh
+make get-heighliner
+```
+Create image:
+```
+make local-image
+```
+Install local interchain:
+```
+make get-localic
+```
+Start the local-devnet:
+```
 make local-devnet
 ```
 
