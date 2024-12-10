@@ -5,39 +5,79 @@ on:
 
 env:
   TAR_PATH: heighliner.tar
+  IBC_TAR_PATH: heighliner-ibc.tar
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build:
+
+  build-primary:
     runs-on: ubuntu-latest
     steps:
-      - name: Build Docker Image
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Build Primary Docker Image
         uses: strangelove-ventures/heighliner-build-action@v1.0.3
         with:
-          registry: "" # empty registry, image only shared for e2e testing
-          tag: local # emulate local environment for consistency in interchaintest cases
-          tar-export-path: ${{ env.TAR_PATH }} # export a tarball that can be uploaded as an artifact for the e2e jobs
-          platform: linux/amd64 # test runner architecture only
-          git-ref: ${{ github.head_ref }} # source code ref
-
-          # Heighliner chains.yaml config
+          registry: ""
+          tag: local
+          tar-export-path: ${{ env.TAR_PATH }}
+          platform: linux/amd64
+          git-ref: ${{ github.head_ref }}
           chain: layer
           dockerfile: cosmos
           build-target: make install
           binaries: |
             - /go/bin/layerd
 
-      - name: Publish Tarball as Artifact
+      - name: Publish Primary Tarball as Artifact
         uses: actions/upload-artifact@v4
         with:
           name: layer-docker-image
           path: ${{ env.TAR_PATH }}
 
+  # Second job: Build the IBC image, depends on the primary image job
+  build-ibc:
+    runs-on: ubuntu-latest
+    needs: build-primary
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Switch to IBC branch
+        run: |
+          git fetch --all
+          git checkout ibc
+
+      - name: Build IBC Docker Image
+        uses: strangelove-ventures/heighliner-build-action@v1.0.3
+        with:
+          registry: ""
+          tag: local
+          tar-export-path: ${{ env.IBC_TAR_PATH }}
+          platform: linux/amd64
+          git-ref: ibc
+          chain: layer-icq
+          dockerfile: cosmos
+          build-target: make install
+          binaries: |
+            - /go/bin/layerd
+
+      - name: Publish IBC Tarball as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: layer-icq-docker-image
+          path: ${{ env.IBC_TAR_PATH }}
+
+  # Prepare job (depends on both build jobs)
   prepare:
     runs-on: ubuntu-latest
+    needs: 
+      - build-primary
+      - build-ibc
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -52,19 +92,17 @@ jobs:
       - name: Generate Matrix
         id: set-matrix
         run: |
-          # Run the command and convert its output to a JSON array
           TESTS=$(cd e2e && go test -list . | grep -v "^ok " | jq -R -s -c 'split("\n")[:-1]')
           echo "matrix=${TESTS}" >> $GITHUB_OUTPUT
 
+  # Test job (depends on prepare, which in turn depends on both build jobs)
   test:
-    needs:
-      - build
-      - prepare
     runs-on: ubuntu-latest
+    needs:
+      - prepare
     strategy:
       matrix:
-        # names of `make` commands to run tests
-        test: ${{fromJson(needs.prepare.outputs.matrix)}}
+        test: ${{ fromJson(needs.prepare.outputs.matrix) }}
       fail-fast: false
 
     steps:
@@ -76,13 +114,21 @@ jobs:
         with:
           go-version: '1.22'
 
-      - name: Download Tarball Artifact
+      - name: Download Primary Tarball
         uses: actions/download-artifact@v4
         with:
           name: layer-docker-image
 
-      - name: Load Docker Image
+      - name: Download IBC Tarball
+        uses: actions/download-artifact@v4
+        with:
+          name: layer-icq-docker-image
+
+      - name: Load Primary Docker Image
         run: docker image load -i ${{ env.TAR_PATH }}
+
+      - name: Load IBC Docker Image
+        run: docker image load -i ${{ env.IBC_TAR_PATH }}
 
       - name: Run Tests
         run: cd e2e && go test -race -v -timeout 10m -run ^${{ matrix.test }}$ .

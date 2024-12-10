@@ -598,7 +598,7 @@ func New(
 		app.ReporterKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-
+	app.ReporterKeeper.SetOracleKeeper(app.OracleKeeper)
 	app.DisputeKeeper = disputemodulekeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[disputemoduletypes.StoreKey]),
@@ -617,7 +617,7 @@ func New(
 		app.ReporterKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-
+	app.OracleKeeper.SetBridgeKeeper(app.BridgeKeeper)
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	appFlags := appflags.GetFlagValuesFromOptions(appOpts)
 	// Panic if this is not a full node and gRPC is disabled.
@@ -937,7 +937,7 @@ func New(
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
 	// Make sure it's called after `app.ModuleManager` and `app.configurator` are set.
-	// app.RegisterUpgradeHandlers()
+	app.RegisterUpgradeHandlers()
 	app.setupUpgradeHandlers()
 	app.setupUpgradeStoreLoaders()
 
@@ -1020,7 +1020,7 @@ func (app *App) preBlocker(ph *ProposalHandler) func(sdk.Context, *abci.RequestF
 }
 
 func (app *App) RegisterUpgradeHandlers() {
-	const UpgradeName = "v2.0.0-audit"
+	const UpgradeName = "v2.0.1"
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,

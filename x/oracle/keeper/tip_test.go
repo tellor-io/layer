@@ -61,8 +61,6 @@ func (s *KeeperTestSuite) TestGetUserTips() {
 	s.NoError(err)
 	s.Equal(math.NewInt(1*1e6), res)
 
-	query.QueryData = ETH_queryId
-	query.Id = 2
 	// adding the flow here to show how its handled in msgTip
 	tipperTotal, err := s.oracleKeeper.TipperTotal.Get(s.ctx, collections.Join(acc.Bytes(), uint64(s.ctx.BlockHeight())))
 	s.NoError(err)
