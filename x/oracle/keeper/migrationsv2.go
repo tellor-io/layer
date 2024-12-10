@@ -1,10 +1,12 @@
 package keeper
 
 import (
-	collcodec "cosmossdk.io/collections/codec"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/gogo/protobuf/proto"
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	collcodec "cosmossdk.io/collections/codec"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 func AggregateValueCodec(cdc codec.BinaryCodec) collcodec.ValueCodec[types.Aggregate] {
