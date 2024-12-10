@@ -25,8 +25,8 @@ const (
 	maxDepositPeriod   = "10s"
 )
 
-func TestJunoUpgradeIBC(t *testing.T) {
-	ChainUpgradeTest(t, "layer", "layerup", "local", "multiverse")
+func TestLayerUpgrade(t *testing.T) {
+	ChainUpgradeTest(t, "layer", "layerup", "local", "v2.0.1")
 }
 
 func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVersion string, upgradeName string) {
@@ -35,6 +35,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	}
 
 	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
 
 	modifyGenesis := []cosmos.GenesisKV{
 		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
@@ -46,7 +47,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
 	}
 
-	nv := 4
+	nv := 1
 	nf := 0
 	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
 		{
