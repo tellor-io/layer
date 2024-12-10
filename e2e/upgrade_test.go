@@ -6,16 +6,17 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
-	"github.com/tellor-io/layer/e2e"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/e2e"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 )
 
 const (
@@ -29,7 +30,7 @@ func TestLayerUpgrade(t *testing.T) {
 	ChainUpgradeTest(t, "layer", "layerup", "local", "v2.0.1")
 }
 
-func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVersion string, upgradeName string) {
+func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVersion, upgradeName string) {
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}

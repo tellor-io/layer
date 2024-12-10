@@ -3,14 +3,16 @@ package v3
 import (
 	"context"
 
+	"github.com/gogo/protobuf/proto"
+	"github.com/tellor-io/layer/x/oracle/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/store/prefix"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/gogo/protobuf/proto"
-	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 type AggregateLegacy struct {
@@ -50,7 +52,8 @@ func MigrateStore(ctx context.Context, storeService store.KVStoreService, cdc co
 	aggregateMap *collections.IndexedMap[collections.Pair[[]byte, uint64], types.Aggregate, types.AggregatesIndex],
 	queryMap *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, types.QueryMetaIndex],
 	reportsMap *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, types.ReportsIndex],
-	medianReport, modeReport func(ctx context.Context, id uint64, report types.MicroReport) error) error {
+	medianReport, modeReport func(ctx context.Context, id uint64, report types.MicroReport) error,
+) error {
 	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 	aggStore := prefix.NewStore(store, types.AggregatesPrefix)
 	iter := aggStore.Iterator(nil, nil)
