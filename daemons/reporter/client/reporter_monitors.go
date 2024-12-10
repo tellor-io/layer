@@ -21,7 +21,14 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 		if err != nil {
 			// log error
 			c.logger.Error("getting current query", "error", err)
+			continue
 		}
+
+		if querymeta == nil {
+			c.logger.Error("QueryMeta is nil")
+			continue
+		}
+
 		mutex.RLock()
 		committed := commitedIds[querymeta.Id]
 		mutex.RUnlock()
