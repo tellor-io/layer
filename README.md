@@ -48,15 +48,15 @@ Install heighliner:
 make get-heighliner
 ```
 Create image:
-```
+```sh
 make local-image
 ```
 Install local interchain:
-```
+```sh
 make get-localic
 ```
 Start the local-devnet:
-```
+```sh
 make local-devnet
 ```
 
