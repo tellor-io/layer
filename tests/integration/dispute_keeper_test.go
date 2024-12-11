@@ -988,10 +988,13 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 	// set report
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report1.QueryId, reporter1.Bytes(), uint64(1)), report1)
 	s.NoError(err)
+	s.NoError(s.Setup.Oraclekeeper.AddReport(s.Setup.Ctx, 1, report1))
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report2.QueryId, reporter2.Bytes(), uint64(1)), report2)
 	s.NoError(err)
+	s.NoError(s.Setup.Oraclekeeper.AddReport(s.Setup.Ctx, 1, report2))
 	err = s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report3.QueryId, reporter3.Bytes(), uint64(1)), report3)
 	s.NoError(err)
+	s.NoError(s.Setup.Oraclekeeper.AddReport(s.Setup.Ctx, 1, report3))
 
 	// add query
 	s.NoError(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, collections.Join(queryid, uint64(1)), oracletypes.QueryMeta{Id: 1, HasRevealedReports: true}))

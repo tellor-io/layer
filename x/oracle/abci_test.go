@@ -24,6 +24,7 @@ type TestSuite struct {
 	registryKeeper *mocks.RegistryKeeper
 	accountKeeper  *mocks.AccountKeeper
 	bankKeeper     *mocks.BankKeeper
+	bridgeKeeper   *mocks.BridgeKeeper
 }
 
 func (s *TestSuite) SetupTest() {
@@ -34,6 +35,7 @@ func (s *TestSuite) SetupTest() {
 		s.registryKeeper,
 		s.accountKeeper,
 		s.bankKeeper,
+		s.bridgeKeeper,
 		s.ctx = keepertest.OracleKeeper(s.T())
 }
 

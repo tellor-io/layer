@@ -117,3 +117,31 @@ func (k Querier) TippedQueries(ctx context.Context, req *types.QueryTippedQuerie
 
 	return &types.QueryTippedQueriesResponse{Queries: queries}, nil
 }
+
+func (k Querier) ReportedIdsByReporter(ctx context.Context, req *types.QueryReportedIdsByReporterRequest) (*types.QueryReportedIdsByReporterResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	store := runtime.KVStoreAdapter(k.keeper.storeService.OpenKVStore(ctx))
+	reportsStore := prefix.NewStore(store, types.ReportsPrefix)
+	ids := make([]uint64, 0)
+	queryIds := make([][]byte, 0)
+
+	pageRes, err := query.Paginate(reportsStore, req.Pagination, func(key, value []byte) error {
+		keycdc := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
+		_, pk, err := keycdc.Decode(key)
+		if err != nil {
+			return err
+		}
+		ids = append(ids, pk.K3())
+		queryIds = append(queryIds, pk.K1())
+
+		return nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryReportedIdsByReporterResponse{Ids: ids, QueryIds: queryIds, Pagination: pageRes}, nil
+}

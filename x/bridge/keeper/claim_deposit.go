@@ -50,7 +50,7 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64,
 		return err
 	}
 	powerThreshold := valsetCheckpointParams.PowerThreshold
-	if aggregate.ReporterPower < powerThreshold {
+	if aggregate.AggregatePower < powerThreshold {
 		return types.ErrInsufficientReporterPower
 	}
 	// ensure can't claim deposit until report is old enough
@@ -192,4 +192,12 @@ func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string
 	tipCoins := sdk.NewCoins(tipCoin)
 
 	return layerRecipientAddress, amountCoins, tipCoins, nil
+}
+
+func (k Keeper) GetDepositStatus(ctx context.Context, depositId uint64) (bool, error) {
+	claimed, err := k.DepositIdClaimedMap.Get(ctx, depositId)
+	if err != nil {
+		return false, err
+	}
+	return claimed.Claimed, nil
 }

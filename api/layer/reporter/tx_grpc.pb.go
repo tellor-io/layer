@@ -34,6 +34,8 @@ type MsgClient interface {
 	UnjailReporter(ctx context.Context, in *MsgUnjailReporter, opts ...grpc.CallOption) (*MsgUnjailReporterResponse, error)
 	// WithdrawTip defines a method to withdraw tip from a reporter module.
 	WithdrawTip(ctx context.Context, in *MsgWithdrawTip, opts ...grpc.CallOption) (*MsgWithdrawTipResponse, error)
+	// WithdrawTipLegacy defines a method to withdraw tip from a reporter module before v2 upgrade.
+	WithdrawTipLegacy(ctx context.Context, in *MsgWithdrawTipLegacy, opts ...grpc.CallOption) (*MsgWithdrawTipLegacyResponse, error)
 }
 
 type msgClient struct {
@@ -107,6 +109,15 @@ func (c *msgClient) WithdrawTip(ctx context.Context, in *MsgWithdrawTip, opts ..
 	return out, nil
 }
 
+func (c *msgClient) WithdrawTipLegacy(ctx context.Context, in *MsgWithdrawTipLegacy, opts ...grpc.CallOption) (*MsgWithdrawTipLegacyResponse, error) {
+	out := new(MsgWithdrawTipLegacyResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/WithdrawTipLegacy", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -127,6 +138,8 @@ type MsgServer interface {
 	UnjailReporter(context.Context, *MsgUnjailReporter) (*MsgUnjailReporterResponse, error)
 	// WithdrawTip defines a method to withdraw tip from a reporter module.
 	WithdrawTip(context.Context, *MsgWithdrawTip) (*MsgWithdrawTipResponse, error)
+	// WithdrawTipLegacy defines a method to withdraw tip from a reporter module before v2 upgrade.
+	WithdrawTipLegacy(context.Context, *MsgWithdrawTipLegacy) (*MsgWithdrawTipLegacyResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -154,6 +167,9 @@ func (UnimplementedMsgServer) UnjailReporter(context.Context, *MsgUnjailReporter
 }
 func (UnimplementedMsgServer) WithdrawTip(context.Context, *MsgWithdrawTip) (*MsgWithdrawTipResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawTip not implemented")
+}
+func (UnimplementedMsgServer) WithdrawTipLegacy(context.Context, *MsgWithdrawTipLegacy) (*MsgWithdrawTipLegacyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawTipLegacy not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -294,6 +310,24 @@ func _Msg_WithdrawTip_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_WithdrawTipLegacy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawTipLegacy)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawTipLegacy(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Msg/WithdrawTipLegacy",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawTipLegacy(ctx, req.(*MsgWithdrawTipLegacy))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -328,6 +362,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WithdrawTip",
 			Handler:    _Msg_WithdrawTip_Handler,
+		},
+		{
+			MethodName: "WithdrawTipLegacy",
+			Handler:    _Msg_WithdrawTipLegacy_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

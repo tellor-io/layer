@@ -50,10 +50,9 @@ func TestMsgClaimDeposits(t *testing.T) {
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
 	aggregate := &oracletypes.Aggregate{
-		QueryId:              queryId,
-		AggregateValue:       reportValueString,
-		AggregateReportIndex: uint64(0),
-		ReporterPower:        uint64(68),
+		QueryId:        queryId,
+		AggregateValue: reportValueString,
+		AggregatePower: uint64(68),
 	}
 	powerThreshold := uint64(67)
 	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)
@@ -65,7 +64,7 @@ func TestMsgClaimDeposits(t *testing.T) {
 	msgSender := sdk.AccAddress(ethAddress.Bytes())
 	recipient, amount, tip, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	claimAmount := amount.Sub(tip...)
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, aggregate.AggregateReportIndex).Return(aggregate, aggregateTimestamp, err)
+	ok.On("GetAggregateByIndex", sdkCtx, queryId, aggregate.Index).Return(aggregate, aggregateTimestamp, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, claimAmount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, msgSender, tip).Return(err)

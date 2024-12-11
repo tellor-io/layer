@@ -26,6 +26,11 @@ type BankKeeper interface {
 	// Methods imported from bank should be defined here
 }
 
+// BridgeKeeper
+type BridgeKeeper interface {
+	GetDepositStatus(ctx context.Context, depositId uint64) (bool, error)
+}
+
 type RegistryKeeper interface {
 	// Methods imported from registry should be defined here
 	GetSpec(ctx context.Context, queryType string) (rktypes.DataSpec, error)
@@ -34,7 +39,8 @@ type RegistryKeeper interface {
 type ReporterKeeper interface {
 	// Methods imported from reporter should be defined here
 	ReporterStake(ctx context.Context, repAddress sdk.AccAddress, queryId []byte) (math.Int, error)
-	DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.LegacyDec, queryId []byte, height uint64) error
+	AddTip(ctx context.Context, metaId uint64, tip Reward) error
+	AddTbr(ctx context.Context, height uint64, tbr Reward) error
 }
 
 type RegistryHooks interface {
