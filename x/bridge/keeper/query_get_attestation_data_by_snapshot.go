@@ -44,7 +44,7 @@ func (q Querier) GetAttestationDataBySnapshot(goCtx context.Context, req *types.
 	queryIdStr := hex.EncodeToString(queryId)
 	timestampStr := strconv.FormatUint(snapshotData.Timestamp, 10)
 	aggValueStr := aggReport.AggregateValue
-	aggPowerStr := strconv.FormatUint(aggReport.ReporterPower, 10)
+	aggPowerStr := strconv.FormatUint(aggReport.AggregatePower, 10)
 	checkpointStr := hex.EncodeToString(snapshotData.ValidatorCheckpoint)
 	attestationTimestampStr := strconv.FormatUint(snapshotData.AttestationTimestamp, 10)
 	previousReportTimestampStr := strconv.FormatUint(snapshotData.PrevReportTimestamp, 10)

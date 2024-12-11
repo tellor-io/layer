@@ -1,75 +1,15 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
-
-// divvy up the tips that a reporter has earned from reporting in the oracle module amongst the reporters' selectors
-// purpose of height argument is to only pay out selectors that were part of the reporter at height of the report
-// DivvyingTips distributes the reward among the reporter and its selectors based on their shares at the given height.
-//
-// The function performs the following steps:
-// 1. Retrieves the reporter's information using the reporter's address.
-// 2. Converts the reward and commission rate to legacy decimals for calculations.
-// 3. Calculates the commission for the reporter and the net reward after commission.
-// 4. Retrieves the selectors' addresses and their respective shares.
-// 5. Distributes the net reward among the selectors based on their shares.
-// 6. Adds the commission to the reporter's share if the reporter is also a selector.
-// 7. Updates the selectors' tips with the new calculated shares.
-func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.LegacyDec, queryId []byte, height uint64) error {
-	reporter, err := k.Reporters.Get(ctx, reporterAddr)
-	if err != nil {
-		return err
-	}
-
-	// selector's commission = reporter's commission rate * reward
-	commission := reward.Mul(reporter.CommissionRate)
-	// Calculate net reward
-	netReward := reward.Sub(commission)
-
-	delAddrs, err := k.Report.Get(ctx, collections.Join(queryId, collections.Join(reporterAddr.Bytes(), height)))
-	if err != nil {
-		return err
-	}
-
-	for _, del := range delAddrs.TokenOrigins {
-		// delegator share = netReward * selector's share / total shares
-		delAmountDec := del.Amount.ToLegacyDec()
-		delTotalDec := delAddrs.Total.ToLegacyDec()
-		delegatorShare := netReward.Mul(delAmountDec).Quo(delTotalDec)
-
-		if bytes.Equal(del.DelegatorAddress, reporterAddr.Bytes()) {
-			delegatorShare = delegatorShare.Add(commission)
-		}
-		// get selector's previous tips
-		oldTips, err := k.SelectorTips.Get(ctx, del.DelegatorAddress)
-		if err != nil {
-			if errors.Is(err, collections.ErrNotFound) {
-				oldTips = math.LegacyZeroDec()
-			} else {
-				return err
-			}
-		}
-		// add the new tip to the old tips
-		newTips := oldTips.Add(delegatorShare)
-		// set new tip total
-		err = k.SelectorTips.Set(ctx, del.DelegatorAddress, newTips)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
 
 // ReturnSlashedTokens returns the slashed tokens to the delegators,
 // called in dispute module after dispute is resolved with result invalid or reporter wins

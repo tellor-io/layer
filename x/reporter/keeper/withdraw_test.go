@@ -17,7 +17,7 @@ import (
 )
 
 func TestFeefromReporterStake(t *testing.T) {
-	k, sk, bk, _, ctx, _ := setupKeeper(t)
+	k, _, sk, bk, _, ctx, _ := setupKeeper(t)
 	fee := math.NewIntWithDecimal(100, 6)
 	reporterAddr, selector1, selector2, selector3 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
 
@@ -81,7 +81,7 @@ func TestFeefromReporterStake(t *testing.T) {
 }
 
 func TestFeefromReporterStakeMultiplevalidators(t *testing.T) {
-	k, sk, bk, _, ctx, _ := setupKeeper(t)
+	k, _, sk, bk, _, ctx, _ := setupKeeper(t)
 	fee := math.NewIntWithDecimal(100, 6)
 	reporterAddr, selector := sample.AccAddressBytes(), sample.AccAddressBytes()
 
@@ -124,7 +124,7 @@ func TestFeefromReporterStakeMultiplevalidators(t *testing.T) {
 }
 
 func TestEscrowReporterStake(t *testing.T) {
-	k, sk, bk, _, ctx, _ := setupKeeper(t)
+	k, _, sk, bk, _, ctx, _ := setupKeeper(t)
 	reporterAddr := sample.AccAddressBytes()
 	stake := math.NewIntWithDecimal(100, 6)
 	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporterAddr.Bytes(), uint64(ctx.BlockHeight()))), types.DelegationsAmounts{
@@ -145,7 +145,7 @@ func TestEscrowReporterStake(t *testing.T) {
 }
 
 func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
-	k, sk, bk, _, ctx, _ := setupKeeper(t)
+	k, _, sk, bk, _, ctx, _ := setupKeeper(t)
 	reporterAddr, selector2, selector3, valAddr1, valAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
 	stake := math.NewIntWithDecimal(1000, 6)
 	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporterAddr.Bytes(), uint64(ctx.BlockHeight()))), types.DelegationsAmounts{

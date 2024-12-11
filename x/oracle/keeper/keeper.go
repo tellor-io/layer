@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	gomath "math"
@@ -27,6 +26,7 @@ type (
 		Params             collections.Item[types.Params]
 		accountKeeper      types.AccountKeeper
 		bankKeeper         types.BankKeeper
+		bridgeKeeper       types.BridgeKeeper
 		registryKeeper     types.RegistryKeeper
 		reporterKeeper     types.ReporterKeeper
 		Schema             collections.Schema
@@ -41,7 +41,13 @@ type (
 		Cyclelist          collections.Map[[]byte, []byte]                                                                   // key: queryId
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
-		authority string
+		authority      string
+		Values         *collections.IndexedMap[collections.Pair[uint64, string], types.Value, types.ValuesIndex] // key: queryMeta.Id, valueHexstring  value: reporter's power
+		AggregateValue collections.Map[uint64, types.RunningAggregate]                                           // key: queryMeta.Id
+		// maintain a total weight for each querymeta.id
+		ValuesWeightSum collections.Map[uint64, uint64] // key: queryMeta.Id value: totalWeight
+		// storage for values that are aggregated via weighted mode
+		ValuesWeightedMode collections.Map[collections.Pair[uint64, string], uint64] // key: queryMeta.Id, valueHexstring  value: total power of reporters that submitted the value
 	}
 )
 
@@ -71,7 +77,13 @@ func NewKeeper(
 		reporterKeeper: reporterKeeper,
 
 		authority: authority,
-
+		Values: collections.NewIndexedMap(sb,
+			types.ValuesPrefix, "values",
+			collections.PairKeyCodec(collections.Uint64Key, collections.StringKey),
+			codec.CollValue[types.Value](cdc), types.NewValuesIndex(sb),
+		),
+		AggregateValue:  collections.NewMap(sb, types.AggregateValuePrefix, "aggregate_value", collections.Uint64Key, codec.CollValue[types.RunningAggregate](cdc)),
+		ValuesWeightSum: collections.NewMap(sb, types.ValuesWeightSumPrefix, "values_weight_sum", collections.Uint64Key, collections.Uint64Value),
 		// TotalTips maps the block number to the total tips added up till that point. Used for calculating voting power during a dispute
 		TotalTips: collections.NewMap(sb, types.TotalTipsPrefix, "total_tips", collections.Uint64Key, sdk.IntValue),
 		// Nonces maps the queryId to the nonce that increments with each aggregate report
@@ -140,6 +152,10 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 	return sdkCtx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
+func (k *Keeper) SetBridgeKeeper(bk types.BridgeKeeper) {
+	k.bridgeKeeper = bk
+}
+
 // initialize query for a given query data.
 // set the id, queryType, and reporting window
 func (k Keeper) InitializeQuery(ctx context.Context, querydata []byte) (types.QueryMeta, error) {
@@ -201,28 +217,23 @@ func (k Keeper) UpdateQuery(ctx context.Context, queryType string, newBlockWindo
 }
 
 func (k Keeper) FlagAggregateReport(ctx context.Context, report types.MicroReport) error {
-	iter, err := k.Aggregates.Indexes.MicroHeight.MatchExact(ctx, report.BlockNumber)
+	reporter := sdk.MustAccAddressFromBech32(report.Reporter)
+	iter, err := k.Aggregates.Indexes.Reporter.MatchExact(ctx, collections.Join3(reporter.Bytes(), report.QueryId, report.BlockNumber))
 	if err != nil {
 		return err
 	}
 	defer iter.Close()
-	for ; iter.Valid(); iter.Next() {
+	if iter.Valid() {
 		aggregatekey, err := iter.PrimaryKey()
 		if err != nil {
 			return err
 		}
-		if bytes.Equal(aggregatekey.K1(), report.QueryId) {
-			aggregate, err := k.Aggregates.Get(ctx, aggregatekey)
-			if err != nil {
-				return err
-			}
-			reporter := aggregate.Reporters[aggregate.AggregateReportIndex].Reporter
-			if sdk.MustAccAddressFromBech32(reporter).Equals(sdk.MustAccAddressFromBech32(report.Reporter)) {
-				aggregate.Flagged = true
-				return k.Aggregates.Set(ctx, aggregatekey, aggregate)
-			}
+		aggregate, err := k.Aggregates.Get(ctx, aggregatekey)
+		if err != nil {
+			return err
 		}
+		aggregate.Flagged = true
+		return k.Aggregates.Set(ctx, aggregatekey, aggregate)
 	}
-
 	return nil
 }
