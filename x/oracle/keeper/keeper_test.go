@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"encoding/hex"
 	"errors"
+	gomath "math"
 	"math/big"
 	"sort"
 	"strings"
@@ -505,4 +506,17 @@ func WeightedMedian(values []string, powers []uint64) string {
 		}
 	}
 	return ""
+}
+
+func (s *KeeperTestSuite) TestBounds() {
+	s.NoError(s.oracleKeeper.QuerySequencer.Set(s.ctx, uint64(gomath.MaxUint64)))
+	s.NoError(s.oracleKeeper.Query.Set(s.ctx, collections.Join([]byte("queryid1"), uint64(gomath.MaxUint64)), types.QueryMeta{
+		Id: uint64(gomath.MaxUint64),
+	}))
+	n, err := s.oracleKeeper.QuerySequencer.Next(s.ctx)
+	s.NoError(err)
+	s.Equal(uint64(gomath.MaxUint64), n)
+	n, err = s.oracleKeeper.QuerySequencer.Next(s.ctx)
+	s.NoError(err)
+	s.Equal(uint64(0), n)
 }
