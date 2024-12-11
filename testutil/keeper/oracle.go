@@ -23,7 +23,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func OracleKeeper(tb testing.TB) (keeper.Keeper, *mocks.ReporterKeeper, *mocks.RegistryKeeper, *mocks.AccountKeeper, *mocks.BankKeeper, sdk.Context) {
+func OracleKeeper(tb testing.TB) (keeper.Keeper, *mocks.ReporterKeeper, *mocks.RegistryKeeper, *mocks.AccountKeeper, *mocks.BankKeeper, *mocks.BridgeKeeper, sdk.Context) {
 	tb.Helper()
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
@@ -38,6 +38,7 @@ func OracleKeeper(tb testing.TB) (keeper.Keeper, *mocks.ReporterKeeper, *mocks.R
 
 	accountKeeper := new(mocks.AccountKeeper)
 	bankKeeper := new(mocks.BankKeeper)
+	bridgeKeeper := new(mocks.BridgeKeeper)
 	registryKeeper := new(mocks.RegistryKeeper)
 	reporterKeeper := new(mocks.ReporterKeeper)
 
@@ -57,5 +58,5 @@ func OracleKeeper(tb testing.TB) (keeper.Keeper, *mocks.ReporterKeeper, *mocks.R
 	require.Nil(tb, k.SetParams(ctx, types.DefaultParams()))
 	require.Nil(tb, k.GenesisCycleList(ctx, types.InitialCycleList()))
 
-	return k, reporterKeeper, registryKeeper, accountKeeper, bankKeeper, ctx
+	return k, reporterKeeper, registryKeeper, accountKeeper, bankKeeper, bridgeKeeper, ctx
 }
