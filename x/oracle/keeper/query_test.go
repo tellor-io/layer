@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	testkeeper "github.com/tellor-io/layer/testutil/keeper"
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -410,4 +411,51 @@ func (s *KeeperTestSuite) TestTippedQueries() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestReportedIdsByReporter() {
+	k := s.oracleKeeper
+	q := s.queryClient
+	reporter := sample.AccAddressBytes()
+	// fetching in descending order
+	pageReq := &query.PageRequest{Reverse: true}
+	queryReq := types.QueryReportedIdsByReporterRequest{ReporterAddress: reporter.String(), Pagination: pageReq}
+	for i := 1; i < 11; i++ {
+		s.NoError(k.Reports.Set(s.ctx,
+			collections.Join3([]byte("queryid1"), reporter.Bytes(), uint64(i)),
+			types.MicroReport{}))
+	}
+	res, err := q.ReportedIdsByReporter(s.ctx, &queryReq)
+	s.NoError(err)
+	s.Equal(res.Ids, []uint64{10, 9, 8, 7, 6, 5, 4, 3, 2, 1})
+
+	pageReq.Reverse = false
+	res, err = q.ReportedIdsByReporter(s.ctx, &queryReq)
+	s.NoError(err)
+	s.Equal(res.Ids, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+
+	pageReq.Limit = 1
+	res, err = q.ReportedIdsByReporter(s.ctx, &queryReq)
+	s.NoError(err)
+	s.Equal(res.Ids, []uint64{1})
+
+	pageReq.Limit = 1
+	pageReq.Reverse = true
+	res, err = q.ReportedIdsByReporter(s.ctx, &queryReq)
+	s.NoError(err)
+	s.Equal(res.Ids, []uint64{10})
+
+	pageReq.Limit = 5
+	pageReq.Offset = 1
+	pageReq.Reverse = true
+	res, err = q.ReportedIdsByReporter(s.ctx, &queryReq)
+	s.NoError(err)
+	s.Equal(res.Ids, []uint64{9, 8, 7, 6, 5})
+
+	pageReq.Limit = 5
+	pageReq.Offset = 4
+	pageReq.Reverse = false
+	res, err = q.ReportedIdsByReporter(s.ctx, &queryReq)
+	s.NoError(err)
+	s.Equal(res.Ids, []uint64{5, 6, 7, 8, 9})
 }

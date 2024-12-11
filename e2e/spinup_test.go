@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
 	"github.com/tellor-io/layer/utils"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/math"
 )
@@ -89,7 +90,7 @@ func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos
 	return tn.ExecTx(ctx, keyName, command...)
 }
 
-func TestLearn(t *testing.T) {
+func TestLayerFlow(t *testing.T) {
 	ctx := context.Background()
 	layer := e2e.LayerSpinup(t) // *cosmos.CosmosChain type
 	validatorI := layer.Validators[0]
@@ -203,4 +204,20 @@ func TestLearn(t *testing.T) {
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(t, err)
 	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 2) // resolved
+}
+
+func TestGetCyclelist(t *testing.T) {
+	t.Skip("infinitely runs and calls CurrentCyclistQuery")
+	ctx := context.Background()
+	layer := e2e.LayerSpinup(t) // *cosmos.CosmosChain type
+	validatorI := layer.Validators[0]
+
+	queryClient := oracletypes.NewQueryClient(validatorI.GrpcConn)
+	for {
+		res, err := queryClient.CurrentCyclelistQuery(ctx, &oracletypes.QueryCurrentCyclelistQueryRequest{})
+		require.NoError(t, err)
+		// fmt.Println(res.QueryMeta)
+		require.NotNil(t, res.QueryData)
+		require.NotNil(t, res.QueryMeta)
+	}
 }
