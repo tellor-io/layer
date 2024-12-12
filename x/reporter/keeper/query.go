@@ -243,3 +243,15 @@ func (k Querier) AvailableTipsByQuery(ctx context.Context, req *types.QueryAvail
 
 	return &types.QueryAvailableTipsResponse{AvailableTips: selectorShare}, nil
 }
+
+func (k Querier) RewardClaimStatus(ctx context.Context, req *types.QueryRewardClaimStatusRequest) (*types.QueryRewardClaimStatusResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	selectorAcc := sdk.MustAccAddressFromBech32(req.SelectorAddress)
+	claimed, err := k.ClaimStatus.Has(ctx, collections.Join(selectorAcc.Bytes(), req.Id))
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryRewardClaimStatusResponse{Status: claimed}, nil
+}
