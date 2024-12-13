@@ -15,6 +15,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type AggregateLegacy struct {
@@ -132,6 +133,11 @@ func MigrateStore(ctx context.Context, storeService store.KVStoreService, cdc co
 		err = aggIndexMap.Remove(ctx, key)
 		if err != nil {
 			panic(fmt.Sprintf("failed to remove aggregate value %v", err))
+		}
+		// withdrawal aggregate reporter is empty string,
+		// making it bridge here and during creation the aggregate reporter will be the sender
+		if newValues[i].AggregateReporter == "" {
+			newValues[i].AggregateReporter = authtypes.NewModuleAddressOrBech32Address("bridge").String()
 		}
 		err = aggregateMap.Set(ctx, key, newValues[i])
 		if err != nil {
