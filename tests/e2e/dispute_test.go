@@ -252,6 +252,7 @@ func (s *E2ETestSuite) TestDisputes() {
 		Id:    dispute.DisputeId,
 		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
 	}
+
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -287,6 +288,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(reporter.Jailed, false)
 	freeFloatingBalanceAfter = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, reporterAccount, s.Setup.Denom)
 	require.Equal(freeFloatingBalanceAfter, freeFloatingBalanceBefore.Sub(disputeFee))
+
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	// todo: more balance checks at each step
@@ -607,6 +609,11 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
 	require.Equal(dispute.DisputeStartBlock, disputeStartHeight)
 
+	// there should be no dispute votes yet
+	voters, err := s.Setup.Disputekeeper.VoteCountsByGroup.Get(s.Setup.Ctx, dispute.DisputeId)
+	require.Error(err)
+	fmt.Println("Voters: ", voters)
+
 	// create vote tx msg
 	msgVote = disputetypes.MsgVote{
 		Voter: reporterAccount.String(),
@@ -617,6 +624,10 @@ func (s *E2ETestSuite) TestDisputes() {
 	voteResponse, err = msgServerDispute.Vote(s.Setup.Ctx, &msgVote)
 	require.NoError(err)
 	require.NotNil(voteResponse)
+
+	voters, err = s.Setup.Disputekeeper.VoteCountsByGroup.Get(s.Setup.Ctx, dispute.DisputeId)
+	require.NoError(err)
+	fmt.Println("Voters: ", voters)
 
 	// vote is properly stored
 	vote, err = s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, dispute.DisputeId)

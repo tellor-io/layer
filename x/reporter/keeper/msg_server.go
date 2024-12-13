@@ -47,7 +47,7 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	}
 	// the min requirement chosen by reporter has gte the min requirement
 	if msg.MinTokensRequired.LT(params.MinTrb) {
-		return nil, errors.New("reporters chosen min to join must be gte the min requirement")
+		return nil, errors.New("reporters chosen min to join must be gte the min requirement") 
 	}
 	// the commission rate must be less than 100%
 	k.Logger().Info("commission rate: ", "commission rate", msg.CommissionRate.String())
