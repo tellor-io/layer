@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	"github.com/tellor-io/layer/utils"
-	"github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/collections"
 
@@ -66,15 +65,27 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	}
 	// next query
 	queryId = utils.QueryIDFromData(q[n])
+	// get query if it exists, should exist if it has a tip that wasn't cleared by aggregation (ie no one reported for it)
+	querymeta, err := k.CurrentQuery(ctx, queryId)
 	// cycle list queries that are without a tip could linger in the store if
 	// there are no reports to be aggregated (where queries are removed from the store)
 	// and since each rotation we generate a new query, here we clear the old queries that are expired, have no tip and have no reports
-	err = k.ClearOldqueries(ctx, queryId)
-	if err != nil {
-		return err
+	if err == nil && querymeta.Expiration < (uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())) && !querymeta.HasRevealedReports && querymeta.Amount.IsZero() {
+		// remove query
+		err = k.Query.Remove(ctx, collections.Join(queryId, querymeta.Id))
+		if err != nil {
+			return err
+		}
+		id, err := k.QuerySequencer.Next(ctx)
+		if err != nil {
+			return err
+		}
+		querymeta.Id = id
+		querymeta.CycleList = true
+		querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
+		emitRotateQueriesEvent(sdkCtx, hex.EncodeToString(queryId), strconv.Itoa(int(querymeta.Id)))
+		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 	}
-	// get query if it exists, should exist if it has a tip that wasn't cleared by aggregation (ie no one reported for it)
-	querymeta, err := k.CurrentQuery(ctx, queryId)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return err
@@ -121,21 +132,6 @@ func emitRotateQueriesEvent(sdkCtx sdk.Context, queryId, nextId string) {
 			sdk.NewAttribute("query_id", queryId),
 			sdk.NewAttribute("New QueryMeta Id", nextId),
 		),
-	})
-}
-
-// removes query that are expired, no tip, and no revealed reports
-// used in RotateQueries to clear cycle list queries that weren't cleared by aggregation
-func (k Keeper) ClearOldqueries(ctx context.Context, queryId []byte) error {
-	rng := collections.NewPrefixedPairRange[[]byte, uint64](queryId)
-	return k.Query.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.QueryMeta) (stop bool, err error) {
-		if value.Expiration < (uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())) && !value.HasRevealedReports && value.Amount.IsZero() {
-			err := k.Query.Remove(ctx, key)
-			if err != nil {
-				return false, err
-			}
-		}
-		return false, nil
 	})
 }
 
