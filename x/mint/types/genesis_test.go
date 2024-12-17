@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"testing"
+	time "time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/mint/types"
@@ -10,9 +11,12 @@ import (
 func TestNewGenesisState(t *testing.T) {
 	require := require.New(t)
 
-	genesisState := types.NewGenesisState("loya")
+	time := time.Now()
+	genesisState := types.NewGenesisState("loya", true, &time)
 	require.NotNil(genesisState)
 	require.Equal(genesisState.BondDenom, "loya")
+	require.True(genesisState.Initialized)
+	require.NotNil(genesisState.PreviousBlockTime)
 }
 
 func TestDefaultGenesis(t *testing.T) {
@@ -21,6 +25,8 @@ func TestDefaultGenesis(t *testing.T) {
 	genesisState := types.DefaultGenesis()
 	require.NotNil(genesisState)
 	require.Equal(genesisState.BondDenom, "loya")
+	require.False(genesisState.Initialized)
+	require.Nil(genesisState.PreviousBlockTime)
 }
 
 func TestValidateGenesis(t *testing.T) {
@@ -32,7 +38,8 @@ func TestValidateGenesis(t *testing.T) {
 	err := types.ValidateGenesis(*genesisState)
 	require.NoError(err)
 
-	emptyDenomGenesis := types.NewGenesisState("")
+	time := time.Now()
+	emptyDenomGenesis := types.NewGenesisState("", true, &time)
 	err = types.ValidateGenesis(*emptyDenomGenesis)
 	require.ErrorContains(err, "bond denom cannot be empty")
 }
