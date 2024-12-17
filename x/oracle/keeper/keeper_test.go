@@ -420,6 +420,64 @@ func (s *KeeperTestSuite) TestAddReport() {
 			crossoverWeight: 100,
 			median:          "0000000000000000000000000000000000000000000000000000014B00000014",
 		},
+		{
+			name: "code review scenario report 1:",
+			id:   13,
+			values: []string{
+				"000000000000000000000000000000000000000000000000000000A", // 10
+
+			},
+			powers:          []uint64{60},
+			crossoverWeight: 60,
+			median:          "000000000000000000000000000000000000000000000000000000000000000A", // 10
+		},
+		{
+			name: "report 2 is added",
+			id:   13,
+			values: []string{
+				"0000000000000000000000000000000000000000000000000000014", // 20
+
+			},
+			powers:          []uint64{30},
+			crossoverWeight: 60,
+			median:          "000000000000000000000000000000000000000000000000000000000000000A", // 10
+		},
+		{
+			name: "report 3 is added",
+			id:   13,
+			values: []string{
+				"000000000000000000000000000000000000000000000000000000A", // 10
+
+			},
+			powers:          []uint64{10},
+			crossoverWeight: 70,
+			median:          "000000000000000000000000000000000000000000000000000000000000000A", // 10
+		},
+		{
+			name: "report 4 is added",
+			id:   13,
+			values: []string{
+				"0000000000000000000000000000000000000000000000000000028", // 40
+
+			},
+			powers:          []uint64{80},
+			crossoverWeight: 100,
+			median:          "0000000000000000000000000000000000000000000000000000000000000014", // 20
+		},
+		{
+			name: "report 4 if it was one huge reporter",
+			id:   17,
+			values: []string{
+				"000000000000000000000000000000000000000000000000000000A", // 10
+				"0000000000000000000000000000000000000000000000000000014", // 20
+				"000000000000000000000000000000000000000000000000000000A", // 10
+				"0000000000000000000000000000000000000000000000000000028", // 40
+
+			},
+			powers:          []uint64{60, 30, 10, 8000},
+			crossoverWeight: 8100,
+			median:          "0000000000000000000000000000000000000000000000000000000000000028", // 40
+		},
 	}
 	for _, tc := range testCases {
 		for i, v := range tc.values {
@@ -431,8 +489,10 @@ func (s *KeeperTestSuite) TestAddReport() {
 				s.Equal(tc.median, median.Value)
 				s.Equal(tc.crossoverWeight, median.CrossoverWeight)
 				s.NoError(err)
-				calculatedMedian := WeightedMedian(tc.values, tc.powers)
-				s.True(strings.EqualFold(calculatedMedian, median.Value))
+				if tc.id != 13 {
+					calculatedMedian := WeightedMedian(tc.values, tc.powers)
+					s.True(strings.EqualFold(calculatedMedian, median.Value))
+				}
 			}
 		}
 	}
