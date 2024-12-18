@@ -1027,8 +1027,6 @@ func (app *App) preBlocker(ph *ProposalHandler) func(ctx sdk.Context, _ *abci.Re
 			// "spendable balance 97171770000loya is smaller than 99121770000loya
 			transferAmt := bondedPoolBal.Amount.Sub(bondedtotal)
 			if transferAmt.Equal(math.NewInt(1950000000)) { // manually checked amount
-				// last_block_height":"1062219"
-
 				err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin("loya", transferAmt)))
 				if err != nil {
 					return nil, err
