@@ -1027,7 +1027,7 @@ func (app *App) preBlocker(ph *ProposalHandler) func(ctx sdk.Context, _ *abci.Re
 		transferAmt := bondedPoolBal.Amount.Sub(bondedtotal)
 		if transferAmt.Equal(math.NewInt(1950000000)) { // manually checked amount
 			// last_block_height":"1062219"
-			if ctx.BlockHeight() == 1062219+1 { // todo: figure out height
+			if ctx.BlockHeight() == 1062219+1 {
 				err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin("loya", transferAmt)))
 				if err != nil {
 					return nil, err
