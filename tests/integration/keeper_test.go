@@ -64,6 +64,7 @@ func CreateRandomPrivateKeys(accNum int) []ed25519.PrivKey {
 	return testAddrs
 }
 
+// todo: remove this
 func (s *IntegrationTestSuite) createValidatorAccs(powers []uint64) ([]sdk.AccAddress, []sdk.ValAddress, []ed25519.PrivKey) {
 	ctx := s.Setup.Ctx
 	acctNum := len(powers)
@@ -121,6 +122,46 @@ func (s *IntegrationTestSuite) CreateAccountsWithTokens(numofAccs int, amountOfT
 		s.Setup.MintTokens(accs[i], math.NewInt(amountOfTokens))
 	}
 	return accs
+}
+
+func (s *IntegrationTestSuite) createValidatorsbypowers(powers []uint64) ([]sdk.AccAddress, []sdk.ValAddress, []ed25519.PrivKey) {
+	ctx := s.Setup.Ctx
+	acctNum := len(powers)
+	privKeys := CreateRandomPrivateKeys(acctNum)
+	testAddrs := s.Setup.ConvertToAccAddress(privKeys)
+	for i, addr := range testAddrs {
+		s.Setup.MintTokens(addr, math.NewInt(int64(powers[i]*1000000)))
+	}
+	valAddrs := simtestutil.ConvertAddrsToValAddrs(testAddrs)
+	stakingServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	for i, pk := range privKeys {
+		account := authtypes.BaseAccount{
+			Address:       testAddrs[i].String(),
+			PubKey:        codectypes.UnsafePackAny(pk.PubKey()),
+			AccountNumber: uint64(i + 100),
+		}
+		s.Setup.Accountkeeper.SetAccount(s.Setup.Ctx, &account)
+		valMsg, err := stakingtypes.NewMsgCreateValidator(
+			valAddrs[i].String(),
+			pk.PubKey(),
+			sdk.NewInt64Coin(s.Setup.Denom, s.Setup.Stakingkeeper.TokensFromConsensusPower(ctx, int64(powers[i])).Int64()),
+			stakingtypes.Description{Moniker: strconv.Itoa(i)},
+			stakingtypes.CommissionRates{
+				Rate:          math.LegacyNewDecWithPrec(5, 1),
+				MaxRate:       math.LegacyNewDecWithPrec(5, 1),
+				MaxChangeRate: math.LegacyNewDec(0),
+			},
+			math.OneInt())
+		s.NoError(err)
+
+		_, err = stakingServer.CreateValidator(s.Setup.Ctx, valMsg)
+		s.NoError(err)
+	}
+
+	_, err := s.Setup.Stakingkeeper.EndBlocker(ctx)
+	s.NoError(err)
+
+	return testAddrs, valAddrs, privKeys
 }
 
 func TestKeeperTestSuite(t *testing.T) {
