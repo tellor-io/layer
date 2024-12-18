@@ -10,7 +10,8 @@ import (
 func (k Keeper) InitGenesis(ctx context.Context, ak types.AccountKeeper, gen *types.GenesisState) {
 	minter := types.DefaultMinter()
 	minter.BondDenom = gen.BondDenom
-	minter.Initialized = false
+	minter.Initialized = gen.Initialized
+	minter.PreviousBlockTime = gen.PreviousBlockTime
 	err := k.Minter.Set(ctx, minter)
 	if err != nil {
 		panic(err)
@@ -25,5 +26,7 @@ func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 		panic(err)
 	}
 	bondDenom := minter.BondDenom
-	return types.NewGenesisState(bondDenom)
+	initialized := minter.Initialized
+	previousBlockTime := minter.PreviousBlockTime
+	return types.NewGenesisState(bondDenom, initialized, previousBlockTime)
 }
