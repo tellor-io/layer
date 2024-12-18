@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/tellor-io/layer/testutil"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/dispute"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -18,7 +20,12 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
+	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func (s *IntegrationTestSuite) TestVotingOnDispute() {
@@ -1151,4 +1158,236 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeBond() {
 	feePayerStakeAfter, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, disputer, []byte{})
 	s.NoError(err)
 	s.Equal(feePayerStakeBefore.Sub(disputeFee.QuoRaw(2)), feePayerStakeAfter)
+}
+
+func (s *IntegrationTestSuite) TestCurrentBug() {
+	ctx := s.Setup.Ctx
+	ctx = ctx.WithBlockHeight(1)
+	sk := s.Setup.Stakingkeeper
+	startingBondedPoolbal := math.NewInt(1000000)
+	params := slashingtypes.DefaultParams()
+	params.SignedBlocksWindow = 1
+	notbondedpool := authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName)
+	bondedpool := authtypes.NewModuleAddress(stakingtypes.BondedPoolName)
+
+	s.NoError(s.Setup.SlashingKeeper.SetParams(ctx, params))
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	oServer := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+
+	// chain has three validators
+	repAccs, valAccs, _ := s.createValidatorsbypowers([]uint64{150, 500, 100000})
+	// staking pool balances
+	// not bonded pool
+	bal, err := s.Setup.Bankkeeper.Balances.Get(ctx, collections.Join(notbondedpool, "loya"))
+	s.Error(err, "balance should be zero")
+	s.True(bal.IsNil())
+	// bonded poool
+	bal, err = s.Setup.Bankkeeper.Balances.Get(ctx, collections.Join(bondedpool, "loya"))
+	s.NoError(err, "balance should be gt zero")
+	s.Equal(sk.PowerReduction(ctx).MulRaw(int64(150+500+100000)).Add(startingBondedPoolbal), bal)
+
+	// give disputer tokens
+	s.Setup.MintTokens(repAccs[1], math.NewInt(100000000000))
+	// bridge endBlock stuff
+	for _, val := range valAccs {
+		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(s.Setup.Ctx, val.String(), []byte("not real"))
+		s.NoError(err)
+	}
+
+	// create reporter and submit reports
+	reportBlock := ctx.BlockHeight()
+	for _, r := range repAccs {
+		s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, r, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+		s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, r, reportertypes.NewSelection(r, 1)))
+		rep := report(r.String(), testutil.EncodeValue(29266), ethQueryData)
+		_, err := oServer.SubmitValue(ctx, &rep)
+		s.NoError(err)
+	}
+
+	ctx, err = simtestutil.NextBlock(s.Setup.App, ctx, time.Minute)
+	s.NoError(err)
+
+	// propose dispute id 1 slash amount 10_000_000
+	_, err = msgServer.ProposeDispute(ctx, &types.MsgProposeDispute{
+		Creator: repAccs[1].String(),
+		Report: &oracletypes.MicroReport{
+			Reporter:        repAccs[2].String(),
+			Power:           100000,
+			QueryType:       "SpotPrice",
+			QueryId:         utils.QueryIDFromData(ethQueryData),
+			AggregateMethod: "weighted-median",
+			Value:           testutil.EncodeValue(29266),
+			Cyclelist:       false,
+			BlockNumber:     uint64(reportBlock),
+		},
+		DisputeCategory: types.Warning,
+		Fee:             sdk.NewCoin(s.Setup.Denom, math.NewInt(1000_000_000)), // one percent dispute fee
+		PayFromBond:     false,
+	})
+	s.NoError(err)
+	// check dispute status
+	dispute, err := s.Setup.Disputekeeper.Disputes.Get(ctx, 1)
+	s.NoError(err)
+	s.Equal(types.Voting, dispute.DisputeStatus)
+	ctx, err = simtestutil.NextBlock(s.Setup.App, ctx, time.Minute)
+	s.NoError(err)
+
+	// check pool bals after first dispute
+	notbondedpool = authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName)
+	bal, err = s.Setup.Bankkeeper.Balances.Get(ctx, collections.Join(notbondedpool, "loya"))
+	s.Error(err, "balance should be zero")
+	s.True(bal.IsNil())
+
+	// bonded pool
+	bal, err = s.Setup.Bankkeeper.Balances.Get(ctx, collections.Join(bondedpool, "loya"))
+	s.NoError(err, "balance should be gt zero")
+	s.Equal(sk.PowerReduction(ctx).MulRaw(int64(150+500+99000)).Add(startingBondedPoolbal), bal)
+
+	// propose dispute id 2 slash amount 2_000_000
+	_, err = msgServer.ProposeDispute(ctx, &types.MsgProposeDispute{
+		Creator: repAccs[1].String(),
+		Report: &oracletypes.MicroReport{
+			Reporter:        repAccs[0].String(),
+			Power:           150,
+			QueryType:       "SpotPrice",
+			QueryId:         utils.QueryIDFromData(ethQueryData),
+			AggregateMethod: "weighted-median",
+			Value:           testutil.EncodeValue(29266),
+			Cyclelist:       false,
+			BlockNumber:     uint64(reportBlock),
+		},
+		DisputeCategory: types.Warning,
+		Fee:             sdk.NewCoin(s.Setup.Denom, math.NewInt(2_000_000)), // one percent dispute fee
+		PayFromBond:     false,
+	})
+	s.NoError(err)
+
+	// check dispute status 2
+	dispute, err = s.Setup.Disputekeeper.Disputes.Get(ctx, 2)
+	s.NoError(err)
+	s.Equal(types.Voting, dispute.DisputeStatus)
+	ctx, err = simtestutil.NextBlock(s.Setup.App, ctx, time.Minute)
+	s.NoError(err)
+
+	notbondedpool = authtypes.NewModuleAddress(stakingtypes.NotBondedPoolName)
+	bal, err = s.Setup.Bankkeeper.Balances.Get(ctx, collections.Join(notbondedpool, "loya"))
+	s.Error(err, "balance should be zero")
+	s.True(bal.IsNil())
+
+	voteinfos := []abci.VoteInfo{
+		{
+			Validator: abci.Validator{
+				Address: valAccs[0],
+				Power:   149,
+			},
+		},
+		{
+			Validator: abci.Validator{
+				Address: valAccs[1],
+				Power:   4000,
+			},
+		},
+		{
+			Validator: abci.Validator{
+				Address: valAccs[2],
+				Power:   99000,
+			},
+		},
+	}
+
+	ctx, err = simtestutil.NextBlock(s.Setup.App, ctx, time.Minute)
+	s.NoError(err)
+
+	// during a dispute two validators are jailed (validator slashing)
+	val1, err := s.Setup.Stakingkeeper.GetValidator(ctx, valAccs[0]) // reporter
+	s.NoError(err)
+	consAddr1, err := val1.GetConsAddr()
+	s.NoError(err)
+	signinginfor1, err := s.Setup.SlashingKeeper.GetValidatorSigningInfo(ctx, consAddr1)
+	s.NoError(err)
+	signinginfor1.MissedBlocksCounter = 2
+	signinginfor1.StartHeight = 1
+	s.NoError(s.Setup.SlashingKeeper.SetValidatorSigningInfo(ctx, consAddr1, signinginfor1))
+
+	val2, err := s.Setup.Stakingkeeper.GetValidator(ctx, valAccs[2]) // reporter
+	s.NoError(err)
+
+	consAddr2, err := val2.GetConsAddr()
+	s.NoError(err)
+	signinginfor2, err := s.Setup.SlashingKeeper.GetValidatorSigningInfo(ctx, consAddr2)
+	s.NoError(err)
+	signinginfor2.MissedBlocksCounter = 2
+	signinginfor1.StartHeight = 1
+	s.NoError(s.Setup.SlashingKeeper.SetValidatorSigningInfo(ctx, consAddr2, signinginfor2))
+
+	// move blocks ahead so that they are jailed/slashed
+	ctx = ctx.WithVoteInfos(voteinfos)
+	_, err = s.Setup.App.BeginBlocker(ctx)
+	s.NoError(err)
+	ctx, err = simtestutil.NextBlock(s.Setup.App, ctx, time.Minute)
+	s.NoError(err)
+
+	// both validators jailed
+	val1, err = s.Setup.Stakingkeeper.GetValidator(ctx, valAccs[0]) // reporter
+	s.NoError(err)
+	s.True(val1.Jailed)
+	val2, err = s.Setup.Stakingkeeper.GetValidator(ctx, valAccs[2]) // reporter
+	s.NoError(err)
+	s.True(val2.Jailed)
+
+	ctx, err = simtestutil.NextBlock(s.Setup.App, ctx, time.Minute)
+	s.NoError(err)
+	bal, err = s.Setup.Bankkeeper.Balances.Get(ctx, collections.Join(notbondedpool, "loya"))
+	s.NoError(err, "balance should be gt zero since validators were jailed")
+	s.True(bal.GT(math.ZeroInt()), "amount should be tokens minus the slashed amount, val 0 and val 2 got slashed 1 percen")
+	s.Equal(math.NewInt(int64(147010000+98010000000)), bal) // 147010000 precision ?? should be 147015000
+	votes := []types.MsgVote{
+		{
+			Voter: repAccs[1].String(),
+			Id:    1,
+			Vote:  types.VoteEnum_VOTE_AGAINST,
+		},
+	}
+	for i := range votes {
+		_, err = msgServer.Vote(ctx, &votes[i])
+		s.NoError(err)
+	}
+
+	votes = []types.MsgVote{
+		{
+			Voter: repAccs[1].String(),
+			Id:    2,
+			Vote:  types.VoteEnum_VOTE_AGAINST,
+		},
+	}
+	for i := range votes {
+		_, err = msgServer.Vote(ctx, &votes[i])
+		s.NoError(err)
+	}
+
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour * 72))
+	ctx, err = simtestutil.NextBlock(s.Setup.App, ctx, time.Minute)
+	s.NoError(err)
+	dispute, err = s.Setup.Disputekeeper.Disputes.Get(ctx, 1)
+	s.NoError(err)
+	s.Equal(dispute.DisputeStatus, types.Resolved)
+	vote, err := s.Setup.Disputekeeper.Votes.Get(ctx, 1)
+	s.NoError(err)
+	s.Equal(vote.VoteResult, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST)
+	dispute, err = s.Setup.Disputekeeper.Disputes.Get(ctx, 2)
+	s.NoError(err)
+	s.Equal(dispute.DisputeStatus, types.Resolved)
+	vote, err = s.Setup.Disputekeeper.Votes.Get(ctx, 2)
+	s.NoError(err)
+	s.Equal(vote.VoteResult, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST)
+	// unjail validator 1
+	slashingServer := slashingkeeper.NewMsgServerImpl(s.Setup.SlashingKeeper)
+	_, err = slashingServer.Unjail(ctx, slashingtypes.NewMsgUnjail(valAccs[2].String()))
+	s.NoError(err)
+
+	_, err = simtestutil.NextBlock(s.Setup.App, ctx, time.Minute)
+	s.Error(err)
+
+	// _, err = slashingServer.Unjail(ctx, slashingtypes.NewMsgUnjail(valAccs[0].String()))
+	// s.NoError(err)
 }
