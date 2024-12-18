@@ -1385,9 +1385,16 @@ func (s *IntegrationTestSuite) TestCurrentBug() {
 	_, err = slashingServer.Unjail(ctx, slashingtypes.NewMsgUnjail(valAccs[2].String()))
 	s.NoError(err)
 
-	_, err = simtestutil.NextBlock(s.Setup.App, ctx, time.Minute)
-	s.Error(err)
+	ctx, err = simtestutil.NextBlock(s.Setup.App, ctx, time.Minute)
+	s.NoError(err)
 
-	// _, err = slashingServer.Unjail(ctx, slashingtypes.NewMsgUnjail(valAccs[0].String()))
-	// s.NoError(err)
+	_, err = slashingServer.Unjail(ctx, slashingtypes.NewMsgUnjail(valAccs[0].String()))
+	s.NoError(err)
+
+	ctx, err = simtestutil.NextBlock(s.Setup.App, ctx, time.Minute)
+	s.NoError(err)
+	// should be back to zero/nil
+	bal, err = s.Setup.Bankkeeper.Balances.Get(ctx, collections.Join(notbondedpool, "loya"))
+	s.Error(err, "balance should be zero")
+	s.True(bal.IsNil())
 }
