@@ -162,17 +162,27 @@ func (_m *ReporterKeeper) JailReporter(ctx context.Context, reporterAddr types.A
 }
 
 // ReturnSlashedTokens provides a mock function with given fields: ctx, amt, hashId
-func (_m *ReporterKeeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) error {
+func (_m *ReporterKeeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) (string, error) {
 	ret := _m.Called(ctx, amt, hashId)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, math.Int, []byte) error); ok {
+	var r0 string
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, math.Int, []byte) (string, error)); ok {
+		return rf(ctx, amt, hashId)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, math.Int, []byte) string); ok {
 		r0 = rf(ctx, amt, hashId)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(string)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, math.Int, []byte) error); ok {
+		r1 = rf(ctx, amt, hashId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // TotalReporterPower provides a mock function with given fields: ctx
