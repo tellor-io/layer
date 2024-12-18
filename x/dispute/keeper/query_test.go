@@ -65,7 +65,6 @@ func (s *KeeperTestSuite) TestDisputesQuery() {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			if tc.setup != nil {
 				tc.setup()
