@@ -384,6 +384,8 @@ func (c *Client) getEthRpcUrl() (string, error) {
 	ethRpcUrl := os.Getenv("ETH_RPC_URL")
 	if ethRpcUrl == "" {
 		return "", fmt.Errorf("ETH_RPC_URL not set")
+	} else {
+		fmt.Println("ETH_RPC_URL", ethRpcUrl)
 	}
 	return ethRpcUrl, nil
 }
@@ -392,6 +394,8 @@ func (c *Client) getTokenBridgeContractAddress() (common.Address, error) {
 	tokenBridgeContractAddress := os.Getenv("TOKEN_BRIDGE_CONTRACT")
 	if tokenBridgeContractAddress == "" {
 		return common.Address{}, fmt.Errorf("TOKEN_BRIDGE_CONTRACT not set")
+	} else {
+		fmt.Println("TOKEN_BRIDGE_CONTRACT", tokenBridgeContractAddress)
 	}
 	return common.HexToAddress(tokenBridgeContractAddress), nil
 }
