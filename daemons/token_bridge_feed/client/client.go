@@ -17,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
 	tokenbridge "github.com/tellor-io/layer/daemons/token_bridge_feed/abi"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/log"
 )
@@ -226,6 +227,73 @@ func (c *Client) QueryTokenBridgeContract() error {
 			c.logger.Info("Block height is not final", "blockHeight", depositTicket.BlockHeight)
 			return nil
 		}
+
+		// assemble and add to pending reports
+		queryData, err := c.EncodeQueryData(depositTicket)
+		if err != nil {
+			c.logger.Error("Failed to encode query data", "error", err)
+		}
+		reportValue, err := c.EncodeReportValue(depositTicket)
+		if err != nil {
+			c.logger.Error("Failed to encode report value", "error", err)
+		}
+
+		// Update the token deposits cache
+		c.tokenDepositsCache.AddReport(tokenbridgetypes.DepositReport{QueryData: queryData, Value: reportValue})
+
+		// Update the last reported deposit ID
+		c.lastReportedDepositId = nextDepositId
+		c.logger.Info("Added deposit to pending reports", "depositId", c.lastReportedDepositId)
+	}
+
+	return nil
+}
+
+func (c *Client) QueryTokenBridgeContractForPreviousDeposits() error {
+	// Add retry logic for queries
+	var latestDepositId *big.Int
+	var err error
+
+	for retries := 0; retries < 3; retries++ {
+		latestDepositId, err = c.QueryCurrentDepositId()
+		if err != nil {
+			if retries < 2 {
+				c.logger.Error("Failed to query latest deposit ID, reconnecting...", "attempt", retries+1, "error", err)
+				// Attempt to reconnect
+				if err := c.reconnectEthClient(); err != nil {
+					c.logger.Error("Failed to reconnect", "error", err)
+					time.Sleep(time.Second * 5)
+					continue
+				}
+			} else {
+				return fmt.Errorf("failed to query the latest deposit ID: %w", err)
+			}
+		} else {
+			break
+		}
+	}
+
+	haveNotFoundCompleteDeposit := true
+	depositId := big.NewInt(latestDepositId.Int64())
+	for haveNotFoundCompleteDeposit {
+
+		depositTicket, err := c.QueryDepositDetails(depositId)
+		if err != nil {
+			return fmt.Errorf("failed to query deposit details: %w", err)
+		}
+
+		// Check if the block height is final
+		isFinal, err := c.CheckForFinality(depositTicket.BlockHeight)
+		if err != nil {
+			return fmt.Errorf("failed to check if block height is final: %w", err)
+		}
+
+		if !isFinal {
+			c.logger.Info("Block height is not final", "blockHeight", depositTicket.BlockHeight)
+			return nil
+		}
+
+		queryClient := oracletypes.QueryClient
 
 		// assemble and add to pending reports
 		queryData, err := c.EncodeQueryData(depositTicket)
