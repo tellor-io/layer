@@ -27,6 +27,7 @@ type Client struct {
 	lastReportedDepositId *big.Int
 	logger                log.Logger
 	tokenDepositsCache    *tokenbridgetypes.DepositReports
+	OracleQueryClient 		oracletypes.QueryClient
 
 	daemonStartup sync.WaitGroup
 
@@ -62,12 +63,23 @@ func StartNewClient(ctx context.Context, logger log.Logger, tokenDepositsCache *
 }
 
 func newClient(logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositReports) *Client {
+	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
+	if err != nil {
+		c.logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
+		return err
+	}
+	defer func() {
+		if connErr := grpcClient.CloseConnection(queryConn); connErr != nil {
+			err = connErr
+		}
+	}()
 	logger = logger.With(log.ModuleKey, "tokenbridge-daemon")
 	client := &Client{
 		tickers:            []*time.Ticker{},
 		stops:              []chan bool{},
 		logger:             logger,
 		tokenDepositsCache: tokenDepositsCache,
+		OracleQueryClient: ,
 	}
 
 	// Set the client's daemonStartup state to indicate that the daemon has not finished starting up.
@@ -293,7 +305,7 @@ func (c *Client) QueryTokenBridgeContractForPreviousDeposits() error {
 			return nil
 		}
 
-		queryClient := oracletypes.QueryClient
+		queryClient := oracletypes.QueryClient.GetCurrentAggregateReport()
 
 		// assemble and add to pending reports
 		queryData, err := c.EncodeQueryData(depositTicket)
