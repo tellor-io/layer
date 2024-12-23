@@ -3,6 +3,7 @@ package client
 import (
 	"bytes"
 	"context"
+	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -54,18 +55,43 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 func (c *Client) MonitorTokenBridgeReports(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	var localWG sync.WaitGroup
-	for {
-		localWG.Add(1)
-		go func() {
-			defer localWG.Done()
-			err := c.GenerateDepositMessages(context.Background())
-			if err != nil {
-				c.logger.Error("Error generating deposit messages: ", err)
-			}
-		}()
-		localWG.Wait()
 
-		time.Sleep(10 * time.Second)
+	// Recovery function for goroutines
+	handlePanic := func() {
+		if r := recover(); r != nil {
+			c.logger.Error("Recovered from panic in token bridge monitor",
+				"panic", r,
+				"stack", string(debug.Stack()))
+		}
+		localWG.Done()
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			// Wait for any in-progress operations
+			localWG.Wait()
+			return
+		default:
+			localWG.Add(1)
+			go func() {
+				defer handlePanic()
+
+				// Use timeout context for deposit generation
+				genCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+				defer cancel()
+
+				err := c.GenerateDepositMessages(genCtx)
+				if err != nil {
+					c.logger.Error("Error generating deposit messages",
+						"error", err)
+				}
+			}()
+
+			// Wait for current operation to complete before starting next
+			localWG.Wait()
+			time.Sleep(10 * time.Second)
+		}
 	}
 }
 

@@ -76,6 +76,9 @@ func (c *Client) GenerateDepositMessages(ctx context.Context) error {
 			return fmt.Errorf("transaction failed with code %d", resp.TxResult.Code)
 		}
 
+		// Remove oldest deposit report from cache
+		c.TokenDepositsCache.RemoveOldestReport()
+
 		// Only mark as reported if transaction was successful
 		mutex.Lock()
 		depositReportMap[queryId] = true

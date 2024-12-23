@@ -47,6 +47,15 @@ func (d *DepositReports) RemoveReport(report DepositReport) {
 	}
 }
 
+func (d *DepositReports) RemoveOldestReport() {
+	d.Lock()
+	defer d.Unlock()
+	if len(d.Reports) == 0 {
+		return
+	}
+	d.Reports = d.Reports[1:]
+}
+
 func (d *DepositReports) GetOldestReport() (DepositReport, error) {
 	d.Lock()
 	defer d.Unlock()
@@ -54,6 +63,5 @@ func (d *DepositReports) GetOldestReport() (DepositReport, error) {
 		return DepositReport{}, fmt.Errorf("no pending deposits")
 	}
 	oldest := d.Reports[0]
-	d.Reports = d.Reports[1:]
 	return oldest, nil
 }
