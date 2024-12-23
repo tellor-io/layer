@@ -161,12 +161,12 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 
 func (c *Client) LogProcessStats() {
 	count := runtime.NumGoroutine()
-	c.logger.Debug(fmt.Sprintf("Number of Goroutines: %d\n", count))
+	c.logger.Info(fmt.Sprintf("Number of Goroutines: %d\n", count))
 
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 
-	c.logger.Debug(fmt.Sprintf("Memory Stats: { 'alloc': %d, 'total alloc': %d, 'mallocs': %d, 'frees': %d, 'heap released': %d}", m.Alloc, m.TotalAlloc, m.Mallocs, m.Frees, m.HeapReleased))
+	c.logger.Info(fmt.Sprintf("Memory Stats: { 'alloc': %d, 'total alloc': %d, 'mallocs': %d, 'frees': %d, 'heap released': %d}", m.Alloc, m.TotalAlloc, m.Mallocs, m.Frees, m.HeapReleased))
 
 	pid := int32(os.Getpid())
 	p, err := process.NewProcess(pid)
@@ -188,5 +188,5 @@ func (c *Client) LogProcessStats() {
 		return
 	}
 
-	c.logger.Debug(fmt.Sprintf("CPU Usage: %.2f%%, Num of threads: %d\n", cpuPercent, numThreads))
+	c.logger.Info(fmt.Sprintf("CPU Usage: %.2f%%, Num of threads: %d\n", cpuPercent, numThreads))
 }
