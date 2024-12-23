@@ -58,14 +58,14 @@ func (c *Client) MonitorTokenBridgeReports(ctx context.Context, wg *sync.WaitGro
 		localWG.Add(1)
 		go func() {
 			defer localWG.Done()
-			err := c.generateDepositmessages(context.Background())
+			err := c.GenerateDepositMessages(context.Background())
 			if err != nil {
 				c.logger.Error("Error generating deposit messages: ", err)
 			}
 		}()
 		localWG.Wait()
 
-		time.Sleep(4 * time.Minute)
+		time.Sleep(10 * time.Second)
 	}
 }
 

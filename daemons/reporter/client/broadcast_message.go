@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"time"
 
 	"github.com/tellor-io/layer/utils"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
@@ -22,7 +23,7 @@ import (
 // 	trb, _ = utils.QueryBytesFromString(trbQueryData)
 // )
 
-func (c *Client) generateDepositmessages(ctx context.Context) error {
+func (c *Client) GenerateDepositMessages(ctx context.Context) error {
 	depositQuerydata, value, err := c.deposits()
 	if err != nil {
 		if err.Error() == "no pending deposits" {
@@ -35,22 +36,55 @@ func (c *Client) generateDepositmessages(ctx context.Context) error {
 	mutex.RLock()
 	depositReported := depositReportMap[queryId]
 	mutex.RUnlock()
+
 	if depositReported {
-		return fmt.Errorf("already reported for this bridge deposit tx")
+		c.logger.Info("Skipping already reported deposit", "queryId", queryId)
+		return nil
 	}
+
 	msg := oracletypes.MsgSubmitValue{
 		Creator:   c.accAddr.String(),
 		QueryData: depositQuerydata,
 		Value:     value,
 	}
-	resp, err := c.sendTx(ctx, &msg)
-	if err != nil {
-		c.logger.Error("sending submit deposit transaction", "error", err)
+
+	// Add retry logic for transaction sending
+	maxRetries := 5
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		resp, err := c.sendTx(ctx, &msg)
+		if err != nil {
+			c.logger.Error("submitting deposit report transaction",
+				"error", err,
+				"attempt", attempt,
+				"queryId", queryId)
+
+			if attempt == maxRetries {
+				// Don't mark as reported if all retries failed
+				return fmt.Errorf("failed to submit deposit after %d attempts: %w", maxRetries, err)
+			}
+
+			// Wait before retry with exponential backoff
+			time.Sleep(time.Second * time.Duration(2^attempt))
+			continue
+		}
+
+		// Check transaction success
+		if resp.TxResult.Code != 0 {
+			c.logger.Error("deposit report transaction failed",
+				"code", resp.TxResult.Code,
+				"queryId", queryId)
+			return fmt.Errorf("transaction failed with code %d", resp.TxResult.Code)
+		}
+
+		// Only mark as reported if transaction was successful
+		mutex.Lock()
+		depositReportMap[queryId] = true
+		mutex.Unlock()
+
+		c.logger.Info(fmt.Sprintf("Response from bridge tx report: %v", resp.TxResult))
+
+		return nil
 	}
-	c.logger.Info(fmt.Sprintf("Response from bridge tx report: %v", resp.TxResult))
-	mutex.Lock()
-	depositReportMap[queryId] = true
-	mutex.Unlock()
 
 	return nil
 }

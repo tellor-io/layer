@@ -79,7 +79,7 @@ func (c *Client) start(ctx context.Context) {
 		c.logger.Error("Failed to initialize deposits", "error", err)
 		return
 	}
-	ticker := time.NewTicker(3 * time.Minute)
+	ticker := time.NewTicker(10 * time.Second)
 	defer ticker.Stop()
 
 	for {
