@@ -140,5 +140,7 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 	commitedIds[querymeta.Id] = true
 	mutex.Unlock()
 
+	c.LogProcessStats()
+
 	return nil
 }
