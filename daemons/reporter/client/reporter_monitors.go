@@ -3,6 +3,9 @@ package client
 import (
 	"bytes"
 	"context"
+	"fmt"
+	"os"
+	"runtime"
 	"runtime/debug"
 	"strings"
 	"sync"
@@ -11,6 +14,7 @@ import (
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/shirou/gopsutil/v3/process"
 )
 
 func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) {
@@ -91,6 +95,7 @@ func (c *Client) MonitorTokenBridgeReports(ctx context.Context, wg *sync.WaitGro
 			// Wait for current operation to complete before starting next
 			localWG.Wait()
 			time.Sleep(10 * time.Second)
+			c.LogProcessStats()
 		}
 	}
 }
@@ -152,4 +157,36 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 		// Add a small delay between batches to prevent overwhelming the system
 		time.Sleep(500 * time.Millisecond)
 	}
+}
+
+func (c *Client) LogProcessStats() {
+	count := runtime.NumGoroutine()
+	c.logger.Debug(fmt.Sprintf("Number of Goroutines: %d\n", count))
+
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+
+	c.logger.Debug(fmt.Sprintf("Memory Stats: { 'alloc': %d, 'total alloc': %d, 'mallocs': %d, 'frees': %d, 'heap released': %d}", m.Alloc, m.TotalAlloc, m.Mallocs, m.Frees, m.HeapReleased))
+
+	pid := int32(os.Getpid())
+	p, err := process.NewProcess(pid)
+	if err != nil {
+		c.logger.Error(fmt.Sprintf("Error getting process info: %v\n", err))
+		return
+	}
+
+	// Get CPU usage percentage
+	cpuPercent, err := p.CPUPercent()
+	if err != nil {
+		c.logger.Error(fmt.Sprintf("Error getting CPU percent: %v\n", err))
+		return
+	}
+
+	numThreads, err := p.NumThreads()
+	if err != nil {
+		c.logger.Error(fmt.Sprintf("Error getting num of threads: %v\n", numThreads))
+		return
+	}
+
+	c.logger.Debug(fmt.Sprintf("CPU Usage: %.2f%%, Num of threads: %d\n", cpuPercent, numThreads))
 }
