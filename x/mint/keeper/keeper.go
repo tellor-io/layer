@@ -14,7 +14,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 // Keeper of the mint store
@@ -95,19 +94,17 @@ func (k Keeper) SendInflationaryRewards(ctx context.Context, coins sdk.Coins) er
 	}
 	quarter := coinsAmt.QuoRaw(4)
 	threequarters := coinsAmt.Sub(quarter)
-	outputs := []banktypes.Output{
-		{
-			Address: authtypes.NewModuleAddressOrBech32Address(types.TimeBasedRewards).String(),
-			Coins:   sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters)),
-		},
-		{
-			Address: authtypes.NewModuleAddressOrBech32Address(authtypes.FeeCollectorName).String(),
-			Coins:   sdk.NewCoins(sdk.NewCoin(layer.BondDenom, quarter)),
-		},
-	}
-	moduleAddress := authtypes.NewModuleAddressOrBech32Address(types.ModuleName)
-	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters.Add(quarter))))
-	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+
+	// send 3/4 from mint to time based rewards
+	mintModuleAddress := authtypes.NewModuleAddressOrBech32Address(types.ModuleName).String()
+	timeBasedRewardsModuleAddress := authtypes.NewModuleAddressOrBech32Address(types.TimeBasedRewards).String()
+	k.bankKeeper.SendCoinsFromModuleToModule(ctx, mintModuleAddress, timeBasedRewardsModuleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters)))
+
+	// send 1/4 from mint to fee collector
+	feeCollectorModuleAddress := authtypes.NewModuleAddressOrBech32Address(authtypes.FeeCollectorName).String()
+	k.bankKeeper.SendCoinsFromModuleToModule(ctx, mintModuleAddress, feeCollectorModuleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, quarter)))
+
+	return nil
 }
 
 // GetAuthority returns the module's authority.
