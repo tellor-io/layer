@@ -11,10 +11,9 @@ set -e
 
 # use docker ps to get the container id hashes
 echo "setting variables"
-export ETH_RPC_URL="https://sepolia.infura.io/v3/53ba4f713bf940fb87a58280912231ab"
+export ETH_RPC_URL="https://sepolia.infura.io/v3/your_key_here"
 export TOKEN_BRIDGE_CONTRACT="0xFC1C57F1E466605e3Dd40840bC3e7DdAa400528c"
-export upgrade_binary_path="/Users/sloetter/projects/layer/local_devnet/v2.0.0-audit/layerd"
-export terminal="/Users/sloetter/projects/layer/local_devnet/v2.0.0-audit/layerd"
+export upgrade_binary_path="/path/to/layerd"
 
 # Get all container IDs into an array
 container_ids=($(docker ps -q))
