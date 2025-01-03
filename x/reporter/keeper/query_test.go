@@ -9,6 +9,7 @@ import (
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 )
 
@@ -95,4 +96,19 @@ func TestAllowedAmountExpiration(t *testing.T) {
 	res, err := querier.AllowedAmountExpiration(ctx, &types.QueryAllowedAmountExpirationRequest{})
 	require.NoError(t, err)
 	require.Equal(t, res.Expiration, uint64(ctx.BlockTime().Add(1).UnixMilli()))
+}
+
+func TestRewardClaimStatus(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	querier := keeper.NewQuerier(k)
+	addy := sample.AccAddressBytes()
+	require.NoError(t, k.ClaimStatus.Set(ctx, collections.Join(addy.Bytes(), uint64(10)), true))
+
+	res, err := querier.RewardClaimStatus(ctx, &types.QueryRewardClaimStatusRequest{Id: 10, SelectorAddress: addy.String()})
+	require.NoError(t, err)
+	require.Equal(t, res.Status, true)
+
+	res, err = querier.RewardClaimStatus(ctx, &types.QueryRewardClaimStatusRequest{Id: 1, SelectorAddress: addy.String()})
+	require.NoError(t, err)
+	require.Equal(t, res.Status, false)
 }

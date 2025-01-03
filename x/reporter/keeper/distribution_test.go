@@ -76,8 +76,8 @@ func TestReturnSlashedTokens(t *testing.T) {
 	sk.On("GetValidator", ctx, val2Address).Return(validator2, nil)
 	sk.On("Delegate", ctx, delAddr1, tokenOrigin1.Amount, stakingtypes.Bonded, validator1, false).Return(math.LegacyZeroDec(), nil)
 	sk.On("Delegate", ctx, delAddr2, tokenOrigin2.Amount, stakingtypes.Bonded, validator2, false).Return(math.LegacyZeroDec(), nil)
-
-	require.NoError(t, k.ReturnSlashedTokens(ctx, math.NewIntWithDecimal(2000, 6), []byte("hashId")))
+	_, err = k.ReturnSlashedTokens(ctx, math.NewIntWithDecimal(2000, 6), []byte("hashId"))
+	require.NoError(t, err)
 }
 
 func TestFeeRefund(t *testing.T) {

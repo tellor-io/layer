@@ -53,6 +53,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query how much how much tips a selector has",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}},
 				},
+				{
+					RpcMethod:      "RewardClaimStatus",
+					Use:            "reward-claim-status",
+					Short:          "Query if a reward has been claimed",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}, {ProtoField: "selector_address"}},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
