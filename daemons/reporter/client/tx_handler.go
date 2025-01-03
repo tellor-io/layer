@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
 	cmttypes "github.com/cometbft/cometbft/rpc/core/types"
@@ -115,11 +114,9 @@ func (c Client) WaitForBlockHeight(ctx context.Context, h int64) error {
 	}
 }
 
-var mus sync.Mutex
-
 func (c *Client) sendTx(ctx context.Context, msg ...sdk.Msg) (*cmttypes.ResultTx, error) {
-	mus.Lock()
-	defer mus.Unlock()
+	c.txMutex.Lock()
+	defer c.txMutex.Unlock()
 	block, err := c.cosmosCtx.Client.Block(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error getting block: %w", err)
