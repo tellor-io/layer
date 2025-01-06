@@ -70,11 +70,11 @@ func (c *Client) WaitForTx(ctx context.Context, hash string) (*cmttypes.ResultTx
 	return nil, fmt.Errorf("fetching tx '%s'; err: %w", hash, err)
 }
 
-func (c Client) WaitForNextBlock(ctx context.Context) error {
+func (c *Client) WaitForNextBlock(ctx context.Context) error {
 	return c.WaitForNBlocks(ctx, 1)
 }
 
-func (c Client) WaitForNBlocks(ctx context.Context, n int64) error {
+func (c *Client) WaitForNBlocks(ctx context.Context, n int64) error {
 	start, err := c.LatestBlockHeight(ctx)
 	if err != nil {
 		return err
@@ -82,7 +82,7 @@ func (c Client) WaitForNBlocks(ctx context.Context, n int64) error {
 	return c.WaitForBlockHeight(ctx, start+n)
 }
 
-func (c Client) LatestBlockHeight(ctx context.Context) (int64, error) {
+func (c *Client) LatestBlockHeight(ctx context.Context) (int64, error) {
 	resp, err := c.Status(ctx)
 	if err != nil {
 		return 0, err
@@ -90,11 +90,11 @@ func (c Client) LatestBlockHeight(ctx context.Context) (int64, error) {
 	return resp.SyncInfo.LatestBlockHeight, nil
 }
 
-func (c Client) Status(ctx context.Context) (*cmttypes.ResultStatus, error) {
+func (c *Client) Status(ctx context.Context) (*cmttypes.ResultStatus, error) {
 	return c.cosmosCtx.Client.Status(ctx)
 }
 
-func (c Client) WaitForBlockHeight(ctx context.Context, h int64) error {
+func (c *Client) WaitForBlockHeight(ctx context.Context, h int64) error {
 	ticker := time.NewTicker(time.Millisecond * 500)
 	defer ticker.Stop()
 

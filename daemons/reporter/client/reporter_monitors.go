@@ -10,10 +10,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/shirou/gopsutil/v3/process"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/shirou/gopsutil/v3/process"
 )
 
 const (
