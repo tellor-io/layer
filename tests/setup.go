@@ -205,7 +205,7 @@ type SharedSetup struct {
 	Accountkeeper  authkeeper.AccountKeeper
 	Bankkeeper     bankkeeper.BaseKeeper
 	distrKeeper    distrkeeper.Keeper
-	slashingKeeper slashingkeeper.Keeper
+	SlashingKeeper slashingkeeper.Keeper
 	Stakingkeeper  *stakingkeeper.Keeper
 	Govkeeper      *govkeeper.Keeper
 	Ctx            sdk.Context
@@ -249,7 +249,7 @@ func (s *SharedSetup) SetupTest(t *testing.T) {
 			depinject.Supply(log.NewNopLogger()),
 		),
 		DefaultStartUpConfig(),
-		&s.Accountkeeper, &s.Bankkeeper, &s.Stakingkeeper, &s.slashingKeeper, &s.interfaceRegistry,
+		&s.Accountkeeper, &s.Bankkeeper, &s.Stakingkeeper, &s.SlashingKeeper, &s.interfaceRegistry,
 		&s.appCodec, &s.authConfig, &s.Oraclekeeper, &s.Mintkeeper, &s.Bridgekeeper, &s.GlobalFeekeeper,
 		&s.Disputekeeper, &s.Registrykeeper, &s.Govkeeper, &s.distrKeeper, &s.Reporterkeeper)
 	require.NoError(t, err)
