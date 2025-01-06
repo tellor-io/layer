@@ -192,7 +192,6 @@ func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {
 	s.oracleKeeper.On("FlagAggregateReport", s.ctx, report()).Return(nil)
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			slashAmount, jailTime, err := keeper.GetSlashPercentageAndJailDuration(tc.cat)
 			if tc.name == "Severe" {
