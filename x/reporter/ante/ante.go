@@ -2,6 +2,7 @@ package ante
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/types"
@@ -16,7 +17,7 @@ import (
 
 // param ?
 const (
-	NestedMsgLimit = 7
+	MaxNestedMsgCount = 7
 )
 
 // TrackStakeChangesDecorator is an AnteDecorator that checks if the transaction is going to change stake by more than 5% and disallows the transaction to enter the mempool or be executed if so
@@ -36,7 +37,7 @@ func NewTrackStakeChangesDecorator(rk keeper.Keeper, sk types.StakingKeeper) Tra
 func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool, next sdk.AnteHandler) (sdk.Context, error) {
 	// check if the message type will change stake by more than 5%
 	for _, msg := range tx.GetMsgs() {
-		if err := t.processMessage(ctx, msg); err != nil {
+		if err := t.processMessage(ctx, msg, 1); err != nil {
 			return ctx, err
 		}
 	}
@@ -44,8 +45,11 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	return next(ctx, tx, simulate)
 }
 
-func (t TrackStakeChangesDecorator) processMessage(ctx sdk.Context, msg sdk.Msg) error {
-	var nestedMsg int64
+func (t TrackStakeChangesDecorator) processMessage(ctx sdk.Context, msg sdk.Msg, nestedMsgCount int64) error {
+	fmt.Println("nestedMsgCount: ", nestedMsgCount)
+	if nestedMsgCount > MaxNestedMsgCount {
+		return fmt.Errorf("nested message count exceeds the maximum allowed: Limit is %d", MaxNestedMsgCount)
+	}
 	switch msg := msg.(type) {
 	// if the message is an authz exec, check the inner messages for any stake changes
 	case *authz.MsgExec:
@@ -54,8 +58,8 @@ func (t TrackStakeChangesDecorator) processMessage(ctx sdk.Context, msg sdk.Msg)
 			return err
 		}
 		for _, innerMsg := range innerMsgs {
-			nestedMsg++
-			if err := t.processMessage(ctx, innerMsg); err != nil {
+			nestedMsgCount++
+			if err := t.processMessage(ctx, innerMsg, nestedMsgCount); err != nil {
 				return err
 			}
 		}
