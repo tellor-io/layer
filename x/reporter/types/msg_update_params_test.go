@@ -29,7 +29,7 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 		Authority: sample.AccAddress(),
 		Params: Params{
 			MinCommissionRate: math.LegacyNewDec(5),
-			MinTrb:            math.NewInt(1),
+			MinLoya:           math.NewInt(1),
 			MaxSelectors:      100,
 		},
 	}

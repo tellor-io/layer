@@ -42,11 +42,11 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if err != nil {
 		return nil, err
 	}
-	if params.MinTrb.GT(bondedTokens) {
+	if params.MinLoya.GT(bondedTokens) {
 		return nil, errors.New("address does not have min tokens required to be a reporter with a BONDED validator")
 	}
 	// the min requirement chosen by reporter has gte the min requirement
-	if msg.MinTokensRequired.LT(params.MinTrb) {
+	if msg.MinTokensRequired.LT(params.MinLoya) {
 		return nil, errors.New("reporters chosen min to join must be gte the min requirement")
 	}
 	// reporter can't be previously a selector or a reporter

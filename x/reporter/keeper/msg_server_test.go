@@ -39,7 +39,7 @@ func TestCreateReporter(t *testing.T) {
 	k, sk, _, _, ms, ctx := setupMsgServer(t)
 	addr := sample.AccAddressBytes()
 	sk.On("IterateDelegatorDelegations", ctx, addr, mock.Anything).Return(nil)
-	_, err := ms.CreateReporter(ctx, &types.MsgCreateReporter{ReporterAddress: addr.String(), CommissionRate: types.DefaultMinCommissionRate, MinTokensRequired: types.DefaultMinTrb})
+	_, err := ms.CreateReporter(ctx, &types.MsgCreateReporter{ReporterAddress: addr.String(), CommissionRate: types.DefaultMinCommissionRate, MinTokensRequired: types.DefaultMinLoya})
 	require.ErrorContains(t, err, "address does not have min tokens required to be a reporter with a BONDED validator")
 
 	ctx = ctx.WithBlockHeight(1)
@@ -73,19 +73,19 @@ func TestCreateReporter(t *testing.T) {
 
 	_, err = k.Reporters.Get(ctx, addr)
 	require.ErrorIs(t, err, collections.ErrNotFound)
-	_, err = ms.CreateReporter(ctx, &types.MsgCreateReporter{ReporterAddress: addr.String(), CommissionRate: types.DefaultMinCommissionRate, MinTokensRequired: types.DefaultMinTrb})
+	_, err = ms.CreateReporter(ctx, &types.MsgCreateReporter{ReporterAddress: addr.String(), CommissionRate: types.DefaultMinCommissionRate, MinTokensRequired: types.DefaultMinLoya})
 	require.NoError(t, err)
 
 	reporter, err := k.Reporters.Get(ctx, addr)
 	require.NoError(t, err)
 	require.Equal(t, types.DefaultMinCommissionRate, reporter.CommissionRate)
-	require.Equal(t, types.DefaultMinTrb, reporter.MinTokensRequired)
+	require.Equal(t, types.DefaultMinLoya, reporter.MinTokensRequired)
 }
 
 func TestSelectReporter(t *testing.T) {
 	k, sk, _, _, ms, ctx := setupMsgServer(t)
 	selector, reporter := sample.AccAddressBytes(), sample.AccAddressBytes()
-	require.NoError(t, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb)))
+	require.NoError(t, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya)))
 	sk.On("IterateDelegatorDelegations", ctx, selector, mock.Anything).Return(nil)
 	_, err := ms.SelectReporter(ctx, &types.MsgSelectReporter{SelectorAddress: selector.String(), ReporterAddress: reporter.String()})
 	require.ErrorContains(t, err, "reporter's min requirement 1000000 not met by selector")
@@ -138,7 +138,7 @@ func TestSwitchReporter(t *testing.T) {
 	_, err := ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selector.String(), ReporterAddress: reporter2.String()})
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
-	require.NoError(t, k.Reporters.Set(ctx, reporter2, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb)))
+	require.NoError(t, k.Reporters.Set(ctx, reporter2, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya)))
 	require.NoError(t, k.Params.Set(ctx, types.Params{MaxSelectors: 0}))
 
 	_, err = ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selector.String(), ReporterAddress: reporter2.String()})
@@ -212,7 +212,7 @@ func TestSwitchReporter(t *testing.T) {
 func TestRemoveSelector(t *testing.T) {
 	k, sk, _, _, ms, ctx := setupMsgServer(t)
 	reporter, selector := sample.AccAddressBytes(), sample.AccAddressBytes()
-	require.NoError(t, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb)))
+	require.NoError(t, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya)))
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporter, 1)))
 
 	sk.On("IterateDelegatorDelegations", ctx, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
@@ -263,7 +263,7 @@ func TestRemoveSelector(t *testing.T) {
 func TestUnjailReporter(t *testing.T) {
 	k, _, _, _, msg, ctx := setupMsgServer(t)
 	addr := sample.AccAddressBytes()
-	require.NoError(t, k.Reporters.Set(ctx, addr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb)))
+	require.NoError(t, k.Reporters.Set(ctx, addr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya)))
 	reporter, err := k.Reporters.Get(ctx, addr)
 	require.NoError(t, err)
 	require.False(t, reporter.Jailed)
