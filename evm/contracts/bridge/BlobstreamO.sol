@@ -289,7 +289,11 @@ contract BlobstreamO is ECDSA {
         Signature calldata _sig
     ) internal pure returns (bool) {
         _digest = sha256(abi.encodePacked(_digest));
-        return _signer == ecrecover(_digest, _sig.v, _sig.r, _sig.s);
+        (address _recovered, RecoverError error, ) = tryRecover(_digest, _sig.v, _sig.r, _sig.s);
+        if (error != RecoverError.NoError) {
+            revert InvalidSignature();
+        }
+        return _signer == _recovered;
     }
 }
 
