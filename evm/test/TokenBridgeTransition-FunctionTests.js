@@ -174,6 +174,14 @@ describe("Function Tests - NewTransition", function() {
     await govflex.connect(bigWallet).beginDispute(ETH_QUERY_ID, blocky2.timestamp)
     assert.equal(await tbridge.isInDispute(ETH_QUERY_ID, blocky2.timestamp), true)
   })
+  it.only("retrieveData()", async function () {
+    data = await tbridge.retrieveData(ETH_QUERY_ID, blocky0.timestamp)
+    assert.equal(data, h.uintTob32("100"))
+    data = await tbridge.retrieveData(ETH_QUERY_ID, blocky1.timestamp)
+    assert.equal(data, h.uintTob32("101"))
+    data = await tbridge.retrieveData(ETH_QUERY_ID, blocky2.timestamp)
+    assert.equal(data, h.uintTob32("102"))
+  })
   it("verify()", async function () {
     assert(await tbridge.verify() == 9999, "verify should be correct")
   })
