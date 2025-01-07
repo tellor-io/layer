@@ -285,10 +285,6 @@ func local_request_Query_SpaceAvailableByReporter_0(ctx context.Context, marshal
 
 }
 
-var (
-	filter_Query_AvailableTipsByQuery_0 = &utilities.DoubleArray{Encoding: map[string]int{"selector_address": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
-)
-
 func request_Query_AvailableTipsByQuery_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryAvailableTipsRequest
 	var metadata runtime.ServerMetadata
@@ -311,11 +307,37 @@ func request_Query_AvailableTipsByQuery_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "selector_address", err)
 	}
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	val, ok = pathParams["reporter_address"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "reporter_address")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_AvailableTipsByQuery_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.ReporterAddress, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "reporter_address", err)
+	}
+
+	val, ok = pathParams["query_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
+	}
+
+	protoReq.QueryId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
+	}
+
+	val, ok = pathParams["meta_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "meta_id")
+	}
+
+	protoReq.MetaId, err = runtime.Uint64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "meta_id", err)
 	}
 
 	msg, err := client.AvailableTipsByQuery(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -345,11 +367,37 @@ func local_request_Query_AvailableTipsByQuery_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "selector_address", err)
 	}
 
-	if err := req.ParseForm(); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	val, ok = pathParams["reporter_address"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "reporter_address")
 	}
-	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_AvailableTipsByQuery_0); err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+
+	protoReq.ReporterAddress, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "reporter_address", err)
+	}
+
+	val, ok = pathParams["query_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
+	}
+
+	protoReq.QueryId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
+	}
+
+	val, ok = pathParams["meta_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "meta_id")
+	}
+
+	protoReq.MetaId, err = runtime.Uint64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "meta_id", err)
 	}
 
 	msg, err := server.AvailableTipsByQuery(ctx, &protoReq)
@@ -885,7 +933,7 @@ var (
 
 	pattern_Query_SpaceAvailableByReporter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"tellor-io", "layer", "reporter", "space-available-by-reporter", "reporter_address"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_AvailableTipsByQuery_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"tellor-io", "layer", "reporter", "available-tips", "selector_address"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_AvailableTipsByQuery_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5, 1, 0, 4, 1, 5, 6, 1, 0, 4, 1, 5, 7}, []string{"tellor-io", "layer", "reporter", "available-tips", "selector_address", "reporter_address", "query_id", "meta_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_RewardClaimStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"tellor-io", "layer", "reporter", "reward-claim-status", "id", "selector_address"}, "", runtime.AssumeColonVerbOpt(false)))
 )
