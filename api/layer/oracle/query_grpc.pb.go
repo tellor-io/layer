@@ -30,6 +30,7 @@ type QueryClient interface {
 	GetUserTipTotal(ctx context.Context, in *QueryGetUserTipTotalRequest, opts ...grpc.CallOption) (*QueryGetUserTipTotalResponse, error)
 	// Queries a list of GetAggregatedReport items.
 	GetDataBefore(ctx context.Context, in *QueryGetDataBeforeRequest, opts ...grpc.CallOption) (*QueryGetDataBeforeResponse, error)
+	GetDataAfter(ctx context.Context, in *QueryGetDataAfterRequest, opts ...grpc.CallOption) (*QueryGetDataAfterResponse, error)
 	// Queries a list of GetTimeBasedRewards items.
 	GetTimeBasedRewards(ctx context.Context, in *QueryGetTimeBasedRewardsRequest, opts ...grpc.CallOption) (*QueryGetTimeBasedRewardsResponse, error)
 	// Queries a list of CurrentCyclelistQuery items.
@@ -111,6 +112,15 @@ func (c *queryClient) GetUserTipTotal(ctx context.Context, in *QueryGetUserTipTo
 func (c *queryClient) GetDataBefore(ctx context.Context, in *QueryGetDataBeforeRequest, opts ...grpc.CallOption) (*QueryGetDataBeforeResponse, error) {
 	out := new(QueryGetDataBeforeResponse)
 	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetDataBefore", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetDataAfter(ctx context.Context, in *QueryGetDataAfterRequest, opts ...grpc.CallOption) (*QueryGetDataAfterResponse, error) {
+	out := new(QueryGetDataAfterResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetDataAfter", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -232,6 +242,7 @@ type QueryServer interface {
 	GetUserTipTotal(context.Context, *QueryGetUserTipTotalRequest) (*QueryGetUserTipTotalResponse, error)
 	// Queries a list of GetAggregatedReport items.
 	GetDataBefore(context.Context, *QueryGetDataBeforeRequest) (*QueryGetDataBeforeResponse, error)
+	GetDataAfter(context.Context, *QueryGetDataAfterRequest) (*QueryGetDataAfterResponse, error)
 	// Queries a list of GetTimeBasedRewards items.
 	GetTimeBasedRewards(context.Context, *QueryGetTimeBasedRewardsRequest) (*QueryGetTimeBasedRewardsResponse, error)
 	// Queries a list of CurrentCyclelistQuery items.
@@ -273,6 +284,9 @@ func (UnimplementedQueryServer) GetUserTipTotal(context.Context, *QueryGetUserTi
 }
 func (UnimplementedQueryServer) GetDataBefore(context.Context, *QueryGetDataBeforeRequest) (*QueryGetDataBeforeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDataBefore not implemented")
+}
+func (UnimplementedQueryServer) GetDataAfter(context.Context, *QueryGetDataAfterRequest) (*QueryGetDataAfterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDataAfter not implemented")
 }
 func (UnimplementedQueryServer) GetTimeBasedRewards(context.Context, *QueryGetTimeBasedRewardsRequest) (*QueryGetTimeBasedRewardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTimeBasedRewards not implemented")
@@ -442,6 +456,24 @@ func _Query_GetDataBefore_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).GetDataBefore(ctx, req.(*QueryGetDataBeforeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetDataAfter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetDataAfterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetDataAfter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Query/GetDataAfter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetDataAfter(ctx, req.(*QueryGetDataAfterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -678,6 +710,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetDataBefore",
 			Handler:    _Query_GetDataBefore_Handler,
+		},
+		{
+			MethodName: "GetDataAfter",
+			Handler:    _Query_GetDataAfter_Handler,
 		},
 		{
 			MethodName: "GetTimeBasedRewards",
