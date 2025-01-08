@@ -14,7 +14,7 @@ var (
 	KeyMinCommissionRate = []byte("MinCommissionRate")
 	// TODO: Determine the default value
 	DefaultMinCommissionRate = math.LegacyZeroDec()
-	DefaultMinLoya            = math.NewIntWithDecimal(1, 6)
+	DefaultMinLoya           = math.NewIntWithDecimal(1, 6)
 	DefaultMaxSelectors      = uint64(100)
 )
 
