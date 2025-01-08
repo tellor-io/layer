@@ -45,6 +45,7 @@ type QueryClient interface {
 	GetReportsByAggregate(ctx context.Context, in *QueryGetReportsByAggregateRequest, opts ...grpc.CallOption) (*QueryGetReportsByAggregateResponse, error)
 	GetCurrentQueryByQueryId(ctx context.Context, in *QueryGetCurrentQueryByQueryIdRequest, opts ...grpc.CallOption) (*QueryGetCurrentQueryByQueryIdResponse, error)
 	ReportedIdsByReporter(ctx context.Context, in *QueryReportedIdsByReporterRequest, opts ...grpc.CallOption) (*QueryReportedIdsByReporterResponse, error)
+	GetCycleList(ctx context.Context, in *QueryGetCycleListRequest, opts ...grpc.CallOption) (*QueryGetCycleListResponse, error)
 }
 
 type queryClient struct {
@@ -226,6 +227,15 @@ func (c *queryClient) ReportedIdsByReporter(ctx context.Context, in *QueryReport
 	return out, nil
 }
 
+func (c *queryClient) GetCycleList(ctx context.Context, in *QueryGetCycleListRequest, opts ...grpc.CallOption) (*QueryGetCycleListResponse, error) {
+	out := new(QueryGetCycleListResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetCycleList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -257,6 +267,7 @@ type QueryServer interface {
 	GetReportsByAggregate(context.Context, *QueryGetReportsByAggregateRequest) (*QueryGetReportsByAggregateResponse, error)
 	GetCurrentQueryByQueryId(context.Context, *QueryGetCurrentQueryByQueryIdRequest) (*QueryGetCurrentQueryByQueryIdResponse, error)
 	ReportedIdsByReporter(context.Context, *QueryReportedIdsByReporterRequest) (*QueryReportedIdsByReporterResponse, error)
+	GetCycleList(context.Context, *QueryGetCycleListRequest) (*QueryGetCycleListResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -320,6 +331,9 @@ func (UnimplementedQueryServer) GetCurrentQueryByQueryId(context.Context, *Query
 }
 func (UnimplementedQueryServer) ReportedIdsByReporter(context.Context, *QueryReportedIdsByReporterRequest) (*QueryReportedIdsByReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReportedIdsByReporter not implemented")
+}
+func (UnimplementedQueryServer) GetCycleList(context.Context, *QueryGetCycleListRequest) (*QueryGetCycleListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCycleList not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -676,6 +690,24 @@ func _Query_ReportedIdsByReporter_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetCycleList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetCycleListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetCycleList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Query/GetCycleList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetCycleList(ctx, req.(*QueryGetCycleListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -758,6 +790,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ReportedIdsByReporter",
 			Handler:    _Query_ReportedIdsByReporter_Handler,
+		},
+		{
+			MethodName: "GetCycleList",
+			Handler:    _Query_GetCycleList_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

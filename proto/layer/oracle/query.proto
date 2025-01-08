@@ -94,6 +94,9 @@ service Query {
   rpc ReportedIdsByReporter(QueryReportedIdsByReporterRequest) returns (QueryReportedIdsByReporterResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/reported_ids_by_reporter/{reporter_address}";
   }
+  rpc GetCycleList(QueryGetCycleListRequest) returns (QueryGetCycleListResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_cycle_list";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -289,4 +292,10 @@ message QueryReportedIdsByReporterResponse {
   repeated uint64 ids = 1;
   repeated bytes query_ids =2;
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
+}
+
+message QueryGetCycleListRequest {}
+
+message QueryGetCycleListResponse {
+  repeated bytes cycle_list = 1;
 }

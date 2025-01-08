@@ -119,6 +119,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query reported ids by reporter",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
 				},
+				{
+					RpcMethod:      "GetCycleList",
+					Use:            "get-cycle-list",
+					Short:          "Query cycle list",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
