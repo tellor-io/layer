@@ -45,7 +45,7 @@ service Query {
   }
   //  AvailableTips queries the tips available for withdrawal for a given selector.
   rpc AvailableTipsByQuery(QueryAvailableTipsRequest) returns (QueryAvailableTipsResponse) {
-    option (google.api.http).get = "/tellor-io/layer/reporter/available-tips/{selector_address}";
+    option (google.api.http).get = "/tellor-io/layer/reporter/available-tips/{selector_address}/{reporter_address}/{query_id}/{meta_id}";
   }
   // RewardClaimStatus queries if a query's reward was already claimed by querymeta.Id
   rpc RewardClaimStatus(QueryRewardClaimStatusRequest) returns (QueryRewardClaimStatusResponse) {
