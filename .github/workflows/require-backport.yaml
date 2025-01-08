@@ -1,0 +1,20 @@
+name: Require Backport Label
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  require-backport-label:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check for backport label
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(label => label.name);
+            if (!labels.includes('backport')) {
+              core.setFailed('Pull request must have a backport label');
+            }
