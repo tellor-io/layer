@@ -411,7 +411,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake2() {
 	delAddr = delAddr[1:]
 
 	err := rk.Reporters.Set(ctx, reporter, reportertypes.OracleReporter{
-		MinTokensRequired: reportertypes.DefaultMinTrb,
+		MinTokensRequired: reportertypes.DefaultMinLoya,
 		CommissionRate:    reportertypes.DefaultMinCommissionRate,
 	})
 	s.NoError(err)

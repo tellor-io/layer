@@ -3,6 +3,7 @@ package types
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
 
@@ -22,10 +23,11 @@ func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 	}
 	require.ErrorContains(msg.ValidateBasic(), "invalid authority address")
 
-	// good authority, anything geos for params ?
 	msg = MsgUpdateParams{
 		Authority: sample.AccAddress(),
-		Params:    Params{},
+		Params: Params{
+			MinStakeAmount: math.NewInt(100),
+		},
 	}
 	require.NoError(msg.ValidateBasic())
 }
