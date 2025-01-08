@@ -161,8 +161,8 @@ func (c *Client) sendTx(ctx context.Context, msg ...sdk.Msg) (*cmttypes.ResultTx
 		return nil, fmt.Errorf("error waiting for transaction: %w", err)
 	}
 	c.logger.Info("TxResult", "result", txnResponse.TxResult)
-	fmt.Println("transaction hash ", res.TxHash)
-	fmt.Println("response after submit message", txnResponse.TxResult.Code)
+	c.logger.Info(fmt.Sprintf("transaction hash: %s", res.TxHash))
+	c.logger.Info(fmt.Sprintf("response after submit message: %d", txnResponse.TxResult.Code))
 
 	return txnResponse, nil
 }
