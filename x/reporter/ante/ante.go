@@ -15,7 +15,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// param ?
 const (
 	MaxNestedMsgCount = 7
 )
