@@ -42,52 +42,13 @@ func (c *Client) GenerateDepositMessages(ctx context.Context) error {
 		return nil
 	}
 
-	msg := oracletypes.MsgSubmitValue{
+	msg := &oracletypes.MsgSubmitValue{
 		Creator:   c.accAddr.String(),
 		QueryData: depositQuerydata,
 		Value:     value,
 	}
 
-	// Add retry logic for transaction sending
-	maxRetries := 5
-	for attempt := 1; attempt <= maxRetries; attempt++ {
-		resp, err := c.sendTx(ctx, &msg)
-		if err != nil {
-			c.logger.Error("submitting deposit report transaction",
-				"error", err,
-				"attempt", attempt,
-				"queryId", queryId)
-
-			if attempt == maxRetries {
-				// Don't mark as reported if all retries failed
-				return fmt.Errorf("failed to submit deposit after %d attempts: %w", maxRetries, err)
-			}
-
-			// Wait before retry with exponential backoff
-			time.Sleep(time.Second * time.Duration(2^attempt))
-			continue
-		}
-
-		// Check transaction success
-		if resp.TxResult.Code != 0 {
-			c.logger.Error("deposit report transaction failed",
-				"code", resp.TxResult.Code,
-				"queryId", queryId)
-			return fmt.Errorf("transaction failed with code %d", resp.TxResult.Code)
-		}
-
-		// Remove oldest deposit report from cache
-		c.TokenDepositsCache.RemoveOldestReport()
-
-		// Only mark as reported if transaction was successful
-		mutex.Lock()
-		depositReportMap[queryId] = true
-		mutex.Unlock()
-
-		c.logger.Info(fmt.Sprintf("Response from bridge tx report: %v", resp.TxResult))
-
-		return nil
-	}
+	c.txChan <- TxChannelInfo{Msg: msg, isBridge: true, NumRetries: 5}
 
 	return nil
 }
@@ -131,11 +92,8 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 		Value:     value,
 	}
 
-	resp, err := c.sendTx(ctx, msg)
-	if err != nil {
-		return fmt.Errorf("error sending tx: %w", err)
-	}
-	fmt.Println("response after submit message", resp.TxResult.Code)
+	c.txChan <- TxChannelInfo{Msg: msg, isBridge: false}
+
 	mutex.Lock()
 	commitedIds[querymeta.Id] = true
 	mutex.Unlock()
@@ -143,4 +101,65 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 	c.LogProcessStats()
 
 	return nil
+}
+
+func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChannelInfo) {
+	resp, err := c.sendTx(ctx, data.Msg)
+	if err != nil {
+		c.logger.Error("submitting deposit report transaction",
+			"error", err,
+			"attemptsLeft", data.NumRetries)
+
+		if data.NumRetries == 0 {
+			// Don't mark as reported if all retries failed
+			c.logger.Error(fmt.Sprintf("failed to submit deposit after all allotted attempts attempts: %v", err))
+			return
+		}
+
+		data.NumRetries--
+		c.txChan <- data
+	}
+
+	queryId := utils.QueryIDFromData(data.Msg.GetQueryData())
+
+	// Check transaction success
+	if resp.TxResult.Code != 0 {
+		c.logger.Error("deposit report transaction failed",
+			"code", resp.TxResult.Code,
+			"queryId", queryId)
+		return
+	}
+
+	// Remove oldest deposit report from cache
+	c.TokenDepositsCache.RemoveOldestReport()
+
+	// Only mark as reported if transaction was successful
+	mutex.Lock()
+	depositReportMap[hex.EncodeToString(queryId)] = true
+	mutex.Unlock()
+
+	c.logger.Info(fmt.Sprintf("Response from bridge tx report: %v", resp.TxResult))
+}
+
+func (c *Client) BroadcastTxMsgToChain() {
+	for obj := range c.txChan {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		done := make(chan struct{})
+		go func() {
+			defer close(done)
+			if !obj.isBridge {
+				c.sendTx(ctx, obj.Msg)
+			} else {
+				c.HandleBridgeDepositTxInChannel(ctx, obj)
+			}
+		}()
+
+		select {
+		case <-done:
+			cancel()
+		case <-ctx.Done():
+			c.logger.Error("broadcasting tx timed out")
+			cancel()
+		}
+	}
 }

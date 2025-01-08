@@ -34,6 +34,12 @@ var (
 
 var mutex = &sync.RWMutex{}
 
+type TxChannelInfo struct {
+	Msg        *oracletypes.MsgSubmitValue
+	isBridge   bool
+	NumRetries uint8
+}
+
 type Client struct {
 	// reporter account name
 	AccountName string
@@ -52,17 +58,19 @@ type Client struct {
 	accAddr   sdk.AccAddress
 	minGasFee string
 	// logger is the logger for the daemon.
-	logger  log.Logger
-	txMutex sync.Mutex
+	logger log.Logger
+	txChan chan TxChannelInfo
 }
 
 func NewClient(clctx client.Context, logger log.Logger, accountName, valGasMin string) *Client {
 	logger = logger.With("module", "reporter-client")
+	txChan := make(chan TxChannelInfo)
 	return &Client{
 		AccountName: accountName,
 		cosmosCtx:   clctx,
 		logger:      logger,
 		minGasFee:   valGasMin,
+		txChan:      txChan,
 	}
 }
 
@@ -173,6 +181,9 @@ func StartReporterDaemonTaskLoop(
 	}
 
 	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go client.BroadcastTxMsgToChain()
 
 	wg.Add(1)
 	go client.MonitorCyclelistQuery(ctx, &wg)

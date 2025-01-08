@@ -50,6 +50,7 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 			txCtx, cancel := context.WithTimeout(ctx, defaultTxTimeout)
 			done := make(chan struct{})
 
+			c.logger.Info(fmt.Sprintf("starting to generate spot price report at %d", time.Now().Unix()))
 			go func() {
 				defer close(done)
 				err := c.GenerateAndBroadcastSpotPriceReport(txCtx, querydata, querymeta)
@@ -62,7 +63,7 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 			case <-done:
 				cancel()
 			case <-txCtx.Done():
-				c.logger.Error("report generation timed out")
+				c.logger.Error(fmt.Sprintf("report generation timed out at %d", time.Now().Unix()))
 				cancel()
 			}
 

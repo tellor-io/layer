@@ -49,10 +49,15 @@ func (c *Client) WaitForTx(ctx context.Context, hash string) (*cmttypes.ResultTx
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode tx hash '%s'; err: %w", hash, err)
 	}
+
+	startTimestamp := time.Now().UnixMilli()
 	for waiting {
 		resp, err := c.cosmosCtx.Client.Tx(ctx, bz, false)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
+				if time.Now().UnixMilli()-startTimestamp > 2500 {
+					return nil, fmt.Errorf("fetching tx '%s'; err: No transaction found within the allotted time", hash)
+				}
 				continue
 
 				// Tx not found, wait for next block and try again
@@ -115,8 +120,6 @@ func (c *Client) WaitForBlockHeight(ctx context.Context, h int64) error {
 }
 
 func (c *Client) sendTx(ctx context.Context, msg ...sdk.Msg) (*cmttypes.ResultTx, error) {
-	c.txMutex.Lock()
-	defer c.txMutex.Unlock()
 	block, err := c.cosmosCtx.Client.Block(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error getting block: %w", err)
@@ -159,6 +162,7 @@ func (c *Client) sendTx(ctx context.Context, msg ...sdk.Msg) (*cmttypes.ResultTx
 	}
 	c.logger.Info("TxResult", "result", txnResponse.TxResult)
 	fmt.Println("transaction hash ", res.TxHash)
+	fmt.Println("response after submit message", txnResponse.TxResult.Code)
 
 	return txnResponse, nil
 }
