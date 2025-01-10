@@ -157,7 +157,7 @@ contract TokenBridge is LayerTransition{
     /// @return amount of tokens that can be deposited
     function depositLimit() external view returns (uint256) {
         if (block.timestamp - depositLimitUpdateTime > TWELVE_HOUR_CONSTANT) {
-            return token.balanceOf(address(this)) / DEPOSIT_LIMIT_DENOMINATOR;
+            return (token.balanceOf(address(this)) + _getMintAmount()) / DEPOSIT_LIMIT_DENOMINATOR;
         }
         else{
             return depositLimitRecord;
@@ -168,7 +168,7 @@ contract TokenBridge is LayerTransition{
     /// @return amount of tokens that can be withdrawn
     function withdrawLimit() external view returns (uint256) {
         if (block.timestamp - withdrawLimitUpdateTime > TWELVE_HOUR_CONSTANT) {
-            return token.balanceOf(address(this)) / WITHDRAW_LIMIT_DENOMINATOR;
+            return (token.balanceOf(address(this)) + _getMintAmount()) / WITHDRAW_LIMIT_DENOMINATOR;
         }
         else{
             return withdrawLimitRecord;
@@ -176,6 +176,15 @@ contract TokenBridge is LayerTransition{
     }
 
     /* Internal Functions */
+    /// @notice returns the amount of tokens pending to be minted to this contract
+    /// @return amount of tokens pending to be minted
+    function _getMintAmount() internal view returns (uint256) {
+        uint256 _releasedAmount = (146.94 ether *
+            (block.timestamp - token.getUintVar(keccak256("_LAST_RELEASE_TIME_DAO")))) /
+            86400;
+        return _releasedAmount;
+    }
+
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
     /// @return max amount of tokens that can be deposited
     function _refreshDepositLimit(uint256 _amount) internal returns (uint256) {
