@@ -114,6 +114,9 @@ contract BlobstreamO is ECDSA {
         if (block.timestamp - (validatorTimestamp / MS_PER_SECOND) < unbondingPeriod) {
             revert ValidatorSetNotStale();
         }
+        if (_validatorTimestamp <= validatorTimestamp) {
+            revert ValidatorTimestampMustIncrease();
+        }
         powerThreshold = _powerThreshold;
         validatorTimestamp = _validatorTimestamp;
         lastValidatorSetCheckpoint = _validatorSetCheckpoint;
