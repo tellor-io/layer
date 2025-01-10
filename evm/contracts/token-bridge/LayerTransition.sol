@@ -83,12 +83,10 @@ contract LayerTransition {
         return tellorFlex.isInDispute(_queryId, _timestamp);
     }
 
-    /**
-     * @dev Retrieve value from oracle based on timestamp
-     * @param _queryId being requested
-     * @param _timestamp to retrieve data/value from
-     * @return bytes value for timestamp submitted
-     */
+    /// @notice This forwards retrieveData calls to the old tellorFlex
+    /// @param _queryId being requested
+    /// @param _timestamp to retrieve data/value from
+    /// @return bytes value for timestamp submitted
     function retrieveData(bytes32 _queryId, uint256 _timestamp) external view returns(bytes memory) {
         return tellorFlex.retrieveData(_queryId, _timestamp);
     }

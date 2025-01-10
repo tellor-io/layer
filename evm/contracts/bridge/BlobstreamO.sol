@@ -45,6 +45,7 @@ contract BlobstreamO is ECDSA {
     uint256 public validatorTimestamp; /// Timestamp of the block where validator set is updated.
     address public deployer; /// Address that deployed the contract.
     bool public initialized; /// True if the contract is initialized.
+    uint256 public constant MS_PER_SECOND = 1000; // factor to convert milliseconds to seconds
 
     /*Events*/
     event GuardianResetValidatorSet(uint256 _powerThreshold, uint256 _validatorTimestamp, bytes32 _validatorSetHash);
@@ -111,7 +112,7 @@ contract BlobstreamO is ECDSA {
         if (msg.sender != guardian) {
             revert NotGuardian();
         }
-        if (block.timestamp - (validatorTimestamp / 1000) < unbondingPeriod) {
+        if (block.timestamp - (validatorTimestamp / MS_PER_SECOND) < unbondingPeriod) {
             revert ValidatorSetNotStale();
         }
         powerThreshold = _powerThreshold;
@@ -235,7 +236,7 @@ contract BlobstreamO is ECDSA {
         bytes32 _digest,
         uint256 _powerThreshold
     ) internal view {
-        if (block.timestamp - (validatorTimestamp / 1000) > unbondingPeriod) {
+        if (block.timestamp - (validatorTimestamp / MS_PER_SECOND) > unbondingPeriod) {
             revert StaleValidatorSet();
         }
         uint256 _cumulativePower = 0;
