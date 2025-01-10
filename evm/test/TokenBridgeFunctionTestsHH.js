@@ -206,6 +206,7 @@ describe("TokenBridge - Function Tests", async function () {
         await h.expectThrow(tbridge.depositToLayer(0, tip, LAYER_RECIPIENT)) // zero amount
         await h.expectThrow(tbridge.depositToLayer(h.toWei("21"), tip, LAYER_RECIPIENT)) // over limit
         await h.expectThrow(tbridge.depositToLayer(depositAmount, h.toWei("1.01"), LAYER_RECIPIENT)) // tip over amount
+        await h.expectThrow(tbridge.depositToLayer(h.toWei("1.00000000001"), tip, LAYER_RECIPIENT)) // not divisible by 1e12
         await tbridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)
         blocky1 = await h.getBlock()
         tbridgeBal = await token.balanceOf(await tbridge.address)

@@ -89,6 +89,7 @@ contract TokenBridge is LayerTransition{
     /// @param _layerRecipient your cosmos address on layer (don't get it wrong!!)
     function depositToLayer(uint256 _amount, uint256 _tip, string memory _layerRecipient) external {
         require(_amount > 0.1 ether, "TokenBridge: amount must be greater than 0.1 tokens");
+        require(_amount % TOKEN_DECIMAL_PRECISION_MULTIPLIER == 0, "TokenBridge: amount must be divisible by 1e12");
         require(_amount <= _refreshDepositLimit(_amount), "TokenBridge: amount exceeds deposit limit for time period");
         require(_tip <= _amount, "TokenBridge: tip must be less than or equal to amount");
         if (_tip > 0) {
