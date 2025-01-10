@@ -27,9 +27,9 @@ contract TokenBridge is LayerTransition{
     uint256 public constant TWELVE_HOUR_UPDATE_INTERVAL = 12 hours; // deposit and withdraw limits update interval
     uint256 public constant WITHDRAW_LIMIT_DENOMINATOR = 100e18 / 5e18; // 100/withdrawLimitPercentage
 
-    mapping(uint256 => bool) public withdrawClaimed; // withdraw id => claimed status
-    mapping(address => uint256) public tokensToClaim; // recipient => extra amount to claim
-    mapping(uint256 => DepositDetails) public deposits; // deposit id => deposit details
+    mapping(uint256 depositId => DepositDetails) public deposits; // deposit id => deposit details
+    mapping(address recipient => uint256 extraAmountToClaim) public tokensToClaim; // recipient => extra amount to claim
+    mapping(uint256 withdrawId => bool claimed) public withdrawClaimed; // withdraw id => claimed status
 
     struct DepositDetails {
         address sender;
