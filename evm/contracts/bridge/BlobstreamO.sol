@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.19;
 
-import "./ECDSA.sol";
+import {ECDSA} from "./ECDSA.sol";
 import "./Constants.sol";
 
 struct OracleAttestationData {
