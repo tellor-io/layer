@@ -57,7 +57,6 @@ contract BlobstreamO is ECDSA {
     error InvalidPowerThreshold();
     error InvalidSignature();
     error MalformedCurrentValidatorSet();
-    error NotConsensusValue();
     error NotDeployer();
     error NotGuardian();
     error StaleValidatorSet();
