@@ -47,6 +47,7 @@ contract BlobstreamO is ECDSA {
     bool public initialized; /// True if the contract is initialized.
 
     /*Events*/
+    event GuardianResetValidatorSet(uint256 _powerThreshold, uint256 _validatorTimestamp, bytes32 _validatorSetHash);
     event ValidatorSetUpdated(uint256 _powerThreshold, uint256 _validatorTimestamp, bytes32 _validatorSetHash);
 
     /*Errors*/
@@ -116,6 +117,7 @@ contract BlobstreamO is ECDSA {
         powerThreshold = _powerThreshold;
         validatorTimestamp = _validatorTimestamp;
         lastValidatorSetCheckpoint = _validatorSetCheckpoint;
+        emit GuardianResetValidatorSet(_powerThreshold, _validatorTimestamp, _validatorSetCheckpoint);
     }
 
     /// @notice This updates the validator set by checking that the validators
