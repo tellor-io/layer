@@ -17,6 +17,31 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	return CheckClosedDisputesForExecution(ctx, k)
 }
 
+// SetBlockInfo logic should be in EndBlocker so that BlockInfo records the correct values after all delegations and tip additions for the block have been processed
+func EndBlocker(ctx context.Context, k keeper.Keeper) error {
+	// check if a dispute has been opened at the current block height
+	iter, err := k.Disputes.Indexes.OpenDisputes.MatchExact(ctx, true)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		key, err := iter.PrimaryKey()
+		if err != nil {
+			return err
+		}
+		dispute, err := k.Disputes.Get(ctx, key)
+		if err != nil {
+			return err
+		}
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		if dispute.BlockNumber == uint64(sdkCtx.BlockHeight()) {
+			k.SetBlockInfo(ctx, dispute.HashId)
+		}
+	}
+	return nil
+}
+
 // Checks for expired prevote disputes and sets them to failed if expired.
 // Also checks whether any open disputes' vote periods have ended and tallies the vote if so.
 func CheckOpenDisputesForExpiration(ctx context.Context, k keeper.Keeper) error {

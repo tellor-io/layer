@@ -31,5 +31,7 @@ func (k msgServer) UpdateTeam(ctx context.Context, msg *types.MsgUpdateTeam) (*t
 	if err := k.Params.Set(ctx, param); err != nil {
 		return nil, err
 	}
+	// if the team has voted on a dispute, transfer vote to the new address
+	
 	return &types.MsgUpdateTeamResponse{}, nil
 }
