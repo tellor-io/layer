@@ -60,6 +60,29 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 	if msg.Amount.Amount.GT(fee) {
 		msg.Amount.Amount = fee
 	}
+	// accumulate the amount in DisputeFeePayer for multiple fee additions while ensuring the FromBond value remains consistent to prevent refund misallocation
+	payer, err := k.Keeper.DisputeFeePayer.Get(ctx, collections.Join(dispute.DisputeId, sender.Bytes()))
+	// if payer does not exist, set it
+	if err != nil {
+		// return if error besides not found
+		if err != collections.ErrNotFound {
+			return nil, err
+		}
+		// dispute fee payer
+		if err := k.Keeper.DisputeFeePayer.Set(ctx, collections.Join(dispute.DisputeId, sender.Bytes()), types.PayerInfo{
+			Amount:   msg.Amount.Amount,
+			FromBond: msg.PayFromBond,
+		}); err != nil {
+			return nil, err
+		}
+	} else {
+		// if payer exists and msg.PayFromBond matches what is stored, add current msg amount to payer amount
+		if payer.FromBond != msg.PayFromBond {
+			return nil, errors.New("PayFromBond must match previously paid fee origin")
+		}
+		msg.Amount.Amount = msg.Amount.Amount.Add(payer.Amount)
+	}
+
 	// dispute fee payer
 	if err := k.Keeper.DisputeFeePayer.Set(ctx, collections.Join(dispute.DisputeId, sender.Bytes()), types.PayerInfo{
 		Amount:   msg.Amount.Amount,
