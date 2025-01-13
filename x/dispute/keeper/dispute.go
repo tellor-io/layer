@@ -131,10 +131,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 			return err
 		}
 	}
-	err = k.SetBlockInfo(ctx, dispute.HashId)
-	if err != nil {
-		return err
-	}
+
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"new_dispute",
