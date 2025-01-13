@@ -84,7 +84,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		voteCounts = types.StakeholderVoteCounts{
 			Users:        types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
 			Reporters:    types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
-			Tokenholders: types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
 			Team:         types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
 		}
 	}
@@ -183,33 +182,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
 	}
 
-	tokenSupply := k.GetTotalSupply(ctx)
-
-	tallies.ForVotes.TokenHolders = math.NewIntFromUint64(voteCounts.Tokenholders.Support)
-	tallies.AgainstVotes.TokenHolders = math.NewIntFromUint64(voteCounts.Tokenholders.Against)
-	tallies.Invalid.TokenHolders = math.NewIntFromUint64(voteCounts.Tokenholders.Invalid)
-	tokenHolderVoteSum := tallies.ForVotes.TokenHolders.Add(tallies.AgainstVotes.TokenHolders).Add(tallies.Invalid.TokenHolders)
-	totalRatio = totalRatio.Add(Ratio(tokenSupply, tokenHolderVoteSum))
-
-	if !tokenHolderVoteSum.IsZero() {
-		tokenHolderVoteSumDec := math.LegacyNewDecFromInt(tokenHolderVoteSum)
-		tokenHoldersForVotesDec := math.LegacyNewDecFromInt(tallies.ForVotes.TokenHolders)
-		tokenHoldersAgainstVotesDec := math.LegacyNewDecFromInt(tallies.AgainstVotes.TokenHolders)
-		tokenHoldersInvalidVotesDec := math.LegacyNewDecFromInt(tallies.Invalid.TokenHolders)
-
-		forTokenHoldersDec := tokenHoldersForVotesDec.Mul(powerReductionDec).Quo(tokenHolderVoteSumDec)
-		againstTokenHoldersDec := tokenHoldersAgainstVotesDec.Mul(powerReductionDec).Quo(tokenHolderVoteSumDec)
-		invalidTokenHoldersDec := tokenHoldersInvalidVotesDec.Mul(powerReductionDec).Quo(tokenHolderVoteSumDec)
-		scaledSupportDec = scaledSupportDec.Add(forTokenHoldersDec)
-		scaledAgainstDec = scaledAgainstDec.Add(againstTokenHoldersDec)
-		scaledInvalidDec = scaledInvalidDec.Add(invalidTokenHoldersDec)
-	}
-	if totalRatio.GTE(math.NewInt(51).Mul(layertypes.PowerReduction)) {
-		dispute.DisputeStatus = types.Resolved
-		dispute.Open = false
-		dispute.PendingExecution = true
-		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupportDec.TruncateInt(), scaledAgainstDec.TruncateInt(), scaledInvalidDec.TruncateInt(), true)
-	}
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	// quorum not reached case
 	if vote.VoteEnd.Before(sdkctx.BlockTime()) {

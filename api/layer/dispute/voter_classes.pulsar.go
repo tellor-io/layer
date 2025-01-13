@@ -15,18 +15,16 @@ import (
 )
 
 var (
-	md_VoterClasses              protoreflect.MessageDescriptor
-	fd_VoterClasses_reporters    protoreflect.FieldDescriptor
-	fd_VoterClasses_tokenHolders protoreflect.FieldDescriptor
-	fd_VoterClasses_users        protoreflect.FieldDescriptor
-	fd_VoterClasses_team         protoreflect.FieldDescriptor
+	md_VoterClasses           protoreflect.MessageDescriptor
+	fd_VoterClasses_reporters protoreflect.FieldDescriptor
+	fd_VoterClasses_users     protoreflect.FieldDescriptor
+	fd_VoterClasses_team      protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_dispute_voter_classes_proto_init()
 	md_VoterClasses = File_layer_dispute_voter_classes_proto.Messages().ByName("VoterClasses")
 	fd_VoterClasses_reporters = md_VoterClasses.Fields().ByName("reporters")
-	fd_VoterClasses_tokenHolders = md_VoterClasses.Fields().ByName("tokenHolders")
 	fd_VoterClasses_users = md_VoterClasses.Fields().ByName("users")
 	fd_VoterClasses_team = md_VoterClasses.Fields().ByName("team")
 }
@@ -102,12 +100,6 @@ func (x *fastReflection_VoterClasses) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
-	if x.TokenHolders != "" {
-		value := protoreflect.ValueOfString(x.TokenHolders)
-		if !f(fd_VoterClasses_tokenHolders, value) {
-			return
-		}
-	}
 	if x.Users != "" {
 		value := protoreflect.ValueOfString(x.Users)
 		if !f(fd_VoterClasses_users, value) {
@@ -137,8 +129,6 @@ func (x *fastReflection_VoterClasses) Has(fd protoreflect.FieldDescriptor) bool 
 	switch fd.FullName() {
 	case "layer.dispute.VoterClasses.reporters":
 		return x.Reporters != ""
-	case "layer.dispute.VoterClasses.tokenHolders":
-		return x.TokenHolders != ""
 	case "layer.dispute.VoterClasses.users":
 		return x.Users != ""
 	case "layer.dispute.VoterClasses.team":
@@ -161,8 +151,6 @@ func (x *fastReflection_VoterClasses) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.dispute.VoterClasses.reporters":
 		x.Reporters = ""
-	case "layer.dispute.VoterClasses.tokenHolders":
-		x.TokenHolders = ""
 	case "layer.dispute.VoterClasses.users":
 		x.Users = ""
 	case "layer.dispute.VoterClasses.team":
@@ -185,9 +173,6 @@ func (x *fastReflection_VoterClasses) Get(descriptor protoreflect.FieldDescripto
 	switch descriptor.FullName() {
 	case "layer.dispute.VoterClasses.reporters":
 		value := x.Reporters
-		return protoreflect.ValueOfString(value)
-	case "layer.dispute.VoterClasses.tokenHolders":
-		value := x.TokenHolders
 		return protoreflect.ValueOfString(value)
 	case "layer.dispute.VoterClasses.users":
 		value := x.Users
@@ -217,8 +202,6 @@ func (x *fastReflection_VoterClasses) Set(fd protoreflect.FieldDescriptor, value
 	switch fd.FullName() {
 	case "layer.dispute.VoterClasses.reporters":
 		x.Reporters = value.Interface().(string)
-	case "layer.dispute.VoterClasses.tokenHolders":
-		x.TokenHolders = value.Interface().(string)
 	case "layer.dispute.VoterClasses.users":
 		x.Users = value.Interface().(string)
 	case "layer.dispute.VoterClasses.team":
@@ -245,8 +228,6 @@ func (x *fastReflection_VoterClasses) Mutable(fd protoreflect.FieldDescriptor) p
 	switch fd.FullName() {
 	case "layer.dispute.VoterClasses.reporters":
 		panic(fmt.Errorf("field reporters of message layer.dispute.VoterClasses is not mutable"))
-	case "layer.dispute.VoterClasses.tokenHolders":
-		panic(fmt.Errorf("field tokenHolders of message layer.dispute.VoterClasses is not mutable"))
 	case "layer.dispute.VoterClasses.users":
 		panic(fmt.Errorf("field users of message layer.dispute.VoterClasses is not mutable"))
 	case "layer.dispute.VoterClasses.team":
@@ -265,8 +246,6 @@ func (x *fastReflection_VoterClasses) Mutable(fd protoreflect.FieldDescriptor) p
 func (x *fastReflection_VoterClasses) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.dispute.VoterClasses.reporters":
-		return protoreflect.ValueOfString("")
-	case "layer.dispute.VoterClasses.tokenHolders":
 		return protoreflect.ValueOfString("")
 	case "layer.dispute.VoterClasses.users":
 		return protoreflect.ValueOfString("")
@@ -345,10 +324,6 @@ func (x *fastReflection_VoterClasses) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.TokenHolders)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		l = len(x.Users)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
@@ -391,19 +366,12 @@ func (x *fastReflection_VoterClasses) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], x.Team)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Team)))
 			i--
-			dAtA[i] = 0x22
+			dAtA[i] = 0x1a
 		}
 		if len(x.Users) > 0 {
 			i -= len(x.Users)
 			copy(dAtA[i:], x.Users)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Users)))
-			i--
-			dAtA[i] = 0x1a
-		}
-		if len(x.TokenHolders) > 0 {
-			i -= len(x.TokenHolders)
-			copy(dAtA[i:], x.TokenHolders)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.TokenHolders)))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -497,38 +465,6 @@ func (x *fastReflection_VoterClasses) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TokenHolders", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.TokenHolders = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 3:
-				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Users", wireType)
 				}
 				var stringLen uint64
@@ -559,7 +495,7 @@ func (x *fastReflection_VoterClasses) ProtoMethods() *protoiface.Methods {
 				}
 				x.Users = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			case 4:
+			case 3:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Team", wireType)
 				}
@@ -627,10 +563,9 @@ func (x *fastReflection_VoterClasses) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_VoteGroup              protoreflect.MessageDescriptor
-	fd_VoteGroup_users        protoreflect.FieldDescriptor
-	fd_VoteGroup_reporters    protoreflect.FieldDescriptor
-	fd_VoteGroup_tokenHolders protoreflect.FieldDescriptor
+	md_VoteGroup           protoreflect.MessageDescriptor
+	fd_VoteGroup_users     protoreflect.FieldDescriptor
+	fd_VoteGroup_reporters protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -638,7 +573,6 @@ func init() {
 	md_VoteGroup = File_layer_dispute_voter_classes_proto.Messages().ByName("VoteGroup")
 	fd_VoteGroup_users = md_VoteGroup.Fields().ByName("users")
 	fd_VoteGroup_reporters = md_VoteGroup.Fields().ByName("reporters")
-	fd_VoteGroup_tokenHolders = md_VoteGroup.Fields().ByName("tokenHolders")
 }
 
 var _ protoreflect.Message = (*fastReflection_VoteGroup)(nil)
@@ -718,12 +652,6 @@ func (x *fastReflection_VoteGroup) Range(f func(protoreflect.FieldDescriptor, pr
 			return
 		}
 	}
-	if len(x.TokenHolders) != 0 {
-		value := protoreflect.ValueOfBytes(x.TokenHolders)
-		if !f(fd_VoteGroup_tokenHolders, value) {
-			return
-		}
-	}
 }
 
 // Has reports whether a field is populated.
@@ -743,8 +671,6 @@ func (x *fastReflection_VoteGroup) Has(fd protoreflect.FieldDescriptor) bool {
 		return len(x.Users) != 0
 	case "layer.dispute.VoteGroup.reporters":
 		return len(x.Reporters) != 0
-	case "layer.dispute.VoteGroup.tokenHolders":
-		return len(x.TokenHolders) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteGroup"))
@@ -765,8 +691,6 @@ func (x *fastReflection_VoteGroup) Clear(fd protoreflect.FieldDescriptor) {
 		x.Users = nil
 	case "layer.dispute.VoteGroup.reporters":
 		x.Reporters = nil
-	case "layer.dispute.VoteGroup.tokenHolders":
-		x.TokenHolders = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteGroup"))
@@ -788,9 +712,6 @@ func (x *fastReflection_VoteGroup) Get(descriptor protoreflect.FieldDescriptor) 
 		return protoreflect.ValueOfBytes(value)
 	case "layer.dispute.VoteGroup.reporters":
 		value := x.Reporters
-		return protoreflect.ValueOfBytes(value)
-	case "layer.dispute.VoteGroup.tokenHolders":
-		value := x.TokenHolders
 		return protoreflect.ValueOfBytes(value)
 	default:
 		if descriptor.IsExtension() {
@@ -816,8 +737,6 @@ func (x *fastReflection_VoteGroup) Set(fd protoreflect.FieldDescriptor, value pr
 		x.Users = value.Bytes()
 	case "layer.dispute.VoteGroup.reporters":
 		x.Reporters = value.Bytes()
-	case "layer.dispute.VoteGroup.tokenHolders":
-		x.TokenHolders = value.Bytes()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteGroup"))
@@ -842,8 +761,6 @@ func (x *fastReflection_VoteGroup) Mutable(fd protoreflect.FieldDescriptor) prot
 		panic(fmt.Errorf("field users of message layer.dispute.VoteGroup is not mutable"))
 	case "layer.dispute.VoteGroup.reporters":
 		panic(fmt.Errorf("field reporters of message layer.dispute.VoteGroup is not mutable"))
-	case "layer.dispute.VoteGroup.tokenHolders":
-		panic(fmt.Errorf("field tokenHolders of message layer.dispute.VoteGroup is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.VoteGroup"))
@@ -860,8 +777,6 @@ func (x *fastReflection_VoteGroup) NewField(fd protoreflect.FieldDescriptor) pro
 	case "layer.dispute.VoteGroup.users":
 		return protoreflect.ValueOfBytes(nil)
 	case "layer.dispute.VoteGroup.reporters":
-		return protoreflect.ValueOfBytes(nil)
-	case "layer.dispute.VoteGroup.tokenHolders":
 		return protoreflect.ValueOfBytes(nil)
 	default:
 		if fd.IsExtension() {
@@ -940,10 +855,6 @@ func (x *fastReflection_VoteGroup) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.TokenHolders)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -972,13 +883,6 @@ func (x *fastReflection_VoteGroup) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.TokenHolders) > 0 {
-			i -= len(x.TokenHolders)
-			copy(dAtA[i:], x.TokenHolders)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.TokenHolders)))
-			i--
-			dAtA[i] = 0x1a
 		}
 		if len(x.Reporters) > 0 {
 			i -= len(x.Reporters)
@@ -1111,40 +1015,6 @@ func (x *fastReflection_VoteGroup) ProtoMethods() *protoiface.Methods {
 					x.Reporters = []byte{}
 				}
 				iNdEx = postIndex
-			case 3:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TokenHolders", wireType)
-				}
-				var byteLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					byteLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if byteLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + byteLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.TokenHolders = append(x.TokenHolders[:0], dAtA[iNdEx:postIndex]...)
-				if x.TokenHolders == nil {
-					x.TokenHolders = []byte{}
-				}
-				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1198,10 +1068,9 @@ type VoterClasses struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Reporters    string `protobuf:"bytes,1,opt,name=reporters,proto3" json:"reporters,omitempty"`
-	TokenHolders string `protobuf:"bytes,2,opt,name=tokenHolders,proto3" json:"tokenHolders,omitempty"`
-	Users        string `protobuf:"bytes,3,opt,name=users,proto3" json:"users,omitempty"`
-	Team         string `protobuf:"bytes,4,opt,name=team,proto3" json:"team,omitempty"`
+	Reporters string `protobuf:"bytes,1,opt,name=reporters,proto3" json:"reporters,omitempty"`
+	Users     string `protobuf:"bytes,2,opt,name=users,proto3" json:"users,omitempty"`
+	Team      string `protobuf:"bytes,3,opt,name=team,proto3" json:"team,omitempty"`
 }
 
 func (x *VoterClasses) Reset() {
@@ -1231,13 +1100,6 @@ func (x *VoterClasses) GetReporters() string {
 	return ""
 }
 
-func (x *VoterClasses) GetTokenHolders() string {
-	if x != nil {
-		return x.TokenHolders
-	}
-	return ""
-}
-
 func (x *VoterClasses) GetUsers() string {
 	if x != nil {
 		return x.Users
@@ -1257,9 +1119,8 @@ type VoteGroup struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Users        []byte `protobuf:"bytes,1,opt,name=users,proto3" json:"users,omitempty"`
-	Reporters    []byte `protobuf:"bytes,2,opt,name=reporters,proto3" json:"reporters,omitempty"`
-	TokenHolders []byte `protobuf:"bytes,3,opt,name=tokenHolders,proto3" json:"tokenHolders,omitempty"`
+	Users     []byte `protobuf:"bytes,1,opt,name=users,proto3" json:"users,omitempty"`
+	Reporters []byte `protobuf:"bytes,2,opt,name=reporters,proto3" json:"reporters,omitempty"`
 }
 
 func (x *VoteGroup) Reset() {
@@ -1296,13 +1157,6 @@ func (x *VoteGroup) GetReporters() []byte {
 	return nil
 }
 
-func (x *VoteGroup) GetTokenHolders() []byte {
-	if x != nil {
-		return x.TokenHolders
-	}
-	return nil
-}
-
 var File_layer_dispute_voter_classes_proto protoreflect.FileDescriptor
 
 var file_layer_dispute_voter_classes_proto_rawDesc = []byte{
@@ -1312,43 +1166,36 @@ var file_layer_dispute_voter_classes_proto_rawDesc = []byte{
 	0x74, 0x65, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67,
 	0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0xae, 0x02, 0x0a, 0x0c, 0x56, 0x6f, 0x74, 0x65, 0x72, 0x43, 0x6c, 0x61,
+	0x6f, 0x74, 0x6f, 0x22, 0xdd, 0x01, 0x0a, 0x0c, 0x56, 0x6f, 0x74, 0x65, 0x72, 0x43, 0x6c, 0x61,
 	0x73, 0x73, 0x65, 0x73, 0x12, 0x49, 0x0a, 0x09, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
 	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f,
 	0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61,
 	0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x49, 0x6e, 0x74, 0x52, 0x09, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x12,
-	0x4f, 0x0a, 0x0c, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x48, 0x6f, 0x6c, 0x64, 0x65, 0x72, 0x73, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68,
-	0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49,
-	0x6e, 0x74, 0x52, 0x0c, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x48, 0x6f, 0x6c, 0x64, 0x65, 0x72, 0x73,
-	0x12, 0x41, 0x0a, 0x05, 0x75, 0x73, 0x65, 0x72, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42,
-	0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73,
-	0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4,
-	0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x05, 0x75, 0x73,
-	0x65, 0x72, 0x73, 0x12, 0x3f, 0x0a, 0x04, 0x74, 0x65, 0x61, 0x6d, 0x18, 0x04, 0x20, 0x01, 0x28,
-	0x09, 0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74,
-	0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x04,
-	0x74, 0x65, 0x61, 0x6d, 0x22, 0x63, 0x0a, 0x09, 0x56, 0x6f, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75,
-	0x70, 0x12, 0x14, 0x0a, 0x05, 0x75, 0x73, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c,
-	0x52, 0x05, 0x75, 0x73, 0x65, 0x72, 0x73, 0x12, 0x1c, 0x0a, 0x09, 0x72, 0x65, 0x70, 0x6f, 0x72,
-	0x74, 0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x72, 0x65, 0x70, 0x6f,
-	0x72, 0x74, 0x65, 0x72, 0x73, 0x12, 0x22, 0x0a, 0x0c, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x48, 0x6f,
-	0x6c, 0x64, 0x65, 0x72, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0c, 0x74, 0x6f, 0x6b,
-	0x65, 0x6e, 0x48, 0x6f, 0x6c, 0x64, 0x65, 0x72, 0x73, 0x42, 0xa9, 0x01, 0x0a, 0x11, 0x63, 0x6f,
-	0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x42,
-	0x11, 0x56, 0x6f, 0x74, 0x65, 0x72, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75,
-	0x74, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x44, 0x58, 0xaa, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72,
-	0x2e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xca, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72,
-	0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xe2, 0x02, 0x19, 0x4c, 0x61, 0x79, 0x65, 0x72,
-	0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x44, 0x69,
-	0x73, 0x70, 0x75, 0x74, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x41, 0x0a, 0x05, 0x75, 0x73, 0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x2b,
+	0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64,
+	0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2, 0xb4, 0x2d,
+	0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x05, 0x75, 0x73, 0x65,
+	0x72, 0x73, 0x12, 0x3f, 0x0a, 0x04, 0x74, 0x65, 0x61, 0x6d, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
+	0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74, 0xd2,
+	0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x52, 0x04, 0x74,
+	0x65, 0x61, 0x6d, 0x22, 0x3f, 0x0a, 0x09, 0x56, 0x6f, 0x74, 0x65, 0x47, 0x72, 0x6f, 0x75, 0x70,
+	0x12, 0x14, 0x0a, 0x05, 0x75, 0x73, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x05, 0x75, 0x73, 0x65, 0x72, 0x73, 0x12, 0x1c, 0x0a, 0x09, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74,
+	0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x72, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x73, 0x42, 0xa9, 0x01, 0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x42, 0x11, 0x56, 0x6f, 0x74, 0x65,
+	0x72, 0x43, 0x6c, 0x61, 0x73, 0x73, 0x65, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
+	0x2c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c,
+	0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xa2, 0x02, 0x03,
+	0x4c, 0x44, 0x58, 0xaa, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x44, 0x69, 0x73, 0x70,
+	0x75, 0x74, 0x65, 0xca, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x44, 0x69, 0x73, 0x70,
+	0x75, 0x74, 0x65, 0xe2, 0x02, 0x19, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x44, 0x69, 0x73, 0x70,
+	0x75, 0x74, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
+	0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

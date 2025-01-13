@@ -58,12 +58,8 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if err != nil {
 		return nil, err
 	}
-	acctBal, err := k.SetTokenholderVote(ctx, msg.Id, voterAcc, dispute.BlockNumber, msg.Vote)
-	if err != nil {
-		return nil, err
-	}
 	// totalSupply := k.GetTotalSupply(ctx)
-	voterPower := teampower.Add(upower).Add(repP).Add(acctBal)
+	voterPower := teampower.Add(upower).Add(repP)
 	if voterPower.IsZero() {
 		return nil, errors.New("voter power is zero")
 	}
@@ -71,7 +67,6 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 		Vote:             msg.Vote,
 		VoterPower:       voterPower,
 		ReporterPower:    repP,
-		TokenholderPower: acctBal,
 	}
 	if err := k.Voter.Set(ctx, collections.Join(vote.Id, voterAcc.Bytes()), voterVote); err != nil {
 		return nil, err

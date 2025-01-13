@@ -73,19 +73,16 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 	}
 
 	addrReporterPower := math.ZeroInt()
-	addrTokenholderPower := math.ZeroInt()
 	addrUserPower := math.ZeroInt()
 
 	globalReporterPower := math.ZeroInt()
 	globalUserPower := math.ZeroInt()
-	globalTokenholderPower := math.ZeroInt()
 
 	for _, pastId := range dispute.PrevDisputeIds {
 		pastVoterInfo, err := k.Voter.Get(ctx, collections.Join(pastId, addr.Bytes()))
 		if err == nil {
 			// Voter info exists for this past dispute
 			addrReporterPower = addrReporterPower.Add(pastVoterInfo.ReporterPower)
-			addrTokenholderPower = addrTokenholderPower.Add(pastVoterInfo.TokenholderPower)
 			userTips, err := k.GetUserTotalTips(ctx, addr, pastId)
 			if err != nil {
 				return math.Int{}, err
@@ -103,8 +100,6 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 			Add(math.NewIntFromUint64(pastVoteCounts.Reporters.Against)).Add(math.NewIntFromUint64(pastVoteCounts.Reporters.Invalid))
 		globalUserPower = globalUserPower.Add(math.NewIntFromUint64(pastVoteCounts.Users.Support)).
 			Add(math.NewIntFromUint64(pastVoteCounts.Users.Against)).Add(math.NewIntFromUint64(pastVoteCounts.Users.Invalid))
-		globalTokenholderPower = globalTokenholderPower.Add(math.NewIntFromUint64(pastVoteCounts.Tokenholders.Support)).
-			Add(math.NewIntFromUint64(pastVoteCounts.Tokenholders.Against)).Add(math.NewIntFromUint64(pastVoteCounts.Tokenholders.Invalid))
 	}
 	// nice way to handle zero division and zero votes
 	totalGroups := int64(3)
@@ -116,10 +111,6 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 		globalUserPower = math.NewInt(1)
 		totalGroups--
 	}
-	if globalTokenholderPower.IsZero() {
-		globalTokenholderPower = math.NewInt(1)
-		totalGroups--
-	}
 	if totalGroups == 0 {
 		return math.Int{}, errors.New("no votes found")
 	}
@@ -128,17 +119,14 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 	powerReductionDec := math.LegacyNewDecFromInt(layer.PowerReduction)
 	addrUserPowerDec := math.LegacyNewDecFromInt(addrUserPower)
 	addrReporterPowerDec := math.LegacyNewDecFromInt(addrReporterPower)
-	addrTokenholderPowerDec := math.LegacyNewDecFromInt(addrTokenholderPower)
 	globalUserPowerDec := math.LegacyNewDecFromInt(globalUserPower)
 	globalReporterPowerDec := math.LegacyNewDecFromInt(globalReporterPower)
-	globalTokenholderPowerDec := math.LegacyNewDecFromInt(globalTokenholderPower)
 	totalGroupsDec := math.LegacyNewDecFromInt(math.NewInt(totalGroups))
 	disputeVoterRewardDec := math.LegacyNewDecFromInt(dispute.VoterReward)
 
 	userPower := addrUserPowerDec.Mul(powerReductionDec).Quo(globalUserPowerDec)
 	reporterPower := addrReporterPowerDec.Mul(powerReductionDec).Quo(globalReporterPowerDec)
-	tokenholderPower := addrTokenholderPowerDec.Mul(powerReductionDec).Quo(globalTokenholderPowerDec)
-	totalAccPower := userPower.Add(reporterPower).Add(tokenholderPower)
+	totalAccPower := userPower.Add(reporterPower)
 	rewardAcc := totalAccPower.Mul(disputeVoterRewardDec).Quo(totalGroupsDec.Mul(powerReductionDec))
 
 	return rewardAcc.TruncateInt(), nil
