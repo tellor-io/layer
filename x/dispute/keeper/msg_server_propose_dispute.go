@@ -25,6 +25,10 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 	if msg.Fee.Amount.LT(layer.OnePercent) {
 		return nil, types.ErrMinimumTRBrequired.Wrapf("fee %s doesn't meet minimum fee required", msg.Fee.Amount)
 	}
+	// return an error if the proposer attempts to create a dispute on themselves while paying from their bond
+	if msg.PayFromBond && sender.String() == msg.Creator {
+		return nil, types.ErrSelfDisputeFromBond.Wrapf("proposer cannot pay from their bond when creating a dispute on themselves")
+	}
 	dispute, err := k.GetDisputeByReporter(ctx, *msg.Report, msg.DisputeCategory)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
