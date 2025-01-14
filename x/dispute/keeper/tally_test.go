@@ -15,6 +15,33 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func (s *KeeperTestSuite) TestGetVotersExist() {
+	require := s.Require()
+	ctx := s.ctx
+	require.NotNil(ctx)
+	k := s.disputeKeeper
+	require.NotNil(k)
+
+	// no voters
+	voterExists, err := k.GetVotersExist(ctx, 1)
+	fmt.Println("voter exists: ", voterExists)
+	// require.Error(err)
+	fmt.Println(err)
+
+	voter := sample.AccAddressBytes()
+	require.NoError(k.Voter.Set(ctx, collections.Join(uint64(1), voter.Bytes()), types.Voter{
+		Vote:          1,
+		VoterPower:    math.NewInt(100),
+		ReporterPower: math.NewInt(100),
+		RewardClaimed: false,
+	}))
+
+	// 1 voter
+	voterExists, err = k.GetVoterExists(ctx, 1)
+	fmt.Println("voter exists: ", voterExists)
+	require.NoError(err)
+
+}
 func (s *KeeperTestSuite) TestGetVoters() {
 	require := s.Require()
 	ctx := s.ctx

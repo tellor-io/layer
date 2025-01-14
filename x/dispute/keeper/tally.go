@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -14,18 +15,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) GetVoters(ctx context.Context, id uint64) (
-	[]collections.KeyValue[collections.Pair[uint64, []byte], types.Voter], error,
-) {
+func (k Keeper) GetVotersExist(ctx context.Context, id uint64) (bool, error) {
 	iter, err := k.Voter.Indexes.VotersById.MatchExact(ctx, id)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
-	voters, err := indexes.CollectKeyValues(ctx, k.Voter, iter)
-	if err != nil {
-		return nil, err
+
+	valid := iter.Valid()
+	if !valid {
+		return false, nil
 	}
-	return voters, nil
+
+	return true, nil
 }
 
 func (k Keeper) GetAccountBalance(ctx context.Context, addr sdk.AccAddress) (math.Int, error) {
@@ -82,9 +83,9 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
 	if err != nil {
 		voteCounts = types.StakeholderVoteCounts{
-			Users:        types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
-			Reporters:    types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
-			Team:         types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
+			Users:     types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
+			Reporters: types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
+			Team:      types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
 		}
 	}
 
@@ -192,11 +193,11 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 			dispute.DisputeStatus = types.Resolved
 			dispute.Open = false
 		}
-		allvoters, err := k.GetVoters(ctx, id)
+		voterExists, err := k.GetVotersExist(ctx, id)
 		if err != nil {
 			return err
 		}
-		if len(allvoters) == 0 {
+		if !voterExists {
 			if err := k.Disputes.Set(ctx, id, dispute); err != nil {
 				return err
 			}

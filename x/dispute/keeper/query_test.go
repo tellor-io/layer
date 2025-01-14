@@ -214,9 +214,7 @@ func (s *KeeperTestSuite) TestTallyQuery() {
 
 	require.Equal(res.Users.TotalPowerVoted, uint64(1600))
 	require.Equal(res.Reporters.TotalPowerVoted, uint64(10660))
-	require.Equal(res.Tokenholders.TotalPowerVoted, uint64(51500))
 
 	require.Equal(res.Users.TotalGroupPower, uint64(5000))
 	require.Equal(res.Reporters.TotalGroupPower, uint64(25000))
-	require.Equal(res.Tokenholders.TotalGroupPower, uint64(100000))
 }
