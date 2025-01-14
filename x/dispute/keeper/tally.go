@@ -99,16 +99,20 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	if err != nil {
 		return err
 	}
-	teamDidVote, err := k.Voter.Has(ctx, collections.Join(id, teamAddr.Bytes()))
+	teamVote, err := k.Voter.Get(ctx, collections.Join(id, teamAddr.Bytes()))
+	var teamDidVote bool
 	if err != nil {
-		return err
-	}
-	if teamDidVote {
-		vote, err := k.Voter.Get(ctx, collections.Join(id, teamAddr.Bytes()))
-		if err != nil {
+		if err != collections.ErrNotFound {
 			return err
 		}
-		switch vote.Vote {
+		teamDidVote = false
+	} else {
+		teamDidVote = true
+	}
+	if teamDidVote {
+		vote := teamVote.Vote
+
+		switch vote {
 		case types.VoteEnum_VOTE_SUPPORT:
 			tallies.ForVotes.Team = math.OneInt()
 			scaledSupport = scaledSupport.Add(layertypes.PowerReduction)
