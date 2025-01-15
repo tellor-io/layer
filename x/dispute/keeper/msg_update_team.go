@@ -3,7 +3,6 @@ package keeper
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -56,11 +55,8 @@ func (k msgServer) UpdateTeam(ctx context.Context, msg *types.MsgUpdateTeam) (*t
 			id := dispute.DisputeId
 			teamVoteExists, err := k.Voter.Has(ctx, collections.Join(id, currentAccBytes))
 			if err != nil {
-				if !errors.Is(err, collections.ErrNotFound) {
-					return nil, err
-				}
+				return nil, err
 			}
-			fmt.Println("teamVoteExists: ", teamVoteExists)
 			// if team has voted, remove previous team vote and set again with new address
 			if teamVoteExists {
 				vote, err := k.Voter.Get(ctx, collections.Join(id, currentAccBytes))
