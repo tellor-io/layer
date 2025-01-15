@@ -2,6 +2,8 @@ package types
 
 import (
 	"fmt"
+
+	regtypes "github.com/tellor-io/layer/x/registry/types"
 )
 
 // this line is used by starport scaffolding # genesis/types/import
@@ -32,7 +34,11 @@ func (gs GenesisState) Validate() error {
 		if len(query) == 0 {
 			return fmt.Errorf("cyclelist item is empty")
 		}
-		// check if the queryType of the given queryData exists in x/registry
+		// check if the queryType of the given queryData has a decodable query type
+		_, _, err := regtypes.DecodeQueryType(query)
+		if err != nil {
+			return fmt.Errorf("failed to decode query type: %v", err)
+		}
 	}
 
 	return gs.Params.Validate()
