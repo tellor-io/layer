@@ -102,7 +102,7 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 			Add(math.NewIntFromUint64(pastVoteCounts.Users.Against)).Add(math.NewIntFromUint64(pastVoteCounts.Users.Invalid))
 	}
 	// nice way to handle zero division and zero votes
-	totalGroups := int64(3)
+	totalGroups := int64(2)
 	if globalReporterPower.IsZero() {
 		globalReporterPower = math.NewInt(1)
 		totalGroups--
