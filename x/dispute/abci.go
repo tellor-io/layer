@@ -36,7 +36,10 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 		}
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 		if dispute.BlockNumber == uint64(sdkCtx.BlockHeight()) {
-			k.SetBlockInfo(ctx, dispute.HashId)
+			err := k.SetBlockInfo(ctx, dispute.HashId)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil
