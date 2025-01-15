@@ -274,7 +274,7 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 	dispute.DisputeRound++
 	dispute.PrevDisputeIds = append(dispute.PrevDisputeIds, disputeId)
 
-	// set new 
+	// set new
 	if err := k.DisputeFeePayer.Set(ctx, collections.Join(dispute.DisputeId, sender.Bytes()), types.PayerInfo{
 		Amount:   msg.Fee.Amount,
 		FromBond: msg.PayFromBond,

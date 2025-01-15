@@ -15,9 +15,9 @@ import (
 
 func (k Keeper) InitVoterClasses() *types.VoterClasses {
 	return &types.VoterClasses{
-		Reporters:    math.ZeroInt(),
-		Users:        math.ZeroInt(),
-		Team:         math.ZeroInt(),
+		Reporters: math.ZeroInt(),
+		Users:     math.ZeroInt(),
+		Team:      math.ZeroInt(),
 	}
 }
 

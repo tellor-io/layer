@@ -40,7 +40,6 @@ func (s *KeeperTestSuite) TestGetVotersExist() {
 	voterExists, err = k.GetVotersExist(ctx, 1)
 	fmt.Println("voter exists: ", voterExists)
 	require.NoError(err)
-
 }
 
 // func (s *KeeperTestSuite) TestGetVoters() {

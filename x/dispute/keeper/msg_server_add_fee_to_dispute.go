@@ -64,30 +64,25 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 	payer, err := k.Keeper.DisputeFeePayer.Get(ctx, collections.Join(dispute.DisputeId, sender.Bytes()))
 	// if payer does not exist, set it
 	if err != nil {
-		// return if error besides not found
-		if err != collections.ErrNotFound {
+		if errors.Is(err, collections.ErrNotFound) {
+			payer = types.PayerInfo{
+				Amount:   msg.Amount.Amount,
+				FromBond: msg.PayFromBond,
+			}
+		} else {
 			return nil, err
 		}
-		// dispute fee payer
-		if err := k.Keeper.DisputeFeePayer.Set(ctx, collections.Join(dispute.DisputeId, sender.Bytes()), types.PayerInfo{
-			Amount:   msg.Amount.Amount,
-			FromBond: msg.PayFromBond,
-		}); err != nil {
-			return nil, err
-		}
+	// if no error, payer has already contributed to dispute fee and msg amount needs added 
 	} else {
 		// if payer exists and msg.PayFromBond matches what is stored, add current msg amount to payer amount
 		if payer.FromBond != msg.PayFromBond {
 			return nil, errors.New("PayFromBond must match previously paid fee origin")
 		}
-		msg.Amount.Amount = msg.Amount.Amount.Add(payer.Amount)
+		payer.Amount = payer.Amount.Add(msg.Amount.Amount)
 	}
 
-	// dispute fee payer
-	if err := k.Keeper.DisputeFeePayer.Set(ctx, collections.Join(dispute.DisputeId, sender.Bytes()), types.PayerInfo{
-		Amount:   msg.Amount.Amount,
-		FromBond: msg.PayFromBond,
-	}); err != nil {
+	// set the updated or new payer information
+	if err := k.Keeper.DisputeFeePayer.Set(ctx, collections.Join(dispute.DisputeId, sender.Bytes()), payer); err != nil {
 		return nil, err
 	}
 

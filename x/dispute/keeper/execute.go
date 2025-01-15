@@ -199,9 +199,9 @@ func (k Keeper) GetSumOfAllGroupVotesAllRounds(ctx context.Context, id uint64) (
 		voteCounts, err := k.VoteCountsByGroup.Get(ctx, roundId)
 		if err != nil {
 			voteCounts = types.StakeholderVoteCounts{
-				Users:        types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
-				Reporters:    types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
-				Team:         types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
+				Users:     types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
+				Reporters: types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
+				Team:      types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
 			}
 		}
 		processVoteCounts(voteCounts)

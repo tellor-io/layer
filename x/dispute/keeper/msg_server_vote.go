@@ -64,9 +64,9 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 		return nil, errors.New("voter power is zero")
 	}
 	voterVote := types.Voter{
-		Vote:             msg.Vote,
-		VoterPower:       voterPower,
-		ReporterPower:    repP,
+		Vote:          msg.Vote,
+		VoterPower:    voterPower,
+		ReporterPower: repP,
 	}
 	if err := k.Voter.Set(ctx, collections.Join(vote.Id, voterAcc.Bytes()), voterVote); err != nil {
 		return nil, err
