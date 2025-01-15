@@ -73,6 +73,7 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 			sdk.NewAttribute("query_data", hex.EncodeToString(queryData)),
 		),
 	})
+	fmt.Println("setting reporter", "queryId: ", hex.EncodeToString(queryId))
 	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id), report)
 }
 

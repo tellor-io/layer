@@ -19,9 +19,9 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	if err != nil {
 		return err
 	}
-	if !minter.Initialized {
-		return nil
-	}
+	// if !minter.Initialized {
+	// 	return nil
+	// }
 
 	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
 	if currentTime.IsZero() {

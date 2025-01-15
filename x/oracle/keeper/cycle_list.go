@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/tellor-io/layer/utils"
@@ -31,65 +32,98 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	// if current query is expired, rotate the cycle list
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := sdkCtx.BlockHeight()
-
-	querydata, err := k.GetCurrentQueryInCycleList(ctx)
+	all, err := k.GetCyclelist(ctx)
+	fmt.Println("length of cyclelist: ", len(all))
 	if err != nil {
 		return err
 	}
-	queryId := utils.QueryIDFromData(querydata)
-
-	queryMeta, err := k.CurrentQuery(ctx, queryId)
-	// if current query has not expired, return and don't create a new query/rotate
-	if err == nil && queryMeta.Expiration > uint64(blockHeight) {
-		return nil
-	}
-	// rotate
-	q, err := k.GetCyclelist(ctx)
-	if err != nil {
-		return err
-	}
-	n, err := k.CyclelistSequencer.Next(ctx)
-	if err != nil {
-		return err
-	}
-	max := len(q)
-
-	switch {
-	case n >= uint64(max-1): // n could be gt if the cycle list is updated, otherwise n == max-1
-		err := k.CyclelistSequencer.Set(ctx, 0)
+	for _, qdt := range all {
+		queryId := utils.QueryIDFromData(qdt)
+		err = k.ClearOldqueries(ctx, queryId)
 		if err != nil {
 			return err
 		}
-		n = 0
-	default:
-		n += 1
-	}
-	// next query
-	queryId = utils.QueryIDFromData(q[n])
-	// cycle list queries that are without a tip could linger in the store if
-	// there are no reports to be aggregated (where queries are removed from the store)
-	// and since each rotation we generate a new query, here we clear the old queries that are expired, have no tip and have no reports
-	err = k.ClearOldqueries(ctx, queryId)
-	if err != nil {
-		return err
-	}
-	// get query if it exists, should exist if it has a tip that wasn't cleared by aggregation (ie no one reported for it)
-	querymeta, err := k.CurrentQuery(ctx, queryId)
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return err
+		querymeta, err := k.CurrentQuery(ctx, queryId)
+		if err == nil && querymeta.Expiration > uint64(blockHeight) {
+			continue
 		}
-		// initialize a query since it was cleared either by aggregation or expiration and not tipped
-		querymeta, err = k.InitializeQuery(ctx, q[n])
-		if err != nil {
-			return err
-		}
-		querymeta.CycleList = true
-		querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
-		emitRotateQueriesEvent(sdkCtx, hex.EncodeToString(queryId), strconv.Itoa(int(querymeta.Id)))
-		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
 
+		if err != nil {
+			if !errors.Is(err, collections.ErrNotFound) {
+				return err
+			}
+			// initialize a query since it was cleared either by aggregation or expiration and not tipped
+			querymeta, err = k.InitializeQuery(ctx, qdt)
+			if err != nil {
+				return err
+			}
+			querymeta.CycleList = true
+			querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
+			emitRotateQueriesEvent(sdkCtx, hex.EncodeToString(queryId), strconv.Itoa(int(querymeta.Id)))
+			err = k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
+			if err != nil {
+				return err
+			}
+		}
 	}
+	// querydata, err := k.GetCurrentQueryInCycleList(ctx)
+	// if err != nil {
+	// 	return err
+	// }
+	// queryId := utils.QueryIDFromData(querydata)
+
+	// queryMeta, err := k.CurrentQuery(ctx, queryId)
+	// // if current query has not expired, return and don't create a new query/rotate
+	// if err == nil && queryMeta.Expiration > uint64(blockHeight) {
+	// 	return nil
+	// }
+	// // rotate
+	// q, err := k.GetCyclelist(ctx)
+	// if err != nil {
+	// 	return err
+	// }
+	// n, err := k.CyclelistSequencer.Next(ctx)
+	// if err != nil {
+	// 	return err
+	// }
+	// max := len(q)
+
+	// switch {
+	// case n >= uint64(max-1): // n could be gt if the cycle list is updated, otherwise n == max-1
+	// 	err := k.CyclelistSequencer.Set(ctx, 0)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	n = 0
+	// default:
+	// 	n += 1
+	// }
+	// // next query
+	// queryId = utils.QueryIDFromData(q[n])
+	// // cycle list queries that are without a tip could linger in the store if
+	// // there are no reports to be aggregated (where queries are removed from the store)
+	// // and since each rotation we generate a new query, here we clear the old queries that are expired, have no tip and have no reports
+	// err = k.ClearOldqueries(ctx, queryId)
+	// if err != nil {
+	// 	return err
+	// }
+	// // get query if it exists, should exist if it has a tip that wasn't cleared by aggregation (ie no one reported for it)
+	// querymeta, err := k.CurrentQuery(ctx, queryId)
+	// if err != nil {
+	// 	if !errors.Is(err, collections.ErrNotFound) {
+	// 		return err
+	// 	}
+	// 	// initialize a query since it was cleared either by aggregation or expiration and not tipped
+	// 	querymeta, err = k.InitializeQuery(ctx, q[n])
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	querymeta.CycleList = true
+	// 	querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
+	// 	emitRotateQueriesEvent(sdkCtx, hex.EncodeToString(queryId), strconv.Itoa(int(querymeta.Id)))
+	// 	return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
+
+	// }
 	// if query has a tip don't generate a new query
 	// shouldn't enter here if query has no tip and is expired since it would have been cleared
 	// if query has a tip and is not expired and has reports/or no reports then set cycle list true and nothing else
@@ -98,19 +132,19 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	// set cycle list to true and extend the expiration time.
 	// sidenote: similar to tipping, tipping only extends the expiration if a query is expired or
 	// only increments the tip amount for a query that is ongoing.
-	if !querymeta.Amount.IsZero() {
-		querymeta.CycleList = true
-		expired := querymeta.Expiration <= uint64(blockHeight)
-		// this should not be required since SetAggregate happens before rotation which should clear any query that is expired and has revealed reports
-		// noRevealedReports := !querymeta.HasRevealedReports
-		if expired {
-			// extend time as if tbr is a tip that would extend the time (tipping)
-			querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
-		}
-		emitRotateQueriesEvent(sdkCtx, hex.EncodeToString(queryId), strconv.Itoa(int(querymeta.Id)))
+	// if !querymeta.Amount.IsZero() {
+	// 	querymeta.CycleList = true
+	// 	expired := querymeta.Expiration <= uint64(blockHeight)
+	// 	// this should not be required since SetAggregate happens before rotation which should clear any query that is expired and has revealed reports
+	// 	// noRevealedReports := !querymeta.HasRevealedReports
+	// 	if expired {
+	// 		// extend time as if tbr is a tip that would extend the time (tipping)
+	// 		querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
+	// 	}
+	// 	emitRotateQueriesEvent(sdkCtx, hex.EncodeToString(queryId), strconv.Itoa(int(querymeta.Id)))
 
-		return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
-	}
+	// 	return k.Query.Set(ctx, collections.Join(queryId, querymeta.Id), querymeta)
+	// }
 	return nil
 }
 

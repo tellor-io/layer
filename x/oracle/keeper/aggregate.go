@@ -36,7 +36,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 
 	var aggrFunc func(ctx context.Context, reports []types.MicroReport, metaId uint64) (*types.Aggregate, error)
 	reportersToPay := make([]*types.Aggregate, 0)
-
+	i := 0
 	defer idsIterator.Close()
 	for ; idsIterator.Valid(); idsIterator.Next() {
 		key, err := idsIterator.PrimaryKey()
@@ -49,7 +49,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		}
 		// enter if query has expired
 		if query.Expiration <= blockHeight {
-
+			i++
 			reportsIterator, err := k.Reports.Indexes.Id.MatchExact(ctx, query.Id)
 			if err != nil {
 				return err
@@ -92,9 +92,11 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			}
 		}
 	}
+	fmt.Println("itertated through: ", i, " queries")
 	if len(reportersToPay) == 0 {
 		return nil
 	}
+	fmt.Println("paying this many reporters: ", len(reportersToPay))
 	// Process time-based rewards for reporters.
 	// tbr is in loya
 	tbr := k.GetTimeBasedRewards(ctx)
