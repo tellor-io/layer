@@ -33,7 +33,6 @@ func (gs GenesisState) Validate() error {
 			return fmt.Errorf("cyclelist item is empty")
 		}
 		// check if the queryType of the given queryData exists in x/registry
-		
 	}
 
 	return gs.Params.Validate()

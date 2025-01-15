@@ -72,7 +72,7 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 		} else {
 			return nil, err
 		}
-	// if no error, payer has already contributed to dispute fee and msg amount needs added 
+		// if no error, payer has already contributed to dispute fee and msg amount needs added
 	} else {
 		// if payer exists and msg.PayFromBond matches what is stored, add current msg amount to payer amount
 		if payer.FromBond != msg.PayFromBond {
