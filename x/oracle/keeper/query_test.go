@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	testkeeper "github.com/tellor-io/layer/testutil/keeper"
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -14,11 +15,12 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 func TestNewQuerier(t *testing.T) {
-	k, _, _, _, _, _ := testkeeper.OracleKeeper(t)
+	k, _, _, _, _, _, _ := testkeeper.OracleKeeper(t)
 	q := keeper.NewQuerier(k)
 	require.NotNil(t, q)
 }
@@ -53,20 +55,20 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 	require.NoError(k.Aggregates.Set(s.ctx, collections.Join(qId, uint64(0)), types.Aggregate{
 		QueryId:           qId,
 		AggregateValue:    "100",
-		AggregateReporter: "reporter",
-		ReporterPower:     100,
+		AggregateReporter: sdk.AccAddress("reporter").String(),
+		AggregatePower:    100,
 	}))
 	res, err = q.GetCurrentAggregateReport(s.ctx, &req)
 	require.NoError(err)
 	require.NotNil(res)
 	require.Equal(res.Aggregate.QueryId, qId)
 	require.Equal(res.Aggregate.AggregateValue, "100")
-	require.Equal(res.Aggregate.AggregateReporter, "reporter")
-	require.Equal(res.Aggregate.ReporterPower, uint64(100))
+	require.Equal(res.Aggregate.AggregateReporter, sdk.AccAddress("reporter").String())
+	require.Equal(res.Aggregate.AggregatePower, uint64(100))
 }
 
 func TestGetCurrentAggregateReport(t *testing.T) {
-	k, _, _, _, _, ctx := testkeeper.OracleKeeper(t)
+	k, _, _, _, _, _, ctx := testkeeper.OracleKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -94,16 +96,14 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 	require.Nil(t, getCurrentAggResponse)
 
 	agg = &types.Aggregate{
-		QueryId:              []byte(queryId),
-		AggregateValue:       "10_000",
-		AggregateReporter:    "reporter1",
-		ReporterPower:        100,
-		Reporters:            []*types.AggregateReporter{{}},
-		Flagged:              false,
-		Index:                uint64(0),
-		AggregateReportIndex: 0,
-		Height:               0,
-		MicroHeight:          0,
+		QueryId:           []byte(queryId),
+		AggregateValue:    "10_000",
+		AggregateReporter: sdk.AccAddress("reporter1").String(),
+		AggregatePower:    100,
+		Flagged:           false,
+		Index:             uint64(0),
+		Height:            0,
+		MicroHeight:       0,
 	}
 
 	require.NoError(t, k.Aggregates.Set(ctx, collections.Join(qIdBz, uint64(timestamp.UnixMilli())), *agg))
@@ -115,15 +115,14 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 	require.Equal(t, getCurrentAggResponse.Aggregate.QueryId, agg.QueryId)
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateValue, agg.AggregateValue)
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateReporter, agg.AggregateReporter)
-	require.Equal(t, getCurrentAggResponse.Aggregate.ReporterPower, agg.ReporterPower)
+	require.Equal(t, getCurrentAggResponse.Aggregate.AggregatePower, agg.AggregatePower)
 	require.Equal(t, getCurrentAggResponse.Aggregate.Flagged, agg.Flagged)
 	require.Equal(t, getCurrentAggResponse.Aggregate.Index, agg.Index)
-	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateReportIndex, agg.AggregateReportIndex)
 	require.Equal(t, getCurrentAggResponse.Aggregate.Height, agg.Height)
 }
 
 func TestRetreiveData(t *testing.T) {
-	k, _, _, _, _, ctx := testkeeper.OracleKeeper(t)
+	k, _, _, _, _, _, ctx := testkeeper.OracleKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -156,8 +155,8 @@ func TestRetreiveData(t *testing.T) {
 				require.NoError(t, k.Aggregates.Set(ctx, collections.Join(qId, uint64(0)), types.Aggregate{
 					QueryId:           qId,
 					AggregateValue:    "100",
-					AggregateReporter: "reporter",
-					ReporterPower:     100,
+					AggregateReporter: sdk.AccAddress("reporter").String(),
+					AggregatePower:    100,
 				}))
 			},
 			expectedError: "",
@@ -412,4 +411,51 @@ func (s *KeeperTestSuite) TestTippedQueries() {
 			}
 		})
 	}
+}
+
+func (s *KeeperTestSuite) TestReportedIdsByReporter() {
+	k := s.oracleKeeper
+	q := s.queryClient
+	reporter := sample.AccAddressBytes()
+	// fetching in descending order
+	pageReq := &query.PageRequest{Reverse: true}
+	queryReq := types.QueryReportedIdsByReporterRequest{ReporterAddress: reporter.String(), Pagination: pageReq}
+	for i := 1; i < 11; i++ {
+		s.NoError(k.Reports.Set(s.ctx,
+			collections.Join3([]byte("queryid1"), reporter.Bytes(), uint64(i)),
+			types.MicroReport{}))
+	}
+	res, err := q.ReportedIdsByReporter(s.ctx, &queryReq)
+	s.NoError(err)
+	s.Equal(res.Ids, []uint64{10, 9, 8, 7, 6, 5, 4, 3, 2, 1})
+
+	pageReq.Reverse = false
+	res, err = q.ReportedIdsByReporter(s.ctx, &queryReq)
+	s.NoError(err)
+	s.Equal(res.Ids, []uint64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10})
+
+	pageReq.Limit = 1
+	res, err = q.ReportedIdsByReporter(s.ctx, &queryReq)
+	s.NoError(err)
+	s.Equal(res.Ids, []uint64{1})
+
+	pageReq.Limit = 1
+	pageReq.Reverse = true
+	res, err = q.ReportedIdsByReporter(s.ctx, &queryReq)
+	s.NoError(err)
+	s.Equal(res.Ids, []uint64{10})
+
+	pageReq.Limit = 5
+	pageReq.Offset = 1
+	pageReq.Reverse = true
+	res, err = q.ReportedIdsByReporter(s.ctx, &queryReq)
+	s.NoError(err)
+	s.Equal(res.Ids, []uint64{9, 8, 7, 6, 5})
+
+	pageReq.Limit = 5
+	pageReq.Offset = 4
+	pageReq.Reverse = false
+	res, err = q.ReportedIdsByReporter(s.ctx, &queryReq)
+	s.NoError(err)
+	s.Equal(res.Ids, []uint64{5, 6, 7, 8, 9})
 }

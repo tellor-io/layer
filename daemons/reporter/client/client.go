@@ -52,7 +52,8 @@ type Client struct {
 	accAddr   sdk.AccAddress
 	minGasFee string
 	// logger is the logger for the daemon.
-	logger log.Logger
+	logger  log.Logger
+	txMutex sync.Mutex
 }
 
 func NewClient(clctx client.Context, logger log.Logger, accountName, valGasMin string) *Client {

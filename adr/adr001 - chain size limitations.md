@@ -11,6 +11,7 @@
 - 2024-04-02: formatting
 - 2024-04-01: clarity
 - 2024-08-03: progress update
+- 2024-12-06: update
 
 ## Context
 
@@ -22,11 +23,8 @@ This ADR is meant to go over the limits relating to decisions that affect the si
 
     How fast does the chain grow in size? The initial tests show overall disk storage increasing about 3GB a day. The difference between the size of the chain and total storage is about 6-8GB. For example, it has been observed that the total storage being used showed as 18GB but the size of the chain was 10GB. The difference seems to be largely attributed to the log files. As we move forward on setting up the test nodes, validators, and reporters the log files will be pruned periodically. To ensure we are able to view the logs if something goes wrong there will be two logs, one historical and one current. The historical will be deleted daily after the current log is renamed to become the historical file and a new current is created.  
 
-    What measures / designs are in place for pruning state? The chain will also be pruned periodically. Because disputes have a window of 21 days that is the minimun history the chain needs to keep. The team will keep archive nodes (and anyone is welcome to keep one as well) with state sync. State sync is necessary to allow other nodes to join the network without having to fully sync back to genesis. This will make it efficient for nodes, validators, and reporters to join the network as well as keep the storage requirements lower to become part of the network.
+    How big the chain is as a whole is up to the individual node operator.  The default is for the chain to be pruned periodically. Because disputes have a window of 21 days that is the minimun history the chain needs to keep. The team will keep archive nodes (and anyone is welcome to keep one as well) with state sync. State sync is necessary to allow other nodes to join the network without having to fully sync back to genesis. This will make it efficient for nodes, validators, and reporters to join the network as well as keep the storage requirements lower to become part of the network. Ideally you do come in and validate the chain from genesis, and Tellor will maintain a commitment for people to be able to do so. 
 
-    Should we consider a data availability layer? Should we assume no-one needs data or verification passed pruning timeframe?
-    Using a data availability layer is still an open question.
-    
 
 ###  Blocksize limits
     
@@ -50,11 +48,13 @@ We have currently opted for implementing signing off on bridge data via vote ext
     - What is the size limit for VoteExtension? Currently estimated at about 4MB.
     - How many signatures can we add to vote extensions (queryId's aggregated x validators needed to hit 2/3 consensus)?
 
-If we don't use voteExtensions, 
-    - how many signatures can we fit into a block (i.e. store them in the next block)? 
-    - Should lanes be implemented? What is a good balance between data reports, transfers, and bridge signatures?
-
 ## Alternate approaches to state growth
+
+### Use a DA layer or long term storage
+    A DA layer was decided against for the reason being it hurts finality of the chain in the sense that most DA solutions are relatively slower than our target blocktime.  If you have to wait 12seconds on Ethereum for a block to be finalized (best case scenario), this can limit chains looking to use the data.  Additionally, a data storage network for long term use may be beneficial, but as an oracle network, data that is old is not necessarily critical as most oracle data should be consumed relatively quickly and can be asked for again if needed.   
+
+    Ultimately this route may be an option (a DA or long term data layer), as technology such as zk data proofs for bridging, preconfirmations for speed, and just base security/decentralization of the chain gets better. 
+    
 
 ### Cap number of reporters (like validators)
 

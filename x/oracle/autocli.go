@@ -107,6 +107,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query current query by query id",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}},
 				},
+				{
+					RpcMethod:      "ReportedIdsByReporter",
+					Use:            "reported_ids_by_reporter [reporter_address]",
+					Short:          "Query reported ids by reporter",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},

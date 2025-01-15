@@ -11,25 +11,27 @@
 - 2024-04-01: clarified language
 - 2024-04-02: added option on decreasing user vote power
 - 2024-08-03: clean up
+- 2025-01-14: remove token holder voting group
 
 ## Context
 
 For voting on disputes and determining if a value is correct, these groups are weighted evenly:
 
-25% reporters (based on reporter weight)
-25% users (based on tips)
-25% team
-25% token holders
+33.3% reporters (based on reporter weight)
+33.3% users (based on tips)
+33.3% team
 
-Most notable in the split is the absence of validators and relayers.  The rationale for not including validators is the treatment of delegated tokens.  Currently delegated tokens are already counted twice (token holders and reporters they are delegated to).  If the validator was also able to use tokens delegated to themselves, you could essentially delegate tokens to yourself as a reporter and a validator and then triple your voting power.  We had to choose between giving the power to reporters or validators in this case and we chose reporters for the same reason disputes can be started with delegated tokens from reporters and not validators; data reporting and quality is done by the reporters, chain operations are done by the validators. Also, in old tellor, reporters could earn voting weight per report count, however that has been removed in Layer in favor of reporter weight. 
+Most notable in the split is the absence of validators, relayers, and token holders.  The rationale for not including validators is the treatment of delegated tokens.  Currently delegated tokens are already counted twice (token holders and reporters they are delegated to).  If the validator was also able to use tokens delegated to themselves, you could essentially delegate tokens to yourself as a reporter and a validator and then triple your voting power.  We had to choose between giving the power to reporters or validators in this case and we chose reporters for the same reason disputes can be started with delegated tokens from reporters and not validators; data reporting and quality is done by the reporters, chain operations are done by the validators. Also, in old tellor, reporters could earn voting weight per report count, however that has been removed in Layer in favor of reporter weight.
 
-Additionally, we give delegated reporters multiple powers (token weight and reporter weight).  
+In old tellor we also included token holders.  The reason against is that snapshotting token balances can get expensive and voting can be gamed if you don't use a static block number for balances.  The rationale for accepting this is that there will be few free floating tokens on Layer.  As the token lives on Ethereum with most of the balances on CEX's, the idea that people will bridge their tokens and NOT delegate to a reporter should be rare.  Additionally, the counting of token holders was double counting those delegated to reporters.  Now the tokens more accurately balance power between reporters and users. 
 
-If A and B each have 100 tokens and A and B both delegate to B for reporting
-
-For voting - reporter weights go to B and the token weight portion also goes to B for 200, unless A votes.  If A votes, he gets his 100 and B gets 100 (note that this is standard for validator delegation and votes in the cosmos sdk).
+How Delegation Works (an example)- If A and B each have 100 tokens and A and B both delegate to B for reporting.  For voting, reporter weights go to B and the token weight portion also goes to B for 200, unless A votes.  If A votes, he gets his 100 and B gets 100 (note that this is standard for validator delegation and votes in the cosmos sdk).
 
 ## Alternative Approaches
+
+### Add in token holders
+
+We had originally wanted to give free floating token holders weight, but it is unlikely they will be undelegated.  Additionally, token holders on ETH always have the option to fork the value of the token away if they see a compromise (the ETH token is what's listed on exchanges). 
 
 ### Add in validators
 

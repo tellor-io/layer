@@ -1,11 +1,15 @@
 package keeper
 
 import (
+	"context"
+	"errors"
+	"math/big"
 	"reflect"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/x/oracle/types"
 
+	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -14,7 +18,7 @@ import (
 // PreventBridgeWithdrawalReport verifies if the queryData is a TRBBridgeQueryType. If not, it returns false, nil.
 // If it is, then it further checks whether it is a withdrawal or deposit report. If it is a withdrawal report, it returns an error
 // indicating that such reports should not be processed.
-func (k Keeper) PreventBridgeWithdrawalReport(queryData []byte) (bool, error) {
+func (k Keeper) PreventBridgeWithdrawalReport(ctx context.Context, queryData []byte) (bool, error) {
 	// decode query data partial
 	StringType, err := abi.NewType("string", "", nil)
 	if err != nil {
@@ -73,6 +77,18 @@ func (k Keeper) PreventBridgeWithdrawalReport(queryData []byte) (bool, error) {
 
 	if !queryDataArgsDecoded[0].(bool) {
 		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid report type, cannot report token bridge withdrawal")
+	}
+	// get depositId status
+	depositId := queryDataArgsDecoded[1].(*big.Int).Uint64()
+	claimStatus, err := k.bridgeKeeper.GetDepositStatus(ctx, depositId)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return true, nil
+		}
+		return false, err
+	}
+	if claimStatus {
+		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid report type, cannot report token bridge deposit that has already been claimed")
 	}
 	return true, nil
 }

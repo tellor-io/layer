@@ -1,83 +1,24 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// divvy up the tips that a reporter has earned from reporting in the oracle module amongst the reporters' selectors
-// purpose of height argument is to only pay out selectors that were part of the reporter at height of the report
-// DivvyingTips distributes the reward among the reporter and its selectors based on their shares at the given height.
-//
-// The function performs the following steps:
-// 1. Retrieves the reporter's information using the reporter's address.
-// 2. Converts the reward and commission rate to legacy decimals for calculations.
-// 3. Calculates the commission for the reporter and the net reward after commission.
-// 4. Retrieves the selectors' addresses and their respective shares.
-// 5. Distributes the net reward among the selectors based on their shares.
-// 6. Adds the commission to the reporter's share if the reporter is also a selector.
-// 7. Updates the selectors' tips with the new calculated shares.
-func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.LegacyDec, queryId []byte, height uint64) error {
-	reporter, err := k.Reporters.Get(ctx, reporterAddr)
-	if err != nil {
-		return err
-	}
-
-	// selector's commission = reporter's commission rate * reward
-	commission := reward.Mul(reporter.CommissionRate)
-	// Calculate net reward
-	netReward := reward.Sub(commission)
-
-	delAddrs, err := k.Report.Get(ctx, collections.Join(queryId, collections.Join(reporterAddr.Bytes(), height)))
-	if err != nil {
-		return err
-	}
-
-	for _, del := range delAddrs.TokenOrigins {
-		// delegator share = netReward * selector's share / total shares
-		delAmountDec := del.Amount.ToLegacyDec()
-		delTotalDec := delAddrs.Total.ToLegacyDec()
-		delegatorShare := netReward.Mul(delAmountDec).Quo(delTotalDec)
-
-		if bytes.Equal(del.DelegatorAddress, reporterAddr.Bytes()) {
-			delegatorShare = delegatorShare.Add(commission)
-		}
-		// get selector's previous tips
-		oldTips, err := k.SelectorTips.Get(ctx, del.DelegatorAddress)
-		if err != nil {
-			if errors.Is(err, collections.ErrNotFound) {
-				oldTips = math.LegacyZeroDec()
-			} else {
-				return err
-			}
-		}
-		// add the new tip to the old tips
-		newTips := oldTips.Add(delegatorShare)
-		// set new tip total
-		err = k.SelectorTips.Set(ctx, del.DelegatorAddress, newTips)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
 // ReturnSlashedTokens returns the slashed tokens to the delegators,
 // called in dispute module after dispute is resolved with result invalid or reporter wins
-func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) error {
+func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) (string, error) {
+	var pool string
 	// get the snapshot of the metadata of the tokens that were slashed ie selectors' shares amounts and validator they were delegated to
 	snapshot, err := k.DisputedDelegationAmounts.Get(ctx, hashId)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// winningpurse represents the amount of tokens that a disputed reporter possibly receives for winning a dispute
@@ -91,15 +32,15 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []
 		val, err = k.stakingKeeper.GetValidator(ctx, valAddr)
 		if err != nil {
 			if !errors.Is(err, stakingtypes.ErrNoValidatorFound) {
-				return err
+				return "", err
 			}
 			vals, err := k.GetBondedValidators(ctx, 1)
 			if err != nil {
-				return err
+				return "", err
 			}
 			// this should never happen since there should always be a bonded validator
 			if len(vals) == 0 {
-				return errors.New("no validators found in staking module to return tokens to")
+				return "", errors.New("no validators found in staking module to return tokens to")
 			}
 			val = vals[0]
 		}
@@ -119,16 +60,17 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []
 		var tokenSrc stakingtypes.BondStatus
 		if val.IsBonded() {
 			tokenSrc = stakingtypes.Bonded
+			pool = stakingtypes.BondedPoolName
 		} else {
 			tokenSrc = stakingtypes.Unbonded
+			pool = stakingtypes.NotBondedPoolName
 		}
 		_, err = k.stakingKeeper.Delegate(ctx, delAddr, shareAmt.TruncateInt(), tokenSrc, val, false) // false means to not subtract tokens from an account
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
-
-	return k.DisputedDelegationAmounts.Remove(ctx, hashId)
+	return pool, k.DisputedDelegationAmounts.Remove(ctx, hashId)
 }
 
 // called in dispute module after dispute is resolved

@@ -80,6 +80,7 @@ import (
 	"cosmossdk.io/client/v2/autocli"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/evidence"
 	evidencekeeper "cosmossdk.io/x/evidence/keeper"
@@ -598,7 +599,7 @@ func New(
 		app.ReporterKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-
+	app.ReporterKeeper.SetOracleKeeper(app.OracleKeeper)
 	app.DisputeKeeper = disputemodulekeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[disputemoduletypes.StoreKey]),
@@ -617,7 +618,7 @@ func New(
 		app.ReporterKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-
+	app.OracleKeeper.SetBridgeKeeper(app.BridgeKeeper)
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	appFlags := appflags.GetFlagValuesFromOptions(appOpts)
 	// Panic if this is not a full node and gRPC is disabled.
@@ -938,6 +939,8 @@ func New(
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
 	// Make sure it's called after `app.ModuleManager` and `app.configurator` are set.
 	app.RegisterUpgradeHandlers()
+	app.setupUpgradeHandlers()
+	app.setupUpgradeStoreLoaders()
 
 	autocliv1.RegisterQueryServer(app.GRPCQueryRouter(), runtimeservices.NewAutoCLIQueryService(app.mm.Modules))
 	reflectionSvc, err := runtimeservices.NewReflectionService()
@@ -999,11 +1002,36 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 	app.SetAnteHandler(anteHandler)
 }
 
-func (app *App) preBlocker(ph *ProposalHandler) func(sdk.Context, *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+func (app *App) preBlocker(ph *ProposalHandler) func(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 	return func(ctx sdk.Context, req *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
 		res, err := app.ModuleManager().PreBlock(ctx)
 		if err != nil {
 			return nil, err
+		}
+		if ctx.BlockHeight() == 1062219+1 {
+			bondedPoolBal := app.BankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(stakingtypes.BondedPoolName), "loya")
+			vals, err := app.StakingKeeper.GetValidators(ctx, 7) // only 6 validators exist
+			if err != nil {
+				return nil, err
+			}
+			bondedtotal := math.ZeroInt()
+			notbondedtotal := math.ZeroInt()
+			for _, v := range vals {
+				if v.IsBonded() {
+					bondedtotal = bondedtotal.Add(v.Tokens)
+				} else {
+					notbondedtotal = notbondedtotal.Add(v.Tokens)
+				}
+			}
+			// transfer amount should be 1950000000
+			// "spendable balance 97171770000loya is smaller than 99121770000loya
+			transferAmt := bondedPoolBal.Amount.Sub(bondedtotal)
+			if transferAmt.Equal(math.NewInt(1950000000)) { // manually checked amount
+				err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, stakingtypes.BondedPoolName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin("loya", transferAmt)))
+				if err != nil {
+					return nil, err
+				}
+			}
 		}
 
 		changed := res.ConsensusParamsChanged
@@ -1018,7 +1046,7 @@ func (app *App) preBlocker(ph *ProposalHandler) func(sdk.Context, *abci.RequestF
 }
 
 func (app *App) RegisterUpgradeHandlers() {
-	const UpgradeName = "v1.6.0"
+	const UpgradeName = "v2.0.1"
 
 	app.UpgradeKeeper.SetUpgradeHandler(
 		UpgradeName,

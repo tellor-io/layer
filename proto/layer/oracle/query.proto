@@ -87,6 +87,9 @@ service Query {
   rpc GetCurrentQueryByQueryId(QueryGetCurrentQueryByQueryIdRequest) returns (QueryGetCurrentQueryByQueryIdResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_current_query_by_query_id/{query_id}";
   }
+  rpc ReportedIdsByReporter(QueryReportedIdsByReporterRequest) returns (QueryReportedIdsByReporterResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/reported_ids_by_reporter/{reporter_address}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -261,4 +264,15 @@ message QueryGetCurrentQueryByQueryIdRequest {
 
 message QueryGetCurrentQueryByQueryIdResponse {
   QueryMeta query = 1;
+}
+
+message QueryReportedIdsByReporterRequest {
+  string reporter_address = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryReportedIdsByReporterResponse {
+  repeated uint64 ids = 1;
+  repeated bytes query_ids =2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }

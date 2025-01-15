@@ -32,7 +32,9 @@ type QueryClient interface {
 	// SpaceAvailableByReporter queries the space available in a reporter.
 	SpaceAvailableByReporter(ctx context.Context, in *QuerySpaceAvailableByReporterRequest, opts ...grpc.CallOption) (*QuerySpaceAvailableByReporterResponse, error)
 	// AvailableTips queries the tips available for withdrawal for a given selector.
-	AvailableTips(ctx context.Context, in *QueryAvailableTipsRequest, opts ...grpc.CallOption) (*QueryAvailableTipsResponse, error)
+	AvailableTipsByQuery(ctx context.Context, in *QueryAvailableTipsRequest, opts ...grpc.CallOption) (*QueryAvailableTipsResponse, error)
+	// RewardClaimStatus queries if a query's reward was already claimed by querymeta.Id
+	RewardClaimStatus(ctx context.Context, in *QueryRewardClaimStatusRequest, opts ...grpc.CallOption) (*QueryRewardClaimStatusResponse, error)
 }
 
 type queryClient struct {
@@ -106,9 +108,18 @@ func (c *queryClient) SpaceAvailableByReporter(ctx context.Context, in *QuerySpa
 	return out, nil
 }
 
-func (c *queryClient) AvailableTips(ctx context.Context, in *QueryAvailableTipsRequest, opts ...grpc.CallOption) (*QueryAvailableTipsResponse, error) {
+func (c *queryClient) AvailableTipsByQuery(ctx context.Context, in *QueryAvailableTipsRequest, opts ...grpc.CallOption) (*QueryAvailableTipsResponse, error) {
 	out := new(QueryAvailableTipsResponse)
-	err := c.cc.Invoke(ctx, "/layer.reporter.Query/AvailableTips", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/AvailableTipsByQuery", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) RewardClaimStatus(ctx context.Context, in *QueryRewardClaimStatusRequest, opts ...grpc.CallOption) (*QueryRewardClaimStatusResponse, error) {
+	out := new(QueryRewardClaimStatusResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/RewardClaimStatus", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +144,9 @@ type QueryServer interface {
 	// SpaceAvailableByReporter queries the space available in a reporter.
 	SpaceAvailableByReporter(context.Context, *QuerySpaceAvailableByReporterRequest) (*QuerySpaceAvailableByReporterResponse, error)
 	// AvailableTips queries the tips available for withdrawal for a given selector.
-	AvailableTips(context.Context, *QueryAvailableTipsRequest) (*QueryAvailableTipsResponse, error)
+	AvailableTipsByQuery(context.Context, *QueryAvailableTipsRequest) (*QueryAvailableTipsResponse, error)
+	// RewardClaimStatus queries if a query's reward was already claimed by querymeta.Id
+	RewardClaimStatus(context.Context, *QueryRewardClaimStatusRequest) (*QueryRewardClaimStatusResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -162,8 +175,11 @@ func (UnimplementedQueryServer) NumOfSelectorsByReporter(context.Context, *Query
 func (UnimplementedQueryServer) SpaceAvailableByReporter(context.Context, *QuerySpaceAvailableByReporterRequest) (*QuerySpaceAvailableByReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SpaceAvailableByReporter not implemented")
 }
-func (UnimplementedQueryServer) AvailableTips(context.Context, *QueryAvailableTipsRequest) (*QueryAvailableTipsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AvailableTips not implemented")
+func (UnimplementedQueryServer) AvailableTipsByQuery(context.Context, *QueryAvailableTipsRequest) (*QueryAvailableTipsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AvailableTipsByQuery not implemented")
+}
+func (UnimplementedQueryServer) RewardClaimStatus(context.Context, *QueryRewardClaimStatusRequest) (*QueryRewardClaimStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RewardClaimStatus not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -304,20 +320,38 @@ func _Query_SpaceAvailableByReporter_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_AvailableTips_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Query_AvailableTipsByQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryAvailableTipsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).AvailableTips(ctx, in)
+		return srv.(QueryServer).AvailableTipsByQuery(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/layer.reporter.Query/AvailableTips",
+		FullMethod: "/layer.reporter.Query/AvailableTipsByQuery",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).AvailableTips(ctx, req.(*QueryAvailableTipsRequest))
+		return srv.(QueryServer).AvailableTipsByQuery(ctx, req.(*QueryAvailableTipsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_RewardClaimStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryRewardClaimStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).RewardClaimStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/RewardClaimStatus",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).RewardClaimStatus(ctx, req.(*QueryRewardClaimStatusRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -358,8 +392,12 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Query_SpaceAvailableByReporter_Handler,
 		},
 		{
-			MethodName: "AvailableTips",
-			Handler:    _Query_AvailableTips_Handler,
+			MethodName: "AvailableTipsByQuery",
+			Handler:    _Query_AvailableTipsByQuery_Handler,
+		},
+		{
+			MethodName: "RewardClaimStatus",
+			Handler:    _Query_RewardClaimStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
