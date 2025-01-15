@@ -99,13 +99,13 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	if err != nil {
 		return err
 	}
-	teamVote, err := k.Voter.Get(ctx, collections.Join(id, teamAddr.Bytes()))
 	var teamDidVote bool
+	// get team vote
+	teamVote, err := k.Voter.Get(ctx, collections.Join(id, teamAddr.Bytes()))
 	if err != nil {
-		if err != collections.ErrNotFound {
+		if !errors.Is(err, collections.ErrNotFound) {
 			return err
 		}
-		teamDidVote = false
 	} else {
 		teamDidVote = true
 	}
