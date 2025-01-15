@@ -34,7 +34,7 @@ func (gs GenesisState) Validate() error {
 		if len(query) == 0 {
 			return fmt.Errorf("cyclelist item is empty")
 		}
-		// check if the queryType of the given queryData has a decodable query type
+		// check if the queryType of the given queryData is decodable
 		_, _, err := regtypes.DecodeQueryType(query)
 		if err != nil {
 			return fmt.Errorf("failed to decode query type: %v", err)

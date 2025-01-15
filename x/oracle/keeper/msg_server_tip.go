@@ -6,7 +6,6 @@ import (
 	"errors"
 	"strconv"
 
-	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 
@@ -14,11 +13,10 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Tip handles tipping a query; accepts query data and amount to tip.
-// 1. Checks if the bond denom is correct and if the amount is positive.
+// 1. Checks if the bond denom is correct and if the amount is positive (in ValidateBasic).
 // 2. Transfers the amount to the module account after burning 2% of the tip.
 // 3. Fetches the QueryMeta by queryId:
 //   - If QueryMeta is not found, initializes a new QueryMeta and sets the amount and the expiration time.
@@ -34,9 +32,6 @@ import (
 func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if msg.Amount.Denom != layer.BondDenom || msg.Amount.Amount.IsZero() || msg.Amount.Amount.IsNegative() {
-		return nil, sdkerrors.ErrInvalidRequest
-	}
 	tipper := sdk.MustAccAddressFromBech32(msg.Tipper)
 
 	tip, err := k.keeper.transfer(ctx, tipper, msg.Amount)
