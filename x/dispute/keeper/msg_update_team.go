@@ -34,6 +34,8 @@ func (k msgServer) UpdateTeam(ctx context.Context, msg *types.MsgUpdateTeam) (*t
 	if err := k.Params.Set(ctx, param); err != nil {
 		return nil, err
 	}
+	currentAccBytes := currentAcc.Bytes()
+	newAccBytes := newAcc.Bytes()
 	// if the team has voted on a dispute, transfer vote to the new address
 	iter, err := k.Disputes.Indexes.OpenDisputes.MatchExact(ctx, true)
 	if err != nil {
@@ -52,8 +54,6 @@ func (k msgServer) UpdateTeam(ctx context.Context, msg *types.MsgUpdateTeam) (*t
 		// if dispute is open, check if team has voted
 		if dispute.Open {
 			id := dispute.DisputeId
-			currentAccBytes := currentAcc.Bytes()
-			newAccBytes := newAcc.Bytes()
 			teamVoteExists, err := k.Voter.Has(ctx, collections.Join(id, currentAccBytes))
 			if err != nil {
 				if !errors.Is(err, collections.ErrNotFound) {
