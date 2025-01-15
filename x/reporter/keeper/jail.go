@@ -48,5 +48,6 @@ func (k Keeper) UnjailReporter(ctx context.Context, reporterAddr sdk.AccAddress,
 	}
 
 	reporter.Jailed = false
+	reporter.JailedUntil = time.Time{}
 	return k.Reporters.Set(ctx, reporterAddr, reporter)
 }
