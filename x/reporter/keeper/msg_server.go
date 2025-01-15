@@ -228,6 +228,11 @@ func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSel
 		return nil, err
 	}
 
+	// ensure that a selector cannot be removed if it is the reporter’s own address
+	if bytes.Equal(selector.Reporter, selectorAddr.Bytes()) {
+		return nil, errors.New("selector cannot be removed if it is the reporter's own address")
+	}
+
 	hasMin, err := k.Keeper.HasMin(goCtx, selectorAddr, reporter.MinTokensRequired)
 	if err != nil {
 		return nil, err
