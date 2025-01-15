@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"strings"
 
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -26,7 +27,7 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 		return nil, types.ErrMinimumTRBrequired.Wrapf("fee %s doesn't meet minimum fee required", msg.Fee.Amount)
 	}
 	// return an error if the proposer attempts to create a dispute on themselves while paying from their bond
-	if msg.PayFromBond && sender.String() == msg.Creator {
+	if msg.PayFromBond && strings.EqualFold(msg.Creator, msg.Report.Reporter) {
 		return nil, types.ErrSelfDisputeFromBond.Wrapf("proposer cannot pay from their bond when creating a dispute on themselves")
 	}
 	dispute, err := k.GetDisputeByReporter(ctx, *msg.Report, msg.DisputeCategory)
