@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/tellor-io/layer/utils"
-	"github.com/tellor-io/layer/x/oracle/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -122,9 +121,9 @@ func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChan
 		c.txChan <- data
 	}
 
-	var bridgeDepositMsg *types.MsgSubmitValue
+	var bridgeDepositMsg *oracletypes.MsgSubmitValue
 	var queryId []byte
-	if msg, ok := data.Msg.(*types.MsgSubmitValue); ok {
+	if msg, ok := data.Msg.(*oracletypes.MsgSubmitValue); ok {
 		bridgeDepositMsg = msg
 	} else {
 		c.logger.Error("Could not go from sdk.Msg to types.MsgSubmitValue")
