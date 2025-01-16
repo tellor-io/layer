@@ -12,6 +12,7 @@ import (
 
 	"github.com/shirou/gopsutil/v3/process"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -193,4 +194,34 @@ func (c *Client) LogProcessStats() {
 	}
 
 	c.logger.Info(fmt.Sprintf("CPU Usage: %.2f%%, Num of threads: %d\n", cpuPercent, numThreads))
+}
+
+func (c *Client) WithdrawAndStakeEarnedRewardsPeriodically(ctx context.Context, frequency time.Duration) {
+	valAddr := ""
+	for {
+		if valAddr == "" {
+			valAddr = os.Getenv("REPORTERS_VALIDATOR_ADDRESS")
+			if valAddr == "" {
+				fmt.Println("Returning from Withdraw Monitor due to no validator address env variable was found")
+				time.Sleep(frequency)
+				continue
+			}
+		}
+
+		withdrawMsg := &reportertypes.MsgWithdrawTipLegacy{
+			SelectorAddress:  c.accAddr.String(),
+			ValidatorAddress: valAddr,
+		}
+
+		txResult, err := c.sendTx(ctx, withdrawMsg)
+		if err != nil {
+			c.logger.Error(fmt.Sprintf("ERROR withdrawing tips: %v", err))
+			time.Sleep(frequency)
+			valAddr = "" // reset to empty string so that we are forced to read the validator address environment variable
+			continue
+		}
+
+		c.logger.Info(fmt.Sprintf("WithdrawTip Tx Result: %v", txResult))
+		time.Sleep(frequency)
+	}
 }
