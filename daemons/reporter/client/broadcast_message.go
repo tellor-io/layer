@@ -92,7 +92,6 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 		Value:     value,
 	}
 
-	c.logger.Info("sent msg to channel")
 	c.txChan <- TxChannelInfo{Msg: msg, isBridge: false, NumRetries: 0}
 
 	mutex.Lock()
