@@ -3,11 +3,11 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/collections"
 	layer "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 
+	"cosmossdk.io/collections"
 	// "cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
