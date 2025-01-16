@@ -194,8 +194,8 @@ func StartReporterDaemonTaskLoop(
 	wg.Add(1)
 	go client.MonitorForTippedQueries(ctx, &wg)
 
-	// wg.Add(1)
-	// go client.WithdrawAndStakeEarnedRewardsPeriodically(ctx, &wg)
+	wg.Add(1)
+	go client.WithdrawAndStakeEarnedRewardsPeriodically(ctx, &wg)
 
 	wg.Wait()
 }
