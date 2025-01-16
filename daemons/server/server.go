@@ -28,6 +28,7 @@ type Server struct {
 	socketAddress string
 	PriceFeedServer
 	TokenBridgeFeedServer
+	TokenBridgeTipServer
 }
 
 // NewServer creates a single gRPC server that's shared across multiple daemons for communication.

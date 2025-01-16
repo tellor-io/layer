@@ -17,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
+	tokenbridgetipstypes "github.com/tellor-io/layer/daemons/server/types/token_bridge_tips"
 	tokenbridge "github.com/tellor-io/layer/daemons/token_bridge_feed/abi"
 
 	"cosmossdk.io/log"
@@ -27,8 +28,8 @@ type Client struct {
 	lastReportedDepositId *big.Int
 	logger                log.Logger
 	tokenDepositsCache    *tokenbridgetypes.DepositReports
-
-	daemonStartup sync.WaitGroup
+	tokenBridgeTipsCache  *tokenbridgetipstypes.DepositTips
+	daemonStartup         sync.WaitGroup
 
 	runningSubtasksWaitGroup sync.WaitGroup
 
@@ -48,10 +49,10 @@ type APIResponse struct {
 	} `json:"data"`
 }
 
-func StartNewClient(ctx context.Context, logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositReports) *Client {
+func StartNewClient(ctx context.Context, logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositReports, tokenBridgeTipsCache *tokenbridgetipstypes.DepositTips) *Client {
 	logger.Info("Starting tokenbridge daemon")
 
-	client := newClient(logger, tokenDepositsCache)
+	client := newClient(logger, tokenDepositsCache, tokenBridgeTipsCache)
 	client.runningSubtasksWaitGroup.Add(1)
 	go func() {
 		defer client.runningSubtasksWaitGroup.Done()
@@ -60,13 +61,14 @@ func StartNewClient(ctx context.Context, logger log.Logger, tokenDepositsCache *
 	return client
 }
 
-func newClient(logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositReports) *Client {
+func newClient(logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositReports, tokenBridgeTipsCache *tokenbridgetipstypes.DepositTips) *Client {
 	logger = logger.With(log.ModuleKey, "tokenbridge-daemon")
 	client := &Client{
-		tickers:            []*time.Ticker{},
-		stops:              []chan bool{},
-		logger:             logger,
-		tokenDepositsCache: tokenDepositsCache,
+		tickers:              []*time.Ticker{},
+		stops:                []chan bool{},
+		logger:               logger,
+		tokenDepositsCache:   tokenDepositsCache,
+		tokenBridgeTipsCache: tokenBridgeTipsCache,
 	}
 
 	// Set the client's daemonStartup state to indicate that the daemon has not finished starting up.
@@ -87,12 +89,124 @@ func (c *Client) start(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			err := c.QueryTokenBridgeContract()
-			if err != nil {
+			// Process regular deposits
+			if err := c.QueryTokenBridgeContract(); err != nil {
 				c.logger.Error("Failed to query and process deposits", "error", err)
+			}
+
+			// Process tips
+			if err := c.ProcessPendingTips(); err != nil {
+				c.logger.Error("Failed to process pending tips", "error", err)
 			}
 		}
 	}
+}
+
+// Add new method to process tips
+func (c *Client) ProcessPendingTips() error {
+	oldestTipQueryData, err := c.tokenBridgeTipsCache.GetOldestTip()
+	if err != nil {
+		return nil
+	}
+
+	// Decode the query data to extract depositId
+	queryType, depositId, err := c.DecodeQueryData(oldestTipQueryData.QueryData)
+	if err != nil {
+		c.logger.Error("Failed to decode tip query data", "error", err)
+		c.tokenBridgeTipsCache.RemoveOldestTip()
+		return nil
+	}
+
+	// Verify this is a TRBBridge query
+	if queryType != "TRBBridge" {
+		c.logger.Error("Invalid query type for tip", "queryType", queryType)
+		c.tokenBridgeTipsCache.RemoveOldestTip()
+		return nil
+	}
+
+	// Query deposit details
+	depositTicket, err := c.QueryDepositDetails(depositId)
+	if err != nil {
+		c.logger.Error("Failed to query deposit details for tip", "error", err)
+		return nil
+	}
+
+	// Check finality
+	isFinal, err := c.CheckForFinality(depositTicket.BlockHeight)
+	if err != nil || !isFinal {
+		c.logger.Info("Tip deposit not yet final", "depositId", depositId)
+		return nil
+	}
+
+	// Encode report data
+	// queryData, err := c.EncodeQueryData(depositTicket)
+	// if err != nil {
+	// 	c.logger.Error("Failed to encode query data for tip", "error", err)
+	// 	return nil
+	// }
+	reportValue, err := c.EncodeReportValue(depositTicket)
+	if err != nil {
+		c.logger.Error("Failed to encode report value for tip", "error", err)
+		return nil
+	}
+
+	// Add to deposits cache
+	c.tokenDepositsCache.AddReport(tokenbridgetypes.DepositReport{
+		QueryData: oldestTipQueryData.QueryData,
+		Value:     reportValue,
+	})
+
+	// Remove from tips cache
+	c.tokenBridgeTipsCache.RemoveOldestTip()
+	c.logger.Info("Processed tip and added to deposits", "depositId", depositId)
+
+	return nil
+}
+
+// Add helper method to decode query data
+func (c *Client) DecodeQueryData(queryData []byte) (string, *big.Int, error) {
+	// Prepare types for decoding
+	StringType, err := abi.NewType("string", "", nil)
+	if err != nil {
+		return "", nil, err
+	}
+	BytesType, err := abi.NewType("bytes", "", nil)
+	if err != nil {
+		return "", nil, err
+	}
+
+	// Decode outer layer
+	args := abi.Arguments{{Type: StringType}, {Type: BytesType}}
+	decoded, err := args.Unpack(queryData)
+	if err != nil {
+		return "", nil, err
+	}
+
+	queryType := decoded[0].(string)
+	innerData := decoded[1].([]byte)
+
+	// Decode inner layer
+	BoolType, err := abi.NewType("bool", "", nil)
+	if err != nil {
+		return "", nil, err
+	}
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	if err != nil {
+		return "", nil, err
+	}
+
+	innerArgs := abi.Arguments{{Type: BoolType}, {Type: Uint256Type}}
+	innerDecoded, err := innerArgs.Unpack(innerData)
+	if err != nil {
+		return "", nil, err
+	}
+
+	isDeposit := innerDecoded[0].(bool)
+	if !isDeposit {
+		return "", nil, fmt.Errorf("tip is not a deposit")
+	}
+	depositId := innerDecoded[1].(*big.Int)
+	return queryType, depositId, nil
 }
 
 type DepositReceipt struct {

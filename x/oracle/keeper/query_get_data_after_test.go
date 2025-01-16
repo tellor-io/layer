@@ -34,7 +34,7 @@ func (s *KeeperTestSuite) TestQueryGetDataAfter() {
 	s.ErrorContains(err, "no aggregate report found after timestamp")
 	s.Nil(getDataAfterResponse)
 
-	queryId := "1234abcd"
+	const queryId = "1234abcd"
 	qIdBz, err := utils.QueryBytesFromString(queryId)
 	s.NoError(err)
 	agg := types.Aggregate{QueryId: qIdBz, AggregateReporter: sample.AccAddress()}
