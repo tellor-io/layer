@@ -35,7 +35,7 @@ var (
 var mutex = &sync.RWMutex{}
 
 type TxChannelInfo struct {
-	Msg        *oracletypes.MsgSubmitValue
+	Msg        sdk.Msg
 	isBridge   bool
 	NumRetries uint8
 }

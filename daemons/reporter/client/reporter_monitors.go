@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/shirou/gopsutil/v3/process"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -161,6 +163,35 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 				}
 			}
 		}
+	}
+}
+
+func (c *Client) WithdrawAndStakeEarnedRewardsPeriodically(ctx context.Context) {
+	freqVar := os.Getenv("WITHDRAW_FREQUENCY")
+	if freqVar == "" {
+		freqVar = "43200" // default to being 12 hours or 43200 seconds
+	}
+	frequency, err := strconv.Atoi(freqVar)
+	if err != nil {
+		c.logger.Error("Could not start auto rewards withdrawal process due to incorrect parameter. Please enter the number of seconds to wait in between claiming rewards")
+		return
+	}
+
+	for {
+		valAddr := os.Getenv("REPORTERS_VALIDATOR_ADDRESS")
+		if valAddr == "" {
+			fmt.Println("Returning from Withdraw Monitor due to no validator address env variable was found")
+			time.Sleep(time.Duration(frequency) * time.Second)
+			continue
+		}
+
+		withdrawMsg := &reportertypes.MsgWithdrawTipLegacy{
+			SelectorAddress:  c.accAddr.String(),
+			ValidatorAddress: valAddr,
+		}
+		c.txChan <- TxChannelInfo{Msg: withdrawMsg, isBridge: false, NumRetries: 0}
+
+		time.Sleep(time.Duration(frequency) * time.Second)
 	}
 }
 

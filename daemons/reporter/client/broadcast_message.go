@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/tellor-io/layer/utils"
+	"github.com/tellor-io/layer/x/oracle/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -93,7 +94,7 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 	}
 
 	c.logger.Info("sent msg to channel")
-	c.txChan <- TxChannelInfo{Msg: msg, isBridge: false}
+	c.txChan <- TxChannelInfo{Msg: msg, isBridge: false, NumRetries: 0}
 
 	mutex.Lock()
 	commitedIds[querymeta.Id] = true
@@ -121,7 +122,16 @@ func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChan
 		c.txChan <- data
 	}
 
-	queryId := utils.QueryIDFromData(data.Msg.GetQueryData())
+	var bridgeDepositMsg *types.MsgSubmitValue
+	var queryId []byte
+	if msg, ok := data.Msg.(*types.MsgSubmitValue); ok {
+		bridgeDepositMsg = msg
+	} else {
+		c.logger.Error("Could not go from sdk.Msg to types.MsgSubmitValue")
+		return
+	}
+
+	queryId = utils.QueryIDFromData(bridgeDepositMsg.GetQueryData())
 
 	// Check transaction success
 	if resp.TxResult.Code != 0 {
