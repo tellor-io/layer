@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -196,14 +197,24 @@ func (c *Client) LogProcessStats() {
 	c.logger.Info(fmt.Sprintf("CPU Usage: %.2f%%, Num of threads: %d\n", cpuPercent, numThreads))
 }
 
-func (c *Client) WithdrawAndStakeEarnedRewardsPeriodically(ctx context.Context, frequency time.Duration) {
+func (c *Client) WithdrawAndStakeEarnedRewardsPeriodically(ctx context.Context) {
+	freqVar := os.Getenv("WITHDRAW_FREQUENCY")
+	if freqVar == "" {
+		freqVar = "43200" // default to being 12 hours or 43200 seconds
+	}
+	frequency, err := strconv.Atoi(freqVar)
+	if err != nil {
+		c.logger.Error("Could not start auto rewards withdrawal process due to incorrect parameter. Please enter the number of seconds to wait in between claiming rewards")
+		return
+	}
+
 	valAddr := ""
 	for {
 		if valAddr == "" {
 			valAddr = os.Getenv("REPORTERS_VALIDATOR_ADDRESS")
 			if valAddr == "" {
 				fmt.Println("Returning from Withdraw Monitor due to no validator address env variable was found")
-				time.Sleep(frequency)
+				time.Sleep(time.Duration(frequency) * time.Second)
 				continue
 			}
 		}
@@ -216,12 +227,12 @@ func (c *Client) WithdrawAndStakeEarnedRewardsPeriodically(ctx context.Context, 
 		txResult, err := c.sendTx(ctx, withdrawMsg)
 		if err != nil {
 			c.logger.Error(fmt.Sprintf("ERROR withdrawing tips: %v", err))
-			time.Sleep(frequency)
+			time.Sleep(time.Duration(frequency) * time.Second)
 			valAddr = "" // reset to empty string so that we are forced to read the validator address environment variable
 			continue
 		}
 
 		c.logger.Info(fmt.Sprintf("WithdrawTip Tx Result: %v", txResult))
-		time.Sleep(frequency)
+		time.Sleep(time.Duration(frequency) * time.Second)
 	}
 }
