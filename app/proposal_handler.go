@@ -238,14 +238,15 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 			h.logger.Error("CheckInitialSignaturesFromLastCommit: failed to unmarshal vote extension", "error", err)
 			// check for initial sig
 		} else if len(voteExt.InitialSignature.SignatureA) > 0 {
-			// verify initial sig
-			evmAddress, err := h.bridgeKeeper.EVMAddressFromSignatures(ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB)
+			// get operator address from vote
+			operatorAddress, err := h.ValidatorOperatorAddressFromVote(ctx, vote)
 			if err != nil {
-				h.logger.Error("CheckInitialSignaturesFromLastCommit: failed to get evm address from initial sig", "error", err)
+				h.logger.Error("CheckInitialSignaturesFromLastCommit: failed to get operator address from vote", "error", err)
 			} else {
-				operatorAddress, err := h.ValidatorOperatorAddressFromVote(ctx, vote)
+				// verify initial sig
+				evmAddress, err := h.bridgeKeeper.EVMAddressFromSignatures(ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB, operatorAddress)
 				if err != nil {
-					h.logger.Error("CheckInitialSignaturesFromLastCommit: failed to get operator address from vote", "error", err)
+					h.logger.Error("CheckInitialSignaturesFromLastCommit: failed to get evm address from initial sig", "error", err)
 				} else {
 					// check for existing EVM address for operator
 					_, err := h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
