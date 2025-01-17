@@ -157,7 +157,10 @@ func (c *Client) BroadcastTxMsgToChain() {
 		go func() {
 			defer close(done)
 			if !obj.isBridge {
-				c.sendTx(ctx, obj.Msg)
+				_, err := c.sendTx(ctx, obj.Msg)
+				if err != nil {
+					c.logger.Error(fmt.Sprintf("Error sending tx: %v", err))
+				}
 			} else {
 				c.HandleBridgeDepositTxInChannel(ctx, obj)
 			}

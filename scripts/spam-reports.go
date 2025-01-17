@@ -12,10 +12,12 @@ import (
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
-var COMMAND_PATH = "/Users/caleb/layer/layerd"
-var LAYER_PATH = "/Users/caleb/.layer"
-var FAUCET_ADDRESS = "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp"
-var VALIDATOR_ADDRESS = "tellorvaloper1ta78rra3a9sjr6n9ve7wjxft5n862ug73p75cg" // this can be any
+var (
+	COMMAND_PATH      = "/Users/caleb/layer/layerd"
+	LAYER_PATH        = "/Users/caleb/.layer"
+	FAUCET_ADDRESS    = "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp"
+	VALIDATOR_ADDRESS = "tellorvaloper1ta78rra3a9sjr6n9ve7wjxft5n862ug73p75cg" // this can be any
+)
 
 var NUM_OF_REPORTERS = 200
 
@@ -45,7 +47,6 @@ func main() {
 		go SpamReportsWithReportersMap(reportersMap, querydata)
 		prevQueryData = querydata
 	}
-
 }
 
 type CyclelistQueryResponse struct {
@@ -78,6 +79,7 @@ func SpamReportsWithReportersMap(reportersMap map[string]ReporterInfo, qd string
 	var wg sync.WaitGroup
 
 	for reporter_name, info := range reportersMap {
+		reporterInfo := info
 		wg.Add(1)
 		ticket <- struct{}{} // would block if guard channel is already filled
 		key_path := fmt.Sprintf("%s/%s", LAYER_PATH, reporter_name)
@@ -91,7 +93,7 @@ func SpamReportsWithReportersMap(reportersMap map[string]ReporterInfo, qd string
 			reporter_info.SequenceNum++
 			fmt.Println(string(output))
 			<-ticket
-		}(&info, key_path)
+		}(&reporterInfo, key_path)
 	}
 
 	wg.Wait()
@@ -106,7 +108,7 @@ func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]ReporterI
 	reporterMap := make(map[string]ReporterInfo, numOfReporters)
 	for i := 1; i <= numOfReporters; i++ {
 		key_name := fmt.Sprintf("test_reporter%d", i)
-		//key_path := fmt.Sprintf("%s/%s", LAYER_PATH, key_name)
+		// key_path := fmt.Sprintf("%s/%s", LAYER_PATH, key_name)
 
 		// Create account for reporter
 		// fmt.Println("Create keys")
