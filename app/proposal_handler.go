@@ -68,51 +68,22 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 		h.logger.Info("PrepareProposalHandler: failed to validate vote extensions", "error", err, "votes", req.LocalLastCommit.Votes)
 	}
 	proposalTxs := req.Txs
-	injectedVoteExtTx := VoteExtTx{}
 
 	if req.Height > ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
-		operatorAddresses, evmAddresses, err := h.CheckInitialSignaturesFromLastCommit(ctx, req.LocalLastCommit)
-		if err != nil {
-			h.logger.Info("PrepareProposalHandler: failed to check initial signatures from last commit", "error", err)
-			bz, err := json.Marshal(injectedVoteExtTx)
-			if err != nil {
-				h.logger.Error("PrepareProposalHandler: failed to encode injected vote extension tx", "err", err)
-				return nil, errors.New("failed to encode injected vote extension tx")
-			}
-			proposalTxs = append([][]byte{bz}, proposalTxs...)
-			return &abci.ResponsePrepareProposal{
-				Txs: proposalTxs,
-			}, nil
-		}
+		operatorAddresses, evmAddresses := h.CheckInitialSignaturesFromLastCommit(ctx, req.LocalLastCommit)
 		operatorAndEvm := OperatorAndEVM{
 			OperatorAddresses: operatorAddresses,
 			EVMAddresses:      evmAddresses,
 		}
 
-		valsetOperatorAddresses, valsetTimestamps, valsetSignatures, err := h.CheckValsetSignaturesFromLastCommit(ctx, req.LocalLastCommit)
-		if err != nil {
-			h.logger.Info("PrepareProposalHandler: failed to check valset signatures from last commit", "error", err)
-			bz, err := json.Marshal(injectedVoteExtTx)
-			if err != nil {
-				h.logger.Error("PrepareProposalHandler: failed to encode injected vote extension tx", "err", err)
-				return nil, errors.New("failed to encode injected vote extension tx")
-			}
-			proposalTxs = append([][]byte{bz}, proposalTxs...)
-			return &abci.ResponsePrepareProposal{
-				Txs: proposalTxs,
-			}, nil
-		}
+		valsetOperatorAddresses, valsetTimestamps, valsetSignatures := h.CheckValsetSignaturesFromLastCommit(ctx, req.LocalLastCommit)
 		valsetSigs := ValsetSignatures{
 			OperatorAddresses: valsetOperatorAddresses,
 			Timestamps:        valsetTimestamps,
 			Signatures:        valsetSignatures,
 		}
 
-		oracleSigs, oracleSnapshots, oracleOperatorAddresses, err := h.CheckOracleAttestationsFromLastCommit(ctx, req.LocalLastCommit)
-		if err != nil {
-			h.logger.Info("PrepareProposalHandler: failed to check oracle attestations from last commit", "error", err)
-		}
-
+		oracleSigs, oracleSnapshots, oracleOperatorAddresses := h.CheckOracleAttestationsFromLastCommit(ctx, req.LocalLastCommit)
 		oracleAttestations := OracleAttestations{
 			OperatorAddresses: oracleOperatorAddresses,
 			Attestations:      oracleSigs,
@@ -155,11 +126,7 @@ func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.Requ
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
 
-		operatorAddresses, evmAddresses, err := h.CheckInitialSignaturesFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
-		if err != nil {
-			h.logger.Error("ProcessProposalHandler: rejecting proposal, failed to check initial signatures from last commit", "error", err)
-			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-		}
+		operatorAddresses, evmAddresses := h.CheckInitialSignaturesFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
 
 		if !reflect.DeepEqual(operatorAddresses, injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses) {
 			h.logger.Error("ProcessProposalHandler: rejecting proposal, operator addresses do not match", "operatorAddresses", operatorAddresses, "injectedVoteExtTx", injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses)
@@ -171,11 +138,7 @@ func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.Requ
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
 
-		valsetOperatorAddresses, valsetTimestamps, valsetSignatures, err := h.CheckValsetSignaturesFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
-		if err != nil {
-			h.logger.Error("ProcessProposalHandler: rejecting proposal, failed to check valset signatures from last commit", "error", err)
-			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-		}
+		valsetOperatorAddresses, valsetTimestamps, valsetSignatures := h.CheckValsetSignaturesFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
 
 		if !reflect.DeepEqual(valsetOperatorAddresses, injectedVoteExtTx.ValsetSigs.OperatorAddresses) {
 			h.logger.Error("ProcessProposalHandler: rejecting proposal, valset operator addresses do not match", "valsetOperatorAddresses", valsetOperatorAddresses, "injectedVoteExtTx", injectedVoteExtTx.ValsetSigs.OperatorAddresses)
@@ -192,11 +155,7 @@ func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.Requ
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
 
-		oracleSigs, oracleSnapshots, oracleOperatorAddresses, err := h.CheckOracleAttestationsFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
-		if err != nil {
-			h.logger.Error("ProcessProposalHandler: rejecting proposal, failed to check oracle attestations from last commit", "error", err)
-			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
-		}
+		oracleSigs, oracleSnapshots, oracleOperatorAddresses := h.CheckOracleAttestationsFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
 
 		if !reflect.DeepEqual(oracleSigs, injectedVoteExtTx.OracleAttestations.Attestations) {
 			h.logger.Error("ProcessProposalHandler: rejecting proposal, oracle signatures do not match", "oracleSigs", oracleSigs, "injectedVoteExtTx", injectedVoteExtTx.OracleAttestations.Attestations)
@@ -262,7 +221,7 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 	return res, nil
 }
 
-func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([]string, []string, error) {
+func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([]string, []string) {
 	var operatorAddresses []string
 	var evmAddresses []string
 
@@ -301,12 +260,12 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 	}
 	if len(operatorAddresses) == 0 {
 		emptyStringArray := make([]string, 0)
-		return emptyStringArray, emptyStringArray, nil
+		return emptyStringArray, emptyStringArray
 	}
-	return operatorAddresses, evmAddresses, nil
+	return operatorAddresses, evmAddresses
 }
 
-func (h *ProposalHandler) CheckValsetSignaturesFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([]string, []int64, []string, error) {
+func (h *ProposalHandler) CheckValsetSignaturesFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([]string, []int64, []string) {
 	var operatorAddresses []string
 	var timestamps []int64
 	var signatures []string
@@ -337,7 +296,7 @@ func (h *ProposalHandler) CheckValsetSignaturesFromLastCommit(ctx sdk.Context, c
 			}
 		}
 	}
-	return operatorAddresses, timestamps, signatures, nil
+	return operatorAddresses, timestamps, signatures
 }
 
 func (h *ProposalHandler) SetEVMAddresses(ctx sdk.Context, operatorAddresses, evmAddresses []string) error {
@@ -362,7 +321,7 @@ func (h *ProposalHandler) ValidatorOperatorAddressFromVote(ctx sdk.Context, vote
 	return operatorAddress, nil
 }
 
-func (h *ProposalHandler) CheckOracleAttestationsFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([][]byte, [][]byte, []string, error) {
+func (h *ProposalHandler) CheckOracleAttestationsFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([][]byte, [][]byte, []string) {
 	var attestations [][]byte
 	var operatorAddresses []string
 	var snapshots [][]byte
@@ -394,5 +353,5 @@ func (h *ProposalHandler) CheckOracleAttestationsFromLastCommit(ctx sdk.Context,
 			}
 		}
 	}
-	return attestations, snapshots, operatorAddresses, nil
+	return attestations, snapshots, operatorAddresses
 }
