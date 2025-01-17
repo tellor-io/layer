@@ -209,6 +209,20 @@ func (_m *ReporterKeeper) TotalReporterPower(ctx context.Context) (math.Int, err
 	return r0, r1
 }
 
+// UpdateJailedUntilOnFailedDispute provides a mock function with given fields: ctx, reporterAddr
+func (_m *ReporterKeeper) UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr types.AccAddress) error {
+	ret := _m.Called(ctx, reporterAddr)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) error); ok {
+		r0 = rf(ctx, reporterAddr)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 type mockConstructorTestingTNewReporterKeeper interface {
 	mock.TestingT
 	Cleanup(func())

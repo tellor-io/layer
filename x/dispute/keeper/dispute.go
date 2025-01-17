@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	gomath "math"
 	"math/big"
 	"strconv"
 
@@ -179,9 +178,6 @@ func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroRe
 
 func (k Keeper) JailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDuration uint64) error {
 	// noop for major duration, reporter is removed from store so no need to jail
-	if jailDuration == gomath.MaxInt64 {
-		return nil
-	}
 	return k.reporterKeeper.JailReporter(ctx, repAddr, jailDuration)
 }
 
@@ -193,7 +189,7 @@ func GetSlashPercentageAndJailDuration(category types.DisputeCategory) (math.Int
 	case types.Minor:
 		return math.NewInt(layertypes.PowerReduction.Int64()).QuoRaw(20), 600, nil // 5%
 	case types.Major:
-		return layertypes.PowerReduction, gomath.MaxInt64, nil // 100%
+		return layertypes.PowerReduction, 31536000, nil // 100% and jails reporter for a year or 31536000 seconds. Will be deleted or unjailed depending on the results of the dispute
 	default:
 		return math.Int{}, 0, types.ErrInvalidDisputeCategory
 	}
