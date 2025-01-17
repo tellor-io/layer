@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.8.22;
+pragma solidity 0.8.19;
 
-import "./ECDSA.sol";
+import {ECDSA} from "./ECDSA.sol";
 import "./Constants.sol";
 
 struct OracleAttestationData {
@@ -45,8 +45,10 @@ contract BlobstreamO is ECDSA {
     uint256 public validatorTimestamp; /// Timestamp of the block where validator set is updated.
     address public deployer; /// Address that deployed the contract.
     bool public initialized; /// True if the contract is initialized.
+    uint256 public constant MS_PER_SECOND = 1000; // factor to convert milliseconds to seconds
 
     /*Events*/
+    event GuardianResetValidatorSet(uint256 _powerThreshold, uint256 _validatorTimestamp, bytes32 _validatorSetHash);
     event ValidatorSetUpdated(uint256 _powerThreshold, uint256 _validatorTimestamp, bytes32 _validatorSetHash);
 
     /*Errors*/
@@ -55,7 +57,6 @@ contract BlobstreamO is ECDSA {
     error InvalidPowerThreshold();
     error InvalidSignature();
     error MalformedCurrentValidatorSet();
-    error NotConsensusValue();
     error NotDeployer();
     error NotGuardian();
     error StaleValidatorSet();
@@ -110,12 +111,16 @@ contract BlobstreamO is ECDSA {
         if (msg.sender != guardian) {
             revert NotGuardian();
         }
-        if (block.timestamp - (validatorTimestamp / 1000) < unbondingPeriod) {
+        if (block.timestamp - (validatorTimestamp / MS_PER_SECOND) < unbondingPeriod) {
             revert ValidatorSetNotStale();
+        }
+        if (_validatorTimestamp <= validatorTimestamp) {
+            revert ValidatorTimestampMustIncrease();
         }
         powerThreshold = _powerThreshold;
         validatorTimestamp = _validatorTimestamp;
         lastValidatorSetCheckpoint = _validatorSetCheckpoint;
+        emit GuardianResetValidatorSet(_powerThreshold, _validatorTimestamp, _validatorSetCheckpoint);
     }
 
     /// @notice This updates the validator set by checking that the validators
@@ -233,7 +238,7 @@ contract BlobstreamO is ECDSA {
         bytes32 _digest,
         uint256 _powerThreshold
     ) internal view {
-        if (block.timestamp - (validatorTimestamp / 1000) > unbondingPeriod) {
+        if (block.timestamp - (validatorTimestamp / MS_PER_SECOND) > unbondingPeriod) {
             revert StaleValidatorSet();
         }
         uint256 _cumulativePower = 0;
@@ -289,7 +294,11 @@ contract BlobstreamO is ECDSA {
         Signature calldata _sig
     ) internal pure returns (bool) {
         _digest = sha256(abi.encodePacked(_digest));
-        return _signer == ecrecover(_digest, _sig.v, _sig.r, _sig.s);
+        (address _recovered, RecoverError error, ) = tryRecover(_digest, _sig.v, _sig.r, _sig.s);
+        if (error != RecoverError.NoError) {
+            revert InvalidSignature();
+        }
+        return _signer == _recovered;
     }
 }
 

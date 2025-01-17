@@ -954,12 +954,8 @@ func (k Keeper) EncodeOracleAttestationData(
 	valsetCheckpoint []byte,
 	attestationTimestamp uint64,
 ) ([]byte, error) {
-	// domainSeparator is bytes "tellorNewReport"
-	domainSep := "74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
-	NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR, err := hex.DecodeString(domainSep)
-	if err != nil {
-		return nil, err
-	}
+	// domainSeparator is bytes "tellorCurrentAttestation"
+	NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR := []byte("tellorCurrentAttestation")
 	// Convert domain separator to bytes32
 	var domainSepBytes32 [32]byte
 	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR)
