@@ -37,7 +37,7 @@ func (gs GenesisState) Validate() error {
 		// check if the queryType of the given queryData is decodable
 		_, _, err := regtypes.DecodeQueryType(query)
 		if err != nil {
-			return fmt.Errorf("failed to decode query type: %v", err)
+			return fmt.Errorf("failed to decode query type: %w", err)
 		}
 	}
 
