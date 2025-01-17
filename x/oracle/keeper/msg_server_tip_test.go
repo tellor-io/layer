@@ -23,6 +23,7 @@ func (s *KeeperTestSuite) TestTip() {
 	// denom not loya
 	tipper := sample.AccAddressBytes()
 	amount := sdk.NewCoin("btc", math.NewInt(10*1e6))
+	// s.bankKeeper.On("SendCoinsFromAccountToModule", ctx, tipper, "oracle", sdk.NewCoins(amount)).Return(nil)
 	tipRes, err := msgServer.Tip(ctx, &types.MsgTip{
 		Amount:    amount,
 		Tipper:    tipper.String(),
@@ -39,6 +40,7 @@ func (s *KeeperTestSuite) TestTip() {
 		QueryData: []byte(queryData),
 	})
 	require.Error(err)
+	require.EqualError(err, types.ErrNotEnoughTip.Error())
 	require.Nil(tipRes)
 
 	// amount is negative
@@ -52,13 +54,13 @@ func (s *KeeperTestSuite) TestTip() {
 
 	// bad tipper address
 	badTipperAddr := "bad_tipper_address"
-	tipRes, err = msgServer.Tip(ctx, &types.MsgTip{
-		Amount:    amount,
-		Tipper:    badTipperAddr,
-		QueryData: []byte(queryData),
+	require.Panics(func() {
+		tipRes, err = msgServer.Tip(ctx, &types.MsgTip{
+			Amount:    amount,
+			Tipper:    badTipperAddr,
+			QueryData: []byte(queryData),
+		})
 	})
-	require.Error(err)
-	require.Nil(tipRes)
 
 	// query needs initialized, expiration after block time, set first tip
 	amount = sdk.NewCoin("loya", math.NewInt(10*1e6))
