@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.22;
+pragma solidity 0.8.19;
 
 import "../interfaces/IBlobstreamO.sol";
 import { LayerTransition } from "./LayerTransition.sol";
@@ -22,14 +22,16 @@ contract TokenBridge is LayerTransition{
     uint256 public withdrawLimitUpdateTime; // last time the withdraw limit was updated
     uint256 public withdrawLimitRecord; // amount you can withdraw per limit period
     uint256 public constant DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
+    uint256 public constant MS_PER_SECOND = 1000; // factor to convert milliseconds to seconds
     uint256 public constant PAUSE_PERIOD = 21 days; // time period guardian can pause bridge, only once
     uint256 public constant PAUSE_TRIBUTE_AMOUNT = 10000 ether; // amount of tokens burned to pause bridge
-    uint256 public constant TWELVE_HOUR_UPDATE_INTERVAL = 12 hours; // deposit and withdraw limits update interval
+    uint256 public constant TOKEN_DECIMAL_PRECISION_MULTIPLIER = 1e12; // multiplier to convert from loya to 1e18
+    uint256 public constant TWELVE_HOUR_CONSTANT = 12 hours; // deposit and withdraw limits update interval
     uint256 public constant WITHDRAW_LIMIT_DENOMINATOR = 100e18 / 5e18; // 100/withdrawLimitPercentage
 
-    mapping(uint256 => bool) public withdrawClaimed; // withdraw id => claimed status
-    mapping(address => uint256) public tokensToClaim; // recipient => extra amount to claim
-    mapping(uint256 => DepositDetails) public deposits; // deposit id => deposit details
+    mapping(uint256 depositId => DepositDetails) public deposits; // deposit id => deposit details
+    mapping(address recipient => uint256 extraAmountToClaim) public tokensToClaim; // recipient => extra amount to claim
+    mapping(uint256 withdrawId => bool claimed) public withdrawClaimed; // withdraw id => claimed status
 
     struct DepositDetails {
         address sender;
@@ -87,6 +89,7 @@ contract TokenBridge is LayerTransition{
     /// @param _layerRecipient your cosmos address on layer (don't get it wrong!!)
     function depositToLayer(uint256 _amount, uint256 _tip, string memory _layerRecipient) external {
         require(_amount > 0.1 ether, "TokenBridge: amount must be greater than 0.1 tokens");
+        require(_amount % TOKEN_DECIMAL_PRECISION_MULTIPLIER == 0, "TokenBridge: amount must be divisible by 1e12");
         require(_amount <= _refreshDepositLimit(_amount), "TokenBridge: amount exceeds deposit limit for time period");
         require(_tip <= _amount, "TokenBridge: tip must be less than or equal to amount");
         if (_tip > 0) {
@@ -132,13 +135,13 @@ contract TokenBridge is LayerTransition{
         require(bridgeState != BridgeState.PAUSED, "TokenBridge: bridge is paused");
         require(_attestData.queryId == keccak256(abi.encode("TRBBridge", abi.encode(false, _depositId))), "TokenBridge: invalid queryId");
         require(!withdrawClaimed[_depositId], "TokenBridge: withdraw already claimed");
-        require(block.timestamp - (_attestData.report.timestamp / 1000) > 12 hours, "TokenBridge: premature attestation");
-        require(block.timestamp - (_attestData.attestationTimestamp / 1000) < 12 hours, "TokenBridge: attestation too old");
+        require(block.timestamp - (_attestData.report.timestamp / MS_PER_SECOND) > TWELVE_HOUR_CONSTANT, "TokenBridge: premature attestation");
+        require(block.timestamp - (_attestData.attestationTimestamp / MS_PER_SECOND) < TWELVE_HOUR_CONSTANT, "TokenBridge: attestation too old");
         bridge.verifyOracleData(_attestData, _valset, _sigs);
         require(_attestData.report.aggregatePower >= bridge.powerThreshold(), "Report aggregate power must be greater than or equal to _minimumPower");
         withdrawClaimed[_depositId] = true;    
         (address _recipient, string memory _layerSender,uint256 _amountLoya,) = abi.decode(_attestData.report.value, (address, string, uint256, uint256));
-        uint256 _amountConverted = _amountLoya * 1e12; 
+        uint256 _amountConverted = _amountLoya * TOKEN_DECIMAL_PRECISION_MULTIPLIER; 
         uint256 _withdrawLimit = _refreshWithdrawLimit(_amountConverted);
         if(_withdrawLimit < _amountConverted){
             tokensToClaim[_recipient] = tokensToClaim[_recipient] + (_amountConverted - _withdrawLimit);
@@ -153,8 +156,8 @@ contract TokenBridge is LayerTransition{
     /// @notice returns the amount of tokens that can be deposited in the current 12 hour period
     /// @return amount of tokens that can be deposited
     function depositLimit() external view returns (uint256) {
-        if (block.timestamp - depositLimitUpdateTime > TWELVE_HOUR_UPDATE_INTERVAL) {
-            return token.balanceOf(address(this)) / DEPOSIT_LIMIT_DENOMINATOR;
+        if (block.timestamp - depositLimitUpdateTime > TWELVE_HOUR_CONSTANT) {
+            return (token.balanceOf(address(this)) + _getMintAmount()) / DEPOSIT_LIMIT_DENOMINATOR;
         }
         else{
             return depositLimitRecord;
@@ -164,8 +167,8 @@ contract TokenBridge is LayerTransition{
     /// @notice returns the withdraw limit
     /// @return amount of tokens that can be withdrawn
     function withdrawLimit() external view returns (uint256) {
-        if (block.timestamp - withdrawLimitUpdateTime > TWELVE_HOUR_UPDATE_INTERVAL) {
-            return token.balanceOf(address(this)) / WITHDRAW_LIMIT_DENOMINATOR;
+        if (block.timestamp - withdrawLimitUpdateTime > TWELVE_HOUR_CONSTANT) {
+            return (token.balanceOf(address(this)) + _getMintAmount()) / WITHDRAW_LIMIT_DENOMINATOR;
         }
         else{
             return withdrawLimitRecord;
@@ -173,10 +176,19 @@ contract TokenBridge is LayerTransition{
     }
 
     /* Internal Functions */
+    /// @notice returns the amount of tokens pending to be minted to this contract
+    /// @return amount of tokens pending to be minted
+    function _getMintAmount() internal view returns (uint256) {
+        uint256 _releasedAmount = (146.94 ether *
+            (block.timestamp - token.getUintVar(keccak256("_LAST_RELEASE_TIME_DAO")))) /
+            86400;
+        return _releasedAmount;
+    }
+
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
     /// @return max amount of tokens that can be deposited
     function _refreshDepositLimit(uint256 _amount) internal returns (uint256) {
-        if (block.timestamp - depositLimitUpdateTime > TWELVE_HOUR_UPDATE_INTERVAL) {
+        if (block.timestamp - depositLimitUpdateTime > TWELVE_HOUR_CONSTANT) {
             uint256 _tokenBalance = token.balanceOf(address(this));
             if (_tokenBalance < _amount) {
                 token.mintToOracle();
@@ -192,7 +204,7 @@ contract TokenBridge is LayerTransition{
     /// @param _amount of tokens to withdraw
     /// @return max amount of tokens that can be withdrawn
     function _refreshWithdrawLimit(uint256 _amount) internal returns (uint256) {
-        if (block.timestamp - withdrawLimitUpdateTime > TWELVE_HOUR_UPDATE_INTERVAL) {
+        if (block.timestamp - withdrawLimitUpdateTime > TWELVE_HOUR_CONSTANT) {
             uint256 _tokenBalance = token.balanceOf(address(this));
             if (_tokenBalance < _amount) {
                 token.mintToOracle();
