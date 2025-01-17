@@ -157,6 +157,8 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		}
 		// update reporter's power record for reward calculation
 		reporterVote.ReporterPower = reporterVote.ReporterPower.Sub(selectorTokens)
+		// decrease reporterVote.VoterPower by selectorTokens
+		reporterVote.VoterPower = reporterVote.VoterPower.Sub(selectorTokens)
 		err = k.Voter.Set(ctx, collections.Join(id, reporter.Bytes()), reporterVote)
 		if err != nil {
 			return math.Int{}, err
