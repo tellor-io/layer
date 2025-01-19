@@ -66,6 +66,7 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 	err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), req.LocalLastCommit)
 	if err != nil {
 		h.logger.Info("PrepareProposalHandler: failed to validate vote extensions", "error", err, "votes", req.LocalLastCommit.Votes)
+		return nil, err
 	}
 	proposalTxs := req.Txs
 	injectedVoteExtTx := VoteExtTx{}
