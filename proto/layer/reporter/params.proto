@@ -18,11 +18,11 @@ message Params {
     (gogoproto.moretags) = "yaml:\"min_commission_rate\"",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false,
-    (cosmos_proto.scalar) = "cosmos.LegacyDec"
+    (cosmos_proto.scalar) = "cosmos.Dec"
   ];
-  // min_trb to be a reporter
-  string min_trb = 2 [
-    (gogoproto.moretags) = "yaml:\"min_trb\"",
+  // min_loya to be a reporter
+  string min_loya = 2 [
+    (gogoproto.moretags) = "yaml:\"min_loya\"",
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false

@@ -376,6 +376,7 @@ func _Msg_UpdateDataSpec_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.registry.Msg",
 	HandlerType: (*MsgServer)(nil),

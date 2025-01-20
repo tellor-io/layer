@@ -44,6 +44,10 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 
 // Validate validates the set of params
 func (p Params) Validate() error {
+	if p.MinStakeAmount.IsNil() {
+		return fmt.Errorf("min stake amount is nil")
+	}
+
 	return nil
 }
 

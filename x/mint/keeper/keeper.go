@@ -87,8 +87,14 @@ func (k Keeper) SendInflationaryRewards(ctx context.Context, coins sdk.Coins) er
 	if coins.Empty() {
 		return nil
 	}
-	quarter := coins.AmountOf(layer.BondDenom).QuoRaw(4)
-	threequarters := coins.AmountOf(layer.BondDenom).Sub(quarter)
+	// declare coins.AmountOf(layer.BondDenom) to optimize gas
+	coinsAmt := coins.AmountOf(layer.BondDenom)
+	// return nil if amt is zero to avoid constructing invalid transactions
+	if coinsAmt.IsZero() {
+		return nil
+	}
+	quarter := coinsAmt.QuoRaw(4)
+	threequarters := coinsAmt.Sub(quarter)
 	outputs := []banktypes.Output{
 		{
 			Address: authtypes.NewModuleAddressOrBech32Address(types.TimeBasedRewards).String(),

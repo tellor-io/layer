@@ -42,11 +42,11 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if err != nil {
 		return nil, err
 	}
-	if params.MinTrb.GT(bondedTokens) {
+	if params.MinLoya.GT(bondedTokens) {
 		return nil, errors.New("address does not have min tokens required to be a reporter with a BONDED validator")
 	}
 	// the min requirement chosen by reporter has gte the min requirement
-	if msg.MinTokensRequired.LT(params.MinTrb) {
+	if msg.MinTokensRequired.LT(params.MinLoya) {
 		return nil, errors.New("reporters chosen min to join must be gte the min requirement")
 	}
 	// reporter can't be previously a selector or a reporter
@@ -57,10 +57,11 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if alreadyExists {
 		return nil, errors.New("address already exists")
 	}
-
-	if msg.CommissionRate.GT(math.LegacyNewDec(100)) {
-		return nil, errors.New("commission rate must be LTE 100 as that is a 100 percent commission rate")
+	// reporter commission rate must be between 0 and 1
+	if msg.CommissionRate.GT(math.LegacyNewDec(1)) || msg.CommissionRate.LT(params.MinCommissionRate) {
+		return nil, errors.New("commission rate must be between 0 and 1 (e.g, 0.50 = 50%)")
 	}
+
 	// set the reporter and set the self selector
 	if err := k.Keeper.Reporters.Set(goCtx, addr.Bytes(), types.NewReporter(msg.CommissionRate, msg.MinTokensRequired)); err != nil {
 		return nil, err
@@ -227,6 +228,11 @@ func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSel
 		return nil, err
 	}
 
+	// ensure that a selector cannot be removed if it is the reporter’s own address
+	if bytes.Equal(selector.Reporter, selectorAddr.Bytes()) {
+		return nil, errors.New("selector cannot be removed if it is the reporter's own address")
+	}
+
 	hasMin, err := k.Keeper.HasMin(goCtx, selectorAddr, reporter.MinTokensRequired)
 	if err != nil {
 		return nil, err
@@ -249,7 +255,7 @@ func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSel
 		if err != nil {
 			return nil, err
 		}
-		if len(selectors) <= int(params.MaxSelectors) {
+		if len(selectors) < int(params.MaxSelectors) {
 			return nil, errors.New("selector can only be removed if reporter has reached max selectors and doesn't meet min requirement")
 		}
 	}

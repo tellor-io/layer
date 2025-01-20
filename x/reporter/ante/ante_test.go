@@ -2,6 +2,7 @@ package ante
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,9 +14,19 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+func mustAny(msg sdk.Msg) *codectypes.Any {
+	any, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		panic(err)
+	}
+	return any
+}
 
 func TestNewTrackStakeChangesDecorator(t *testing.T) {
 	k, sk, _, _, ctx, _ := keepertest.ReporterKeeper(t)
@@ -90,7 +101,143 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 			},
 			err: nil,
 		},
+		{
+			name: "empty authz exec",
+			msg:  &authz.MsgExec{},
+			err:  nil,
+		},
+		{
+			name: "stake change > 5% wrapped once",
+			msg: &authz.MsgExec{
+				Grantee: sample.AccAddressBytes().String(),
+				Msgs: []*codectypes.Any{
+					mustAny(&stakingtypes.MsgCreateValidator{
+						Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(1000)},
+					}),
+				},
+			},
+			err: errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period"),
+		},
+		{
+			name: "stake change < 5% wrapped once",
+			msg: &authz.MsgExec{
+				Grantee: sample.AccAddressBytes().String(),
+				Msgs: []*codectypes.Any{
+					mustAny(&stakingtypes.MsgCreateValidator{
+						Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(1)},
+					}),
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "stake change < 5% wrapped twice",
+			msg: &authz.MsgExec{
+				Grantee: sample.AccAddressBytes().String(),
+				Msgs: []*codectypes.Any{
+					mustAny(&authz.MsgExec{
+						Grantee: sample.AccAddressBytes().String(),
+						Msgs: []*codectypes.Any{
+							mustAny(&authz.MsgExec{
+								Grantee: sample.AccAddressBytes().String(),
+								Msgs: []*codectypes.Any{
+									mustAny(&authz.MsgExec{
+										Grantee: sample.AccAddressBytes().String(),
+										Msgs: []*codectypes.Any{
+											mustAny(&authz.MsgExec{
+												Grantee: sample.AccAddressBytes().String(),
+												Msgs: []*codectypes.Any{
+													mustAny(&authz.MsgExec{
+														Grantee: sample.AccAddressBytes().String(),
+														Msgs: []*codectypes.Any{
+															mustAny(&authz.MsgExec{
+																Grantee: sample.AccAddressBytes().String(),
+																Msgs: []*codectypes.Any{
+																	mustAny(&stakingtypes.MsgCreateValidator{
+																		Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(1000)},
+																	}),
+																},
+															}),
+														},
+													}),
+												},
+											}),
+										},
+									}),
+								},
+							}),
+						},
+					}),
+				},
+			},
+			err: fmt.Errorf("nested message count exceeds the maximum allowed: Limit is %d", MaxNestedMsgCount),
+		},
+		{
+			name: "stake change > 5% wrapped twice",
+			msg: &authz.MsgExec{
+				Grantee: sample.AccAddressBytes().String(),
+				Msgs: []*codectypes.Any{
+					mustAny(&authz.MsgExec{
+						Grantee: sample.AccAddressBytes().String(),
+						Msgs: []*codectypes.Any{
+							mustAny(&authz.MsgExec{
+								Grantee: sample.AccAddressBytes().String(),
+								Msgs: []*codectypes.Any{
+									mustAny(&stakingtypes.MsgCreateValidator{
+										Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(1000)},
+									}),
+								},
+							}),
+						},
+					}),
+				},
+			},
+			err: errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period"),
+		},
+		{
+			name: "nested message count exceeds the maximum allowed",
+			msg: &authz.MsgExec{
+				Grantee: sample.AccAddressBytes().String(),
+				Msgs: []*codectypes.Any{
+					mustAny(&authz.MsgExec{
+						Grantee: sample.AccAddressBytes().String(),
+						Msgs: []*codectypes.Any{
+							mustAny(&authz.MsgExec{
+								Grantee: sample.AccAddressBytes().String(),
+								Msgs: []*codectypes.Any{
+									mustAny(&authz.MsgExec{
+										Grantee: sample.AccAddressBytes().String(),
+										Msgs: []*codectypes.Any{
+											mustAny(&authz.MsgExec{
+												Grantee: sample.AccAddressBytes().String(),
+												Msgs: []*codectypes.Any{
+													mustAny(&authz.MsgExec{
+														Grantee: sample.AccAddressBytes().String(),
+														Msgs: []*codectypes.Any{
+															mustAny(&authz.MsgExec{
+																Grantee: sample.AccAddressBytes().String(),
+																Msgs: []*codectypes.Any{
+																	mustAny(&stakingtypes.MsgCreateValidator{
+																		Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(1000)},
+																	}),
+																},
+															}),
+														},
+													}),
+												},
+											}),
+										},
+									}),
+								},
+							}),
+						},
+					}),
+				},
+			},
+			err: errors.New("nested message count exceeds the maximum allowed: Limit is 7"),
+		},
 	}
+
 	s := encoding.GetTestEncodingCfg()
 	clientCtx := client.Context{}.
 		WithTxConfig(s.TxConfig)

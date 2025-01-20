@@ -6,6 +6,8 @@ import (
 	"strings"
 
 	"github.com/tellor-io/layer/x/registry/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -28,6 +30,16 @@ func (k msgServer) UpdateDataSpec(goCtx context.Context, req *types.MsgUpdateDat
 	if !querytypeExists {
 		return nil, errorsmod.Wrapf(types.ErrInvalidSpec, "data spec not registered for query type: %s", req.QueryType)
 	}
+	// sanitization and validation
+	req.Spec.ResponseValueType = strings.ToLower(req.Spec.ResponseValueType)
+	req.Spec.AggregationMethod = strings.ToLower(req.Spec.AggregationMethod)
+	if !types.SupportedType(req.Spec.ResponseValueType) {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("value type not supported: %s", req.Spec.ResponseValueType))
+	}
+	if !types.SupportedAggregationMethod[req.Spec.AggregationMethod] {
+		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("aggregation method not supported: %s", req.Spec.AggregationMethod))
+	}
+
 	if err := k.Keeper.SetDataSpec(ctx, req.QueryType, req.Spec); err != nil {
 		return nil, err
 	}

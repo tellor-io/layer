@@ -49,7 +49,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	}
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	_, err = reporterMsgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccAddrs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: reportertypes.DefaultMinTrb})
+	_, err = reporterMsgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccAddrs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: reportertypes.DefaultMinLoya})
 	require.NoError(err)
 	//---------------------------------------------------------------------------
 	// Height 1 - register a spec for a TWAP query, registrar is reporter

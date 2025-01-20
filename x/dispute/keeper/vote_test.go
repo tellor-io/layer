@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/tellor-io/layer/testutil/sample"
-	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
@@ -24,7 +23,6 @@ func (s *KeeperTestSuite) TestInitVoterClasses() {
 	require.True(classes.Users.IsZero())
 	require.True(classes.Reporters.IsZero())
 	require.True(classes.Team.IsZero())
-	require.True(classes.TokenHolders.IsZero())
 }
 
 func (s *KeeperTestSuite) TestSetStartVote() {
@@ -344,126 +342,126 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 	}
 }
 
-func (s *KeeperTestSuite) TestSetTokenholderVote() {
-	require := s.Require()
-	k := s.disputeKeeper
-	bk := s.bankKeeper
-	rk := s.reporterKeeper
-	ctx := s.ctx
-	ctx = ctx.WithBlockHeight(10)
+// func (s *KeeperTestSuite) TestSetTokenholderVote() {
+// 	require := s.Require()
+// 	k := s.disputeKeeper
+// 	bk := s.bankKeeper
+// 	rk := s.reporterKeeper
+// 	ctx := s.ctx
+// 	ctx = ctx.WithBlockHeight(10)
 
-	disputeId := uint64(1)
-	blockNum := uint64(10)
-	tokenHolder := sample.AccAddressBytes()
-	// reporter := sample.AccAddressBytes()
+// 	disputeId := uint64(1)
+// 	blockNum := uint64(10)
+// 	tokenHolder := sample.AccAddressBytes()
+// 	// reporter := sample.AccAddressBytes()
 
-	testCases := []struct {
-		name           string
-		voter          sdk.AccAddress
-		setup          func()
-		expectedError  bool
-		expectedTokens math.Int
-		expectedVote   types.StakeholderVoteCounts
-		teardown       func()
-	}{
-		{
-			name:  "err from GetDelegatorTokensAtBlock ",
-			voter: tokenHolder,
-			setup: func() {
-				// 100 free floating
-				bk.On("GetBalance", ctx, tokenHolder, layertypes.BondDenom).Return(sdk.Coin{
-					Denom:  layertypes.BondDenom,
-					Amount: math.NewInt(100),
-				}, nil).Once()
-				rk.On("GetDelegatorTokensAtBlock", ctx, tokenHolder.Bytes(), blockNum).Return(math.Int{}, errors.New("error!")).Once()
-			},
-			expectedError:  true,
-			expectedTokens: math.Int{},
-			expectedVote:   types.StakeholderVoteCounts{},
-			teardown:       nil,
-		},
-		{
-			name:  "err from VoteCountsByGroup",
-			voter: tokenHolder,
-			setup: func() {
-				// 100 free floating
-				bk.On("GetBalance", ctx, tokenHolder, layertypes.BondDenom).Return(sdk.Coin{
-					Denom:  layertypes.BondDenom,
-					Amount: math.NewInt(100),
-				}, nil).Once()
-				rk.On("GetDelegatorTokensAtBlock", ctx, tokenHolder.Bytes(), blockNum).Return(math.ZeroInt(), errors.New("error!")).Once()
-			},
-			expectedError:  true,
-			expectedTokens: math.Int{},
-			expectedVote:   types.StakeholderVoteCounts{},
-			teardown:       nil,
-		},
-		{
-			name:  "no delegated token, vote success",
-			voter: tokenHolder,
-			setup: func() {
-				// 200 free floating, 0 delegated, 0 selected
-				bk.On("GetBalance", ctx, tokenHolder, layertypes.BondDenom).Return(sdk.Coin{
-					Denom:  layertypes.BondDenom,
-					Amount: math.NewInt(200),
-				}, nil).Once()
-				rk.On("GetDelegatorTokensAtBlock", ctx, tokenHolder.Bytes(), blockNum).Return(math.ZeroInt(), nil).Once()
-			},
-			expectedError:  false,
-			expectedTokens: math.NewInt(200),
-			expectedVote: types.StakeholderVoteCounts{
-				Tokenholders: types.VoteCounts{
-					Support: 200,
-				},
-			},
-			teardown: func() {
-				require.NoError(k.VoteCountsByGroup.Remove(ctx, disputeId))
-			},
-		},
-		{
-			name:  "delegated token, vote success",
-			voter: tokenHolder,
-			setup: func() {
-				// 200 free floating, 100 delegated, 10 selected
-				bk.On("GetBalance", ctx, tokenHolder, layertypes.BondDenom).Return(sdk.Coin{
-					Denom:  layertypes.BondDenom,
-					Amount: math.NewInt(200),
-				}, nil).Once()
-				rk.On("GetDelegatorTokensAtBlock", ctx, tokenHolder.Bytes(), blockNum).Return(math.NewInt(100), nil).Once()
-			},
-			expectedError:  false,
-			expectedTokens: math.NewInt(300),
-			expectedVote: types.StakeholderVoteCounts{
-				Tokenholders: types.VoteCounts{
-					Support: 300,
-				},
-			},
-			teardown: func() {
-				require.NoError(k.VoteCountsByGroup.Remove(ctx, disputeId))
-			},
-		},
-	}
-	for _, tc := range testCases {
-		if tc.setup != nil {
-			tc.setup()
-		}
-		tokensVoted, err := k.SetTokenholderVote(ctx, disputeId, tc.voter, blockNum, types.VoteEnum_VOTE_SUPPORT)
-		if tc.expectedError {
-			require.Error(err)
-		} else {
-			require.NoError(err)
-		}
-		require.Equal(tokensVoted, tc.expectedTokens)
-		if tc.expectedVote != (types.StakeholderVoteCounts{}) {
-			votesByGroup, err := k.VoteCountsByGroup.Get(ctx, disputeId)
-			require.Equal(votesByGroup, tc.expectedVote)
-			require.NoError(err)
-		}
-		if tc.teardown != nil {
-			tc.teardown()
-		}
-	}
-}
+// 	testCases := []struct {
+// 		name           string
+// 		voter          sdk.AccAddress
+// 		setup          func()
+// 		expectedError  bool
+// 		expectedTokens math.Int
+// 		expectedVote   types.StakeholderVoteCounts
+// 		teardown       func()
+// 	}{
+// 		{
+// 			name:  "err from GetDelegatorTokensAtBlock ",
+// 			voter: tokenHolder,
+// 			setup: func() {
+// 				// 100 free floating
+// 				bk.On("GetBalance", ctx, tokenHolder, layertypes.BondDenom).Return(sdk.Coin{
+// 					Denom:  layertypes.BondDenom,
+// 					Amount: math.NewInt(100),
+// 				}, nil).Once()
+// 				rk.On("GetDelegatorTokensAtBlock", ctx, tokenHolder.Bytes(), blockNum).Return(math.Int{}, errors.New("error!")).Once()
+// 			},
+// 			expectedError:  true,
+// 			expectedTokens: math.Int{},
+// 			expectedVote:   types.StakeholderVoteCounts{},
+// 			teardown:       nil,
+// 		},
+// 		{
+// 			name:  "err from VoteCountsByGroup",
+// 			voter: tokenHolder,
+// 			setup: func() {
+// 				// 100 free floating
+// 				bk.On("GetBalance", ctx, tokenHolder, layertypes.BondDenom).Return(sdk.Coin{
+// 					Denom:  layertypes.BondDenom,
+// 					Amount: math.NewInt(100),
+// 				}, nil).Once()
+// 				rk.On("GetDelegatorTokensAtBlock", ctx, tokenHolder.Bytes(), blockNum).Return(math.ZeroInt(), errors.New("error!")).Once()
+// 			},
+// 			expectedError:  true,
+// 			expectedTokens: math.Int{},
+// 			expectedVote:   types.StakeholderVoteCounts{},
+// 			teardown:       nil,
+// 		},
+// 		{
+// 			name:  "no delegated token, vote success",
+// 			voter: tokenHolder,
+// 			setup: func() {
+// 				// 200 free floating, 0 delegated, 0 selected
+// 				bk.On("GetBalance", ctx, tokenHolder, layertypes.BondDenom).Return(sdk.Coin{
+// 					Denom:  layertypes.BondDenom,
+// 					Amount: math.NewInt(200),
+// 				}, nil).Once()
+// 				rk.On("GetDelegatorTokensAtBlock", ctx, tokenHolder.Bytes(), blockNum).Return(math.ZeroInt(), nil).Once()
+// 			},
+// 			expectedError:  false,
+// 			expectedTokens: math.NewInt(200),
+// 			expectedVote: types.StakeholderVoteCounts{
+// 				Tokenholders: types.VoteCounts{
+// 					Support: 200,
+// 				},
+// 			},
+// 			teardown: func() {
+// 				require.NoError(k.VoteCountsByGroup.Remove(ctx, disputeId))
+// 			},
+// 		},
+// 		{
+// 			name:  "delegated token, vote success",
+// 			voter: tokenHolder,
+// 			setup: func() {
+// 				// 200 free floating, 100 delegated, 10 selected
+// 				bk.On("GetBalance", ctx, tokenHolder, layertypes.BondDenom).Return(sdk.Coin{
+// 					Denom:  layertypes.BondDenom,
+// 					Amount: math.NewInt(200),
+// 				}, nil).Once()
+// 				rk.On("GetDelegatorTokensAtBlock", ctx, tokenHolder.Bytes(), blockNum).Return(math.NewInt(100), nil).Once()
+// 			},
+// 			expectedError:  false,
+// 			expectedTokens: math.NewInt(300),
+// 			expectedVote: types.StakeholderVoteCounts{
+// 				Tokenholders: types.VoteCounts{
+// 					Support: 300,
+// 				},
+// 			},
+// 			teardown: func() {
+// 				require.NoError(k.VoteCountsByGroup.Remove(ctx, disputeId))
+// 			},
+// 		},
+// 	}
+// 	for _, tc := range testCases {
+// 		if tc.setup != nil {
+// 			tc.setup()
+// 		}
+// 		tokensVoted, err := k.SetTokenholderVote(ctx, disputeId, tc.voter, blockNum, types.VoteEnum_VOTE_SUPPORT)
+// 		if tc.expectedError {
+// 			require.Error(err)
+// 		} else {
+// 			require.NoError(err)
+// 		}
+// 		require.Equal(tokensVoted, tc.expectedTokens)
+// 		if tc.expectedVote != (types.StakeholderVoteCounts{}) {
+// 			votesByGroup, err := k.VoteCountsByGroup.Get(ctx, disputeId)
+// 			require.Equal(votesByGroup, tc.expectedVote)
+// 			require.NoError(err)
+// 		}
+// 		if tc.teardown != nil {
+// 			tc.teardown()
+// 		}
+// 	}
+// }
 
 func (s *KeeperTestSuite) TestAddAndSubtractReporterVoteCount() {
 	require := s.Require()

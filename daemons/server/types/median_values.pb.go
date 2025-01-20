@@ -409,6 +409,7 @@ func _MedianValuesService_GetMedianValue_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+var MedianValuesService_serviceDesc = _MedianValuesService_serviceDesc
 var _MedianValuesService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.daemons.MedianValuesService",
 	HandlerType: (*MedianValuesServiceServer)(nil),

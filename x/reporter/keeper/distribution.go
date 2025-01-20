@@ -73,11 +73,12 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 
 // ReturnSlashedTokens returns the slashed tokens to the delegators,
 // called in dispute module after dispute is resolved with result invalid or reporter wins
-func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) error {
+func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) (string, error) {
+	var pool string
 	// get the snapshot of the metadata of the tokens that were slashed ie selectors' shares amounts and validator they were delegated to
 	snapshot, err := k.DisputedDelegationAmounts.Get(ctx, hashId)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// winningpurse represents the amount of tokens that a disputed reporter possibly receives for winning a dispute
@@ -91,15 +92,15 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []
 		val, err = k.stakingKeeper.GetValidator(ctx, valAddr)
 		if err != nil {
 			if !errors.Is(err, stakingtypes.ErrNoValidatorFound) {
-				return err
+				return "", err
 			}
 			vals, err := k.GetBondedValidators(ctx, 1)
 			if err != nil {
-				return err
+				return "", err
 			}
 			// this should never happen since there should always be a bonded validator
 			if len(vals) == 0 {
-				return errors.New("no validators found in staking module to return tokens to")
+				return "", errors.New("no validators found in staking module to return tokens to")
 			}
 			val = vals[0]
 		}
@@ -119,16 +120,18 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []
 		var tokenSrc stakingtypes.BondStatus
 		if val.IsBonded() {
 			tokenSrc = stakingtypes.Bonded
+			pool = stakingtypes.BondedPoolName
 		} else {
 			tokenSrc = stakingtypes.Unbonded
+			pool = stakingtypes.NotBondedPoolName
 		}
 		_, err = k.stakingKeeper.Delegate(ctx, delAddr, shareAmt.TruncateInt(), tokenSrc, val, false) // false means to not subtract tokens from an account
 		if err != nil {
-			return err
+			return "", err
 		}
 	}
 
-	return k.DisputedDelegationAmounts.Remove(ctx, hashId)
+	return pool, k.DisputedDelegationAmounts.Remove(ctx, hashId)
 }
 
 // called in dispute module after dispute is resolved

@@ -1,6 +1,8 @@
 package types
 
 import (
+	"errors"
+
 	"gopkg.in/yaml.v2"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
@@ -35,6 +37,10 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 
 // Validate validates the set of params
 func (p Params) Validate() error {
+	// verify that the MaxReportBufferWindow parameter is greater than zero
+	if p.MaxReportBufferWindow <= 0 {
+		return errors.New("max report buffer window must be greater than zero")
+	}
 	return nil
 }
 

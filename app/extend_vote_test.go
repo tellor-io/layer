@@ -549,7 +549,7 @@ func (s *VoteExtensionTestSuite) TestSignInitialMessage() {
 		return []byte("signedMsg"), nil
 	})
 
-	sigA, sigB, err := h.SignInitialMessage()
+	sigA, sigB, err := h.SignInitialMessage("operatorAddr1")
 	require.NoError(err)
 	require.NotEmpty(sigA)
 	require.NotEmpty(sigB)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/sha256"
+	"fmt"
 	"testing"
 	"time"
 
@@ -663,9 +664,10 @@ func TestEVMAddressFromSignatures(t *testing.T) {
 		Y: privateKey.Y,
 	}
 	addressExpected := crypto.PubkeyToAddress(*pkCoord).Hex()
+	operatorAddr := "operatorAddr1"
 
-	msgA := "TellorLayer: Initial bridge signature A"
-	msgB := "TellorLayer: Initial bridge signature B"
+	msgA := fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddr)
+	msgB := fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddr)
 	msgBytesA := []byte(msgA)
 	msgBytesB := []byte(msgB)
 
@@ -691,7 +693,7 @@ func TestEVMAddressFromSignatures(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, sigB)
 
-	evmAddress, err := k.EVMAddressFromSignatures(ctx, sigA, sigB)
+	evmAddress, err := k.EVMAddressFromSignatures(ctx, sigA, sigB, operatorAddr)
 	require.NoError(t, err)
 	require.NotNil(t, evmAddress)
 
@@ -701,15 +703,15 @@ func TestEVMAddressFromSignatures(t *testing.T) {
 	badSigB := []byte("badSigB")
 
 	require.Panics(t, func() {
-		evmAddress, err = k.EVMAddressFromSignatures(ctx, badSigA, sigB)
+		evmAddress, err = k.EVMAddressFromSignatures(ctx, badSigA, sigB, operatorAddr)
 		require.Error(t, err)
 	})
 	require.Panics(t, func() {
-		evmAddress, err = k.EVMAddressFromSignatures(ctx, sigA, badSigB)
+		evmAddress, err = k.EVMAddressFromSignatures(ctx, sigA, badSigB, operatorAddr)
 		require.Error(t, err)
 	})
 	require.Panics(t, func() {
-		evmAddress, err = k.EVMAddressFromSignatures(ctx, badSigA, badSigB)
+		evmAddress, err = k.EVMAddressFromSignatures(ctx, badSigA, badSigB, operatorAddr)
 		require.Error(t, err)
 	})
 }

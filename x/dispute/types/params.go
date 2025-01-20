@@ -26,7 +26,6 @@ func ParamKeyTable() paramtypes.KeyTable {
 func NewParams(
 	team sdk.AccAddress,
 ) Params {
-	fmt.Println("team: ", team)
 	return Params{
 		TeamAddress: team.Bytes(),
 	}
