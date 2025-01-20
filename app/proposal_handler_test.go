@@ -110,8 +110,7 @@ func (s *ProposalHandlerTestSuite) TestCheckOracleAttestationsFromLastCommit() {
 		OperatorAddress: valAddr.String(),
 	}, nil)
 
-	att, snap, addrs, err := p.CheckOracleAttestationsFromLastCommit(ctx, commit)
-	require.NoError(err)
+	att, snap, addrs := p.CheckOracleAttestationsFromLastCommit(ctx, commit)
 	require.Equal(voteExt.OracleAttestations[0].Attestation, att[0])
 	require.Equal(voteExt.OracleAttestations[0].Snapshot, snap[0])
 	require.Equal(valAddr.String(), addrs[0])
@@ -163,8 +162,7 @@ func (s *ProposalHandlerTestSuite) TestCheckInitialSignaturesFromLastCommit() {
 			Validator: val1,
 		},
 	}
-	res1, res2, err := p.CheckInitialSignaturesFromLastCommit(s.ctx, ext)
-	require.NoError(err)
+	res1, res2 := p.CheckInitialSignaturesFromLastCommit(s.ctx, ext)
 	require.Empty(res1)
 	require.Empty(res2)
 
@@ -173,10 +171,9 @@ func (s *ProposalHandlerTestSuite) TestCheckInitialSignaturesFromLastCommit() {
 	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
 		OperatorAddress: valAddr.String(),
 	}, nil)
-	bk.On("EVMAddressFromSignatures", ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB).Return(addrsExpected, nil)
+	bk.On("EVMAddressFromSignatures", ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB, valAddr.String()).Return(addrsExpected, nil)
 	bk.On("GetEVMAddressByOperator", ctx, valAddr.String()).Return(nil, errors.New("error"))
-	res1, res2, err = p.CheckInitialSignaturesFromLastCommit(ctx, commit)
-	require.NoError(err)
+	res1, res2 = p.CheckInitialSignaturesFromLastCommit(ctx, commit)
 	require.Equal(valAddr.String(), res1[0])
 	require.Equal(addrsExpected.String(), res2[0])
 }
@@ -196,8 +193,7 @@ func (s *ProposalHandlerTestSuite) TestCheckValsetSignaturesFromLastCommit() {
 		OperatorAddress: valAddr.String(),
 	}, nil)
 
-	operAddrs, timestamps, signatures, err := p.CheckValsetSignaturesFromLastCommit(ctx, commit)
-	require.NoError(err)
+	operAddrs, timestamps, signatures := p.CheckValsetSignaturesFromLastCommit(ctx, commit)
 	require.Equal(valAddr.String(), operAddrs[0])
 	require.Equal(uint64(timestamps[0]), voteExt.ValsetSignature.Timestamp)
 	require.Equal(signatures[0], hex.EncodeToString(voteExt.ValsetSignature.Signature))
@@ -243,8 +239,8 @@ func (s *ProposalHandlerTestSuite) TestPrepareProposalHandler() ([][]byte, sdk.A
 	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
 		OperatorAddress: consAddr.String(),
 	}, nil)
-	bk.On("EVMAddressFromSignatures", ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB).Return(evmAddr, nil)
-	bk.On("GetEVMAddressByOperator", ctx, consAddr.String()).Return(nil, errors.New("error"))
+	bk.On("EVMAddressFromSignatures", ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB, consAddr.String()).Return(evmAddr, nil)
+	bk.On("GetEVMAddressByOperator", ctx, accAddr.String()).Return(nil, errors.New("error"))
 
 	req := abcitypes.RequestPrepareProposal{
 		Height:          3,
@@ -373,7 +369,7 @@ func (s *ProposalHandlerTestSuite) TestProcessProposalHandler() {
 	}
 	s.valStore.EXPECT().GetPubKeyByConsAddr(ctx, consAddr).Return(validPubKey, nil).AnyTimes()
 
-	bk.On("EVMAddressFromSignatures", ctx, sigA, sigB).Return(evmAddr, nil)
+	bk.On("EVMAddressFromSignatures", ctx, sigA, sigB, consAddr.String()).Return(evmAddr, nil)
 	bk.On("GetEVMAddressByOperator", ctx, consAddr.String()).Return(nil, errors.New("error"))
 	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
 		OperatorAddress: consAddr.String(),
