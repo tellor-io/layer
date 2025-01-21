@@ -56,7 +56,7 @@ func TestGenesis(t *testing.T) {
 	}
 	require.Equal(t, i, 2)
 
-	k.SpecRegistry.Set(ctx, "question", types.DataSpec{
+	err = k.SpecRegistry.Set(ctx, "question", types.DataSpec{
 		DocumentHash:      "",
 		ResponseValueType: "uint256",
 		AbiComponents: []*types.ABIComponent{
@@ -76,6 +76,7 @@ func TestGenesis(t *testing.T) {
 		ReportBlockWindow: 200,
 		QueryType:         "question",
 	})
+	require.NoError(t, err)
 
 	got = registry.ExportGenesis(ctx, k)
 	require.NotNil(t, got)
