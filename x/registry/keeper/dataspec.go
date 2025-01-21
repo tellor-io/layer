@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"fmt"
 	"context"
 	"errors"
 	"strings"
@@ -20,6 +21,11 @@ func (k Keeper) SetDataSpec(ctx sdk.Context, querytype string, dataspec types.Da
 	}
 	if dataspec.ReportBlockWindow > params.MaxReportBufferWindow {
 		return errors.New("report buffer window exceeds max allowed value")
+	}
+	fmt.Println("dataspec.QueryType: ", dataspec.QueryType)
+	fmt.Println("querytype: ", querytype)
+	if dataspec.QueryType != querytype {
+		return errors.New("query type in dataspec does not match the query type provided")
 	}
 	return k.SpecRegistry.Set(ctx, querytype, dataspec)
 }
@@ -49,4 +55,21 @@ func (k Keeper) MaxReportBufferWindow(ctx context.Context) (uint64, error) {
 		return 0, err
 	}
 	return params.MaxReportBufferWindow, nil
+}
+
+func (k Keeper) GetAllDataSpecs(ctx context.Context) ([]types.DataSpec, error) {
+	specs := []types.DataSpec{}
+	iter, err := k.SpecRegistry.Iterate(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		spec, err := iter.Value()
+		if err != nil {
+			return nil, err
+		}
+		specs = append(specs, spec)
+	}
+	return specs, nil
 }
