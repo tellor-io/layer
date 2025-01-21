@@ -27,7 +27,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(minStakeAmount math.Int, minTipAmount math.Int) Params {
+func NewParams(minStakeAmount, minTipAmount math.Int) Params {
 	return Params{
 		MinStakeAmount: minStakeAmount,
 		MinTipAmount:   minTipAmount,
