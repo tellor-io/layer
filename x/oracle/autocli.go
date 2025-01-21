@@ -107,6 +107,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query current query by query id",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}},
 				},
+				{
+					RpcMethod:      "GetQueryDataLimit",
+					Use:            "get-query-data-limit",
+					Short:          "Query query data limit",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
@@ -133,6 +139,13 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "UpdateCyclelist",
 					Skip:      true, // skipped because authority gated
+				},
+				{
+					RpcMethod:      "UpdateQueryDataLimit",
+					Use:            "update-query-data-limit [limit]",
+					Short:          "Update query data limit (bytes)",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "limit"}},
+					Skip:           true, // skipped because authority gated
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
