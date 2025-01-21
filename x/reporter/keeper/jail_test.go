@@ -67,12 +67,13 @@ func TestUpdateJailedUntilOnFailedDispute(t *testing.T) {
 	reporter.Jailed = true
 	reporter.JailedUntil = jailedAt.Add(time.Second * 100)
 	ctx = ctx.WithBlockTime(jailedAt.Add(time.Second * 50))
-	k.Reporters.Set(ctx, addr, reporter)
+	err := k.Reporters.Set(ctx, addr, reporter)
+	require.NoError(t, err)
 
 	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, addr))
 
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Second * 1))
-	reporter, err := k.Reporters.Get(ctx, addr)
+	reporter, err = k.Reporters.Get(ctx, addr)
 	require.NoError(t, err)
 
 	require.Equal(t, jailedAt.Add(time.Second*49), reporter.JailedUntil)
