@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	"fmt"
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/tellor-io/layer/x/registry/types"
