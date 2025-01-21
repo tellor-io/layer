@@ -584,6 +584,7 @@ func New(
 		runtime.NewKVStoreService(keys[reportermoduletypes.StoreKey]),
 		logger,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		app.AccountKeeper,
 		app.StakingKeeper,
 		app.BankKeeper,
 		app.RegistryKeeper,
