@@ -31,6 +31,7 @@ func (k msgServer) RegisterSpec(goCtx context.Context, msg *types.MsgRegisterSpe
 	}
 
 	// fee to deter bogus specs
+	
 
 	if err := k.Keeper.SetDataSpec(ctx, msg.QueryType, msg.Spec); err != nil {
 		return nil, err

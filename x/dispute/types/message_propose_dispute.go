@@ -52,7 +52,7 @@ func (msg *MsgProposeDispute) ValidateBasic() error {
 	}
 	// ensure that the fee matches the layer.BondDenom and the amount is a positive number
 	if msg.Fee.Denom != layer.BondDenom || msg.Fee.Amount.IsZero() || msg.Fee.Amount.IsNegative() {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid tip amount (%s)", msg.Fee.Amount.String())
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid fee amount (%s)", msg.Fee.Amount.String())
 	}
 	if msg.Report == nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "report should not be nil")
