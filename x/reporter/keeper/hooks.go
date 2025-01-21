@@ -25,11 +25,53 @@ func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
-func (h Hooks) AfterValidatorBonded(ctx context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+func (h Hooks) AfterValidatorBonded(ctx context.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) error {
+	repAddr := sdk.AccAddress(valAddr)
+	iter, err := h.k.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		selectorAddr, err := iter.PrimaryKey()
+		if err != nil {
+			return err
+		}
+
+		selector, err := h.k.Selectors.Get(ctx, selectorAddr)
+		if err != nil {
+			return err
+		}
+		selector.DelegationsCount++
+		if err := h.k.Selectors.Set(ctx, repAddr, selector); err != nil {
+			return nil
+		}
+	}
 	return nil
 }
 
-func (h Hooks) AfterValidatorBeginUnbonding(ctx context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
+func (h Hooks) AfterValidatorBeginUnbonding(ctx context.Context, _ sdk.ConsAddress, valAddr sdk.ValAddress) error {
+	repAddr := sdk.AccAddress(valAddr)
+	iter, err := h.k.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		selectorAddr, err := iter.PrimaryKey()
+		if err != nil {
+			return err
+		}
+
+		selector, err := h.k.Selectors.Get(ctx, selectorAddr)
+		if err != nil {
+			return err
+		}
+		selector.DelegationsCount--
+		if err := h.k.Selectors.Set(ctx, repAddr, selector); err != nil {
+			return nil
+		}
+	}
 	return nil
 }
 
