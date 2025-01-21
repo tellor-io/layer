@@ -18,7 +18,7 @@ message Params {
   ];
 
   string minTipAmount = 2 [
-    (gogoproto.moretags) = "yaml:\"min_stake_amount\"",
+    (gogoproto.moretags) = "yaml:\"min_tip_amount\"",
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
