@@ -30,7 +30,7 @@ func (k msgServer) RegisterSpec(goCtx context.Context, msg *types.MsgRegisterSpe
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("aggregation method not supported: %s", msg.Spec.AggregationMethod))
 	}
 
-	// fee to deter bogus specs
+	// fee to deter bogus specs ?
 
 	if err := k.Keeper.SetDataSpec(ctx, msg.QueryType, msg.Spec); err != nil {
 		return nil, err

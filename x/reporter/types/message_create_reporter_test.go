@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
 
+	"cosmossdk.io/math"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -18,13 +20,17 @@ func TestMsgCreateReporter_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid address",
 			msg: MsgCreateReporter{
-				ReporterAddress: "invalid_address",
+				ReporterAddress:   "invalid_address",
+				CommissionRate:    math.LegacyNewDec(1),
+				MinTokensRequired: math.NewInt(1000000),
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
 			msg: MsgCreateReporter{
-				ReporterAddress: sample.AccAddress(),
+				ReporterAddress:   sample.AccAddress(),
+				CommissionRate:    math.LegacyNewDec(1),
+				MinTokensRequired: math.NewInt(1000000),
 			},
 		},
 	}
