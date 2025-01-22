@@ -101,7 +101,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 		SlashAmount:       disputeFee,
 		// burn amount is calculated as 5% of dispute fee
 		BurnAmount:      fivePercent,
-		DisputeFee:      disputeFee.Sub(fivePercent),
+		DisputeFee:      disputeFee,
 		InitialEvidence: *msg.Report,
 		FeeTotal:        msg.Fee.Amount,
 		PrevDisputeIds:  []uint64{disputeId},
@@ -225,6 +225,9 @@ func (k Keeper) GetDisputeFee(ctx sdk.Context, rep oracletypes.MicroReport, cate
 }
 
 // Update existing dispute when conditions are met
+// if dispute is unresolved then you can ingite another round.
+// dispute round will have a new dispute id and the dispute.Round will be incremented.
+// previous dispute will be closed.
 func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute types.Dispute, msg types.MsgProposeDispute) error {
 	if dispute.DisputeStatus != types.Unresolved {
 		return fmt.Errorf("can't start a new round for this dispute %d; dispute status %s", dispute.DisputeId, dispute.DisputeStatus)
@@ -238,6 +241,11 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 		return fmt.Errorf("this dispute is expired, can't start new round %d", dispute.DisputeId)
 	}
 
+	if dispute.DisputeRound == 5 {
+		return fmt.Errorf("can't start a new round for this dispute %d; max dispute rounds has been reached %d", dispute.DisputeId, dispute.DisputeRound)
+	}
+	// fee calculates a fee by scaling a base amount (fivePercent) exponentially based on the given round,
+	// doubling for each successive round.
 	fee := func(fivePercent math.Int, round int64) math.Int {
 		base := new(big.Int).Exp(big.NewInt(2), big.NewInt(round), nil)
 		return fivePercent.Mul(math.NewIntFromBigInt(base))
@@ -265,7 +273,12 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 		return err
 	}
 	prevDisputeId := dispute.DisputeId
+	// validate to avoid overflow
+	fmt.Println("slash amount: ", dispute.SlashAmount)
+	fmt.Println("before dispute burn amount: ", dispute.BurnAmount)
+	fmt.Println("round fee being added to burnAmount: ", roundFee)
 	dispute.BurnAmount = dispute.BurnAmount.Add(roundFee)
+	fmt.Println("after dispute burn amount: ", dispute.BurnAmount)
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Fee.Amount)
 	disputeId := k.NextDisputeId(ctx)
 	dispute.DisputeId = disputeId
@@ -275,6 +288,7 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 	dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
 	dispute.DisputeStartBlock = uint64(ctx.BlockHeight())
 	dispute.DisputeRound++
+	fmt.Println("dispute round incremented: ", dispute.DisputeRound)
 	dispute.PrevDisputeIds = append(dispute.PrevDisputeIds, disputeId)
 
 	err := k.Disputes.Set(ctx, dispute.DisputeId, dispute)

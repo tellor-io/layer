@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -32,14 +33,11 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 	}
 	// handle failed underfunded dispute
 	if dispute.DisputeStatus == types.Failed {
-		disputeFeeTotalDec := math.LegacyNewDecFromInt(dispute.FeeTotal)
-		feeMinusBurnDec := disputeFeeTotalDec.Quo(math.LegacyNewDec(20))
-		feeMinusBurn := feeMinusBurnDec.TruncateInt()
-		fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.FeeTotal, feeMinusBurn, dispute.HashId)
+		err := k.RefundFailedDisputeFee(ctx, feePayer, payerInfo, dispute.HashId)
 		if err != nil {
 			return nil, err
 		}
-		remainder = remainder.Add(fraction)
+
 	} else {
 		// check if vote executed
 		vote, err := k.Votes.Get(ctx, msg.Id)
@@ -50,23 +48,24 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 		if !vote.Executed {
 			return nil, errors.New("vote not executed")
 		}
-
-		feeMinusBurn := dispute.SlashAmount.Sub(dispute.BurnAmount)
+		// todo: fix could become negative since burnAmount just increments
 		switch vote.VoteResult {
 		case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
-			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.FeeTotal, feeMinusBurn, dispute.HashId)
+			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.DisputeFee, dispute.HashId)
 			if err != nil {
 				return nil, err
 			}
 			remainder = remainder.Add(fraction)
 		case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
-			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.FeeTotal, feeMinusBurn, dispute.HashId)
+			fmt.Println(dispute.FeeTotal, "fee totla")
+			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.DisputeFee, dispute.HashId)
 			if err != nil {
 				return nil, err
 			}
 
 			remainder = remainder.Add(fraction)
-			fraction, err = k.RewardReporterBondToFeePayers(ctx, feePayer, payerInfo, dispute.FeeTotal, dispute.SlashAmount)
+
+			fraction, err = k.RewardReporterBondToFeePayers(ctx, feePayer, payerInfo, dispute.DisputeFee, dispute.SlashAmount)
 			if err != nil {
 				return nil, err
 			}

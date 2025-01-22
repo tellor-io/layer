@@ -34,6 +34,7 @@ func CheckOpenDisputesForExpiration(ctx context.Context, k keeper.Keeper) error 
 		if err != nil {
 			return err
 		}
+		// dispute is expired before it entered voting phase; so close dispute and set status to failed
 		if sdk.UnwrapSDKContext(ctx).BlockTime().After(dispute.DisputeEndTime) && dispute.DisputeStatus == types.Prevote {
 			dispute.Open = false
 			dispute.DisputeStatus = types.Failed
@@ -46,6 +47,7 @@ func CheckOpenDisputesForExpiration(ctx context.Context, k keeper.Keeper) error 
 			if err != nil {
 				return err
 			}
+			// tally the vote if vote period ended and it hasn't been tallied yet
 			if sdk.UnwrapSDKContext(ctx).BlockTime().After(vote.VoteEnd) && vote.VoteResult == types.VoteResult_NO_TALLY {
 				if err := k.TallyVote(ctx, key); err != nil {
 					return err

@@ -230,7 +230,6 @@ func (s *E2ETestSuite) TestDisputes() {
 	_, err = msgServerDispute.ProposeDispute(s.Setup.Ctx, &msgProposeDispute)
 	require.NoError(err)
 
-	burnAmount := disputeFee.Amount.MulRaw(1).QuoRaw(20)
 	disputes, err := s.Setup.Disputekeeper.GetOpenDisputes(s.Setup.Ctx)
 	require.NoError(err)
 	require.NotNil(disputes)
@@ -241,7 +240,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(dispute.DisputeId, uint64(1))
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
 	require.Equal(dispute.DisputeCategory, disputetypes.Warning)
-	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
+	require.Equal(dispute.DisputeFee, disputeFee.Amount)
 	feepayer, err := s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(uint64(1), reporterAccount.Bytes()))
 	require.NoError(err)
 	require.Equal(feepayer.Amount, disputeFee.Amount)
@@ -421,13 +420,12 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 	require.Equal(reporter.Jailed, true)
 	// dispute is created correctly
-	burnAmount = disputeFee.Amount.MulRaw(1).QuoRaw(20)
 	dispute, err = s.Setup.Disputekeeper.GetDisputeByReporter(s.Setup.Ctx, report, disputetypes.Minor)
 	fmt.Printf("Dispute: %v,\r Report: %v\r", dispute, report)
 	require.NoError(err)
 	require.Equal(dispute.DisputeCategory, disputetypes.Minor)
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
-	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
+	require.Equal(dispute.DisputeFee, disputeFee.Amount)
 	feepayer, err = s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(dispute.DisputeId, reporterAccount.Bytes()))
 	require.NoError(err)
 	require.Equal(feepayer.Amount, disputeFee.Amount)
@@ -600,11 +598,11 @@ func (s *E2ETestSuite) TestDisputes() {
 	// dispute is created and open for voting
 	dispute, err = s.Setup.Disputekeeper.GetDisputeByReporter(s.Setup.Ctx, report, disputetypes.Major)
 	require.NoError(err)
-	burnAmount = disputeFee.Amount.MulRaw(1).QuoRaw(20)
+
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
 	require.Equal(dispute.DisputeStartTime, disputeStartTime)
 	require.Equal(dispute.DisputeEndTime, disputeStartTime.Add(disputekeeper.THREE_DAYS))
-	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
+	require.Equal(dispute.DisputeFee, disputeFee.Amount)
 	require.Equal(dispute.DisputeStartBlock, disputeStartHeight)
 
 	// create vote tx msg
@@ -1087,7 +1085,7 @@ func (s *E2ETestSuite) TestOpenDisputePrecision() {
 	require.Equal(dispute.FeeTotal, disputeFeeTotal)
 	// disputeFee should be 95% of fee total, 5% is burned
 	disputeFee := disputeFeeTotal.Mul(math.NewInt(95)).Quo(math.NewInt(100))
-	require.Equal(dispute.DisputeFee, disputeFee)
+	require.Equal(dispute.DisputeFee, disputeFeeTotal)
 	disputeFeeBurn := disputeFeeTotal.Sub(disputeFee)
 	require.Equal(dispute.BurnAmount, disputeFeeBurn)
 	require.Equal(dispute.BlockNumber, uint64(7))
@@ -1247,7 +1245,6 @@ func (s *E2ETestSuite) TestDisputes2() {
 	_, err = msgServerDispute.ProposeDispute(s.Setup.Ctx, &msgProposeDispute)
 	require.NoError(err)
 
-	burnAmount := disputeFee.Amount.MulRaw(1).QuoRaw(20)
 	disputes, err := s.Setup.Disputekeeper.GetOpenDisputes(s.Setup.Ctx)
 	require.NoError(err)
 	require.NotNil(disputes)
@@ -1257,7 +1254,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.Equal(dispute.DisputeId, uint64(1))
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
 	require.Equal(dispute.DisputeCategory, disputetypes.Warning)
-	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
+	require.Equal(dispute.DisputeFee, disputeFee.Amount)
 	feepayer, err := s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(uint64(1), repsAccs[0].Bytes()))
 	require.NoError(err)
 	require.Equal(feepayer.Amount, disputeFee.Amount)
@@ -1360,7 +1357,6 @@ func (s *E2ETestSuite) TestDisputes2() {
 	_, err = msgServerDispute.ProposeDispute(s.Setup.Ctx, &msgProposeDispute)
 	require.NoError(err)
 
-	burnAmount = disputeFee.Amount.MulRaw(1).QuoRaw(20)
 	disputes, err = s.Setup.Disputekeeper.GetOpenDisputes(s.Setup.Ctx)
 	require.NoError(err)
 	require.NotNil(disputes)
@@ -1370,7 +1366,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.Equal(dispute.DisputeId, uint64(2))
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
 	require.Equal(dispute.DisputeCategory, disputetypes.Warning)
-	require.Equal(dispute.DisputeFee, disputeFee.Amount.Sub(burnAmount))
+	require.Equal(dispute.DisputeFee, disputeFee.Amount)
 	feepayer, err = s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(uint64(2), repsAccs[1].Bytes()))
 	require.NoError(err)
 	require.Equal(feepayer.Amount, disputeFee.Amount)
