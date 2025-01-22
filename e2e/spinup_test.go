@@ -100,6 +100,9 @@ func TestLearn(t *testing.T) {
 	user := interchaintest.GetAndFundTestUsers(t, ctx, "user1", math.OneInt(), layer)[0]
 	fmt.Println("User address: ", user.FormattedAddress())
 
+	disputer := interchaintest.GetAndFundTestUsers(t, ctx, "disputer", math.NewInt(1*1e12), layer)[0]
+	disputerFA := disputer.FormattedAddress()
+
 	prop := Proposal{
 		Messages: []map[string]interface{}{
 			{
@@ -168,7 +171,7 @@ func TestLearn(t *testing.T) {
 	// dispute report
 	bz, err := json.Marshal(microReports.MicroReports[0])
 	require.NoError(t, err)
-	txHash, err = validatorI.ExecTx(ctx, "validator", "dispute", "propose-dispute", string(bz), "warning", "500000000000loya", "true", "--keyring-dir", layer.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = validatorI.ExecTx(ctx, disputerFA, "dispute", "propose-dispute", string(bz), "warning", "500000000000loya", "false", "--keyring-dir", layer.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 	var disputes e2e.Disputes
@@ -176,7 +179,7 @@ func TestLearn(t *testing.T) {
 	require.NoError(t, err)
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(t, err)
-	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 1) // voting
+	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // voting
 	fmt.Println("Disputes: ", string(r))
 	res2, _, err = validatorI.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hex.EncodeToString(qidbz))
 	require.NoError(t, err)
@@ -202,5 +205,5 @@ func TestLearn(t *testing.T) {
 
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(t, err)
-	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 2) // resolved
+	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_RESOLVED") // resolved
 }
