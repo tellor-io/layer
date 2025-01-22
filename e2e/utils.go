@@ -148,9 +148,9 @@ type Disputes struct {
 type Metadata struct {
 	HashID            string   `json:"hash_id"`
 	DisputeID         string   `json:"dispute_id"`
-	DisputeCategory   string      `json:"dispute_category"`
+	DisputeCategory   string   `json:"dispute_category"`
 	DisputeFee        string   `json:"dispute_fee"`
-	DisputeStatus     string      `json:"dispute_status"`
+	DisputeStatus     string   `json:"dispute_status"`
 	DisputeStartTime  string   `json:"dispute_start_time"`
 	DisputeEndTime    string   `json:"dispute_end_time"`
 	DisputeStartBlock string   `json:"dispute_start_block"`

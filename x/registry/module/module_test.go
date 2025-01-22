@@ -66,8 +66,10 @@ func TestValidateGenesis(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	am := registry.NewAppModuleBasic(appCodec)
 	h := json.RawMessage(`{
-        "params": {}
-      }`)
+        "params": {
+			"max_report_buffer_window": "100000"
+		}
+	}`)
 
 	err := am.ValidateGenesis(appCodec, nil, h)
 	require.NoError(t, err)
