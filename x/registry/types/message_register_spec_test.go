@@ -19,12 +19,42 @@ func TestMsgRegisterSpec_ValidateBasic(t *testing.T) {
 			name: "invalid address",
 			msg: MsgRegisterSpec{
 				Registrar: "invalid_address",
+				Spec: DataSpec{
+					DocumentHash:      "document_hash",
+					ResponseValueType: "uint256",
+					AggregationMethod: "weighted-median",
+					Registrar:         sample.AccAddress(),
+					ReportBlockWindow: 10,
+					AbiComponents: []*ABIComponent{
+						{
+							Name:      "asset",
+							FieldType: "string",
+						},
+					},
+					QueryType: "test",
+				},
+				QueryType: "test",
 			},
 			err: sdkerrors.ErrInvalidAddress,
 		}, {
 			name: "valid address",
 			msg: MsgRegisterSpec{
 				Registrar: sample.AccAddress(),
+				Spec: DataSpec{
+					DocumentHash:      "document_hash",
+					ResponseValueType: "uint256",
+					AggregationMethod: "weighted-median",
+					Registrar:         sample.AccAddress(),
+					ReportBlockWindow: 10,
+					AbiComponents: []*ABIComponent{
+						{
+							Name:      "asset",
+							FieldType: "string",
+						},
+					},
+					QueryType: "test",
+				},
+				QueryType: "test",
 			},
 		},
 	}

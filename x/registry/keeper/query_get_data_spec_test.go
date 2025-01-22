@@ -16,7 +16,7 @@ func TestQueryGetDataSpec(t *testing.T) {
 	require.NotNil(t, k)
 
 	// register a spec
-	spec1 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median"}
+	spec1 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median", QueryType: "querytype1"}
 	specInput := &types.MsgRegisterSpec{
 		Registrar: "creator1",
 		QueryType: "queryType1",

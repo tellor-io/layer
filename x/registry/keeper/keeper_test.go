@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	testQueryType = "testQueryType"
+	testQueryType = "testQuerytype"
 )
 
 func TestNewKeeper(t *testing.T) {
@@ -31,6 +31,7 @@ func TestGetAuthority(t *testing.T) {
 		DocumentHash:      "testHash",
 		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
+		QueryType:         testQueryType,
 	}
 
 	// Register spec

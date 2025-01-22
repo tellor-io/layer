@@ -100,6 +100,9 @@ func TestLearn(t *testing.T) {
 	user := interchaintest.GetAndFundTestUsers(t, ctx, "user1", math.OneInt(), layer)[0]
 	fmt.Println("User address: ", user.FormattedAddress())
 
+	disputer := interchaintest.GetAndFundTestUsers(t, ctx, "disputer", math.NewInt(1*1e12), layer)[0]
+	disputerFA := disputer.FormattedAddress()
+
 	prop := Proposal{
 		Messages: []map[string]interface{}{
 			{
@@ -168,7 +171,7 @@ func TestLearn(t *testing.T) {
 	// dispute report
 	bz, err := json.Marshal(microReports.MicroReports[0])
 	require.NoError(t, err)
-	txHash, err = validatorI.ExecTx(ctx, "validator", "dispute", "propose-dispute", string(bz), "warning", "500000000000loya", "true", "--keyring-dir", layer.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = validatorI.ExecTx(ctx, disputerFA, "dispute", "propose-dispute", string(bz), "warning", "500000000000loya", "false", "--keyring-dir", layer.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 	var disputes e2e.Disputes
