@@ -63,7 +63,20 @@ func NewProposalHandler(logger log.Logger, valStore baseapp.ValidatorStore, appC
 }
 
 func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
-	err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), req.LocalLastCommit)
+	// Verify number of votes doesn't exceed bonded validators
+	bondedVals, err := h.stakingKeeper.GetBondedValidatorsByPower(ctx)
+	if err != nil {
+		h.logger.Error("PrepareProposalHandler: failed to get bonded validators", "error", err)
+		return nil, err
+	}
+	if len(req.LocalLastCommit.Votes) > len(bondedVals) {
+		h.logger.Error("PrepareProposalHandler: number of votes exceeds bonded validators",
+			"votes", len(req.LocalLastCommit.Votes),
+			"bonded_validators", len(bondedVals))
+		return nil, errors.New("number of votes exceeds bonded validators")
+	}
+
+	err = baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), req.LocalLastCommit)
 	if err != nil {
 		h.logger.Info("PrepareProposalHandler: failed to validate vote extensions", "error", err, "votes", req.LocalLastCommit.Votes)
 		return nil, err // stop execution in case of error
@@ -124,6 +137,17 @@ func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.Requ
 		err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), injectedVoteExtTx.ExtendedCommitInfo)
 		if err != nil {
 			h.logger.Error("ProcessProposalHandler: rejecting proposal, failed to validate vote extension", "error", err)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
+
+		// Verify number of votes doesn't exceed bonded validators
+		bondedVals, err := h.stakingKeeper.GetBondedValidatorsByPower(ctx)
+		if err != nil {
+			h.logger.Error("ProcessProposalHandler: failed to get bonded validators", "error", err)
+			return nil, err
+		}
+		if len(injectedVoteExtTx.ExtendedCommitInfo.Votes) > len(bondedVals) {
+			h.logger.Error("ProcessProposalHandler: number of votes exceeds bonded validators", "votes", len(injectedVoteExtTx.ExtendedCommitInfo.Votes), "bonded_validators", len(bondedVals))
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
 
