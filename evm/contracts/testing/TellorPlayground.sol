@@ -31,6 +31,7 @@ contract TellorPlayground {
     mapping(bytes32 => uint256[]) public voteRounds; // mapping of vote identifier hashes to an array of dispute IDs
     mapping(address => mapping(address => uint256)) private _allowances;
     mapping(address => uint256) private _balances;
+    mapping(bytes32 => uint256) public uintVars;
 
     uint256 public stakeAmount;
     uint256 public constant timeBasedReward = 5e17; // time based reward for a reporter for successfully submitting a value
@@ -42,7 +43,6 @@ contract TellorPlayground {
     string private _symbol;
     uint8 private _decimals;
     address public oracleMintRecipient;
-    uint256 public lastReleaseTimeDao;
     address public deployer;
 
     // Structs
@@ -63,7 +63,7 @@ contract TellorPlayground {
         _symbol = "TRBP";
         _decimals = 18;
         token = address(this);
-        lastReleaseTimeDao = block.timestamp;
+        uintVars[keccak256("_LAST_RELEASE_TIME_DAO")] = block.timestamp;
         deployer = msg.sender;
     }
 
@@ -144,9 +144,9 @@ contract TellorPlayground {
             return;
         }
         uint256 _releasedAmount = (146.94 ether *
-            (block.timestamp - lastReleaseTimeDao)) /
+            (block.timestamp - uintVars[keccak256("_LAST_RELEASE_TIME_DAO")])) /
             86400;
-        lastReleaseTimeDao = block.timestamp;
+        uintVars[keccak256("_LAST_RELEASE_TIME_DAO")] = block.timestamp;
         uint256 _stakingRewards = (_releasedAmount * 2) / 100;
         _mint(oracleMintRecipient, _releasedAmount - _stakingRewards);
         _mint(address(this), _stakingRewards);
@@ -527,6 +527,15 @@ contract TellorPlayground {
         uint256 _len = timestamps[_queryId].length;
         if (_len == 0 || _len <= _index) return 0;
         return timestamps[_queryId][_index];
+    }
+
+    /**
+     * @dev Returns the value of a uint variable
+     * @param _data the key of the variable
+     * @return uint256 the value of the variable
+     */
+    function getUintVar(bytes32 _data) external view returns (uint256) {
+        return uintVars[_data];
     }
 
     /**
