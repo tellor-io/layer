@@ -51,8 +51,9 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 		Power:     100,
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: time.Unix(1696516597, 0),
+		Timestamp: time.UnixMilli(1696516597).UTC(),
 	}
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
 	// disputer with tokens to pay fee
 	disputer := s.newKeysWithTokens()
 
@@ -153,9 +154,10 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 		Power:       1000,
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.Unix(1696516597, 0),
+		Timestamp:   time.UnixMilli(1696516597).UTC(),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
 		Creator:         repAddr.String(),
@@ -223,9 +225,10 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 		Power:       100,
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.Unix(1696516597, 0),
+		Timestamp:   time.UnixMilli(1696516597).UTC(),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
 	s.NoError(err)
 	burnAmount := disputeFee.MulRaw(1).QuoRaw(20)
@@ -361,9 +364,9 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 		Power:     repStake.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: time.Unix(1696516597, 0),
+		Timestamp: time.UnixMilli(1696516597).UTC(),
 	}
-
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
 	s.NoError(err)
 
@@ -441,8 +444,9 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 		Power:     stake.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: time.Unix(1696516597, 0),
+		Timestamp: time.UnixMilli(1696516597).UTC(),
 	}
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
 	fmt.Println("Disputed report power: ", report.Power)
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
 	s.NoError(err)
@@ -587,8 +591,9 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 		Power:     stake.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: time.Unix(1696516597, 0),
+		Timestamp: time.UnixMilli(1696516597).UTC(),
 	}
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
 	s.NoError(err)
 
@@ -722,9 +727,10 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 		Power:       reporter1StakeBefore.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.Unix(1696516597, 0),
+		Timestamp:   time.UnixMilli(1696516597).UTC(),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporter1Acc.Bytes(), report.MetaId), report))
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
 	s.NoError(err)
 	burnAmount := disputeFee.MulRaw(1).QuoRaw(20)
@@ -822,9 +828,10 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 		Power:       reporter1StakeBefore.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.Unix(1696516597, 0),
+		Timestamp:   time.UnixMilli(1696516597).UTC(),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporter1Acc.Bytes(), report.MetaId), report))
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
 	s.NoError(err)
 
@@ -893,10 +900,10 @@ func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
 		Power:       reporterStakeBefore.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.Unix(1696516597, 0),
+		Timestamp:   time.UnixMilli(1696516597).UTC(),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
-
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporter1Acc.Bytes(), report.MetaId), report))
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
 	s.NoError(err)
 
@@ -959,6 +966,7 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 		Cyclelist:       true,
 		BlockNumber:     uint64(s.Setup.Ctx.BlockHeight()),
 	}
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report1.QueryId, reporter1.Bytes(), report1.MetaId), report1))
 	report2 := oracletypes.MicroReport{
 		Reporter:        reporter2.String(),
 		Power:           uint64(sdk.TokensToConsensusPower(stake2, sdk.DefaultPowerReduction)),
@@ -970,6 +978,7 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 		Cyclelist:       true,
 		BlockNumber:     uint64(s.Setup.Ctx.BlockHeight()),
 	}
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report2.QueryId, reporter2.Bytes(), report2.MetaId), report2))
 	report3 := oracletypes.MicroReport{
 		Reporter:        reporter3.String(),
 		Power:           uint64(sdk.TokensToConsensusPower(stake3, sdk.DefaultPowerReduction)),
@@ -981,7 +990,7 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 		Cyclelist:       true,
 		BlockNumber:     uint64(s.Setup.Ctx.BlockHeight()),
 	}
-
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report3.QueryId, reporter3.Bytes(), report3.MetaId), report3))
 	// forward time
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
@@ -1045,10 +1054,10 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeNotBond() {
 		Power:       reporterStake.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.Unix(1696516597, 0),
+		Timestamp:   time.UnixMilli(1696516597).UTC(),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
-
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporter1Acc.Bytes(), report.MetaId), report))
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
 	s.NoError(err)
 
@@ -1104,10 +1113,11 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeBond() {
 		Power:       reporterStake.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.Unix(1696516597, 0),
+		Timestamp:   time.UnixMilli(1696516597).UTC(),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
+		MetaId:      1,
 	}
-
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporter1Acc.Bytes(), report.MetaId), report))
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
 	s.NoError(err)
 

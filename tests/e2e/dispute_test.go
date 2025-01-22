@@ -216,7 +216,7 @@ func (s *E2ETestSuite) TestDisputes() {
 		Timestamp:   s.Setup.Ctx.BlockTime(),
 		BlockNumber: uint64(revealBlock),
 	}
-
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporterAccount.Bytes(), report.MetaId), report))
 	// create msg for propose dispute tx
 	msgProposeDispute := disputetypes.MsgProposeDispute{
 		Creator:         reporterAccount.String(),
@@ -383,7 +383,7 @@ func (s *E2ETestSuite) TestDisputes() {
 		Timestamp:   s.Setup.Ctx.BlockTime(),
 		BlockNumber: uint64(revealBlock),
 	}
-
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporterAccount.Bytes(), report.MetaId), report))
 	fmt.Println("Report power: ", report.Power)
 
 	// create msg for propose dispute tx
@@ -561,6 +561,7 @@ func (s *E2ETestSuite) TestDisputes() {
 		Timestamp:   s.Setup.Ctx.BlockTime(),
 		BlockNumber: uint64(revealBlock),
 	}
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporterAccount.Bytes(), report.MetaId), report))
 	// create msg for propose dispute tx
 
 	msgProposeDispute = disputetypes.MsgProposeDispute{
@@ -1225,7 +1226,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 		Timestamp:   revealTime,
 		BlockNumber: uint64(reportBlock),
 	}
-
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repsAccs[0].Bytes(), report.MetaId), report))
 	// disputedBal := disputedRep.TotalTokens
 	// onePercent := disputedBal.Mul(math.NewInt(1)).Quo(math.NewInt(100))
 	fee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, disputetypes.Warning)
@@ -1342,7 +1343,9 @@ func (s *E2ETestSuite) TestDisputes2() {
 		Value:       value,
 		Timestamp:   revealTime,
 		BlockNumber: uint64(revealBlock),
+		MetaId:      1,
 	}
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repsAccs[0].Bytes(), report.MetaId), report))
 
 	// create msg for propose dispute tx
 	msgProposeDispute = disputetypes.MsgProposeDispute{
@@ -1439,8 +1442,9 @@ func (s *E2ETestSuite) TestDisputes2() {
 		Value:       value,
 		Timestamp:   revealTime,
 		BlockNumber: uint64(revealBlock),
+		MetaId:      2,
 	}
-
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repsAccs[0].Bytes(), report.MetaId), report))
 	// create msg for propose dispute tx
 	msgProposeDispute = disputetypes.MsgProposeDispute{
 		Creator:         repsAccs[1].String(),

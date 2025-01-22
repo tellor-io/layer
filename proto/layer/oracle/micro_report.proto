@@ -29,4 +29,6 @@ message MicroReport {
   bool cyclelist = 8;
   // block number of when the report was created
   uint64 block_number = 9;
+  // identifier for the report's aggregate group
+  uint64 meta_id = 10;
 }

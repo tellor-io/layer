@@ -76,6 +76,14 @@ func (k Keeper) ReporterKey(ctx sdk.Context, r oracletypes.MicroReport, c types.
 
 // Set new dispute
 func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.MsgProposeDispute) error {
+	// validate report to make sure it exists
+	exists, err := k.oracleKeeper.ValidateMicroReportExists(ctx, *msg.Report)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return fmt.Errorf("micro report does not exist")
+	}
 	disputeId := k.NextDisputeId(ctx)
 	hashId := k.HashId(ctx, *msg.Report, msg.DisputeCategory)
 	// slash amount
