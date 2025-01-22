@@ -24,10 +24,10 @@ func TestQueryGetDataSpecSpec(t *testing.T) {
 	require.Equal(t, specReturn, types.DataSpec{})
 
 	// register a spec and check Spec() returns correct bytes
-	spec1 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median", Registrar: "creator1"}
+	spec1 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median", Registrar: "creator1", QueryType: "querytype1"}
 	specInput := &types.MsgRegisterSpec{
 		Registrar: spec1.Registrar,
-		QueryType: "queryType1",
+		QueryType: "querytype1",
 		Spec:      spec1,
 	}
 	registerSpecResult, err := ms.RegisterSpec(ctx, specInput)
@@ -47,12 +47,13 @@ func TestSetDataSpec(t *testing.T) {
 	require.NotNil(t, k)
 
 	// Define test data
-	queryType := "queryType1"
+	queryType := "querytype1"
 	dataSpec := types.DataSpec{
 		DocumentHash:      "hash1",
 		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
 		Registrar:         "creator1",
+		QueryType:         queryType,
 	}
 
 	// Call the function
@@ -81,6 +82,7 @@ func TestSetDataSpec(t *testing.T) {
 				AggregationMethod: "weighted-median",
 				Registrar:         "creator1",
 				ReportBlockWindow: 500_000, // 20 days
+				QueryType:         "SPOTPRICE",
 			},
 			expectError: false,
 		},
@@ -93,6 +95,7 @@ func TestSetDataSpec(t *testing.T) {
 				AggregationMethod: "weighted-median",
 				Registrar:         "creator1",
 				ReportBlockWindow: 1_000_000, // 22 days
+				QueryType:         "SPOTPRICE",
 			},
 			expectError: true,
 		},
@@ -105,6 +108,7 @@ func TestSetDataSpec(t *testing.T) {
 				AggregationMethod: "weighted-median",
 				Registrar:         "creator1",
 				ReportBlockWindow: 700_000, // 21 days
+				QueryType:         "SPOTPRICE",
 			},
 			expectError: false,
 		},
@@ -132,12 +136,13 @@ func TestHasDataSpec(t *testing.T) {
 	require.NotNil(t, k)
 
 	// Define test data
-	queryType := "queryType1"
+	queryType := "querytype1"
 	dataSpec := types.DataSpec{
 		DocumentHash:      "hash1",
 		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
 		Registrar:         "creator1",
+		QueryType:         queryType,
 	}
 
 	// Call the function
