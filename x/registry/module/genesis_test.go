@@ -51,7 +51,7 @@ func TestGenesis(t *testing.T) {
 	for ; iter.Valid(); iter.Next() {
 		dataspec, err := iter.Value()
 		require.NoError(t, err)
-		fmt.Println("dataspec.QueryType: ", dataspec.QueryType)
+		fmt.Println("dataspec.QueryType:  ", dataspec.QueryType)
 		i++
 	}
 	require.Equal(t, i, 2)
