@@ -43,6 +43,17 @@ func (s *KeeperTestSuite) TestTip() {
 	require.EqualError(err, types.ErrNotEnoughTip.Error())
 	require.Nil(tipRes)
 
+	// amount is to large
+	amount = sdk.NewCoin("loya", math.NewInt(100_000_000))
+	tipRes, err = msgServer.Tip(ctx, &types.MsgTip{
+		Amount:    amount,
+		Tipper:    tipper.String(),
+		QueryData: []byte(queryData),
+	})
+	require.Error(err)
+	require.EqualError(err, types.ErrTipExceedsMax.Error())
+	require.Nil(tipRes)
+
 	// amount is negative
 	require.Panics(func() {
 		tipRes, err = msgServer.Tip(ctx, &types.MsgTip{
@@ -64,7 +75,15 @@ func (s *KeeperTestSuite) TestTip() {
 
 	// query needs initialized, expiration after block time, set first tip
 	amount = sdk.NewCoin("loya", math.NewInt(10*1e6))
-	regK.On("GetSpec", ctx, "SpotPrice").Return(regtypes.GenesisDataSpec(), nil)
+	genesisDataSpecs := regtypes.GenesisDataSpec()
+	var spotPriceSpec regtypes.DataSpec
+	for i := 0; i < len(genesisDataSpecs); i++ {
+		if genesisDataSpecs[i].QueryType == "spotprice" {
+			spotPriceSpec = genesisDataSpecs[i]
+			break
+		}
+	}
+	regK.On("GetSpec", ctx, "SpotPrice").Return(spotPriceSpec, nil)
 	bk.On("SendCoinsFromAccountToModule", ctx, tipper, types.ModuleName, sdk.NewCoins(amount)).Return(nil).Once()
 	twoPercent := amount.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100))
 	burnCoin := sdk.NewCoin(amount.Denom, twoPercent)
