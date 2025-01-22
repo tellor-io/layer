@@ -49,55 +49,22 @@ func (_m *OracleKeeper) GetAggregateBefore(ctx context.Context, queryId []byte, 
 	return r0, r1, r2
 }
 
-// GetAggregateByIndex provides a mock function with given fields: ctx, queryId, index
-func (_m *OracleKeeper) GetAggregateByIndex(ctx context.Context, queryId []byte, index uint64) (*types.Aggregate, time.Time, error) {
-	ret := _m.Called(ctx, queryId, index)
-
-	var r0 *types.Aggregate
-	var r1 time.Time
-	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, []byte, uint64) (*types.Aggregate, time.Time, error)); ok {
-		return rf(ctx, queryId, index)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, []byte, uint64) *types.Aggregate); ok {
-		r0 = rf(ctx, queryId, index)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*types.Aggregate)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, []byte, uint64) time.Time); ok {
-		r1 = rf(ctx, queryId, index)
-	} else {
-		r1 = ret.Get(1).(time.Time)
-	}
-
-	if rf, ok := ret.Get(2).(func(context.Context, []byte, uint64) error); ok {
-		r2 = rf(ctx, queryId, index)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
-}
-
 // GetAggregateByTimestamp provides a mock function with given fields: ctx, queryId, timestamp
-func (_m *OracleKeeper) GetAggregateByTimestamp(ctx context.Context, queryId []byte, timestamp time.Time) (types.Aggregate, error) {
+func (_m *OracleKeeper) GetAggregateByTimestamp(ctx context.Context, queryId []byte, timestamp uint64) (types.Aggregate, error) {
 	ret := _m.Called(ctx, queryId, timestamp)
 
 	var r0 types.Aggregate
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, []byte, time.Time) (types.Aggregate, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, uint64) (types.Aggregate, error)); ok {
 		return rf(ctx, queryId, timestamp)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, []byte, time.Time) types.Aggregate); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, uint64) types.Aggregate); ok {
 		r0 = rf(ctx, queryId, timestamp)
 	} else {
 		r0 = ret.Get(0).(types.Aggregate)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, []byte, time.Time) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, []byte, uint64) error); ok {
 		r1 = rf(ctx, queryId, timestamp)
 	} else {
 		r1 = ret.Error(1)
