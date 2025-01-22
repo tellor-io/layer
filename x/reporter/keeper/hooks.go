@@ -40,7 +40,11 @@ func (h Hooks) AfterValidatorBonded(ctx context.Context, _ sdk.ConsAddress, valA
 
 		selector, err := h.k.Selectors.Get(ctx, selectorAddr)
 		if err != nil {
-			return err
+			if errors.Is(err, collections.ErrNotFound) {
+				continue
+			} else {
+				return err
+			}
 		}
 		selector.DelegationsCount++
 		if err := h.k.Selectors.Set(ctx, repAddr, selector); err != nil {
@@ -65,7 +69,11 @@ func (h Hooks) AfterValidatorBeginUnbonding(ctx context.Context, _ sdk.ConsAddre
 
 		selector, err := h.k.Selectors.Get(ctx, selectorAddr)
 		if err != nil {
-			return err
+			if errors.Is(err, collections.ErrNotFound) {
+				continue
+			} else {
+				return err
+			}
 		}
 		selector.DelegationsCount--
 		if err := h.k.Selectors.Set(ctx, repAddr, selector); err != nil {

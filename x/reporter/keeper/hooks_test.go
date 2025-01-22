@@ -12,6 +12,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+func TestAfterValidatorBonded(t *testing.T) {
+	k, _, _, _, ctx, _ := setupKeeper(t)
+	delAddr, valAddr := sample.AccAddressBytes(), sdk.ValAddress(sample.AccAddressBytes())
+	require.NoError(t, k.Hooks().AfterValidatorBonded(ctx, sdk.ConsAddress(delAddr), valAddr))
+}
+
+func TestAfterValidatorBeginUnbonding(t *testing.T) {
+	k, _, _, _, ctx, _ := setupKeeper(t)
+	delAddr, valAddr := sample.AccAddressBytes(), sdk.ValAddress(sample.AccAddressBytes())
+	require.NoError(t, k.Hooks().AfterValidatorBeginUnbonding(ctx, sdk.ConsAddress(delAddr), valAddr))
+}
+
 func TestBeforeDelegationCreated(t *testing.T) {
 	k, _, _, _, ctx, _ := setupKeeper(t)
 	delAddr, valAddr := sample.AccAddressBytes(), sdk.ValAddress(sample.AccAddressBytes())
