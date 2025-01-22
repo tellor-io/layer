@@ -271,7 +271,8 @@ func (k Keeper) UpdateDispute(
 			result = types.VoteResult_NO_QUORUM_MAJORITY_INVALID
 		}
 	default:
-		return errors.New("no majority")
+		k.Logger(ctx).Error("Vote tally", "result", "no majority")
+		return nil
 	}
 	vote.VoteResult = result
 	vote.VoteEnd = sdk.UnwrapSDKContext(ctx).BlockTime()
