@@ -179,6 +179,7 @@ func TestLearn(t *testing.T) {
 	require.NoError(t, err)
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(t, err)
+
 	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, int32(1)) // voting
 	fmt.Println("Disputes: ", string(r))
 	res2, _, err = validatorI.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hex.EncodeToString(qidbz))

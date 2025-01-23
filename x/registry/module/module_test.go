@@ -120,20 +120,31 @@ func TestInitGenesis(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	k, _k2, _k3, ctx := keepertest.RegistryKeeper(t)
 	am := registry.NewAppModule(appCodec, k, _k2, _k3)
-	h := json.RawMessage(`{"params":{"max_report_buffer_window":"700000"},"dataspec":{"document_hash":"","response_value_type":"","abi_components":[],"aggregation_method":"","registrar":"","report_block_window":"3"}}`)
-	am.InitGenesis(ctx, appCodec, h)
+	genesisState := types.DefaultGenesis()
+	json, err := json.Marshal(genesisState)
+	require.NoError(t, err)
+	am.InitGenesis(ctx, appCodec, json)
 }
 
 func TestExportGenesis(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	k, _k2, _k3, ctx := keepertest.RegistryKeeper(t)
 	am := registry.NewAppModule(appCodec, k, _k2, _k3)
-	h := json.RawMessage(`{"params":{"max_report_buffer_window":"700000"},"dataspec":{"document_hash":"","response_value_type":"","abi_components":[],"aggregation_method":"","registrar":"","report_block_window":"3"}}`)
-	am.InitGenesis(ctx, appCodec, h)
+	defaultGen := types.DefaultGenesis()
+	fmt.Println("genesisState: ", defaultGen)
+	j, err := json.Marshal(defaultGen)
+	require.NoError(t, err)
+
+	am.InitGenesis(ctx, appCodec, j)
 	gen := am.ExportGenesis(ctx, appCodec)
 	fmt.Println("exported genesis: ", gen)
-	fmt.Println("expected: ", h)
-	require.Equal(t, gen, h)
+	fmt.Println("expected: ", j)
+	genJson, err := json.Marshal(gen)
+	fmt.Println("genJson: ", genJson)
+	unmarshalled := json.Unmarshal(genJson, &types.GenesisState{})
+	fmt.Println("unmarshalled: ", unmarshalled)
+	require.NoError(t, err)
+	require.Equal(t, genJson, j)
 }
 
 func TestConsensusVersion(t *testing.T) {
