@@ -163,6 +163,7 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 	rk := s.reporterKeeper
 	ctx := s.ctx
 	ctx = ctx.WithBlockHeight(10)
+	ctx = ctx.WithBlockTime(time.Now())
 
 	blockNum := uint64(10)
 	disputeId := uint64(1)
@@ -268,6 +269,11 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 				}, nil).Once()
 				// selector has 100 selected to reporter
 				rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).Return(math.NewInt(100), nil).Once()
+				rk.On("GetSelector", ctx, selector).Return(reportertypes.Selection{
+					Reporter:         reporter,
+					LockedUntilTime:  ctx.BlockTime().Add(time.Hour * -24),
+					DelegationsCount: 10,
+				}, nil).Once()
 			},
 			expectedError:  false,
 			expectedTokens: math.NewInt(100),
@@ -303,6 +309,11 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 					},
 				}))
 				require.NoError(k.ReportersWithDelegatorsVotedBefore.Set(ctx, collections.Join(reporter.Bytes(), disputeId), math.NewInt(50)))
+				rk.On("GetSelector", ctx, selector).Return(reportertypes.Selection{
+					Reporter:         reporter,
+					LockedUntilTime:  ctx.BlockTime().Add(time.Hour * -24),
+					DelegationsCount: 10,
+				}, nil).Once()
 			},
 			expectedError:  false,
 			expectedTokens: math.NewInt(100),
@@ -318,8 +329,32 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 				require.NoError(k.VoteCountsByGroup.Remove(ctx, disputeId))
 			},
 		},
+		{
+			name:  "voter is selector, selector has recently switched reporters",
+			voter: selector,
+			setup: func() {
+				rk.On("Delegation", ctx, selector).Return(reportertypes.Selection{
+					Reporter: reporter,
+				}, nil).Once()
+				// selector has 100 selected to reporter
+				rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).Return(math.NewInt(100), nil).Once()
+				rk.On("GetSelector", ctx, selector).Return(reportertypes.Selection{
+					Reporter:         reporter,
+					LockedUntilTime:  ctx.BlockTime().Add(time.Hour * 24),
+					DelegationsCount: 10,
+				}, nil).Once()
+			},
+			expectedError:  false,
+			expectedTokens: math.ZeroInt(),
+			expectedVote:   types.StakeholderVoteCounts{},
+			teardown: func() {
+				require.NoError(k.VoteCountsByGroup.Remove(ctx, disputeId))
+				require.NoError(k.ReportersWithDelegatorsVotedBefore.Remove(ctx, collections.Join(reporter.Bytes(), disputeId)))
+			},
+		},
 	}
 	for _, tc := range testCases {
+		fmt.Println(tc.name)
 		if tc.setup != nil {
 			s.Run(tc.name, tc.setup)
 		}
@@ -329,6 +364,8 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 		} else {
 			require.NoError(err)
 		}
+		fmt.Println("tokensVoted: ", tokensVoted)
+		fmt.Println("expectedTokens: ", tc.expectedTokens)
 		require.Equal(tc.expectedTokens, tokensVoted)
 		if tc.expectedVote != (types.StakeholderVoteCounts{}) {
 			votesByGroup, err := k.VoteCountsByGroup.Get(ctx, disputeId)

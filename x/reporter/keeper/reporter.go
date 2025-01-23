@@ -206,3 +206,7 @@ func (k Keeper) GetNumOfSelectors(ctx context.Context, repAddr sdk.AccAddress) (
 	}
 	return len(keys), nil
 }
+
+func (k Keeper) GetSelector(ctx context.Context, selectorAddr sdk.AccAddress) (types.Selection, error) {
+	return k.Selectors.Get(ctx, selectorAddr)
+}
