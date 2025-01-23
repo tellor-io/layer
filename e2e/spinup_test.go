@@ -191,7 +191,8 @@ func TestLearn(t *testing.T) {
 	res3, _, err := validatorI.ExecQuery(ctx, "reporter", "reporters")
 	require.NoError(t, err)
 	fmt.Println("Reporter: ", string(res3))
-	// reporter/tipper votes on dispute
+
+	// validator who is reporter/tipper votes on dispute
 	_, err = validatorI.ExecTx(ctx, "validator", "dispute", "vote", "1", "vote-support", "--keyring-dir", layer.HomeDir())
 	require.NoError(t, err)
 	// validators vote on dispute

@@ -144,6 +144,10 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 	return BeginBlocker(ctx, am.keeper)
 }
 
+func (am AppModule) EndBlock(ctx context.Context) error {
+	return EndBlocker(ctx, am.keeper)
+}
+
 // ----------------------------------------------------------------------------
 // App Wiring Setup
 // ----------------------------------------------------------------------------
