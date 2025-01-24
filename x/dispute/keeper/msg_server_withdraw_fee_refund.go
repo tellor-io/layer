@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -48,7 +47,7 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 		if !vote.Executed {
 			return nil, errors.New("vote not executed")
 		}
-		// todo: fix could become negative since burnAmount just increments
+
 		switch vote.VoteResult {
 		case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
 			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.DisputeFee, dispute.HashId)
@@ -57,7 +56,6 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 			}
 			remainder = remainder.Add(fraction)
 		case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
-			fmt.Println(dispute.FeeTotal, "fee totla")
 			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.DisputeFee, dispute.HashId)
 			if err != nil {
 				return nil, err

@@ -281,12 +281,7 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 		return err
 	}
 	prevDisputeId := dispute.DisputeId
-	// validate to avoid overflow
-	fmt.Println("slash amount: ", dispute.SlashAmount)
-	fmt.Println("before dispute burn amount: ", dispute.BurnAmount)
-	fmt.Println("round fee being added to burnAmount: ", roundFee)
 	dispute.BurnAmount = dispute.BurnAmount.Add(roundFee)
-	fmt.Println("after dispute burn amount: ", dispute.BurnAmount)
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Fee.Amount)
 	disputeId := k.NextDisputeId(ctx)
 	dispute.DisputeId = disputeId
@@ -296,7 +291,6 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 	dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
 	dispute.DisputeStartBlock = uint64(ctx.BlockHeight())
 	dispute.DisputeRound++
-	fmt.Println("dispute round incremented: ", dispute.DisputeRound)
 	dispute.PrevDisputeIds = append(dispute.PrevDisputeIds, disputeId)
 
 	err := k.Disputes.Set(ctx, dispute.DisputeId, dispute)

@@ -24,8 +24,13 @@ func CheckOpenDisputesForExpiration(ctx context.Context, k keeper.Keeper) error 
 	if err != nil {
 		return err
 	}
+	// do a 1000 open disputes at a time
+	i := 1000
 	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
+		if i == 0 {
+			break
+		}
 		key, err := iter.PrimaryKey()
 		if err != nil {
 			return err
@@ -54,6 +59,7 @@ func CheckOpenDisputesForExpiration(ctx context.Context, k keeper.Keeper) error 
 				}
 			}
 		}
+		i--
 	}
 	return nil
 }
