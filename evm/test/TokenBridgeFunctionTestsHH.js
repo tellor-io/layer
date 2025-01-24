@@ -206,6 +206,7 @@ describe("TokenBridge - Function Tests", async function () {
         await h.expectThrow(tbridge.depositToLayer(0, tip, LAYER_RECIPIENT)) // zero amount
         await h.expectThrow(tbridge.depositToLayer(h.toWei("21"), tip, LAYER_RECIPIENT)) // over limit
         await h.expectThrow(tbridge.depositToLayer(depositAmount, h.toWei("1.01"), LAYER_RECIPIENT)) // tip over amount
+        await h.expectThrow(tbridge.depositToLayer(h.toWei("1.00000000001"), tip, LAYER_RECIPIENT)) // not divisible by 1e12
         await tbridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)
         blocky1 = await h.getBlock()
         tbridgeBal = await token.balanceOf(await tbridge.address)
@@ -230,8 +231,16 @@ describe("TokenBridge - Function Tests", async function () {
         await tbridge.refreshDepositLimit(1)
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit2);
     })
-
     it("depositLimit", async function () {
+        timeOfLastRelease = await token.getUintVar(h.hash("_LAST_RELEASE_TIME_DAO"))
+        blocky = await h.getBlock()
+        expectedReleaseAmount = (BigInt(h.toWei("146.94")) *
+            (BigInt(blocky.timestamp) - BigInt(timeOfLastRelease))) /
+            BigInt(86400);
+        expectedDepositLimit = (BigInt(100e18) + expectedReleaseAmount) / BigInt(5)
+        depositLimit = await tbridge.depositLimit()
+        assert(depositLimit == expectedDepositLimit, "depositLimit should be correct")
+
         expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10)
         await tbridge.refreshDepositLimit(1)
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
@@ -247,13 +256,19 @@ describe("TokenBridge - Function Tests", async function () {
         await tbridge.refreshDepositLimit(1)
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit2);
     })
-
     it("withdrawLimit", async function () {
-        expectedWithdrawLimit = BigInt(100e18) / BigInt(20)
+        timeOfLastRelease = await token.getUintVar(h.hash("_LAST_RELEASE_TIME_DAO"))
+        blocky = await h.getBlock()
+        expectedReleaseAmount = (BigInt(h.toWei("146.94")) *
+            (BigInt(blocky.timestamp) - BigInt(timeOfLastRelease))) /
+            BigInt(86400);
+        expectedWithdrawLimit = (BigInt(100e18) + expectedReleaseAmount) / BigInt(20)
         withdrawLimit = await tbridge.withdrawLimit()
         assert(withdrawLimit == expectedWithdrawLimit, "withdrawLimit should be correct")
     })
     it("claimExtraWithdraw", async function () {
+        tbridge2 = await ethers.deployContract("TestTokenBridge", [token.address,blobstream.address, oldOracle.address])
+        await token.setOracleMintRecipient(await tbridge2.address)
         const WITHDRAW_AMOUNT = h.toWei("10")
         let _addy = await accounts[2].address
         value = h.getWithdrawValue(_addy,LAYER_RECIPIENT,BigInt(WITHDRAW_AMOUNT) / BigInt(1e12))
@@ -289,9 +304,7 @@ describe("TokenBridge - Function Tests", async function () {
             attestTimestamp
         )
         await h.advanceTime(43200)
-        expectedWithdrawLimit = BigInt(INITIAL_LAYER_TOKEN_SUPPLY) / BigInt(20)
-        let _limit0 = await tbridge.withdrawLimit.call()
-        assert(_limit0 == expectedWithdrawLimit, "withdrawLimit should be correct")
+        _limit0 = BigInt(INITIAL_LAYER_TOKEN_SUPPLY) / BigInt(20)
         assert(await token.balanceOf(_addy) == 0)
         await tbridge.withdrawFromLayer(
             oracleDataStruct,
@@ -300,11 +313,12 @@ describe("TokenBridge - Function Tests", async function () {
             1,
         )
         recipientBal0 = await token.balanceOf(_addy)
-        assert(recipientBal0 - _limit0 == 0, "token balance should be correct")
+        assert(BigInt(recipientBal0) - BigInt(_limit0) == BigInt(0), "token balance should be correct")
         tokensToClaim = await tbridge.tokensToClaim(accounts[2].address)
         assert(tokensToClaim == BigInt(WITHDRAW_AMOUNT) - BigInt(recipientBal0), "tokensToClaim should be correct")
         await h.expectThrow(tbridge.claimExtraWithdraw(await accounts[2].address))
         await h.advanceTime(43200)
+        await token.mintToOracle()
         _limit1 = await tbridge.withdrawLimit.call()
 
         await tbridge.claimExtraWithdraw(await accounts[2].address);
@@ -575,7 +589,7 @@ describe("TokenBridge - Function Tests", async function () {
     it("mintToOracle on deposit", async function() {
         const bridge2 = await ethers.deployContract("TestTokenBridge", [token.address,blobstream.address, oldOracle.address])
         await token.setOracleMintRecipient(bridge2.address)
-        deployTime = await token.lastReleaseTimeDao()
+        deployTime = await token.getUintVar(h.hash("_LAST_RELEASE_TIME_DAO"))
         bridgeBal = await token.balanceOf(await bridge2.address)
         assert(BigInt(bridgeBal) == BigInt(0), "bridge bal should be correct")
         await token.approve(bridge2.address, h.toWei("10000"))

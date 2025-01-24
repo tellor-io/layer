@@ -52,6 +52,7 @@ import (
 	daemonservertypes "github.com/tellor-io/layer/daemons/server/types"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
+	tokenbridgetipstypes "github.com/tellor-io/layer/daemons/server/types/token_bridge_tips"
 	tokenbridgeclient "github.com/tellor-io/layer/daemons/token_bridge_feed/client"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 	"github.com/tellor-io/layer/docs"
@@ -631,6 +632,7 @@ func New(
 	indexPriceCache := pricefeedtypes.NewMarketToExchangePrices(constants.MaxPriceAge)
 
 	tokenDepositsCache := tokenbridgetypes.NewDepositReports()
+	tokenBridgeTipsCache := tokenbridgetipstypes.NewDepositTips()
 	// Create server that will ingest gRPC messages from daemon clients.
 	// Note that gRPC clients will block on new gRPC connection until the gRPC server is ready to
 	// accept new connections.
@@ -694,6 +696,7 @@ func New(
 						marketParamsConfig,
 						indexPriceCache,
 						tokenDepositsCache,
+						tokenBridgeTipsCache,
 						// app.CreateQueryContext,
 						*app.StakingKeeper,
 						app.ChainID(),
@@ -703,7 +706,7 @@ func New(
 				}()
 			}
 
-			app.TokenBridgeClient = tokenbridgeclient.StartNewClient(context.Background(), logger, tokenDepositsCache)
+			app.TokenBridgeClient = tokenbridgeclient.StartNewClient(context.Background(), logger, tokenDepositsCache, tokenBridgeTipsCache)
 		}
 		// Start the Metrics Daemon.
 		// The metrics daemon is purely used for observability. It should never bring the app down.
