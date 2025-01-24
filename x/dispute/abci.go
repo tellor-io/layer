@@ -2,7 +2,6 @@ package dispute
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -38,7 +37,6 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 		}
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 		if dispute.BlockNumber == uint64(sdkCtx.BlockHeight()) {
-			fmt.Println("SETTING BLOCK INFO AFTER DISPUTE OPENED IN END BLOCKER")
 			k.Logger(ctx).Info("FOUND NEW OPEN DISPUTE AND SET BLOCK INFO")
 			err := k.SetBlockInfo(ctx, dispute.HashId)
 			if err != nil {

@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/tellor-io/layer/x/registry/types"
@@ -22,8 +21,7 @@ func (k Keeper) SetDataSpec(ctx sdk.Context, querytype string, dataspec types.Da
 	if dataspec.ReportBlockWindow > params.MaxReportBufferWindow {
 		return errors.New("report buffer window exceeds max allowed value")
 	}
-	fmt.Println("dataspec.QueryType: ", dataspec.QueryType)
-	fmt.Println("querytype: ", querytype)
+
 	if dataspec.QueryType != querytype {
 		return errors.New("query type in dataspec does not match the query type provided")
 	}
