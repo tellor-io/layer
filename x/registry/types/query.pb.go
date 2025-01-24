@@ -761,7 +761,6 @@ func _Query_DecodeValue_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.registry.Query",
 	HandlerType: (*QueryServer)(nil),

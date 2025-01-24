@@ -58,7 +58,6 @@ func TestParams_Validate(t *testing.T) {
 	require.NoError(validateMinStakeAmount(params.MinStakeAmount))
 	require.NoError(validateMinTipAmount(params.MinTipAmount))
 	require.NoError(validateMaxTipAmount(params.MaxTipAmount))
-
 	params = NewParams(math.NewInt(0), math.NewInt(0), math.NewInt(0))
 	require.NoError(validateMinStakeAmount(math.ZeroInt()))
 	require.NoError(validateMinTipAmount(math.ZeroInt()))

@@ -4,7 +4,6 @@ import (
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
-	regtypes "github.com/tellor-io/layer/x/registry/types"
 
 	// "cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -15,12 +14,10 @@ import (
 func (s *KeeperTestSuite) TestTip() {
 	require := s.Require()
 	ctx := s.ctx
-	// k := s.oracleKeeper
 	regK := s.registryKeeper
 	bk := s.bankKeeper
 	msgServer := s.msgServer
 
-	// denom not loya
 	tipper := sample.AccAddressBytes()
 	amount := sdk.NewCoin("btc", math.NewInt(10*1e6))
 	// s.bankKeeper.On("SendCoinsFromAccountToModule", ctx, tipper, "oracle", sdk.NewCoins(amount)).Return(nil)
@@ -90,16 +87,11 @@ func (s *KeeperTestSuite) TestTip() {
 	bk.On("BurnCoins", ctx, types.ModuleName, sdk.NewCoins(burnCoin)).Return(nil).Once()
 	queryBytes, err := utils.QueryBytesFromString(queryData)
 	require.NoError(err)
-	tipRes, err = msgServer.Tip(ctx, &types.MsgTip{
+	tipRes, err := msgServer.Tip(ctx, &types.MsgTip{
 		Amount:    amount,
 		Tipper:    tipper.String(),
 		QueryData: queryBytes,
 	})
 	require.NoError(err)
 	require.NotNil(tipRes)
-
-	// queryId := utils.QueryIDFromData(queryBytes)
-	// tips, err := k.Tips.Get(ctx, collections.Join(queryId, []byte(tipper)))
-	// require.NoError(err)
-	// require.Equal(tips, amount.Amount.Sub(twoPercent))
 }

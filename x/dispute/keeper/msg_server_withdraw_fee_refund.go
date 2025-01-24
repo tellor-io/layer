@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -52,6 +53,7 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 		}
 
 		feeMinusBurn := dispute.SlashAmount.Sub(dispute.BurnAmount)
+		fmt.Println("feeMinusBurn", feeMinusBurn)
 		switch vote.VoteResult {
 		case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
 			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.FeeTotal, feeMinusBurn, dispute.HashId)

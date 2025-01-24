@@ -20,7 +20,6 @@ var (
 	DefaultMinStakeAmount = math.NewInt(1_000_000) // one TRB
 
 	DefaultMinTipAmount = math.NewInt(10_000)
-
 	DefaultMaxTipAmount = math.NewInt(25_000_000)
 )
 
@@ -85,7 +84,6 @@ func validateMinTipAmount(v interface{}) error {
 
 	return nil
 }
-
 func validateMaxTipAmount(v interface{}) error {
 	_, ok := v.(math.Int)
 	if !ok {

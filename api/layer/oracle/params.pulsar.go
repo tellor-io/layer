@@ -361,6 +361,7 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
+
 		if len(x.MaxTipAmount) > 0 {
 			i -= len(x.MaxTipAmount)
 			copy(dAtA[i:], x.MaxTipAmount)
@@ -619,14 +620,12 @@ func (x *Params) GetMinTipAmount() string {
 	}
 	return ""
 }
-
 func (x *Params) GetMaxTipAmount() string {
 	if x != nil {
 		return x.MaxTipAmount
 	}
 	return ""
 }
-
 var File_layer_oracle_params_proto protoreflect.FileDescriptor
 
 var file_layer_oracle_params_proto_rawDesc = []byte{
