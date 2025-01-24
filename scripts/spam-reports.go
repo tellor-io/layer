@@ -1,5 +1,3 @@
-//nolint:all
-
 package main
 
 import (
@@ -87,7 +85,7 @@ func SpamReportsWithReportersMap(reportersMap map[string]ReporterInfo, qd string
 		key_path := fmt.Sprintf("%s/%s", LAYER_PATH, reporter_name)
 		go func(reporter_info *ReporterInfo, path string) {
 			defer wg.Done()
-			cmd := exec.Command(COMMAND_PATH, "tx", "oracle", "submit-value", reporter_info.Address, qd, value, "--from", reporter_info.Address, "--chain-id", "layertest-2", "--fees", "10loya", "--keyring-backend", "test", "--keyring-dir", path, "--sequence", strconv.Itoa(reporter_info.SequenceNum), "--home", path, "--node", "http://54.234.103.186:26657", "--yes")
+			cmd := exec.Command(COMMAND_PATH, "tx", "oracle", "submit-value", reporter_info.Address, qd, value, "--from", reporter_info.Address, "--chain-id", "layertest-2", "--fees", "10loya", "--keyring-backend", "test", "--keyring-dir", path, "--sequence", strconv.Itoa(reporter_info.SequenceNum), "--home", path, "--node", "http://54.234.103.186:26657", "--yes")  //nolint:gosec
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				fmt.Println("ERROR submitting value: ", err)
@@ -178,7 +176,7 @@ func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]ReporterI
 }
 
 func GetAddressFromKeyName(key_name string) string {
-	cmd := exec.Command(COMMAND_PATH, "keys", "show", key_name, "-a", "--keyring-backend", "test", "--home", fmt.Sprintf("%s/%s", LAYER_PATH, key_name))
+	cmd := exec.Command(COMMAND_PATH, "keys", "show", key_name, "-a", "--keyring-backend", "test", "--home", fmt.Sprintf("%s/%s", LAYER_PATH, key_name)) //nolint:gosec
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Fatalf("cmd.Run() failed: %v\n", err)
