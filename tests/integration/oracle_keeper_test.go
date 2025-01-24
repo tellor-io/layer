@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"testing"
 	"time"
 
@@ -31,7 +32,7 @@ func (s *IntegrationTestSuite) TestTipping() {
 
 	addr := s.newKeysWithTokens()
 
-	tip := sdk.NewCoin(s.Setup.Denom, math.NewInt(1000))
+	tip := sdk.NewCoin(s.Setup.Denom, math.NewInt(100_000))
 	twoPercent := sdk.NewCoin(s.Setup.Denom, tip.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
 	msg := types.MsgTip{
 		Tipper:    addr.String(),
@@ -83,7 +84,7 @@ func (s *IntegrationTestSuite) TestGetCurrentTip() {
 
 	addr := s.newKeysWithTokens()
 
-	tip := sdk.NewCoin(s.Setup.Denom, math.NewInt(1000))
+	tip := sdk.NewCoin(s.Setup.Denom, math.NewInt(100_000))
 	twoPercent := sdk.NewCoin(s.Setup.Denom, tip.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
 	msg := types.MsgTip{
 		Tipper:    addr.String(),
@@ -108,7 +109,7 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200})
 	addr := s.newKeysWithTokens()
 
-	tip := sdk.NewCoin(s.Setup.Denom, math.NewInt(1000))
+	tip := sdk.NewCoin(s.Setup.Denom, math.NewInt(100_000))
 	twoPercent := sdk.NewCoin(s.Setup.Denom, tip.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
 	msg := types.MsgTip{
 		Tipper:    addr.String(),
@@ -157,7 +158,7 @@ func (s *IntegrationTestSuite) TestGetUserTipTotal() {
 
 	addr := s.newKeysWithTokens()
 
-	tip := math.NewInt(1000)
+	tip := math.NewInt(100_000)
 	twoPercent := tip.Mul(math.NewInt(2)).Quo(math.NewInt(100))
 	msg := types.MsgTip{
 		Tipper:    addr.String(),
@@ -184,7 +185,7 @@ func (s *IntegrationTestSuite) TestSmallTip() {
 
 	addr := s.newKeysWithTokens()
 
-	tip := sdk.NewCoin(s.Setup.Denom, math.NewInt(10))
+	tip := sdk.NewCoin(s.Setup.Denom, math.NewInt(10_000))
 	twoPercent := sdk.NewCoin(s.Setup.Denom, tip.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100)))
 	msg := types.MsgTip{
 		Tipper:    addr.String(),
@@ -255,7 +256,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 			power:         5,
 		},
 	}
-	_, err := msgServer.Tip(s.Setup.Ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: ethQueryData, Amount: sdk.NewCoin(s.Setup.Denom, math.NewInt(1000))})
+	_, err := msgServer.Tip(s.Setup.Ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: ethQueryData, Amount: sdk.NewCoin(s.Setup.Denom, math.NewInt(100_000))})
 	s.Nil(err)
 	addr := make([]sdk.AccAddress, len(reporters))
 	for i, r := range reporters {
@@ -775,7 +776,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 
 	stakeAmount, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[0], queryId)
 	require.NoError(err)
-	tipAmount := math.NewInt(1000)
+	tipAmount := math.NewInt(100_000)
 
 	tipper := s.newKeysWithTokens()
 
@@ -825,7 +826,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	// delegation shares should increase after reporting and escrow balance should go back to 0
 	delAfter, err := s.Setup.Stakingkeeper.Delegation(s.Setup.Ctx, repAccs[0].Bytes(), valAddr)
 	s.Nil(err)
-	s.True(delAfter.GetShares().Equal(delBefore.GetShares().Add(math.LegacyNewDec(980))), "delegation shares plus the tip added") // 1000 - 2% tip
+	s.True(delAfter.GetShares().Equal(delBefore.GetShares().Add(math.LegacyNewDec(98000))), "delegation shares plus the tip added") // 100,000 - 2% tip
 	escrowBalance = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, escrowAcct, s.Setup.Denom)
 	s.True(escrowBalance.IsZero())
 }
@@ -847,7 +848,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	reporterStake2, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAccs[1], queryId)
 	require.NoError(err)
 
-	tipAmount := math.NewInt(1000)
+	tipAmount := math.NewInt(100_000)
 
 	tipper := s.newKeysWithTokens()
 	valAddr1 := valAddrs[0]
@@ -905,12 +906,16 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	// delegation shares should increase after reporting and withdrawing
 	del1After, err := s.Setup.Stakingkeeper.Delegation(s.Setup.Ctx, delegator1.Bytes(), valAddr1)
 	s.Nil(err)
-	s.True(del1After.GetShares().Equal(del1Before.GetShares().Add(math.LegacyNewDec(326))), "delegation 1 (self delegation) shares should be half the tip plus 50 percent commission")
+	fmt.Println(del1After.GetShares().String())
+	fmt.Println(del1Before.GetShares().String())
+	s.True(del1After.GetShares().Equal(del1Before.GetShares().Add(math.LegacyNewDec(32666))), "delegation 1 (self delegation) shares should be half the tip plus 50 percent commission")
 	// withdraw del2 delegation from tip escrow
 	_, err = reporterMsgServer.WithdrawTip(s.Setup.Ctx, &reportertypes.MsgWithdrawTip{SelectorAddress: delegator2.String(), ValidatorAddress: valAddr2.String()})
 	require.NoError(err)
 
 	del2After, err := s.Setup.Stakingkeeper.Delegation(s.Setup.Ctx, delegator2.Bytes(), valAddr2)
 	s.Nil(err)
-	s.True(del2After.GetShares().Equal(del2Before.GetShares().Add(math.LegacyNewDec(653))), "delegation 2 shares should be half the tip minus 50 percent reporter commission")
+	fmt.Println(del2After.GetShares().String())
+	fmt.Println(del2Before.GetShares().String())
+	s.True(del2After.GetShares().Equal(del2Before.GetShares().Add(math.LegacyNewDec(65333))), "delegation 2 shares should be half the tip minus 50 percent reporter commission")
 }

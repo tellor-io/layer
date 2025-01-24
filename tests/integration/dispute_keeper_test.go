@@ -667,6 +667,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	for i := range votes {
 		_, err = msgServer.Vote(s.Setup.Ctx, &votes[i])
 		if err != nil {
+			fmt.Println(err)
 			s.Error(err, "voter power is zero")
 		}
 	}

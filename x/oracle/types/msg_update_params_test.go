@@ -57,6 +57,7 @@ func TestMsgUpdateParams_GetSignBytes(t *testing.T) {
 
 	msg := MsgUpdateParams{
 		Authority: sample.AccAddress(),
+		Params: DefaultParams(),
 	}
 	msgBz := ModuleCdc.MustMarshalJSON(&msg)
 	require.Equal(msgBz, msg.GetSignBytes())
