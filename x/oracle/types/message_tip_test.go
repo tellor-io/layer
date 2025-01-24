@@ -5,7 +5,11 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
+	layer "github.com/tellor-io/layer/types"
 
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -21,11 +25,30 @@ func TestMsgTip_ValidateBasic(t *testing.T) {
 				Tipper: "invalid_address",
 			},
 			err: sdkerrors.ErrInvalidAddress,
-		}, {
-			name: "valid address",
+		},
+		{
+			name: "valid address, empty coin",
 			msg: MsgTip{
 				Tipper: sample.AccAddress(),
 			},
+			err: sdkerrors.ErrInvalidCoins,
+		},
+		{
+			name: "valid address, valid coin, empty query data",
+			msg: MsgTip{
+				Tipper: sample.AccAddress(),
+				Amount: sdk.NewCoin(layer.BondDenom, math.NewInt(1000000)),
+			},
+			err: sdkerrors.ErrInvalidRequest,
+		},
+		{
+			name: "valid address, valid coin, valid query data",
+			msg: MsgTip{
+				Tipper:    sample.AccAddress(),
+				Amount:    sdk.NewCoin(layer.BondDenom, math.NewInt(1000000)),
+				QueryData: []byte("test"),
+			},
+			err: nil,
 		},
 	}
 	for _, tt := range tests {

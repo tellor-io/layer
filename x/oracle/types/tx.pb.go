@@ -738,7 +738,6 @@ func _Msg_UpdateCyclelist_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	return interceptor(ctx, in, info, handler)
 }
-
 func _Msg_UpdateQueryDataLimit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgUpdateQueryDataLimit)
 	if err := dec(in); err != nil {
