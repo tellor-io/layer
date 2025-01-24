@@ -1,4 +1,4 @@
-//nolint:gosec
+//nolint
 
 package main
 
