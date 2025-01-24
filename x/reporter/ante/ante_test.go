@@ -29,18 +29,22 @@ func mustAny(msg sdk.Msg) *codectypes.Any {
 }
 
 func TestNewTrackStakeChangesDecorator(t *testing.T) {
-	k, sk, _, _, ctx, _ := keepertest.ReporterKeeper(t)
+	k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
 	decorator := NewTrackStakeChangesDecorator(k, sk)
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100), nil)
 	err := k.Tracker.Set(ctx, types.StakeTracker{
 		Expiration: nil,
 		Amount:     math.NewInt(105),
 	})
+	delAddr := sample.AccAddressBytes()
+	valSrcAddr := sample.AccAddressBytes()
+	valDstAddr := sample.AccAddressBytes()
 	require.NoError(t, err)
 	testCases := []struct {
-		name string
-		msg  sdk.Msg
-		err  error
+		name  string
+		msg   sdk.Msg
+		err   error
+		setup func()
 	}{
 		{
 			name: "CreateValidator",
@@ -59,21 +63,27 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 		{
 			name: "Delegate",
 			msg: &stakingtypes.MsgDelegate{
-				DelegatorAddress: sample.AccAddressBytes().String(),
-				ValidatorAddress: sample.AccAddressBytes().String(),
+				DelegatorAddress: delAddr.String(),
+				ValidatorAddress: valSrcAddr.String(),
 				Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(1)},
 			},
 			err: nil,
+			setup: func() {
+				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr)).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
+			},
 		},
 		{
 			name: "BeginRedelegate",
 			msg: &stakingtypes.MsgBeginRedelegate{
-				DelegatorAddress:    sample.AccAddressBytes().String(),
-				ValidatorSrcAddress: sample.AccAddressBytes().String(),
-				ValidatorDstAddress: sample.AccAddressBytes().String(),
+				DelegatorAddress:    delAddr.String(),
+				ValidatorSrcAddress: valSrcAddr.String(),
+				ValidatorDstAddress: valDstAddr.String(),
 				Amount:              sdk.Coin{Denom: "loya", Amount: math.NewInt(1)},
 			},
 			err: nil,
+			setup: func() {
+				sk.On("GetValidator", ctx, sdk.ValAddress(valDstAddr)).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil)
+			},
 		},
 		{
 			name: "CancelUnbondingDelegation",
@@ -83,6 +93,9 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(100)},
 			},
 			err: errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period"),
+			setup: func() {
+				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr)).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil)
+			},
 		},
 		{
 			name: "Undelegate",
@@ -92,6 +105,9 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(95)},
 			},
 			err: errors.New("total stake decrease exceeds the allowed 5% threshold within a twelve-hour period"),
+			setup: func() {
+				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr)).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil)
+			},
 		},
 		{
 			name: "Other message type",
@@ -248,7 +264,7 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := txBuilder.SetMsgs(tc.msg)
 			require.NoError(t, err)
-
+			sk.On("GetValidator", ctx)
 			tx := txBuilder.GetTx()
 			_, err = decorator.AnteHandle(ctx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				return ctx, nil
