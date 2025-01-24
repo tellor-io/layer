@@ -115,7 +115,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 		return err
 	}
 	// Pay the dispute fee
-	if err := k.PayDisputeFee(ctx, sender, msg.Fee, msg.PayFromBond, dispute.HashId); err != nil {
+	if err := k.PayDisputeFee(ctx, sender, msg.Fee, msg.PayFromBond, dispute.HashId, true); err != nil {
 		return err
 	}
 
@@ -251,7 +251,7 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 	}
 
 	// Pay the dispute fee
-	if err := k.PayDisputeFee(ctx, sender, msg.Fee, msg.PayFromBond, dispute.HashId); err != nil {
+	if err := k.PayDisputeFee(ctx, sender, msg.Fee, msg.PayFromBond, dispute.HashId, false); err != nil {
 		return err
 	}
 
