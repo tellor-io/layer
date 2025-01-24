@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -184,6 +185,9 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		dispute.PendingExecution = true
 		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
 	}
+	fmt.Println("scaledSupport: ", scaledSupport)
+	fmt.Println("scaledAgainst: ", scaledAgainst)
+	fmt.Println("scaledInvalid: ", scaledInvalid)
 
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	// quorum not reached case

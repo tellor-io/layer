@@ -220,7 +220,6 @@ func _TokenBridgeService_GetPendingDepositReport_Handler(srv interface{}, ctx co
 	return interceptor(ctx, in, info, handler)
 }
 
-var TokenBridgeService_serviceDesc = _TokenBridgeService_serviceDesc
 var _TokenBridgeService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.daemons.TokenBridgeService",
 	HandlerType: (*TokenBridgeServiceServer)(nil),

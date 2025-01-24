@@ -52,4 +52,5 @@ type ReporterKeeper interface {
 	GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber uint64) (math.Int, error)
 	GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber uint64) (math.Int, error)
 	FeeRefund(ctx context.Context, hashId []byte, amt math.Int) error
+	GetSelector(ctx context.Context, selectorAddr sdk.AccAddress) (reportertypes.Selection, error)
 }

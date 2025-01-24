@@ -93,8 +93,11 @@ func TestLearn(t *testing.T) {
 	ctx := context.Background()
 	layer := e2e.LayerSpinup(t) // *cosmos.CosmosChain type
 	validatorI := layer.Validators[0]
+	validatorII := layer.Validators[1]
 
 	valAddress, err := validatorI.AccountKeyBech32(ctx, "validator")
+	require.NoError(t, err)
+	valIIAddress, err := validatorII.AccountKeyBech32(ctx, "validator")
 	require.NoError(t, err)
 	// sample of how add a user and fund it
 	user := interchaintest.GetAndFundTestUsers(t, ctx, "user1", math.OneInt(), layer)[0]
@@ -103,6 +106,7 @@ func TestLearn(t *testing.T) {
 	disputer := interchaintest.GetAndFundTestUsers(t, ctx, "disputer", math.NewInt(1*1e12), layer)[0]
 	disputerFA := disputer.FormattedAddress()
 
+	// turn on minting
 	prop := Proposal{
 		Messages: []map[string]interface{}{
 			{
@@ -118,7 +122,7 @@ func TestLearn(t *testing.T) {
 	}
 	_, err = ExecProposal(ctx, "validator", prop, validatorI)
 	require.NoError(t, err)
-
+	// all validators vote yes on minting proposal
 	for _, v := range layer.Validators {
 		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "1000000loya", "--keyring-dir", layer.HomeDir())
 		require.NoError(t, err)
@@ -129,17 +133,32 @@ func TestLearn(t *testing.T) {
 	result, err := layer.GovQueryProposal(ctx, 1)
 	require.NoError(t, err)
 	fmt.Println("Proposal result: ", result)
-	// create reporter
+
+	// all validators become reporters
 	txHash, err := validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", layer.HomeDir())
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
+	txHash, err = validatorII.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", layer.HomeDir())
+	require.NoError(t, err)
+	fmt.Println("Tx hash: ", txHash)
 
+	// validatorI tips
 	_, _, err = validatorI.Exec(ctx, validatorI.TxCommand("validator", "oracle", "tip", valAddress, qData, "1000000loya", "--keyring-dir", layer.HomeDir()), validatorI.Chain.Config().Env)
 	require.NoError(t, err)
 	err = testutil.WaitForBlocks(ctx, 1, validatorI)
 	require.NoError(t, err)
-
+	// validatorI reports
 	txHash, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", valAddress, qData, value, "--keyring-dir", layer.HomeDir())
+	require.NoError(t, err)
+	fmt.Println("Tx hash: ", txHash)
+
+	// validatorII tips
+	_, _, err = validatorII.Exec(ctx, validatorII.TxCommand("validator", "oracle", "tip", valIIAddress, qData, "1000000loya", "--keyring-dir", layer.HomeDir()), validatorII.Chain.Config().Env)
+	require.NoError(t, err)
+	err = testutil.WaitForBlocks(ctx, 1, validatorII)
+	require.NoError(t, err)
+	// validatorII reports
+	txHash, err = validatorII.ExecTx(ctx, "validator", "oracle", "submit-value", valIIAddress, qData, value, "--keyring-dir", layer.HomeDir())
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 
@@ -166,9 +185,9 @@ func TestLearn(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println("Aggregate report: ", aggReport)
 
-	require.Equal(t, aggReport.Aggregate.AggregateReporter, valAddress)
+	require.Equal(t, aggReport.Aggregate.AggregateReporter, valIIAddress)
 
-	// dispute report
+	// second party disputes report
 	bz, err := json.Marshal(microReports.MicroReports[0])
 	require.NoError(t, err)
 	txHash, err = validatorI.ExecTx(ctx, disputerFA, "dispute", "propose-dispute", string(bz), "warning", "500000000000loya", "false", "--keyring-dir", layer.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
@@ -179,7 +198,7 @@ func TestLearn(t *testing.T) {
 	require.NoError(t, err)
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(t, err)
-	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // voting
+	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 1) // voting
 	fmt.Println("Disputes: ", string(r))
 	res2, _, err = validatorI.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hex.EncodeToString(qidbz))
 	require.NoError(t, err)
@@ -189,11 +208,22 @@ func TestLearn(t *testing.T) {
 	res3, _, err := validatorI.ExecQuery(ctx, "reporter", "reporters")
 	require.NoError(t, err)
 	fmt.Println("Reporter: ", string(res3))
-	// vote on dispute
+
+	// validators(reporters and tippers) vote on dispute
 	for _, v := range layer.Validators {
 		_, err = v.ExecTx(ctx, "validator", "dispute", "vote", "1", "vote-support", "--keyring-dir", layer.HomeDir())
 		require.NoError(t, err)
 	}
+
+	// check dispute status
+	r, _, err = validatorI.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(t, err)
+
+	err = json.Unmarshal(r, &disputes)
+	require.NoError(t, err)
+	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 1) // not resolved yet
+
+	// team votes
 	_, err = validatorI.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-support", "--keyring-dir", layer.HomeDir())
 	require.NoError(t, err)
 
@@ -205,5 +235,5 @@ func TestLearn(t *testing.T) {
 
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(t, err)
-	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_RESOLVED") // resolved
+	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 2) // resolved
 }
