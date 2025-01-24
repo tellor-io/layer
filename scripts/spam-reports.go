@@ -1,3 +1,5 @@
+//nolint:gosec
+
 package main
 
 import (
