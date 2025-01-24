@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package layer.daemons;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/tellor-io/layer/daemons/server/types";
+
+// TokenBridgeService provides methods related to token bridge deposits.
+service TokenBridgeTipService {
+  // GetPendingBridgeDeposit returns the oldest pending bridge deposit report data.
+  rpc GetTokenBridgeTip(GetTokenBridgeTipRequest) returns (GetTokenBridgeTipResponse) {
+    option (google.api.http).get = "/layer/api/get_token_bridge_tip";
+  }
+}
+
+// GetTokenBridgeTipRequest is a request message for getting pending bridge deposits.
+message GetTokenBridgeTipRequest {}
+
+// GetTokenBridgeTipResponse is a response message for getting pending bridge deposits.
+message GetTokenBridgeTipResponse {
+  bytes query_data = 1;
+}
