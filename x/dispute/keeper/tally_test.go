@@ -33,7 +33,6 @@ func (s *KeeperTestSuite) TestGetVotersExist() {
 	// 1 voter
 	_, err := k.GetVotersExist(ctx, 1)
 	require.NoError(err)
-
 }
 
 // func (s *KeeperTestSuite) TestGetVoters() {

@@ -12,5 +12,4 @@ func TestAttestationRequests_AddRequest(t *testing.T) {
 		Snapshot: []byte("snapshot"),
 	})
 	require.Equal(t, attestationRequests.Requests[0].Snapshot, []byte("snapshot"))
-
 }
