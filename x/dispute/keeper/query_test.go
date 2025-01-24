@@ -199,10 +199,9 @@ func (s *KeeperTestSuite) TestTallyQuery() {
 	}))
 
 	require.NoError(k.VoteCountsByGroup.Set(ctx, 1, types.StakeholderVoteCounts{
-		Users:        types.VoteCounts{Support: 1000, Against: 100, Invalid: 500},
-		Reporters:    types.VoteCounts{Support: 10000, Against: 100, Invalid: 560},
-		Tokenholders: types.VoteCounts{Support: 50000, Against: 1000, Invalid: 500},
-		Team:         types.VoteCounts{Support: 1000, Against: 0, Invalid: 0},
+		Users:     types.VoteCounts{Support: 1000, Against: 100, Invalid: 500},
+		Reporters: types.VoteCounts{Support: 10000, Against: 100, Invalid: 560},
+		Team:      types.VoteCounts{Support: 1000, Against: 0, Invalid: 0},
 	}))
 
 	require.NoError(q.BlockInfo.Set(ctx, []byte{1}, types.BlockInfo{TotalReporterPower: math.NewInt(25000), TotalUserTips: math.NewInt(5000)}))

@@ -146,12 +146,13 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 	// skip selectors that are locked from switching reporters
 	selector, err := k.reporterKeeper.GetSelector(ctx, voter)
 	if err != nil {
-		fmt.Println("err: ", err)
+		fmt.Println("err : ", err)
 		if !errors.Is(err, collections.ErrNotFound) {
 			return math.Int{}, err
 		}
 		return math.ZeroInt(), nil
 	}
+	fmt.Println("selector locked until time: ", selector.LockedUntilTime)
 	if selector.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
 		return math.ZeroInt(), nil
 	}
