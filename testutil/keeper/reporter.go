@@ -39,12 +39,14 @@ func ReporterKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.
 	bk := new(mocks.BankKeeper)
 	sk := new(mocks.StakingKeeper)
 	rk := new(mocks.RegistryKeeper)
+	ak := new(mocks.AccountKeeper)
 	storeservice := runtime.NewKVStoreService(storeKey)
 	k := keeper.NewKeeper(
 		cdc,
 		storeservice,
 		log.NewNopLogger(),
 		authority.String(),
+		ak,
 		sk,
 		bk,
 		rk,

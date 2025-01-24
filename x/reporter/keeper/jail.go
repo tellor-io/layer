@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	gomath "math"
 	"strconv"
 	"time"
 
@@ -20,7 +21,12 @@ func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, j
 		return types.ErrReporterJailed.Wrapf("cannot jail already jailed reporter, %v", reporter)
 	}
 	sdkctx := sdk.UnwrapSDKContext(ctx)
-	reporter.JailedUntil = sdkctx.BlockTime().Add(time.Second * time.Duration(jailDuration))
+	if jailDuration == gomath.MaxInt64 {
+		// Set jailed until to the max time by converting max int64 into seconds and nanoseconds
+		reporter.JailedUntil = time.Unix(int64(jailDuration)/1e9, int64(jailDuration)%1e9)
+	} else {
+		reporter.JailedUntil = sdkctx.BlockTime().Add(time.Second * time.Duration(jailDuration))
+	}
 	reporter.Jailed = true
 	err = k.Reporters.Set(ctx, reporterAddr, reporter)
 	if err != nil {
@@ -49,5 +55,20 @@ func (k Keeper) UnjailReporter(ctx context.Context, reporterAddr sdk.AccAddress,
 
 	reporter.Jailed = false
 	reporter.JailedUntil = time.Time{}
+	return k.Reporters.Set(ctx, reporterAddr, reporter)
+}
+
+func (k Keeper) UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr sdk.AccAddress) error {
+	reporter, err := k.Reporters.Get(ctx, reporterAddr)
+	if err != nil {
+		return err
+	}
+	if !reporter.Jailed {
+		return nil
+	}
+
+	sdkctx := sdk.UnwrapSDKContext(ctx)
+	reporter.JailedUntil = sdkctx.BlockTime().Add(-1 * time.Second)
+
 	return k.Reporters.Set(ctx, reporterAddr, reporter)
 }

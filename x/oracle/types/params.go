@@ -14,8 +14,13 @@ var _ paramtypes.ParamSet = (*Params)(nil)
 
 var (
 	KeyMinStakeAmount = []byte("MinStakeAmount")
+	KeyMinTipAmount   = []byte("MinTipAmount")
+	KeyMaxTipAmount   = []byte("MaxTipAmount")
 	// TODO: Determine the default value
 	DefaultMinStakeAmount = math.NewInt(1_000_000) // one TRB
+
+	DefaultMinTipAmount = math.NewInt(10_000)
+	DefaultMaxTipAmount = math.NewInt(25_000_000)
 )
 
 // ParamKeyTable the param key table for launch module
@@ -24,21 +29,25 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(minStakeAmount math.Int) Params {
+func NewParams(minStakeAmount, minTipAmount, maxTipAmount math.Int) Params {
 	return Params{
 		MinStakeAmount: minStakeAmount,
+		MinTipAmount:   minTipAmount,
+		MaxTipAmount:   maxTipAmount,
 	}
 }
 
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
-	return NewParams(DefaultMinStakeAmount)
+	return NewParams(DefaultMinStakeAmount, DefaultMinTipAmount, DefaultMaxTipAmount)
 }
 
 // ParamSetPairs get the params.ParamSet
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(KeyMinStakeAmount, &p.MinStakeAmount, validateMinStakeAmount),
+		paramtypes.NewParamSetPair(KeyMinTipAmount, &p.MinTipAmount, validateMinTipAmount),
+		paramtypes.NewParamSetPair(KeyMaxTipAmount, &p.MaxTipAmount, validateMaxTipAmount),
 	}
 }
 
@@ -59,6 +68,24 @@ func (p Params) String() string {
 
 // validateMinStakeAmount validates the MinStakeAmount param
 func validateMinStakeAmount(v interface{}) error {
+	_, ok := v.(math.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	return nil
+}
+
+func validateMinTipAmount(v interface{}) error {
+	_, ok := v.(math.Int)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	return nil
+}
+
+func validateMaxTipAmount(v interface{}) error {
 	_, ok := v.(math.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)

@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"strconv"
+	"strings"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -13,6 +14,7 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Tip handles tipping a query; accepts query data and amount to tip.
@@ -33,6 +35,16 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	tipper := sdk.MustAccAddressFromBech32(msg.Tipper)
+
+	if msg.Amount.Amount.LT(types.DefaultMinTipAmount) {
+		return nil, types.ErrNotEnoughTip
+	} else if msg.Amount.Amount.GT(types.DefaultMaxTipAmount) {
+		return nil, types.ErrTipExceedsMax
+	}
+
+	if !strings.EqualFold(msg.Amount.Denom, types.DefaultBondDenom) {
+		return nil, sdkerrors.ErrInvalidRequest
+	}
 
 	tip, err := k.keeper.transfer(ctx, tipper, msg.Amount)
 	if err != nil {

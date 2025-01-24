@@ -21,7 +21,8 @@ func (k Keeper) SetDataSpec(ctx sdk.Context, querytype string, dataspec types.Da
 	if dataspec.ReportBlockWindow > params.MaxReportBufferWindow {
 		return errors.New("report buffer window exceeds max allowed value")
 	}
-	if strings.ToLower(dataspec.QueryType) != querytype {
+
+	if dataspec.QueryType != querytype {
 		return errors.New("query type in dataspec does not match the query type provided")
 	}
 	return k.SpecRegistry.Set(ctx, querytype, dataspec)
