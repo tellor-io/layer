@@ -77,18 +77,59 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 	case *stakingtypes.MsgCreateValidator:
 		msgAmount = msg.Value.Amount
 	case *stakingtypes.MsgDelegate:
-		msgAmount = msg.Amount.Amount
+		val, err := t.stakingKeeper.GetValidator(ctx, sdk.ValAddress(msg.ValidatorAddress))
+		if err != nil {
+			return err
+		}
+		if val.Status == stakingtypes.Bonded {
+			msgAmount = msg.Amount.Amount
+		} else {
+			return nil
+		}
 	case *stakingtypes.MsgBeginRedelegate:
 		// redelegate shouldn't increase the total stake, however if its coming from
 		// a validator that is not in the active set, it might be considered as an increase
 		// in the active stake. Hence, we need to handle it appropriately.
-		msgAmount = msg.Amount.Amount
+		sourceAddr := msg.ValidatorSrcAddress
+		destAddr := msg.ValidatorDstAddress
+		sourceVal, err := t.stakingKeeper.GetValidator(ctx, sdk.ValAddress(sourceAddr))
+		if err != nil {
+			return err
+		}
+		destVal, err := t.stakingKeeper.GetValidator(ctx, sdk.ValAddress(destAddr))
+		if err != nil {
+			return err
+		}
+
+		if sourceVal.Status == stakingtypes.Bonded && destVal.Status != stakingtypes.Bonded {
+			msgAmount = msg.Amount.Amount.MulRaw(-1)
+		} else if sourceVal.Status == destVal.Status {
+			return nil
+		} else if sourceVal.Status != stakingtypes.Bonded && destVal.Status == stakingtypes.Bonded {
+			msgAmount = msg.Amount.Amount
+		}
 	case *stakingtypes.MsgCancelUnbondingDelegation:
-		msgAmount = msg.Amount.Amount
+		val, err := t.stakingKeeper.GetValidator(ctx, sdk.ValAddress(msg.ValidatorAddress))
+		if err != nil {
+			return err
+		}
+		if val.Status == stakingtypes.Bonded {
+			msgAmount = msg.Amount.Amount
+		} else {
+			return nil
+		}
 	case *stakingtypes.MsgUndelegate:
-		// negate the amount since undelegating is removing stake from the chain
-		// and to help with the comparison later on
-		msgAmount = msg.Amount.Amount.Neg()
+		val, err := t.stakingKeeper.GetValidator(ctx, sdk.ValAddress(msg.ValidatorAddress))
+		if err != nil {
+			return err
+		}
+		if val.Status == stakingtypes.Bonded {
+			// negate the amount since undelegating is removing stake from the chain
+			// and to help with the comparison later on
+			msgAmount = msg.Amount.Amount.Neg()
+		} else {
+			return nil
+		}
 	default:
 		return nil
 	}

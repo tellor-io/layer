@@ -20,6 +20,7 @@ func TestDecodeValueQuery(t *testing.T) {
 			AbiComponents: []*types.ABIComponent{
 				{Name: "test", FieldType: "string"},
 			},
+			QueryType: testQueryType,
 		},
 	})
 	require.NoError(t, err)

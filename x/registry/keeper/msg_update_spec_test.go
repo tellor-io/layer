@@ -18,6 +18,7 @@ func TestUpdateDataSpec(t *testing.T) {
 		DocumentHash:      "testHash",
 		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
+		QueryType:         testQueryType,
 	}
 
 	// Register spec

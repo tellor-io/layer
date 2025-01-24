@@ -2405,7 +2405,6 @@ func _Query_GetCurrentQueryByQueryId_Handler(srv interface{}, ctx context.Contex
 	}
 	return interceptor(ctx, in, info, handler)
 }
-
 func _Query_GetQueryDataLimit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetQueryDataLimitRequest)
 	if err := dec(in); err != nil {

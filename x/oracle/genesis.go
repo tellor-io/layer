@@ -33,6 +33,13 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 	}
 	genesis.Params = params
 
+	// get cyclelist
+	cyclelist, err := k.GetCyclelist(ctx)
+	if err != nil {
+		panic(err)
+	}
+	genesis.Cyclelist = cyclelist
+
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis

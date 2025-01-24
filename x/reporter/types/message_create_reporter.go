@@ -1,6 +1,8 @@
 package types
 
 import (
+	"errors"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
@@ -22,5 +24,11 @@ func (msg *MsgCreateReporter) ValidateBasic() error {
 	if err != nil {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid reporter address (%s)", err)
 	}
+
+	// check that mintokensrequired is positive
+	if msg.MinTokensRequired.LTE(math.ZeroInt()) {
+		return errors.New("MinTokensRequired must be postiive (%s)")
+	}
+
 	return nil
 }

@@ -66,8 +66,10 @@ func TestValidateGenesis(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	am := registry.NewAppModuleBasic(appCodec)
 	h := json.RawMessage(`{
-        "params": {}
-      }`)
+        "params": {
+			"max_report_buffer_window": "100000"
+		}
+	}`)
 
 	err := am.ValidateGenesis(appCodec, nil, h)
 	require.NoError(t, err)
@@ -118,20 +120,33 @@ func TestInitGenesis(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	k, _k2, _k3, ctx := keepertest.RegistryKeeper(t)
 	am := registry.NewAppModule(appCodec, k, _k2, _k3)
-	h := json.RawMessage(`{"params":{"max_report_buffer_window":"700000"},"dataspec":{"document_hash":"","response_value_type":"","abi_components":[],"aggregation_method":"","registrar":"","report_block_window":"3"}}`)
-	am.InitGenesis(ctx, appCodec, h)
+	genesisState := types.DefaultGenesis()
+	json, err := json.Marshal(genesisState)
+	require.NoError(t, err)
+	am.InitGenesis(ctx, appCodec, json)
 }
 
 func TestExportGenesis(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	k, _k2, _k3, ctx := keepertest.RegistryKeeper(t)
 	am := registry.NewAppModule(appCodec, k, _k2, _k3)
-	h := json.RawMessage(`{"params":{"max_report_buffer_window":"700000"},"dataspec":{"document_hash":"","response_value_type":"","abi_components":[],"aggregation_method":"","registrar":"","report_block_window":"3"}}`)
-	am.InitGenesis(ctx, appCodec, h)
-	gen := am.ExportGenesis(ctx, appCodec)
-	fmt.Println("exported genesis: ", gen)
-	fmt.Println("expected: ", h)
-	require.Equal(t, gen, h)
+	defaultGen := types.DefaultGenesis()
+	fmt.Println("defaultGen: ", defaultGen)
+	defaultJson, err := json.Marshal(defaultGen)
+	require.NoError(t, err)
+	// init with default genesis
+	am.InitGenesis(ctx, appCodec, defaultJson)
+	// export genesis
+	export := am.ExportGenesis(ctx, appCodec)
+	fmt.Println("exported Genesis: ", export)
+	// Unmarshal exportedGenesis back to a GenesisState
+	var exportedUnmarsahalled types.GenesisState
+	err = json.Unmarshal(export, &exportedUnmarsahalled)
+	require.NoError(t, err)
+
+	// Compare the defaultGen and exportedGen
+	require.Equal(t, defaultGen.Params, exportedUnmarsahalled.Params)
+	require.Equal(t, defaultGen.Dataspec, exportedUnmarsahalled.Dataspec)
 }
 
 func TestConsensusVersion(t *testing.T) {

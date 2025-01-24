@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/tellor-io/layer/x/dispute/types"
 
@@ -142,6 +143,19 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		return reporterTokens, k.AddReporterVoteCount(ctx, id, reporterTokens.Uint64(), choice)
 	}
 	// voter is non-reporter selector
+	// skip selectors that are locked from switching reporters
+	selector, err := k.reporterKeeper.GetSelector(ctx, voter)
+	if err != nil {
+		fmt.Println("err : ", err)
+		if !errors.Is(err, collections.ErrNotFound) {
+			return math.Int{}, err
+		}
+		return math.ZeroInt(), nil
+	}
+	fmt.Println("selector locked until time: ", selector.LockedUntilTime)
+	if selector.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
+		return math.ZeroInt(), nil
+	}
 	selectorTokens, err := k.reporterKeeper.GetDelegatorTokensAtBlock(ctx, voter, blockNumber)
 	if err != nil {
 		return math.Int{}, err
@@ -157,6 +171,8 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		}
 		// update reporter's power record for reward calculation
 		reporterVote.ReporterPower = reporterVote.ReporterPower.Sub(selectorTokens)
+		// decrease reporterVote.VoterPower by selectorTokens
+		reporterVote.VoterPower = reporterVote.VoterPower.Sub(selectorTokens)
 		err = k.Voter.Set(ctx, collections.Join(id, reporter.Bytes()), reporterVote)
 		if err != nil {
 			return math.Int{}, err
