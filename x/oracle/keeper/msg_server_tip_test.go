@@ -18,8 +18,6 @@ func (s *KeeperTestSuite) TestTip() {
 	bk := s.bankKeeper
 	msgServer := s.msgServer
 
-	// note: previous tests got moved to ValidateBasic
-
 	tipper := sample.AccAddressBytes()
 	// query needs initialized, expiration after block time, set first tip
 	amount := sdk.NewCoin("loya", math.NewInt(10*1e6))
