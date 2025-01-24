@@ -20,6 +20,19 @@ import (
 
 const qData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747262000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
 
+var spotSpec = registrytypes.DataSpec{
+	DocumentHash:      "",
+	ResponseValueType: "uint256",
+	AbiComponents: []*registrytypes.ABIComponent{
+		{Name: "asset", FieldType: "string"},
+		{Name: "currency", FieldType: "string"},
+	},
+	AggregationMethod: "weighted-median",
+	Registrar:         "genesis",
+	ReportBlockWindow: 2,
+	QueryType:         "spotprice",
+}
+
 func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 	require := s.Require()
 	k := s.oracleKeeper
@@ -62,7 +75,7 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 
 	// Submit value transaction with value revealed, this checks if the value is correctly hashed
 	rk.On("ReporterStake", s.ctx, addr, queryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
-	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil).Once()
+	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(spotSpec, nil).Once()
 
 	res, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	require.NoError(err)
@@ -105,75 +118,6 @@ func (s *KeeperTestSuite) TestSubmitWithBadQueryData() {
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "invalid query data")
 }
-
-// func (s *KeeperTestSuite) TestSubmitWithBadValue() {
-// 	require := s.Require()
-// 	// submit wrong value but correct salt
-
-// 	badValue := "00000F4240"
-// 	addr := sample.AccAddressBytes()
-// 	qDataBz, err := utils.QueryBytesFromString(qData)
-// 	require.NoError(err)
-
-// 	submitreq := types.MsgSubmitValue{
-// 		Creator:   addr.String(),
-// 		QueryData: qDataBz,
-// 		Value:     badValue,
-// 	}
-// 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-// 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-// 	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
-
-// 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
-// 	s.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
-// }
-
-// func (s *KeeperTestSuite) TestSubmitWithWrongSalt() {
-// 	// submit correct value but wrong salt
-// 	addr, _, queryData, cid := s.TestCommitValue()
-
-// 	badSalt, err := oracleutils.Salt(32)
-// 	s.Nil(err)
-
-// 	submitreq := types.MsgSubmitValue{
-// 		Creator:   addr.String(),
-// 		QueryData: queryData,
-// 		Value:     value,
-// 		Salt:      badSalt,
-// 		CommitId:  cid,
-// 	}
-// 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-
-// 	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil)
-
-// 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
-// 	s.ErrorContains(err, "submitted value doesn't match commitment, are you a cheater?")
-// }
-
-// func (s *KeeperTestSuite) TestSubmitAtWrongBlock() {
-// 	// try to submit value in same block as commit
-
-// 	addr, salt, queryData, cid := s.TestCommitValue()
-
-// 	submitreq := types.MsgSubmitValue{
-// 		Creator:   addr.String(),
-// 		QueryData: queryData,
-// 		Value:     value,
-// 		Salt:      salt,
-// 		CommitId:  cid,
-// 	}
-// 	// Note: No longer relevant since you can reveal early
-// 	// _, err := s.msgServer.SubmitValue(s.s.ctx, &submitreq)
-// 	// s.ErrorContains(err, "commit reveal window is too early")
-
-// 	// try to submit value 2 blocks after commit
-// 	s.ctx = s.ctx.WithBlockTime(s.ctx.BlockTime().Add(time.Hour))
-// 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
-// 	_ = s.reporterKeeper.On("ReporterStake", s.ctx, addr).Return(math.NewInt(1_000_000), nil) // submitreq.Salt = salt
-
-// 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
-// 	s.ErrorContains(err, "submission window expired")
-// }
 
 func (s *KeeperTestSuite) TestSubmitWithNoCreator() {
 	// submit value with no creator
@@ -230,7 +174,7 @@ func (s *KeeperTestSuite) TestSubmitValueDirectReveal() {
 	repk := s.reporterKeeper
 	regk := s.registryKeeper
 	ctx := s.ctx
-	regk.On("GetSpec", ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
+	regk.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil)
 	s.NoError(s.oracleKeeper.RotateQueries(ctx))
 	s.NoError(s.oracleKeeper.RotateQueries(ctx))
 	s.NoError(s.oracleKeeper.RotateQueries(ctx))
@@ -274,7 +218,7 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	regK := s.registryKeeper
 	ctx := s.ctx
 	// returns data spec with report block window set to 3
-	regK.On("GetSpec", ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil)
+	regK.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil)
 	s.NoError(s.oracleKeeper.RotateQueries(s.ctx))
 	s.NoError(s.oracleKeeper.RotateQueries(s.ctx))
 	s.NoError(s.oracleKeeper.RotateQueries(s.ctx))
@@ -300,7 +244,7 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	// query amount is 0, query expiration + offset is before blocktime, incycle, should set nextId and setValue
 	query.Expiration = uint64(ctx.BlockHeight())
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
-	regK.On("GetSpec", ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil).Once()
+	regK.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil).Once()
 	err = k.DirectReveal(ctx, query, qDataBz, value, reporter, votingPower, isBridgeDeposit)
 	require.NoError(err)
 	microReport, err := k.Reports.Get(ctx, collections.Join3(queryId, reporter.Bytes(), uint64(1)))
@@ -319,7 +263,7 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	query.Expiration = uint64(ctx.BlockHeight() - 1)
 	query.Id = 4
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
-	regK.On("GetSpec", ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil).Once()
+	regK.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil).Once()
 	err = k.DirectReveal(ctx, query, qDataBz, value, reporter, votingPower, !isBridgeDeposit)
 	require.ErrorContains(err, "submission window expired")
 
@@ -327,7 +271,7 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	query.Expiration = 10
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
 	ctx = ctx.WithBlockHeight(15)
-	regK.On("GetSpec", ctx, "SpotPrice").Return(registrytypes.GenesisDataSpec(), nil).Once()
+	regK.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil).Once()
 	err = k.DirectReveal(ctx, query, qDataBz, value, reporter, votingPower, isBridgeDeposit)
 	require.NoError(err)
 	microReport, err = k.Reports.Get(ctx, collections.Join3(queryId, reporter.Bytes(), uint64(4))) //

@@ -24,7 +24,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 	}
 
-	// always write default bridge spec
 	// set token bridge spec
 	bridgeSpec := types.DataSpec{
 		DocumentHash:      "",

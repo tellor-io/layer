@@ -147,6 +147,30 @@ func (_m *ReporterKeeper) GetReporterTokensAtBlock(ctx context.Context, reporter
 	return r0, r1
 }
 
+// GetSelector provides a mock function with given fields: ctx, selectorAddr
+func (_m *ReporterKeeper) GetSelector(ctx context.Context, selectorAddr types.AccAddress) (reportertypes.Selection, error) {
+	ret := _m.Called(ctx, selectorAddr)
+
+	var r0 reportertypes.Selection
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (reportertypes.Selection, error)); ok {
+		return rf(ctx, selectorAddr)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) reportertypes.Selection); ok {
+		r0 = rf(ctx, selectorAddr)
+	} else {
+		r0 = ret.Get(0).(reportertypes.Selection)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, types.AccAddress) error); ok {
+		r1 = rf(ctx, selectorAddr)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // JailReporter provides a mock function with given fields: ctx, reporterAddr, jailDuration
 func (_m *ReporterKeeper) JailReporter(ctx context.Context, reporterAddr types.AccAddress, jailDuration uint64) error {
 	ret := _m.Called(ctx, reporterAddr, jailDuration)
@@ -207,6 +231,20 @@ func (_m *ReporterKeeper) TotalReporterPower(ctx context.Context) (math.Int, err
 	}
 
 	return r0, r1
+}
+
+// UpdateJailedUntilOnFailedDispute provides a mock function with given fields: ctx, reporterAddr
+func (_m *ReporterKeeper) UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr types.AccAddress) error {
+	ret := _m.Called(ctx, reporterAddr)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) error); ok {
+		r0 = rf(ctx, reporterAddr)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 type mockConstructorTestingTNewReporterKeeper interface {
