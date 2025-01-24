@@ -38,6 +38,8 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 
 	if msg.Amount.Amount.LT(types.DefaultMinTipAmount) {
 		return nil, types.ErrNotEnoughTip
+	} else if msg.Amount.Amount.GT(types.DefaultMaxTipAmount) {
+		return nil, types.ErrTipExceedsMax
 	}
 
 	if !strings.EqualFold(msg.Amount.Denom, types.DefaultBondDenom) {
