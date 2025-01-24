@@ -16,6 +16,8 @@ func (s *IntegrationTestSuite) TestRegistryKeeper() {
 		DocumentHash:      "testHash",
 		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
+		ReportBlockWindow: 2,
+		QueryType:        queryType,
 	}
 
 	// Register spec

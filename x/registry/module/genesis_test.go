@@ -1,7 +1,6 @@
 package registry_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -47,9 +46,8 @@ func TestGenesis(t *testing.T) {
 	require.NoError(t, err)
 	var i int
 	for ; iter.Valid(); iter.Next() {
-		dataspec, err := iter.Value()
+		_, err := iter.Value()
 		require.NoError(t, err)
-		fmt.Println("dataspec.QueryType: ", dataspec.QueryType)
 		i++
 	}
 	require.Equal(t, i, 2)
@@ -88,9 +86,8 @@ func TestGenesis(t *testing.T) {
 	require.NoError(t, err)
 	var j int
 	for ; iter.Valid(); iter.Next() {
-		dataspec, err := iter.Value()
+		_, err := iter.Value()
 		require.NoError(t, err)
-		fmt.Println("dataspec.QueryType: ", dataspec.QueryType)
 		j++
 	}
 	require.Equal(t, j, 3)

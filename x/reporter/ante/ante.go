@@ -45,7 +45,6 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 }
 
 func (t TrackStakeChangesDecorator) processMessage(ctx sdk.Context, msg sdk.Msg, nestedMsgCount int64) error {
-	fmt.Println("nestedMsgCount: ", nestedMsgCount)
 	if nestedMsgCount > MaxNestedMsgCount {
 		return fmt.Errorf("nested message count exceeds the maximum allowed: Limit is %d", MaxNestedMsgCount)
 	}

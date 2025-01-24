@@ -22,12 +22,6 @@ func (s *KeeperTestSuite) TestGetVotersExist() {
 	k := s.disputeKeeper
 	require.NotNil(k)
 
-	// no voters
-	voterExists, err := k.GetVotersExist(ctx, 1)
-	fmt.Println("voter exists: ", voterExists)
-	// require.Error(err)
-	fmt.Println(err)
-
 	voter := sample.AccAddressBytes()
 	require.NoError(k.Voter.Set(ctx, collections.Join(uint64(1), voter.Bytes()), types.Voter{
 		Vote:          1,
@@ -37,9 +31,9 @@ func (s *KeeperTestSuite) TestGetVotersExist() {
 	}))
 
 	// 1 voter
-	voterExists, err = k.GetVotersExist(ctx, 1)
-	fmt.Println("voter exists: ", voterExists)
+	_, err := k.GetVotersExist(ctx, 1)
 	require.NoError(err)
+
 }
 
 // func (s *KeeperTestSuite) TestGetVoters() {

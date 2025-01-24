@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/tellor-io/layer/x/dispute/keeper"
@@ -78,7 +77,6 @@ func (s *KeeperTestSuite) TestDisputesQuery() {
 				require.NotNil(resp)
 				require.Equal(tc.expectedLength, len(resp.Disputes))
 			}
-			fmt.Println(resp)
 		})
 	}
 }
@@ -121,7 +119,6 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 	resp, err = q.OpenDisputes(ctx, &types.QueryOpenDisputesRequest{})
 	require.NoError(err)
 	require.NotNil(resp)
-	fmt.Println(resp)
 	require.Equal(1, len(resp.OpenDisputes.Ids))
 
 	// two open disputes
@@ -145,7 +142,6 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 	resp, err = q.OpenDisputes(ctx, &types.QueryOpenDisputesRequest{})
 	require.NoError(err)
 	require.NotNil(resp)
-	fmt.Println(resp)
 	require.Equal(2, len(resp.OpenDisputes.Ids))
 
 	// two open and one closed dispute
@@ -169,7 +165,6 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 	resp, err = q.OpenDisputes(ctx, &types.QueryOpenDisputesRequest{})
 	require.NoError(err)
 	require.NotNil(resp)
-	fmt.Println(resp)
 	require.Equal(2, len(resp.OpenDisputes.Ids))
 }
 

@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -35,7 +34,6 @@ func TestQueryGetDataSpecSpec(t *testing.T) {
 	require.Equal(t, registerSpecResult, &types.MsgRegisterSpecResponse{})
 
 	specReturn, err = k.GetSpec(unwrappedCtx, "queryType1")
-	fmt.Println("specReturn2: ", specReturn)
 	require.Nil(t, err)
 	require.Equal(t, specReturn, spec1)
 }

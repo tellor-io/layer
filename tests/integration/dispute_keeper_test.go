@@ -233,7 +233,6 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
-	fmt.Println("disputeFee", disputeFee)
 	s.NoError(err)
 	burnAmount := disputeFee.MulRaw(1).QuoRaw(20)
 	disputerBalanceBefore := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
@@ -332,16 +331,12 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	expectedDisputerBalAfterExecute := disputerBalanceBeforeExecuteVote.Amount.Add(disputeFee.Sub(burnAmount))
 	s.Equal(expectedDisputerBalAfterExecute, disputerBalanceAfterExecuteVote.Amount)
 	disputerVoterReward, err := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, disputer, 1)
-	fmt.Println("disputerVoterReward", disputerVoterReward)
 	s.NoError(err)
 	reporterVoterReward, err := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, repAddr, 1)
-	fmt.Println("reporterVoterReward", reporterVoterReward)
 	s.NoError(err)
 	delegator1VoterReward, err := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, delegators[1], 1)
-	fmt.Println("delegator1VoterReward", delegator1VoterReward)
 	s.NoError(err)
 	delegator2VoterReward, err := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, delegators[2], 1)
-	fmt.Println("delegator2VoterReward", delegator2VoterReward)
 	s.NoError(err)
 	// disputer cannot call claim reward since he has no voting power, just gets withdrawfeerefund
 	_, err = msgServer.ClaimReward(s.Setup.Ctx, &types.MsgClaimReward{CallerAddress: repAddr.String(), DisputeId: 1})
@@ -370,16 +365,6 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 
 	repStake, _ := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr, qId)
-	fmt.Println("\nrepStake", repStake)
-	valStakeBeforePropose, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddr)
-	s.NoError(err)
-	fmt.Println("\nvalStakeBeforePropose", valStakeBeforePropose.Tokens)
-	s.NoError(err)
-	currentBlock := s.Setup.Ctx.BlockHeight()
-	delTokensAtBlock, err := s.Setup.Reporterkeeper.GetDelegatorTokensAtBlock(s.Setup.Ctx, valAddr.Bytes(), uint64(currentBlock))
-	s.NoError(err)
-	fmt.Println("\ndelTokensAtBlock", delTokensAtBlock)
-
 	report := oracletypes.MicroReport{
 		Reporter:  repAddr.String(),
 		Power:     repStake.Quo(sdk.DefaultPowerReduction).Uint64(),
@@ -590,7 +575,6 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	}
 	disputerDelgation, err := s.Setup.Stakingkeeper.GetDelegatorBonded(s.Setup.Ctx, disputer)
 	s.NoError(err)
-	fmt.Println(disputerDelgation)
 	s.True(disputerDelgation.Equal(math.NewInt(20_000_000)))
 }
 
@@ -683,8 +667,6 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	for i := range votes {
 		_, err = msgServer.Vote(s.Setup.Ctx, &votes[i])
 		if err != nil {
-			fmt.Println("vote err: ", err)
-			fmt.Println("voter: ", votes[i].Voter)
 			s.Error(err, "voter power is zero")
 		}
 	}
@@ -698,9 +680,8 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	})
 	s.NoError(err)
 
-	val, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddr)
-	s.NoError(err)
-	fmt.Println(val.Tokens)
+	// val, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddr)
+	// s.NoError(err)
 	// tally vote
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	s.NoError(err)
@@ -729,15 +710,11 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 		totalVoterPower = totalVoterPower.Add(v.VoterPower)
 	}
 	// votersReward, _ := s.Setup.Disputekeeper.CalculateVoterShare(s.Setup.Ctx, voters, twoPercentBurn, totalVoterPower)
-	fmt.Println("twoPercentBurn", twoPercentBurn)
-	fmt.Println("teamAddr: ", teamAddr.String())
 	for _, v := range voters {
 		if bytes.Equal(teamAddr, v.Voter) {
 			continue
 		}
-		fmt.Println("voter: ", v.Voter.String())
 		newBal := votersBalanceBefore[v.Voter.String()].Amount.Add(v.Share)
-		fmt.Println(newBal)
 		// votersBalanceBefore[votersReward[i].Voter.String()].Amount = votersBalanceBefore[i].Amount.Add(votersReward[i].Share)
 		s.Equal(newBal, votersBalanceAfter[v.Voter.String()].Amount)
 	}

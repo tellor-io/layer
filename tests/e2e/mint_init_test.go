@@ -1,7 +1,6 @@
 package e2e_test
 
 import (
-	"fmt"
 	"time"
 
 	minttypes "github.com/tellor-io/layer/x/mint/types"
@@ -142,8 +141,7 @@ func (s *E2ETestSuite) TestGovernanceInitTbr() {
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-	mintModuleAddress := authtypes.NewModuleAddressOrBech32Address(minttypes.ModuleName).String()
-	fmt.Println("mintModuleAddress: ", mintModuleAddress)
+
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 

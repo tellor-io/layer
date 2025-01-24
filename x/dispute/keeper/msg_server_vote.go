@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -69,7 +68,6 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 		VoterPower:    voterPower,
 		ReporterPower: repP,
 	}
-	fmt.Println("voterVote: ", voterVote)
 	if err := k.Voter.Set(ctx, collections.Join(vote.Id, voterAcc.Bytes()), voterVote); err != nil {
 		return nil, err
 	}

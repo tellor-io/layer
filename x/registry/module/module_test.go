@@ -131,22 +131,17 @@ func TestExportGenesis(t *testing.T) {
 	k, _k2, _k3, ctx := keepertest.RegistryKeeper(t)
 	am := registry.NewAppModule(appCodec, k, _k2, _k3)
 	defaultGen := types.DefaultGenesis()
-	fmt.Println("defaultGen: ", defaultGen)
-	defaultJson, err := json.Marshal(defaultGen)
+	defaultBz, err := json.Marshal(defaultGen)
 	require.NoError(t, err)
 	// init with default genesis
-	am.InitGenesis(ctx, appCodec, defaultJson)
+	am.InitGenesis(ctx, appCodec, defaultBz)
 	// export genesis
 	export := am.ExportGenesis(ctx, appCodec)
-	fmt.Println("exported Genesis: ", export)
-	// Unmarshal exportedGenesis back to a GenesisState
-	var exportedUnmarsahalled types.GenesisState
-	err = json.Unmarshal(export, &exportedUnmarsahalled)
+	marshalledExport, err := json.Marshal(export)
 	require.NoError(t, err)
 
 	// Compare the defaultGen and exportedGen
-	require.Equal(t, defaultGen.Params, exportedUnmarsahalled.Params)
-	require.Equal(t, defaultGen.Dataspec, exportedUnmarsahalled.Dataspec)
+	require.Equal(t, defaultBz, marshalledExport)
 }
 
 func TestConsensusVersion(t *testing.T) {

@@ -68,7 +68,8 @@ func (s *E2ETestSuite) TestEditSpec() {
 		AggregationMethod: "weighted-median",
 		Registrar:         valAccAddrs[0].String(),
 		AbiComponents:     abiComponents,
-		ReportBlockWindow: 1,
+		ReportBlockWindow: 2,
+		QueryType:         "TWAP",
 	}
 	_, err = registryMsgServer.RegisterSpec(s.Setup.Ctx, &registrytypes.MsgRegisterSpec{
 		Registrar: valAccAddrs[0].String(),
@@ -141,13 +142,6 @@ func (s *E2ETestSuite) TestEditSpec() {
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
-	msgWithdrawTip := reportertypes.MsgWithdrawTip{
-		SelectorAddress:  valAccAddrs[0].String(),
-		ValidatorAddress: valValAddrs[0].String(),
-	}
-	_, err = reporterMsgServer.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)
-	require.NoError(err)
-
 	govParams, err := s.Setup.Govkeeper.Params.Get(s.Setup.Ctx)
 	require.NoError(err)
 	updatedSpec := registrytypes.DataSpec{
@@ -155,6 +149,8 @@ func (s *E2ETestSuite) TestEditSpec() {
 		AggregationMethod: "weighted-median",
 		Registrar:         valAccAddrs[0].String(),
 		AbiComponents:     abiComponents,
+		ReportBlockWindow: 1,
+		QueryType:         "TWAP",
 	}
 	msgUpdateSpec := registrytypes.MsgUpdateDataSpec{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -199,7 +195,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	require.Equal(vote.Voter, valAccAddrs[0].String())
 	require.Equal(vote.Metadata, "vote metadata from validator")
 
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(48 * time.Hour))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(49 * time.Hour))
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -214,6 +210,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	// proposal passed
 	proposal1, err := s.Setup.Govkeeper.Proposals.Get(s.Setup.Ctx, proposal.ProposalId)
 	require.NoError(err)
+
 	require.Equal(proposal1.Status, v1.StatusPassed)
 	require.Equal(proposal1.Proposer, valAccAddrs[0].String())
 	require.Equal(proposal1.TotalDeposit, govParams.MinDeposit)
@@ -248,6 +245,10 @@ func (s *E2ETestSuite) TestEditSpec() {
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
+	msgWithdrawTip := reportertypes.MsgWithdrawTip{
+		SelectorAddress:  valAccAddrs[0].String(),
+		ValidatorAddress: valValAddrs[0].String(),
+	}
 	_, err = reporterMsgServer.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)
 	require.NoError(err)
 
@@ -262,6 +263,8 @@ func (s *E2ETestSuite) TestEditSpec() {
 			{Name: "asset", FieldType: "string"},
 			{Name: "currency", FieldType: "string"},
 		},
+		ReportBlockWindow: 2,
+		QueryType:         "TWAP",
 	}
 	msgUpdateSpec = registrytypes.MsgUpdateDataSpec{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),

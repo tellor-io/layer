@@ -710,6 +710,7 @@ func (s *VoteExtensionTestSuite) TestEncodeAndSignMessage() {
 	}
 
 	for _, tt := range tests {
+		fmt.Println(tt.name)
 		s.Run(tt.name, func() {
 			h, _, _, _ := s.CreateHandlerAndMocks()
 			patches := gomonkey.NewPatches()

@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -185,8 +184,6 @@ func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
 	sk.On("GetValidator", ctx, sdk.ValAddress(valAddr1)).Return(validator1, nil)
 	sk.On("GetValidator", ctx, sdk.ValAddress(valAddr2)).Return(validator2, nil)
 
-	fmt.Println("Val 1: ", valAddr1)
-	fmt.Println("Reporter: ", reporterAddr)
 	sk.On("Unbond", ctx, reporterAddr, sdk.ValAddress(valAddr1), delegation1.Shares.Quo(math.LegacyNewDec(2))).Return(stake.QuoRaw(2), nil)
 	sk.On("Unbond", ctx, selector3, sdk.ValAddress(valAddr2), math.LegacyNewDec(500000000)).Return(math.NewInt(500000000), nil)
 

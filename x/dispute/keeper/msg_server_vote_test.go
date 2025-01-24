@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"fmt"
+	"time"
 
 	"github.com/tellor-io/layer/x/dispute/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
@@ -15,16 +15,14 @@ func (s *KeeperTestSuite) TestVote() {
 	// Create dispute
 	addr, dispute := s.TestMsgProposeDisputeFromAccount()
 
-	// mock dependency modules
-
-	s.oracleKeeper.On("GetTipsAtBlockForTipper", s.ctx, uint64(s.ctx.BlockHeight()), addr).Return(math.NewInt(1), nil)
+	s.oracleKeeper.On("GetTipsAtBlockForTipper", s.ctx, uint64(s.ctx.BlockHeight()), addr).Return(math.NewInt(10), nil)
 	s.reporterKeeper.On("Delegation", s.ctx, addr).Return(reportertypes.Selection{
-		Reporter: addr.Bytes(),
+		LockedUntilTime:  time.Now().Add(-1 * time.Hour),
+		Reporter:         addr.Bytes(),
+		DelegationsCount: 1,
 	}, nil)
-	s.reporterKeeper.On("GetReporterTokensAtBlock", s.ctx, addr.Bytes(), uint64(s.ctx.BlockHeight())).Return(math.NewInt(1), nil)
-	s.reporterKeeper.On("GetDelegatorTokensAtBlock", s.ctx, addr.Bytes(), uint64(s.ctx.BlockHeight())).Return(math.NewInt(100), nil).Once()
-	s.reporterKeeper.On("TotalReporterPower", s.ctx).Return(math.NewInt(1), nil)
-	s.oracleKeeper.On("GetTotalTips", s.ctx).Return(math.NewInt(1), nil)
+	s.reporterKeeper.On("GetReporterTokensAtBlock", s.ctx, addr.Bytes(), uint64(s.ctx.BlockHeight())).Return(math.NewInt(10), nil)
+
 	// need to manually call setblock info - happens in endblock normally
 	err := s.disputeKeeper.SetBlockInfo(s.ctx, dispute.HashId)
 	s.NoError(err)
@@ -62,11 +60,9 @@ func (s *KeeperTestSuite) TestVote() {
 	s.NoError(err)
 
 	// check on voting tally
-	votes, err := s.disputeKeeper.VoteCountsByGroup.Get(s.ctx, uint64(1))
+	_, err = s.disputeKeeper.VoteCountsByGroup.Get(s.ctx, uint64(1))
 	s.NoError(err)
-	fmt.Println(votes)
 	// vote calls tally, enough ppl have voted to reach quorum
-	fmt.Println(vote.VoteResult)
 	s.Equal(vote.VoteResult, types.VoteResult_SUPPORT)
 	s.Equal(vote.Id, uint64(1))
 }

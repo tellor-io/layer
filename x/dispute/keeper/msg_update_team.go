@@ -3,7 +3,6 @@ package keeper
 import (
 	"bytes"
 	"context"
-	"fmt"
 
 	"github.com/tellor-io/layer/x/dispute/types"
 
@@ -63,7 +62,6 @@ func (k msgServer) UpdateTeam(ctx context.Context, msg *types.MsgUpdateTeam) (*t
 				if err != nil {
 					return nil, err
 				}
-				fmt.Println("vote: ", vote)
 				err = k.Voter.Remove(ctx, collections.Join(id, currentAccBytes))
 				if err != nil {
 					return nil, err

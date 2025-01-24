@@ -217,7 +217,7 @@ func (s *ProposalHandlerTestSuite) TestPrepareProposalHandler() ([][]byte, sdk.A
 		Votes: []abcitypes.VoteInfo{
 			{
 				Validator: abcitypes.Validator{
-					Address: []byte("validator"),
+					Address: accAddr.Bytes(),
 					Power:   1000,
 				},
 			},

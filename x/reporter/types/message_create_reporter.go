@@ -27,7 +27,7 @@ func (msg *MsgCreateReporter) ValidateBasic() error {
 
 	// check that mintokensrequired is positive
 	if msg.MinTokensRequired.LTE(math.ZeroInt()) {
-		return errors.New("MinTokensRequired must be postiive (%s)")
+		return errors.New("MinTokensRequired must be positive (%s)")
 	}
 
 	return nil

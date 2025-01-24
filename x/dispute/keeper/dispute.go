@@ -302,11 +302,12 @@ func (k Keeper) SetBlockInfo(ctx context.Context, hashId []byte) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("total reporter power: ", tp)
 	tips, err := k.oracleKeeper.GetTotalTips(ctx)
 	if err != nil {
 		return err
 	}
-
+	fmt.Println("total tips: ", tips)
 	blockInfo := types.BlockInfo{
 		TotalReporterPower: tp,
 		TotalUserTips:      tips,

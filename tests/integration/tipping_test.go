@@ -2,7 +2,6 @@ package integration_test
 
 import (
 	"bytes"
-	"fmt"
 	"time"
 
 	"github.com/tellor-io/layer/testutil"
@@ -74,9 +73,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	query, err := okpr.CurrentQuery(ctx, utils.QueryIDFromData(ethQueryData))
 	s.NoError(err)
 	s.Equal(math.ZeroInt(), query.Amount)
-	// fmt.Println("query.Expiration", query.Expiration)
 	s.True(query.Expiration > uint64(ctx.BlockHeight()))
-	// expirationBeforeTip := query.Expiration
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2)
 	s.NoError(err)
@@ -161,7 +158,6 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	btcQueryId := utils.QueryIDFromData(btcQueryData)
 	tippedBTCQueryMeta, err := okpr.CurrentQuery(ctx, btcQueryId)
 	s.NoError(err)
-	fmt.Println(tippedBTCQueryMeta)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // trb query data
 	s.NoError(err)
@@ -193,7 +189,6 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 
 	cycleListQueryMeta, err := okpr.CurrentQuery(ctx, btcQueryId)
 	s.NoError(err)
-	fmt.Println(cycleListQueryMeta)
 	s.NotEqual(tippedBTCQueryMeta.Id, cycleListQueryMeta.Id)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // btc query data

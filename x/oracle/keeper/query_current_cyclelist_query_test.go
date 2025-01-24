@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
-
 	"github.com/tellor-io/layer/x/oracle/types"
 )
 
@@ -16,9 +14,8 @@ func (s *KeeperTestSuite) TestQueryCurrentCyclelist() {
 	_, err := q.CurrentCyclelistQuery(ctx, nil)
 	require.ErrorContains(err, "invalid request")
 
-	res, err := q.CurrentCyclelistQuery(ctx, &types.QueryCurrentCyclelistQueryRequest{})
+	_, err = q.CurrentCyclelistQuery(ctx, &types.QueryCurrentCyclelistQueryRequest{})
 	require.NoError(err)
-	fmt.Println(res)
 }
 
 func (s *KeeperTestSuite) TestNextCyclelistQuery() {
