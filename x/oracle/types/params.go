@@ -84,6 +84,7 @@ func validateMinTipAmount(v interface{}) error {
 
 	return nil
 }
+
 func validateMaxTipAmount(v interface{}) error {
 	_, ok := v.(math.Int)
 	if !ok {
