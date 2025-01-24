@@ -10,7 +10,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/shirou/gopsutil/v3/process"
+	tokenbridgetipstypes "github.com/tellor-io/layer/daemons/server/types/token_bridge_tips"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -135,8 +137,20 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 			height := uint64(status.SyncInfo.LatestBlockHeight)
 
 			for _, query := range res.Queries {
+				queryType := c.GetQueryType(query.GetQueryData())
 				if height > query.Expiration || commitedIds[query.Id] ||
-					strings.EqualFold(query.QueryType, "SpotPrice") {
+					!strings.EqualFold(queryType, "SpotPrice") && !strings.EqualFold(queryType, "TRBBridge") {
+					continue
+				}
+
+				if strings.EqualFold(queryType, "TRBBridge") {
+					if depositTipMap[query.Id] {
+						continue
+					}
+					queryData := query.GetQueryData()
+					tipQueryData := tokenbridgetipstypes.QueryData{QueryData: queryData}
+					c.TokenBridgeTipsCache.AddTip(tipQueryData)
+					depositTipMap[query.Id] = true
 					continue
 				}
 
@@ -193,4 +207,25 @@ func (c *Client) LogProcessStats() {
 	}
 
 	c.logger.Info(fmt.Sprintf("CPU Usage: %.2f%%, Num of threads: %d\n", cpuPercent, numThreads))
+}
+
+func (c *Client) GetQueryType(querydata []byte) string {
+	// in solidity, querydata encoded as abi.encode(string queryType, bytes queryArgs)
+	StringType, err := abi.NewType("string", "", nil)
+	if err != nil {
+		return ""
+	}
+	BytesType, err := abi.NewType("bytes", "", nil)
+	if err != nil {
+		return ""
+	}
+	initialArgs := abi.Arguments{
+		{Type: StringType},
+		{Type: BytesType},
+	}
+	queryDataDecodedPartial, err := initialArgs.Unpack(querydata)
+	if err != nil {
+		return ""
+	}
+	return queryDataDecodedPartial[0].(string)
 }

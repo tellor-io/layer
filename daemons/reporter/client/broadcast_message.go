@@ -73,6 +73,8 @@ func (c *Client) GenerateDepositMessages(ctx context.Context) error {
 			c.logger.Error("deposit report transaction failed",
 				"code", resp.TxResult.Code,
 				"queryId", queryId)
+			// remove oldest deposit report and move on to next one
+			c.TokenDepositsCache.RemoveOldestReport()
 			return fmt.Errorf("transaction failed with code %d", resp.TxResult.Code)
 		}
 
