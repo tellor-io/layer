@@ -341,7 +341,8 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	}
 
 	// send coins
-	err = k.Keeper.bankKeeper.SendCoinsFromModuleToModule(ctx, types.TipsEscrowPool, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, math.NewInt(int64(amtToDelegate.Uint64())))))
+	escrowPoolAddr := k.Keeper.accountKeeper.GetModuleAddress(types.TipsEscrowPool)
+	err = k.Keeper.bankKeeper.DelegateCoinsFromAccountToModule(ctx, escrowPoolAddr, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, math.NewInt(int64(amtToDelegate.Uint64())))))
 	if err != nil {
 		return nil, err
 	}
