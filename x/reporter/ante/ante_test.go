@@ -52,6 +52,8 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(1)},
 			},
 			err: nil,
+			setup: func() {
+			},
 		},
 		{
 			name: "CreateValidator",
@@ -59,6 +61,8 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(100)},
 			},
 			err: errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period"),
+			setup: func() {
+			},
 		},
 		{
 			name: "Delegate",
@@ -69,7 +73,7 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 			},
 			err: nil,
 			setup: func() {
-				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr)).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
+				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr.String())).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
 			},
 		},
 		{
@@ -82,31 +86,32 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 			},
 			err: nil,
 			setup: func() {
-				sk.On("GetValidator", ctx, sdk.ValAddress(valDstAddr)).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil)
+				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr.String())).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
+				sk.On("GetValidator", ctx, sdk.ValAddress(valDstAddr.String())).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
 			},
 		},
 		{
 			name: "CancelUnbondingDelegation",
 			msg: &stakingtypes.MsgCancelUnbondingDelegation{
-				DelegatorAddress: sample.AccAddressBytes().String(),
-				ValidatorAddress: sample.AccAddressBytes().String(),
+				DelegatorAddress: delAddr.String(),
+				ValidatorAddress: valSrcAddr.String(),
 				Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(100)},
 			},
 			err: errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period"),
 			setup: func() {
-				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr)).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil)
+				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr.String())).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
 			},
 		},
 		{
 			name: "Undelegate",
 			msg: &stakingtypes.MsgUndelegate{
-				DelegatorAddress: sample.AccAddressBytes().String(),
-				ValidatorAddress: sample.AccAddressBytes().String(),
+				DelegatorAddress: delAddr.String(),
+				ValidatorAddress: valSrcAddr.String(),
 				Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(95)},
 			},
 			err: errors.New("total stake decrease exceeds the allowed 5% threshold within a twelve-hour period"),
 			setup: func() {
-				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr)).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil)
+				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr.String())).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
 			},
 		},
 		{
@@ -116,11 +121,15 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				Params:    types.Params{},
 			},
 			err: nil,
+			setup: func() {
+			},
 		},
 		{
 			name: "empty authz exec",
 			msg:  &authz.MsgExec{},
 			err:  nil,
+			setup: func() {
+			},
 		},
 		{
 			name: "stake change > 5% wrapped once",
@@ -133,6 +142,8 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				},
 			},
 			err: errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period"),
+			setup: func() {
+			},
 		},
 		{
 			name: "stake change < 5% wrapped once",
@@ -145,6 +156,8 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				},
 			},
 			err: nil,
+			setup: func() {
+			},
 		},
 		{
 			name: "stake change < 5% wrapped twice",
@@ -187,6 +200,8 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				},
 			},
 			err: fmt.Errorf("nested message count exceeds the maximum allowed: Limit is %d", MaxNestedMsgCount),
+			setup: func() {
+			},
 		},
 		{
 			name: "stake change > 5% wrapped twice",
@@ -209,6 +224,8 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				},
 			},
 			err: errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period"),
+			setup: func() {
+			},
 		},
 		{
 			name: "nested message count exceeds the maximum allowed",
@@ -251,6 +268,8 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				},
 			},
 			err: errors.New("nested message count exceeds the maximum allowed: Limit is 7"),
+			setup: func() {
+			},
 		},
 	}
 
@@ -262,9 +281,9 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			tc.setup()
 			err := txBuilder.SetMsgs(tc.msg)
 			require.NoError(t, err)
-			sk.On("GetValidator", ctx)
 			tx := txBuilder.GetTx()
 			_, err = decorator.AnteHandle(ctx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				return ctx, nil
