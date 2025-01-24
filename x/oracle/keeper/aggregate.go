@@ -284,6 +284,34 @@ func (k Keeper) GetAggregateBefore(ctx context.Context, queryId []byte, timestam
 	return mostRecent, timestamp, nil
 }
 
+func (k Keeper) GetAggregateAfter(ctx context.Context, queryId []byte, timestampAfter time.Time) (aggregate *types.Aggregate, timestamp time.Time, err error) {
+	// Convert the timestampAfter to Unix time and create a range that starts just after this timestamp
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](queryId).StartExclusive(uint64(timestampAfter.UnixMilli()))
+
+	var oldest *types.Aggregate
+	var oldestTimestamp uint64
+
+	err = k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.Aggregate) (stop bool, err error) {
+		if !value.Flagged {
+			oldest = &value
+			oldestTimestamp = key.K2()
+			return true, nil
+		}
+		return false, nil
+	})
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+
+	if oldest == nil {
+		return nil, time.Time{}, fmt.Errorf("no aggregate report found after timestamp %v for query id %s", timestampAfter, hex.EncodeToString(queryId))
+	}
+
+	// Convert the Unix timestamp back to time.Time
+	timestamp = time.UnixMilli(int64(oldestTimestamp))
+	return oldest, timestamp, nil
+}
+
 func (k Keeper) GetAggregateByTimestamp(ctx context.Context, queryId []byte, timestamp time.Time) (aggregate types.Aggregate, err error) {
 	agg, err := k.Aggregates.Get(ctx, collections.Join(queryId, uint64(timestamp.UnixMilli())))
 	if err != nil {

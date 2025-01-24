@@ -13,6 +13,7 @@ import (
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
+	tokenbridgetipstypes "github.com/tellor-io/layer/daemons/server/types/token_bridge_tips"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
@@ -30,6 +31,7 @@ const defaultGas = uint64(300000)
 var (
 	commitedIds      = make(map[uint64]bool)
 	depositReportMap = make(map[string]bool)
+	depositTipMap    = make(map[uint64]bool) // map of deposit tips already sent to bridge daemon
 )
 
 var mutex = &sync.RWMutex{}
@@ -43,11 +45,12 @@ type Client struct {
 	ReporterClient    reportertypes.QueryClient
 	GlobalfeeClient   globalfeetypes.QueryClient
 
-	cosmosCtx          client.Context
-	MarketParams       []pricefeedtypes.MarketParam
-	MarketToExchange   *pricefeedservertypes.MarketToExchangePrices
-	TokenDepositsCache *tokenbridgetypes.DepositReports
-	StakingKeeper      stakingkeeper.Keeper
+	cosmosCtx            client.Context
+	MarketParams         []pricefeedtypes.MarketParam
+	MarketToExchange     *pricefeedservertypes.MarketToExchangePrices
+	TokenDepositsCache   *tokenbridgetypes.DepositReports
+	TokenBridgeTipsCache *tokenbridgetipstypes.DepositTips
+	StakingKeeper        stakingkeeper.Keeper
 
 	accAddr   sdk.AccAddress
 	minGasFee string
@@ -74,6 +77,7 @@ func (c *Client) Start(
 	marketParams []pricefeedtypes.MarketParam,
 	marketToExchange *pricefeedservertypes.MarketToExchangePrices,
 	tokenDepositsCache *tokenbridgetypes.DepositReports,
+	tokenBridgeTipsCache *tokenbridgetipstypes.DepositTips,
 	// ctxGetter func(int64, bool) (sdk.Context, error),
 	stakingKeeper stakingkeeper.Keeper,
 	chainId string,
@@ -89,7 +93,7 @@ func (c *Client) Start(
 	c.StakingKeeper = stakingKeeper
 
 	c.TokenDepositsCache = tokenDepositsCache
-
+	c.TokenBridgeTipsCache = tokenBridgeTipsCache
 	// Make a connection to the Cosmos gRPC query services.
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
 	if err != nil {

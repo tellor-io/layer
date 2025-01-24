@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.22;
+pragma solidity 0.8.19;
 
 import { ITellorFlex } from "../interfaces/ITellorFlex.sol";
 import { ITellorMaster } from "../interfaces/ITellorMaster.sol";
@@ -81,6 +81,14 @@ contract LayerTransition {
     /// @param _timestamp timestamp you want data for
     function isInDispute(bytes32 _queryId, uint256 _timestamp) external view returns(bool) {
         return tellorFlex.isInDispute(_queryId, _timestamp);
+    }
+
+    /// @notice This forwards retrieveData calls to the old tellorFlex
+    /// @param _queryId being requested
+    /// @param _timestamp to retrieve data/value from
+    /// @return bytes value for timestamp submitted
+    function retrieveData(bytes32 _queryId, uint256 _timestamp) external view returns(bytes memory) {
+        return tellorFlex.retrieveData(_queryId, _timestamp);
     }
 
     /// @notice This returns a big number.  Necessary for upgrading the contract

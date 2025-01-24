@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
+	tokenbridgetipstypes "github.com/tellor-io/layer/daemons/server/types/token_bridge_tips"
 	tokenbridge "github.com/tellor-io/layer/daemons/token_bridge_feed/abi"
 
 	"cosmossdk.io/log"
@@ -26,8 +28,8 @@ type Client struct {
 	lastReportedDepositId *big.Int
 	logger                log.Logger
 	tokenDepositsCache    *tokenbridgetypes.DepositReports
-
-	daemonStartup sync.WaitGroup
+	tokenBridgeTipsCache  *tokenbridgetipstypes.DepositTips
+	daemonStartup         sync.WaitGroup
 
 	runningSubtasksWaitGroup sync.WaitGroup
 
@@ -35,9 +37,8 @@ type Client struct {
 
 	stops []chan bool
 
-	ethClient *ethclient.Client
-
-	bridgeContract *tokenbridge.TokenBridge
+	ethClients      []*ethclient.Client
+	bridgeContracts []*tokenbridge.TokenBridge
 }
 
 // Struct to unmarshal the JSON data
@@ -48,10 +49,10 @@ type APIResponse struct {
 	} `json:"data"`
 }
 
-func StartNewClient(ctx context.Context, logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositReports) *Client {
+func StartNewClient(ctx context.Context, logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositReports, tokenBridgeTipsCache *tokenbridgetipstypes.DepositTips) *Client {
 	logger.Info("Starting tokenbridge daemon")
 
-	client := newClient(logger, tokenDepositsCache)
+	client := newClient(logger, tokenDepositsCache, tokenBridgeTipsCache)
 	client.runningSubtasksWaitGroup.Add(1)
 	go func() {
 		defer client.runningSubtasksWaitGroup.Done()
@@ -60,13 +61,14 @@ func StartNewClient(ctx context.Context, logger log.Logger, tokenDepositsCache *
 	return client
 }
 
-func newClient(logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositReports) *Client {
+func newClient(logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositReports, tokenBridgeTipsCache *tokenbridgetipstypes.DepositTips) *Client {
 	logger = logger.With(log.ModuleKey, "tokenbridge-daemon")
 	client := &Client{
-		tickers:            []*time.Ticker{},
-		stops:              []chan bool{},
-		logger:             logger,
-		tokenDepositsCache: tokenDepositsCache,
+		tickers:              []*time.Ticker{},
+		stops:                []chan bool{},
+		logger:               logger,
+		tokenDepositsCache:   tokenDepositsCache,
+		tokenBridgeTipsCache: tokenBridgeTipsCache,
 	}
 
 	// Set the client's daemonStartup state to indicate that the daemon has not finished starting up.
@@ -87,12 +89,124 @@ func (c *Client) start(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			err := c.QueryTokenBridgeContract()
-			if err != nil {
+			// Process regular deposits
+			if err := c.QueryTokenBridgeContract(); err != nil {
 				c.logger.Error("Failed to query and process deposits", "error", err)
+			}
+
+			// Process tips
+			if err := c.ProcessPendingTips(); err != nil {
+				c.logger.Error("Failed to process pending tips", "error", err)
 			}
 		}
 	}
+}
+
+// Add new method to process tips
+func (c *Client) ProcessPendingTips() error {
+	oldestTipQueryData, err := c.tokenBridgeTipsCache.GetOldestTip()
+	if err != nil {
+		return nil
+	}
+
+	// Decode the query data to extract depositId
+	queryType, depositId, err := c.DecodeQueryData(oldestTipQueryData.QueryData)
+	if err != nil {
+		c.logger.Error("Failed to decode tip query data", "error", err)
+		c.tokenBridgeTipsCache.RemoveOldestTip()
+		return nil
+	}
+
+	// Verify this is a TRBBridge query
+	if queryType != "TRBBridge" {
+		c.logger.Error("Invalid query type for tip", "queryType", queryType)
+		c.tokenBridgeTipsCache.RemoveOldestTip()
+		return nil
+	}
+
+	// Query deposit details
+	depositTicket, err := c.QueryDepositDetails(depositId)
+	if err != nil {
+		c.logger.Error("Failed to query deposit details for tip", "error", err)
+		return nil
+	}
+
+	// Check finality
+	isFinal, err := c.CheckForFinality(depositTicket.BlockHeight)
+	if err != nil || !isFinal {
+		c.logger.Info("Tip deposit not yet final", "depositId", depositId)
+		return nil
+	}
+
+	// Encode report data
+	// queryData, err := c.EncodeQueryData(depositTicket)
+	// if err != nil {
+	// 	c.logger.Error("Failed to encode query data for tip", "error", err)
+	// 	return nil
+	// }
+	reportValue, err := c.EncodeReportValue(depositTicket)
+	if err != nil {
+		c.logger.Error("Failed to encode report value for tip", "error", err)
+		return nil
+	}
+
+	// Add to deposits cache
+	c.tokenDepositsCache.AddReport(tokenbridgetypes.DepositReport{
+		QueryData: oldestTipQueryData.QueryData,
+		Value:     reportValue,
+	})
+
+	// Remove from tips cache
+	c.tokenBridgeTipsCache.RemoveOldestTip()
+	c.logger.Info("Processed tip and added to deposits", "depositId", depositId)
+
+	return nil
+}
+
+// Add helper method to decode query data
+func (c *Client) DecodeQueryData(queryData []byte) (string, *big.Int, error) {
+	// Prepare types for decoding
+	StringType, err := abi.NewType("string", "", nil)
+	if err != nil {
+		return "", nil, err
+	}
+	BytesType, err := abi.NewType("bytes", "", nil)
+	if err != nil {
+		return "", nil, err
+	}
+
+	// Decode outer layer
+	args := abi.Arguments{{Type: StringType}, {Type: BytesType}}
+	decoded, err := args.Unpack(queryData)
+	if err != nil {
+		return "", nil, err
+	}
+
+	queryType := decoded[0].(string)
+	innerData := decoded[1].([]byte)
+
+	// Decode inner layer
+	BoolType, err := abi.NewType("bool", "", nil)
+	if err != nil {
+		return "", nil, err
+	}
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	if err != nil {
+		return "", nil, err
+	}
+
+	innerArgs := abi.Arguments{{Type: BoolType}, {Type: Uint256Type}}
+	innerDecoded, err := innerArgs.Unpack(innerData)
+	if err != nil {
+		return "", nil, err
+	}
+
+	isDeposit := innerDecoded[0].(bool)
+	if !isDeposit {
+		return "", nil, fmt.Errorf("tip is not a deposit")
+	}
+	depositId := innerDecoded[1].(*big.Int)
+	return queryType, depositId, nil
 }
 
 type DepositReceipt struct {
@@ -134,41 +248,42 @@ func (c *Client) QueryAPI(urlStr string) ([]byte, error) {
 }
 
 func (c *Client) InitializeDeposits() error {
-	// Add retry logic for initial connection
-	var eclient *ethclient.Client
-	var err error
-	var ethRpcUrl string
-	for retries := 0; retries < 3; retries++ {
-		ethRpcUrl, err = c.getEthRpcUrl()
-		if err != nil {
-			return fmt.Errorf("failed to get ETH RPC url: %w", err)
+	urls, err := c.getEthRpcUrls()
+	if err != nil {
+		return fmt.Errorf("failed to get ETH RPC urls: %w", err)
+	}
+
+	// Initialize slices
+	c.ethClients = make([]*ethclient.Client, len(urls))
+	c.bridgeContracts = make([]*tokenbridge.TokenBridge, len(urls))
+
+	// Connect to each RPC endpoint
+	for i, url := range urls {
+		for retries := 0; retries < 3; retries++ {
+			client, err := ethclient.Dial(url)
+			if err != nil {
+				c.logger.Error("Failed to connect to Ethereum client, retrying...",
+					"url", url, "attempt", retries+1, "error", err)
+				time.Sleep(time.Second * 5)
+				continue
+			}
+			c.ethClients[i] = client
+			break
+		}
+		if c.ethClients[i] == nil {
+			return fmt.Errorf("failed to connect to RPC endpoint: %s", url)
 		}
 
-		eclient, err = ethclient.Dial(ethRpcUrl)
+		contractAddress, err := c.getTokenBridgeContractAddress()
 		if err != nil {
-			c.logger.Error("Failed to connect to Ethereum client, retrying...", "attempt", retries+1, "error", err)
-			time.Sleep(time.Second * 5)
-			continue
+			return fmt.Errorf("failed to get token bridge contract address: %w", err)
 		}
-		break
-	}
-	if err != nil {
-		return fmt.Errorf("failed to connect to the Ethereum client after retries: %w", err)
-	}
 
-	c.ethClient = eclient
-
-	contractAddress, err := c.getTokenBridgeContractAddress()
-	if err != nil {
-		return fmt.Errorf("failed to get token bridge contract address: %w", err)
+		c.bridgeContracts[i], err = tokenbridge.NewTokenBridge(contractAddress, c.ethClients[i])
+		if err != nil {
+			return fmt.Errorf("failed to instantiate TokenBridge contract for endpoint %s: %w", url, err)
+		}
 	}
-
-	bridgeContract, err := tokenbridge.NewTokenBridge(contractAddress, c.ethClient)
-	if err != nil {
-		return fmt.Errorf("failed to instantiate a TokenBridge contract: %w", err)
-	}
-
-	c.bridgeContract = bridgeContract
 
 	latestDepositId, err := c.QueryCurrentDepositId()
 	if err != nil {
@@ -181,7 +296,6 @@ func (c *Client) InitializeDeposits() error {
 }
 
 func (c *Client) QueryTokenBridgeContract() error {
-	// Add retry logic for queries
 	var latestDepositId *big.Int
 	var err error
 
@@ -189,8 +303,8 @@ func (c *Client) QueryTokenBridgeContract() error {
 		latestDepositId, err = c.QueryCurrentDepositId()
 		if err != nil {
 			if retries < 2 {
-				c.logger.Error("Failed to query latest deposit ID, reconnecting...", "attempt", retries+1, "error", err)
-				// Attempt to reconnect
+				c.logger.Error("Failed to query latest deposit ID, reconnecting...",
+					"attempt", retries+1, "error", err)
 				if err := c.reconnectEthClient(); err != nil {
 					c.logger.Error("Failed to reconnect", "error", err)
 					time.Sleep(time.Second * 5)
@@ -246,35 +360,6 @@ func (c *Client) QueryTokenBridgeContract() error {
 	}
 
 	return nil
-}
-
-func (c *Client) QueryCurrentDepositId() (*big.Int, error) {
-	// Query the latest deposit ID from the bridge contract
-	latestDepositId, err := c.bridgeContract.DepositId(nil)
-	if err != nil {
-		return latestDepositId, fmt.Errorf("failed to query latest deposit ID: %w", err)
-	}
-
-	return latestDepositId, nil
-}
-
-func (c *Client) QueryDepositDetails(depositId *big.Int) (DepositReceipt, error) {
-	// Query depositDetails details for a specific depositDetails ID
-	depositDetails, err := c.bridgeContract.Deposits(nil, depositId)
-	if err != nil {
-		return DepositReceipt{}, fmt.Errorf("failed to query deposit details for ID %d: %w", depositId, err)
-	}
-
-	depositReceipt := DepositReceipt{
-		DepositId:   depositId,
-		Sender:      depositDetails.Sender,
-		Recipient:   depositDetails.Recipient,
-		Amount:      depositDetails.Amount,
-		Tip:         depositDetails.Tip,
-		BlockHeight: depositDetails.BlockHeight,
-	}
-
-	return depositReceipt, nil
 }
 
 func (c *Client) CheckForFinality(blockHeight *big.Int) (bool, error) {
@@ -380,16 +465,6 @@ func (c *Client) EncodeReportValue(depositReceipt DepositReceipt) ([]byte, error
 	return reportValueArgsEncoded, nil
 }
 
-func (c *Client) getEthRpcUrl() (string, error) {
-	ethRpcUrl := os.Getenv("ETH_RPC_URL")
-	if ethRpcUrl == "" {
-		return "", fmt.Errorf("ETH_RPC_URL not set")
-	} else {
-		fmt.Println("ETH_RPC_URL", ethRpcUrl)
-	}
-	return ethRpcUrl, nil
-}
-
 func (c *Client) getTokenBridgeContractAddress() (common.Address, error) {
 	tokenBridgeContractAddress := os.Getenv("TOKEN_BRIDGE_CONTRACT")
 	if tokenBridgeContractAddress == "" {
@@ -402,34 +477,148 @@ func (c *Client) getTokenBridgeContractAddress() (common.Address, error) {
 
 // Add new helper function for reconnection
 func (c *Client) reconnectEthClient() error {
-	ethRpcUrl, err := c.getEthRpcUrl()
+	urls, err := c.getEthRpcUrls()
 	if err != nil {
-		return fmt.Errorf("failed to get ETH RPC url: %w", err)
+		return fmt.Errorf("failed to get ETH RPC urls: %w", err)
 	}
 
-	eclient, err := ethclient.Dial(ethRpcUrl)
-	if err != nil {
-		return fmt.Errorf("failed to reconnect to the Ethereum client: %w", err)
+	for i, url := range urls {
+		// Close existing client if it exists
+		if c.ethClients[i] != nil {
+			c.ethClients[i].Close()
+		}
+
+		client, err := ethclient.Dial(url)
+		if err != nil {
+			c.logger.Error("Failed to reconnect to Ethereum client",
+				"url", url, "error", err)
+			continue
+		}
+		c.ethClients[i] = client
+
+		contractAddress, err := c.getTokenBridgeContractAddress()
+		if err != nil {
+			return fmt.Errorf("failed to get token bridge contract address: %w", err)
+		}
+
+		c.bridgeContracts[i], err = tokenbridge.NewTokenBridge(contractAddress, client)
+		if err != nil {
+			return fmt.Errorf("failed to reinstantiate TokenBridge contract: %w", err)
+		}
 	}
 
-	// Close existing client if it exists
-	if c.ethClient != nil {
-		c.ethClient.Close()
-	}
-
-	c.ethClient = eclient
-
-	// Reinstantiate the bridge contract with new client
-	contractAddress, err := c.getTokenBridgeContractAddress()
-	if err != nil {
-		return fmt.Errorf("failed to get token bridge contract address: %w", err)
-	}
-
-	bridgeContract, err := tokenbridge.NewTokenBridge(contractAddress, c.ethClient)
-	if err != nil {
-		return fmt.Errorf("failed to reinstantiate TokenBridge contract: %w", err)
-	}
-
-	c.bridgeContract = bridgeContract
 	return nil
+}
+
+func (c *Client) getEthRpcUrls() ([]string, error) {
+	ethRpcUrls := os.Getenv("ETH_RPC_URL")
+	if ethRpcUrls == "" {
+		return nil, fmt.Errorf("ETH_RPC_URL not set")
+	}
+
+	// Split by comma
+	urls := strings.Split(ethRpcUrls, ",")
+
+	// Trim whitespace
+	for i, url := range urls {
+		urls[i] = strings.TrimSpace(url)
+	}
+
+	return urls, nil
+}
+
+func (c *Client) QueryCurrentDepositId() (*big.Int, error) {
+	var results []*big.Int
+
+	// Query all RPCs
+	for i, contract := range c.bridgeContracts {
+		depositId, err := contract.DepositId(nil)
+		if err != nil {
+			c.logger.Error("Failed to query deposit ID from RPC",
+				"index", i, "error", err)
+			continue
+		}
+		results = append(results, depositId)
+	}
+
+	if len(results) < len(c.bridgeContracts)/2+1 {
+		return nil, fmt.Errorf("failed to get majority consensus: insufficient responses")
+	}
+
+	// Find the majority value
+	counts := make(map[string]int)
+	for _, result := range results {
+		counts[result.String()]++
+	}
+
+	var majorityValue *big.Int
+	majorityCount := 0
+	for valueStr, count := range counts {
+		if count > majorityCount {
+			majorityCount = count
+			value, _ := new(big.Int).SetString(valueStr, 10)
+			majorityValue = value
+		}
+	}
+
+	// Ensure we have a majority
+	if majorityCount <= len(c.bridgeContracts)/2 {
+		return nil, fmt.Errorf("no majority consensus reached")
+	}
+
+	return majorityValue, nil
+}
+
+func (c *Client) QueryDepositDetails(depositId *big.Int) (DepositReceipt, error) {
+	var results []DepositReceipt
+
+	// Query all RPCs
+	for i, contract := range c.bridgeContracts {
+		deposit, err := contract.Deposits(nil, depositId)
+		if err != nil {
+			c.logger.Error("Failed to query deposit details from RPC",
+				"index", i, "error", err)
+			continue
+		}
+
+		results = append(results, DepositReceipt{
+			DepositId:   depositId,
+			Sender:      deposit.Sender,
+			Recipient:   deposit.Recipient,
+			Amount:      deposit.Amount,
+			Tip:         deposit.Tip,
+			BlockHeight: deposit.BlockHeight,
+		})
+	}
+
+	if len(results) < len(c.bridgeContracts)/2+1 {
+		return DepositReceipt{}, fmt.Errorf("failed to get majority consensus: insufficient responses")
+	}
+
+	// Find the majority value by comparing serialized results
+	counts := make(map[string]int)
+	receiptMap := make(map[string]DepositReceipt)
+
+	for _, result := range results {
+		serialized, _ := json.Marshal(result)
+		key := string(serialized)
+		counts[key]++
+		receiptMap[key] = result
+	}
+
+	var majorityReceipt DepositReceipt
+	majorityCount := 0
+	for key, count := range counts {
+		if count > majorityCount {
+			majorityCount = count
+			majorityReceipt = receiptMap[key]
+		}
+	}
+
+	// Ensure we have a majority
+	if majorityCount <= len(c.bridgeContracts)/2 {
+		return DepositReceipt{}, fmt.Errorf("no majority consensus reached")
+	}
+
+	return majorityReceipt, nil
 }
