@@ -6,7 +6,7 @@
 version: v1
 plugins:
   - name: openapiv2
-    out: .
+    out: ../tmp-swagger-gen
     opt:
       - logtostderr=true
       - openapi_naming_strategy=fqn
