@@ -12,7 +12,7 @@ import (
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
-// variables that describe your environment 
+// variables that describe your environment
 const (
 	COMMAND_PATH      = "/Users/caleb/layer/layerd"
 	LAYER_PATH        = "/Users/caleb/.layer"
