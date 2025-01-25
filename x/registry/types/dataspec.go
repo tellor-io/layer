@@ -23,8 +23,16 @@ func GenesisDataSpec() []DataSpec {
 		DocumentHash:      "",
 		ResponseValueType: "uint256",
 		AbiComponents: []*ABIComponent{
-			{Name: "asset", FieldType: "string"},
-			{Name: "currency", FieldType: "string"},
+			{
+				Name:            "asset",
+				FieldType:       "string",
+				NestedComponent: []*ABIComponent{},
+			},
+			{
+				Name:            "currency",
+				FieldType:       "string",
+				NestedComponent: []*ABIComponent{},
+			},
 		},
 		AggregationMethod: "weighted-median",
 		Registrar:         "genesis",

@@ -186,7 +186,7 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	}
 
 	// check if selector was part of a report before switching
-	prevReportedPower, err := k.Keeper.GetReporterTokensAtBlock(goCtx, selector.Reporter, uint64(sdk.UnwrapSDKContext(goCtx).BlockHeight()))
+	prevReportedPower, err := k.Keeper.GetReporterTokensAtBlock(goCtx, sdk.MustAccAddressFromBech32(prevReporter.String()), uint64(sdk.UnwrapSDKContext(goCtx).BlockHeight()))
 	if err != nil {
 		return nil, err
 	}

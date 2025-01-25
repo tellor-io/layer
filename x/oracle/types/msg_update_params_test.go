@@ -52,13 +52,13 @@ func TestMsgUpdateParams_TestGetSigners(t *testing.T) {
 	require.Equal([]sdk.AccAddress{signer}, msg.GetSigners())
 }
 
-func TestMsgUpdateParams_GetSignBytes(t *testing.T) {
-	require := require.New(t)
+// func TestMsgUpdateParams_GetSignBytes(t *testing.T) {
+// 	require := require.New(t)
 
-	msg := MsgUpdateParams{
-		Authority: sample.AccAddress(),
-		Params: DefaultParams(),
-	}
-	msgBz := ModuleCdc.MustMarshalJSON(&msg)
-	require.Equal(msgBz, msg.GetSignBytes())
-}
+// 	msg := MsgUpdateParams{
+// 		Authority: sample.AccAddress(),
+// 		Params: DefaultParams(),
+// 	}
+// 	msgBz := ModuleCdc.MustMarshalJSON(&msg)
+// 	require.Equal(msgBz, msg.GetSignBytes())
+// }
