@@ -122,8 +122,7 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, query
 					return true
 				}
 				if val.IsBonded() {
-					delTokensDec := val.TokensFromShares(delegation.Shares)
-					delTokens := delTokensDec.TruncateInt()
+					delTokens := val.TokensFromSharesTruncated(delegation.Shares).TruncateInt()
 					totalTokens = totalTokens.Add(delTokens)
 					delegates = append(delegates, &types.TokenOriginInfo{DelegatorAddress: selectorAddr, ValidatorAddress: valAddr.Bytes(), Amount: delTokens})
 				}
@@ -205,4 +204,8 @@ func (k Keeper) GetNumOfSelectors(ctx context.Context, repAddr sdk.AccAddress) (
 		return 0, err
 	}
 	return len(keys), nil
+}
+
+func (k Keeper) GetSelector(ctx context.Context, selectorAddr sdk.AccAddress) (types.Selection, error) {
+	return k.Selectors.Get(ctx, selectorAddr)
 }

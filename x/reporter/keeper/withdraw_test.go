@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/mock"
@@ -17,7 +16,7 @@ import (
 )
 
 func TestFeefromReporterStake(t *testing.T) {
-	k, sk, bk, _, ctx, _ := setupKeeper(t)
+	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
 	fee := math.NewIntWithDecimal(100, 6)
 	reporterAddr, selector1, selector2, selector3 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
 
@@ -81,7 +80,7 @@ func TestFeefromReporterStake(t *testing.T) {
 }
 
 func TestFeefromReporterStakeMultiplevalidators(t *testing.T) {
-	k, sk, bk, _, ctx, _ := setupKeeper(t)
+	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
 	fee := math.NewIntWithDecimal(100, 6)
 	reporterAddr, selector := sample.AccAddressBytes(), sample.AccAddressBytes()
 
@@ -124,7 +123,7 @@ func TestFeefromReporterStakeMultiplevalidators(t *testing.T) {
 }
 
 func TestEscrowReporterStake(t *testing.T) {
-	k, sk, bk, _, ctx, _ := setupKeeper(t)
+	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
 	reporterAddr := sample.AccAddressBytes()
 	stake := math.NewIntWithDecimal(100, 6)
 	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporterAddr.Bytes(), uint64(ctx.BlockHeight()))), types.DelegationsAmounts{
@@ -145,7 +144,7 @@ func TestEscrowReporterStake(t *testing.T) {
 }
 
 func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
-	k, sk, bk, _, ctx, _ := setupKeeper(t)
+	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
 	reporterAddr, selector2, selector3, valAddr1, valAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
 	stake := math.NewIntWithDecimal(1000, 6)
 	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporterAddr.Bytes(), uint64(ctx.BlockHeight()))), types.DelegationsAmounts{
@@ -185,8 +184,6 @@ func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
 	sk.On("GetValidator", ctx, sdk.ValAddress(valAddr1)).Return(validator1, nil)
 	sk.On("GetValidator", ctx, sdk.ValAddress(valAddr2)).Return(validator2, nil)
 
-	fmt.Println("Val 1: ", valAddr1)
-	fmt.Println("Reporter: ", reporterAddr)
 	sk.On("Unbond", ctx, reporterAddr, sdk.ValAddress(valAddr1), delegation1.Shares.Quo(math.LegacyNewDec(2))).Return(stake.QuoRaw(2), nil)
 	sk.On("Unbond", ctx, selector3, sdk.ValAddress(valAddr2), math.LegacyNewDec(500000000)).Return(math.NewInt(500000000), nil)
 

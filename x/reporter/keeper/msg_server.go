@@ -10,9 +10,11 @@ import (
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -31,6 +33,10 @@ var _ types.MsgServer = msgServer{}
 // Msg: CreateReporter, adds a new reporter if it was never registered before and meets the min bonded tokens requirement
 // allows the reporter to set their commission rate and min tokens required for selectors to join
 func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateReporter) (*types.MsgCreateReporterResponse, error) {
+	err := validateCreateReporter(msg)
+	if err != nil {
+		return nil, err
+	}
 	// check if reporter has min bonded tokens
 	addr := sdk.MustAccAddressFromBech32(msg.ReporterAddress)
 	params, err := k.Keeper.Params.Get(goCtx)
@@ -42,11 +48,11 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if err != nil {
 		return nil, err
 	}
-	if params.MinTrb.GT(bondedTokens) {
+	if params.MinLoya.GT(bondedTokens) {
 		return nil, errors.New("address does not have min tokens required to be a reporter with a BONDED validator")
 	}
 	// the min requirement chosen by reporter has gte the min requirement
-	if msg.MinTokensRequired.LT(params.MinTrb) {
+	if msg.MinTokensRequired.LT(params.MinLoya) {
 		return nil, errors.New("reporters chosen min to join must be gte the min requirement")
 	}
 	// reporter can't be previously a selector or a reporter
@@ -57,10 +63,11 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if alreadyExists {
 		return nil, errors.New("address already exists")
 	}
-
-	if msg.CommissionRate.GT(math.LegacyNewDec(100)) {
-		return nil, errors.New("commission rate must be LTE 100 as that is a 100 percent commission rate")
+	// reporter commission rate must be between 0 and 1
+	if msg.CommissionRate.GT(math.LegacyNewDec(1)) || msg.CommissionRate.LT(params.MinCommissionRate) {
+		return nil, errors.New("commission rate must be between 0 and 1 (e.g, 0.50 = 50%)")
 	}
+
 	// set the reporter and set the self selector
 	if err := k.Keeper.Reporters.Set(goCtx, addr.Bytes(), types.NewReporter(msg.CommissionRate, msg.MinTokensRequired)); err != nil {
 		return nil, err
@@ -79,10 +86,27 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	return &types.MsgCreateReporterResponse{}, nil
 }
 
+func validateCreateReporter(msg *types.MsgCreateReporter) error {
+	_, err := sdk.AccAddressFromBech32(msg.ReporterAddress)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid reporter address (%s)", err)
+	}
+
+	// check that mintokensrequired is positive
+	if msg.MinTokensRequired.LTE(math.ZeroInt()) {
+		return errors.New("MinTokensRequired must be positive (%s)")
+	}
+	return nil
+}
+
 // Msg: SelectReporter, allows a selector to join a reporter if they meet the min requirement set by the reporter
 // and the reporter has not reached the max selectors allowed
 // selector can only join one reporter at a time and to switch reporters see SwitchReporter
 func (k msgServer) SelectReporter(goCtx context.Context, msg *types.MsgSelectReporter) (*types.MsgSelectReporterResponse, error) {
+	err := validateSelectReporter(msg)
+	if err != nil {
+		return nil, err
+	}
 	// check if selector exists
 	addr := sdk.MustAccAddressFromBech32(msg.SelectorAddress)
 	alreadyExists, err := k.Keeper.Selectors.Has(goCtx, addr)
@@ -138,11 +162,27 @@ func (k msgServer) SelectReporter(goCtx context.Context, msg *types.MsgSelectRep
 	return &types.MsgSelectReporterResponse{}, nil
 }
 
+func validateSelectReporter(msg *types.MsgSelectReporter) error {
+	_, err := sdk.AccAddressFromBech32(msg.SelectorAddress)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid selector address (%s)", err)
+	}
+	_, err = sdk.AccAddressFromBech32(msg.ReporterAddress)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid reporter address (%s)", err)
+	}
+	return nil
+}
+
 // Msg: SwitchReporter, allows a selector to switch reporters if they meet the new reporters min requirement
 // and the new reporter has not reached the max selectors allowed
 // switching reporters will not automatically include the selector's tokens to be part of reporting until the unbonding time has passed
 // in order to prevent the selector from being part of a report twice unless they were part of a reporter that hasn't reported yet
 func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchReporter) (*types.MsgSwitchReporterResponse, error) {
+	err := validateSwitchReporter(msg)
+	if err != nil {
+		return nil, err
+	}
 	addr := sdk.MustAccAddressFromBech32(msg.SelectorAddress)
 	// check if selector exists
 	selector, err := k.Keeper.Selectors.Get(goCtx, addr)
@@ -185,7 +225,7 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	}
 
 	// check if selector was part of a report before switching
-	prevReportedPower, err := k.Keeper.GetReporterTokensAtBlock(goCtx, selector.Reporter, uint64(sdk.UnwrapSDKContext(goCtx).BlockHeight()))
+	prevReportedPower, err := k.Keeper.GetReporterTokensAtBlock(goCtx, sdk.MustAccAddressFromBech32(prevReporter.String()), uint64(sdk.UnwrapSDKContext(goCtx).BlockHeight()))
 	if err != nil {
 		return nil, err
 	}
@@ -214,9 +254,25 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	return &types.MsgSwitchReporterResponse{}, nil
 }
 
+func validateSwitchReporter(msg *types.MsgSwitchReporter) error {
+	_, err := sdk.AccAddressFromBech32(msg.SelectorAddress)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid selector address (%s)", err)
+	}
+	_, err = sdk.AccAddressFromBech32(msg.ReporterAddress)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid reporter address (%s)", err)
+	}
+	return nil
+}
+
 // Msg: RemoveSelector, allows anyone to remove a selector if the selector falls below a given reporter's min requirement in order to free up space for new selectors
 // if they are capped at max selectors
 func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSelector) (*types.MsgRemoveSelectorResponse, error) {
+	err := validateRemoveSelector(msg)
+	if err != nil {
+		return nil, err
+	}
 	selectorAddr := sdk.MustAccAddressFromBech32(msg.SelectorAddress)
 	selector, err := k.Keeper.Selectors.Get(goCtx, selectorAddr)
 	if err != nil {
@@ -225,6 +281,11 @@ func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSel
 	reporter, err := k.Keeper.Reporters.Get(goCtx, selector.Reporter)
 	if err != nil {
 		return nil, err
+	}
+
+	// ensure that a selector cannot be removed if it is the reporter’s own address
+	if bytes.Equal(selector.Reporter, selectorAddr.Bytes()) {
+		return nil, errors.New("selector cannot be removed if it is the reporter's own address")
 	}
 
 	hasMin, err := k.Keeper.HasMin(goCtx, selectorAddr, reporter.MinTokensRequired)
@@ -249,7 +310,7 @@ func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSel
 		if err != nil {
 			return nil, err
 		}
-		if len(selectors) <= int(params.MaxSelectors) {
+		if len(selectors) < int(params.MaxSelectors) {
 			return nil, errors.New("selector can only be removed if reporter has reached max selectors and doesn't meet min requirement")
 		}
 	}
@@ -265,6 +326,18 @@ func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSel
 		),
 	})
 	return &types.MsgRemoveSelectorResponse{}, nil
+}
+
+func validateRemoveSelector(msg *types.MsgRemoveSelector) error {
+	_, err := sdk.AccAddressFromBech32(msg.AnyAddress)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid signer address (%s)", err)
+	}
+	_, err = sdk.AccAddressFromBech32(msg.SelectorAddress)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid selector address (%s)", err)
+	}
+	return nil
 }
 
 // Msg: UnjailReporter, allows a reporter that is jailed to be unjailed if the jail period has passed (jail period is set during a dispute)
@@ -292,6 +365,10 @@ func (k msgServer) UnjailReporter(goCtx context.Context, msg *types.MsgUnjailRep
 
 // Msg: WithdrawTip, allows selectors to directly withdraw reporting rewards and stake them with a BONDED validator
 func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip) (*types.MsgWithdrawTipResponse, error) {
+	err := validateWithdrawTip(msg)
+	if err != nil {
+		return nil, err
+	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	delAddr := sdk.MustAccAddressFromBech32(msg.SelectorAddress)
 	shares, err := k.Keeper.SelectorTips.Get(ctx, delAddr)
@@ -335,7 +412,8 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	}
 
 	// send coins
-	err = k.Keeper.bankKeeper.SendCoinsFromModuleToModule(ctx, types.TipsEscrowPool, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, math.NewInt(int64(amtToDelegate.Uint64())))))
+	escrowPoolAddr := k.Keeper.accountKeeper.GetModuleAddress(types.TipsEscrowPool)
+	err = k.Keeper.bankKeeper.DelegateCoinsFromAccountToModule(ctx, escrowPoolAddr, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, math.NewInt(int64(amtToDelegate.Uint64())))))
 	if err != nil {
 		return nil, err
 	}
@@ -348,4 +426,12 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 		),
 	})
 	return &types.MsgWithdrawTipResponse{}, nil
+}
+
+func validateWithdrawTip(msg *types.MsgWithdrawTip) error {
+	_, err := sdk.AccAddressFromBech32(msg.SelectorAddress)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+	return nil
 }

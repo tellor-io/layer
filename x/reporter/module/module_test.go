@@ -50,6 +50,7 @@ func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, *mocks.AccountKeepe
 		runtime.NewKVStoreService(storeKey),
 		log.NewNopLogger(),
 		authority,
+		ak,
 		sk,
 		bk,
 		rk,

@@ -46,5 +46,6 @@ func (m Minter) CalculateBlockProvision(current, previous time.Time) (sdk.Coin, 
 	}
 	timeElapsed := current.Sub(previous).Milliseconds()
 	mintAmount := DailyMintRate * timeElapsed / MillisecondsInDay
-	return sdk.NewCoin(DefaultBondDenom, cosmosmath.NewInt(mintAmount)), nil
+	bondDenom := m.BondDenom
+	return sdk.NewCoin(bondDenom, cosmosmath.NewInt(mintAmount)), nil
 }

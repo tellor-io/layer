@@ -103,6 +103,13 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
 			return err
 		}
+		reporterAddr, err := sdk.AccAddressFromBech32(dispute.InitialEvidence.GetReporter())
+		if err != nil {
+			return err
+		}
+		if err := k.reporterKeeper.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr); err != nil {
+			return err
+		}
 		vote.Executed = true
 		if err := k.Votes.Set(ctx, id, vote); err != nil {
 			return err
@@ -178,14 +185,12 @@ func (k Keeper) GetSumOfAllGroupVotesAllRounds(ctx context.Context, id uint64) (
 
 	sumUsers := uint64(0)
 	sumReporters := uint64(0)
-	sumTokenholders := uint64(0)
 	sumTeam := uint64(0)
 
 	// process vote counts function
 	processVoteCounts := func(voteCounts types.StakeholderVoteCounts) {
 		sumUsers += voteCounts.Users.Support + voteCounts.Users.Against + voteCounts.Users.Invalid
 		sumReporters += voteCounts.Reporters.Support + voteCounts.Reporters.Against + voteCounts.Reporters.Invalid
-		sumTokenholders += voteCounts.Tokenholders.Support + voteCounts.Tokenholders.Against + voteCounts.Tokenholders.Invalid
 		sumTeam += voteCounts.Team.Support + voteCounts.Team.Against + voteCounts.Team.Invalid
 	}
 
@@ -201,10 +206,9 @@ func (k Keeper) GetSumOfAllGroupVotesAllRounds(ctx context.Context, id uint64) (
 		voteCounts, err := k.VoteCountsByGroup.Get(ctx, roundId)
 		if err != nil {
 			voteCounts = types.StakeholderVoteCounts{
-				Users:        types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
-				Reporters:    types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
-				Tokenholders: types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
-				Team:         types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
+				Users:     types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
+				Reporters: types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
+				Team:      types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
 			}
 		}
 		processVoteCounts(voteCounts)
@@ -212,7 +216,6 @@ func (k Keeper) GetSumOfAllGroupVotesAllRounds(ctx context.Context, id uint64) (
 
 	totalSum := math.NewInt(int64(sumUsers)).
 		Add(math.NewInt(int64(sumReporters))).
-		Add(math.NewInt(int64(sumTokenholders))).
 		Add(math.NewInt(int64(sumTeam)))
 
 	return totalSum, nil
