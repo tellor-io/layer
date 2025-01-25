@@ -5,12 +5,13 @@ import (
 	"encoding/hex"
 	"errors"
 	"strconv"
-	"strings"
 
+	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,16 +35,17 @@ import (
 func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	err := validateTip(msg)
+	if err != nil {
+		return nil, err
+	}
+
 	tipper := sdk.MustAccAddressFromBech32(msg.Tipper)
 
 	if msg.Amount.Amount.LT(types.DefaultMinTipAmount) {
 		return nil, types.ErrNotEnoughTip
 	} else if msg.Amount.Amount.GT(types.DefaultMaxTipAmount) {
 		return nil, types.ErrTipExceedsMax
-	}
-
-	if !strings.EqualFold(msg.Amount.Denom, types.DefaultBondDenom) {
-		return nil, sdkerrors.ErrInvalidRequest
 	}
 
 	tip, err := k.keeper.transfer(ctx, tipper, msg.Amount)
@@ -102,4 +104,20 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 		),
 	})
 	return &types.MsgTipResponse{}, nil
+}
+
+func validateTip(msg *types.MsgTip) error {
+	_, err := sdk.AccAddressFromBech32(msg.Tipper)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid tipper address (%s)", err)
+	}
+	// ensure that the msg.Amount.Denom matches the layer.BondDenom and the amount is a positive number
+	if msg.Amount.Denom != layer.BondDenom || msg.Amount.Amount.IsZero() || msg.Amount.Amount.IsNegative() {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid tip amount (%s)", msg.Amount.String())
+	}
+	// ensure that the queryData is not empty
+	if len(msg.QueryData) == 0 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "query data is empty")
+	}
+	return nil
 }

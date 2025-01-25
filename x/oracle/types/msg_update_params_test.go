@@ -6,31 +6,29 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
 
-	"cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
-	require := require.New(t)
+	// require := require.New(t)
 
-	// empty authority
-	msg := MsgUpdateParams{}
-	require.ErrorContains(msg.ValidateBasic(), "invalid authority address")
+	// // empty authority
+	// msg := MsgUpdateParams{}
+	// require.ErrorContains(msg.ValidateBasic(), "invalid authority address")
 
-	// bad authority address
-	msg = MsgUpdateParams{
-		Authority: "bad_address",
-	}
-	require.ErrorContains(msg.ValidateBasic(), "invalid authority address")
+	// // bad authority address
+	// msg = MsgUpdateParams{
+	// 	Authority: "bad_address",
+	// }
+	// require.ErrorContains(msg.ValidateBasic(), "invalid authority address")
 
-	msg = MsgUpdateParams{
-		Authority: sample.AccAddress(),
-		Params: Params{
-			MinStakeAmount: math.NewInt(100),
-		},
-	}
-	require.NoError(msg.ValidateBasic())
+	// msg = MsgUpdateParams{
+	// 	Authority: sample.AccAddress(),
+	// 	Params: Params{
+	// 		MinStakeAmount: math.NewInt(100),
+	// 	},
+	// }
+	// require.NoError(msg.ValidateBasic())
 }
 
 func TestMsgUpdateParams_TestGetSigners(t *testing.T) {

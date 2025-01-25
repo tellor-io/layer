@@ -5,15 +5,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/registry/keeper"
 	"github.com/tellor-io/layer/x/registry/types"
 )
 
 func TestGenerateQueryData(t *testing.T) {
 	// register data spec
+	registrar := sample.AccAddress()
 	ms, ctx, k := setupMsgServer(t)
 	msgres, err := ms.RegisterSpec(ctx, &types.MsgRegisterSpec{
-		Registrar: "creator1",
+		Registrar: registrar,
 		QueryType: testQueryType,
 		Spec: types.DataSpec{
 			ResponseValueType: "uint256",
@@ -22,6 +24,8 @@ func TestGenerateQueryData(t *testing.T) {
 			},
 			AggregationMethod: "weighted-median",
 			QueryType:         testQueryType,
+			Registrar:         registrar,
+			DocumentHash:      "hash1",
 		},
 	})
 	require.NoError(t, err)

@@ -241,7 +241,10 @@ func TestRemoveSelector(t *testing.T) {
 		}
 	})
 	// no previous reports
-	_, err := ms.RemoveSelector(ctx, &types.MsgRemoveSelector{SelectorAddress: selector.String()})
+	_, err := ms.RemoveSelector(ctx, &types.MsgRemoveSelector{
+		SelectorAddress: selector.String(),
+		AnyAddress:      reporter.String(),
+	})
 	require.ErrorContains(t, err, "selector can't be removed if reporter's min requirement is met")
 	// selector not removed
 	_, err = k.Selectors.Get(ctx, selector)
@@ -250,11 +253,11 @@ func TestRemoveSelector(t *testing.T) {
 	ctx = ctx.WithBlockHeight(1)
 	// selector does not meet min requirement, however reporter is not capped
 	sk.On("IterateDelegatorDelegations", ctx, selector, mock.Anything).Return(nil)
-	_, err = ms.RemoveSelector(ctx, &types.MsgRemoveSelector{SelectorAddress: selector.String()})
+	_, err = ms.RemoveSelector(ctx, &types.MsgRemoveSelector{SelectorAddress: selector.String(), AnyAddress: reporter.String()})
 	require.ErrorContains(t, err, "selector can only be removed if reporter has reached max selectors and doesn't meet min requirement")
 
 	require.NoError(t, k.Params.Set(ctx, types.Params{MaxSelectors: 0}))
-	_, err = ms.RemoveSelector(ctx, &types.MsgRemoveSelector{SelectorAddress: selector.String()})
+	_, err = ms.RemoveSelector(ctx, &types.MsgRemoveSelector{SelectorAddress: selector.String(), AnyAddress: reporter.String()})
 	require.NoError(t, err)
 
 	_, err = k.Selectors.Get(ctx, selector)

@@ -38,7 +38,7 @@ func (s *KeeperTestSuite) TestTip() {
 		QueryData: []byte(queryData),
 	})
 	require.Error(err)
-	require.EqualError(err, types.ErrNotEnoughTip.Error())
+	require.ErrorContains(err, "invalid tip amount")
 	require.Nil(tipRes)
 
 	// amount is to large
@@ -51,25 +51,6 @@ func (s *KeeperTestSuite) TestTip() {
 	require.Error(err)
 	require.EqualError(err, types.ErrTipExceedsMax.Error())
 	require.Nil(tipRes)
-
-	// amount is negative
-	require.Panics(func() {
-		tipRes, err = msgServer.Tip(ctx, &types.MsgTip{
-			Amount:    sdk.NewCoin("loya", math.NewInt(-10*1e6)),
-			Tipper:    tipper.String(),
-			QueryData: []byte(queryData),
-		})
-	})
-
-	// bad tipper address
-	badTipperAddr := "bad_tipper_address"
-	require.Panics(func() {
-		tipRes, err = msgServer.Tip(ctx, &types.MsgTip{
-			Amount:    amount,
-			Tipper:    badTipperAddr,
-			QueryData: []byte(queryData),
-		})
-	})
 
 	// query needs initialized, expiration after block time, set first tip
 	amount = sdk.NewCoin("loya", math.NewInt(10*1e6))

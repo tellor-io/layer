@@ -165,7 +165,7 @@ func (s *KeeperTestSuite) TestSubmitWithNoValue() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
-	s.ErrorContains(err, "value cannot be empty")
+	s.ErrorContains(err, "cannot be empty")
 }
 
 func (s *KeeperTestSuite) TestSubmitValueDirectReveal() {

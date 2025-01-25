@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/registry/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -14,16 +15,24 @@ import (
 func TestUpdateDataSpec(t *testing.T) {
 	ms, ctx, k := setupMsgServer(t)
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	registrar := sample.AccAddress()
 	spec := types.DataSpec{
 		DocumentHash:      "testHash",
 		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
 		QueryType:         testQueryType,
+		Registrar:         registrar,
+		AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		},
 	}
 
 	// Register spec
 	registerSpecInput := &types.MsgRegisterSpec{
-		Registrar: "creator1",
+		Registrar: registrar,
 		QueryType: testQueryType,
 		Spec:      spec,
 	}

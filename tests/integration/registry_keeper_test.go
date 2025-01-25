@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/registry/keeper"
 	"github.com/tellor-io/layer/x/registry/types"
 
@@ -12,17 +13,25 @@ func (s *IntegrationTestSuite) TestRegistryKeeper() {
 	ms := keeper.NewMsgServerImpl(s.Setup.Registrykeeper)
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 	queryType := "testQueryType"
+	registrar := sample.AccAddress()
 	spec := types.DataSpec{
 		DocumentHash:      "testHash",
 		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
 		ReportBlockWindow: 2,
 		QueryType:         queryType,
+		Registrar:         registrar,
+		AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		},
 	}
 
 	// Register spec
 	registerSpecInput := &types.MsgRegisterSpec{
-		Registrar: "creator1",
+		Registrar: registrar,
 		QueryType: queryType,
 		Spec:      spec,
 	}

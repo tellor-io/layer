@@ -12,6 +12,10 @@ import (
 )
 
 func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
+	err := validateUpdateParams(req)
+	if err != nil {
+		return nil, err
+	}
 	if k.GetAuthority() != req.Authority {
 		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.GetAuthority(), req.Authority)
 	}
@@ -29,4 +33,16 @@ func (k msgServer) UpdateParams(goCtx context.Context, req *types.MsgUpdateParam
 		),
 	})
 	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+func validateUpdateParams(m *types.MsgUpdateParams) error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return errorsmod.Wrap(err, "invalid authority address")
+	}
+
+	if err := m.Params.Validate(); err != nil {
+		return err
+	}
+
+	return nil
 }
