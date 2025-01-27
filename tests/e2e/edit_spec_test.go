@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/tellor-io/layer/testutil"
-	"github.com/tellor-io/layer/utils"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
@@ -128,7 +127,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 		QueryData: encodedDataSpec,
 		Value:     testutil.EncodeValue(5_000),
 	}
-	res, err := oracleMsgServer.SubmitValue(s.Setup.Ctx, &msgSubmit)
+	_, err = oracleMsgServer.SubmitValue(s.Setup.Ctx, &msgSubmit)
 	require.NoError(err)
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
@@ -141,13 +140,10 @@ func (s *E2ETestSuite) TestEditSpec() {
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-	queryId := utils.QueryIDFromData(encodedDataSpec)
+
 	msgWithdrawTip := reportertypes.MsgWithdrawTip{
 		SelectorAddress:  valAccAddrs[0].String(),
 		ValidatorAddress: valValAddrs[0].String(),
-		ReporterAddress:  valAccAddrs[0].String(),
-		QueryId:          queryId,
-		Id:               res.Id,
 	}
 	_, err = reporterMsgServer.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)
 	require.NoError(err)
@@ -237,7 +233,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	_, err = oracleMsgServer.Tip(s.Setup.Ctx, &msgTip)
 	require.NoError(err)
 
-	res, err = oracleMsgServer.SubmitValue(s.Setup.Ctx, &msgSubmit)
+	_, err = oracleMsgServer.SubmitValue(s.Setup.Ctx, &msgSubmit)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
 
@@ -252,7 +248,6 @@ func (s *E2ETestSuite) TestEditSpec() {
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
-	msgWithdrawTip.Id = res.Id
 	_, err = reporterMsgServer.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)
 	require.NoError(err)
 
@@ -290,7 +285,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	require.NoError(err)
 	require.Equal(proposal.ProposalId, uint64(2))
 
-	res, err = oracleMsgServer.SubmitValue(s.Setup.Ctx, &msgSubmit)
+	_, err = oracleMsgServer.SubmitValue(s.Setup.Ctx, &msgSubmit)
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(7 * time.Second))
 
@@ -305,7 +300,6 @@ func (s *E2ETestSuite) TestEditSpec() {
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
-	msgWithdrawTip.Id = res.Id
 	_, err = reporterMsgServer.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)
 	require.NoError(err)
 

@@ -4,9 +4,7 @@ import (
 	"context"
 	"time"
 
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-
-	"cosmossdk.io/collections"
+	// "cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
 
@@ -70,8 +68,4 @@ type StakingHooks interface {
 
 type RegistryKeeper interface {
 	MaxReportBufferWindow(ctx context.Context) (uint64, error)
-}
-
-type OracleKeeper interface {
-	MicroReport(ctx context.Context, key collections.Triple[[]byte, []byte, uint64]) (oracletypes.MicroReport, error)
 }

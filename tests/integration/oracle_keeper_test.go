@@ -376,7 +376,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
 
 	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
-	res, err := queryServer.GetCurrentAggregateReport(ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
+	_, err = queryServer.GetCurrentAggregateReport(ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
 	s.NoError(err)
 
 	// advance height
@@ -385,7 +385,6 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	repServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	_, err = repServer.WithdrawTip(ctx, &reportertypes.MsgWithdrawTip{
 		SelectorAddress: repAccs[0].String(), ValidatorAddress: valAddrs[0].String(),
-		ReporterAddress: repAccs[0].String(), Id: res.Aggregate.MetaId, QueryId: res.Aggregate.QueryId,
 	})
 	s.NoError(err)
 	bond, err := s.Setup.Stakingkeeper.GetDelegatorBonded(ctx, repAccs[0])
@@ -457,7 +456,6 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 		s.T().Run(tc.name, func(t *testing.T) {
 			_, err = reporterServer.WithdrawTip(ctx, &reportertypes.MsgWithdrawTip{
 				SelectorAddress: tc.delegator.String(), ValidatorAddress: sdk.ValAddress(tc.delegator).String(),
-				ReporterAddress: tc.delegator.String(), Id: 1, QueryId: qId,
 			})
 			s.NoError(err)
 			afterBalance, err := s.Setup.Stakingkeeper.GetDelegatorBonded(ctx, tc.delegator)
@@ -540,7 +538,6 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 		s.T().Run(tc.name, func(t *testing.T) {
 			_, err = reporterServer.WithdrawTip(ctx, &reportertypes.MsgWithdrawTip{
 				SelectorAddress: tc.delegator.String(), ValidatorAddress: sdk.ValAddress(tc.delegator).String(),
-				ReporterAddress: tc.delegator.String(), QueryId: qId, Id: 1,
 			})
 			s.NoError(err)
 			afterBalance, err := s.Setup.Stakingkeeper.GetDelegatorBonded(ctx, tc.delegator)
@@ -675,7 +672,6 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	reporterMsgServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	_, err = reporterMsgServer.WithdrawTip(ctx, &reportertypes.MsgWithdrawTip{
 		SelectorAddress: reporter5.String(), ValidatorAddress: valAddr[0].String(),
-		ReporterAddress: reporter5.String(), QueryId: agg.QueryId, Id: agg.MetaId,
 	})
 	s.NoError(err)
 }
@@ -855,7 +851,6 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	// withdraw tip
 	_, err = reporterMsgServer.WithdrawTip(ctx, &reportertypes.MsgWithdrawTip{
 		SelectorAddress: repAccs[0].String(), ValidatorAddress: valAddr.String(),
-		ReporterAddress: repAccs[0].String(), QueryId: queryId, Id: query.Id,
 	})
 	require.NoError(err)
 
@@ -941,7 +936,6 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	reporterMsgServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	_, err = reporterMsgServer.WithdrawTip(ctx, &reportertypes.MsgWithdrawTip{
 		SelectorAddress: delegator1.String(), ValidatorAddress: valAddr1.String(),
-		ReporterAddress: delegator1.String(), QueryId: queryId, Id: query.Id,
 	})
 	require.NoError(err)
 
@@ -952,7 +946,6 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	// withdraw del2 delegation from tip escrow
 	_, err = reporterMsgServer.WithdrawTip(ctx, &reportertypes.MsgWithdrawTip{
 		SelectorAddress: delegator2.String(), ValidatorAddress: valAddr2.String(),
-		ReporterAddress: delegator2.String(), QueryId: queryId, Id: query.Id,
 	})
 	require.NoError(err)
 
