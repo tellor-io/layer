@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"reflect"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -14,7 +15,15 @@ import (
 // PreventBridgeWithdrawalReport verifies if the queryData is a TRBBridgeQueryType. If not, it returns false, nil.
 // If it is, then it further checks whether it is a withdrawal or deposit report. If it is a withdrawal report, it returns an error
 // indicating that such reports should not be processed.
-func (k Keeper) PreventBridgeWithdrawalReport(queryData []byte) (bool, error) {
+func (k Keeper) PreventBridgeWithdrawalReport(ctx context.Context, queryData []byte) (bool, error) {
+	// Size limit check (0.5MB)
+	limit, err := k.QueryDataLimit.Get(ctx)
+	if err != nil {
+		return false, err
+	}
+	if len(queryData) > int(limit.Limit) {
+		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "query data too large")
+	}
 	// decode query data partial
 	StringType, err := abi.NewType("string", "", nil)
 	if err != nil {

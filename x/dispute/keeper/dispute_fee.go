@@ -25,15 +25,15 @@ func (k Keeper) PayFromAccount(ctx sdk.Context, addr sdk.AccAddress, fee sdk.Coi
 }
 
 // Pay fee from validator's bond can only be called by the validator itself
-func (k Keeper) PayFromBond(ctx sdk.Context, reporterAddr sdk.AccAddress, fee sdk.Coin, hashId []byte) error {
-	return k.reporterKeeper.FeefromReporterStake(ctx, reporterAddr, fee.Amount, hashId)
+func (k Keeper) PayFromBond(ctx sdk.Context, reporterAddr sdk.AccAddress, fee sdk.Coin, hashId []byte, isFirstRound bool) error {
+	return k.reporterKeeper.FeefromReporterStake(ctx, reporterAddr, fee.Amount, hashId, isFirstRound)
 }
 
 // Pay dispute fee
-func (k Keeper) PayDisputeFee(ctx sdk.Context, proposer sdk.AccAddress, fee sdk.Coin, fromBond bool, hashId []byte) error {
+func (k Keeper) PayDisputeFee(ctx sdk.Context, proposer sdk.AccAddress, fee sdk.Coin, fromBond bool, hashId []byte, isFirstRound bool) error {
 	if fromBond {
 		// pay fee from given validator
-		err := k.PayFromBond(ctx, proposer, fee, hashId)
+		err := k.PayFromBond(ctx, proposer, fee, hashId, isFirstRound)
 		if err != nil {
 			return err
 		}

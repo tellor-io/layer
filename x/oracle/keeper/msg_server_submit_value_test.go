@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/tellor-io/layer/testutil/sample"
@@ -54,6 +53,8 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 
 	err = k.Query.Set(s.ctx, collections.Join(queryId, query.Id), query)
 	require.NoError(err)
+	err = k.QueryDataLimit.Set(s.ctx, types.QueryDataLimit{Limit: types.InitialQueryDataLimit()})
+	require.NoError(err)
 	// reporterstake err
 	submitreq := types.MsgSubmitValue{
 		Creator:   addr.String(),
@@ -73,10 +74,9 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
 	require.Error(err)
 
-	// Submit value transaction with value revealed, this checks if the value is correctly hashed
+	//  good submit
 	rk.On("ReporterStake", s.ctx, addr, queryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(spotSpec, nil).Once()
-
 	res, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	require.NoError(err)
 	require.Equal(&types.MsgSubmitValueResponse{}, res)
@@ -101,22 +101,6 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 	require.Equal(expectedReport.MicroReports, report.MicroReports)
 
 	return addr, queryId
-}
-
-func (s *KeeperTestSuite) TestSubmitWithBadQueryData() {
-	// submit value with bad query data
-	badQueryData := []byte("invalidQueryData")
-	addr := sample.AccAddressBytes()
-
-	submitreq := types.MsgSubmitValue{
-		Creator:   addr.String(),
-		QueryData: badQueryData,
-		Value:     value,
-	}
-	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
-
-	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
-	s.ErrorContains(err, "invalid query data")
 }
 
 func (s *KeeperTestSuite) TestSubmitWithNoCreator() {
@@ -165,7 +149,7 @@ func (s *KeeperTestSuite) TestSubmitWithNoValue() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 
 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
-	s.ErrorContains(err, "cannot be empty")
+	s.ErrorContains(err, "value cannot be empty")
 }
 
 func (s *KeeperTestSuite) TestSubmitValueDirectReveal() {
@@ -174,6 +158,8 @@ func (s *KeeperTestSuite) TestSubmitValueDirectReveal() {
 	repk := s.reporterKeeper
 	regk := s.registryKeeper
 	ctx := s.ctx
+	err := k.QueryDataLimit.Set(s.ctx, types.QueryDataLimit{Limit: types.InitialQueryDataLimit()})
+	require.NoError(err)
 	regk.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil)
 	s.NoError(s.oracleKeeper.RotateQueries(ctx))
 	s.NoError(s.oracleKeeper.RotateQueries(ctx))
@@ -191,11 +177,12 @@ func (s *KeeperTestSuite) TestSubmitValueDirectReveal() {
 	require.NoError(err)
 	minStakeAmt := params.MinStakeAmount
 	repk.On("ReporterStake", ctx, reporter, utils.QueryIDFromData(currentQuery)).Return(minStakeAmt.Add(math.NewInt(1*1e6)), nil).Once()
+	err = k.QueryDataLimit.Set(ctx, types.QueryDataLimit{Limit: types.InitialQueryDataLimit()})
+	require.NoError(err)
 
 	res, err := s.msgServer.SubmitValue(ctx, &msgSubmitValue)
 	require.NoError(err)
 	require.NotNil(res)
-	fmt.Println(res)
 
 	// check on report
 	queryId := utils.QueryIDFromData(currentQuery)

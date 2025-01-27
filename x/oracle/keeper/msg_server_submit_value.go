@@ -42,7 +42,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 		return nil, err
 	}
 
-	isTokenBridgeDeposit, err := k.keeper.PreventBridgeWithdrawalReport(msg.QueryData)
+	isTokenBridgeDeposit, err := k.keeper.PreventBridgeWithdrawalReport(ctx, msg.QueryData)
 	if err != nil {
 		return nil, err
 	}
@@ -128,11 +128,11 @@ func validateSubmitValue(msg *types.MsgSubmitValue) error {
 	}
 	// make sure query data is not empty
 	if len(msg.QueryData) == 0 {
-		return errors.New("MsgSubmitValue query data cannot be empty (%s)")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "query data cannot be empty")
 	}
 	// make sure value is not empty
 	if msg.Value == "" {
-		return errors.New("MsgSubmitValue value field cannot be empty (%s)")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be empty")
 	}
 	return nil
 }

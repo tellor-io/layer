@@ -5,6 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/utils"
+	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 func (s *KeeperTestSuite) TestPreventBridgeWithdrawalReport() {
@@ -15,6 +16,8 @@ func (s *KeeperTestSuite) TestPreventBridgeWithdrawalReport() {
 	toLayerBool := true
 	withdrawalId := uint64(1)
 	withdrawalIdUint64 := new(big.Int).SetUint64(withdrawalId)
+	err := k.QueryDataLimit.Set(s.ctx, types.QueryDataLimit{Limit: types.InitialQueryDataLimit()})
+	require.NoError(err)
 	// prepare encoding
 	StringType, err := abi.NewType("string", "", nil)
 	require.NoError(err)
@@ -38,7 +41,8 @@ func (s *KeeperTestSuite) TestPreventBridgeWithdrawalReport() {
 	}
 	queryDataEncoded, err := finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
 	require.NoError(err)
-	_, err = k.PreventBridgeWithdrawalReport(queryDataEncoded)
+	ctx := s.ctx
+	_, err = k.PreventBridgeWithdrawalReport(ctx, queryDataEncoded)
 	require.NoError(err)
 
 	// try with toLayerBool false
@@ -47,12 +51,12 @@ func (s *KeeperTestSuite) TestPreventBridgeWithdrawalReport() {
 	require.NoError(err)
 	queryDataEncoded, err = finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
 	require.NoError(err)
-	_, err = k.PreventBridgeWithdrawalReport(queryDataEncoded)
+	_, err = k.PreventBridgeWithdrawalReport(ctx, queryDataEncoded)
 	require.Error(err)
 
 	// try with trb/usd
 	queryBytes, err := utils.QueryBytesFromString(queryData)
 	require.NoError(err)
-	_, err = k.PreventBridgeWithdrawalReport(queryBytes)
+	_, err = k.PreventBridgeWithdrawalReport(ctx, queryBytes)
 	require.NoError(err)
 }

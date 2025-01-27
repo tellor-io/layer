@@ -47,6 +47,7 @@ var (
 	TipsBlockIndexPrefix             = collections.NewPrefix(20)
 	TipperTotalPrefix                = collections.NewPrefix(21)
 	AggregatesMicroHeightIndexPrefix = collections.NewPrefix(22)
+	QueryDataLimitPrefix             = collections.NewPrefix(23)
 )
 
 func KeyPrefix(p string) []byte {
