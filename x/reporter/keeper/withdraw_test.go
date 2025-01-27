@@ -20,7 +20,7 @@ func TestFeefromReporterStake(t *testing.T) {
 	fee := math.NewIntWithDecimal(100, 6)
 	reporterAddr, selector1, selector2, selector3 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
 
-	err := k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"))
+	err := k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
 	require.ErrorContains(t, err, "insufficient stake to pay fee")
 
 	require.NoError(t, k.Selectors.Set(ctx, selector1, types.NewSelection(reporterAddr, 1)))
@@ -70,7 +70,7 @@ func TestFeefromReporterStake(t *testing.T) {
 	sk.On("Unbond", ctx, selector3, sdk.ValAddress(reporterAddr), feeShare3).Return(tokenShare3.TruncateInt(), nil)
 
 	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(99_999_999)))).Return(nil)
-	err = k.FeefromReporterStake(ctx, reporterAddr, math.NewIntWithDecimal(100, 6), []byte("hashId"))
+	err = k.FeefromReporterStake(ctx, reporterAddr, math.NewIntWithDecimal(100, 6), []byte("hashId"), true)
 	require.NoError(t, err)
 
 	feefromstake, err := k.FeePaidFromStake.Get(ctx, []byte("hashId"))
@@ -105,7 +105,7 @@ func TestFeefromReporterStakeMultiplevalidators(t *testing.T) {
 	})
 
 	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", fee))).Return(nil)
-	err := k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"))
+	err := k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
 	require.NoError(t, err)
 
 	feefromstake, err := k.FeePaidFromStake.Get(ctx, []byte("hashId"))
@@ -113,7 +113,7 @@ func TestFeefromReporterStakeMultiplevalidators(t *testing.T) {
 	expected := fee
 	require.Equal(t, expected, feefromstake.Total)
 
-	err = k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"))
+	err = k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
 	require.NoError(t, err)
 
 	feefromstake, err = k.FeePaidFromStake.Get(ctx, []byte("hashId"))

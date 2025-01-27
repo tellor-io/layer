@@ -30,7 +30,7 @@ type selectorsInfo struct {
 
 // FeefromReporterStake enables a reporter to pay a dispute fee from their stake power.
 // hashId is the dispute identifier, needed in the case where a reporter's fee is returned when a dispute is invalid.
-func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte) error {
+func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte, isFirstRound bool) error {
 	reporterTotalTokens := math.LegacyZeroDec()
 	fee := math.LegacyNewDecFromInt(amt)
 
@@ -161,11 +161,14 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 	if err := k.tokensToDispute(ctx, stakingtypes.BondedPoolName, totalTrackedAmount); err != nil {
 		return err
 	}
-	if err := k.FeePaidFromStake.Set(ctx, hashId, types.DelegationsAmounts{
-		TokenOrigins: feeTracker,
-		Total:        totalTrackedAmount.Add(prevTotal),
-	}); err != nil {
-		return err
+	// Only track the fee if this is round 1
+	if isFirstRound {
+		if err := k.FeePaidFromStake.Set(ctx, hashId, types.DelegationsAmounts{
+			TokenOrigins: feeTracker,
+			Total:        totalTrackedAmount.Add(prevTotal),
+		}); err != nil {
+			return err
+		}
 	}
 	return nil
 }

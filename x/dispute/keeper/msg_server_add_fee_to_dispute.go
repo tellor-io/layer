@@ -51,8 +51,8 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 		msg.Amount.Amount = dispute.SlashAmount.Sub(dispute.FeeTotal)
 	}
 
-	// Pay fee
-	if err := k.Keeper.PayDisputeFee(ctx, sender, msg.Amount, msg.PayFromBond, dispute.HashId); err != nil {
+	// Pay fee - isFirstRound is true since later rounds must be paid on creation
+	if err := k.Keeper.PayDisputeFee(ctx, sender, msg.Amount, msg.PayFromBond, dispute.HashId, true); err != nil {
 		return nil, err
 	}
 	// Don't take payment more than slash amount

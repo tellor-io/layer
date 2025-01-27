@@ -35,7 +35,7 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 		disputeFeeTotalDec := math.LegacyNewDecFromInt(dispute.FeeTotal)
 		feeMinusBurnDec := disputeFeeTotalDec.Quo(math.LegacyNewDec(20))
 		feeMinusBurn := feeMinusBurnDec.TruncateInt()
-		fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.FeeTotal, feeMinusBurn, dispute.HashId)
+		fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.SlashAmount, feeMinusBurn, dispute.HashId)
 		if err != nil {
 			return nil, err
 		}
@@ -54,19 +54,19 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 		feeMinusBurn := dispute.SlashAmount.Sub(dispute.BurnAmount)
 		switch vote.VoteResult {
 		case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
-			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.FeeTotal, feeMinusBurn, dispute.HashId)
+			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.SlashAmount, feeMinusBurn, dispute.HashId)
 			if err != nil {
 				return nil, err
 			}
 			remainder = remainder.Add(fraction)
 		case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
-			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.FeeTotal, feeMinusBurn, dispute.HashId)
+			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.SlashAmount, feeMinusBurn, dispute.HashId)
 			if err != nil {
 				return nil, err
 			}
 
 			remainder = remainder.Add(fraction)
-			fraction, err = k.RewardReporterBondToFeePayers(ctx, feePayer, payerInfo, dispute.FeeTotal, dispute.SlashAmount)
+			fraction, err = k.RewardReporterBondToFeePayers(ctx, feePayer, payerInfo, dispute.SlashAmount, dispute.SlashAmount)
 			if err != nil {
 				return nil, err
 			}
