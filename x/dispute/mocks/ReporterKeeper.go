@@ -85,13 +85,13 @@ func (_m *ReporterKeeper) FeeRefund(ctx context.Context, hashId []byte, amt math
 	return r0
 }
 
-// FeefromReporterStake provides a mock function with given fields: ctx, reporterAddr, amt, hashId
-func (_m *ReporterKeeper) FeefromReporterStake(ctx context.Context, reporterAddr types.AccAddress, amt math.Int, hashId []byte) error {
-	ret := _m.Called(ctx, reporterAddr, amt, hashId)
+// FeefromReporterStake provides a mock function with given fields: ctx, reporterAddr, amt, hashId, isFirstRound
+func (_m *ReporterKeeper) FeefromReporterStake(ctx context.Context, reporterAddr types.AccAddress, amt math.Int, hashId []byte, isFirstRound bool) error {
+	ret := _m.Called(ctx, reporterAddr, amt, hashId, isFirstRound)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, math.Int, []byte) error); ok {
-		r0 = rf(ctx, reporterAddr, amt, hashId)
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, math.Int, []byte, bool) error); ok {
+		r0 = rf(ctx, reporterAddr, amt, hashId, isFirstRound)
 	} else {
 		r0 = ret.Error(0)
 	}
