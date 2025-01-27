@@ -5,6 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/utils"
+	"github.com/tellor-io/layer/x/oracle/types"
 )
 
 func (s *KeeperTestSuite) TestPreventBridgeWithdrawalReport() {
@@ -15,6 +16,8 @@ func (s *KeeperTestSuite) TestPreventBridgeWithdrawalReport() {
 	toLayerBool := true
 	withdrawalId := uint64(1)
 	withdrawalIdUint64 := new(big.Int).SetUint64(withdrawalId)
+	err := k.QueryDataLimit.Set(s.ctx, types.QueryDataLimit{Limit: types.InitialQueryDataLimit()})
+	require.NoError(err)
 	// prepare encoding
 	StringType, err := abi.NewType("string", "", nil)
 	require.NoError(err)

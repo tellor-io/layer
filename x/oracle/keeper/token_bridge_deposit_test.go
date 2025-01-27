@@ -5,6 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/utils"
+	"github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/math"
 )
@@ -15,6 +16,8 @@ func (s *KeeperTestSuite) TestGetTokenBridgeDeposit() {
 	// regK := s.registryKeeper
 	ctx := s.ctx
 
+	err := k.QueryDataLimit.Set(s.ctx, types.QueryDataLimit{Limit: types.InitialQueryDataLimit()})
+	require.NoError(err)
 	// try trb/usd spot price, should err with NotTokenDeposit
 	queryBytes, err := utils.QueryBytesFromString(queryData)
 	require.NoError(err)
