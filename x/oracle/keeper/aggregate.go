@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	layer "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
@@ -26,14 +27,20 @@ import (
 // proportional to their reporting power.
 // In addition, all the micro-reports that are part of a cyclelist are gathered and their reporters are
 // rewarded with the time-based rewards.
+type rewards struct {
+	aggregateReport types.Aggregate
+	reward          math.LegacyDec
+}
+
 func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	// aggregate
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := uint64(sdkCtx.BlockHeight())
-	totalPowerTbr := uint64(0)
-	transferAmount := math.ZeroInt()
-	// does cyclist query exist
-	cyclelistQuery := false
+	cyclelist := make([]types.Aggregate, 0)
+	transferAmt := math.ZeroInt()
+	totalPowerForTbr := uint64(0)
+	tipRewardAllocation := make(map[uint64]rewards)
+	var tipRewardKeys []uint64
 	// rng for queries that have expired and have revealed reports
 	// ranger is inclusive and descending
 	rng := collections.NewPrefixUntilPairRange[collections.Pair[bool, uint64], collections.Pair[[]byte, uint64]](collections.Join(true, blockHeight)).Descending()
@@ -65,46 +72,57 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			return err
 		}
 
-		tip := query.Amount
-		if tip.IsNil() {
-			tip = math.ZeroInt()
-		}
-
-		reward := types.Reward{TotalPower: aggregateReport.AggregatePower, Amount: tip.ToLegacyDec(), CycleList: isCyclelist, BlockHeight: blockHeight}
-		err = k.reporterKeeper.AddTip(ctx, query.Id, reward)
-		if err != nil {
-			return err
-		}
 		if !query.Amount.IsZero() {
-			transferAmount = transferAmount.Add(query.Amount)
+			tipRewardAllocation[query.Id] = rewards{aggregateReport: aggregateReport, reward: query.Amount.ToLegacyDec()}
+			tipRewardKeys = append(tipRewardKeys, query.Id)
+			transferAmt = transferAmt.Add(query.Amount)
 		}
 
-		// if the query is part of a cyclelist, allocate time-based rewards
 		if isCyclelist {
-			cyclelistQuery = isCyclelist
-			totalPowerTbr += aggregateReport.AggregatePower
+			totalPowerForTbr = aggregateReport.AggregatePower
+			cyclelist = append(cyclelist, aggregateReport)
 		}
 		err = k.Query.Remove(ctx, fullKey.K2())
 		if err != nil {
 			return err
 		}
 	}
-	if transferAmount.IsPositive() {
-		return k.bankKeeper.SendCoinsFromModuleToModule(
-			ctx, types.ModuleName, reportertypes.TipsEscrowPool, sdk.NewCoins(sdk.NewCoin("loya", transferAmount)),
+	if totalPowerForTbr > 0 {
+		tbr := k.GetTimeBasedRewards(ctx)
+		tipRewardAllocation, tipRewardKeys = k.DistributeTbr(
+			ctx,
+			tipRewardKeys,
+			cyclelist,
+			tipRewardAllocation,
+			totalPowerForTbr,
+			tbr,
 		)
+		err = k.bankKeeper.SendCoinsFromModuleToModule(
+			ctx,
+			minttypes.TimeBasedRewards,
+			reportertypes.TipsEscrowPool,
+			sdk.NewCoins(sdk.NewCoin(layer.BondDenom, tbr)),
+		)
+		if err != nil {
+			return err
+		}
 	}
-
-	if !cyclelistQuery {
-		return nil
+	err = k.DistributeRewards(ctx, tipRewardAllocation, tipRewardKeys)
+	if err != nil {
+		return err
 	}
-
-	tbrAmount := k.GetTimeBasedRewards(ctx)
-	err = k.reporterKeeper.AddTbr(ctx, blockHeight, types.Reward{Amount: tbrAmount.ToLegacyDec(), TotalPower: totalPowerTbr})
-
-	return k.bankKeeper.SendCoinsFromModuleToModule(
-		ctx, minttypes.TimeBasedRewards, reportertypes.TipsEscrowPool, sdk.NewCoins(sdk.NewCoin("loya", tbrAmount)),
-	)
+	if transferAmt.GT(math.ZeroInt()) {
+		err = k.bankKeeper.SendCoinsFromModuleToModule(
+			ctx,
+			types.ModuleName,
+			reportertypes.TipsEscrowPool,
+			sdk.NewCoins(sdk.NewCoin(layer.BondDenom, transferAmt)),
+		)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // SetAggregate increments the queryId's report index plus sets the timestamp and blockHeight and stores the aggregate report

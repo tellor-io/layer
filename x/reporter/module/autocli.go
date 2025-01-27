@@ -48,16 +48,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
 				},
 				{
-					RpcMethod:      "AvailableTipsByQuery",
-					Use:            "available-tips-by-query",
+					RpcMethod:      "AvailableTips",
+					Use:            "available-tips",
 					Short:          "Query how much how much tips a selector has",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}, {ProtoField: "reporter_address"}, {ProtoField: "query_id"}, {ProtoField: "meta_id"}},
-				},
-				{
-					RpcMethod:      "RewardClaimStatus",
-					Use:            "reward-claim-status",
-					Short:          "Query if a reward has been claimed",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}, {ProtoField: "selector_address"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}},
 				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
@@ -102,19 +96,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "WithdrawTip",
-					Use:       "withdraw-tip [selector-address] [validator-address] [reporter-address] [id] [query-id]",
-					Short:     "Send a WithdrawTip tx",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "selector_address"},
-						{ProtoField: "validator_address"},
-						{ProtoField: "reporter_address"},
-						{ProtoField: "id"},
-						{ProtoField: "query_id"},
-					},
-				},
-				{
-					RpcMethod: "WithdrawTipLegacy",
-					Use:       "withdraw-tip-legacy [selector-address] [validator-address]",
+					Use:       "withdraw-tip [selector-address] [validator-address]",
 					Short:     "Send a WithdrawTip tx",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "selector_address"},
