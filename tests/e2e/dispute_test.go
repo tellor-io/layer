@@ -46,27 +46,43 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 
 	// create a validator
-	valAccount := simtestutil.CreateIncrementalAccounts(1)
-	// mint 5000*1e8 tokens for validator
-	initCoins := sdk.NewCoin(s.Setup.Denom, math.NewInt(5000*1e8))
+	valAccounts := simtestutil.CreateIncrementalAccounts(2)
+	// mint 5000*1e8 tokens for each validator
+	initCoins := sdk.NewCoin(s.Setup.Denom, math.NewInt(10000*1e8))
 	require.NoError(s.Setup.Bankkeeper.MintCoins(s.Setup.Ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
-	require.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(s.Setup.Ctx, authtypes.Minter, valAccount[0], sdk.NewCoins(initCoins)))
+	halfCoins := sdk.NewCoin(s.Setup.Denom, math.NewInt(5000*1e8))
+	require.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(s.Setup.Ctx, authtypes.Minter, valAccounts[0], sdk.NewCoins(halfCoins)))
+	require.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(s.Setup.Ctx, authtypes.Minter, valAccounts[1], sdk.NewCoins(halfCoins)))
 	// get val address
-	valAccountValAddrs := simtestutil.ConvertAddrsToValAddrs(valAccount)
+	valAccountValAddrs := simtestutil.ConvertAddrsToValAddrs(valAccounts)
 	// create pub key for validator
-	pubKey := simtestutil.CreateTestPubKeys(1)
+	pubKeys := simtestutil.CreateTestPubKeys(2)
 	// tell keepers about the new validator
-	s.Setup.Accountkeeper.NewAccountWithAddress(s.Setup.Ctx, valAccount[0])
-	msgCreateValidaotr, err := stakingtypes.NewMsgCreateValidator(
+	s.Setup.Accountkeeper.NewAccountWithAddress(s.Setup.Ctx, valAccounts[0])
+	msgCreateValidator1, err := stakingtypes.NewMsgCreateValidator(
 		valAccountValAddrs[0].String(),
-		pubKey[0],
+		pubKeys[0],
 		sdk.NewCoin(s.Setup.Denom, math.NewInt(4000*1e8)),
 		stakingtypes.Description{Moniker: "created validator"},
 		stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(0, 0), math.LegacyNewDecWithPrec(3, 1), math.LegacyNewDecWithPrec(1, 1)),
 		math.OneInt(),
 	)
 	require.NoError(err)
-	_, err = msgServerStaking.CreateValidator(s.Setup.Ctx, msgCreateValidaotr)
+	_, err = msgServerStaking.CreateValidator(s.Setup.Ctx, msgCreateValidator1)
+	require.NoError(err)
+
+	// tell keepers about the 2nd new validator
+	s.Setup.Accountkeeper.NewAccountWithAddress(s.Setup.Ctx, valAccounts[1])
+	msgCreateValidator2, err := stakingtypes.NewMsgCreateValidator(
+		valAccountValAddrs[1].String(),
+		pubKeys[1],
+		sdk.NewCoin(s.Setup.Denom, math.NewInt(4000*1e8)),
+		stakingtypes.Description{Moniker: "created validator"},
+		stakingtypes.NewCommissionRates(math.LegacyNewDecWithPrec(0, 0), math.LegacyNewDecWithPrec(3, 1), math.LegacyNewDecWithPrec(1, 1)),
+		math.OneInt(),
+	)
+	require.NoError(err)
+	_, err = msgServerStaking.CreateValidator(s.Setup.Ctx, msgCreateValidator2)
 	require.NoError(err)
 	for _, val := range valAccountValAddrs {
 		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(s.Setup.Ctx, val.String(), []byte("not real"))
@@ -533,7 +549,39 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
-	// Height 13 - open major dispute for report
+	// Height 13 - redelegate with bad reporter before major dispute is made to ensure their tokens are still able to be escrowed for the dispute
+	//---------------------------------------------------------------------------
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	// Get validators for source and destination
+	validator, err = s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAccountValAddrs[0])
+	require.NoError(err)
+	validator2, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAccountValAddrs[1])
+	require.NoError(err)
+
+	// Redelegate 100% of their stake to the second validator
+	oneHundredPercent, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount, queryId)
+	require.NoError(err)
+	redelegateAmt := sdk.NewCoin(s.Setup.Denom, oneHundredPercent)
+
+	msgRedelegate := &stakingtypes.MsgBeginRedelegate{
+		DelegatorAddress:    reporterAccount.String(),
+		ValidatorSrcAddress: validator.GetOperator(),
+		ValidatorDstAddress: validator2.GetOperator(),
+		Amount:              redelegateAmt,
+	}
+
+	_, err = msgServerStaking.BeginRedelegate(s.Setup.Ctx, msgRedelegate)
+	require.NoError(err)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 14 - open major dispute for report
 	//---------------------------------------------------------------------------
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
@@ -544,7 +592,7 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.NoError(err)
 	require.Equal(reporter.Jailed, false)
 
-	oneHundredPercent, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount, queryId)
+	oneHundredPercent, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterAccount, queryId)
 	require.NoError(err)
 	disputeFee = sdk.NewCoin(s.Setup.Denom, oneHundredPercent)
 
