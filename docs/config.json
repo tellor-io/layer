@@ -29,6 +29,47 @@
             "Params": "BridgeParams"
           }
         }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/tmp/bank/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "BankParams"
+          }
+        }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/tmp/evidence/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "EvidenceParams"
+          }
+        }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/tmp/staking/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "StakingParams"
+          }
+        }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/tmp/distribution/query.swagger.json", 
+        "operationIds": {
+          "rename": {
+            "Params": "DistributionParams",
+            "DelegatorValidators": "DistrDelegatorValidators"
+          }
+        }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/tmp/auth/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "AuthParams"
+          }
+        }
       }
     ]
   }

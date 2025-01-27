@@ -2,8 +2,44 @@
 
 set -eo pipefail
 
+
 mkdir -p ./tmp-swagger-gen
 cd proto
+
+mkdir -p ./layer/tmp/bank
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/bank/v1beta1/query.proto -O ./layer/tmp/bank/query.proto
+
+mkdir ./layer/tmp/evidence
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/evidence/v1beta1/query.proto -O ./layer/tmp/evidence/query.proto
+
+mkdir ./layer/tmp/staking
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/staking/v1beta1/query.proto -O ./layer/tmp/staking/query.proto
+
+mkdir ./layer/tmp/distribution
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/distribution/v1beta1/query.proto -O ./layer/tmp/distribution/query.proto
+
+mkdir ./layer/tmp/auth
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/auth/v1beta1/query.proto -O ./layer/tmp/auth/query.proto
+
+mkdir ./layer/tmp/upgrade
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/upgrade/v1beta1/query.proto -O ./layer/tmp/upgrade/query.proto
+
+mkdir ./layer/tmp/slashing
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/slashing/v1beta1/query.proto -O ./layer/tmp/slashing/query.proto
+
+mkdir ./layer/tmp/gov
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/gov/v1beta1/query.proto -O ./layer/tmp/gov/query.proto
+
+mkdir ./layer/tmp/feegrant
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/feegrant/v1beta1/query.proto -O ./layer/tmp/feegrant/query.proto
+
+mkdir ./layer/tmp/group
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/group/v1/query.proto -O ./layer/tmp/group/query.proto
+
+mkdir ./layer/tmp/consensus
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/consensus/v1/query.proto -O ./layer/tmp/consensus/query.proto
+
+
 proto_dirs=$(find ./layer -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 for dir in $proto_dirs; do
   # generate swagger files (filter query files)
@@ -14,6 +50,8 @@ for dir in $proto_dirs; do
   fi
 done
 
+rm -rf ./layer/tmp
+
 cd ..
 # combine swagger files
 # uses nodejs package `swagger-combine`.
@@ -22,4 +60,5 @@ swagger-combine ./docs/config.json -o ./docs/static/openapi.yml -f yaml --contin
 
 # clean swagger files
 rm -rf ./tmp-swagger-gen
+
 
