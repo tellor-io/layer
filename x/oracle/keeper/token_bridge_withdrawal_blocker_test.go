@@ -38,7 +38,8 @@ func (s *KeeperTestSuite) TestPreventBridgeWithdrawalReport() {
 	}
 	queryDataEncoded, err := finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
 	require.NoError(err)
-	_, err = k.PreventBridgeWithdrawalReport(queryDataEncoded)
+	ctx := s.ctx
+	_, err = k.PreventBridgeWithdrawalReport(ctx, queryDataEncoded)
 	require.NoError(err)
 
 	// try with toLayerBool false
@@ -47,12 +48,12 @@ func (s *KeeperTestSuite) TestPreventBridgeWithdrawalReport() {
 	require.NoError(err)
 	queryDataEncoded, err = finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
 	require.NoError(err)
-	_, err = k.PreventBridgeWithdrawalReport(queryDataEncoded)
+	_, err = k.PreventBridgeWithdrawalReport(ctx, queryDataEncoded)
 	require.Error(err)
 
 	// try with trb/usd
 	queryBytes, err := utils.QueryBytesFromString(queryData)
 	require.NoError(err)
-	_, err = k.PreventBridgeWithdrawalReport(queryBytes)
+	_, err = k.PreventBridgeWithdrawalReport(ctx, queryBytes)
 	require.NoError(err)
 }

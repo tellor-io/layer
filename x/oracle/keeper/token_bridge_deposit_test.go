@@ -18,7 +18,7 @@ func (s *KeeperTestSuite) TestGetTokenBridgeDeposit() {
 	// try trb/usd spot price, should err with NotTokenDeposit
 	queryBytes, err := utils.QueryBytesFromString(queryData)
 	require.NoError(err)
-	res, err := k.PreventBridgeWithdrawalReport(queryBytes)
+	res, err := k.PreventBridgeWithdrawalReport(ctx, queryBytes)
 	require.NoError(err)
 	require.False(res, "should not be a token deposit")
 
@@ -66,7 +66,7 @@ func (s *KeeperTestSuite) TestGetTokenBridgeDeposit() {
 	require.NoError(err)
 	queryDataEncoded, err = finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
 	require.NoError(err)
-	res, err = k.PreventBridgeWithdrawalReport(queryDataEncoded)
+	res, err = k.PreventBridgeWithdrawalReport(ctx, queryDataEncoded)
 	require.ErrorContains(err, "cannot report token bridge withdrawal")
 	require.False(res)
 }

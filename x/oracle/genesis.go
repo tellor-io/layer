@@ -18,6 +18,10 @@ func InitGenesis(ctx context.Context, k keeper.Keeper, genState types.GenesisSta
 	if err != nil {
 		panic(err)
 	}
+	err = k.SetQueryDataLimit(ctx, genState.QueryDataLimit)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns the module's exported genesis
