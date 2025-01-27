@@ -45,7 +45,7 @@ type ReporterKeeper interface {
 	EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height uint64, amt math.Int, queryId, hashId []byte) error
 	JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration uint64) error
 	TotalReporterPower(ctx context.Context) (math.Int, error)
-	FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte) error
+	FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte, isFirstRound bool) error
 	ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) (string, error)
 	AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt math.Int) error
 	Delegation(ctx context.Context, delegator sdk.AccAddress) (reportertypes.Selection, error)
