@@ -129,6 +129,30 @@ func (_m *OracleKeeper) GetUserTips(ctx context.Context, tipper cosmos_sdktypes.
 	return r0, r1
 }
 
+// ValidateMicroReportExists provides a mock function with given fields: ctx, microReport
+func (_m *OracleKeeper) ValidateMicroReportExists(ctx context.Context, microReport types.MicroReport) (bool, error) {
+	ret := _m.Called(ctx, microReport)
+
+	var r0 bool
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.MicroReport) (bool, error)); ok {
+		return rf(ctx, microReport)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, types.MicroReport) bool); ok {
+		r0 = rf(ctx, microReport)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, types.MicroReport) error); ok {
+		r1 = rf(ctx, microReport)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewOracleKeeper interface {
 	mock.TestingT
 	Cleanup(func())

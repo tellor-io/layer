@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/tellor-io/layer/x/oracle/types"
+	regTypes "github.com/tellor-io/layer/x/registry/types"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -28,8 +29,23 @@ func (k msgServer) UpdateCyclelist(ctx context.Context, req *types.MsgUpdateCycl
 		return nil, err
 	}
 	queries := make([]string, len(req.Cyclelist))
-	for i, query := range req.Cyclelist {
-		queries[i] = hex.EncodeToString(query)
+	for i, querydata := range req.Cyclelist {
+		// decode the queryType
+		queryType, fieldBytes, err := regTypes.DecodeQueryType(querydata)
+		if err != nil {
+			return nil, err
+		}
+		// check if the queryType is registered
+		dataSpec, err := k.keeper.GetDataSpec(ctx, queryType)
+		if err != nil {
+			return nil, err
+		}
+		// check if the fieldBytes are valid for the queryType
+		_, err = regTypes.DecodeParamtypes(fieldBytes, dataSpec.AbiComponents)
+		if err != nil {
+			return nil, err
+		}
+		queries[i] = hex.EncodeToString(querydata)
 	}
 	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(

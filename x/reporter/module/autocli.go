@@ -1,9 +1,18 @@
 package reporter
 
 import (
+	"fmt"
+
+	"github.com/spf13/cobra"
 	modulev1 "github.com/tellor-io/layer/api/layer/reporter"
+	"github.com/tellor-io/layer/x/reporter/types"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
@@ -48,16 +57,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
 				},
 				{
-					RpcMethod:      "AvailableTipsByQuery",
-					Use:            "available-tips-by-query",
+					RpcMethod:      "AvailableTips",
+					Use:            "available-tips",
 					Short:          "Query how much how much tips a selector has",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}, {ProtoField: "reporter_address"}, {ProtoField: "query_id"}, {ProtoField: "meta_id"}},
-				},
-				{
-					RpcMethod:      "RewardClaimStatus",
-					Use:            "reward-claim-status",
-					Short:          "Query if a reward has been claimed",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "id"}, {ProtoField: "selector_address"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}},
 				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
@@ -102,19 +105,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "WithdrawTip",
-					Use:       "withdraw-tip [selector-address] [validator-address] [reporter-address] [id] [query-id]",
-					Short:     "Send a WithdrawTip tx",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "selector_address"},
-						{ProtoField: "validator_address"},
-						{ProtoField: "reporter_address"},
-						{ProtoField: "id"},
-						{ProtoField: "query_id"},
-					},
-				},
-				{
-					RpcMethod: "WithdrawTipLegacy",
-					Use:       "withdraw-tip-legacy [selector-address] [validator-address]",
+					Use:       "withdraw-tip [selector-address] [validator-address]",
 					Short:     "Send a WithdrawTip tx",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "selector_address"},
@@ -125,4 +116,45 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 	}
+}
+
+func (AppModule) GetTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:                "reporter",
+		Short:              "Transactions command for the reporter module",
+		RunE:               client.ValidateCmd,
+		DisableFlagParsing: true,
+	}
+	cmd.AddCommand(GetTxCreateReporterCmd())
+	return cmd
+}
+
+func GetTxCreateReporterCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-reporter [commission-rate] [min-tokens-required]",
+		Short: "Execute the CreateReporter RPC method",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			minTokensRequired, ok := math.NewIntFromString(args[1])
+			if !ok {
+				return fmt.Errorf("invalid min-tokens-required: %s", args[1])
+			}
+
+			msg := types.MsgCreateReporter{
+				ReporterAddress:   clientCtx.FromAddress.String(),
+				CommissionRate:    math.LegacyMustNewDecFromStr(args[0]),
+				MinTokensRequired: minTokensRequired,
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+	cmd.Flags().Bool("genesis", false, "if true will print the json init message for genesis")
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }

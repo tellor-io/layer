@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/tellor-io/layer/x/dispute/types"
 
@@ -23,6 +24,12 @@ func (k msgServer) AddEvidence(goCtx context.Context, msg *types.MsgAddEvidence)
 	// check if dispute is open
 	if !dispute.Open {
 		return nil, errors.New("dispute is not open")
+	}
+	// reporter in additional evidence must be the same as the reporter in the dispute
+	for _, report := range msg.Reports {
+		if !strings.EqualFold(report.Reporter, dispute.InitialEvidence.Reporter) {
+			return nil, errors.New("reporter in additional evidence must be the same as the reporter in the dispute")
+		}
 	}
 	// append submitted evidence to dispute
 	dispute.AdditionalEvidence = append(dispute.AdditionalEvidence, msg.Reports...)

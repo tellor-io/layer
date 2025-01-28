@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	gomath "math"
+	"reflect"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -39,6 +40,7 @@ type (
 		Query              *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, types.QueryMetaIndex]  // key: queryId, id
 		Aggregates         *collections.IndexedMap[collections.Pair[[]byte, uint64], types.Aggregate, types.AggregatesIndex] // key: queryId, timestamp
 		Cyclelist          collections.Map[[]byte, []byte]                                                                   // key: queryId
+		QueryDataLimit     collections.Item[types.QueryDataLimit]                                                            // query data bytes limit
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		authority      string
@@ -131,6 +133,8 @@ func NewKeeper(
 			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
 			sdk.IntValue,
 		),
+		// QueryDataLimit is the maximum number of bytes query data can be
+		QueryDataLimit: collections.NewItem(sb, types.QueryDataLimitPrefix, "query_data_limit", codec.CollValue[types.QueryDataLimit](cdc)),
 	}
 
 	schema, err := sb.Build()
@@ -236,4 +240,18 @@ func (k Keeper) FlagAggregateReport(ctx context.Context, report types.MicroRepor
 		return k.Aggregates.Set(ctx, aggregatekey, aggregate)
 	}
 	return nil
+}
+
+func (k Keeper) ValidateMicroReportExists(ctx context.Context, microReport types.MicroReport) (bool, error) {
+	reporterBech, err := sdk.AccAddressFromBech32(microReport.Reporter)
+	if err != nil {
+		return false, err
+	}
+
+	report, err := k.Reports.Get(ctx, collections.Join3(microReport.QueryId, reporterBech.Bytes(), microReport.MetaId))
+	if err != nil {
+		return false, err
+	}
+
+	return reflect.DeepEqual(report, microReport), nil
 }

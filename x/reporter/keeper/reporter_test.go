@@ -17,7 +17,7 @@ import (
 )
 
 func TestHasMin(t *testing.T) {
-	k, _, sk, _, _, ctx, _ := setupKeeper(t)
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 	addr := sample.AccAddressBytes()
 
 	testCases := []struct {
@@ -108,12 +108,12 @@ func TestHasMin(t *testing.T) {
 }
 
 func TestReporterStake(t *testing.T) {
-	k, _, sk, _, _, ctx, _ := setupKeeper(t)
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 
 	reporterAddr, selector, noSelectorsReporterAddr, jailedReporterAddr := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
-	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb)))
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya)))
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 2)))
-	require.NoError(t, k.Reporters.Set(ctx, noSelectorsReporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb)))
+	require.NoError(t, k.Reporters.Set(ctx, noSelectorsReporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya)))
 	require.NoError(t, k.Reporters.Set(ctx, jailedReporterAddr, types.OracleReporter{Jailed: true}))
 	validatorSet := new(mocks.ValidatorSet)
 	testCases := []struct {
@@ -194,7 +194,7 @@ func TestReporterStake(t *testing.T) {
 }
 
 func TestCheckSelectorsDelegations(t *testing.T) {
-	k, _, sk, _, _, ctx, _ := setupKeeper(t)
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 	addr := sample.AccAddressBytes()
 
 	testCases := []struct {
@@ -256,7 +256,7 @@ func TestCheckSelectorsDelegations(t *testing.T) {
 }
 
 func TestTotalReporterPower(t *testing.T) {
-	k, _, sk, _, _, ctx, _ := setupKeeper(t)
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 	valSet := new(mocks.ValidatorSet)
 	sk.On("GetValidatorSet").Return(valSet)
 	valSet.On("TotalBondedTokens", ctx).Return(math.ZeroInt(), nil)
@@ -283,8 +283,8 @@ func TestDelegation(t *testing.T) {
 func TestReporter(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	addr := sample.AccAddressBytes()
-	require.NoError(t, k.Reporters.Set(ctx, addr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb)))
+	require.NoError(t, k.Reporters.Set(ctx, addr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya)))
 	reporter, err := k.Reporter(ctx, addr)
 	require.NoError(t, err)
-	require.Equal(t, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb))
+	require.Equal(t, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya))
 }

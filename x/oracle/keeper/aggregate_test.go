@@ -135,7 +135,7 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	s.accountKeeper.On("GetModuleAccount", ctx, minttypes.TimeBasedRewards).Return(testModuleAccount)
 	s.bankKeeper.On("GetBalance", mock.Anything, mock.Anything, layertypes.BondDenom).Return(sdk.Coin{Amount: math.NewInt(1 * 1e6)})
 	s.bankKeeper.On("SendCoinsFromModuleToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	s.reporterKeeper.On("AddTip", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	s.reporterKeeper.On("DivvyingTips", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	err = s.oracleKeeper.SetAggregatedReport(ctx)
 	s.NoError(err)
@@ -422,20 +422,9 @@ func (s *KeeperTestSuite) TestGetAggregateByTimestamp() {
 	// queryAt := time.Unix(fastForward, 0)
 	s.ctx = s.ctx.WithBlockTime(reportedAt)
 
-	retAgg, err := s.oracleKeeper.GetAggregateByTimestamp(s.ctx, qId, reportedAt)
+	retAgg, err := s.oracleKeeper.GetAggregateByTimestamp(s.ctx, qId, uint64(reportedAt.UnixMilli()))
 	s.NoError(err)
 	s.Equal(aggregate, &retAgg)
-}
-
-func (s *KeeperTestSuite) TestGetAggregateByIndex() {
-	reportedAt := time.Now()
-	aggregate, qId, _, _, err := s.CreateReportAndReportersAtTimestamp(reportedAt)
-	s.NoError(err)
-
-	retAgg, retTimestamp, err := s.oracleKeeper.GetAggregateByIndex(s.ctx, qId, 0)
-	s.NoError(err)
-	s.Equal(aggregate, retAgg)
-	s.Equal(reportedAt.Unix(), retTimestamp.Unix())
 }
 
 func (s *KeeperTestSuite) TestGetAggregateBeforeByReporter() {

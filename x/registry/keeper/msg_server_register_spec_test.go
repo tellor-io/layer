@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/registry/types"
 )
 
@@ -12,12 +13,18 @@ func TestRegisterSpec(t *testing.T) {
 	require.NotNil(t, ms)
 	require.NotNil(t, ctx)
 	require.NotNil(t, k)
+	registrar := sample.AccAddress()
 
 	// register a spec
-	spec1 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median"}
+	spec1 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median", QueryType: testQueryType, Registrar: registrar, AbiComponents: []*types.ABIComponent{
+		{
+			Name:      "field",
+			FieldType: "uint256",
+		},
+	}}
 	specInput := &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType1",
+		Registrar: registrar,
+		QueryType: testQueryType,
 		Spec:      spec1,
 	}
 	registerSpecResult, err := ms.RegisterSpec(ctx, specInput)
@@ -26,8 +33,8 @@ func TestRegisterSpec(t *testing.T) {
 
 	// try to register spec that already exists
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType1",
+		Registrar: registrar,
+		QueryType: testQueryType,
 		Spec:      spec1,
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
@@ -35,10 +42,15 @@ func TestRegisterSpec(t *testing.T) {
 	require.Nil(t, registerSpecResult)
 
 	// register invalid value type
-	spec2 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "fakeValueType", AggregationMethod: "weighted-median"}
+	spec2 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "badtype", AggregationMethod: "weighted-median", QueryType: "querytype2", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+		{
+			Name:      "field",
+			FieldType: "uint256",
+		},
+	}}
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType2",
+		Registrar: registrar,
+		QueryType: "querytype2",
 		Spec:      spec2,
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
@@ -51,135 +63,210 @@ func TestRegisterSpec(t *testing.T) {
 	type11, type12, type13, type14, type15 := "uint8", "uint16", "uint32", "uint64", "uint128"
 
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType3",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type1, AggregationMethod: "weighted-median"},
+		Registrar: registrar,
+		QueryType: "querytype3",
+		Spec: types.DataSpec{DocumentHash: "hash1", ResponseValueType: type1, AggregationMethod: "weighted-median", QueryType: "querytype3", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		}},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType4",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type2, AggregationMethod: "weighted-median"},
+		Registrar: registrar,
+		QueryType: "querytype4",
+		Spec: types.DataSpec{DocumentHash: "hash1", ResponseValueType: type2, AggregationMethod: "weighted-median", QueryType: "querytype4", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		}},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType5",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type3, AggregationMethod: "weighted-median"},
+		Registrar: registrar,
+		QueryType: "querytype5",
+		Spec: types.DataSpec{DocumentHash: "hash1", ResponseValueType: type3, AggregationMethod: "weighted-median", QueryType: "querytype5", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		}},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType6",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type4, AggregationMethod: "weighted-median"},
+		Registrar: registrar,
+		QueryType: "querytype6",
+		Spec: types.DataSpec{DocumentHash: "hash1", ResponseValueType: type4, AggregationMethod: "weighted-median", QueryType: "querytype6", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		}},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType7",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type5, AggregationMethod: "weighted-median"},
+		Registrar: registrar,
+		QueryType: "querytype7",
+		Spec: types.DataSpec{DocumentHash: "hash1", ResponseValueType: type5, AggregationMethod: "weighted-median", QueryType: "querytype7", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		}},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType8",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type6, AggregationMethod: "weighted-median"},
+		Registrar: registrar,
+		QueryType: "querytype8",
+		Spec: types.DataSpec{DocumentHash: "hash1", ResponseValueType: type6, AggregationMethod: "weighted-median", QueryType: "querytype8", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		}},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType9",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type7, AggregationMethod: "weighted-median"},
+		Registrar: registrar,
+		QueryType: "querytype9",
+		Spec: types.DataSpec{DocumentHash: "hash1", ResponseValueType: type7, AggregationMethod: "weighted-median", QueryType: "querytype9", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		}},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType10",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type8, AggregationMethod: "weighted-median"},
+		Registrar: registrar,
+		QueryType: "querytype10",
+		Spec: types.DataSpec{DocumentHash: "hash1", ResponseValueType: type8, AggregationMethod: "weighted-median", QueryType: "querytype10", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		}},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType11",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type9, AggregationMethod: "weighted-median"},
+		Registrar: registrar,
+		QueryType: "querytype11",
+		Spec: types.DataSpec{DocumentHash: "hash1", ResponseValueType: type9, AggregationMethod: "weighted-median", QueryType: "querytype11", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		}},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType12",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type10, AggregationMethod: "weighted-median"},
+		Registrar: registrar,
+		QueryType: "querytype12",
+		Spec: types.DataSpec{DocumentHash: "hash1", ResponseValueType: type10, AggregationMethod: "weighted-median", QueryType: "querytype12", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		}},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType13",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type11, AggregationMethod: "weighted-median"},
+		Registrar: registrar,
+		QueryType: "querytype13",
+		Spec: types.DataSpec{DocumentHash: "hash1", ResponseValueType: type11, AggregationMethod: "weighted-median", QueryType: "querytype13", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		}},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType14",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type12, AggregationMethod: "weighted-median"},
+		Registrar: registrar,
+		QueryType: "querytype14",
+		Spec: types.DataSpec{DocumentHash: "hash1", ResponseValueType: type12, AggregationMethod: "weighted-median", QueryType: "querytype14", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		}},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType15",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type13, AggregationMethod: "weighted-median"},
+		Registrar: registrar,
+		QueryType: "querytype15",
+		Spec: types.DataSpec{DocumentHash: "hash1", ResponseValueType: type13, AggregationMethod: "weighted-median", QueryType: "querytype15", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		}},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
-		QueryType: "queryType16",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type14, AggregationMethod: "weighted-median"},
+		Registrar: registrar,
+		QueryType: "querytype16",
+		Spec: types.DataSpec{DocumentHash: "hash1", ResponseValueType: type14, AggregationMethod: "weighted-median", QueryType: "queryType16", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		}},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)
 	require.NotNil(t, registerSpecResult)
 
 	specInput = &types.MsgRegisterSpec{
-		Registrar: "creator1",
+		Registrar: registrar,
 		QueryType: "queryType17",
-		Spec:      types.DataSpec{DocumentHash: "hash1", ResponseValueType: type15, AggregationMethod: "weighted-median"},
+		Spec: types.DataSpec{DocumentHash: "hash1", ResponseValueType: type15, AggregationMethod: "weighted-median", QueryType: "querytype17", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+			{
+				Name:      "field",
+				FieldType: "uint256",
+			},
+		}},
 	}
 	registerSpecResult, err = ms.RegisterSpec(ctx, specInput)
 	require.NoError(t, err)

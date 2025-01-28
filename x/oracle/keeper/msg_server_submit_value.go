@@ -12,6 +12,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // SubmitValue: allow a reporter to submit a value for a query.
@@ -31,6 +32,11 @@ import (
 // 7. Set queryMeta.HasRevealedReports to true
 // 8. Emit an event for the new report
 func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (*types.MsgSubmitValueResponse, error) {
+	err := validateSubmitValue(msg)
+	if err != nil {
+		return nil, err
+	}
+
 	reporterAddr, err := msg.GetSignerAndValidateMsg()
 	if err != nil {
 		return nil, err
@@ -112,4 +118,21 @@ func (k Keeper) DirectReveal(ctx context.Context,
 	}
 
 	return k.SetValue(ctx, reporterAddr, query, value, qDataBytes, votingPower, query.CycleList)
+}
+
+// replacement for ValidateBasic
+func validateSubmitValue(msg *types.MsgSubmitValue) error {
+	_, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+	// make sure query data is not empty
+	if len(msg.QueryData) == 0 {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "query data cannot be empty")
+	}
+	// make sure value is not empty
+	if msg.Value == "" {
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be empty")
+	}
+	return nil
 }

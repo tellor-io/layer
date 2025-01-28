@@ -2,6 +2,7 @@ package ante
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,23 +14,37 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+func mustAny(msg sdk.Msg) *codectypes.Any {
+	any, err := codectypes.NewAnyWithValue(msg)
+	if err != nil {
+		panic(err)
+	}
+	return any
+}
+
 func TestNewTrackStakeChangesDecorator(t *testing.T) {
-	k, _, sk, _, _, ctx, _ := keepertest.ReporterKeeper(t)
+	k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
 	decorator := NewTrackStakeChangesDecorator(k, sk)
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100), nil)
 	err := k.Tracker.Set(ctx, types.StakeTracker{
 		Expiration: nil,
 		Amount:     math.NewInt(105),
 	})
+	delAddr := sample.AccAddressBytes()
+	valSrcAddr := sample.AccAddressBytes()
+	valDstAddr := sample.AccAddressBytes()
 	require.NoError(t, err)
 	testCases := []struct {
-		name string
-		msg  sdk.Msg
-		err  error
+		name  string
+		msg   sdk.Msg
+		err   error
+		setup func()
 	}{
 		{
 			name: "CreateValidator",
@@ -37,6 +52,8 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(1)},
 			},
 			err: nil,
+			setup: func() {
+			},
 		},
 		{
 			name: "CreateValidator",
@@ -44,43 +61,58 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(100)},
 			},
 			err: errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period"),
+			setup: func() {
+			},
 		},
 		{
 			name: "Delegate",
 			msg: &stakingtypes.MsgDelegate{
-				DelegatorAddress: sample.AccAddressBytes().String(),
-				ValidatorAddress: sample.AccAddressBytes().String(),
+				DelegatorAddress: delAddr.String(),
+				ValidatorAddress: valSrcAddr.String(),
 				Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(1)},
 			},
 			err: nil,
+			setup: func() {
+				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr.String())).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
+			},
 		},
 		{
 			name: "BeginRedelegate",
 			msg: &stakingtypes.MsgBeginRedelegate{
-				DelegatorAddress:    sample.AccAddressBytes().String(),
-				ValidatorSrcAddress: sample.AccAddressBytes().String(),
-				ValidatorDstAddress: sample.AccAddressBytes().String(),
+				DelegatorAddress:    delAddr.String(),
+				ValidatorSrcAddress: valSrcAddr.String(),
+				ValidatorDstAddress: valDstAddr.String(),
 				Amount:              sdk.Coin{Denom: "loya", Amount: math.NewInt(1)},
 			},
 			err: nil,
+			setup: func() {
+				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr.String())).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
+				sk.On("GetValidator", ctx, sdk.ValAddress(valDstAddr.String())).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
+			},
 		},
 		{
 			name: "CancelUnbondingDelegation",
 			msg: &stakingtypes.MsgCancelUnbondingDelegation{
-				DelegatorAddress: sample.AccAddressBytes().String(),
-				ValidatorAddress: sample.AccAddressBytes().String(),
+				DelegatorAddress: delAddr.String(),
+				ValidatorAddress: valSrcAddr.String(),
 				Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(100)},
 			},
 			err: errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period"),
+			setup: func() {
+				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr.String())).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
+			},
 		},
 		{
 			name: "Undelegate",
 			msg: &stakingtypes.MsgUndelegate{
-				DelegatorAddress: sample.AccAddressBytes().String(),
-				ValidatorAddress: sample.AccAddressBytes().String(),
+				DelegatorAddress: delAddr.String(),
+				ValidatorAddress: valSrcAddr.String(),
 				Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(95)},
 			},
 			err: errors.New("total stake decrease exceeds the allowed 5% threshold within a twelve-hour period"),
+			setup: func() {
+				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr.String())).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
+			},
 		},
 		{
 			name: "Other message type",
@@ -89,8 +121,158 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 				Params:    types.Params{},
 			},
 			err: nil,
+			setup: func() {
+			},
+		},
+		{
+			name: "empty authz exec",
+			msg:  &authz.MsgExec{},
+			err:  nil,
+			setup: func() {
+			},
+		},
+		{
+			name: "stake change > 5% wrapped once",
+			msg: &authz.MsgExec{
+				Grantee: sample.AccAddressBytes().String(),
+				Msgs: []*codectypes.Any{
+					mustAny(&stakingtypes.MsgCreateValidator{
+						Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(1000)},
+					}),
+				},
+			},
+			err: errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period"),
+			setup: func() {
+			},
+		},
+		{
+			name: "stake change < 5% wrapped once",
+			msg: &authz.MsgExec{
+				Grantee: sample.AccAddressBytes().String(),
+				Msgs: []*codectypes.Any{
+					mustAny(&stakingtypes.MsgCreateValidator{
+						Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(1)},
+					}),
+				},
+			},
+			err: nil,
+			setup: func() {
+			},
+		},
+		{
+			name: "stake change < 5% wrapped twice",
+			msg: &authz.MsgExec{
+				Grantee: sample.AccAddressBytes().String(),
+				Msgs: []*codectypes.Any{
+					mustAny(&authz.MsgExec{
+						Grantee: sample.AccAddressBytes().String(),
+						Msgs: []*codectypes.Any{
+							mustAny(&authz.MsgExec{
+								Grantee: sample.AccAddressBytes().String(),
+								Msgs: []*codectypes.Any{
+									mustAny(&authz.MsgExec{
+										Grantee: sample.AccAddressBytes().String(),
+										Msgs: []*codectypes.Any{
+											mustAny(&authz.MsgExec{
+												Grantee: sample.AccAddressBytes().String(),
+												Msgs: []*codectypes.Any{
+													mustAny(&authz.MsgExec{
+														Grantee: sample.AccAddressBytes().String(),
+														Msgs: []*codectypes.Any{
+															mustAny(&authz.MsgExec{
+																Grantee: sample.AccAddressBytes().String(),
+																Msgs: []*codectypes.Any{
+																	mustAny(&stakingtypes.MsgCreateValidator{
+																		Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(1000)},
+																	}),
+																},
+															}),
+														},
+													}),
+												},
+											}),
+										},
+									}),
+								},
+							}),
+						},
+					}),
+				},
+			},
+			err: fmt.Errorf("nested message count exceeds the maximum allowed: Limit is %d", MaxNestedMsgCount),
+			setup: func() {
+			},
+		},
+		{
+			name: "stake change > 5% wrapped twice",
+			msg: &authz.MsgExec{
+				Grantee: sample.AccAddressBytes().String(),
+				Msgs: []*codectypes.Any{
+					mustAny(&authz.MsgExec{
+						Grantee: sample.AccAddressBytes().String(),
+						Msgs: []*codectypes.Any{
+							mustAny(&authz.MsgExec{
+								Grantee: sample.AccAddressBytes().String(),
+								Msgs: []*codectypes.Any{
+									mustAny(&stakingtypes.MsgCreateValidator{
+										Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(1000)},
+									}),
+								},
+							}),
+						},
+					}),
+				},
+			},
+			err: errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period"),
+			setup: func() {
+			},
+		},
+		{
+			name: "nested message count exceeds the maximum allowed",
+			msg: &authz.MsgExec{
+				Grantee: sample.AccAddressBytes().String(),
+				Msgs: []*codectypes.Any{
+					mustAny(&authz.MsgExec{
+						Grantee: sample.AccAddressBytes().String(),
+						Msgs: []*codectypes.Any{
+							mustAny(&authz.MsgExec{
+								Grantee: sample.AccAddressBytes().String(),
+								Msgs: []*codectypes.Any{
+									mustAny(&authz.MsgExec{
+										Grantee: sample.AccAddressBytes().String(),
+										Msgs: []*codectypes.Any{
+											mustAny(&authz.MsgExec{
+												Grantee: sample.AccAddressBytes().String(),
+												Msgs: []*codectypes.Any{
+													mustAny(&authz.MsgExec{
+														Grantee: sample.AccAddressBytes().String(),
+														Msgs: []*codectypes.Any{
+															mustAny(&authz.MsgExec{
+																Grantee: sample.AccAddressBytes().String(),
+																Msgs: []*codectypes.Any{
+																	mustAny(&stakingtypes.MsgCreateValidator{
+																		Value: sdk.Coin{Denom: "loya", Amount: math.NewInt(1000)},
+																	}),
+																},
+															}),
+														},
+													}),
+												},
+											}),
+										},
+									}),
+								},
+							}),
+						},
+					}),
+				},
+			},
+			err: errors.New("nested message count exceeds the maximum allowed: Limit is 7"),
+			setup: func() {
+			},
 		},
 	}
+
 	s := encoding.GetTestEncodingCfg()
 	clientCtx := client.Context{}.
 		WithTxConfig(s.TxConfig)
@@ -99,9 +281,9 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
+			tc.setup()
 			err := txBuilder.SetMsgs(tc.msg)
 			require.NoError(t, err)
-
 			tx := txBuilder.GetTx()
 			_, err = decorator.AnteHandle(ctx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				return ctx, nil

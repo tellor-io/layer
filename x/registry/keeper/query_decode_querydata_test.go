@@ -5,15 +5,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/registry/keeper"
 	"github.com/tellor-io/layer/x/registry/types"
 )
 
 func TestDecodeQuerydata(t *testing.T) {
 	// register data spec
+	registrar := sample.AccAddress()
 	ms, ctx, k := setupMsgServer(t)
 	msgres, err := ms.RegisterSpec(ctx, &types.MsgRegisterSpec{
-		Registrar: "creator1",
+		Registrar: registrar,
 		QueryType: testQueryType,
 		Spec: types.DataSpec{
 			AggregationMethod: "weighted-median",
@@ -21,6 +23,8 @@ func TestDecodeQuerydata(t *testing.T) {
 			AbiComponents: []*types.ABIComponent{
 				{Name: "test", FieldType: "string"},
 			},
+			QueryType: testQueryType,
+			Registrar: registrar,
 		},
 	})
 	require.NoError(t, err)

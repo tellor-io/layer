@@ -14,7 +14,7 @@ var (
 	KeyMinCommissionRate = []byte("MinCommissionRate")
 	// TODO: Determine the default value
 	DefaultMinCommissionRate = math.LegacyZeroDec()
-	DefaultMinTrb            = math.NewIntWithDecimal(1, 6)
+	DefaultMinLoya           = math.NewIntWithDecimal(1, 6)
 	DefaultMaxSelectors      = uint64(100)
 )
 
@@ -26,11 +26,11 @@ func ParamKeyTable() paramtypes.KeyTable {
 // NewParams creates a new Params instance
 func NewParams(
 	minCommissionRate math.LegacyDec,
-	minTrb math.Int,
+	minLoya math.Int,
 ) Params {
 	return Params{
 		MinCommissionRate: minCommissionRate,
-		MinTrb:            minTrb,
+		MinLoya:           minLoya,
 		MaxSelectors:      DefaultMaxSelectors,
 	}
 }
@@ -39,7 +39,7 @@ func NewParams(
 func DefaultParams() Params {
 	return NewParams(
 		DefaultMinCommissionRate,
-		DefaultMinTrb,
+		DefaultMinLoya,
 	)
 }
 

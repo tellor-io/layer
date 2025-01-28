@@ -66,8 +66,10 @@ func TestValidateGenesis(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	am := registry.NewAppModuleBasic(appCodec)
 	h := json.RawMessage(`{
-        "params": {}
-      }`)
+        "params": {
+			"max_report_buffer_window": "100000"
+		}
+	}`)
 
 	err := am.ValidateGenesis(appCodec, nil, h)
 	require.NoError(t, err)
@@ -118,15 +120,18 @@ func TestInitGenesis(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	k, _k2, _k3, ctx := keepertest.RegistryKeeper(t)
 	am := registry.NewAppModule(appCodec, k, _k2, _k3)
-	h := json.RawMessage(`{"params":{"max_report_buffer_window":"700000"},"dataspec":{"document_hash":"","response_value_type":"","abi_components":[],"aggregation_method":"","registrar":"","report_block_window":"3"}}`)
-	am.InitGenesis(ctx, appCodec, h)
+	genesisState := types.DefaultGenesis()
+	json, err := json.Marshal(genesisState)
+	require.NoError(t, err)
+	am.InitGenesis(ctx, appCodec, json)
 }
 
 func TestExportGenesis(t *testing.T) {
 	appCodec := codec.NewProtoCodec(sdkTypes.NewInterfaceRegistry())
 	k, _k2, _k3, ctx := keepertest.RegistryKeeper(t)
 	am := registry.NewAppModule(appCodec, k, _k2, _k3)
-	h := json.RawMessage(`{"params":{"max_report_buffer_window":"700000"},"dataspec":{"document_hash":"","response_value_type":"","abi_components":[],"aggregation_method":"","registrar":"","report_block_window":"3"}}`)
+
+	h := json.RawMessage(`{"params":{"max_report_buffer_window":"700000"},"dataspec":[{"document_hash":"","response_value_type":"uint256","abi_components":[{"name":"asset","field_type":"string","nested_component":[]},{"name":"currency","field_type":"string","nested_component":[]}],"aggregation_method":"weighted-median","registrar":"genesis","report_block_window":"2000","query_type":"spotprice"},{"document_hash":"","response_value_type":"address, string, uint256","abi_components":[{"name":"toLayer","field_type":"bool","nested_component":[]},{"name":"depositId","field_type":"uint256","nested_component":[]}],"aggregation_method":"weighted-mode","registrar":"genesis","report_block_window":"2000","query_type":"trbbridge"}]}`)
 	am.InitGenesis(ctx, appCodec, h)
 	gen := am.ExportGenesis(ctx, appCodec)
 	fmt.Println("exported genesis: ", gen)

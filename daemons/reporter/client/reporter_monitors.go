@@ -6,12 +6,16 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/shirou/gopsutil/v3/process"
+	tokenbridgetipstypes "github.com/tellor-io/layer/daemons/server/types/token_bridge_tips"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
@@ -50,6 +54,7 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 			txCtx, cancel := context.WithTimeout(ctx, defaultTxTimeout)
 			done := make(chan struct{})
 
+			c.logger.Info(fmt.Sprintf("starting to generate spot price report at %d", time.Now().Unix()))
 			go func() {
 				defer close(done)
 				err := c.GenerateAndBroadcastSpotPriceReport(txCtx, querydata, querymeta)
@@ -62,7 +67,7 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 			case <-done:
 				cancel()
 			case <-txCtx.Done():
-				c.logger.Error("report generation timed out")
+				c.logger.Error(fmt.Sprintf("report generation timed out at %d", time.Now().Unix()))
 				cancel()
 			}
 
@@ -135,8 +140,20 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 			height := uint64(status.SyncInfo.LatestBlockHeight)
 
 			for _, query := range res.Queries {
+				queryType := c.GetQueryType(query.GetQueryData())
 				if height > query.Expiration || commitedIds[query.Id] ||
-					strings.EqualFold(query.QueryType, "SpotPrice") {
+					!strings.EqualFold(queryType, "SpotPrice") && !strings.EqualFold(queryType, "TRBBridge") {
+					continue
+				}
+
+				if strings.EqualFold(queryType, "TRBBridge") {
+					if depositTipMap[query.Id] {
+						continue
+					}
+					queryData := query.GetQueryData()
+					tipQueryData := tokenbridgetipstypes.QueryData{QueryData: queryData}
+					c.TokenBridgeTipsCache.AddTip(tipQueryData)
+					depositTipMap[query.Id] = true
 					continue
 				}
 
@@ -160,6 +177,35 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 				}
 			}
 		}
+	}
+}
+
+func (c *Client) WithdrawAndStakeEarnedRewardsPeriodically(ctx context.Context, wg *sync.WaitGroup) {
+	freqVar := os.Getenv("WITHDRAW_FREQUENCY")
+	if freqVar == "" {
+		freqVar = "43200" // default to being 12 hours or 43200 seconds
+	}
+	frequency, err := strconv.Atoi(freqVar)
+	if err != nil {
+		c.logger.Error("Could not start auto rewards withdrawal process due to incorrect parameter. Please enter the number of seconds to wait in between claiming rewards")
+		return
+	}
+
+	for {
+		valAddr := os.Getenv("REPORTERS_VALIDATOR_ADDRESS")
+		if valAddr == "" {
+			fmt.Println("Returning from Withdraw Monitor due to no validator address env variable was found")
+			time.Sleep(time.Duration(frequency) * time.Second)
+			continue
+		}
+
+		withdrawMsg := &reportertypes.MsgWithdrawTip{
+			SelectorAddress:  c.accAddr.String(),
+			ValidatorAddress: valAddr,
+		}
+		c.txChan <- TxChannelInfo{Msg: withdrawMsg, isBridge: false, NumRetries: 0}
+
+		time.Sleep(time.Duration(frequency) * time.Second)
 	}
 }
 
@@ -193,4 +239,25 @@ func (c *Client) LogProcessStats() {
 	}
 
 	c.logger.Info(fmt.Sprintf("CPU Usage: %.2f%%, Num of threads: %d\n", cpuPercent, numThreads))
+}
+
+func (c *Client) GetQueryType(querydata []byte) string {
+	// in solidity, querydata encoded as abi.encode(string queryType, bytes queryArgs)
+	StringType, err := abi.NewType("string", "", nil)
+	if err != nil {
+		return ""
+	}
+	BytesType, err := abi.NewType("bytes", "", nil)
+	if err != nil {
+		return ""
+	}
+	initialArgs := abi.Arguments{
+		{Type: StringType},
+		{Type: BytesType},
+	}
+	queryDataDecodedPartial, err := initialArgs.Unpack(querydata)
+	if err != nil {
+		return ""
+	}
+	return queryDataDecodedPartial[0].(string)
 }

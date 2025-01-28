@@ -9,7 +9,6 @@ import (
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/types"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 )
 
@@ -17,7 +16,7 @@ func TestReportersQuery(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	querier := keeper.NewQuerier(k)
 	for i := 0; i < 10; i++ {
-		err := k.Reporters.Set(ctx, sample.AccAddressBytes(), types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb))
+		err := k.Reporters.Set(ctx, sample.AccAddressBytes(), types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya))
 		require.NoError(t, err)
 	}
 	res, err := querier.Reporters(ctx, &types.QueryReportersRequest{})
@@ -38,7 +37,7 @@ func TestSelectorReporterQuery(t *testing.T) {
 }
 
 func TestAllowedAmountQuery(t *testing.T) {
-	k, _, sk, _, _, ctx, _ := setupKeeper(t)
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 	querier := keeper.NewQuerier(k)
 
 	// set the last stored tracked amount
@@ -98,17 +97,80 @@ func TestAllowedAmountExpiration(t *testing.T) {
 	require.Equal(t, res.Expiration, uint64(ctx.BlockTime().Add(1).UnixMilli()))
 }
 
-func TestRewardClaimStatus(t *testing.T) {
+func TestAvailableTips(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	querier := keeper.NewQuerier(k)
-	addy := sample.AccAddressBytes()
-	require.NoError(t, k.ClaimStatus.Set(ctx, collections.Join(addy.Bytes(), uint64(10)), true))
+	require := require.New(t)
 
-	res, err := querier.RewardClaimStatus(ctx, &types.QueryRewardClaimStatusRequest{Id: 10, SelectorAddress: addy.String()})
-	require.NoError(t, err)
-	require.Equal(t, res.Status, true)
+	selectorAddr := sample.AccAddressBytes()
 
-	res, err = querier.RewardClaimStatus(ctx, &types.QueryRewardClaimStatusRequest{Id: 1, SelectorAddress: addy.String()})
-	require.NoError(t, err)
-	require.Equal(t, res.Status, false)
+	cleanup := func() {
+		iter, err := k.SelectorTips.Iterate(ctx, nil)
+		require.NoError(err)
+		defer iter.Close()
+
+		for ; iter.Valid(); iter.Next() {
+			key, err := iter.Key()
+			require.NoError(err)
+			require.NoError(k.SelectorTips.Remove(ctx, key))
+		}
+	}
+
+	testCases := []struct {
+		name     string
+		setup    func()
+		req      *types.QueryAvailableTipsRequest
+		err      bool
+		expected math.LegacyDec
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  true,
+		},
+		{
+			name:     "no tips",
+			req:      &types.QueryAvailableTipsRequest{SelectorAddress: selectorAddr.String()},
+			err:      true,
+			expected: math.LegacyZeroDec(),
+		},
+		{
+			name: "one tip",
+			setup: func() {
+				err := k.SelectorTips.Set(ctx, selectorAddr, math.LegacyNewDec(100*1e6))
+				require.NoError(err)
+			},
+			req:      &types.QueryAvailableTipsRequest{SelectorAddress: selectorAddr.String()},
+			err:      false,
+			expected: math.LegacyNewDec(100 * 1e6),
+		},
+		{
+			name: "amount changes",
+			setup: func() {
+				err := k.SelectorTips.Set(ctx, selectorAddr, math.LegacyNewDec(100*1e6))
+				require.NoError(err)
+				err = k.SelectorTips.Set(ctx, selectorAddr, math.LegacyNewDec(200*1e6))
+				require.NoError(err)
+			},
+			req:      &types.QueryAvailableTipsRequest{SelectorAddress: selectorAddr.String()},
+			err:      false,
+			expected: math.LegacyNewDec(200 * 1e6),
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			cleanup()
+
+			if tc.setup != nil {
+				tc.setup()
+			}
+			res, err := querier.AvailableTips(ctx, tc.req)
+			if tc.err {
+				require.Error(err)
+			} else {
+				require.NoError(err)
+				require.Equal(tc.expected, res.AvailableTips)
+			}
+		})
+	}
 }

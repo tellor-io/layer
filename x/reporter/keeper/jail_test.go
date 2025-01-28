@@ -58,3 +58,23 @@ func TestUnJailReporter(t *testing.T) {
 	err = k.UnjailReporter(ctx, addr, updatedReporter)
 	require.Error(t, err)
 }
+
+func TestUpdateJailedUntilOnFailedDispute(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	addr := sample.AccAddressBytes()
+	jailedAt := time.Now().UTC()
+	reporter := types.NewReporter(types.DefaultMinCommissionRate, math.OneInt())
+	reporter.Jailed = true
+	reporter.JailedUntil = jailedAt.Add(time.Second * 100)
+	ctx = ctx.WithBlockTime(jailedAt.Add(time.Second * 50))
+	err := k.Reporters.Set(ctx, addr, reporter)
+	require.NoError(t, err)
+
+	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, addr))
+
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Second * 1))
+	reporter, err = k.Reporters.Get(ctx, addr)
+	require.NoError(t, err)
+
+	require.Equal(t, jailedAt.Add(time.Second*49), reporter.JailedUntil)
+}

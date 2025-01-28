@@ -11,13 +11,13 @@ import (
 
 func (k msgServer) ClaimDeposits(goCtx context.Context, msg *types.MsgClaimDepositsRequest) (*types.MsgClaimDepositsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(goCtx)
-	if len(msg.DepositIds) != len(msg.Indices) {
+	if len(msg.DepositIds) != len(msg.Timestamps) {
 		return nil, types.ErrInvalidDepositIdsAndIndicesLength
 	}
 	msgSender := sdk.MustAccAddressFromBech32(msg.Creator)
 	for i, depositId := range msg.DepositIds {
-		index := msg.Indices[i]
-		if err := k.Keeper.ClaimDeposit(sdkCtx, depositId, index, msgSender); err != nil {
+		timestamp := msg.Timestamps[i]
+		if err := k.Keeper.ClaimDeposit(sdkCtx, depositId, timestamp, msgSender); err != nil {
 			return nil, err
 		}
 		sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{

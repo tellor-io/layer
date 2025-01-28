@@ -13,6 +13,57 @@ import (
 	sync "sync"
 )
 
+var _ protoreflect.List = (*_GenesisState_2_list)(nil)
+
+type _GenesisState_2_list struct {
+	list *[]*DataSpec
+}
+
+func (x *_GenesisState_2_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_2_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_2_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DataSpec)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_2_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DataSpec)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_2_list) AppendMutable() protoreflect.Value {
+	v := new(DataSpec)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_2_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_2_list) NewElement() protoreflect.Value {
+	v := new(DataSpec)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_2_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
 	md_GenesisState          protoreflect.MessageDescriptor
 	fd_GenesisState_params   protoreflect.FieldDescriptor
@@ -97,8 +148,8 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
-	if x.Dataspec != nil {
-		value := protoreflect.ValueOfMessage(x.Dataspec.ProtoReflect())
+	if len(x.Dataspec) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_2_list{list: &x.Dataspec})
 		if !f(fd_GenesisState_dataspec, value) {
 			return
 		}
@@ -121,7 +172,7 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 	case "layer.registry.GenesisState.params":
 		return x.Params != nil
 	case "layer.registry.GenesisState.dataspec":
-		return x.Dataspec != nil
+		return len(x.Dataspec) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.GenesisState"))
@@ -162,8 +213,11 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 		value := x.Params
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "layer.registry.GenesisState.dataspec":
-		value := x.Dataspec
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
+		if len(x.Dataspec) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_2_list{})
+		}
+		listValue := &_GenesisState_2_list{list: &x.Dataspec}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.GenesisState"))
@@ -187,7 +241,9 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 	case "layer.registry.GenesisState.params":
 		x.Params = value.Message().Interface().(*Params)
 	case "layer.registry.GenesisState.dataspec":
-		x.Dataspec = value.Message().Interface().(*DataSpec)
+		lv := value.List()
+		clv := lv.(*_GenesisState_2_list)
+		x.Dataspec = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.GenesisState"))
@@ -215,9 +271,10 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		return protoreflect.ValueOfMessage(x.Params.ProtoReflect())
 	case "layer.registry.GenesisState.dataspec":
 		if x.Dataspec == nil {
-			x.Dataspec = new(DataSpec)
+			x.Dataspec = []*DataSpec{}
 		}
-		return protoreflect.ValueOfMessage(x.Dataspec.ProtoReflect())
+		value := &_GenesisState_2_list{list: &x.Dataspec}
+		return protoreflect.ValueOfList(value)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.GenesisState"))
@@ -235,8 +292,8 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 		m := new(Params)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "layer.registry.GenesisState.dataspec":
-		m := new(DataSpec)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
+		list := []*DataSpec{}
+		return protoreflect.ValueOfList(&_GenesisState_2_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.GenesisState"))
@@ -310,9 +367,11 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			l = options.Size(x.Params)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Dataspec != nil {
-			l = options.Size(x.Dataspec)
-			n += 1 + l + runtime.Sov(uint64(l))
+		if len(x.Dataspec) > 0 {
+			for _, e := range x.Dataspec {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -343,19 +402,21 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Dataspec != nil {
-			encoded, err := options.Marshal(x.Dataspec)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
+		if len(x.Dataspec) > 0 {
+			for iNdEx := len(x.Dataspec) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Dataspec[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x12
 			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x12
 		}
 		if x.Params != nil {
 			encoded, err := options.Marshal(x.Params)
@@ -485,10 +546,8 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Dataspec == nil {
-					x.Dataspec = &DataSpec{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Dataspec); err != nil {
+				x.Dataspec = append(x.Dataspec, &DataSpec{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Dataspec[len(x.Dataspec)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -549,7 +608,7 @@ type GenesisState struct {
 	// params defines all the paramaters of the registry module.
 	Params *Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
 	// Initial data specs
-	Dataspec *DataSpec `protobuf:"bytes,2,opt,name=dataspec,proto3" json:"dataspec,omitempty"`
+	Dataspec []*DataSpec `protobuf:"bytes,2,rep,name=dataspec,proto3" json:"dataspec,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -579,7 +638,7 @@ func (x *GenesisState) GetParams() *Params {
 	return nil
 }
 
-func (x *GenesisState) GetDataspec() *DataSpec {
+func (x *GenesisState) GetDataspec() []*DataSpec {
 	if x != nil {
 		return x.Dataspec
 	}
@@ -602,7 +661,7 @@ var file_layer_registry_genesis_proto_rawDesc = []byte{
 	0x28, 0x0b, 0x32, 0x16, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73,
 	0x74, 0x72, 0x79, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00,
 	0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x3a, 0x0a, 0x08, 0x64, 0x61, 0x74, 0x61,
-	0x73, 0x70, 0x65, 0x63, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x6c, 0x61, 0x79,
+	0x73, 0x70, 0x65, 0x63, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x6c, 0x61, 0x79,
 	0x65, 0x72, 0x2e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x79, 0x2e, 0x44, 0x61, 0x74, 0x61,
 	0x53, 0x70, 0x65, 0x63, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x08, 0x64, 0x61, 0x74, 0x61,
 	0x73, 0x70, 0x65, 0x63, 0x42, 0xaa, 0x01, 0x0a, 0x12, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79,

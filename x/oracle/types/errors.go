@@ -24,4 +24,6 @@ var (
 	ErrInvalidQueryData            = sdkerrors.Register(ModuleName, 1112, "invalid query data")
 	ErrCommitWindowExpired         = sdkerrors.Register(ModuleName, 1113, "commit window expired")
 	ErrSubmissionWindowExpired     = sdkerrors.Register(ModuleName, 1114, "submission window expired")
+	ErrNotEnoughTip                = sdkerrors.Register(ModuleName, 1115, "tip amount does not mean the minimum tip amount")
+	ErrTipExceedsMax               = sdkerrors.Register(ModuleName, 1116, "tip amount exceeds the maximum tip amount")
 )

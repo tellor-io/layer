@@ -47,6 +47,7 @@ var (
 	TipsBlockIndexPrefix             = collections.NewPrefix(20)
 	TipperTotalPrefix                = collections.NewPrefix(21)
 	AggregatesMicroHeightIndexPrefix = collections.NewPrefix(22)
+	QueryDataLimitPrefix             = collections.NewPrefix(23)
 	ValuesWeightSumPrefix            = collections.NewPrefix(25)
 	ValuesPrefix                     = collections.NewPrefix(26)
 	AggregateValuePrefix             = collections.NewPrefix(27)

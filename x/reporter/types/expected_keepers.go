@@ -4,9 +4,7 @@ import (
 	"context"
 	"time"
 
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-
-	"cosmossdk.io/collections"
+	// "cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
 
@@ -41,6 +39,7 @@ type StakingKeeper interface {
 // AccountKeeper defines the expected interface for the Account module.
 type AccountKeeper interface {
 	GetAccount(context.Context, sdk.AccAddress) sdk.AccountI // only used for simulation
+	GetModuleAddress(moduleName string) sdk.AccAddress       // used to get address of escrow pool when withdrawing tips
 	// Methods imported from account should be defined here
 }
 
@@ -49,6 +48,7 @@ type BankKeeper interface {
 	SpendableCoins(context.Context, sdk.AccAddress) sdk.Coins
 	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
+	DelegateCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 	// Methods imported from bank should be defined here
 }
 
@@ -70,8 +70,4 @@ type StakingHooks interface {
 
 type RegistryKeeper interface {
 	MaxReportBufferWindow(ctx context.Context) (uint64, error)
-}
-
-type OracleKeeper interface {
-	MicroReport(ctx context.Context, key collections.Triple[[]byte, []byte, uint64]) (oracletypes.MicroReport, error)
 }
