@@ -49,7 +49,7 @@ func TestMsgClaimDeposits(t *testing.T) {
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
-	aggregate := &oracletypes.Aggregate{
+	aggregate := oracletypes.Aggregate{
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
 		AggregateReportIndex: uint64(0),
@@ -65,18 +65,17 @@ func TestMsgClaimDeposits(t *testing.T) {
 	msgSender := sdk.AccAddress(ethAddress.Bytes())
 	recipient, amount, tip, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	claimAmount := amount.Sub(tip...)
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, aggregate.AggregateReportIndex).Return(aggregate, aggregateTimestamp, err)
+	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(aggregateTimestamp.UnixMilli())).Return(aggregate, nil)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, claimAmount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, msgSender, tip).Return(err)
 
 	depositId := uint64(0)
-	reportIndex := uint64(0)
 
 	result, err := msgServer.ClaimDeposits(sdkCtx, &bridgetypes.MsgClaimDepositsRequest{
 		Creator:    msgSender.String(),
 		DepositIds: []uint64{depositId},
-		Indices:    []uint64{reportIndex},
+		Timestamps: []uint64{uint64(aggregateTimestamp.UnixMilli())},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, result)

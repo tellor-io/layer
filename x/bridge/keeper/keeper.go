@@ -837,7 +837,7 @@ func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 
 // Called with each new agg report and with new request for optimistic attestations
 func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp time.Time, isExternalRequest bool) error {
-	aggReport, err := k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, timestamp)
+	aggReport, err := k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, uint64(timestamp.UnixMilli()))
 	if err != nil {
 		k.Logger(ctx).Info("Error getting aggregate report by timestamp", "error", err)
 		return err

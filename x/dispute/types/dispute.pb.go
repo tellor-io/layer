@@ -75,9 +75,9 @@ const (
 	Prevote DisputeStatus = 0
 	// VOTING defines a dispute that has been funded and is in voting.
 	Voting DisputeStatus = 1
-	// RESOLVED defines a dispute that has completed voting and reached quroum
+	// RESOLVED defines a dispute where dispute period has ended
 	Resolved DisputeStatus = 2
-	// UNRESOLVED defines a dispute that has completed voting and but hasn't reached quroum
+	// UNRESOLVED defines a dispute where dispute period has not ended but voting period has.
 	Unresolved DisputeStatus = 3
 	// FAILED defines a dispute that failed to pay the dispute fee to start vote.
 	Failed DisputeStatus = 4

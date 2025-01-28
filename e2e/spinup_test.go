@@ -33,6 +33,7 @@ type MicroReport struct {
 	Value           string `json:"value"`
 	Timestamp       string `json:"timestamp"`
 	BlockNumber     string `json:"block_number"`
+	MetaId          string `json:"meta_id"`
 }
 
 type ReportsResponse struct {

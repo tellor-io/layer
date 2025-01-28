@@ -191,6 +191,8 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		dispute.DisputeStatus = types.Unresolved
 		dispute.PendingExecution = true
 		// check if rounds have been exhausted or dispute has expired in order to disperse funds
+		// todo:  check if rounds have been exhausted
+		// if dispute.DisputeEndTime.Before(sdkctx.BlockTime()) || dispute.DisputeRound == 5 {
 		if dispute.DisputeEndTime.Before(sdkctx.BlockTime()) {
 			dispute.DisputeStatus = types.Resolved
 			dispute.Open = false
@@ -244,7 +246,8 @@ func (k Keeper) UpdateDispute(
 			result = types.VoteResult_NO_QUORUM_MAJORITY_INVALID
 		}
 	default:
-		return errors.New("no majority")
+		k.Logger(ctx).Error("Vote tally", "result", "no majority")
+		return nil
 	}
 	vote.VoteResult = result
 	vote.VoteEnd = sdk.UnwrapSDKContext(ctx).BlockTime()

@@ -45,7 +45,7 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() (sdk.AccAddress, ty
 	s.bankKeeper.On("HasBalance", s.ctx, addr, fee).Return(true)
 	s.bankKeeper.On("SendCoinsFromAccountToModule", s.ctx, addr, mock.Anything, sdk.NewCoins(fee)).Return(nil)
 	s.oracleKeeper.On("FlagAggregateReport", s.ctx, report).Return(nil)
-
+	s.oracleKeeper.On("ValidateMicroReportExists", s.ctx, mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
 	msgRes, err := s.msgServer.ProposeDispute(s.ctx, &msg)
 	s.NoError(err)
 	s.NotNil(msgRes)

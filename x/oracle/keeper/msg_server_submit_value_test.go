@@ -94,6 +94,7 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 		Timestamp:       s.ctx.BlockTime(),
 		Cyclelist:       true,
 		BlockNumber:     uint64(s.ctx.BlockHeight()),
+		MetaId:          query.Id,
 	}
 	expectedReport := types.QueryMicroReportsResponse{
 		MicroReports: []types.MicroReport{microReport},

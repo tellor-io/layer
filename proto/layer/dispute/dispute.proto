@@ -99,9 +99,9 @@ enum DisputeStatus {
   DISPUTE_STATUS_PREVOTE = 0 [(gogoproto.enumvalue_customname) = "Prevote"];
   // VOTING defines a dispute that has been funded and is in voting.
   DISPUTE_STATUS_VOTING = 1 [(gogoproto.enumvalue_customname) = "Voting"];
-  // RESOLVED defines a dispute that has completed voting and reached quroum
+  // RESOLVED defines a dispute where dispute period has ended
   DISPUTE_STATUS_RESOLVED = 2 [(gogoproto.enumvalue_customname) = "Resolved"];
-  // UNRESOLVED defines a dispute that has completed voting and but hasn't reached quroum
+  // UNRESOLVED defines a dispute where dispute period has not ended but voting period has.
   DISPUTE_STATUS_UNRESOLVED = 3 [(gogoproto.enumvalue_customname) = "Unresolved"];
   // FAILED defines a dispute that failed to pay the dispute fee to start vote.
   DISPUTE_STATUS_FAILED = 4 [(gogoproto.enumvalue_customname) = "Failed"];

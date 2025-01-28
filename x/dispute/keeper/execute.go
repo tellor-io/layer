@@ -46,8 +46,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	if vote.Executed {
 		return errors.New("vote already executed")
 	}
-	// amount of dispute fee to return to fee payers or give to reporter
-	disputeFeeMinusBurn := dispute.SlashAmount.Sub(dispute.BurnAmount)
+
 	// the burnAmount starts at %5 of disputeFee, half of which is burned and the other half is distributed to the voters
 	disputeBurnAmountDec := math.LegacyNewDecFromInt(dispute.BurnAmount)
 	halfBurnAmountDec := disputeBurnAmountDec.Quo(math.LegacyNewDec(2))
@@ -99,7 +98,9 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			}
 		}
 		// refund the reporters bond to the reporter plus the remaining disputeFee; goes to bonded pool
-		dispute.SlashAmount = dispute.SlashAmount.Add(disputeFeeMinusBurn)
+		fivePercentDec := dispute.DisputeFee.ToLegacyDec().Quo(math.LegacyNewDec(20))
+		disputeFeeMinusFivePercent := dispute.DisputeFee.Sub(fivePercentDec.TruncateInt())
+		dispute.SlashAmount = dispute.SlashAmount.Add(disputeFeeMinusFivePercent)
 		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
 			return err
 		}
@@ -132,14 +133,27 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	return k.BlockInfo.Remove(ctx, dispute.HashId)
 }
 
-func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeesPaid, feeMinusBurn math.Int, hashId []byte) (math.Int, error) {
+func (k Keeper) RefundFailedDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, hashId []byte) error {
 	fee := payerInfo.Amount
-	totalFees := totalFeesPaid
 
+	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, fee))
+	if !payerInfo.FromBond {
+		return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, feePayer, coins)
+	}
+
+	return k.ReturnFeetoStake(ctx, hashId, fee)
+}
+
+func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, disputeFee math.Int, hashId []byte) (math.Int, error) {
+	fee := payerInfo.Amount
+	totalFees := disputeFee
+	fivePercentDec := disputeFee.ToLegacyDec().Quo(math.LegacyNewDec(20))
+	fivePercent := fivePercentDec.TruncateInt()
 	feeDec := math.LegacyNewDecFromInt(fee)
-	feeMinusBurnDec := math.LegacyNewDecFromInt(feeMinusBurn)
+	feeMinusBurnDec := disputeFee.Sub(fivePercent).ToLegacyDec()
 	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
 	totalFeesDec := math.LegacyNewDecFromInt(totalFees)
+
 	amtFixed12Dec := feeDec.Mul(feeMinusBurnDec).Mul(powerReductionDec).Quo(totalFeesDec)
 
 	amtFixed12 := amtFixed12Dec.TruncateInt()

@@ -12,6 +12,7 @@ import (
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
+	"cosmossdk.io/collections"
 	math "cosmossdk.io/math"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -188,7 +189,7 @@ func TestClaimDeposit(t *testing.T) {
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
-	aggregate := &oracletypes.Aggregate{
+	aggregate := oracletypes.Aggregate{
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
 		AggregateReportIndex: uint64(0),
@@ -201,14 +202,14 @@ func TestClaimDeposit(t *testing.T) {
 	require.NoError(t, err)
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, (aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
+	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(aggregateTimestamp.UnixMilli())).Return(aggregate, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
 	depositId := uint64(0)
-	reportIndex := uint64(0)
+
 	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
-	err = k.ClaimDeposit(sdkCtx, depositId, reportIndex, msgSender)
+	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
 	require.NoError(t, err)
 	depositClaimedResult, err := k.DepositIdClaimedMap.Get(sdkCtx, depositId)
 	require.NoError(t, err)
@@ -223,11 +224,10 @@ func TestClaimDepositNilAggregate(t *testing.T) {
 
 	queryId, _ := k.GetDepositQueryId(0)
 	currentTime := time.Now()
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, uint64(0)).Return(nil, currentTime, nil)
-
+	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(currentTime.UnixMilli())).Return(oracletypes.Aggregate{}, collections.ErrNotFound)
 	msgSender := simtestutil.CreateIncrementalAccounts(1)[0]
-	err := k.ClaimDeposit(ctx, 0, 0, msgSender)
-	require.ErrorContains(t, err, "no aggregate found")
+	err := k.ClaimDeposit(ctx, 0, uint64(currentTime.UnixMilli()), msgSender)
+	require.ErrorContains(t, err, "not found")
 }
 
 func TestClaimDepositFlaggedAggregate(t *testing.T) {
@@ -256,7 +256,7 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
-	aggregate := &oracletypes.Aggregate{
+	aggregate := oracletypes.Aggregate{
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
 		AggregateReportIndex: uint64(0),
@@ -267,14 +267,14 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	totalBondedTokens := math.NewInt(100 * 1e6)
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, aggregate.AggregateReportIndex).Return(aggregate, aggregateTimestamp, err)
+	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(aggregateTimestamp.UnixMilli())).Return(aggregate, err)
 	rk.On("TotalReporterPower", sdkCtx).Return(totalBondedTokens, err)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
 	depositId := uint64(0)
-	reportIndex := uint64(0)
-	err = k.ClaimDeposit(sdkCtx, depositId, reportIndex, msgSender)
+
+	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
 	require.ErrorContains(t, err, "aggregate flagged")
 }
 
@@ -305,7 +305,7 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
 	// 66/100
-	aggregate := &oracletypes.Aggregate{
+	aggregate := oracletypes.Aggregate{
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
 		AggregateReportIndex: uint64(0),
@@ -319,13 +319,12 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, (aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
+	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(aggregateTimestamp.UnixMilli())).Return(aggregate, nil)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
 	depositId := uint64(0)
-	reportIndex := uint64(0)
-	err = k.ClaimDeposit(sdkCtx, depositId, reportIndex, msgSender)
+	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
 	require.ErrorContains(t, err, "insufficient reporter power")
 }
 
@@ -355,7 +354,7 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
-	aggregate := &oracletypes.Aggregate{
+	aggregate := oracletypes.Aggregate{
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
 		AggregateReportIndex: uint64(0),
@@ -369,13 +368,12 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(11 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, (aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
+	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(aggregateTimestamp.UnixMilli())).Return(aggregate, nil)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
 	depositId := uint64(0)
-	reportIndex := uint64(0)
-	err = k.ClaimDeposit(sdkCtx, depositId, reportIndex, msgSender)
+	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
 	require.ErrorContains(t, err, "report too young")
 }
 
@@ -405,7 +403,7 @@ func TestClaimDepositSpam(t *testing.T) {
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
-	aggregate := &oracletypes.Aggregate{
+	aggregate := oracletypes.Aggregate{
 		QueryId:              queryId,
 		AggregateValue:       reportValueString,
 		AggregateReportIndex: uint64(0),
@@ -419,13 +417,12 @@ func TestClaimDepositSpam(t *testing.T) {
 	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	ok.On("GetAggregateByIndex", sdkCtx, queryId, (aggregate.AggregateReportIndex)).Return(aggregate, aggregateTimestamp, err)
+	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(aggregateTimestamp.UnixMilli())).Return(aggregate, nil)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
 	depositId := uint64(0)
-	reportIndex := uint64(0)
-	err = k.ClaimDeposit(sdkCtx, depositId, reportIndex, msgSender)
+	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
 	require.NoError(t, err)
 	depositClaimedResult, err := k.DepositIdClaimedMap.Get(sdkCtx, depositId)
 	require.NoError(t, err)
@@ -434,7 +431,7 @@ func TestClaimDepositSpam(t *testing.T) {
 	attempts := 0
 	for attempts < 100 {
 		attempts++
-		err = k.ClaimDeposit(sdkCtx, depositId, reportIndex, msgSender)
+		err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
 		require.ErrorContains(t, err, "deposit already claimed")
 	}
 }

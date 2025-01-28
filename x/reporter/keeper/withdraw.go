@@ -130,7 +130,7 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 				feeTracker = append(feeTracker, &types.TokenOriginInfo{
 					DelegatorAddress: selectors.delAddr.Bytes(),
 					ValidatorAddress: info.valAddr.Bytes(),
-					Amount:           unbondAmt.TruncateInt(),
+					Amount:           escrowedAmt,
 				})
 				totalTrackedAmount = totalTrackedAmount.Add(escrowedAmt)
 
