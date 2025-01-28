@@ -15,7 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() sdk.AccAddress {
+func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() (sdk.AccAddress, types.Dispute) {
 	addr := sample.AccAddressBytes()
 	s.ctx = s.ctx.WithBlockTime(time.Now())
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
@@ -60,5 +60,5 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() sdk.AccAddress {
 	s.Equal(disputeRes.DisputeCategory, types.Warning)
 	s.Equal(disputeRes.InitialEvidence.Reporter, addr.String())
 	s.Equal(disputeRes.DisputeStatus, types.Voting)
-	return addr
+	return addr, disputeRes
 }

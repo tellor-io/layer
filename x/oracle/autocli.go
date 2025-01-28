@@ -107,6 +107,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query current query by query id",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}},
 				},
+				{
+					RpcMethod:      "GetQueryDataLimit",
+					Use:            "get-query-data-limit",
+					Short:          "Query query data limit",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},

@@ -31,12 +31,12 @@ func (s *KeeperTestSuite) TestMsgUpdateParams() {
 			expErrMsg: "invalid authority",
 		},
 		{
-			name: "send enabled param",
+			name: "send empty params",
 			input: &types.MsgUpdateParams{
 				Authority: s.oracleKeeper.GetAuthority(),
 				Params:    types.Params{},
 			},
-			expErr: false,
+			expErr: true,
 		},
 		{
 			name: "all good",

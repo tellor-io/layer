@@ -26,6 +26,11 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if err != nil {
 		panic(err)
 	}
+	snapshotLimit, err := k.SnapshotLimit.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
+	genesis.SnapshotLimit = snapshotLimit.Limit
 
 	// this line is used by starport scaffolding # genesis/module/export
 

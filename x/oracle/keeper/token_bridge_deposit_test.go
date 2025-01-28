@@ -5,6 +5,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/utils"
+	"github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/math"
 )
@@ -15,10 +16,12 @@ func (s *KeeperTestSuite) TestGetTokenBridgeDeposit() {
 	// regK := s.registryKeeper
 	ctx := s.ctx
 
+	err := k.QueryDataLimit.Set(s.ctx, types.QueryDataLimit{Limit: types.InitialQueryDataLimit()})
+	require.NoError(err)
 	// try trb/usd spot price, should err with NotTokenDeposit
 	queryBytes, err := utils.QueryBytesFromString(queryData)
 	require.NoError(err)
-	res, err := k.PreventBridgeWithdrawalReport(queryBytes)
+	res, err := k.PreventBridgeWithdrawalReport(ctx, queryBytes)
 	require.NoError(err)
 	require.False(res, "should not be a token deposit")
 
@@ -66,7 +69,7 @@ func (s *KeeperTestSuite) TestGetTokenBridgeDeposit() {
 	require.NoError(err)
 	queryDataEncoded, err = finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
 	require.NoError(err)
-	res, err = k.PreventBridgeWithdrawalReport(queryDataEncoded)
+	res, err = k.PreventBridgeWithdrawalReport(ctx, queryDataEncoded)
 	require.ErrorContains(err, "cannot report token bridge withdrawal")
 	require.False(res)
 }

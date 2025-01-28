@@ -3599,6 +3599,830 @@ func (x *fastReflection_MsgUpdateCyclelistResponse) ProtoMethods() *protoiface.M
 	}
 }
 
+var (
+	md_MsgUpdateQueryDataLimit           protoreflect.MessageDescriptor
+	fd_MsgUpdateQueryDataLimit_authority protoreflect.FieldDescriptor
+	fd_MsgUpdateQueryDataLimit_limit     protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_oracle_tx_proto_init()
+	md_MsgUpdateQueryDataLimit = File_layer_oracle_tx_proto.Messages().ByName("MsgUpdateQueryDataLimit")
+	fd_MsgUpdateQueryDataLimit_authority = md_MsgUpdateQueryDataLimit.Fields().ByName("authority")
+	fd_MsgUpdateQueryDataLimit_limit = md_MsgUpdateQueryDataLimit.Fields().ByName("limit")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgUpdateQueryDataLimit)(nil)
+
+type fastReflection_MsgUpdateQueryDataLimit MsgUpdateQueryDataLimit
+
+func (x *MsgUpdateQueryDataLimit) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateQueryDataLimit)(x)
+}
+
+func (x *MsgUpdateQueryDataLimit) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_oracle_tx_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgUpdateQueryDataLimit_messageType fastReflection_MsgUpdateQueryDataLimit_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateQueryDataLimit_messageType{}
+
+type fastReflection_MsgUpdateQueryDataLimit_messageType struct{}
+
+func (x fastReflection_MsgUpdateQueryDataLimit_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateQueryDataLimit)(nil)
+}
+func (x fastReflection_MsgUpdateQueryDataLimit_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateQueryDataLimit)
+}
+func (x fastReflection_MsgUpdateQueryDataLimit_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateQueryDataLimit
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgUpdateQueryDataLimit) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateQueryDataLimit
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgUpdateQueryDataLimit) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateQueryDataLimit_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgUpdateQueryDataLimit) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateQueryDataLimit)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgUpdateQueryDataLimit) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateQueryDataLimit)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgUpdateQueryDataLimit) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Authority != "" {
+		value := protoreflect.ValueOfString(x.Authority)
+		if !f(fd_MsgUpdateQueryDataLimit_authority, value) {
+			return
+		}
+	}
+	if x.Limit != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Limit)
+		if !f(fd_MsgUpdateQueryDataLimit_limit, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgUpdateQueryDataLimit) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.oracle.MsgUpdateQueryDataLimit.authority":
+		return x.Authority != ""
+	case "layer.oracle.MsgUpdateQueryDataLimit.limit":
+		return x.Limit != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MsgUpdateQueryDataLimit"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MsgUpdateQueryDataLimit does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateQueryDataLimit) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.oracle.MsgUpdateQueryDataLimit.authority":
+		x.Authority = ""
+	case "layer.oracle.MsgUpdateQueryDataLimit.limit":
+		x.Limit = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MsgUpdateQueryDataLimit"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MsgUpdateQueryDataLimit does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgUpdateQueryDataLimit) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.oracle.MsgUpdateQueryDataLimit.authority":
+		value := x.Authority
+		return protoreflect.ValueOfString(value)
+	case "layer.oracle.MsgUpdateQueryDataLimit.limit":
+		value := x.Limit
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MsgUpdateQueryDataLimit"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MsgUpdateQueryDataLimit does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateQueryDataLimit) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.oracle.MsgUpdateQueryDataLimit.authority":
+		x.Authority = value.Interface().(string)
+	case "layer.oracle.MsgUpdateQueryDataLimit.limit":
+		x.Limit = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MsgUpdateQueryDataLimit"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MsgUpdateQueryDataLimit does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateQueryDataLimit) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.oracle.MsgUpdateQueryDataLimit.authority":
+		panic(fmt.Errorf("field authority of message layer.oracle.MsgUpdateQueryDataLimit is not mutable"))
+	case "layer.oracle.MsgUpdateQueryDataLimit.limit":
+		panic(fmt.Errorf("field limit of message layer.oracle.MsgUpdateQueryDataLimit is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MsgUpdateQueryDataLimit"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MsgUpdateQueryDataLimit does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgUpdateQueryDataLimit) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.oracle.MsgUpdateQueryDataLimit.authority":
+		return protoreflect.ValueOfString("")
+	case "layer.oracle.MsgUpdateQueryDataLimit.limit":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MsgUpdateQueryDataLimit"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MsgUpdateQueryDataLimit does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgUpdateQueryDataLimit) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.oracle.MsgUpdateQueryDataLimit", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgUpdateQueryDataLimit) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateQueryDataLimit) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgUpdateQueryDataLimit) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgUpdateQueryDataLimit) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgUpdateQueryDataLimit)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Authority)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Limit != 0 {
+			n += 1 + runtime.Sov(uint64(x.Limit))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgUpdateQueryDataLimit)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Limit != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Limit))
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.Authority) > 0 {
+			i -= len(x.Authority)
+			copy(dAtA[i:], x.Authority)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Authority)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgUpdateQueryDataLimit)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateQueryDataLimit: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateQueryDataLimit: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Authority = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Limit", wireType)
+				}
+				x.Limit = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Limit |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgUpdateQueryDataLimitResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_layer_oracle_tx_proto_init()
+	md_MsgUpdateQueryDataLimitResponse = File_layer_oracle_tx_proto.Messages().ByName("MsgUpdateQueryDataLimitResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgUpdateQueryDataLimitResponse)(nil)
+
+type fastReflection_MsgUpdateQueryDataLimitResponse MsgUpdateQueryDataLimitResponse
+
+func (x *MsgUpdateQueryDataLimitResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateQueryDataLimitResponse)(x)
+}
+
+func (x *MsgUpdateQueryDataLimitResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_oracle_tx_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgUpdateQueryDataLimitResponse_messageType fastReflection_MsgUpdateQueryDataLimitResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateQueryDataLimitResponse_messageType{}
+
+type fastReflection_MsgUpdateQueryDataLimitResponse_messageType struct{}
+
+func (x fastReflection_MsgUpdateQueryDataLimitResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateQueryDataLimitResponse)(nil)
+}
+func (x fastReflection_MsgUpdateQueryDataLimitResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateQueryDataLimitResponse)
+}
+func (x fastReflection_MsgUpdateQueryDataLimitResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateQueryDataLimitResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateQueryDataLimitResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateQueryDataLimitResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateQueryDataLimitResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateQueryDataLimitResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MsgUpdateQueryDataLimitResponse"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MsgUpdateQueryDataLimitResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MsgUpdateQueryDataLimitResponse"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MsgUpdateQueryDataLimitResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MsgUpdateQueryDataLimitResponse"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MsgUpdateQueryDataLimitResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MsgUpdateQueryDataLimitResponse"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MsgUpdateQueryDataLimitResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MsgUpdateQueryDataLimitResponse"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MsgUpdateQueryDataLimitResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MsgUpdateQueryDataLimitResponse"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MsgUpdateQueryDataLimitResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.oracle.MsgUpdateQueryDataLimitResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgUpdateQueryDataLimitResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgUpdateQueryDataLimitResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgUpdateQueryDataLimitResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgUpdateQueryDataLimitResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateQueryDataLimitResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateQueryDataLimitResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -3913,6 +4737,75 @@ func (*MsgUpdateCyclelistResponse) Descriptor() ([]byte, []int) {
 	return file_layer_oracle_tx_proto_rawDescGZIP(), []int{7}
 }
 
+type MsgUpdateQueryDataLimit struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	Limit     uint64 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
+}
+
+func (x *MsgUpdateQueryDataLimit) Reset() {
+	*x = MsgUpdateQueryDataLimit{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_oracle_tx_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgUpdateQueryDataLimit) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgUpdateQueryDataLimit) ProtoMessage() {}
+
+// Deprecated: Use MsgUpdateQueryDataLimit.ProtoReflect.Descriptor instead.
+func (*MsgUpdateQueryDataLimit) Descriptor() ([]byte, []int) {
+	return file_layer_oracle_tx_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *MsgUpdateQueryDataLimit) GetAuthority() string {
+	if x != nil {
+		return x.Authority
+	}
+	return ""
+}
+
+func (x *MsgUpdateQueryDataLimit) GetLimit() uint64 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type MsgUpdateQueryDataLimitResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgUpdateQueryDataLimitResponse) Reset() {
+	*x = MsgUpdateQueryDataLimitResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_oracle_tx_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgUpdateQueryDataLimitResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgUpdateQueryDataLimitResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgUpdateQueryDataLimitResponse.ProtoReflect.Descriptor instead.
+func (*MsgUpdateQueryDataLimitResponse) Descriptor() ([]byte, []int) {
+	return file_layer_oracle_tx_proto_rawDescGZIP(), []int{9}
+}
+
 var File_layer_oracle_tx_proto protoreflect.FileDescriptor
 
 var file_layer_oracle_tx_proto_rawDesc = []byte{
@@ -3971,27 +4864,42 @@ var file_layer_oracle_tx_proto_rawDesc = []byte{
 	0x63, 0x6c, 0x65, 0x2f, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43, 0x79, 0x63,
 	0x6c, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x22, 0x1c, 0x0a, 0x1a, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
 	0x61, 0x74, 0x65, 0x43, 0x79, 0x63, 0x6c, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x32, 0xcf, 0x02, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x54, 0x0a, 0x0c,
-	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x1d, 0x2e, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x25, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70,
-	0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x51, 0x0a, 0x0b, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x56, 0x61, 0x6c, 0x75,
-	0x65, 0x12, 0x1c, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65,
-	0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x1a,
-	0x24, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e, 0x4d,
-	0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x39, 0x0a, 0x03, 0x54, 0x69, 0x70, 0x12, 0x14, 0x2e, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x54,
-	0x69, 0x70, 0x1a, 0x1c, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c,
-	0x65, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x69, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x5d, 0x0a, 0x0f, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43, 0x79, 0x63, 0x6c, 0x65, 0x6c,
-	0x69, 0x73, 0x74, 0x12, 0x20, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63,
-	0x6c, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43, 0x79, 0x63, 0x6c,
-	0x65, 0x6c, 0x69, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x5d, 0x0a, 0x17, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x12,
+	0x1c, 0x0a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x14, 0x0a,
+	0x05, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x6c, 0x69,
+	0x6d, 0x69, 0x74, 0x3a, 0x0e, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72,
+	0x69, 0x74, 0x79, 0x22, 0x21, 0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xbd, 0x03, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x54,
+	0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x1d,
+	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e, 0x4d, 0x73,
+	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x25, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e, 0x4d, 0x73, 0x67,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x51, 0x0a, 0x0b, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x56, 0x61,
+	0x6c, 0x75, 0x65, 0x12, 0x1c, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63,
+	0x6c, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x56, 0x61, 0x6c, 0x75,
+	0x65, 0x1a, 0x24, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65,
+	0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x39, 0x0a, 0x03, 0x54, 0x69, 0x70, 0x12, 0x14,
+	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e, 0x4d, 0x73,
+	0x67, 0x54, 0x69, 0x70, 0x1a, 0x1c, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61,
+	0x63, 0x6c, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x69, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x5d, 0x0a, 0x0f, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43, 0x79, 0x63, 0x6c,
+	0x65, 0x6c, 0x69, 0x73, 0x74, 0x12, 0x20, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72,
 	0x61, 0x63, 0x6c, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x43, 0x79,
-	0x63, 0x6c, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a,
+	0x63, 0x6c, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
+	0x43, 0x79, 0x63, 0x6c, 0x65, 0x6c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x6c, 0x0a, 0x14, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x44, 0x61, 0x74, 0x61, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x12, 0x25, 0x2e, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x4c, 0x69, 0x6d, 0x69, 0x74,
+	0x1a, 0x2d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e,
+	0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61,
+	0x74, 0x61, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a,
 	0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x99, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c,
 	0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x42, 0x07, 0x54, 0x78, 0x50,
 	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
@@ -4017,35 +4925,39 @@ func file_layer_oracle_tx_proto_rawDescGZIP() []byte {
 	return file_layer_oracle_tx_proto_rawDescData
 }
 
-var file_layer_oracle_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_layer_oracle_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_layer_oracle_tx_proto_goTypes = []interface{}{
-	(*MsgUpdateParams)(nil),            // 0: layer.oracle.MsgUpdateParams
-	(*MsgUpdateParamsResponse)(nil),    // 1: layer.oracle.MsgUpdateParamsResponse
-	(*MsgSubmitValue)(nil),             // 2: layer.oracle.MsgSubmitValue
-	(*MsgSubmitValueResponse)(nil),     // 3: layer.oracle.MsgSubmitValueResponse
-	(*MsgTip)(nil),                     // 4: layer.oracle.MsgTip
-	(*MsgTipResponse)(nil),             // 5: layer.oracle.MsgTipResponse
-	(*MsgUpdateCyclelist)(nil),         // 6: layer.oracle.MsgUpdateCyclelist
-	(*MsgUpdateCyclelistResponse)(nil), // 7: layer.oracle.MsgUpdateCyclelistResponse
-	(*Params)(nil),                     // 8: layer.oracle.Params
-	(*v1beta1.Coin)(nil),               // 9: cosmos.base.v1beta1.Coin
+	(*MsgUpdateParams)(nil),                 // 0: layer.oracle.MsgUpdateParams
+	(*MsgUpdateParamsResponse)(nil),         // 1: layer.oracle.MsgUpdateParamsResponse
+	(*MsgSubmitValue)(nil),                  // 2: layer.oracle.MsgSubmitValue
+	(*MsgSubmitValueResponse)(nil),          // 3: layer.oracle.MsgSubmitValueResponse
+	(*MsgTip)(nil),                          // 4: layer.oracle.MsgTip
+	(*MsgTipResponse)(nil),                  // 5: layer.oracle.MsgTipResponse
+	(*MsgUpdateCyclelist)(nil),              // 6: layer.oracle.MsgUpdateCyclelist
+	(*MsgUpdateCyclelistResponse)(nil),      // 7: layer.oracle.MsgUpdateCyclelistResponse
+	(*MsgUpdateQueryDataLimit)(nil),         // 8: layer.oracle.MsgUpdateQueryDataLimit
+	(*MsgUpdateQueryDataLimitResponse)(nil), // 9: layer.oracle.MsgUpdateQueryDataLimitResponse
+	(*Params)(nil),                          // 10: layer.oracle.Params
+	(*v1beta1.Coin)(nil),                    // 11: cosmos.base.v1beta1.Coin
 }
 var file_layer_oracle_tx_proto_depIdxs = []int32{
-	8, // 0: layer.oracle.MsgUpdateParams.params:type_name -> layer.oracle.Params
-	9, // 1: layer.oracle.MsgTip.amount:type_name -> cosmos.base.v1beta1.Coin
-	0, // 2: layer.oracle.Msg.UpdateParams:input_type -> layer.oracle.MsgUpdateParams
-	2, // 3: layer.oracle.Msg.SubmitValue:input_type -> layer.oracle.MsgSubmitValue
-	4, // 4: layer.oracle.Msg.Tip:input_type -> layer.oracle.MsgTip
-	6, // 5: layer.oracle.Msg.UpdateCyclelist:input_type -> layer.oracle.MsgUpdateCyclelist
-	1, // 6: layer.oracle.Msg.UpdateParams:output_type -> layer.oracle.MsgUpdateParamsResponse
-	3, // 7: layer.oracle.Msg.SubmitValue:output_type -> layer.oracle.MsgSubmitValueResponse
-	5, // 8: layer.oracle.Msg.Tip:output_type -> layer.oracle.MsgTipResponse
-	7, // 9: layer.oracle.Msg.UpdateCyclelist:output_type -> layer.oracle.MsgUpdateCyclelistResponse
-	6, // [6:10] is the sub-list for method output_type
-	2, // [2:6] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	10, // 0: layer.oracle.MsgUpdateParams.params:type_name -> layer.oracle.Params
+	11, // 1: layer.oracle.MsgTip.amount:type_name -> cosmos.base.v1beta1.Coin
+	0,  // 2: layer.oracle.Msg.UpdateParams:input_type -> layer.oracle.MsgUpdateParams
+	2,  // 3: layer.oracle.Msg.SubmitValue:input_type -> layer.oracle.MsgSubmitValue
+	4,  // 4: layer.oracle.Msg.Tip:input_type -> layer.oracle.MsgTip
+	6,  // 5: layer.oracle.Msg.UpdateCyclelist:input_type -> layer.oracle.MsgUpdateCyclelist
+	8,  // 6: layer.oracle.Msg.UpdateQueryDataLimit:input_type -> layer.oracle.MsgUpdateQueryDataLimit
+	1,  // 7: layer.oracle.Msg.UpdateParams:output_type -> layer.oracle.MsgUpdateParamsResponse
+	3,  // 8: layer.oracle.Msg.SubmitValue:output_type -> layer.oracle.MsgSubmitValueResponse
+	5,  // 9: layer.oracle.Msg.Tip:output_type -> layer.oracle.MsgTipResponse
+	7,  // 10: layer.oracle.Msg.UpdateCyclelist:output_type -> layer.oracle.MsgUpdateCyclelistResponse
+	9,  // 11: layer.oracle.Msg.UpdateQueryDataLimit:output_type -> layer.oracle.MsgUpdateQueryDataLimitResponse
+	7,  // [7:12] is the sub-list for method output_type
+	2,  // [2:7] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_layer_oracle_tx_proto_init() }
@@ -4151,6 +5063,30 @@ func file_layer_oracle_tx_proto_init() {
 				return nil
 			}
 		}
+		file_layer_oracle_tx_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgUpdateQueryDataLimit); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_oracle_tx_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgUpdateQueryDataLimitResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -4158,7 +5094,7 @@ func file_layer_oracle_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_oracle_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

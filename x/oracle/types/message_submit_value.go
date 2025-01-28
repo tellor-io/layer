@@ -48,10 +48,21 @@ func (msg *MsgSubmitValue) GetSignBytes() []byte {
 }
 
 func (msg *MsgSubmitValue) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
-	}
+	// _, err := sdk.AccAddressFromBech32(msg.Creator)
+	// if err != nil {
+	// 	return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	// }
+
+	// // make sure query data is not empty
+	// if len(msg.QueryData) == 0 {
+	// 	return errors.New("MsgSubmitValue query data cannot be empty (%s)")
+	// }
+
+	// // make sure value is not empty
+	// if msg.Value == "" {
+	// 	return errors.New("MsgSubmitValue value field cannot be empty (%s)")
+	// }
+
 	return nil
 }
 

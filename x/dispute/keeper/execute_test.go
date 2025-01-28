@@ -30,10 +30,10 @@ func (k *KeeperTestSuite) TestExecuteVote() {
 		Executed:   true,
 	}
 	voteCounts := types.StakeholderVoteCounts{
-		Users:        types.VoteCounts{Support: 1, Against: 0, Invalid: 0},
-		Reporters:    types.VoteCounts{Support: 1, Against: 0, Invalid: 0},
-		Tokenholders: types.VoteCounts{Support: 1, Against: 0, Invalid: 0},
-		Team:         types.VoteCounts{Support: 1, Against: 0, Invalid: 0},
+		Users:     types.VoteCounts{Support: 1, Against: 0, Invalid: 0},
+		Reporters: types.VoteCounts{Support: 1, Against: 0, Invalid: 0},
+		// Tokenholders: types.VoteCounts{Support: 1, Against: 0, Invalid: 0},
+		Team: types.VoteCounts{Support: 1, Against: 0, Invalid: 0},
 	}
 	k.NoError(k.disputeKeeper.VoteCountsByGroup.Set(k.ctx, dispute.DisputeId, voteCounts))
 
@@ -158,15 +158,15 @@ func (k *KeeperTestSuite) TestGetSumOfAllGroupVotesAllRounds() {
 
 	// set vote counts for current dispute
 	currentVoteCounts := types.StakeholderVoteCounts{
-		Users:        types.VoteCounts{Support: 10, Against: 5, Invalid: 2}, // 17
-		Reporters:    types.VoteCounts{Support: 8, Against: 3, Invalid: 1},  // 12
-		Tokenholders: types.VoteCounts{Support: 15, Against: 7, Invalid: 3}, // 25
-		Team:         types.VoteCounts{Support: 5, Against: 2, Invalid: 1},  // 8 total=62
+		Users:     types.VoteCounts{Support: 10, Against: 5, Invalid: 2}, // 17
+		Reporters: types.VoteCounts{Support: 8, Against: 3, Invalid: 1},  // 12
+		// Tokenholders: types.VoteCounts{Support: 15, Against: 7, Invalid: 3}, // 25
+		Team: types.VoteCounts{Support: 5, Against: 2, Invalid: 1}, // 8 total=37
 	}
 	k.NoError(k.disputeKeeper.VoteCountsByGroup.Set(k.ctx, dispute.DisputeId, currentVoteCounts))
 
 	// test no previous disputes
-	expectedTotalSum := math.NewInt(62)
+	expectedTotalSum := math.NewInt(37)
 	totalSum, err := k.disputeKeeper.GetSumOfAllGroupVotesAllRounds(k.ctx, dispute.DisputeId)
 	k.NoError(err)
 	k.True(expectedTotalSum.Equal(totalSum))
@@ -175,22 +175,22 @@ func (k *KeeperTestSuite) TestGetSumOfAllGroupVotesAllRounds() {
 	prevDisputeIds := []uint64{2, 3, 4}
 	prevVoteCounts := []types.StakeholderVoteCounts{
 		{
-			Users:        types.VoteCounts{Support: 5, Against: 3, Invalid: 1}, // 9
-			Reporters:    types.VoteCounts{Support: 4, Against: 2, Invalid: 0}, // 6
-			Tokenholders: types.VoteCounts{Support: 8, Against: 4, Invalid: 2}, // 14
-			Team:         types.VoteCounts{Support: 3, Against: 1, Invalid: 0}, // 4 total=33
+			Users:     types.VoteCounts{Support: 5, Against: 3, Invalid: 1}, // 9
+			Reporters: types.VoteCounts{Support: 4, Against: 2, Invalid: 0}, // 6
+			// Tokenholders: types.VoteCounts{Support: 8, Against: 4, Invalid: 2}, // 14
+			Team: types.VoteCounts{Support: 3, Against: 1, Invalid: 0}, // 4 total=19
 		},
 		{
-			Users:        types.VoteCounts{Support: 7, Against: 4, Invalid: 2},  // 13
-			Reporters:    types.VoteCounts{Support: 6, Against: 3, Invalid: 1},  // 10
-			Tokenholders: types.VoteCounts{Support: 10, Against: 5, Invalid: 2}, // 17
-			Team:         types.VoteCounts{Support: 4, Against: 2, Invalid: 1},  // 7 total=47
+			Users:     types.VoteCounts{Support: 7, Against: 4, Invalid: 2}, // 13
+			Reporters: types.VoteCounts{Support: 6, Against: 3, Invalid: 1}, // 10
+			// Tokenholders: types.VoteCounts{Support: 10, Against: 5, Invalid: 2}, // 17
+			Team: types.VoteCounts{Support: 4, Against: 2, Invalid: 1}, // 7 total=30
 		},
 		{
-			Users:        types.VoteCounts{Support: 3, Against: 2, Invalid: 0}, // 5
-			Reporters:    types.VoteCounts{Support: 2, Against: 1, Invalid: 0}, // 3
-			Tokenholders: types.VoteCounts{Support: 5, Against: 3, Invalid: 1}, // 9
-			Team:         types.VoteCounts{Support: 2, Against: 1, Invalid: 0}, // 3 total=20
+			Users:     types.VoteCounts{Support: 3, Against: 2, Invalid: 0}, // 5
+			Reporters: types.VoteCounts{Support: 2, Against: 1, Invalid: 0}, // 3
+			// Tokenholders: types.VoteCounts{Support: 5, Against: 3, Invalid: 1}, // 9
+			Team: types.VoteCounts{Support: 2, Against: 1, Invalid: 0}, // 3 total=11
 		},
 	}
 
@@ -203,10 +203,10 @@ func (k *KeeperTestSuite) TestGetSumOfAllGroupVotesAllRounds() {
 
 	// Calculate the expected total sum
 	expectedTotalSum = math.NewInt(0).
-		Add(math.NewInt(int64(17 + 12 + 25 + 8))). // Current dispute
-		Add(math.NewInt(int64(9 + 6 + 14 + 4))).   // Previous dispute 1
-		Add(math.NewInt(int64(13 + 10 + 17 + 7))). // Previous dispute 2
-		Add(math.NewInt(int64(5 + 3 + 9 + 3)))     // Previous dispute 3
+		Add(math.NewInt(int64(17 + 12 + 8))). // Current dispute
+		Add(math.NewInt(int64(9 + 6 + 4))).   // Previous dispute 1
+		Add(math.NewInt(int64(13 + 10 + 7))). // Previous dispute 2
+		Add(math.NewInt(int64(5 + 3 + 3)))    // Previous dispute 3
 
 	// Call the function and check the result
 	totalSum, err = k.disputeKeeper.GetSumOfAllGroupVotesAllRounds(k.ctx, dispute.DisputeId)

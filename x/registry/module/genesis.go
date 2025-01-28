@@ -18,12 +18,13 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err := k.SetParams(ctx, genState.Params); err != nil {
 		panic(err)
 	}
-	if err := k.SetDataSpec(ctx, genQueryTypeSpotPrice, genState.Dataspec); err != nil {
-		panic(err)
+	for _, dataspec := range genState.Dataspec {
+		if err := k.SetDataSpec(ctx, dataspec.QueryType, dataspec); err != nil {
+			panic(err)
+		}
 	}
 
 	// set token bridge spec
-
 	bridgeSpec := types.DataSpec{
 		DocumentHash:      "",
 		ResponseValueType: "address, string, uint256",
@@ -42,6 +43,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		AggregationMethod: "weighted-mode",
 		Registrar:         "genesis",
 		ReportBlockWindow: 2000,
+		QueryType:         "trbbridge",
 	}
 
 	if err := k.SetDataSpec(ctx, genQueryTypeBridgeDeposit, bridgeSpec); err != nil {
@@ -51,17 +53,19 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 // ExportGenesis returns the module's exported genesis
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
+	genesis := types.DefaultGenesis()
+
 	params, err := k.GetParams(ctx)
 	if err != nil {
 		panic(err)
 	}
-	dataspec, err := k.GetSpec(ctx, genQueryTypeSpotPrice)
+	genesis.Params = params
+
+	dataspecs, err := k.GetAllDataSpecs(ctx)
 	if err != nil {
 		panic(err)
 	}
-	genesis := types.DefaultGenesis()
-	genesis.Params = params
-	genesis.Dataspec = dataspec
+	genesis.Dataspec = dataspecs
 
 	// this line is used by starport scaffolding # genesis/module/export
 

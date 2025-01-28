@@ -38,6 +38,7 @@ type (
 		ValidatorCheckpoint          collections.Item[types.ValidatorCheckpoint]
 		WithdrawalId                 collections.Item[types.WithdrawalId]
 		OperatorToEVMAddressMap      collections.Map[string, types.EVMAddress]
+		EVMAddressRegisteredMap      collections.Map[string, types.EVMAddressRegistered]
 		BridgeValsetSignaturesMap    collections.Map[uint64, types.BridgeValsetSignatures]
 		ValidatorCheckpointParamsMap collections.Map[uint64, types.ValidatorCheckpointParams]
 		ValidatorCheckpointIdxMap    collections.Map[uint64, types.CheckpointTimestamp]
@@ -77,6 +78,7 @@ func NewKeeper(
 		ValidatorCheckpoint:          collections.NewItem(sb, types.ValidatorCheckpointKey, "validator_checkpoint", codec.CollValue[types.ValidatorCheckpoint](cdc)),
 		WithdrawalId:                 collections.NewItem(sb, types.WithdrawalIdKey, "withdrawal_id", codec.CollValue[types.WithdrawalId](cdc)),
 		OperatorToEVMAddressMap:      collections.NewMap(sb, types.OperatorToEVMAddressMapKey, "operator_to_evm_address_map", collections.StringKey, codec.CollValue[types.EVMAddress](cdc)),
+		EVMAddressRegisteredMap:      collections.NewMap(sb, types.EVMAddressRegisteredMapKey, "evm_address_registered_map", collections.StringKey, codec.CollValue[types.EVMAddressRegistered](cdc)),
 		BridgeValsetSignaturesMap:    collections.NewMap(sb, types.BridgeValsetSignaturesMapKey, "bridge_valset_signatures_map", collections.Uint64Key, codec.CollValue[types.BridgeValsetSignatures](cdc)),
 		ValidatorCheckpointParamsMap: collections.NewMap(sb, types.ValidatorCheckpointParamsMapKey, "validator_checkpoint_params_map", collections.Uint64Key, codec.CollValue[types.ValidatorCheckpointParams](cdc)),
 		ValidatorCheckpointIdxMap:    collections.NewMap(sb, types.ValidatorCheckpointIdxMapKey, "validator_checkpoint_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointTimestamp](cdc)),
@@ -545,9 +547,9 @@ func absInt64(x int64) int64 {
 	return x
 }
 
-func (k Keeper) EVMAddressFromSignatures(ctx context.Context, sigA, sigB []byte) (common.Address, error) {
-	msgA := "TellorLayer: Initial bridge signature A"
-	msgB := "TellorLayer: Initial bridge signature B"
+func (k Keeper) EVMAddressFromSignatures(ctx context.Context, sigA, sigB []byte, operatorAddress string) (common.Address, error) {
+	msgA := fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddress)
+	msgB := fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddress)
 
 	// convert messages to bytes
 	msgBytesA := []byte(msgA)
@@ -608,11 +610,45 @@ func (k Keeper) SetEVMAddressByOperator(ctx context.Context, operatorAddr string
 		EVMAddress: evmAddr,
 	}
 
-	err := k.OperatorToEVMAddressMap.Set(ctx, operatorAddr, evmAddrType)
+	// check if the EVM address is already registered
+	evmAddressString := common.Bytes2Hex(evmAddr)
+	isRegistered, err := k.EVMAddressRegisteredMap.Has(ctx, evmAddressString)
+	if err != nil {
+		k.Logger(ctx).Info("Error checking if EVM address is registered", "error", err)
+		return err
+	}
+	if isRegistered {
+		k.Logger(ctx).Info("EVM address already registered, skipping",
+			"evm_address", evmAddressString,
+			"operator_address", operatorAddr,
+		)
+		// if addr is already registered, we return nil to allow for graceful handling of duplicate registration
+		// attempts (e.g. from validator restarts)
+		return nil
+	}
+
+	err = k.OperatorToEVMAddressMap.Set(ctx, operatorAddr, evmAddrType)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting EVM address by operator", "error", err)
 		return err
 	}
+
+	// mark the EVM address as registered
+	err = k.EVMAddressRegisteredMap.Set(ctx, evmAddressString, types.EVMAddressRegistered{Registered: true})
+	if err != nil {
+		k.Logger(ctx).Info("Error marking EVM address as registered", "error", err)
+		return err
+	}
+
+	// emit event
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.ModuleName,
+			sdk.NewAttribute("operator_address", operatorAddr),
+			sdk.NewAttribute("evm_address", evmAddressString),
+		),
+	)
 	return nil
 }
 

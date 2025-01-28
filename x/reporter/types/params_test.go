@@ -17,22 +17,22 @@ func TestParams_NewParams(t *testing.T) {
 	params := NewParams(math.LegacyNewDec(5), math.NewInt(1))
 	require.NoError(params.Validate())
 	require.Equal(params.MinCommissionRate, math.LegacyNewDec(5))
-	require.Equal(params.MinTrb, math.NewInt(1))
+	require.Equal(params.MinLoya, math.NewInt(1))
 
 	params = NewParams(math.LegacyZeroDec(), math.NewInt(0))
 	require.NoError(params.Validate())
 	require.Equal(params.MinCommissionRate, math.LegacyZeroDec())
-	require.Equal(params.MinTrb, math.NewInt(0))
+	require.Equal(params.MinLoya, math.NewInt(0))
 
 	params = NewParams(math.LegacyNewDec(100), math.NewInt(100))
 	require.NoError(params.Validate())
 	require.Equal(params.MinCommissionRate, math.LegacyNewDec(100))
-	require.Equal(params.MinTrb, math.NewInt(100))
+	require.Equal(params.MinLoya, math.NewInt(100))
 
 	params = NewParams(math.LegacyNewDec(100), math.NewInt(1000))
 	require.NoError(params.Validate())
 	require.Equal(params.MinCommissionRate, math.LegacyNewDec(100))
-	require.Equal(params.MinTrb, math.NewInt(1000))
+	require.Equal(params.MinLoya, math.NewInt(1000))
 }
 
 func TestParams_DefaultParams(t *testing.T) {
@@ -40,7 +40,7 @@ func TestParams_DefaultParams(t *testing.T) {
 
 	params := DefaultParams()
 	require.NoError(params.Validate())
-	require.Equal(params.MinTrb, DefaultMinTrb)
+	require.Equal(params.MinLoya, DefaultMinLoya)
 	require.Equal(params.MinCommissionRate, DefaultMinCommissionRate)
 	require.Equal(params.MaxSelectors, DefaultMaxSelectors)
 }

@@ -15,10 +15,9 @@ import (
 
 func (k Keeper) InitVoterClasses() *types.VoterClasses {
 	return &types.VoterClasses{
-		Reporters:    math.ZeroInt(),
-		TokenHolders: math.ZeroInt(),
-		Users:        math.ZeroInt(),
-		Team:         math.ZeroInt(),
+		Reporters: math.ZeroInt(),
+		Users:     math.ZeroInt(),
+		Team:      math.ZeroInt(),
 	}
 }
 
@@ -143,6 +142,17 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		return reporterTokens, k.AddReporterVoteCount(ctx, id, reporterTokens.Uint64(), choice)
 	}
 	// voter is non-reporter selector
+	// skip selectors that are locked from switching reporters
+	selector, err := k.reporterKeeper.GetSelector(ctx, voter)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return math.Int{}, err
+		}
+		return math.ZeroInt(), nil
+	}
+	if selector.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
+		return math.ZeroInt(), nil
+	}
 	selectorTokens, err := k.reporterKeeper.GetDelegatorTokensAtBlock(ctx, voter, blockNumber)
 	if err != nil {
 		return math.Int{}, err
@@ -158,6 +168,8 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		}
 		// update reporter's power record for reward calculation
 		reporterVote.ReporterPower = reporterVote.ReporterPower.Sub(selectorTokens)
+		// decrease reporterVote.VoterPower by selectorTokens
+		reporterVote.VoterPower = reporterVote.VoterPower.Sub(selectorTokens)
 		err = k.Voter.Set(ctx, collections.Join(id, reporter.Bytes()), reporterVote)
 		if err != nil {
 			return math.Int{}, err
@@ -177,39 +189,6 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		return math.Int{}, err
 	}
 	return selectorTokens, k.AddReporterVoteCount(ctx, id, selectorTokens.Uint64(), choice)
-}
-
-func (k Keeper) SetTokenholderVote(ctx context.Context, id uint64, voter sdk.AccAddress, blockNumber uint64, choice types.VoteEnum) (math.Int, error) {
-	// get token balance
-	tokenBalance, err := k.GetAccountBalance(ctx, voter)
-	if err != nil {
-		return math.Int{}, err
-	}
-	// get tokens delegated to a reporter
-	selectorTokens, err := k.reporterKeeper.GetDelegatorTokensAtBlock(ctx, voter, blockNumber)
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return math.Int{}, err
-		}
-		selectorTokens = math.ZeroInt()
-	}
-	tokenBalance = tokenBalance.Add(selectorTokens)
-
-	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return math.Int{}, err
-		}
-		voteCounts = types.StakeholderVoteCounts{}
-	}
-	if choice == types.VoteEnum_VOTE_SUPPORT {
-		voteCounts.Tokenholders.Support += tokenBalance.Uint64()
-	} else if choice == types.VoteEnum_VOTE_AGAINST {
-		voteCounts.Tokenholders.Against += tokenBalance.Uint64()
-	} else {
-		voteCounts.Tokenholders.Invalid += tokenBalance.Uint64()
-	}
-	return tokenBalance, k.VoteCountsByGroup.Set(ctx, id, voteCounts)
 }
 
 func (k Keeper) AddReporterVoteCount(ctx context.Context, id, amount uint64, choice types.VoteEnum) error {

@@ -1,7 +1,6 @@
 package integration_test
 
 import (
-	"fmt"
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -208,10 +207,8 @@ func (s *IntegrationTestSuite) TestMaxSelectorsCount() {
 	valAccs, valAddrs, _ := s.Setup.CreateValidators(1)
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	stakingmsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
-	val, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddrs[0])
-	s.NoError(err)
-	fmt.Println(val.Tokens)
-	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: sdk.AccAddress(valAddrs[0]).String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
+
+	_, err := msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: sdk.AccAddress(valAddrs[0]).String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
 	s.NoError(err)
 	valAcc := valAccs[0]
 	valAdd := valAddrs[0]
@@ -411,7 +408,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake2() {
 	delAddr = delAddr[1:]
 
 	err := rk.Reporters.Set(ctx, reporter, reportertypes.OracleReporter{
-		MinTokensRequired: reportertypes.DefaultMinTrb,
+		MinTokensRequired: reportertypes.DefaultMinLoya,
 		CommissionRate:    reportertypes.DefaultMinCommissionRate,
 	})
 	s.NoError(err)
@@ -469,6 +466,5 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake2() {
 	s.True(reporterStake.LT(math.NewIntWithDecimal(1, 6)))
 	// leftover less than 1 trb
 	leftover := reporterStake.ToLegacyDec().Sub(reporterStake.Quo(layertypes.PowerReduction).ToLegacyDec()).TruncateInt()
-	fmt.Println(reporterStake)
 	s.Equal(leftover, reporterStake)
 }

@@ -16,18 +16,52 @@ const (
 )
 
 // genesis spot price data spec
-func GenesisDataSpec() DataSpec {
-	return DataSpec{
+func GenesisDataSpec() []DataSpec {
+	var dataspecs []DataSpec
+	// spotprice data spec
+	dataspecs = append(dataspecs, DataSpec{
 		DocumentHash:      "",
 		ResponseValueType: "uint256",
 		AbiComponents: []*ABIComponent{
-			{Name: "asset", FieldType: "string"},
-			{Name: "currency", FieldType: "string"},
+			{
+				Name:            "asset",
+				FieldType:       "string",
+				NestedComponent: []*ABIComponent{},
+			},
+			{
+				Name:            "currency",
+				FieldType:       "string",
+				NestedComponent: []*ABIComponent{},
+			},
 		},
 		AggregationMethod: "weighted-median",
 		Registrar:         "genesis",
 		ReportBlockWindow: 2,
-	}
+		QueryType:         "spotprice",
+	})
+	// trbbridge data spec
+	dataspecs = append(dataspecs, DataSpec{
+		DocumentHash:      "",
+		ResponseValueType: "address, string, uint256",
+		AbiComponents: []*ABIComponent{
+			{
+				Name:            "toLayer",
+				FieldType:       "bool",
+				NestedComponent: []*ABIComponent{},
+			},
+			{
+				Name:            "depositId",
+				FieldType:       "uint256",
+				NestedComponent: []*ABIComponent{},
+			},
+		},
+		AggregationMethod: "weighted-mode",
+		Registrar:         "genesis",
+		ReportBlockWindow: 2000,
+		QueryType:         "trbbridge",
+	})
+
+	return dataspecs
 }
 
 func (d DataSpec) EncodeData(querytype, datafields string) ([]byte, error) {
