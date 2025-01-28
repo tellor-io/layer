@@ -49,11 +49,10 @@ func TestMsgClaimDeposits(t *testing.T) {
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
-	aggregate := oracletypes.Aggregate{
-		QueryId:              queryId,
-		AggregateValue:       reportValueString,
-		AggregateReportIndex: uint64(0),
-		ReporterPower:        uint64(68),
+	aggregate := &oracletypes.Aggregate{
+		QueryId:        queryId,
+		AggregateValue: reportValueString,
+		AggregatePower: uint64(68),
 	}
 	powerThreshold := uint64(67)
 	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)

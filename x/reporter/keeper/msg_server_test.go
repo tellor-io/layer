@@ -296,11 +296,24 @@ func TestWithdrawTip(t *testing.T) {
 
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(selector, 1)))
 
-	_, err := msg.WithdrawTip(ctx, &types.MsgWithdrawTip{SelectorAddress: selector.String(), ValidatorAddress: valAddr.String()})
+	_, err := msg.WithdrawTip(ctx, &types.MsgWithdrawTip{
+		SelectorAddress: selector.String(), ValidatorAddress: valAddr.String(),
+	})
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
 	require.NoError(t, k.SelectorTips.Set(ctx, selector, math.LegacyNewDec(1*1e6)))
-
+	require.NoError(t, k.Reporters.Set(ctx, selector, types.OracleReporter{CommissionRate: types.DefaultMinCommissionRate}))
+	require.NoError(t, k.Report.Set(
+		ctx, collections.Join([]byte("queryid"), collections.Join(selector.Bytes(), uint64(0))),
+		types.DelegationsAmounts{
+			TokenOrigins: []*types.TokenOriginInfo{
+				{
+					DelegatorAddress: selector,
+					Amount:           math.OneInt(),
+				},
+			},
+			Total: math.OneInt(),
+		}))
 	validator := stakingtypes.Validator{Status: stakingtypes.Bonded}
 	escrowPoolAddr := sample.AccAddressBytes()
 	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)

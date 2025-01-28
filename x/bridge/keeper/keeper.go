@@ -818,7 +818,11 @@ func (k Keeper) GetValidatorDidSignCheckpoint(ctx context.Context, operatorAddr 
 func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := sdkCtx.BlockHeight()
-
+	snapshotlimit, err := k.SnapshotLimit.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting snapshot limit", "error", err)
+		return err
+	}
 	reports := k.oracleKeeper.GetAggregatedReportsByHeight(ctx, uint64(blockHeight))
 	for _, report := range reports {
 		queryId := report.QueryId
@@ -831,6 +835,10 @@ func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		if snapshotlimit.Limit == 0 {
+			break
+		}
+		snapshotlimit.Limit--
 	}
 	return nil
 }
@@ -867,7 +875,7 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 		queryId,
 		aggReport.AggregateValue,
 		uint64(timestamp.UnixMilli()),
-		aggReport.ReporterPower,
+		aggReport.AggregatePower,
 		uint64(tsBefore.UnixMilli()),
 		uint64(tsAfter.UnixMilli()),
 		validatorCheckpoint.Checkpoint,
@@ -982,12 +990,8 @@ func (k Keeper) EncodeOracleAttestationData(
 	valsetCheckpoint []byte,
 	attestationTimestamp uint64,
 ) ([]byte, error) {
-	// domainSeparator is bytes "tellorNewReport"
-	domainSep := "74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
-	NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR, err := hex.DecodeString(domainSep)
-	if err != nil {
-		return nil, err
-	}
+	// domainSeparator is bytes "tellorCurrentAttestation"
+	NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR := []byte("tellorCurrentAttestation")
 	// Convert domain separator to bytes32
 	var domainSepBytes32 [32]byte
 	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR)

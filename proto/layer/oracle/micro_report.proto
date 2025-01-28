@@ -32,3 +32,7 @@ message MicroReport {
   // identifier for the report's aggregate group
   uint64 meta_id = 10;
 }
+message Value {
+  uint64 crossover_weight = 1;
+  MicroReport micro_report = 2;
+}

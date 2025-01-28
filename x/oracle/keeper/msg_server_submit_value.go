@@ -91,7 +91,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	if err != nil {
 		return nil, err
 	}
-	return &types.MsgSubmitValueResponse{}, nil
+	return &types.MsgSubmitValueResponse{Id: query.Id}, nil
 }
 
 func (k Keeper) DirectReveal(ctx context.Context,

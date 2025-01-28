@@ -73,7 +73,14 @@ describe("Blobstream - Function Tests", async function () {
         await h.expectThrow(blobstream.connect(guardian).guardianResetValidatorSet(newThreshold, newValTimestamp, newValCheckpoint));
         await h.advanceTime(UNBONDING_PERIOD + 1)
         await h.expectThrow(blobstream.guardianResetValidatorSet(newThreshold, newValTimestamp, newValCheckpoint));//not guardian
+        oldValTimestamp = await blobstream.validatorTimestamp()
+        await h.expectThrow(blobstream.connect(guardian).guardianResetValidatorSet(newThreshold, oldValTimestamp, newValCheckpoint));
+        blocky = await h.getBlock()
+        newValTimestamp = (blocky.timestamp - 1) * 1000
         await blobstream.connect(guardian).guardianResetValidatorSet(newThreshold, newValTimestamp, newValCheckpoint);
+        assert.equal(await blobstream.validatorTimestamp(), newValTimestamp)
+        assert.equal(await blobstream.lastValidatorSetCheckpoint(), newValCheckpoint)
+        assert.equal(await blobstream.powerThreshold(), newThreshold)
     })
     it("updateValidatorSet", async function () {
         newValAddrs = [val1.address, val2.address, val3.address]

@@ -473,6 +473,82 @@ func local_request_Query_GetDataBefore_0(ctx context.Context, marshaler runtime.
 
 }
 
+func request_Query_GetDataAfter_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryGetDataAfterRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["query_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
+	}
+
+	protoReq.QueryId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
+	}
+
+	val, ok = pathParams["timestamp"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
+	}
+
+	protoReq.Timestamp, err = runtime.Uint64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)
+	}
+
+	msg, err := client.GetDataAfter(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Query_GetDataAfter_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryGetDataAfterRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["query_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "query_id")
+	}
+
+	protoReq.QueryId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "query_id", err)
+	}
+
+	val, ok = pathParams["timestamp"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "timestamp")
+	}
+
+	protoReq.Timestamp, err = runtime.Uint64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "timestamp", err)
+	}
+
+	msg, err := server.GetDataAfter(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
 func request_Query_GetTimeBasedRewards_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryGetTimeBasedRewardsRequest
 	var metadata runtime.ServerMetadata
@@ -1015,20 +1091,108 @@ func local_request_Query_GetCurrentQueryByQueryId_0(ctx context.Context, marshal
 
 }
 
+<<<<<<< HEAD
 func request_Query_GetQueryDataLimit_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryGetQueryDataLimitRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := client.GetQueryDataLimit(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+=======
+var (
+	filter_Query_ReportedIdsByReporter_0 = &utilities.DoubleArray{Encoding: map[string]int{"reporter_address": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
+
+func request_Query_ReportedIdsByReporter_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryReportedIdsByReporterRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["reporter_address"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "reporter_address")
+	}
+
+	protoReq.ReporterAddress, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "reporter_address", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_ReportedIdsByReporter_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.ReportedIdsByReporter(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+>>>>>>> main
 	return msg, metadata, err
 
 }
 
+<<<<<<< HEAD
 func local_request_Query_GetQueryDataLimit_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq QueryGetQueryDataLimitRequest
 	var metadata runtime.ServerMetadata
 
 	msg, err := server.GetQueryDataLimit(ctx, &protoReq)
+=======
+func local_request_Query_ReportedIdsByReporter_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryReportedIdsByReporterRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["reporter_address"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "reporter_address")
+	}
+
+	protoReq.ReporterAddress, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "reporter_address", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_Query_ReportedIdsByReporter_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := server.ReportedIdsByReporter(ctx, &protoReq)
+	return msg, metadata, err
+
+}
+
+func request_Query_GetCycleList_0(ctx context.Context, marshaler runtime.Marshaler, client QueryClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryGetCycleListRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := client.GetCycleList(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func local_request_Query_GetCycleList_0(ctx context.Context, marshaler runtime.Marshaler, server QueryServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq QueryGetCycleListRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := server.GetCycleList(ctx, &protoReq)
+>>>>>>> main
 	return msg, metadata, err
 
 }
@@ -1197,6 +1361,29 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 		}
 
 		forward_Query_GetDataBefore_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Query_GetDataAfter_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Query_GetDataAfter_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Query_GetDataAfter_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1430,7 +1617,11 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 
 	})
 
+<<<<<<< HEAD
 	mux.Handle("GET", pattern_Query_GetQueryDataLimit_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+=======
+	mux.Handle("GET", pattern_Query_ReportedIdsByReporter_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+>>>>>>> main
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		var stream runtime.ServerTransportStream
@@ -1441,7 +1632,11 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
+<<<<<<< HEAD
 		resp, md, err := local_request_Query_GetQueryDataLimit_0(rctx, inboundMarshaler, server, req, pathParams)
+=======
+		resp, md, err := local_request_Query_ReportedIdsByReporter_0(rctx, inboundMarshaler, server, req, pathParams)
+>>>>>>> main
 		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
@@ -1449,7 +1644,34 @@ func RegisterQueryHandlerServer(ctx context.Context, mux *runtime.ServeMux, serv
 			return
 		}
 
+<<<<<<< HEAD
 		forward_Query_GetQueryDataLimit_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+=======
+		forward_Query_ReportedIdsByReporter_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Query_GetCycleList_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		var stream runtime.ServerTransportStream
+		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := local_request_Query_GetCycleList_0(rctx, inboundMarshaler, server, req, pathParams)
+		md.HeaderMD, md.TrailerMD = metadata.Join(md.HeaderMD, stream.Header()), metadata.Join(md.TrailerMD, stream.Trailer())
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Query_GetCycleList_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+>>>>>>> main
 
 	})
 
@@ -1631,6 +1853,26 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 		}
 
 		forward_Query_GetDataBefore_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Query_GetDataAfter_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Query_GetDataAfter_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Query_GetDataAfter_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
 
 	})
 
@@ -1834,7 +2076,11 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 
 	})
 
+<<<<<<< HEAD
 	mux.Handle("GET", pattern_Query_GetQueryDataLimit_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+=======
+	mux.Handle("GET", pattern_Query_ReportedIdsByReporter_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+>>>>>>> main
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
@@ -1843,14 +2089,42 @@ func RegisterQueryHandlerClient(ctx context.Context, mux *runtime.ServeMux, clie
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
+<<<<<<< HEAD
 		resp, md, err := request_Query_GetQueryDataLimit_0(rctx, inboundMarshaler, client, req, pathParams)
+=======
+		resp, md, err := request_Query_ReportedIdsByReporter_0(rctx, inboundMarshaler, client, req, pathParams)
+>>>>>>> main
 		ctx = runtime.NewServerMetadataContext(ctx, md)
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
 		}
 
+<<<<<<< HEAD
 		forward_Query_GetQueryDataLimit_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+=======
+		forward_Query_ReportedIdsByReporter_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("GET", pattern_Query_GetCycleList_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_Query_GetCycleList_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_Query_GetCycleList_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+>>>>>>> main
 
 	})
 
@@ -1872,6 +2146,8 @@ var (
 
 	pattern_Query_GetDataBefore_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"tellor-io", "layer", "oracle", "get_data_before", "query_id", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
 
+	pattern_Query_GetDataAfter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4, 1, 0, 4, 1, 5, 5}, []string{"tellor-io", "layer", "oracle", "get_data_after", "query_id", "timestamp"}, "", runtime.AssumeColonVerbOpt(false)))
+
 	pattern_Query_GetTimeBasedRewards_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"tellor-io", "layer", "oracle", "get_time_based_rewards"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_CurrentCyclelistQuery_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"tellor-io", "layer", "oracle", "current_cyclelist_query"}, "", runtime.AssumeColonVerbOpt(false)))
@@ -1892,7 +2168,13 @@ var (
 
 	pattern_Query_GetCurrentQueryByQueryId_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"tellor-io", "layer", "oracle", "get_current_query_by_query_id", "query_id"}, "", runtime.AssumeColonVerbOpt(false)))
 
+<<<<<<< HEAD
 	pattern_Query_GetQueryDataLimit_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"tellor-io", "layer", "oracle", "get_query_data_limit"}, "", runtime.AssumeColonVerbOpt(false)))
+=======
+	pattern_Query_ReportedIdsByReporter_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3, 1, 0, 4, 1, 5, 4}, []string{"tellor-io", "layer", "oracle", "reported_ids_by_reporter", "reporter_address"}, "", runtime.AssumeColonVerbOpt(false)))
+
+	pattern_Query_GetCycleList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 2, 3}, []string{"tellor-io", "layer", "oracle", "get_cycle_list"}, "", runtime.AssumeColonVerbOpt(false)))
+>>>>>>> main
 )
 
 var (
@@ -1909,6 +2191,8 @@ var (
 	forward_Query_GetUserTipTotal_0 = runtime.ForwardResponseMessage
 
 	forward_Query_GetDataBefore_0 = runtime.ForwardResponseMessage
+
+	forward_Query_GetDataAfter_0 = runtime.ForwardResponseMessage
 
 	forward_Query_GetTimeBasedRewards_0 = runtime.ForwardResponseMessage
 
@@ -1930,5 +2214,11 @@ var (
 
 	forward_Query_GetCurrentQueryByQueryId_0 = runtime.ForwardResponseMessage
 
+<<<<<<< HEAD
 	forward_Query_GetQueryDataLimit_0 = runtime.ForwardResponseMessage
+=======
+	forward_Query_ReportedIdsByReporter_0 = runtime.ForwardResponseMessage
+
+	forward_Query_GetCycleList_0 = runtime.ForwardResponseMessage
+>>>>>>> main
 )

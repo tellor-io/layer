@@ -42,7 +42,7 @@ func TestGetAttestationDataBySnapshot(t *testing.T) {
 	aggReport := oracletypes.Aggregate{
 		QueryId:        queryId,
 		AggregateValue: "1",
-		ReporterPower:  uint64(10),
+		AggregatePower: uint64(10),
 	}
 	ok.On("GetAggregateByTimestamp", ctx, queryId, uint64(timestampTime.UnixMilli())).Return(aggReport, nil).Once()
 	snapshot, err := utils.QueryBytesFromString("abcd1234")
@@ -65,7 +65,7 @@ func TestGetAttestationDataBySnapshot(t *testing.T) {
 	require.Equal(t, getAttDataBySnapResponse.QueryId, hex.EncodeToString(aggReport.QueryId))
 	require.Equal(t, getAttDataBySnapResponse.Timestamp, strconv.FormatUint(uint64(timestampTime.UnixMilli()), 10))
 	require.Equal(t, getAttDataBySnapResponse.AggregateValue, aggReport.AggregateValue)
-	require.Equal(t, getAttDataBySnapResponse.AggregatePower, strconv.FormatUint(aggReport.ReporterPower, 10))
+	require.Equal(t, getAttDataBySnapResponse.AggregatePower, strconv.FormatUint(aggReport.AggregatePower, 10))
 	require.Equal(t, getAttDataBySnapResponse.Checkpoint, hex.EncodeToString([]byte("checkpoint")))
 	require.Equal(t, getAttDataBySnapResponse.PreviousReportTimestamp, strconv.FormatUint(uint64(timestampTime.UnixMilli()-2), 10))
 	require.Equal(t, getAttDataBySnapResponse.NextReportTimestamp, strconv.FormatUint(uint64(timestampTime.UnixMilli()+2), 10))

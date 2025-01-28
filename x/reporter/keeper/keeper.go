@@ -191,3 +191,10 @@ func (k Keeper) TrackStakeChange(ctx context.Context) error {
 	maxStake.Amount = total
 	return k.Tracker.Set(ctx, maxStake)
 }
+
+func CalculateRewardAmount(reporterPower, totalPower uint64, reward math.Int) math.LegacyDec {
+	rPower := math.LegacyNewDec(int64(reporterPower))
+	tPower := math.LegacyNewDec(int64(totalPower))
+	amount := rPower.Quo(tPower).Mul(reward.ToLegacyDec())
+	return amount
+}

@@ -11,7 +11,6 @@ import (
 func (s *KeeperTestSuite) TestPreventBridgeWithdrawalReport() {
 	require := s.Require()
 	k := s.oracleKeeper
-
 	queryTypeString := "TRBBridge"
 	toLayerBool := true
 	withdrawalId := uint64(1)
@@ -41,8 +40,10 @@ func (s *KeeperTestSuite) TestPreventBridgeWithdrawalReport() {
 	}
 	queryDataEncoded, err := finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
 	require.NoError(err)
-	ctx := s.ctx
-	_, err = k.PreventBridgeWithdrawalReport(ctx, queryDataEncoded)
+
+	s.bridgeKeeper.On("GetDepositStatus", s.ctx, uint64(1)).Return(false, nil)
+
+	_, err = k.PreventBridgeWithdrawalReport(s.ctx, queryDataEncoded)
 	require.NoError(err)
 
 	// try with toLayerBool false
@@ -51,12 +52,12 @@ func (s *KeeperTestSuite) TestPreventBridgeWithdrawalReport() {
 	require.NoError(err)
 	queryDataEncoded, err = finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
 	require.NoError(err)
-	_, err = k.PreventBridgeWithdrawalReport(ctx, queryDataEncoded)
+	_, err = k.PreventBridgeWithdrawalReport(s.ctx, queryDataEncoded)
 	require.Error(err)
 
 	// try with trb/usd
 	queryBytes, err := utils.QueryBytesFromString(queryData)
 	require.NoError(err)
-	_, err = k.PreventBridgeWithdrawalReport(ctx, queryBytes)
+	_, err = k.PreventBridgeWithdrawalReport(s.ctx, queryBytes)
 	require.NoError(err)
 }

@@ -60,6 +60,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}, {ProtoField: "timestamp"}},
 				},
 				{
+					RpcMethod:      "GetDataAfter",
+					Use:            "get-data-after [query_id] [timestamp]",
+					Short:          "Query data after a timestamp",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}, {ProtoField: "timestamp"}},
+				},
+				{
 					RpcMethod:      "RetrieveData",
 					Use:            "retrieve-data [query_id] [timestamp]",
 					Short:          "get data for a query at a specific timestamp",
@@ -111,6 +117,18 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod:      "GetQueryDataLimit",
 					Use:            "get-query-data-limit",
 					Short:          "Query query data limit",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+				{
+					RpcMethod:      "ReportedIdsByReporter",
+					Use:            "reported_ids_by_reporter [reporter_address]",
+					Short:          "Query reported ids by reporter",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
+				},
+				{
+					RpcMethod:      "GetCycleList",
+					Use:            "get-cycle-list",
+					Short:          "Query cycle list",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
 				// this line is used by ignite scaffolding # autocli/query

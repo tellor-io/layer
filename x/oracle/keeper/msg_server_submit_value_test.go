@@ -79,7 +79,7 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(spotSpec, nil).Once()
 	res, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	require.NoError(err)
-	require.Equal(&types.MsgSubmitValueResponse{}, res)
+	require.Equal(&types.MsgSubmitValueResponse{Id: 1}, res)
 
 	report, err := s.queryClient.GetReportsbyQid(ctx, &types.QueryGetReportsbyQidRequest{QueryId: hex.EncodeToString(queryId)})
 	s.Nil(err)

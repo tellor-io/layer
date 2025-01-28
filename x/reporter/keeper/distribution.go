@@ -130,7 +130,6 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []
 			return "", err
 		}
 	}
-
 	return pool, k.DisputedDelegationAmounts.Remove(ctx, hashId)
 }
 

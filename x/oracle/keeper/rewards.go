@@ -2,110 +2,17 @@ package keeper
 
 import (
 	"context"
-	"sort"
 
 	layer "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
+	// "cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-type ReportersReportCount struct {
-	Power   uint64
-	Reports uint64
-	Height  uint64
-	queryId []byte
-}
-
-// AllocateRewards distributes rewards to reporters based on their power and number of reports.
-// It calculates the reward amount for each reporter and allocates the rewards.
-// Finally, it sends the allocated rewards to the apprppopriate module based on the source of the reward.
-func (k Keeper) AllocateRewards(ctx context.Context, reports []*types.Aggregate, reward math.Int, fromPool string) error {
-	if reward.IsZero() {
-		return nil
-	}
-	// Initialize totalPower to keep track of the total power of all reporters.
-	totalPower := uint64(0)
-
-	// Use a struct to hold reporter info
-	type ReporterInfo struct {
-		address string
-		data    ReportersReportCount
-	}
-
-	// First pass: collect data in map
-	reportersMap := make(map[string]ReportersReportCount)
-	for _, report := range reports {
-		for _, r := range report.Reporters {
-			reporter, found := reportersMap[r.Reporter]
-			if found {
-				reporter.Reports++
-			} else {
-				reporter = ReportersReportCount{
-					Power:   r.Power,
-					Reports: 1,
-					Height:  r.BlockNumber,
-					queryId: report.QueryId,
-				}
-			}
-			reportersMap[r.Reporter] = reporter
-			totalPower += r.Power
-		}
-	}
-
-	// Convert to sorted slice for deterministic iteration
-	sortedReporters := make([]ReporterInfo, 0, len(reportersMap))
-	for addr, data := range reportersMap {
-		sortedReporters = append(sortedReporters, ReporterInfo{
-			address: addr,
-			data:    data,
-		})
-	}
-
-	// Sort by address for deterministic ordering
-	sort.Slice(sortedReporters, func(i, j int) bool {
-		return sortedReporters[i].address < sortedReporters[j].address
-	})
-
-	// Process rewards in deterministic order
-	totaldist := math.LegacyZeroDec()
-	for i, reporter := range sortedReporters {
-		amount := CalculateRewardAmount(
-			reporter.data.Power,
-			reporter.data.Reports,
-			totalPower,
-			// reward is in loya
-			reward,
-		)
-		totaldist = totaldist.Add(amount)
-
-		reporterAddr, err := sdk.AccAddressFromBech32(reporter.address)
-		if err != nil {
-			return err
-		}
-
-		// final reporter gets total reward - total distributed so far
-		if i == len(sortedReporters)-1 {
-			amount = amount.Add(math.LegacyNewDecFromInt(reward).Sub(totaldist))
-		}
-
-		err = k.AllocateTip(ctx, reporterAddr.Bytes(), reporter.data.queryId, amount, reporter.data.Height)
-		if err != nil {
-			return err
-		}
-	}
-
-	return k.bankKeeper.SendCoinsFromModuleToModule(
-		ctx,
-		fromPool,
-		reportertypes.TipsEscrowPool,
-		sdk.NewCoins(sdk.NewCoin(layer.BondDenom, reward)),
-	)
-}
 
 func (k Keeper) GetTimeBasedRewards(ctx context.Context) math.Int {
 	tbrAccount := k.GetTimeBasedRewardsAccount(ctx)
@@ -117,18 +24,57 @@ func (k Keeper) GetTimeBasedRewardsAccount(ctx context.Context) sdk.ModuleAccoun
 	return k.accountKeeper.GetModuleAccount(ctx, minttypes.TimeBasedRewards)
 }
 
-func CalculateRewardAmount(reporterPower, reportsCount, totalPower uint64, reward math.Int) math.LegacyDec {
-	rPower := math.LegacyNewDec(int64(reporterPower))
-	rcount := math.LegacyNewDec(int64(reportsCount))
-	tPower := math.LegacyNewDec(int64(totalPower))
-
-	power := rPower.Mul(rcount)
-	// reward is in loya
-	// amount = (power/TotalPower) * reward
-	amount := power.Quo(tPower).Mul(reward.ToLegacyDec())
-	return amount
-}
-
 func (k Keeper) AllocateTip(ctx context.Context, addr, queryId []byte, amount math.LegacyDec, height uint64) error {
 	return k.reporterKeeper.DivvyingTips(ctx, addr, amount, queryId, height)
+}
+
+func (k Keeper) DistributeRewards(ctx context.Context, tipRewardAllocation map[uint64]rewards, tipRewardKeys []uint64) error {
+	for _, id := range tipRewardKeys {
+		aggregateReward := tipRewardAllocation[id]
+		aggregateReport := aggregateReward.aggregateReport
+		iter, err := k.Reports.Indexes.IdQueryId.MatchExact(ctx, collections.Join(aggregateReport.MetaId, aggregateReport.QueryId))
+		if err != nil {
+			return err
+		}
+
+		defer iter.Close()
+
+		for ; iter.Valid(); iter.Next() {
+			reporterk, err := iter.PrimaryKey()
+			if err != nil {
+				return err
+			}
+			report, err := k.Reports.Get(ctx, reporterk)
+			if err != nil {
+				return err
+			}
+			amount := math.LegacyNewDec(int64(report.Power)).Quo(math.LegacyNewDec(int64(aggregateReport.AggregatePower))).Mul(aggregateReward.reward)
+			err = k.AllocateTip(ctx, reporterk.K2(), report.QueryId, amount, report.BlockNumber)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func (k Keeper) DistributeTbr(
+	ctx context.Context, tipRewardKeys []uint64,
+	cyclelist []types.Aggregate, tipRewardAllocation map[uint64]rewards,
+	totaltbrPower uint64, tbr math.Int,
+) (map[uint64]rewards, []uint64) {
+	totalPowerDec := math.LegacyNewDec(int64(totaltbrPower))
+	for _, aggregateReport := range cyclelist {
+		aggregatePower := math.LegacyNewDec(int64(aggregateReport.AggregatePower)).Quo(totalPowerDec)
+		share := aggregatePower.Mul(tbr.ToLegacyDec())
+		reward, ok := tipRewardAllocation[aggregateReport.MetaId]
+		if !ok {
+			tipRewardAllocation[aggregateReport.MetaId] = rewards{aggregateReport: aggregateReport, reward: share}
+			tipRewardKeys = append(tipRewardKeys, aggregateReport.MetaId)
+			continue
+		}
+		reward.reward = reward.reward.Add(share)
+		tipRewardAllocation[aggregateReport.MetaId] = reward
+	}
+	return tipRewardAllocation, tipRewardKeys
 }

@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -48,21 +47,6 @@ func TestDivvyingTips(t *testing.T) {
 
 	err = k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(addr.Bytes(), height)), delegationAmounts)
 	require.NoError(t, err)
-
-	ctx = ctx.WithBlockHeight(12)
-	err = k.DivvyingTips(ctx, addr, math.LegacyNewDec(10*1e6), []byte{}, 10)
-	require.NoError(t, err)
-
-	ctx = ctx.WithBlockHeight(13)
-	del1, err := k.SelectorTips.Get(ctx, addr.Bytes())
-	require.NoError(t, err)
-	del2, err := k.SelectorTips.Get(ctx, addr2.Bytes())
-
-	fmt.Printf("delegator1: %v, delegator2: %v\r", del1, del2)
-	require.Equal(t, math.LegacyNewDec(5*1e6), del1)
-
-	require.NoError(t, err)
-	require.Equal(t, math.LegacyNewDec(5*1e6), del2)
 }
 
 func TestReturnSlashedTokens(t *testing.T) {

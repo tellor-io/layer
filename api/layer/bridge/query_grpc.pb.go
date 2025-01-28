@@ -44,6 +44,8 @@ type QueryClient interface {
 	GetValidatorSetIndexByTimestamp(ctx context.Context, in *QueryGetValidatorSetIndexByTimestampRequest, opts ...grpc.CallOption) (*QueryGetValidatorSetIndexByTimestampResponse, error)
 	// Queries the current validator set timestamp
 	GetCurrentValidatorSetTimestamp(ctx context.Context, in *QueryGetCurrentValidatorSetTimestampRequest, opts ...grpc.CallOption) (*QueryGetCurrentValidatorSetTimestampResponse, error)
+	// Queries the snapshot limit
+	GetSnapshotLimit(ctx context.Context, in *QueryGetSnapshotLimitRequest, opts ...grpc.CallOption) (*QueryGetSnapshotLimitResponse, error)
 }
 
 type queryClient struct {
@@ -171,6 +173,15 @@ func (c *queryClient) GetCurrentValidatorSetTimestamp(ctx context.Context, in *Q
 	return out, nil
 }
 
+func (c *queryClient) GetSnapshotLimit(ctx context.Context, in *QueryGetSnapshotLimitRequest, opts ...grpc.CallOption) (*QueryGetSnapshotLimitResponse, error) {
+	out := new(QueryGetSnapshotLimitResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetSnapshotLimit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -201,6 +212,8 @@ type QueryServer interface {
 	GetValidatorSetIndexByTimestamp(context.Context, *QueryGetValidatorSetIndexByTimestampRequest) (*QueryGetValidatorSetIndexByTimestampResponse, error)
 	// Queries the current validator set timestamp
 	GetCurrentValidatorSetTimestamp(context.Context, *QueryGetCurrentValidatorSetTimestampRequest) (*QueryGetCurrentValidatorSetTimestampResponse, error)
+	// Queries the snapshot limit
+	GetSnapshotLimit(context.Context, *QueryGetSnapshotLimitRequest) (*QueryGetSnapshotLimitResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -246,6 +259,9 @@ func (UnimplementedQueryServer) GetValidatorSetIndexByTimestamp(context.Context,
 }
 func (UnimplementedQueryServer) GetCurrentValidatorSetTimestamp(context.Context, *QueryGetCurrentValidatorSetTimestampRequest) (*QueryGetCurrentValidatorSetTimestampResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCurrentValidatorSetTimestamp not implemented")
+}
+func (UnimplementedQueryServer) GetSnapshotLimit(context.Context, *QueryGetSnapshotLimitRequest) (*QueryGetSnapshotLimitResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSnapshotLimit not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -494,6 +510,24 @@ func _Query_GetCurrentValidatorSetTimestamp_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetSnapshotLimit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetSnapshotLimitRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetSnapshotLimit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Query/GetSnapshotLimit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetSnapshotLimit(ctx, req.(*QueryGetSnapshotLimitRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -552,6 +586,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCurrentValidatorSetTimestamp",
 			Handler:    _Query_GetCurrentValidatorSetTimestamp_Handler,
+		},
+		{
+			MethodName: "GetSnapshotLimit",
+			Handler:    _Query_GetSnapshotLimit_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

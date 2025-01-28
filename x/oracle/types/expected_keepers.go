@@ -26,6 +26,11 @@ type BankKeeper interface {
 	// Methods imported from bank should be defined here
 }
 
+// BridgeKeeper
+type BridgeKeeper interface {
+	GetDepositStatus(ctx context.Context, depositId uint64) (bool, error)
+}
+
 type RegistryKeeper interface {
 	// Methods imported from registry should be defined here
 	GetSpec(ctx context.Context, queryType string) (rktypes.DataSpec, error)

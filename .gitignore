@@ -25,6 +25,7 @@ build/*
 secrets.yaml
 .env
 prod-sim
+/layerd_new
 
 dist/
 

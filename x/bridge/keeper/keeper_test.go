@@ -1102,7 +1102,7 @@ func TestCreateSnapshot(t *testing.T) {
 	ok.On("GetAggregateByTimestamp", ctx, []byte("queryId"), uint64(time.Unix(100, 0).UnixMilli())).Return(oracletypes.Aggregate{
 		QueryId:        []byte("queryId"),
 		AggregateValue: "5000",
-		ReporterPower:  uint64(100),
+		AggregatePower: uint64(100),
 	}, nil)
 
 	err := k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{
@@ -1151,7 +1151,7 @@ func TestCreateNewReportSnapshots(t *testing.T) {
 			Height:         0,
 			QueryId:        queryId,
 			AggregateValue: "5000",
-			ReporterPower:  uint64(100),
+			AggregatePower: uint64(100),
 		},
 	}, nil)
 	ok.On("GetTimestampBefore", sdkCtx, queryId, timestampPlus1).Return(timestamp, nil).Once()
@@ -1159,7 +1159,7 @@ func TestCreateNewReportSnapshots(t *testing.T) {
 	ok.On("GetAggregateByTimestamp", ctx, queryId, uint64(timestamp.UnixMilli())).Return(oracletypes.Aggregate{
 		QueryId:        queryId,
 		AggregateValue: "5000",
-		ReporterPower:  uint64(100),
+		AggregatePower: uint64(100),
 	}, nil)
 
 	err := k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{

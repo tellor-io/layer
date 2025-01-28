@@ -39,6 +39,7 @@ service Msg {
 
   // WithdrawTip defines a method to withdraw tip from a reporter module.
   rpc WithdrawTip(MsgWithdrawTip) returns (MsgWithdrawTipResponse);
+
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.

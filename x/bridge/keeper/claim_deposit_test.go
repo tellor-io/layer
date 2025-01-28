@@ -189,11 +189,10 @@ func TestClaimDeposit(t *testing.T) {
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
-	aggregate := oracletypes.Aggregate{
-		QueryId:              queryId,
-		AggregateValue:       reportValueString,
-		AggregateReportIndex: uint64(0),
-		ReporterPower:        uint64(68),
+	aggregate := &oracletypes.Aggregate{
+		QueryId:        queryId,
+		AggregateValue: reportValueString,
+		AggregatePower: uint64(68),
 	}
 	powerThreshold := uint64(67)
 	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)
@@ -256,12 +255,11 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
-	aggregate := oracletypes.Aggregate{
-		QueryId:              queryId,
-		AggregateValue:       reportValueString,
-		AggregateReportIndex: uint64(0),
-		ReporterPower:        uint64(90 * 1e6),
-		Flagged:              true,
+	aggregate := &oracletypes.Aggregate{
+		QueryId:        queryId,
+		AggregateValue: reportValueString,
+		AggregatePower: uint64(90 * 1e6),
+		Flagged:        true,
 	}
 	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
@@ -305,11 +303,10 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
 	// 66/100
-	aggregate := oracletypes.Aggregate{
-		QueryId:              queryId,
-		AggregateValue:       reportValueString,
-		AggregateReportIndex: uint64(0),
-		ReporterPower:        uint64(65),
+	aggregate := &oracletypes.Aggregate{
+		QueryId:        queryId,
+		AggregateValue: reportValueString,
+		AggregatePower: uint64(65),
 	}
 	powerThreshold := uint64(67)
 	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)
@@ -354,11 +351,10 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
-	aggregate := oracletypes.Aggregate{
-		QueryId:              queryId,
-		AggregateValue:       reportValueString,
-		AggregateReportIndex: uint64(0),
-		ReporterPower:        uint64(68),
+	aggregate := &oracletypes.Aggregate{
+		QueryId:        queryId,
+		AggregateValue: reportValueString,
+		AggregatePower: uint64(68),
 	}
 	powerThreshold := uint64(67)
 	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)
@@ -403,11 +399,10 @@ func TestClaimDepositSpam(t *testing.T) {
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
-	aggregate := oracletypes.Aggregate{
-		QueryId:              queryId,
-		AggregateValue:       reportValueString,
-		AggregateReportIndex: uint64(0),
-		ReporterPower:        uint64(68),
+	aggregate := &oracletypes.Aggregate{
+		QueryId:        queryId,
+		AggregateValue: reportValueString,
+		AggregatePower: uint64(68),
 	}
 	powerThreshold := uint64(67)
 	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)
