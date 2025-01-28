@@ -11,9 +11,9 @@ import (
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/math"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"

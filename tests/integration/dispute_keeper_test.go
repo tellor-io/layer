@@ -1243,7 +1243,6 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeBond() {
 }
 
 func (s *IntegrationTestSuite) TestCurrentBug() {
-
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	sk := s.Setup.Stakingkeeper
 	startingBondedPoolbal := math.NewInt(1000000)
