@@ -2754,9 +2754,9 @@ const (
 	DisputeStatus_DISPUTE_STATUS_PREVOTE DisputeStatus = 0
 	// VOTING defines a dispute that has been funded and is in voting.
 	DisputeStatus_DISPUTE_STATUS_VOTING DisputeStatus = 1
-	// RESOLVED defines a dispute that has completed voting and reached quroum
+	// RESOLVED defines a dispute where dispute period has ended
 	DisputeStatus_DISPUTE_STATUS_RESOLVED DisputeStatus = 2
-	// UNRESOLVED defines a dispute that has completed voting and but hasn't reached quroum
+	// UNRESOLVED defines a dispute where dispute period has not ended but voting period has.
 	DisputeStatus_DISPUTE_STATUS_UNRESOLVED DisputeStatus = 3
 	// FAILED defines a dispute that failed to pay the dispute fee to start vote.
 	DisputeStatus_DISPUTE_STATUS_FAILED DisputeStatus = 4

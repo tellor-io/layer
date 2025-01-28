@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/tellor-io/layer/x/dispute/keeper"
@@ -65,7 +64,6 @@ func (s *KeeperTestSuite) TestDisputesQuery() {
 		},
 	}
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			if tc.setup != nil {
 				tc.setup()
@@ -79,7 +77,6 @@ func (s *KeeperTestSuite) TestDisputesQuery() {
 				require.NotNil(resp)
 				require.Equal(tc.expectedLength, len(resp.Disputes))
 			}
-			fmt.Println(resp)
 		})
 	}
 }
@@ -122,7 +119,6 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 	resp, err = q.OpenDisputes(ctx, &types.QueryOpenDisputesRequest{})
 	require.NoError(err)
 	require.NotNil(resp)
-	fmt.Println(resp)
 	require.Equal(1, len(resp.OpenDisputes.Ids))
 
 	// two open disputes
@@ -146,7 +142,6 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 	resp, err = q.OpenDisputes(ctx, &types.QueryOpenDisputesRequest{})
 	require.NoError(err)
 	require.NotNil(resp)
-	fmt.Println(resp)
 	require.Equal(2, len(resp.OpenDisputes.Ids))
 
 	// two open and one closed dispute
@@ -170,7 +165,6 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 	resp, err = q.OpenDisputes(ctx, &types.QueryOpenDisputesRequest{})
 	require.NoError(err)
 	require.NotNil(resp)
-	fmt.Println(resp)
 	require.Equal(2, len(resp.OpenDisputes.Ids))
 }
 
@@ -200,10 +194,9 @@ func (s *KeeperTestSuite) TestTallyQuery() {
 	}))
 
 	require.NoError(k.VoteCountsByGroup.Set(ctx, 1, types.StakeholderVoteCounts{
-		Users:        types.VoteCounts{Support: 1000, Against: 100, Invalid: 500},
-		Reporters:    types.VoteCounts{Support: 10000, Against: 100, Invalid: 560},
-		Tokenholders: types.VoteCounts{Support: 50000, Against: 1000, Invalid: 500},
-		Team:         types.VoteCounts{Support: 1000, Against: 0, Invalid: 0},
+		Users:     types.VoteCounts{Support: 1000, Against: 100, Invalid: 500},
+		Reporters: types.VoteCounts{Support: 10000, Against: 100, Invalid: 560},
+		Team:      types.VoteCounts{Support: 1000, Against: 0, Invalid: 0},
 	}))
 
 	require.NoError(q.BlockInfo.Set(ctx, []byte{1}, types.BlockInfo{TotalReporterPower: math.NewInt(25000), TotalUserTips: math.NewInt(5000)}))
@@ -215,9 +208,7 @@ func (s *KeeperTestSuite) TestTallyQuery() {
 
 	require.Equal(res.Users.TotalPowerVoted, uint64(1600))
 	require.Equal(res.Reporters.TotalPowerVoted, uint64(10660))
-	require.Equal(res.Tokenholders.TotalPowerVoted, uint64(51500))
 
 	require.Equal(res.Users.TotalGroupPower, uint64(5000))
 	require.Equal(res.Reporters.TotalGroupPower, uint64(25000))
-	require.Equal(res.Tokenholders.TotalGroupPower, uint64(100000))
 }

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/registry/keeper"
 	types "github.com/tellor-io/layer/x/registry/types"
 )
@@ -14,11 +15,17 @@ func TestQueryGetDataSpec(t *testing.T) {
 	require.NotNil(t, ms)
 	require.NotNil(t, ctx)
 	require.NotNil(t, k)
+	registrar := sample.AccAddress()
 
 	// register a spec
-	spec1 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median"}
+	spec1 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median", QueryType: "querytype1", Registrar: registrar, AbiComponents: []*types.ABIComponent{
+		{
+			Name:      "field",
+			FieldType: "uint256",
+		},
+	}}
 	specInput := &types.MsgRegisterSpec{
-		Registrar: "creator1",
+		Registrar: registrar,
 		QueryType: "queryType1",
 		Spec:      spec1,
 	}

@@ -1,11 +1,11 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/registry/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,15 +19,21 @@ func TestQueryGetDataSpecSpec(t *testing.T) {
 
 	// check Spec() return for unregistered data spec
 	unwrappedCtx := sdk.UnwrapSDKContext(ctx)
+	registrar := sample.AccAddress()
 	specReturn, err := k.GetSpec(unwrappedCtx, "queryType1")
 	require.Error(t, err)
 	require.Equal(t, specReturn, types.DataSpec{})
 
 	// register a spec and check Spec() returns correct bytes
-	spec1 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median", Registrar: "creator1"}
+	spec1 := types.DataSpec{DocumentHash: "hash1", ResponseValueType: "uint256", AggregationMethod: "weighted-median", Registrar: registrar, QueryType: "querytype1", AbiComponents: []*types.ABIComponent{
+		{
+			Name:      "field",
+			FieldType: "uint256",
+		},
+	}}
 	specInput := &types.MsgRegisterSpec{
-		Registrar: spec1.Registrar,
-		QueryType: "queryType1",
+		Registrar: registrar,
+		QueryType: "querytype1",
 		Spec:      spec1,
 	}
 	registerSpecResult, err := ms.RegisterSpec(ctx, specInput)
@@ -35,7 +41,6 @@ func TestQueryGetDataSpecSpec(t *testing.T) {
 	require.Equal(t, registerSpecResult, &types.MsgRegisterSpecResponse{})
 
 	specReturn, err = k.GetSpec(unwrappedCtx, "queryType1")
-	fmt.Println("specReturn2: ", specReturn)
 	require.Nil(t, err)
 	require.Equal(t, specReturn, spec1)
 }
@@ -47,12 +52,14 @@ func TestSetDataSpec(t *testing.T) {
 	require.NotNil(t, k)
 
 	// Define test data
-	queryType := "queryType1"
+	queryType := "querytype1"
+	registrar := sample.AccAddress()
 	dataSpec := types.DataSpec{
 		DocumentHash:      "hash1",
 		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
-		Registrar:         "creator1",
+		Registrar:         registrar,
+		QueryType:         queryType,
 	}
 
 	// Call the function
@@ -79,8 +86,15 @@ func TestSetDataSpec(t *testing.T) {
 				DocumentHash:      "hash1",
 				ResponseValueType: "uint256",
 				AggregationMethod: "weighted-median",
-				Registrar:         "creator1",
+				Registrar:         registrar,
 				ReportBlockWindow: 500_000, // 20 days
+				QueryType:         "SPOTPRICE",
+				AbiComponents: []*types.ABIComponent{
+					{
+						Name:      "field",
+						FieldType: "uint256",
+					},
+				},
 			},
 			expectError: false,
 		},
@@ -91,8 +105,15 @@ func TestSetDataSpec(t *testing.T) {
 				DocumentHash:      "hash2",
 				ResponseValueType: "uint256",
 				AggregationMethod: "weighted-median",
-				Registrar:         "creator1",
+				Registrar:         registrar,
 				ReportBlockWindow: 1_000_000, // 22 days
+				QueryType:         "SPOTPRICE",
+				AbiComponents: []*types.ABIComponent{
+					{
+						Name:      "field",
+						FieldType: "uint256",
+					},
+				},
 			},
 			expectError: true,
 		},
@@ -103,8 +124,15 @@ func TestSetDataSpec(t *testing.T) {
 				DocumentHash:      "hash3",
 				ResponseValueType: "uint256",
 				AggregationMethod: "weighted-median",
-				Registrar:         "creator1",
+				Registrar:         registrar,
 				ReportBlockWindow: 700_000, // 21 days
+				QueryType:         "SPOTPRICE",
+				AbiComponents: []*types.ABIComponent{
+					{
+						Name:      "field",
+						FieldType: "uint256",
+					},
+				},
 			},
 			expectError: false,
 		},
@@ -132,12 +160,13 @@ func TestHasDataSpec(t *testing.T) {
 	require.NotNil(t, k)
 
 	// Define test data
-	queryType := "queryType1"
+	queryType := "querytype1"
 	dataSpec := types.DataSpec{
 		DocumentHash:      "hash1",
 		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
 		Registrar:         "creator1",
+		QueryType:         queryType,
 	}
 
 	// Call the function

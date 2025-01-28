@@ -13,6 +13,7 @@ import (
 	"cosmossdk.io/math"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -208,10 +209,8 @@ func (s *IntegrationTestSuite) TestMaxSelectorsCount() {
 	valAccs, valAddrs, _ := s.Setup.CreateValidators(1)
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	stakingmsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
-	val, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddrs[0])
-	s.NoError(err)
-	fmt.Println(val.Tokens)
-	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: sdk.AccAddress(valAddrs[0]).String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
+
+	_, err := msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: sdk.AccAddress(valAddrs[0]).String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
 	s.NoError(err)
 	valAcc := valAccs[0]
 	valAdd := valAddrs[0]
@@ -352,18 +351,22 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake() {
 		valAddr2.String(),
 		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
 	)
-	_, err = stakingmsgServer.BeginRedelegate(ctx, msgReDelegate3)
+	fmt.Println("begin redelegate", "dstVal", valAddr2.String())
+	redelres, err := stakingmsgServer.BeginRedelegate(ctx, msgReDelegate3)
 	s.NoError(err)
-
+	fmt.Println(redelres.CompletionTime)
+	ctx, err = simtestutil.NextBlock(s.Setup.App, ctx, time.Minute)
+	s.NoError(err)
 	// what happens when the delegator tries to unbond from the new validator
 	msgUndelegatedelegator3 := stakingtypes.NewMsgUndelegate(
 		delegator3.String(),
 		valAddr2.String(),
 		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
 	)
-	_, err = stakingmsgServer.Undelegate(ctx, msgUndelegatedelegator3)
+	fmt.Println("undelegate", "srcVal", valAddr2.String())
+	undelres, err := stakingmsgServer.Undelegate(ctx, msgUndelegatedelegator3)
 	s.NoError(err)
-
+	fmt.Println(undelres.CompletionTime)
 	bondedpool = s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress(stakingtypes.BondedPoolName), s.Setup.Denom)
 	s.Equal(bondedpoolAmountafterDelegating.Sub(math.NewIntWithDecimal(2_000, 6)), bondedpool.Amount)
 	unbondedpool = s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress(stakingtypes.NotBondedPoolName), s.Setup.Denom)
@@ -411,7 +414,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake2() {
 	delAddr = delAddr[1:]
 
 	err := rk.Reporters.Set(ctx, reporter, reportertypes.OracleReporter{
-		MinTokensRequired: reportertypes.DefaultMinTrb,
+		MinTokensRequired: reportertypes.DefaultMinLoya,
 		CommissionRate:    reportertypes.DefaultMinCommissionRate,
 	})
 	s.NoError(err)
@@ -469,6 +472,5 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake2() {
 	s.True(reporterStake.LT(math.NewIntWithDecimal(1, 6)))
 	// leftover less than 1 trb
 	leftover := reporterStake.ToLegacyDec().Sub(reporterStake.Quo(layertypes.PowerReduction).ToLegacyDec()).TruncateInt()
-	fmt.Println(reporterStake)
 	s.Equal(leftover, reporterStake)
 }

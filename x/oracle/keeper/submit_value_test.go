@@ -35,7 +35,7 @@ func (s *KeeperTestSuite) TestSetValue() {
 
 	queryBytes, err := utils.QueryBytesFromString(queryData)
 	require.NoError(err)
-	regK.On("GetSpec", ctx, "SpotPrice").Return(regtypes.GenesisDataSpec(), nil)
+	regK.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil)
 	err = k.SetValue(ctx, reporter, query, "0x0000000000000000000000000000000000000000000000000000000000000009", queryBytes, 1, true)
 	require.NoError(err)
 
@@ -59,7 +59,7 @@ func (s *KeeperTestSuite) TestGetDataSpec() {
 		{Name: "asset", FieldType: "string"},
 		{Name: "currency", FieldType: "string"},
 	}
-	regK.On("GetSpec", ctx, "SpotPrice").Return(regtypes.GenesisDataSpec(), nil).Once()
+	regK.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil).Once()
 	spec, err := k.GetDataSpec(ctx, "SpotPrice")
 	require.NoError(err)
 	require.Equal(spec.AbiComponents, expectedABI)
@@ -69,7 +69,7 @@ func (s *KeeperTestSuite) TestGetDataSpec() {
 	require.Equal(spec.ReportBlockWindow, uint64(2))
 	require.Equal(spec.ResponseValueType, "uint256")
 
-	regK.On("GetSpec", ctx, "BadQueryType").Return(regtypes.GenesisDataSpec(), errors.New("not found")).Once()
+	regK.On("GetSpec", ctx, "BadQueryType").Return(spotSpec, errors.New("not found")).Once()
 	spec, err = k.GetDataSpec(ctx, "BadQueryType")
 	require.Error(err)
 	require.Equal(spec, regtypes.DataSpec{})

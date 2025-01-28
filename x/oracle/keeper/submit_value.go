@@ -64,6 +64,7 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 		Timestamp:       sdkCtx.BlockTime(),
 		Cyclelist:       incycle,
 		BlockNumber:     uint64(sdkCtx.BlockHeight()),
+		MetaId:          query.Id,
 	}
 
 	query.HasRevealedReports = true

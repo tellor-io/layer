@@ -18,6 +18,10 @@ func InitGenesis(ctx context.Context, k keeper.Keeper, genState types.GenesisSta
 	if err != nil {
 		panic(err)
 	}
+	err = k.SetQueryDataLimit(ctx, genState.QueryDataLimit)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns the module's exported genesis
@@ -28,6 +32,13 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 		panic(err)
 	}
 	genesis.Params = params
+
+	// get cyclelist
+	cyclelist, err := k.GetCyclelist(ctx)
+	if err != nil {
+		panic(err)
+	}
+	genesis.Cyclelist = cyclelist
 
 	// this line is used by starport scaffolding # genesis/module/export
 

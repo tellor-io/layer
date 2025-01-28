@@ -5,6 +5,7 @@ import (
 	gomath "math"
 	"time"
 
+	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -136,7 +137,7 @@ func (s *KeeperTestSuite) TestSetNewDispute() types.MsgProposeDispute {
 	s.bankKeeper.On("SendCoinsFromAccountToModule", s.ctx, sdk.MustAccAddressFromBech32(disputeMsg.Creator), types.ModuleName, sdk.NewCoins(disputeMsg.Fee)).Return(nil)
 	s.reporterKeeper.On("TotalReporterPower", s.ctx).Return(math.NewInt(1), nil)
 	s.oracleKeeper.On("GetTotalTips", s.ctx).Return(math.NewInt(1), nil)
-
+	s.oracleKeeper.On("ValidateMicroReportExists", s.ctx, mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
 	s.NoError(s.disputeKeeper.SetNewDispute(s.ctx, creator, disputeMsg))
 
 	return disputeMsg
@@ -192,7 +193,6 @@ func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {
 	s.oracleKeeper.On("FlagAggregateReport", s.ctx, report()).Return(nil)
 
 	for _, tc := range testCases {
-		tc := tc
 		s.Run(tc.name, func() {
 			slashAmount, jailTime, err := keeper.GetSlashPercentageAndJailDuration(tc.cat)
 			if tc.name == "Severe" {

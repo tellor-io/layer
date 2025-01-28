@@ -13,10 +13,10 @@ import (
 )
 
 func TestReportersQuery(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	querier := keeper.NewQuerier(k)
 	for i := 0; i < 10; i++ {
-		err := k.Reporters.Set(ctx, sample.AccAddressBytes(), types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb))
+		err := k.Reporters.Set(ctx, sample.AccAddressBytes(), types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya))
 		require.NoError(t, err)
 	}
 	res, err := querier.Reporters(ctx, &types.QueryReportersRequest{})
@@ -25,7 +25,7 @@ func TestReportersQuery(t *testing.T) {
 }
 
 func TestSelectorReporterQuery(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	querier := keeper.NewQuerier(k)
 	selector := sample.AccAddressBytes()
 	reporterAddr := sample.AccAddressBytes()
@@ -37,7 +37,7 @@ func TestSelectorReporterQuery(t *testing.T) {
 }
 
 func TestAllowedAmountQuery(t *testing.T) {
-	k, sk, _, _, ctx, _ := setupKeeper(t)
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 	querier := keeper.NewQuerier(k)
 
 	// set the last stored tracked amount
@@ -55,7 +55,7 @@ func TestAllowedAmountQuery(t *testing.T) {
 }
 
 func TestNumOfSelectorsByReporter(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	querier := keeper.NewQuerier(k)
 
 	reporterAddr := sample.AccAddressBytes()
@@ -70,7 +70,7 @@ func TestNumOfSelectorsByReporter(t *testing.T) {
 }
 
 func TestSpaceAvailableByReporter(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	querier := keeper.NewQuerier(k)
 
 	reporterAddr := sample.AccAddressBytes()
@@ -85,7 +85,7 @@ func TestSpaceAvailableByReporter(t *testing.T) {
 }
 
 func TestAllowedAmountExpiration(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	querier := keeper.NewQuerier(k)
 	ctx = ctx.WithBlockTime(time.Now())
 
@@ -98,7 +98,7 @@ func TestAllowedAmountExpiration(t *testing.T) {
 }
 
 func TestAvailableTips(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	querier := keeper.NewQuerier(k)
 	require := require.New(t)
 
