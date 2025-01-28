@@ -212,6 +212,7 @@ func _TokenBridgeTipService_GetTokenBridgeTip_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+var TokenBridgeTipService_serviceDesc = _TokenBridgeTipService_serviceDesc
 var _TokenBridgeTipService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.daemons.TokenBridgeTipService",
 	HandlerType: (*TokenBridgeTipServiceServer)(nil),

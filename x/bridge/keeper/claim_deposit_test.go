@@ -189,7 +189,7 @@ func TestClaimDeposit(t *testing.T) {
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
-	aggregate := &oracletypes.Aggregate{
+	aggregate := oracletypes.Aggregate{
 		QueryId:        queryId,
 		AggregateValue: reportValueString,
 		AggregatePower: uint64(68),
@@ -255,7 +255,7 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
-	aggregate := &oracletypes.Aggregate{
+	aggregate := oracletypes.Aggregate{
 		QueryId:        queryId,
 		AggregateValue: reportValueString,
 		AggregatePower: uint64(90 * 1e6),
@@ -303,7 +303,7 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
 	// 66/100
-	aggregate := &oracletypes.Aggregate{
+	aggregate := oracletypes.Aggregate{
 		QueryId:        queryId,
 		AggregateValue: reportValueString,
 		AggregatePower: uint64(65),
@@ -351,7 +351,7 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
-	aggregate := &oracletypes.Aggregate{
+	aggregate := oracletypes.Aggregate{
 		QueryId:        queryId,
 		AggregateValue: reportValueString,
 		AggregatePower: uint64(68),
@@ -399,7 +399,7 @@ func TestClaimDepositSpam(t *testing.T) {
 	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
 	queryId, err := k.GetDepositQueryId(0)
 	require.NoError(t, err)
-	aggregate := &oracletypes.Aggregate{
+	aggregate := oracletypes.Aggregate{
 		QueryId:        queryId,
 		AggregateValue: reportValueString,
 		AggregatePower: uint64(68),

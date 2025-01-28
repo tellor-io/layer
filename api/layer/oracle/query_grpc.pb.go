@@ -222,6 +222,12 @@ func (c *queryClient) GetCurrentQueryByQueryId(ctx context.Context, in *QueryGet
 func (c *queryClient) GetQueryDataLimit(ctx context.Context, in *QueryGetQueryDataLimitRequest, opts ...grpc.CallOption) (*QueryGetQueryDataLimitResponse, error) {
 	out := new(QueryGetQueryDataLimitResponse)
 	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetQueryDataLimit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) ReportedIdsByReporter(ctx context.Context, in *QueryReportedIdsByReporterRequest, opts ...grpc.CallOption) (*QueryReportedIdsByReporterResponse, error) {
 	out := new(QueryReportedIdsByReporterResponse)
 	err := c.cc.Invoke(ctx, "/layer.oracle.Query/ReportedIdsByReporter", in, out, opts...)
@@ -336,6 +342,7 @@ func (UnimplementedQueryServer) GetCurrentQueryByQueryId(context.Context, *Query
 }
 func (UnimplementedQueryServer) GetQueryDataLimit(context.Context, *QueryGetQueryDataLimitRequest) (*QueryGetQueryDataLimitResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetQueryDataLimit not implemented")
+}
 func (UnimplementedQueryServer) ReportedIdsByReporter(context.Context, *QueryReportedIdsByReporterRequest) (*QueryReportedIdsByReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReportedIdsByReporter not implemented")
 }
@@ -681,8 +688,6 @@ func _Query_GetCurrentQueryByQueryId_Handler(srv interface{}, ctx context.Contex
 
 func _Query_GetQueryDataLimit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetQueryDataLimitRequest)
-func _Query_ReportedIdsByReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryReportedIdsByReporterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -695,6 +700,16 @@ func _Query_ReportedIdsByReporter_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).GetQueryDataLimit(ctx, req.(*QueryGetQueryDataLimitRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ReportedIdsByReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryReportedIdsByReporterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
 		return srv.(QueryServer).ReportedIdsByReporter(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
@@ -807,6 +822,8 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetQueryDataLimit",
 			Handler:    _Query_GetQueryDataLimit_Handler,
+		},
+		{
 			MethodName: "ReportedIdsByReporter",
 			Handler:    _Query_ReportedIdsByReporter_Handler,
 		},

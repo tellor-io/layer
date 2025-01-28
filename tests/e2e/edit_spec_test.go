@@ -140,7 +140,16 @@ func (s *E2ETestSuite) TestEditSpec() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(4)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
+
+	msgWithdrawTip := reportertypes.MsgWithdrawTip{
+		SelectorAddress:  valAccAddrs[0].String(),
+		ValidatorAddress: valValAddrs[0].String(),
+	}
+	_, err = reporterMsgServer.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)
+	require.NoError(err)
 
 	govParams, err := s.Setup.Govkeeper.Params.Get(s.Setup.Ctx)
 	require.NoError(err)
@@ -195,7 +204,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	require.Equal(vote.Voter, valAccAddrs[0].String())
 	require.Equal(vote.Metadata, "vote metadata from validator")
 
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(49 * time.Hour))
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(48 * time.Hour))
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -210,7 +219,6 @@ func (s *E2ETestSuite) TestEditSpec() {
 	// proposal passed
 	proposal1, err := s.Setup.Govkeeper.Proposals.Get(s.Setup.Ctx, proposal.ProposalId)
 	require.NoError(err)
-
 	require.Equal(proposal1.Status, v1.StatusPassed)
 	require.Equal(proposal1.Proposer, valAccAddrs[0].String())
 	require.Equal(proposal1.TotalDeposit, govParams.MinDeposit)
@@ -243,12 +251,10 @@ func (s *E2ETestSuite) TestEditSpec() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(6)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
-	msgWithdrawTip := reportertypes.MsgWithdrawTip{
-		SelectorAddress:  valAccAddrs[0].String(),
-		ValidatorAddress: valValAddrs[0].String(),
-	}
 	_, err = reporterMsgServer.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)
 	require.NoError(err)
 
@@ -301,6 +307,8 @@ func (s *E2ETestSuite) TestEditSpec() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(7)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
 	_, err = reporterMsgServer.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)
@@ -331,6 +339,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(8)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
+
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
 	// proposal passed

@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"fmt"
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -10,6 +11,7 @@ import (
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/math"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -349,18 +351,22 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake() {
 		valAddr2.String(),
 		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
 	)
-	_, err = stakingmsgServer.BeginRedelegate(ctx, msgReDelegate3)
+	fmt.Println("begin redelegate", "dstVal", valAddr2.String())
+	redelres, err := stakingmsgServer.BeginRedelegate(ctx, msgReDelegate3)
 	s.NoError(err)
-
+	fmt.Println(redelres.CompletionTime)
+	ctx, err = simtestutil.NextBlock(s.Setup.App, ctx, time.Minute)
+	s.NoError(err)
 	// what happens when the delegator tries to unbond from the new validator
 	msgUndelegatedelegator3 := stakingtypes.NewMsgUndelegate(
 		delegator3.String(),
 		valAddr2.String(),
 		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
 	)
-	_, err = stakingmsgServer.Undelegate(ctx, msgUndelegatedelegator3)
+	fmt.Println("undelegate", "srcVal", valAddr2.String())
+	undelres, err := stakingmsgServer.Undelegate(ctx, msgUndelegatedelegator3)
 	s.NoError(err)
-
+	fmt.Println(undelres.CompletionTime)
 	bondedpool = s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress(stakingtypes.BondedPoolName), s.Setup.Denom)
 	s.Equal(bondedpoolAmountafterDelegating.Sub(math.NewIntWithDecimal(2_000, 6)), bondedpool.Amount)
 	unbondedpool = s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress(stakingtypes.NotBondedPoolName), s.Setup.Denom)

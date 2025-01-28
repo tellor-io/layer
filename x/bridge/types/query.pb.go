@@ -2364,7 +2364,6 @@ func _Query_GetCurrentValidatorSetTimestamp_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
-var Query_serviceDesc = _Query_serviceDesc
 func _Query_GetSnapshotLimit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryGetSnapshotLimitRequest)
 	if err := dec(in); err != nil {
@@ -2383,6 +2382,7 @@ func _Query_GetSnapshotLimit_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.bridge.Query",
 	HandlerType: (*QueryServer)(nil),
