@@ -197,7 +197,7 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 		delAddr := sdk.AccAddress(del.DelegatorAddress)
 		valAddr := sdk.ValAddress(del.ValidatorAddress)
 
-		remaining, err := k.undelegate(ctx, delAddr, valAddr, delegatorShare.ToLegacyDec(), false)
+		remaining, err := k.undelegate(ctx, delAddr, valAddr, delegatorShare.ToLegacyDec())
 		if err != nil {
 			return err
 		}
@@ -216,7 +216,7 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 			if err != nil {
 				return err
 			}
-			_, err = k.undelegate(ctx, delAddr, dstVAl, math.LegacyNewDecFromInt(remaining), true)
+			_, err = k.undelegate(ctx, delAddr, dstVAl, math.LegacyNewDecFromInt(remaining))
 			if err != nil {
 				return err
 			}
@@ -351,7 +351,7 @@ func (k Keeper) tokensToDispute(ctx context.Context, fromPool string, amount mat
 // undelegate a selector's tokens that are part of a dispute.
 // first attempt to get the tokens from known validator and if not found then chase after the tokens that were either redelegated to another validator
 // or are being unbonded
-func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, delTokens math.LegacyDec, isRedelegating bool) (math.Int, error) {
+func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, delTokens math.LegacyDec) (math.Int, error) {
 	remainingFromdel, err := k.deductFromdelegation(ctx, delAddr, valAddr, delTokens)
 	if err != nil {
 		return math.Int{}, err
@@ -362,18 +362,15 @@ func (k Keeper) undelegate(ctx context.Context, delAddr sdk.AccAddress, valAddr 
 		return math.ZeroInt(), nil
 	}
 
-	remainingUnbonding := math.ZeroInt()
-	if !isRedelegating {
-		remainingUnbonding, err = k.deductUnbondingDelegation(ctx, delAddr, valAddr, remainingFromdel.TruncateInt())
-		if err != nil {
-			if errors.Is(err, stakingtypes.ErrNoUnbondingDelegation) {
-				return remainingFromdel.TruncateInt(), nil
-			}
-			return math.Int{}, err
+	remainingUnbonding, err := k.deductUnbondingDelegation(ctx, delAddr, valAddr, remainingFromdel.TruncateInt())
+	if err != nil {
+		if errors.Is(err, stakingtypes.ErrNoUnbondingDelegation) {
+			return remainingFromdel.TruncateInt(), nil
 		}
-		if remainingUnbonding.IsZero() {
-			return math.ZeroInt(), nil
-		}
+		return math.Int{}, err
+	}
+	if remainingUnbonding.IsZero() {
+		return math.ZeroInt(), nil
 	}
 	return remainingUnbonding, nil
 }
