@@ -70,6 +70,90 @@
             "Params": "AuthParams"
           }
         }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/tmp/upgrade/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "UpgradeParams",
+            "Proposal": "UpgradeProposal",
+            "TallyResult": "UpgradeTallyResult"
+          }
+        }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/tmp/slashing/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "SlashingParams"
+          }
+        }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/tmp/gov/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "GovParams",
+            "Proposal": "GovProposal",
+            "TallyResult": "GovTallyResult"
+          }
+        }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/tmp/feegrant/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "FeegrantParams"
+          }
+        }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/tmp/group/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "GroupParams"
+          }
+        }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/tmp/consensus/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "ConsensusParams"
+          }
+        }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/tmp/ibc/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "IBCParams"
+          }
+        }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/tmp/icacontroller/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "ICAControllerParams"
+          }
+        }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/tmp/icahost/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "ICAHostParams"
+          }
+        }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/tmp/globalfee/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "GlobalFeeParams"
+          }
+        }
       }
     ]
   }

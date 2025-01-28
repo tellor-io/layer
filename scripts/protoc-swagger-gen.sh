@@ -39,6 +39,17 @@ wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto
 mkdir ./layer/tmp/consensus
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/consensus/v1/query.proto -O ./layer/tmp/consensus/query.proto
 
+mkdir ./layer/tmp/ibc
+wget https://raw.githubusercontent.com/cosmos/ibc-go/refs/tags/v8.0.0/proto/ibc/applications/transfer/v1/query.proto -O ./layer/tmp/ibc/query.proto
+
+mkdir ./layer/tmp/icacontroller
+wget https://raw.githubusercontent.com/cosmos/ibc-go/refs/tags/v8.0.0/proto/ibc/applications/interchain_accounts/controller/v1/query.proto -O ./layer/tmp/icacontroller/query.proto
+
+mkdir ./layer/tmp/icahost
+wget https://raw.githubusercontent.com/cosmos/ibc-go/refs/tags/v8.0.0/proto/ibc/applications/interchain_accounts/host/v1/query.proto -O ./layer/tmp/icahost/query.proto
+
+mkdir ./layer/tmp/globalfee
+wget https://raw.githubusercontent.com/strangelove-ventures/globalfee/refs/tags/v0.50.1/proto/gaia/globalfee/v1beta1/query.proto -O ./layer/tmp/globalfee/query.proto
 
 proto_dirs=$(find ./layer -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 for dir in $proto_dirs; do
