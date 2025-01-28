@@ -24,7 +24,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func ReporterKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, *mocks.RegistryKeeper, sdk.Context, corestore.KVStoreService) {
+func ReporterKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, *mocks.RegistryKeeper, *mocks.AccountKeeper, sdk.Context, corestore.KVStoreService) {
 	tb.Helper()
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
@@ -39,13 +39,14 @@ func ReporterKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.
 	bk := new(mocks.BankKeeper)
 	sk := new(mocks.StakingKeeper)
 	rk := new(mocks.RegistryKeeper)
-
+	ak := new(mocks.AccountKeeper)
 	storeservice := runtime.NewKVStoreService(storeKey)
 	k := keeper.NewKeeper(
 		cdc,
 		storeservice,
 		log.NewNopLogger(),
 		authority.String(),
+		ak,
 		sk,
 		bk,
 		rk,
@@ -57,5 +58,5 @@ func ReporterKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.
 	err := k.Params.Set(ctx, types.DefaultParams())
 	require.NoError(tb, err)
 
-	return k, sk, bk, rk, ctx, storeservice
+	return k, sk, bk, rk, ak, ctx, storeservice
 }

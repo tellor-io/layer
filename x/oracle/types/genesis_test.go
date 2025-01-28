@@ -19,14 +19,19 @@ func TestGenesisState_Validate(t *testing.T) {
 			valid:    true,
 		},
 		{
-			desc:     "valid genesis state",
+			desc: "empty cyclelist",
 			genState: &types.GenesisState{
-
-				// this line is used by starport scaffolding # types/genesis/validField
+				Cyclelist: [][]byte{},
 			},
-			valid: true,
+			valid: false,
 		},
-		// this line is used by starport scaffolding # types/genesis/testcase
+		{
+			desc: "empty cyclelist items",
+			genState: &types.GenesisState{
+				Cyclelist: [][]byte{{}, {}},
+			},
+			valid: false,
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {

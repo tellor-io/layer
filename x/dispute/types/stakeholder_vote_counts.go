@@ -5,10 +5,9 @@ import (
 )
 
 type StakeholderVoteCounts struct {
-	Users        VoteCounts `protobuf:"bytes,1,opt,name=users,proto3"`
-	Reporters    VoteCounts `protobuf:"bytes,2,opt,name=reporters,proto3"`
-	Tokenholders VoteCounts `protobuf:"bytes,3,opt,name=tokenholders,proto3"`
-	Team         VoteCounts `protobuf:"bytes,4,opt,name=team,proto3"`
+	Users     VoteCounts `protobuf:"bytes,1,opt,name=users,proto3"`
+	Reporters VoteCounts `protobuf:"bytes,2,opt,name=reporters,proto3"`
+	Team      VoteCounts `protobuf:"bytes,3,opt,name=team,proto3"`
 }
 
 // Ensure WithdrawalId implements proto.Message

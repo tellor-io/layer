@@ -91,6 +91,9 @@ service Query {
   rpc GetCurrentQueryByQueryId(QueryGetCurrentQueryByQueryIdRequest) returns (QueryGetCurrentQueryByQueryIdResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_current_query_by_query_id/{query_id}";
   }
+  rpc GetQueryDataLimit(QueryGetQueryDataLimitRequest) returns (QueryGetQueryDataLimitResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_query_data_limit";
+  }
   rpc ReportedIdsByReporter(QueryReportedIdsByReporterRequest) returns (QueryReportedIdsByReporterResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/reported_ids_by_reporter/{reporter_address}";
   }
@@ -283,6 +286,11 @@ message QueryGetCurrentQueryByQueryIdResponse {
   QueryMeta query = 1;
 }
 
+message QueryGetQueryDataLimitRequest {}
+
+message QueryGetQueryDataLimitResponse {
+  uint64 limit = 1;
+}
 message QueryReportedIdsByReporterRequest {
   string reporter_address = 1;
   cosmos.base.query.v1beta1.PageRequest pagination = 2;

@@ -24,6 +24,7 @@ type MsgClient interface {
 	SubmitValue(ctx context.Context, in *MsgSubmitValue, opts ...grpc.CallOption) (*MsgSubmitValueResponse, error)
 	Tip(ctx context.Context, in *MsgTip, opts ...grpc.CallOption) (*MsgTipResponse, error)
 	UpdateCyclelist(ctx context.Context, in *MsgUpdateCyclelist, opts ...grpc.CallOption) (*MsgUpdateCyclelistResponse, error)
+	UpdateQueryDataLimit(ctx context.Context, in *MsgUpdateQueryDataLimit, opts ...grpc.CallOption) (*MsgUpdateQueryDataLimitResponse, error)
 }
 
 type msgClient struct {
@@ -70,6 +71,15 @@ func (c *msgClient) UpdateCyclelist(ctx context.Context, in *MsgUpdateCyclelist,
 	return out, nil
 }
 
+func (c *msgClient) UpdateQueryDataLimit(ctx context.Context, in *MsgUpdateQueryDataLimit, opts ...grpc.CallOption) (*MsgUpdateQueryDataLimitResponse, error) {
+	out := new(MsgUpdateQueryDataLimitResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Msg/UpdateQueryDataLimit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -80,6 +90,7 @@ type MsgServer interface {
 	SubmitValue(context.Context, *MsgSubmitValue) (*MsgSubmitValueResponse, error)
 	Tip(context.Context, *MsgTip) (*MsgTipResponse, error)
 	UpdateCyclelist(context.Context, *MsgUpdateCyclelist) (*MsgUpdateCyclelistResponse, error)
+	UpdateQueryDataLimit(context.Context, *MsgUpdateQueryDataLimit) (*MsgUpdateQueryDataLimitResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -98,6 +109,9 @@ func (UnimplementedMsgServer) Tip(context.Context, *MsgTip) (*MsgTipResponse, er
 }
 func (UnimplementedMsgServer) UpdateCyclelist(context.Context, *MsgUpdateCyclelist) (*MsgUpdateCyclelistResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateCyclelist not implemented")
+}
+func (UnimplementedMsgServer) UpdateQueryDataLimit(context.Context, *MsgUpdateQueryDataLimit) (*MsgUpdateQueryDataLimitResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateQueryDataLimit not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -184,6 +198,24 @@ func _Msg_UpdateCyclelist_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateQueryDataLimit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateQueryDataLimit)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateQueryDataLimit(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Msg/UpdateQueryDataLimit",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateQueryDataLimit(ctx, req.(*MsgUpdateQueryDataLimit))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -206,6 +238,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateCyclelist",
 			Handler:    _Msg_UpdateCyclelist_Handler,
+		},
+		{
+			MethodName: "UpdateQueryDataLimit",
+			Handler:    _Msg_UpdateQueryDataLimit_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

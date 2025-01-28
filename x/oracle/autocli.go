@@ -114,6 +114,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}},
 				},
 				{
+					RpcMethod:      "GetQueryDataLimit",
+					Use:            "get-query-data-limit",
+					Short:          "Query query data limit",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+				{
 					RpcMethod:      "ReportedIdsByReporter",
 					Use:            "reported_ids_by_reporter [reporter_address]",
 					Short:          "Query reported ids by reporter",

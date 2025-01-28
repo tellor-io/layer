@@ -69,7 +69,7 @@ message MsgCreateReporter {
   // reporter_address is the address of the reporter.
   string reporter_address = 1;
   string commission_rate = 2 [
-    (cosmos_proto.scalar) = "cosmos.LegacyDec",
+    (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true

@@ -1,7 +1,6 @@
 package types
 
 import (
-	fmt "fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -13,6 +12,4 @@ func TestAttestationRequests_AddRequest(t *testing.T) {
 		Snapshot: []byte("snapshot"),
 	})
 	require.Equal(t, attestationRequests.Requests[0].Snapshot, []byte("snapshot"))
-
-	fmt.Println(attestationRequests.String())
 }

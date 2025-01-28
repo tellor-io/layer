@@ -272,9 +272,12 @@ func TestMixedEncoding(t *testing.T) {
 func TestGenesisDataSpec(t *testing.T) {
 	val := GenesisDataSpec()
 	require.NotNil(t, val)
-	require.Equal(t, val.ResponseValueType, "uint256")
-	require.Equal(t, val.AggregationMethod, "weighted-median")
-	require.Equal(t, val.Registrar, "genesis")
+	require.Equal(t, val[0].ResponseValueType, "uint256")
+	require.Equal(t, val[0].AggregationMethod, "weighted-median")
+	require.Equal(t, val[0].Registrar, "genesis")
+	require.Equal(t, val[1].ResponseValueType, "address, string, uint256")
+	require.Equal(t, val[1].AggregationMethod, "weighted-mode")
+	require.Equal(t, val[1].Registrar, "genesis")
 }
 
 func TestValidateValue(t *testing.T) {

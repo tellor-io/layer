@@ -19,25 +19,25 @@ type BridgeKeeper struct {
 	mock.Mock
 }
 
-// EVMAddressFromSignatures provides a mock function with given fields: ctx, sigA, sigB
-func (_m *BridgeKeeper) EVMAddressFromSignatures(ctx context.Context, sigA []byte, sigB []byte) (common.Address, error) {
-	ret := _m.Called(ctx, sigA, sigB)
+// EVMAddressFromSignatures provides a mock function with given fields: ctx, sigA, sigB, operatorAddress
+func (_m *BridgeKeeper) EVMAddressFromSignatures(ctx context.Context, sigA []byte, sigB []byte, operatorAddress string) (common.Address, error) {
+	ret := _m.Called(ctx, sigA, sigB, operatorAddress)
 
 	var r0 common.Address
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, []byte, []byte) (common.Address, error)); ok {
-		return rf(ctx, sigA, sigB)
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, []byte, string) (common.Address, error)); ok {
+		return rf(ctx, sigA, sigB, operatorAddress)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, []byte, []byte) common.Address); ok {
-		r0 = rf(ctx, sigA, sigB)
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, []byte, string) common.Address); ok {
+		r0 = rf(ctx, sigA, sigB, operatorAddress)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(common.Address)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, []byte, []byte) error); ok {
-		r1 = rf(ctx, sigA, sigB)
+	if rf, ok := ret.Get(1).(func(context.Context, []byte, []byte, string) error); ok {
+		r1 = rf(ctx, sigA, sigB, operatorAddress)
 	} else {
 		r1 = ret.Error(1)
 	}
