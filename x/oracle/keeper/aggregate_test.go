@@ -422,20 +422,9 @@ func (s *KeeperTestSuite) TestGetAggregateByTimestamp() {
 	// queryAt := time.Unix(fastForward, 0)
 	s.ctx = s.ctx.WithBlockTime(reportedAt)
 
-	retAgg, err := s.oracleKeeper.GetAggregateByTimestamp(s.ctx, qId, reportedAt)
+	retAgg, err := s.oracleKeeper.GetAggregateByTimestamp(s.ctx, qId, uint64(reportedAt.UnixMilli()))
 	s.NoError(err)
 	s.Equal(aggregate, &retAgg)
-}
-
-func (s *KeeperTestSuite) TestGetAggregateByIndex() {
-	reportedAt := time.Now()
-	aggregate, qId, _, _, err := s.CreateReportAndReportersAtTimestamp(reportedAt)
-	s.NoError(err)
-
-	retAgg, retTimestamp, err := s.oracleKeeper.GetAggregateByIndex(s.ctx, qId, 0)
-	s.NoError(err)
-	s.Equal(aggregate, retAgg)
-	s.Equal(reportedAt.Unix(), retTimestamp.Unix())
 }
 
 func (s *KeeperTestSuite) TestGetAggregateBeforeByReporter() {

@@ -549,7 +549,7 @@ func (s *VoteExtensionTestSuite) TestSignInitialMessage() {
 		return []byte("signedMsg"), nil
 	})
 
-	sigA, sigB, err := h.SignInitialMessage()
+	sigA, sigB, err := h.SignInitialMessage("operatorAddr1")
 	require.NoError(err)
 	require.NotEmpty(sigA)
 	require.NotEmpty(sigB)
@@ -710,6 +710,7 @@ func (s *VoteExtensionTestSuite) TestEncodeAndSignMessage() {
 	}
 
 	for _, tt := range tests {
+		fmt.Println(tt.name)
 		s.Run(tt.name, func() {
 			h, _, _, _ := s.CreateHandlerAndMocks()
 			patches := gomonkey.NewPatches()

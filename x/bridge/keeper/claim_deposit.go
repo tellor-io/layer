@@ -18,18 +18,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64, msgSender sdk.AccAddress) error {
+func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64, msgSender sdk.AccAddress) error {
 	cosmosCtx := sdk.UnwrapSDKContext(ctx)
 	queryId, err := k.GetDepositQueryId(depositId)
 	if err != nil {
 		return err
 	}
-	aggregate, aggregateTimestamp, err := k.oracleKeeper.GetAggregateByIndex(ctx, queryId, reportIndex)
+	aggregate, err := k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, timestamp)
 	if err != nil {
 		return err
-	}
-	if aggregate == nil {
-		return types.ErrNoAggregate
 	}
 	if aggregate.Flagged {
 		return types.ErrAggregateFlagged
@@ -41,7 +38,7 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64,
 		return types.ErrDepositAlreadyClaimed
 	}
 	// get power threshold at report time
-	valsetTimestampBefore, err := k.GetValidatorSetTimestampBefore(ctx, uint64(aggregateTimestamp.UnixMilli()))
+	valsetTimestampBefore, err := k.GetValidatorSetTimestampBefore(ctx, timestamp)
 	if err != nil {
 		return err
 	}
@@ -54,7 +51,7 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, reportIndex uint64,
 		return types.ErrInsufficientReporterPower
 	}
 	// ensure can't claim deposit until report is old enough
-	if cosmosCtx.BlockTime().Sub(aggregateTimestamp) < 12*time.Hour {
+	if cosmosCtx.BlockTime().Sub(time.UnixMilli(int64(timestamp))) < 12*time.Hour {
 		return types.ErrReportTooYoung
 	}
 

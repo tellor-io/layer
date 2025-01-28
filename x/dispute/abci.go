@@ -17,9 +17,10 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	return CheckClosedDisputesForExecution(ctx, k)
 }
 
-// Checks for expired prevote disputes and sets them to failed if expired.
-// Also checks whether any open disputes' vote periods have ended and tallies the vote if so.
-func CheckOpenDisputesForExpiration(ctx context.Context, k keeper.Keeper) error {
+// SetBlockInfo logic should be in EndBlocker so that BlockInfo records the correct values after all delegations and tip additions for the block have been processed
+func EndBlocker(ctx context.Context, k keeper.Keeper) error {
+	k.Logger(ctx).Info("IN ENDBLOCKER FOR DISPUTE")
+	// check if a dispute has been opened at the current block height
 	iter, err := k.Disputes.Indexes.OpenDisputes.MatchExact(ctx, true)
 	if err != nil {
 		return err
@@ -34,6 +35,42 @@ func CheckOpenDisputesForExpiration(ctx context.Context, k keeper.Keeper) error 
 		if err != nil {
 			return err
 		}
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		if dispute.BlockNumber == uint64(sdkCtx.BlockHeight()) {
+			k.Logger(ctx).Info("FOUND NEW OPEN DISPUTE AND SET BLOCK INFO")
+			err := k.SetBlockInfo(ctx, dispute.HashId)
+			if err != nil {
+				return err
+			}
+			k.Logger(ctx).Info("FOUND NEW OPEN DISPUTE AND SET BLOCK INFO")
+		}
+	}
+	return nil
+}
+
+// Checks for expired prevote disputes and sets them to failed if expired.
+// Also checks whether any open disputes' vote periods have ended and tallies the vote if so.
+func CheckOpenDisputesForExpiration(ctx context.Context, k keeper.Keeper) error {
+	iter, err := k.Disputes.Indexes.OpenDisputes.MatchExact(ctx, true)
+	if err != nil {
+		return err
+	}
+	// do a 1000 open disputes at a time
+	i := 1000
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		if i == 0 {
+			break
+		}
+		key, err := iter.PrimaryKey()
+		if err != nil {
+			return err
+		}
+		dispute, err := k.Disputes.Get(ctx, key)
+		if err != nil {
+			return err
+		}
+		// dispute is expired before it entered voting phase; so close dispute and set status to failed
 		if sdk.UnwrapSDKContext(ctx).BlockTime().After(dispute.DisputeEndTime) && dispute.DisputeStatus == types.Prevote {
 			dispute.Open = false
 			dispute.DisputeStatus = types.Failed
@@ -46,12 +83,14 @@ func CheckOpenDisputesForExpiration(ctx context.Context, k keeper.Keeper) error 
 			if err != nil {
 				return err
 			}
+			// tally the vote if vote period ended and it hasn't been tallied yet
 			if sdk.UnwrapSDKContext(ctx).BlockTime().After(vote.VoteEnd) && vote.VoteResult == types.VoteResult_NO_TALLY {
 				if err := k.TallyVote(ctx, key); err != nil {
 					return err
 				}
 			}
 		}
+		i--
 	}
 	return nil
 }

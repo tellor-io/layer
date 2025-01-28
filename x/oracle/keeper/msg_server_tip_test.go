@@ -15,14 +15,13 @@ import (
 func (s *KeeperTestSuite) TestTip() {
 	require := s.Require()
 	ctx := s.ctx
-	// k := s.oracleKeeper
 	regK := s.registryKeeper
 	bk := s.bankKeeper
 	msgServer := s.msgServer
 
-	// denom not loya
 	tipper := sample.AccAddressBytes()
 	amount := sdk.NewCoin("btc", math.NewInt(10*1e6))
+	// s.bankKeeper.On("SendCoinsFromAccountToModule", ctx, tipper, "oracle", sdk.NewCoins(amount)).Return(nil)
 	tipRes, err := msgServer.Tip(ctx, &types.MsgTip{
 		Amount:    amount,
 		Tipper:    tipper.String(),
@@ -39,30 +38,31 @@ func (s *KeeperTestSuite) TestTip() {
 		QueryData: []byte(queryData),
 	})
 	require.Error(err)
+	require.ErrorContains(err, "invalid tip amount")
 	require.Nil(tipRes)
 
-	// amount is negative
-	require.Panics(func() {
-		tipRes, err = msgServer.Tip(ctx, &types.MsgTip{
-			Amount:    sdk.NewCoin("loya", math.NewInt(-10*1e6)),
-			Tipper:    tipper.String(),
-			QueryData: []byte(queryData),
-		})
-	})
-
-	// bad tipper address
-	badTipperAddr := "bad_tipper_address"
+	// amount is to large
+	amount = sdk.NewCoin("loya", math.NewInt(100_000_000))
 	tipRes, err = msgServer.Tip(ctx, &types.MsgTip{
 		Amount:    amount,
-		Tipper:    badTipperAddr,
+		Tipper:    tipper.String(),
 		QueryData: []byte(queryData),
 	})
 	require.Error(err)
+	require.EqualError(err, types.ErrTipExceedsMax.Error())
 	require.Nil(tipRes)
 
 	// query needs initialized, expiration after block time, set first tip
 	amount = sdk.NewCoin("loya", math.NewInt(10*1e6))
-	regK.On("GetSpec", ctx, "SpotPrice").Return(regtypes.GenesisDataSpec(), nil)
+	genesisDataSpecs := regtypes.GenesisDataSpec()
+	var spotPriceSpec regtypes.DataSpec
+	for i := 0; i < len(genesisDataSpecs); i++ {
+		if genesisDataSpecs[i].QueryType == "spotprice" {
+			spotPriceSpec = genesisDataSpecs[i]
+			break
+		}
+	}
+	regK.On("GetSpec", ctx, "SpotPrice").Return(spotPriceSpec, nil)
 	bk.On("SendCoinsFromAccountToModule", ctx, tipper, types.ModuleName, sdk.NewCoins(amount)).Return(nil).Once()
 	twoPercent := amount.Amount.Mul(math.NewInt(2)).Quo(math.NewInt(100))
 	burnCoin := sdk.NewCoin(amount.Denom, twoPercent)
@@ -76,9 +76,4 @@ func (s *KeeperTestSuite) TestTip() {
 	})
 	require.NoError(err)
 	require.NotNil(tipRes)
-
-	// queryId := utils.QueryIDFromData(queryBytes)
-	// tips, err := k.Tips.Get(ctx, collections.Join(queryId, []byte(tipper)))
-	// require.NoError(err)
-	// require.Equal(tips, amount.Amount.Sub(twoPercent))
 }

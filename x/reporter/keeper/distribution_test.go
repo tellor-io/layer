@@ -16,7 +16,7 @@ import (
 )
 
 func TestDivvyingTips(t *testing.T) {
-	k, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	height := uint64(10)
 	val1Address := sample.AccAddressBytes()
 	vals := simtestutil.ConvertAddrsToValAddrs([]sdk.AccAddress{val1Address})
@@ -50,7 +50,7 @@ func TestDivvyingTips(t *testing.T) {
 }
 
 func TestReturnSlashedTokens(t *testing.T) {
-	k, sk, _, _, ctx, _ := setupKeeper(t)
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 
 	delAddr1, delAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
 	val1Address, val2Address := sdk.ValAddress(sample.AccAddressBytes()), sdk.ValAddress(sample.AccAddressBytes())
@@ -76,13 +76,15 @@ func TestReturnSlashedTokens(t *testing.T) {
 	sk.On("GetValidator", ctx, val2Address).Return(validator2, nil)
 	sk.On("Delegate", ctx, delAddr1, tokenOrigin1.Amount, stakingtypes.Bonded, validator1, false).Return(math.LegacyZeroDec(), nil)
 	sk.On("Delegate", ctx, delAddr2, tokenOrigin2.Amount, stakingtypes.Bonded, validator2, false).Return(math.LegacyZeroDec(), nil)
-	_, err = k.ReturnSlashedTokens(ctx, math.NewIntWithDecimal(2000, 6), []byte("hashId"))
+
+	pool, err := k.ReturnSlashedTokens(ctx, math.NewIntWithDecimal(2000, 6), []byte("hashId"))
 	require.NoError(t, err)
+	require.Equal(t, stakingtypes.BondedPoolName, pool)
 }
 
 func TestFeeRefund(t *testing.T) {
 	// set fee refund
-	k, sk, _, _, ctx, _ := setupKeeper(t)
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 	delAddr1, delAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
 	valAddr1, valAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
 	tokenOrigin1 := &types.TokenOriginInfo{
@@ -113,7 +115,7 @@ func TestFeeRefund(t *testing.T) {
 }
 
 func TestGetBondedValidators(t *testing.T) {
-	k, sk, _, _, ctx, kvstore := setupKeeper(t)
+	k, sk, _, _, _, ctx, kvstore := setupKeeper(t)
 
 	valAddr := sdk.ValAddress(sample.AccAddressBytes())
 
@@ -147,7 +149,7 @@ func TestGetBondedValidators(t *testing.T) {
 }
 
 func TestAddAmountToStake(t *testing.T) {
-	k, sk, _, _, ctx, kvstore := setupKeeper(t)
+	k, sk, _, _, _, ctx, kvstore := setupKeeper(t)
 
 	acc := sample.AccAddressBytes()
 	valAddr := sdk.ValAddress(sample.AccAddressBytes())

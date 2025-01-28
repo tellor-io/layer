@@ -35,4 +35,6 @@ message DataSpec {
   // to 0s if not specified.
   // extensions: treat as a golang time.duration, don't allow nil values, don't omit empty values
   uint64 report_block_window = 6;
+  // querytype is the first arg in queryData
+  string query_type = 7;
 }

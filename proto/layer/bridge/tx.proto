@@ -42,7 +42,8 @@ message MsgClaimDepositsRequest {
 
   string creator = 1;
   repeated uint64 deposit_ids = 2;
-  repeated uint64 indices = 3;
+  // list of timestamps in milliseconds
+  repeated uint64 timestamps = 3;
 }
 
 message MsgClaimDepositsResponse {}

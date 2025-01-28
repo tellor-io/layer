@@ -2,18 +2,21 @@ package types
 
 import (
 	"errors"
+	time "time"
 )
 
 // NewGenesisState creates a new GenesisState object
-func NewGenesisState(bondDenom string) *GenesisState {
+func NewGenesisState(bondDenom string, initialized bool, previousBlockTime *time.Time) *GenesisState {
 	return &GenesisState{
-		BondDenom: bondDenom,
+		BondDenom:         bondDenom,
+		Initialized:       initialized,
+		PreviousBlockTime: previousBlockTime,
 	}
 }
 
 // DefaultGenesisState creates a default GenesisState object
 func DefaultGenesis() *GenesisState {
-	return NewGenesisState(DefaultBondDenom)
+	return NewGenesisState(DefaultBondDenom, false, nil)
 }
 
 // ValidateGenesis validates the provided genesis state to ensure the

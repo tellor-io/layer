@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/bridge/types"
@@ -34,9 +33,8 @@ func (q Querier) GetAttestationDataBySnapshot(goCtx context.Context, req *types.
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("snapshot not found for snapshot %s", snapshot))
 	}
 	queryId := snapshotData.QueryId
-	timestampTime := time.UnixMilli(int64(snapshotData.Timestamp))
 
-	aggReport, err := q.k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, timestampTime)
+	aggReport, err := q.k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, snapshotData.Timestamp)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("aggregate not found for queryId %s and timestamp %d", hex.EncodeToString(queryId), snapshotData.Timestamp))
 	}

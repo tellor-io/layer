@@ -49,7 +49,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	}
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	_, err = reporterMsgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccAddrs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: reportertypes.DefaultMinTrb})
+	_, err = reporterMsgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccAddrs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: reportertypes.DefaultMinLoya})
 	require.NoError(err)
 	//---------------------------------------------------------------------------
 	// Height 1 - register a spec for a TWAP query, registrar is reporter
@@ -68,7 +68,8 @@ func (s *E2ETestSuite) TestEditSpec() {
 		AggregationMethod: "weighted-median",
 		Registrar:         valAccAddrs[0].String(),
 		AbiComponents:     abiComponents,
-		ReportBlockWindow: 1,
+		ReportBlockWindow: 2,
+		QueryType:         "TWAP",
 	}
 	_, err = registryMsgServer.RegisterSpec(s.Setup.Ctx, &registrytypes.MsgRegisterSpec{
 		Registrar: valAccAddrs[0].String(),
@@ -139,6 +140,8 @@ func (s *E2ETestSuite) TestEditSpec() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(4)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
 	msgWithdrawTip := reportertypes.MsgWithdrawTip{
@@ -155,6 +158,8 @@ func (s *E2ETestSuite) TestEditSpec() {
 		AggregationMethod: "weighted-median",
 		Registrar:         valAccAddrs[0].String(),
 		AbiComponents:     abiComponents,
+		ReportBlockWindow: 1,
+		QueryType:         "TWAP",
 	}
 	msgUpdateSpec := registrytypes.MsgUpdateDataSpec{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -246,6 +251,8 @@ func (s *E2ETestSuite) TestEditSpec() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(6)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
 	_, err = reporterMsgServer.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)
@@ -262,6 +269,8 @@ func (s *E2ETestSuite) TestEditSpec() {
 			{Name: "asset", FieldType: "string"},
 			{Name: "currency", FieldType: "string"},
 		},
+		ReportBlockWindow: 2,
+		QueryType:         "TWAP",
 	}
 	msgUpdateSpec = registrytypes.MsgUpdateDataSpec{
 		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -298,6 +307,8 @@ func (s *E2ETestSuite) TestEditSpec() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(7)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
 	_, err = reporterMsgServer.WithdrawTip(s.Setup.Ctx, &msgWithdrawTip)
@@ -328,6 +339,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(8)
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
+
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
 	// proposal passed

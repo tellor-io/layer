@@ -4,23 +4,29 @@ package mint
 import (
 	fmt "fmt"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	reflect "reflect"
 	sync "sync"
 )
 
 var (
-	md_GenesisState            protoreflect.MessageDescriptor
-	fd_GenesisState_bond_denom protoreflect.FieldDescriptor
+	md_GenesisState                     protoreflect.MessageDescriptor
+	fd_GenesisState_bond_denom          protoreflect.FieldDescriptor
+	fd_GenesisState_initialized         protoreflect.FieldDescriptor
+	fd_GenesisState_previous_block_time protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_mint_genesis_proto_init()
 	md_GenesisState = File_layer_mint_genesis_proto.Messages().ByName("GenesisState")
 	fd_GenesisState_bond_denom = md_GenesisState.Fields().ByName("bond_denom")
+	fd_GenesisState_initialized = md_GenesisState.Fields().ByName("initialized")
+	fd_GenesisState_previous_block_time = md_GenesisState.Fields().ByName("previous_block_time")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -94,6 +100,18 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
+	if x.Initialized != false {
+		value := protoreflect.ValueOfBool(x.Initialized)
+		if !f(fd_GenesisState_initialized, value) {
+			return
+		}
+	}
+	if x.PreviousBlockTime != nil {
+		value := protoreflect.ValueOfMessage(x.PreviousBlockTime.ProtoReflect())
+		if !f(fd_GenesisState_previous_block_time, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -111,6 +129,10 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 	switch fd.FullName() {
 	case "layer.mint.GenesisState.bond_denom":
 		return x.BondDenom != ""
+	case "layer.mint.GenesisState.initialized":
+		return x.Initialized != false
+	case "layer.mint.GenesisState.previous_block_time":
+		return x.PreviousBlockTime != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.mint.GenesisState"))
@@ -129,6 +151,10 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.mint.GenesisState.bond_denom":
 		x.BondDenom = ""
+	case "layer.mint.GenesisState.initialized":
+		x.Initialized = false
+	case "layer.mint.GenesisState.previous_block_time":
+		x.PreviousBlockTime = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.mint.GenesisState"))
@@ -148,6 +174,12 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 	case "layer.mint.GenesisState.bond_denom":
 		value := x.BondDenom
 		return protoreflect.ValueOfString(value)
+	case "layer.mint.GenesisState.initialized":
+		value := x.Initialized
+		return protoreflect.ValueOfBool(value)
+	case "layer.mint.GenesisState.previous_block_time":
+		value := x.PreviousBlockTime
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.mint.GenesisState"))
@@ -170,6 +202,10 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 	switch fd.FullName() {
 	case "layer.mint.GenesisState.bond_denom":
 		x.BondDenom = value.Interface().(string)
+	case "layer.mint.GenesisState.initialized":
+		x.Initialized = value.Bool()
+	case "layer.mint.GenesisState.previous_block_time":
+		x.PreviousBlockTime = value.Message().Interface().(*timestamppb.Timestamp)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.mint.GenesisState"))
@@ -190,8 +226,15 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "layer.mint.GenesisState.previous_block_time":
+		if x.PreviousBlockTime == nil {
+			x.PreviousBlockTime = new(timestamppb.Timestamp)
+		}
+		return protoreflect.ValueOfMessage(x.PreviousBlockTime.ProtoReflect())
 	case "layer.mint.GenesisState.bond_denom":
 		panic(fmt.Errorf("field bond_denom of message layer.mint.GenesisState is not mutable"))
+	case "layer.mint.GenesisState.initialized":
+		panic(fmt.Errorf("field initialized of message layer.mint.GenesisState is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.mint.GenesisState"))
@@ -207,6 +250,11 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	switch fd.FullName() {
 	case "layer.mint.GenesisState.bond_denom":
 		return protoreflect.ValueOfString("")
+	case "layer.mint.GenesisState.initialized":
+		return protoreflect.ValueOfBool(false)
+	case "layer.mint.GenesisState.previous_block_time":
+		m := new(timestamppb.Timestamp)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.mint.GenesisState"))
@@ -280,6 +328,13 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if x.Initialized {
+			n += 2
+		}
+		if x.PreviousBlockTime != nil {
+			l = options.Size(x.PreviousBlockTime)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -308,6 +363,30 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.PreviousBlockTime != nil {
+			encoded, err := options.Marshal(x.PreviousBlockTime)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if x.Initialized {
+			i--
+			if x.Initialized {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+			i--
+			dAtA[i] = 0x18
 		}
 		if len(x.BondDenom) > 0 {
 			i -= len(x.BondDenom)
@@ -397,6 +476,62 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				}
 				x.BondDenom = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Initialized", wireType)
+				}
+				var v int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				x.Initialized = bool(v != 0)
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PreviousBlockTime", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.PreviousBlockTime == nil {
+					x.PreviousBlockTime = &timestamppb.Timestamp{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PreviousBlockTime); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -453,6 +588,10 @@ type GenesisState struct {
 
 	// BondDenom is the denomination of the token that should be minted.
 	BondDenom string `protobuf:"bytes,2,opt,name=bond_denom,json=bondDenom,proto3" json:"bond_denom,omitempty"`
+	// Boolean for if the minter has been initialized.
+	Initialized bool `protobuf:"varint,3,opt,name=initialized,proto3" json:"initialized,omitempty"`
+	// PreviousBlockTime is the timestamp of the previous block.
+	PreviousBlockTime *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=previous_block_time,json=previousBlockTime,proto3" json:"previous_block_time,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -482,25 +621,50 @@ func (x *GenesisState) GetBondDenom() string {
 	return ""
 }
 
+func (x *GenesisState) GetInitialized() bool {
+	if x != nil {
+		return x.Initialized
+	}
+	return false
+}
+
+func (x *GenesisState) GetPreviousBlockTime() *timestamppb.Timestamp {
+	if x != nil {
+		return x.PreviousBlockTime
+	}
+	return nil
+}
+
 var File_layer_mint_genesis_proto protoreflect.FileDescriptor
 
 var file_layer_mint_genesis_proto_rawDesc = []byte{
 	0x0a, 0x18, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6d, 0x69, 0x6e, 0x74, 0x2f, 0x67, 0x65, 0x6e,
 	0x65, 0x73, 0x69, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x0a, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2e, 0x6d, 0x69, 0x6e, 0x74, 0x22, 0x33, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69,
-	0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x62, 0x6f, 0x6e, 0x64, 0x5f, 0x64,
-	0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x62, 0x6f, 0x6e, 0x64,
-	0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4a, 0x04, 0x08, 0x01, 0x10, 0x02, 0x42, 0x92, 0x01, 0x0a, 0x0e,
-	0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6d, 0x69, 0x6e, 0x74, 0x42, 0x0c,
-	0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x29,
-	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f,
-	0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2f, 0x6d, 0x69, 0x6e, 0x74, 0xa2, 0x02, 0x03, 0x4c, 0x4d, 0x58, 0xaa,
-	0x02, 0x0a, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x4d, 0x69, 0x6e, 0x74, 0xca, 0x02, 0x0a, 0x4c,
-	0x61, 0x79, 0x65, 0x72, 0x5c, 0x4d, 0x69, 0x6e, 0x74, 0xe2, 0x02, 0x16, 0x4c, 0x61, 0x79, 0x65,
-	0x72, 0x5c, 0x4d, 0x69, 0x6e, 0x74, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0xea, 0x02, 0x0b, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x4d, 0x69, 0x6e, 0x74,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x72, 0x2e, 0x6d, 0x69, 0x6e, 0x74, 0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
+	0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xa7, 0x01,
+	0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x1d,
+	0x0a, 0x0a, 0x62, 0x6f, 0x6e, 0x64, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x09, 0x62, 0x6f, 0x6e, 0x64, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x20, 0x0a,
+	0x0b, 0x69, 0x6e, 0x69, 0x74, 0x69, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x08, 0x52, 0x0b, 0x69, 0x6e, 0x69, 0x74, 0x69, 0x61, 0x6c, 0x69, 0x7a, 0x65, 0x64, 0x12,
+	0x50, 0x0a, 0x13, 0x70, 0x72, 0x65, 0x76, 0x69, 0x6f, 0x75, 0x73, 0x5f, 0x62, 0x6c, 0x6f, 0x63,
+	0x6b, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67,
+	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x11,
+	0x70, 0x72, 0x65, 0x76, 0x69, 0x6f, 0x75, 0x73, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x54, 0x69, 0x6d,
+	0x65, 0x4a, 0x04, 0x08, 0x01, 0x10, 0x02, 0x42, 0x92, 0x01, 0x0a, 0x0e, 0x63, 0x6f, 0x6d, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6d, 0x69, 0x6e, 0x74, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65,
+	0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x29, 0x67, 0x69, 0x74, 0x68,
+	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f,
+	0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2f, 0x6d, 0x69, 0x6e, 0x74, 0xa2, 0x02, 0x03, 0x4c, 0x4d, 0x58, 0xaa, 0x02, 0x0a, 0x4c, 0x61,
+	0x79, 0x65, 0x72, 0x2e, 0x4d, 0x69, 0x6e, 0x74, 0xca, 0x02, 0x0a, 0x4c, 0x61, 0x79, 0x65, 0x72,
+	0x5c, 0x4d, 0x69, 0x6e, 0x74, 0xe2, 0x02, 0x16, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4d, 0x69,
+	0x6e, 0x74, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
+	0x0b, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x4d, 0x69, 0x6e, 0x74, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -517,14 +681,16 @@ func file_layer_mint_genesis_proto_rawDescGZIP() []byte {
 
 var file_layer_mint_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_layer_mint_genesis_proto_goTypes = []interface{}{
-	(*GenesisState)(nil), // 0: layer.mint.GenesisState
+	(*GenesisState)(nil),          // 0: layer.mint.GenesisState
+	(*timestamppb.Timestamp)(nil), // 1: google.protobuf.Timestamp
 }
 var file_layer_mint_genesis_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: layer.mint.GenesisState.previous_block_time:type_name -> google.protobuf.Timestamp
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_layer_mint_genesis_proto_init() }
