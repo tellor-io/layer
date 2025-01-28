@@ -199,7 +199,7 @@ func (c *Client) WithdrawAndStakeEarnedRewardsPeriodically(ctx context.Context, 
 			continue
 		}
 
-		withdrawMsg := &reportertypes.MsgWithdrawTipLegacy{
+		withdrawMsg := &reportertypes.MsgWithdrawTip{
 			SelectorAddress:  c.accAddr.String(),
 			ValidatorAddress: valAddr,
 		}
