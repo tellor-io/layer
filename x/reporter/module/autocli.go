@@ -1,9 +1,18 @@
 package reporter
 
 import (
+	"fmt"
+
+	"github.com/spf13/cobra"
 	modulev1 "github.com/tellor-io/layer/api/layer/reporter"
+	"github.com/tellor-io/layer/x/reporter/types"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
+	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/tx"
 )
 
 // AutoCLIOptions implements the autocli.HasAutoCLIConfig interface.
@@ -107,4 +116,45 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			},
 		},
 	}
+}
+
+func (AppModule) GetTxCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:                "reporter",
+		Short:              "Transactions command for the reporter module",
+		RunE:               client.ValidateCmd,
+		DisableFlagParsing: true,
+	}
+	cmd.AddCommand(GetTxCreateReporterCmd())
+	return cmd
+}
+
+func GetTxCreateReporterCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "create-reporter [commission-rate] [min-tokens-required]",
+		Short: "Execute the CreateReporter RPC method",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			minTokensRequired, ok := math.NewIntFromString(args[1])
+			if !ok {
+				return fmt.Errorf("invalid min-tokens-required: %s", args[1])
+			}
+
+			msg := types.MsgCreateReporter{
+				ReporterAddress:   clientCtx.FromAddress.String(),
+				CommissionRate:    math.LegacyMustNewDecFromStr(args[0]),
+				MinTokensRequired: minTokensRequired,
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
+		},
+	}
+	cmd.Flags().Bool("genesis", false, "if true will print the json init message for genesis")
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
 }

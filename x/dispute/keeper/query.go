@@ -119,9 +119,6 @@ func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest
 	sumOfUsersVotes := voteCounts.Users.Against + voteCounts.Users.Invalid + voteCounts.Users.Support
 	totalUserPower := blockInfo.TotalUserTips
 
-	sumOfTokenHoldersVotes := voteCounts.Tokenholders.Against + voteCounts.Tokenholders.Invalid + voteCounts.Tokenholders.Support
-	totalTokenHolderPower := k.Keeper.GetTotalSupply(ctx).Uint64()
-
 	teamAddr, err := k.Keeper.GetTeamAddress(ctx)
 	if err != nil {
 		return &types.QueryDisputesTallyResponse{}, err
@@ -159,11 +156,6 @@ func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest
 			VoteCount:       &voteCounts.Reporters,
 			TotalPowerVoted: sumOfReporterVotes,
 			TotalGroupPower: totalReporterPower.Uint64(),
-		},
-		Tokenholders: &types.GroupTally{
-			VoteCount:       &voteCounts.Tokenholders,
-			TotalPowerVoted: sumOfTokenHoldersVotes,
-			TotalGroupPower: totalTokenHolderPower,
 		},
 		Team: teamVote,
 	}

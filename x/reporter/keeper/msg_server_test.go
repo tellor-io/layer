@@ -19,27 +19,28 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func setupMsgServer(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, *mocks.RegistryKeeper, types.MsgServer, sdk.Context) {
+func setupMsgServer(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, *mocks.RegistryKeeper, *mocks.AccountKeeper, types.MsgServer, sdk.Context) {
 	tb.Helper()
-	k, sk, bk, rk, ctx, _ := setupKeeper(tb)
-	return k, sk, bk, rk, keeper.NewMsgServerImpl(k), ctx
+	k, sk, bk, rk, ak, ctx, _ := setupKeeper(tb)
+	return k, sk, bk, rk, ak, keeper.NewMsgServerImpl(k), ctx
 }
 
 func TestMsgServer(t *testing.T) {
-	k, sk, bk, rk, ms, ctx := setupMsgServer(t)
+	k, sk, bk, rk, ak, ms, ctx := setupMsgServer(t)
 	require.NotNil(t, ms)
 	require.NotNil(t, ctx)
 	require.NotEmpty(t, k)
 	require.NotNil(t, sk)
 	require.NotNil(t, bk)
 	require.NotNil(t, rk)
+	require.NotNil(t, ak)
 }
 
 func TestCreateReporter(t *testing.T) {
-	k, sk, _, _, ms, ctx := setupMsgServer(t)
+	k, sk, _, _, _, ms, ctx := setupMsgServer(t)
 	addr := sample.AccAddressBytes()
 	sk.On("IterateDelegatorDelegations", ctx, addr, mock.Anything).Return(nil)
-	_, err := ms.CreateReporter(ctx, &types.MsgCreateReporter{ReporterAddress: addr.String(), CommissionRate: types.DefaultMinCommissionRate, MinTokensRequired: types.DefaultMinTrb})
+	_, err := ms.CreateReporter(ctx, &types.MsgCreateReporter{ReporterAddress: addr.String(), CommissionRate: types.DefaultMinCommissionRate, MinTokensRequired: types.DefaultMinLoya})
 	require.ErrorContains(t, err, "address does not have min tokens required to be a reporter with a BONDED validator")
 
 	ctx = ctx.WithBlockHeight(1)
@@ -73,19 +74,19 @@ func TestCreateReporter(t *testing.T) {
 
 	_, err = k.Reporters.Get(ctx, addr)
 	require.ErrorIs(t, err, collections.ErrNotFound)
-	_, err = ms.CreateReporter(ctx, &types.MsgCreateReporter{ReporterAddress: addr.String(), CommissionRate: types.DefaultMinCommissionRate, MinTokensRequired: types.DefaultMinTrb})
+	_, err = ms.CreateReporter(ctx, &types.MsgCreateReporter{ReporterAddress: addr.String(), CommissionRate: types.DefaultMinCommissionRate, MinTokensRequired: types.DefaultMinLoya})
 	require.NoError(t, err)
 
 	reporter, err := k.Reporters.Get(ctx, addr)
 	require.NoError(t, err)
 	require.Equal(t, types.DefaultMinCommissionRate, reporter.CommissionRate)
-	require.Equal(t, types.DefaultMinTrb, reporter.MinTokensRequired)
+	require.Equal(t, types.DefaultMinLoya, reporter.MinTokensRequired)
 }
 
 func TestSelectReporter(t *testing.T) {
-	k, sk, _, _, ms, ctx := setupMsgServer(t)
+	k, sk, _, _, _, ms, ctx := setupMsgServer(t)
 	selector, reporter := sample.AccAddressBytes(), sample.AccAddressBytes()
-	require.NoError(t, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb)))
+	require.NoError(t, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya)))
 	sk.On("IterateDelegatorDelegations", ctx, selector, mock.Anything).Return(nil)
 	_, err := ms.SelectReporter(ctx, &types.MsgSelectReporter{SelectorAddress: selector.String(), ReporterAddress: reporter.String()})
 	require.ErrorContains(t, err, "reporter's min requirement 1000000 not met by selector")
@@ -129,7 +130,7 @@ func TestSelectReporter(t *testing.T) {
 }
 
 func TestSwitchReporter(t *testing.T) {
-	k, sk, _, rk, ms, ctx := setupMsgServer(t)
+	k, sk, _, rk, _, ms, ctx := setupMsgServer(t)
 	ctx = ctx.WithBlockTime(time.Now())
 	selector, reporter, reporter2 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
 
@@ -138,7 +139,7 @@ func TestSwitchReporter(t *testing.T) {
 	_, err := ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selector.String(), ReporterAddress: reporter2.String()})
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
-	require.NoError(t, k.Reporters.Set(ctx, reporter2, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb)))
+	require.NoError(t, k.Reporters.Set(ctx, reporter2, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya)))
 	require.NoError(t, k.Params.Set(ctx, types.Params{MaxSelectors: 0}))
 
 	_, err = ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selector.String(), ReporterAddress: reporter2.String()})
@@ -210,9 +211,9 @@ func TestSwitchReporter(t *testing.T) {
 }
 
 func TestRemoveSelector(t *testing.T) {
-	k, sk, _, _, ms, ctx := setupMsgServer(t)
+	k, sk, _, _, _, ms, ctx := setupMsgServer(t)
 	reporter, selector := sample.AccAddressBytes(), sample.AccAddressBytes()
-	require.NoError(t, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb)))
+	require.NoError(t, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya)))
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporter, 1)))
 
 	sk.On("IterateDelegatorDelegations", ctx, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
@@ -240,7 +241,10 @@ func TestRemoveSelector(t *testing.T) {
 		}
 	})
 	// no previous reports
-	_, err := ms.RemoveSelector(ctx, &types.MsgRemoveSelector{SelectorAddress: selector.String()})
+	_, err := ms.RemoveSelector(ctx, &types.MsgRemoveSelector{
+		SelectorAddress: selector.String(),
+		AnyAddress:      reporter.String(),
+	})
 	require.ErrorContains(t, err, "selector can't be removed if reporter's min requirement is met")
 	// selector not removed
 	_, err = k.Selectors.Get(ctx, selector)
@@ -249,11 +253,11 @@ func TestRemoveSelector(t *testing.T) {
 	ctx = ctx.WithBlockHeight(1)
 	// selector does not meet min requirement, however reporter is not capped
 	sk.On("IterateDelegatorDelegations", ctx, selector, mock.Anything).Return(nil)
-	_, err = ms.RemoveSelector(ctx, &types.MsgRemoveSelector{SelectorAddress: selector.String()})
+	_, err = ms.RemoveSelector(ctx, &types.MsgRemoveSelector{SelectorAddress: selector.String(), AnyAddress: reporter.String()})
 	require.ErrorContains(t, err, "selector can only be removed if reporter has reached max selectors and doesn't meet min requirement")
 
 	require.NoError(t, k.Params.Set(ctx, types.Params{MaxSelectors: 0}))
-	_, err = ms.RemoveSelector(ctx, &types.MsgRemoveSelector{SelectorAddress: selector.String()})
+	_, err = ms.RemoveSelector(ctx, &types.MsgRemoveSelector{SelectorAddress: selector.String(), AnyAddress: reporter.String()})
 	require.NoError(t, err)
 
 	_, err = k.Selectors.Get(ctx, selector)
@@ -261,9 +265,9 @@ func TestRemoveSelector(t *testing.T) {
 }
 
 func TestUnjailReporter(t *testing.T) {
-	k, _, _, _, msg, ctx := setupMsgServer(t)
+	k, _, _, _, _, msg, ctx := setupMsgServer(t)
 	addr := sample.AccAddressBytes()
-	require.NoError(t, k.Reporters.Set(ctx, addr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinTrb)))
+	require.NoError(t, k.Reporters.Set(ctx, addr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya)))
 	reporter, err := k.Reporters.Get(ctx, addr)
 	require.NoError(t, err)
 	require.False(t, reporter.Jailed)
@@ -287,8 +291,7 @@ func TestUnjailReporter(t *testing.T) {
 }
 
 func TestWithdrawTip(t *testing.T) {
-	k, sk, bk, _, msg, ctx := setupMsgServer(t)
-
+	k, sk, bk, _, ak, msg, ctx := setupMsgServer(t)
 	selector, valAddr := sample.AccAddressBytes(), sdk.ValAddress(sample.AccAddressBytes())
 
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(selector, 1)))
@@ -312,12 +315,12 @@ func TestWithdrawTip(t *testing.T) {
 			Total: math.OneInt(),
 		}))
 	validator := stakingtypes.Validator{Status: stakingtypes.Bonded}
+	escrowPoolAddr := sample.AccAddressBytes()
 	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
 	sk.On("Delegate", ctx, selector, math.NewInt(1*1e6), stakingtypes.Bonded, validator, false).Return(math.LegacyZeroDec(), nil)
 	bk.On("SendCoinsFromModuleToModule", ctx, types.TipsEscrowPool, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(1*1e6)))).Return(nil)
-
-	_, err = msg.WithdrawTip(ctx, &types.MsgWithdrawTip{
-		SelectorAddress: selector.String(), ValidatorAddress: valAddr.String(),
-	})
+	ak.On("GetModuleAddress", types.TipsEscrowPool).Return(escrowPoolAddr)
+	bk.On("DelegateCoinsFromAccountToModule", ctx, escrowPoolAddr, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(1*1e6)))).Return(nil)
+	_, err = msg.WithdrawTip(ctx, &types.MsgWithdrawTip{SelectorAddress: selector.String(), ValidatorAddress: valAddr.String()})
 	require.NoError(t, err)
 }

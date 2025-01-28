@@ -27,7 +27,7 @@ func TestMsgRequestAttestations(t *testing.T) {
 
 	// empty message
 	response, err := msgServer.RequestAttestations(ctx, &types.MsgRequestAttestations{})
-	require.ErrorContains(t, err, "InvalidArgument")
+	require.ErrorContains(t, err, "invalid")
 	require.Nil(t, response)
 
 	// bad queryId
@@ -36,7 +36,7 @@ func TestMsgRequestAttestations(t *testing.T) {
 		QueryId:   "z",
 		Timestamp: "1",
 	})
-	require.ErrorContains(t, err, "InvalidArgument")
+	require.ErrorContains(t, err, "invalid")
 	require.Nil(t, response)
 
 	// bad timestamp
@@ -45,7 +45,7 @@ func TestMsgRequestAttestations(t *testing.T) {
 		QueryId:   "abcd1234",
 		Timestamp: "z",
 	})
-	require.ErrorContains(t, err, "InvalidArgument")
+	require.ErrorContains(t, err, "invalid")
 	require.Nil(t, response)
 
 	validators := []stakingtypes.Validator{
@@ -90,7 +90,7 @@ func TestMsgRequestAttestations(t *testing.T) {
 		AggregatePower:    uint64(10),
 		AggregateReporter: creatorAddr.String(),
 	}
-	ok.On("GetAggregateByTimestamp", ctx, queryId, timestampTime).Return(aggReport, nil)
+	ok.On("GetAggregateByTimestamp", ctx, queryId, uint64(timestampTime.UnixMilli())).Return(aggReport, nil)
 	err = k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{
 		Checkpoint: []byte("checkpoint"),
 	})

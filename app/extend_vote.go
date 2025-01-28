@@ -36,7 +36,7 @@ type BridgeKeeper interface {
 	GetValidatorCheckpointFromStorage(ctx context.Context) (*bridgetypes.ValidatorCheckpoint, error)
 	Logger(ctx context.Context) log.Logger
 	GetEVMAddressByOperator(ctx context.Context, operatorAddress string) ([]byte, error)
-	EVMAddressFromSignatures(ctx context.Context, sigA, sigB []byte) (common.Address, error)
+	EVMAddressFromSignatures(ctx context.Context, sigA, sigB []byte, operatorAddress string) (common.Address, error)
 	SetEVMAddressByOperator(ctx context.Context, operatorAddr string, evmAddr []byte) error
 	GetValidatorSetSignaturesFromStorage(ctx context.Context, timestamp uint64) (*bridgetypes.BridgeValsetSignatures, error)
 	SetBridgeValsetSignature(ctx context.Context, operatorAddress string, timestamp uint64, signature string) error
@@ -51,6 +51,7 @@ type BridgeKeeper interface {
 
 type StakingKeeper interface {
 	GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator stakingtypes.Validator, err error)
+	GetBondedValidatorsByPower(ctx context.Context) ([]stakingtypes.Validator, error)
 }
 
 type VoteExtHandler struct {
@@ -107,7 +108,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	_, err = h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
 		h.logger.Info("ExtendVoteHandler: EVM address not found for operator address, registering evm address", "operatorAddress", operatorAddress)
-		initialSigA, initialSigB, err := h.SignInitialMessage()
+		initialSigA, initialSigB, err := h.SignInitialMessage(operatorAddress)
 		if err != nil {
 			h.logger.Info("ExtendVoteHandler: failed to sign initial message", "error", err)
 			bz, err := json.Marshal(voteExt)
@@ -248,9 +249,9 @@ func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
 	return sig, nil
 }
 
-func (h *VoteExtHandler) SignInitialMessage() ([]byte, []byte, error) {
-	messageA := "TellorLayer: Initial bridge signature A"
-	messageB := "TellorLayer: Initial bridge signature B"
+func (h *VoteExtHandler) SignInitialMessage(operatorAddress string) ([]byte, []byte, error) {
+	messageA := fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddress)
+	messageB := fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddress)
 
 	// convert message to bytes
 	msgBytesA := []byte(messageA)

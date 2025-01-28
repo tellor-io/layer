@@ -15,6 +15,12 @@ func (k Keeper) DecodeValue(goCtx context.Context, req *types.QueryDecodeValueRe
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// hardcoded limit 512KB
+	// check hex string length
+	if len(req.Value) > 524288*2 {
+		return nil, status.Error(codes.InvalidArgument, "value too large")
+	}
 	// get spec from store
 	spec, err := k.GetSpec(ctx, req.QueryType)
 	if err != nil {

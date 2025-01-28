@@ -2,12 +2,16 @@ syntax = "proto3";
 package layer.mint;
 
 option go_package = "github.com/tellor-io/layer/x/mint/types";
+import "google/protobuf/timestamp.proto";
+import "gogoproto/gogo.proto";
 
 // GenesisState defines the mint module's genesis state.
 message GenesisState {
   reserved 1; // 1 was previously used for the `Minter` field.
-
   // BondDenom is the denomination of the token that should be minted.
   string bond_denom = 2;
-
+  // Boolean for if the minter has been initialized.
+  bool initialized = 3;
+  // PreviousBlockTime is the timestamp of the previous block.
+  google.protobuf.Timestamp previous_block_time = 4 [(gogoproto.stdtime) = true];
 }

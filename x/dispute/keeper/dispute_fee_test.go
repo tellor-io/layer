@@ -25,8 +25,8 @@ func (s *KeeperTestSuite) TestPayFromAccount() {
 func (s *KeeperTestSuite) TestPayFromBond() {
 	addr := sample.AccAddressBytes()
 
-	s.reporterKeeper.On("FeefromReporterStake", s.ctx, addr, math.OneInt(), []byte("hash")).Return(nil)
-	err := s.disputeKeeper.PayFromBond(s.ctx, addr, sdk.NewCoin(layer.BondDenom, math.NewInt(1)), []byte("hash"))
+	s.reporterKeeper.On("FeefromReporterStake", s.ctx, addr, math.OneInt(), []byte("hash"), true).Return(nil)
+	err := s.disputeKeeper.PayFromBond(s.ctx, addr, sdk.NewCoin(layer.BondDenom, math.NewInt(1)), []byte("hash"), true)
 	s.Nil(err)
 }
 
@@ -36,17 +36,16 @@ func (s *KeeperTestSuite) TestPayDisputeFee() {
 	s.bankKeeper.On("HasBalance", s.ctx, acct, fee).Return(true)
 	s.bankKeeper.On("SendCoinsFromAccountToModule", s.ctx, acct, types.ModuleName, sdk.NewCoins(fee)).Return(nil)
 	// from account
-	s.NoError(s.disputeKeeper.PayDisputeFee(s.ctx, acct, fee, false, []byte("hash")))
+	s.NoError(s.disputeKeeper.PayDisputeFee(s.ctx, acct, fee, false, []byte("hash"), true))
 	// from bond
-	s.reporterKeeper.On("FeefromReporterStake", s.ctx, acct, math.OneInt(), []byte("hash")).Return(nil)
-	s.NoError(s.disputeKeeper.PayDisputeFee(s.ctx, acct, fee, true, []byte("hash")))
+	s.reporterKeeper.On("FeefromReporterStake", s.ctx, acct, math.OneInt(), []byte("hash"), true).Return(nil)
+	s.NoError(s.disputeKeeper.PayDisputeFee(s.ctx, acct, fee, true, []byte("hash"), true))
 }
 
 func (k *KeeperTestSuite) TestReturnSlashedTokens() {
 	dispute := k.dispute()
-	pool := stakingtypes.BondedPoolName
-	k.reporterKeeper.On("ReturnSlashedTokens", k.ctx, dispute.SlashAmount, dispute.HashId).Return(pool, nil)
-	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, pool, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, dispute.SlashAmount))).Return(nil)
+	k.reporterKeeper.On("ReturnSlashedTokens", k.ctx, dispute.SlashAmount, dispute.HashId).Return(stakingtypes.BondedPoolName, nil)
+	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, dispute.SlashAmount))).Return(nil)
 	k.NoError(k.disputeKeeper.ReturnSlashedTokens(k.ctx, dispute))
 }
 
