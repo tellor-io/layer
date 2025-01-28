@@ -16,7 +16,7 @@ import (
 )
 
 func TestDivvyingTips(t *testing.T) {
-	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	k, _, _, _, ctx, _ := setupKeeper(t)
 	height := uint64(10)
 	val1Address := sample.AccAddressBytes()
 	vals := simtestutil.ConvertAddrsToValAddrs([]sdk.AccAddress{val1Address})
@@ -50,7 +50,7 @@ func TestDivvyingTips(t *testing.T) {
 }
 
 func TestReturnSlashedTokens(t *testing.T) {
-	k, _, sk, _, _, ctx, _ := setupKeeper(t)
+	k, sk, _, _, ctx, _ := setupKeeper(t)
 
 	delAddr1, delAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
 	val1Address, val2Address := sdk.ValAddress(sample.AccAddressBytes()), sdk.ValAddress(sample.AccAddressBytes())
@@ -82,7 +82,7 @@ func TestReturnSlashedTokens(t *testing.T) {
 
 func TestFeeRefund(t *testing.T) {
 	// set fee refund
-	k, _, sk, _, _, ctx, _ := setupKeeper(t)
+	k, sk, _, _, ctx, _ := setupKeeper(t)
 	delAddr1, delAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
 	valAddr1, valAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
 	tokenOrigin1 := &types.TokenOriginInfo{
@@ -113,7 +113,7 @@ func TestFeeRefund(t *testing.T) {
 }
 
 func TestGetBondedValidators(t *testing.T) {
-	k, _, sk, _, _, ctx, kvstore := setupKeeper(t)
+	k, sk, _, _, ctx, kvstore := setupKeeper(t)
 
 	valAddr := sdk.ValAddress(sample.AccAddressBytes())
 
@@ -147,7 +147,7 @@ func TestGetBondedValidators(t *testing.T) {
 }
 
 func TestAddAmountToStake(t *testing.T) {
-	k, _, sk, _, _, ctx, kvstore := setupKeeper(t)
+	k, sk, _, _, ctx, kvstore := setupKeeper(t)
 
 	acc := sample.AccAddressBytes()
 	valAddr := sdk.ValAddress(sample.AccAddressBytes())
