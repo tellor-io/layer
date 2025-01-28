@@ -373,6 +373,7 @@ func (s *ProposalHandlerTestSuite) TestProcessProposalHandler() {
 	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
 		OperatorAddress: consAddr.String(),
 	}, nil)
+	sk.On("GetBondedValidatorsByPower", ctx).Return([]stakingtypes.Validator{{OperatorAddress: consAddr.String()}}, nil)
 	res, err := p.ProcessProposalHandler(ctx, &req)
 	require.NoError(err)
 	require.NotNil(res)
