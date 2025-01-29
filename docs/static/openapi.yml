@@ -73,12 +73,12 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /tellor-io/layer/reporter/available-tips/{selector_address}/{reporter_address}/{query_id}/{meta_id}:
+  /tellor-io/layer/reporter/available-tips/{selector_address}:
     get:
       summary: >-
         AvailableTips queries the tips available for withdrawal for a given
         selector.
-      operationId: AvailableTipsByQuery
+      operationId: AvailableTips
       responses:
         '200':
           description: A successful response.
@@ -114,19 +114,6 @@ paths:
           in: path
           required: true
           type: string
-        - name: reporter_address
-          in: path
-          required: true
-          type: string
-        - name: query_id
-          in: path
-          required: true
-          type: string
-        - name: meta_id
-          in: path
-          required: true
-          type: string
-          format: uint64
       tags:
         - Query
   /tellor-io/layer/reporter/num-of-selectors-by-reporter/{reporter_address}:
@@ -193,9 +180,9 @@ paths:
                     title: >-
                       min_commission_rate, adopted from staking module, is the
                       minimum commission rate a reporter can their delegators
-                  min_trb:
+                  min_loya:
                     type: string
-                    title: min_trb to be a reporter
+                    title: min_loya to be a reporter
                   max_selectors:
                     type: string
                     format: uint64
@@ -363,50 +350,6 @@ paths:
           type: boolean
       tags:
         - Query
-  /tellor-io/layer/reporter/reward-claim-status/{id}/{selector_address}:
-    get:
-      summary: >-
-        RewardClaimStatus queries if a query's reward was already claimed by
-        querymeta.Id
-      operationId: RewardClaimStatus
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              status:
-                type: boolean
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: selector_address
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
   /tellor-io/layer/reporter/selector-reporter/{selector_address}:
     get:
       summary: SelectorReporter queries the reporter of a selector.
@@ -542,6 +485,10 @@ paths:
                       type: string
                       format: uint64
                       title: block number of when the report was created
+                    meta_id:
+                      type: string
+                      format: uint64
+                      title: identifier for the report's aggregate group
                   title: MicroReport represents data for a single report
               pagination:
                 description: pagination defines the pagination in the response.
@@ -693,6 +640,10 @@ paths:
                       type: string
                       format: uint64
                       title: block number of when the report was created
+                    meta_id:
+                      type: string
+                      format: uint64
+                      title: identifier for the report's aggregate group
                   title: MicroReport represents data for a single report
               pagination:
                 description: pagination defines the pagination in the response.
@@ -843,6 +794,10 @@ paths:
                       type: string
                       format: uint64
                       title: block number of when the report was created
+                    meta_id:
+                      type: string
+                      format: uint64
+                      title: identifier for the report's aggregate group
                   title: MicroReport represents data for a single report
               pagination:
                 description: pagination defines the pagination in the response.
@@ -963,6 +918,10 @@ paths:
                 type: object
                 properties:
                   minStakeAmount:
+                    type: string
+                  minTipAmount:
+                    type: string
+                  maxTipAmount:
                     type: string
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
@@ -1329,6 +1288,121 @@ paths:
           type: string
       tags:
         - Query
+  /tellor-io/layer/oracle/get_cycle_list:
+    get:
+      operationId: GetCycleList
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              cycle_list:
+                type: array
+                items:
+                  type: string
+                  format: byte
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/oracle/get_data_after/{query_id}/{timestamp}:
+    get:
+      operationId: GetDataAfter
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              aggregate:
+                type: object
+                properties:
+                  query_id:
+                    type: string
+                    format: byte
+                    title: query_id is the id of the query
+                  aggregate_value:
+                    type: string
+                    title: aggregate_value is the value of the aggregate
+                  aggregate_reporter:
+                    type: string
+                    title: aggregate_reporter is the address of the reporter
+                  aggregate_power:
+                    type: string
+                    format: uint64
+                    title: |-
+                      aggregate_power is the power of all the reporters
+                      that reported for the aggregate
+                  flagged:
+                    type: boolean
+                    title: flagged is true if the aggregate was flagged by a dispute
+                  index:
+                    type: string
+                    format: uint64
+                    title: index is the index of the aggregate
+                  height:
+                    type: string
+                    format: uint64
+                    title: height of the aggregate report
+                  micro_height:
+                    type: string
+                    format: uint64
+                    title: height of the micro report
+                  meta_id:
+                    type: string
+                    format: uint64
+                    title: meta_id is the id of the querymeta iterator
+                title: aggregate struct to represent meta data of an aggregate report
+              timestamp:
+                type: string
+                format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: query_id
+          in: path
+          required: true
+          type: string
+        - name: timestamp
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
   /tellor-io/layer/oracle/get_data_before/{query_id}/{timestamp}:
     get:
       summary: Queries a list of GetAggregatedReport items.
@@ -1490,6 +1564,38 @@ paths:
           format: uint64
       tags:
         - Query
+  /tellor-io/layer/oracle/get_query_data_limit:
+    get:
+      operationId: GetQueryDataLimit
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              limit:
+                type: string
+                format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
   /tellor-io/layer/oracle/get_reports_by_aggregate/{query_id}/{timestamp}:
     get:
       operationId: GetReportsByAggregate
@@ -1539,6 +1645,10 @@ paths:
                       type: string
                       format: uint64
                       title: block number of when the report was created
+                    meta_id:
+                      type: string
+                      format: uint64
+                      title: identifier for the report's aggregate group
                   title: MicroReport represents data for a single report
               pagination:
                 type: object
