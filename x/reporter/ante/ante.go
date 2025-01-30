@@ -76,7 +76,13 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 	case *stakingtypes.MsgCreateValidator:
 		msgAmount = msg.Value.Amount
 	case *stakingtypes.MsgDelegate:
-		val, err := t.stakingKeeper.GetValidator(ctx, sdk.ValAddress(msg.ValidatorAddress))
+		var valAddr sdk.ValAddress
+		if addr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err == nil {
+			valAddr = addr
+		} else {
+			return err
+		}
+		val, err := t.stakingKeeper.GetValidator(ctx, valAddr)
 		if err != nil {
 			return err
 		}
@@ -89,13 +95,24 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 		// redelegate shouldn't increase the total stake, however if its coming from
 		// a validator that is not in the active set, it might be considered as an increase
 		// in the active stake. Hence, we need to handle it appropriately.
-		sourceAddr := msg.ValidatorSrcAddress
-		destAddr := msg.ValidatorDstAddress
-		sourceVal, err := t.stakingKeeper.GetValidator(ctx, sdk.ValAddress(sourceAddr))
+		var srcValAddr sdk.ValAddress
+		if addr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddress); err == nil {
+			srcValAddr = addr
+		} else {
+			return err
+		}
+		var dstValAddr sdk.ValAddress
+		if addr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddress); err == nil {
+			dstValAddr = addr
+		} else {
+			return err
+		}
+
+		sourceVal, err := t.stakingKeeper.GetValidator(ctx, srcValAddr)
 		if err != nil {
 			return err
 		}
-		destVal, err := t.stakingKeeper.GetValidator(ctx, sdk.ValAddress(destAddr))
+		destVal, err := t.stakingKeeper.GetValidator(ctx, dstValAddr)
 		if err != nil {
 			return err
 		}
@@ -108,7 +125,13 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 			msgAmount = msg.Amount.Amount
 		}
 	case *stakingtypes.MsgCancelUnbondingDelegation:
-		val, err := t.stakingKeeper.GetValidator(ctx, sdk.ValAddress(msg.ValidatorAddress))
+		var valAddr sdk.ValAddress
+		if addr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err == nil {
+			valAddr = addr
+		} else {
+			return err
+		}
+		val, err := t.stakingKeeper.GetValidator(ctx, valAddr)
 		if err != nil {
 			return err
 		}
@@ -118,7 +141,13 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 			return nil
 		}
 	case *stakingtypes.MsgUndelegate:
-		val, err := t.stakingKeeper.GetValidator(ctx, sdk.ValAddress(msg.ValidatorAddress))
+		var valAddr sdk.ValAddress
+		if addr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err == nil {
+			valAddr = addr
+		} else {
+			return err
+		}
+		val, err := t.stakingKeeper.GetValidator(ctx, valAddr)
 		if err != nil {
 			return err
 		}
