@@ -1491,3 +1491,14 @@ func (s *IntegrationTestSuite) TestCurrentBug() {
 	s.Error(err, "balance should be zero")
 	s.True(bal.IsNil())
 }
+
+func (s *IntegrationTestSuite) TestManyOpenDisputes() {
+	// require := s.Require()
+	// msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+
+	// // chain has 11 validators
+	// // 10 will get disputed, 1 will be tipping and disputing
+	// repAccs, valAccs, _ := s.createValidatorsbypowers([]uint64{10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000})
+	// tipper := repAccs[0]
+
+}
