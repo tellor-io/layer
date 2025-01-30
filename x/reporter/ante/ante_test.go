@@ -37,8 +37,8 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 		Amount:     math.NewInt(105),
 	})
 	delAddr := sample.AccAddressBytes()
-	valSrcAddr := sample.AccAddressBytes()
-	valDstAddr := sample.AccAddressBytes()
+	valSrcAddr := sdk.ValAddress(sample.AccAddressBytes())
+	valDstAddr := sdk.ValAddress(sample.AccAddressBytes())
 	require.NoError(t, err)
 	testCases := []struct {
 		name  string
@@ -73,7 +73,7 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 			},
 			err: nil,
 			setup: func() {
-				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr.String())).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
+				sk.On("GetValidator", ctx, valSrcAddr).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
 			},
 		},
 		{
@@ -86,8 +86,8 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 			},
 			err: nil,
 			setup: func() {
-				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr.String())).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
-				sk.On("GetValidator", ctx, sdk.ValAddress(valDstAddr.String())).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
+				sk.On("GetValidator", ctx, valSrcAddr).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Twice()
+				sk.On("GetValidator", ctx, valDstAddr).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Twice()
 			},
 		},
 		{
@@ -99,7 +99,7 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 			},
 			err: errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period"),
 			setup: func() {
-				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr.String())).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
+				sk.On("GetValidator", ctx, valSrcAddr).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
 			},
 		},
 		{
@@ -111,7 +111,7 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 			},
 			err: errors.New("total stake decrease exceeds the allowed 5% threshold within a twelve-hour period"),
 			setup: func() {
-				sk.On("GetValidator", ctx, sdk.ValAddress(valSrcAddr.String())).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
+				sk.On("GetValidator", ctx, valSrcAddr).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
 			},
 		},
 		{
