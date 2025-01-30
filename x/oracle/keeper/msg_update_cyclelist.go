@@ -22,12 +22,10 @@ func (k msgServer) UpdateCyclelist(ctx context.Context, req *types.MsgUpdateCycl
 		return nil, errorsmod.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.keeper.GetAuthority(), req.Authority)
 	}
 
-	if err := k.keeper.Cyclelist.Clear(ctx, nil); err != nil {
-		return nil, err
+	if len(req.Cyclelist) == 0 {
+		return nil, errorsmod.Wrapf(fmt.Errorf("cyclelist is empty"), "cyclelist cannot be an empty array")
 	}
-	if err := k.keeper.InitCycleListQuery(ctx, req.Cyclelist); err != nil {
-		return nil, err
-	}
+
 	queries := make([]string, len(req.Cyclelist))
 	for i, querydata := range req.Cyclelist {
 		// decode the queryType
@@ -47,6 +45,15 @@ func (k msgServer) UpdateCyclelist(ctx context.Context, req *types.MsgUpdateCycl
 		}
 		queries[i] = hex.EncodeToString(querydata)
 	}
+
+	// if we make it here then the cyclelist is valid and will be updated
+	if err := k.keeper.Cyclelist.Clear(ctx, nil); err != nil {
+		return nil, err
+	}
+	if err := k.keeper.InitCycleListQuery(ctx, req.Cyclelist); err != nil {
+		return nil, err
+	}
+
 	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"cyclelist_updated",
