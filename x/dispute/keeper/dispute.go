@@ -78,19 +78,24 @@ func (k Keeper) ReporterKey(ctx sdk.Context, r oracletypes.MicroReport, c types.
 func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.MsgProposeDispute) error {
 	// validate report to make sure it exists
 	exists, err := k.oracleKeeper.ValidateMicroReportExists(ctx, *msg.Report)
+	ctx.Logger().Info("SetNewDispute", "exists", exists, "err", err)
 	if err != nil {
+		ctx.Logger().Error("SetNewDispute - validateMicroReportExists", "err", err)
 		return err
 	}
 	if !exists {
 		return fmt.Errorf("micro report does not exist")
 	}
 	disputeId := k.NextDisputeId(ctx)
+	ctx.Logger().Info("SetNewDispute dispute id", "disputeId", disputeId)
 	hashId := k.HashId(ctx, *msg.Report, msg.DisputeCategory)
+	ctx.Logger().Info("SetNewDispute hash id", "hashId", hashId)
 	// slash amount
 	disputeFee, err := k.GetDisputeFee(ctx, *msg.Report, msg.DisputeCategory)
 	if err != nil {
 		return err
 	}
+	ctx.Logger().Info("SetNewDispute dispute fee", "disputeFee", disputeFee)
 	if msg.Fee.Amount.GT(disputeFee) {
 		msg.Fee.Amount = disputeFee
 	}

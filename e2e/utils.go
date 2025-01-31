@@ -19,7 +19,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
@@ -35,8 +34,8 @@ var (
 			UidGid:     "1025:1025",
 		},
 	}
-	numVals      = 1
-	numFullNodes = 1
+	numVals      = 2
+	numFullNodes = 2
 
 	baseBech32 = "tellor"
 
@@ -275,7 +274,9 @@ type QueryReportersResponse struct {
 	// all the reporters.
 	Reporters []*Reporter `protobuf:"bytes,1,rep,name=reporters,proto3" json:"reporters,omitempty"`
 	// pagination defines the pagination in the response.
-	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	Pagination struct {
+		Total string `json:"total"`
+	} `json:"pagination"`
 }
 
 type QueryMeta struct {
