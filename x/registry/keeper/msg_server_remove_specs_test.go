@@ -76,5 +76,4 @@ func TestRemoveDataSpecs(t *testing.T) {
 
 	_, err = ms.RemoveDataSpecs(ctx, removeSpecsRequest)
 	require.NoError(t, err)
-
 }
