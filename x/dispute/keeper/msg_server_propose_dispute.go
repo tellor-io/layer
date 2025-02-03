@@ -64,7 +64,7 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 	return &types.MsgProposeDisputeResponse{}, nil
 }
 
-func validateProposeDispute(msg *types.MsgProposeDispute) (creator sdk.AccAddress, disputed_reporter sdk.AccAddress, err error) {
+func validateProposeDispute(msg *types.MsgProposeDispute) (creator, disputed_reporter sdk.AccAddress, err error) {
 	creator, err = sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return nil, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
