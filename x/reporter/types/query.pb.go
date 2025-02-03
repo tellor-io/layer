@@ -894,9 +894,9 @@ type QueryClient interface {
 	AllowedAmountExpiration(ctx context.Context, in *QueryAllowedAmountExpirationRequest, opts ...grpc.CallOption) (*QueryAllowedAmountExpirationResponse, error)
 	// NumOfSelectorsByReporter queries the number of selectors by a reporter.
 	NumOfSelectorsByReporter(ctx context.Context, in *QueryNumOfSelectorsByReporterRequest, opts ...grpc.CallOption) (*QueryNumOfSelectorsByReporterResponse, error)
-	// SpaceAvailableByReporter queries the space available in a reporter.
+	//  SpaceAvailableByReporter queries the space available in a reporter.
 	SpaceAvailableByReporter(ctx context.Context, in *QuerySpaceAvailableByReporterRequest, opts ...grpc.CallOption) (*QuerySpaceAvailableByReporterResponse, error)
-	// AvailableTips queries the tips available for withdrawal for a given selector.
+	//  AvailableTips queries the tips available for withdrawal for a given selector.
 	AvailableTips(ctx context.Context, in *QueryAvailableTipsRequest, opts ...grpc.CallOption) (*QueryAvailableTipsResponse, error)
 }
 
@@ -993,9 +993,9 @@ type QueryServer interface {
 	AllowedAmountExpiration(context.Context, *QueryAllowedAmountExpirationRequest) (*QueryAllowedAmountExpirationResponse, error)
 	// NumOfSelectorsByReporter queries the number of selectors by a reporter.
 	NumOfSelectorsByReporter(context.Context, *QueryNumOfSelectorsByReporterRequest) (*QueryNumOfSelectorsByReporterResponse, error)
-	// SpaceAvailableByReporter queries the space available in a reporter.
+	//  SpaceAvailableByReporter queries the space available in a reporter.
 	SpaceAvailableByReporter(context.Context, *QuerySpaceAvailableByReporterRequest) (*QuerySpaceAvailableByReporterResponse, error)
-	// AvailableTips queries the tips available for withdrawal for a given selector.
+	//  AvailableTips queries the tips available for withdrawal for a given selector.
 	AvailableTips(context.Context, *QueryAvailableTipsRequest) (*QueryAvailableTipsResponse, error)
 }
 
