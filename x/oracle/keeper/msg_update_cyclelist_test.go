@@ -33,4 +33,12 @@ func (s *KeeperTestSuite) TestMsgUpdateCycleList() {
 	cyclelist, err := k.GetCyclelist(ctx)
 	require.NoError(err)
 	require.Equal([][]byte{matic}, cyclelist)
+
+	req = types.MsgUpdateCyclelist{
+		Authority: k.GetAuthority(),
+		Cyclelist: make([][]byte, 0),
+	}
+
+	_, err = s.msgServer.UpdateCyclelist(ctx, &req)
+	require.ErrorContains(err, "cyclelist is empty")
 }

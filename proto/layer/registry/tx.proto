@@ -17,6 +17,8 @@ service Msg {
   rpc RegisterSpec(MsgRegisterSpec) returns (MsgRegisterSpecResponse);
   // UpdateDataSpec defines a method for updating an existing data specification.
   rpc UpdateDataSpec(MsgUpdateDataSpec) returns (MsgUpdateDataSpecResponse);
+  // RemoveDataSpecs defines a method for removing data specs via governance
+  rpc RemoveDataSpecs(MsgRemoveDataSpecs) returns (MsgRemoveDataSpecsResponse);
 }
 
 // MsgRegisterSpec defines the Msg/RegisterSpec request type.
@@ -46,3 +48,15 @@ message MsgUpdateDataSpec {
   DataSpec spec = 3 [(gogoproto.nullable) = false];
 }
 message MsgUpdateDataSpecResponse {}
+
+// MsgRemoveDataSpecs is the Msg/RemoveDataSpecs request type.
+message MsgRemoveDataSpecs {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "layer/x/registry/MsgUpdateDataSpec";
+
+  // authority is the address that is allowed calling this msg.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  repeated string data_spec_types = 2;
+}
+message MsgRemoveDataSpecsResponse {}
