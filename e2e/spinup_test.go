@@ -158,6 +158,7 @@ func TestLayerFlow(t *testing.T) {
 	// second party disputes report
 	//bz, err := json.Marshal(microReports.MicroReports[0])
 	require.NoError(t, err)
+	fmt.Println("Query id for proposal: ", microReports.MicroReports[0].QueryID)
 	txHash, err = validatorI.ExecTx(ctx, disputerFA, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, microReports.MicroReports[0].QueryID, "warning", "500000000000loya", "false", "--keyring-dir", layer.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
