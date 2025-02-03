@@ -22,6 +22,8 @@ type MsgClient interface {
 	RegisterSpec(ctx context.Context, in *MsgRegisterSpec, opts ...grpc.CallOption) (*MsgRegisterSpecResponse, error)
 	// UpdateDataSpec defines a method for updating an existing data specification.
 	UpdateDataSpec(ctx context.Context, in *MsgUpdateDataSpec, opts ...grpc.CallOption) (*MsgUpdateDataSpecResponse, error)
+	// RemoveDataSpecs defines a method for removing data specs via governance
+	RemoveDataSpecs(ctx context.Context, in *MsgRemoveDataSpecs, opts ...grpc.CallOption) (*MsgRemoveDataSpecsResponse, error)
 }
 
 type msgClient struct {
@@ -50,6 +52,15 @@ func (c *msgClient) UpdateDataSpec(ctx context.Context, in *MsgUpdateDataSpec, o
 	return out, nil
 }
 
+func (c *msgClient) RemoveDataSpecs(ctx context.Context, in *MsgRemoveDataSpecs, opts ...grpc.CallOption) (*MsgRemoveDataSpecsResponse, error) {
+	out := new(MsgRemoveDataSpecsResponse)
+	err := c.cc.Invoke(ctx, "/layer.registry.Msg/RemoveDataSpecs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -58,6 +69,8 @@ type MsgServer interface {
 	RegisterSpec(context.Context, *MsgRegisterSpec) (*MsgRegisterSpecResponse, error)
 	// UpdateDataSpec defines a method for updating an existing data specification.
 	UpdateDataSpec(context.Context, *MsgUpdateDataSpec) (*MsgUpdateDataSpecResponse, error)
+	// RemoveDataSpecs defines a method for removing data specs via governance
+	RemoveDataSpecs(context.Context, *MsgRemoveDataSpecs) (*MsgRemoveDataSpecsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -70,6 +83,9 @@ func (UnimplementedMsgServer) RegisterSpec(context.Context, *MsgRegisterSpec) (*
 }
 func (UnimplementedMsgServer) UpdateDataSpec(context.Context, *MsgUpdateDataSpec) (*MsgUpdateDataSpecResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateDataSpec not implemented")
+}
+func (UnimplementedMsgServer) RemoveDataSpecs(context.Context, *MsgRemoveDataSpecs) (*MsgRemoveDataSpecsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveDataSpecs not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -120,6 +136,24 @@ func _Msg_UpdateDataSpec_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_RemoveDataSpecs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRemoveDataSpecs)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RemoveDataSpecs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.registry.Msg/RemoveDataSpecs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RemoveDataSpecs(ctx, req.(*MsgRemoveDataSpecs))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +168,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateDataSpec",
 			Handler:    _Msg_UpdateDataSpec_Handler,
+		},
+		{
+			MethodName: "RemoveDataSpecs",
+			Handler:    _Msg_RemoveDataSpecs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

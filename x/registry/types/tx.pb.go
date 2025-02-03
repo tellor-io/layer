@@ -232,45 +232,140 @@ func (m *MsgUpdateDataSpecResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateDataSpecResponse proto.InternalMessageInfo
 
+// MsgRemoveDataSpecs is the Msg/RemoveDataSpecs request type.
+type MsgRemoveDataSpecs struct {
+	// authority is the address that is allowed calling this msg.
+	Authority     string   `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	DataSpecTypes []string `protobuf:"bytes,2,rep,name=data_spec_types,json=dataSpecTypes,proto3" json:"data_spec_types,omitempty"`
+}
+
+func (m *MsgRemoveDataSpecs) Reset()         { *m = MsgRemoveDataSpecs{} }
+func (m *MsgRemoveDataSpecs) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveDataSpecs) ProtoMessage()    {}
+func (*MsgRemoveDataSpecs) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6dfd681be11a64dd, []int{4}
+}
+func (m *MsgRemoveDataSpecs) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveDataSpecs) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveDataSpecs.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveDataSpecs) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveDataSpecs.Merge(m, src)
+}
+func (m *MsgRemoveDataSpecs) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveDataSpecs) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveDataSpecs.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveDataSpecs proto.InternalMessageInfo
+
+func (m *MsgRemoveDataSpecs) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgRemoveDataSpecs) GetDataSpecTypes() []string {
+	if m != nil {
+		return m.DataSpecTypes
+	}
+	return nil
+}
+
+type MsgRemoveDataSpecsResponse struct {
+}
+
+func (m *MsgRemoveDataSpecsResponse) Reset()         { *m = MsgRemoveDataSpecsResponse{} }
+func (m *MsgRemoveDataSpecsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgRemoveDataSpecsResponse) ProtoMessage()    {}
+func (*MsgRemoveDataSpecsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6dfd681be11a64dd, []int{5}
+}
+func (m *MsgRemoveDataSpecsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgRemoveDataSpecsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgRemoveDataSpecsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgRemoveDataSpecsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgRemoveDataSpecsResponse.Merge(m, src)
+}
+func (m *MsgRemoveDataSpecsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgRemoveDataSpecsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgRemoveDataSpecsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgRemoveDataSpecsResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgRegisterSpec)(nil), "layer.registry.MsgRegisterSpec")
 	proto.RegisterType((*MsgRegisterSpecResponse)(nil), "layer.registry.MsgRegisterSpecResponse")
 	proto.RegisterType((*MsgUpdateDataSpec)(nil), "layer.registry.MsgUpdateDataSpec")
 	proto.RegisterType((*MsgUpdateDataSpecResponse)(nil), "layer.registry.MsgUpdateDataSpecResponse")
+	proto.RegisterType((*MsgRemoveDataSpecs)(nil), "layer.registry.MsgRemoveDataSpecs")
+	proto.RegisterType((*MsgRemoveDataSpecsResponse)(nil), "layer.registry.MsgRemoveDataSpecsResponse")
 }
 
 func init() { proto.RegisterFile("layer/registry/tx.proto", fileDescriptor_6dfd681be11a64dd) }
 
 var fileDescriptor_6dfd681be11a64dd = []byte{
-	// 433 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x52, 0xb1, 0xef, 0xd2, 0x40,
-	0x18, 0xed, 0x09, 0x9a, 0x70, 0x1a, 0x0c, 0x0d, 0x09, 0xa5, 0xc6, 0x82, 0x5d, 0x44, 0x0c, 0xbd,
-	0x88, 0xd1, 0xc1, 0x4d, 0xa2, 0x23, 0x4b, 0xd1, 0xc4, 0x38, 0x48, 0x8e, 0xf6, 0x72, 0x34, 0xa1,
-	0x5c, 0xbd, 0x3b, 0x0c, 0xdd, 0x8c, 0xa3, 0x93, 0x7f, 0x88, 0x03, 0x83, 0x7f, 0x83, 0x61, 0x24,
-	0x26, 0x26, 0x4e, 0xc6, 0xc0, 0xc0, 0xbf, 0x61, 0x7a, 0x6d, 0x21, 0x94, 0x5f, 0xc2, 0xf4, 0x5b,
-	0xda, 0xde, 0xf7, 0xde, 0x7d, 0xef, 0x7b, 0xdf, 0x2b, 0x6c, 0xcc, 0x70, 0x4c, 0x38, 0xe2, 0x84,
-	0x06, 0x42, 0xf2, 0x18, 0xc9, 0xa5, 0x13, 0x71, 0x26, 0x99, 0x5e, 0x55, 0x80, 0x93, 0x03, 0x66,
-	0x0d, 0x87, 0xc1, 0x9c, 0x21, 0xf5, 0x4c, 0x29, 0x66, 0xc3, 0x63, 0x22, 0x64, 0x02, 0x85, 0x82,
-	0xa2, 0x4f, 0x4f, 0x92, 0x57, 0x06, 0x34, 0x53, 0x60, 0xac, 0x4e, 0x28, 0x3d, 0x64, 0x50, 0x9d,
-	0x32, 0xca, 0xd2, 0x7a, 0xf2, 0x95, 0x55, 0xad, 0xc2, 0x14, 0x3e, 0x96, 0x78, 0x2c, 0x22, 0xe2,
-	0xa5, 0xb8, 0xfd, 0x1d, 0xc0, 0xbb, 0x43, 0x41, 0x5d, 0x85, 0x13, 0x3e, 0x8a, 0x88, 0xa7, 0x3f,
-	0x87, 0x95, 0x8c, 0x8f, 0xb9, 0x01, 0xda, 0xa0, 0x53, 0x19, 0x18, 0xbf, 0x7e, 0xf4, 0xea, 0x99,
-	0xdc, 0x4b, 0xdf, 0xe7, 0x44, 0x88, 0x91, 0xe4, 0xc1, 0x9c, 0xba, 0x47, 0xaa, 0x7e, 0x1f, 0xc2,
-	0x8f, 0x0b, 0xc2, 0xe3, 0xb1, 0x8c, 0x23, 0x62, 0xdc, 0x48, 0x2e, 0xba, 0x15, 0x55, 0x79, 0x13,
-	0x47, 0x44, 0xef, 0xc3, 0x72, 0x22, 0x6c, 0x94, 0xda, 0xa0, 0x73, 0xbb, 0x6f, 0x38, 0xa7, 0x6b,
-	0x70, 0x5e, 0x61, 0x89, 0x13, 0xf9, 0x41, 0x79, 0xfd, 0xb7, 0xa5, 0xb9, 0x8a, 0xfb, 0xa2, 0xfa,
-	0x65, 0xbf, 0xea, 0x1e, 0x25, 0xec, 0x26, 0x6c, 0x14, 0xa6, 0x75, 0x89, 0x88, 0xd8, 0x5c, 0x10,
-	0xfb, 0x37, 0x80, 0xb5, 0xa1, 0xa0, 0x6f, 0x23, 0x1f, 0x4b, 0x92, 0x37, 0x4b, 0xbc, 0xe0, 0x85,
-	0x9c, 0x32, 0x1e, 0xc8, 0xf8, 0xb2, 0x97, 0x03, 0xf5, 0x3a, 0xbc, 0x3c, 0x53, 0x5e, 0x0e, 0x12,
-	0x5f, 0xf7, 0xab, 0xae, 0x9d, 0xa6, 0xb3, 0x3c, 0xe6, 0x73, 0xe6, 0xc0, 0xbe, 0x07, 0x9b, 0x67,
-	0xc5, 0xdc, 0x74, 0xff, 0x27, 0x80, 0xa5, 0xa1, 0xa0, 0xfa, 0x3b, 0x78, 0xe7, 0x24, 0xc2, 0x56,
-	0x71, 0xa2, 0xc2, 0xd6, 0xcc, 0x87, 0x17, 0x08, 0xb9, 0x82, 0xfe, 0x01, 0x56, 0x0b, 0x2b, 0x7d,
-	0x70, 0xc5, 0xd5, 0x53, 0x8a, 0xf9, 0xe8, 0x22, 0x25, 0xef, 0x6f, 0xde, 0xfc, 0xbc, 0x5f, 0x75,
-	0xc1, 0xe0, 0xf5, 0x7a, 0x6b, 0x81, 0xcd, 0xd6, 0x02, 0xff, 0xb6, 0x16, 0xf8, 0xb6, 0xb3, 0xb4,
-	0xcd, 0xce, 0xd2, 0xfe, 0xec, 0x2c, 0xed, 0xfd, 0x63, 0x1a, 0xc8, 0xe9, 0x62, 0xe2, 0x78, 0x2c,
-	0x44, 0x92, 0xcc, 0x66, 0x8c, 0xf7, 0x02, 0x86, 0xce, 0x16, 0x97, 0xe4, 0x24, 0x26, 0xb7, 0xd4,
-	0x5f, 0xfd, 0xf4, 0x7f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x41, 0x01, 0x74, 0x1c, 0x7d, 0x03, 0x00,
-	0x00,
+	// 495 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x54, 0xcf, 0x8b, 0xd3, 0x40,
+	0x14, 0xee, 0xb4, 0xab, 0xd0, 0xa7, 0xb6, 0x6c, 0x58, 0x68, 0x1a, 0x35, 0x5b, 0x73, 0xd0, 0x5a,
+	0xd9, 0x04, 0x2b, 0x7a, 0xf0, 0x66, 0xd1, 0x63, 0x2f, 0x59, 0x05, 0xf1, 0x60, 0x99, 0x6d, 0x86,
+	0xd9, 0x40, 0xd3, 0x89, 0x33, 0xd3, 0x65, 0x73, 0x13, 0x8f, 0x9e, 0xfc, 0x37, 0x44, 0x0f, 0x3d,
+	0xf8, 0x47, 0xec, 0x71, 0x11, 0x04, 0x4f, 0x22, 0xed, 0xa1, 0xff, 0x86, 0x64, 0xf2, 0xa3, 0x34,
+	0x5d, 0x08, 0x14, 0xbc, 0x24, 0x99, 0xf7, 0x7d, 0xf3, 0xbe, 0xf7, 0xbd, 0xf7, 0x08, 0xb4, 0x26,
+	0x38, 0x22, 0xdc, 0xe1, 0x84, 0xfa, 0x42, 0xf2, 0xc8, 0x91, 0xe7, 0x76, 0xc8, 0x99, 0x64, 0x5a,
+	0x43, 0x01, 0x76, 0x06, 0x18, 0xfb, 0x38, 0xf0, 0xa7, 0xcc, 0x51, 0xcf, 0x84, 0x62, 0xb4, 0xc6,
+	0x4c, 0x04, 0x4c, 0x38, 0x81, 0xa0, 0xce, 0xd9, 0xe3, 0xf8, 0x95, 0x02, 0xed, 0x04, 0x18, 0xa9,
+	0x93, 0x93, 0x1c, 0x52, 0xe8, 0x80, 0x32, 0xca, 0x92, 0x78, 0xfc, 0x95, 0x46, 0xcd, 0x42, 0x15,
+	0x1e, 0x96, 0x78, 0x24, 0x42, 0x32, 0x4e, 0x70, 0xeb, 0x3b, 0x82, 0xe6, 0x50, 0x50, 0x57, 0xe1,
+	0x84, 0x1f, 0x87, 0x64, 0xac, 0x3d, 0x83, 0x7a, 0xca, 0xc7, 0x5c, 0x47, 0x1d, 0xd4, 0xad, 0x0f,
+	0xf4, 0x9f, 0x3f, 0x8e, 0x0e, 0x52, 0xb9, 0x17, 0x9e, 0xc7, 0x89, 0x10, 0xc7, 0x92, 0xfb, 0x53,
+	0xea, 0xae, 0xa9, 0xda, 0x5d, 0x80, 0x0f, 0x33, 0xc2, 0xa3, 0x91, 0x8c, 0x42, 0xa2, 0x57, 0xe3,
+	0x8b, 0x6e, 0x5d, 0x45, 0x5e, 0x47, 0x21, 0xd1, 0xfa, 0xb0, 0x17, 0x0b, 0xeb, 0xb5, 0x0e, 0xea,
+	0xde, 0xe8, 0xeb, 0xf6, 0x66, 0x1b, 0xec, 0x97, 0x58, 0xe2, 0x58, 0x7e, 0xb0, 0x77, 0xf1, 0xe7,
+	0xb0, 0xe2, 0x2a, 0xee, 0xf3, 0xc6, 0xa7, 0xd5, 0xbc, 0xb7, 0x96, 0xb0, 0xda, 0xd0, 0x2a, 0x54,
+	0xeb, 0x12, 0x11, 0xb2, 0xa9, 0x20, 0xd6, 0x2f, 0x04, 0xfb, 0x43, 0x41, 0xdf, 0x84, 0x1e, 0x96,
+	0x24, 0x4b, 0x16, 0x7b, 0xc1, 0x33, 0x79, 0xca, 0xb8, 0x2f, 0xa3, 0x72, 0x2f, 0x39, 0xf5, 0x7f,
+	0x78, 0x79, 0xaa, 0xbc, 0xe4, 0x12, 0x9f, 0x57, 0xf3, 0x9e, 0x95, 0x4c, 0xe7, 0x7c, 0x3d, 0x9f,
+	0x2d, 0x07, 0xd6, 0x6d, 0x68, 0x6f, 0x05, 0x73, 0xd3, 0xdf, 0x10, 0x68, 0xaa, 0x21, 0x01, 0x3b,
+	0xcb, 0x51, 0xb1, 0xb3, 0xeb, 0xfb, 0xd0, 0xcc, 0x17, 0x44, 0x39, 0x17, 0x7a, 0xb5, 0x53, 0xeb,
+	0xd6, 0xdd, 0x5b, 0x5e, 0x9a, 0x3b, 0x76, 0x2f, 0x76, 0xb5, 0x72, 0x07, 0x8c, 0xed, 0x62, 0x33,
+	0x2f, 0xfd, 0xaf, 0x55, 0xa8, 0x0d, 0x05, 0xd5, 0xde, 0xc2, 0xcd, 0x8d, 0x75, 0x3c, 0x2c, 0x76,
+	0xb7, 0xb0, 0x01, 0xc6, 0x83, 0x12, 0x42, 0xa6, 0xa0, 0xbd, 0x87, 0x46, 0x61, 0x3d, 0xee, 0x5d,
+	0x71, 0x75, 0x93, 0x62, 0x3c, 0x2c, 0xa5, 0xe4, 0xf9, 0x31, 0x34, 0x8b, 0x93, 0xb0, 0xae, 0xac,
+	0x6d, 0x83, 0x63, 0xf4, 0xca, 0x39, 0x99, 0x84, 0x71, 0xed, 0xe3, 0x6a, 0xde, 0x43, 0x83, 0x57,
+	0x17, 0x0b, 0x13, 0x5d, 0x2e, 0x4c, 0xf4, 0x77, 0x61, 0xa2, 0x2f, 0x4b, 0xb3, 0x72, 0xb9, 0x34,
+	0x2b, 0xbf, 0x97, 0x66, 0xe5, 0xdd, 0x23, 0xea, 0xcb, 0xd3, 0xd9, 0x89, 0x3d, 0x66, 0x81, 0x23,
+	0xc9, 0x64, 0xc2, 0xf8, 0x91, 0xcf, 0x9c, 0xad, 0xe1, 0xa8, 0xe1, 0x9e, 0x5c, 0x57, 0x3f, 0x81,
+	0x27, 0xff, 0x02, 0x00, 0x00, 0xff, 0xff, 0x9e, 0x5f, 0x4a, 0x6a, 0xac, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -289,6 +384,8 @@ type MsgClient interface {
 	RegisterSpec(ctx context.Context, in *MsgRegisterSpec, opts ...grpc.CallOption) (*MsgRegisterSpecResponse, error)
 	// UpdateDataSpec defines a method for updating an existing data specification.
 	UpdateDataSpec(ctx context.Context, in *MsgUpdateDataSpec, opts ...grpc.CallOption) (*MsgUpdateDataSpecResponse, error)
+	// RemoveDataSpecs defines a method for removing data specs via governance
+	RemoveDataSpecs(ctx context.Context, in *MsgRemoveDataSpecs, opts ...grpc.CallOption) (*MsgRemoveDataSpecsResponse, error)
 }
 
 type msgClient struct {
@@ -317,12 +414,23 @@ func (c *msgClient) UpdateDataSpec(ctx context.Context, in *MsgUpdateDataSpec, o
 	return out, nil
 }
 
+func (c *msgClient) RemoveDataSpecs(ctx context.Context, in *MsgRemoveDataSpecs, opts ...grpc.CallOption) (*MsgRemoveDataSpecsResponse, error) {
+	out := new(MsgRemoveDataSpecsResponse)
+	err := c.cc.Invoke(ctx, "/layer.registry.Msg/RemoveDataSpecs", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// RegisterSpec defines a method for registering a new data specification.
 	RegisterSpec(context.Context, *MsgRegisterSpec) (*MsgRegisterSpecResponse, error)
 	// UpdateDataSpec defines a method for updating an existing data specification.
 	UpdateDataSpec(context.Context, *MsgUpdateDataSpec) (*MsgUpdateDataSpecResponse, error)
+	// RemoveDataSpecs defines a method for removing data specs via governance
+	RemoveDataSpecs(context.Context, *MsgRemoveDataSpecs) (*MsgRemoveDataSpecsResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -334,6 +442,9 @@ func (*UnimplementedMsgServer) RegisterSpec(ctx context.Context, req *MsgRegiste
 }
 func (*UnimplementedMsgServer) UpdateDataSpec(ctx context.Context, req *MsgUpdateDataSpec) (*MsgUpdateDataSpecResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateDataSpec not implemented")
+}
+func (*UnimplementedMsgServer) RemoveDataSpecs(ctx context.Context, req *MsgRemoveDataSpecs) (*MsgRemoveDataSpecsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveDataSpecs not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -376,6 +487,24 @@ func _Msg_UpdateDataSpec_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_RemoveDataSpecs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRemoveDataSpecs)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RemoveDataSpecs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.registry.Msg/RemoveDataSpecs",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RemoveDataSpecs(ctx, req.(*MsgRemoveDataSpecs))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.registry.Msg",
@@ -388,6 +517,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateDataSpec",
 			Handler:    _Msg_UpdateDataSpec_Handler,
+		},
+		{
+			MethodName: "RemoveDataSpecs",
+			Handler:    _Msg_RemoveDataSpecs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -534,6 +667,68 @@ func (m *MsgUpdateDataSpecResponse) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgRemoveDataSpecs) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveDataSpecs) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveDataSpecs) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.DataSpecTypes) > 0 {
+		for iNdEx := len(m.DataSpecTypes) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.DataSpecTypes[iNdEx])
+			copy(dAtA[i:], m.DataSpecTypes[iNdEx])
+			i = encodeVarintTx(dAtA, i, uint64(len(m.DataSpecTypes[iNdEx])))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgRemoveDataSpecsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgRemoveDataSpecsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgRemoveDataSpecsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -593,6 +788,34 @@ func (m *MsgUpdateDataSpec) Size() (n int) {
 }
 
 func (m *MsgUpdateDataSpecResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgRemoveDataSpecs) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.DataSpecTypes) > 0 {
+		for _, s := range m.DataSpecTypes {
+			l = len(s)
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgRemoveDataSpecsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -978,6 +1201,170 @@ func (m *MsgUpdateDataSpecResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUpdateDataSpecResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveDataSpecs) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveDataSpecs: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveDataSpecs: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DataSpecTypes", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DataSpecTypes = append(m.DataSpecTypes, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgRemoveDataSpecsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgRemoveDataSpecsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgRemoveDataSpecsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
