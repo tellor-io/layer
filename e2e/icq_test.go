@@ -224,7 +224,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 	fmt.Println(string(response), "response")
 	require.NoError(t, err)
 	// Validate response
-	var aggReport AggregateReport
+	var aggReport e2e.AggregateReport
 	err = json.Unmarshal(response, &aggReport)
 	require.NoError(t, err)
 	fmt.Println("Aggregate report: ", aggReport)
