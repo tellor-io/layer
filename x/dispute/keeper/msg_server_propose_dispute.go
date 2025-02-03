@@ -84,8 +84,8 @@ func validateProposeDispute(msg *types.MsgProposeDispute) error {
 	if msg.Fee.Denom != layer.BondDenom || msg.Fee.Amount.IsZero() || msg.Fee.Amount.IsNegative() {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid fee amount (%s)", msg.Fee.Amount.String())
 	}
-	if msg.ReportMetaId <= 0 && msg.ReportQueryId != "" {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "report should not be nil")
+	if msg.ReportQueryId == "" {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "query id should not be nil")
 	}
 	if msg.DisputeCategory != types.Warning && msg.DisputeCategory != types.Minor && msg.DisputeCategory != types.Major {
 		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "dispute category should be either Warning, Minor, or Major")

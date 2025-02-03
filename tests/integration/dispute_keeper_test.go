@@ -59,6 +59,7 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: time.UnixMilli(1696516597).UTC(),
+		MetaId:    1,
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
 	// disputer with tokens to pay fee
@@ -66,10 +67,12 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 
 	// Propose dispute pay half of the fee from account
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
-		Creator:         disputer.String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.Setup.Denom, math.NewInt(500_000)),
-		DisputeCategory: types.Warning,
+		Creator:          disputer.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		Fee:              sdk.NewCoin(s.Setup.Denom, math.NewInt(500_000)),
+		DisputeCategory:  types.Warning,
 	})
 	s.NoError(err)
 
@@ -173,11 +176,13 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
-		Creator:         repAddr.String(),
-		Report:          &report,
-		DisputeCategory: types.Warning,
-		Fee:             sdk.NewCoin(s.Setup.Denom, math.NewInt(10_000_000)), // one percent dispute fee
-		PayFromBond:     false,
+		Creator:          repAddr.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		DisputeCategory:  types.Warning,
+		Fee:              sdk.NewCoin(s.Setup.Denom, math.NewInt(10_000_000)), // one percent dispute fee
+		PayFromBond:      false,
 	})
 	s.NoError(err)
 
@@ -248,10 +253,12 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	disputerBalanceBefore := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
 	// Propose dispute pay half of the fee from account
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
-		Creator:         disputer.String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.Setup.Denom, disputeFee),
-		DisputeCategory: types.Warning,
+		Creator:          disputer.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		Fee:              sdk.NewCoin(s.Setup.Denom, disputeFee),
+		DisputeCategory:  types.Warning,
 	})
 	s.NoError(err)
 	s.True(s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom).IsLT(disputerBalanceBefore))
@@ -388,10 +395,12 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 
 	// Propose dispute pay half of the fee from account
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
-		Creator:         disputer.String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.Setup.Denom, disputeFee),
-		DisputeCategory: types.Warning,
+		Creator:          disputer.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		Fee:              sdk.NewCoin(s.Setup.Denom, disputeFee),
+		DisputeCategory:  types.Warning,
 	})
 	s.NoError(err)
 	// get dispute to set block info
@@ -474,10 +483,12 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	s.NoError(err)
 	fivePercentBurn := disputeFee.MulRaw(1).QuoRaw(20)
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
-		Creator:         disputer.String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.Setup.Denom, disputeFee),
-		DisputeCategory: types.Warning,
+		Creator:          disputer.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		Fee:              sdk.NewCoin(s.Setup.Denom, disputeFee),
+		DisputeCategory:  types.Warning,
 	})
 	s.NoError(err)
 	s.NoError(dispute.CheckOpenDisputesForExpiration(s.Setup.Ctx, s.Setup.Disputekeeper))
@@ -634,10 +645,12 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	s.NoError(err)
 	// fivePercentBurn := disputeFee.MulRaw(1).QuoRaw(20)
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
-		Creator:         disputer.String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.Setup.Denom, disputeFee),
-		DisputeCategory: types.Warning,
+		Creator:          disputer.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		Fee:              sdk.NewCoin(s.Setup.Denom, disputeFee),
+		DisputeCategory:  types.Warning,
 	})
 	s.NoError(err)
 	s.NoError(dispute.CheckOpenDisputesForExpiration(s.Setup.Ctx, s.Setup.Disputekeeper))
@@ -793,10 +806,12 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	// disputer balance before proposing dispute
 	disputerBalanceBefore := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
 	disputeMsg := types.MsgProposeDispute{
-		Creator:         disputer.String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.Setup.Denom, disputeFee),
-		DisputeCategory: types.Warning,
+		Creator:          disputer.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		Fee:              sdk.NewCoin(s.Setup.Denom, disputeFee),
+		DisputeCategory:  types.Warning,
 	}
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
 	s.NoError(err)
@@ -902,10 +917,12 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 	s.Setup.MintTokens(disputer, math.NewInt(100_000_000))
 
 	disputeMsg := types.MsgProposeDispute{
-		Creator:         disputer.String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.Setup.Denom, disputeFee),
-		DisputeCategory: types.Warning,
+		Creator:          disputer.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		Fee:              sdk.NewCoin(s.Setup.Denom, disputeFee),
+		DisputeCategory:  types.Warning,
 	}
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
 	s.NoError(err)
@@ -983,10 +1000,12 @@ func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
 	s.Setup.MintTokens(disputer, math.NewInt(100_000_000))
 
 	disputeMsg := types.MsgProposeDispute{
-		Creator:         disputer.String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.Setup.Denom, disputeFee),
-		DisputeCategory: types.Warning,
+		Creator:          disputer.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		Fee:              sdk.NewCoin(s.Setup.Denom, disputeFee),
+		DisputeCategory:  types.Warning,
 	}
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
 	s.NoError(err)
@@ -1103,10 +1122,12 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 	disputeMsg := types.MsgProposeDispute{
-		Creator:         disputer.String(),
-		Report:          &report2,
-		Fee:             sdk.NewCoin(s.Setup.Denom, disputeFee),
-		DisputeCategory: types.Warning,
+		Creator:          disputer.String(),
+		DisputedReporter: report2.Reporter,
+		ReportMetaId:     report2.MetaId,
+		ReportQueryId:    hex.EncodeToString(report2.QueryId),
+		Fee:              sdk.NewCoin(s.Setup.Denom, disputeFee),
+		DisputeCategory:  types.Warning,
 	}
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
 	s.NoError(err)
@@ -1146,10 +1167,12 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeNotBond() {
 	s.Setup.MintTokens(disputer, math.NewInt(100_000_000))
 	// propose dispute with half the fee
 	disputeMsg := types.MsgProposeDispute{
-		Creator:         disputer.String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.Setup.Denom, disputeFee.QuoRaw(2)),
-		DisputeCategory: types.Warning,
+		Creator:          disputer.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		Fee:              sdk.NewCoin(s.Setup.Denom, disputeFee.QuoRaw(2)),
+		DisputeCategory:  types.Warning,
 	}
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
 	s.NoError(err)
@@ -1206,11 +1229,13 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeBond() {
 	s.Setup.MintTokens(disputer, math.NewInt(100_000_000_000))
 	// propose dispute with half the fee
 	disputeMsg := types.MsgProposeDispute{
-		Creator:         disputer.String(),
-		Report:          &report,
-		Fee:             sdk.NewCoin(s.Setup.Denom, disputeFee.QuoRaw(2)),
-		DisputeCategory: types.Warning,
-		PayFromBond:     false,
+		Creator:          disputer.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		Fee:              sdk.NewCoin(s.Setup.Denom, disputeFee.QuoRaw(2)),
+		DisputeCategory:  types.Warning,
+		PayFromBond:      false,
 	}
 
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
@@ -1289,24 +1314,27 @@ func (s *IntegrationTestSuite) TestCurrentBug() {
 	s.Setup.Ctx, err = simtestutil.NextBlock(s.Setup.App, s.Setup.Ctx, time.Hour)
 	s.NoError(err)
 
+	test_report := &oracletypes.MicroReport{
+		Reporter:        repAccs[2].String(),
+		Power:           100000,
+		QueryType:       "SpotPrice",
+		QueryId:         utils.QueryIDFromData(ethQueryData),
+		AggregateMethod: "weighted-median",
+		Timestamp:       reportTime,
+		Value:           testutil.EncodeValue(29266),
+		Cyclelist:       true,
+		BlockNumber:     uint64(reportBlock),
+		MetaId:          0,
+	}
 	// propose dispute id 1 slash amount 10_000_000
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
-		Creator: repAccs[1].String(),
-		Report: &oracletypes.MicroReport{
-			Reporter:        repAccs[2].String(),
-			Power:           100000,
-			QueryType:       "SpotPrice",
-			QueryId:         utils.QueryIDFromData(ethQueryData),
-			AggregateMethod: "weighted-median",
-			Timestamp:       reportTime,
-			Value:           testutil.EncodeValue(29266),
-			Cyclelist:       true,
-			BlockNumber:     uint64(reportBlock),
-			MetaId:          0,
-		},
-		DisputeCategory: types.Warning,
-		Fee:             sdk.NewCoin(s.Setup.Denom, math.NewInt(1000_000_000)), // one percent dispute fee
-		PayFromBond:     false,
+		Creator:          repAccs[1].String(),
+		DisputedReporter: test_report.Reporter,
+		ReportMetaId:     test_report.MetaId,
+		ReportQueryId:    hex.EncodeToString(test_report.QueryId),
+		DisputeCategory:  types.Warning,
+		Fee:              sdk.NewCoin(s.Setup.Denom, math.NewInt(1000_000_000)), // one percent dispute fee
+		PayFromBond:      false,
 	})
 	s.NoError(err)
 	// check dispute status
@@ -1327,23 +1355,26 @@ func (s *IntegrationTestSuite) TestCurrentBug() {
 	s.NoError(err, "balance should be gt zero")
 	s.Equal(sk.PowerReduction(s.Setup.Ctx).MulRaw(int64(150+500+99000)).Add(startingBondedPoolbal), bal)
 
+	test_report2 := &oracletypes.MicroReport{
+		Reporter:        repAccs[0].String(),
+		Power:           150,
+		QueryType:       "SpotPrice",
+		QueryId:         utils.QueryIDFromData(ethQueryData),
+		AggregateMethod: "weighted-median",
+		Timestamp:       reportTime,
+		Value:           testutil.EncodeValue(29266),
+		Cyclelist:       true,
+		BlockNumber:     uint64(reportBlock),
+	}
 	// propose dispute id 2 slash amount 2_000_000
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
-		Creator: repAccs[1].String(),
-		Report: &oracletypes.MicroReport{
-			Reporter:        repAccs[0].String(),
-			Power:           150,
-			QueryType:       "SpotPrice",
-			QueryId:         utils.QueryIDFromData(ethQueryData),
-			AggregateMethod: "weighted-median",
-			Timestamp:       reportTime,
-			Value:           testutil.EncodeValue(29266),
-			Cyclelist:       true,
-			BlockNumber:     uint64(reportBlock),
-		},
-		DisputeCategory: types.Warning,
-		Fee:             sdk.NewCoin(s.Setup.Denom, math.NewInt(2_000_000)), // one percent dispute fee
-		PayFromBond:     false,
+		Creator:          repAccs[1].String(),
+		DisputedReporter: test_report2.Reporter,
+		ReportMetaId:     test_report2.MetaId,
+		ReportQueryId:    hex.EncodeToString(test_report2.QueryId),
+		DisputeCategory:  types.Warning,
+		Fee:              sdk.NewCoin(s.Setup.Denom, math.NewInt(2_000_000)), // one percent dispute fee
+		PayFromBond:      false,
 	})
 	s.NoError(err)
 
