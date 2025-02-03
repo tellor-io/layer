@@ -374,7 +374,7 @@ func TestFiveRounder(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
 	}
 
-	nv := 1
+	nv := 2
 	nf := 0
 	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
 		{
@@ -440,26 +440,19 @@ func TestFiveRounder(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("val1 Account Address: ", val1Addr)
 	fmt.Println("val1 Validator Address: ", val1valAddr)
-	val2 := chain.Validators[1]
-	val2Addr, err := val2.AccountKeyBech32(ctx, "validator")
-	require.NoError(err)
-	val2valAddr, err := val2.KeyBech32(ctx, "validator", "val")
-	require.NoError(err)
-	fmt.Println("val2 Account Address: ", val2Addr)
-	fmt.Println("val2 Validator Address: ", val2valAddr)
 
-	// queryValidators to confirm that 2 validators are bonded
+	// queryValidators to confirm that validator is bonded
 	vals, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
 	require.NoError(err)
 	require.Equal(len(vals), 2)
 
 	// get val1 staking power
-	val2Staking, err := chain.StakingQueryValidator(ctx, val2valAddr)
+	val1Staking, err := chain.StakingQueryValidator(ctx, val1valAddr)
 	require.NoError(err)
-	val2StartPower := val2Staking.Tokens
-	fmt.Println("val2 staking power before delegations: ", val2StartPower)
+	val1StartPower := val1Staking.Tokens
+	fmt.Println("val1 staking power before delegations: ", val1StartPower)
 
-	// make 2 users who will delegate to val2 and become reporters
+	// make 2 users who will delegate to val1 and become reporters
 	numReporters := 2
 	reporters := make([]ReporterAccs, numReporters)
 	expectedDelTotal := math.NewInt(0)
@@ -468,7 +461,7 @@ func TestFiveRounder(t *testing.T) {
 		fundAmt := math.NewInt(10_000 * 1e6)
 		delegateAmt := sdk.NewCoin("loya", math.NewInt(1_000*1e6))
 		user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
-		txHash, err := val1.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val2valAddr, delegateAmt.String(), "--keyring-dir", val2.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		txHash, err := val1.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1valAddr, delegateAmt.String(), "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (", keyname, " delegates to val2): ", txHash)
 		reporters[i] = ReporterAccs{
@@ -477,16 +470,16 @@ func TestFiveRounder(t *testing.T) {
 		}
 		expectedDelTotal = expectedDelTotal.Add(delegateAmt.Amount)
 		fmt.Println("expectedDelTotal: ", expectedDelTotal)
-		val2Staking, err = chain.StakingQueryValidator(ctx, val2valAddr)
+		val1Staking, err = chain.StakingQueryValidator(ctx, val1valAddr)
 		require.NoError(err)
-		fmt.Println("val2 staking power: ", val2Staking.Tokens)
+		fmt.Println("val1 staking power: ", val1Staking.Tokens)
 	}
 
 	// get val1 staking power
-	val2Staking, err = chain.StakingQueryValidator(ctx, val2valAddr)
+	val1Staking, err = chain.StakingQueryValidator(ctx, val1valAddr)
 	require.NoError(err)
-	fmt.Println("val2 staking power: ", val2Staking.Tokens)
-	require.Equal(val2Staking.Tokens, val2StartPower.Add(expectedDelTotal))
+	fmt.Println("val1 staking power: ", val1Staking.Tokens)
+	require.Equal(val1Staking.Tokens, val1StartPower.Add(expectedDelTotal))
 
 	// submit minting proposal and vote yes on it from all validators
 	require.NoError(e2e.TurnOnMinting(ctx, chain, val1))
@@ -518,11 +511,6 @@ func TestFiveRounder(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
-	// val2 becomes a reporter
-	txHash, err = val2.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val2.HomeDir())
-	require.NoError(err)
-	fmt.Println("TX HASH (val2 becomes a reporter): ", txHash)
-
 	// query reporter module
 	res, _, err := val1.ExecQuery(ctx, "reporter", "reporters")
 	require.NoError(err)
@@ -530,66 +518,60 @@ func TestFiveRounder(t *testing.T) {
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
 	fmt.Println("reporters res: ", reportersRes)
-	require.Equal(len(reportersRes.Reporters), numReporters+2) // number of delegating reporters + 2 validator reporters
+	require.Equal(len(reportersRes.Reporters), numReporters+1) // number of delegating reporters + 1 validator reporter
 
-	// val1 tips 1trb and user0 reports for bch spotprice
-	queryDataList := []QueryData{
-		{QueryData: bchQData, QueryID: bchQId},
-	}
+	// user0 tips 1trb and user1 reports for bch spotprice
 	value := layerutil.EncodeValue(10000000.99)
 	tipAmt := math.NewInt(1_000_000)
 	tip := sdk.NewCoin("loya", tipAmt)
-	for i, query := range queryDataList {
-		_, _, err := val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", val1Addr, query.QueryData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
-		require.NoError(err)
-		fmt.Println("val1 tipped ", query.QueryID)
-		err = testutil.WaitForBlocks(ctx, 1, val1)
-		require.NoError(err)
+	_, _, err = val1.Exec(ctx, val1.TxCommand("user0", "oracle", "tip", reporters[0].Addr, bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	require.NoError(err)
+	fmt.Println("TX HASH (user0 tipped ", bchQId, "): ", txHash)
+	err = testutil.WaitForBlocks(ctx, 1, val1)
+	require.NoError(err)
 
-		txHash, err := val1.ExecTx(ctx, "validator", "oracle", "submit-value", reporters[i].Addr, query.QueryData, value, "--keyring-dir", val1.HomeDir())
-		fmt.Println("TX HASH (", reporters[i].Keyname, " reported ", query.QueryID, "): ", txHash)
-		require.NoError(err)
+	txHash, err = val1.ExecTx(ctx, "user1", "oracle", "submit-value", reporters[1].Addr, bchQData, value, "--keyring-dir", val1.HomeDir())
+	fmt.Println("TX HASH (user1 reported ", bchQId, "): ", txHash)
+	require.NoError(err)
 
-		// wait for query to expire and dispute
-		err = testutil.WaitForBlocks(ctx, 2, val1)
-		require.NoError(err)
-		microreport, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
-		require.NoError(err)
-		var microReports e2e.ReportsResponse
-		require.NoError(json.Unmarshal(microreport, &microReports))
-		// require.Equal(microReports.MicroReports[0].QueryID, query.QueryID) // unmarshalling type err ?
-		require.Equal(microReports.MicroReports[0].Reporter, reporters[i].Addr)
-		require.Equal(microReports.MicroReports[0].Value, value)
-		require.Equal(microReports.MicroReports[0].AggregateMethod, "weighted-median")
-		require.Equal(microReports.MicroReports[0].Power, "1000")
-		require.Equal(microReports.MicroReports[0].QueryType, "SpotPrice")
-		bz, err := json.Marshal(microReports.MicroReports[0])
-		require.NoError(err)
-		fmt.Println("bz: ", string(bz))
+	// wait for query to expire and dispute from user0
+	err = testutil.WaitForBlocks(ctx, 2, val1)
+	require.NoError(err)
+	microreport, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[1].Addr)
+	require.NoError(err)
+	var microReports e2e.ReportsResponse
+	require.NoError(json.Unmarshal(microreport, &microReports))
+	// require.Equal(microReports.MicroReports[0].QueryID, query.QueryID) // unmarshalling type err ?
+	require.Equal(microReports.MicroReports[0].Reporter, reporters[1].Addr)
+	require.Equal(microReports.MicroReports[0].Value, value)
+	require.Equal(microReports.MicroReports[0].AggregateMethod, "weighted-median")
+	require.Equal(microReports.MicroReports[0].Power, "1000")
+	require.Equal(microReports.MicroReports[0].QueryType, "SpotPrice")
+	bz, err := json.Marshal(microReports.MicroReports[0])
+	require.NoError(err)
+	fmt.Println("bz: ", string(bz))
 
-		// dispute from validator
-		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "propose-dispute", string(bz), "warning", "500000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
-		require.NoError(err)
-		fmt.Println("TX HASH (dispute on ", microReports.MicroReports[0].Reporter, "): ", txHash)
+	// dispute from user0
+	txHash, err = val1.ExecTx(ctx, reporters[0].Addr, "dispute", "propose-dispute", string(bz), "warning", "500000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	require.NoError(err)
+	fmt.Println("TX HASH (dispute on ", microReports.MicroReports[0].Reporter, "): ", txHash)
 
-		// check dispute status
-		// disputeId := i + 1
-		// res, _, err := val1.ExecQuery(ctx, "dispute", "tally", "--dispute-id", strconv.Itoa(disputeId))
-		// require.NoError(err)
-		// var tally e2e.QueryDisputesTallyResponse
-		// require.NoError(json.Unmarshal(res, &tally))
-		// fmt.Println("tally: ", tally)
-		// require.Equal(tally.Team.Support, "0")
-		// require.Equal(tally.Team.Against, "0")
-		// require.Equal(tally.Team.Invalid, "0")
-		// require.Equal(tally.Users.VoteCount.Support, "0")
-		// require.Equal(tally.Users.VoteCount.Against, "0")
-		// require.Equal(tally.Users.VoteCount.Invalid, "0")
-		// require.Equal(tally.Reporters.VoteCount.Support, "0")
-		// require.Equal(tally.Reporters.VoteCount.Against, "0")
-		// require.Equal(tally.Reporters.VoteCount.Invalid, "0")
-
-	}
+	// check dispute status
+	// disputeId := i + 1
+	// res, _, err := val1.ExecQuery(ctx, "dispute", "tally", "--dispute-id", strconv.Itoa(disputeId))
+	// require.NoError(err)
+	// var tally e2e.QueryDisputesTallyResponse
+	// require.NoError(json.Unmarshal(res, &tally))
+	// fmt.Println("tally: ", tally)
+	// require.Equal(tally.Team.Support, "0")
+	// require.Equal(tally.Team.Against, "0")
+	// require.Equal(tally.Team.Invalid, "0")
+	// require.Equal(tally.Users.VoteCount.Support, "0")
+	// require.Equal(tally.Users.VoteCount.Against, "0")
+	// require.Equal(tally.Users.VoteCount.Invalid, "0")
+	// require.Equal(tally.Reporters.VoteCount.Support, "0")
+	// require.Equal(tally.Reporters.VoteCount.Against, "0")
+	// require.Equal(tally.Reporters.VoteCount.Invalid, "0")
 
 	// check open disputes
 	res, _, err = val1.ExecQuery(ctx, "dispute", "open-disputes")
@@ -597,42 +579,35 @@ func TestFiveRounder(t *testing.T) {
 	var openDisputes e2e.QueryOpenDisputesResponse
 	require.NoError(json.Unmarshal(res, &openDisputes))
 	fmt.Println("openDisputes: ", openDisputes.OpenDisputes)
-	require.Equal(len(openDisputes.OpenDisputes.Ids), 10) // all 10 disputes should be open
+	require.Equal(len(openDisputes.OpenDisputes.Ids), 1) // dispute 1 is open
 
-	// vote and resolve all disputes
-	for i := 0; i < len(queryDataList); i++ {
-		// vote from val1 (all tipping power)
-		_, err = val1.ExecTx(ctx, "validator", "dispute", "vote", strconv.Itoa(i+1), "vote-support", "--keyring-dir", val1.HomeDir())
-		require.NoError(err)
+	// vote from user0 (all tipping power)
+	_, err = val1.ExecTx(ctx, reporters[0].Addr, "dispute", "vote", "1", "vote-support", "--keyring-dir", val1.HomeDir())
+	require.NoError(err)
 
-		// vote from val2 (0 power error)
-		_, err = val2.ExecTx(ctx, "validator", "dispute", "vote", strconv.Itoa(i+1), "vote-support", "--keyring-dir", val2.HomeDir())
-		require.Error(err)
+	// check dispute status
+	res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	var disputes e2e.Disputes
+	require.NoError(json.Unmarshal(res, &disputes))
+	fmt.Println("disputes: ", disputes)
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1) // not resolved yet
 
-		// check dispute status
-		res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
-		require.NoError(err)
-		var disputes e2e.Disputes
-		require.NoError(json.Unmarshal(res, &disputes))
-		fmt.Println("disputes: ", disputes)
-		require.Equal(disputes.Disputes[i].Metadata.DisputeStatus, 1) // not resolved yet
+	// vote from team (should be at least 66% voting power after (33% from team, 33% from having one tip from user0))
+	_, err = val1.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-support", "--keyring-dir", val1.HomeDir())
+	require.NoError(err)
 
-		// vote from team (should be at least 66% voting power after (33% from team, 33% from having one tip from val1))
-		_, err = val1.ExecTx(ctx, "team", "dispute", "vote", strconv.Itoa(i+1), "vote-support", "--keyring-dir", val1.HomeDir())
-		require.NoError(err)
+	// check on dispute team vote
+	teamVote, _, err := val1.ExecQuery(ctx, "dispute", "team-vote", "1")
+	require.NoError(err)
+	fmt.Println("Team address: ", string(teamVote))
 
-		// check on dispute team vote
-		teamVote, _, err := val1.ExecQuery(ctx, "dispute", "team-vote", strconv.Itoa(i+1))
-		require.NoError(err)
-		fmt.Println("Team address: ", string(teamVote))
+	// check on dispute status
+	r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	err = json.Unmarshal(r, &disputes)
+	require.NoError(err)
+	fmt.Println("dispute: ", disputes.Disputes[0])
 
-		// check on dispute status
-		r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
-		require.NoError(err)
-		err = json.Unmarshal(r, &disputes)
-		require.NoError(err)
-		fmt.Println("dispute ", i+1, ": ", disputes.Disputes[i])
-
-		require.Equal(disputes.Disputes[i].Metadata.DisputeStatus, 2) // resolved now
-	}
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 2) // resolved now
 }
