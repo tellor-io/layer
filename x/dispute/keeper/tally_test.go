@@ -80,36 +80,23 @@ func (s *KeeperTestSuite) TestGetAccountBalance() {
 	require.Equal(balance, math.NewInt(100))
 }
 
-func (s *KeeperTestSuite) TestGetTotalSupply() {
-	require := s.Require()
-	ctx := s.ctx
-	k := s.disputeKeeper
-	require.NotNil(k)
-	require.NotNil(ctx)
-
-	s.bankKeeper.On("GetSupply", ctx, layertypes.BondDenom).Return(sdk.Coin{Denom: layertypes.BondDenom, Amount: math.NewInt(1_000 * 1e6)}, nil)
-
-	totalSupply := k.GetTotalSupply(ctx)
-	require.Equal(totalSupply, math.NewInt(1_000*1e6))
-}
-
 func (s *KeeperTestSuite) TestRatio() {
 	require := s.Require()
 
 	// 10/25 --> 10/100
-	ratio := disputekeeper.Ratio(math.NewInt(25), math.NewInt(10))
+	ratio := disputekeeper.Ratio(math.NewInt(33), math.NewInt(11))
 	fmt.Println(ratio)
 	require.Equal(ratio, math.NewInt(10*1e6))
 	// 25/25 --> 25/100
-	ratio = disputekeeper.Ratio(math.NewInt(25), math.NewInt(25))
+	ratio = disputekeeper.Ratio(math.NewInt(33), math.NewInt(33))
 	fmt.Println(ratio)
 	require.Equal(ratio, math.NewInt(25*1e6))
 	// 0/25 --> 0/100
-	ratio = disputekeeper.Ratio(math.NewInt(25), math.NewInt(0))
+	ratio = disputekeeper.Ratio(math.NewInt(33), math.NewInt(0))
 	fmt.Println(ratio)
 	require.Equal(ratio, math.NewInt(0))
 	// 25/0 --> 100/0
-	ratio = disputekeeper.Ratio(math.NewInt(0), math.NewInt(25))
+	ratio = disputekeeper.Ratio(math.NewInt(0), math.NewInt(33))
 	fmt.Println(ratio)
 	require.Equal(ratio, math.NewInt(0))
 

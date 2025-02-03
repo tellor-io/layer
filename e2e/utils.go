@@ -193,6 +193,7 @@ type MicroReport struct {
 	Value           string `json:"value"`
 	Timestamp       string `json:"timestamp"`
 	BlockNumber     string `json:"block_number"`
+	MetaId          string `json:"meta_id"`
 }
 
 type ReportsResponse struct {
@@ -314,6 +315,32 @@ type OracleReporter struct {
 
 type QuerySelectorReporterResponse struct {
 	Reporter string `json:"reporter"`
+}
+
+type QueryDisputesTallyResponse struct {
+	Users     *GroupTally `protobuf:"bytes,1,opt,name=users,proto3" json:"users,omitempty"`
+	Reporters *GroupTally `protobuf:"bytes,2,opt,name=reporters,proto3" json:"reporters,omitempty"`
+	Team      *VoteCounts `protobuf:"bytes,3,opt,name=team,proto3" json:"team,omitempty"`
+}
+
+type GroupTally struct {
+	VoteCount       *VoteCounts `protobuf:"bytes,1,opt,name=voteCount,proto3" json:"voteCount,omitempty"`
+	TotalPowerVoted string      `protobuf:"varint,2,opt,name=totalPowerVoted,proto3" json:"totalPowerVoted,omitempty"`
+	TotalGroupPower string      `protobuf:"varint,3,opt,name=totalGroupPower,proto3" json:"totalGroupPower,omitempty"`
+}
+
+type VoteCounts struct {
+	Support string `protobuf:"varint,1,opt,name=support,proto3" json:"support,omitempty"`
+	Against string `protobuf:"varint,2,opt,name=against,proto3" json:"against,omitempty"`
+	Invalid string `protobuf:"varint,3,opt,name=invalid,proto3" json:"invalid,omitempty"`
+}
+
+type QueryOpenDisputesResponse struct {
+	OpenDisputes *OpenDisputes `protobuf:"bytes,1,opt,name=openDisputes,proto3" json:"openDisputes,omitempty"`
+}
+
+type OpenDisputes struct {
+	Ids []string `protobuf:"varint,1,rep,packed,name=ids,proto3" json:"ids,omitempty"`
 }
 
 // HELPERS FOR TESTING AGAINST THE CHAIN

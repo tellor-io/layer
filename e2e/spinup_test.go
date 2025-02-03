@@ -25,40 +25,6 @@ const (
 	value = "000000000000000000000000000000000000000000000058528649cf80ee0000"
 )
 
-type MicroReport struct {
-	Reporter        string `json:"reporter"`
-	Power           string `json:"power"`
-	QueryType       string `json:"query_type"`
-	QueryID         string `json:"query_id"`
-	AggregateMethod string `json:"aggregate_method"`
-	Value           string `json:"value"`
-	Timestamp       string `json:"timestamp"`
-	BlockNumber     string `json:"block_number"`
-	MetaId          string `json:"meta_id"`
-}
-
-type ReportsResponse struct {
-	MicroReports []MicroReport `json:"microReports"`
-}
-type AggregateReport struct {
-	Aggregate struct {
-		QueryID           string `json:"query_id"`
-		AggregateValue    string `json:"aggregate_value"`
-		AggregateReporter string `json:"aggregate_reporter"`
-		ReporterPower     string `json:"reporter_power"`
-		Reporters         []struct {
-			Reporter    string `json:"reporter"`
-			Power       string `json:"power"`
-			BlockNumber string `json:"block_number"`
-		} `json:"reporters"`
-		Index       string `json:"index"`
-		Height      string `json:"height"`
-		MicroHeight string `json:"micro_height"`
-		MetaID      string `json:"meta_id"`
-	} `json:"aggregate"`
-	Timestamp string `json:"timestamp"`
-}
-
 type Proposal struct {
 	Messages  []map[string]interface{} `json:"messages"`
 	Metadata  string                   `json:"metadata"`
@@ -167,7 +133,7 @@ func TestLayerFlow(t *testing.T) {
 	res1, _, err := validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddress)
 	require.NoError(t, err)
 
-	var microReports ReportsResponse
+	var microReports e2e.ReportsResponse
 	err = json.Unmarshal(res1, &microReports)
 	require.NoError(t, err)
 	fmt.Println("Micro reports: ", microReports)
@@ -180,7 +146,7 @@ func TestLayerFlow(t *testing.T) {
 	res2, _, err := validatorI.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hex.EncodeToString(qidbz))
 	require.NoError(t, err)
 
-	var aggReport AggregateReport
+	var aggReport e2e.AggregateReport
 	fmt.Println("Aggregate report: ", string(res2))
 
 	err = json.Unmarshal(res2, &aggReport)

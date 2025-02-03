@@ -32,18 +32,13 @@ func (k Keeper) GetAccountBalance(ctx context.Context, addr sdk.AccAddress) (mat
 	return bal.Amount, nil
 }
 
-// Get total trb supply
-func (k Keeper) GetTotalSupply(ctx context.Context) math.Int {
-	return k.bankKeeper.GetSupply(ctx, layertypes.BondDenom).Amount
-}
-
 // The `Ratio` function calculates the percentage ratio of `part` to `total`, scaled by a factor of 4 for the total before calculation. The result is expressed as a percentage.
 // Ratio gets called on each sector of voters after votes have been summed e.g Ratio(totalUserTips, userVoteSum)
 func Ratio(total, part math.Int) math.Int {
 	if total.IsZero() {
 		return math.ZeroInt()
 	}
-	total = total.MulRaw(4)
+	total = total.MulRaw(3)
 	totalDec := math.LegacyNewDecFromInt(total)
 	partDec := math.LegacyNewDecFromInt(part)
 	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
@@ -65,6 +60,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	if err != nil {
 		return err
 	}
+	k.Logger(ctx).Info("Vote", "vote", vote)
 
 	if vote.VoteResult != types.VoteResult_NO_TALLY {
 		return errors.New("vote already tallied")
@@ -73,13 +69,17 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	if err != nil {
 		return err
 	}
+	k.Logger(ctx).Info("Dispute", "dispute", dispute)
 	info, err := k.BlockInfo.Get(ctx, dispute.HashId)
 	if err != nil {
 		return err
 	}
+	k.Logger(ctx).Info("BlockInfo", "BlockInfo", info)
 
 	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
+	k.Logger(ctx).Info("VoteCountsByGroup no error", "VoteCountsByGroup", voteCounts)
 	if err != nil {
+		k.Logger(ctx).Info("VoteCountsByGroup error", "VoteCountsByGroup", voteCounts)
 		voteCounts = types.StakeholderVoteCounts{
 			Users:     types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
 			Reporters: types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
@@ -124,9 +124,9 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 			scaledInvalid = scaledInvalid.Add(layertypes.PowerReduction)
 		}
 
-		totalRatio = totalRatio.Add(math.NewInt(25).Mul(layertypes.PowerReduction))
+		totalRatio = totalRatio.Add(math.NewInt(33).Mul(layertypes.PowerReduction))
 	}
-
+	k.Logger(ctx).Info("TotalRatio after team vote", "TotalRatio", totalRatio)
 	// get user group
 	tallies.ForVotes.Users = math.NewIntFromUint64(voteCounts.Users.Support)
 	tallies.AgainstVotes.Users = math.NewIntFromUint64(voteCounts.Users.Against)
@@ -148,6 +148,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		scaledAgainstDec = scaledAgainstDec.Add(usersAgainstVotesDec.Mul(powerReductionDec).Quo(userVoteSumDec))
 		scaledInvalidDec = scaledInvalidDec.Add(usersInvalidVotesDec.Mul(powerReductionDec).Quo(userVoteSumDec))
 	}
+	k.Logger(ctx).Info("TotalRatio after user vote", "TotalRatio", totalRatio)
 
 	tallies.ForVotes.Reporters = math.NewIntFromUint64(voteCounts.Reporters.Support)
 	tallies.AgainstVotes.Reporters = math.NewIntFromUint64(voteCounts.Reporters.Against)
@@ -169,7 +170,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		scaledAgainstDec = scaledAgainstDec.Add(againstReportersDec)
 		scaledInvalidDec = scaledInvalidDec.Add(invalidReportersDec)
 	}
-
+	k.Logger(ctx).Info("TotalRatio after reporter vote", "TotalRatio", totalRatio)
 	if totalRatio.GTE(math.NewInt(51).Mul(layertypes.PowerReduction)) {
 		numGroupsDec := math.LegacyNewDecFromInt(numGroups)
 		scaledSupportDec = scaledSupportDec.Quo(numGroupsDec)

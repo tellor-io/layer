@@ -31,6 +31,22 @@
         }
       },
       {
+        "url": "./tmp-swagger-gen/layer/dispute/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "DisputeParams"
+          }
+        }
+      },
+      {
+        "url": "./tmp-swagger-gen/layer/registry/query.swagger.json",
+        "operationIds": {
+          "rename": {
+            "Params": "RegistryParams"
+          }
+        }
+      },
+      {
         "url": "./tmp-swagger-gen/layer/tmp/bank/query.swagger.json",
         "operationIds": {
           "rename": {
