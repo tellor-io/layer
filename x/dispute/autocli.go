@@ -37,9 +37,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod:      "ProposeDispute",
-					Use:            "propose-dispute [report] [dispute-category] [fee] [pay-from-bond]",
+					Use:            "propose-dispute [disputed-reporter] [report-meta-id] [report-query-id] [dispute-category] [fee] [pay-from-bond]",
 					Short:          "Execute the ProposeDispute RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "report"}, {ProtoField: "dispute_category"}, {ProtoField: "fee"}, {ProtoField: "pay_from_bond"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "disputed_reporter"}, {ProtoField: "report_meta_id"}, {ProtoField: "report_query_id"}, {ProtoField: "dispute_category"}, {ProtoField: "fee"}, {ProtoField: "pay_from_bond"}},
 				},
 				{
 					RpcMethod:      "AddFeeToDispute",

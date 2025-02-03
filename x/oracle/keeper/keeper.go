@@ -2,9 +2,9 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	gomath "math"
-	"reflect"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -242,16 +242,14 @@ func (k Keeper) FlagAggregateReport(ctx context.Context, report types.MicroRepor
 	return nil
 }
 
-func (k Keeper) ValidateMicroReportExists(ctx context.Context, microReport types.MicroReport) (bool, error) {
-	reporterBech, err := sdk.AccAddressFromBech32(microReport.Reporter)
+func (k Keeper) ValidateMicroReportExists(ctx context.Context, reporter sdk.AccAddress, meta_id uint64, query_id []byte) (*types.MicroReport, bool, error) {
+	report, err := k.Reports.Get(ctx, collections.Join3(query_id, reporter.Bytes(), meta_id))
 	if err != nil {
-		return false, err
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, false, nil
+		}
+		return nil, false, err
 	}
 
-	report, err := k.Reports.Get(ctx, collections.Join3(microReport.QueryId, reporterBech.Bytes(), microReport.MetaId))
-	if err != nil {
-		return false, err
-	}
-
-	return reflect.DeepEqual(report, microReport), nil
+	return &report, true, nil
 }
