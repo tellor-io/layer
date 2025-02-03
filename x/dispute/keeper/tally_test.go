@@ -104,7 +104,7 @@ func (s *KeeperTestSuite) TestRatio() {
 	// big numbers
 	// ex. total reporter power is 1_000_000 trb, all of them have voted
 	ratio = disputekeeper.Ratio(math.LegacyNewDec(1_000_000), math.LegacyNewDec(1_000_000))
-	expected = math.LegacyNewDec(3).Quo(math.LegacyNewDec(9)).Mul(math.LegacyNewDec(1e8)) 
+	expected = math.LegacyNewDec(3).Quo(math.LegacyNewDec(9)).Mul(math.LegacyNewDec(1e8))
 	fmt.Println(ratio)
 	require.Equal(ratio.TruncateDec(), expected.TruncateDec())
 
