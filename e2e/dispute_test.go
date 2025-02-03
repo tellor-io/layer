@@ -2,6 +2,8 @@ package e2e_test
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -282,8 +284,14 @@ func TestDispute(t *testing.T) {
 		require.NoError(err)
 		fmt.Println("bz: ", string(bz))
 
+		decodedBytes, err := base64.StdEncoding.DecodeString(microReports.MicroReports[0].QueryID)
+		require.NoError(err)
+
+		// Convert to hex
+		hexStr := hex.EncodeToString(decodedBytes)
+
 		// dispute from validator
-		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "propose-dispute", string(bz), "warning", "500000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, hexStr, "warning", "500000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (dispute on ", microReports.MicroReports[0].Reporter, "): ", txHash)
 
