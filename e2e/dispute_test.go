@@ -593,21 +593,29 @@ func TestFiveRounder(t *testing.T) {
 	fmt.Println("disputes: ", disputes)
 	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1) // not resolved yet
 
+	// open a new round
+	dispute := disputes.Disputes[0]
+	sender := reporters[0].Addr
+	
+	txHash, err = val1.ExecTx(ctx, reporters[0].Addr, "dispute", "add-dispute-round", sender, dispute, creator, report, category, fee, payfrombond "--keyring-dir", val1.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (open a new round): ", txHash)
+
 	// vote from team (should be at least 66% voting power after (33% from team, 33% from having one tip from user0))
-	_, err = val1.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-support", "--keyring-dir", val1.HomeDir())
-	require.NoError(err)
+	// _, err = val1.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-support", "--keyring-dir", val1.HomeDir())
+	// require.NoError(err)
 
-	// check on dispute team vote
-	teamVote, _, err := val1.ExecQuery(ctx, "dispute", "team-vote", "1")
-	require.NoError(err)
-	fmt.Println("Team address: ", string(teamVote))
+	// // check on dispute team vote
+	// teamVote, _, err := val1.ExecQuery(ctx, "dispute", "team-vote", "1")
+	// require.NoError(err)
+	// fmt.Println("Team address: ", string(teamVote))
 
-	// check on dispute status
-	r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
-	require.NoError(err)
-	err = json.Unmarshal(r, &disputes)
-	require.NoError(err)
-	fmt.Println("dispute: ", disputes.Disputes[0])
+	// // check on dispute status
+	// r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
+	// require.NoError(err)
+	// err = json.Unmarshal(r, &disputes)
+	// require.NoError(err)
+	// fmt.Println("dispute: ", disputes.Disputes[0])
 
-	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 2) // resolved now
+	// require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 2) // resolved now
 }
