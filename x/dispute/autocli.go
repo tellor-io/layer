@@ -23,6 +23,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Shows the team vote for a dispute",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dispute_id"}},
 				},
+				{
+					RpcMethod:      "Tally",
+					Use:            "tally [dispute-id]",
+					Short:          "Shows the tally for a dispute",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dispute_id"}},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
