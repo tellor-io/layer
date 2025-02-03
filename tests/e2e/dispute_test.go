@@ -226,15 +226,18 @@ func (s *E2ETestSuite) TestDisputes() {
 		Value:       value,
 		Timestamp:   s.Setup.Ctx.BlockTime(),
 		BlockNumber: uint64(revealBlock),
+		MetaId:      1,
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporterAccount.Bytes(), report.MetaId), report))
 	// create msg for propose dispute tx
 	msgProposeDispute := disputetypes.MsgProposeDispute{
-		Creator:         reporterAccount.String(),
-		Report:          &report,
-		DisputeCategory: disputetypes.Warning,
-		Fee:             disputeFee,
-		PayFromBond:     false,
+		Creator:          reporterAccount.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		DisputeCategory:  disputetypes.Warning,
+		Fee:              disputeFee,
+		PayFromBond:      false,
 	}
 
 	// send propose dispute tx
@@ -397,11 +400,13 @@ func (s *E2ETestSuite) TestDisputes() {
 
 	// create msg for propose dispute tx
 	msgProposeDispute = disputetypes.MsgProposeDispute{
-		Creator:         reporterAccount.String(),
-		Report:          &report,
-		DisputeCategory: disputetypes.Minor,
-		Fee:             disputeFee,
-		PayFromBond:     false,
+		Creator:          reporterAccount.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		DisputeCategory:  disputetypes.Minor,
+		Fee:              disputeFee,
+		PayFromBond:      false,
 	}
 
 	// send propose dispute tx
@@ -605,11 +610,13 @@ func (s *E2ETestSuite) TestDisputes() {
 	// create msg for propose dispute tx
 
 	msgProposeDispute = disputetypes.MsgProposeDispute{
-		Creator:         reporterAccount.String(),
-		Report:          &report,
-		DisputeCategory: disputetypes.Major,
-		Fee:             disputeFee,
-		PayFromBond:     false,
+		Creator:          reporterAccount.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		DisputeCategory:  disputetypes.Major,
+		Fee:              disputeFee,
+		PayFromBond:      false,
 	}
 
 	// send propose dispute tx
@@ -901,14 +908,17 @@ func (s *E2ETestSuite) TestDisputeFromDelegatorPayFromBond() {
 		Value:       testutil.EncodeValue(100_000),
 		Timestamp:   s.Setup.Ctx.BlockTime(),
 		BlockNumber: uint64(4),
+		MetaId:      1,
 	}
 
 	msgProposeDispute := disputetypes.MsgProposeDispute{
-		Creator:         delwoodAccAddr.String(),
-		Report:          &report,
-		DisputeCategory: disputetypes.Warning,
-		Fee:             sdk.NewCoin(s.Setup.Denom, math.NewInt(10*1e6)),
-		PayFromBond:     true,
+		Creator:          delwoodAccAddr.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		DisputeCategory:  disputetypes.Warning,
+		Fee:              sdk.NewCoin(s.Setup.Denom, math.NewInt(10*1e6)),
+		PayFromBond:      true,
 	}
 
 	_, err = msgServerDispute.ProposeDispute(s.Setup.Ctx, &msgProposeDispute)
@@ -1262,6 +1272,7 @@ func (s *E2ETestSuite) TestDisputes2() {
 		Value:       value,
 		Timestamp:   revealTime,
 		BlockNumber: uint64(reportBlock),
+		MetaId:      1,
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repsAccs[0].Bytes(), report.MetaId), report))
 	// disputedBal := disputedRep.TotalTokens
@@ -1272,11 +1283,13 @@ func (s *E2ETestSuite) TestDisputes2() {
 
 	// create msg for propose dispute tx
 	msgProposeDispute := disputetypes.MsgProposeDispute{
-		Creator:         repsAccs[0].String(),
-		Report:          &report,
-		DisputeCategory: disputetypes.Warning,
-		Fee:             disputeFee,
-		PayFromBond:     false,
+		Creator:          repsAccs[0].String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		DisputeCategory:  disputetypes.Warning,
+		Fee:              disputeFee,
+		PayFromBond:      false,
 	}
 
 	// send propose dispute tx
@@ -1386,11 +1399,13 @@ func (s *E2ETestSuite) TestDisputes2() {
 
 	// create msg for propose dispute tx
 	msgProposeDispute = disputetypes.MsgProposeDispute{
-		Creator:         repsAccs[1].String(),
-		Report:          &report,
-		DisputeCategory: disputetypes.Warning,
-		Fee:             disputeFee,
-		PayFromBond:     false,
+		Creator:          repsAccs[1].String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		DisputeCategory:  disputetypes.Warning,
+		Fee:              disputeFee,
+		PayFromBond:      false,
 	}
 
 	// send propose dispute tx
@@ -1484,11 +1499,13 @@ func (s *E2ETestSuite) TestDisputes2() {
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repsAccs[0].Bytes(), report.MetaId), report))
 	// create msg for propose dispute tx
 	msgProposeDispute = disputetypes.MsgProposeDispute{
-		Creator:         repsAccs[1].String(),
-		Report:          &report,
-		DisputeCategory: disputetypes.Minor,
-		Fee:             disputeFee,
-		PayFromBond:     true,
+		Creator:          repsAccs[1].String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		DisputeCategory:  disputetypes.Minor,
+		Fee:              disputeFee,
+		PayFromBond:      true,
 	}
 
 	// send propose dispute tx
