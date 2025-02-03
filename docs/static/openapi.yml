@@ -73,12 +73,12 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
-  /tellor-io/layer/reporter/available-tips/{selector_address}/{reporter_address}/{query_id}/{meta_id}:
+  /tellor-io/layer/reporter/available-tips/{selector_address}:
     get:
       summary: >-
         AvailableTips queries the tips available for withdrawal for a given
         selector.
-      operationId: AvailableTipsByQuery
+      operationId: AvailableTips
       responses:
         '200':
           description: A successful response.
@@ -114,19 +114,6 @@ paths:
           in: path
           required: true
           type: string
-        - name: reporter_address
-          in: path
-          required: true
-          type: string
-        - name: query_id
-          in: path
-          required: true
-          type: string
-        - name: meta_id
-          in: path
-          required: true
-          type: string
-          format: uint64
       tags:
         - Query
   /tellor-io/layer/reporter/num-of-selectors-by-reporter/{reporter_address}:
@@ -193,9 +180,9 @@ paths:
                     title: >-
                       min_commission_rate, adopted from staking module, is the
                       minimum commission rate a reporter can their delegators
-                  min_trb:
+                  min_loya:
                     type: string
-                    title: min_trb to be a reporter
+                    title: min_loya to be a reporter
                   max_selectors:
                     type: string
                     format: uint64
@@ -363,50 +350,6 @@ paths:
           type: boolean
       tags:
         - Query
-  /tellor-io/layer/reporter/reward-claim-status/{id}/{selector_address}:
-    get:
-      summary: >-
-        RewardClaimStatus queries if a query's reward was already claimed by
-        querymeta.Id
-      operationId: RewardClaimStatus
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              status:
-                type: boolean
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: id
-          in: path
-          required: true
-          type: string
-          format: uint64
-        - name: selector_address
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
   /tellor-io/layer/reporter/selector-reporter/{selector_address}:
     get:
       summary: SelectorReporter queries the reporter of a selector.
@@ -542,6 +485,10 @@ paths:
                       type: string
                       format: uint64
                       title: block number of when the report was created
+                    meta_id:
+                      type: string
+                      format: uint64
+                      title: identifier for the report's aggregate group
                   title: MicroReport represents data for a single report
               pagination:
                 description: pagination defines the pagination in the response.
@@ -693,6 +640,10 @@ paths:
                       type: string
                       format: uint64
                       title: block number of when the report was created
+                    meta_id:
+                      type: string
+                      format: uint64
+                      title: identifier for the report's aggregate group
                   title: MicroReport represents data for a single report
               pagination:
                 description: pagination defines the pagination in the response.
@@ -843,6 +794,10 @@ paths:
                       type: string
                       format: uint64
                       title: block number of when the report was created
+                    meta_id:
+                      type: string
+                      format: uint64
+                      title: identifier for the report's aggregate group
                   title: MicroReport represents data for a single report
               pagination:
                 description: pagination defines the pagination in the response.
@@ -963,6 +918,10 @@ paths:
                 type: object
                 properties:
                   minStakeAmount:
+                    type: string
+                  minTipAmount:
+                    type: string
+                  maxTipAmount:
                     type: string
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
@@ -1329,6 +1288,121 @@ paths:
           type: string
       tags:
         - Query
+  /tellor-io/layer/oracle/get_cycle_list:
+    get:
+      operationId: GetCycleList
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              cycle_list:
+                type: array
+                items:
+                  type: string
+                  format: byte
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/oracle/get_data_after/{query_id}/{timestamp}:
+    get:
+      operationId: GetDataAfter
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              aggregate:
+                type: object
+                properties:
+                  query_id:
+                    type: string
+                    format: byte
+                    title: query_id is the id of the query
+                  aggregate_value:
+                    type: string
+                    title: aggregate_value is the value of the aggregate
+                  aggregate_reporter:
+                    type: string
+                    title: aggregate_reporter is the address of the reporter
+                  aggregate_power:
+                    type: string
+                    format: uint64
+                    title: |-
+                      aggregate_power is the power of all the reporters
+                      that reported for the aggregate
+                  flagged:
+                    type: boolean
+                    title: flagged is true if the aggregate was flagged by a dispute
+                  index:
+                    type: string
+                    format: uint64
+                    title: index is the index of the aggregate
+                  height:
+                    type: string
+                    format: uint64
+                    title: height of the aggregate report
+                  micro_height:
+                    type: string
+                    format: uint64
+                    title: height of the micro report
+                  meta_id:
+                    type: string
+                    format: uint64
+                    title: meta_id is the id of the querymeta iterator
+                title: aggregate struct to represent meta data of an aggregate report
+              timestamp:
+                type: string
+                format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: query_id
+          in: path
+          required: true
+          type: string
+        - name: timestamp
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
   /tellor-io/layer/oracle/get_data_before/{query_id}/{timestamp}:
     get:
       summary: Queries a list of GetAggregatedReport items.
@@ -1490,6 +1564,38 @@ paths:
           format: uint64
       tags:
         - Query
+  /tellor-io/layer/oracle/get_query_data_limit:
+    get:
+      operationId: GetQueryDataLimit
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              limit:
+                type: string
+                format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
   /tellor-io/layer/oracle/get_reports_by_aggregate/{query_id}/{timestamp}:
     get:
       operationId: GetReportsByAggregate
@@ -1539,6 +1645,10 @@ paths:
                       type: string
                       format: uint64
                       title: block number of when the report was created
+                    meta_id:
+                      type: string
+                      format: uint64
+                      title: identifier for the report's aggregate group
                   title: MicroReport represents data for a single report
               pagination:
                 type: object
@@ -2665,6 +2775,873 @@ paths:
               params:
                 description: params holds all the parameters of this module.
                 type: object
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/dispute/disputes:
+    get:
+      summary: Reporters queries all the staked reporters.
+      operationId: Disputes
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              pagination:
+                description: pagination defines an optional pagination for the request.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+              disputes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    disputeId:
+                      type: string
+                      format: uint64
+                    metadata:
+                      type: object
+                      properties:
+                        hash_id:
+                          type: string
+                          format: byte
+                          title: unique dispute hash identifier
+                        dispute_id:
+                          type: string
+                          format: uint64
+                          title: current dispute id
+                        dispute_category:
+                          title: dispute severity level
+                          type: string
+                          enum:
+                            - DISPUTE_CATEGORY_UNSPECIFIED
+                            - DISPUTE_CATEGORY_WARNING
+                            - DISPUTE_CATEGORY_MINOR
+                            - DISPUTE_CATEGORY_MAJOR
+                          default: DISPUTE_CATEGORY_UNSPECIFIED
+                          description: |-
+                            DisputeCategory defines the severity of a dispute.
+
+                             - DISPUTE_CATEGORY_UNSPECIFIED: UNSPECIFIED defines an invalid dispute category.
+                             - DISPUTE_CATEGORY_WARNING: WARNING defines a 1 percent slashing.
+                             - DISPUTE_CATEGORY_MINOR: MINOR defines a 5 percent slashing.
+                             - DISPUTE_CATEGORY_MAJOR: MAJOR defines a 100 percent slashing.
+                        dispute_fee:
+                          type: string
+                          title: cost to start dispute
+                        dispute_status:
+                          title: current dispute status
+                          type: string
+                          enum:
+                            - DISPUTE_STATUS_PREVOTE
+                            - DISPUTE_STATUS_VOTING
+                            - DISPUTE_STATUS_RESOLVED
+                            - DISPUTE_STATUS_UNRESOLVED
+                            - DISPUTE_STATUS_FAILED
+                          default: DISPUTE_STATUS_PREVOTE
+                          description: |-
+                            DisputeStatus defines the status of a dispute.
+
+                             - DISPUTE_STATUS_PREVOTE: PREVOTE defines a dispute that hasn't started voting (ie in funding).
+                             - DISPUTE_STATUS_VOTING: VOTING defines a dispute that has been funded and is in voting.
+                             - DISPUTE_STATUS_RESOLVED: RESOLVED defines a dispute where dispute period has ended
+                             - DISPUTE_STATUS_UNRESOLVED: UNRESOLVED defines a dispute where dispute period has not ended but voting period has.
+                             - DISPUTE_STATUS_FAILED: FAILED defines a dispute that failed to pay the dispute fee to start vote.
+                        dispute_start_time:
+                          type: string
+                          format: date-time
+                          title: >-
+                            start time of the dispute that begins after dispute
+                            fee is fully paid
+                        dispute_end_time:
+                          type: string
+                          format: date-time
+                          title: >-
+                            end time that the dispute stop taking votes and
+                            creating new rounds
+                        dispute_start_block:
+                          type: string
+                          format: uint64
+                          title: height of the block that started the dispute
+                        dispute_round:
+                          type: string
+                          format: uint64
+                          title: current dispute round
+                        slash_amount:
+                          type: string
+                          title: reporter's slashed amount
+                        burn_amount:
+                          type: string
+                          title: >-
+                            burn amount that will be divided in half and paid to
+                            voters and the other half burned
+                        initial_evidence:
+                          title: initial single report evidence to be disputed
+                          type: object
+                          properties:
+                            reporter:
+                              type: string
+                              title: reporter is the address of the reporter
+                            power:
+                              type: string
+                              format: uint64
+                              title: >-
+                                the power of the reporter based on total tokens
+                                normalized
+                            query_type:
+                              type: string
+                              title: string identifier of the data spec
+                            query_id:
+                              type: string
+                              format: byte
+                              title: hash of the query data
+                            aggregate_method:
+                              type: string
+                              title: >-
+                                aggregate method to use for aggregating all the
+                                reports for the query id
+                            value:
+                              type: string
+                              title: hex string of the response value
+                            timestamp:
+                              type: string
+                              format: date-time
+                              title: timestamp of when the report was created
+                            cyclelist:
+                              type: boolean
+                              title: >-
+                                indicates if the report's query id is in the
+                                cyclelist
+                            block_number:
+                              type: string
+                              format: uint64
+                              title: block number of when the report was created
+                            meta_id:
+                              type: string
+                              format: uint64
+                              title: identifier for the report's aggregate group
+                        fee_total:
+                          type: string
+                          title: >-
+                            fee payers that were involved in paying the dispute
+                            fee in order to start the dispute
+
+                            total fee paid tracked to know if dispute fee is
+                            fully paid to start dispute
+                        prev_dispute_ids:
+                          type: array
+                          items:
+                            type: string
+                            format: uint64
+                          title: >-
+                            list of dispute ids that preceded before this
+                            current round began
+                        block_number:
+                          type: string
+                          format: uint64
+                          title: block number when this specific dispute was created
+                        open:
+                          type: boolean
+                        additional_evidence:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              reporter:
+                                type: string
+                                title: reporter is the address of the reporter
+                              power:
+                                type: string
+                                format: uint64
+                                title: >-
+                                  the power of the reporter based on total
+                                  tokens normalized
+                              query_type:
+                                type: string
+                                title: string identifier of the data spec
+                              query_id:
+                                type: string
+                                format: byte
+                                title: hash of the query data
+                              aggregate_method:
+                                type: string
+                                title: >-
+                                  aggregate method to use for aggregating all
+                                  the reports for the query id
+                              value:
+                                type: string
+                                title: hex string of the response value
+                              timestamp:
+                                type: string
+                                format: date-time
+                                title: timestamp of when the report was created
+                              cyclelist:
+                                type: boolean
+                                title: >-
+                                  indicates if the report's query id is in the
+                                  cyclelist
+                              block_number:
+                                type: string
+                                format: uint64
+                                title: block number of when the report was created
+                              meta_id:
+                                type: string
+                                format: uint64
+                                title: identifier for the report's aggregate group
+                            title: MicroReport represents data for a single report
+                        voter_reward:
+                          type: string
+                          title: total tokens allocated to voters
+                        pending_execution:
+                          type: boolean
+                          title: >-
+                            pending execution is true if the dispute has reached
+                            quorum and is pending execution.
+
+                            however, if a new dispute round begins, this is set
+                            to false again
+                      description: Dispute defines a dispute.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /tellor-io/layer/dispute/open-disputes:
+    get:
+      summary: OpenDisputes queries all the open disputes.
+      operationId: OpenDisputes
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              openDisputes:
+                type: object
+                properties:
+                  ids:
+                    type: array
+                    items:
+                      type: string
+                      format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/dispute/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: DisputeParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+                properties:
+                  team_address:
+                    type: string
+                    format: byte
+            description: >-
+              QueryParamsResponse is response type for the Query/Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/dispute/tally/{dispute_id}:
+    get:
+      summary: Tally queries the vote count of a dispute
+      operationId: Tally
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              users:
+                type: object
+                properties:
+                  voteCount:
+                    type: object
+                    properties:
+                      support:
+                        type: string
+                        format: uint64
+                      against:
+                        type: string
+                        format: uint64
+                      invalid:
+                        type: string
+                        format: uint64
+                  totalPowerVoted:
+                    type: string
+                    format: uint64
+                  totalGroupPower:
+                    type: string
+                    format: uint64
+              reporters:
+                type: object
+                properties:
+                  voteCount:
+                    type: object
+                    properties:
+                      support:
+                        type: string
+                        format: uint64
+                      against:
+                        type: string
+                        format: uint64
+                      invalid:
+                        type: string
+                        format: uint64
+                  totalPowerVoted:
+                    type: string
+                    format: uint64
+                  totalGroupPower:
+                    type: string
+                    format: uint64
+              team:
+                type: object
+                properties:
+                  support:
+                    type: string
+                    format: uint64
+                  against:
+                    type: string
+                    format: uint64
+                  invalid:
+                    type: string
+                    format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: dispute_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
+  /tellor-io/layer/dispute/team-address:
+    get:
+      summary: team address queries the team address.
+      operationId: TeamAddress
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              team_address:
+                type: string
+                description: teamAddress holds the team address.
+            description: >-
+              QueryTeamAddressResponse is response type for the
+              Query/TeamAddress RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/dispute/team-vote/{dispute_id}:
+    get:
+      summary: team vote queries the team vote for a dispute.
+      operationId: TeamVote
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              team_vote:
+                description: teamVote holds the team voter info for a dispute.
+                type: object
+                properties:
+                  vote:
+                    type: string
+                    enum:
+                      - VOTE_INVALID
+                      - VOTE_SUPPORT
+                      - VOTE_AGAINST
+                    default: VOTE_INVALID
+                  voter_power:
+                    type: string
+                  reporter_power:
+                    type: string
+                  reward_claimed:
+                    type: boolean
+            description: >-
+              QueryTeamVoteResponse is response type for the Query/TeamVote RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: dispute_id
+          description: disputeId defines the dispute id.
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
+  /layer/registry/decode_querydata/{query_data}:
+    get:
+      summary: Queries a list of DecodeQuerydata items.
+      operationId: DecodeQuerydata
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              spec:
+                type: string
+                description: >-
+                  spec is the decoded json represention of the query data hex
+                  string.
+            description: >-
+              QueryDecodeQuerydataResponse is response type for the
+              Query/DecodeQuerydata RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: query_data
+          description: query_data is the query data hex string to be decoded.
+          in: path
+          required: true
+          type: string
+          format: byte
+      tags:
+        - Query
+  /layer/registry/decode_value/{queryType}/{value}:
+    get:
+      summary: Queries a list of DecodeValue items.
+      operationId: DecodeValue
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              decodedValue:
+                type: string
+                description: decodedValue is the decoded value of the hex string.
+            description: >-
+              QueryDecodeValueResponse is response type for the
+              Query/DecodeValue RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: queryType
+          description: queryType is the key to fetch a the corresponding data spec.
+          in: path
+          required: true
+          type: string
+        - name: value
+          description: value is the value hex string to be decoded.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/registry/generate_querydata/{querytype}/{parameters}:
+    get:
+      summary: Queries a list of GenerateQuerydata items.
+      operationId: GenerateQuerydata
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              query_data:
+                type: string
+                format: byte
+                description: query_data is the generated query_data hex string.
+            description: >-
+              QueryGenerateQuerydataResponse is response type for the
+              Query/GenerateQuerydata RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: querytype
+          description: querytype for which query_data is to be generated.
+          in: path
+          required: true
+          type: string
+        - name: parameters
+          description: parameters for which query_data is to be generated.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/registry/get_data_spec/{query_type}:
+    get:
+      summary: Queries a list of GetDataSpec items.
+      operationId: GetDataSpec
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              spec:
+                description: spec is the data spec corresponding to the query type.
+                type: object
+                properties:
+                  document_hash:
+                    type: string
+                    title: ipfs hash of the data spec
+                  response_value_type:
+                    type: string
+                    title: the value's datatype for decoding the value
+                  abi_components:
+                    type: array
+                    items:
+                      type: object
+                      properties: &ref_0
+                        name:
+                          type: string
+                          title: name
+                        field_type:
+                          type: string
+                          title: type
+                        nested_component:
+                          type: array
+                          items:
+                            type: object
+                            properties: *ref_0
+                            title: >-
+                              ABIComponent is a specification for how to
+                              interpret abi_components
+                          title: >-
+                            consider taking this recursion out and make it once
+                            only
+                      title: >-
+                        ABIComponent is a specification for how to interpret
+                        abi_components
+                    title: the abi components for decoding
+                  aggregation_method:
+                    type: string
+                    title: >-
+                      how to aggregate the data (ie. average, median, mode, etc)
+                      for aggregating reports and arriving at final value
+                  registrar:
+                    type: string
+                    title: address that originally registered the data spec
+                  report_block_window:
+                    type: string
+                    format: uint64
+                    title: >-
+                      report_buffer_window specifies the duration of the time
+                      window following an initial report
+
+                      during which additional reports can be submitted. This
+                      duration acts as a buffer, allowing
+
+                      a collection of related reports in a defined time frame.
+                      The window ensures that all
+
+                      pertinent reports are aggregated together before arriving
+                      at a final value. This defaults
+
+                      to 0s if not specified.
+
+                      extensions: treat as a golang time.duration, don't allow
+                      nil values, don't omit empty values
+                  query_type:
+                    type: string
+                    title: querytype is the first arg in queryData
+                title: >-
+                  DataSpec is a specification for how to interpret and aggregate
+                  data
+            description: >-
+              QueryGetDataSpecResponse is response type for the
+              Query/GetDataSpec RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: query_type
+          description: queryType is the key to fetch a the corresponding data spec.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /layer/registry/params:
+    get:
+      summary: Parameters queries the parameters of the module.
+      operationId: RegistryParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                description: params holds all the parameters of this module.
+                type: object
+                properties:
+                  max_report_buffer_window:
+                    type: string
+                    format: uint64
+                    title: max report buffer window
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.

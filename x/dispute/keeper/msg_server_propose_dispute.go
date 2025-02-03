@@ -21,6 +21,7 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 	if err != nil {
 		return nil, err
 	}
+	ctx.Logger().Info("Proposing dispute", "reporter", msg.Report.Reporter, "report", msg.Report, "disputeCategory", msg.DisputeCategory, "fee", msg.Fee.Amount)
 
 	err = validateProposeDispute(msg)
 	if err != nil {
