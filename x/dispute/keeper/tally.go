@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -34,17 +35,15 @@ func (k Keeper) GetAccountBalance(ctx context.Context, addr sdk.AccAddress) (mat
 
 // The `Ratio` function calculates the percentage ratio of `part` to `total`, scaled by a factor of 4 for the total before calculation. The result is expressed as a percentage.
 // Ratio gets called on each sector of voters after votes have been summed e.g Ratio(totalUserTips, userVoteSum)
-func Ratio(total, part math.Int) math.Int {
+func Ratio(total, part math.LegacyDec) math.LegacyDec {
 	if total.IsZero() {
-		return math.ZeroInt()
+		return math.LegacyZeroDec()
 	}
-	total = total.MulRaw(3)
-	totalDec := math.LegacyNewDecFromInt(total)
-	partDec := math.LegacyNewDecFromInt(part)
+	total = total.Mul(math.LegacyNewDec(3))
 	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
-	ratioDec := partDec.Mul(powerReductionDec).Quo(totalDec).Mul(math.LegacyNewDec(100))
+	ratioDec := part.Mul(powerReductionDec).Quo(total).Mul(math.LegacyNewDec(100))
 
-	return ratioDec.TruncateInt()
+	return ratioDec
 }
 
 // TallyVote determines whether the dispute vote has either reached quorum or the vote period has ended.
@@ -82,7 +81,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		}
 	}
 
-	totalRatio := math.ZeroInt()
+	totalRatio := math.LegacyZeroDec()
 	// init tallies
 	tallies := types.Tally{
 		ForVotes:     k.InitVoterClasses(),
@@ -119,7 +118,9 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 			scaledInvalid = scaledInvalid.Add(layertypes.PowerReduction)
 		}
 
-		totalRatio = totalRatio.Add(math.NewInt(33).Mul(layertypes.PowerReduction))
+		// team power is 100*1e6 / 3
+		totalRatio = totalRatio.Add(math.LegacyNewDec(100).Mul(layertypes.PowerReduction.ToLegacyDec()).Quo(math.LegacyNewDec(3)))
+		fmt.Println("totalRatio from team vote: ", totalRatio)
 	}
 	// get user group
 	tallies.ForVotes.Users = math.NewIntFromUint64(voteCounts.Users.Support)
@@ -131,8 +132,10 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	scaledAgainstDec := math.LegacyNewDecFromInt(scaledAgainst)
 	scaledInvalidDec := math.LegacyNewDecFromInt(scaledInvalid)
 	if userVoteSum.GT(math.ZeroInt()) {
-		totalRatio = totalRatio.Add(Ratio(info.TotalUserTips, userVoteSum))
+		totalUserTipsDec := math.LegacyNewDecFromInt(info.TotalUserTips)
 		userVoteSumDec := math.LegacyNewDecFromInt(userVoteSum)
+		totalRatio = totalRatio.Add(Ratio(totalUserTipsDec, userVoteSumDec))
+		fmt.Println("totalRatio from user vote: ", totalRatio)
 
 		usersForVotesDec := math.LegacyNewDecFromInt(tallies.ForVotes.Users)
 		usersAgainstVotesDec := math.LegacyNewDecFromInt(tallies.AgainstVotes.Users)
@@ -147,9 +150,11 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	tallies.AgainstVotes.Reporters = math.NewIntFromUint64(voteCounts.Reporters.Against)
 	tallies.Invalid.Reporters = math.NewIntFromUint64(voteCounts.Reporters.Invalid)
 	reporterVoteSum := tallies.ForVotes.Reporters.Add(tallies.AgainstVotes.Reporters).Add(tallies.Invalid.Reporters)
-	reporterRatio := Ratio(info.TotalReporterPower, reporterVoteSum)
+	totalReporterPowerDec := math.LegacyNewDecFromInt(info.TotalReporterPower)
+	reporterVoteSumDec := math.LegacyNewDecFromInt(reporterVoteSum)
+	reporterRatio := Ratio(totalReporterPowerDec, reporterVoteSumDec)
 	totalRatio = totalRatio.Add(reporterRatio)
-
+	fmt.Println("totalRatio from reporter vote: ", totalRatio)
 	if reporterVoteSum.GT(math.ZeroInt()) {
 		reporterVoteSumDec := math.LegacyNewDecFromInt(reporterVoteSum)
 		reportersForVotesDec := math.LegacyNewDecFromInt(tallies.ForVotes.Reporters)
@@ -163,7 +168,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		scaledAgainstDec = scaledAgainstDec.Add(againstReportersDec)
 		scaledInvalidDec = scaledInvalidDec.Add(invalidReportersDec)
 	}
-	if totalRatio.GTE(math.NewInt(51).Mul(layertypes.PowerReduction)) {
+	if totalRatio.GTE(math.LegacyNewDec(51).Mul(layertypes.PowerReduction.ToLegacyDec())) {
 		numGroupsDec := math.LegacyNewDecFromInt(numGroups)
 		scaledSupportDec = scaledSupportDec.Quo(numGroupsDec)
 		scaledAgainstDec = scaledAgainstDec.Quo(numGroupsDec)

@@ -84,32 +84,35 @@ func (s *KeeperTestSuite) TestRatio() {
 	require := s.Require()
 
 	// 11/33 --> 11111111
-	ratio := disputekeeper.Ratio(math.NewInt(33), math.NewInt(11))
+	ratio := disputekeeper.Ratio(math.LegacyNewDec(33), math.LegacyNewDec(11))
+	expected := math.LegacyNewDec(1).Quo(math.LegacyNewDec(9)).Mul(math.LegacyNewDec(1e8)) // 6 for power reduction, 2 for using tens place numbers
 	fmt.Println(ratio)
-	require.Equal(ratio, math.NewInt(11111111))
+	require.Equal(ratio.TruncateDec(), expected.TruncateDec()) // not sure of a better way to compare...
 	// 25/25 --> 25/100
-	ratio = disputekeeper.Ratio(math.NewInt(33), math.NewInt(33))
-	fmt.Println(ratio)
-	require.Equal(ratio, math.NewInt(33333333))
+	ratio = disputekeeper.Ratio(math.LegacyNewDec(33), math.LegacyNewDec(33))
+	expected = math.LegacyNewDec(3).Quo(math.LegacyNewDec(9)).Mul(math.LegacyNewDec(1e8))
+	require.Equal(ratio.TruncateDec(), expected.TruncateDec())
 	// 0/25 --> 0/100
-	ratio = disputekeeper.Ratio(math.NewInt(33), math.NewInt(0))
+	ratio = disputekeeper.Ratio(math.LegacyNewDec(33), math.LegacyNewDec(0))
 	fmt.Println(ratio)
-	require.Equal(ratio, math.NewInt(0))
+	require.Equal(ratio, math.LegacyNewDec(0))
 	// 25/0 --> 100/0
-	ratio = disputekeeper.Ratio(math.NewInt(0), math.NewInt(33))
+	ratio = disputekeeper.Ratio(math.LegacyNewDec(0), math.LegacyNewDec(33))
 	fmt.Println(ratio)
-	require.Equal(ratio, math.NewInt(0))
+	require.Equal(ratio, math.LegacyNewDec(0))
 
 	// big numbers
 	// ex. total reporter power is 1_000_000 trb, all of them have voted
-	ratio = disputekeeper.Ratio(math.NewInt(1_000_000), math.NewInt(1_000_000))
+	ratio = disputekeeper.Ratio(math.LegacyNewDec(1_000_000), math.LegacyNewDec(1_000_000))
+	expected = math.LegacyNewDec(3).Quo(math.LegacyNewDec(9)).Mul(math.LegacyNewDec(1e8)) 
 	fmt.Println(ratio)
-	require.Equal(ratio, math.NewInt(33333333))
+	require.Equal(ratio.TruncateDec(), expected.TruncateDec())
 
 	// ex. total reporter power is 1e14 trb, 1e13 trb have voted
-	ratio = disputekeeper.Ratio(math.NewInt(1e14), math.NewInt(1e14))
+	ratio = disputekeeper.Ratio(math.LegacyNewDec(1e14), math.LegacyNewDec(1e13))
+	expected = math.LegacyNewDec(1e13).Quo(math.LegacyNewDec(3e14)).Mul(math.LegacyNewDec(1e8))
 	fmt.Println(ratio)
-	require.Equal(ratio, math.NewInt(33333333))
+	require.Equal(ratio.TruncateDec(), expected.TruncateDec())
 }
 
 func (s *KeeperTestSuite) TestTallyVote() {
