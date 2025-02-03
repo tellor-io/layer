@@ -13,6 +13,7 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/stretchr/testify/require"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	"go.uber.org/zap/zaptest"
 
 	"cosmossdk.io/math"
@@ -20,8 +21,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	registrytypes "github.com/tellor-io/layer/x/registry/types"
 )
 
 // HELPERS FOR BUILDING THE CHAIN
@@ -397,8 +396,7 @@ func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *c
 	return nil
 }
 
-func GetValAddresses(ctx context.Context, layer *cosmos.CosmosChain) (validators []*cosmos.ChainNode, valAccAddresses []string, valAddresses []string, err error) {
-
+func GetValAddresses(ctx context.Context, layer *cosmos.CosmosChain) (validators []*cosmos.ChainNode, valAccAddresses, valAddresses []string, err error) {
 	for _, validator := range layer.Validators {
 		valAccAddress, err := validator.AccountKeyBech32(ctx, "validator")
 		if err != nil {
@@ -421,7 +419,7 @@ func GetValAddresses(ctx context.Context, layer *cosmos.CosmosChain) (validators
 
 func GetTxHashFromExec(stdout []byte) (string, error) {
 	output := cosmos.CosmosTx{}
-	err := json.Unmarshal([]byte(stdout), &output)
+	err := json.Unmarshal(stdout, &output)
 	if err != nil {
 		panic("error unmarshalling stdout")
 	}
@@ -450,7 +448,7 @@ func CreateDataSpec(reportBlockWindow int, registrar string) (DataSpec, error) {
 }
 
 func QueryTips(queryData string, ctx context.Context, validatorI *cosmos.ChainNode) (CurrentTipsResponse, error) {
-	availableTips, _, err := validatorI.ExecQuery(ctx, "oracle", "get-current-tip", string(queryData))
+	availableTips, _, err := validatorI.ExecQuery(ctx, "oracle", "get-current-tip", queryData)
 	if err != nil {
 		return CurrentTipsResponse{}, err
 	}

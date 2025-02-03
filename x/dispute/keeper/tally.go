@@ -60,7 +60,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	if err != nil {
 		return err
 	}
-	k.Logger(ctx).Info("Vote", "vote", vote)
 
 	if vote.VoteResult != types.VoteResult_NO_TALLY {
 		return errors.New("vote already tallied")
@@ -69,17 +68,13 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	if err != nil {
 		return err
 	}
-	k.Logger(ctx).Info("Dispute", "dispute", dispute)
 	info, err := k.BlockInfo.Get(ctx, dispute.HashId)
 	if err != nil {
 		return err
 	}
-	k.Logger(ctx).Info("BlockInfo", "BlockInfo", info)
 
 	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
-	k.Logger(ctx).Info("VoteCountsByGroup no error", "VoteCountsByGroup", voteCounts)
 	if err != nil {
-		k.Logger(ctx).Info("VoteCountsByGroup error", "VoteCountsByGroup", voteCounts)
 		voteCounts = types.StakeholderVoteCounts{
 			Users:     types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
 			Reporters: types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
@@ -126,7 +121,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 
 		totalRatio = totalRatio.Add(math.NewInt(33).Mul(layertypes.PowerReduction))
 	}
-	k.Logger(ctx).Info("TotalRatio after team vote", "TotalRatio", totalRatio)
 	// get user group
 	tallies.ForVotes.Users = math.NewIntFromUint64(voteCounts.Users.Support)
 	tallies.AgainstVotes.Users = math.NewIntFromUint64(voteCounts.Users.Against)
@@ -148,7 +142,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		scaledAgainstDec = scaledAgainstDec.Add(usersAgainstVotesDec.Mul(powerReductionDec).Quo(userVoteSumDec))
 		scaledInvalidDec = scaledInvalidDec.Add(usersInvalidVotesDec.Mul(powerReductionDec).Quo(userVoteSumDec))
 	}
-	k.Logger(ctx).Info("TotalRatio after user vote", "TotalRatio", totalRatio)
 
 	tallies.ForVotes.Reporters = math.NewIntFromUint64(voteCounts.Reporters.Support)
 	tallies.AgainstVotes.Reporters = math.NewIntFromUint64(voteCounts.Reporters.Against)
@@ -170,7 +163,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		scaledAgainstDec = scaledAgainstDec.Add(againstReportersDec)
 		scaledInvalidDec = scaledInvalidDec.Add(invalidReportersDec)
 	}
-	k.Logger(ctx).Info("TotalRatio after reporter vote", "TotalRatio", totalRatio)
 	if totalRatio.GTE(math.NewInt(51).Mul(layertypes.PowerReduction)) {
 		numGroupsDec := math.LegacyNewDecFromInt(numGroups)
 		scaledSupportDec = scaledSupportDec.Quo(numGroupsDec)

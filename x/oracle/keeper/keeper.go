@@ -243,19 +243,13 @@ func (k Keeper) FlagAggregateReport(ctx context.Context, report types.MicroRepor
 }
 
 func (k Keeper) ValidateMicroReportExists(ctx context.Context, microReport types.MicroReport) (bool, error) {
-	k.Logger(ctx).Info("ValidateMicroReportExists", "microReport", microReport)
 	reporterBech, err := sdk.AccAddressFromBech32(microReport.Reporter)
 	if err != nil {
 		return false, err
 	}
 
-	k.Logger(ctx).Info("ValidateMicroReportExists reporterBech", "reporterBech", reporterBech)
-	k.Logger(ctx).Info("ValidateMicroReportExists microReport.QueryId", "microReport.QueryId", microReport.QueryId)
-	k.Logger(ctx).Info("ValidateMicroReportExists microReport.MetaId", "microReport.MetaId", microReport.MetaId)
 	report, err := k.Reports.Get(ctx, collections.Join3(microReport.QueryId, reporterBech.Bytes(), microReport.MetaId))
-	k.Logger(ctx).Info("ValidateMicroReportExists report", "report", report)
 	if err != nil {
-		k.Logger(ctx).Error("ValidateMicroReportExists report", "err", err)
 		return false, err
 	}
 

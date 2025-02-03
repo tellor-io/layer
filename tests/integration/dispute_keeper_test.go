@@ -255,10 +255,13 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	})
 	s.NoError(err)
 	s.True(s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom).IsLT(disputerBalanceBefore))
+	// set block info directly for ease (need validators to call endblocker)
+	d, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	err = s.Setup.Disputekeeper.SetBlockInfo(s.Setup.Ctx, d.HashId)
+	s.NoError(err)
 
 	s.NoError(dispute.CheckOpenDisputesForExpiration(s.Setup.Ctx, s.Setup.Disputekeeper))
-	teamAddr, err := s.Setup.Disputekeeper.GetTeamAddress(s.Setup.Ctx)
-	s.NoError(err)
 	votes := []types.MsgVote{
 		{
 			Voter: report.Reporter,
@@ -280,15 +283,11 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 			Id:    1,
 			Vote:  types.VoteEnum_VOTE_INVALID,
 		},
-		{
-			Voter: teamAddr.String(),
-			Id:    1,
-			Vote:  types.VoteEnum_VOTE_INVALID,
-		},
 	}
 	for i := range votes {
 		_, err = msgServer.Vote(s.Setup.Ctx, &votes[i])
 		if err != nil {
+			fmt.Println("err: ", err)
 			s.Error(err, "voter power is zero")
 		}
 
@@ -299,15 +298,18 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	// get dispute hash id
 	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
 	s.NoError(err)
-	// set block info directly for ease (need validators to call endblocker)
-	err = s.Setup.Disputekeeper.SetBlockInfo(s.Setup.Ctx, dispute.HashId)
+	fmt.Println("dispute: ", dispute)
+	voteInfo, err := s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
 	s.NoError(err)
+	fmt.Println("voteInfo before time skip: ", voteInfo)
+	s.False(voteInfo.Executed)
 	// only 25 percent of the total power voted so vote should not be tallied unless it's expired
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	s.NoError(err)
-	voteInfo, err := s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
+	voteInfo, err = s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
 	s.NoError(err)
+	fmt.Println("voteInfo after time skip: ", voteInfo)
 	s.True(voteInfo.Executed)
 	s.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, voteInfo.VoteResult)
 	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &types.MsgWithdrawFeeRefund{CallerAddress: disputer.String(), PayerAddress: disputer.String(), Id: 1})
@@ -530,7 +532,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 		Id:    1,
 		Vote:  types.VoteEnum_VOTE_SUPPORT,
 	})
-	s.NoError(err)
+	s.Error(err) // vote already reached quorum
 	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1)
 	s.Equal(err.Error(), "vote already tallied")
 	// execute vote
@@ -690,7 +692,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 		Id:    1,
 		Vote:  types.VoteEnum_VOTE_AGAINST,
 	})
-	s.NoError(err)
+	s.Error(err) // vote already reached quorum
 	err = s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1)
 	s.Equal(err.Error(), "vote already tallied")
 	// execute vote
@@ -1500,5 +1502,4 @@ func (s *IntegrationTestSuite) TestManyOpenDisputes() {
 	// // 10 will get disputed, 1 will be tipping and disputing
 	// repAccs, valAccs, _ := s.createValidatorsbypowers([]uint64{10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000})
 	// tipper := repAccs[0]
-
 }

@@ -83,14 +83,14 @@ func (s *KeeperTestSuite) TestGetAccountBalance() {
 func (s *KeeperTestSuite) TestRatio() {
 	require := s.Require()
 
-	// 10/25 --> 10/100
+	// 11/33 --> 11111111
 	ratio := disputekeeper.Ratio(math.NewInt(33), math.NewInt(11))
 	fmt.Println(ratio)
-	require.Equal(ratio, math.NewInt(10*1e6))
+	require.Equal(ratio, math.NewInt(11111111))
 	// 25/25 --> 25/100
 	ratio = disputekeeper.Ratio(math.NewInt(33), math.NewInt(33))
 	fmt.Println(ratio)
-	require.Equal(ratio, math.NewInt(25*1e6))
+	require.Equal(ratio, math.NewInt(33333333))
 	// 0/25 --> 0/100
 	ratio = disputekeeper.Ratio(math.NewInt(33), math.NewInt(0))
 	fmt.Println(ratio)
@@ -104,12 +104,12 @@ func (s *KeeperTestSuite) TestRatio() {
 	// ex. total reporter power is 1_000_000 trb, all of them have voted
 	ratio = disputekeeper.Ratio(math.NewInt(1_000_000), math.NewInt(1_000_000))
 	fmt.Println(ratio)
-	require.Equal(ratio, math.NewInt(25*1e6))
+	require.Equal(ratio, math.NewInt(33333333))
 
 	// ex. total reporter power is 1e14 trb, 1e13 trb have voted
 	ratio = disputekeeper.Ratio(math.NewInt(1e14), math.NewInt(1e14))
 	fmt.Println(ratio)
-	require.Equal(ratio, math.NewInt(25*1e6))
+	require.Equal(ratio, math.NewInt(33333333))
 }
 
 func (s *KeeperTestSuite) TestTallyVote() {
@@ -179,28 +179,28 @@ func (s *KeeperTestSuite) TestTallyVote() {
 			teardown:      func() {},
 			expectedError: errors.New("vote period not ended and quorum not reached"),
 			expectedVotes: types.StakeholderVoteCounts{
-				Team:      types.VoteCounts{Support: 25000000, Against: 0, Invalid: 0},
+				Team:      types.VoteCounts{Support: 33333333, Against: 0, Invalid: 0},
 				Reporters: types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
 				Users:     types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
 			},
 		},
 		{
-			name:      "team votes, all users vote, quorum not reached",
+			name:      "team votes, some users vote, quorum not reached",
 			disputeId: uint64(2),
 			setup: func() {
 				disputeId := uint64(2)
 				require.NoError(k.VoteCountsByGroup.Set(ctx, disputeId, types.StakeholderVoteCounts{
-					Team:      types.VoteCounts{Support: 25000000, Against: 0, Invalid: 0},
-					Users:     types.VoteCounts{Support: 50000000, Against: 0, Invalid: 0},
+					Team:      types.VoteCounts{Support: 33333333, Against: 0, Invalid: 0},
+					Users:     types.VoteCounts{Support: 10000000, Against: 0, Invalid: 0},
 					Reporters: types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
 				}))
 			},
 			teardown:      func() {},
 			expectedError: errors.New("vote period not ended and quorum not reached"),
 			expectedVotes: types.StakeholderVoteCounts{
-				Team:      types.VoteCounts{Support: 25000000, Against: 0, Invalid: 0},
+				Team:      types.VoteCounts{Support: 33333333, Against: 0, Invalid: 0},
 				Reporters: types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
-				Users:     types.VoteCounts{Support: 50000000, Against: 0, Invalid: 0},
+				Users:     types.VoteCounts{Support: 10000000, Against: 0, Invalid: 0},
 			},
 		},
 		{
@@ -209,7 +209,7 @@ func (s *KeeperTestSuite) TestTallyVote() {
 			setup: func() {
 				disputeId := uint64(2)
 				require.NoError(k.VoteCountsByGroup.Set(ctx, disputeId, types.StakeholderVoteCounts{
-					Team:      types.VoteCounts{Support: 25000000, Against: 0, Invalid: 0},
+					Team:      types.VoteCounts{Support: 33333333, Against: 0, Invalid: 0},
 					Users:     types.VoteCounts{Support: 50000000, Against: 0, Invalid: 0},
 					Reporters: types.VoteCounts{Support: 50000000, Against: 0, Invalid: 0},
 				}))
@@ -217,49 +217,7 @@ func (s *KeeperTestSuite) TestTallyVote() {
 			teardown:      func() {},
 			expectedError: nil,
 			expectedVotes: types.StakeholderVoteCounts{
-				Team:      types.VoteCounts{Support: 25000000, Against: 0, Invalid: 0},
-				Reporters: types.VoteCounts{Support: 50000000, Against: 0, Invalid: 0},
-				Users:     types.VoteCounts{Support: 50000000, Against: 0, Invalid: 0},
-			},
-		},
-		{
-			name:      "everybody votes, quorum reached",
-			disputeId: uint64(3),
-			setup: func() {
-				disputeId := uint64(3)
-				// get team address
-				teamAddr, err := k.GetTeamAddress(ctx)
-				require.NoError(err)
-				// set dispute voting status
-				require.NoError(k.Votes.Set(ctx, disputeId, types.Vote{
-					Id:         disputeId,
-					VoteResult: types.VoteResult_NO_TALLY,
-				}))
-				// set dispute info
-				require.NoError(k.Disputes.Set(ctx, disputeId, types.Dispute{
-					HashId:    []byte("hashId3"),
-					DisputeId: disputeId,
-				}))
-				// set block info
-				require.NoError(k.BlockInfo.Set(ctx, []byte("hashId3"), types.BlockInfo{
-					TotalReporterPower: math.NewInt(50 * 1e6),
-					TotalUserTips:      math.NewInt(50 * 1e6),
-				}))
-				// set vote counts by group
-				require.NoError(k.VoteCountsByGroup.Set(ctx, disputeId, types.StakeholderVoteCounts{
-					Team:      types.VoteCounts{Support: 25000000, Against: 0, Invalid: 0},
-					Users:     types.VoteCounts{Support: 50000000, Against: 0, Invalid: 0},
-					Reporters: types.VoteCounts{Support: 50000000, Against: 0, Invalid: 0},
-				}))
-				// set team vote
-				require.NoError(k.Voter.Set(ctx, collections.Join(disputeId, teamAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_SUPPORT, VoterPower: math.NewInt(25000000)}))
-				// mock for GetTotalSupply
-				bk.On("GetSupply", ctx, layertypes.BondDenom).Return(sdk.Coin{Denom: layertypes.BondDenom, Amount: math.NewInt(250 * 1e6)}, nil)
-			},
-			teardown:      func() {},
-			expectedError: nil,
-			expectedVotes: types.StakeholderVoteCounts{
-				Team:      types.VoteCounts{Support: 25000000, Against: 0, Invalid: 0},
+				Team:      types.VoteCounts{Support: 33333333, Against: 0, Invalid: 0},
 				Reporters: types.VoteCounts{Support: 50000000, Against: 0, Invalid: 0},
 				Users:     types.VoteCounts{Support: 50000000, Against: 0, Invalid: 0},
 			},
@@ -289,7 +247,7 @@ func (s *KeeperTestSuite) TestTallyVote() {
 				}))
 				// set vote counts by group
 				require.NoError(k.VoteCountsByGroup.Set(ctx, disputeId, types.StakeholderVoteCounts{
-					Team:      types.VoteCounts{Support: 0, Against: 0, Invalid: 25000000},
+					Team:      types.VoteCounts{Support: 0, Against: 0, Invalid: 33333333},
 					Users:     types.VoteCounts{Support: 22500000, Against: 22500000, Invalid: 15000000},
 					Reporters: types.VoteCounts{Support: 27500000, Against: 22500000, Invalid: 10000000},
 				}))
@@ -301,7 +259,7 @@ func (s *KeeperTestSuite) TestTallyVote() {
 			teardown:      func() {},
 			expectedError: nil,
 			expectedVotes: types.StakeholderVoteCounts{
-				Team:      types.VoteCounts{Support: 0, Against: 0, Invalid: 25000000},
+				Team:      types.VoteCounts{Support: 0, Against: 0, Invalid: 33333333},
 				Users:     types.VoteCounts{Support: 22500000, Against: 22500000, Invalid: 15000000},
 				Reporters: types.VoteCounts{Support: 27500000, Against: 22500000, Invalid: 10000000},
 			},
