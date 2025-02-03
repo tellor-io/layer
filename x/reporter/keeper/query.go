@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -39,10 +40,15 @@ func (k Querier) Reporters(ctx context.Context, req *types.QueryReportersRequest
 		if err != nil {
 			return err
 		}
-
+		stake, _, err := k.GetReporterStake(ctx, sdk.AccAddress(repAddr), nil)
+		reportingPower := stake.Quo(layertypes.PowerReduction).Uint64()
+		if err != nil {
+			return err
+		}
 		reporters = append(reporters, &types.Reporter{
 			Address:  sdk.AccAddress(repAddr).String(),
 			Metadata: &reporterMeta,
+			Power:    reportingPower,
 		})
 		return nil
 	})
