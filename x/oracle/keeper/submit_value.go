@@ -96,7 +96,7 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 			sdk.NewAttribute("cyclelist", fmt.Sprintf("%t", incycle)),
 			sdk.NewAttribute("aggregate_method", dataSpec.AggregationMethod),
 			sdk.NewAttribute("query_data", hex.EncodeToString(queryData)),
-			sdk.NewAttribute("timestamp", sdkCtx.BlockTime().String()),
+			sdk.NewAttribute("timestamp", strconv.Itoa(int(sdkCtx.BlockTime().UnixMilli()))),
 			sdk.NewAttribute("meta_id", meta_id_str),
 		),
 	})

@@ -19,15 +19,7 @@ import (
 func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDispute) (*types.MsgProposeDisputeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := validateProposeDispute(msg)
-	if err != nil {
-		return nil, err
-	}
-	sender, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		return nil, err
-	}
-	disputed_reporter, err := sdk.AccAddressFromBech32(msg.DisputedReporter)
+	sender, disputed_reporter, err := validateProposeDispute(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -71,24 +63,24 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 	return &types.MsgProposeDisputeResponse{}, nil
 }
 
-func validateProposeDispute(msg *types.MsgProposeDispute) error {
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
+func validateProposeDispute(msg *types.MsgProposeDispute) (creator sdk.AccAddress, disputed_reporter sdk.AccAddress, err error) {
+	creator, err = sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return nil, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
-	_, err = sdk.AccAddressFromBech32(msg.DisputedReporter)
+	disputed_reporter, err = sdk.AccAddressFromBech32(msg.DisputedReporter)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid disputed reporter address (%s)", err)
+		return nil, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid disputed reporter address (%s)", err)
 	}
 	// ensure that the fee matches the layer.BondDenom and the amount is a positive number
 	if msg.Fee.Denom != layer.BondDenom || msg.Fee.Amount.IsZero() || msg.Fee.Amount.IsNegative() {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid fee amount (%s)", msg.Fee.Amount.String())
+		return nil, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid fee amount (%s)", msg.Fee.Amount.String())
 	}
 	if msg.ReportQueryId == "" {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "query id should not be nil")
+		return nil, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "query id should not be nil")
 	}
 	if msg.DisputeCategory != types.Warning && msg.DisputeCategory != types.Minor && msg.DisputeCategory != types.Major {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "dispute category should be either Warning, Minor, or Major")
+		return nil, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "dispute category should be either Warning, Minor, or Major")
 	}
-	return nil
+	return creator, disputed_reporter, nil
 }
