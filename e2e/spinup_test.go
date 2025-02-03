@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -156,9 +157,14 @@ func TestLayerFlow(t *testing.T) {
 	require.Equal(t, aggReport.Aggregate.AggregateReporter, valIIAddress)
 
 	// second party disputes report
-	bz, err := json.Marshal(microReports.MicroReports[0])
+	//bz, err := json.Marshal(microReports.MicroReports[0])
 	require.NoError(t, err)
-	txHash, err = validatorI.ExecTx(ctx, disputerFA, "dispute", "propose-dispute", string(bz), "warning", "500000000000loya", "false", "--keyring-dir", layer.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	decodedBytes, err := base64.StdEncoding.DecodeString(microReports.MicroReports[0].QueryID)
+	require.NoError(t, err)
+
+	// Convert to hex
+	hexStr := hex.EncodeToString(decodedBytes)
+	txHash, err = validatorI.ExecTx(ctx, disputerFA, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, hexStr, "warning", "500000000000loya", "false", "--keyring-dir", layer.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 	var disputes e2e.Disputes

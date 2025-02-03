@@ -129,28 +129,37 @@ func (_m *OracleKeeper) GetUserTips(ctx context.Context, tipper cosmos_sdktypes.
 	return r0, r1
 }
 
-// ValidateMicroReportExists provides a mock function with given fields: ctx, microReport
-func (_m *OracleKeeper) ValidateMicroReportExists(ctx context.Context, microReport types.MicroReport) (bool, error) {
-	ret := _m.Called(ctx, microReport)
+// ValidateMicroReportExists provides a mock function with given fields: ctx, reporter, meta_id, query_id
+func (_m *OracleKeeper) ValidateMicroReportExists(ctx context.Context, reporter cosmos_sdktypes.AccAddress, meta_id uint64, query_id []byte) (*types.MicroReport, bool, error) {
+	ret := _m.Called(ctx, reporter, meta_id, query_id)
 
-	var r0 bool
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.MicroReport) (bool, error)); ok {
-		return rf(ctx, microReport)
+	var r0 *types.MicroReport
+	var r1 bool
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, cosmos_sdktypes.AccAddress, uint64, []byte) (*types.MicroReport, bool, error)); ok {
+		return rf(ctx, reporter, meta_id, query_id)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, types.MicroReport) bool); ok {
-		r0 = rf(ctx, microReport)
+	if rf, ok := ret.Get(0).(func(context.Context, cosmos_sdktypes.AccAddress, uint64, []byte) *types.MicroReport); ok {
+		r0 = rf(ctx, reporter, meta_id, query_id)
 	} else {
-		r0 = ret.Get(0).(bool)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.MicroReport)
+		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, types.MicroReport) error); ok {
-		r1 = rf(ctx, microReport)
+	if rf, ok := ret.Get(1).(func(context.Context, cosmos_sdktypes.AccAddress, uint64, []byte) bool); ok {
+		r1 = rf(ctx, reporter, meta_id, query_id)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(bool)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, cosmos_sdktypes.AccAddress, uint64, []byte) error); ok {
+		r2 = rf(ctx, reporter, meta_id, query_id)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 type mockConstructorTestingTNewOracleKeeper interface {

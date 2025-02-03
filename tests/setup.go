@@ -1,6 +1,7 @@
 package setup
 
 import (
+	"encoding/hex"
 	"fmt"
 	"strconv"
 	"testing"
@@ -489,11 +490,13 @@ func (s *SharedSetup) Report(ctx sdk.Context, reporterAccAddr sdk.AccAddress, qu
 
 func (s *SharedSetup) OpenDispute(ctx sdk.Context, disputerAccAddr sdk.AccAddress, report oracletypes.MicroReport, category disputetypes.DisputeCategory, fee math.Int, payFromBond bool) {
 	msgProposeDispute := disputetypes.MsgProposeDispute{
-		Creator:         disputerAccAddr.String(),
-		Report:          &report,
-		DisputeCategory: disputetypes.Warning,
-		Fee:             sdk.NewCoin(s.Denom, fee),
-		PayFromBond:     payFromBond,
+		Creator:          disputerAccAddr.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		DisputeCategory:  disputetypes.Warning,
+		Fee:              sdk.NewCoin(s.Denom, fee),
+		PayFromBond:      payFromBond,
 	}
 
 	msgServerDispute := disputekeeper.NewMsgServerImpl(s.Disputekeeper)

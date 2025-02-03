@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strconv"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -83,6 +84,7 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 			return fmt.Errorf("failed to add report: %w", err)
 		}
 	}
+	meta_id_str := strconv.Itoa(int(report.MetaId))
 	sdkCtx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"new_report",
@@ -94,6 +96,8 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 			sdk.NewAttribute("cyclelist", fmt.Sprintf("%t", incycle)),
 			sdk.NewAttribute("aggregate_method", dataSpec.AggregationMethod),
 			sdk.NewAttribute("query_data", hex.EncodeToString(queryData)),
+			sdk.NewAttribute("timestamp", strconv.Itoa(int(sdkCtx.BlockTime().UnixMilli()))),
+			sdk.NewAttribute("meta_id", meta_id_str),
 		),
 	})
 	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id), report)
