@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/hex"
 	"fmt"
 	gomath "math"
 	"time"
@@ -125,11 +126,13 @@ func (s *KeeperTestSuite) TestSetNewDispute() types.MsgProposeDispute {
 	report := report()
 	creator := sample.AccAddressBytes()
 	disputeMsg := types.MsgProposeDispute{
-		Creator:         creator.String(),
-		Report:          &report,
-		DisputeCategory: types.Warning,
-		Fee:             sdk.NewCoin("loya", math.NewInt(1000)),
-		PayFromBond:     false,
+		Creator:          creator.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		DisputeCategory:  types.Warning,
+		Fee:              sdk.NewCoin("loya", math.NewInt(1000)),
+		PayFromBond:      false,
 	}
 
 	// mock dependency modules
@@ -138,7 +141,7 @@ func (s *KeeperTestSuite) TestSetNewDispute() types.MsgProposeDispute {
 	s.reporterKeeper.On("TotalReporterPower", s.ctx).Return(math.NewInt(1), nil)
 	s.oracleKeeper.On("GetTotalTips", s.ctx).Return(math.NewInt(1), nil)
 	s.oracleKeeper.On("ValidateMicroReportExists", s.ctx, mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
-	s.NoError(s.disputeKeeper.SetNewDispute(s.ctx, creator, disputeMsg))
+	s.NoError(s.disputeKeeper.SetNewDispute(s.ctx, creator, disputeMsg, &report))
 
 	return disputeMsg
 }
