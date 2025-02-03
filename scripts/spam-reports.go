@@ -86,7 +86,7 @@ func SpamReportsWithReportersMap(reportersMap map[string]ReporterInfo, qd string
 		key_path := fmt.Sprintf("%s/%s", LAYER_PATH, reporter_name)
 		go func(reporter_info *ReporterInfo, path string) {
 			defer wg.Done()
-			cmd := exec.Command(COMMAND_PATH, "tx", "oracle", "submit-value", reporter_info.Address, qd, value, "--from", reporter_info.Address, "--chain-id", "layertest-2", "--fees", "10loya", "--keyring-backend", "test", "--keyring-dir", path, "--sequence", strconv.Itoa(reporter_info.SequenceNum), "--home", path, "--node", "http://54.234.103.186:26657", "--yes")  //nolint:all // this function has been tested manually
+			cmd := exec.Command(COMMAND_PATH, "tx", "oracle", "submit-value", reporter_info.Address, qd, value, "--from", reporter_info.Address, "--chain-id", "layertest-3", "--fees", "10loya", "--keyring-backend", "test", "--keyring-dir", path, "--sequence", strconv.Itoa(reporter_info.SequenceNum), "--home", path, "--node", "http://54.234.103.186:26657", "--yes") //nolint:all // this function has been tested manually
 			output, err := cmd.CombinedOutput()
 			if err != nil {
 				fmt.Println("ERROR submitting value: ", err)
@@ -124,7 +124,7 @@ func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]ReporterI
 		// send tokens to reporter from faucet
 		fmt.Println("fund account from faucet")
 		key_address := GetAddressFromKeyName(key_name)
-		// cmd := exec.Command(COMMAND_PATH, "tx", "bank", "send", "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp", key_address, "9000000loya", "--from", "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp", "--chain-id", "layertest-2", "--keyring-dir", "/Users/caleb/.layer", "--keyring-backend", "test", "--home", "/Users/caleb/.layer", "--fees", "15loya", "--node", "http://54.234.103.186:26657", "--yes")
+		// cmd := exec.Command(COMMAND_PATH, "tx", "bank", "send", "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp", key_address, "9000000loya", "--from", "tellor19d90wqftqx34khmln36zjdswm9p2aqawq2t3vp", "--chain-id", "layertest-3", "--keyring-dir", "/Users/caleb/.layer", "--keyring-backend", "test", "--home", "/Users/caleb/.layer", "--fees", "15loya", "--node", "http://54.234.103.186:26657", "--yes")
 		// output, err := cmd.CombinedOutput()
 		// if err != nil {
 		// 	fmt.Println(string(output))
@@ -149,7 +149,7 @@ func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]ReporterI
 		}
 
 		// fmt.Println("delegate to validator")
-		// cmd = exec.Command(COMMAND_PATH, "tx", "staking", "delegate", VALIDATOR_ADDRESS, "150000000loya", "--from", key_address, "--chain-id", "layertest-2", "--keyring-dir", fmt.Sprintf("%s/%s", LAYER_PATH, key_name), "--keyring-backend", "test", "--home", fmt.Sprintf("%s/%s", LAYER_PATH, key_name), "--fees", "15loya", "--node", "http://54.234.103.186:26657", "--yes")
+		// cmd = exec.Command(COMMAND_PATH, "tx", "staking", "delegate", VALIDATOR_ADDRESS, "150000000loya", "--from", key_address, "--chain-id", "layertest-3", "--keyring-dir", fmt.Sprintf("%s/%s", LAYER_PATH, key_name), "--keyring-backend", "test", "--home", fmt.Sprintf("%s/%s", LAYER_PATH, key_name), "--fees", "15loya", "--node", "http://54.234.103.186:26657", "--yes")
 		// output, err = cmd.CombinedOutput()
 		// if err != nil {
 		// 	fmt.Println(string(output))
@@ -160,7 +160,7 @@ func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]ReporterI
 
 		// create reporter
 		// fmt.Println("create reporter ")
-		// cmd = exec.Command(COMMAND_PATH, "tx", "reporter", "create-reporter", "20000", "1000000", "--from", key_address, "--chain-id", "layertest-2", "--keyring-dir", key_path, "--keyring-backend", "test", "--sequence", "1", "--home", key_path, "--fees", "15loya", "--sequence", "1", "--node", "http://54.234.103.186:26657", "--yes")
+		// cmd = exec.Command(COMMAND_PATH, "tx", "reporter", "create-reporter", "20000", "1000000", "--from", key_address, "--chain-id", "layertest-3", "--keyring-dir", key_path, "--keyring-backend", "test", "--sequence", "1", "--home", key_path, "--fees", "15loya", "--sequence", "1", "--node", "http://54.234.103.186:26657", "--yes")
 		// output, err = cmd.CombinedOutput()
 		// if err != nil {
 		// 	fmt.Println(string(output))
