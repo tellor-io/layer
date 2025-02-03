@@ -1,6 +1,8 @@
 package types
 
 import (
+	"encoding/hex"
+
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,11 +14,13 @@ var _ sdk.Msg = &MsgProposeDispute{}
 
 func NewMsgProposeDispute(creator string, report *oracletypes.MicroReport, disputeCategory DisputeCategory, fee sdk.Coin, payFromBond bool) *MsgProposeDispute {
 	return &MsgProposeDispute{
-		Creator:         creator,
-		Report:          report,
-		DisputeCategory: disputeCategory,
-		Fee:             fee,
-		PayFromBond:     payFromBond,
+		Creator:          creator,
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		DisputeCategory:  disputeCategory,
+		Fee:              fee,
+		PayFromBond:      payFromBond,
 	}
 }
 

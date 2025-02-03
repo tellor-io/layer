@@ -25,16 +25,19 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() (sdk.AccAddress, ty
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
 		Timestamp: time.Unix(1696516597, 0),
 		Power:     1,
+		MetaId:    1,
 	}
 
 	fee := sdk.NewCoin(layer.BondDenom, math.NewInt(10000))
 
 	msg := types.MsgProposeDispute{
-		Creator:         addr.String(),
-		Report:          &report,
-		DisputeCategory: types.Warning,
-		Fee:             fee,
-		PayFromBond:     false,
+		Creator:          addr.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		DisputeCategory:  types.Warning,
+		Fee:              fee,
+		PayFromBond:      false,
 	}
 
 	s.reporterKeeper.On("EscrowReporterStake", s.ctx, addr, uint64(1), uint64(0), math.NewInt(10_000), qId, mock.Anything).Return(nil)
@@ -45,7 +48,7 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() (sdk.AccAddress, ty
 	s.bankKeeper.On("HasBalance", s.ctx, addr, fee).Return(true)
 	s.bankKeeper.On("SendCoinsFromAccountToModule", s.ctx, addr, mock.Anything, sdk.NewCoins(fee)).Return(nil)
 	s.oracleKeeper.On("FlagAggregateReport", s.ctx, report).Return(nil)
-	s.oracleKeeper.On("ValidateMicroReportExists", s.ctx, mock.Anything, mock.Anything, mock.Anything).Return(true, nil)
+	s.oracleKeeper.On("ValidateMicroReportExists", s.ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(&report, true, nil)
 	msgRes, err := s.msgServer.ProposeDispute(s.ctx, &msg)
 	s.NoError(err)
 	s.NotNil(msgRes)

@@ -75,19 +75,11 @@ func (k Keeper) ReporterKey(ctx sdk.Context, r oracletypes.MicroReport, c types.
 }
 
 // Set new dispute
-func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.MsgProposeDispute) error {
-	// validate report to make sure it exists
-	exists, err := k.oracleKeeper.ValidateMicroReportExists(ctx, *msg.Report)
-	if err != nil {
-		return err
-	}
-	if !exists {
-		return fmt.Errorf("micro report does not exist")
-	}
+func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.MsgProposeDispute, report *oracletypes.MicroReport) error {
 	disputeId := k.NextDisputeId(ctx)
-	hashId := k.HashId(ctx, *msg.Report, msg.DisputeCategory)
+	hashId := k.HashId(ctx, *report, msg.DisputeCategory)
 	// slash amount
-	disputeFee, err := k.GetDisputeFee(ctx, *msg.Report, msg.DisputeCategory)
+	disputeFee, err := k.GetDisputeFee(ctx, *report, msg.DisputeCategory)
 	if err != nil {
 		return err
 	}
@@ -110,7 +102,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 		// burn amount is calculated as 5% of dispute fee
 		BurnAmount:      fivePercent,
 		DisputeFee:      disputeFee,
-		InitialEvidence: *msg.Report,
+		InitialEvidence: *report,
 		FeeTotal:        msg.Fee.Amount,
 		PrevDisputeIds:  []uint64{disputeId},
 		Open:            true,
@@ -144,16 +136,16 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 		sdk.NewEvent(
 			"new_dispute",
 			sdk.NewAttribute("disputer", msg.Creator),
-			sdk.NewAttribute("reporter", msg.Report.Reporter),
+			sdk.NewAttribute("reporter", msg.DisputedReporter),
 			sdk.NewAttribute("dispute_category", msg.DisputeCategory.String()),
 			sdk.NewAttribute("total_fee", disputeFee.String()),
 			sdk.NewAttribute("fee_paid", msg.Fee.Amount.String()),
 			sdk.NewAttribute("pay_from_bond", strconv.FormatBool(msg.PayFromBond)),
 			sdk.NewAttribute("dispute_id", strconv.FormatUint(disputeId, 10)),
-			sdk.NewAttribute("value", msg.Report.Value),
-			sdk.NewAttribute("query_type", msg.Report.QueryType),
-			sdk.NewAttribute("query_id", hex.EncodeToString(msg.Report.QueryId)),
-			sdk.NewAttribute("report_block_number", strconv.FormatUint(msg.Report.BlockNumber, 10)),
+			sdk.NewAttribute("value", report.Value),
+			sdk.NewAttribute("query_type", report.QueryType),
+			sdk.NewAttribute("query_id", hex.EncodeToString(report.QueryId)),
+			sdk.NewAttribute("report_block_number", strconv.FormatUint(report.BlockNumber, 10)),
 		),
 	})
 	return k.Disputes.Set(ctx, dispute.DisputeId, dispute)
