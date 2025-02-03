@@ -41,10 +41,10 @@ func (k Querier) Reporters(ctx context.Context, req *types.QueryReportersRequest
 			return err
 		}
 		stake, _, err := k.GetReporterStake(ctx, sdk.AccAddress(repAddr), nil)
-		reportingPower := stake.Quo(layertypes.PowerReduction).Uint64()
 		if err != nil {
-			return err
+			stake = math.ZeroInt()
 		}
+		reportingPower := stake.Quo(layertypes.PowerReduction).Uint64()
 		reporters = append(reporters, &types.Reporter{
 			Address:  sdk.AccAddress(repAddr).String(),
 			Metadata: &reporterMeta,
