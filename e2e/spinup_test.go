@@ -189,15 +189,12 @@ func TestLayerFlow(t *testing.T) {
 
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(t, err)
-	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 1) // not resolved yet
+	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 2) // 2/3 voted so resolved
 
-	// team votes
+	// team votes should error
 	_, err = validatorI.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-support", "--keyring-dir", layer.HomeDir())
-	require.NoError(t, err)
+	require.Error(t, err) // vote already tallied
 
-	res3, _, err = validatorI.ExecQuery(ctx, "dispute", "team-vote", "1")
-	require.NoError(t, err)
-	fmt.Println("Team address: ", string(res3))
 	r, _, err = validatorI.ExecQuery(ctx, "dispute", "disputes")
 	require.NoError(t, err)
 
