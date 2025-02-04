@@ -305,6 +305,7 @@ type ReportersResponse struct {
 type Reporter struct {
 	Address  string          `json:"address"`
 	Metadata *OracleReporter `json:"metadata"`
+	Power    string          `json:"power"`
 }
 
 type OracleReporter struct {
