@@ -74,6 +74,18 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
 			return err
 		}
+		// set all previous votes to executed so original vote fee can be refunded
+		prevIds := dispute.PrevDisputeIds
+		for _, prevId := range prevIds {
+			vote, err := k.Votes.Get(ctx, prevId)
+			if err != nil {
+				return err
+			}
+			vote.Executed = true
+			if err := k.Votes.Set(ctx, prevId, vote); err != nil {
+				return err
+			}
+		}
 		vote.Executed = true
 		if err := k.Votes.Set(ctx, id, vote); err != nil {
 			return err
@@ -85,7 +97,18 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 				return err
 			}
 		}
-
+		// set all previous votes to executed so original vote fee can be refunded
+		prevIds := dispute.PrevDisputeIds
+		for _, prevId := range prevIds {
+			vote, err := k.Votes.Get(ctx, prevId)
+			if err != nil {
+				return err
+			}
+			vote.Executed = true
+			if err := k.Votes.Set(ctx, prevId, vote); err != nil {
+				return err
+			}
+		}
 		vote.Executed = true
 		if err := k.Votes.Set(ctx, id, vote); err != nil {
 			return err
@@ -110,6 +133,18 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		}
 		if err := k.reporterKeeper.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr); err != nil {
 			return err
+		}
+		// set all previous votes to executed so original vote fee can be refunded
+		prevIds := dispute.PrevDisputeIds
+		for _, prevId := range prevIds {
+			vote, err := k.Votes.Get(ctx, prevId)
+			if err != nil {
+				return err
+			}
+			vote.Executed = true
+			if err := k.Votes.Set(ctx, prevId, vote); err != nil {
+				return err
+			}
 		}
 		vote.Executed = true
 		if err := k.Votes.Set(ctx, id, vote); err != nil {
