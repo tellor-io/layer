@@ -69,6 +69,7 @@ message QueryReportersRequest {
 message reporter {
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   OracleReporter metadata = 2;
+  uint64 power = 3;
 }
 
 // QueryReportersResponse is the response type for the Query/Reporters RPC method.

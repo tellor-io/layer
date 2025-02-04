@@ -29,12 +29,12 @@ go build ./cmd/layerd
 
 # Initialize the chain
 echo "Initializing the chain..."
-./layerd init layer --chain-id layertest-2
+./layerd init layer --chain-id layertest-3
 
 # Initialize chain nodes
 for name in luke yoda obi_wan darth_vader palpatine darth_maul; do    
     echo "Initializing chain node for $name..."
-    ./layerd init $name-moniker --chain-id layertest-2 --home ~/.layer/$name
+    ./layerd init $name-moniker --chain-id layertest-3 --home ~/.layer/$name
     
     echo "Change denom to loya in genesis file..."
     sed -i '' 's/"stake"/"loya"/g' ~/.layer/$name/config/genesis.json
@@ -46,7 +46,7 @@ for name in luke yoda obi_wan darth_vader palpatine darth_maul; do
     sed -i '' 's/^keyring-backend = .*"/keyring-backend = "'$KEYRING_BACKEND'"/g' ~/.layer/$name/config/client.toml
 
     echo "Set Chain Id to layer in client config file for $name..."
-    sed -i '' 's/^chain-id = .*$/chain-id = "layertest-2"/g' ~/.layer/$name/config/app.toml
+    sed -i '' 's/^chain-id = .*$/chain-id = "layertest-3"/g' ~/.layer/$name/config/app.toml
 
     echo "Set pruning to custom..."
     sed -i '' 's/^pruning = "default"/pruning = "custom"/g' ~/.layer/$name/config/app.toml
@@ -58,7 +58,7 @@ for name in luke yoda obi_wan darth_vader palpatine darth_maul; do
     sed -i '' 's/^snapshot-keep-recent = 2/snapshot-keep-recent = 5/g' ~/.layer/$name/config/app.toml
 
     echo "set chain id in genesis file to layer..."
-    sed -i '' 's/"chain_id": .*"/"chain_id": '\"layertest-2\"'/g' ~/.layer/$name/config/genesis.json
+    sed -i '' 's/"chain_id": .*"/"chain_id": '\"layertest-3\"'/g' ~/.layer/$name/config/genesis.json
 
     echo "Updating vote_extensions_enable_height in genesis.json for $name..."
     jq '.consensus.params.abci.vote_extensions_enable_height = "1"'  ~/.layer/$name/config/genesis.json > temp.json && mv temp.json ~/.layer/$name/config/genesis.json
@@ -113,7 +113,7 @@ echo "add tokens to team account"
 for name in luke yoda obi_wan darth_vader palpatine darth_maul; do
     echo "Creating gentx for $name....."
     ADDRESS=$(./layerd keys show $name -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/$name)
-    ./layerd genesis gentx $name 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/$name --chain-id layertest-2
+    ./layerd genesis gentx $name 100000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/$name --chain-id layertest-3
 done
 
 for name in yoda obi_wan darth_vader palpatine darth_maul; do
