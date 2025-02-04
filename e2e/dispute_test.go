@@ -591,15 +591,40 @@ func TestFiveRounder(t *testing.T) {
 	var disputes e2e.Disputes
 	require.NoError(json.Unmarshal(res, &disputes))
 	fmt.Println("disputes: ", disputes)
-	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1) // not resolved yet
+	fmt.Println("disputes[0] burn amount: ", disputes.Disputes[0].Metadata.BurnAmount)
+	fmt.Println("disputes[0] dispute status: ", disputes.Disputes[0].Metadata.DisputeStatus)
+	fmt.Println("disputes[0] dispute round: ", disputes.Disputes[0].Metadata.DisputeRound)
+	fmt.Println("disputes[0] fee total: ", disputes.Disputes[0].Metadata.FeeTotal)
+	fmt.Println("disputes[0] dispute end time: ", disputes.Disputes[0].Metadata.DisputeEndTime)
+	fmt.Println("disputes[0] dispute start time: ", disputes.Disputes[0].Metadata.DisputeStartTime)
+	fmt.Println("disputes[0] dispute id: ", disputes.Disputes[0].Metadata.DisputeID)
+	fmt.Println("disputes[0] slash amt: ", disputes.Disputes[0].Metadata.SlashAmount)
+	fmt.Println("disputes[0] voter reward: ", disputes.Disputes[0].Metadata.VoterReward)
+	fmt.Println("disputes[0] category: ", disputes.Disputes[0].Metadata.DisputeCategory)
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1)        // not resolved yet
+	require.Equal(disputes.Disputes[0].Metadata.DisputeRound, "1")       // still in first round
+	expectedFeeTotal := (math.NewInt(1_000 * 1e6)).Quo(math.NewInt(100)) // 1% of amt staked with val1
+	require.Equal(disputes.Disputes[0].Metadata.FeeTotal, expectedFeeTotal.String())
+	expectedBurnAmount := (expectedFeeTotal).Quo(math.NewInt(20)) // 5% of total fee
+	require.Equal(disputes.Disputes[0].Metadata.BurnAmount, expectedBurnAmount.String())
+	require.Equal(disputes.Disputes[0].Metadata.SlashAmount, expectedFeeTotal.String()) // 1% of amt staked with val1 still
+	require.Equal(disputes.Disputes[0].Metadata.InitialEvidence.Reporter, reporters[1].Addr)
+	require.Equal(disputes.Disputes[0].Metadata.InitialEvidence.Value, value)
+	require.Greater(disputes.Disputes[0].Metadata.DisputeEndTime, val1.CliContext().Viper.GetTime("validator"))
 
-	// open a new round
-	dispute := disputes.Disputes[0]
-	sender := reporters[0].Addr
-	
-	txHash, err = val1.ExecTx(ctx, reporters[0].Addr, "dispute", "add-dispute-round", sender, dispute, creator, report, category, fee, payfrombond "--keyring-dir", val1.HomeDir())
+	// user0 opens a new round
+	txHash, err = val1.ExecTx(ctx, reporters[0].Addr, "dispute", "propose-dispute", string(bz), "warning", "500000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
-	fmt.Println("TX HASH (open a new round): ", txHash)
+	fmt.Println("TX HASH (second rd dispute on ", microReports.MicroReports[0].Reporter, "): ", txHash)
+
+	res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	fmt.Println("err: ", err)
+	disputes = e2e.Disputes{}
+	require.NoError(json.Unmarshal(res, &disputes))
+	require.Equal(len(disputes.Disputes[0].DisputeID), 1)          // still one dispute open
+	require.Equal(disputes.Disputes[0].Metadata.DisputeRound, "2") //
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1)
 
 	// vote from team (should be at least 66% voting power after (33% from team, 33% from having one tip from user0))
 	// _, err = val1.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-support", "--keyring-dir", val1.HomeDir())
