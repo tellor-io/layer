@@ -1086,7 +1086,7 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	s.Equal(types.Unresolved, dispute.DisputeStatus)
 	s.True(dispute.PendingExecution)
 
-	// try to start new round, should error becuase 5 rd max
+	// try to start new round, should error because 5 rd max
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
 	s.Error(err, "can't start a new round for this dispute 5; max dispute rounds has been reached 5")
 
