@@ -831,8 +831,8 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	s.NoError(err)
 
 	// assert fee is correct
-	expectedFee := reporter1StakeBefore.QuoRaw(100) // 1% of reporter1StakeBefore
-	s.Equal(expectedFee, dispute.DisputeFee)
+	expectedRd1Fee := reporter1StakeBefore.QuoRaw(100) // 1% of reporter1StakeBefore
+	s.Equal(expectedRd1Fee, dispute.DisputeFee)
 	// assert disputer fee has been deducted
 	disputerBalanceAfter1stRound := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
 	s.Equal(disputerBalanceAfter1stRound.Amount, disputerBalanceBefore.Amount.Sub(disputeFee))
@@ -1126,7 +1126,7 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &withdrawMsg)
 	s.NoError(err)
 	disputerBalAfterClaim := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
-	s.Equal(disputerBalBeforeClaim.Amount.Add(expectedFee.MulRaw(95).QuoRaw(100)), disputerBalAfterClaim.Amount)
+	s.Equal(disputerBalBeforeClaim.Amount.Add(expectedRd1Fee.MulRaw(95).QuoRaw(100)), disputerBalAfterClaim.Amount)
 
 	for i := 2; i < 4; i++ {
 		vote, err = s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, uint64(i))
