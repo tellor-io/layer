@@ -48,93 +48,9 @@ func (k Keeper) HasMin(ctx context.Context, addr sdk.AccAddress, minRequired mat
 // at the time of reporting and returns the total amount plus stores
 // the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties
 func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, queryId []byte) (math.Int, error) {
-	reporter, err := k.Reporters.Get(ctx, repAddr.Bytes())
+	totalTokens, delegates, err := k.GetReporterStake(ctx, repAddr, queryId)
 	if err != nil {
 		return math.Int{}, err
-	}
-	if reporter.Jailed {
-		return math.Int{}, errorsmod.Wrapf(types.ErrReporterJailed, "reporter %s is in jail", repAddr.String())
-	}
-	totalTokens := math.ZeroInt()
-	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr)
-	if err != nil {
-		return math.Int{}, err
-	}
-	defer iter.Close()
-	delegates := make([]*types.TokenOriginInfo, 0)
-	for ; iter.Valid(); iter.Next() {
-		selectorAddr, err := iter.PrimaryKey()
-		if err != nil {
-			return math.Int{}, err
-		}
-		valSet := k.stakingKeeper.GetValidatorSet()
-		maxValSet, err := valSet.MaxValidators(ctx)
-		if err != nil {
-			return math.Int{}, err
-		}
-		// get delegator count
-		selector, err := k.Selectors.Get(ctx, selectorAddr)
-		if err != nil {
-			return math.Int{}, err
-		}
-		// skip selectors that are locked out for switching reporters
-		if selector.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
-			continue
-		}
-		var iterError error
-		// compare how many delegations a selector has to the max validators to detemine if you should short circuit and iterate the counts number of times
-		// or iterate over all bonded validators for a selector in the case they have more delegations (with multiple validators, bonded or not) than the max bonded validators
-		if selector.DelegationsCount > uint64(maxValSet) {
-			// iterate over bonded validators
-			err = valSet.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
-				valAddrr, err := sdk.ValAddressFromBech32(validator.GetOperator())
-				if err != nil {
-					iterError = err
-					return true
-				}
-				stakingdel, err := k.stakingKeeper.GetDelegation(ctx, selectorAddr, valAddrr)
-				if err != nil {
-					if errors.Is(err, stakingtypes.ErrNoDelegation) {
-						return false
-					}
-					iterError = err
-					return true
-				}
-				// get the token amount
-				tokens := validator.TokensFromSharesTruncated(stakingdel.Shares).TruncateInt()
-				totalTokens = totalTokens.Add(tokens)
-				delegates = append(delegates, &types.TokenOriginInfo{DelegatorAddress: selectorAddr, ValidatorAddress: valAddrr.Bytes(), Amount: tokens})
-				return false
-			})
-			if err != nil {
-				return math.Int{}, err
-			}
-		} else {
-			err = k.stakingKeeper.IterateDelegatorDelegations(ctx, selectorAddr, func(delegation stakingtypes.Delegation) (stop bool) {
-				valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
-				if err != nil {
-					iterError = err
-					return true
-				}
-				val, err := k.stakingKeeper.GetValidator(ctx, valAddr)
-				if err != nil {
-					iterError = err
-					return true
-				}
-				if val.IsBonded() {
-					delTokens := val.TokensFromSharesTruncated(delegation.Shares).TruncateInt()
-					totalTokens = totalTokens.Add(delTokens)
-					delegates = append(delegates, &types.TokenOriginInfo{DelegatorAddress: selectorAddr, ValidatorAddress: valAddr.Bytes(), Amount: delTokens})
-				}
-				return false
-			})
-			if err != nil {
-				return math.Int{}, err
-			}
-		}
-		if iterError != nil {
-			return math.Int{}, iterError
-		}
 	}
 	err = k.Report.Set(ctx, collections.Join(queryId, collections.Join(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
 	if err != nil {
@@ -208,4 +124,99 @@ func (k Keeper) GetNumOfSelectors(ctx context.Context, repAddr sdk.AccAddress) (
 
 func (k Keeper) GetSelector(ctx context.Context, selectorAddr sdk.AccAddress) (types.Selection, error) {
 	return k.Selectors.Get(ctx, selectorAddr)
+}
+
+// GetReporterStake counts the total amount of BONDED tokens for a given reporter's selectors
+// at the time of reporting and returns the total amount plus stores
+// the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties
+func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress, queryId []byte) (math.Int, []*types.TokenOriginInfo, error) {
+	reporter, err := k.Reporters.Get(ctx, repAddr.Bytes())
+	if err != nil {
+		return math.Int{}, nil, err
+	}
+	if reporter.Jailed {
+		return math.Int{}, nil, errorsmod.Wrapf(types.ErrReporterJailed, "reporter %s is in jail", repAddr.String())
+	}
+	totalTokens := math.ZeroInt()
+	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr)
+	if err != nil {
+		return math.Int{}, nil, err
+	}
+	defer iter.Close()
+	delegates := make([]*types.TokenOriginInfo, 0)
+	for ; iter.Valid(); iter.Next() {
+		selectorAddr, err := iter.PrimaryKey()
+		if err != nil {
+			return math.Int{}, nil, err
+		}
+		valSet := k.stakingKeeper.GetValidatorSet()
+		maxValSet, err := valSet.MaxValidators(ctx)
+		if err != nil {
+			return math.Int{}, nil, err
+		}
+		// get delegator count
+		selector, err := k.Selectors.Get(ctx, selectorAddr)
+		if err != nil {
+			return math.Int{}, nil, err
+		}
+		// skip selectors that are locked out for switching reporters
+		if selector.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
+			continue
+		}
+		var iterError error
+		// compare how many delegations a selector has to the max validators to detemine if you should short circuit and iterate the counts number of times
+		// or iterate over all bonded validators for a selector in the case they have more delegations (with multiple validators, bonded or not) than the max bonded validators
+		if selector.DelegationsCount > uint64(maxValSet) {
+			// iterate over bonded validators
+			err = valSet.IterateBondedValidatorsByPower(ctx, func(index int64, validator stakingtypes.ValidatorI) (stop bool) {
+				valAddrr, err := sdk.ValAddressFromBech32(validator.GetOperator())
+				if err != nil {
+					iterError = err
+					return true
+				}
+				stakingdel, err := k.stakingKeeper.GetDelegation(ctx, selectorAddr, valAddrr)
+				if err != nil {
+					if errors.Is(err, stakingtypes.ErrNoDelegation) {
+						return false
+					}
+					iterError = err
+					return true
+				}
+				// get the token amount
+				tokens := validator.TokensFromSharesTruncated(stakingdel.Shares).TruncateInt()
+				totalTokens = totalTokens.Add(tokens)
+				delegates = append(delegates, &types.TokenOriginInfo{DelegatorAddress: selectorAddr, ValidatorAddress: valAddrr.Bytes(), Amount: tokens})
+				return false
+			})
+			if err != nil {
+				return math.Int{}, nil, err
+			}
+		} else {
+			err = k.stakingKeeper.IterateDelegatorDelegations(ctx, selectorAddr, func(delegation stakingtypes.Delegation) (stop bool) {
+				valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+				if err != nil {
+					iterError = err
+					return true
+				}
+				val, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+				if err != nil {
+					iterError = err
+					return true
+				}
+				if val.IsBonded() {
+					delTokens := val.TokensFromSharesTruncated(delegation.Shares).TruncateInt()
+					totalTokens = totalTokens.Add(delTokens)
+					delegates = append(delegates, &types.TokenOriginInfo{DelegatorAddress: selectorAddr, ValidatorAddress: valAddr.Bytes(), Amount: delTokens})
+				}
+				return false
+			})
+			if err != nil {
+				return math.Int{}, nil, err
+			}
+		}
+		if iterError != nil {
+			return math.Int{}, nil, iterError
+		}
+	}
+	return totalTokens, delegates, nil
 }
