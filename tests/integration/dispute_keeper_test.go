@@ -1116,7 +1116,7 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	s.Equal(uint64(1), vote.Id)
 	s.Less(vote.VoteEnd, s.Setup.Ctx.BlockTime())
 
-	// claim fee refund from 5th rd disputer, he should get nothing back
+	// claim fee refund from original dispute proposer, he should get first rd fee back
 	disputerBalBeforeClaim := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
 	withdrawMsg := types.MsgWithdrawFeeRefund{
 		Id:            uint64(1),
@@ -1128,13 +1128,13 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	disputerBalAfterClaim := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
 	s.Equal(disputerBalBeforeClaim.Amount.Add(expectedRd1Fee.MulRaw(95).QuoRaw(100)), disputerBalAfterClaim.Amount)
 
+	// try to claim fee refund from 2nd 3rd and 4th rd disputers, they should get nothing back
 	for i := 2; i < 4; i++ {
 		vote, err = s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, uint64(i))
 		s.NoError(err)
 		s.True(vote.Executed)
 
 		disputerBalBeforeClaim := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
-		// try to claim fee refund from 2nd and 3rd rd disputers, they should get nothing back
 		withdrawMsg := types.MsgWithdrawFeeRefund{
 			Id:            uint64(i),
 			PayerAddress:  disputer.String(),
