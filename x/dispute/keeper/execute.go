@@ -144,12 +144,12 @@ func (k Keeper) RefundFailedDisputeFee(ctx context.Context, feePayer sdk.AccAddr
 }
 
 func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, disputeFeeTotal math.Int, hashId []byte, slashAmt math.Int) (math.Int, error) {
-	// fee paid in rd1
+	// fee paid in rd 1
 	payerFee := payerInfo.Amount
 	payerFeeDec := payerFee.ToLegacyDec()
 	// total fee rd 1
 	totalFeeRd1 := math.LegacyNewDecFromInt(slashAmt)
-	// total fee all rounds - burn
+	// total fee all rounds minus burn
 	fivePercentDec := disputeFeeTotal.ToLegacyDec().Quo(math.LegacyNewDec(20))
 	fivePercent := fivePercentDec.TruncateInt()
 	totalFeeMinusBurnDec := disputeFeeTotal.Sub(fivePercent).ToLegacyDec()
