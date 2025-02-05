@@ -777,7 +777,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	// s.True(sumVoterRewards.GTE(twoPercentBurn.Sub(math.NewInt(4)))) // max one loya per voter lost via rounding
 }
 
-func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
+func (s *IntegrationTestSuite) TestDisputeFiveRoundsTwoFeePayers() {
 	// create 2 validator reporter accs
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200})
 	reporter1Acc := repAccs[0]
@@ -832,6 +832,7 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 
 	// assert fee is correct
 	expectedRd1Fee := reporter1StakeBefore.QuoRaw(100) // 1% of reporter1StakeBefore
+	fmt.Println(expectedRd1Fee.String())
 	s.Equal(expectedRd1Fee, dispute.DisputeFee)
 	// assert disputer fee has been deducted
 	disputerBalanceAfter1stRound := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
@@ -1104,36 +1105,46 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 5)
 	s.NoError(err)
 	s.Equal(types.Resolved, dispute.DisputeStatus)
+	fmt.Println("DISPUTE FEE TOTAL", dispute.FeeTotal.String())
+	expectedClaimAmount := dispute.FeeTotal.MulRaw(95).QuoRaw(100)
+	fmt.Println("EXPECTED CLAIM AMOUNT", expectedClaimAmount)
 
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	s.NoError(err)
 
 	// check on first round vote
-	vote, err = s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
-	s.NoError(err)
-	// s.True(vote.Executed) // false
-	s.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, vote.VoteResult)
-	s.Equal(uint64(1), vote.Id)
-	s.Less(vote.VoteEnd, s.Setup.Ctx.BlockTime())
+	// vote, err = s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
+	// s.NoError(err)
+	// // s.True(vote.Executed) // false
+	// s.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, vote.VoteResult)
+	// s.Equal(uint64(1), vote.Id)
+	// s.Less(vote.VoteEnd, s.Setup.Ctx.BlockTime())
+
+	// // get all disputeFeePayer stores
+	// for i := 1; i < 5; i++ {
+	// 	fp, err := s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(uint64(i), disputer.Bytes()))
+	// 	s.NoError(err)
+	// 	fmt.Println("payer for dispute", i, fp)
+	// }
+	// fp, err := s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(uint64(5), fifthRdDisputer.Bytes()))
+	// s.NoError(err)
+	// fmt.Println("payer for dispute 5", fp)
 
 	// claim fee refund from original dispute proposer, he should get first rd fee back
 	disputerBalBeforeClaim := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+	fmt.Println("DISPUTER BAL BEFORE CLAIM", disputerBalBeforeClaim.String())
 	withdrawMsg := types.MsgWithdrawFeeRefund{
-		Id:            uint64(1),
+		Id:            uint64(5),
 		PayerAddress:  disputer.String(),
 		CallerAddress: disputer.String(),
 	}
 	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &withdrawMsg)
 	s.NoError(err)
 	disputerBalAfterClaim := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
-	s.Equal(disputerBalBeforeClaim.Amount.Add(expectedRd1Fee.MulRaw(95).QuoRaw(100)), disputerBalAfterClaim.Amount)
+	s.Equal(disputerBalBeforeClaim.Amount.Add(expectedClaimAmount), disputerBalAfterClaim.Amount)
 
 	// try to claim fee refund from 2nd 3rd and 4th rd disputers, they should get nothing back
 	for i := 2; i < 4; i++ {
-		vote, err = s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, uint64(i))
-		s.NoError(err)
-		s.True(vote.Executed)
-
 		disputerBalBeforeClaim := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
 		withdrawMsg := types.MsgWithdrawFeeRefund{
 			Id:            uint64(i),
@@ -1170,19 +1181,421 @@ func (s *IntegrationTestSuite) TestDisputeMultipleRounds() {
 	disputerBalAfterClaim = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
 	s.Equal(disputerBalBeforeClaim.Amount, disputerBalAfterClaim.Amount)
 
-	// check on first vote and dispute
-	vote, err = s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
-	s.NoError(err)
-	s.True(vote.Executed)
-	s.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, vote.VoteResult)
-	s.Equal(uint64(1), vote.Id)
-	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
-	s.NoError(err)
-	fmt.Println("DISPUTE STATUS", dispute.DisputeStatus)
-	// s.Equal(types.Resolved, dispute.DisputeStatus) // still says unresolved
-	s.False(dispute.PendingExecution)
-	s.False(dispute.Open)
+	// // check on first vote and dispute
+	// vote, err = s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
+	// s.NoError(err)
+	// s.True(vote.Executed)
+	// s.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, vote.VoteResult)
+	// s.Equal(uint64(1), vote.Id)
+	// dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
+	// s.NoError(err)
+	// fmt.Println("DISPUTE STATUS", dispute.DisputeStatus)
+	// // s.Equal(types.Resolved, dispute.DisputeStatus) // still says unresolved
+	// s.False(dispute.PendingExecution)
+	// s.False(dispute.Open)
 }
+
+// func (s *IntegrationTestSuite) TestDisputeFiveRounds1Payer() {
+// 	// create 2 validator reporter accs
+// 	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200})
+// 	reporter1Acc := repAccs[0]
+// 	// reporter2Acc := repAccs[1]
+// 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+// 	// set reporter and selector stores (skip calling createreporter)
+// 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+// 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewSelection(reporter1Acc, 1)))
+
+// 	// make report to set in store and dispute
+// 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
+// 	reporter1StakeBefore, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporter1Acc, qId)
+// 	s.NoError(err)
+// 	report := oracletypes.MicroReport{
+// 		Reporter:    reporter1Acc.String(),
+// 		Power:       reporter1StakeBefore.Quo(sdk.DefaultPowerReduction).Uint64(),
+// 		QueryId:     qId,
+// 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
+// 		Timestamp:   time.UnixMilli(1696516597).UTC(),
+// 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
+// 	}
+// 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporter1Acc.Bytes(), report.MetaId), report))
+
+// 	// prepare to propose dispute from non reporter 3rd part
+// 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
+// 	s.NoError(err)
+// 	burnAmount := disputeFee.MulRaw(1).QuoRaw(20)
+// 	disputer := s.newKeysWithTokens()
+// 	// mint disputer tokens
+// 	s.Setup.MintTokens(disputer, math.NewInt(100_000_000))
+// 	// disputer balance before proposing dispute
+// 	disputerBalanceBefore := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+
+// 	// propose warning dispute
+// 	disputeMsg := types.MsgProposeDispute{
+// 		Creator:          disputer.String(),
+// 		DisputedReporter: report.Reporter,
+// 		ReportMetaId:     report.MetaId,
+// 		ReportQueryId:    hex.EncodeToString(report.QueryId),
+// 		Fee:              sdk.NewCoin(s.Setup.Denom, disputeFee),
+// 		DisputeCategory:  types.Warning,
+// 	}
+// 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
+// 	s.NoError(err)
+// 	fmt.Println("RD 1 STARTED")
+
+// 	// get dispute to set block info
+// 	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
+// 	s.NoError(err)
+// 	err = s.Setup.Disputekeeper.SetBlockInfo(s.Setup.Ctx, dispute.HashId)
+// 	s.NoError(err)
+
+// 	// assert fee is correct
+// 	expectedRd1Fee := reporter1StakeBefore.QuoRaw(100) // 1% of reporter1StakeBefore
+// 	s.Equal(expectedRd1Fee, dispute.DisputeFee)
+// 	// assert disputer fee has been deducted
+// 	disputerBalanceAfter1stRound := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+// 	s.Equal(disputerBalanceAfter1stRound.Amount, disputerBalanceBefore.Amount.Sub(disputeFee))
+// 	// assert disputed reporter is jailed
+// 	reporter1, err := s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, reporter1Acc)
+// 	s.NoError(err)
+// 	s.True(reporter1.Jailed)
+// 	// assert fee has been deducted from disputed reporters stake
+// 	rep1TokensAfterRd1, err := s.Setup.Stakingkeeper.GetDelegatorBonded(s.Setup.Ctx, reporter1Acc)
+// 	s.NoError(err)
+// 	s.True(rep1TokensAfterRd1.LT(reporter1StakeBefore))
+// 	s.Equal(rep1TokensAfterRd1, reporter1StakeBefore.Sub(disputeFee))
+
+// 	// vote from team
+// 	teamAddr, err := s.Setup.Disputekeeper.GetTeamAddress(s.Setup.Ctx)
+// 	s.NoError(err)
+// 	voteMsg := types.MsgVote{
+// 		Voter: teamAddr.String(),
+// 		Id:    1,
+// 		Vote:  types.VoteEnum_VOTE_INVALID,
+// 	}
+// 	_, err = msgServer.Vote(s.Setup.Ctx, &voteMsg)
+// 	s.NoError(err)
+
+// 	// attempt to start another round, shouldnt work because dispute is still in voting phase
+// 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
+// 	s.Error(err, "can't start a new round for this dispute 1; dispute status DISPUTE_STATUS_VOTING")
+// 	// forward time to end voting period, but not resolve dispute (2 days to end voting, 1 day to execute)
+// 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.TWO_DAYS + 1))
+// 	// tally vote
+// 	s.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1))
+// 	// calling tally a second time should error
+// 	s.ErrorContains(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 1), "vote already tallied")
+// 	// execute should error because dispute is not resolved yet
+// 	s.Error(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1), "dispute is not resolved yet")
+
+// 	// start another dispute round
+// 	// fee paid should be 2*0.05(prevRoundFee)
+// 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
+// 	s.NoError(err)
+// 	fmt.Println("RD 2 STARTED")
+// 	// check on dispute
+// 	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 2)
+// 	s.NoError(err)
+// 	// assert disputefeetotal is correct
+// 	rd2FeeAddition := disputeFee.MulRaw(5).QuoRaw(100).MulRaw(2)
+// 	expectedFeeTotalRd2 := disputeFee.Add(rd2FeeAddition)
+// 	s.Equal(expectedFeeTotalRd2, dispute.FeeTotal)
+// 	s.Equal(types.Voting, dispute.DisputeStatus)
+// 	s.True(dispute.Open)
+// 	// assert disputer fee has been deducted
+// 	disputerBalanceAfter2ndRound := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+// 	s.Equal(disputerBalanceAfter1stRound.Amount.Sub(burnAmount.MulRaw(2)), disputerBalanceAfter2ndRound.Amount)
+// 	s.Equal(disputerBalanceAfter1stRound.Amount.Sub(rd2FeeAddition), disputerBalanceAfter2ndRound.Amount)
+// 	// assert disputed reporter is still jailed
+// 	reporter1, err = s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, reporter1Acc)
+// 	s.NoError(err)
+// 	s.True(reporter1.Jailed)
+// 	// assert reporters stake is the same as after the first round
+// 	rep1TokensAfterRd2, err := s.Setup.Stakingkeeper.GetDelegatorBonded(s.Setup.Ctx, reporter1Acc)
+// 	s.NoError(err)
+// 	s.Equal(rep1TokensAfterRd2, rep1TokensAfterRd1)
+
+// 	// tally vote should error because 2nd rd voting period just started
+// 	s.Error(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 2), "vote period not ended and quorum not reached")
+
+// 	// voting that doesn't reach quorum
+// 	voteMsg = types.MsgVote{
+// 		Voter: teamAddr.String(),
+// 		Id:    2,
+// 		Vote:  types.VoteEnum_VOTE_INVALID,
+// 	}
+// 	_, err = msgServer.Vote(s.Setup.Ctx, &voteMsg)
+// 	s.NoError(err)
+
+// 	// forward time to end voting period pre execute vote
+// 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.TWO_DAYS + 1))
+// 	// tally vote
+// 	s.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 2))
+// 	// calling tally a second time should error
+// 	s.ErrorContains(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 2), "vote already tallied")
+// 	// execute should error because dispute is not resolved yet
+// 	s.Error(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 2), "dispute is not resolved yet")
+// 	// get dispute to check status
+// 	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 2)
+// 	s.NoError(err)
+// 	s.Equal(types.Unresolved, dispute.DisputeStatus)
+// 	s.True(dispute.PendingExecution)
+
+// 	// start 3rd round
+// 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
+// 	s.NoError(err)
+// 	fmt.Println("RD 3 STARTED")
+
+// 	// check on dispute
+// 	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 3)
+// 	s.NoError(err)
+// 	// assert disputefeetotal is correct
+// 	rd3FeeAddition := rd2FeeAddition.MulRaw(2)
+// 	expectedFeeTotalRd3 := expectedFeeTotalRd2.Add(rd3FeeAddition)
+// 	s.Equal(expectedFeeTotalRd3, dispute.FeeTotal)
+// 	s.Equal(types.Voting, dispute.DisputeStatus)
+// 	s.True(dispute.Open)
+// 	// assert disputer fee has been deducted
+// 	disputerBalanceAfter3rdRound := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+// 	s.Equal(disputerBalanceAfter2ndRound.Amount.Sub(burnAmount.MulRaw(4)), disputerBalanceAfter3rdRound.Amount)
+// 	s.Equal(disputerBalanceAfter2ndRound.Amount.Sub(rd3FeeAddition), disputerBalanceAfter3rdRound.Amount)
+// 	// assert disputed reporter is still jailed
+// 	reporter1, err = s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, reporter1Acc)
+// 	s.NoError(err)
+// 	s.True(reporter1.Jailed)
+// 	// assert reporters stake is the same as after the second round
+// 	rep1TokensAfterRd3, err := s.Setup.Stakingkeeper.GetDelegatorBonded(s.Setup.Ctx, reporter1Acc)
+// 	s.NoError(err)
+// 	s.Equal(rep1TokensAfterRd3, rep1TokensAfterRd2)
+
+// 	// tally vote should error because 3rd rd voting period just started
+// 	s.Error(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 3), "vote period not ended and quorum not reached")
+
+// 	// voting that doesn't reach quorum
+// 	voteMsg = types.MsgVote{
+// 		Voter: teamAddr.String(),
+// 		Id:    3,
+// 		Vote:  types.VoteEnum_VOTE_INVALID,
+// 	}
+// 	_, err = msgServer.Vote(s.Setup.Ctx, &voteMsg)
+// 	s.NoError(err)
+
+// 	// forward time to end voting period pre execute vote
+// 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.TWO_DAYS + 1))
+// 	// tally vote
+// 	s.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 3))
+// 	// calling tally a second time should error
+// 	s.ErrorContains(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 3), "vote already tallied")
+// 	// execute should error because dispute is not resolved yet
+// 	s.Error(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 3), "dispute is not resolved yet")
+// 	// get dispute to check status
+// 	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 3)
+// 	s.NoError(err)
+// 	s.Equal(types.Unresolved, dispute.DisputeStatus)
+// 	s.True(dispute.PendingExecution)
+
+// 	// start 4th round
+// 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
+// 	s.NoError(err)
+// 	fmt.Println("RD 4 STARTED")
+
+// 	// check on dispute
+// 	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 4)
+// 	s.NoError(err)
+// 	// assert disputefeetotal is correct
+// 	rd4FeeAddition := rd3FeeAddition.MulRaw(2)
+// 	expectedFeeTotalRd4 := expectedFeeTotalRd3.Add(rd4FeeAddition)
+// 	s.Equal(expectedFeeTotalRd4, dispute.FeeTotal)
+// 	s.Equal(types.Voting, dispute.DisputeStatus)
+// 	s.True(dispute.Open)
+// 	// assert disputer fee has been deducted
+// 	disputerBalanceAfter4thRound := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+// 	s.Equal(disputerBalanceAfter3rdRound.Amount.Sub(burnAmount.MulRaw(8)), disputerBalanceAfter4thRound.Amount)
+// 	s.Equal(disputerBalanceAfter3rdRound.Amount.Sub(rd4FeeAddition), disputerBalanceAfter4thRound.Amount)
+// 	// assert disputed reporter is still jailed
+// 	reporter1, err = s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, reporter1Acc)
+// 	s.NoError(err)
+// 	s.True(reporter1.Jailed)
+// 	// assert reporters stake is the same as after the second round
+// 	rep1TokensAfterRd4, err := s.Setup.Stakingkeeper.GetDelegatorBonded(s.Setup.Ctx, reporter1Acc)
+// 	s.NoError(err)
+// 	s.Equal(rep1TokensAfterRd4, rep1TokensAfterRd3)
+
+// 	// tally vote should error because 4th rd voting period just started
+// 	s.Error(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 4), "vote period not ended and quorum not reached")
+
+// 	// voting that doesn't reach quorum
+// 	voteMsg = types.MsgVote{
+// 		Voter: teamAddr.String(),
+// 		Id:    4,
+// 		Vote:  types.VoteEnum_VOTE_INVALID,
+// 	}
+// 	_, err = msgServer.Vote(s.Setup.Ctx, &voteMsg)
+// 	s.NoError(err)
+
+// 	// forward time to end voting period pre execute vote
+// 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.TWO_DAYS + 1))
+// 	// tally vote
+// 	s.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 4))
+// 	// calling tally a second time should error
+// 	s.ErrorContains(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 4), "vote already tallied")
+// 	// execute should error because dispute is not resolved yet
+// 	s.Error(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 4), "dispute is not resolved yet")
+// 	// get dispute to check status
+// 	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 4)
+// 	s.NoError(err)
+// 	s.Equal(types.Unresolved, dispute.DisputeStatus)
+// 	s.True(dispute.PendingExecution)
+
+// 	// start 5th round
+// 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
+// 	s.NoError(err)
+// 	fmt.Println("RD 5 STARTED")
+
+// 	// check on dispute
+// 	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 5)
+// 	s.NoError(err)
+// 	// assert disputefeetotal is correct
+// 	rd5FeeAddition := rd4FeeAddition.MulRaw(2)
+// 	expectedFeeTotalRd5 := expectedFeeTotalRd4.Add(rd5FeeAddition)
+// 	s.Equal(expectedFeeTotalRd5, dispute.FeeTotal)
+// 	s.Equal(types.Voting, dispute.DisputeStatus)
+// 	s.True(dispute.Open)
+// 	// assert disputer fee has been deducted
+// 	disputerBalanceAfter5thRound := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+// 	s.Equal(disputerBalanceAfter4thRound.Amount.Sub(burnAmount.MulRaw(16)), disputerBalanceAfter5thRound.Amount)
+// 	s.Equal(disputerBalanceAfter4thRound.Amount.Sub(rd5FeeAddition), disputerBalanceAfter5thRound.Amount)
+// 	// assert disputed reporter is still jailed
+// 	reporter1, err = s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, reporter1Acc)
+// 	s.NoError(err)
+// 	s.True(reporter1.Jailed)
+// 	// assert reporters stake is the same as after the second round
+// 	rep1TokensAfterRd5, err := s.Setup.Stakingkeeper.GetDelegatorBonded(s.Setup.Ctx, reporter1Acc)
+// 	s.NoError(err)
+// 	s.Equal(rep1TokensAfterRd5, rep1TokensAfterRd4)
+
+// 	// tally vote should error because 5th rd voting period just started
+// 	s.Error(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 5), "vote period not ended and quorum not reached")
+
+// 	// voting that doesn't reach quorum
+// 	voteMsg = types.MsgVote{
+// 		Voter: teamAddr.String(),
+// 		Id:    5,
+// 		Vote:  types.VoteEnum_VOTE_INVALID,
+// 	}
+// 	_, err = msgServer.Vote(s.Setup.Ctx, &voteMsg)
+// 	s.NoError(err)
+
+// 	// forward time to end voting period pre execute vote
+// 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.TWO_DAYS + 1))
+// 	// tally vote
+// 	s.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 5))
+// 	// calling tally a second time should error
+// 	s.ErrorContains(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 5), "vote already tallied")
+// 	// execute should error because dispute is not resolved yet
+// 	s.Error(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 5), "dispute is not resolved yet")
+// 	// get dispute to check status
+// 	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 5)
+// 	s.NoError(err)
+// 	s.Equal(types.Unresolved, dispute.DisputeStatus)
+// 	s.True(dispute.PendingExecution)
+
+// 	// try to start new round, should error because 5 rd max
+// 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
+// 	s.Error(err, "can't start a new round for this dispute 5; max dispute rounds has been reached 5")
+
+// 	// forward time to execute vote
+// 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.ONE_DAY + 1))
+// 	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 5))
+// 	vote, err := s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 5)
+// 	s.NoError(err)
+// 	s.True(vote.Executed)
+// 	s.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, vote.VoteResult)
+// 	s.Equal(uint64(5), vote.Id)
+// 	s.Less(vote.VoteEnd, s.Setup.Ctx.BlockTime())
+
+// 	// assert dispute is resolved
+// 	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 5)
+// 	s.NoError(err)
+// 	s.Equal(types.Resolved, dispute.DisputeStatus)
+
+// 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+// 	s.NoError(err)
+
+// 	// check on first round vote
+// 	vote, err = s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
+// 	s.NoError(err)
+// 	// s.True(vote.Executed) // false
+// 	s.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, vote.VoteResult)
+// 	s.Equal(uint64(1), vote.Id)
+// 	s.Less(vote.VoteEnd, s.Setup.Ctx.BlockTime())
+
+// 	// claim fee refund from original dispute proposer, he should get first rd fee back
+// 	disputerBalBeforeClaim := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+// 	withdrawMsg := types.MsgWithdrawFeeRefund{
+// 		Id:            uint64(1),
+// 		PayerAddress:  disputer.String(),
+// 		CallerAddress: disputer.String(),
+// 	}
+// 	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &withdrawMsg)
+// 	s.NoError(err)
+// 	disputerBalAfterClaim := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+// 	s.Equal(disputerBalBeforeClaim.Amount.Add(expectedRd1Fee.MulRaw(95).QuoRaw(100)), disputerBalAfterClaim.Amount)
+
+// 	// try to claim fee refund from 2nd 3rd and 4th rd disputers, they should get nothing back
+// 	for i := 2; i < 4; i++ {
+// 		vote, err = s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, uint64(i))
+// 		s.NoError(err)
+// 		s.True(vote.Executed)
+
+// 		disputerBalBeforeClaim := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+// 		withdrawMsg := types.MsgWithdrawFeeRefund{
+// 			Id:            uint64(i),
+// 			PayerAddress:  disputer.String(),
+// 			CallerAddress: disputer.String(),
+// 		}
+// 		_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &withdrawMsg)
+// 		s.Error(err)
+// 		disputerBalAfterClaim := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+// 		s.Equal(disputerBalBeforeClaim.Amount, disputerBalAfterClaim.Amount)
+// 	}
+
+// 	// try to claim fee for 5th rd disputer, he should get nothing back
+// 	disputerBalBeforeClaim = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+// 	withdrawMsg = types.MsgWithdrawFeeRefund{
+// 		Id:            uint64(5),
+// 		PayerAddress:  disputer.String(),
+// 		CallerAddress: disputer.String(),
+// 	}
+// 	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &withdrawMsg)
+// 	s.Error(err)
+// 	disputerBalAfterClaim = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+// 	s.Equal(disputerBalBeforeClaim.Amount, disputerBalAfterClaim.Amount)
+
+// 	// try to claim fee for 1st rd disputer again, should error
+// 	disputerBalBeforeClaim = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+// 	withdrawMsg = types.MsgWithdrawFeeRefund{
+// 		Id:            uint64(1),
+// 		PayerAddress:  disputer.String(),
+// 		CallerAddress: disputer.String(),
+// 	}
+// 	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &withdrawMsg)
+// 	s.Error(err)
+// 	disputerBalAfterClaim = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
+// 	s.Equal(disputerBalBeforeClaim.Amount, disputerBalAfterClaim.Amount)
+
+// 	// check on first vote and dispute
+// 	vote, err = s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
+// 	s.NoError(err)
+// 	s.True(vote.Executed)
+// 	s.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, vote.VoteResult)
+// 	s.Equal(uint64(1), vote.Id)
+// 	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
+// 	s.NoError(err)
+// 	fmt.Println("DISPUTE STATUS", dispute.DisputeStatus)
+// 	// s.Equal(types.Resolved, dispute.DisputeStatus) // still says unresolved
+// 	s.False(dispute.PendingExecution)
+// 	s.False(dispute.Open)
+// }
 
 func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)

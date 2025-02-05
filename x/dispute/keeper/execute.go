@@ -74,18 +74,6 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
 			return err
 		}
-		// set all previous votes to executed so original vote fee can be refunded
-		prevIds := dispute.PrevDisputeIds
-		for _, prevId := range prevIds {
-			vote, err := k.Votes.Get(ctx, prevId)
-			if err != nil {
-				return err
-			}
-			vote.Executed = true
-			if err := k.Votes.Set(ctx, prevId, vote); err != nil {
-				return err
-			}
-		}
 		vote.Executed = true
 		if err := k.Votes.Set(ctx, id, vote); err != nil {
 			return err
@@ -94,18 +82,6 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		// burn half the burnAmount
 		if !halfBurnAmount.IsZero() {
 			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, halfBurnAmount))); err != nil {
-				return err
-			}
-		}
-		// set all previous votes to executed so original vote fee can be refunded
-		prevIds := dispute.PrevDisputeIds
-		for _, prevId := range prevIds {
-			vote, err := k.Votes.Get(ctx, prevId)
-			if err != nil {
-				return err
-			}
-			vote.Executed = true
-			if err := k.Votes.Set(ctx, prevId, vote); err != nil {
 				return err
 			}
 		}
@@ -133,18 +109,6 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		}
 		if err := k.reporterKeeper.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr); err != nil {
 			return err
-		}
-		// set all previous votes to executed so original vote fee can be refunded
-		prevIds := dispute.PrevDisputeIds
-		for _, prevId := range prevIds {
-			vote, err := k.Votes.Get(ctx, prevId)
-			if err != nil {
-				return err
-			}
-			vote.Executed = true
-			if err := k.Votes.Set(ctx, prevId, vote); err != nil {
-				return err
-			}
 		}
 		vote.Executed = true
 		if err := k.Votes.Set(ctx, id, vote); err != nil {
@@ -179,17 +143,21 @@ func (k Keeper) RefundFailedDisputeFee(ctx context.Context, feePayer sdk.AccAddr
 	return k.ReturnFeetoStake(ctx, hashId, fee)
 }
 
-func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, disputeFee math.Int, hashId []byte) (math.Int, error) {
-	fee := payerInfo.Amount
-	totalFees := disputeFee
-	fivePercentDec := disputeFee.ToLegacyDec().Quo(math.LegacyNewDec(20))
+func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, disputeFeeTotal math.Int, hashId []byte, slashAmt math.Int) (math.Int, error) {
+	// fee paid in rd1
+	payerFee := payerInfo.Amount
+	payerFeeDec := payerFee.ToLegacyDec()
+	// total fee rd 1
+	totalFeeRd1 := math.LegacyNewDecFromInt(slashAmt)
+	// total fee all rounds - burn
+	fivePercentDec := disputeFeeTotal.ToLegacyDec().Quo(math.LegacyNewDec(20))
 	fivePercent := fivePercentDec.TruncateInt()
-	feeDec := math.LegacyNewDecFromInt(fee)
-	feeMinusBurnDec := disputeFee.Sub(fivePercent).ToLegacyDec()
+	totalFeeMinusBurnDec := disputeFeeTotal.Sub(fivePercent).ToLegacyDec()
+	// power reductions
 	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
-	totalFeesDec := math.LegacyNewDecFromInt(totalFees)
 
-	amtFixed12Dec := feeDec.Mul(feeMinusBurnDec).Mul(powerReductionDec).Quo(totalFeesDec)
+	// (fee paid in rd1 / total fee rd 1)(total fee all rounds - burn)
+	amtFixed12Dec := payerFeeDec.Mul(totalFeeMinusBurnDec).Mul(powerReductionDec).Quo(totalFeeRd1)
 
 	amtFixed12 := amtFixed12Dec.TruncateInt()
 
