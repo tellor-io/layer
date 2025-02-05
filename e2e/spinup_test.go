@@ -157,7 +157,7 @@ func TestLayerFlow(t *testing.T) {
 	require.Equal(t, aggReport.Aggregate.AggregateReporter, valIIAddress)
 
 	// second party disputes report
-	//bz, err := json.Marshal(microReports.MicroReports[0])
+	// bz, err := json.Marshal(microReports.MicroReports[0])
 	require.NoError(t, err)
 	decodedBytes, err := base64.StdEncoding.DecodeString(microReports.MicroReports[0].QueryID)
 	require.NoError(t, err)
