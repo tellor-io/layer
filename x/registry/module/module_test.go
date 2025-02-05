@@ -131,7 +131,7 @@ func TestExportGenesis(t *testing.T) {
 	k, _k2, _k3, ctx := keepertest.RegistryKeeper(t)
 	am := registry.NewAppModule(appCodec, k, _k2, _k3)
 
-	h := json.RawMessage(`{"params":{"max_report_buffer_window":"700000"},"dataspec":[{"document_hash":"","response_value_type":"uint256","abi_components":[{"name":"asset","field_type":"string","nested_component":[]},{"name":"currency","field_type":"string","nested_component":[]}],"aggregation_method":"weighted-median","registrar":"genesis","report_block_window":"2000","query_type":"spotprice"},{"document_hash":"","response_value_type":"address, string, uint256","abi_components":[{"name":"toLayer","field_type":"bool","nested_component":[]},{"name":"depositId","field_type":"uint256","nested_component":[]}],"aggregation_method":"weighted-mode","registrar":"genesis","report_block_window":"2000","query_type":"trbbridge"}]}`)
+	h := json.RawMessage(`{"params":{"max_report_buffer_window":"700000"},"dataspec":[{"document_hash":"","response_value_type":"uint256","abi_components":[{"name":"asset","field_type":"string","nested_component":[]},{"name":"currency","field_type":"string","nested_component":[]}],"aggregation_method":"weighted-median","registrar":"genesis","report_block_window":"2000","query_type":"spotprice"},{"document_hash":"","response_value_type":"address, string, uint256, uint256","abi_components":[{"name":"toLayer","field_type":"bool","nested_component":[]},{"name":"depositId","field_type":"uint256","nested_component":[]}],"aggregation_method":"weighted-mode","registrar":"genesis","report_block_window":"2000","query_type":"trbbridge"}]}`)
 	am.InitGenesis(ctx, appCodec, h)
 	gen := am.ExportGenesis(ctx, appCodec)
 	fmt.Println("exported genesis: ", gen)
