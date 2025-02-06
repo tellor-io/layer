@@ -90,12 +90,12 @@ func (k *KeeperTestSuite) TestRefundDisputeFee() {
 
 	k.reporterKeeper.On("FeeRefund", k.ctx, []byte("hash"), math.NewInt(760)).Return(nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(760)))).Return(nil)
-	dust, err := k.disputeKeeper.RefundDisputeFee(k.ctx, feepayer1, feePayers[0], math.NewInt(1000), []byte("hash"))
+	dust, err := k.disputeKeeper.RefundDisputeFee(k.ctx, feepayer1, feePayers[0], math.NewInt(1000), []byte("hash"), math.NewInt(1000))
 	k.NoError(err)
 	k.True(math.ZeroInt().Equal(dust))
 
 	k.bankKeeper.On("SendCoinsFromModuleToAccount", k.ctx, types.ModuleName, feepayer2, sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(190)))).Return(nil)
-	dust, err = k.disputeKeeper.RefundDisputeFee(k.ctx, feepayer2, feePayers[1], math.NewInt(1000), []byte("hash"))
+	dust, err = k.disputeKeeper.RefundDisputeFee(k.ctx, feepayer2, feePayers[1], math.NewInt(1000), []byte("hash"), math.NewInt(1000))
 	k.NoError(err)
 	k.True(math.ZeroInt().Equal(dust))
 }
