@@ -275,7 +275,7 @@ func TestGenesisDataSpec(t *testing.T) {
 	require.Equal(t, val[0].ResponseValueType, "uint256")
 	require.Equal(t, val[0].AggregationMethod, "weighted-median")
 	require.Equal(t, val[0].Registrar, "genesis")
-	require.Equal(t, val[1].ResponseValueType, "address, string, uint256")
+	require.Equal(t, val[1].ResponseValueType, "address, string, uint256, uint256")
 	require.Equal(t, val[1].AggregationMethod, "weighted-mode")
 	require.Equal(t, val[1].Registrar, "genesis")
 }
