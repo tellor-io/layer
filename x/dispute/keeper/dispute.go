@@ -266,8 +266,9 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 	if err := k.CloseDispute(ctx, dispute.DisputeId); err != nil {
 		return err
 	}
+
 	prevDisputeId := dispute.DisputeId
-	dispute.BurnAmount = dispute.BurnAmount.Add(roundFee)
+	dispute.BurnAmount = dispute.BurnAmount.Add(fivePercent) // burnAmt = 5 % of fee total
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Fee.Amount)
 	disputeId := k.NextDisputeId(ctx)
 	dispute.DisputeId = disputeId
