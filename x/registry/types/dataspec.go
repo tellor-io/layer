@@ -42,7 +42,7 @@ func GenesisDataSpec() []DataSpec {
 	// trbbridge data spec
 	dataspecs = append(dataspecs, DataSpec{
 		DocumentHash:      "",
-		ResponseValueType: "address, string, uint256",
+		ResponseValueType: "address, string, uint256, uint256",
 		AbiComponents: []*ABIComponent{
 			{
 				Name:            "toLayer",
