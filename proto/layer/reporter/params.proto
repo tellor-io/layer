@@ -29,6 +29,8 @@ message Params {
   ];
   // max number of selectors for a reporter
   uint64 max_selectors = 3;
+  // max number of validators a user can delegate too
+  uint64 max_num_of_delegations = 4;
 }
 
 message StakeTracker {
