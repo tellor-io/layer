@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -120,7 +119,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 
 		// team power is 100*1e6 / 3
 		totalRatio = totalRatio.Add(math.LegacyNewDec(100).Mul(layertypes.PowerReduction.ToLegacyDec()).Quo(math.LegacyNewDec(3)))
-		fmt.Println("totalRatio from team vote: ", totalRatio)
 	}
 	// get user group
 	tallies.ForVotes.Users = math.NewIntFromUint64(voteCounts.Users.Support)
@@ -135,7 +133,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		totalUserTipsDec := math.LegacyNewDecFromInt(info.TotalUserTips)
 		userVoteSumDec := math.LegacyNewDecFromInt(userVoteSum)
 		totalRatio = totalRatio.Add(Ratio(totalUserTipsDec, userVoteSumDec))
-		fmt.Println("totalRatio from user vote: ", totalRatio)
 
 		usersForVotesDec := math.LegacyNewDecFromInt(tallies.ForVotes.Users)
 		usersAgainstVotesDec := math.LegacyNewDecFromInt(tallies.AgainstVotes.Users)
@@ -154,7 +151,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	reporterVoteSumDec := math.LegacyNewDecFromInt(reporterVoteSum)
 	reporterRatio := Ratio(totalReporterPowerDec, reporterVoteSumDec)
 	totalRatio = totalRatio.Add(reporterRatio)
-	fmt.Println("totalRatio from reporter vote: ", totalRatio)
 	if reporterVoteSum.GT(math.ZeroInt()) {
 		reporterVoteSumDec := math.LegacyNewDecFromInt(reporterVoteSum)
 		reportersForVotesDec := math.LegacyNewDecFromInt(tallies.ForVotes.Reporters)
