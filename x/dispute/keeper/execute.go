@@ -74,6 +74,13 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
 			return err
 		}
+		reporterAddr, err := sdk.AccAddressFromBech32(dispute.InitialEvidence.GetReporter())
+		if err != nil {
+			return err
+		}
+		if err := k.reporterKeeper.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr); err != nil {
+			return err
+		}
 		vote.Executed = true
 		if err := k.Votes.Set(ctx, id, vote); err != nil {
 			return err
