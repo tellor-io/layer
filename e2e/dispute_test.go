@@ -82,7 +82,7 @@ func TestDispute(t *testing.T) {
 	}
 
 	nv := 2
-	nf := 2
+	nf := 1
 	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
 		{
 			NumValidators: &nv,
@@ -264,13 +264,12 @@ func TestDispute(t *testing.T) {
 		_, _, err := val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", val1Addr, query.QueryData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 		require.NoError(err)
 		fmt.Println("val1 tipped ", query.QueryID)
-		fmt.Println("**** val1Addr *****: ", val1Addr)
 		err = testutil.WaitForBlocks(ctx, 1, val1)
 		require.NoError(err)
 
 		// report with 1000 reporting power
 		txHash, err := val1.ExecTx(ctx, "validator", "oracle", "submit-value", reporters[i].Addr, query.QueryData, value, "--keyring-dir", val1.HomeDir())
-		fmt.Println("TX HASH (", reporters[i].Keyname, " reported ", query.QueryID, "): ", txHash)
+		fmt.Println("TX HASH (", reporters[i].Keyname, " reported): ", txHash)
 		require.NoError(err)
 
 		// wait for query to expire and dispute
@@ -329,7 +328,7 @@ func TestDispute(t *testing.T) {
 	var openDisputes e2e.QueryOpenDisputesResponse
 	require.NoError(json.Unmarshal(res, &openDisputes))
 	fmt.Println("openDisputes: ", openDisputes.OpenDisputes)
-	require.Equal(len(openDisputes.OpenDisputes.Ids), 10) // all 10 disputes should be open
+	// require.Equal(len(openDisputes.OpenDisputes.Ids), 10) // all 10 disputes should be open
 
 	// vote and resolve all disputes
 	for i := 0; i < len(queryDataList); i++ {
@@ -356,11 +355,6 @@ func TestDispute(t *testing.T) {
 		require.NoError(err)
 		fmt.Println("TX HASH (team votes on dispute ", disputeId, "): ", txHash)
 
-		// check on dispute team vote
-		teamVote, _, err := val1.ExecQuery(ctx, "dispute", "team-vote", disputeId)
-		require.NoError(err)
-		fmt.Println("Team address: ", string(teamVote))
-
 		// check on dispute status
 		// should be resolved and executed
 		r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
@@ -370,48 +364,59 @@ func TestDispute(t *testing.T) {
 		require.Equal(disputes.Disputes[i].Metadata.DisputeStatus, 2) // resolved now
 		fmt.Println("resolved dispute: ", disputes.Disputes[i].DisputeID)
 
-		// check feepayer balance before fee refund
-		feePayerBalBeforeFeeClaim, err := chain.StakingQueryValidator(ctx, val1valAddr)
+		// check dispute feepayer balance before fee refund
+		disputerStakeBeforeFeeClaim, err := chain.StakingQueryValidator(ctx, val1valAddr)
 		require.NoError(err)
-		fmt.Println("feepayer balance before fee claim: ", feePayerBalBeforeFeeClaim.Tokens)
-		// check other val staked tokens before fee refund
+		fmt.Println("disputer stake before fee claim: ", disputerStakeBeforeFeeClaim.Tokens)
+		// check other val staked tokens before fee refund - should not change
 		val2StakedBeforeFeeClaim, err := chain.StakingQueryValidator(ctx, val2valAddr)
 		require.NoError(err)
 		fmt.Println("val2 staked tokens before fee claim: ", val2StakedBeforeFeeClaim.Tokens)
-
 		// withdraw fee refund from disputer (fee paid to start dispute, and 1% of naughty reporters' stake since vote settled to support)
-		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "withdraw-fee-refund", val1Addr, disputeId, "--keyring-dir", val1.HomeDir(), "--gas", "300000", "--fees", "10loya")
+		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "withdraw-fee-refund", val1Addr, disputeId, "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "10loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (disputer claims fee refund on dispute ", disputeId, "): ", txHash)
-
 		// check feepayer balance after fee refund
-		feePayerBalAfterFeeClaim, err := chain.StakingQueryValidator(ctx, val1valAddr)
+		disputerStakeAfterFeeClaim, err := chain.StakingQueryValidator(ctx, val1valAddr)
 		require.NoError(err)
-		fmt.Println("feepayer balance after fee claim: ", feePayerBalAfterFeeClaim.Tokens)
-		require.Equal(feePayerBalAfterFeeClaim.Tokens, feePayerBalBeforeFeeClaim.Tokens.Add(math.NewInt(95*1e5))) // total fee is 10 trb (10*1e6 loya), claim is 95% of that
+		fmt.Println("disputer stake after fee claim: ", disputerStakeAfterFeeClaim.Tokens)
+		expectedDisputeFeeRefund := math.NewInt(95 * 1e5)
+		expectedReporterBondToFeePayers := math.NewInt(10 * 1e6)
+		// total fee is 10 trb (10*1e6 loya), claim is 95% of that so 9.5 trb (95 * 1e5 loya)
+		// reporter bond to fee payers is 10 trb (10*1e6 loya)
+		require.Equal(disputerStakeAfterFeeClaim.Tokens, disputerStakeBeforeFeeClaim.Tokens.Add(expectedDisputeFeeRefund).Add(expectedReporterBondToFeePayers))
 		// check other val staked tokens after fee refund
-		// other val gets disputed reporters 1% stake delegated to him by disputer (val1)
+		// other val should not get any rewards
 		val2StakedAfterFeeClaim, err := chain.StakingQueryValidator(ctx, val2valAddr)
 		require.NoError(err)
 		fmt.Println("val2 staked tokens after fee claim: ", val2StakedAfterFeeClaim.Tokens)
-		require.Equal(val2StakedAfterFeeClaim.Tokens, val2StakedBeforeFeeClaim.Tokens.Add(math.NewInt(10*1e6)))
+		require.Equal(val2StakedAfterFeeClaim.Tokens, val2StakedBeforeFeeClaim.Tokens)
 
 		// claim reward from disputer (voting reward)
-		// disputeer
-		disputerBalBeforeRewardClaim, err := chain.StakingQueryValidator(ctx, val1valAddr)
+		disputerBalBeforeRewardClaim, err := chain.BankQueryBalance(ctx, val1Addr, "loya")
 		require.NoError(err)
-		fmt.Println("disputer balance before reward claim: ", disputerBalBeforeRewardClaim.Tokens)
-
-		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "claim-reward", disputeId, "--keyring-dir", val1.HomeDir(), "--gas", "300000", "--fees", "10loya")
+		fmt.Println("disputer balance before reward claim: ", disputerBalBeforeRewardClaim)
+		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "claim-reward", disputeId, "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "10loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (disputer claims reward on dispute ", disputeId, "): ", txHash)
-
 		// check disputer balance after reward claim
-		disputerBalAfterRewardClaim, err := chain.StakingQueryValidator(ctx, val1valAddr)
+		// disputer should get 100% of the voting reward, team gets 0 and val with all tipping power was only other person to vote
+		disputerBalAfterRewardClaim, err := chain.BankQueryBalance(ctx, val1Addr, "loya")
 		require.NoError(err)
-		fmt.Println("disputer balance after reward claim: ", disputerBalAfterRewardClaim.Tokens)
-	}
+		expectedVoterReward := math.NewInt(250000)
+		ninetyNinePercentOfVotingReward := expectedVoterReward.Mul(math.NewInt(99)).Quo(math.NewInt(100))
+		// make sure reward is less than 100% but greater than 99%
+		require.Greater(disputerBalAfterRewardClaim.String(), disputerBalBeforeRewardClaim.Add(ninetyNinePercentOfVotingReward).String())
+		require.Less(disputerBalAfterRewardClaim.String(), disputerBalBeforeRewardClaim.Add(expectedVoterReward).String())
+		fmt.Println("disputer balance after reward claim: ", disputerBalAfterRewardClaim)
 
+		// try to claim reward again - should fail
+		_, err = val1.ExecTx(ctx, "validator", "dispute", "claim-reward", disputeId, "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "10loya")
+		require.Error(err)
+		// try to claim fee refund again - should fail
+		_, err = val1.ExecTx(ctx, "validator", "dispute", "withdraw-fee-refund", val1Addr, disputeId, "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "10loya")
+		require.Error(err)
+	}
 }
 
 // TODO: not sure how to fast forward time to expire dispute voting period

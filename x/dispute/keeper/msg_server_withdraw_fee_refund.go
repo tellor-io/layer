@@ -14,7 +14,6 @@ import (
 )
 
 func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdrawFeeRefund) (*types.MsgWithdrawFeeRefundResponse, error) {
-	k.Keeper.Logger(ctx).Info("WithdrawFeeRefund")
 	// should be ok to be called by anyone
 	feePayer := sdk.MustAccAddressFromBech32(msg.PayerAddress)
 	// dispute

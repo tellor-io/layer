@@ -211,16 +211,50 @@ func (k Keeper) GetBondedValidators(ctx context.Context, max uint32) ([]stakingt
 
 // TODO: this should be in dispute module, no reason for it to be in reporter module
 // Stakes a given amount of tokens to a BONDED validator from a given address
+// first looks up if given acount is delegated to a validator
+// if they are delgated, then delegate winnings to that validator
+// if not, then delegate winnings to a bonded validator
 func (k Keeper) AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt math.Int) error {
-	vals, err := k.GetBondedValidators(ctx, 1)
-	if err != nil {
-		return err
-	}
-	validator := vals[0]
+	// Flag to check if the account is already delegated to a bonded validator
+	isDelegated := false
 
-	_, err = k.stakingKeeper.Delegate(ctx, acc, amt, stakingtypes.Bonded, validator, false)
+	// iterate through delegations to find if account is delegated to a bonded validator
+	err := k.stakingKeeper.IterateDelegatorDelegations(ctx, acc, func(delegation stakingtypes.Delegation) (stop bool) {
+		// grab validator address from delegation
+		valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		if err != nil {
+			return true // stop iteration on error
+		}
+		// grab validator using validator address
+		val, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
+			return true // stop iteration on error
+		}
+		// check if validator is bonded
+		if val.IsBonded() {
+			isDelegated = true
+			// delegate winnings to that validator
+			_, err = k.stakingKeeper.Delegate(ctx, acc, amt, stakingtypes.Bonded, val, false)
+			return err != nil // stop iteration if delegation fails
+		}
+		return false // continue iteration if not bonded
+	})
 	if err != nil {
 		return err
 	}
+
+	// if account is not delegated to any bonded validator, then delegate winnings to a bonded validator
+	if !isDelegated {
+		vals, err := k.GetBondedValidators(ctx, 1)
+		if err != nil {
+			return err
+		}
+		validator := vals[0]
+		_, err = k.stakingKeeper.Delegate(ctx, acc, amt, stakingtypes.Bonded, validator, false)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
