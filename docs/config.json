@@ -1,175 +1,180 @@
 {
-    "swagger": "2.0",
-    "info": {
-      "title": "Layer - gRPC Gateway docs",
-      "description": "A REST interface for state queries.",
-      "version": "1.0.0"
-    },
-    "apis": [
-      {
-        "url": "./tmp-swagger-gen/layer/reporter/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "ReporterParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/oracle/query.swagger.json", 
-        "operationIds": {
-          "rename": {
-            "Params": "OracleParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/bridge/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "BridgeParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/dispute/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "DisputeParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/registry/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "RegistryParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/tmp/bank/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "BankParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/tmp/evidence/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "EvidenceParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/tmp/staking/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "StakingParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/tmp/distribution/query.swagger.json", 
-        "operationIds": {
-          "rename": {
-            "Params": "DistributionParams",
-            "DelegatorValidators": "DistrDelegatorValidators"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/tmp/auth/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "AuthParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/tmp/upgrade/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "UpgradeParams",
-            "Proposal": "UpgradeProposal",
-            "TallyResult": "UpgradeTallyResult"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/tmp/slashing/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "SlashingParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/tmp/gov/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "GovParams",
-            "Proposal": "GovProposal",
-            "TallyResult": "GovTallyResult"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/tmp/feegrant/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "FeegrantParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/tmp/group/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "GroupParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/tmp/consensus/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "ConsensusParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/tmp/ibc/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "IBCParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/tmp/icacontroller/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "ICAControllerParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/tmp/icahost/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "ICAHostParams"
-          }
-        }
-      },
-      {
-        "url": "./tmp-swagger-gen/layer/tmp/globalfee/query.swagger.json",
-        "operationIds": {
-          "rename": {
-            "Params": "GlobalFeeParams"
-          }
+  "swagger": "2.0",
+  "info": {
+    "title": "Layer - gRPC Gateway docs",
+    "description": "A REST interface for state queries.",
+    "version": "1.0.0"
+  },
+  "apis": [
+    {
+      "url": "./tmp-swagger-gen/layer/reporter/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ReporterParams"
         }
       }
-    ]
-  }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/oracle/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "OracleParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/bridge/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "BridgeParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/dispute/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "DisputeParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/registry/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "RegistryParams"
+        }
+      },
+      "paths": {
+        "exclude": [
+          "/layer/registry/get_data_spec/{query_type}"
+        ]
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/tmp/bank/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "BankParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/tmp/evidence/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "EvidenceParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/tmp/staking/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "StakingParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/tmp/distribution/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "DistributionParams",
+          "DelegatorValidators": "DistrDelegatorValidators"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/tmp/auth/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "AuthParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/tmp/upgrade/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "UpgradeParams",
+          "Proposal": "UpgradeProposal",
+          "TallyResult": "UpgradeTallyResult"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/tmp/slashing/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "SlashingParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/tmp/gov/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "GovParams",
+          "Proposal": "GovProposal",
+          "TallyResult": "GovTallyResult"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/tmp/feegrant/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "FeegrantParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/tmp/group/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "GroupParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/tmp/consensus/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ConsensusParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/tmp/ibc/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "IBCParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/tmp/icacontroller/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ICAControllerParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/tmp/icahost/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ICAHostParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/layer/tmp/globalfee/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "GlobalFeeParams"
+        }
+      }
+    }
+  ]
+}

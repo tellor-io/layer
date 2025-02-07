@@ -27,7 +27,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	// set token bridge spec
 	bridgeSpec := types.DataSpec{
 		DocumentHash:      "",
-		ResponseValueType: "address, string, uint256",
+		ResponseValueType: "address, string, uint256, uint256",
 		AbiComponents: []*types.ABIComponent{
 			{
 				Name:            "toLayer",
