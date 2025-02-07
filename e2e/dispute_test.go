@@ -167,7 +167,7 @@ func TestDispute(t *testing.T) {
 	fmt.Println("val2 staking power before delegations: ", val2StartPower)
 
 	// make 10 users who will delegate to val2 and become reporters
-	numReporters := 1
+	numReporters := 10
 	reporters := make([]ReporterAccs, numReporters)
 	expectedDelTotal := math.NewInt(0)
 	for i := 0; i < numReporters; i++ {
@@ -243,17 +243,18 @@ func TestDispute(t *testing.T) {
 	require.Equal(len(reportersRes.Reporters), numReporters+2) // number of delegating reporters + 2 validator reporters
 
 	// tip 1trb and report for 10 different spotprices
+	// needs to be the same length as numReporters
 	queryDataList := []QueryData{
 		{QueryData: bchQData, QueryID: bchQId},
-		// {QueryData: ltcQData, QueryID: ltcQId},
-		// {QueryData: solQData, QueryID: solQId},
-		// {QueryData: dogeQData, QueryID: dogeQId},
-		// {QueryData: dotQData, QueryID: dotQId},
-		// {QueryData: bnbQData, QueryID: bnbQId},
-		// {QueryData: xrpQData, QueryID: xrpQId},
-		// {QueryData: hypeQData, QueryID: hypeQId},
-		// {QueryData: trxQData, QueryID: trxQId},
-		// {QueryData: suiQData, QueryID: suiQId},
+		{QueryData: ltcQData, QueryID: ltcQId},
+		{QueryData: solQData, QueryID: solQId},
+		{QueryData: dogeQData, QueryID: dogeQId},
+		{QueryData: dotQData, QueryID: dotQId},
+		{QueryData: bnbQData, QueryID: bnbQId},
+		{QueryData: xrpQData, QueryID: xrpQId},
+		{QueryData: hypeQData, QueryID: hypeQId},
+		{QueryData: trxQData, QueryID: trxQId},
+		{QueryData: suiQData, QueryID: suiQId},
 	}
 	value := layerutil.EncodeValue(10000000.99)
 	tipAmt := math.NewInt(1 * 1e6)
@@ -263,6 +264,7 @@ func TestDispute(t *testing.T) {
 		_, _, err := val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", val1Addr, query.QueryData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 		require.NoError(err)
 		fmt.Println("val1 tipped ", query.QueryID)
+		fmt.Println("**** val1Addr *****: ", val1Addr)
 		err = testutil.WaitForBlocks(ctx, 1, val1)
 		require.NoError(err)
 
@@ -301,7 +303,7 @@ func TestDispute(t *testing.T) {
 		// dispute from validator
 		// since reporting power is 1000, first rd fee fee is 10 trb
 		// paying from bond, so val1 stake should decrease by 10 trb
-		// val2 stake should also decrease by 10 trb
+		// val2 stake should also decrease by 10 trb bc of slash on reporter delgated to them
 		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, queryId, "warning", "500000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (dispute on ", microReports.MicroReports[0].Reporter, "): ", txHash)
@@ -327,7 +329,7 @@ func TestDispute(t *testing.T) {
 	var openDisputes e2e.QueryOpenDisputesResponse
 	require.NoError(json.Unmarshal(res, &openDisputes))
 	fmt.Println("openDisputes: ", openDisputes.OpenDisputes)
-	// require.Equal(len(openDisputes.OpenDisputes.Ids), 10) // all 10 disputes should be open
+	require.Equal(len(openDisputes.OpenDisputes.Ids), 10) // all 10 disputes should be open
 
 	// vote and resolve all disputes
 	for i := 0; i < len(queryDataList); i++ {
@@ -342,6 +344,7 @@ func TestDispute(t *testing.T) {
 		require.Error(err)
 
 		// check dispute status
+		// should still be open bc only 33% of power has voted
 		res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
 		require.NoError(err)
 		var disputes e2e.Disputes
@@ -359,6 +362,7 @@ func TestDispute(t *testing.T) {
 		fmt.Println("Team address: ", string(teamVote))
 
 		// check on dispute status
+		// should be resolved and executed
 		r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
 		require.NoError(err)
 		err = json.Unmarshal(r, &disputes)
@@ -366,23 +370,34 @@ func TestDispute(t *testing.T) {
 		require.Equal(disputes.Disputes[i].Metadata.DisputeStatus, 2) // resolved now
 		fmt.Println("resolved dispute: ", disputes.Disputes[i].DisputeID)
 
-		// check feepayer balance before fee claim
+		// check feepayer balance before fee refund
 		feePayerBalBeforeFeeClaim, err := chain.StakingQueryValidator(ctx, val1valAddr)
 		require.NoError(err)
 		fmt.Println("feepayer balance before fee claim: ", feePayerBalBeforeFeeClaim.Tokens)
+		// check other val staked tokens before fee refund
+		val2StakedBeforeFeeClaim, err := chain.StakingQueryValidator(ctx, val2valAddr)
+		require.NoError(err)
+		fmt.Println("val2 staked tokens before fee claim: ", val2StakedBeforeFeeClaim.Tokens)
 
-		// claim fee refund from disputer
+		// withdraw fee refund from disputer (fee paid to start dispute, and 1% of naughty reporters' stake since vote settled to support)
 		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "withdraw-fee-refund", val1Addr, disputeId, "--keyring-dir", val1.HomeDir(), "--gas", "300000", "--fees", "10loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (disputer claims fee refund on dispute ", disputeId, "): ", txHash)
 
-		// check feepayer balance after fee claim
+		// check feepayer balance after fee refund
 		feePayerBalAfterFeeClaim, err := chain.StakingQueryValidator(ctx, val1valAddr)
 		require.NoError(err)
 		fmt.Println("feepayer balance after fee claim: ", feePayerBalAfterFeeClaim.Tokens)
 		require.Equal(feePayerBalAfterFeeClaim.Tokens, feePayerBalBeforeFeeClaim.Tokens.Add(math.NewInt(95*1e5))) // total fee is 10 trb (10*1e6 loya), claim is 95% of that
+		// check other val staked tokens after fee refund
+		// other val gets disputed reporters 1% stake delegated to him by disputer (val1)
+		val2StakedAfterFeeClaim, err := chain.StakingQueryValidator(ctx, val2valAddr)
+		require.NoError(err)
+		fmt.Println("val2 staked tokens after fee claim: ", val2StakedAfterFeeClaim.Tokens)
+		require.Equal(val2StakedAfterFeeClaim.Tokens, val2StakedBeforeFeeClaim.Tokens.Add(math.NewInt(10*1e6)))
 
-		// claim reward from disputer
+		// claim reward from disputer (voting reward)
+		// disputeer
 		disputerBalBeforeRewardClaim, err := chain.StakingQueryValidator(ctx, val1valAddr)
 		require.NoError(err)
 		fmt.Println("disputer balance before reward claim: ", disputerBalBeforeRewardClaim.Tokens)
