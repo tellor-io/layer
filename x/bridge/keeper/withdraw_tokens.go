@@ -29,12 +29,12 @@ func (k Keeper) WithdrawTokens(ctx context.Context, amount sdk.Coin, sender sdk.
 		return 0, err
 	}
 
-	aggregate, err := k.CreateWithdrawalAggregate(ctx, amount, sender, recipient, withdrawalId)
+	aggregate, queryData, err := k.CreateWithdrawalAggregate(ctx, amount, sender, recipient, withdrawalId)
 	if err != nil {
 		return 0, err
 	}
 
-	err = k.oracleKeeper.SetAggregate(ctx, aggregate)
+	err = k.oracleKeeper.SetAggregate(ctx, aggregate, queryData)
 	if err != nil {
 		return 0, err
 	}
@@ -59,19 +59,19 @@ func (k Keeper) IncrementWithdrawalId(goCtx context.Context) (uint64, error) {
 	return id.Id, nil
 }
 
-func (k Keeper) CreateWithdrawalAggregate(goCtx context.Context, amount sdk.Coin, sender sdk.AccAddress, recipient []byte, withdrawalId uint64) (*oracletypes.Aggregate, error) {
+func (k Keeper) CreateWithdrawalAggregate(goCtx context.Context, amount sdk.Coin, sender sdk.AccAddress, recipient []byte, withdrawalId uint64) (*oracletypes.Aggregate, []byte, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	queryId, err := k.GetWithdrawalQueryId(withdrawalId)
+	queryId, queryData, err := k.GetWithdrawalQueryId(withdrawalId)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	reportValue, err := k.GetWithdrawalReportValue(amount, sender, recipient)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	totalBondedTokens, err := k.stakingKeeper.TotalBondedTokens(ctx)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	reporterPower := totalBondedTokens.Uint64()
 
@@ -85,10 +85,10 @@ func (k Keeper) CreateWithdrawalAggregate(goCtx context.Context, amount sdk.Coin
 		Height:            uint64(ctx.BlockHeight()),
 		MicroHeight:       uint64(ctx.BlockHeight()),
 	}
-	return aggregate, nil
+	return aggregate, queryData, nil
 }
 
-func (k Keeper) GetWithdrawalQueryId(withdrawalId uint64) ([]byte, error) {
+func (k Keeper) GetWithdrawalQueryId(withdrawalId uint64) ([]byte, []byte, error) {
 	// replicate solidity encoding,  keccak256(abi.encode(string "TRBBridge", abi.encode(bool false, uint256 withdrawalId)))
 
 	queryTypeString := "TRBBridge"
@@ -98,19 +98,19 @@ func (k Keeper) GetWithdrawalQueryId(withdrawalId uint64) ([]byte, error) {
 	// prepare encoding
 	StringType, err := abi.NewType("string", "", nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	Uint256Type, err := abi.NewType("uint256", "", nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	BoolType, err := abi.NewType("bool", "", nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	BytesType, err := abi.NewType("bytes", "", nil)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// encode query data arguments first
@@ -120,7 +120,7 @@ func (k Keeper) GetWithdrawalQueryId(withdrawalId uint64) ([]byte, error) {
 	}
 	queryDataArgsEncoded, err := queryDataArgs.Pack(toLayerBool, withdrawalIdUint64)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// encode query data
@@ -130,12 +130,12 @@ func (k Keeper) GetWithdrawalQueryId(withdrawalId uint64) ([]byte, error) {
 	}
 	queryDataEncoded, err := finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// generate query id
 	queryId := crypto.Keccak256(queryDataEncoded)
-	return queryId, nil
+	return queryId, queryDataEncoded, nil
 }
 
 func (k Keeper) GetWithdrawalReportValue(amount sdk.Coin, sender sdk.AccAddress, recipient []byte) ([]byte, error) {

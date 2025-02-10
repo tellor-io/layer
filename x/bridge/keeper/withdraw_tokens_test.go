@@ -34,27 +34,29 @@ func TestGetWithdrawalReportValue(t *testing.T) {
 func TestGetWithdrawalQueryId(t *testing.T) {
 	k, _, _, _, _, _, _ := setupKeeper(t)
 
-	res, err := k.GetWithdrawalQueryId(1)
+	res, queryData, err := k.GetWithdrawalQueryId(1)
 	require.NoError(t, err)
 	require.NotNil(t, res)
+	require.NotNil(t, queryData)
 
-	res2, err := k.GetWithdrawalQueryId(2)
+	res2, queryData2, err := k.GetWithdrawalQueryId(2)
 	require.NoError(t, err)
 	require.NotNil(t, res2)
 	require.NotEqual(t, res, res2)
+	require.NotEqual(t, queryData, queryData2)
 }
 
 func TestCreateWithdrawalAggregate(t *testing.T) {
 	k, _, _, _, _, sk, ctx := setupKeeper(t)
 
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100), nil).Once()
-	agg, err := k.CreateWithdrawalAggregate(ctx, sdk.Coin{Amount: math.NewInt(100), Denom: "loya"}, sdk.AccAddress("operatorAddr1"), []byte("evmAddress1"), 1)
+	agg, _, err := k.CreateWithdrawalAggregate(ctx, sdk.Coin{Amount: math.NewInt(100), Denom: "loya"}, sdk.AccAddress("operatorAddr1"), []byte("evmAddress1"), 1)
 	require.NoError(t, err)
 	require.Equal(t, agg.AggregatePower, uint64(100))
 	require.Equal(t, agg.Height, uint64(0))
 	require.Equal(t, agg.Flagged, false)
 	require.Equal(t, agg.Index, uint64(0))
-	queryIdExpected, err := k.GetWithdrawalQueryId(1)
+	queryIdExpected, _, err := k.GetWithdrawalQueryId(1)
 	require.NoError(t, err)
 	require.Equal(t, agg.QueryId, queryIdExpected)
 	aggValueExpected, err := k.GetWithdrawalReportValue(sdk.Coin{Amount: math.NewInt(100), Denom: "loya"}, sdk.AccAddress("operatorAddr1"), []byte("evmAddress1"))
@@ -82,11 +84,11 @@ func TestWithdrawTokens(t *testing.T) {
 	amount := sdk.Coin{Denom: "loya", Amount: math.NewInt(10 * 1e6)}
 
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100*1e6), nil)
-	agg, err := k.CreateWithdrawalAggregate(ctx, amount, creatorAddr, []byte(recipientAddr), 1)
+	agg, queryData, err := k.CreateWithdrawalAggregate(ctx, amount, creatorAddr, []byte(recipientAddr), 1)
 	require.NoError(t, err)
 	require.NotNil(t, agg)
 
-	ok.On("SetAggregate", ctx, agg).Return(nil)
+	ok.On("SetAggregate", ctx, agg, queryData).Return(nil)
 	bk.On("SendCoinsFromAccountToModule", ctx, creatorAddr, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
 	bk.On("BurnCoins", ctx, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
 
