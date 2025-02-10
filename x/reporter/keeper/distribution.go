@@ -220,22 +220,22 @@ func (k Keeper) AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt ma
 
 	// iterate through delegations to find if account is delegated to a bonded validator
 	err := k.stakingKeeper.IterateDelegatorDelegations(ctx, acc, func(delegation stakingtypes.Delegation) (stop bool) {
-		// grab validator address from delegation
 		valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 		if err != nil {
-			return true // stop iteration on error
+			return true
 		}
-		// grab validator using validator address
 		val, err := k.stakingKeeper.GetValidator(ctx, valAddr)
 		if err != nil {
-			return true // stop iteration on error
+			return true
 		}
-		// check if validator is bonded
+		// if val is bonded, delegate winnings to that validator and exit iteration
 		if val.IsBonded() {
 			isDelegated = true
-			// delegate winnings to that validator
 			_, err = k.stakingKeeper.Delegate(ctx, acc, amt, stakingtypes.Bonded, val, false)
-			return err != nil // stop iteration if delegation fails
+			if err != nil {
+				return true
+			}
+			return true
 		}
 		return false // continue iteration if not bonded
 	})

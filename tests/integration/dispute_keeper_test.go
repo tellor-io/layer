@@ -1580,7 +1580,7 @@ func (s *IntegrationTestSuite) TestDisputeFiveRoundsTwoFeePayers() {
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporter1Acc.Bytes(), report.MetaId), report))
 
-	// prepare to propose dispute from non reporter 3rd part
+	// prepare to propose dispute from non reporter 3rd party
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
 	s.NoError(err)
 	halfDisputeFee := disputeFee.QuoRaw(2)
@@ -1993,6 +1993,214 @@ func (s *IntegrationTestSuite) TestDisputeFiveRoundsTwoFeePayers() {
 	s.Error(err)
 	disputerBalAfterClaim = s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
 	s.Equal(disputerBalBeforeClaim.Amount, disputerBalAfterClaim.Amount)
+}
+
+func (s *IntegrationTestSuite) TestDisputeTwoDelegations() {
+	// create 3 validators
+	valAccAddrs, valValAddrs, _ := s.createValidatorAccs([]uint64{10, 10, 10})
+	// check stakes
+	totalBondedTokens, err := s.Setup.Stakingkeeper.TotalBondedTokens(s.Setup.Ctx)
+	s.NoError(err)
+	expectedTotalStake := math.NewInt(61000000) // vals get 2x given power in createValidatorAccs, 1 random val is made in DefaultStartUpConfig
+	s.Equal(totalBondedTokens, expectedTotalStake)
+	val1StakeBeforeDelegating, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[0])
+	s.NoError(err)
+	fmt.Println("VAL1 STAKE BEFORE DELEGATING", val1StakeBeforeDelegating.Tokens.String())
+	val2StakeBeforeDelegating, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[1])
+	s.NoError(err)
+	fmt.Println("VAL2 STAKE BEFORE DELEGATING", val2StakeBeforeDelegating.Tokens.String())
+	val3StakeBeforeDelegating, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[2])
+	s.NoError(err)
+	fmt.Println("VAL3 STAKE BEFORE DELEGATING", val3StakeBeforeDelegating.Tokens.String())
+
+	// get validator infos
+	val2, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[1])
+	s.NoError(err)
+	val3, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[2])
+	s.NoError(err)
+	// mint disputer some tokens
+	disputer := s.newKeysWithTokens()
+	delAmount := math.NewInt(30 * 1e6)
+	s.Setup.MintTokens(disputer, delAmount)
+	// delegate from disputer to val 2
+	_, err = s.Setup.Stakingkeeper.Delegate(s.Setup.Ctx, disputer, delAmount, stakingtypes.Bonded, val2, false)
+	s.NoError(err)
+	// delegate from disputer to val 3
+	_, err = s.Setup.Stakingkeeper.Delegate(s.Setup.Ctx, disputer, delAmount, stakingtypes.Bonded, val3, false)
+	s.NoError(err)
+
+	// check on delegation
+	val1StakeAfterDelegating, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[0])
+	s.NoError(err)
+	fmt.Println("VAL1 STAKE AFTER DELEGATING", val1StakeAfterDelegating.Tokens.String())
+	s.Equal(val1StakeBeforeDelegating.Tokens, val1StakeAfterDelegating.Tokens) // should not change, no delegations to val 1
+	val2StakeAfterDelegating, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[1])
+	s.NoError(err)
+	fmt.Println("VAL2 STAKE AFTER DELEGATING", val2StakeAfterDelegating.Tokens.String())
+	s.Equal(val2StakeBeforeDelegating.Tokens.Add(delAmount), val2StakeAfterDelegating.Tokens) // val 2 stake gets 25 more trb staked with him
+	val3StakeAfterDelegating, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[2])
+	s.NoError(err)
+	fmt.Println("VAL3 STAKE AFTER DELEGATING", val3StakeAfterDelegating.Tokens.String())
+	s.Equal(val3StakeBeforeDelegating.Tokens.Add(delAmount), val3StakeAfterDelegating.Tokens) // val 3 stake gets 25 more trb staked with him
+
+	// val1 becomes a reporter
+	reporter1Acc := valAccAddrs[0]
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	// set reporter and selector stores (skip calling createreporter)
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewSelection(reporter1Acc, 1)))
+
+	// make report to set in store and dispute
+	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
+	reporter1StakeBefore, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporter1Acc, qId)
+	s.NoError(err)
+	report := oracletypes.MicroReport{
+		Reporter:    reporter1Acc.String(),
+		Power:       reporter1StakeBefore.Quo(sdk.DefaultPowerReduction).Uint64(),
+		QueryId:     qId,
+		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp:   time.UnixMilli(1696516597).UTC(),
+		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
+	}
+	// set report so there is something to dispute
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporter1Acc.Bytes(), report.MetaId), report))
+	// give reporter all the tipping power
+	s.NoError(s.Setup.Oraclekeeper.TipperTotal.Set(s.Setup.Ctx, collections.Join(valAccAddrs[1].Bytes(), uint64(1)), math.NewInt(100)))
+	s.NoError(s.Setup.Oraclekeeper.TotalTips.Set(s.Setup.Ctx, uint64(1), math.NewInt(100)))
+
+	// advance to block 2
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(2)
+	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
+	s.NoError(err)
+
+	// get stakes before dispute
+	val1StakeBeforeDispute, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[0])
+	s.NoError(err)
+	val2StakeBeforeDispute, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[1])
+	s.NoError(err)
+	val3StakeBeforeDispute, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[2])
+	s.NoError(err)
+	// propose dispute from val 1
+	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
+	s.NoError(err)
+	disputeMsg := types.MsgProposeDispute{
+		Creator:          disputer.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		Fee:              sdk.NewCoin(s.Setup.Denom, disputeFee),
+		DisputeCategory:  types.Warning,
+		PayFromBond:      false,
+	}
+	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
+	s.NoError(err)
+
+	// get dispute to set block info
+	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	blockInfo := types.BlockInfo{
+		TotalReporterPower: reporter1StakeBefore,
+		TotalUserTips:      math.NewInt(100),
+	}
+	// set block info directly
+	s.NoError(s.Setup.Disputekeeper.BlockInfo.Set(s.Setup.Ctx, dispute.HashId, blockInfo))
+
+	// verify balances are correct
+	val1StakeAfterDispute, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[0])
+	s.NoError(err)
+	fmt.Println("VAL1 STAKE AFTER DISPUTE", val1StakeAfterDispute.Tokens.String()) // val 1 loses slashAmount in staking power
+	s.Equal(val1StakeBeforeDispute.Tokens.Sub(dispute.SlashAmount), val1StakeAfterDispute.Tokens)
+	val2StakeAfterDispute, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[1])
+	s.NoError(err)
+	fmt.Println("VAL2 STAKE AFTER DISPUTE", val2StakeAfterDispute.Tokens.String())
+	s.Equal(val2StakeBeforeDispute.Tokens, val2StakeAfterDispute.Tokens) // val 2 stake isnt touched
+	val3StakeAfterDispute, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[2])
+	s.NoError(err)
+	fmt.Println("VAL3 STAKE AFTER DISPUTE", val3StakeAfterDispute.Tokens.String())
+	s.Equal(val3StakeBeforeDispute.Tokens, val3StakeAfterDispute.Tokens) // val 3 stake isnt touched
+
+	// vote on dispute from team
+	teamAddr, err := s.Setup.Disputekeeper.GetTeamAddress(s.Setup.Ctx)
+	s.NoError(err)
+	voteMsg := types.MsgVote{
+		Voter: teamAddr.String(),
+		Id:    1,
+		Vote:  types.VoteEnum_VOTE_SUPPORT,
+	}
+	_, err = msgServer.Vote(s.Setup.Ctx, &voteMsg) // 33%
+	s.NoError(err)
+
+	// vote from val2
+	val2Addr := valAccAddrs[1]
+	voteMsg = types.MsgVote{
+		Voter: val2Addr.String(),
+		Id:    1,
+		Vote:  types.VoteEnum_VOTE_SUPPORT,
+	}
+	_, err = msgServer.Vote(s.Setup.Ctx, &voteMsg) // 33%
+	s.NoError(err)
+
+	// check on dispute
+	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	s.Equal(types.Resolved, dispute.DisputeStatus)
+	s.True(dispute.PendingExecution) // dispute is resolved but needs executed
+	// check on vote
+	vote, err := s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	s.Equal(types.VoteResult_SUPPORT, vote.VoteResult)
+	s.False(vote.Executed)
+	// execute vote
+	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 1))
+	vote, err = s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	s.True(vote.Executed)
+
+	// check on disputed reporter, should be jailed until calling unjail
+	reporter, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, reporter1Acc)
+	s.NoError(err)
+	s.True(reporter.Jailed)
+
+	// make sure stakes have not changed since execution
+	val1StakeAfterExecuted, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[0])
+	s.NoError(err)
+	fmt.Println("VAL1 STAKE AFTER EXECUTED", val1StakeAfterExecuted.Tokens.String())
+	s.Equal(val1StakeAfterDispute.Tokens, val1StakeAfterExecuted.Tokens)
+	val2StakeAfterExecuted, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[1])
+	s.NoError(err)
+	fmt.Println("VAL2 STAKE AFTER EXECUTED", val2StakeAfterExecuted.Tokens.String())
+	s.Equal(val2StakeBeforeDispute.Tokens, val2StakeAfterExecuted.Tokens)
+	val3StakeAfterExecuted, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[2])
+	s.NoError(err)
+	fmt.Println("VAL3 STAKE AFTER EXECUTED", val3StakeAfterExecuted.Tokens.String())
+	s.Equal(val3StakeBeforeDispute.Tokens, val3StakeAfterExecuted.Tokens)
+
+	// claim fee refund
+	res, err := msgServer.WithdrawFeeRefund(s.Setup.Ctx, &types.MsgWithdrawFeeRefund{
+		Id:            1,
+		PayerAddress:  disputer.String(),
+		CallerAddress: disputer.String(),
+	})
+	s.NoError(err)
+	fmt.Println("RES", res)
+
+	// check stakes after refund, val2 or val3 should get some money
+	val1StakeAfterRefund, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[0])
+	s.NoError(err)
+	fmt.Println("VAL1 STAKE AFTER REFUND", val1StakeAfterRefund.Tokens.String())
+	val2StakeAfterRefund, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[1])
+	s.NoError(err)
+	fmt.Println("VAL2 STAKE AFTER REFUND", val2StakeAfterRefund.Tokens.String())
+	val3StakeAfterRefund, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valValAddrs[2])
+	s.NoError(err)
+	fmt.Println("VAL3 STAKE AFTER REFUND", val3StakeAfterRefund.Tokens.String())
+
+	// Check that either val2 OR val3 increased by 200000
+	val2Increased := val2StakeAfterRefund.Tokens.Equal(val2StakeAfterExecuted.Tokens.Add(math.NewInt(200000)))
+	val3Increased := val3StakeAfterRefund.Tokens.Equal(val3StakeAfterExecuted.Tokens.Add(math.NewInt(200000)))
+	s.True(val2Increased != val3Increased, "exactly one validator should have increased stake")
+	s.True(val2Increased || val3Increased, "either val2 or val3 should have increased stake by 200000")
+
 }
 
 func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
