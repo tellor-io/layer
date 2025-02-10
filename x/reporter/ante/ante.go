@@ -209,6 +209,10 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 }
 
 func (t TrackStakeChangesDecorator) checkAmountOfDelegationsByAddressDoesNotExceedMax(ctx sdk.Context, msg sdk.Msg) (bool, error) {
+	params, err := t.reporterKeeper.Params.Get(ctx)
+	if err != nil {
+		return false, err
+	}
 	switch msg := msg.(type) {
 	case *stakingtypes.MsgDelegate:
 		addr := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
@@ -216,8 +220,9 @@ func (t TrackStakeChangesDecorator) checkAmountOfDelegationsByAddressDoesNotExce
 		if err != nil {
 			return false, err
 		}
+
 		// Check to ensure that the number of delegations does not exceed 10
-		if len(delegations) == 10 {
+		if len(delegations) == int(params.MaxNumOfDelegations) {
 			return false, nil
 		}
 		return true, nil
@@ -227,10 +232,7 @@ func (t TrackStakeChangesDecorator) checkAmountOfDelegationsByAddressDoesNotExce
 		if err != nil {
 			return false, err
 		}
-		params, err := t.reporterKeeper.Params.Get(ctx)
-		if err != nil {
-			return false, err
-		}
+
 		// Check to ensure that the number of delegations does not exceed 10
 		if len(delegations) == int(params.MaxNumOfDelegations) {
 			for i := 0; i < int(params.MaxNumOfDelegations); i++ {
