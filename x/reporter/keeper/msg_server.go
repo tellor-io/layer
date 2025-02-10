@@ -221,7 +221,7 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 		return nil, err
 	}
 	if !hasMin {
-		return nil, fmt.Errorf("reporter's min requirement of %s not met by selector. Must stake enough to reach the minimum.", reporter.MinTokensRequired.String())
+		return nil, fmt.Errorf("reporter's min requirement of %s not met by selector. Must stake enough to reach the minimum", reporter.MinTokensRequired.String())
 	}
 
 	// check if selector was part of a report before switching
