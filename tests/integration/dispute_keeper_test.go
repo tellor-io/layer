@@ -2200,7 +2200,6 @@ func (s *IntegrationTestSuite) TestDisputeTwoDelegations() {
 	val3Increased := val3StakeAfterRefund.Tokens.Equal(val3StakeAfterExecuted.Tokens.Add(math.NewInt(200000)))
 	s.True(val2Increased != val3Increased, "exactly one validator should have increased stake")
 	s.True(val2Increased || val3Increased, "either val2 or val3 should have increased stake by 200000")
-
 }
 
 func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
