@@ -17,6 +17,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const maxValidators = 100
+
 type ProposalHandler struct {
 	logger        log.Logger
 	valStore      baseapp.ValidatorStore // to get the current validators' pubkeys
@@ -64,23 +66,19 @@ func NewProposalHandler(logger log.Logger, valStore baseapp.ValidatorStore, appC
 
 func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 	// Verify number of votes doesn't exceed bonded validators
-	bondedVals, err := h.stakingKeeper.GetBondedValidatorsByPower(ctx)
-	if err != nil {
-		h.logger.Error("PrepareProposalHandler: failed to get bonded validators", "error", err)
-		return nil, err
-	}
-	if len(req.LocalLastCommit.Votes) > len(bondedVals) {
-		h.logger.Error("PrepareProposalHandler: number of votes exceeds bonded validators",
+	if len(req.LocalLastCommit.Votes) > maxValidators {
+		h.logger.Error("PrepareProposalHandler: number of votes exceeds max validators",
 			"votes", len(req.LocalLastCommit.Votes),
-			"bonded_validators", len(bondedVals))
-		return nil, errors.New("number of votes exceeds bonded validators")
+			"max_validators", maxValidators)
+		return nil, errors.New("number of votes exceeds max validators")
 	}
-	err = baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), req.LocalLastCommit)
+	err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), req.LocalLastCommit)
 	if err != nil {
 		h.logger.Info("PrepareProposalHandler: failed to validate vote extensions", "error", err, "votes", req.LocalLastCommit.Votes)
 		return nil, err
 	}
 	proposalTxs := req.Txs
+	h.logger.Info("PrepareProposalHandler: proposal txs", "proposal_txs", proposalTxs)
 
 	if req.Height > ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
 		operatorAddresses, evmAddresses := h.CheckInitialSignaturesFromLastCommit(ctx, req.LocalLastCommit)
@@ -118,6 +116,7 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 		}
 
 		proposalTxs = append([][]byte{bz}, proposalTxs...)
+		h.logger.Info("PrepareProposalHandler: proposal txs after injection", "proposal_txs", proposalTxs)
 	}
 
 	return &abci.ResponsePrepareProposal{
@@ -132,6 +131,7 @@ func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.Requ
 			h.logger.Error("ProcessProposalHandler: failed to decode injected vote extension tx", "err", err)
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
+		h.logger.Info("ProcessProposalHandler: injected vote extension tx", "injectedVoteExtTx", injectedVoteExtTx)
 
 		err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), injectedVoteExtTx.ExtendedCommitInfo)
 		if err != nil {
@@ -144,7 +144,7 @@ func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.Requ
 			h.logger.Error("ProcessProposalHandler: failed to get bonded validators", "error", err)
 			return nil, err
 		}
-		if len(injectedVoteExtTx.ExtendedCommitInfo.Votes) > len(bondedVals) {
+		if len(injectedVoteExtTx.ExtendedCommitInfo.Votes) > maxValidators {
 			h.logger.Error("ProcessProposalHandler: number of votes exceeds bonded validators", "votes", len(injectedVoteExtTx.ExtendedCommitInfo.Votes), "bonded_validators", len(bondedVals))
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
