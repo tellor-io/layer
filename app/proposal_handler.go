@@ -78,7 +78,6 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 		return nil, err
 	}
 	proposalTxs := req.Txs
-	h.logger.Info("PrepareProposalHandler: proposal txs", "proposal_txs", proposalTxs)
 
 	if req.Height > ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
 		operatorAddresses, evmAddresses := h.CheckInitialSignaturesFromLastCommit(ctx, req.LocalLastCommit)
@@ -116,7 +115,6 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 		}
 
 		proposalTxs = append([][]byte{bz}, proposalTxs...)
-		h.logger.Info("PrepareProposalHandler: proposal txs after injection", "proposal_txs", proposalTxs)
 	}
 
 	return &abci.ResponsePrepareProposal{
@@ -131,21 +129,15 @@ func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.Requ
 			h.logger.Error("ProcessProposalHandler: failed to decode injected vote extension tx", "err", err)
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
-		h.logger.Info("ProcessProposalHandler: injected vote extension tx", "injectedVoteExtTx", injectedVoteExtTx)
 
 		err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), injectedVoteExtTx.ExtendedCommitInfo)
 		if err != nil {
 			h.logger.Error("ProcessProposalHandler: rejecting proposal, failed to validate vote extension", "error", err)
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
-		// Verify number of votes doesn't exceed bonded validators
-		bondedVals, err := h.stakingKeeper.GetBondedValidatorsByPower(ctx)
-		if err != nil {
-			h.logger.Error("ProcessProposalHandler: failed to get bonded validators", "error", err)
-			return nil, err
-		}
+		// Verify number of votes doesn't exceed max validators
 		if len(injectedVoteExtTx.ExtendedCommitInfo.Votes) > maxValidators {
-			h.logger.Error("ProcessProposalHandler: number of votes exceeds bonded validators", "votes", len(injectedVoteExtTx.ExtendedCommitInfo.Votes), "bonded_validators", len(bondedVals))
+			h.logger.Error("ProcessProposalHandler: number of votes exceeds max validators", "votes", len(injectedVoteExtTx.ExtendedCommitInfo.Votes), "max_validators", maxValidators)
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
 		operatorAddresses, evmAddresses := h.CheckInitialSignaturesFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/libs/rand"
-	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
@@ -20,6 +19,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
