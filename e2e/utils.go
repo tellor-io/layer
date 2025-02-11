@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/cometbft/cometbft/libs/rand"
 	"github.com/strangelove-ventures/interchaintest/v8"
@@ -18,6 +19,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -341,6 +343,69 @@ type QueryOpenDisputesResponse struct {
 
 type OpenDisputes struct {
 	Ids []string `protobuf:"varint,1,rep,packed,name=ids,proto3" json:"ids,omitempty"`
+}
+
+type QueryValidatorsResponse struct {
+	Validators []Validator `json:"validators"`
+}
+
+type Validator struct {
+	// operator_address defines the address of the validator's operator; bech encoded in JSON.
+	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
+	// consensus_pubkey is the consensus public key of the validator, as a Protobuf Any.
+	ConsensusPubkey *types1.Any `protobuf:"bytes,2,opt,name=consensus_pubkey,json=consensusPubkey,proto3" json:"consensus_pubkey,omitempty"`
+	// jailed defined whether the validator has been jailed from bonded status or not.
+	Jailed bool `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
+	// status is the validator status (bonded/unbonding/unbonded).
+	Status int `protobuf:"varint,4,opt,name=status,proto3,enum=cosmos.staking.v1beta1.BondStatus" json:"status,omitempty"`
+	// tokens define the delegated tokens (incl. self-delegation).
+	Tokens string `protobuf:"bytes,5,opt,name=tokens,proto3,customtype=cosmossdk.io/math.Int" json:"tokens"`
+	// delegator_shares defines total shares issued to a validator's delegators.
+	DelegatorShares string `protobuf:"bytes,6,opt,name=delegator_shares,json=delegatorShares,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"delegator_shares"`
+	// description defines the description terms for the validator.
+	Description Description `protobuf:"bytes,7,opt,name=description,proto3" json:"description"`
+	// unbonding_height defines, if unbonding, the height at which this validator has begun unbonding.
+	UnbondingHeight string `protobuf:"varint,8,opt,name=unbonding_height,json=unbondingHeight,proto3" json:"unbonding_height,omitempty"`
+	// unbonding_time defines, if unbonding, the min time for the validator to complete unbonding.
+	UnbondingTime string `protobuf:"bytes,9,opt,name=unbonding_time,json=unbondingTime,proto3,stdtime" json:"unbonding_time"`
+	// commission defines the commission parameters.
+	Commission Commission `protobuf:"bytes,10,opt,name=commission,proto3" json:"commission"`
+	// min_self_delegation is the validator's self declared minimum self delegation.
+	// Since: cosmos-sdk 0.46
+	MinSelfDelegation string `protobuf:"bytes,11,opt,name=min_self_delegation,json=minSelfDelegation,proto3" json:"min_self_delegation"`
+	// strictly positive if this validator's unbonding has been stopped by external modules
+	UnbondingOnHoldRefCount string `protobuf:"varint,12,opt,name=unbonding_on_hold_ref_count,json=unbondingOnHoldRefCount,proto3" json:"unbonding_on_hold_ref_count,omitempty"`
+	// list of unbonding ids, each uniquely identifing an unbonding of this validator
+	UnbondingIds []string `protobuf:"varint,13,rep,packed,name=unbonding_ids,json=unbondingIds,proto3" json:"unbonding_ids,omitempty"`
+}
+
+type Description struct {
+	// moniker defines a human-readable name for the validator.
+	Moniker string `protobuf:"bytes,1,opt,name=moniker,proto3" json:"moniker,omitempty"`
+	// identity defines an optional identity signature (ex. UPort or Keybase).
+	Identity string `protobuf:"bytes,2,opt,name=identity,proto3" json:"identity,omitempty"`
+	// website defines an optional website link.
+	Website string `protobuf:"bytes,3,opt,name=website,proto3" json:"website,omitempty"`
+	// security_contact defines an optional email for security contact.
+	SecurityContact string `protobuf:"bytes,4,opt,name=security_contact,json=securityContact,proto3" json:"security_contact,omitempty"`
+	// details define other optional details.
+	Details string `protobuf:"bytes,5,opt,name=details,proto3" json:"details,omitempty"`
+}
+
+type Commission struct {
+	// commission_rates defines the initial commission rates to be used for creating a validator.
+	CommissionRates `protobuf:"bytes,1,opt,name=commission_rates,json=commissionRates,proto3,embedded=commission_rates" json:"commission_rates"`
+	// update_time is the last time the commission rate was changed.
+	UpdateTime time.Time `protobuf:"bytes,2,opt,name=update_time,json=updateTime,proto3,stdtime" json:"update_time"`
+}
+
+type CommissionRates struct {
+	// rate is the commission rate charged to delegators, as a fraction.
+	Rate math.LegacyDec `protobuf:"bytes,1,opt,name=rate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"rate"`
+	// max_rate defines the maximum commission rate which validator can ever charge, as a fraction.
+	MaxRate math.LegacyDec `protobuf:"bytes,2,opt,name=max_rate,json=maxRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_rate"`
+	// max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
+	MaxChangeRate math.LegacyDec `protobuf:"bytes,3,opt,name=max_change_rate,json=maxChangeRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_change_rate"`
 }
 
 // HELPERS FOR TESTING AGAINST THE CHAIN
