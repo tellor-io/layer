@@ -17,8 +17,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const maxValidators = 100
-
 type ProposalHandler struct {
 	logger        log.Logger
 	valStore      baseapp.ValidatorStore // to get the current validators' pubkeys
@@ -65,14 +63,19 @@ func NewProposalHandler(logger log.Logger, valStore baseapp.ValidatorStore, appC
 }
 
 func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
-	// Verify number of votes doesn't exceed bonded validators
-	if len(req.LocalLastCommit.Votes) > maxValidators {
+	maxValidators, err := h.GetMaxValidators(ctx)
+	if err != nil {
+		h.logger.Error("PrepareProposalHandler: failed to get max validators", "error", err)
+		return nil, err
+	}
+	// Verify number of votes doesn't exceed max validators
+	if len(req.LocalLastCommit.Votes) > int(maxValidators) {
 		h.logger.Error("PrepareProposalHandler: number of votes exceeds max validators",
 			"votes", len(req.LocalLastCommit.Votes),
 			"max_validators", maxValidators)
 		return nil, errors.New("number of votes exceeds max validators")
 	}
-	err := baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), req.LocalLastCommit)
+	err = baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), req.LocalLastCommit)
 	if err != nil {
 		h.logger.Info("PrepareProposalHandler: failed to validate vote extensions", "error", err, "votes", req.LocalLastCommit.Votes)
 		return nil, err
@@ -135,8 +138,13 @@ func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.Requ
 			h.logger.Error("ProcessProposalHandler: rejecting proposal, failed to validate vote extension", "error", err)
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
+		maxValidators, err := h.GetMaxValidators(ctx)
+		if err != nil {
+			h.logger.Error("ProcessProposalHandler: failed to get max validators", "error", err)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, err
+		}
 		// Verify number of votes doesn't exceed max validators
-		if len(injectedVoteExtTx.ExtendedCommitInfo.Votes) > maxValidators {
+		if len(injectedVoteExtTx.ExtendedCommitInfo.Votes) > int(maxValidators) {
 			h.logger.Error("ProcessProposalHandler: number of votes exceeds max validators", "votes", len(injectedVoteExtTx.ExtendedCommitInfo.Votes), "max_validators", maxValidators)
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
@@ -278,6 +286,15 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 		return emptyStringArray, emptyStringArray
 	}
 	return operatorAddresses, evmAddresses
+}
+
+func (h *ProposalHandler) GetMaxValidators(ctx sdk.Context) (uint32, error) {
+	valSet := h.stakingKeeper.GetValidatorSet()
+	maxValSet, err := valSet.MaxValidators(ctx)
+	if err != nil {
+		return 0, errors.New("failed to get max validators from valset")
+	}
+	return maxValSet, nil
 }
 
 func (h *ProposalHandler) CheckValsetSignaturesFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([]string, []int64, []string) {
