@@ -63,17 +63,17 @@ func NewProposalHandler(logger log.Logger, valStore baseapp.ValidatorStore, appC
 }
 
 func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
-	// Verify number of votes doesn't exceed bonded validators
-	bondedVals, err := h.stakingKeeper.GetBondedValidatorsByPower(ctx)
+	maxValidators, err := h.GetMaxValidators(ctx)
 	if err != nil {
-		h.logger.Error("PrepareProposalHandler: failed to get bonded validators", "error", err)
+		h.logger.Error("PrepareProposalHandler: failed to get max validators", "error", err)
 		return nil, err
 	}
-	if len(req.LocalLastCommit.Votes) > len(bondedVals) {
-		h.logger.Error("PrepareProposalHandler: number of votes exceeds bonded validators",
+	// Verify number of votes doesn't exceed max validators
+	if len(req.LocalLastCommit.Votes) > int(maxValidators) {
+		h.logger.Error("PrepareProposalHandler: number of votes exceeds max validators",
 			"votes", len(req.LocalLastCommit.Votes),
-			"bonded_validators", len(bondedVals))
-		return nil, errors.New("number of votes exceeds bonded validators")
+			"max_validators", maxValidators)
+		return nil, errors.New("number of votes exceeds max validators")
 	}
 	err = baseapp.ValidateVoteExtensions(ctx, h.valStore, req.Height, ctx.ChainID(), req.LocalLastCommit)
 	if err != nil {
@@ -138,14 +138,14 @@ func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.Requ
 			h.logger.Error("ProcessProposalHandler: rejecting proposal, failed to validate vote extension", "error", err)
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
-		// Verify number of votes doesn't exceed bonded validators
-		bondedVals, err := h.stakingKeeper.GetBondedValidatorsByPower(ctx)
+		maxValidators, err := h.GetMaxValidators(ctx)
 		if err != nil {
-			h.logger.Error("ProcessProposalHandler: failed to get bonded validators", "error", err)
-			return nil, err
+			h.logger.Error("ProcessProposalHandler: failed to get max validators", "error", err)
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, err
 		}
-		if len(injectedVoteExtTx.ExtendedCommitInfo.Votes) > len(bondedVals) {
-			h.logger.Error("ProcessProposalHandler: number of votes exceeds bonded validators", "votes", len(injectedVoteExtTx.ExtendedCommitInfo.Votes), "bonded_validators", len(bondedVals))
+		// Verify number of votes doesn't exceed max validators
+		if len(injectedVoteExtTx.ExtendedCommitInfo.Votes) > int(maxValidators) {
+			h.logger.Error("ProcessProposalHandler: number of votes exceeds max validators", "votes", len(injectedVoteExtTx.ExtendedCommitInfo.Votes), "max_validators", maxValidators)
 			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
 		}
 		operatorAddresses, evmAddresses := h.CheckInitialSignaturesFromLastCommit(ctx, injectedVoteExtTx.ExtendedCommitInfo)
@@ -286,6 +286,14 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 		return emptyStringArray, emptyStringArray
 	}
 	return operatorAddresses, evmAddresses
+}
+
+func (h *ProposalHandler) GetMaxValidators(ctx sdk.Context) (uint32, error) {
+	params, err := h.stakingKeeper.GetParams(ctx)
+	if err != nil {
+		return 0, errors.New("failed to get max validators from params")
+	}
+	return params.MaxValidators, nil
 }
 
 func (h *ProposalHandler) CheckValsetSignaturesFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([]string, []int64, []string) {

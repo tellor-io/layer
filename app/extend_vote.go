@@ -51,7 +51,7 @@ type BridgeKeeper interface {
 
 type StakingKeeper interface {
 	GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator stakingtypes.Validator, err error)
-	GetBondedValidatorsByPower(ctx context.Context) ([]stakingtypes.Validator, error)
+	GetParams(ctx context.Context) (stakingtypes.Params, error)
 }
 
 type VoteExtHandler struct {
