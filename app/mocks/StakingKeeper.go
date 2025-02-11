@@ -16,32 +16,6 @@ type StakingKeeper struct {
 	mock.Mock
 }
 
-// GetBondedValidatorsByPower provides a mock function with given fields: ctx
-func (_m *StakingKeeper) GetBondedValidatorsByPower(ctx context.Context) ([]types.Validator, error) {
-	ret := _m.Called(ctx)
-
-	var r0 []types.Validator
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context) ([]types.Validator, error)); ok {
-		return rf(ctx)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context) []types.Validator); ok {
-		r0 = rf(ctx)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]types.Validator)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
-		r1 = rf(ctx)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetParams provides a mock function with given fields: ctx
 func (_m *StakingKeeper) GetParams(ctx context.Context) (types.Params, error) {
 	ret := _m.Called(ctx)
