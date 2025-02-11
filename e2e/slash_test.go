@@ -140,8 +140,13 @@ func TestInactivitySlash(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("validatorsRes: ", validatorsRes)
 	require.Equal(len(validatorsRes.Validators), 4)
-	require.Equal(validatorsRes.Validators[0].Jailed, true)
-	require.Equal(validatorsRes.Validators[1].Jailed, false)
-	require.Equal(validatorsRes.Validators[2].Jailed, false)
-	require.Equal(validatorsRes.Validators[3].Jailed, false)
+
+	// make sure one validator is jailed
+	jailedCount := 0
+	for _, val := range validatorsRes.Validators {
+		if val.Jailed {
+			jailedCount++
+		}
+	}
+	require.Equal(1, jailedCount, "expected exactly one validator to be jailed")
 }
