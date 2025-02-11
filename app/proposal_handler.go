@@ -289,12 +289,11 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 }
 
 func (h *ProposalHandler) GetMaxValidators(ctx sdk.Context) (uint32, error) {
-	valSet := h.stakingKeeper.GetValidatorSet()
-	maxValSet, err := valSet.MaxValidators(ctx)
+	params, err := h.stakingKeeper.GetParams(ctx)
 	if err != nil {
-		return 0, errors.New("failed to get max validators from valset")
+		return 0, errors.New("failed to get max validators from params")
 	}
-	return maxValSet, nil
+	return params.MaxValidators, nil
 }
 
 func (h *ProposalHandler) CheckValsetSignaturesFromLastCommit(ctx sdk.Context, commit abci.ExtendedCommitInfo) ([]string, []int64, []string) {
