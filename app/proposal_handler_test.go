@@ -13,6 +13,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/golang/mock/gomock"
 	"github.com/spf13/viper"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/app/mocks"
@@ -266,6 +267,9 @@ func (s *ProposalHandlerTestSuite) TestProcessProposalHandler() {
 
 	pubKey, privKey, consAddr, _ := testutils.GenerateProposer(s.T())
 	sigA, sigB, evmAddr := testutils.GenerateSignatures(s.T())
+	sk.On("GetParams", mock.Anything).Return(stakingtypes.Params{
+		MaxValidators: 100,
+	}, nil)
 
 	ve := app.BridgeVoteExtension{
 		OracleAttestations: []app.OracleAttestation{
@@ -373,7 +377,6 @@ func (s *ProposalHandlerTestSuite) TestProcessProposalHandler() {
 	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
 		OperatorAddress: consAddr.String(),
 	}, nil)
-	sk.On("GetBondedValidatorsByPower", ctx).Return([]stakingtypes.Validator{{OperatorAddress: consAddr.String()}}, nil)
 	res, err := p.ProcessProposalHandler(ctx, &req)
 	require.NoError(err)
 	require.NotNil(res)
