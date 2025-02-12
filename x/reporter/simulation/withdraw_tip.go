@@ -23,8 +23,6 @@ func SimulateMsgWithdrawTip(
 			SelectorAddress: simAccount.Address.String(),
 		}
 
-		// TODO: Handling the WithdrawTip simulation
-
 		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "WithdrawTip simulation not implemented"), nil, nil
 	}
 }

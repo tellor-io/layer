@@ -23,8 +23,6 @@ func SimulateMsgSubmitValue(
 			Creator: simAccount.Address.String(),
 		}
 
-		// TODO: Handling the SubmitValue simulation
-
 		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "SubmitValue simulation not implemented"), nil, nil
 	}
 }

@@ -23,16 +23,14 @@ var (
 )
 
 const (
-	opWeightMsgCreateReporter = "op_weight_msg_create_reporter"
-	// TODO: Determine the simulation weight value
+	opWeightMsgCreateReporter          = "op_weight_msg_create_reporter"
 	defaultWeightMsgCreateReporter int = 100
 
 	opWeightMsgSelectReporter = "op_weight_msg_select_reporter"
 
 	defaultWeightMsgSelectReporter int = 100
 
-	opWeightMsgWithdrawTip = "op_weight_msg_withdraw_tip"
-	// TODO: Determine the simulation weight value
+	opWeightMsgWithdrawTip          = "op_weight_msg_withdraw_tip"
 	defaultWeightMsgWithdrawTip int = 100
 
 	// this line is used by starport scaffolding # simapp/module/const

@@ -24,8 +24,7 @@ var (
 )
 
 const (
-	opWeightMsgRegisterSpec = "op_weight_msg_register_spec"
-	// TODO: Determine the simulation weight value
+	opWeightMsgRegisterSpec          = "op_weight_msg_register_spec"
 	defaultWeightMsgRegisterSpec int = 100
 
 	// this line is used by starport scaffolding # simapp/module/const

@@ -23,8 +23,6 @@ func SimulateMsgRegisterSpec(
 			Registrar: simAccount.Address.String(),
 		}
 
-		// TODO: Handling the RegisterSpec simulation
-
 		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "RegisterSpec simulation not implemented"), nil, nil
 	}
 }

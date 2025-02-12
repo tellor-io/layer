@@ -25,15 +25,12 @@ var (
 
 const (
 	opWeightMsgProposeDispute = "op_weight_msg_propose_dispute"
-	// TODO: Determine the simulation weight value
 	defaultWeightMsgProposeDispute int = 100
 
 	opWeightMsgAddFeeToDispute = "op_weight_msg_add_fee_to_dispute"
-	// TODO: Determine the simulation weight value
 	defaultWeightMsgAddFeeToDispute int = 100
 
 	opWeightMsgVote = "op_weight_msg_vote"
-	// TODO: Determine the simulation weight value
 	defaultWeightMsgVote int = 100
 
 	// this line is used by starport scaffolding # simapp/module/const
