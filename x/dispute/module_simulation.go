@@ -24,13 +24,13 @@ var (
 )
 
 const (
-	opWeightMsgProposeDispute = "op_weight_msg_propose_dispute"
+	opWeightMsgProposeDispute          = "op_weight_msg_propose_dispute"
 	defaultWeightMsgProposeDispute int = 100
 
-	opWeightMsgAddFeeToDispute = "op_weight_msg_add_fee_to_dispute"
+	opWeightMsgAddFeeToDispute          = "op_weight_msg_add_fee_to_dispute"
 	defaultWeightMsgAddFeeToDispute int = 100
 
-	opWeightMsgVote = "op_weight_msg_vote"
+	opWeightMsgVote          = "op_weight_msg_vote"
 	defaultWeightMsgVote int = 100
 
 	// this line is used by starport scaffolding # simapp/module/const
