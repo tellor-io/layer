@@ -46,6 +46,32 @@ func (_m *StakingKeeper) Delegate(ctx context.Context, delAddr types.AccAddress,
 	return r0, r1
 }
 
+// GetAllDelegatorDelegations provides a mock function with given fields: ctx, delegator
+func (_m *StakingKeeper) GetAllDelegatorDelegations(ctx context.Context, delegator types.AccAddress) ([]stakingtypes.Delegation, error) {
+	ret := _m.Called(ctx, delegator)
+
+	var r0 []stakingtypes.Delegation
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) ([]stakingtypes.Delegation, error)); ok {
+		return rf(ctx, delegator)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) []stakingtypes.Delegation); ok {
+		r0 = rf(ctx, delegator)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]stakingtypes.Delegation)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, types.AccAddress) error); ok {
+		r1 = rf(ctx, delegator)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetDelegation provides a mock function with given fields: ctx, delAddr, valAddr
 func (_m *StakingKeeper) GetDelegation(ctx context.Context, delAddr types.AccAddress, valAddr types.ValAddress) (stakingtypes.Delegation, error) {
 	ret := _m.Called(ctx, delAddr, valAddr)
