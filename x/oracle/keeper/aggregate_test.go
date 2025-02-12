@@ -61,6 +61,7 @@ func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Tim
 	rep1 = sample.AccAddressBytes()
 	rep2 = sample.AccAddressBytes()
 	queryId = []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0")
+	queryData := []byte("0xabcd")
 
 	report := &types.Aggregate{
 		QueryId:           queryId,
@@ -73,7 +74,7 @@ func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Tim
 
 	s.ctx = s.ctx.WithBlockTime(timestamp)
 	s.ctx = s.ctx.WithBlockHeight(10)
-	err = s.oracleKeeper.SetAggregate(s.ctx, report)
+	err = s.oracleKeeper.SetAggregate(s.ctx, report, queryData)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
@@ -164,6 +165,7 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 
 func (s *KeeperTestSuite) TestSetAggregate() {
 	queryId := []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0")
+	queryData := []byte("0xabcd")
 	err := s.oracleKeeper.Nonces.Set(s.ctx, queryId, 0)
 	s.NoError(err)
 	reporter := sample.AccAddressBytes()
@@ -178,7 +180,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 		Flagged:           false,
 	}
 
-	err = s.oracleKeeper.SetAggregate(s.ctx, report)
+	err = s.oracleKeeper.SetAggregate(s.ctx, report, queryData)
 	s.NoError(err)
 
 	res, err := s.oracleKeeper.Aggregates.Get(s.ctx, collections.Join(queryId, uint64(timestamp.UnixMilli())))
