@@ -41,16 +41,14 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	}
 
 	tipper := sdk.MustAccAddressFromBech32(msg.Tipper)
-
-	if msg.Amount.Amount.LT(types.DefaultMinTipAmount) {
-		return nil, types.ErrNotEnoughTip
-	} else if msg.Amount.Amount.GT(types.DefaultMaxTipAmount) {
-		return nil, types.ErrTipExceedsMax
-	}
-
-	tip, err := k.keeper.transfer(ctx, tipper, msg.Amount)
+	params, err := k.keeper.GetParams(ctx)
 	if err != nil {
 		return nil, err
+	}
+	if msg.Amount.Amount.LT(params.MinTipAmount) {
+		return nil, types.ErrNotEnoughTip
+	} else if msg.Amount.Amount.GT(params.MaxTipAmount) {
+		return nil, types.ErrTipExceedsMax
 	}
 
 	// get query id bytes hash from query data
@@ -70,6 +68,17 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 
 		query.Amount = math.ZeroInt()
 		query.Expiration = uint64(ctx.BlockHeight()) + query.RegistrySpecBlockWindow
+	}
+
+	// if an additional tip exceeds max tip, return an error
+	if query.Amount.Add(msg.Amount.Amount).GT(types.DefaultMaxTipAmount) {
+		return nil, types.ErrTipExceedsMax
+	}
+
+	// transfer the tip amount to the module account after burning 2% of the tip
+	tip, err := k.keeper.transfer(ctx, tipper, msg.Amount)
+	if err != nil {
+		return nil, err
 	}
 
 	query.Amount = query.Amount.Add(tip.Amount)
