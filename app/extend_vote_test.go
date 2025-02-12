@@ -686,9 +686,9 @@ func (s *VoteExtensionTestSuite) TestEncodeAndSignMessage() {
 		{
 			name:              "Valid checkpoint",
 			checkpointString:  "0123456789abcdef",
-			mockSignature:     []byte("mocksignature"),
+			mockSignature:     []byte("signedMsg"),
 			mockError:         nil,
-			expectedSignature: []byte("mocksignature"),
+			expectedSignature: []byte("signedMsg"),
 			expectedError:     "",
 		},
 		{
