@@ -942,7 +942,6 @@ func New(
 
 	// RegisterUpgradeHandlers is used for registering any on-chain upgrades.
 	// Make sure it's called after `app.ModuleManager` and `app.configurator` are set.
-	// app.RegisterUpgradeHandlers()
 	app.setupUpgradeHandlers()
 	app.setupUpgradeStoreLoaders()
 
@@ -1046,29 +1045,6 @@ func (app *App) preBlocker(ph *ProposalHandler) func(ctx sdk.Context, _ *abci.Re
 		}
 
 		return res, err
-	}
-}
-
-func (app *App) RegisterUpgradeHandlers() {
-	const UpgradeName = "v2.0.1"
-
-	app.UpgradeKeeper.SetUpgradeHandler(
-		UpgradeName,
-		func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			return app.ModuleManager().RunMigrations(ctx, app.Configurator(), fromVM)
-		},
-	)
-
-	upgradeInfo, err := app.UpgradeKeeper.ReadUpgradeInfoFromDisk()
-	if err != nil {
-		panic(err)
-	}
-
-	if upgradeInfo.Name == UpgradeName && !app.UpgradeKeeper.IsSkipHeight(upgradeInfo.Height) {
-		storeUpgrades := storetypes.StoreUpgrades{}
-
-		// configure store loader that checks if version == upgradeHeight and applies store upgrades
-		app.SetStoreLoader(upgradetypes.UpgradeStoreLoader(upgradeInfo.Height, &storeUpgrades))
 	}
 }
 
