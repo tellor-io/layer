@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/reporter/types"
@@ -165,6 +166,7 @@ func TestAddAmountToStake(t *testing.T) {
 	sk.On("ValidatorsPowerStoreIterator", ctx).Return(iterator, nil)
 	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
 	sk.On("Delegate", ctx, acc, amt, stakingtypes.Bonded, validator, false).Return(math.LegacyZeroDec(), nil)
+	sk.On("IterateDelegatorDelegations", ctx, acc, mock.Anything).Return(nil)
 
 	err = k.AddAmountToStake(ctx, acc, amt)
 	require.NoError(t, err)

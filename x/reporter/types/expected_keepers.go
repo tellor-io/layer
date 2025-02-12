@@ -33,6 +33,7 @@ type StakingKeeper interface {
 	GetValidatorSet() stakingtypes.ValidatorSet
 	IterateDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress, cb func(delegation stakingtypes.Delegation) (stop bool)) error
 	IterateDelegatorUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress, cb func(ubd stakingtypes.UnbondingDelegation) (stop bool)) error
+	GetAllDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress) ([]stakingtypes.Delegation, error)
 	// Methods imported from account should be defined here
 }
 

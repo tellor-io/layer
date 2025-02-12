@@ -83,7 +83,7 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 		if err == nil {
 			// Voter info exists for this past dispute
 			addrReporterPower = addrReporterPower.Add(pastVoterInfo.ReporterPower)
-			userTips, err := k.GetUserTotalTips(ctx, addr, pastId)
+			userTips, err := k.GetUserTotalTips(ctx, addr, dispute.BlockNumber)
 			if err != nil {
 				return math.Int{}, err
 			}

@@ -65,10 +65,11 @@ func TestMsgWithdrawTokens(t *testing.T) {
 	}
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(10*1e6), nil)
 	// ok.On("SetAggregate", ctx, &aggregate).Return(nil)
-	agg, err := k.CreateWithdrawalAggregate(ctx, amount, creatorAddr, []byte(recipientAddr), 1)
+	agg, queryData, err := k.CreateWithdrawalAggregate(ctx, amount, creatorAddr, []byte(recipientAddr), 1)
 	require.NoError(t, err)
 	require.NotNil(t, agg)
-	ok.On("SetAggregate", ctx, agg).Return(nil)
+	require.NotNil(t, queryData)
+	ok.On("SetAggregate", ctx, agg, queryData).Return(nil)
 
 	response, err = msgServer.WithdrawTokens(ctx, &types.MsgWithdrawTokens{
 		Creator:   creatorAddr.String(),

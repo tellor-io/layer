@@ -43,7 +43,7 @@ type OracleKeeper interface {
 	GetTimestampBefore(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetTimestampAfter(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetAggregatedReportsByHeight(ctx context.Context, height uint64) []oracletypes.Aggregate
-	SetAggregate(ctx context.Context, report *oracletypes.Aggregate) error
+	SetAggregate(ctx context.Context, report *oracletypes.Aggregate, queryData []byte) error
 }
 
 type ReporterKeeper interface {

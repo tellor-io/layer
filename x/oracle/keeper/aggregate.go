@@ -67,7 +67,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			return err
 		}
 
-		aggregateReport, isCyclelist, err := k.AggregateReport(ctx, query.Id)
+		aggregateReport, isCyclelist, err := k.AggregateReport(ctx, query.Id, query.QueryData)
 		if err != nil {
 			return err
 		}
@@ -126,7 +126,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 }
 
 // SetAggregate increments the queryId's report index plus sets the timestamp and blockHeight and stores the aggregate report
-func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error {
+func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, queryData []byte) error {
 	nonce, err := k.Nonces.Get(ctx, report.QueryId)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
@@ -146,6 +146,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 		sdk.NewEvent(
 			"aggregate_report",
 			sdk.NewAttribute("query_id", hex.EncodeToString(report.QueryId)),
+			sdk.NewAttribute("query_data", hex.EncodeToString(queryData)),
 			sdk.NewAttribute("value", report.AggregateValue),
 			sdk.NewAttribute("micro_report_height", fmt.Sprintf("%d", report.MicroHeight)),
 		),
@@ -153,7 +154,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate) error
 	return k.Aggregates.Set(ctx, collections.Join(report.QueryId, currentTimestamp), *report)
 }
 
-func (k Keeper) AggregateReport(ctx context.Context, id uint64) (types.Aggregate, bool, error) {
+func (k Keeper) AggregateReport(ctx context.Context, id uint64, queryData []byte) (types.Aggregate, bool, error) {
 	median, err := k.AggregateValue.Get(ctx, id)
 	if err != nil {
 		return types.Aggregate{}, false, err // return nil and log error ?
@@ -177,7 +178,7 @@ func (k Keeper) AggregateReport(ctx context.Context, id uint64) (types.Aggregate
 		MicroHeight:       microReport.BlockNumber,
 		MetaId:            id,
 	}
-	err = k.SetAggregate(ctx, aggregateReport)
+	err = k.SetAggregate(ctx, aggregateReport, queryData)
 	if err != nil {
 		return types.Aggregate{}, false, err
 	}
