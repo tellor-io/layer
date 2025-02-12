@@ -49,11 +49,11 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 		return nil, err
 	}
 	if params.MinLoya.GT(bondedTokens) {
-		return nil, errors.New("address does not have min tokens required to be a reporter with a BONDED validator")
+		return nil, errors.New("address does not have min tokens required to be a reporter staked with a BONDED validator")
 	}
 	// the min requirement chosen by reporter has gte the min requirement
 	if msg.MinTokensRequired.LT(params.MinLoya) {
-		return nil, errors.New("reporters chosen min to join must be gte the min requirement")
+		return nil, errors.New("reporters chosen min tokens for selectors to join must be gte the min requirement")
 	}
 	// reporter can't be previously a selector or a reporter
 	alreadyExists, err := k.Keeper.Selectors.Has(goCtx, addr)
@@ -145,7 +145,7 @@ func (k msgServer) SelectReporter(goCtx context.Context, msg *types.MsgSelectRep
 	}
 	// check if selector meets reporters min requirement
 	if reporter.MinTokensRequired.GT(bondedTokens) {
-		return nil, fmt.Errorf("reporter's min requirement %s not met by selector", reporter.MinTokensRequired.String())
+		return nil, fmt.Errorf("reporter's min requirement %s not met by selector. Must stake %s more to select to this reporter", reporter.MinTokensRequired.String(), reporter.MinTokensRequired.Sub(bondedTokens).String())
 	}
 	// set the selector
 	if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), types.NewSelection(reporterAddr.Bytes(), uint64(count))); err != nil {
@@ -221,7 +221,7 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 		return nil, err
 	}
 	if !hasMin {
-		return nil, fmt.Errorf("reporter's min requirement %s not met by selector", reporter.MinTokensRequired.String())
+		return nil, fmt.Errorf("reporter's min requirement of %s not met by selector. Must stake enough to reach the minimum", reporter.MinTokensRequired.String())
 	}
 
 	// check if selector was part of a report before switching
