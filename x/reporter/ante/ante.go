@@ -3,6 +3,7 @@ package ante
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/types"
@@ -76,6 +77,13 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 	case *stakingtypes.MsgCreateValidator:
 		msgAmount = msg.Value.Amount
 	case *stakingtypes.MsgDelegate:
+		isAllowed, err := t.checkAmountOfDelegationsByAddressDoesNotExceedMax(ctx, msg)
+		if err != nil {
+			return err
+		}
+		if !isAllowed {
+			return types.ErrExceedsMaxDelegations
+		}
 		var valAddr sdk.ValAddress
 		if addr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err == nil {
 			valAddr = addr
@@ -92,6 +100,13 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 			return nil
 		}
 	case *stakingtypes.MsgBeginRedelegate:
+		isAllowed, err := t.checkAmountOfDelegationsByAddressDoesNotExceedMax(ctx, msg)
+		if err != nil {
+			return err
+		}
+		if !isAllowed {
+			return types.ErrExceedsMaxDelegations
+		}
 		// redelegate shouldn't increase the total stake, however if its coming from
 		// a validator that is not in the active set, it might be considered as an increase
 		// in the active stake. Hence, we need to handle it appropriately.
@@ -191,4 +206,50 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 		}
 	}
 	return nil
+}
+
+func (t TrackStakeChangesDecorator) checkAmountOfDelegationsByAddressDoesNotExceedMax(ctx sdk.Context, msg sdk.Msg) (bool, error) {
+	params, err := t.reporterKeeper.Params.Get(ctx)
+	if err != nil {
+		return false, err
+	}
+	switch msg := msg.(type) {
+	case *stakingtypes.MsgDelegate:
+		addr := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
+		delegations, err := t.stakingKeeper.GetAllDelegatorDelegations(ctx, addr)
+		if err != nil {
+			return false, err
+		}
+
+		// Check to ensure that the number of delegations does not exceed 10
+		if len(delegations) == int(params.MaxNumOfDelegations) {
+			return false, nil
+		}
+		return true, nil
+	case *stakingtypes.MsgBeginRedelegate:
+		addr := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
+		delegations, err := t.stakingKeeper.GetAllDelegatorDelegations(ctx, addr)
+		if err != nil {
+			return false, err
+		}
+
+		// Check to ensure that the number of delegations does not exceed 10
+		if len(delegations) == int(params.MaxNumOfDelegations) {
+			for i := 0; i < int(params.MaxNumOfDelegations); i++ {
+				if strings.EqualFold(delegations[i].ValidatorAddress, msg.ValidatorSrcAddress) {
+					fmt.Println("validator address matched")
+					fmt.Println(msg.Amount.Amount)
+					fmt.Println(delegations[i].Shares.TruncateInt())
+					if msg.Amount.Amount.Equal(delegations[i].Shares.TruncateInt()) {
+						return true, nil
+					} else {
+						return false, nil
+					}
+				}
+			}
+		}
+		return true, nil
+	default:
+		return true, nil
+	}
 }

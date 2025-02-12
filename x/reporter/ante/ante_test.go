@@ -74,6 +74,20 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 			err: nil,
 			setup: func() {
 				sk.On("GetValidator", ctx, valSrcAddr).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
+				sk.On("GetAllDelegatorDelegations", ctx, delAddr).Return([]stakingtypes.Delegation{}, nil).Once()
+			},
+		},
+		{
+			name: "Delegate. Already has 10 delegations",
+			msg: &stakingtypes.MsgDelegate{
+				DelegatorAddress: delAddr.String(),
+				ValidatorAddress: valSrcAddr.String(),
+				Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(1)},
+			},
+			err: types.ErrExceedsMaxDelegations,
+			setup: func() {
+				sk.On("GetValidator", ctx, valSrcAddr).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Once()
+				sk.On("GetAllDelegatorDelegations", ctx, delAddr).Return([]stakingtypes.Delegation{{}, {}, {}, {}, {}, {}, {}, {}, {}, {}}, nil).Once()
 			},
 		},
 		{
@@ -88,6 +102,37 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 			setup: func() {
 				sk.On("GetValidator", ctx, valSrcAddr).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Twice()
 				sk.On("GetValidator", ctx, valDstAddr).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Twice()
+				sk.On("GetAllDelegatorDelegations", ctx, delAddr).Return([]stakingtypes.Delegation{}, nil).Once()
+			},
+		},
+		{
+			name: "BeginRedelegate. With 10 validators. Using Whole amount",
+			msg: &stakingtypes.MsgBeginRedelegate{
+				DelegatorAddress:    delAddr.String(),
+				ValidatorSrcAddress: valSrcAddr.String(),
+				ValidatorDstAddress: valDstAddr.String(),
+				Amount:              sdk.Coin{Denom: "loya", Amount: math.NewInt(1)},
+			},
+			err: nil,
+			setup: func() {
+				sk.On("GetValidator", ctx, valSrcAddr).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Twice()
+				sk.On("GetValidator", ctx, valDstAddr).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Twice()
+				sk.On("GetAllDelegatorDelegations", ctx, delAddr).Return([]stakingtypes.Delegation{{ValidatorAddress: valSrcAddr.String(), Shares: math.LegacyNewDecFromInt(math.NewInt(1))}, {}, {}, {}, {}, {}, {}, {}, {}, {}}, nil).Once()
+			},
+		},
+		{
+			name: "BeginRedelegate. With 10 validators. Using Not Whole amount",
+			msg: &stakingtypes.MsgBeginRedelegate{
+				DelegatorAddress:    delAddr.String(),
+				ValidatorSrcAddress: valSrcAddr.String(),
+				ValidatorDstAddress: valDstAddr.String(),
+				Amount:              sdk.Coin{Denom: "loya", Amount: math.NewInt(100)},
+			},
+			err: types.ErrExceedsMaxDelegations,
+			setup: func() {
+				sk.On("GetValidator", ctx, valSrcAddr).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Twice()
+				sk.On("GetValidator", ctx, valDstAddr).Return(stakingtypes.Validator{Status: stakingtypes.Bonded}, nil).Twice()
+				sk.On("GetAllDelegatorDelegations", ctx, delAddr).Return([]stakingtypes.Delegation{{ValidatorAddress: valSrcAddr.String(), Shares: math.LegacyNewDecFromInt(math.NewInt(1))}, {}, {}, {}, {}, {}, {}, {}, {}, {}}, nil).Once()
 			},
 		},
 		{

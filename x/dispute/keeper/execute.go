@@ -189,7 +189,6 @@ func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.
 	totalFeesDec := math.LegacyNewDecFromInt(totalFees)
 	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
 	amtFixed12Dec := feeDec.Mul(bondDec).Mul(powerReductionDec).Quo(totalFeesDec)
-
 	amtFixed12 := amtFixed12Dec.TruncateInt()
 
 	amtFixed6Dec := amtFixed12Dec.Quo(powerReductionDec)
