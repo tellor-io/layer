@@ -41,7 +41,7 @@ func TestCreateReporter(t *testing.T) {
 	addr := sample.AccAddressBytes()
 	sk.On("IterateDelegatorDelegations", ctx, addr, mock.Anything).Return(nil)
 	_, err := ms.CreateReporter(ctx, &types.MsgCreateReporter{ReporterAddress: addr.String(), CommissionRate: types.DefaultMinCommissionRate, MinTokensRequired: types.DefaultMinLoya})
-	require.ErrorContains(t, err, "address does not have min tokens required to be a reporter with a BONDED validator")
+	require.ErrorContains(t, err, "address does not have min tokens required to be a reporter staked with a BONDED validator")
 
 	ctx = ctx.WithBlockHeight(1)
 	sk.On("IterateDelegatorDelegations", ctx, addr, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
@@ -148,7 +148,7 @@ func TestSwitchReporter(t *testing.T) {
 	require.NoError(t, k.Params.Set(ctx, types.Params{MaxSelectors: 1}))
 	sk.On("IterateDelegatorDelegations", ctx, selector, mock.Anything).Return(nil)
 	_, err = ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selector.String(), ReporterAddress: reporter2.String()})
-	require.ErrorContains(t, err, "reporter's min requirement 1000000 not met by selector")
+	require.ErrorContains(t, err, "reporter's min requirement of 1000000 not met by selector.")
 
 	ctx = ctx.WithBlockHeight(1)
 	sk.On("IterateDelegatorDelegations", ctx, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
