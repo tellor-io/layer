@@ -53,8 +53,16 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 
 // Validate validates the set of params
 func (p Params) Validate() error {
-	if p.MinStakeAmount.IsNil() {
-		return fmt.Errorf("min stake amount is nil")
+	if p.MinStakeAmount.IsNil() || p.MinStakeAmount.LTE(math.ZeroInt()) {
+		return fmt.Errorf("min stake amount must be greater than 0")
+	}
+
+	if p.MinTipAmount.IsNil() || p.MinTipAmount.LTE(math.ZeroInt()) {
+		return fmt.Errorf("min tip amount must be greater than 0")
+	}
+
+	if p.MaxTipAmount.IsNil() || p.MaxTipAmount.LTE(math.ZeroInt()) {
+		return fmt.Errorf("max tip amount must be greater than 0")
 	}
 
 	return nil

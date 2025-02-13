@@ -23,8 +23,6 @@ func SimulateMsgAddFeeToDispute(
 			Creator: simAccount.Address.String(),
 		}
 
-		// TODO: Handling the AddFeeToDispute simulation
-
 		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "AddFeeToDispute simulation not implemented"), nil, nil
 	}
 }

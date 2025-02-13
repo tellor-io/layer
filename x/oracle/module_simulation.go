@@ -24,12 +24,10 @@ var (
 )
 
 const (
-	opWeightMsgSubmitValue = "op_weight_msg_submit_value"
-	// TODO: Determine the simulation weight value
+	opWeightMsgSubmitValue          = "op_weight_msg_submit_value"
 	defaultWeightMsgSubmitValue int = 100
 
-	opWeightMsgTip = "op_weight_msg_tip"
-	// TODO: Determine the simulation weight value
+	opWeightMsgTip          = "op_weight_msg_tip"
 	defaultWeightMsgTip int = 100
 
 	// this line is used by starport scaffolding # simapp/module/const

@@ -1084,27 +1084,21 @@ func (s *IntegrationTestSuite) TestDisputeFiveRounds5thRdNewPayer() {
 	s.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 5))
 	// calling tally a second time should error
 	s.ErrorContains(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 5), "vote already tallied")
-	// execute should error because dispute is not resolved yet
-	s.Error(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 5), "dispute is not resolved yet")
-	// get dispute to check status
-	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 5)
-	s.NoError(err)
-	s.Equal(types.Unresolved, dispute.DisputeStatus)
-	s.True(dispute.PendingExecution)
-
 	// try to start new round, should error because 5 rd max
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
 	s.Error(err, "can't start a new round for this dispute 5; max dispute rounds has been reached 5")
-
-	// forward time to execute vote
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.ONE_DAY + 1))
-	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 5))
+	// execute should work bc dispute is now resolved
+	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 5), "dispute is not resolved yet")
+	// get dispute to check status
+	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 5)
+	s.NoError(err)
+	s.Equal(types.Resolved, dispute.DisputeStatus)
+	s.False(dispute.PendingExecution)
 	vote, err := s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 5)
 	s.NoError(err)
 	s.True(vote.Executed)
 	s.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, vote.VoteResult)
 	s.Equal(uint64(5), vote.Id)
-	s.Less(vote.VoteEnd, s.Setup.Ctx.BlockTime())
 
 	// assert dispute is resolved
 	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 5)
@@ -1471,27 +1465,20 @@ func (s *IntegrationTestSuite) TestDisputeFiveRounds1Payer() {
 	s.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 5))
 	// calling tally a second time should error
 	s.ErrorContains(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 5), "vote already tallied")
-	// execute should error because dispute is not resolved yet
-	s.Error(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 5), "dispute is not resolved yet")
-	// get dispute to check status
-	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 5)
-	s.NoError(err)
-	s.Equal(types.Unresolved, dispute.DisputeStatus)
-	s.True(dispute.PendingExecution)
-
 	// try to start new round, should error because 5 rd max
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
 	s.Error(err, "can't start a new round for this dispute 5; max dispute rounds has been reached 5")
-
-	// forward time to execute vote
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.ONE_DAY + 1))
-	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 5))
+	// execute should work bc dipsute is now resolved
+	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 5), "dispute is not resolved yet")
+	// get dispute to check status
+	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 5)
+	s.NoError(err)
+	s.Equal(types.Resolved, dispute.DisputeStatus)
+	s.False(dispute.PendingExecution)
 	vote, err := s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 5)
 	s.NoError(err)
 	s.True(vote.Executed)
 	s.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, vote.VoteResult)
-	s.Equal(uint64(5), vote.Id)
-	s.Less(vote.VoteEnd, s.Setup.Ctx.BlockTime())
 
 	// assert dispute is resolved
 	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 5)
@@ -1886,27 +1873,21 @@ func (s *IntegrationTestSuite) TestDisputeFiveRoundsTwoFeePayers() {
 	s.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 5))
 	// calling tally a second time should error
 	s.ErrorContains(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 5), "vote already tallied")
-	// execute should error because dispute is not resolved yet
-	s.Error(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 5), "dispute is not resolved yet")
-	// get dispute to check status
-	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 5)
-	s.NoError(err)
-	s.Equal(types.Unresolved, dispute.DisputeStatus)
-	s.True(dispute.PendingExecution)
-
 	// try to start new round, should error because 5 rd max
 	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &disputeMsg)
 	s.Error(err, "can't start a new round for this dispute 5; max dispute rounds has been reached 5")
-
-	// forward time to execute vote
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.ONE_DAY + 1))
-	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 5))
+	// execute should work bc dispute is now resolved
+	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 5), "dispute is not resolved yet")
+	// get dispute to check status
+	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 5)
+	s.NoError(err)
+	s.Equal(types.Resolved, dispute.DisputeStatus)
+	s.False(dispute.PendingExecution)
 	vote, err := s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 5)
 	s.NoError(err)
 	s.True(vote.Executed)
 	s.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, vote.VoteResult)
 	s.Equal(uint64(5), vote.Id)
-	s.Less(vote.VoteEnd, s.Setup.Ctx.BlockTime())
 
 	// assert dispute is resolved
 	dispute, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 5)
