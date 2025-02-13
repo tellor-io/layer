@@ -23,8 +23,6 @@ func SimulateMsgSelectReporter(
 			SelectorAddress: simAccount.Address.String(),
 		}
 
-		// TODO: Handling the ChangeReporter simulation
-
 		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "ChangeReporter simulation not implemented"), nil, nil
 	}
 }

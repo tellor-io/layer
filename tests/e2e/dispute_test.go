@@ -217,7 +217,6 @@ func (s *E2ETestSuite) TestDisputes() {
 	onePercent := balBeforeDispute.Mul(math.NewInt(1)).Quo(math.NewInt(100))
 	disputeFee := sdk.NewCoin(s.Setup.Denom, onePercent) // warning should be 1% of bonded tokens
 
-	// todo: is there a getter for this ?
 	// get microreport for dispute
 	report := oracletypes.MicroReport{
 		Reporter:    reporterAccount.String(),
@@ -302,7 +301,6 @@ func (s *E2ETestSuite) TestDisputes() {
 	require.Equal(freeFloatingBalanceAfter, freeFloatingBalanceBefore.Sub(disputeFee))
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	// todo: more balance checks at each step
 
 	//---------------------------------------------------------------------------
 	// Height 7 - direct reveal for cycle list again
@@ -1263,7 +1261,6 @@ func (s *E2ETestSuite) TestDisputes2() {
 	require.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 
-	// todo: is there a getter for this ?
 	// get microreport for dispute
 	report := oracletypes.MicroReport{
 		Reporter:    repsAccs[0].String(),

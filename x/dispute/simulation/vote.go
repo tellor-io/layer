@@ -23,8 +23,6 @@ func SimulateMsgVote(
 			Voter: simAccount.Address.String(),
 		}
 
-		// TODO: Handling the Vote simulation
-
 		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "Vote simulation not implemented"), nil, nil
 	}
 }

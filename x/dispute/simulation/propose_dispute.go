@@ -23,8 +23,6 @@ func SimulateMsgProposeDispute(
 			Creator: simAccount.Address.String(),
 		}
 
-		// TODO: Handling the ProposeDispute simulation
-
 		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "ProposeDispute simulation not implemented"), nil, nil
 	}
 }

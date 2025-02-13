@@ -419,7 +419,7 @@ func TestDispute(t *testing.T) {
 	}
 }
 
-// TODO: not sure how to fast forward time to expire dispute voting period
+// TODO: can we fast forward time to expire dispute voting period ?
 // -- maybe use alternate binary with shorter voting period ?
 // scenario in integration tests for now
 // func TestFiveRounder(t *testing.T) {
