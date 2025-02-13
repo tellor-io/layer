@@ -23,8 +23,6 @@ func SimulateMsgCreateReporter(
 			ReporterAddress: simAccount.Address.String(),
 		}
 
-		// TODO: Handling the CreateReporter simulation
-
 		return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "CreateReporter simulation not implemented"), nil, nil
 	}
 }

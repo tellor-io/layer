@@ -23,8 +23,6 @@ func SimulateMsgTip(
 			Tipper: simAccount.Address.String(),
 		}
 
-		// TODO: Handling the Tip simulation
-
 		return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "Tip simulation not implemented"), nil, nil
 	}
 }

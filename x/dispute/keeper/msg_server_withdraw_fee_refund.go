@@ -13,6 +13,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// WithdrawFeeRefund allows whoever paid the first round dispute fee to get refunded the fee if the
+// dispute does not get fully funded, or resolves to invalid or support.
+// If the dispute resolves to support, a first round fee payer also gets the disputed reporter's slashed tokens.
 func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdrawFeeRefund) (*types.MsgWithdrawFeeRefundResponse, error) {
 	// should be ok to be called by anyone
 	feePayer := sdk.MustAccAddressFromBech32(msg.PayerAddress)
@@ -30,11 +33,7 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 	} else {
 		firstRoundDisputeId = prevDisputes[0]
 	}
-	// get first round that to
-	// rd1Dispute, err := k.Disputes.Get(ctx, firstRoundDisputeId)
-	if err != nil {
-		return nil, err
-	}
+
 	// get dispute fee payer from rd 1
 	payerInfo, err := k.DisputeFeePayer.Get(ctx, collections.Join(firstRoundDisputeId, feePayer.Bytes()))
 	if err != nil {
