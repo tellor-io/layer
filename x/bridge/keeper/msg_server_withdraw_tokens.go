@@ -12,6 +12,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// Withdraw tokens from Layer to the recipient address through the token bridge contract.
 func (k msgServer) WithdrawTokens(goCtx context.Context, msg *types.MsgWithdrawTokens) (*types.MsgWithdrawTokensResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(goCtx)
 

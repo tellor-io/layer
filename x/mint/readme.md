@@ -6,8 +6,21 @@ This module enables the minting of time based rewards for reporters, validators,
 
 ## ADRs
 
-- adr1001 - distributions of base rewards
-- adr1002 - dual delgation
-- adr10003 - time based rewards eligibility
-- adr2001 - trb bridge structure
-- adr3001 - TellorMaster to bridge structure
+- [adr1001](https://github.com/tellor-io/Layer/blob/main/docs/adr/adr1001.md) - distributions of base rewards
+- [adr1002](https://github.com/tellor-io/Layer/blob/main/docs/adr/adr1002.md) - dual delgation
+- [adr10003](https://github.com/tellor-io/Layer/blob/main/docs/adr/adr1003.md) - time based rewards eligibility
+- [adr2001](https://github.com/tellor-io/Layer/blob/main/docs/adr/adr2001.md) - trb bridge structure
+- [adr3001](https://github.com/tellor-io/Layer/blob/main/docs/adr/adr3001.md) - TellorMaster to bridge structure
+
+## Tx
+
+### Init
+Start minting time based rewards through a governance proposal.
+
+## BeginBlocker
+### MintBlockProvision
+Mint the block provision for the current block.
+
+### SetPreviousBlockTime
+Sets the block time for the minter to read next block.
+

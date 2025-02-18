@@ -16,6 +16,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// Propose a dispute on a given microreport. 
 func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDispute) (*types.MsgProposeDisputeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

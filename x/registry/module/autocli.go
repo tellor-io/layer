@@ -25,23 +25,23 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "DecodeQuerydata",
-					Use:            "decode-querydata [query_data]",
+					Use:            "decode-querydata [query-data]",
 					Short:          "Decode the query data into human readable format",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_data"}},
 				},
 
 				{
 					RpcMethod:      "GenerateQuerydata",
-					Use:            "generate-querydata [querytype] [parameters]",
+					Use:            "generate-querydata [query-type] [parameters]",
 					Short:          "Encode query data hex given query type and parameters",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "querytype"}, {ProtoField: "parameters"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_type"}, {ProtoField: "parameters"}},
 				},
 
 				{
 					RpcMethod:      "DecodeValue",
 					Use:            "decode-value [query-type] [value]",
 					Short:          "Decode the value given query type",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "queryType"}, {ProtoField: "value"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_type"}, {ProtoField: "value"}},
 				},
 
 				// this line is used by ignite scaffolding # autocli/query
@@ -59,6 +59,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:            "register-spec [query-type] [spec]",
 					Short:          "Broadcast message RegisterSpec",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_type"}, {ProtoField: "spec"}},
+				},
+				{
+					RpcMethod: "RemoveDataSpecs",
+					Skip:      true, // skipped because authority gated
 				},
 			},
 		},

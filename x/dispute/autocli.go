@@ -29,6 +29,24 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Shows the tally for a dispute",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dispute_id"}},
 				},
+				{
+					RpcMethod:      "Disputes",
+					Use:            "disputes",
+					Short:          "Shows all disputes",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+				{
+					RpcMethod:      "OpenDisputes",
+					Use:            "open-disputes",
+					Short:          "Shows all open disputes",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+				{
+					RpcMethod:      "TeamAddress",
+					Use:            "team-address",
+					Short:          "Shows the team address",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{
@@ -68,6 +86,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:            "claim-reward [dispute_id]",
 					Short:          "Execute the ClaimReward RPC method",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dispute_id"}},
+				},
+				{
+					RpcMethod:      "AddEvidence",
+					Use:            "add-evidence [dispute-id] [reports]",
+					Short:          "Execute the AddEvidence RPC method",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dispute_id"}, {ProtoField: "reports"}},
 				},
 			},
 		},

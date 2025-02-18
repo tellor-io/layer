@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Contribute to the first round payment of a proposed dispute if the proposer did not pay the full fee.
 func (k msgServer) AddFeeToDispute(goCtx context.Context,
 	msg *types.MsgAddFeeToDispute,
 ) (*types.MsgAddFeeToDisputeResponse, error) {
