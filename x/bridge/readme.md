@@ -19,23 +19,16 @@ This module enables Layer to communicate with user chains. It enables both token
 Claim deposits made by the Ethereum token bridge contract into Layer.  
 - `./layerd tx bridge claim-deposits [creator] [deposit-ids] [timestamps]`
 
-- `./layerd tx bridge claim-deposits tellor1p88ju0yhutmf5p2u798xv3umaa7ujw7gch9r4f 27 1713024000`
-
 ### RequestAttestations
 Request attestations for a snapshot of an aggregate report.  
 - `./layerd tx bridge request-attestations [creator] [query-id] [timestamp]`
-
-- `./layerd tx bridge request-attestations tellor1p88ju0yhutmf5p2u798xv3umaa7ujw7gch9r4f 3375a5d1a012c725a51f641a86a09e37627ec21ec907401e9b95f7d1ecd22af6 1713024000`
 
 ### WithdrawTokens
 Withdraw tokens from Layer to the recipient address through the token bridge contract.  
 - `./layerd tx bridge withdraw-tokens [creator] [recipient] [amount]`
 
-- `./layerd tx bridge withdraw-tokens tellor1p88ju0yhutmf5p2u798xv3umaa7ujw7gch9r4f AE7CFe4CF579Ec060f95d951bD5260A5A8c0dcDC 1000000loya --fees 10loya --chain-id layertest-3`
-
 ### UpdateSnapshotLimit
 Governance transaction to update the number of attestation requests per block.  
-- `./layerd tx bridge update-snapshot-limit [limit]`
 
 ## Queries
 
@@ -85,3 +78,17 @@ Creates new report snapshots for all reports aggregated at the current height.
 ## Mocks
 
 `make mock-gen-bridge`
+
+## Example Commands
+
+```sh
+./layerd tx bridge claim-deposits tellor1p88ju0yhutmf5p2u798xv3umaa7ujw7gch9r4f 27 1713024000
+```
+
+```sh
+./layerd tx bridge request-attestations tellor1p88ju0yhutmf5p2u798xv3umaa7ujw7gch9r4f 3375a5d1a012c725a51f641a86a09e37627ec21ec907401e9b95f7d1ecd22af6 1713024000
+```
+
+```sh
+./layerd tx bridge withdraw-tokens tellor1p88ju0yhutmf5p2u798xv3umaa7ujw7gch9r4f AE7CFe4CF579Ec060f95d951bD5260A5A8c0dcDC 1000000loya --fees 10loya --chain-id layertest-3
+```

@@ -51,22 +51,37 @@ Allows selectors to directly withdraw reporting rewards and stake them with a BO
 - `./layerd tx reporter withdraw-tip [selector-address] [validator-address]`
 
 ### UpdateParams
+Update module parameters through governance. Params include the minimum comission rate for reporters, the minimum loya required to be a reporter, the maximum number of selectors for a reporter, and the maximum number of validators a user can delegate too.
 
 ## Getters
 
 ### Params
 
+- `./layerd query reporter params`
+
 ### Reporters
+
+- `./layerd query reporter reporters`
 
 ### SelectorReporter
 
+- `./layerd query reporter selector-reporter [selector-address]`
+
 ### AllowedAmount
+
+- `./layerd query reporter allowed-amount [reporter-address]`
 
 ### NumOfSelectorsByReporter
 
+- `./layerd query reporter num-of-selectors-by-reporter [reporter-address]`
+
 ### SpaceAvailableByReporter
 
+- `./layerd query reporter space-available-by-reporter [reporter-address]`
+
 ### AvailableTips
+
+- `./layerd query reporter available-tips [selector-address]`
 
 ## Mocks
 
