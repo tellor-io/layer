@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Claim voting rewards after a dispute is resolved. 2.5% of the total dispute fee is rewarded to voters.
 func (k msgServer) ClaimReward(ctx context.Context, msg *types.MsgClaimReward) (*types.MsgClaimRewardResponse, error) {
 	callerAcc, err := sdk.AccAddressFromBech32(msg.CallerAddress)
 	if err != nil {

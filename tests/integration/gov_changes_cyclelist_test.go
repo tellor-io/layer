@@ -1,4 +1,4 @@
-package e2e_test
+package integration_test
 
 import (
 	"encoding/hex"
@@ -17,7 +17,7 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-func (s *E2ETestSuite) TestGovernanceChangesCycleList() {
+func (s *IntegrationTestSuite) TestGovernanceChangesCycleList() {
 	require := s.Require()
 
 	govMsgServer := govkeeper.NewMsgServerImpl(s.Setup.Govkeeper)

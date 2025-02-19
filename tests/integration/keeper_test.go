@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/big"
 	"strconv"
 	"testing"
@@ -162,6 +163,24 @@ func (s *IntegrationTestSuite) createValidatorsbypowers(powers []uint64) ([]sdk.
 	s.NoError(err)
 
 	return testAddrs, valAddrs, privKeys
+}
+
+func JailValidator(ctx sdk.Context, consensusAddress sdk.ConsAddress, validatorAddress sdk.ValAddress, k stakingkeeper.Keeper) error {
+	validator, err := k.GetValidator(ctx, validatorAddress)
+	if err != nil {
+		return fmt.Errorf("validator %s not found", validatorAddress)
+	}
+
+	if validator.Jailed {
+		return fmt.Errorf("validator %s is already jailed", validatorAddress)
+	}
+
+	err = k.Jail(ctx, consensusAddress)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func TestKeeperTestSuite(t *testing.T) {

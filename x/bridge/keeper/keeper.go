@@ -964,7 +964,6 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 		k.Logger(ctx).Info("Error getting attestation requests by height", "error", err)
 		return err
 	}
-	// make this a governance param
 	snapshotLimit, err := k.SnapshotLimit.Get(ctx)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting snapshot limit", "error", err)
