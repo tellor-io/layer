@@ -98,6 +98,7 @@ func TestMsgRequestAttestations(t *testing.T) {
 
 	ok.On("GetTimestampBefore", ctx, queryId, timestampTime).Return(timestampTime.Add(-1*time.Hour), nil)
 	ok.On("GetTimestampAfter", ctx, queryId, timestampTime).Return(timestampTime.Add(1*time.Hour), nil)
+	ok.On("GetCurrentAggregateReport", ctx, queryId).Return(&aggReport, timestampTime, nil)
 
 	response, err = msgServer.RequestAttestations(ctx, &types.MsgRequestAttestations{
 		Creator:   creatorAddr.String(),
