@@ -1125,6 +1125,12 @@ func TestCreateSnapshot(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	// set last consensus timestamp
+	err = k.AttestSnapshotDataMap.Set(ctx, queryId, types.AttestationSnapshotData{
+		LastConsensusTimestamp: 100,
+	})
+	require.NoError(t, err)
+
 	err = k.CreateSnapshot(ctx, queryId, timestamp, false)
 	require.NoError(t, err)
 
