@@ -13,8 +13,8 @@ import (
 
 	collections "cosmossdk.io/collections"
 	math "cosmossdk.io/math"
-
 	storetypes "cosmossdk.io/store/types"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

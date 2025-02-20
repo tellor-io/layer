@@ -3,10 +3,11 @@ package oracle
 import (
 	"context"
 
-	// "github.com/tellor-io/layer/utils"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	// "github.com/tellor-io/layer/utils"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 func EndBlocker(ctx context.Context, k keeper.Keeper) error {
