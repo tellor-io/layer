@@ -104,6 +104,7 @@ func (s *IntegrationTestSuite) TestGetCurrentTip() {
 
 // test tipping, reporting and allocation of rewards
 func (s *IntegrationTestSuite) TestTippingReporting() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	ctx := s.Setup.Ctx
 	ctx = ctx.WithBlockTime(time.Now())
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
