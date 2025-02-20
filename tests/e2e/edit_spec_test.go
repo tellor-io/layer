@@ -14,6 +14,7 @@ import (
 	collections "cosmossdk.io/collections"
 	math "cosmossdk.io/math"
 
+	storetypes "cosmossdk.io/store/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -33,6 +34,7 @@ func (s *E2ETestSuite) TestEditSpec() {
 	require.NotNil(reporterMsgServer)
 	govMsgServer := govkeeper.NewMsgServerImpl(s.Setup.Govkeeper)
 	require.NotNil(govMsgServer)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
 	//---------------------------------------------------------------------------
 	// Height 0 - create 1 validator and 1 reporter

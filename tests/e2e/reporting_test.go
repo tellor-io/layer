@@ -14,6 +14,7 @@ import (
 
 	"cosmossdk.io/math"
 
+	storetypes "cosmossdk.io/store/types"
 	secp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -515,6 +516,7 @@ func (s *E2ETestSuite) TestAggregateOverMultipleBlocks() {
 	require.NotNil(msgServerDispute)
 	msgServerStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 	require.NotNil(msgServerStaking)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
 	//---------------------------------------------------------------------------
 	// Height 0 - vicky becomes a validator

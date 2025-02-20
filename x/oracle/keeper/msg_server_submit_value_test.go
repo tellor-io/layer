@@ -14,6 +14,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -61,7 +62,9 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 		QueryData: qDataBz,
 		Value:     value,
 	}
+	s.ctx = s.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	ctx := s.ctx.WithBlockHeight(18)
+
 	rk.On("ReporterStake", ctx, addr, queryId).Return(math.NewInt(1_000_000), errors.New("error")).Once()
 	_, err = s.msgServer.SubmitValue(ctx, &submitreq)
 	require.Error(err)
@@ -116,6 +119,7 @@ func (s *KeeperTestSuite) TestSubmitWithNoCreator() {
 		Value:     value,
 	}
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	s.ctx = s.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "invalid creator address")
@@ -131,6 +135,7 @@ func (s *KeeperTestSuite) TestSubmitWithNoQueryData() {
 		Value:   value,
 	}
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+	s.ctx = s.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
 	_, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	s.ErrorContains(err, "query data cannot be empty")
@@ -142,6 +147,7 @@ func (s *KeeperTestSuite) TestSubmitWithNoValue() {
 	addr := sample.AccAddressBytes()
 	qDataBz, err := utils.QueryBytesFromString(qData)
 	require.NoError(err)
+	s.ctx = s.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
 	submitreq := types.MsgSubmitValue{
 		Creator:   addr.String(),
@@ -158,6 +164,7 @@ func (s *KeeperTestSuite) TestSubmitValueDirectReveal() {
 	k := s.oracleKeeper
 	repk := s.reporterKeeper
 	regk := s.registryKeeper
+	s.ctx = s.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	ctx := s.ctx
 	err := k.QueryDataLimit.Set(s.ctx, types.QueryDataLimit{Limit: types.InitialQueryDataLimit()})
 	require.NoError(err)
@@ -204,6 +211,7 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	require := s.Require()
 	k := s.oracleKeeper
 	regK := s.registryKeeper
+	s.ctx = s.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	ctx := s.ctx
 	// returns data spec with report block window set to 3
 	regK.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil)

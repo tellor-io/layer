@@ -20,6 +20,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -207,6 +208,7 @@ func (s *IntegrationTestSuite) TestSmallTip() {
 }
 
 func (s *IntegrationTestSuite) TestMedianReports() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	ctx := s.Setup.Ctx
 	ctx = ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
