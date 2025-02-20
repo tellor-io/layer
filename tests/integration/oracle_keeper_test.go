@@ -553,6 +553,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 }
 
 func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	ctx := s.Setup.Ctx
 	repAccs, valAddr, _ := s.Setup.CreateValidators(5)
 	ok := s.Setup.Oraclekeeper
@@ -679,6 +680,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 }
 
 func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	repAccs, _, _ := s.Setup.CreateValidators(5)
 	ok := s.Setup.Oraclekeeper
 	ctx := s.Setup.Ctx
