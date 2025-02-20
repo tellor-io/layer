@@ -1194,7 +1194,8 @@ func TestEncodeOracleAttestationData(t *testing.T) {
 	tsAfter := uint64(110)
 	checkpoint := []byte("checkpoint")
 	attestationTimestamp := uint64(100)
-	res, err := k.EncodeOracleAttestationData(queryId, value, timestamp, power, tsBefore, tsAfter, checkpoint, attestationTimestamp)
+	lastConsensusTimestamp := uint64(100)
+	res, err := k.EncodeOracleAttestationData(queryId, value, timestamp, power, tsBefore, tsAfter, checkpoint, attestationTimestamp, lastConsensusTimestamp)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }

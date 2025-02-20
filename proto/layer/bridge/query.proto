@@ -204,6 +204,7 @@ message QueryGetAttestationDataBySnapshotResponse {
   string attestation_timestamp = 6;
   string previous_report_timestamp = 7;
   string next_report_timestamp = 8;
+  string last_consensus_timestamp = 9;
 }
 
 message QueryGetAttestationsBySnapshotRequest {
