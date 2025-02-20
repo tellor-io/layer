@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/tellor-io/layer/lib/metrics"
 	"github.com/tellor-io/layer/utils"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
@@ -48,6 +50,7 @@ func (c *Client) GenerateDepositMessages(ctx context.Context) error {
 		Value:     value,
 	}
 
+	telemetry.IncrCounterWithLabels([]string{"daemon_bridge_deposit", "found"}, 1, []metrics.Label{{Name: "chain_id", Value: c.cosmosCtx.ChainID}})
 	c.txChan <- TxChannelInfo{Msg: msg, isBridge: true, NumRetries: 5}
 
 	return nil
@@ -118,6 +121,7 @@ func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChan
 
 		data.NumRetries--
 		c.txChan <- data
+		return
 	}
 
 	var bridgeDepositMsg *oracletypes.MsgSubmitValue
@@ -147,6 +151,7 @@ func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChan
 	depositReportMap[hex.EncodeToString(queryId)] = true
 	mutex.Unlock()
 
+	telemetry.IncrCounterWithLabels([]string{"daemon_bridge_deposit", "reported"}, 1, []metrics.Label{{Name: "chain_id", Value: c.cosmosCtx.ChainID}})
 	c.logger.Info(fmt.Sprintf("Response from bridge tx report: %v", resp.TxResult))
 }
 
