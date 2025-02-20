@@ -349,6 +349,10 @@ type QueryValidatorsResponse struct {
 	Validators []Validator `json:"validators"`
 }
 
+type QueryMicroReportsResponse struct {
+	MicroReports []MicroReport `protobuf:"bytes,1,rep,name=microReports,proto3" json:"microReports"`
+}
+
 type Validator struct {
 	// operator_address defines the address of the validator's operator; bech encoded in JSON.
 	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
@@ -406,6 +410,11 @@ type CommissionRates struct {
 	MaxRate math.LegacyDec `protobuf:"bytes,2,opt,name=max_rate,json=maxRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_rate"`
 	// max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
 	MaxChangeRate math.LegacyDec `protobuf:"bytes,3,opt,name=max_change_rate,json=maxChangeRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_change_rate"`
+}
+
+type QueryCurrentCyclelistQueryResponse struct {
+	QueryData string     `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
+	QueryMeta *QueryMeta `protobuf:"bytes,2,opt,name=query_meta,json=queryMeta,proto3" json:"query_meta,omitempty"`
 }
 
 // HELPERS FOR TESTING AGAINST THE CHAIN
