@@ -3,16 +3,19 @@ package keeper
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strconv"
 
+	"github.com/tellor-io/layer/lib/metrics"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -83,6 +86,7 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 			sdk.NewAttribute("min_tokens_required", msg.MinTokensRequired.String()),
 		),
 	})
+	telemetry.IncrCounterWithLabels([]string{"create_reporter_count"}, 1, []metrics.Label{{Name: "chain_id", Value: sdk.UnwrapSDKContext(goCtx).ChainID()}})
 	return &types.MsgCreateReporterResponse{}, nil
 }
 
@@ -159,6 +163,7 @@ func (k msgServer) SelectReporter(goCtx context.Context, msg *types.MsgSelectRep
 			sdk.NewAttribute("reporter_selector_count_increased", strconv.Itoa(len(selectors)+1)),
 		),
 	})
+	telemetry.IncrCounterWithLabels([]string{"num_of_selectors", "join"}, 1, []metrics.Label{{Name: "chain_id", Value: sdk.UnwrapSDKContext(goCtx).ChainID()}})
 	return &types.MsgSelectReporterResponse{}, nil
 }
 
@@ -425,6 +430,8 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 			sdk.NewAttribute("amount", amtToDelegate.String()),
 		),
 	})
+	// allow for people to track the amount they have withdrawn based on their address
+	telemetry.IncrCounterWithLabels([]string{"withdrawn_amount_tracker"}, float32(amtToDelegate.Int64()), []metrics.Label{{Name: "chain_id", Value: ctx.ChainID()}, {Name: "reporter", Value: hex.EncodeToString(delAddr.Bytes())}})
 	return &types.MsgWithdrawTipResponse{}, nil
 }
 

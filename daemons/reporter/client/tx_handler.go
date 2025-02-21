@@ -9,11 +9,13 @@ import (
 
 	cmttypes "github.com/cometbft/cometbft/rpc/core/types"
 	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
+	"github.com/tellor-io/layer/lib/metrics"
 
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
@@ -55,9 +57,10 @@ func (c *Client) WaitForTx(ctx context.Context, hash string) (*cmttypes.ResultTx
 		resp, err := c.cosmosCtx.Client.Tx(ctx, bz, false)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
-				if time.Now().UnixMilli()-startTimestamp > 2500 {
+				if time.Now().UnixMilli()-startTimestamp > 3500 {
 					return nil, fmt.Errorf("fetching tx '%s'; err: No transaction found within the allotted time", hash)
 				}
+				time.Sleep(25 * time.Millisecond)
 				continue
 
 				// Tx not found, wait for next block and try again
@@ -120,6 +123,7 @@ func (c *Client) WaitForBlockHeight(ctx context.Context, h int64) error {
 }
 
 func (c *Client) sendTx(ctx context.Context, msg ...sdk.Msg) (*cmttypes.ResultTx, error) {
+	telemetry.IncrCounter(1, "daemon_sending_txs", "called")
 	block, err := c.cosmosCtx.Client.Block(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error getting block: %w", err)
@@ -163,6 +167,10 @@ func (c *Client) sendTx(ctx context.Context, msg ...sdk.Msg) (*cmttypes.ResultTx
 	c.logger.Info("TxResult", "result", txnResponse.TxResult)
 	c.logger.Info(fmt.Sprintf("transaction hash: %s", res.TxHash))
 	c.logger.Info(fmt.Sprintf("response after submit message: %d", txnResponse.TxResult.Code))
+	if txnResponse.TxResult.Code == 0 {
+		telemetry.IncrCounter(1, "daemon_sending_txs", "success")
+		telemetry.IncrCounterWithLabels([]string{"daemon_tx_gas_used_count"}, float32(txnResponse.TxResult.GasUsed), []metrics.Label{{Name: "chain_id", Value: c.cosmosCtx.ChainID}})
+	}
 
 	return txnResponse, nil
 }
