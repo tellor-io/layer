@@ -8,6 +8,7 @@ import (
 	"math"
 	"strconv"
 
+	"github.com/tellor-io/layer/lib/metrics"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
@@ -16,6 +17,7 @@ import (
 
 	"cosmossdk.io/collections"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -100,6 +102,7 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 			sdk.NewAttribute("meta_id", meta_id_str),
 		),
 	})
+	telemetry.IncrCounterWithLabels([]string{"reports_in_aggregate", "report_submitted"}, 1, []metrics.Label{{Name: "chain_id", Value: sdkCtx.ChainID()}, {Name: "query_id", Value: hex.EncodeToString(queryId)}})
 	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id), report)
 }
 

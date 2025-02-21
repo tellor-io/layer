@@ -19,6 +19,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -2564,6 +2565,7 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeBond() {
 }
 
 func (s *IntegrationTestSuite) TestCurrentBug() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	sk := s.Setup.Stakingkeeper
 	startingBondedPoolbal := math.NewInt(1000000)

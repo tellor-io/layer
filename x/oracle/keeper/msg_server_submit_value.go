@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/tellor-io/layer/lib/metrics"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -11,6 +12,7 @@ import (
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -31,8 +33,10 @@ import (
 // 6. Further checks to validate the value is decodable to the expected spec type.
 // 7. Set queryMeta.HasRevealedReports to true
 // 8. Emit an event for the new report
-func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (*types.MsgSubmitValueResponse, error) {
-	err := validateSubmitValue(msg)
+func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (res *types.MsgSubmitValueResponse, err error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	initialGas := sdkCtx.BlockGasMeter().GasConsumed()
+	err = validateSubmitValue(msg)
 	if err != nil {
 		return nil, err
 	}
@@ -64,6 +68,12 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	reportingPower := reporterStake.Quo(layertypes.PowerReduction).Uint64()
 
 	query, err := k.keeper.CurrentQuery(ctx, queryId)
+	defer func() {
+		if err == nil {
+			gasUsed := sdkCtx.BlockGasMeter().GasConsumed() - initialGas
+			telemetry.SetGaugeWithLabels([]string{"submit_value_gas_consumed"}, float32(gasUsed), []metrics.Label{{Name: "chain_id", Value: sdkCtx.ChainID()}, {Name: "query_type", Value: query.QueryType}})
+		}
+	}()
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return nil, err
@@ -91,6 +101,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	if err != nil {
 		return nil, err
 	}
+
 	return &types.MsgSubmitValueResponse{Id: query.Id}, nil
 }
 

@@ -6,6 +6,7 @@ import (
 	"errors"
 	"strconv"
 
+	"github.com/tellor-io/layer/lib/metrics"
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -14,6 +15,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -112,6 +114,12 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 			sdk.NewAttribute("querymeta_id", strconv.Itoa(int(query.Id))),
 		),
 	})
+
+	defer func() {
+		// track both the total tips for a query id and the amount of times that a a query id is tipped
+		telemetry.IncrCounterWithLabels([]string{"oracle_tip_tracker"}, float32(tip.Amount.Uint64()), []metrics.Label{{Name: "chain_id", Value: ctx.ChainID()}, {Name: "query_id", Value: hex.EncodeToString(queryId)}})
+		telemetry.IncrCounterWithLabels([]string{"oracle_tipped_query"}, 1, []metrics.Label{{Name: "chain_id", Value: ctx.ChainID()}, {Name: "query_id", Value: hex.EncodeToString(queryId)}})
+	}()
 	return &types.MsgTipResponse{}, nil
 }
 
