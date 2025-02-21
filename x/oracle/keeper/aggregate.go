@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/tellor-io/layer/lib/metrics"
 	layer "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -16,6 +17,7 @@ import (
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/math"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -151,6 +153,8 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, query
 			sdk.NewAttribute("micro_report_height", fmt.Sprintf("%d", report.MicroHeight)),
 		),
 	})
+	telemetry.SetGaugeWithLabels([]string{"reporter_power_in_aggregates"}, float32(report.AggregatePower), []metrics.Label{{Name: "chain_id", Value: sdkCtx.ChainID()}, {Name: "query_id", Value: hex.EncodeToString(report.QueryId)}})
+	telemetry.IncrCounterWithLabels([]string{"reports_in_aggregate", "aggregate_created"}, 1, []metrics.Label{{Name: "chain_id", Value: sdkCtx.ChainID()}, {Name: "query_id", Value: hex.EncodeToString(report.QueryId)}})
 	return k.Aggregates.Set(ctx, collections.Join(report.QueryId, currentTimestamp), *report)
 }
 

@@ -89,6 +89,39 @@ func (_m *OracleKeeper) GetAggregatedReportsByHeight(ctx context.Context, height
 	return r0
 }
 
+// GetCurrentAggregateReport provides a mock function with given fields: ctx, queryId
+func (_m *OracleKeeper) GetCurrentAggregateReport(ctx context.Context, queryId []byte) (*types.Aggregate, time.Time, error) {
+	ret := _m.Called(ctx, queryId)
+
+	var r0 *types.Aggregate
+	var r1 time.Time
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) (*types.Aggregate, time.Time, error)); ok {
+		return rf(ctx, queryId)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) *types.Aggregate); ok {
+		r0 = rf(ctx, queryId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.Aggregate)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []byte) time.Time); ok {
+		r1 = rf(ctx, queryId)
+	} else {
+		r1 = ret.Get(1).(time.Time)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, []byte) error); ok {
+		r2 = rf(ctx, queryId)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // GetTimestampAfter provides a mock function with given fields: ctx, queryId, timestamp
 func (_m *OracleKeeper) GetTimestampAfter(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
 	ret := _m.Called(ctx, queryId, timestamp)

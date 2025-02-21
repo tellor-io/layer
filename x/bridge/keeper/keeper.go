@@ -11,6 +11,7 @@ import (
 	"math/big"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -871,6 +872,12 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	attestationTimestamp := sdkCtx.BlockTime()
 
+	lastConsensusTimestamp, err := k.GetLastConsensusTimestamp(ctx, queryId, timestamp, aggReport.AggregatePower, isExternalRequest)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting last consensus timestamp", "error", err)
+		return err
+	}
+
 	snapshotBytes, err := k.EncodeOracleAttestationData(
 		queryId,
 		aggReport.AggregateValue,
@@ -880,6 +887,7 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 		uint64(tsAfter.UnixMilli()),
 		validatorCheckpoint.Checkpoint,
 		uint64(attestationTimestamp.UnixMilli()),
+		lastConsensusTimestamp,
 	)
 	if err != nil {
 		k.Logger(ctx).Info("Error encoding oracle attestation data", "error", err)
@@ -917,12 +925,13 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 
 	// set snapshot to snapshot data map
 	snapshotData := types.AttestationSnapshotData{
-		ValidatorCheckpoint:  validatorCheckpoint.Checkpoint,
-		AttestationTimestamp: uint64(attestationTimestamp.UnixMilli()),
-		PrevReportTimestamp:  uint64(tsBefore.UnixMilli()),
-		NextReportTimestamp:  uint64(tsAfter.UnixMilli()),
-		QueryId:              queryId,
-		Timestamp:            uint64(timestamp.UnixMilli()),
+		ValidatorCheckpoint:    validatorCheckpoint.Checkpoint,
+		AttestationTimestamp:   uint64(attestationTimestamp.UnixMilli()),
+		PrevReportTimestamp:    uint64(tsBefore.UnixMilli()),
+		NextReportTimestamp:    uint64(tsAfter.UnixMilli()),
+		QueryId:                queryId,
+		Timestamp:              uint64(timestamp.UnixMilli()),
+		LastConsensusTimestamp: lastConsensusTimestamp,
 	}
 	err = k.AttestSnapshotDataMap.Set(ctx, snapshotBytes, snapshotData)
 	if err != nil {
@@ -979,6 +988,55 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 	return k.AttestRequestsByHeightMap.Set(ctx, blockHeight, attestRequests)
 }
 
+func (k Keeper) GetLastConsensusTimestamp(ctx context.Context, queryId []byte, timestamp time.Time, aggregatePower uint64, isExternalRequest bool) (uint64, error) {
+	var pastReportTimestamp time.Time
+	// handle new report
+	if !isExternalRequest {
+		currentValsetTimestamp, err := k.GetCurrentValidatorSetTimestamp(ctx)
+		if err != nil {
+			return 0, err
+		}
+		valsetParams, err := k.ValidatorCheckpointParamsMap.Get(ctx, currentValsetTimestamp)
+		if err != nil {
+			return 0, err
+		}
+		// handle consensus report
+		if aggregatePower >= valsetParams.PowerThreshold {
+			return uint64(timestamp.UnixMilli()), nil
+			// handle non-consensus report
+		} else {
+			pastReportTimestamp, err = k.oracleKeeper.GetTimestampBefore(ctx, queryId, timestamp)
+			if err != nil {
+				if strings.Contains(err.Error(), "no data before timestamp") {
+					return 0, nil
+				}
+				return 0, err
+			}
+		}
+		// handle external request
+	} else {
+		var err error
+		_, pastReportTimestamp, err = k.oracleKeeper.GetCurrentAggregateReport(ctx, queryId)
+		if err != nil {
+			return 0, err
+		}
+	}
+	snapshotKey := crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(pastReportTimestamp.UnixMilli())))
+	snapshots, err := k.AttestSnapshotsByReportMap.Get(ctx, snapshotKey)
+	if err != nil {
+		return 0, err
+	}
+	if len(snapshots.Snapshots) == 0 {
+		return 0, nil
+	}
+	snapshot := snapshots.Snapshots[0]
+	snapshotData, err := k.AttestSnapshotDataMap.Get(ctx, snapshot)
+	if err != nil {
+		return 0, err
+	}
+	return snapshotData.LastConsensusTimestamp, nil
+}
+
 func (k Keeper) EncodeOracleAttestationData(
 	queryId []byte,
 	value string,
@@ -988,6 +1046,7 @@ func (k Keeper) EncodeOracleAttestationData(
 	nextTimestamp uint64,
 	valsetCheckpoint []byte,
 	attestationTimestamp uint64,
+	lastConsensusTimestamp uint64,
 ) ([]byte, error) {
 	// domainSeparator is bytes "tellorCurrentAttestation"
 	NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR := []byte("tellorCurrentAttestation")
@@ -1029,6 +1088,10 @@ func (k Keeper) EncodeOracleAttestationData(
 	attestationTimestampUint64 := new(big.Int)
 	attestationTimestampUint64.SetUint64(attestationTimestamp)
 
+	// Convert lastConsensusTimestamp to uint64
+	lastConsensusTimestampUint64 := new(big.Int)
+	lastConsensusTimestampUint64.SetUint64(lastConsensusTimestamp)
+
 	// Prepare Encoding
 	Bytes32Type, err := abi.NewType("bytes32", "", nil)
 	if err != nil {
@@ -1053,6 +1116,7 @@ func (k Keeper) EncodeOracleAttestationData(
 		{Type: Uint256Type},
 		{Type: Bytes32Type},
 		{Type: Uint256Type},
+		{Type: Uint256Type},
 	}
 
 	// Encode the data
@@ -1066,6 +1130,7 @@ func (k Keeper) EncodeOracleAttestationData(
 		nextTimestampUint64,
 		valsetCheckpointBytes32,
 		attestationTimestampUint64,
+		lastConsensusTimestampUint64,
 	)
 	if err != nil {
 		return nil, err

@@ -16,6 +16,9 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
+    - name: Clean up Go module cache
+      run: go clean -modcache
+
     - name: Set up Go
       uses: actions/setup-go@v4
       with:

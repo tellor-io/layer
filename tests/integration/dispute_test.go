@@ -18,6 +18,7 @@ import (
 
 	collections "cosmossdk.io/collections"
 	math "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	secp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -38,6 +39,7 @@ func (s *IntegrationTestSuite) TestDisputes() {
 	require.NotNil(msgServerDispute)
 	msgServerStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 	require.NotNil(msgServerStaking)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
 	//---------------------------------------------------------------------------
 	// Height 0 - create validator and 2 reporters
@@ -710,6 +712,7 @@ func (s *IntegrationTestSuite) TestDisputeFromDelegatorPayFromBond() {
 	require.NotNil(msgServerDispute)
 	msgServerStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 	require.NotNil(msgServerStaking)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
 	//---------------------------------------------------------------------------
 	// Height 0 - vicky becomes a validator
@@ -942,6 +945,7 @@ func (s *IntegrationTestSuite) TestOpenDisputePrecision() {
 	msgServerStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 	require.NotNil(msgServerStaking)
 
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	_, err := s.Setup.App.BeginBlocker(s.Setup.Ctx)
@@ -1156,6 +1160,7 @@ func (s *IntegrationTestSuite) TestDisputes2() {
 	require.NotNil(msgServerDispute)
 	msgServerStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 	require.NotNil(msgServerStaking)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 
 	//---------------------------------------------------------------------------
 	// Height 0 - create 3 validators and 3 reporters
