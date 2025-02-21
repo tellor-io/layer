@@ -187,6 +187,10 @@ paths:
                     type: string
                     format: uint64
                     title: max number of selectors for a reporter
+                  max_num_of_delegations:
+                    type: string
+                    format: uint64
+                    title: max number of validators a user can delegate too
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -2272,6 +2276,8 @@ paths:
               previous_report_timestamp:
                 type: string
               next_report_timestamp:
+                type: string
+              last_consensus_timestamp:
                 type: string
         default:
           description: An unexpected error response.

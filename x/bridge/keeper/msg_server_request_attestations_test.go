@@ -2,11 +2,13 @@ package keeper_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/types"
@@ -98,6 +100,24 @@ func TestMsgRequestAttestations(t *testing.T) {
 
 	ok.On("GetTimestampBefore", ctx, queryId, timestampTime).Return(timestampTime.Add(-1*time.Hour), nil)
 	ok.On("GetTimestampAfter", ctx, queryId, timestampTime).Return(timestampTime.Add(1*time.Hour), nil)
+	ok.On("GetCurrentAggregateReport", ctx, queryId).Return(&aggReport, timestampTime, nil)
+	snapshotKey := crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(timestampTime.UnixMilli())))
+	snapshot := []byte("snapshot")
+	err = k.AttestSnapshotsByReportMap.Set(ctx, snapshotKey, types.AttestationSnapshots{
+		Snapshots: [][]byte{snapshot},
+	})
+	require.NoError(t, err)
+	snapshotData := types.AttestationSnapshotData{
+		ValidatorCheckpoint:    []byte("checkpoint"),
+		AttestationTimestamp:   uint64(timestampTime.UnixMilli()),
+		PrevReportTimestamp:    uint64(timestampTime.Add(-1 * time.Hour).UnixMilli()),
+		NextReportTimestamp:    uint64(0),
+		QueryId:                queryId,
+		Timestamp:              uint64(timestampTime.UnixMilli()),
+		LastConsensusTimestamp: uint64(timestampTime.Add(-2 * time.Hour).UnixMilli()),
+	}
+	err = k.AttestSnapshotDataMap.Set(ctx, snapshot, snapshotData)
+	require.NoError(t, err)
 
 	response, err = msgServer.RequestAttestations(ctx, &types.MsgRequestAttestations{
 		Creator:   creatorAddr.String(),
@@ -106,4 +126,22 @@ func TestMsgRequestAttestations(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.NotNil(t, response)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	expectedAttestationTimestamp := sdkCtx.BlockTime()
+
+	// retrieve newly created snapshot & data
+	snapshots, err := k.AttestSnapshotsByReportMap.Get(ctx, snapshotKey)
+	require.NoError(t, err)
+	require.Equal(t, len(snapshots.Snapshots), 2)
+	require.Equal(t, snapshots.Snapshots[0], snapshot)
+	snapshot2 := snapshots.Snapshots[1]
+	snapshotData2, err := k.AttestSnapshotDataMap.Get(ctx, snapshot2)
+	require.NoError(t, err)
+	require.Equal(t, snapshotData2.LastConsensusTimestamp, uint64(timestampTime.Add(-2*time.Hour).UnixMilli()))
+	require.Equal(t, snapshotData2.PrevReportTimestamp, uint64(timestampTime.Add(-1*time.Hour).UnixMilli()))
+	require.Equal(t, snapshotData2.NextReportTimestamp, uint64(timestampTime.Add(1*time.Hour).UnixMilli()))
+	require.Equal(t, snapshotData2.QueryId, queryId)
+	require.Equal(t, snapshotData2.Timestamp, uint64(timestampTime.UnixMilli()))
+	require.Equal(t, snapshotData2.ValidatorCheckpoint, []byte("checkpoint"))
+	require.Equal(t, snapshotData2.AttestationTimestamp, uint64(expectedAttestationTimestamp.UnixMilli()))
 }
