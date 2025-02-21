@@ -19,6 +19,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -103,6 +104,7 @@ func (s *IntegrationTestSuite) TestGetCurrentTip() {
 
 // test tipping, reporting and allocation of rewards
 func (s *IntegrationTestSuite) TestTippingReporting() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	ctx := s.Setup.Ctx
 	ctx = ctx.WithBlockTime(time.Now())
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -207,6 +209,7 @@ func (s *IntegrationTestSuite) TestSmallTip() {
 }
 
 func (s *IntegrationTestSuite) TestMedianReports() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	ctx := s.Setup.Ctx
 	ctx = ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
@@ -551,6 +554,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 }
 
 func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	ctx := s.Setup.Ctx
 	repAccs, valAddr, _ := s.Setup.CreateValidators(5)
 	ok := s.Setup.Oraclekeeper
@@ -677,6 +681,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 }
 
 func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	repAccs, _, _ := s.Setup.CreateValidators(5)
 	ok := s.Setup.Oraclekeeper
 	ctx := s.Setup.Ctx

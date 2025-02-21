@@ -6,10 +6,12 @@ import (
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
 	err := CheckOpenDisputesForExpiration(ctx, k)
 	if err != nil {
 		return err
@@ -19,6 +21,7 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 
 // SetBlockInfo logic should be in EndBlocker so that BlockInfo records the correct values after all delegations and tip additions for the block have been processed
 func EndBlocker(ctx context.Context, k keeper.Keeper) error {
+	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
 	// check if a dispute has been opened at the current block height
 	iter, err := k.Disputes.Indexes.OpenDisputes.MatchExact(ctx, true)
 	if err != nil {
