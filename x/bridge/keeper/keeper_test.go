@@ -4,7 +4,9 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -1098,24 +1100,27 @@ func TestCreateSnapshot(t *testing.T) {
 	k, _, _, ok, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
+	timestamp := time.Now()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx = sdkCtx.WithBlockTime(timestamp)
 
-	ok.On("GetAggregateByTimestamp", ctx, []byte("queryId"), uint64(time.Unix(100, 0).UnixMilli())).Return(oracletypes.Aggregate{
-		QueryId:        []byte("queryId"),
+	qId, err := hex.DecodeString("efa84ae5ea9eb0545e159f78f0a44911ac5a81ecb6ff0c4e32107bcfc66c4baa")
+	require.NoError(t, err)
+	ok.On("GetAggregateByTimestamp", sdkCtx, qId, uint64(timestamp.UnixMilli())).Return(oracletypes.Aggregate{
+		QueryId:        qId,
 		AggregateValue: "5000",
 		AggregatePower: uint64(100),
 	}, nil)
 
-	err := k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{
+	err = k.ValidatorCheckpoint.Set(sdkCtx, types.ValidatorCheckpoint{
 		Checkpoint: []byte("checkpoint"),
 	})
 	require.NoError(t, err)
 
-	queryId := []byte("queryId")
-	timestamp := time.Unix(100, 0)
-	ok.On("GetTimestampBefore", ctx, queryId, timestamp).Return(timestamp.Add(-1*time.Hour), nil)
-	ok.On("GetTimestampAfter", ctx, queryId, timestamp).Return(timestamp.Add(1*time.Hour), nil)
+	ok.On("GetTimestampBefore", sdkCtx, qId, timestamp).Return(timestamp.Add(-1*time.Hour), nil)
+	ok.On("GetTimestampAfter", sdkCtx, qId, timestamp).Return(timestamp.Add(1*time.Hour), nil)
 
-	err = k.BridgeValset.Set(ctx, types.BridgeValidatorSet{
+	err = k.BridgeValset.Set(sdkCtx, types.BridgeValidatorSet{
 		BridgeValidatorSet: []*types.BridgeValidator{
 			{
 				EthereumAddress: []byte("validator1"),
@@ -1125,15 +1130,56 @@ func TestCreateSnapshot(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	err = k.CreateSnapshot(ctx, queryId, timestamp, false)
+	// set last consensus timestamp
+	err = k.AttestSnapshotDataMap.Set(sdkCtx, qId, types.AttestationSnapshotData{
+		LastConsensusTimestamp: 100,
+	})
+	require.NoError(t, err)
+
+	// set GetCurrentValidatorSetTimestamp
+	err = k.LatestCheckpointIdx.Set(sdkCtx, types.CheckpointIdx{
+		Index: 1,
+	})
+	require.NoError(t, err)
+	err = k.ValidatorCheckpointIdxMap.Set(sdkCtx, 1, types.CheckpointTimestamp{
+		Timestamp: 100,
+	})
+	require.NoError(t, err)
+
+	// ValidatorCheckpointParamsMap
+	err = k.ValidatorCheckpointParamsMap.Set(sdkCtx, 100, types.ValidatorCheckpointParams{
+		Checkpoint:     []byte("checkpoint"),
+		ValsetHash:     []byte("valsetHash"),
+		Timestamp:      100,
+		PowerThreshold: 100,
+	})
+	require.NoError(t, err)
+
+	err = k.CreateSnapshot(sdkCtx, qId, timestamp, false)
 	require.NoError(t, err)
 
 	// check if snapshot is created
-	snapshot, err := k.AttestRequestsByHeightMap.Get(ctx, 0)
+	attReq, err := k.AttestRequestsByHeightMap.Get(sdkCtx, 0)
 	require.NoError(t, err)
-	require.NotNil(t, snapshot)
+	require.NotNil(t, attReq)
 
-	// to do: verify snapshot bytes
+	// get snapshot by  report
+	querier := keeper.NewQuerier(k)
+	req := &types.QueryGetSnapshotsByReportRequest{
+		QueryId:   hex.EncodeToString(qId),
+		Timestamp: strconv.FormatUint(uint64(timestamp.UnixMilli()), 10),
+	}
+	snapshots, err := querier.GetSnapshotsByReport(sdkCtx, req)
+	require.NoError(t, err)
+	require.NotNil(t, snapshots)
+
+	// get attestations by snapshot
+	snapshotBytes, err := hex.DecodeString(snapshots.Snapshots[0])
+	require.NoError(t, err)
+	attestations, err := k.SnapshotToAttestationsMap.Get(sdkCtx, snapshotBytes)
+	require.NoError(t, err)
+	require.NotNil(t, attestations)
+	require.Equal(t, len(attestations.Attestations), 1)
 }
 
 func TestCreateNewReportSnapshots(t *testing.T) {
@@ -1177,6 +1223,31 @@ func TestCreateNewReportSnapshots(t *testing.T) {
 	})
 	require.NoError(t, err)
 
+	// set last consensus timestamp
+	err = k.AttestSnapshotDataMap.Set(sdkCtx, queryId, types.AttestationSnapshotData{
+		LastConsensusTimestamp: 100,
+	})
+	require.NoError(t, err)
+
+	// set GetCurrentValidatorSetTimestamp
+	err = k.LatestCheckpointIdx.Set(sdkCtx, types.CheckpointIdx{
+		Index: 1,
+	})
+	require.NoError(t, err)
+	err = k.ValidatorCheckpointIdxMap.Set(sdkCtx, 1, types.CheckpointTimestamp{
+		Timestamp: 100,
+	})
+	require.NoError(t, err)
+
+	// ValidatorCheckpointParamsMap
+	err = k.ValidatorCheckpointParamsMap.Set(sdkCtx, 100, types.ValidatorCheckpointParams{
+		Checkpoint:     []byte("checkpoint"),
+		ValsetHash:     []byte("valsetHash"),
+		Timestamp:      100,
+		PowerThreshold: 100,
+	})
+	require.NoError(t, err)
+
 	err = k.CreateNewReportSnapshots(ctx)
 	require.NoError(t, err)
 }
@@ -1194,7 +1265,8 @@ func TestEncodeOracleAttestationData(t *testing.T) {
 	tsAfter := uint64(110)
 	checkpoint := []byte("checkpoint")
 	attestationTimestamp := uint64(100)
-	res, err := k.EncodeOracleAttestationData(queryId, value, timestamp, power, tsBefore, tsAfter, checkpoint, attestationTimestamp)
+	lastConsensusTimestamp := uint64(100)
+	res, err := k.EncodeOracleAttestationData(queryId, value, timestamp, power, tsBefore, tsAfter, checkpoint, attestationTimestamp, lastConsensusTimestamp)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }

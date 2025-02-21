@@ -47,6 +47,17 @@ func (q Querier) GetAttestationDataBySnapshot(goCtx context.Context, req *types.
 	attestationTimestampStr := strconv.FormatUint(snapshotData.AttestationTimestamp, 10)
 	previousReportTimestampStr := strconv.FormatUint(snapshotData.PrevReportTimestamp, 10)
 	nextReportTimestampStr := strconv.FormatUint(snapshotData.NextReportTimestamp, 10)
+	lastConsensusTimestampStr := strconv.FormatUint(snapshotData.LastConsensusTimestamp, 10)
 
-	return &types.QueryGetAttestationDataBySnapshotResponse{QueryId: queryIdStr, Timestamp: timestampStr, AggregateValue: aggValueStr, AggregatePower: aggPowerStr, Checkpoint: checkpointStr, AttestationTimestamp: attestationTimestampStr, PreviousReportTimestamp: previousReportTimestampStr, NextReportTimestamp: nextReportTimestampStr}, nil
+	return &types.QueryGetAttestationDataBySnapshotResponse{
+		QueryId:                 queryIdStr,
+		Timestamp:               timestampStr,
+		AggregateValue:          aggValueStr,
+		AggregatePower:          aggPowerStr,
+		Checkpoint:              checkpointStr,
+		AttestationTimestamp:    attestationTimestampStr,
+		PreviousReportTimestamp: previousReportTimestampStr,
+		NextReportTimestamp:     nextReportTimestampStr,
+		LastConsensusTimestamp:  lastConsensusTimestampStr,
+	}, nil
 }
