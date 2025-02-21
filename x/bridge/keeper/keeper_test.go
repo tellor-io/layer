@@ -1162,24 +1162,24 @@ func TestCreateSnapshot(t *testing.T) {
 	attReq, err := k.AttestRequestsByHeightMap.Get(sdkCtx, 0)
 	require.NoError(t, err)
 	require.NotNil(t, attReq)
-	fmt.Println("attReq: ", attReq)
 
 	// get snapshot by  report
 	querier := keeper.NewQuerier(k)
 	req := &types.QueryGetSnapshotsByReportRequest{
 		QueryId:   hex.EncodeToString(qId),
-		Timestamp: strconv.FormatUint(uint64(timestamp.UnixMilli()/1000), 10),
+		Timestamp: strconv.FormatUint(uint64(timestamp.UnixMilli()), 10),
 	}
 	snapshots, err := querier.GetSnapshotsByReport(sdkCtx, req)
 	require.NoError(t, err)
 	require.NotNil(t, snapshots)
-	fmt.Println("snapshots: ", snapshots)
 
 	// get attestations by snapshot
-	// attestations, err := k.SnapshotToAttestationsMap.Get(sdkCtx, snapshot)
-	// require.NoError(t, err)
-	// require.NotNil(t, attestations)
-	// fmt.Println("attestations: ", attestations)
+	snapshotBytes, err := hex.DecodeString(snapshots.Snapshots[0])
+	require.NoError(t, err)
+	attestations, err := k.SnapshotToAttestationsMap.Get(sdkCtx, snapshotBytes)
+	require.NoError(t, err)
+	require.NotNil(t, attestations)
+	require.Equal(t, len(attestations.Attestations), 1)
 }
 
 func TestCreateNewReportSnapshots(t *testing.T) {
