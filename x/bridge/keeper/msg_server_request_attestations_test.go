@@ -103,9 +103,10 @@ func TestMsgRequestAttestations(t *testing.T) {
 	ok.On("GetCurrentAggregateReport", ctx, queryId).Return(&aggReport, timestampTime, nil)
 	snapshotKey := crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(timestampTime.UnixMilli())))
 	snapshot := []byte("snapshot")
-	k.AttestSnapshotsByReportMap.Set(ctx, snapshotKey, types.AttestationSnapshots{
+	err = k.AttestSnapshotsByReportMap.Set(ctx, snapshotKey, types.AttestationSnapshots{
 		Snapshots: [][]byte{snapshot},
 	})
+	require.NoError(t, err)
 	snapshotData := types.AttestationSnapshotData{
 		ValidatorCheckpoint:    []byte("checkpoint"),
 		AttestationTimestamp:   uint64(timestampTime.UnixMilli()),
@@ -115,7 +116,8 @@ func TestMsgRequestAttestations(t *testing.T) {
 		Timestamp:              uint64(timestampTime.UnixMilli()),
 		LastConsensusTimestamp: uint64(timestampTime.Add(-2 * time.Hour).UnixMilli()),
 	}
-	k.AttestSnapshotDataMap.Set(ctx, snapshot, snapshotData)
+	err = k.AttestSnapshotDataMap.Set(ctx, snapshot, snapshotData)
+	require.NoError(t, err)
 
 	response, err = msgServer.RequestAttestations(ctx, &types.MsgRequestAttestations{
 		Creator:   creatorAddr.String(),
