@@ -10,11 +10,13 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tellor-io/layer/lib/metrics"
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/bridge/types"
 
 	"cosmossdk.io/collections"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -88,6 +90,7 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64, m
 		return err
 	}
 
+	telemetry.IncrCounterWithLabels([]string{"claimed_deposit_tracker"}, float32(amount.AmountOf("loya").Int64()), []metrics.Label{{Name: "chain_id", Value: cosmosCtx.ChainID()}})
 	return nil
 }
 

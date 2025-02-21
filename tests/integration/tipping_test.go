@@ -13,6 +13,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -22,6 +23,7 @@ import (
 
 // Test adding tip to a query that is already in cycle and not expired
 func (s *IntegrationTestSuite) TestTipQueryInCycle() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	ctx := s.Setup.Ctx
 	app := s.Setup.App
 	okpr := s.Setup.Oraclekeeper
@@ -59,6 +61,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	s.True(bytes.Equal(currentCycleListQuery, ethQueryData))
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2) // endblock1/beginblock2
+	ctx = ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	s.NoError(err)
 	//-------------------------------------------------
 	// block 2 - eth in cycle list
@@ -76,6 +79,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	s.True(query.Expiration > uint64(ctx.BlockHeight()))
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2)
+	ctx = ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	s.NoError(err)
 	//-------------------------------------------------
 	// block 3 - eth final block in cycle list
@@ -87,6 +91,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	s.True(bytes.Equal(currentCycleListQuery, ethQueryData))
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2)
+	ctx = ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	s.NoError(err)
 	//-------------------------------------------------
 	// block 4 - first block for btc
@@ -103,6 +108,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	s.NoError(err)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second*2) // trb query data
+	ctx = ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	s.NoError(err)
 	//-------------------------------------------------
 	// block 5 - final block for btc, tip
@@ -126,6 +132,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	s.Equal(math.NewInt(980_000), query.Amount) // 2% burn
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2))
+	ctx = ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	s.NoError(err)
 	//-------------------------------------------------
 	// block 6 - first block for trb for cycle list but should be when it expires due to the tip at block 4
@@ -141,6 +148,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	s.NoError(err)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2))
+	ctx = ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	s.NoError(err)
 	//-------------------------------------------------
 	// block 7 - back to eth
@@ -160,6 +168,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	s.NoError(err)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // trb query data
+	ctx = ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	s.NoError(err)
 	//-------------------------------------------------
 	// block 8 - eth last block
@@ -177,6 +186,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	s.Equal(query.Expiration, uint64(ctx.BlockHeight())) // should expire next block
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // trb query data
+	ctx = ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	s.NoError(err)
 	//-------------------------------------------------
 	// block 9 - btc first block
@@ -192,6 +202,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	s.NotEqual(tippedBTCQueryMeta.Id, cycleListQueryMeta.Id)
 
 	ctx, err = simtestutil.NextBlock(app, ctx, (time.Second * 2)) // btc query data
+	ctx = ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	s.NoError(err)
 	//-------------------------------------------------
 	// block 10 - final block for btc
@@ -260,6 +271,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 
 // test tipping an expiring query
 func (s *IntegrationTestSuite) TestTippingQuery() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	ctx := s.Setup.Ctx
 	app := s.Setup.App
 	okpr := s.Setup.Oraclekeeper
@@ -331,6 +343,7 @@ func (s *IntegrationTestSuite) TestTippingQuery() {
 }
 
 func (s *IntegrationTestSuite) TestRotateQueries() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	ctx := s.Setup.Ctx
 	app := s.Setup.App
 	okpr := s.Setup.Oraclekeeper
