@@ -792,5 +792,4 @@ func TestMajorSlash(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("user0 free floating after claiming reward: ", user0FreeFloatingAfterClaim)
 	require.Greater(user0FreeFloatingAfterClaim.Int64(), user0FreeFloatingBeforeClaim.Int64())
-
 }

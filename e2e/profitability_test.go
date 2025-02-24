@@ -164,7 +164,7 @@ func TestProfitability(t *testing.T) {
 
 	time1 := time.Now()
 	fmt.Println("time1: ", time1.Format(time.RFC3339))
-	//wait 5 blocks
+	// wait 5 blocks
 	require.NoError(testutil.WaitForBlocks(ctx, 5, val1))
 	time2 := time.Now()
 	fmt.Println("time2 after 5 blocks: ", time2.Format(time.RFC3339))
