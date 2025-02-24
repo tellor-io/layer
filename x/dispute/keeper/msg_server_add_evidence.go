@@ -38,6 +38,10 @@ func (k msgServer) AddEvidence(goCtx context.Context, msg *types.MsgAddEvidence)
 			return nil, errors.New("additional evidence must be less than 21 days old")
 		}
 	}
+	// proposed dispute must be less than 21 days old for evidence to be added
+	if dispute.InitialEvidence.Timestamp.Before(ctx.BlockTime().Add(-21 * 24 * time.Hour)) {
+		return nil, errors.New("proposed dispute must be less than 21 days old")
+	}
 	// append submitted evidence to dispute
 	dispute.AdditionalEvidence = append(dispute.AdditionalEvidence, msg.Reports...)
 	// set updated dispute
