@@ -23,7 +23,7 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() (sdk.AccAddress, ty
 		Reporter:  addr.String(),
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: time.Unix(1696516597, 0),
+		Timestamp: time.Now().Add(-1 * 24 * time.Hour), // 1 day old
 		Power:     1,
 		MetaId:    1,
 	}
