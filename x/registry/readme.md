@@ -6,27 +6,42 @@ This module enables the registration of fully customizable data specs to inform 
 
 ## ADRs
 
-- adr002 - queryId time frame structure
-- adr1004 - fees on tips
-- adr2002 - nonces for bridging
+- [adr002](https://github.com/tellor-io/Layer/blob/main/docs/adr/adr002.md) - queryId time frame structure
+- [adr1004](https://github.com/tellor-io/Layer/blob/main/docs/adr/adr1004.md) - fees on tips
+- [adr2002](https://github.com/tellor-io/Layer/blob/main/docs/adr/adr2002.md) - nonces for bridging
 
 ## Transactions 
 
--`RegisterSpec`
--`UpdateSpec`
+### RegisterSpec
+Register a new data spec.
+- `./layerd tx registry register-spec [query-type] [spec]`
+
+### UpdateSpec
+Update an existing data spec through governance.
+
+### RemoveDataSpecs
+Remove a data spec or specs through governance.
 
 ## Getters
 
-- `Params` - get module parameters
-- `DecodeQueryData` - decode query data into query type and data fields
-- `DecodeValue` - decode value into a string
-- `GenerateQueryData` - generate query data for a given query type and data
-- `GetDataSpec` - get data specification for a given query type
+### Params
+-`./layerd query registry params`
+
+### DecodeQueryData
+-`./layerd query registry decode-querydata [query-data]`
+
+### DecodeValue
+-`./layerd query registry decode-value [query-type] [value]`
+
+### GenerateQueryData
+-`./layerd query registry generate-querydata [query-type] [parameters]`
+
+### GetDataSpec
+-`./layerd query registry data-spec [query-type]`
 
 ## Mocks
 
-1. cd into registry/mocks
-2. run `make mock-gen`
+`make mock-gen-registry`
 
 ## CLI
 
@@ -38,7 +53,7 @@ layerd tx registry register-spec BTCBalance '{"document_hash":"<ipfs-hash>","res
 ```
 
 ```sh
-# get data spec for a registere query type
+# get data spec for a registered query type
 layerd query registry data-spec BTCBalance
 # output-> 
 # spec:
@@ -50,7 +65,7 @@ layerd query registry data-spec BTCBalance
 #   aggregation_method: weighted-mode
 #   document_hash: <ipfs-hash>
 #   registrar: tellor13ffxsq63xsqk2a4tg94sax5mrs4jjph8hszt7v
-#   report_buffer_window: 0s
+#   report_block_window: 0s
 #   response_value_type: uint256
 ```
 

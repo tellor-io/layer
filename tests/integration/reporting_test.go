@@ -1,4 +1,4 @@
-package e2e_test
+package integration_test
 
 import (
 	"encoding/hex"
@@ -505,7 +505,7 @@ import (
 // 	require.Equal(deleBeforeReport2.GetShares().Add(math.LegacyNewDecFromInt(tipPlusTbr)), deleAfter.GetShares())
 // }
 
-func (s *E2ETestSuite) TestAggregateOverMultipleBlocks() {
+func (s *IntegrationTestSuite) TestAggregateOverMultipleBlocks() {
 	// Setup msgServers
 	require := s.Require()
 	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)

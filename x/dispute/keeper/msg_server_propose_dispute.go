@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
@@ -16,6 +17,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
+// Propose a dispute on a given microreport.
 func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDispute) (*types.MsgProposeDisputeResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -36,6 +38,9 @@ func (k msgServer) ProposeDispute(goCtx context.Context, msg *types.MsgProposeDi
 	}
 	if err != nil {
 		return nil, err
+	}
+	if report.Timestamp.Before(ctx.BlockTime().Add(-21 * 24 * time.Hour)) {
+		return nil, errors.New("disputed report must be less than 21 days old")
 	}
 
 	if msg.Fee.Amount.LT(layer.OnePercent) {

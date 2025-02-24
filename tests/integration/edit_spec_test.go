@@ -1,4 +1,4 @@
-package e2e_test
+package integration_test
 
 import (
 	"time"
@@ -23,7 +23,7 @@ import (
 	v1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
-func (s *E2ETestSuite) TestEditSpec() {
+func (s *IntegrationTestSuite) TestEditSpec() {
 	require := s.Require()
 
 	registryMsgServer := registrykeeper.NewMsgServerImpl(s.Setup.Registrykeeper)

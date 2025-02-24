@@ -64,18 +64,35 @@ To configure the chain (ie add more validators plus more) edit the json in local
 
 ## Tests
 
-To run integration tests:
+To run all unit and integration tests:
 
-`make test`
+```go
+make test
+```
 
-To run e2e tests:
+In addition to the unit and integration tests, there are also end to end tests using the [interchaintest](https://github.com/strangelove-ventures/interchaintest) framework. These tests spin up a live chain with a given number of nodes/validators in docker that you can run transactions and queries against. To run all e2e tests:
 
-`make e2e`
+Install heighliner:
+```sh
+make get-heighliner
+```
+Create image:
+```sh
+make local-image
+```
+Run all e2e tests:
+```sh
+make e2e
+```
+Run an individual test:
+```sh
+cd e2e
+go test -v -run TestLayerFlow -timeout 10m
+```
 
 ## Linting
 
-To lint per folder:
-
+To lint per folder:  
 `make lint-folder-fix FOLDER="x/mint"`
 
 To lint all files:

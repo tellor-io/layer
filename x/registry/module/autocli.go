@@ -43,7 +43,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Decode the value given query type",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "queryType"}, {ProtoField: "value"}},
 				},
-
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
@@ -59,6 +58,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:            "register-spec [query-type] [spec]",
 					Short:          "Broadcast message RegisterSpec",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_type"}, {ProtoField: "spec"}},
+				},
+				{
+					RpcMethod: "RemoveDataSpecs",
+					Skip:      true, // skipped because authority gated
 				},
 			},
 		},

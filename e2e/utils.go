@@ -313,6 +313,9 @@ type Reporter struct {
 type OracleReporter struct {
 	CommissionRate string `json:"commission_rate"`
 	MinTokens      string `json:"min_tokens_required"`
+	Jailed         bool   `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
+	// jailed_until is the time the reporter is jailed until
+	JailedUntil time.Time `protobuf:"bytes,4,opt,name=jailed_until,json=jailedUntil,proto3,stdtime" json:"jailed_until"`
 }
 
 type QuerySelectorReporterResponse struct {
@@ -347,6 +350,10 @@ type OpenDisputes struct {
 
 type QueryValidatorsResponse struct {
 	Validators []Validator `json:"validators"`
+}
+
+type QueryMicroReportsResponse struct {
+	MicroReports []MicroReport `protobuf:"bytes,1,rep,name=microReports,proto3" json:"microReports"`
 }
 
 type Validator struct {
@@ -406,6 +413,11 @@ type CommissionRates struct {
 	MaxRate math.LegacyDec `protobuf:"bytes,2,opt,name=max_rate,json=maxRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_rate"`
 	// max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
 	MaxChangeRate math.LegacyDec `protobuf:"bytes,3,opt,name=max_change_rate,json=maxChangeRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_change_rate"`
+}
+
+type QueryCurrentCyclelistQueryResponse struct {
+	QueryData string     `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
+	QueryMeta *QueryMeta `protobuf:"bytes,2,opt,name=query_meta,json=queryMeta,proto3" json:"query_meta,omitempty"`
 }
 
 // HELPERS FOR TESTING AGAINST THE CHAIN

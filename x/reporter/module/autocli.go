@@ -59,7 +59,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "AvailableTips",
 					Use:            "available-tips [selector-address]",
-					Short:          "Query how much how much tips a selector has",
+					Short:          "Query how much tips a selector has",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}},
 				},
 				// this line is used by ignite scaffolding # autocli/query
@@ -99,7 +99,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "UnjailReporter",
-					Use:            "unjail-reporter [reporter-addr]",
+					Use:            "unjail-reporter [reporter-address]",
 					Short:          "Execute the UnjailReporter RPC method",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
 				},
