@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+	"time"
 
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
@@ -419,9 +420,7 @@ func TestDispute(t *testing.T) {
 	}
 }
 
-// TODO: can we fast forward time to expire dispute voting period ?
-// -- maybe use alternate binary with shorter voting period ?
-// scenario in integration tests for now
+// reporter reports a bad value, unbonds some tokens, gets major disputed
 func TestMajorSlash(t *testing.T) {
 	require := require.New(t)
 
@@ -525,14 +524,14 @@ func TestMajorSlash(t *testing.T) {
 	numReporters := 2
 	reporters := make([]ReporterAccs, numReporters)
 	expectedDelTotal := math.NewInt(0)
-	for i := 0; i < numReporters; i++ {
+	for i := range numReporters {
 		keyname := fmt.Sprintf("user%d", i)
 		fundAmt := math.NewInt(10_000 * 1e6)
 		delegateAmt := sdk.NewCoin("loya", math.NewInt(1_000*1e6))
 		user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
 		txHash, err := val1.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1valAddr, delegateAmt.String(), "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 		require.NoError(err)
-		fmt.Println("TX HASH (", keyname, " delegates to val2): ", txHash)
+		fmt.Println("TX HASH (", keyname, " delegates to val1): ", txHash)
 		reporters[i] = ReporterAccs{
 			Keyname: keyname,
 			Addr:    user.FormattedAddress(),
@@ -567,7 +566,7 @@ func TestMajorSlash(t *testing.T) {
 	require.Equal(result.Status.String(), "PROPOSAL_STATUS_PASSED")
 
 	// all 2 delegators become reporters
-	for i := 0; i < len(reporters); i++ {
+	for i := range reporters {
 		commissRate := "0.1"
 		minStakeAmt := "1000000"
 		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, "--keyring-dir", val1.HomeDir())
@@ -598,10 +597,31 @@ func TestMajorSlash(t *testing.T) {
 	fmt.Println("TX HASH (user0 tipped ", bchQId, "): ", txHash)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
 	require.NoError(err)
-
 	txHash, err = val1.ExecTx(ctx, "user1", "oracle", "submit-value", reporters[1].Addr, bchQData, value, "--keyring-dir", val1.HomeDir())
 	fmt.Println("TX HASH (user1 reported ", bchQId, "): ", txHash)
 	require.NoError(err)
+	err = testutil.WaitForBlocks(ctx, 1, val1)
+	require.NoError(err)
+	// user1 unbonds all of their tokens
+	txHash, err = val1.ExecTx(ctx, reporters[1].Addr, "staking", "unbond", val1valAddr, "1000000000loya", "--keyring-dir", val1.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (user1 unbonds all of their tokens): ", txHash)
+
+	// query stkaing module delegations
+	delegations, err := chain.StakingQueryDelegations(ctx, val1Addr)
+	require.NoError(err)
+	fmt.Println("delegations: ", delegations)
+
+	// query reporter module
+	res, _, err = val1.ExecQuery(ctx, "reporter", "reporters")
+	require.NoError(err)
+	err = json.Unmarshal(res, &reportersRes)
+	require.NoError(err)
+	fmt.Println("reporters res: ", reportersRes)
+	require.Equal(len(reportersRes.Reporters), numReporters+1)
+	fmt.Println("reportersRes.Reporters[0].Reporter: ", reportersRes.Reporters[0].Metadata)
+	fmt.Println("reportersRes.Reporters[1].Reporter: ", reportersRes.Reporters[1].Metadata)
+	fmt.Println("reportersRes.Reporters[2].Reporter: ", reportersRes.Reporters[2].Metadata)
 
 	// wait for query to expire and dispute from user0
 	err = testutil.WaitForBlocks(ctx, 2, val1)
@@ -635,28 +655,22 @@ func TestMajorSlash(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("reporters res: ", reportersRes)
 	require.Equal(len(reportersRes.Reporters), numReporters+1)
-	fmt.Println("reportersRes.Reporters[0].Reporter: ", reportersRes.Reporters[0])
-	fmt.Println("reportersRes.Reporters[1].Reporter: ", reportersRes.Reporters[1])
-	fmt.Println("reportersRes.Reporters[2].Reporter: ", reportersRes.Reporters[2])
+	fmt.Println("reportersRes.Reporters[0].Reporter: ", reportersRes.Reporters[0].Metadata)
+	fmt.Println("reportersRes.Reporters[1].Reporter: ", reportersRes.Reporters[1].Metadata)
+	fmt.Println("reportersRes.Reporters[2].Reporter: ", reportersRes.Reporters[2].Metadata)
+	// find the disputed reporter (user1) and verify they are jailed
+	var disputedReporter *e2e.Reporter
+	for _, reporter := range reportersRes.Reporters {
+		if reporter.Address == reporters[1].Addr { // user1's address
+			disputedReporter = reporter
+			break
+		}
+	}
+	require.NotNil(disputedReporter, "Disputed reporter not found")
+	require.True(disputedReporter.Metadata.Jailed, "Disputed reporter should be jailed")
+	require.Greater(disputedReporter.Metadata.JailedUntil, time.Now().Add(1000000*time.Hour)) // jailed over 100 years mua ha ha
 
 	// check dispute status
-	// disputeId := i + 1
-	// res, _, err := val1.ExecQuery(ctx, "dispute", "tally", "--dispute-id", strconv.Itoa(disputeId))
-	// require.NoError(err)
-	// var tally e2e.QueryDisputesTallyResponse
-	// require.NoError(json.Unmarshal(res, &tally))
-	// fmt.Println("tally: ", tally)
-	// require.Equal(tally.Team.Support, "0")
-	// require.Equal(tally.Team.Against, "0")
-	// require.Equal(tally.Team.Invalid, "0")
-	// require.Equal(tally.Users.VoteCount.Support, "0")
-	// require.Equal(tally.Users.VoteCount.Against, "0")
-	// require.Equal(tally.Users.VoteCount.Invalid, "0")
-	// require.Equal(tally.Reporters.VoteCount.Support, "0")
-	// require.Equal(tally.Reporters.VoteCount.Against, "0")
-	// require.Equal(tally.Reporters.VoteCount.Invalid, "0")
-
-	// check open disputes
 	res, _, err = val1.ExecQuery(ctx, "dispute", "open-disputes")
 	require.NoError(err)
 	var openDisputes e2e.QueryOpenDisputesResponse

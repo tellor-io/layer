@@ -313,6 +313,9 @@ type Reporter struct {
 type OracleReporter struct {
 	CommissionRate string `json:"commission_rate"`
 	MinTokens      string `json:"min_tokens_required"`
+	Jailed         bool   `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
+	// jailed_until is the time the reporter is jailed until
+	JailedUntil time.Time `protobuf:"bytes,4,opt,name=jailed_until,json=jailedUntil,proto3,stdtime" json:"jailed_until"`
 }
 
 type QuerySelectorReporterResponse struct {
