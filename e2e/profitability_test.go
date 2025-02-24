@@ -22,7 +22,7 @@ import (
 // cd e2e
 // go test -run TestProfitability --timeout 5m
 
-// 10 validator, check profitability before and after minting is turned on and 10 reporters are reporting
+// 10 validators, each report for the cycle list once and claim rewards
 func TestProfitability(t *testing.T) {
 	require := require.New(t)
 
@@ -87,22 +87,14 @@ func TestProfitability(t *testing.T) {
 	ctx := context.Background()
 
 	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
-		TestName:  t.Name(),
-		Client:    client,
-		NetworkID: network,
-		// BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
+		TestName:         t.Name(),
+		Client:           client,
+		NetworkID:        network,
 		SkipPathCreation: false,
 	}))
 	t.Cleanup(func() {
 		_ = ic.Close()
 	})
-	// teamMnemonic := "unit curious maid primary holiday lunch lift melody boil blossom three boat work deliver alpha intact tornado october process dignity gravity giggle enrich output"
-	// require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
-	// require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
-	// 	Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-	// 	Amount:  math.NewInt(1000000000000),
-	// 	Denom:   "loya",
-	// }))
 
 	val1 := chain.Validators[0]
 
