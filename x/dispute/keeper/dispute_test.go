@@ -17,38 +17,41 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func report() oracletypes.MicroReport {
+func report(ctx sdk.Context) oracletypes.MicroReport {
 	return oracletypes.MicroReport{
 		Reporter:    sample.AccAddressBytes().String(),
 		Power:       uint64(1),
 		QueryId:     []byte{},
 		Value:       "0x",
-		Timestamp:   time.Unix(1696516597, 0),
+		Timestamp:   ctx.BlockTime().Add(-1 * 24 * time.Hour), // 1 day old
 		BlockNumber: 1,
 	}
 }
 
-func (s *KeeperTestSuite) dispute() types.Dispute {
-	report := report()
-	hash := s.disputeKeeper.HashId(s.ctx, report, types.Warning)
+func (s *KeeperTestSuite) dispute(ctx sdk.Context) types.Dispute {
+	report := report(ctx)
+	hash := s.disputeKeeper.HashId(ctx, report, types.Warning)
 	return types.Dispute{
-		HashId:          hash[:],
-		DisputeId:       1,
-		DisputeCategory: types.Warning,
-		DisputeFee:      math.ZeroInt(),
-		InitialEvidence: report,
-		Open:            true,
-		SlashAmount:     math.NewInt(10000),
-		BurnAmount:      math.NewInt(500),
+		HashId:           hash[:],
+		DisputeId:        1,
+		DisputeCategory:  types.Warning,
+		DisputeFee:       math.ZeroInt(),
+		InitialEvidence:  report,
+		Open:             true,
+		SlashAmount:      math.NewInt(10000),
+		BurnAmount:       math.NewInt(500),
+		DisputeEndTime:   ctx.BlockTime().Add(24 * time.Hour),
+		DisputeStartTime: ctx.BlockTime().Add(-1 * 24 * time.Hour),
 	}
 }
 
 func (s *KeeperTestSuite) TestGetOpenDisputes() {
+	s.ctx = s.ctx.WithBlockTime(time.Now())
 	res, err := s.disputeKeeper.GetOpenDisputes(s.ctx)
 	s.Nil(err)
 	s.Equal([]uint64{}, res)
 
-	dispute := s.dispute()
+	dispute := s.dispute(s.ctx)
 	s.NoError(s.disputeKeeper.Disputes.Set(s.ctx, dispute.DisputeId, dispute))
 	open, err := s.disputeKeeper.GetOpenDisputes(s.ctx)
 	s.NoError(err)
@@ -77,7 +80,8 @@ func (s *KeeperTestSuite) TestGetOpenDisputes() {
 }
 
 func (s *KeeperTestSuite) TestGetDisputeByReporter() {
-	dispute := s.dispute()
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+	dispute := s.dispute(s.ctx)
 	s.NoError(s.disputeKeeper.Disputes.Set(s.ctx, dispute.DisputeId, dispute))
 
 	disputeByReporter, err := s.disputeKeeper.GetDisputeByReporter(s.ctx, dispute.InitialEvidence, types.Warning)
@@ -93,7 +97,8 @@ func (s *KeeperTestSuite) TestGetDisputeByReporter() {
 }
 
 func (s *KeeperTestSuite) TestNextDisputeId() {
-	dispute := s.dispute()
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+	dispute := s.dispute(s.ctx)
 	s.NoError(s.disputeKeeper.Disputes.Set(s.ctx, dispute.DisputeId, dispute))
 	s.Equal(uint64(2), s.disputeKeeper.NextDisputeId(s.ctx))
 	dispute.DisputeId = 2
@@ -108,12 +113,14 @@ func (s *KeeperTestSuite) TestNextDisputeId() {
 }
 
 func (s *KeeperTestSuite) TestHashId() {
-	hashId := s.disputeKeeper.HashId(s.ctx, report(), types.Warning)
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+	hashId := s.disputeKeeper.HashId(s.ctx, report(s.ctx), types.Warning)
 	s.Len(hashId, 32)
 }
 
 func (s *KeeperTestSuite) TestReporterKey() {
-	report := report()
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+	report := report(s.ctx)
 	hash := s.disputeKeeper.HashId(s.ctx, report, types.Warning)
 	expectedKey := fmt.Sprintf("%s:%x", report.Reporter, hash) // Replace with the expected key
 
@@ -123,7 +130,8 @@ func (s *KeeperTestSuite) TestReporterKey() {
 }
 
 func (s *KeeperTestSuite) TestSetNewDispute() types.MsgProposeDispute {
-	report := report()
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+	report := report(s.ctx)
 	creator := sample.AccAddressBytes()
 	disputeMsg := types.MsgProposeDispute{
 		Creator:          creator.String(),
@@ -148,8 +156,8 @@ func (s *KeeperTestSuite) TestSetNewDispute() types.MsgProposeDispute {
 
 func (s *KeeperTestSuite) TestSlashAndJailReporter() {
 	s.ctx = s.ctx.WithBlockTime(time.Unix(1696516597, 0))
-	report := report()
-	dispute := s.dispute()
+	report := report(s.ctx)
+	dispute := s.dispute(s.ctx)
 	reporterAcc := sdk.MustAccAddressFromBech32(report.Reporter)
 	s.reporterKeeper.On("EscrowReporterStake", s.ctx, reporterAcc, report.Power, uint64(1), math.NewInt(10000), dispute.InitialEvidence.QueryId, dispute.HashId).Return(nil)
 	s.reporterKeeper.On("JailReporter", s.ctx, reporterAcc, uint64(0)).Return(nil)
@@ -193,7 +201,7 @@ func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {
 			cat:  4,
 		},
 	}
-	s.oracleKeeper.On("FlagAggregateReport", s.ctx, report()).Return(nil)
+	s.oracleKeeper.On("FlagAggregateReport", s.ctx, report(s.ctx)).Return(nil)
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
@@ -210,7 +218,7 @@ func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {
 }
 
 func (s *KeeperTestSuite) TestGetDisputeFee() {
-	rep := report()
+	rep := report(s.ctx)
 	rep.Power = 0
 	disputeFee, err := s.disputeKeeper.GetDisputeFee(s.ctx, rep, types.Warning)
 	s.NoError(err)
@@ -254,7 +262,7 @@ func (s *KeeperTestSuite) TestAddDisputeRound() {
 	fee := sdk.NewCoin("loya", math.NewInt(10))
 	s.bankKeeper.On("HasBalance", s.ctx, sender, fee).Return(true)
 	s.bankKeeper.On("SendCoinsFromAccountToModule", s.ctx, sender, types.ModuleName, sdk.NewCoins(fee)).Return(nil)
-	s.oracleKeeper.On("FlagAggregateReport", s.ctx, report()).Return(nil)
+	s.oracleKeeper.On("FlagAggregateReport", s.ctx, report(s.ctx)).Return(nil)
 	s.NoError(s.disputeKeeper.AddDisputeRound(s.ctx, sender, dispute, msg))
 
 	dispute1, err := s.disputeKeeper.Disputes.Get(s.ctx, 1)
@@ -274,7 +282,8 @@ func (s *KeeperTestSuite) TestAddDisputeRound() {
 }
 
 func (s *KeeperTestSuite) TestSetBlockInfo() {
-	dispute := s.dispute()
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+	dispute := s.dispute(s.ctx)
 	s.reporterKeeper.On("TotalReporterPower", s.ctx).Return(math.NewInt(1), nil)
 	s.oracleKeeper.On("GetTotalTips", s.ctx).Return(math.NewInt(1), nil)
 	s.NoError(s.disputeKeeper.SetBlockInfo(s.ctx, dispute.HashId))
@@ -289,7 +298,8 @@ func (s *KeeperTestSuite) TestSetBlockInfo() {
 }
 
 func (s *KeeperTestSuite) TestCloseDispute() {
-	dispute := s.dispute()
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+	dispute := s.dispute(s.ctx)
 	s.NoError(s.disputeKeeper.Disputes.Set(s.ctx, dispute.DisputeId, dispute))
 	open, err := s.disputeKeeper.GetOpenDisputes(s.ctx)
 	s.NoError(err)

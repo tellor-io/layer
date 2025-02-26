@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"time"
+
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -12,7 +14,8 @@ import (
 )
 
 func (k *KeeperTestSuite) TestExecuteVote() {
-	dispute := k.dispute()
+	k.ctx = k.ctx.WithBlockTime(time.Now())
+	dispute := k.dispute(k.ctx)
 
 	// slash amount = 10000
 	dispute.FeeTotal = math.NewInt(10000)
@@ -153,7 +156,8 @@ func (k *KeeperTestSuite) TestRewardReporterBondToFeePayers() {
 }
 
 func (k *KeeperTestSuite) TestGetSumOfAllGroupVotesAllRounds() {
-	dispute := k.dispute()
+	k.ctx = k.ctx.WithBlockTime(time.Now())
+	dispute := k.dispute(k.ctx)
 	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, dispute.DisputeId, dispute))
 
 	// set vote counts for current dispute

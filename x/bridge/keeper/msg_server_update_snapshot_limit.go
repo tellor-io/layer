@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Update the number of attestation requests per block through governance.
 func (k msgServer) UpdateSnapshotLimit(goCtx context.Context, msg *types.MsgUpdateSnapshotLimit) (*types.MsgUpdateSnapshotLimitResponse, error) {
 	if k.Keeper.GetAuthority() != msg.Authority {
 		return nil, errors.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.Keeper.GetAuthority(), msg.Authority)

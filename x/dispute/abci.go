@@ -96,6 +96,7 @@ func CheckOpenDisputesForExpiration(ctx context.Context, k keeper.Keeper) error 
 	return nil
 }
 
+// Checks if any disputes are pending execution, and if so, executes the vote.
 func CheckClosedDisputesForExecution(ctx context.Context, k keeper.Keeper) error {
 	iter, err := k.Disputes.Indexes.PendingExecution.MatchExact(ctx, true)
 	if err != nil {
