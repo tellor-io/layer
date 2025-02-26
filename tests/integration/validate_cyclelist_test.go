@@ -1,10 +1,6 @@
-package e2e_test
+package integration_test
 
-import (
-	utils "github.com/tellor-io/layer/utils"
-)
-
-func (s *E2ETestSuite) TestValidateCycleList() {
+func (s *IntegrationTestSuite) TestValidateCycleList() {
 	require := s.Require()
 	_, vals, _ := s.Setup.CreateValidators(1)
 	for _, val := range vals {
@@ -19,7 +15,7 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	require.NoError(err)
 	cycle1, err := s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
 	require.NoError(err)
-	queryDataBytes, err := utils.QueryBytesFromString(ethQueryData[2:])
+	queryDataBytes := ethQueryData
 	require.NoError(err)
 	require.Equal(queryDataBytes, cycle1)
 	require.Equal(s.Setup.Ctx.BlockHeight(), int64(1))
@@ -35,7 +31,7 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	require.Equal(s.Setup.Ctx.BlockHeight(), int64(2))
 	cycle1, err = s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
 	require.NoError(err)
-	queryDataBytes, err = utils.QueryBytesFromString(ethQueryData[2:])
+	queryDataBytes = ethQueryData
 	require.NoError(err)
 	require.Equal(queryDataBytes, cycle1)
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
@@ -50,7 +46,7 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	require.Equal(s.Setup.Ctx.BlockHeight(), int64(3))
 	cycle1, err = s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
 	require.NoError(err)
-	queryDataBytes, err = utils.QueryBytesFromString(ethQueryData[2:])
+	queryDataBytes = ethQueryData
 	require.NoError(err)
 	require.Equal(queryDataBytes, cycle1)
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
@@ -65,7 +61,7 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	require.Equal(s.Setup.Ctx.BlockHeight(), int64(4))
 	cycle2, err := s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
 	require.NoError(err)
-	queryDataBytes, err = utils.QueryBytesFromString(btcQueryData[2:])
+	queryDataBytes = btcQueryData
 	require.NoError(err)
 	require.Equal(queryDataBytes, cycle2)
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
@@ -80,7 +76,7 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	require.Equal(s.Setup.Ctx.BlockHeight(), int64(5))
 	cycle2, err = s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
 	require.NoError(err)
-	queryDataBytes, err = utils.QueryBytesFromString(btcQueryData[2:])
+	queryDataBytes = btcQueryData
 	require.NoError(err)
 	require.Equal(queryDataBytes, cycle2)
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
@@ -95,7 +91,7 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	require.Equal(s.Setup.Ctx.BlockHeight(), int64(6))
 	cycle2, err = s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
 	require.NoError(err)
-	queryDataBytes, err = utils.QueryBytesFromString(trbQueryData[2:])
+	queryDataBytes = trbQueryData
 	require.NoError(err)
 	require.Equal(queryDataBytes, cycle2)
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
@@ -111,7 +107,7 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	require.Equal(s.Setup.Ctx.BlockHeight(), int64(7))
 	cycle3, err := s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
 	require.NoError(err)
-	queryDataBytes, err = utils.QueryBytesFromString(trbQueryData[2:])
+	queryDataBytes = trbQueryData
 	require.NoError(err)
 	require.Equal(queryDataBytes, cycle3)
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
@@ -126,7 +122,7 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	require.Equal(s.Setup.Ctx.BlockHeight(), int64(8))
 	cycle3, err = s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
 	require.NoError(err)
-	queryDataBytes, err = utils.QueryBytesFromString(ethQueryData[2:])
+	queryDataBytes = ethQueryData
 	require.NoError(err)
 	require.Equal(queryDataBytes, cycle3)
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
@@ -141,7 +137,7 @@ func (s *E2ETestSuite) TestValidateCycleList() {
 	require.Equal(s.Setup.Ctx.BlockHeight(), int64(9))
 	cycle2, err = s.Setup.Oraclekeeper.GetCurrentQueryInCycleList(s.Setup.Ctx)
 	require.NoError(err)
-	queryDataBytes, err = utils.QueryBytesFromString(ethQueryData[2:])
+	queryDataBytes = ethQueryData
 	require.NoError(err)
 	require.Equal(queryDataBytes, cycle2)
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)

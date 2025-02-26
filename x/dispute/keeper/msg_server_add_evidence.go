@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/tellor-io/layer/x/dispute/types"
 
@@ -29,6 +30,12 @@ func (k msgServer) AddEvidence(goCtx context.Context, msg *types.MsgAddEvidence)
 	for _, report := range msg.Reports {
 		if !strings.EqualFold(report.Reporter, dispute.InitialEvidence.Reporter) {
 			return nil, errors.New("reporter in additional evidence must be the same as the reporter in the dispute")
+		}
+	}
+	// additional evidence must be less than 21 days old
+	for _, report := range msg.Reports {
+		if report.Timestamp.Before(ctx.BlockTime().Add(-21 * 24 * time.Hour)) {
+			return nil, errors.New("additional evidence must be less than 21 days old")
 		}
 	}
 	// append submitted evidence to dispute

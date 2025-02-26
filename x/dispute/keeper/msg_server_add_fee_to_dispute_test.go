@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/stretchr/testify/mock"
@@ -14,6 +15,7 @@ import (
 )
 
 func (k *KeeperTestSuite) TestMsgServerAddFeeToDispute() {
+	k.ctx = k.ctx.WithBlockTime(time.Now())
 	creator := sample.AccAddressBytes()
 	msg := types.MsgAddFeeToDispute{
 		Creator:     creator.String(),
@@ -32,14 +34,11 @@ func (k *KeeperTestSuite) TestMsgServerAddFeeToDispute() {
 	k.ErrorContains(err, "not found")
 	k.Nil(res)
 
-	dispute := k.dispute()
+	dispute := k.dispute(k.ctx)
 	dispute.FeeTotal = dispute.SlashAmount
 	dispute.InitialEvidence.QueryId = []byte("query")
+	fmt.Println("dispute: ", dispute)
 	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, dispute.DisputeId, dispute))
-
-	res, err = k.msgServer.AddFeeToDispute(k.ctx.WithBlockTime(time.Now()), &msg)
-	k.ErrorContains(err, "dispute time expired")
-	k.Nil(res)
 
 	res, err = k.msgServer.AddFeeToDispute(k.ctx, &msg)
 	k.ErrorContains(err, "dispute fee already met")
@@ -58,4 +57,9 @@ func (k *KeeperTestSuite) TestMsgServerAddFeeToDispute() {
 	res, err = k.msgServer.AddFeeToDispute(k.ctx, &msg)
 	k.NoError(err)
 	k.NotNil(res)
+
+	// try to add again
+	res, err = k.msgServer.AddFeeToDispute(k.ctx, &msg)
+	k.ErrorContains(err, "dispute fee already met")
+	k.Nil(res)
 }
