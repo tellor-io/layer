@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"time"
+
 	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/testutil/sample"
 	layer "github.com/tellor-io/layer/types"
@@ -43,7 +45,8 @@ func (s *KeeperTestSuite) TestPayDisputeFee() {
 }
 
 func (k *KeeperTestSuite) TestReturnSlashedTokens() {
-	dispute := k.dispute()
+	k.ctx = k.ctx.WithBlockTime(time.Now())
+	dispute := k.dispute(k.ctx)
 	k.reporterKeeper.On("ReturnSlashedTokens", k.ctx, dispute.SlashAmount, dispute.HashId).Return(stakingtypes.BondedPoolName, nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, dispute.SlashAmount))).Return(nil)
 	k.NoError(k.disputeKeeper.ReturnSlashedTokens(k.ctx, dispute))

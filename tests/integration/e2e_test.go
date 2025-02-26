@@ -1,4 +1,4 @@
-package e2e_test
+package integration_test
 
 import (
 	"math/big"
@@ -19,7 +19,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
+func (s *IntegrationTestSuite) TestSetUpValidatorAndReporter() {
 	require := s.Require()
 
 	// Create Validator Accounts
@@ -155,7 +155,7 @@ func (s *E2ETestSuite) TestSetUpValidatorAndReporter() {
 	require.Equal(delegationReporter.Reporter, valAddr.Bytes())
 }
 
-func (s *E2ETestSuite) TestUnstaking() {
+func (s *IntegrationTestSuite) TestUnstaking() {
 	require := s.Require()
 	// create 5 validators with 5_000 TRB
 	accaddr, valaddr, _ := s.Setup.CreateValidators(5)

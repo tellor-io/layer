@@ -21,7 +21,7 @@ func (s *KeeperTestSuite) TestAddEvidence() {
 	require.Error(err)
 
 	// open dispute
-	dispute := s.dispute()
+	dispute := s.dispute(s.ctx)
 	s.NoError(s.disputeKeeper.Disputes.Set(s.ctx, dispute.DisputeId, dispute))
 	disputedReporter := dispute.InitialEvidence.Reporter
 
@@ -33,7 +33,7 @@ func (s *KeeperTestSuite) TestAddEvidence() {
 		QueryId:         dispute.InitialEvidence.QueryId,
 		AggregateMethod: dispute.InitialEvidence.AggregateMethod,
 		Value:           "100",
-		Timestamp:       s.ctx.BlockTime(),
+		Timestamp:       s.ctx.BlockTime().Add(-1 * 24 * time.Hour), // 1 day old
 		Cyclelist:       dispute.InitialEvidence.Cyclelist,
 		BlockNumber:     uint64(s.ctx.BlockHeight()),
 	}

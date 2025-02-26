@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Claim deposits made by the Ethereum token bridge contract into Layer.
 func (k msgServer) ClaimDeposits(goCtx context.Context, msg *types.MsgClaimDepositsRequest) (*types.MsgClaimDepositsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(goCtx)
 	if len(msg.DepositIds) != len(msg.Timestamps) {

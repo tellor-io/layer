@@ -30,6 +30,7 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestVotingOnDispute() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 	_, valAddrs, _ := s.createValidatorAccs([]uint64{50}) // creates validator with 100 power
 	valAddr := valAddrs[0]
@@ -59,7 +60,7 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 		Power:     100,
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: time.UnixMilli(1696516597).UTC(),
+		Timestamp: time.Now().Add(-1 * 12 * time.Hour),
 		MetaId:    1,
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
@@ -136,6 +137,7 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 }
 
 func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 
 	_, valAddrs, _ := s.createValidatorAccs([]uint64{500})
@@ -171,7 +173,7 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 		Power:       1000,
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.UnixMilli(1696516597).UTC(),
+		Timestamp:   time.Now().Add(-1 * 12 * time.Hour),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
@@ -204,6 +206,7 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 
 	_, valAddrs, _ := s.createValidatorAccs([]uint64{50})
@@ -244,7 +247,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 		Power:       100,
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.UnixMilli(1696516597).UTC(),
+		Timestamp:   time.Now().Add(-1 * 12 * time.Hour),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
@@ -370,6 +373,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 
 	_, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
@@ -390,7 +394,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 		Power:     repStake.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: time.UnixMilli(1696516597).UTC(),
+		Timestamp: time.Now().Add(-1 * 12 * time.Hour),
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
@@ -441,6 +445,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 
 	_, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
@@ -478,7 +483,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 		Power:     stake.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: time.UnixMilli(1696516597).UTC(),
+		Timestamp: time.Now().Add(-1 * 12 * time.Hour),
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
 	fmt.Println("Disputed report power: ", report.Power)
@@ -604,6 +609,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 
 	_, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
@@ -641,7 +647,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 		Power:     stake.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:   qId,
 		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp: time.UnixMilli(1696516597).UTC(),
+		Timestamp: time.Now().Add(-1 * 12 * time.Hour),
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
 	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
@@ -779,6 +785,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 }
 
 func (s *IntegrationTestSuite) TestDisputeFiveRounds5thRdNewPayer() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	// create 2 validator reporter accs
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200})
 	reporter1Acc := repAccs[0]
@@ -797,7 +804,7 @@ func (s *IntegrationTestSuite) TestDisputeFiveRounds5thRdNewPayer() {
 		Power:       reporter1StakeBefore.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.UnixMilli(1696516597).UTC(),
+		Timestamp:   time.Now().Add(-1 * 12 * time.Hour),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporter1Acc.Bytes(), report.MetaId), report))
@@ -1165,6 +1172,7 @@ func (s *IntegrationTestSuite) TestDisputeFiveRounds5thRdNewPayer() {
 }
 
 func (s *IntegrationTestSuite) TestDisputeFiveRounds1Payer() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	// create 2 validator reporter accs
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200})
 	reporter1Acc := repAccs[0]
@@ -1183,7 +1191,7 @@ func (s *IntegrationTestSuite) TestDisputeFiveRounds1Payer() {
 		Power:       reporter1StakeBefore.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.UnixMilli(1696516597).UTC(),
+		Timestamp:   time.Now().Add(-1 * 12 * time.Hour),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporter1Acc.Bytes(), report.MetaId), report))
@@ -1545,6 +1553,7 @@ func (s *IntegrationTestSuite) TestDisputeFiveRounds1Payer() {
 }
 
 func (s *IntegrationTestSuite) TestDisputeFiveRoundsTwoFeePayers() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	// create 2 validator reporter accs
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200})
 	reporter1Acc := repAccs[0]
@@ -1563,7 +1572,7 @@ func (s *IntegrationTestSuite) TestDisputeFiveRoundsTwoFeePayers() {
 		Power:       reporter1StakeBefore.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.UnixMilli(1696516597).UTC(),
+		Timestamp:   time.Now().Add(-1 * 12 * time.Hour),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporter1Acc.Bytes(), report.MetaId), report))
@@ -1978,6 +1987,7 @@ func (s *IntegrationTestSuite) TestDisputeFiveRoundsTwoFeePayers() {
 }
 
 func (s *IntegrationTestSuite) TestDisputeTwoDelegations() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	// create 3 validators
 	valAccAddrs, valValAddrs, _ := s.createValidatorAccs([]uint64{10, 10, 10})
 	// check stakes
@@ -2041,7 +2051,7 @@ func (s *IntegrationTestSuite) TestDisputeTwoDelegations() {
 		Power:       reporter1StakeBefore.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.UnixMilli(1696516597).UTC(),
+		Timestamp:   time.Now().Add(-1 * 12 * time.Hour),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	// set report so there is something to dispute
@@ -2185,6 +2195,7 @@ func (s *IntegrationTestSuite) TestDisputeTwoDelegations() {
 }
 
 func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200})
 	reporter1Acc := repAccs[0]
@@ -2202,7 +2213,7 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 		Power:       reporter1StakeBefore.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.UnixMilli(1696516597).UTC(),
+		Timestamp:   time.Now().Add(-1 * 12 * time.Hour),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporter1Acc.Bytes(), report.MetaId), report))
@@ -2269,6 +2280,7 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 }
 
 func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100})
 	reporter1Acc := repAccs[0]
@@ -2285,7 +2297,7 @@ func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
 		Power:       reporterStakeBefore.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.UnixMilli(1696516597).UTC(),
+		Timestamp:   time.Now().Add(-1 * 12 * time.Hour),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporter1Acc.Bytes(), report.MetaId), report))
@@ -2321,6 +2333,7 @@ func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
 }
 
 func (s *IntegrationTestSuite) TestFlagReport() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	// three micro reports
 	// setAggregate
 	// then dispute report to check if its flagged
@@ -2436,6 +2449,7 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 }
 
 func (s *IntegrationTestSuite) TestAddFeeToDisputeNotBond() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100})
 	reporter1Acc := repAccs[0]
@@ -2452,7 +2466,7 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeNotBond() {
 		Power:       reporterStake.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.UnixMilli(1696516597).UTC(),
+		Timestamp:   time.Now().Add(-1 * 12 * time.Hour),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 	}
 	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, reporter1Acc.Bytes(), report.MetaId), report))
@@ -2497,6 +2511,7 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeNotBond() {
 }
 
 func (s *IntegrationTestSuite) TestAddFeeToDisputeBond() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200})
 	reporter1Acc := repAccs[0]
@@ -2513,7 +2528,7 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeBond() {
 		Power:       reporterStake.Quo(sdk.DefaultPowerReduction).Uint64(),
 		QueryId:     qId,
 		Value:       "000000000000000000000000000000000000000000000058528649cf80ee0000",
-		Timestamp:   time.UnixMilli(1696516597).UTC(),
+		Timestamp:   time.Now().Add(-1 * 12 * time.Hour),
 		BlockNumber: uint64(s.Setup.Ctx.BlockHeight()),
 		MetaId:      1,
 	}
@@ -2565,6 +2580,7 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeBond() {
 }
 
 func (s *IntegrationTestSuite) TestCurrentBug() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	sk := s.Setup.Stakingkeeper
@@ -2821,12 +2837,56 @@ func (s *IntegrationTestSuite) TestCurrentBug() {
 	s.True(bal.IsNil())
 }
 
-func (s *IntegrationTestSuite) TestManyOpenDisputes() {
-	// require := s.Require()
-	// msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+func (s *IntegrationTestSuite) TestProposeOldDispute() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 
-	// // chain has 11 validators
-	// // 10 will get disputed, 1 will be tipping and disputing
-	// repAccs, valAccs, _ := s.createValidatorsbypowers([]uint64{10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000, 10000})
-	// tipper := repAccs[0]
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
+
+	disputer := s.newKeysWithTokens()
+
+	valAddr := valAddrs[0]
+	repAddr := sdk.AccAddress(valAddr)
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, 1)))
+
+	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
+
+	stake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr, qId)
+	s.NoError(err)
+	disputerBefore, err := s.Setup.Stakingkeeper.GetAllDelegatorDelegations(s.Setup.Ctx, disputer)
+	s.NoError(err)
+	s.True(len(disputerBefore) == 0)
+
+	// mint tokens to voters
+	s.Setup.MintTokens(disputer, math.NewInt(100_000_000))
+	oracleServer := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	msg := oracletypes.MsgTip{
+		Tipper:    disputer.String(),
+		QueryData: ethQueryData,
+		Amount:    sdk.NewCoin(s.Setup.Denom, math.NewInt(1_000_000)),
+	}
+	_, err = oracleServer.Tip(s.Setup.Ctx, &msg)
+	s.Nil(err)
+
+	report := oracletypes.MicroReport{
+		Reporter:  repAddr.String(),
+		Power:     stake.Quo(sdk.DefaultPowerReduction).Uint64(),
+		QueryId:   qId,
+		Value:     "000000000000000000000000000000000000000000000058528649cf80ee0000",
+		Timestamp: time.Now().Add(-22 * 24 * time.Hour), // 22 day old report
+	}
+	s.NoError(s.Setup.Oraclekeeper.Reports.Set(s.Setup.Ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
+	fmt.Println("Disputed report power: ", report.Power)
+	disputeFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, report, types.Warning)
+	s.NoError(err)
+	_, err = msgServer.ProposeDispute(s.Setup.Ctx, &types.MsgProposeDispute{
+		Creator:          disputer.String(),
+		DisputedReporter: report.Reporter,
+		ReportMetaId:     report.MetaId,
+		ReportQueryId:    hex.EncodeToString(report.QueryId),
+		Fee:              sdk.NewCoin(s.Setup.Denom, disputeFee),
+		DisputeCategory:  types.Warning,
+	})
+	s.ErrorContains(err, "disputed report must be less than 21 days old")
 }
