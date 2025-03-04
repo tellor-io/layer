@@ -424,7 +424,7 @@ type QueryGetCurrentAggregateReportResponse struct {
 	// aggregate defines the current aggregate report.
 	Aggregate *Aggregate `protobuf:"bytes,1,opt,name=aggregate,proto3" json:"aggregate,omitempty"`
 	// timestamp defines the timestamp of the aggregate report.
-	Timestamp uint64 `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp string `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
 type Aggregate struct {
@@ -436,17 +436,37 @@ type Aggregate struct {
 	AggregateReporter string `protobuf:"bytes,3,opt,name=aggregate_reporter,json=aggregateReporter,proto3" json:"aggregate_reporter,omitempty"`
 	// aggregate_power is the power of all the reporters
 	// that reported for the aggregate
-	AggregatePower uint64 `protobuf:"varint,4,opt,name=aggregate_power,json=aggregatePower,proto3" json:"aggregate_power,omitempty"`
+	AggregatePower string `protobuf:"varint,4,opt,name=aggregate_power,json=aggregatePower,proto3" json:"aggregate_power,omitempty"`
 	// flagged is true if the aggregate was flagged by a dispute
 	Flagged bool `protobuf:"varint,5,opt,name=flagged,proto3" json:"flagged,omitempty"`
 	// index is the index of the aggregate
-	Index uint64 `protobuf:"varint,6,opt,name=index,proto3" json:"index,omitempty"`
+	Index string `protobuf:"varint,6,opt,name=index,proto3" json:"index,omitempty"`
 	// height of the aggregate report
-	Height uint64 `protobuf:"varint,7,opt,name=height,proto3" json:"height,omitempty"`
+	Height string `protobuf:"varint,7,opt,name=height,proto3" json:"height,omitempty"`
 	// height of the micro report
-	MicroHeight uint64 `protobuf:"varint,8,opt,name=micro_height,json=microHeight,proto3" json:"micro_height,omitempty"`
+	MicroHeight string `protobuf:"varint,8,opt,name=micro_height,json=microHeight,proto3" json:"micro_height,omitempty"`
 	// meta_id is the id of the querymeta iterator
-	MetaId uint64 `protobuf:"varint,9,opt,name=meta_id,json=metaId,proto3" json:"meta_id,omitempty"`
+	MetaId string `protobuf:"varint,9,opt,name=meta_id,json=metaId,proto3" json:"meta_id,omitempty"`
+}
+
+type QueryGetSnapshotsByReportResponse struct {
+	Snapshots []string `protobuf:"bytes,1,rep,name=snapshots,proto3" json:"snapshots,omitempty"`
+}
+
+type QueryGetAttestationBySnapshotResponse struct {
+	Attestations []string `protobuf:"bytes,1,rep,name=attestations,proto3" json:"attestations,omitempty"`
+}
+
+type QueryGetAttestationDataBySnapshotResponse struct {
+	QueryId                 string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	Timestamp               string `protobuf:"bytes,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	AggregateValue          string `protobuf:"bytes,3,opt,name=aggregate_value,json=aggregateValue,proto3" json:"aggregate_value,omitempty"`
+	AggregatePower          string `protobuf:"bytes,4,opt,name=aggregate_power,json=aggregatePower,proto3" json:"aggregate_power,omitempty"`
+	Checkpoint              string `protobuf:"bytes,5,opt,name=checkpoint,proto3" json:"checkpoint,omitempty"`
+	AttestationTimestamp    string `protobuf:"bytes,6,opt,name=attestation_timestamp,json=attestationTimestamp,proto3" json:"attestation_timestamp,omitempty"`
+	PreviousReportTimestamp string `protobuf:"bytes,7,opt,name=previous_report_timestamp,json=previousReportTimestamp,proto3" json:"previous_report_timestamp,omitempty"`
+	NextReportTimestamp     string `protobuf:"bytes,8,opt,name=next_report_timestamp,json=nextReportTimestamp,proto3" json:"next_report_timestamp,omitempty"`
+	LastConsensusTimestamp  string `protobuf:"bytes,9,opt,name=last_consensus_timestamp,json=lastConsensusTimestamp,proto3" json:"last_consensus_timestamp,omitempty"`
 }
 
 // HELPERS FOR TESTING AGAINST THE CHAIN

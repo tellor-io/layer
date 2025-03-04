@@ -6,8 +6,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"testing"
+	"time"
 
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
@@ -204,12 +204,110 @@ func TestAttestation(t *testing.T) {
 	var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
 	err = json.Unmarshal(res, &currentAggRes)
 	require.NoError(err)
-	timestampUint := currentAggRes.Timestamp
-	timestamp := strconv.FormatUint(timestampUint, 10)
+	timestamp := currentAggRes.Timestamp
 
 	// request attestations for that report
 	txHash, err := validators[0].Val.ExecTx(ctx, "validator", "bridge", "request-attestations", validators[0].Addr, decodedQueryId, timestamp, "--keyring-dir", validators[0].Val.HomeDir(), "--fees", "25loya")
 	fmt.Println("TX HASH (val1 request attestation): ", txHash)
 	require.NoError(err)
 
+	// get snapshots
+	snapshots, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", decodedQueryId, timestamp)
+	require.NoError(err)
+	var snapshotsRes e2e.QueryGetSnapshotsByReportResponse
+	err = json.Unmarshal(snapshots, &snapshotsRes)
+	require.NoError(err)
+	fmt.Println("snapshots: ", snapshotsRes)
+
+	// get attestations by snapshot
+	for _, snapshot := range snapshotsRes.Snapshots {
+		attestations, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-by-snapshot", snapshot)
+		require.NoError(err)
+		var attestationsRes e2e.QueryGetAttestationBySnapshotResponse
+		err = json.Unmarshal(attestations, &attestationsRes)
+		require.NoError(err)
+		fmt.Println("attestations: ", attestationsRes)
+
+		// get attestation data by snapshot
+		fmt.Println("snapshot: ", snapshot)
+		attestationData, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-data-by-snapshot", snapshot)
+		require.NoError(err)
+		var attestationDataRes e2e.QueryGetAttestationDataBySnapshotResponse
+		err = json.Unmarshal(attestationData, &attestationDataRes)
+		require.NoError(err)
+		fmt.Println("attestation data: ", attestationDataRes)
+		fmt.Println("attestation data.QueryId: ", attestationDataRes.QueryId)
+		fmt.Println("attestation data.Timestamp: ", attestationDataRes.Timestamp)
+		fmt.Println("attestation data.AggregateValue: ", attestationDataRes.AggregateValue)
+		fmt.Println("attestation data.AggregatePower: ", attestationDataRes.AggregatePower)
+		fmt.Println("attestation data.Checkpoint: ", attestationDataRes.Checkpoint)
+		fmt.Println("attestation data.AttestationTimestamp: ", attestationDataRes.AttestationTimestamp)
+		fmt.Println("attestation data.PreviousReportTimestamp: ", attestationDataRes.PreviousReportTimestamp)
+		fmt.Println("attestation data.NextReportTimestamp: ", attestationDataRes.NextReportTimestamp)
+		fmt.Println("attestation data.LastConsensusTimestamp: ", attestationDataRes.LastConsensusTimestamp)
+		// require.Equal(attestationDataRes.QueryId, decodedQueryId)
+		// require.Equal(attestationDataRes.Timestamp, timestamp)
+		// require.Equal(attestationDataRes.AggregateValue, value)
+		// require.Equal(attestationDataRes.AggregatePower, "10000000")
+		// require.NotNil(attestationDataRes.Checkpoint) // validator checkpoint
+		// require.Equal(attestationDataRes.AttestationTimestamp, timestamp)
+		// require.Equal(attestationDataRes.PreviousReportTimestamp, "0")
+		// require.Equal(attestationDataRes.NextReportTimestamp, "0")
+		// require.Equal(attestationDataRes.LastConsensusTimestamp, "")
+	}
+
+	// report for same cycle list again
+	success := false
+	var cycleListQData string
+	for !success {
+		cycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
+		require.NoError(err)
+		var cycleList e2e.QueryCurrentCyclelistQueryResponse
+		err = json.Unmarshal(cycleListRes, &cycleList)
+		require.NoError(err)
+		fmt.Println("current cycle list: ", cycleList.QueryData)
+		fmt.Println("prev report qData: ", currentCycleList.QueryData)
+		if cycleList.QueryData == currentCycleList.QueryData {
+			success = true
+			cycleListQData = cycleList.QueryData
+		}
+		time.Sleep(2 * time.Second)
+	}
+
+	for i, v := range validators {
+		// report for the cycle list
+		_, _, err = v.Val.Exec(ctx, v.Val.TxCommand("validator", "oracle", "submit-value", v.Addr, cycleListQData, value, "--fees", "25loya", "--keyring-dir", v.Val.HomeDir()), v.Val.Chain.Config().Env)
+		require.NoError(err)
+		height, err := chain.Height(ctx)
+		require.NoError(err)
+		fmt.Println("validator [", i, "] reported at height ", height)
+	}
+
+	// wait 2 blocks for query to expire
+	err = testutil.WaitForBlocks(ctx, 2, validators[0].Val)
+	require.NoError(err)
+
+	// get reports by reporter
+	var queryId3, queryId4, decodedQueryId2 string
+	for i, v := range validators {
+		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", v.Addr)
+		require.NoError(err)
+		var reportsRes e2e.QueryMicroReportsResponse
+		err = json.Unmarshal(reports, &reportsRes)
+		require.NoError(err)
+		fmt.Println("reports from: ", v.Addr, ": ", reportsRes)
+		require.Equal(len(reportsRes.MicroReports), 2) // each reporter should have two reports now
+		if i == 0 {
+			queryId3 = reportsRes.MicroReports[0].QueryID
+		} else {
+			queryId4 = reportsRes.MicroReports[0].QueryID
+		}
+		// decode queryId
+		decodedBytes, err := base64.StdEncoding.DecodeString(reportsRes.MicroReports[0].QueryID)
+		require.NoError(err)
+		decodedQueryId2 = hex.EncodeToString(decodedBytes)
+		fmt.Println("decodedQueryId: ", decodedQueryId2)
+	}
+	require.Equal(queryId3, queryId4) // make sure both reporters reported for the same query
+	require.Equal(queryId1, queryId3) // make sure query is same as first report
 }
