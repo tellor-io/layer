@@ -13,6 +13,7 @@ struct ReportData {
     uint256 aggregatePower;
     uint256 previousTimestamp;
     uint256 nextTimestamp;
+    uint256 lastConsensusTimestamp;
 }
 
 struct Signature {
