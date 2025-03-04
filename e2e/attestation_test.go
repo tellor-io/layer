@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
-	"time"
 
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
@@ -177,9 +176,7 @@ func TestAttestation(t *testing.T) {
 	require.NoError(err)
 
 	// check on reports
-	var queryId1, queryId2 string
-	var decodedQueryId string
-	var timestamp string
+	var queryId1, queryId2, decodedQueryId string
 	for i, v := range validators {
 		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", v.Addr)
 		require.NoError(err)
@@ -198,15 +195,17 @@ func TestAttestation(t *testing.T) {
 		require.NoError(err)
 		decodedQueryId = hex.EncodeToString(decodedBytes)
 		fmt.Println("decodedQueryId: ", decodedQueryId)
-		// parse timestamp
-		parsedTime, err := time.Parse(time.RFC3339Nano, reportsRes.MicroReports[0].Timestamp)
-		require.NoError(err)
-		unixTimestamp := parsedTime.Unix()
-		fmt.Println("unixTimestamp int64: ", unixTimestamp)
-		timestamp = strconv.FormatInt(unixTimestamp, 10)
-		fmt.Println("timestamp string: ", timestamp)
 	}
 	require.Equal(queryId1, queryId2) // make sure both reporters reported for the same query
+
+	// query GetCurrentAggregateReport to get aggregate timestamp
+	res, _, err = validators[0].Val.ExecQuery(ctx, "oracle", "get-current-aggregate-report", decodedQueryId)
+	require.NoError(err)
+	var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
+	err = json.Unmarshal(res, &currentAggRes)
+	require.NoError(err)
+	timestampUint := currentAggRes.Timestamp
+	timestamp := strconv.FormatUint(timestampUint, 10)
 
 	// request attestations for that report
 	txHash, err := validators[0].Val.ExecTx(ctx, "validator", "bridge", "request-attestations", validators[0].Addr, decodedQueryId, timestamp, "--keyring-dir", validators[0].Val.HomeDir(), "--fees", "25loya")

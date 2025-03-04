@@ -420,6 +420,35 @@ type QueryCurrentCyclelistQueryResponse struct {
 	QueryMeta *QueryMeta `protobuf:"bytes,2,opt,name=query_meta,json=queryMeta,proto3" json:"query_meta,omitempty"`
 }
 
+type QueryGetCurrentAggregateReportResponse struct {
+	// aggregate defines the current aggregate report.
+	Aggregate *Aggregate `protobuf:"bytes,1,opt,name=aggregate,proto3" json:"aggregate,omitempty"`
+	// timestamp defines the timestamp of the aggregate report.
+	Timestamp uint64 `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+}
+
+type Aggregate struct {
+	// query_id is the id of the query
+	QueryId []byte `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	// aggregate_value is the value of the aggregate
+	AggregateValue string `protobuf:"bytes,2,opt,name=aggregate_value,json=aggregateValue,proto3" json:"aggregate_value,omitempty"`
+	// aggregate_reporter is the address of the reporter
+	AggregateReporter string `protobuf:"bytes,3,opt,name=aggregate_reporter,json=aggregateReporter,proto3" json:"aggregate_reporter,omitempty"`
+	// aggregate_power is the power of all the reporters
+	// that reported for the aggregate
+	AggregatePower uint64 `protobuf:"varint,4,opt,name=aggregate_power,json=aggregatePower,proto3" json:"aggregate_power,omitempty"`
+	// flagged is true if the aggregate was flagged by a dispute
+	Flagged bool `protobuf:"varint,5,opt,name=flagged,proto3" json:"flagged,omitempty"`
+	// index is the index of the aggregate
+	Index uint64 `protobuf:"varint,6,opt,name=index,proto3" json:"index,omitempty"`
+	// height of the aggregate report
+	Height uint64 `protobuf:"varint,7,opt,name=height,proto3" json:"height,omitempty"`
+	// height of the micro report
+	MicroHeight uint64 `protobuf:"varint,8,opt,name=micro_height,json=microHeight,proto3" json:"micro_height,omitempty"`
+	// meta_id is the id of the querymeta iterator
+	MetaId uint64 `protobuf:"varint,9,opt,name=meta_id,json=metaId,proto3" json:"meta_id,omitempty"`
+}
+
 // HELPERS FOR TESTING AGAINST THE CHAIN
 
 func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos.ChainNode) (string, error) {
