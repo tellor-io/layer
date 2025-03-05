@@ -62,7 +62,7 @@ type ReporterAccs struct {
 
 // open 10 disputes simultaneously, vote and resolve all of them
 // 10 disputes on 10 different ppl
-func TestDispute(t *testing.T) {
+func TestTenDisputesTenPeople(t *testing.T) {
 	require := require.New(t)
 
 	t.Helper()
@@ -422,7 +422,7 @@ func TestDispute(t *testing.T) {
 }
 
 // reporter reports a bad value, unbonds some tokens, gets major disputed
-func TesUnbondMajorDispute(t *testing.T) {
+func TesReportUnbondMajorDispute(t *testing.T) {
 	require := require.New(t)
 
 	t.Helper()
@@ -796,7 +796,7 @@ func TesUnbondMajorDispute(t *testing.T) {
 }
 
 // reporter reports, their reporting power increases, then major dispute is opened on report with less power than they have now
-func TestGainTokensMajorDispute(t *testing.T) {
+func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require := require.New(t)
 
 	t.Helper()
@@ -1047,13 +1047,13 @@ func TestGainTokensMajorDispute(t *testing.T) {
 	for i := range delegations {
 		fmt.Println("delegations ", i, ": ", delegations[i])
 	}
-	require.Equal(len(delegations), 3) // val1 and user0, user1 is unbonding
+	require.Equal(len(delegations), 3) // val1, user0, and user1
 
 	// get val1 staking power
 	val1Staking, err = chain.StakingQueryValidator(ctx, val1valAddr)
 	require.NoError(err)
 	fmt.Println("val1 staking power after unbonding: ", val1Staking.Tokens)
-	require.Equal(val1Staking.Tokens, val1power.Add(math.NewInt(1000*1e6))) // val1 power after delegations plus user1 addtl 1000 trb
+	require.Equal(val1Staking.Tokens, val1power.Add(math.NewInt(1000*1e6))) // val1 power after initial delegations plus user1 addtl 1000 trb
 
 	// query reporter module
 	res, _, err = val1.ExecQuery(ctx, "reporter", "reporters")
@@ -1137,29 +1137,37 @@ func TestGainTokensMajorDispute(t *testing.T) {
 	fmt.Println("disputes: ", disputes)
 	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 2)  // should be resolved now
 	require.Equal(disputes.Disputes[0].Metadata.DisputeRound, "1") // stayed in first round
-	expectedFeeTotal := (math.NewInt(1_000 * 1e6))                 // 100% of user0 power
+	expectedFeeTotal := (math.NewInt(1_000 * 1e6))                 // 100% of user0 power at time of report
 	require.Equal(disputes.Disputes[0].Metadata.FeeTotal, expectedFeeTotal.String())
 	expectedBurnAmount := (expectedFeeTotal).Quo(math.NewInt(20)) // 5% of total fee
 	require.Equal(disputes.Disputes[0].Metadata.BurnAmount, expectedBurnAmount.String())
-	require.Equal(disputes.Disputes[0].Metadata.SlashAmount, expectedFeeTotal.String()) // 1% of amt staked with val1 still
+	require.Equal(disputes.Disputes[0].Metadata.SlashAmount, expectedFeeTotal.String())
 	require.Equal(disputes.Disputes[0].Metadata.InitialEvidence.Reporter, reporters[1].Addr)
 	require.Equal(disputes.Disputes[0].Metadata.InitialEvidence.Value, value)
+
+	// check on disputed reporter again
+	res, _, err = val1.ExecQuery(ctx, "reporter", "reporters")
+	require.NoError(err)
+	err = json.Unmarshal(res, &reportersRes)
+	require.NoError(err)
+	require.Equal(len(reportersRes.Reporters), numReporters+1) // 2 pure reporters + 1 validator reporter
+	fmt.Println("reportersRes: ", reportersRes)
+	// find the disputed reporter (user1) and verify they are jailed
+	for _, reporter := range reportersRes.Reporters {
+		if reporter.Address == reporters[1].Addr { // user1's address
+			disputedReporter = reporter
+			break
+		}
+	}
+	require.NotNil(disputedReporter, "Disputed reporter not found")
+	require.True(disputedReporter.Metadata.Jailed, "Disputed reporter should be jailed")
+	require.Greater(disputedReporter.Metadata.JailedUntil, time.Now().Add(1000000*time.Hour)) // jailed over 100 years mua ha ha
 
 	// get user1 stake after resolving dispute
 	user1StakingAfterDispute, err := chain.StakingQueryDelegation(ctx, val1valAddr, user1Addr)
 	require.NoError(err)
 	fmt.Println("user1 staking after resolving dispute: ", user1StakingAfterDispute)
-
-	delegations, err = chain.StakingQueryDelegationsTo(ctx, val1valAddr)
-	require.NoError(err)
-	for i := range delegations {
-		fmt.Println("delegations to val1 before withdrawing fee refund ", i, ": ", delegations[i])
-	}
-
-	// query unbonding delegations for user0 before withdrawing fee refund, should be empty
-	unbonding, err := chain.StakingQueryUnbondingDelegations(ctx, user0Addr)
-	require.NoError(err)
-	fmt.Println("unbonding delegations for user0: ", unbonding)
+	require.Equal(user1StakingAfterDispute.Balance.Amount.String(), user1StakingBeforeDispute.Balance.Amount.Sub(expectedFeeTotal).String()) // only slashed power at time of report (1000 trb)
 
 	// withdraw feerefund for user0
 	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "withdraw-fee-refund", user0Addr, "1", "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "10loya")
@@ -1176,6 +1184,13 @@ func TestGainTokensMajorDispute(t *testing.T) {
 	user0FreeFloatingBeforeClaim, err := chain.BankQueryBalance(ctx, user0Addr, "loya")
 	require.NoError(err)
 	fmt.Println("user0 free floating before claiming reward: ", user0FreeFloatingBeforeClaim)
+
+	delegations, err = chain.StakingQueryDelegationsTo(ctx, val1valAddr)
+	require.NoError(err)
+	for i := range delegations {
+		fmt.Println("delegations to val1 before withdrawing fee refund ", i, ": ", delegations[i])
+	}
+	require.Equal(len(delegations), 3) // val1, user0, and user1
 
 	// claim reward for user0
 	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "claim-reward", "1", "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "10loya")
@@ -1196,7 +1211,7 @@ func TestGainTokensMajorDispute(t *testing.T) {
 	for i := range delegations {
 		fmt.Println("delegations to val1 after claiming reward ", i, ": ", delegations[i])
 	}
-	require.Equal(len(delegations), 3) // val1 and user0, user1 is gone
+	require.Equal(len(delegations), 3) // val1, user0, and user1
 
 	// check user0 delegation to val1, should not have changed
 	user0Delegation, err := chain.StakingQueryDelegation(ctx, val1valAddr, user0Addr)
@@ -1204,11 +1219,66 @@ func TestGainTokensMajorDispute(t *testing.T) {
 	fmt.Println("user0 delegation to val1: ", user0Delegation)
 	require.Equal(user0Delegation.Balance.Amount.String(), user0StakingAfterWithdraw.Balance.Amount.String())
 
-	// check user0 free floating after claiming reward
+	// check user0 free floating after claiming reward, should increase
 	user0FreeFloatingAfterClaim, err := chain.BankQueryBalance(ctx, user0Addr, "loya")
 	require.NoError(err)
 	fmt.Println("user0 free floating after claiming reward: ", user0FreeFloatingAfterClaim)
 	require.Greater(user0FreeFloatingAfterClaim.Int64(), user0FreeFloatingBeforeClaim.Int64())
+
+	// check user1 delegation to val1, should be 1000 trb
+	user1Delegation, err := chain.StakingQueryDelegation(ctx, val1valAddr, user1Addr)
+	require.NoError(err)
+	fmt.Println("user1 delegation to val1: ", user1Delegation)
+	require.Equal(user1Delegation.Balance.Amount.String(), "1000000000")
+
+	// try to create reporter from user1
+	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val1.HomeDir())
+	require.Error(err)
+	fmt.Println("TX HASH (user1 tries to create reporter again): ", txHash)
+
+	// check reporter module
+	res, _, err = val1.ExecQuery(ctx, "reporter", "reporters")
+	require.NoError(err)
+	err = json.Unmarshal(res, &reportersRes)
+	require.NoError(err)
+	require.Equal(len(reportersRes.Reporters), numReporters+1) // 2 pure reporters + 1 validator reporter
+
+	// user1 tries to select another reporter, errors with selector already exists
+	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "select-reporter", user0Addr, "--keyring-dir", val1.HomeDir())
+	require.Error(err)
+	fmt.Println("TX HASH (user1 tries to select another reporter): ", txHash)
+
+	// user1 tries switching reporters, errors with cannot switch reporter if selector is a reporter
+	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "switch-reporter", user0Addr, "--keyring-dir", val1.HomeDir())
+	require.Error(err)
+	fmt.Println("TX HASH (user1 tries to switch reporters): ", txHash)
+
+	// user1 tries to remove self as selector, errors selector cannot be removed if it is the reporter's own address
+	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "remove-selector", user1Addr, "--keyring-dir", val1.HomeDir())
+	require.Error(err)
+	fmt.Println("TX HASH (user1 tries to remove self as selector): ", txHash)
+
+	// check reporter module
+	res, _, err = val1.ExecQuery(ctx, "reporter", "reporters")
+	require.NoError(err)
+	err = json.Unmarshal(res, &reportersRes)
+	require.NoError(err)
+	require.Equal(len(reportersRes.Reporters), numReporters+1) // 2 pure reporters + 1 validator reporter
+	fmt.Println("reportersRes: ", reportersRes)
+
+	// user1 unbonds thier second 1000 trb delegation
+	txHash, err = val1.ExecTx(ctx, user1Addr, "staking", "unbond", val1valAddr, "1000000000loya", "--keyring-dir", val1.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (user1 unbonds their second 1000 trb delegation): ", txHash)
+
+	// check unbonding delegations
+	unbonding, err := chain.StakingQueryUnbondingDelegationsFrom(ctx, val1valAddr)
+	require.NoError(err)
+	fmt.Println("unbonding delegations from val1: ", unbonding)
+	require.Equal(len(unbonding), 1)
+	require.Equal(unbonding[0].DelegatorAddress, user1Addr)
+	require.Equal(unbonding[0].ValidatorAddress, val1valAddr)
+	require.Equal(unbonding[0].Entries[0].Balance.String(), "1000000000")
 }
 
 // 1% open, moves to 5%, moves to 100%
