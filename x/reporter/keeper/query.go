@@ -157,3 +157,10 @@ func (k Querier) AvailableTips(ctx context.Context, req *types.QueryAvailableTip
 	}
 	return &types.QueryAvailableTipsResponse{AvailableTips: rewards}, nil
 }
+
+// func (k Querier) ReporterPower(ctx context.Context, req *types.QueryReporterPowerRequest) (*types.QueryReporterPowerResponse, error) {
+// 	if req == nil {
+// 		return nil, status.Error(codes.InvalidArgument, "invalid request")
+// 	}
+
+// }
