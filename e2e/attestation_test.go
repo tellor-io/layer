@@ -25,7 +25,7 @@ import (
 // cd e2e
 // go test -run TestAttestation --timeout 5m
 
-// user requests cycle list spot price attestation
+// check snapshot/attestation data for report1_consensus, report2_not_consensus, request_attestations_report2 (lastConsTs should equal report1 timestamp)
 func TestAttestation(t *testing.T) {
 	require := require.New(t)
 
@@ -112,7 +112,7 @@ func TestAttestation(t *testing.T) {
 	}
 
 	validators := make([]Validators, len(chain.Validators))
-	for i, _ := range chain.Validators {
+	for i := range chain.Validators {
 		val := chain.Validators[i]
 		valAddr, err := val.AccountKeyBech32(ctx, "validator")
 		require.NoError(err)
@@ -206,11 +206,6 @@ func TestAttestation(t *testing.T) {
 	require.NoError(err)
 	timestamp := currentAggRes.Timestamp
 
-	// request attestations for that report
-	txHash, err := validators[0].Val.ExecTx(ctx, "validator", "bridge", "request-attestations", validators[0].Addr, decodedQueryId, timestamp, "--keyring-dir", validators[0].Val.HomeDir(), "--fees", "25loya")
-	fmt.Println("TX HASH (val1 request attestation): ", txHash)
-	require.NoError(err)
-
 	// get snapshots
 	snapshots, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", decodedQueryId, timestamp)
 	require.NoError(err)
@@ -223,10 +218,11 @@ func TestAttestation(t *testing.T) {
 	for _, snapshot := range snapshotsRes.Snapshots {
 		attestations, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-by-snapshot", snapshot)
 		require.NoError(err)
+		fmt.Println("attestations bz: ", attestations)
 		var attestationsRes e2e.QueryGetAttestationBySnapshotResponse
 		err = json.Unmarshal(attestations, &attestationsRes)
 		require.NoError(err)
-		fmt.Println("attestations: ", attestationsRes)
+		fmt.Println("attestations: ", attestationsRes) // investigate why this is empty, bytes are not empty
 
 		// get attestation data by snapshot
 		fmt.Println("snapshot: ", snapshot)
@@ -235,29 +231,19 @@ func TestAttestation(t *testing.T) {
 		var attestationDataRes e2e.QueryGetAttestationDataBySnapshotResponse
 		err = json.Unmarshal(attestationData, &attestationDataRes)
 		require.NoError(err)
-		fmt.Println("attestation data: ", attestationDataRes)
-		fmt.Println("attestation data.QueryId: ", attestationDataRes.QueryId)
-		fmt.Println("attestation data.Timestamp: ", attestationDataRes.Timestamp)
-		fmt.Println("attestation data.AggregateValue: ", attestationDataRes.AggregateValue)
-		fmt.Println("attestation data.AggregatePower: ", attestationDataRes.AggregatePower)
-		fmt.Println("attestation data.Checkpoint: ", attestationDataRes.Checkpoint)
-		fmt.Println("attestation data.AttestationTimestamp: ", attestationDataRes.AttestationTimestamp)
-		fmt.Println("attestation data.PreviousReportTimestamp: ", attestationDataRes.PreviousReportTimestamp)
-		fmt.Println("attestation data.NextReportTimestamp: ", attestationDataRes.NextReportTimestamp)
-		fmt.Println("attestation data.LastConsensusTimestamp: ", attestationDataRes.LastConsensusTimestamp)
-		// require.Equal(attestationDataRes.QueryId, decodedQueryId)
-		// require.Equal(attestationDataRes.Timestamp, timestamp)
-		// require.Equal(attestationDataRes.AggregateValue, value)
-		// require.Equal(attestationDataRes.AggregatePower, "10000000")
-		// require.NotNil(attestationDataRes.Checkpoint) // validator checkpoint
-		// require.Equal(attestationDataRes.AttestationTimestamp, timestamp)
-		// require.Equal(attestationDataRes.PreviousReportTimestamp, "0")
-		// require.Equal(attestationDataRes.NextReportTimestamp, "0")
-		// require.Equal(attestationDataRes.LastConsensusTimestamp, "")
+		require.Equal(attestationDataRes.QueryId, decodedQueryId)
+		require.Equal(attestationDataRes.Timestamp, timestamp)
+		require.Equal(attestationDataRes.AggregateValue, value)
+		require.Equal(attestationDataRes.AggregatePower, "10000000") // 100% power
+		require.NotNil(attestationDataRes.Checkpoint)                // validator checkpoint not nil
+		require.Equal(attestationDataRes.AttestationTimestamp, timestamp)
+		require.Equal(attestationDataRes.PreviousReportTimestamp, "0")      // first report for qId
+		require.Equal(attestationDataRes.NextReportTimestamp, "0")          // first report for qId
+		require.Equal(attestationDataRes.LastConsensusTimestamp, timestamp) // lastConsTs should equal report1 timestamp
 	}
 
-	// report for same cycle list again
-	success := false
+	// sleep until cycle list query data is the same as the previous report
+	var success bool
 	var cycleListQData string
 	for !success {
 		cycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
@@ -265,49 +251,110 @@ func TestAttestation(t *testing.T) {
 		var cycleList e2e.QueryCurrentCyclelistQueryResponse
 		err = json.Unmarshal(cycleListRes, &cycleList)
 		require.NoError(err)
-		fmt.Println("current cycle list: ", cycleList.QueryData)
-		fmt.Println("prev report qData: ", currentCycleList.QueryData)
 		if cycleList.QueryData == currentCycleList.QueryData {
 			success = true
 			cycleListQData = cycleList.QueryData
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
 
-	for i, v := range validators {
-		// report for the cycle list
-		_, _, err = v.Val.Exec(ctx, v.Val.TxCommand("validator", "oracle", "submit-value", v.Addr, cycleListQData, value, "--fees", "25loya", "--keyring-dir", v.Val.HomeDir()), v.Val.Chain.Config().Env)
-		require.NoError(err)
-		height, err := chain.Height(ctx)
-		require.NoError(err)
-		fmt.Println("validator [", i, "] reported at height ", height)
-	}
+	// report for the cycle list from 1 val so not a consensus report
+	_, _, err = validators[0].Val.Exec(ctx, validators[0].Val.TxCommand("validator", "oracle", "submit-value", validators[0].Addr, cycleListQData, value, "--fees", "25loya", "--keyring-dir", validators[0].Val.HomeDir()), validators[0].Val.Chain.Config().Env)
+	require.NoError(err)
+	height, err := chain.Height(ctx)
+	require.NoError(err)
+	fmt.Println("validator [0] reported at height ", height)
 
 	// wait 2 blocks for query to expire
 	err = testutil.WaitForBlocks(ctx, 2, validators[0].Val)
 	require.NoError(err)
 
 	// get reports by reporter
-	var queryId3, queryId4, decodedQueryId2 string
-	for i, v := range validators {
-		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", v.Addr)
+	var queryId3 string
+	reports, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[0].Addr)
+	require.NoError(err)
+	var reportsRes e2e.QueryMicroReportsResponse
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(err)
+	fmt.Println("reports from: ", validators[0].Addr, ": ", reportsRes)
+	require.Equal(len(reportsRes.MicroReports), 2) // val0 should have two reports now
+	queryId3 = reportsRes.MicroReports[0].QueryID
+	require.Equal(queryId1, queryId3) // make sure query is same as first report, then we can reuse the decoded queryId from earlier
+
+	// query GetCurrentAggregateReport to get aggregate timestamp
+	res, _, err = validators[0].Val.ExecQuery(ctx, "oracle", "get-current-aggregate-report", decodedQueryId)
+	require.NoError(err)
+	err = json.Unmarshal(res, &currentAggRes)
+	require.NoError(err)
+	prevTimestamp := timestamp
+	timestamp = currentAggRes.Timestamp
+	fmt.Println("timestamp: ", timestamp)
+	fmt.Println("currentAggRes: ", currentAggRes)
+
+	// get snapshots
+	snapshots, _, err = validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", decodedQueryId, timestamp)
+	require.NoError(err)
+	err = json.Unmarshal(snapshots, &snapshotsRes)
+	require.NoError(err)
+	fmt.Println("snapshots: ", snapshotsRes)
+
+	// get attestations by snapshot
+	for _, snapshot := range snapshotsRes.Snapshots {
+		attestations, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-by-snapshot", snapshot)
 		require.NoError(err)
-		var reportsRes e2e.QueryMicroReportsResponse
-		err = json.Unmarshal(reports, &reportsRes)
+		fmt.Println("attestations bz: ", attestations)
+		var attestationsRes e2e.QueryGetAttestationBySnapshotResponse
+		err = json.Unmarshal(attestations, &attestationsRes)
 		require.NoError(err)
-		fmt.Println("reports from: ", v.Addr, ": ", reportsRes)
-		require.Equal(len(reportsRes.MicroReports), 2) // each reporter should have two reports now
-		if i == 0 {
-			queryId3 = reportsRes.MicroReports[0].QueryID
-		} else {
-			queryId4 = reportsRes.MicroReports[0].QueryID
-		}
-		// decode queryId
-		decodedBytes, err := base64.StdEncoding.DecodeString(reportsRes.MicroReports[0].QueryID)
+		fmt.Println("attestations: ", attestationsRes) // investigate why this is empty, bytes are not empty
+
+		// get attestation data by snapshot
+		fmt.Println("snapshot: ", snapshot)
+		attestationData, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-data-by-snapshot", snapshot)
 		require.NoError(err)
-		decodedQueryId2 = hex.EncodeToString(decodedBytes)
-		fmt.Println("decodedQueryId: ", decodedQueryId2)
+		var attestationDataRes e2e.QueryGetAttestationDataBySnapshotResponse
+		err = json.Unmarshal(attestationData, &attestationDataRes)
+		require.NoError(err)
+		require.Equal(attestationDataRes.QueryId, decodedQueryId)
+		require.Equal(attestationDataRes.Timestamp, timestamp)
+		require.Equal(attestationDataRes.AggregateValue, value)
+		require.Equal(attestationDataRes.AggregatePower, "5000000") // 50% power
+		require.NotNil(attestationDataRes.Checkpoint)               // validator checkpoint not nil
+		require.Equal(attestationDataRes.AttestationTimestamp, timestamp)
+		require.Equal(attestationDataRes.PreviousReportTimestamp, prevTimestamp)
+		require.Equal(attestationDataRes.NextReportTimestamp, "0")              // first report for qId
+		require.Equal(attestationDataRes.LastConsensusTimestamp, prevTimestamp) // lastConsTs should equal report1 timestamp
 	}
-	require.Equal(queryId3, queryId4) // make sure both reporters reported for the same query
-	require.Equal(queryId1, queryId3) // make sure query is same as first report
+
+	// wait and request attestations for report2
+	err = testutil.WaitForBlocks(ctx, 5, validators[0].Val)
+	require.NoError(err)
+	txHash, err := validators[0].Val.ExecTx(ctx, "validator", "bridge", "request-attestations", validators[0].Addr, decodedQueryId, timestamp, "--keyring-dir", validators[0].Val.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (val0 requests attestation for report2): ", txHash)
+
+	// get snapshots by report
+	snapshots, _, err = validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", decodedQueryId, timestamp)
+	require.NoError(err)
+	err = json.Unmarshal(snapshots, &snapshotsRes)
+	require.NoError(err)
+	fmt.Println("snapshots: ", snapshotsRes)
+	require.Equal(len(snapshotsRes.Snapshots), 2) // should be auto generated plus additional requested snapshot
+
+	// get attestation data for new attestation request
+	attestationData, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-data-by-snapshot", snapshotsRes.Snapshots[1])
+	require.NoError(err)
+	var attestationDataRes e2e.QueryGetAttestationDataBySnapshotResponse
+	err = json.Unmarshal(attestationData, &attestationDataRes)
+	require.NoError(err)
+	require.Equal(attestationDataRes.QueryId, decodedQueryId)
+	require.Equal(attestationDataRes.Timestamp, timestamp)
+	require.Equal(attestationDataRes.AggregateValue, value)
+	require.Equal(attestationDataRes.AggregatePower, "5000000")         // 50% power
+	require.NotNil(attestationDataRes.Checkpoint)                       // validator checkpoint not nil
+	require.Greater(attestationDataRes.AttestationTimestamp, timestamp) // attestation was after report2 timestamp
+	require.Equal(attestationDataRes.PreviousReportTimestamp, prevTimestamp)
+	require.Equal(attestationDataRes.NextReportTimestamp, "0")
+	require.Equal(attestationDataRes.LastConsensusTimestamp, prevTimestamp) // lastConsTs should equal report1 timestamp
+	fmt.Println("attestationData: ", attestationDataRes)
 }

@@ -61,6 +61,7 @@ type ReporterAccs struct {
 // go test -run TestDispute --timeout 5m
 
 // open 10 disputes simultaneously, vote and resolve all of them
+// 10 disputes on 10 different ppl
 func TestDispute(t *testing.T) {
 	require := require.New(t)
 
@@ -421,7 +422,7 @@ func TestDispute(t *testing.T) {
 }
 
 // reporter reports a bad value, unbonds some tokens, gets major disputed
-func TestMajorSlash(t *testing.T) {
+func TesUnbondMajorDispute(t *testing.T) {
 	require := require.New(t)
 
 	t.Helper()
@@ -792,4 +793,15 @@ func TestMajorSlash(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("user0 free floating after claiming reward: ", user0FreeFloatingAfterClaim)
 	require.Greater(user0FreeFloatingAfterClaim.Int64(), user0FreeFloatingBeforeClaim.Int64())
+}
+
+// reporter reports, thier reporting power increases, then major dispute is opened on report with less power than they have now
+func TestGainTokensMajorDispute(t *testing.T) {
+
+}
+
+// 1% open, moves to 5%, moves to 100%
+// 3 open on same person, different reports
+func TestEscalatingDispute(t *testing.T) {
+
 }
