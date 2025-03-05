@@ -422,7 +422,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 }
 
 // reporter reports a bad value, unbonds some tokens, gets major disputed
-func TesReportUnbondMajorDispute(t *testing.T) {
+func TestReportUnbondMajorDispute(t *testing.T) {
 	require := require.New(t)
 
 	t.Helper()
@@ -1266,7 +1266,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Equal(len(reportersRes.Reporters), numReporters+1) // 2 pure reporters + 1 validator reporter
 	fmt.Println("reportersRes: ", reportersRes)
 
-	// user1 unbonds thier second 1000 trb delegation
+	// user1 unbonds their second 1000 trb delegation
 	txHash, err = val1.ExecTx(ctx, user1Addr, "staking", "unbond", val1valAddr, "1000000000loya", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (user1 unbonds their second 1000 trb delegation): ", txHash)
