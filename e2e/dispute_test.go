@@ -551,7 +551,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 		}
 	}
 
-	// query stkaing module delegations
+	// query staking module delegations
 	delegations, err := chain.StakingQueryDelegationsTo(ctx, val1valAddr)
 	require.NoError(err)
 	for i := range delegations {
@@ -627,7 +627,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("TX HASH (user1 unbonds all of their tokens): ", txHash)
 
-	// query stkaing module delegations
+	// query staking module delegations
 	delegations, err = chain.StakingQueryDelegationsTo(ctx, val1valAddr)
 	require.NoError(err)
 	for i := range delegations {
@@ -925,7 +925,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 		}
 	}
 
-	// query stkaing module delegations
+	// query staking module delegations
 	delegations, err := chain.StakingQueryDelegationsTo(ctx, val1valAddr)
 	require.NoError(err)
 	for i := range delegations {
@@ -1413,7 +1413,7 @@ func TestEscalatingDispute(t *testing.T) {
 		}
 	}
 
-	// query stkaing module delegations
+	// query staking module delegations
 	delegations, err := chain.StakingQueryDelegationsTo(ctx, val1valAddr)
 	require.NoError(err)
 	for i := range delegations {
@@ -1649,4 +1649,332 @@ func TestEscalatingDispute(t *testing.T) {
 	require.Greater(user0BalanceAfterClaim2.Int64(), user0BalanceAfterClaim.Int64())
 	require.Greater(user0BalanceAfterClaim2.Int64(), user0BalanceAfterClaim.Add(math.NewInt(1250000)).Int64()) // all of 2.5% of 50 trb, plus some dust from last claim
 	require.Less(user0BalanceAfterClaim2.Int64(), user0BalanceAfterClaim.Add(math.NewInt(1251000)).Int64())    // less than 1000 loya in dust
+}
+
+// major dispute opened maliciously, disputer loses
+func TestMajorDisputeAgainst(t *testing.T) {
+	require := require.New(t)
+
+	t.Helper()
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
+
+	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
+
+	modifyGenesis := []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
+		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "20s"),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+	}
+
+	nv := 2
+	nf := 0
+	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
+		{
+			NumValidators: &nv,
+			NumFullNodes:  &nf,
+			ChainConfig: ibc.ChainConfig{
+				Type:           "cosmos",
+				Name:           "layer",
+				ChainID:        "layer",
+				Bin:            "layerd",
+				Denom:          "loya",
+				Bech32Prefix:   "tellor",
+				CoinType:       "118",
+				GasPrices:      "0.0loya",
+				GasAdjustment:  1.1,
+				TrustingPeriod: "504h",
+				NoHostMount:    false,
+				Images: []ibc.DockerImage{
+					{
+						Repository: "layer",
+						Version:    "local",
+						UidGid:     "1025:1025",
+					},
+				},
+				EncodingConfig:      e2e.LayerEncoding(),
+				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
+				AdditionalStartArgs: []string{"--key-name", "validator", "--price-daemon-enabled=false"},
+			},
+		},
+	})
+
+	client, network := interchaintest.DockerSetup(t)
+
+	chain := chains[0].(*cosmos.CosmosChain)
+
+	ic := interchaintest.NewInterchain().
+		AddChain(chain)
+
+	ctx := context.Background()
+
+	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
+		TestName:  t.Name(),
+		Client:    client,
+		NetworkID: network,
+		// BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
+		SkipPathCreation: false,
+	}))
+	t.Cleanup(func() {
+		_ = ic.Close()
+	})
+	teamMnemonic := "unit curious maid primary holiday lunch lift melody boil blossom three boat work deliver alpha intact tornado october process dignity gravity giggle enrich output"
+	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
+	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
+		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
+		Amount:  math.NewInt(1000000000000),
+		Denom:   "loya",
+	}))
+
+	val1 := chain.Validators[0]
+	val1Addr, err := val1.AccountKeyBech32(ctx, "validator")
+	require.NoError(err)
+	val1valAddr, err := val1.KeyBech32(ctx, "validator", "val")
+	require.NoError(err)
+	fmt.Println("val1 Account Address: ", val1Addr)
+	fmt.Println("val1 Validator Address: ", val1valAddr)
+
+	// queryValidators to confirm that 2 validators are bonded
+	vals, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
+	require.NoError(err)
+	require.Equal(len(vals), 2)
+
+	// get val1 staking power
+	val1Staking, err := chain.StakingQueryValidator(ctx, val1valAddr)
+	require.NoError(err)
+	val1StartPower := val1Staking.Tokens
+	fmt.Println("val1 staking power before delegations: ", val1StartPower)
+
+	// make 2 users who will delegate to val1 and become reporters
+	numReporters := 2
+	reporters := make([]ReporterAccs, numReporters)
+	expectedDelTotal := math.NewInt(0)
+	var user0Addr, user1Addr string
+	var delegateAmt sdk.Coin
+	for i := range numReporters {
+		keyname := fmt.Sprintf("user%d", i)
+		fundAmt := math.NewInt(10_000 * 1e6)
+		delegateAmt = sdk.NewCoin("loya", math.NewInt(1_000*1e6))
+		user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
+		txHash, err := val1.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1valAddr, delegateAmt.String(), "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		require.NoError(err)
+		fmt.Println("TX HASH (", keyname, " delegates to val1): ", txHash)
+		reporters[i] = ReporterAccs{
+			Keyname: keyname,
+			Addr:    user.FormattedAddress(),
+		}
+		expectedDelTotal = expectedDelTotal.Add(delegateAmt.Amount)
+		fmt.Println("expectedDelTotal: ", expectedDelTotal)
+		val1Staking, err = chain.StakingQueryValidator(ctx, val1valAddr)
+		require.NoError(err)
+		fmt.Println("val1 staking power: ", val1Staking.Tokens)
+		if i == 0 {
+			user0Addr = user.FormattedAddress()
+		} else {
+			user1Addr = user.FormattedAddress()
+		}
+	}
+
+	// query staking module delegations
+	delegations, err := chain.StakingQueryDelegationsTo(ctx, val1valAddr)
+	require.NoError(err)
+	for i := range delegations {
+		fmt.Println("delegations ", i, ": ", delegations[i])
+	}
+	require.Equal(len(delegations), 3) // val1, user0, user1
+
+	// get val1 staking power
+	val1Staking, err = chain.StakingQueryValidator(ctx, val1valAddr)
+	require.NoError(err)
+	fmt.Println("val1 staking power: ", val1Staking.Tokens)
+	require.Equal(val1Staking.Tokens, val1StartPower.Add(expectedDelTotal))
+	// val1power := val1Staking.Tokens
+
+	// submit minting proposal and vote yes on it from all validators
+	require.NoError(e2e.TurnOnMinting(ctx, chain, val1))
+
+	// custom gov params set voting period to 15s
+	require.NoError(testutil.WaitForBlocks(ctx, 5, val1))
+	result, err := chain.GovQueryProposal(ctx, 1)
+	require.NoError(err)
+
+	expectedYesTotal := math.NewInt(10000000000000).Add(expectedDelTotal)
+	fmt.Println("Proposal status: ", result.Status.String())
+	require.Equal(result.FinalTallyResult.Yes.String(), expectedYesTotal.String())
+	require.Equal(result.FinalTallyResult.No.String(), "0")
+	require.Equal(result.FinalTallyResult.Abstain.String(), "0")
+	require.Equal(result.FinalTallyResult.NoWithVeto.String(), "0")
+	require.Equal(result.Status.String(), "PROPOSAL_STATUS_PASSED")
+
+	// all 2 delegators become reporters
+	for i := range reporters {
+		commissRate := "0.1"
+		minStakeAmt := "1000000"
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, "--keyring-dir", val1.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
+	}
+
+	// val1 becomes a reporter
+	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val1.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
+
+	// query reporter module
+	res, _, err := val1.ExecQuery(ctx, "reporter", "reporters")
+	require.NoError(err)
+	var reportersRes e2e.QueryReportersResponse
+	err = json.Unmarshal(res, &reportersRes)
+	require.NoError(err)
+	fmt.Println("reporters res: ", reportersRes)
+	require.Equal(len(reportersRes.Reporters), numReporters+1) // number of delegating reporters + 1 validator reporter
+
+	// user0 tips 1trb for bch
+	value := layerutil.EncodeValue(10000000.99)
+	tipAmt := math.NewInt(1_000_000)
+	tip := sdk.NewCoin("loya", tipAmt)
+	_, _, err = val1.Exec(ctx, val1.TxCommand("user0", "oracle", "tip", user0Addr, bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	require.NoError(err)
+	fmt.Println("TX HASH (user0 tipped ", bchQId, "): ", txHash)
+	err = testutil.WaitForBlocks(ctx, 1, val1)
+	require.NoError(err)
+
+	// user1 reports for bch spotprice
+	txHash, err = val1.ExecTx(ctx, "user1", "oracle", "submit-value", user1Addr, bchQData, value, "--keyring-dir", val1.HomeDir())
+	fmt.Println("TX HASH (user1 reported ", bchQId, "): ", txHash)
+	require.NoError(err)
+	err = testutil.WaitForBlocks(ctx, 1, val1)
+	require.NoError(err)
+
+	// wait for query to expire
+	err = testutil.WaitForBlocks(ctx, 2, val1)
+	require.NoError(err)
+
+	// get report to check reporter power
+	res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr)
+	require.NoError(err)
+	var reports e2e.QueryMicroReportsResponse
+	require.NoError(json.Unmarshal(res, &reports))
+	fmt.Println("reports: ", reports)
+	require.Equal(reports.MicroReports[0].Reporter, user1Addr)
+	require.Equal(reports.MicroReports[0].Value, value)
+	require.Equal(reports.MicroReports[0].Power, "1000")
+
+	// get user0 stake before dispute
+	user0StakingBeforeDispute, err := chain.StakingQueryDelegation(ctx, val1valAddr, user0Addr)
+	require.NoError(err)
+	fmt.Println("user0 stake before dispute: ", user0StakingBeforeDispute.Balance.Amount.String())
+
+	// get user1 stake before dispute
+	user1StakingBeforeDispute, err := chain.StakingQueryDelegation(ctx, val1valAddr, user1Addr)
+	require.NoError(err)
+	fmt.Println("user1 stake before dispute: ", user1StakingBeforeDispute.Balance.Amount.String())
+
+	// open major dispute from user0
+	decodedBytes, err := base64.StdEncoding.DecodeString(reports.MicroReports[0].QueryID)
+	require.NoError(err)
+	hexStr := hex.EncodeToString(decodedBytes)
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, hexStr, "major", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	require.NoError(err)
+	fmt.Println("TX HASH (user0 opens warning dispute): ", txHash)
+
+	// check on dispute
+	r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	var disputes e2e.Disputes
+	err = json.Unmarshal(r, &disputes)
+	require.NoError(err)
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1)   // open
+	require.Equal(disputes.Disputes[0].Metadata.DisputeCategory, 3) // major
+	require.Equal(disputes.Disputes[0].Metadata.DisputeID, "1")     // open
+	require.Equal(disputes.Disputes[0].Metadata.DisputeRound, "1")
+	require.Equal(disputes.Disputes[0].Metadata.FeeTotal, "1000000000") // 1000 * 1e6 is 100% of 1000 trb
+	fmt.Println("open dispute: ", disputes.Disputes[0])
+
+	// there should be no delegations to val1 besides self now
+	delegations, err = chain.StakingQueryDelegationsTo(ctx, val1valAddr)
+	require.NoError(err)
+	require.Equal(len(delegations), 1) // self only
+
+	// vote from user0 against
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "vote", "1", "vote-against", "--keyring-dir", val1.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (user0 votes against dispute 1): ", txHash)
+
+	// vote from team against
+	txHash, err = val1.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-against", "--keyring-dir", val1.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (team votes against dispute 1): ", txHash)
+
+	// wait 1 block for execution
+	err = testutil.WaitForBlocks(ctx, 1, val1)
+	require.NoError(err)
+
+	// check on dispute
+	r, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	err = json.Unmarshal(r, &disputes)
+	require.NoError(err)
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 2)   // resolved
+	require.Equal(disputes.Disputes[0].Metadata.DisputeCategory, 3) // major
+	require.Equal(disputes.Disputes[0].Metadata.DisputeID, "1")
+	require.Equal(disputes.Disputes[0].Metadata.DisputeRound, "1")
+	require.Equal(disputes.Disputes[0].Metadata.FeeTotal, "1000000000") // 1000 * 1e6 is 100% of 1000 trb
+
+	// check on val1 delegations
+	delegations, err = chain.StakingQueryDelegationsTo(ctx, val1valAddr)
+	require.NoError(err)
+	fmt.Println("delegations to val1 after dispute: ", delegations)
+	require.Equal(len(delegations), 2) // self and user1 who got falsely disputed
+
+	// check user1 delegation after dispute
+	user1StakingAfterDispute, err := chain.StakingQueryDelegation(ctx, val1valAddr, user1Addr)
+	require.NoError(err)
+	fmt.Println("user1 stake after dispute: ", user1StakingAfterDispute.Balance.Amount.String())
+	expectedStake := math.NewInt(1000 * 1e6).Add(math.NewInt(950 * 1e6))
+	require.Equal(user1StakingAfterDispute.Balance.Amount.String(), expectedStake.String())
+
+	// attempted withdraw fee refund from user0, fails
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "withdraw-fee-refund", user0Addr, "1", "--gas", "250000", "--keyring-dir", val1.HomeDir())
+	require.Error(err)
+	fmt.Println("TX HASH (user0 withdraws fee refund): ", txHash)
+
+	// check user0 stake after withdrawing refund, he should have lost everything
+	_, err = chain.StakingQueryDelegation(ctx, val1valAddr, user0Addr)
+	require.Error(err)
+
+	// attempted withdraw fee refund from user1,  fails bc money was already sent
+	txHash, err = val1.ExecTx(ctx, user1Addr, "dispute", "withdraw-fee-refund", user1Addr, "1", "--gas", "250000", "--keyring-dir", val1.HomeDir())
+	require.Error(err)
+	fmt.Println("TX HASH (user1 withdraws fee refund): ", txHash)
+
+	// check user1 stake after withdrawing refund, still 1950 trb
+	user1StakingAfterRefund, err := chain.StakingQueryDelegation(ctx, val1valAddr, user1Addr)
+	require.NoError(err)
+	fmt.Println("user1 stake after withdrawing fee refund: ", user1StakingAfterRefund.Balance.Amount.String())
+	require.Equal(user1StakingAfterRefund.Balance.Amount.String(), expectedStake.String())
+
+	// check user0 free floating balance before claiming
+	user0BalanceBeforeClaim, err := chain.BankQueryBalance(ctx, user0Addr, "loya")
+	require.NoError(err)
+	fmt.Println("user0 free floating balance before claiming dispute 1 rewards: ", user0BalanceBeforeClaim)
+
+	// claim rewards for user0
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "claim-reward", "1", "--keyring-dir", val1.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (user0 claims dispute 1 rewards): ", txHash)
+
+	// check user0 free floating balance, should get all of voting rewards (2.5% of dispute 1 fee)
+	user0BalanceAfterClaim, err := chain.BankQueryBalance(ctx, user0Addr, "loya")
+	require.NoError(err)
+	fmt.Println("user0 free floating balance after claiming dispute 1 rewards: ", user0BalanceAfterClaim)
+	require.Greater(user0BalanceAfterClaim.Int64(), user0BalanceBeforeClaim.Int64())
+	expectedBalance := user0BalanceBeforeClaim.Add(math.NewInt(25 * 1e6)) // 2.5% of 1000 trb
+	require.Equal(user0BalanceAfterClaim.String(), expectedBalance.String())
 }
