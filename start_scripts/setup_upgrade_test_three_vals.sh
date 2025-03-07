@@ -8,12 +8,9 @@ clear
 
 KEYRING_BACKEND="test"
 PASSWORD="password"
-export LUKE_NETWORK_ADDRESS="" #us east
-export YODA_NETWORK_ADDRESS="" #us west
-export OBI_WAN_NETWORK_ADDRESS="" #singapore
-export DARTH_VADER_NETWORK_ADDRESS=""
-export PALPATINE_NETWORK_ADDRESS=""
-export DARTH_MAUL_NETWORK_ADDRESS=""
+export LUKE_NETWORK_ADDRESS="3.80.39.230" #us east
+export YODA_NETWORK_ADDRESS="3.101.12.103" #us west
+export PALPATINE_NETWORK_ADDRESS="54.255.188.214"
 
 for name in luke yoda palpatine; do
     export LAYERD_NODE_HOME_$name="$HOME/.layer/$name"
@@ -68,7 +65,7 @@ for name in luke yoda palpatine; do
 
     echo "start with minting turned on"
     jq '.mint.initialized = true'  ~/.layer/$name/config/genesis.json > temp.json && mv temp.json ~/.layer/$name/config/genesis.json
-
+    sleep 10
 
     # Update signed_blocks_window in genesis.json for luke
     echo "Updating signed_blocks_window in genesis.json for $name..."
@@ -153,7 +150,7 @@ echo "yoda ip: $YODA_NODE_IDENTIFIER"
 
 echo "Get node id for palpatine to use for peer identifier"
 PALPATINE_NODE_ID=$(./layerd comet show-node-id --home ~/.layer/palpatine)
-PALPATINE_NODE_IDENTIFIER=$PALPATINE_NODE_ID@$PALPATINE_NETWORK_ADDRESS:26757
+PALPATINE_NODE_IDENTIFIER=$PALPATINE_NODE_ID@$PALPATINE_NETWORK_ADDRESS:26656
 echo "PALPATINE ip: $PALPATINE_NODE_IDENTIFIER"
 
 LUKE_PEERS=$YODA_NODE_IDENTIFIER,$PALPATINE_NODE_IDENTIFIER
