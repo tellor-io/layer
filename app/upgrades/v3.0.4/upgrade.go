@@ -13,7 +13,7 @@ import (
 /*
 	Upgrade to v3.0.4 will include:
 		- an update to the reporter daemon that fixes an issue we were occasionally seeing when reporting bridge deposits
-		- add a field (LastConsensusTimestamp) to bridge type AttestationSnapshotData to track the last
+		- add a field (LastConsensusTimestamp) to bridge type AttestationSnapshotData to be used in bridge proofs
 		- added more telemetry statements to track chain performance and oracle usage/stats
 
 	Migrations:
