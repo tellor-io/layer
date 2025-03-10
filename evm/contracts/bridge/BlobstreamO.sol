@@ -194,13 +194,11 @@ contract BlobstreamO is ECDSA {
             revert MalformedCurrentValidatorSet();
         }
         // Check that the supplied current validator set matches the saved checkpoint.
-        // bytes32 _currentValidatorSetHash = keccak256(abi.encode(_currentValidatorSet));
         if (
             _domainSeparateValidatorSetHash(
                 powerThreshold,
                 validatorTimestamp,
                 keccak256(abi.encode(_currentValidatorSet))
-                // _currentValidatorSetHash
             ) != lastValidatorSetCheckpoint
         ) {
             revert SuppliedValidatorSetInvalid();
