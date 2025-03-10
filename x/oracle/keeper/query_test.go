@@ -459,3 +459,114 @@ func (s *KeeperTestSuite) TestReportedIdsByReporter() {
 	s.NoError(err)
 	s.Equal(res.Ids, []uint64{5, 6, 7, 8, 9})
 }
+
+func (s *KeeperTestSuite) TestGetTimestampBeforeandAfterQueries() {
+	require := s.Require()
+	k := s.oracleKeeper
+	q := s.queryClient
+	ctx := s.ctx
+
+	queryId := []byte("0x1234")
+	time := uint64(1000)
+	// store has timestamps of 100, 999, 1000, 1001, 10000
+	require.NoError(k.Aggregates.Set(ctx, collections.Join(queryId, time), types.Aggregate{
+		QueryId:           queryId,
+		AggregateValue:    "100",
+		AggregateReporter: sdk.AccAddress("reporter").String(),
+		AggregatePower:    100,
+	}))
+	time = uint64(1001)
+	require.NoError(k.Aggregates.Set(ctx, collections.Join(queryId, time), types.Aggregate{
+		QueryId:           queryId,
+		AggregateValue:    "100",
+		AggregateReporter: sdk.AccAddress("reporter").String(),
+		AggregatePower:    100,
+	}))
+	time = uint64(999)
+	require.NoError(k.Aggregates.Set(ctx, collections.Join(queryId, time), types.Aggregate{
+		QueryId:           queryId,
+		AggregateValue:    "100",
+		AggregateReporter: sdk.AccAddress("reporter").String(),
+		AggregatePower:    100,
+	}))
+	time = uint64(100)
+	require.NoError(k.Aggregates.Set(ctx, collections.Join(queryId, time), types.Aggregate{
+		QueryId:           queryId,
+		AggregateValue:    "100",
+		AggregateReporter: sdk.AccAddress("reporter").String(),
+		AggregatePower:    100,
+	}))
+	time = uint64(10000)
+	require.NoError(k.Aggregates.Set(ctx, collections.Join(queryId, time), types.Aggregate{
+		QueryId:           queryId,
+		AggregateValue:    "100",
+		AggregateReporter: sdk.AccAddress("reporter").String(),
+		AggregatePower:    100,
+	}))
+	// GETTIMESTAMPBEFORE TESTS
+	// before 1000 -> 999 (not inclusive)
+	res, err := q.GetTimestampBefore(ctx, &types.QueryGetTimestampBeforeRequest{
+		QueryId:   hex.EncodeToString(queryId),
+		Timestamp: uint64(1000),
+	})
+	require.NoError(err)
+	require.Equal(res.Timestamp, uint64(999))
+
+	// before 1001 -> 1000
+	res, err = q.GetTimestampBefore(ctx, &types.QueryGetTimestampBeforeRequest{
+		QueryId:   hex.EncodeToString(queryId),
+		Timestamp: uint64(1001),
+	})
+	require.NoError(err)
+	require.Equal(res.Timestamp, uint64(1000))
+
+	// before 1000000000 -> 10000
+	res, err = q.GetTimestampBefore(ctx, &types.QueryGetTimestampBeforeRequest{
+		QueryId:   hex.EncodeToString(queryId),
+		Timestamp: uint64(1000000000),
+	})
+	require.NoError(err)
+	require.Equal(res.Timestamp, uint64(10000))
+
+	// before 991 -> 100
+	res, err = q.GetTimestampBefore(ctx, &types.QueryGetTimestampBeforeRequest{
+		QueryId:   hex.EncodeToString(queryId),
+		Timestamp: uint64(991),
+	})
+	require.NoError(err)
+	require.Equal(res.Timestamp, uint64(100))
+
+	// GETTIMESTAMPAFTER TESTS
+	// after 1000 -> 1001 (not inclusive)
+	resAfter, err := q.GetTimestampAfter(ctx, &types.QueryGetTimestampAfterRequest{
+		QueryId:   hex.EncodeToString(queryId),
+		Timestamp: uint64(1000),
+	})
+	require.NoError(err)
+	require.Equal(resAfter.Timestamp, uint64(1001))
+
+	// after 9000 -> 10000
+	resAfter, err = q.GetTimestampAfter(ctx, &types.QueryGetTimestampAfterRequest{
+		QueryId:   hex.EncodeToString(queryId),
+		Timestamp: uint64(9000),
+	})
+	require.NoError(err)
+	require.Equal(resAfter.Timestamp, uint64(10000))
+
+	// after 1 -> 100
+	resAfter, err = q.GetTimestampAfter(ctx, &types.QueryGetTimestampAfterRequest{
+		QueryId:   hex.EncodeToString(queryId),
+		Timestamp: uint64(1),
+	})
+	require.NoError(err)
+	require.Equal(resAfter.Timestamp, uint64(100))
+
+	// after 999 -> 1000
+	resAfter, err = q.GetTimestampAfter(ctx, &types.QueryGetTimestampAfterRequest{
+		QueryId:   hex.EncodeToString(queryId),
+		Timestamp: uint64(999),
+	})
+	require.NoError(err)
+	require.Equal(resAfter.Timestamp, uint64(1000))
+
+}
