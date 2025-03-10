@@ -16,6 +16,7 @@ struct ReportData {
     uint256 aggregatePower;
     uint256 previousTimestamp;
     uint256 nextTimestamp;
+    uint256 lastConsensusTimestamp;
 }
 
 struct Signature {
@@ -193,12 +194,11 @@ contract BlobstreamO is ECDSA {
             revert MalformedCurrentValidatorSet();
         }
         // Check that the supplied current validator set matches the saved checkpoint.
-        bytes32 _currentValidatorSetHash = keccak256(abi.encode(_currentValidatorSet));
         if (
             _domainSeparateValidatorSetHash(
                 powerThreshold,
                 validatorTimestamp,
-                _currentValidatorSetHash
+                keccak256(abi.encode(_currentValidatorSet))
             ) != lastValidatorSetCheckpoint
         ) {
             revert SuppliedValidatorSetInvalid();
@@ -213,7 +213,8 @@ contract BlobstreamO is ECDSA {
                     _attestData.report.previousTimestamp,
                     _attestData.report.nextTimestamp,
                     lastValidatorSetCheckpoint,
-                    _attestData.attestationTimestamp
+                    _attestData.attestationTimestamp,
+                    _attestData.report.lastConsensusTimestamp
                 )
             );
         _checkValidatorSignatures(

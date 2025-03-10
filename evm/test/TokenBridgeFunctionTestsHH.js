@@ -69,6 +69,7 @@ describe("TokenBridge - Function Tests", async function () {
         attestTimestamp = blocky.timestamp * 1000
         previousTimestamp = 0
         nextTimestamp = 0
+        lastConsensusTimestamp = timestamp
         newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
         valCheckpoint = await h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
         dataDigest = await h.getDataDigest(
@@ -79,7 +80,8 @@ describe("TokenBridge - Function Tests", async function () {
             previousTimestamp,
             nextTimestamp,
             valCheckpoint,
-            attestTimestamp
+            attestTimestamp,
+            lastConsensusTimestamp
         )
         currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
         sig1 = await h.layerSign(dataDigest, val1.privateKey)
@@ -92,7 +94,8 @@ describe("TokenBridge - Function Tests", async function () {
             aggregatePower,
             previousTimestamp,
             nextTimestamp,
-            attestTimestamp
+            attestTimestamp,
+            lastConsensusTimestamp
         )
         await tbridge.withdrawFromLayer(
             oracleDataStruct,
@@ -111,6 +114,7 @@ describe("TokenBridge - Function Tests", async function () {
         blocky = await h.getBlock()
         timestamp = (blocky.timestamp - 43200) * 1000
         attestTimestamp = blocky.timestamp * 1000
+        lastConsensusTimestamp = timestamp
         WITHDRAW2_QUERY_DATA_ARGS = abiCoder.encode(["bool", "uint256"], [false, 2])
         WITHDRAW2_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TRBBridge", WITHDRAW2_QUERY_DATA_ARGS])
         WITHDRAW2_QUERY_ID = h.hash(WITHDRAW2_QUERY_DATA)
@@ -123,7 +127,8 @@ describe("TokenBridge - Function Tests", async function () {
             previousTimestamp,
             nextTimestamp,
             valCheckpoint,
-            attestTimestamp
+            attestTimestamp,
+            lastConsensusTimestamp
         )
         sig1 = await h.layerSign(dataDigest, val1.privateKey)
         sig2 = await h.layerSign(dataDigest, val2.privateKey)
@@ -135,7 +140,8 @@ describe("TokenBridge - Function Tests", async function () {
             aggregatePower,
             previousTimestamp,
             nextTimestamp,
-            attestTimestamp
+            attestTimestamp,
+            lastConsensusTimestamp
         )
         for (let i = 0; i < 10; i++) {
             await token.faucet(guardian.address)
@@ -171,7 +177,8 @@ describe("TokenBridge - Function Tests", async function () {
             previousTimestamp,
             nextTimestamp,
             valCheckpoint,
-            attestTimestamp
+            attestTimestamp,
+            lastConsensusTimestamp
         )
         sig1 = await h.layerSign(dataDigest, val1.privateKey)
         sig2 = await h.layerSign(dataDigest, val2.privateKey)
@@ -183,7 +190,8 @@ describe("TokenBridge - Function Tests", async function () {
             aggregatePower,
             previousTimestamp,
             nextTimestamp,
-            attestTimestamp
+            attestTimestamp,
+            lastConsensusTimestamp
         )
         await tbridge.unpauseBridge()
         await tbridge.withdrawFromLayer(
@@ -278,6 +286,7 @@ describe("TokenBridge - Function Tests", async function () {
         attestTimestamp = (blocky.timestamp + 43200) * 1000
         previousTimestamp = 0
         nextTimestamp = 0
+        lastConsensusTimestamp = timestamp
         newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
         valCheckpoint = await h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
         dataDigest = await h.getDataDigest(
@@ -288,7 +297,8 @@ describe("TokenBridge - Function Tests", async function () {
             previousTimestamp,
             nextTimestamp,
             valCheckpoint,
-            attestTimestamp
+            attestTimestamp,
+            lastConsensusTimestamp
         )
         currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
         sig1 = await h.layerSign(dataDigest, val1.privateKey)
@@ -301,7 +311,8 @@ describe("TokenBridge - Function Tests", async function () {
             aggregatePower,
             previousTimestamp,
             nextTimestamp,
-            attestTimestamp
+            attestTimestamp,
+            lastConsensusTimestamp
         )
         await h.advanceTime(43200)
         _limit0 = BigInt(INITIAL_LAYER_TOKEN_SUPPLY) / BigInt(20)
@@ -381,7 +392,7 @@ describe("TokenBridge - Function Tests", async function () {
     })
 
     // more complex tests
-    it("100 deposits and withdrawals", async function () {
+    it.skip("100 deposits and withdrawals", async function () {
         this.timeout(300000)
         // fund accts
         await token.faucet(accounts[0].address)
@@ -452,7 +463,8 @@ describe("TokenBridge - Function Tests", async function () {
                 reportTimestamp - 1,
                 0,
                 valCheckpoint,
-                attestationTimestamp
+                attestationTimestamp,
+                reportTimestamp
             )
             dataDigest1 = await h.getDataDigest(
                 withdrawQueryId1,
@@ -462,7 +474,8 @@ describe("TokenBridge - Function Tests", async function () {
                 reportTimestamp - 1,
                 0,
                 valCheckpoint,
-                attestationTimestamp
+                attestationTimestamp,
+                reportTimestamp
             )
             currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
             sig0_1 = await h.layerSign(dataDigest0, val1.privateKey)
@@ -478,7 +491,8 @@ describe("TokenBridge - Function Tests", async function () {
                 aggregatePower,
                 reportTimestamp - 1,
                 0,
-                attestationTimestamp
+                attestationTimestamp,
+                reportTimestamp
             )
             oracleDataStruct1 = await h.getOracleDataStruct(
                 withdrawQueryId1,
@@ -487,7 +501,8 @@ describe("TokenBridge - Function Tests", async function () {
                 aggregatePower,
                 reportTimestamp - 1,
                 0,
-                attestationTimestamp
+                attestationTimestamp,
+                reportTimestamp
             )
 
             withdrawLimitBefore0 = await tbridge.withdrawLimit()

@@ -125,6 +125,7 @@ describe("Blobstream - Function Tests", async function () {
         attestTimestamp = timestamp + 1000
         previousTimestamp = 0
         nextTimestamp = 0
+        lastConsensusTimestamp = timestamp
         newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
         valCheckpoint = await h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
         dataDigest = await h.getDataDigest(
@@ -135,7 +136,8 @@ describe("Blobstream - Function Tests", async function () {
             previousTimestamp,
             nextTimestamp,
             valCheckpoint,
-            attestTimestamp
+            attestTimestamp,
+            lastConsensusTimestamp
         )
         currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
         sig1 = await h.layerSign(dataDigest, val1.privateKey)
@@ -148,7 +150,8 @@ describe("Blobstream - Function Tests", async function () {
             aggregatePower,
             previousTimestamp,
             nextTimestamp,
-            attestTimestamp
+            attestTimestamp,
+            lastConsensusTimestamp
         )
         await blobstream.verifyOracleData(
             oracleDataStruct,
@@ -197,6 +200,7 @@ describe("Blobstream - Function Tests", async function () {
         attestTimestamp1 = timestamp1 + 1000
         previousTimestamp1 = 0
         nextTimestamp1 = 0
+        lastConsensusTimestamp1 = timestamp1
         newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
         valCheckpoint1 = h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
         dataDigest1 = await h.getDataDigest(
@@ -207,7 +211,8 @@ describe("Blobstream - Function Tests", async function () {
             previousTimestamp1,
             nextTimestamp1,
             valCheckpoint1,
-            attestTimestamp1
+            attestTimestamp1,
+            lastConsensusTimestamp1
         )
         currentValSetArray1 = await h.getValSetStructArray(initialValAddrs, initialPowers)
         sig1 = await h.layerSign(dataDigest1, val1.privateKey)
@@ -220,7 +225,8 @@ describe("Blobstream - Function Tests", async function () {
             aggregatePower1,
             previousTimestamp1,
             nextTimestamp1,
-            attestTimestamp1
+            attestTimestamp1,
+            lastConsensusTimestamp1
         )
         await blobstream.verifyOracleData(
             oracleDataStruct1,
@@ -248,6 +254,7 @@ describe("Blobstream - Function Tests", async function () {
         attestTimestamp2 = timestamp2 + 1000
         previousTimestamp2 = timestamp1
         nextTimestamp2 = 0
+        lastConsensusTimestamp2 = timestamp2
         valCheckpoint2 = newValCheckpoint
         dataDigest2 = await h.getDataDigest(
             queryId1,
@@ -257,7 +264,8 @@ describe("Blobstream - Function Tests", async function () {
             previousTimestamp2,
             nextTimestamp2,
             valCheckpoint2,
-            attestTimestamp2
+            attestTimestamp2,
+            lastConsensusTimestamp2
         )
         currentValSetArray2 = await h.getValSetStructArray(newValAddrs, newPowers)
         sig1 = await h.layerSign(dataDigest2, val1.privateKey)
@@ -271,7 +279,8 @@ describe("Blobstream - Function Tests", async function () {
             aggregatePower2,
             previousTimestamp2,
             nextTimestamp2,
-            attestTimestamp2
+            attestTimestamp2,
+            lastConsensusTimestamp2
         )
         await blobstream.verifyOracleData(
             oracleDataStruct2,
@@ -300,6 +309,7 @@ describe("Blobstream - Function Tests", async function () {
         attestTimestamp3 = timestamp3 + 1000
         previousTimestamp3 = timestamp2
         nextTimestamp3 = 0
+        lastConsensusTimestamp3 = timestamp3
         valCheckpoint3 = newValCheckpoint2
 
         dataDigest3 = await h.getDataDigest(
@@ -310,7 +320,8 @@ describe("Blobstream - Function Tests", async function () {
             previousTimestamp3,
             nextTimestamp3,
             valCheckpoint3,
-            attestTimestamp3
+            attestTimestamp3,
+            lastConsensusTimestamp3
         )
 
         currentValSetArray3 = await h.getValSetStructArray(newValAddrs2, newPowers2)
@@ -326,7 +337,8 @@ describe("Blobstream - Function Tests", async function () {
             aggregatePower3,
             previousTimestamp3,
             nextTimestamp3,
-            attestTimestamp3
+            attestTimestamp3,
+            lastConsensusTimestamp3
         )
         await blobstream.verifyOracleData(
             oracleDataStruct3,
@@ -367,6 +379,7 @@ describe("Blobstream - Function Tests", async function () {
         attestTimestamp1 = timestamp1 + 1000
         previousTimestamp1 = 0
         nextTimestamp1 = 0
+        lastConsensusTimestamp1 = timestamp1
         dataDigest1 = await h.getDataDigest(
             queryId1,
             value1,
@@ -375,7 +388,8 @@ describe("Blobstream - Function Tests", async function () {
             previousTimestamp1,
             nextTimestamp1,
             newValCheckpoint,
-            attestTimestamp1
+            attestTimestamp1,
+            lastConsensusTimestamp1
         )
         currentValSetArray1 = await h.getValSetStructArray(newValAddrs, newValPowers)
         sigs = []
@@ -390,7 +404,8 @@ describe("Blobstream - Function Tests", async function () {
             aggregatePower1,
             previousTimestamp1,
             nextTimestamp1,
-            attestTimestamp1
+            attestTimestamp1,
+            lastConsensusTimestamp1
         )
         await blobstream.verifyOracleData(
             oracleDataStruct1,

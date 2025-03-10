@@ -4,15 +4,16 @@ pragma solidity ^0.8.0;
 struct OracleAttestationData {
     bytes32 queryId;
     ReportData report;
-    uint256 attestationTimestamp;//timestamp of validatorSignatures on report
+    uint256 attestationTimestamp; //timestamp of validatorSignatures on report
 }
 
 struct ReportData {
     bytes value;
-    uint256 timestamp;//timestamp of reporter signature aggregation
+    uint256 timestamp; //timestamp of reporter signature aggregation
     uint256 aggregatePower;
     uint256 previousTimestamp;
     uint256 nextTimestamp;
+    uint256 lastConsensusTimestamp;
 }
 
 struct Signature {
