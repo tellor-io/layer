@@ -144,7 +144,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "SubmitValue",
-					Use:            "submit-value [creator] [qdata] [value] [salt]",
+					Use:            "submit-value [creator] [qdata] [value]",
 					Short:          "Execute the SubmitValue RPC method",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "query_data"}, {ProtoField: "value"}},
 				},
@@ -156,6 +156,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "UpdateCyclelist",
+					Skip:      true, // skipped because authority gated
+				},
+				{
+					RpcMethod: "UpdateQueryDataLimit",
 					Skip:      true, // skipped because authority gated
 				},
 				// this line is used by ignite scaffolding # autocli/tx

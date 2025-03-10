@@ -1,4 +1,4 @@
-package e2e_test
+package integration_test
 
 import (
 	"encoding/hex"
@@ -29,7 +29,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func (s *E2ETestSuite) TestDisputes() {
+func (s *IntegrationTestSuite) TestDisputes() {
 	require := s.Require()
 	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
 	require.NotNil(msgServerOracle)
@@ -701,7 +701,7 @@ func (s *E2ETestSuite) TestDisputes() {
 // Delwood the Delegator has 250 trb selected to Rob
 // Delwood tries to dispute Rickys report
 // fails
-func (s *E2ETestSuite) TestDisputeFromDelegatorPayFromBond() {
+func (s *IntegrationTestSuite) TestDisputeFromDelegatorPayFromBond() {
 	// Setup msgServers
 	require := s.Require()
 	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
@@ -929,10 +929,10 @@ func (s *E2ETestSuite) TestDisputeFromDelegatorPayFromBond() {
 // test precision loss throughout tip/report/dispute/claim process
 // 2 validators anna and bob become reporters
 // chris delegates and selects to anna
-// chris tips between 1 loya and 1 trb to get matic/usd spot price
-// bob reports matic/usd price inaccurately
+// chris tips to get matic/usd spot price
+// bob reports matic/usd price
 // anna disputes bob's report
-func (s *E2ETestSuite) TestOpenDisputePrecision() {
+func (s *IntegrationTestSuite) TestOpenDisputePrecision() {
 	require := s.Require()
 
 	// setup msgServers
@@ -1150,7 +1150,7 @@ func (s *E2ETestSuite) TestOpenDisputePrecision() {
 	require.NoError(err)
 }
 
-func (s *E2ETestSuite) TestDisputes2() {
+func (s *IntegrationTestSuite) TestDisputes2() {
 	require := s.Require()
 	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
 	require.NotNil(msgServerOracle)
@@ -1573,133 +1573,4 @@ func (s *E2ETestSuite) TestDisputes2() {
 	voteResponse, err = msgServerDispute.Vote(s.Setup.Ctx, &msgVote)
 	require.NoError(err)
 	require.NotNil(voteResponse)
-
-	// totalReporterPower, err := s.Setup.Reporterkeeper.TotalReporterPower(s.Setup.Ctx)
-	// require.NoError(err)
-	// fmt.Println("total reporter power: ", totalReporterPower.Quo(sdk.DefaultPowerReduction))
-
-	// totalFreeFloatingTokens := s.Setup.Disputekeeper.GetTotalSupply(s.Setup.Ctx)
-	// fmt.Println("total Free Floating Tokens: ", totalFreeFloatingTokens)
-	// owners, err := s.Setup.Bankkeeper.DenomOwners(s.Setup.Ctx, &banktypes.QueryDenomOwnersRequest{Denom: s.Setup.Denom})
-	// require.NoError(err)
-	// sumFromDenomOwners := math.ZeroInt()
-	// for _, owner := range owners.DenomOwners {
-	// 	fmt.Println("owner: ", owner)
-	// 	sumFromDenomOwners = sumFromDenomOwners.Add(owner.Balance.Amount)
-	// }
-	// fmt.Println("sumFromDenomOwners: ", sumFromDenomOwners)
-
-	// // print all reporter sdk.AccAddr
-	// for _, rep := range repsAccs {
-	// 	fmt.Println("rep: ", rep.String())
-	// }
-	// for _, val := range valsAcctAddrs {
-	// 	fmt.Println("val: ", val.String())
-	// }
-	// fmt.Println("delegator acc addr: ", delAccAddr.String())
-
-	// // print tbr module account address
-	// tbrModuleAccount := s.Setup.Accountkeeper.GetModuleAddress(minttypes.TimeBasedRewards) // yes
-	// fmt.Println("tbr module account: ", tbrModuleAccount.String())
-
-	// disputeModuleAccount := s.Setup.Accountkeeper.GetModuleAddress(disputetypes.ModuleName) // yes
-	// fmt.Println("dispute module account: ", disputeModuleAccount.String())
-
-	// authModuleAccount := s.Setup.Accountkeeper.GetModuleAddress(authtypes.ModuleName) //
-	// fmt.Println("auth module account: ", authModuleAccount.String())
-
-	// reporterModuleAccount := s.Setup.Accountkeeper.GetModuleAddress(reportertypes.ModuleName) // yes
-	// fmt.Println("reporter module account: ", reporterModuleAccount.String())
-
-	// registryModuleAccount := s.Setup.Accountkeeper.GetModuleAddress(registrytypes.ModuleName) // no
-	// fmt.Println("registry module account: ", registryModuleAccount.String())
-
-	// reporterTipsEscrowAccount := s.Setup.Accountkeeper.GetModuleAddress(reportertypes.TipsEscrowPool) // no
-	// fmt.Println("reporter tips escrow account: ", reporterTipsEscrowAccount.String())
-
-	// oracleModuleAccount := s.Setup.Accountkeeper.GetModuleAddress(oracletypes.ModuleName) // no
-	// fmt.Println("oracle module account: ", oracleModuleAccount.String())
-
-	// stakingModuleAccount := s.Setup.Accountkeeper.GetModuleAddress(stakingtypes.ModuleName) //
-	// fmt.Println("staking module account: ", stakingModuleAccount.String())
-
-	// //---------------------------------------------------------------------------
-	// // Height 9 - resolve dispute, direct reveal again
-	// //---------------------------------------------------------------------------
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(9)
-	// _, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
-	// require.NoError(err)
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-
-	// //---------------------------------------------------------------------------
-	// // Height 10 - open minor dispute, pay from not bond from reporter 1
-	// //---------------------------------------------------------------------------
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(10)
-	// _, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
-	// require.NoError(err)
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-
-	// //---------------------------------------------------------------------------
-	// // Height 11 - vote on minor dispute
-	// //---------------------------------------------------------------------------
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(11)
-	// _, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
-	// require.NoError(err)
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-
-	// //---------------------------------------------------------------------------
-	// // Height 12 - resolve dispute, direct reveal again
-	// //---------------------------------------------------------------------------
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(12)
-	// _, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
-	// require.NoError(err)
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-
-	// //---------------------------------------------------------------------------
-	// // Height 13 - open major dispute, pay from bond from reporter 1
-	// //---------------------------------------------------------------------------
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(13)
-	// _, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
-	// require.NoError(err)
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-
-	// //---------------------------------------------------------------------------
-	// // Height 14 - vote on major dispute
-	// //---------------------------------------------------------------------------
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(14)
-	// _, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
-	// require.NoError(err)
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-
-	// //---------------------------------------------------------------------------
-	// // Height 15 - resolve dispute, direct reveal again
-	// //---------------------------------------------------------------------------
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(15)
-	// _, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
-	// require.NoError(err)
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-
-	// //---------------------------------------------------------------------------
-	// // Height 16 - open major dispute, pay from not bond from reporter 1
-	// //---------------------------------------------------------------------------
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(16)
-	// _, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
-	// require.NoError(err)
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-
-	// //---------------------------------------------------------------------------
-	// // Height 17 - vote on major dispute
-	// //---------------------------------------------------------------------------
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(17)
-	// _, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
-	// require.NoError(err)
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
-
-	// //---------------------------------------------------------------------------
-	// // Height 18 - resolve dispute, direct reveal again
-	// //---------------------------------------------------------------------------
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(18)
-	// _, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
-	// require.NoError(err)
-	// s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 }

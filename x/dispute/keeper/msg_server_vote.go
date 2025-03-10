@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// Vote on a given dispute. 33% of power is given to users (tippers), 33% is given to reporters, and 33% is given to the team address.
 func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVoteResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	voterAcc, err := sdk.AccAddressFromBech32(msg.Voter)
