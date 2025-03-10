@@ -5,26 +5,27 @@ import (
 	"strconv"
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cosmosdb "github.com/cosmos/cosmos-db"
+	"github.com/gogo/protobuf/proto"
+	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/x/bridge/keeper"
+	"github.com/tellor-io/layer/x/bridge/mocks"
+	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
+
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
 	sdkStore "cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cosmosdb "github.com/cosmos/cosmos-db"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/gogo/protobuf/proto"
-	"github.com/stretchr/testify/require"
-
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/tellor-io/layer/x/bridge/keeper"
-	"github.com/tellor-io/layer/x/bridge/mocks"
-	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 )
 
 type AttestationSnapshotDataLegacy struct {
@@ -108,7 +109,7 @@ func createLegacyData(t *testing.T, ctx context.Context, storeService store.KVSt
 	attestStore := prefix.NewStore(store, bridgetypes.AttestSnapshotDataMapKey)
 
 	for _, data := range legacyData {
-		key := []byte(data.QueryId)
+		key := data.QueryId
 		value, err := cdc.Marshal(&data)
 		require.NoError(t, err)
 		attestStore.Set(key, value)
@@ -123,7 +124,7 @@ func TestMigrateStore(t *testing.T) {
 	legacyData := createLegacyData(t, ctx, storeService, cdc)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	//create migrator
+	// create migrator
 	m := keeper.NewMigrator(bk)
 	// Run migration
 	err := m.Migrate3to4(sdkCtx)
@@ -135,7 +136,7 @@ func TestMigrateStore(t *testing.T) {
 
 	// Check each key to ensure data was properly migrated
 	for _, data := range legacyData {
-		key := []byte(data.QueryId)
+		key := data.QueryId
 
 		// Ensure key exists
 		hasKey := attestStore.Has(key)
@@ -196,7 +197,7 @@ func BenchmarkMigrateStore(b *testing.B) {
 			Timestamp:            uint64(950 + i),
 		}
 
-		key := []byte(data.QueryId)
+		key := data.QueryId
 		value, _ := cdc.Marshal(&data)
 		attestStore.Set(key, value)
 	}

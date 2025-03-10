@@ -3,13 +3,14 @@ package v3_0_4
 import (
 	"context"
 
+	"github.com/gogo/protobuf/proto"
+	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
+
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/store/prefix"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
-	"github.com/gogo/protobuf/proto"
-
-	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 )
 
 type AttestationSnapshotDataLegacy struct {
