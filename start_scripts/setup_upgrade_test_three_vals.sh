@@ -8,9 +8,9 @@ clear
 
 KEYRING_BACKEND="test"
 PASSWORD="password"
-export LUKE_NETWORK_ADDRESS="3.80.39.230" #us east
-export YODA_NETWORK_ADDRESS="3.101.12.103" #us west
-export PALPATINE_NETWORK_ADDRESS="54.255.188.214"
+export LUKE_NETWORK_ADDRESS="" #us east
+export YODA_NETWORK_ADDRESS="" #us west
+export PALPATINE_NETWORK_ADDRESS=""
 
 for name in luke yoda palpatine; do
     export LAYERD_NODE_HOME_$name="$HOME/.layer/$name"
