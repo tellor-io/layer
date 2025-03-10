@@ -117,9 +117,7 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 
 	m := keeper.NewMigrator(am.keeper)
-	if err := cfg.RegisterMigration("bridge", 2, func(ctx sdk.Context) error {
-		return m.Migrate3to4(ctx)
-	}); err != nil {
+	if err := cfg.RegisterMigration("bridge", 2, m.Migrate3to4); err != nil {
 		panic(fmt.Sprintf("Could not migrate store from v2 to v3: %v", err))
 	}
 }

@@ -46,6 +46,7 @@ func (m *AttestationSnapshotDataLegacy) String() string {
 func (*AttestationSnapshotDataLegacy) ProtoMessage() {}
 
 func setupTest(t *testing.T) (context.Context, store.KVStoreService, codec.Codec, keeper.Keeper) {
+	t.Helper()
 	// Create in-memory store
 	storeKey := storetypes.NewKVStoreKey(bridgetypes.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(bridgetypes.MemStoreKey)
@@ -84,6 +85,7 @@ func setupTest(t *testing.T) (context.Context, store.KVStoreService, codec.Codec
 }
 
 func createLegacyData(t *testing.T, ctx context.Context, storeService store.KVStoreService, cdc codec.Codec) []AttestationSnapshotDataLegacy {
+	t.Helper()
 	// Create sample legacy data
 	legacyData := []AttestationSnapshotDataLegacy{
 		{
