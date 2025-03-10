@@ -568,5 +568,4 @@ func (s *KeeperTestSuite) TestGetTimestampBeforeandAfterQueries() {
 	})
 	require.NoError(err)
 	require.Equal(resAfter.Timestamp, uint64(1000))
-
 }
