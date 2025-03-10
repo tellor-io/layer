@@ -70,35 +70,64 @@ service Query {
     option (google.api.http).get = "/tellor-io/layer/oracle/next_cyclelist_query";
   }
 
+  // Queries an aggregate report by query id and timestamp
   rpc RetrieveData(QueryRetrieveDataRequest) returns (QueryRetrieveDataResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/retrieve_data/{query_id}/{timestamp}";
   }
+
+  // Queries the current aggregate report by query id
   rpc GetCurrentAggregateReport(QueryGetCurrentAggregateReportRequest) returns (QueryGetCurrentAggregateReportResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_current_aggregate_report/{query_id}";
   }
+  
+  // Queries an aggregate report before a timestamp by query id, and reporter
   rpc GetAggregateBeforeByReporter(QueryGetAggregateBeforeByReporterRequest) returns (QueryGetAggregateBeforeByReporterResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_aggregate_before_by_reporter/{query_id}/{timestamp}/{reporter}";
   }
+
+  // Queries a query by query id and id
   rpc GetQuery(QueryGetQueryRequest) returns (QueryGetQueryResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_query/{query_id}/{id}";
   }
+
+  // Queries a list of tipped non-expired queries
   rpc TippedQueries(QueryTippedQueriesRequest) returns (QueryTippedQueriesResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/tipped_queries";
   }
+
+  // Queries reports by aggregate by query id and timestamp
   rpc GetReportsByAggregate(QueryGetReportsByAggregateRequest) returns (QueryGetReportsByAggregateResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_reports_by_aggregate/{query_id}/{timestamp}";
   }
+
+  // Queries the current query by query id
   rpc GetCurrentQueryByQueryId(QueryGetCurrentQueryByQueryIdRequest) returns (QueryGetCurrentQueryByQueryIdResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_current_query_by_query_id/{query_id}";
   }
+
+  // Queries the query data limit
   rpc GetQueryDataLimit(QueryGetQueryDataLimitRequest) returns (QueryGetQueryDataLimitResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_query_data_limit";
   }
+
+  // Queries reported ids by reporter
   rpc ReportedIdsByReporter(QueryReportedIdsByReporterRequest) returns (QueryReportedIdsByReporterResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/reported_ids_by_reporter/{reporter_address}";
   }
+
+  // Queries the cycle list
   rpc GetCycleList(QueryGetCycleListRequest) returns (QueryGetCycleListResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_cycle_list";
+  }
+
+  // Queries the timestamp before a query id and timestamp
+  rpc GetTimestampBefore(QueryGetTimestampBeforeRequest) returns (QueryGetTimestampBeforeResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_timestamp_before/{query_id}/{timestamp}";
+  }
+
+  // Queries the timestamp after a query id and timestamp
+  rpc GetTimestampAfter(QueryGetTimestampAfterRequest) returns (QueryGetTimestampAfterResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_timestamp_after/{query_id}/{timestamp}";
   }
 }
 
@@ -110,114 +139,138 @@ message QueryParamsResponse {
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
 }
+// QueryMicroReportsResponse is response type for the Query/MicroReports RPC method.
 message QueryMicroReportsResponse {
+  // microReports is a list of individual microreports.
   repeated MicroReport microReports = 1 [(gogoproto.nullable) = false];
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
+// QueryGetReportsbyQidRequest is request type for the Query/GetReportsbyQid RPC method.
 message QueryGetReportsbyQidRequest {
   // query id of requested data
   string query_id = 1;
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
-
+// QueryGetReportsbyReporterRequest is request type for the Query/GetReportsbyReporter RPC method.
 message QueryGetReportsbyReporterRequest {
+  // reporter is the address of the reporter
   string reporter = 1;
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
-
+// QueryGetReportsbyReporterQidRequest is request type for the Query/GetReportsbyReporterQid RPC method.
 message QueryGetReportsbyReporterQidRequest {
+  // reporter is the address of the reporter
   string reporter = 1;
+  // query id of requested data
   string query_id = 2;
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
-
+// QueryGetCurrentTipRequest is request type for the Query/GetCurrentTip RPC method.
 message QueryGetCurrentTipRequest {
+  // query data of requested data
   string query_data = 1;
 }
-
+// QueryGetCurrentTipResponse is response type for the Query/GetCurrentTip RPC method.
 message QueryGetCurrentTipResponse {
+  // tips defines the current tip.
   string tips = 1 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
 }
-
+// QueryGetUserTipTotalRequest is request type for the Query/GetUserTipTotal RPC method.
 message QueryGetUserTipTotalRequest {
+  // tipper is the address of the tipper
   string tipper = 1;
 }
-
+// QueryGetUserTipTotalResponse is response type for the Query/GetUserTipTotal RPC method.
 message QueryGetUserTipTotalResponse {
+  // total_tips defines the total tips a user has made.
   string total_tips = 1 [
     (cosmos_proto.scalar) = "cosmos.Int",
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
 }
-
+// QueryGetDataBeforeRequest is request type for the Query/GetDataBefore RPC method.
 message QueryGetDataBeforeRequest {
+  // query_id defines the query id hex string.
   string query_id = 1;
+  // timestamp defines the timestamp of the aggregate report.
   uint64 timestamp = 2;
 }
-
+// QueryGetDataBeforeResponse is response type for the Query/GetDataBefore RPC method.
 message QueryGetDataBeforeResponse {
+  // aggregate defines the aggregate report.
   Aggregate aggregate = 1;
+  // timestamp defines the timestamp of the aggregate report.
   uint64 timestamp = 2;
 }
-
+// QueryGetDataAfterRequest is request type for the Query/GetDataAfter RPC method.
 message QueryGetDataAfterRequest {
+  // query_id defines the query id hex string.
   string query_id = 1;
+  // timestamp defines the timestamp of the aggregate report.
   uint64 timestamp = 2;
 }
-
+// QueryGetDataAfterResponse is response type for the Query/GetDataAfter RPC method.
 message QueryGetDataAfterResponse {
+  // aggregate defines the aggregate report.
   Aggregate aggregate = 1;
+  // timestamp defines the timestamp of the aggregate report.
   uint64 timestamp = 2;
 }
-
+// QueryGetTimeBasedRewardsRequest is request type for the Query/GetTimeBasedRewards RPC method.
 message QueryGetTimeBasedRewardsRequest {}
-
+// QueryGetTimeBasedRewardsResponse is response type for the Query/GetTimeBasedRewards RPC method.
 message QueryGetTimeBasedRewardsResponse {
+  // reward defines the time based reward amount.
   cosmos.base.v1beta1.Coin reward = 1 [
     (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coin",
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
   ];
 }
-
+// QueryCurrentCyclelistQueryRequest is request type for the Query/CurrentCyclelistQuery RPC method.
 message QueryCurrentCyclelistQueryRequest {}
-
+// QueryCurrentCyclelistQueryResponse is response type for the Query/CurrentCyclelistQuery RPC method.
 message QueryCurrentCyclelistQueryResponse {
+  // query_data defines the query data.
   string query_data = 1;
+  // query_meta defines the query meta.
   QueryMeta query_meta = 2;
 }
-
+// QueryNextCyclelistQueryRequest is request type for the Query/NextCyclelistQuery RPC method.
 message QueryNextCyclelistQueryRequest {}
-
+// QueryNextCyclelistQueryResponse is response type for the Query/NextCyclelistQuery RPC method.
 message QueryNextCyclelistQueryResponse {
+  // query_data defines the query data.
   string query_data = 1;
+  // query_meta defines the query meta.
   QueryMeta query_meta = 2;
 }
-
+// QueryRetrieveDataRequest is request type for the Query/RetrieveData RPC method.
 message QueryRetrieveDataRequest {
+  // query_id defines the query id hex string.
   string query_id = 1;
+  // timestamp defines the timestamp of the aggregate report.
   uint64 timestamp = 2;
 }
-
+// QueryRetrieveDataResponse is response type for the Query/RetrieveData RPC method.
 message QueryRetrieveDataResponse {
+  // aggregate defines the aggregate report.
   Aggregate aggregate = 1;
 }
-
 // QueryGetCurrentAggregateReportRequest is the request type for the Query/GetCurrentAggregateReport RPC method.
 message QueryGetCurrentAggregateReportRequest {
   // query_id defines the query id hex string.
   string query_id = 1;
 }
-
 // QueryGetCurrentAggregateReportResponse is the response type for the Query/GetCurrentAggregateReport RPC method.
 message QueryGetCurrentAggregateReportResponse {
   // aggregate defines the current aggregate report.
@@ -249,61 +302,97 @@ message QueryGetQueryRequest {
   // id defines the query id.
   uint64 id = 2;
 }
-
 // QueryGetQueryResponse is the response type for the Query/GetQuery RPC method.
 message QueryGetQueryResponse {
   // query defines the query.
   QueryMeta query = 1;
 }
-
 // QueryTippedQueriesRequest is the request type for the Query/TippedQueries RPC method.
 message QueryTippedQueriesRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
-
 // QueryTippedQueriesResponse is the response type for the Query/TippedQueries RPC method.
 message QueryTippedQueriesResponse {
   // queries defines the tipped queries.
   repeated QueryMeta queries = 1;
 }
-
+// QueryGetReportsByAggregateRequest is the request type for the Query/GetReportsByAggregate RPC method.
 message QueryGetReportsByAggregateRequest {
+  // query_id defines the query id hex string.
   string query_id = 1;
+  // timestamp defines the timestamp of the aggregate report.
   uint64 timestamp = 2;
+  // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 3;
 }
-
+// QueryGetReportsByAggregateResponse is the response type for the Query/GetReportsByAggregate RPC method.
 message QueryGetReportsByAggregateResponse {
+  // microReports defines the micro reports.
   repeated MicroReport microReports = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
-
+// QueryGetCurrentQueryByQueryIdRequest is the request type for the Query/GetCurrentQueryByQueryId RPC method.
 message QueryGetCurrentQueryByQueryIdRequest {
+  // query_id defines the query id hex string.
   string query_id = 1;
 }
-
+// QueryGetCurrentQueryByQueryIdResponse is the response type for the Query/GetCurrentQueryByQueryId RPC method.
 message QueryGetCurrentQueryByQueryIdResponse {
+  // query defines the query.
   QueryMeta query = 1;
 }
-
+// QueryGetQueryDataLimitRequest is the request type for the Query/GetQueryDataLimit RPC method.
 message QueryGetQueryDataLimitRequest {}
-
+// QueryGetQueryDataLimitResponse is the response type for the Query/GetQueryDataLimit RPC method.  
 message QueryGetQueryDataLimitResponse {
+  // limit defines the query data limit.
   uint64 limit = 1;
 }
+// QueryReportedIdsByReporterRequest is the request type for the Query/ReportedIdsByReporter RPC method.
 message QueryReportedIdsByReporterRequest {
+  // reporter_address defines the reporter address.
   string reporter_address = 1;
+  // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
-
+// QueryReportedIdsByReporterResponse is the response type for the Query/ReportedIdsByReporter RPC method.
 message QueryReportedIdsByReporterResponse {
+  // ids defines the reported ids.
   repeated uint64 ids = 1;
+  // query_ids defines the query ids.
   repeated bytes query_ids =2;
+  // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
-
+// QueryGetCycleListRequest is the request type for the Query/GetCycleList RPC method.
 message QueryGetCycleListRequest {}
-
+// QueryGetCycleListResponse is the response type for the Query/GetCycleList RPC method.
 message QueryGetCycleListResponse {
+  // cycle_list defines the cycle list.
   repeated bytes cycle_list = 1;
+}
+// QueryGetTimestampBeforeRequest is the request type for the Query/GetTimestampBefore RPC method.
+message QueryGetTimestampBeforeRequest {
+  // query_id defines the query id hex string.
+  string query_id = 1;
+  // timestamp defines the timestamp of the aggregate report.
+  uint64 timestamp = 2;
+}
+// QueryGetTimestampBeforeResponse is the response type for the Query/GetTimestampBefore RPC method.
+message QueryGetTimestampBeforeResponse {
+  // timestamp defines the timestamp of the aggregate report.
+  uint64 timestamp = 1;
+}
+// QueryGetTimestampAfterRequest is the request type for the Query/GetTimestampAfter RPC method.
+message QueryGetTimestampAfterRequest {
+  // query_id defines the query id hex string.
+  string query_id = 1;
+  // timestamp defines the timestamp of the aggregate report.
+  uint64 timestamp = 2;
+}
+// QueryGetTimestampAfterResponse is the response type for the Query/GetTimestampAfter RPC method.
+message QueryGetTimestampAfterResponse {
+  // timestamp defines the timestamp of the aggregate report.
+  uint64 timestamp = 1;
 }

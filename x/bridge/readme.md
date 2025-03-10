@@ -79,6 +79,16 @@ Creates new report snapshots for all reports aggregated at the current height.
 
 `make mock-gen-bridge`
 
+## Events
+| Event | Handler Function |
+|-------|-----------------|
+| new_bridge_validator_set | SetBridgeValidatorParams |
+| bridge | SetEVMAddressByOperator |
+| deposit_claimed | ClaimDeposits |
+| attestations_request | RequestAttestations |
+| snapshot_limit_updated | UpdateSnapshotLimit |
+| tokens_withdrawn | WithdrawTokens |
+
 ## Example Commands
 
 ```sh

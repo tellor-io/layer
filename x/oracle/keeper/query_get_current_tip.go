@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// gets the current tip for a query
 func (q Querier) GetCurrentTip(ctx context.Context, req *types.QueryGetCurrentTipRequest) (*types.QueryGetCurrentTipResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")

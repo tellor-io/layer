@@ -29,6 +29,7 @@ func NewQuerier(keeper Keeper) Querier {
 	return Querier{keeper: keeper}
 }
 
+// gets an aggregate report by query id and timestamp
 func (k Querier) RetrieveData(ctx context.Context, req *types.QueryRetrieveDataRequest) (*types.QueryRetrieveDataResponse, error) {
 	queryId, err := utils.QueryBytesFromString(req.QueryId)
 	if err != nil {
@@ -41,6 +42,7 @@ func (k Querier) RetrieveData(ctx context.Context, req *types.QueryRetrieveDataR
 	return &types.QueryRetrieveDataResponse{Aggregate: &agg}, nil
 }
 
+// gets the current aggregate report for a query id
 func (k Querier) GetCurrentAggregateReport(ctx context.Context, req *types.QueryGetCurrentAggregateReportRequest) (*types.QueryGetCurrentAggregateReportResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -62,6 +64,7 @@ func (k Querier) GetCurrentAggregateReport(ctx context.Context, req *types.Query
 	}, nil
 }
 
+// gets the last aggregate report before a timestamp by query id and reporter
 func (k Querier) GetAggregateBeforeByReporter(ctx context.Context, req *types.QueryGetAggregateBeforeByReporterRequest) (*types.QueryGetAggregateBeforeByReporterResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -79,6 +82,7 @@ func (k Querier) GetAggregateBeforeByReporter(ctx context.Context, req *types.Qu
 	return &types.QueryGetAggregateBeforeByReporterResponse{Aggregate: aggregate}, nil
 }
 
+// gets a query by query id and id
 func (k Querier) GetQuery(ctx context.Context, req *types.QueryGetQueryRequest) (*types.QueryGetQueryResponse, error) {
 	queryId, err := utils.QueryBytesFromString(req.QueryId)
 	if err != nil {
@@ -91,6 +95,7 @@ func (k Querier) GetQuery(ctx context.Context, req *types.QueryGetQueryRequest) 
 	return &types.QueryGetQueryResponse{Query: &query}, nil
 }
 
+// returns a list of queries that are not expired and have a tip available
 func (k Querier) TippedQueries(ctx context.Context, req *types.QueryTippedQueriesRequest) (*types.QueryTippedQueriesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -118,6 +123,7 @@ func (k Querier) TippedQueries(ctx context.Context, req *types.QueryTippedQuerie
 	return &types.QueryTippedQueriesResponse{Queries: queries}, nil
 }
 
+// returns a list of reported ids by reporter
 func (k Querier) ReportedIdsByReporter(ctx context.Context, req *types.QueryReportedIdsByReporterRequest) (*types.QueryReportedIdsByReporterResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -144,4 +150,39 @@ func (k Querier) ReportedIdsByReporter(ctx context.Context, req *types.QueryRepo
 	}
 
 	return &types.QueryReportedIdsByReporterResponse{Ids: ids, QueryIds: queryIds, Pagination: pageRes}, nil
+}
+
+// gets the timestamp before a given timestamp by query id
+func (k Querier) GetTimestampBefore(ctx context.Context, req *types.QueryGetTimestampBeforeRequest) (*types.QueryGetTimestampBeforeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	queryId, err := hex.DecodeString(req.QueryId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid query id")
+	}
+	timestamp, err := k.keeper.GetTimestampBefore(ctx, queryId, time.UnixMilli(int64(req.Timestamp)))
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryGetTimestampBeforeResponse{Timestamp: uint64(timestamp.UnixMilli())}, nil
+}
+
+// gets the timestamp after a given timestamp by query id
+func (k Querier) GetTimestampAfter(ctx context.Context, req *types.QueryGetTimestampAfterRequest) (*types.QueryGetTimestampAfterResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	queryId, err := hex.DecodeString(req.QueryId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid query id")
+	}
+	timestamp, err := k.keeper.GetTimestampAfter(ctx, queryId, time.UnixMilli(int64(req.Timestamp)))
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryGetTimestampAfterResponse{Timestamp: uint64(timestamp.UnixMilli())}, nil
 }

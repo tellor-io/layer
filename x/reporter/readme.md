@@ -87,7 +87,17 @@ Update module parameters through governance. Params include the minimum comissio
 
 `make mock-gen-reporter`
 
-## CLI
+## Events
+| Event | Handler Function |
+|-------|-----------------|
+| jailed_reporter | JailReporter |
+| created_reporter | CreateReporter |
+| reporter_selected | SelectReporter |
+| switched_reporter | SwitchReporter |
+| selector_removed | RemoveSelector |
+| unjailed_reporter | UnjailReporter |
+| tip_withdrawn | WithdrawTip |
+| params_updated_by_authority | UpdateParams |
 
 ### Example Commands
 

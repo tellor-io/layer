@@ -37,16 +37,30 @@ type QueryClient interface {
 	CurrentCyclelistQuery(ctx context.Context, in *QueryCurrentCyclelistQueryRequest, opts ...grpc.CallOption) (*QueryCurrentCyclelistQueryResponse, error)
 	// Queries a list of NextCyclelistQuery items.
 	NextCyclelistQuery(ctx context.Context, in *QueryNextCyclelistQueryRequest, opts ...grpc.CallOption) (*QueryNextCyclelistQueryResponse, error)
+	// Queries an aggregate report by query id and timestamp
 	RetrieveData(ctx context.Context, in *QueryRetrieveDataRequest, opts ...grpc.CallOption) (*QueryRetrieveDataResponse, error)
+	// Queries the current aggregate report by query id
 	GetCurrentAggregateReport(ctx context.Context, in *QueryGetCurrentAggregateReportRequest, opts ...grpc.CallOption) (*QueryGetCurrentAggregateReportResponse, error)
+	// Queries an aggregate report before a timestamp by query id, and reporter
 	GetAggregateBeforeByReporter(ctx context.Context, in *QueryGetAggregateBeforeByReporterRequest, opts ...grpc.CallOption) (*QueryGetAggregateBeforeByReporterResponse, error)
+	// Queries a query by query id and id
 	GetQuery(ctx context.Context, in *QueryGetQueryRequest, opts ...grpc.CallOption) (*QueryGetQueryResponse, error)
+	// Queries a list of tipped non-expired queries
 	TippedQueries(ctx context.Context, in *QueryTippedQueriesRequest, opts ...grpc.CallOption) (*QueryTippedQueriesResponse, error)
+	// Queries reports by aggregate by query id and timestamp
 	GetReportsByAggregate(ctx context.Context, in *QueryGetReportsByAggregateRequest, opts ...grpc.CallOption) (*QueryGetReportsByAggregateResponse, error)
+	// Queries the current query by query id
 	GetCurrentQueryByQueryId(ctx context.Context, in *QueryGetCurrentQueryByQueryIdRequest, opts ...grpc.CallOption) (*QueryGetCurrentQueryByQueryIdResponse, error)
+	// Queries the query data limit
 	GetQueryDataLimit(ctx context.Context, in *QueryGetQueryDataLimitRequest, opts ...grpc.CallOption) (*QueryGetQueryDataLimitResponse, error)
+	// Queries reported ids by reporter
 	ReportedIdsByReporter(ctx context.Context, in *QueryReportedIdsByReporterRequest, opts ...grpc.CallOption) (*QueryReportedIdsByReporterResponse, error)
+	// Queries the cycle list
 	GetCycleList(ctx context.Context, in *QueryGetCycleListRequest, opts ...grpc.CallOption) (*QueryGetCycleListResponse, error)
+	// Queries the timestamp before a query id and timestamp
+	GetTimestampBefore(ctx context.Context, in *QueryGetTimestampBeforeRequest, opts ...grpc.CallOption) (*QueryGetTimestampBeforeResponse, error)
+	// Queries the timestamp after a query id and timestamp
+	GetTimestampAfter(ctx context.Context, in *QueryGetTimestampAfterRequest, opts ...grpc.CallOption) (*QueryGetTimestampAfterResponse, error)
 }
 
 type queryClient struct {
@@ -246,6 +260,24 @@ func (c *queryClient) GetCycleList(ctx context.Context, in *QueryGetCycleListReq
 	return out, nil
 }
 
+func (c *queryClient) GetTimestampBefore(ctx context.Context, in *QueryGetTimestampBeforeRequest, opts ...grpc.CallOption) (*QueryGetTimestampBeforeResponse, error) {
+	out := new(QueryGetTimestampBeforeResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetTimestampBefore", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetTimestampAfter(ctx context.Context, in *QueryGetTimestampAfterRequest, opts ...grpc.CallOption) (*QueryGetTimestampAfterResponse, error) {
+	out := new(QueryGetTimestampAfterResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetTimestampAfter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -269,16 +301,30 @@ type QueryServer interface {
 	CurrentCyclelistQuery(context.Context, *QueryCurrentCyclelistQueryRequest) (*QueryCurrentCyclelistQueryResponse, error)
 	// Queries a list of NextCyclelistQuery items.
 	NextCyclelistQuery(context.Context, *QueryNextCyclelistQueryRequest) (*QueryNextCyclelistQueryResponse, error)
+	// Queries an aggregate report by query id and timestamp
 	RetrieveData(context.Context, *QueryRetrieveDataRequest) (*QueryRetrieveDataResponse, error)
+	// Queries the current aggregate report by query id
 	GetCurrentAggregateReport(context.Context, *QueryGetCurrentAggregateReportRequest) (*QueryGetCurrentAggregateReportResponse, error)
+	// Queries an aggregate report before a timestamp by query id, and reporter
 	GetAggregateBeforeByReporter(context.Context, *QueryGetAggregateBeforeByReporterRequest) (*QueryGetAggregateBeforeByReporterResponse, error)
+	// Queries a query by query id and id
 	GetQuery(context.Context, *QueryGetQueryRequest) (*QueryGetQueryResponse, error)
+	// Queries a list of tipped non-expired queries
 	TippedQueries(context.Context, *QueryTippedQueriesRequest) (*QueryTippedQueriesResponse, error)
+	// Queries reports by aggregate by query id and timestamp
 	GetReportsByAggregate(context.Context, *QueryGetReportsByAggregateRequest) (*QueryGetReportsByAggregateResponse, error)
+	// Queries the current query by query id
 	GetCurrentQueryByQueryId(context.Context, *QueryGetCurrentQueryByQueryIdRequest) (*QueryGetCurrentQueryByQueryIdResponse, error)
+	// Queries the query data limit
 	GetQueryDataLimit(context.Context, *QueryGetQueryDataLimitRequest) (*QueryGetQueryDataLimitResponse, error)
+	// Queries reported ids by reporter
 	ReportedIdsByReporter(context.Context, *QueryReportedIdsByReporterRequest) (*QueryReportedIdsByReporterResponse, error)
+	// Queries the cycle list
 	GetCycleList(context.Context, *QueryGetCycleListRequest) (*QueryGetCycleListResponse, error)
+	// Queries the timestamp before a query id and timestamp
+	GetTimestampBefore(context.Context, *QueryGetTimestampBeforeRequest) (*QueryGetTimestampBeforeResponse, error)
+	// Queries the timestamp after a query id and timestamp
+	GetTimestampAfter(context.Context, *QueryGetTimestampAfterRequest) (*QueryGetTimestampAfterResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -348,6 +394,12 @@ func (UnimplementedQueryServer) ReportedIdsByReporter(context.Context, *QueryRep
 }
 func (UnimplementedQueryServer) GetCycleList(context.Context, *QueryGetCycleListRequest) (*QueryGetCycleListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCycleList not implemented")
+}
+func (UnimplementedQueryServer) GetTimestampBefore(context.Context, *QueryGetTimestampBeforeRequest) (*QueryGetTimestampBeforeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTimestampBefore not implemented")
+}
+func (UnimplementedQueryServer) GetTimestampAfter(context.Context, *QueryGetTimestampAfterRequest) (*QueryGetTimestampAfterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTimestampAfter not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -740,6 +792,42 @@ func _Query_GetCycleList_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetTimestampBefore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetTimestampBeforeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetTimestampBefore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Query/GetTimestampBefore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetTimestampBefore(ctx, req.(*QueryGetTimestampBeforeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetTimestampAfter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetTimestampAfterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetTimestampAfter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Query/GetTimestampAfter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetTimestampAfter(ctx, req.(*QueryGetTimestampAfterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -830,6 +918,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCycleList",
 			Handler:    _Query_GetCycleList_Handler,
+		},
+		{
+			MethodName: "GetTimestampBefore",
+			Handler:    _Query_GetTimestampBefore_Handler,
+		},
+		{
+			MethodName: "GetTimestampAfter",
+			Handler:    _Query_GetTimestampAfter_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

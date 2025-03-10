@@ -79,3 +79,13 @@ Checks if a dispute has been opened at the current block height and sets the blo
 
 `make mock-gen-dispute`
 
+## Events
+| Event | Handler Function |
+|-------|-----------------|
+| new_dispute | SetNewDispute |
+| added_dispute_round | AddDisputeRound |
+| dispute_executed | ExecuteVote |
+| fee_added_to_dispute | AddFeeToDispute |
+| voted_on_dispute | Vote |
+
+

@@ -118,4 +118,14 @@ Rotates through the cycle list.
 
 `make mock-gen-dispute`
 
+## Events
+| Event | Handler Function |
+|-------|-----------------|
+| aggregate_report | SetAggregate |
+| rotating-cyclelist-with-next-query | emitRotateQueriesEvent |
+| tip_added | Tip |
+| cyclelist_updated | UpdateCyclelist |
+| query_data_limit_updated | UpdateQueryDataLimit |
+| new_report | SetValue |
+
 
