@@ -38,6 +38,14 @@ func (k msgServer) RequestAttestations(ctx context.Context, msg *types.MsgReques
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 	timestamp := time.UnixMilli(int64(timestampInt))
+	// require timestamp is less than UNBONDING_TIME old
+	unbondingTime, err := k.stakingKeeper.UnbondingTime(sdkCtx)
+	if err != nil {
+		return nil, err
+	}
+	if timestamp.Before(sdkCtx.BlockTime().Add(-unbondingTime)) {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "timestamp is too old")
+	}
 	err = k.Keeper.CreateSnapshot(sdkCtx, queryId, timestamp, true)
 	if err != nil {
 		k.Keeper.Logger(sdkCtx).Error("failed to create snapshot", "error", err)
