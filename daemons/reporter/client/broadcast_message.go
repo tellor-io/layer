@@ -179,5 +179,7 @@ func (c *Client) BroadcastTxMsgToChain() {
 			c.logger.Error("broadcasting tx timed out")
 			cancel()
 		}
+
+		c.logger.Info(fmt.Sprintf("Tx in Channel: %d", len(c.txChan)))
 	}
 }
