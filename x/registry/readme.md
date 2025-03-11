@@ -43,7 +43,12 @@ Remove a data spec or specs through governance.
 
 `make mock-gen-registry`
 
-## CLI
+## Events
+| Event | Handler Function |
+|-------|-----------------|
+| register_data_spec | RegisterSpec |
+| data_spec_updated | UpdateDataSpec |
+
 
 ### Example Commands
 
