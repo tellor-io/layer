@@ -24,3 +24,7 @@ Mint the block provision for the current block.
 ### SetPreviousBlockTime
 Sets the block time for the minter to read next block.
 
+## Events
+| Event | Handler Function |
+|-------|-----------------|
+| minter_initialized | Init |
