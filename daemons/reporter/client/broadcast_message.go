@@ -158,7 +158,7 @@ func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChan
 
 func (c *Client) BroadcastTxMsgToChain() {
 	for obj := range c.txChan {
-		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 4500*time.Millisecond)
 		done := make(chan struct{})
 		go func() {
 			defer close(done)
