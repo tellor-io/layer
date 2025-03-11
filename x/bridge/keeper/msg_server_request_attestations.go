@@ -42,7 +42,9 @@ func (k msgServer) RequestAttestations(ctx context.Context, msg *types.MsgReques
 	if err != nil {
 		return nil, err
 	}
-	if timestamp.Before(sdkCtx.BlockTime().Add(-unbondingTime)) {
+	// get 95% of unbonding time.
+	unbondingTime95 := unbondingTime * 95 / 100
+	if timestamp.Before(sdkCtx.BlockTime().Add(-unbondingTime95)) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "timestamp is too old")
 	}
 	err = k.Keeper.CreateSnapshot(sdkCtx, queryId, timestamp, true)
