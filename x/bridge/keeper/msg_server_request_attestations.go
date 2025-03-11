@@ -19,7 +19,6 @@ import (
 // Request attestations for a snapshot of an aggregate report.
 func (k msgServer) RequestAttestations(ctx context.Context, msg *types.MsgRequestAttestations) (*types.MsgRequestAttestationsResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
 	// ValidateBasic replacement
 	err := validateRequestAttestations(msg)
 	if err != nil {
