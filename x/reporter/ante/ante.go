@@ -237,9 +237,6 @@ func (t TrackStakeChangesDecorator) checkAmountOfDelegationsByAddressDoesNotExce
 		if len(delegations) == int(params.MaxNumOfDelegations) {
 			for i := 0; i < int(params.MaxNumOfDelegations); i++ {
 				if strings.EqualFold(delegations[i].ValidatorAddress, msg.ValidatorSrcAddress) {
-					fmt.Println("validator address matched")
-					fmt.Println(msg.Amount.Amount)
-					fmt.Println(delegations[i].Shares.TruncateInt())
 					if msg.Amount.Amount.Equal(delegations[i].Shares.TruncateInt()) {
 						return true, nil
 					} else {
