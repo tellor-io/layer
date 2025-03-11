@@ -131,10 +131,10 @@ getEthSignedMessageHash = (messageHash) => {
   return digest;
 }
 
-getDataDigest = (queryId, value, timestamp, aggregatePower, previousTimestamp, nextTimestamp, valCheckpoint, attestationTimestamp) => {
+getDataDigest = (queryId, value, timestamp, aggregatePower, previousTimestamp, nextTimestamp, valCheckpoint, attestationTimestamp, lastConsensusTimestamp) => {
   const DOMAIN_SEPARATOR = "0x74656c6c6f7243757272656e744174746573746174696f6e0000000000000000"
-  enc = abiCoder.encode(["bytes32", "bytes32", "bytes", "uint256", "uint256", "uint256", "uint256", "bytes32", "uint256"],
-    [DOMAIN_SEPARATOR, queryId, value, timestamp, aggregatePower, previousTimestamp, nextTimestamp, valCheckpoint, attestationTimestamp])
+  enc = abiCoder.encode(["bytes32", "bytes32", "bytes", "uint256", "uint256", "uint256", "uint256", "bytes32", "uint256", "uint256"],
+    [DOMAIN_SEPARATOR, queryId, value, timestamp, aggregatePower, previousTimestamp, nextTimestamp, valCheckpoint, attestationTimestamp, lastConsensusTimestamp])
   return hash(enc)
 }
 
@@ -172,7 +172,7 @@ getSigStructArray = (sigs) => {
   return structArray
 }
 
-getOracleDataStruct = (queryId, value, timestamp, aggregatePower, previousTimestamp, nextTimestamp, attestTimestamp) => {
+getOracleDataStruct = (queryId, value, timestamp, aggregatePower, previousTimestamp, nextTimestamp, attestTimestamp, lastConsensusTimestamp) => {
   return {
     queryId: queryId,
     report: {
@@ -180,7 +180,8 @@ getOracleDataStruct = (queryId, value, timestamp, aggregatePower, previousTimest
       timestamp: timestamp,
       aggregatePower: aggregatePower,
       previousTimestamp: previousTimestamp,
-      nextTimestamp: nextTimestamp
+      nextTimestamp: nextTimestamp,
+      lastConsensusTimestamp: lastConsensusTimestamp
     },
     attestationTimestamp: attestTimestamp
   }
