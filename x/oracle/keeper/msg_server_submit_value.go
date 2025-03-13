@@ -35,7 +35,6 @@ import (
 // 8. Emit an event for the new report
 func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (res *types.MsgSubmitValueResponse, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	initialGas := sdkCtx.BlockGasMeter().GasConsumed()
 	err = validateSubmitValue(msg)
 	if err != nil {
 		return nil, err
@@ -70,8 +69,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	query, err := k.keeper.CurrentQuery(ctx, queryId)
 	defer func() {
 		if err == nil {
-			gasUsed := sdkCtx.BlockGasMeter().GasConsumed() - initialGas
-			telemetry.SetGaugeWithLabels([]string{"submit_value_gas_consumed"}, float32(gasUsed), []metrics.Label{{Name: "chain_id", Value: sdkCtx.ChainID()}, {Name: "query_type", Value: query.QueryType}})
+			telemetry.SetGaugeWithLabels([]string{"submit_value_gas_consumed"}, float32(sdkCtx.GasMeter().GasConsumed()), []metrics.Label{{Name: "chain_id", Value: sdkCtx.ChainID()}, {Name: "query_type", Value: query.QueryType}})
 		}
 	}()
 	if err != nil {

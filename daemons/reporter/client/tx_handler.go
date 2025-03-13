@@ -57,7 +57,7 @@ func (c *Client) WaitForTx(ctx context.Context, hash string) (*cmttypes.ResultTx
 		resp, err := c.cosmosCtx.Client.Tx(ctx, bz, false)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
-				if time.Now().UnixMilli()-startTimestamp > 3500 {
+				if time.Now().UnixMilli()-startTimestamp > 4000 {
 					return nil, fmt.Errorf("fetching tx '%s'; err: No transaction found within the allotted time", hash)
 				}
 				time.Sleep(25 * time.Millisecond)
