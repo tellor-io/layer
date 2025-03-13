@@ -101,6 +101,7 @@ func TestMsgRequestAttestations(t *testing.T) {
 	ok.On("GetTimestampBefore", ctx, queryId, timestampTime).Return(timestampTime.Add(-1*time.Hour), nil)
 	ok.On("GetTimestampAfter", ctx, queryId, timestampTime).Return(timestampTime.Add(1*time.Hour), nil)
 	ok.On("GetCurrentAggregateReport", ctx, queryId).Return(&aggReport, timestampTime, nil)
+	sk.On("UnbondingTime", ctx).Return(time.Hour*24*21, nil)
 	snapshotKey := crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(timestampTime.UnixMilli())))
 	snapshot := []byte("snapshot")
 	err = k.AttestSnapshotsByReportMap.Set(ctx, snapshotKey, types.AttestationSnapshots{
@@ -144,4 +145,22 @@ func TestMsgRequestAttestations(t *testing.T) {
 	require.Equal(t, snapshotData2.Timestamp, uint64(timestampTime.UnixMilli()))
 	require.Equal(t, snapshotData2.ValidatorCheckpoint, []byte("checkpoint"))
 	require.Equal(t, snapshotData2.AttestationTimestamp, uint64(expectedAttestationTimestamp.UnixMilli()))
+
+	// test old timestamp
+	modernTime := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	sdkCtx = sdk.UnwrapSDKContext(ctx)
+	sdkCtx = sdkCtx.WithBlockTime(modernTime)
+	ctx = sdkCtx
+
+	sk.On("UnbondingTime", ctx).Return(time.Hour*24*21, nil)
+
+	// Create a timestamp that's older than the unbonding period
+	oldTimestamp := modernTime.Add(-24 * time.Hour * 22)
+
+	_, err = msgServer.RequestAttestations(ctx, &types.MsgRequestAttestations{
+		Creator:   creatorAddr.String(),
+		QueryId:   hex.EncodeToString(queryId),
+		Timestamp: strconv.FormatInt(oldTimestamp.UnixMilli(), 10),
+	})
+	require.ErrorContains(t, err, "timestamp is too old")
 }

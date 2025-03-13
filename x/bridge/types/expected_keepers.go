@@ -18,6 +18,7 @@ type StakingKeeper interface {
 	GetAllValidators(ctx context.Context) ([]stakingtypes.Validator, error)
 	GetValidator(ctx context.Context, addr sdk.ValAddress) (stakingtypes.Validator, error)
 	TotalBondedTokens(ctx context.Context) (math.Int, error)
+	UnbondingTime(ctx context.Context) (time.Duration, error)
 }
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
