@@ -11,7 +11,7 @@ export PASSWORD="password"
 export MONIKER="lukemoniker"
 export KEY_NAME="luke"
 export CHAIN_ID="layertest-4"
-export LAYERD_HOME="~/.layer/luke"
+export LAYERD_HOME="home/ubuntu/.layer/luke"
 
 # Remove old test chain data (if present)
 echo "Removing old test chain data..."
@@ -20,6 +20,8 @@ sudo rm -rf $LAYERD_HOME
 # Build layerd
 echo "Building layerd..."
 go build ./cmd/layerd
+
+./layerd init layer --chain-id layertest-4
 
 # Initialize chain node with the folder for validator
 echo "Initializing chain node for $KEY_NAME..."
