@@ -25,6 +25,9 @@ go build ./cmd/layerd
 echo "Initializing chain node for $KEY_NAME..."
 ./layerd init $MONIKER --chain-id $CHAIN_ID --home $LAYERD_HOME
 
+chown -R ubuntu:ubuntu /home/ubuntu/.layer $LAYERD_HOME $LAYERD_HOME/config
+chmod -R u+rwX /home/ubuntu/.layer $LAYERD_HOME $LAYERD_HOME/config
+
 echo "Change denom to loya in genesis file..."
 sed -i 's/"stake"/"loya"/g' $LAYERD_HOME/config/genesis.json
 
