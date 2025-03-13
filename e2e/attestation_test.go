@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -20,6 +21,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
 // cd e2e
@@ -150,7 +154,7 @@ func TestAttestation(t *testing.T) {
 	// query reporters
 	res, _, err := validators[0].Val.ExecQuery(ctx, "reporter", "reporters")
 	require.NoError(err)
-	var reportersRes e2e.QueryReportersResponse
+	var reportersRes reportertypes.QueryReportersResponse
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
 	require.Equal(len(reportersRes.Reporters), 2)
@@ -158,7 +162,7 @@ func TestAttestation(t *testing.T) {
 	// validator reporters report for the cycle list
 	currentCycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
 	require.NoError(err)
-	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
+	var currentCycleList oracletypes.QueryCurrentCyclelistQueryResponse
 	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
 	require.NoError(err)
 	fmt.Println("current cycle list: ", currentCycleList)
@@ -180,18 +184,18 @@ func TestAttestation(t *testing.T) {
 	for i, v := range validators {
 		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", v.Addr)
 		require.NoError(err)
-		var reportsRes e2e.QueryMicroReportsResponse
+		var reportsRes oracletypes.QueryMicroReportsResponse
 		err = json.Unmarshal(reports, &reportsRes)
 		require.NoError(err)
 		fmt.Println("reports from: ", v.Addr, ": ", reportsRes)
 		require.Equal(len(reportsRes.MicroReports), 1) // each reporter should have one report
 		if i == 0 {
-			queryId1 = reportsRes.MicroReports[0].QueryID
+			queryId1 = string(reportsRes.MicroReports[0].QueryId)
 		} else {
-			queryId2 = reportsRes.MicroReports[0].QueryID
+			queryId2 = string(reportsRes.MicroReports[0].QueryId)
 		}
 		// decode queryId
-		decodedBytes, err := base64.StdEncoding.DecodeString(reportsRes.MicroReports[0].QueryID)
+		decodedBytes, err := base64.StdEncoding.DecodeString(string(reportsRes.MicroReports[0].QueryId))
 		require.NoError(err)
 		decodedQueryId = hex.EncodeToString(decodedBytes)
 		fmt.Println("decodedQueryId: ", decodedQueryId)
@@ -201,15 +205,15 @@ func TestAttestation(t *testing.T) {
 	// query GetCurrentAggregateReport to get aggregate timestamp
 	res, _, err = validators[0].Val.ExecQuery(ctx, "oracle", "get-current-aggregate-report", decodedQueryId)
 	require.NoError(err)
-	var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
+	var currentAggRes oracletypes.QueryGetCurrentAggregateReportResponse
 	err = json.Unmarshal(res, &currentAggRes)
 	require.NoError(err)
-	timestamp := currentAggRes.Timestamp
+	timestamp := strconv.FormatUint(currentAggRes.Timestamp, 10)
 
 	// get snapshots
 	snapshots, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", decodedQueryId, timestamp)
 	require.NoError(err)
-	var snapshotsRes e2e.QueryGetSnapshotsByReportResponse
+	var snapshotsRes bridgetypes.QueryGetSnapshotsByReportResponse
 	err = json.Unmarshal(snapshots, &snapshotsRes)
 	require.NoError(err)
 	fmt.Println("snapshots: ", snapshotsRes)
@@ -219,7 +223,7 @@ func TestAttestation(t *testing.T) {
 		attestations, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-by-snapshot", snapshot)
 		require.NoError(err)
 		fmt.Println("attestations bz: ", attestations)
-		var attestationsRes e2e.QueryGetAttestationBySnapshotResponse
+		var attestationsRes bridgetypes.QueryGetAttestationDataBySnapshotResponse
 		err = json.Unmarshal(attestations, &attestationsRes)
 		require.NoError(err)
 		fmt.Println("attestations: ", attestationsRes) // investigate why this is empty, bytes are not empty
@@ -248,7 +252,7 @@ func TestAttestation(t *testing.T) {
 	for !success {
 		cycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
 		require.NoError(err)
-		var cycleList e2e.QueryCurrentCyclelistQueryResponse
+		var cycleList oracletypes.QueryCurrentCyclelistQueryResponse
 		err = json.Unmarshal(cycleListRes, &cycleList)
 		require.NoError(err)
 		if cycleList.QueryData == currentCycleList.QueryData {
@@ -273,12 +277,12 @@ func TestAttestation(t *testing.T) {
 	var queryId3 string
 	reports, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[0].Addr)
 	require.NoError(err)
-	var reportsRes e2e.QueryMicroReportsResponse
+	var reportsRes oracletypes.QueryMicroReportsResponse
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(err)
 	fmt.Println("reports from: ", validators[0].Addr, ": ", reportsRes)
 	require.Equal(len(reportsRes.MicroReports), 2) // val0 should have two reports now
-	queryId3 = reportsRes.MicroReports[0].QueryID
+	queryId3 = string(reportsRes.MicroReports[0].QueryId)
 	require.Equal(queryId1, queryId3) // make sure query is same as first report, then we can reuse the decoded queryId from earlier
 
 	// query GetCurrentAggregateReport to get aggregate timestamp
@@ -287,7 +291,7 @@ func TestAttestation(t *testing.T) {
 	err = json.Unmarshal(res, &currentAggRes)
 	require.NoError(err)
 	prevTimestamp := timestamp
-	timestamp = currentAggRes.Timestamp
+	timestamp = strconv.FormatUint(currentAggRes.Timestamp, 10)
 	fmt.Println("timestamp: ", timestamp)
 	fmt.Println("currentAggRes: ", currentAggRes)
 
@@ -303,7 +307,7 @@ func TestAttestation(t *testing.T) {
 		attestations, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-by-snapshot", snapshot)
 		require.NoError(err)
 		fmt.Println("attestations bz: ", attestations)
-		var attestationsRes e2e.QueryGetAttestationBySnapshotResponse
+		var attestationsRes bridgetypes.QueryGetAttestationDataBySnapshotResponse
 		err = json.Unmarshal(attestations, &attestationsRes)
 		require.NoError(err)
 		fmt.Println("attestations: ", attestationsRes) // investigate why this is empty, bytes are not empty

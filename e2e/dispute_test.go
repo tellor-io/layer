@@ -22,6 +22,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	// oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 const (
@@ -2012,7 +2013,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	require.Equal(user0BalanceAfterClaim.String(), expectedBalance.String())
 }
 
-func TestEverybodyDisputed_Consensus(t *testing.T) {
+func TestEverybodyDisputed_NotConsensus(t *testing.T) {
 	require := require.New(t)
 
 	t.Helper()
@@ -2099,6 +2100,13 @@ func TestEverybodyDisputed_Consensus(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("val1 Account Address: ", val1Addr)
 	fmt.Println("val1 Validator Address: ", val1valAddr)
+	val2 := chain.Validators[1]
+	val2Addr, err := val2.AccountKeyBech32(ctx, "validator")
+	require.NoError(err)
+	val2valAddr, err := val2.KeyBech32(ctx, "validator", "val")
+	require.NoError(err)
+	fmt.Println("val2 Account Address: ", val2Addr)
+	fmt.Println("val2 Validator Address: ", val2valAddr)
 
 	// queryValidators to confirm that 2 validators are bonded
 	vals, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
@@ -2226,16 +2234,89 @@ func TestEverybodyDisputed_Consensus(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 2, val1))
 
 	// make sure both reports got in
+	var user0Report e2e.QueryMicroReportsResponse
+	var user1Report e2e.QueryMicroReportsResponse
+
 	for i := range reporters {
-		if i == 0 || i == 1 {
+		if i == 0 {
 			res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
 			require.NoError(err)
-			var reports e2e.QueryMicroReportsResponse
-			require.NoError(json.Unmarshal(res, &reports))
-			require.Equal(len(reports.MicroReports), 1)
-			require.Equal(reports.MicroReports[0].Reporter, reporters[i].Addr)
-			require.Equal(reports.MicroReports[0].Value, value)
-			require.Equal(reports.MicroReports[0].Power, "1000")
+			require.NoError(json.Unmarshal(res, &user0Report))
+			require.Equal(len(user0Report.MicroReports), 1)
+			require.Equal(user0Report.MicroReports[0].Reporter, reporters[i].Addr)
+			require.Equal(user0Report.MicroReports[0].Value, value)
+			require.Equal(user0Report.MicroReports[0].Power, "1000")
+		} else if i == 1 {
+			res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
+			require.NoError(err)
+			require.NoError(json.Unmarshal(res, &user1Report))
+			require.Equal(len(user1Report.MicroReports), 1)
+			require.Equal(user1Report.MicroReports[0].Reporter, reporters[i].Addr)
+			require.Equal(user1Report.MicroReports[0].Value, value)
 		}
 	}
+	decodedBytes, err := base64.StdEncoding.DecodeString(user0Report.MicroReports[0].QueryID)
+	require.NoError(err)
+	hexStr := hex.EncodeToString(decodedBytes)
+
+	// open dispute on both reports from user3
+	txHash, err = val1.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", user0Report.MicroReports[0].Reporter, user0Report.MicroReports[0].MetaId, hexStr, "minor", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	require.NoError(err)
+	fmt.Println("TX HASH (val1 proposed dispute on user0): ", txHash)
+	txHash, err = val1.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", user1Report.MicroReports[0].Reporter, user1Report.MicroReports[0].MetaId, hexStr, "minor", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	require.NoError(err)
+	fmt.Println("TX HASH (val1 proposed dispute on user1): ", txHash)
+
+	// assert there are 2 disputes open
+	res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	var disputes e2e.Disputes
+	require.NoError(json.Unmarshal(res, &disputes))
+	require.Equal(len(disputes.Disputes), 2)
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1) // not resolved yet
+	require.Equal(disputes.Disputes[1].Metadata.DisputeStatus, 1) // not resolved yet
+
+	for i := range 2 {
+		disputeId := strconv.Itoa(i + 1)
+		// vote from val1 (all tipping power)
+		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (val1 votes on dispute ", disputeId, "): ", txHash)
+
+		// vote from val2 (0 power error)
+		_, err = val2.ExecTx(ctx, "validator", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val2.HomeDir())
+		require.Error(err)
+
+		// check disputes status
+		// should still be open bc only 33% of power has voted
+		res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+		require.NoError(err)
+		require.NoError(json.Unmarshal(res, &disputes))
+		fmt.Println("dispute 1: ", disputes.Disputes[i])
+		require.Equal(disputes.Disputes[i].Metadata.DisputeStatus, 1) // not resolved yet
+
+		// vote from team (should be at least 66% voting power after (33% from team, 33% from having one tip from val1))
+		txHash, err = val1.ExecTx(ctx, "team", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (team votes on dispute ", disputeId, "): ", txHash)
+
+		// check on dispute status
+		// should be resolved and executed
+		r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
+		require.NoError(err)
+		err = json.Unmarshal(r, &disputes)
+		require.NoError(err)
+		require.Equal(disputes.Disputes[i].Metadata.DisputeStatus, 2) // resolved now
+		fmt.Println("resolved dispute ", disputes.Disputes[i].DisputeID)
+	}
+
+	// make sure aggregates are flagged
+	// res, _, err = val1.ExecQuery(ctx, "oracle", "get-data-before", hexStr, timestamp)
+	// require.NoError(err)
+	// var data oracletypes.QueryGetDataBeforeResponse
+	// require.NoError(json.Unmarshal(res, &data))
+	// require.Equal(data.Aggregate.Flagged, true)
+
 }
+
+// add new query type, tip1, report1, tip2, report2, request attestation report1, dispute the report2, add report 1 as evidence, request attestation report1 again
