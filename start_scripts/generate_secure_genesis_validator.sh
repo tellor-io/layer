@@ -15,7 +15,7 @@ export LAYERD_HOME="home/ubuntu/.layer/luke"
 
 # Remove old test chain data (if present)
 echo "Removing old test chain data..."
-sudo rm -rf $LAYERD_HOME
+#sudo rm -rf $LAYERD_HOME
 
 # Build layerd
 echo "Building layerd..."
