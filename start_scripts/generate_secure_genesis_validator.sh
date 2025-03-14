@@ -25,7 +25,7 @@ go build ./cmd/layerd
 
 # Initialize chain node with the folder for validator
 echo "Initializing chain node for $KEY_NAME..."
-./layerd init lukemoniker --chain-id layertest-4 --home home/ubuntu/.layer/luke
+./layerd init lukemoniker --chain-id layertest-4 --home /home/ubuntu/.layer/luke
 
 echo "Change denom to loya in genesis file..."
 sed -i 's/"stake"/"loya"/g' $LAYERD_HOME/config/genesis.json
@@ -104,6 +104,7 @@ sed -i 's/^enable-unsafe-cors = false/enable-unsafe-cors = true/g' $LAYERD_HOME/
 
 echo "Enabled metrics sinks/promethues"
 sed -i 's/^enabled = false/enabled = true/g' $LAYERD_HOME/config/app.toml
+sed -i '/global-labels *= *\[/,/\]/ c\global-labels = [\n      ["chain_id", "layer test-4"]\n]' $LAYERD_HOME/config/app.toml
 # echo "Set prometheus retention time to 60s"
 sed -i 's/^prometheus-retention-time = 0/prometheus-retention-time = 60/g' $LAYERD_HOME/config/app.toml
 
