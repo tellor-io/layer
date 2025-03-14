@@ -4,14 +4,14 @@
 clear
 
 # Stop execution if any command fails
-set -e
+#set -e
 
 export KEYRING_BACKEND="test"
 export PASSWORD="password"
 export MONIKER="lukemoniker"
 export KEY_NAME="luke"
 export CHAIN_ID="layertest-4"
-export LAYERD_HOME="home/ubuntu/.layer/luke"
+export LAYERD_HOME="/home/ubuntu/.layer/luke"
 
 # Remove old test chain data (if present)
 echo "Removing old test chain data..."
@@ -25,10 +25,7 @@ go build ./cmd/layerd
 
 # Initialize chain node with the folder for validator
 echo "Initializing chain node for $KEY_NAME..."
-./layerd init $MONIKER --chain-id $CHAIN_ID --home $LAYERD_HOME
-
-chown -R ubuntu:ubuntu /home/ubuntu/.layer $LAYERD_HOME $LAYERD_HOME/config
-chmod -R u+rwX /home/ubuntu/.layer $LAYERD_HOME $LAYERD_HOME/config
+./layerd init lukemoniker --chain-id layertest-4 --home home/ubuntu/.layer/luke
 
 echo "Change denom to loya in genesis file..."
 sed -i 's/"stake"/"loya"/g' $LAYERD_HOME/config/genesis.json
@@ -50,18 +47,18 @@ echo "set chain id in genesis file to layer..."
 sed -i 's/"chain_id": .*"/"chain_id": '\"$CHAIN_ID\"'/g' $LAYERD_HOME/config/genesis.json
 
 # Update vote_extensions_enable_height in genesis.json for node
-echo "Updating vote_extensions_enable_height in genesis.json for $KEY_NAME..."
-jq '.consensus.params.abci.vote_extensions_enable_height = "1" | .slashing.params.signed_blocks_window = "500"' $LAYERD_HOME/config/genesis.json > temp.json && mv temp.json $LAYERD_HOME/config/genesis.json
-jq '.app_state.globalfee.params.minimum_gas_prices[0].amount = "0.000025000000000000"' $LAYERD_HOME/config/genesis.json > temp.json && mv temp.json $LAYERD_HOME/config/genesis.json
+# echo "Updating vote_extensions_enable_height in genesis.json for $KEY_NAME..."
+# jq '.consensus.params.abci.vote_extensions_enable_height = "1" | .slashing.params.signed_blocks_window = "500"' $LAYERD_HOME/config/genesis.json > temp.json && mv temp.json $LAYERD_HOME/config/genesis.json
+# jq '.app_state.globalfee.params.minimum_gas_prices[0].amount = "0.000025000000000000"' $LAYERD_HOME/config/genesis.json > temp.json && mv temp.json $LAYERD_HOME/config/genesis.json
 
 echo "Set pruning to custom..."
-sed -i '' 's/^pruning = "default"/pruning = "custom"/g' $LAYERD_HOME/config/app.toml
-sed -i '' 's/^pruning-keep-recent = "0"/pruning-keep-recent = "1209600"/g' $LAYERD_HOME/config/app.toml
-sed -i '' 's/^pruning-interval = "0"/pruning-interval = "10"/g' $LAYERD_HOME/config/app.toml
+sed -i 's/^pruning = "default"/pruning = "custom"/g' $LAYERD_HOME/config/app.toml
+sed -i 's/^pruning-keep-recent = "0"/pruning-keep-recent = "1209600"/g' $LAYERD_HOME/config/app.toml
+sed -i 's/^pruning-interval = "0"/pruning-interval = "10"/g' $LAYERD_HOME/config/app.toml
 
 echo "Turn on snapshot service for node"
-sed -i '' 's/^snapshot-interval = 0/snapshot-interval = 2000/g' $LAYERD_HOME/config/app.toml
-sed -i '' 's/^snapshot-keep-recent = 2/snapshot-keep-recent = 5/g' $LAYERD_HOME/config/app.toml
+sed -i 's/^snapshot-interval = 0/snapshot-interval = 2000/g' $LAYERD_HOME/config/app.toml
+sed -i 's/^snapshot-keep-recent = 2/snapshot-keep-recent = 5/g' $LAYERD_HOME/config/app.toml
 
 # Get address/account for validator to use in gentx tx
 echo "Get address/account for $KEY_NAME to use in gentx tx"
