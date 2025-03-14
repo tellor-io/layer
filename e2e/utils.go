@@ -469,6 +469,10 @@ type QueryGetAttestationDataBySnapshotResponse struct {
 	LastConsensusTimestamp  string `protobuf:"bytes,9,opt,name=last_consensus_timestamp,json=lastConsensusTimestamp,proto3" json:"last_consensus_timestamp,omitempty"`
 }
 
+type QueryRetrieveDataResponse struct {
+	Aggregate *Aggregate `protobuf:"bytes,1,opt,name=aggregate,proto3" json:"aggregate,omitempty"`
+}
+
 // HELPERS FOR TESTING AGAINST THE CHAIN
 
 func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos.ChainNode) (string, error) {

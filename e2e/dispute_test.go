@@ -22,7 +22,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	// oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 const (
@@ -751,7 +750,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 withdraws fee refund): ", txHash)
 
-	// check user0 stake after withdrawing feerefund, should contain 950 more trb
+	// check user0 stake after withdrawing fee refund, should contain 950 more trb
 	user0StakingAfterWithdraw, err := chain.StakingQueryDelegation(ctx, val1valAddr, user0Addr)
 	require.NoError(err)
 	fmt.Println("user0 delegation to val1 after withdrawing fee refund: ", user0StakingAfterWithdraw)
@@ -2013,7 +2012,8 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	require.Equal(user0BalanceAfterClaim.String(), expectedBalance.String())
 }
 
-func TestEverybodyDisputed_NotConsensus(t *testing.T) {
+// 2 out of 4 reporters submit, both are bad prices, dispute and unjail, then 4/4 submit bad prices, dispute and unjail
+func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	require := require.New(t)
 
 	t.Helper()
@@ -2211,59 +2211,65 @@ func TestEverybodyDisputed_NotConsensus(t *testing.T) {
 	fmt.Println("reporters res: ", reportersRes)
 	require.Equal(len(reportersRes.Reporters), numReporters+1) // number of delegating reporters + 1 validator reporter
 
-	// val1 tips bch usd
+	// val 1 tips , 2/4 reporters submit, both are bad prices
 	tipAmt := math.NewInt(1_000_000)
 	tip := sdk.NewCoin("loya", tipAmt)
 	_, _, err = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", val1Addr, bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 tipped bch-usd): ", txHash)
 	require.NoError(err)
-	time.Sleep(500 * time.Millisecond)
 
-	// 2/4 reporters submit, both are bad prices
+	// 2/4 ppl submit, both are bad
 	value := layerutil.EncodeValue(10000000.99)
-	for i := range reporters {
-		if i == 0 || i == 1 {
-			_, _, err = val1.Exec(ctx, val1.TxCommand(reporters[i].Keyname, "oracle", "submit-value", reporters[i].Addr, bchQData, value, "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
-			require.NoError(err)
-			fmt.Println("TX HASH (", reporters[i].Keyname, " submitted bch-usd): ", txHash)
-		}
+	for i := range reporters[:2] {
+		_, _, err = val1.Exec(ctx, val1.TxCommand(reporters[i].Keyname, "oracle", "submit-value", reporters[i].Addr, bchQData, value, "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+		require.NoError(err)
+		fmt.Println("TX HASH (", reporters[i].Keyname, " submitted bch-usd): ", txHash)
 	}
 
 	// wait for query to expire
-	require.NoError(testutil.WaitForBlocks(ctx, 2, val1))
+	require.NoError(testutil.WaitForBlocks(ctx, 3, val1))
 
-	// make sure both reports got in
-	var user0Report e2e.QueryMicroReportsResponse
-	var user1Report e2e.QueryMicroReportsResponse
-
-	for i := range reporters {
-		if i == 0 {
-			res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
-			require.NoError(err)
-			require.NoError(json.Unmarshal(res, &user0Report))
-			require.Equal(len(user0Report.MicroReports), 1)
-			require.Equal(user0Report.MicroReports[0].Reporter, reporters[i].Addr)
-			require.Equal(user0Report.MicroReports[0].Value, value)
-			require.Equal(user0Report.MicroReports[0].Power, "1000")
-		} else if i == 1 {
-			res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
-			require.NoError(err)
-			require.NoError(json.Unmarshal(res, &user1Report))
-			require.Equal(len(user1Report.MicroReports), 1)
-			require.Equal(user1Report.MicroReports[0].Reporter, reporters[i].Addr)
-			require.Equal(user1Report.MicroReports[0].Value, value)
-		}
+	// verify reports
+	type UserReports struct {
+		UserReport e2e.QueryMicroReportsResponse
+		Timestamp  string
+		qId        string
 	}
-	decodedBytes, err := base64.StdEncoding.DecodeString(user0Report.MicroReports[0].QueryID)
-	require.NoError(err)
-	hexStr := hex.EncodeToString(decodedBytes)
+	userReports := make([]UserReports, 2)
+	for i := range reporters[:2] {
+		res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
+		require.NoError(err)
+		var userReport e2e.QueryMicroReportsResponse
+		require.NoError(json.Unmarshal(res, &userReport))
+		fmt.Println("userReport", i, ": ", userReport)
+		require.Equal(len(userReport.MicroReports), 1)
+		require.Equal(userReport.MicroReports[0].Reporter, reporters[i].Addr)
+		require.Equal(userReport.MicroReports[0].Value, value)
+		require.Equal(userReport.MicroReports[0].Power, "1000")
+		decodedBytes, err := base64.StdEncoding.DecodeString(userReport.MicroReports[0].QueryID)
+		require.NoError(err)
+		hexStr := hex.EncodeToString(decodedBytes)
+		userReports[i] = UserReports{
+			UserReport: userReport,
+			qId:        hexStr,
+		}
+		// get aggregate timestamp
+		fmt.Println("getting aggregate timestamp for", hexStr, "...")
+		res, _, err = val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hexStr)
+		require.NoError(err)
+		var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
+		err = json.Unmarshal(res, &currentAggRes)
+		require.NoError(err)
+		timestamp := currentAggRes.Timestamp
+		userReports[i].Timestamp = timestamp
+	}
 
 	// open dispute on both reports from user3
-	txHash, err = val1.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", user0Report.MicroReports[0].Reporter, user0Report.MicroReports[0].MetaId, hexStr, "minor", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", userReports[0].UserReport.MicroReports[0].Reporter, userReports[0].UserReport.MicroReports[0].MetaId, userReports[0].qId, "warning", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 proposed dispute on user0): ", txHash)
-	txHash, err = val1.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", user1Report.MicroReports[0].Reporter, user1Report.MicroReports[0].MetaId, hexStr, "minor", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", userReports[1].UserReport.MicroReports[0].Reporter, userReports[1].UserReport.MicroReports[0].MetaId, userReports[1].qId, "warning", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 proposed dispute on user1): ", txHash)
 
@@ -2276,7 +2282,7 @@ func TestEverybodyDisputed_NotConsensus(t *testing.T) {
 	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1) // not resolved yet
 	require.Equal(disputes.Disputes[1].Metadata.DisputeStatus, 1) // not resolved yet
 
-	for i := range 2 {
+	for i := range userReports {
 		disputeId := strconv.Itoa(i + 1)
 		// vote from val1 (all tipping power)
 		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
@@ -2310,13 +2316,146 @@ func TestEverybodyDisputed_NotConsensus(t *testing.T) {
 		fmt.Println("resolved dispute ", disputes.Disputes[i].DisputeID)
 	}
 
-	// make sure aggregates are flagged
-	// res, _, err = val1.ExecQuery(ctx, "oracle", "get-data-before", hexStr, timestamp)
-	// require.NoError(err)
-	// var data oracletypes.QueryGetDataBeforeResponse
-	// require.NoError(json.Unmarshal(res, &data))
-	// require.Equal(data.Aggregate.Flagged, true)
+	// make sure aggregate is flagged
+	res, _, err = val1.ExecQuery(ctx, "oracle", "retrieve-data", userReports[0].qId, userReports[0].Timestamp)
+	require.NoError(err)
+	var data e2e.QueryRetrieveDataResponse
+	require.NoError(json.Unmarshal(res, &data))
+	require.Equal(data.Aggregate.Flagged, true)
+	res, _, err = val1.ExecQuery(ctx, "oracle", "retrieve-data", userReports[1].qId, userReports[1].Timestamp)
+	require.NoError(err)
+	var data2 e2e.QueryRetrieveDataResponse
+	require.NoError(json.Unmarshal(res, &data2))
+	require.Equal(data2.Aggregate.Flagged, true)
+
+	// unjail reporters
+	for i, usr := range userReports {
+		txHash, err = val1.ExecTx(ctx, usr.UserReport.MicroReports[0].Reporter, "reporter", "unjail-reporter", usr.UserReport.MicroReports[0].Reporter, "--keyring-dir", val1.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (user", i, "unjails reporter): ", txHash)
+	}
+
+	// tip again, all 4 reporters submit bad prices
+	tipAmt = math.NewInt(1_000_000)
+	tip = sdk.NewCoin("loya", tipAmt)
+	_, _, err = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", val1Addr, bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	require.NoError(err)
+	fmt.Println("TX HASH (user0 tipped bch-usd): ", txHash)
+	require.NoError(err)
+
+	// 4/4 reporters submit bad prices
+	value = layerutil.EncodeValue(10000000.99)
+	for i := range reporters {
+		_, _, err = val1.Exec(ctx, val1.TxCommand(reporters[i].Keyname, "oracle", "submit-value", reporters[i].Addr, bchQData, value, "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+		require.NoError(err)
+		fmt.Println("TX HASH (", reporters[i].Keyname, " submitted bch-usd): ", txHash)
+	}
+
+	// wait for query to expire
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val1))
+
+	// verify reports
+	userReports = make([]UserReports, 4)
+	for i := range reporters {
+		res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
+		require.NoError(err)
+		var userReport2 e2e.QueryMicroReportsResponse
+		require.NoError(json.Unmarshal(res, &userReport2))
+		fmt.Println("userReport", i, ": ", userReport2)
+		if i < 2 {
+			require.Equal(len(userReport2.MicroReports), 2)         // first 2 reporters should have 2 reports total
+			require.Equal(userReport2.MicroReports[1].Power, "990") // first 2 lost 1% of thier stake from previous dispute
+			require.Equal(userReport2.MicroReports[1].Reporter, reporters[i].Addr)
+			require.Equal(userReport2.MicroReports[1].Value, value)
+		} else {
+			require.Equal(len(userReport2.MicroReports), 1)          // last 2 reporters should have 1 report total
+			require.Equal(userReport2.MicroReports[0].Power, "1000") // havent lost any stake yet
+			require.Equal(userReport2.MicroReports[0].Reporter, reporters[i].Addr)
+			require.Equal(userReport2.MicroReports[0].Value, value)
+		}
+
+		decodedBytes, err := base64.StdEncoding.DecodeString(userReport2.MicroReports[0].QueryID)
+		require.NoError(err)
+		hexStr := hex.EncodeToString(decodedBytes)
+		userReports[i] = UserReports{
+			UserReport: userReport2,
+			qId:        hexStr,
+		}
+		// get aggregate timestamp
+		fmt.Println("getting aggregate timestamp for", hexStr, "...")
+		res, _, err = val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hexStr)
+		require.NoError(err)
+		var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
+		err = json.Unmarshal(res, &currentAggRes)
+		require.NoError(err)
+		timestamp := currentAggRes.Timestamp
+		userReports[i].Timestamp = timestamp
+	}
+
+	// open dispute on all reports from user3
+	for i := range userReports {
+		if i < 2 {
+			txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReports[i].UserReport.MicroReports[1].Reporter, userReports[i].UserReport.MicroReports[1].MetaId, userReports[i].qId, "warning", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		} else {
+			txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReports[i].UserReport.MicroReports[0].Reporter, userReports[i].UserReport.MicroReports[0].MetaId, userReports[i].qId, "warning", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		}
+		require.NoError(err)
+		fmt.Println("TX HASH (val1 proposed dispute on user", i, "): ", txHash)
+	}
+
+	// assert there are 4 disputes open
+	res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	require.NoError(json.Unmarshal(res, &disputes))
+	require.Equal(len(disputes.Disputes), 6)
+	require.Equal(disputes.Disputes[2].Metadata.DisputeStatus, 1) // not resolved yet
+	require.Equal(disputes.Disputes[3].Metadata.DisputeStatus, 1) // not resolved yet
+	require.Equal(disputes.Disputes[4].Metadata.DisputeStatus, 1) // not resolved yet
+	require.Equal(disputes.Disputes[5].Metadata.DisputeStatus, 1) // not resolved yet
+
+	for i := range userReports {
+		disputeId := strconv.Itoa(i + 3) // disputes 3, 4, 5, 6
+		// vote from val1 (all tipping power)
+		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (val1 votes on dispute ", disputeId, "): ", txHash)
+
+		// vote from val2 (0 power error)
+		_, err = val2.ExecTx(ctx, "validator", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val2.HomeDir())
+		require.Error(err)
+
+		// check disputes status
+		// should still be open bc only 33% of power has voted
+		res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+		require.NoError(err)
+		require.NoError(json.Unmarshal(res, &disputes))
+		fmt.Println("dispute ", i+3, ": ", disputes.Disputes[i+2])
+		require.Equal(disputes.Disputes[i+2].Metadata.DisputeStatus, 1) // not resolved yet
+
+		// vote from team (should be at least 66% voting power after (33% from team, 33% from having one tip from val1))
+		txHash, err = val1.ExecTx(ctx, "team", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (team votes on dispute ", disputeId, "): ", txHash)
+
+		// check on dispute status
+		// should be resolved and executed
+		r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
+		require.NoError(err)
+		err = json.Unmarshal(r, &disputes)
+		require.NoError(err)
+		require.Equal(disputes.Disputes[i+2].Metadata.DisputeStatus, 2) // resolved now
+		fmt.Println("resolved dispute ", disputes.Disputes[i+3].DisputeID)
+	}
+
+	// make sure aggregate is flagged
+	res, _, err = val1.ExecQuery(ctx, "oracle", "retrieve-data", userReports[3].qId, userReports[3].Timestamp)
+	require.NoError(err)
+	require.NoError(json.Unmarshal(res, &data))
+	require.Equal(data.Aggregate.Flagged, true)
 
 }
 
 // add new query type, tip1, report1, tip2, report2, request attestation report1, dispute the report2, add report 1 as evidence, request attestation report1 again
+func TestNewQueryTipReportDisputeAttestation(t *testing.T) {
+
+}
