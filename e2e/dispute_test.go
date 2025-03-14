@@ -2444,7 +2444,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 		err = json.Unmarshal(r, &disputes)
 		require.NoError(err)
 		require.Equal(disputes.Disputes[i+2].Metadata.DisputeStatus, 2) // resolved now
-		fmt.Println("resolved dispute ", disputes.Disputes[i+3].DisputeID)
+		fmt.Println("resolved dispute ", disputes.Disputes[i+2].DisputeID)
 	}
 
 	// make sure aggregate is flagged
