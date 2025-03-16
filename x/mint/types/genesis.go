@@ -14,7 +14,7 @@ func NewGenesisState(bondDenom string, initialized bool, previousBlockTime *time
 	}
 }
 
-// DefaultGenesisState creates a default GenesisState object
+// DefaultGenesis creates a default GenesisState object
 func DefaultGenesis() *GenesisState {
 	return NewGenesisState(DefaultBondDenom, false, nil)
 }

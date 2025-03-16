@@ -36,7 +36,7 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	return SetPreviousBlockTime(ctx, k, currentTime)
 }
 
-// mintBlockProvision mints the block provision for the current block.
+// MintBlockProvision mints the block provision for the current block.
 func MintBlockProvision(ctx context.Context, k keeper.Keeper, currentTime time.Time, minter types.Minter) error {
 	if minter.PreviousBlockTime == nil {
 		return nil

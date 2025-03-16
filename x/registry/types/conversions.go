@@ -19,7 +19,7 @@ var (
 	reInt = regexp.MustCompile(`(u?)int(\d*)`)
 )
 
-// ConvertABIToReflectType converts ABI type strings to reflect.Type
+// ConvertTypeToReflectType converts ABI type strings to reflect.Type
 func ConvertTypeToReflectType(abiType string) (reflect.Type, error) {
 	// Handling arrays
 	if matches := reArray.FindStringSubmatch(abiType); matches != nil {
