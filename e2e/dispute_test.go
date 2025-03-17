@@ -2455,8 +2455,8 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	require.Equal(data.Aggregate.Flagged, true)
 }
 
-// add new query type, tip, report, request attestation
-func TestNewQueryTipReportAttestation(t *testing.T) {
+// add new query type, tip, report, dispute
+func TestNewQueryTipReportDispute(t *testing.T) {
 	require := require.New(t)
 
 	t.Helper()
