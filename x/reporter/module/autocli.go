@@ -131,9 +131,9 @@ func (AppModule) GetTxCmd() *cobra.Command {
 
 func GetTxCreateReporterCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "create-reporter [commission-rate] [min-tokens-required]",
+		Use:   "create-reporter [commission-rate] [min-tokens-required] [moniker]",
 		Short: "Execute the CreateReporter RPC method",
-		Args:  cobra.ExactArgs(2),
+		Args:  cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
@@ -149,6 +149,7 @@ func GetTxCreateReporterCmd() *cobra.Command {
 				ReporterAddress:   clientCtx.FromAddress.String(),
 				CommissionRate:    math.LegacyMustNewDecFromStr(args[0]),
 				MinTokensRequired: minTokensRequired,
+				Moniker:           args[2],
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), &msg)
