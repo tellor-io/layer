@@ -17,7 +17,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -118,10 +117,6 @@ func (icqcustomModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	genState.Params.AllowQueries = []string{"/layer.oracle.Query/GetCurrentAggregateReport"}
 
 	return cdc.MustMarshalJSON(genState)
-}
-
-type genutilModule struct {
-	genutil.AppModule
 }
 
 func CustomMessageValidator(msgs []sdk.Msg) error {
