@@ -15,7 +15,7 @@ export LAYERD_HOME="/home/ubuntu/.layer/luke"
 
 # Remove old test chain data (if present)
 echo "Removing old test chain data..."
-#sudo rm -rf $LAYERD_HOME
+sudo rm -rf $LAYERD_HOME
 
 # Build layerd
 echo "Building layerd..."
@@ -74,7 +74,7 @@ echo "Creating gentx for $KEY_NAME..."
 ./layerd genesis gentx $KEY_NAME 10000000loya --keyring-backend $KEYRING_BACKEND --home $LAYERD_HOME --chain-id $CHAIN_ID
 
 echo "Add team address to genesis..."
-./layerd genesis add-team-account tellor18wjwgr0j8pv4ektdaxvzsykpntdylftwz8ml97 --home $LAYERD_HOME
+./layerd genesis add-team-account tellor1rdwhf536fkj7yuj68vnaruexdea4mnrd3d42ya --home $LAYERD_HOME
 
 # Add the transactions to the genesis block
 echo "Collecting gentxs..."
