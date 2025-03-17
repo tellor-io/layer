@@ -2621,6 +2621,7 @@ func TestNewQueryTipReportDispute(t *testing.T) {
 		ReportBlockWindow: 10,
 	}
 	specBz, err := json.Marshal(spec)
+	fmt.Println("specBz: ", string(specBz))
 	require.NoError(err)
 	txHash, err := val1.ExecTx(ctx, user0Addr, "registry", "register-spec", queryType, string(specBz), "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
