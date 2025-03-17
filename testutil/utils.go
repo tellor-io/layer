@@ -84,3 +84,17 @@ func EncodeValue(number float64) string {
 	encodedString := hex.EncodeToString(encodedBytes)
 	return encodedString
 }
+
+// EncodeStringValue encodes a string for Ethereum ABI
+func EncodeStringValue(value string) string {
+	// Create a string ABI type
+	stringABIType, _ := abi.NewType("string", "", nil)
+
+	// Create the arguments and pack the string
+	arguments := abi.Arguments{{Type: stringABIType}}
+	encodedBytes, _ := arguments.Pack(value)
+
+	// Convert to hex string
+	encodedString := hex.EncodeToString(encodedBytes)
+	return encodedString
+}

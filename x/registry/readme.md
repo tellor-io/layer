@@ -72,6 +72,7 @@ layerd query registry data-spec BTCBalance
 #   registrar: tellor13ffxsq63xsqk2a4tg94sax5mrs4jjph8hszt7v
 #   report_block_window: 0s
 #   response_value_type: uint256
+#   query_type: btcbalance
 ```
 
 ```sh
