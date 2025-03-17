@@ -35,14 +35,26 @@ func (s *IntegrationTestSuite) TestCreatingReporter() {
 	s.NoError(err)
 	val1, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddrs[0])
 	s.NoError(err)
-	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
+	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6), Moniker: "reporter_moniker1"})
 	s.NoError(err)
+	reporter, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, valAccs[0].Bytes())
+	s.NoError(err)
+	s.Equal(reporter.Moniker, "reporter_moniker1")
+	s.Equal(reporter.Jailed, false)
+	s.Equal(reporter.CommissionRate, reportertypes.DefaultMinCommissionRate)
+	s.Equal(reporter.MinTokensRequired, math.NewIntWithDecimal(1, 6))
 
 	// delegator is not self reporting but delegated to another reporter
 	_, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, newDelegator)
 	s.Error(err)
-	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: newDelegator.String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
+	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: newDelegator.String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6), Moniker: "reporter_moniker2"})
 	s.NoError(err)
+	reporter, err = s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, newDelegator)
+	s.NoError(err)
+	s.Equal(reporter.Moniker, "reporter_moniker2")
+	s.Equal(reporter.Jailed, false)
+	s.Equal(reporter.CommissionRate, reportertypes.DefaultMinCommissionRate)
+	s.Equal(reporter.MinTokensRequired, math.NewIntWithDecimal(1, 6))
 
 	delBonded, err := s.Setup.Stakingkeeper.GetDelegatorBonded(s.Setup.Ctx, newDelegator)
 	s.NoError(err)
@@ -79,7 +91,7 @@ func (s *IntegrationTestSuite) TestSwitchReporterMsg() {
 	s.NoError(err)
 
 	// register reporter
-	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
+	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6), Moniker: "reporter_moniker1"})
 	s.NoError(err)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(2)
 	// add selector to the reporter
@@ -96,7 +108,7 @@ func (s *IntegrationTestSuite) TestSwitchReporterMsg() {
 	val2, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddrs[1])
 	s.NoError(err)
 	// register second reporter
-	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccs[1].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
+	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccs[1].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6), Moniker: "reporter_moniker2"})
 	s.NoError(err)
 	validatorReporter2, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[1], []byte{})
 	s.NoError(err)
@@ -196,7 +208,7 @@ func (s *IntegrationTestSuite) TestDelegatorCount() {
 	}
 	// register reporter
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
-	_, err := msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: delegatorAddr.String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
+	_, err := msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: delegatorAddr.String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6), Moniker: "reporter_moniker1"})
 	s.NoError(err)
 	del, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, delegatorAddr.Bytes())
 	s.NoError(err)
@@ -210,7 +222,7 @@ func (s *IntegrationTestSuite) TestMaxSelectorsCount() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	stakingmsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 
-	_, err := msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: sdk.AccAddress(valAddrs[0]).String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6)})
+	_, err := msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: sdk.AccAddress(valAddrs[0]).String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6), Moniker: "reporter_moniker"})
 	s.NoError(err)
 	valAcc := valAccs[0]
 	valAdd := valAddrs[0]
@@ -297,6 +309,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake() {
 		ReporterAddress:   reporterAddr.String(),
 		CommissionRate:    reportertypes.DefaultMinCommissionRate,
 		MinTokensRequired: math.NewIntWithDecimal(1, 6),
+		Moniker:           "reporter_moniker1",
 	}
 	_, err = reportermsgServer.CreateReporter(ctx, &msgCreateReporter)
 	s.NoError(err)

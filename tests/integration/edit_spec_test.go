@@ -51,7 +51,7 @@ func (s *IntegrationTestSuite) TestEditSpec() {
 	}
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	_, err = reporterMsgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccAddrs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: reportertypes.DefaultMinLoya})
+	_, err = reporterMsgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccAddrs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: reportertypes.DefaultMinLoya, Moniker: "reporter_moniker1"})
 	require.NoError(err)
 	//---------------------------------------------------------------------------
 	// Height 1 - register a spec for a TWAP query, registrar is reporter

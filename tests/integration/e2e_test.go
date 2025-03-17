@@ -118,8 +118,8 @@ func (s *IntegrationTestSuite) TestSetUpValidatorAndReporter() {
 	require.NoError(err)
 	valAddr2, err := sdk.ValAddressFromBech32(validatorSet[2].GetOperator())
 	require.NoError(err)
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, valAddr1, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, valAddr2, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, valAddr1, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker1")))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, valAddr2, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker2")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, valAddr1, reportertypes.NewSelection(valAddr1, 1)))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, valAddr2, reportertypes.NewSelection(valAddr2, 1)))
 

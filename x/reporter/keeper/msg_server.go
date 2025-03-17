@@ -72,7 +72,7 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	}
 
 	// set the reporter and set the self selector
-	if err := k.Keeper.Reporters.Set(goCtx, addr.Bytes(), types.NewReporter(msg.CommissionRate, msg.MinTokensRequired)); err != nil {
+	if err := k.Keeper.Reporters.Set(goCtx, addr.Bytes(), types.NewReporter(msg.CommissionRate, msg.MinTokensRequired, msg.Moniker)); err != nil {
 		return nil, err
 	}
 	if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), types.NewSelection(addr.Bytes(), uint64(count))); err != nil {
@@ -84,6 +84,7 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 			sdk.NewAttribute("reporter", msg.ReporterAddress),
 			sdk.NewAttribute("commission", msg.CommissionRate.String()),
 			sdk.NewAttribute("min_tokens_required", msg.MinTokensRequired.String()),
+			sdk.NewAttribute("moniker", msg.Moniker),
 		),
 	})
 	telemetry.IncrCounterWithLabels([]string{"create_reporter_count"}, 1, []metrics.Label{{Name: "chain_id", Value: sdk.UnwrapSDKContext(goCtx).ChainID()}})
@@ -99,6 +100,11 @@ func validateCreateReporter(msg *types.MsgCreateReporter) error {
 	// check that mintokensrequired is positive
 	if msg.MinTokensRequired.LTE(math.ZeroInt()) {
 		return errors.New("MinTokensRequired must be positive (%s)")
+	}
+
+	// check that moniker is not empty
+	if msg.Moniker == "" {
+		return errors.New("moniker cannot be empty")
 	}
 	return nil
 }

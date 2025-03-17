@@ -102,12 +102,13 @@ func (s *IntegrationTestSuite) TestAggregateOverMultipleBlocks() {
 		ReporterAddress:   robAccAddr.String(),
 		CommissionRate:    reportertypes.DefaultMinCommissionRate,
 		MinTokensRequired: math.NewInt(1 * 1e6),
+		Moniker:           "rob_moniker",
 	})
 	require.NoError(err)
 	robReporterInfo, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, robAccAddr)
 	require.NoError(err)
 	require.Equal(robReporterInfo.Jailed, false)
-
+	require.Equal(robReporterInfo.Moniker, "rob_moniker")
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -180,11 +181,13 @@ func (s *IntegrationTestSuite) TestAggregateOverMultipleBlocks() {
 		ReporterAddress:   romanAccAddr.String(),
 		CommissionRate:    reportertypes.DefaultMinCommissionRate,
 		MinTokensRequired: math.NewInt(1 * 1e6),
+		Moniker:           "roman_moniker",
 	})
 	require.NoError(err)
 	romanReporterInfo, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, romanAccAddr)
 	require.NoError(err)
 	require.Equal(romanReporterInfo.Jailed, false)
+	require.Equal(romanReporterInfo.Moniker, "roman_moniker")
 
 	rickyPrivKey := secp256k1.GenPrivKey()
 	rickyAccAddr := sdk.AccAddress(rickyPrivKey.PubKey().Address())
@@ -206,12 +209,13 @@ func (s *IntegrationTestSuite) TestAggregateOverMultipleBlocks() {
 		ReporterAddress:   rickyAccAddr.String(),
 		CommissionRate:    reportertypes.DefaultMinCommissionRate,
 		MinTokensRequired: math.NewInt(1 * 1e6),
+		Moniker:           "ricky_moniker",
 	})
 	require.NoError(err)
 	rickyReporterInfo, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, rickyAccAddr)
 	require.NoError(err)
 	require.Equal(rickyReporterInfo.Jailed, false)
-
+	require.Equal(rickyReporterInfo.Moniker, "ricky_moniker")
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
