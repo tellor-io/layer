@@ -193,5 +193,4 @@ func TestInactivitySlash(t *testing.T) {
 		}
 	}
 	require.Equal(0, jailedCount, "expected no validators to be jailed")
-
 }
