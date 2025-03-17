@@ -134,7 +134,7 @@ message QueryGetCurrentAggregateReportResponse {
 **Note**: When inputting or returning a list of items, use the `repeated` keyword, and optional pagination. Ex. with a different query [here](https://github.com/tellor-io/layer/blob/5820469f2544b2dc1a34ac06b961b92a4adcb782/proto/layer/oracle/query.proto#L329)  
 **Note**: If inputting or returning a custom type, such as `Aggregate`, it needs to be defined and imported within the proto files. Ex [here](https://github.com/tellor-io/layer/blob/5820469f2544b2dc1a34ac06b961b92a4adcb782/proto/layer/oracle/aggregate.proto#L11)
 
-3. Generate the protobuf files for the new query using a custom protoc implementation or `ignite generate proto-go`.
+3. Generate the protobuf files for the new query using a custom protoc implementation or `ignite generate proto-go`. (Ignite docs [here](https://github.com/ignite/cli).)
 
 4. Create the query function in layer/x/oracle/keeper/query.go or individual query file. 
 ```go
