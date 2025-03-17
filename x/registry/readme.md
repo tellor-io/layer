@@ -4,6 +4,14 @@
 
 This module enables the registration of fully customizable data specs to inform reporters . Users can vote on data specs to be altered. For more information, reference the [ADRs](#adrs) below.
 
+## How to add new queries to Layer:
+Before registering new queries, please check the existing registry 
+### Using Telliot:
+
+### Manually:
+
+
+
 ## ADRs
 
 - [adr002](https://github.com/tellor-io/Layer/blob/main/docs/adr/adr002.md) - queryId time frame structure
