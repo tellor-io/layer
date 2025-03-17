@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/registry/keeper"
 	registry "github.com/tellor-io/layer/x/registry/module"
 	types "github.com/tellor-io/layer/x/registry/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestQueryGetDataSpec(t *testing.T) {
