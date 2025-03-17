@@ -75,9 +75,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "CreateReporter",
-					Use:            "create-reporter [commission-rate] [min-tokens-required]",
+					Use:            "create-reporter [commission-rate] [min-tokens-required] [moniker]",
 					Short:          "Execute the CreateReporter RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "commission_rate"}, {ProtoField: "min_tokens_required"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "commission_rate"}, {ProtoField: "min_tokens_required"}, {ProtoField: "moniker"}},
 				},
 				{
 					RpcMethod:      "SelectReporter",
