@@ -1369,6 +1369,7 @@ paths:
         - Query
   /tellor-io/layer/oracle/get_data_after/{query_id}/{timestamp}:
     get:
+      summary: Queries a list of GetAggregatedReport items after a timestamp.
       operationId: GetDataAfter
       responses:
         '200':
@@ -1457,7 +1458,7 @@ paths:
         - Query
   /tellor-io/layer/oracle/get_data_before/{query_id}/{timestamp}:
     get:
-      summary: Queries a list of GetAggregatedReport items.
+      summary: Queries a list of GetAggregatedReport items before a timestamp.
       operationId: GetDataBefore
       responses:
         '200':
@@ -1910,7 +1911,7 @@ paths:
           required: true
           type: string
         - name: timestamp
-          description: timestamp defines the timestamp of the aggregate report.
+          description: timestamp defines the timestamp the aggregate should be after.
           in: path
           required: true
           type: string
@@ -1959,7 +1960,7 @@ paths:
           required: true
           type: string
         - name: timestamp
-          description: timestamp defines the timestamp of the aggregate report.
+          description: timestamp defines the timestamp the aggregate should be before.
           in: path
           required: true
           type: string
