@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
@@ -16,6 +17,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/distribution"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/cosmos-sdk/x/staking"
@@ -116,4 +118,27 @@ func (icqcustomModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	genState.Params.AllowQueries = []string{"/layer.oracle.Query/GetCurrentAggregateReport"}
 
 	return cdc.MustMarshalJSON(genState)
+}
+
+type genutilModule struct {
+	genutil.AppModule
+}
+
+func CustomMessageValidator(msgs []sdk.Msg) error {
+	if len(msgs) != 1 {
+		return fmt.Errorf("unexpected number of GenTx messages; got: %d, expected: 1", len(msgs))
+	}
+	_, isCreateValidator := msgs[0].(*stakingtypes.MsgCreateValidator)
+	_, isDelegate := msgs[0].(*stakingtypes.MsgDelegate)
+
+	if !isCreateValidator && !isDelegate {
+		return fmt.Errorf("unexpected GenTx message type; expected: MsgCreateValidator or MsgDelegate, got: %T", msgs[0])
+	}
+
+	if m, ok := msgs[0].(sdk.HasValidateBasic); ok {
+		if err := m.ValidateBasic(); err != nil {
+			return fmt.Errorf("invalid GenTx '%s': %w", msgs[0], err)
+		}
+	}
+	return nil
 }
