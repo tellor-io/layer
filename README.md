@@ -62,6 +62,7 @@ make local-devnet
 
 To configure the chain (ie add more validators plus more) edit the json in local_devnet/chains/layer.json
 
+
 ## Tests
 
 To run all unit and integration tests:
@@ -98,6 +99,94 @@ To lint per folder:
 To lint all files:
 
 `make lint`
+
+## Adding New Getters/Queries
+Read about queries from the Cosmos SDK team [here](https://github.com/cosmos/cosmos-sdk/blob/267b93ee741144c0e6a3d57840a006761d07e6c3/docs/learn/beginner/02-query-lifecycle.md). All nodes do not have to have the same queries. Feel free to make an issue or PR regarding any desired queries to this repo. To add a new query to layer, replace the logic as needed for [`GetCurrentAggregateReport`](https://github.com/tellor-io/layer/blob/5820469f2544b2dc1a34ac06b961b92a4adcb782/x/oracle/keeper/query.go#L46):
+
+1. In `layer/proto/layer/oracle/query.go` , define the rpc endpoint in the `service Query {}` struct. 
+```proto
+service Query {
+  ...
+  // Queries the current aggregate report by query id
+  rpc GetCurrentAggregateReport(QueryGetCurrentAggregateReportRequest) returns (QueryGetCurrentAggregateReportResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_current_aggregate_report/{query_id}";
+  }
+  ...
+}
+```
+2. Also in `layer/proto/layer/oracle/query.go`, define a Message for the query request and query response. 
+
+```proto
+// QueryGetCurrentAggregateReportRequest is the request type for the Query/GetCurrentAggregateReport RPC method.
+message QueryGetCurrentAggregateReportRequest {
+  // query_id defines the query id hex string.
+  string query_id = 1;
+}
+// QueryGetCurrentAggregateReportResponse is the response type for the Query/GetCurrentAggregateReport RPC method.
+message QueryGetCurrentAggregateReportResponse {
+  // aggregate defines the current aggregate report.
+  Aggregate aggregate = 1;
+  // timestamp defines the timestamp of the aggregate report.
+  uint64 timestamp = 2;
+}
+```
+
+**Note**: When inputting or returning a list of items, use the `repeated` keyword, and optional pagination. Ex. with a different query [here](https://github.com/tellor-io/layer/blob/5820469f2544b2dc1a34ac06b961b92a4adcb782/proto/layer/oracle/query.proto#L329)  
+**Note**: If inputting or returning a custom type, such as `Aggregate`, it needs to be defined and imported within the proto files. Ex [here](https://github.com/tellor-io/layer/blob/5820469f2544b2dc1a34ac06b961b92a4adcb782/proto/layer/oracle/aggregate.proto#L11)
+
+3. Generate the protobuf files for the new query using a custom protoc implementation or `ignite generate proto-go`.
+
+4. Create the query function in layer/x/oracle/keeper/query.go or individual query file. 
+```go
+// gets the current aggregate report for a query id
+func (k Querier) GetCurrentAggregateReport(ctx context.Context, req *types.QueryGetCurrentAggregateReportRequest) (*types.QueryGetCurrentAggregateReportResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	queryId, err := hex.DecodeString(req.QueryId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid query id")
+	}
+	aggregate, timestamp, err := k.keeper.GetCurrentAggregateReport(ctx, queryId)
+	if err != nil {
+		return nil, err
+	}
+	timeUnix := timestamp.UnixMilli()
+
+	return &types.QueryGetCurrentAggregateReportResponse{
+		Aggregate: aggregate,
+		Timestamp: uint64(timeUnix),
+	}, nil
+}
+```
+
+5. Add test(s) 
+
+6. In `layer/x/oracle/autocli.go`, add your query to the `AutoCLIOptions` return  
+
+```go
+func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
+	return &autocliv1.ModuleOptions{
+		Query: &autocliv1.ServiceCommandDescriptor{
+			Service: modulev1.Query_ServiceDesc.ServiceName,
+			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
+        ...
+				{
+					RpcMethod:      "GetCurrentAggregateReport",
+					Use:            "get-current-aggregate-report [query_id]",
+					Short:          "Query current aggregate report",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}},
+				},
+        ...
+      }
+    }
+  }
+  ...
+}
+```
+
+7. Run `./scripts/protoc-swagger-gen.sh ` to generate the swagger page documentation
 
 ## Maintainers<a name="maintainers"> </a>
 
