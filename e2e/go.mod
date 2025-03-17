@@ -4,10 +4,11 @@ go 1.22.7
 
 require (
 	cosmossdk.io/math v1.3.0
+	github.com/cometbft/cometbft v0.38.13
 	github.com/cosmos/cosmos-sdk v0.50.9
 	github.com/strangelove-ventures/interchaintest/v8 v8.7.1
 	github.com/stretchr/testify v1.9.0
-	github.com/tellor-io/layer v1.5.0
+	github.com/tellor-io/layer v1.6.1
 	go.uber.org/zap v1.27.0
 )
 
@@ -61,7 +62,6 @@ require (
 	github.com/cockroachdb/pebble v1.1.1 // indirect
 	github.com/cockroachdb/redact v1.1.5 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20230807174530-cc333fc44b06 // indirect
-	github.com/cometbft/cometbft v0.38.13 // indirect
 	github.com/cometbft/cometbft-db v0.14.1 // indirect
 	github.com/consensys/bavard v0.1.13 // indirect
 	github.com/consensys/gnark-crypto v0.12.1 // indirect

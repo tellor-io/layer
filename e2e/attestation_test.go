@@ -219,7 +219,7 @@ func TestAttestation(t *testing.T) {
 		attestations, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-by-snapshot", snapshot)
 		require.NoError(err)
 		fmt.Println("attestations bz: ", attestations)
-		var attestationsRes e2e.QueryGetAttestationBySnapshotResponse
+		var attestationsRes e2e.QueryGetAttestationDataBySnapshotResponse
 		err = json.Unmarshal(attestations, &attestationsRes)
 		require.NoError(err)
 		fmt.Println("attestations: ", attestationsRes) // investigate why this is empty, bytes are not empty
@@ -303,7 +303,7 @@ func TestAttestation(t *testing.T) {
 		attestations, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-by-snapshot", snapshot)
 		require.NoError(err)
 		fmt.Println("attestations bz: ", attestations)
-		var attestationsRes e2e.QueryGetAttestationBySnapshotResponse
+		var attestationsRes e2e.QueryGetAttestationDataBySnapshotResponse
 		err = json.Unmarshal(attestations, &attestationsRes)
 		require.NoError(err)
 		fmt.Println("attestations: ", attestationsRes) // investigate why this is empty, bytes are not empty
