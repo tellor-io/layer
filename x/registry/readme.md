@@ -14,12 +14,9 @@ This module enables the registration of fully customizable data specs to inform 
 Before registering new queries, please check the existing specs using:  
 ```./layerd query registry all-data-specs```  
 
-The registry module uses the [`RegisterSpec`](https://github.com/tellor-io/layer/blob/main/x/registry/keeper/msg_server_register_spec.go#L19) function to register new queries to Layer. 
+The registry module uses the [`RegisterSpec`](https://github.com/tellor-io/layer/blob/main/x/registry/keeper/msg_server_register_spec.go#L19) function to register new queries to Layer.
 
-### Using Telliot:
-
-### Manually:
-The `RegisterSpec` function takes in a string queryType and a [data spec](https://github.com/tellor-io/layer/blob/main/x/registry/types/data_spec.pb.go#L92). The queryType is the title of the data spec, such as "spotprice", and the data spec fields describe the queryType. A dataspec contains the following fields:
+ The `RegisterSpec` function takes in a string queryType and a [data spec](https://github.com/tellor-io/layer/blob/main/x/registry/types/data_spec.pb.go#L92). The queryType is the title of the data spec, such as "spotprice", and the data spec fields describe the queryType. A dataspec contains the following fields:
 ```json
 {
   "document_hash": "your-ipfs-hash",
