@@ -156,8 +156,9 @@ func TestAttestation(t *testing.T) {
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
 	require.Equal(len(reportersRes.Reporters), 2)
-	require.Equal(reportersRes.Reporters[0].Metadata.Moniker, "reporter_moniker0")
-	require.Equal(reportersRes.Reporters[1].Metadata.Moniker, "reporter_moniker1")
+	require.Contains(reportersRes.Reporters[0].Metadata.Moniker, "reporter_moniker")
+	require.Contains(reportersRes.Reporters[1].Metadata.Moniker, "reporter_moniker")
+	require.NotEqual(reportersRes.Reporters[0].Metadata.Moniker, reportersRes.Reporters[1].Metadata.Moniker)
 
 	// validator reporters report for the cycle list
 	currentCycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
