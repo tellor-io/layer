@@ -35,6 +35,11 @@ service Query {
   rpc DecodeValue(QueryDecodeValueRequest) returns (QueryDecodeValueResponse) {
     option (google.api.http).get = "/layer/registry/decode_value/{queryType}/{value}";
   }
+
+  // Queries a list of GetAllDataSpecs items.
+  rpc GetAllDataSpecs(QueryGetAllDataSpecsRequest) returns (QueryGetAllDataSpecsResponse) {
+    option (google.api.http).get = "/layer/registry/get_all_data_specs";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -97,4 +102,13 @@ message QueryDecodeValueRequest {
 message QueryDecodeValueResponse {
   // decodedValue is the decoded value of the hex string.
   string decodedValue = 1;
+}
+
+// QueryGetAllDataSpecsRequest is request type for the Query/GetAllDataSpecs RPC method.
+message QueryGetAllDataSpecsRequest {}
+
+// QueryGetAllDataSpecsResponse is response type for the Query/GetAllDataSpecs RPC method.
+message QueryGetAllDataSpecsResponse {
+  // specs is the list of all data specs.
+  repeated DataSpec specs = 1;
 }
