@@ -24,6 +24,11 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_type"}},
 				},
 				{
+					RpcMethod: "GetAllDataSpecs",
+					Use:       "all-data-specs",
+					Short:     "Shows all registered data specs",
+				},
+				{
 					RpcMethod:      "DecodeQuerydata",
 					Use:            "decode-querydata [query_data]",
 					Short:          "Decode the query data into human readable format",
