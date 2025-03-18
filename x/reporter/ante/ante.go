@@ -211,6 +211,9 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 func (t TrackStakeChangesDecorator) checkAmountOfDelegationsByAddressDoesNotExceedMax(ctx sdk.Context, msg sdk.Msg) (bool, error) {
 	params, err := t.reporterKeeper.Params.Get(ctx)
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return true, nil
+		}
 		return false, err
 	}
 	switch msg := msg.(type) {
