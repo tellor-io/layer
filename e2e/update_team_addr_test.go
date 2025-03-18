@@ -6,15 +6,17 @@ import (
 	"fmt"
 	"testing"
 
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func TestUpdateTeamAddr(t *testing.T) {
@@ -79,11 +81,13 @@ func TestUpdateTeamAddr(t *testing.T) {
 
 	ctx := context.Background()
 
+	fileName := fmt.Sprintf("./dbfile/%s.db", t.Name())
 	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
-		TestName:         t.Name(),
-		Client:           client,
-		NetworkID:        network,
-		SkipPathCreation: false,
+		TestName:          t.Name(),
+		Client:            client,
+		NetworkID:         network,
+		SkipPathCreation:  false,
+		BlockDatabaseFile: fileName,
 	}))
 	t.Cleanup(func() {
 		_ = ic.Close()
@@ -153,5 +157,13 @@ func TestUpdateTeamAddr(t *testing.T) {
 	var teamAddr e2e.QueryTeamAddressResponse
 	require.NoError(json.Unmarshal(teamAddrBz, &teamAddr))
 	require.Equal(teamAddr.TeamAddress, newTeamAddrGood)
+	height, err := validators[0].Val.Height(ctx)
+	require.NoError(err)
+	fmt.Println("current height: ", height)
 
+	// wait 4 blocks
+	require.NoError(testutil.WaitForBlocks(ctx, 4, validators[0].Val))
+	height, err = validators[0].Val.Height(ctx)
+	require.NoError(err)
+	fmt.Println("current height: ", height)
 }
