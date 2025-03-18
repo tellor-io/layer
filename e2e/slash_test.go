@@ -97,7 +97,6 @@ func TestInactivitySlash(t *testing.T) {
 	t.Cleanup(func() {
 		_ = ic.Close()
 	})
-	teamMnemonic := "unit curious maid primary holiday lunch lift melody boil blossom three boat work deliver alpha intact tornado october process dignity gravity giggle enrich output"
 	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
 	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
 		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
