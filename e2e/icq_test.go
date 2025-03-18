@@ -156,7 +156,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 	require.NoError(t, err)
 
 	// create reporter
-	_, err = layer2.GetNode().ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", layer2.HomeDir())
+	_, err = layer2.GetNode().ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val2_moniker", "--keyring-dir", layer2.HomeDir())
 	require.NoError(t, err)
 
 	// tip query

@@ -309,6 +309,7 @@ type OracleReporter struct {
 	Jailed         bool   `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
 	// jailed_until is the time the reporter is jailed until
 	JailedUntil time.Time `protobuf:"bytes,4,opt,name=jailed_until,json=jailedUntil,proto3,stdtime" json:"jailed_until"`
+	Moniker     string    `json:"moniker"`
 }
 
 type QuerySelectorReporterResponse struct {

@@ -30,5 +30,7 @@ message OracleReporter {
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
   ];
+  // moniker is the moniker of the reporter
+  string moniker = 5;
 }
 
