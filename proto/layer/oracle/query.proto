@@ -46,11 +46,12 @@ service Query {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_user_tip_total/{tipper}";
   }
 
-  // Queries a list of GetAggregatedReport items.
+  // Queries a list of GetAggregatedReport items before a timestamp.
   rpc GetDataBefore(QueryGetDataBeforeRequest) returns (QueryGetDataBeforeResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_data_before/{query_id}/{timestamp}";
   }
 
+  // Queries a list of GetAggregatedReport items after a timestamp.
   rpc GetDataAfter(QueryGetDataAfterRequest) returns (QueryGetDataAfterResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_data_after/{query_id}/{timestamp}";
   }
@@ -376,7 +377,7 @@ message QueryGetCycleListResponse {
 message QueryGetTimestampBeforeRequest {
   // query_id defines the query id hex string.
   string query_id = 1;
-  // timestamp defines the timestamp of the aggregate report.
+  // timestamp defines the timestamp the aggregate should be before.
   uint64 timestamp = 2;
 }
 // QueryGetTimestampBeforeResponse is the response type for the Query/GetTimestampBefore RPC method.
@@ -388,7 +389,7 @@ message QueryGetTimestampBeforeResponse {
 message QueryGetTimestampAfterRequest {
   // query_id defines the query id hex string.
   string query_id = 1;
-  // timestamp defines the timestamp of the aggregate report.
+  // timestamp defines the timestamp the aggregate should be after.
   uint64 timestamp = 2;
 }
 // QueryGetTimestampAfterResponse is the response type for the Query/GetTimestampAfter RPC method.
