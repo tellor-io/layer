@@ -38,7 +38,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 		s.NoError(err)
 	}
 
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker1")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 
 	oserver := keeper.NewMsgServerImpl(okpr)
@@ -302,7 +302,7 @@ func (s *IntegrationTestSuite) TestTippingQuery() {
 	s.Equal(math.NewInt(9800), query.Amount)
 	s.NoError(err)
 
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker1")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 
 	value := testutil.EncodeValue(29266)

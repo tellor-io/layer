@@ -15,7 +15,7 @@ func TestJailReporter(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	addr := sample.AccAddressBytes()
 	updatedAt := time.Now().UTC()
-	reporter := types.NewReporter(types.DefaultMinCommissionRate, math.OneInt())
+	reporter := types.NewReporter(types.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")
 
 	err := k.Reporters.Set(ctx, addr, reporter)
 	require.NoError(t, err)
@@ -37,7 +37,7 @@ func TestUnJailReporter(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	addr := sample.AccAddressBytes()
 	jailedAt := time.Now().UTC()
-	reporter := types.NewReporter(types.DefaultMinCommissionRate, math.OneInt())
+	reporter := types.NewReporter(types.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")
 	reporter.Jailed = true
 	reporter.JailedUntil = jailedAt.Add(time.Second * 100)
 	ctx = ctx.WithBlockTime(jailedAt.Add(time.Second * 50))
@@ -63,7 +63,7 @@ func TestUpdateJailedUntilOnFailedDispute(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	addr := sample.AccAddressBytes()
 	jailedAt := time.Now().UTC()
-	reporter := types.NewReporter(types.DefaultMinCommissionRate, math.OneInt())
+	reporter := types.NewReporter(types.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")
 	reporter.Jailed = true
 	reporter.JailedUntil = jailedAt.Add(time.Second * 100)
 	ctx = ctx.WithBlockTime(jailedAt.Add(time.Second * 50))

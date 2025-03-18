@@ -143,7 +143,8 @@ func TestAttestation(t *testing.T) {
 
 	// both validators become reporters
 	for i, val := range chain.Validators {
-		txHash, err := val.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.5", "100000000", "--keyring-dir", val.HomeDir())
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := val.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.5", "100000000", moniker, "--keyring-dir", val.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (val", i+1, "becomes a reporter): ", txHash)
 	}
@@ -155,6 +156,8 @@ func TestAttestation(t *testing.T) {
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
 	require.Equal(len(reportersRes.Reporters), 2)
+	require.Equal(reportersRes.Reporters[0].Metadata.Moniker, "reporter_moniker0")
+	require.Equal(reportersRes.Reporters[1].Metadata.Moniker, "reporter_moniker1")
 
 	// validator reporters report for the cycle list
 	currentCycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")

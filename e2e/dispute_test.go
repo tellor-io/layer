@@ -220,18 +220,19 @@ func TestTenDisputesTenPeople(t *testing.T) {
 	// since reporters delegated 1000 trb each to val2, they will have 1000 reporting power
 	for i := 0; i < len(reporters); i++ {
 		minStakeAmt := "1000000"
-		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, "--keyring-dir", val1.HomeDir())
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
 	// val2 becomes a reporter
-	txHash, err = val2.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val2.HomeDir())
+	txHash, err = val2.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val2_moniker", "--keyring-dir", val2.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val2 becomes a reporter): ", txHash)
 
@@ -243,6 +244,10 @@ func TestTenDisputesTenPeople(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("reporters res: ", reportersRes)
 	require.Equal(len(reportersRes.Reporters), numReporters+2) // number of delegating reporters + 2 validator reporters
+	for _, reporter := range reportersRes.Reporters {
+		fmt.Println("reporter: ", reporter.Metadata.Moniker)
+		require.NotNil(reporter.Metadata.Moniker, "moniker should not be nil")
+	}
 
 	// tip 1trb and report for 10 different spotprices
 	// needs to be the same length as numReporters
@@ -584,13 +589,14 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	// all 2 delegators become reporters
 	for i := range reporters {
 		minStakeAmt := "1000000"
-		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, "--keyring-dir", val1.HomeDir())
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
@@ -963,13 +969,14 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	// all 2 delegators become reporters
 	for i := range reporters {
 		minStakeAmt := "1000000"
-		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, "--keyring-dir", val1.HomeDir())
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
@@ -981,6 +988,10 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("reporters res: ", reportersRes)
 	require.Equal(len(reportersRes.Reporters), numReporters+1) // number of delegating reporters + 1 validator reporter
+	for _, reporter := range reportersRes.Reporters {
+		fmt.Println("reporter: ", reporter.Metadata.Moniker)
+		require.NotNil(reporter.Metadata.Moniker, "moniker should not be nil")
+	}
 
 	// user0 tips 1trb for bch
 	value := layerutil.EncodeValue(10000000.99)
@@ -1235,7 +1246,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Equal(user1Delegation.Balance.Amount.String(), "1000000000")
 
 	// try to create reporter from user1
-	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val1.HomeDir())
+	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "create-reporter", "0.1", "1000000", "badguy", "--keyring-dir", val1.HomeDir())
 	require.Error(err)
 	fmt.Println("TX HASH (user1 tries to create reporter again): ", txHash)
 
@@ -1475,13 +1486,14 @@ func TestEscalatingDispute(t *testing.T) {
 	// all 2 delegators become reporters
 	for i := range reporters {
 		minStakeAmt := "1000000"
-		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, "--keyring-dir", val1.HomeDir())
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
@@ -1493,6 +1505,10 @@ func TestEscalatingDispute(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("reporters res: ", reportersRes)
 	require.Equal(len(reportersRes.Reporters), numReporters+1) // number of delegating reporters + 1 validator reporter
+	for _, reporter := range reportersRes.Reporters {
+		fmt.Println("reporter: ", reporter.Metadata.Moniker)
+		require.NotNil(reporter.Metadata.Moniker, "moniker should not be nil")
+	}
 
 	// user0 tips 1trb for bch
 	value := layerutil.EncodeValue(10000000.99)
@@ -1841,13 +1857,14 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	// all 2 delegators become reporters
 	for i := range reporters {
 		minStakeAmt := "1000000"
-		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, "--keyring-dir", val1.HomeDir())
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
@@ -1859,6 +1876,10 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("reporters res: ", reportersRes)
 	require.Equal(len(reportersRes.Reporters), numReporters+1) // number of delegating reporters + 1 validator reporter
+	for _, reporter := range reportersRes.Reporters {
+		fmt.Println("reporter: ", reporter.Metadata.Moniker)
+		require.NotNil(reporter.Metadata.Moniker, "moniker should not be nil")
+	}
 
 	// user0 tips 1trb for bch
 	value := layerutil.EncodeValue(10000000.99)
@@ -2182,13 +2203,14 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	// all 4 delegators become reporters
 	for i := range reporters {
 		minStakeAmt := "1000000"
-		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, "--keyring-dir", val1.HomeDir())
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
@@ -2200,6 +2222,10 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("reporters res: ", reportersRes)
 	require.Equal(len(reportersRes.Reporters), numReporters+1) // number of delegating reporters + 1 validator reporter
+	for _, reporter := range reportersRes.Reporters {
+		fmt.Println("reporter: ", reporter.Metadata.Moniker)
+		require.NotNil(reporter.Metadata.Moniker, "moniker should not be nil")
+	}
 
 	// val 1 tips , 2/4 reporters submit, both are bad prices
 	tipAmt := math.NewInt(1_000_000)
@@ -2585,7 +2611,8 @@ func TestNewQueryTipReportDispute(t *testing.T) {
 	// both users becomes reporters
 	for i := range numReporters {
 		minStakeAmt := "1000000"
-		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, "--keyring-dir", val1.HomeDir())
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
 	}

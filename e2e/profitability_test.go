@@ -182,7 +182,7 @@ func TestProfitability(t *testing.T) {
 	fmt.Println("minting is now on at height ", height)
 
 	// turn one validator into a reporter
-	_, err = val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--fees", "25loya", "--keyring-dir", val1.HomeDir())
+	_, err = val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--fees", "25loya", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("validator [0] becomes a reporter")
 
@@ -205,7 +205,8 @@ func TestProfitability(t *testing.T) {
 		if i == 0 {
 			continue
 		}
-		_, err = v.Val.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--fees", "25loya", "--keyring-dir", v.Val.HomeDir())
+		moniker := fmt.Sprintf("val%d_moniker", i)
+		_, err = v.Val.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", moniker, "--fees", "25loya", "--keyring-dir", v.Val.HomeDir())
 		require.NoError(err)
 		fmt.Println("validator [", i, "] becomes a reporter")
 	}
