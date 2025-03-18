@@ -392,11 +392,12 @@ func (s *SharedSetup) ConvertToAccAddress(priv []ed25519.PrivKey) []sdk.AccAddre
 	return testAddrs
 }
 
-func (s *SharedSetup) CreateReporter(ctx sdk.Context, accAddr sdk.AccAddress, commissionRate math.LegacyDec, minTokensRequired math.Int) (reportertypes.OracleReporter, error) {
+func (s *SharedSetup) CreateReporter(ctx sdk.Context, accAddr sdk.AccAddress, commissionRate math.LegacyDec, minTokensRequired math.Int, moniker string) (reportertypes.OracleReporter, error) {
 	msgCreateReporter := reportertypes.MsgCreateReporter{
 		ReporterAddress:   accAddr.String(),
 		CommissionRate:    commissionRate,
 		MinTokensRequired: minTokensRequired,
+		Moniker:           moniker,
 	}
 	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.Reporterkeeper)
 	_, err := msgServerReporter.CreateReporter(ctx, &msgCreateReporter)

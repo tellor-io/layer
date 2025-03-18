@@ -103,7 +103,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	valAddress, err := validatorI.AccountKeyBech32(ctx, "validator")
 	require.NoError(t, err)
 
-	_, err = validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", chain.HomeDir())
+	_, err = validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val1_moniker", "--keyring-dir", chain.HomeDir())
 	require.NoError(t, err)
 
 	_, _, err = validatorI.Exec(ctx, validatorI.TxCommand("validator", "oracle", "tip", valAddress, qData, "1000000loya", "--keyring-dir", chain.HomeDir()), validatorI.Chain.Config().Env)

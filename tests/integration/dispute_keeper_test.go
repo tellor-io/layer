@@ -84,7 +84,7 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	s.NoError(err)
 	s.Equal(1, len(open))
 
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr.Bytes(), reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr.Bytes(), reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr.Bytes(), reportertypes.NewSelection(repAddr.Bytes(), 1)))
 	// check validator wasn't slashed/jailed
 	rep, err := s.Setup.Reporterkeeper.Reporter(s.Setup.Ctx, repAddr.Bytes())
@@ -160,7 +160,7 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 		}
 		total = total.Add(srcs[i].Amount)
 	}
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, 1)))
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
@@ -236,7 +236,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 
 	err = s.Setup.Reporterkeeper.Report.Set(s.Setup.Ctx, collections.Join(qId, collections.Join(repAddr.Bytes(), uint64(s.Setup.Ctx.BlockHeight()))), reportertypes.DelegationsAmounts{TokenOrigins: srcs, Total: total})
 	s.NoError(err)
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, uint64(len(dels)))))
 
 	repTokensBeforePropose, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr, qId)
@@ -383,7 +383,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 
 	valAddr := valAddrs[0]
 	repAddr := sdk.AccAddress(valAddr)
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, 1)))
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
@@ -456,7 +456,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 	delegators := repAccs
 	valAddr := valAddrs[0]
 	repAddr := sdk.AccAddress(valAddr)
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, 1)))
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
@@ -620,7 +620,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 	delegators := repAccs
 	valAddr := valAddrs[0]
 	repAddr := sdk.AccAddress(valAddr)
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, 1)))
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
@@ -792,7 +792,7 @@ func (s *IntegrationTestSuite) TestDisputeFiveRounds5thRdNewPayer() {
 	// reporter2Acc := repAccs[1]
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 	// set reporter and selector stores (skip calling createreporter)
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewSelection(reporter1Acc, 1)))
 
 	// make report to set in store and dispute
@@ -1179,7 +1179,7 @@ func (s *IntegrationTestSuite) TestDisputeFiveRounds1Payer() {
 	// reporter2Acc := repAccs[1]
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 	// set reporter and selector stores (skip calling createreporter)
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewSelection(reporter1Acc, 1)))
 
 	// make report to set in store and dispute
@@ -1560,7 +1560,7 @@ func (s *IntegrationTestSuite) TestDisputeFiveRoundsTwoFeePayers() {
 	// reporter2Acc := repAccs[1]
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 	// set reporter and selector stores (skip calling createreporter)
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewSelection(reporter1Acc, 1)))
 
 	// make report to set in store and dispute
@@ -2039,7 +2039,7 @@ func (s *IntegrationTestSuite) TestDisputeTwoDelegations() {
 	reporter1Acc := valAccAddrs[0]
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 	// set reporter and selector stores (skip calling createreporter)
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewSelection(reporter1Acc, 1)))
 
 	// make report to set in store and dispute
@@ -2200,7 +2200,7 @@ func (s *IntegrationTestSuite) TestNoQorumSingleRound() {
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200})
 	reporter1Acc := repAccs[0]
 	// reporter2Acc := repAccs[1]
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewSelection(reporter1Acc, 1)))
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
@@ -2284,7 +2284,7 @@ func (s *IntegrationTestSuite) TestDisputeButNoVotes() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100})
 	reporter1Acc := repAccs[0]
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewSelection(reporter1Acc, 1)))
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
@@ -2339,7 +2339,7 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 	// then dispute report to check if its flagged
 	valAccs, _, _ := s.createValidatorAccs([]uint64{100, 200, 300})
 	reporter1 := valAccs[0]
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter1, reportertypes.NewSelection(reporter1, 1)))
 
 	queryid, err := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
@@ -2348,12 +2348,12 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 	stake1, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporter1, queryid)
 	s.NoError(err)
 	reporter2 := valAccs[1]
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter2, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter2, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter2, reportertypes.NewSelection(reporter2, 1)))
 	stake2, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporter2, queryid)
 	s.NoError(err)
 	reporter3 := valAccs[2]
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter3, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter3, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter3, reportertypes.NewSelection(reporter3, 1)))
 	stake3, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporter3, queryid)
 	s.NoError(err)
@@ -2453,7 +2453,7 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeNotBond() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100})
 	reporter1Acc := repAccs[0]
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewSelection(reporter1Acc, 1)))
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
@@ -2515,7 +2515,7 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeBond() {
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200})
 	reporter1Acc := repAccs[0]
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, reporter1Acc, reportertypes.NewSelection(reporter1Acc, 1)))
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
@@ -2559,7 +2559,7 @@ func (s *IntegrationTestSuite) TestAddFeeToDisputeBond() {
 	s.Equal(types.Prevote, dispute.DisputeStatus)
 
 	// disputer balance before adding fee
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, disputer, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, disputer, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, disputer, reportertypes.NewSelection(disputer, 1)))
 	// check free floating balance
 	freeFloatingBalanceBeforeAdd := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
@@ -2618,7 +2618,7 @@ func (s *IntegrationTestSuite) TestCurrentBug() {
 	reportBlock := s.Setup.Ctx.BlockHeight()
 	reportTime := s.Setup.Ctx.BlockTime().UTC()
 	for _, r := range repAccs {
-		s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, r, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+		s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, r, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 		s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, r, reportertypes.NewSelection(r, 1)))
 		rep := report(r.String(), testutil.EncodeValue(29266), ethQueryData)
 		_, err := oServer.SubmitValue(s.Setup.Ctx, &rep)
@@ -2847,7 +2847,7 @@ func (s *IntegrationTestSuite) TestProposeOldDispute() {
 
 	valAddr := valAddrs[0]
 	repAddr := sdk.AccAddress(valAddr)
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAddr, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAddr, reportertypes.NewSelection(repAddr, 1)))
 
 	qId, _ := hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")

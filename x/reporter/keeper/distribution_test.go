@@ -24,7 +24,7 @@ func TestDivvyingTips(t *testing.T) {
 	val1 := vals[0]
 	addr := sample.AccAddressBytes()
 	addr2 := sample.AccAddressBytes()
-	reporter1 := types.NewReporter(math.LegacyZeroDec(), math.OneInt())
+	reporter1 := types.NewReporter(math.LegacyZeroDec(), math.OneInt(), "reporter_moniker")
 	ctx = ctx.WithBlockHeight(int64(height))
 
 	err := k.Reporters.Set(ctx, addr, reporter1)
