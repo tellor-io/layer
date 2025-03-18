@@ -115,11 +115,12 @@ func (s *IntegrationTestSuite) TestDisputes() {
 	_, err = msgServerStaking.Delegate(s.Setup.Ctx, msgDelegate)
 	require.NoError(err)
 	// // check that reporter was created in Reporters collections
-	_, err = msgServerReporter.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: reporterAccount.String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewInt(4000 * 1e6)})
+	_, err = msgServerReporter.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: reporterAccount.String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewInt(4000 * 1e6), Moniker: "reporter_moniker1"})
 	require.NoError(err)
 	reporter, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, reporterAccount)
 	require.NoError(err)
 	require.Equal(reporter.Jailed, false)
+	require.Equal(reporter.Moniker, "reporter_moniker1")
 	// // check on reporter in Delegators collections
 	rkDelegation, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, reporterAccount)
 	require.NoError(err)
@@ -779,11 +780,13 @@ func (s *IntegrationTestSuite) TestDisputeFromDelegatorPayFromBond() {
 		ReporterAddress:   robAccAddr.String(),
 		CommissionRate:    reportertypes.DefaultMinCommissionRate,
 		MinTokensRequired: math.NewInt(1 * 1e6),
+		Moniker:           "rob_moniker",
 	})
 	require.NoError(err)
 	robReporterInfo, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, robAccAddr)
 	require.NoError(err)
 	require.Equal(robReporterInfo.Jailed, false)
+	require.Equal(robReporterInfo.Moniker, "rob_moniker")
 
 	rickyPrivKey := secp256k1.GenPrivKey()
 	rickyAccAddr := sdk.AccAddress(rickyPrivKey.PubKey().Address())
@@ -805,12 +808,13 @@ func (s *IntegrationTestSuite) TestDisputeFromDelegatorPayFromBond() {
 		ReporterAddress:   rickyAccAddr.String(),
 		CommissionRate:    reportertypes.DefaultMinCommissionRate,
 		MinTokensRequired: math.NewInt(1 * 1e6),
+		Moniker:           "ricky_moniker",
 	})
 	require.NoError(err)
 	rickyReporterInfo, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, rickyAccAddr)
 	require.NoError(err)
 	require.Equal(rickyReporterInfo.Jailed, false)
-
+	require.Equal(rickyReporterInfo.Moniker, "ricky_moniker")
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
 
@@ -973,15 +977,14 @@ func (s *IntegrationTestSuite) TestOpenDisputePrecision() {
 	require.NoError(err)
 
 	// anna becomes a reporter
-	_, err = s.Setup.CreateReporter(ctx, annaAccAddr, reportertypes.DefaultMinCommissionRate, math.NewInt(1*1e6))
+	_, err = s.Setup.CreateReporter(ctx, annaAccAddr, reportertypes.DefaultMinCommissionRate, math.NewInt(1*1e6), "anna_moniker")
 	require.NoError(err)
 	// verify anna's reporter power
 	annaReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(ctx, annaAccAddr, []byte{})
 	require.NoError(err)
 	require.Equal(math.NewInt(annaInitialStake).String(), annaReporterStake.String())
-
 	// bob becomes a reporter
-	_, err = s.Setup.CreateReporter(ctx, bobAccAddr, reportertypes.DefaultMinCommissionRate, math.NewInt(1*1e6))
+	_, err = s.Setup.CreateReporter(ctx, bobAccAddr, reportertypes.DefaultMinCommissionRate, math.NewInt(1*1e6), "bob_moniker")
 	require.NoError(err)
 	// verify bobs reporter power
 	bobReporterStake, err := s.Setup.Reporterkeeper.ReporterStake(ctx, bobAccAddr, []byte{})
@@ -1178,11 +1181,11 @@ func (s *IntegrationTestSuite) TestDisputes2() {
 	badReporter := repsAccs[0]
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
 	require.NoError(err)
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, badReporter, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, badReporter, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker1")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, badReporter, reportertypes.NewSelection(badReporter, 1)))
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repsAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repsAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker2")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repsAccs[1], reportertypes.NewSelection(repsAccs[1], 1)))
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repsAccs[2], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repsAccs[2], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker3")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repsAccs[2], reportertypes.NewSelection(repsAccs[2], 1)))
 	// mapping to track reporter delegation balance
 	// reporterToBalanceMap := make(map[string]math.Int)

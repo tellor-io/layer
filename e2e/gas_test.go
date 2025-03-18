@@ -103,13 +103,13 @@ func TestGas(t *testing.T) {
 	// require.NoError(t, err)
 
 	// create reporter
-	_, err = layer1.GetNode().ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", layer1validator.HomeDir())
+	_, err = layer1.GetNode().ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val1_moniker", "--keyring-dir", layer1validator.HomeDir())
 	require.NoError(t, err)
-	_, err = layer2validator.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", layer2validator.HomeDir())
+	_, err = layer2validator.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val2_moniker", "--keyring-dir", layer2validator.HomeDir())
 	require.NoError(t, err)
-	_, err = layer3validator.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", layer3validator.HomeDir())
+	_, err = layer3validator.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val3_moniker", "--keyring-dir", layer3validator.HomeDir())
 	require.NoError(t, err)
-	_, err = layer4validator.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", layer4validator.HomeDir())
+	_, err = layer4validator.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val4_moniker", "--keyring-dir", layer4validator.HomeDir())
 	require.NoError(t, err)
 
 	// tip query
