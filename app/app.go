@@ -826,7 +826,7 @@ func New(
 	app.BasicModuleManager = module.NewBasicManagerFromManager(
 		app.mm,
 		map[string]module.AppModuleBasic{
-			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+			genutiltypes.ModuleName: genutil.NewAppModuleBasic(CustomMessageValidator),
 			govtypes.ModuleName:     govModule{gov.NewAppModuleBasic([]govclient.ProposalHandler{})},
 		})
 
