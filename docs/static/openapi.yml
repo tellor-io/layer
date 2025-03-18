@@ -501,7 +501,6 @@ paths:
                       title: identifier for the report's aggregate group
                   title: MicroReport represents data for a single report
                 description: microReports is a list of individual microreports.
-                description: microReports is a list of individual microreports.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -521,9 +520,6 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-            description: >-
-              QueryMicroReportsResponse is response type for the
-              Query/MicroReports RPC method.
             description: >-
               QueryMicroReportsResponse is response type for the
               Query/MicroReports RPC method.
@@ -664,7 +660,6 @@ paths:
                       title: identifier for the report's aggregate group
                   title: MicroReport represents data for a single report
                 description: microReports is a list of individual microreports.
-                description: microReports is a list of individual microreports.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -684,9 +679,6 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-            description: >-
-              QueryMicroReportsResponse is response type for the
-              Query/MicroReports RPC method.
             description: >-
               QueryMicroReportsResponse is response type for the
               Query/MicroReports RPC method.
@@ -710,7 +702,6 @@ paths:
                   additionalProperties: {}
       parameters:
         - name: reporter
-          description: reporter is the address of the reporter
           description: reporter is the address of the reporter
           in: path
           required: true
@@ -828,7 +819,6 @@ paths:
                       title: identifier for the report's aggregate group
                   title: MicroReport represents data for a single report
                 description: microReports is a list of individual microreports.
-                description: microReports is a list of individual microreports.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -848,9 +838,6 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-            description: >-
-              QueryMicroReportsResponse is response type for the
-              Query/MicroReports RPC method.
             description: >-
               QueryMicroReportsResponse is response type for the
               Query/MicroReports RPC method.
@@ -875,12 +862,10 @@ paths:
       parameters:
         - name: reporter
           description: reporter is the address of the reporter
-          description: reporter is the address of the reporter
           in: path
           required: true
           type: string
         - name: query_id
-          description: query id of requested data
           description: query id of requested data
           in: path
           required: true
@@ -999,9 +984,7 @@ paths:
               query_data:
                 type: string
                 description: query_data defines the query data.
-                description: query_data defines the query data.
               query_meta:
-                description: query_meta defines the query meta.
                 description: query_meta defines the query meta.
                 type: object
                 properties:
@@ -1039,9 +1022,6 @@ paths:
             description: >-
               QueryCurrentCyclelistQueryResponse is response type for the
               Query/CurrentCyclelistQuery RPC method.
-            description: >-
-              QueryCurrentCyclelistQueryResponse is response type for the
-              Query/CurrentCyclelistQuery RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -1064,7 +1044,6 @@ paths:
         - Query
   /tellor-io/layer/oracle/get_aggregate_before_by_reporter/{query_id}/{timestamp}/{reporter}:
     get:
-      summary: Queries an aggregate report before a timestamp by query id, and reporter
       summary: Queries an aggregate report before a timestamp by query id, and reporter
       operationId: GetAggregateBeforeByReporter
       responses:
@@ -1156,7 +1135,6 @@ paths:
   /tellor-io/layer/oracle/get_current_aggregate_report/{query_id}:
     get:
       summary: Queries the current aggregate report by query id
-      summary: Queries the current aggregate report by query id
       operationId: GetCurrentAggregateReport
       responses:
         '200':
@@ -1240,7 +1218,6 @@ paths:
   /tellor-io/layer/oracle/get_current_query_by_query_id/{query_id}:
     get:
       summary: Queries the current query by query id
-      summary: Queries the current query by query id
       operationId: GetCurrentQueryByQueryId
       responses:
         '200':
@@ -1249,7 +1226,6 @@ paths:
             type: object
             properties:
               query:
-                description: query defines the query.
                 description: query defines the query.
                 type: object
                 properties:
@@ -1287,9 +1263,6 @@ paths:
             description: >-
               QueryGetCurrentQueryByQueryIdResponse is the response type for the
               Query/GetCurrentQueryByQueryId RPC method.
-            description: >-
-              QueryGetCurrentQueryByQueryIdResponse is the response type for the
-              Query/GetCurrentQueryByQueryId RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -1311,7 +1284,6 @@ paths:
       parameters:
         - name: query_id
           description: query_id defines the query id hex string.
-          description: query_id defines the query id hex string.
           in: path
           required: true
           type: string
@@ -1329,10 +1301,6 @@ paths:
             properties:
               tips:
                 type: string
-                description: tips defines the current tip.
-            description: >-
-              QueryGetCurrentTipResponse is response type for the
-              Query/GetCurrentTip RPC method.
                 description: tips defines the current tip.
             description: >-
               QueryGetCurrentTipResponse is response type for the
@@ -1358,7 +1326,6 @@ paths:
       parameters:
         - name: query_data
           description: query data of requested data
-          description: query data of requested data
           in: path
           required: true
           type: string
@@ -1366,7 +1333,6 @@ paths:
         - Query
   /tellor-io/layer/oracle/get_cycle_list:
     get:
-      summary: Queries the cycle list
       summary: Queries the cycle list
       operationId: GetCycleList
       responses:
@@ -1380,10 +1346,6 @@ paths:
                 items:
                   type: string
                   format: byte
-                description: cycle_list defines the cycle list.
-            description: >-
-              QueryGetCycleListResponse is the response type for the
-              Query/GetCycleList RPC method.
                 description: cycle_list defines the cycle list.
             description: >-
               QueryGetCycleListResponse is the response type for the
@@ -1420,7 +1382,6 @@ paths:
             properties:
               aggregate:
                 description: aggregate defines the aggregate report.
-                description: aggregate defines the aggregate report.
                 type: object
                 properties:
                   query_id:
@@ -1466,10 +1427,6 @@ paths:
             description: >-
               QueryGetDataAfterResponse is response type for the
               Query/GetDataAfter RPC method.
-                description: timestamp defines the timestamp of the aggregate report.
-            description: >-
-              QueryGetDataAfterResponse is response type for the
-              Query/GetDataAfter RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -1491,12 +1448,10 @@ paths:
       parameters:
         - name: query_id
           description: query_id defines the query id hex string.
-          description: query_id defines the query id hex string.
           in: path
           required: true
           type: string
         - name: timestamp
-          description: timestamp defines the timestamp of the aggregate report.
           description: timestamp defines the timestamp of the aggregate report.
           in: path
           required: true
@@ -1516,7 +1471,6 @@ paths:
             properties:
               aggregate:
                 description: aggregate defines the aggregate report.
-                description: aggregate defines the aggregate report.
                 type: object
                 properties:
                   query_id:
@@ -1562,10 +1516,6 @@ paths:
             description: >-
               QueryGetDataBeforeResponse is response type for the
               Query/GetDataBefore RPC method.
-                description: timestamp defines the timestamp of the aggregate report.
-            description: >-
-              QueryGetDataBeforeResponse is response type for the
-              Query/GetDataBefore RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -1587,12 +1537,10 @@ paths:
       parameters:
         - name: query_id
           description: query_id defines the query id hex string.
-          description: query_id defines the query id hex string.
           in: path
           required: true
           type: string
         - name: timestamp
-          description: timestamp defines the timestamp of the aggregate report.
           description: timestamp defines the timestamp of the aggregate report.
           in: path
           required: true
@@ -1603,7 +1551,6 @@ paths:
   /tellor-io/layer/oracle/get_query/{query_id}/{id}:
     get:
       summary: Queries a query by query id and id
-      summary: Queries a query by query id and id
       operationId: GetQuery
       responses:
         '200':
@@ -1612,7 +1559,6 @@ paths:
             type: object
             properties:
               query:
-                description: query defines the query.
                 description: query defines the query.
                 type: object
                 properties:
@@ -1685,7 +1631,6 @@ paths:
   /tellor-io/layer/oracle/get_query_data_limit:
     get:
       summary: Queries the query data limit
-      summary: Queries the query data limit
       operationId: GetQueryDataLimit
       responses:
         '200':
@@ -1696,10 +1641,6 @@ paths:
               limit:
                 type: string
                 format: uint64
-                description: limit defines the query data limit.
-            description: >-
-              QueryGetQueryDataLimitResponse is the response type for the
-              Query/GetQueryDataLimit RPC method.
                 description: limit defines the query data limit.
             description: >-
               QueryGetQueryDataLimitResponse is the response type for the
@@ -1726,7 +1667,6 @@ paths:
         - Query
   /tellor-io/layer/oracle/get_reports_by_aggregate/{query_id}/{timestamp}:
     get:
-      summary: Queries reports by aggregate by query id and timestamp
       summary: Queries reports by aggregate by query id and timestamp
       operationId: GetReportsByAggregate
       responses:
@@ -1781,9 +1721,7 @@ paths:
                       title: identifier for the report's aggregate group
                   title: MicroReport represents data for a single report
                 description: microReports defines the micro reports.
-                description: microReports defines the micro reports.
               pagination:
-                description: pagination defines the pagination in the response.
                 description: pagination defines the pagination in the response.
                 type: object
                 properties:
@@ -1802,9 +1740,6 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-            description: >-
-              QueryGetReportsByAggregateResponse is the response type for the
-              Query/GetReportsByAggregate RPC method.
             description: >-
               QueryGetReportsByAggregateResponse is the response type for the
               Query/GetReportsByAggregate RPC method.
@@ -1829,12 +1764,10 @@ paths:
       parameters:
         - name: query_id
           description: query_id defines the query id hex string.
-          description: query_id defines the query id hex string.
           in: path
           required: true
           type: string
         - name: timestamp
-          description: timestamp defines the timestamp of the aggregate report.
           description: timestamp defines the timestamp of the aggregate report.
           in: path
           required: true
@@ -1910,16 +1843,12 @@ paths:
             properties:
               reward:
                 description: reward defines the time based reward amount.
-                description: reward defines the time based reward amount.
                 type: object
                 properties:
                   denom:
                     type: string
                   amount:
                     type: string
-            description: >-
-              QueryGetTimeBasedRewardsResponse is response type for the
-              Query/GetTimeBasedRewards RPC method.
             description: >-
               QueryGetTimeBasedRewardsResponse is response type for the
               Query/GetTimeBasedRewards RPC method.
@@ -2057,10 +1986,6 @@ paths:
             description: >-
               QueryGetUserTipTotalResponse is response type for the
               Query/GetUserTipTotal RPC method.
-                description: total_tips defines the total tips a user has made.
-            description: >-
-              QueryGetUserTipTotalResponse is response type for the
-              Query/GetUserTipTotal RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -2082,7 +2007,6 @@ paths:
       parameters:
         - name: tipper
           description: tipper is the address of the tipper
-          description: tipper is the address of the tipper
           in: path
           required: true
           type: string
@@ -2101,9 +2025,7 @@ paths:
               query_data:
                 type: string
                 description: query_data defines the query data.
-                description: query_data defines the query data.
               query_meta:
-                description: query_meta defines the query meta.
                 description: query_meta defines the query meta.
                 type: object
                 properties:
@@ -2141,9 +2063,6 @@ paths:
             description: >-
               QueryNextCyclelistQueryResponse is response type for the
               Query/NextCyclelistQuery RPC method.
-            description: >-
-              QueryNextCyclelistQueryResponse is response type for the
-              Query/NextCyclelistQuery RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -2167,7 +2086,6 @@ paths:
   /tellor-io/layer/oracle/reported_ids_by_reporter/{reporter_address}:
     get:
       summary: Queries reported ids by reporter
-      summary: Queries reported ids by reporter
       operationId: ReportedIdsByReporter
       responses:
         '200':
@@ -2181,16 +2099,13 @@ paths:
                   type: string
                   format: uint64
                 description: ids defines the reported ids.
-                description: ids defines the reported ids.
               query_ids:
                 type: array
                 items:
                   type: string
                   format: byte
                 description: query_ids defines the query ids.
-                description: query_ids defines the query ids.
               pagination:
-                description: pagination defines the pagination in the response.
                 description: pagination defines the pagination in the response.
                 type: object
                 properties:
@@ -2209,9 +2124,6 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-            description: >-
-              QueryReportedIdsByReporterResponse is the response type for the
-              Query/ReportedIdsByReporter RPC method.
             description: >-
               QueryReportedIdsByReporterResponse is the response type for the
               Query/ReportedIdsByReporter RPC method.
@@ -2235,7 +2147,6 @@ paths:
                   additionalProperties: {}
       parameters:
         - name: reporter_address
-          description: reporter_address defines the reporter address.
           description: reporter_address defines the reporter address.
           in: path
           required: true
@@ -2301,7 +2212,6 @@ paths:
   /tellor-io/layer/oracle/retrieve_data/{query_id}/{timestamp}:
     get:
       summary: Queries an aggregate report by query id and timestamp
-      summary: Queries an aggregate report by query id and timestamp
       operationId: RetrieveData
       responses:
         '200':
@@ -2310,7 +2220,6 @@ paths:
             type: object
             properties:
               aggregate:
-                description: aggregate defines the aggregate report.
                 description: aggregate defines the aggregate report.
                 type: object
                 properties:
@@ -2353,9 +2262,6 @@ paths:
             description: >-
               QueryRetrieveDataResponse is response type for the
               Query/RetrieveData RPC method.
-            description: >-
-              QueryRetrieveDataResponse is response type for the
-              Query/RetrieveData RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -2377,12 +2283,10 @@ paths:
       parameters:
         - name: query_id
           description: query_id defines the query id hex string.
-          description: query_id defines the query id hex string.
           in: path
           required: true
           type: string
         - name: timestamp
-          description: timestamp defines the timestamp of the aggregate report.
           description: timestamp defines the timestamp of the aggregate report.
           in: path
           required: true
@@ -2392,7 +2296,6 @@ paths:
         - Query
   /tellor-io/layer/oracle/tipped_queries:
     get:
-      summary: Queries a list of tipped non-expired queries
       summary: Queries a list of tipped non-expired queries
       operationId: TippedQueries
       responses:
