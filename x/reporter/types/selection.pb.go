@@ -35,8 +35,9 @@ type Selection struct {
 	Reporter []byte `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
 	// locked_until_time is the time until which the tokens are locked before they
 	// can be used for reporting again
-	LockedUntilTime  time.Time `protobuf:"bytes,2,opt,name=locked_until_time,json=lockedUntilTime,proto3,stdtime" json:"locked_until_time"`
-	DelegationsCount uint64    `protobuf:"varint,3,opt,name=delegations_count,json=delegationsCount,proto3" json:"delegations_count,omitempty"`
+	LockedUntilTime time.Time `protobuf:"bytes,2,opt,name=locked_until_time,json=lockedUntilTime,proto3,stdtime" json:"locked_until_time"`
+	// delegations_count is the number of delegations to the reporter
+	DelegationsCount uint64 `protobuf:"varint,3,opt,name=delegations_count,json=delegationsCount,proto3" json:"delegations_count,omitempty"`
 }
 
 func (m *Selection) Reset()         { *m = Selection{} }

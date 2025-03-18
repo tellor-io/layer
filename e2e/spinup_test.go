@@ -104,10 +104,10 @@ func TestLayerFlow(t *testing.T) {
 	fmt.Println("Proposal result: ", result)
 
 	// all validators become reporters
-	txHash, err := validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", layer.HomeDir())
+	txHash, err := validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val1_moniker", "--keyring-dir", layer.HomeDir())
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
-	txHash, err = validatorII.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "--keyring-dir", layer.HomeDir())
+	txHash, err = validatorII.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val2_moniker", "--keyring-dir", layer.HomeDir())
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 

@@ -18,5 +18,6 @@ message Selection {
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
   ];
+  // delegations_count is the number of delegations to the reporter
   uint64 delegations_count = 3;
 }

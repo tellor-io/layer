@@ -111,9 +111,9 @@ func TestReporterStake(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 
 	reporterAddr, selector, noSelectorsReporterAddr, jailedReporterAddr := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
-	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya)))
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter_moniker")))
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 2)))
-	require.NoError(t, k.Reporters.Set(ctx, noSelectorsReporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya)))
+	require.NoError(t, k.Reporters.Set(ctx, noSelectorsReporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter_moniker")))
 	require.NoError(t, k.Reporters.Set(ctx, jailedReporterAddr, types.OracleReporter{Jailed: true}))
 	validatorSet := new(mocks.ValidatorSet)
 	testCases := []struct {
@@ -283,8 +283,8 @@ func TestDelegation(t *testing.T) {
 func TestReporter(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	addr := sample.AccAddressBytes()
-	require.NoError(t, k.Reporters.Set(ctx, addr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya)))
+	require.NoError(t, k.Reporters.Set(ctx, addr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter_moniker")))
 	reporter, err := k.Reporter(ctx, addr)
 	require.NoError(t, err)
-	require.Equal(t, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya))
+	require.Equal(t, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter_moniker"))
 }
