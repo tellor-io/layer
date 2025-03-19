@@ -27,6 +27,7 @@ secrets.yaml
 prod-sim
 /layerd_new
 .cursor
+e2e/dbfile/*
 
 dist/
 

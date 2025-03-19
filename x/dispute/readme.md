@@ -87,5 +87,6 @@ Checks if a dispute has been opened at the current block height and sets the blo
 | dispute_executed | ExecuteVote |
 | fee_added_to_dispute | AddFeeToDispute |
 | voted_on_dispute | Vote |
+| team_address_updated | UpdateTeam |
 
 

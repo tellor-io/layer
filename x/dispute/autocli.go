@@ -78,8 +78,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "payer_address"}, {ProtoField: "id"}},
 				},
 				{
-					RpcMethod: "UpdateTeam",
-					Skip:      true, // skipped because team gated
+					RpcMethod:      "UpdateTeam",
+					Use:            "update-team [new-team-address]",
+					Short:          "Execute the UpdateTeam RPC method",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "new_team_address"}},
 				},
 				{
 					RpcMethod:      "ClaimReward",
