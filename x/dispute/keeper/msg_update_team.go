@@ -74,5 +74,15 @@ func (k msgServer) UpdateTeam(ctx context.Context, msg *types.MsgUpdateTeam) (*t
 		}
 	}
 
+	// emit event
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"team_address_updated",
+			sdk.NewAttribute("new_team_address", msg.NewTeamAddress),
+			sdk.NewAttribute("old_team_address", msg.CurrentTeamAddress),
+		),
+	})
+
 	return &types.MsgUpdateTeamResponse{}, nil
 }

@@ -494,6 +494,12 @@ type QueryGenerateQuerydataResponse struct {
 	QueryData []byte `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 }
 
+// QueryTeamAddressResponse is response type for the Query/TeamAddress RPC method.
+type QueryTeamAddressResponse struct {
+	// teamAddress holds the team address.
+	TeamAddress string `protobuf:"bytes,1,opt,name=team_address,json=teamAddress,proto3" json:"team_address,omitempty"`
+}
+
 // HELPERS FOR TESTING AGAINST THE CHAIN
 
 func EncodeStringValue(value string) string {
