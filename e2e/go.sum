@@ -1130,8 +1130,6 @@ github.com/supranational/blst v0.3.11 h1:LyU6FolezeWAhvQk0k6O/d49jqgO52MSDDfYgbe
 github.com/supranational/blst v0.3.11/go.mod h1:jZJtfjgudtNl4en1tzwPIV3KjUnQUvG3/j+w+fVonLw=
 github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d h1:vfofYNRScrDdvS342BElfbETmL1Aiz3i2t0zfRj16Hs=
 github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d/go.mod h1:RRCYJbIwD5jmqPI9XoAFR0OcDxqUctll6zUj/+B4S48=
-github.com/tellor-io/layer v1.5.0 h1:WW/YUqGp1FV1ffYgMe7c/jWrroBQKK9OAYEqLTFGkDk=
-github.com/tellor-io/layer v1.5.0/go.mod h1:RZUuZ813Rbo58hI6zyKvGMfMAY7N2z1FAkiTrZdDPE4=
 github.com/tellor-io/layer v1.6.1 h1:sO7QTdeGMdiJFJt9SuYkOGWULoFr8OTRSTBOoNxtbvk=
 github.com/tellor-io/layer v1.6.1/go.mod h1:RZUuZ813Rbo58hI6zyKvGMfMAY7N2z1FAkiTrZdDPE4=
 github.com/tendermint/go-amino v0.16.0 h1:GyhmgQKvqF82e2oZeuMSp9JTN0N09emoSZlb2lyGa2E=
