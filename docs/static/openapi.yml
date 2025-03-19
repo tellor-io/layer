@@ -3719,7 +3719,7 @@ paths:
                       type: array
                       items:
                         type: object
-                        properties: &ref_0
+                        properties:
                           name:
                             type: string
                             title: name
@@ -3730,10 +3730,11 @@ paths:
                             type: array
                             items:
                               type: object
-                              properties: *ref_0
-                              title: >-
-                                ABIComponent is a specification for how to
-                                interpret abi_components
+                              properties:
+                                name:
+                                  type: string
+                                field_type:
+                                  type: string
                             title: >-
                               consider taking this recursion out and make it
                               once only
