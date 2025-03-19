@@ -28,9 +28,20 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	v043 "github.com/cosmos/cosmos-sdk/x/genutil/migrations/v043"
+	v046 "github.com/cosmos/cosmos-sdk/x/genutil/migrations/v046"
+	v047 "github.com/cosmos/cosmos-sdk/x/genutil/migrations/v047"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
+
+var MigrationMap = genutiltypes.MigrationMap{
+	"v0.43": v043.Migrate, // NOTE: v0.43, v0.44 and v0.45 are genesis compatible.
+	"v0.46": v046.Migrate,
+	"v0.47": v047.Migrate,
+}
 
 // NewRootCmd creates a new root command for a Cosmos SDK application
 func NewRootCmd(
@@ -145,12 +156,23 @@ func initRootCmd(
 
 // genesisCommand builds genesis-related `simd genesis` command. Users may provide application specific commands as a parameter
 func genesisCommand(txConfig client.TxConfig, basicManager module.BasicManager, cmds ...*cobra.Command) *cobra.Command {
-	cmd := genutilcli.Commands(txConfig, basicManager, app.DefaultNodeHome)
-
-	for _, subCmd := range cmds {
-		cmd.AddCommand(subCmd)
+	cmd := &cobra.Command{
+		Use:                        "genesis",
+		Short:                      "Application's genesis-related subcommands",
+		DisableFlagParsing:         false,
+		SuggestionsMinimumDistance: 2,
+		RunE:                       client.ValidateCmd,
 	}
-	cmd.AddCommand(AddTeamAccountCmd(app.DefaultNodeHome))
+
+	cmd.AddCommand(
+		genutilcli.GenTxCmd(basicManager, txConfig, banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, txConfig.SigningContext().ValidatorAddressCodec()),
+		genutilcli.MigrateGenesisCmd(MigrationMap),
+		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, app.DefaultNodeHome, app.CustomMessageValidator, txConfig.SigningContext().ValidatorAddressCodec()),
+		genutilcli.ValidateGenesisCmd(basicManager),
+		genutilcli.AddGenesisAccountCmd(app.DefaultNodeHome, txConfig.SigningContext().AddressCodec()),
+		AddTeamAccountCmd(app.DefaultNodeHome),
+	)
+
 	return cmd
 }
 
