@@ -2,8 +2,8 @@ package client
 
 import (
 	"context"
-	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/tellor-io/layer/lib/metrics"
@@ -34,17 +34,6 @@ func (c *Client) GenerateDepositMessages(ctx context.Context) error {
 		}
 		return fmt.Errorf("error getting deposits: %w", err)
 	}
-
-	queryId := hex.EncodeToString(utils.QueryIDFromData(depositQuerydata))
-	mutex.RLock()
-	depositReported := depositReportMap[queryId]
-	mutex.RUnlock()
-
-	if depositReported {
-		c.logger.Info("Skipping already reported deposit", "queryId", queryId)
-		return nil
-	}
-
 	msg := &oracletypes.MsgSubmitValue{
 		Creator:   c.accAddr.String(),
 		QueryData: depositQuerydata,
@@ -138,19 +127,18 @@ func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChan
 
 	// Check transaction success
 	if resp.TxResult.Code != 0 {
-		c.logger.Error("deposit report transaction failed",
-			"code", resp.TxResult.Code,
-			"queryId", queryId)
-		return
+		if strings.Contains(resp.TxResult.Log, "reporter has already submitted a report for this query") {
+			c.logger.Info("Reporter has already submitted for this query. Removing from deposits cache")
+		} else {
+			c.logger.Error("deposit report transaction failed",
+				"code", resp.TxResult.Code,
+				"queryId", queryId)
+			return
+		}
 	}
 
 	// Remove oldest deposit report from cache
 	c.TokenDepositsCache.RemoveOldestReport()
-
-	// Only mark as reported if transaction was successful
-	mutex.Lock()
-	depositReportMap[hex.EncodeToString(queryId)] = true
-	mutex.Unlock()
 
 	telemetry.IncrCounterWithLabels([]string{"daemon_bridge_deposit", "reported"}, 1, []metrics.Label{{Name: "chain_id", Value: c.cosmosCtx.ChainID}})
 	c.logger.Info(fmt.Sprintf("Response from bridge tx report: %v", resp.TxResult))
