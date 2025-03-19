@@ -88,6 +88,112 @@ head -n $((LINE_NUMBER-1)) "$OPENAPI_FILE" > "$TMP_FILE"
 
 # Add our snippet
 cat << 'EOF' >> "$TMP_FILE"
+  /layer/registry/get_all_data_specs:
+    get:
+      summary: Queries a list of GetAllDataSpecs items.
+      operationId: GetAllDataSpecs
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              specs:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    document_hash:
+                      type: string
+                      title: ipfs hash of the data spec
+                    response_value_type:
+                      type: string
+                      title: the value's datatype for decoding the value
+                    abi_components:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            title: name
+                          field_type:
+                            type: string
+                            title: type
+                          nested_component:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                field_type:
+                                  type: string
+                            title: >-
+                              consider taking this recursion out and make it
+                              once only
+                        title: >-
+                          ABIComponent is a specification for how to interpret
+                          abi_components
+                      title: the abi components for decoding
+                    aggregation_method:
+                      type: string
+                      title: >-
+                        how to aggregate the data (ie. average, median, mode,
+                        etc) for aggregating reports and arriving at final value
+                    registrar:
+                      type: string
+                      title: address that originally registered the data spec
+                    report_block_window:
+                      type: string
+                      format: uint64
+                      title: >-
+                        report_buffer_window specifies the duration of the time
+                        window following an initial report
+
+                        during which additional reports can be submitted. This
+                        duration acts as a buffer, allowing
+
+                        a collection of related reports in a defined time frame.
+                        The window ensures that all
+
+                        pertinent reports are aggregated together before
+                        arriving at a final value. This defaults
+
+                        to 0s if not specified.
+
+                        extensions: treat as a golang time.duration, don't allow
+                        nil values, don't omit empty values
+                    query_type:
+                      type: string
+                      title: querytype is the first arg in queryData
+                  title: >-
+                    DataSpec is a specification for how to interpret and
+                    aggregate data
+                description: specs is the list of all data specs.
+            description: >-
+              QueryGetAllDataSpecsResponse is response type for the
+              Query/GetAllDataSpecs RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
   /layer/registry/get_data_spec/{query_type}:
     get:
       summary: Queries a list of GetDataSpec items.
@@ -206,6 +312,6 @@ tail -n +$LINE_NUMBER "$OPENAPI_FILE" >> "$TMP_FILE"
 # Replace the original file with the modified one
 mv "$TMP_FILE" "$OPENAPI_FILE"
 
-echo "API snippet for /layer/registry/get_data_spec/ added successfully to $OPENAPI_FILE"
+echo "API snippet for /layer/registry/get_data_spec/ and /layer/registry/get_all_data_specs added successfully to $OPENAPI_FILE"
 
 
