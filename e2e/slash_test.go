@@ -10,6 +10,7 @@ import (
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
+	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
 
@@ -42,7 +43,7 @@ func TestInactivitySlash(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
-		cosmos.NewGenesisKV("app_state.slashing.params.signed_blocks_window", "2"),
+		cosmos.NewGenesisKV("app_state.slashing.params.signed_blocks_window", "4"),
 	}
 
 	nv := 4
@@ -96,7 +97,6 @@ func TestInactivitySlash(t *testing.T) {
 	t.Cleanup(func() {
 		_ = ic.Close()
 	})
-	teamMnemonic := "unit curious maid primary holiday lunch lift melody boil blossom three boat work deliver alpha intact tornado october process dignity gravity giggle enrich output"
 	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
 	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
 		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
@@ -118,20 +118,30 @@ func TestInactivitySlash(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("val2 Account Address: ", val2Addr)
 	fmt.Println("val2 Validator Address: ", val2valAddr)
+	val4 := chain.Validators[3]
+	val4Addr, err := val4.AccountKeyBech32(ctx, "validator")
+	require.NoError(err)
+	val4valAddr, err := val4.KeyBech32(ctx, "validator", "val")
+	require.NoError(err)
+	fmt.Println("val4 Account Address: ", val4Addr)
+	fmt.Println("val4 Validator Address: ", val4valAddr)
 
 	// queryValidators to confirm that 4 validators are bonded
 	vals, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
 	require.NoError(err)
 	require.Equal(len(vals), 4)
 
-	// val 1 goes offline
-	err = val1.PauseContainer(ctx)
-	fmt.Println("paused val1")
+	// val 4 goes offline
+	height, err := chain.Height(ctx)
+	require.NoError(err)
+	err = val4.PauseContainer(ctx)
+	fmt.Println("paused val4 at height: ", height)
 	require.NoError(err)
 
-	time.Sleep(10 * time.Second)
+	// wait 5 blocks
+	require.NoError(testutil.WaitForBlocks(ctx, 5, val2))
 
-	// only 3 validators should be bonded now
+	// 4 validators, 1 jailed
 	fmt.Println("querying validators...")
 	valsQueryRes, _, err := val2.ExecQuery(ctx, "staking", "validators")
 	require.NoError(err)
@@ -149,4 +159,37 @@ func TestInactivitySlash(t *testing.T) {
 		}
 	}
 	require.Equal(1, jailedCount, "expected exactly one validator to be jailed")
+
+	// unpause val4
+	err = val4.UnpauseContainer(ctx)
+	require.NoError(err)
+	height, err = chain.Height(ctx)
+	require.NoError(err)
+	fmt.Println("unpaused val4 at height: ", height)
+
+	// wait 10 minutes
+	time.Sleep(10 * time.Minute)
+
+	// unjail val4
+	txHash, err := val4.ExecTx(ctx, "validator", "slashing", "unjail", "--from", val4valAddr, "--keyring-dir", val4.HomeDir(), "--chain-id", val4.Chain.Config().ChainID)
+	require.NoError(err)
+	fmt.Println("unjailed val4 with tx hash: ", txHash)
+
+	// make sure val4 is unjailed
+	valsQueryRes, _, err = val2.ExecQuery(ctx, "staking", "validators")
+	require.NoError(err)
+	var validatorsRes2 e2e.QueryValidatorsResponse
+	err = json.Unmarshal(valsQueryRes, &validatorsRes2)
+	require.NoError(err)
+	fmt.Println("validatorsRes: ", validatorsRes2)
+	require.Equal(len(validatorsRes2.Validators), 4)
+
+	// make sure no validator is jailed
+	jailedCount = 0
+	for _, val := range validatorsRes2.Validators {
+		if val.Jailed {
+			jailedCount++
+		}
+	}
+	require.Equal(0, jailedCount, "expected no validators to be jailed")
 }

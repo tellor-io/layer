@@ -17,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
 	layerutil "github.com/tellor-io/layer/testutil"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/math"
 
@@ -25,26 +26,27 @@ import (
 )
 
 const (
-	trxQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747278000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	trxQId    = "954476140bd7309c72b6bdc8d71a293ec3df5ad00b79809dc21c98f7fc495bfb"
-	suiQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003737569000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	suiQId    = "8f76558fd2800ccaeb236d250830d068a8d9fb0568fe1b32fc916386558547f4"
-	bchQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003626368000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	bchQId    = "efa84ae5ea9eb0545e159f78f0a44911ac5a81ecb6ff0c4e32107bcfc66c4baa"
-	ltcQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000036c7463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	ltcQId    = "19585d912afb72378e3986a7a53f1eae1fbae792cd17e1d0df063681326823ae"
-	solQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003736f6c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	solQId    = "b211d6f1abbd5bb431618547402a92250b765151acbe749e7f9c26dc19e5dd9a"
-	dogeQData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004646f67650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	dogeQId   = "15d3cb16e8175919781af07b2ce06714d24f168284b1b47b14b6bfbe9a5a02ff"
-	dotQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003646f74000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	dotQId    = "8810ffb0cfcb6131da29ed4b229f252d6bac6fc98fc4a61ffbde5b48131e0228"
-	bnbQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003626e62000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	bnbQId    = "235b53e7caaba06517ae5af902e0e765b4032e8a75b82fd832c4da22486e47b4"
-	xrpQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003787270000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	xrpQId    = "ba615496c4671e5b931b0bbd81046d3f63fb453c414a830d6c4f923864eebf8b"
-	hypeQData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004687970650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	hypeQId   = "48318e44abe415e4eabf291f1aab42a0af0e87ca25868e86b07df7f385b2ff81"
+	trxQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747278000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	trxQId      = "954476140bd7309c72b6bdc8d71a293ec3df5ad00b79809dc21c98f7fc495bfb"
+	suiQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003737569000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	suiQId      = "8f76558fd2800ccaeb236d250830d068a8d9fb0568fe1b32fc916386558547f4"
+	bchQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003626368000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	bchQId      = "efa84ae5ea9eb0545e159f78f0a44911ac5a81ecb6ff0c4e32107bcfc66c4baa"
+	ltcQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000036c7463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	ltcQId      = "19585d912afb72378e3986a7a53f1eae1fbae792cd17e1d0df063681326823ae"
+	solQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003736f6c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	solQId      = "b211d6f1abbd5bb431618547402a92250b765151acbe749e7f9c26dc19e5dd9a"
+	dogeQData   = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004646f67650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	dogeQId     = "15d3cb16e8175919781af07b2ce06714d24f168284b1b47b14b6bfbe9a5a02ff"
+	dotQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003646f74000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	dotQId      = "8810ffb0cfcb6131da29ed4b229f252d6bac6fc98fc4a61ffbde5b48131e0228"
+	bnbQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003626e62000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	bnbQId      = "235b53e7caaba06517ae5af902e0e765b4032e8a75b82fd832c4da22486e47b4"
+	xrpQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003787270000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	xrpQId      = "ba615496c4671e5b931b0bbd81046d3f63fb453c414a830d6c4f923864eebf8b"
+	hypeQData   = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004687970650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	hypeQId     = "48318e44abe415e4eabf291f1aab42a0af0e87ca25868e86b07df7f385b2ff81"
+	commissRate = "0.1"
 )
 
 type QueryData struct {
@@ -134,7 +136,6 @@ func TestTenDisputesTenPeople(t *testing.T) {
 	t.Cleanup(func() {
 		_ = ic.Close()
 	})
-	teamMnemonic := "unit curious maid primary holiday lunch lift melody boil blossom three boat work deliver alpha intact tornado october process dignity gravity giggle enrich output"
 	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
 	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
 		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
@@ -218,20 +219,20 @@ func TestTenDisputesTenPeople(t *testing.T) {
 	// all 10 delegators become reporters
 	// since reporters delegated 1000 trb each to val2, they will have 1000 reporting power
 	for i := 0; i < len(reporters); i++ {
-		commissRate := "0.1"
 		minStakeAmt := "1000000"
-		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, "--keyring-dir", val1.HomeDir())
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
 	// val2 becomes a reporter
-	txHash, err = val2.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val2.HomeDir())
+	txHash, err = val2.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val2_moniker", "--keyring-dir", val2.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val2 becomes a reporter): ", txHash)
 
@@ -243,6 +244,10 @@ func TestTenDisputesTenPeople(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("reporters res: ", reportersRes)
 	require.Equal(len(reportersRes.Reporters), numReporters+2) // number of delegating reporters + 2 validator reporters
+	for _, reporter := range reportersRes.Reporters {
+		fmt.Println("reporter: ", reporter.Metadata.Moniker)
+		require.NotNil(reporter.Metadata.Moniker, "moniker should not be nil")
+	}
 
 	// tip 1trb and report for 10 different spotprices
 	// needs to be the same length as numReporters
@@ -494,7 +499,6 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	t.Cleanup(func() {
 		_ = ic.Close()
 	})
-	teamMnemonic := "unit curious maid primary holiday lunch lift melody boil blossom three boat work deliver alpha intact tornado october process dignity gravity giggle enrich output"
 	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
 	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
 		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
@@ -584,15 +588,15 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 
 	// all 2 delegators become reporters
 	for i := range reporters {
-		commissRate := "0.1"
 		minStakeAmt := "1000000"
-		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, "--keyring-dir", val1.HomeDir())
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
@@ -750,7 +754,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 withdraws fee refund): ", txHash)
 
-	// check user0 stake after withdrawing feerefund, should contain 950 more trb
+	// check user0 stake after withdrawing fee refund, should contain 950 more trb
 	user0StakingAfterWithdraw, err := chain.StakingQueryDelegation(ctx, val1valAddr, user0Addr)
 	require.NoError(err)
 	fmt.Println("user0 delegation to val1 after withdrawing fee refund: ", user0StakingAfterWithdraw)
@@ -868,7 +872,6 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	t.Cleanup(func() {
 		_ = ic.Close()
 	})
-	teamMnemonic := "unit curious maid primary holiday lunch lift melody boil blossom three boat work deliver alpha intact tornado october process dignity gravity giggle enrich output"
 	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
 	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
 		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
@@ -883,6 +886,13 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("val1 Account Address: ", val1Addr)
 	fmt.Println("val1 Validator Address: ", val1valAddr)
+	val2 := chain.Validators[1]
+	val2Addr, err := val2.AccountKeyBech32(ctx, "validator")
+	require.NoError(err)
+	val2valAddr, err := val2.KeyBech32(ctx, "validator", "val")
+	require.NoError(err)
+	fmt.Println("val2 Account Address: ", val2Addr)
+	fmt.Println("val2 Validator Address: ", val2valAddr)
 
 	// queryValidators to confirm that 2 validators are bonded
 	vals, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
@@ -958,15 +968,15 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 
 	// all 2 delegators become reporters
 	for i := range reporters {
-		commissRate := "0.1"
 		minStakeAmt := "1000000"
-		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, "--keyring-dir", val1.HomeDir())
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
@@ -978,6 +988,10 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("reporters res: ", reportersRes)
 	require.Equal(len(reportersRes.Reporters), numReporters+1) // number of delegating reporters + 1 validator reporter
+	for _, reporter := range reportersRes.Reporters {
+		fmt.Println("reporter: ", reporter.Metadata.Moniker)
+		require.NotNil(reporter.Metadata.Moniker, "moniker should not be nil")
+	}
 
 	// user0 tips 1trb for bch
 	value := layerutil.EncodeValue(10000000.99)
@@ -1232,7 +1246,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Equal(user1Delegation.Balance.Amount.String(), "1000000000")
 
 	// try to create reporter from user1
-	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val1.HomeDir())
+	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "create-reporter", "0.1", "1000000", "badguy", "--keyring-dir", val1.HomeDir())
 	require.Error(err)
 	fmt.Println("TX HASH (user1 tries to create reporter again): ", txHash)
 
@@ -1266,18 +1280,44 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Equal(len(reportersRes.Reporters), numReporters+1) // 2 pure reporters + 1 validator reporter
 	fmt.Println("reportersRes: ", reportersRes)
 
-	// user1 unbonds their second 1000 trb delegation
-	txHash, err = val1.ExecTx(ctx, user1Addr, "staking", "unbond", val1valAddr, "1000000000loya", "--keyring-dir", val1.HomeDir())
+	// user1 redelegates to val2
+	txHash, err = val1.ExecTx(ctx, user1Addr, "staking", "redelegate", val1valAddr, val2valAddr, "1000000000loya", "--from", user1Addr, "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	require.NoError(err)
+	fmt.Println("TX HASH (user1 redelegates to val2): ", txHash)
+
+	// check on user1 delegation to val2
+	user1Delegation, err = chain.StakingQueryDelegation(ctx, val2valAddr, user1Addr)
+	require.NoError(err)
+	fmt.Println("user1 delegation to val2: ", user1Delegation)
+	require.Equal(user1Delegation.Balance.Amount.String(), "1000000000")
+
+	// user1 tries to select another reporter, errors with selector already exists
+	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "select-reporter", user0Addr, "--keyring-dir", val1.HomeDir())
+	require.Error(err)
+	fmt.Println("TX HASH (user1 tries to select another reporter): ", txHash)
+
+	// user1 tries switching reporters, errors with cannot switch reporter if selector is a reporter
+	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "switch-reporter", user0Addr, "--keyring-dir", val1.HomeDir())
+	require.Error(err)
+	fmt.Println("TX HASH (user1 tries to switch reporters): ", txHash)
+
+	// user1 tries to remove self as selector, errors selector cannot be removed if it is the reporter's own address
+	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "remove-selector", user1Addr, "--keyring-dir", val1.HomeDir())
+	require.Error(err)
+	fmt.Println("TX HASH (user1 tries to remove self as selector): ", txHash)
+
+	// user1 unbonds their second 1000 trb delegation from val2
+	txHash, err = val1.ExecTx(ctx, user1Addr, "staking", "unbond", val2valAddr, "1000000000loya", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (user1 unbonds their second 1000 trb delegation): ", txHash)
 
 	// check unbonding delegations
-	unbonding, err := chain.StakingQueryUnbondingDelegationsFrom(ctx, val1valAddr)
+	unbonding, err := chain.StakingQueryUnbondingDelegationsFrom(ctx, val2valAddr)
 	require.NoError(err)
-	fmt.Println("unbonding delegations from val1: ", unbonding)
+	fmt.Println("unbonding delegations from val2: ", unbonding)
 	require.Equal(len(unbonding), 1)
 	require.Equal(unbonding[0].DelegatorAddress, user1Addr)
-	require.Equal(unbonding[0].ValidatorAddress, val1valAddr)
+	require.Equal(unbonding[0].ValidatorAddress, val2valAddr)
 	require.Equal(unbonding[0].Entries[0].Balance.String(), "1000000000")
 }
 
@@ -1356,7 +1396,6 @@ func TestEscalatingDispute(t *testing.T) {
 	t.Cleanup(func() {
 		_ = ic.Close()
 	})
-	teamMnemonic := "unit curious maid primary holiday lunch lift melody boil blossom three boat work deliver alpha intact tornado october process dignity gravity giggle enrich output"
 	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
 	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
 		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
@@ -1446,15 +1485,15 @@ func TestEscalatingDispute(t *testing.T) {
 
 	// all 2 delegators become reporters
 	for i := range reporters {
-		commissRate := "0.1"
 		minStakeAmt := "1000000"
-		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, "--keyring-dir", val1.HomeDir())
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
@@ -1466,6 +1505,10 @@ func TestEscalatingDispute(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("reporters res: ", reportersRes)
 	require.Equal(len(reportersRes.Reporters), numReporters+1) // number of delegating reporters + 1 validator reporter
+	for _, reporter := range reportersRes.Reporters {
+		fmt.Println("reporter: ", reporter.Metadata.Moniker)
+		require.NotNil(reporter.Metadata.Moniker, "moniker should not be nil")
+	}
 
 	// user0 tips 1trb for bch
 	value := layerutil.EncodeValue(10000000.99)
@@ -1724,7 +1767,6 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	t.Cleanup(func() {
 		_ = ic.Close()
 	})
-	teamMnemonic := "unit curious maid primary holiday lunch lift melody boil blossom three boat work deliver alpha intact tornado october process dignity gravity giggle enrich output"
 	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
 	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
 		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
@@ -1814,15 +1856,15 @@ func TestMajorDisputeAgainst(t *testing.T) {
 
 	// all 2 delegators become reporters
 	for i := range reporters {
-		commissRate := "0.1"
 		minStakeAmt := "1000000"
-		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, "--keyring-dir", val1.HomeDir())
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
@@ -1834,6 +1876,10 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("reporters res: ", reportersRes)
 	require.Equal(len(reportersRes.Reporters), numReporters+1) // number of delegating reporters + 1 validator reporter
+	for _, reporter := range reportersRes.Reporters {
+		fmt.Println("reporter: ", reporter.Metadata.Moniker)
+		require.NotNil(reporter.Metadata.Moniker, "moniker should not be nil")
+	}
 
 	// user0 tips 1trb for bch
 	value := layerutil.EncodeValue(10000000.99)
@@ -1977,4 +2023,699 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	require.Greater(user0BalanceAfterClaim.Int64(), user0BalanceBeforeClaim.Int64())
 	expectedBalance := user0BalanceBeforeClaim.Add(math.NewInt(25 * 1e6)) // 2.5% of 1000 trb
 	require.Equal(user0BalanceAfterClaim.String(), expectedBalance.String())
+}
+
+// 2 out of 4 reporters submit, both are bad prices, dispute and unjail, then 4/4 submit bad prices, dispute and unjail
+func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
+	require := require.New(t)
+
+	t.Helper()
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
+
+	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
+
+	modifyGenesis := []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
+		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "20s"),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+	}
+
+	nv := 2
+	nf := 0
+	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
+		{
+			NumValidators: &nv,
+			NumFullNodes:  &nf,
+			ChainConfig: ibc.ChainConfig{
+				Type:           "cosmos",
+				Name:           "layer",
+				ChainID:        "layer",
+				Bin:            "layerd",
+				Denom:          "loya",
+				Bech32Prefix:   "tellor",
+				CoinType:       "118",
+				GasPrices:      "0.0loya",
+				GasAdjustment:  1.1,
+				TrustingPeriod: "504h",
+				NoHostMount:    false,
+				Images: []ibc.DockerImage{
+					{
+						Repository: "layer",
+						Version:    "local",
+						UidGid:     "1025:1025",
+					},
+				},
+				EncodingConfig:      e2e.LayerEncoding(),
+				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
+				AdditionalStartArgs: []string{"--key-name", "validator", "--price-daemon-enabled=false"},
+			},
+		},
+	})
+
+	client, network := interchaintest.DockerSetup(t)
+
+	chain := chains[0].(*cosmos.CosmosChain)
+
+	ic := interchaintest.NewInterchain().
+		AddChain(chain)
+
+	ctx := context.Background()
+
+	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
+		TestName:  t.Name(),
+		Client:    client,
+		NetworkID: network,
+		// BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
+		SkipPathCreation: false,
+	}))
+	t.Cleanup(func() {
+		_ = ic.Close()
+	})
+	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
+	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
+		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
+		Amount:  math.NewInt(1000000000000),
+		Denom:   "loya",
+	}))
+
+	val1 := chain.Validators[0]
+	val1Addr, err := val1.AccountKeyBech32(ctx, "validator")
+	require.NoError(err)
+	val1valAddr, err := val1.KeyBech32(ctx, "validator", "val")
+	require.NoError(err)
+	fmt.Println("val1 Account Address: ", val1Addr)
+	fmt.Println("val1 Validator Address: ", val1valAddr)
+	val2 := chain.Validators[1]
+	val2Addr, err := val2.AccountKeyBech32(ctx, "validator")
+	require.NoError(err)
+	val2valAddr, err := val2.KeyBech32(ctx, "validator", "val")
+	require.NoError(err)
+	fmt.Println("val2 Account Address: ", val2Addr)
+	fmt.Println("val2 Validator Address: ", val2valAddr)
+
+	// queryValidators to confirm that 2 validators are bonded
+	vals, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
+	require.NoError(err)
+	require.Equal(len(vals), 2)
+
+	// get val1 staking power
+	val1Staking, err := chain.StakingQueryValidator(ctx, val1valAddr)
+	require.NoError(err)
+	val1StartPower := val1Staking.Tokens
+	fmt.Println("val1 staking power before delegations: ", val1StartPower)
+
+	// make 4 ppl who will delegate to val1 and become reporters
+	numReporters := 4
+	reporters := make([]ReporterAccs, numReporters)
+	expectedDelTotal := math.NewInt(0)
+	var user0Addr, user1Addr, user2Addr, user3Addr string
+	var delegateAmt sdk.Coin
+	for i := range numReporters {
+		keyname := fmt.Sprintf("user%d", i)
+		fundAmt := math.NewInt(10_000 * 1e6)
+		delegateAmt = sdk.NewCoin("loya", math.NewInt(1_000*1e6))
+		user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
+		txHash, err := val1.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1valAddr, delegateAmt.String(), "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		require.NoError(err)
+		fmt.Println("TX HASH (", keyname, " delegates to val1): ", txHash)
+		reporters[i] = ReporterAccs{
+			Keyname: keyname,
+			Addr:    user.FormattedAddress(),
+		}
+		expectedDelTotal = expectedDelTotal.Add(delegateAmt.Amount)
+		fmt.Println("expectedDelTotal: ", expectedDelTotal)
+		val1Staking, err = chain.StakingQueryValidator(ctx, val1valAddr)
+		require.NoError(err)
+		fmt.Println("val1 staking power: ", val1Staking.Tokens)
+		if i == 0 {
+			user0Addr = user.FormattedAddress()
+		} else if i == 1 {
+			user1Addr = user.FormattedAddress()
+		} else if i == 2 {
+			user2Addr = user.FormattedAddress()
+		} else if i == 3 {
+			user3Addr = user.FormattedAddress()
+		}
+	}
+	fmt.Println("user0Addr: ", user0Addr)
+	fmt.Println("user1Addr: ", user1Addr)
+	fmt.Println("user2Addr: ", user2Addr)
+	fmt.Println("user3Addr: ", user3Addr)
+
+	// query staking module delegations
+	delegations, err := chain.StakingQueryDelegationsTo(ctx, val1valAddr)
+	require.NoError(err)
+	for i := range delegations {
+		fmt.Println("delegations ", i, ": ", delegations[i])
+	}
+	require.Equal(len(delegations), numReporters+1) // val1, user0, user1, user2, user3
+
+	// get val1 staking power
+	val1Staking, err = chain.StakingQueryValidator(ctx, val1valAddr)
+	require.NoError(err)
+	fmt.Println("val1 staking power: ", val1Staking.Tokens)
+	require.Equal(val1Staking.Tokens, val1StartPower.Add(expectedDelTotal))
+	// val1power := val1Staking.Tokens
+
+	// submit minting proposal and vote yes on it from all validators
+	require.NoError(e2e.TurnOnMinting(ctx, chain, val1))
+
+	// custom gov params set voting period to 15s
+	require.NoError(testutil.WaitForBlocks(ctx, 5, val1))
+	result, err := chain.GovQueryProposal(ctx, 1)
+	require.NoError(err)
+
+	expectedYesTotal := math.NewInt(10000000000000).Add(expectedDelTotal)
+	fmt.Println("Proposal status: ", result.Status.String())
+	require.Equal(result.FinalTallyResult.Yes.String(), expectedYesTotal.String())
+	require.Equal(result.FinalTallyResult.No.String(), "0")
+	require.Equal(result.FinalTallyResult.Abstain.String(), "0")
+	require.Equal(result.FinalTallyResult.NoWithVeto.String(), "0")
+	require.Equal(result.Status.String(), "PROPOSAL_STATUS_PASSED")
+
+	// all 4 delegators become reporters
+	for i := range reporters {
+		minStakeAmt := "1000000"
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", val1.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
+	}
+
+	// val1 becomes a reporter
+	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
+
+	// query reporter module
+	res, _, err := val1.ExecQuery(ctx, "reporter", "reporters")
+	require.NoError(err)
+	var reportersRes e2e.QueryReportersResponse
+	err = json.Unmarshal(res, &reportersRes)
+	require.NoError(err)
+	fmt.Println("reporters res: ", reportersRes)
+	require.Equal(len(reportersRes.Reporters), numReporters+1) // number of delegating reporters + 1 validator reporter
+	for _, reporter := range reportersRes.Reporters {
+		fmt.Println("reporter: ", reporter.Metadata.Moniker)
+		require.NotNil(reporter.Metadata.Moniker, "moniker should not be nil")
+	}
+
+	// val 1 tips , 2/4 reporters submit, both are bad prices
+	tipAmt := math.NewInt(1_000_000)
+	tip := sdk.NewCoin("loya", tipAmt)
+	_, _, err = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", val1Addr, bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	require.NoError(err)
+	fmt.Println("TX HASH (user0 tipped bch-usd): ", txHash)
+	require.NoError(err)
+
+	// 2/4 ppl submit, both are bad
+	value := layerutil.EncodeValue(10000000.99)
+	for i := range reporters[:2] {
+		_, _, err = val1.Exec(ctx, val1.TxCommand(reporters[i].Keyname, "oracle", "submit-value", reporters[i].Addr, bchQData, value, "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+		require.NoError(err)
+		fmt.Println("TX HASH (", reporters[i].Keyname, " submitted bch-usd): ", txHash)
+	}
+
+	// wait for query to expire
+	require.NoError(testutil.WaitForBlocks(ctx, 3, val1))
+
+	// verify reports
+	type UserReports struct {
+		UserReport e2e.QueryMicroReportsResponse
+		Timestamp  string
+		qId        string
+	}
+	userReports := make([]UserReports, 2)
+	for i := range reporters[:2] {
+		res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
+		require.NoError(err)
+		var userReport e2e.QueryMicroReportsResponse
+		require.NoError(json.Unmarshal(res, &userReport))
+		fmt.Println("userReport", i, ": ", userReport)
+		require.Equal(len(userReport.MicroReports), 1)
+		require.Equal(userReport.MicroReports[0].Reporter, reporters[i].Addr)
+		require.Equal(userReport.MicroReports[0].Value, value)
+		require.Equal(userReport.MicroReports[0].Power, "1000")
+		decodedBytes, err := base64.StdEncoding.DecodeString(userReport.MicroReports[0].QueryID)
+		require.NoError(err)
+		hexStr := hex.EncodeToString(decodedBytes)
+		userReports[i] = UserReports{
+			UserReport: userReport,
+			qId:        hexStr,
+		}
+		// get aggregate timestamp
+		fmt.Println("getting aggregate timestamp for", hexStr, "...")
+		res, _, err = val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hexStr)
+		require.NoError(err)
+		var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
+		err = json.Unmarshal(res, &currentAggRes)
+		require.NoError(err)
+		timestamp := currentAggRes.Timestamp
+		userReports[i].Timestamp = timestamp
+	}
+
+	// open dispute on both reports from user3
+	txHash, err = val1.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", userReports[0].UserReport.MicroReports[0].Reporter, userReports[0].UserReport.MicroReports[0].MetaId, userReports[0].qId, "warning", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	require.NoError(err)
+	fmt.Println("TX HASH (val1 proposed dispute on user0): ", txHash)
+	txHash, err = val1.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", userReports[1].UserReport.MicroReports[0].Reporter, userReports[1].UserReport.MicroReports[0].MetaId, userReports[1].qId, "warning", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	require.NoError(err)
+	fmt.Println("TX HASH (val1 proposed dispute on user1): ", txHash)
+
+	// assert there are 2 disputes open
+	res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	var disputes e2e.Disputes
+	require.NoError(json.Unmarshal(res, &disputes))
+	require.Equal(len(disputes.Disputes), 2)
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1) // not resolved yet
+	require.Equal(disputes.Disputes[1].Metadata.DisputeStatus, 1) // not resolved yet
+
+	for i := range userReports {
+		disputeId := strconv.Itoa(i + 1)
+		// vote from val1 (all tipping power)
+		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (val1 votes on dispute ", disputeId, "): ", txHash)
+
+		// vote from val2 (0 power error)
+		_, err = val2.ExecTx(ctx, "validator", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val2.HomeDir())
+		require.Error(err)
+
+		// check disputes status
+		// should still be open bc only 33% of power has voted
+		res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+		require.NoError(err)
+		require.NoError(json.Unmarshal(res, &disputes))
+		fmt.Println("dispute 1: ", disputes.Disputes[i])
+		require.Equal(disputes.Disputes[i].Metadata.DisputeStatus, 1) // not resolved yet
+
+		// vote from team (should be at least 66% voting power after (33% from team, 33% from having one tip from val1))
+		txHash, err = val1.ExecTx(ctx, "team", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (team votes on dispute ", disputeId, "): ", txHash)
+
+		// check on dispute status
+		// should be resolved and executed
+		r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
+		require.NoError(err)
+		err = json.Unmarshal(r, &disputes)
+		require.NoError(err)
+		require.Equal(disputes.Disputes[i].Metadata.DisputeStatus, 2) // resolved now
+		fmt.Println("resolved dispute ", disputes.Disputes[i].DisputeID)
+	}
+
+	// make sure aggregate is flagged
+	res, _, err = val1.ExecQuery(ctx, "oracle", "retrieve-data", userReports[0].qId, userReports[0].Timestamp)
+	require.NoError(err)
+	var data e2e.QueryRetrieveDataResponse
+	require.NoError(json.Unmarshal(res, &data))
+	require.Equal(data.Aggregate.Flagged, true)
+	res, _, err = val1.ExecQuery(ctx, "oracle", "retrieve-data", userReports[1].qId, userReports[1].Timestamp)
+	require.NoError(err)
+	var data2 e2e.QueryRetrieveDataResponse
+	require.NoError(json.Unmarshal(res, &data2))
+	require.Equal(data2.Aggregate.Flagged, true)
+
+	// unjail reporters
+	for i, usr := range userReports {
+		txHash, err = val1.ExecTx(ctx, usr.UserReport.MicroReports[0].Reporter, "reporter", "unjail-reporter", usr.UserReport.MicroReports[0].Reporter, "--keyring-dir", val1.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (user", i, "unjails reporter): ", txHash)
+	}
+
+	// tip again, all 4 reporters submit bad prices
+	tipAmt = math.NewInt(1_000_000)
+	tip = sdk.NewCoin("loya", tipAmt)
+	_, _, err = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", val1Addr, bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	require.NoError(err)
+	fmt.Println("TX HASH (user0 tipped bch-usd): ", txHash)
+	require.NoError(err)
+
+	// 4/4 reporters submit bad prices
+	value = layerutil.EncodeValue(10000000.99)
+	for i := range reporters {
+		_, _, err = val1.Exec(ctx, val1.TxCommand(reporters[i].Keyname, "oracle", "submit-value", reporters[i].Addr, bchQData, value, "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+		require.NoError(err)
+		fmt.Println("TX HASH (", reporters[i].Keyname, " submitted bch-usd): ", txHash)
+	}
+
+	// wait for query to expire
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val1))
+
+	// verify reports
+	userReports = make([]UserReports, 4)
+	for i := range reporters {
+		res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
+		require.NoError(err)
+		var userReport2 e2e.QueryMicroReportsResponse
+		require.NoError(json.Unmarshal(res, &userReport2))
+		fmt.Println("userReport", i, ": ", userReport2)
+		if i < 2 {
+			require.Equal(len(userReport2.MicroReports), 2)         // first 2 reporters should have 2 reports total
+			require.Equal(userReport2.MicroReports[1].Power, "990") // first 2 lost 1% of their stake from previous dispute
+			require.Equal(userReport2.MicroReports[1].Reporter, reporters[i].Addr)
+			require.Equal(userReport2.MicroReports[1].Value, value)
+		} else {
+			require.Equal(len(userReport2.MicroReports), 1)          // last 2 reporters should have 1 report total
+			require.Equal(userReport2.MicroReports[0].Power, "1000") // havent lost any stake yet
+			require.Equal(userReport2.MicroReports[0].Reporter, reporters[i].Addr)
+			require.Equal(userReport2.MicroReports[0].Value, value)
+		}
+
+		decodedBytes, err := base64.StdEncoding.DecodeString(userReport2.MicroReports[0].QueryID)
+		require.NoError(err)
+		hexStr := hex.EncodeToString(decodedBytes)
+		userReports[i] = UserReports{
+			UserReport: userReport2,
+			qId:        hexStr,
+		}
+		// get aggregate timestamp
+		fmt.Println("getting aggregate timestamp for", hexStr, "...")
+		res, _, err = val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hexStr)
+		require.NoError(err)
+		var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
+		err = json.Unmarshal(res, &currentAggRes)
+		require.NoError(err)
+		timestamp := currentAggRes.Timestamp
+		userReports[i].Timestamp = timestamp
+	}
+
+	// open dispute on all reports from user3
+	for i := range userReports {
+		if i < 2 {
+			txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReports[i].UserReport.MicroReports[1].Reporter, userReports[i].UserReport.MicroReports[1].MetaId, userReports[i].qId, "warning", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		} else {
+			txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReports[i].UserReport.MicroReports[0].Reporter, userReports[i].UserReport.MicroReports[0].MetaId, userReports[i].qId, "warning", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		}
+		require.NoError(err)
+		fmt.Println("TX HASH (val1 proposed dispute on user", i, "): ", txHash)
+	}
+
+	// assert there are 4 disputes open
+	res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	require.NoError(json.Unmarshal(res, &disputes))
+	require.Equal(len(disputes.Disputes), 6)
+	require.Equal(disputes.Disputes[2].Metadata.DisputeStatus, 1) // not resolved yet
+	require.Equal(disputes.Disputes[3].Metadata.DisputeStatus, 1) // not resolved yet
+	require.Equal(disputes.Disputes[4].Metadata.DisputeStatus, 1) // not resolved yet
+	require.Equal(disputes.Disputes[5].Metadata.DisputeStatus, 1) // not resolved yet
+
+	for i := range userReports {
+		disputeId := strconv.Itoa(i + 3) // disputes 3, 4, 5, 6
+		// vote from val1 (all tipping power)
+		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (val1 votes on dispute ", disputeId, "): ", txHash)
+
+		// vote from val2 (0 power error)
+		_, err = val2.ExecTx(ctx, "validator", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val2.HomeDir())
+		require.Error(err)
+
+		// check disputes status
+		// should still be open bc only 33% of power has voted
+		res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+		require.NoError(err)
+		require.NoError(json.Unmarshal(res, &disputes))
+		fmt.Println("dispute ", i+3, ": ", disputes.Disputes[i+2])
+		require.Equal(disputes.Disputes[i+2].Metadata.DisputeStatus, 1) // not resolved yet
+
+		// vote from team (should be at least 66% voting power after (33% from team, 33% from having one tip from val1))
+		txHash, err = val1.ExecTx(ctx, "team", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (team votes on dispute ", disputeId, "): ", txHash)
+
+		// check on dispute status
+		// should be resolved and executed
+		r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
+		require.NoError(err)
+		err = json.Unmarshal(r, &disputes)
+		require.NoError(err)
+		require.Equal(disputes.Disputes[i+2].Metadata.DisputeStatus, 2) // resolved now
+		fmt.Println("resolved dispute ", disputes.Disputes[i+2].DisputeID)
+	}
+
+	// make sure aggregate is flagged
+	res, _, err = val1.ExecQuery(ctx, "oracle", "retrieve-data", userReports[3].qId, userReports[3].Timestamp)
+	require.NoError(err)
+	require.NoError(json.Unmarshal(res, &data))
+	require.Equal(data.Aggregate.Flagged, true)
+}
+
+// add new query type, tip, report, dispute
+func TestNewQueryTipReportDispute(t *testing.T) {
+	require := require.New(t)
+
+	t.Helper()
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
+
+	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
+
+	modifyGenesis := []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
+		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "20s"),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+	}
+
+	nv := 2
+	nf := 0
+	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
+		{
+			NumValidators: &nv,
+			NumFullNodes:  &nf,
+			ChainConfig: ibc.ChainConfig{
+				Type:           "cosmos",
+				Name:           "layer",
+				ChainID:        "layer",
+				Bin:            "layerd",
+				Denom:          "loya",
+				Bech32Prefix:   "tellor",
+				CoinType:       "118",
+				GasPrices:      "0.0loya",
+				GasAdjustment:  1.1,
+				TrustingPeriod: "504h",
+				NoHostMount:    false,
+				Images: []ibc.DockerImage{
+					{
+						Repository: "layer",
+						Version:    "local",
+						UidGid:     "1025:1025",
+					},
+				},
+				EncodingConfig:      e2e.LayerEncoding(),
+				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
+				AdditionalStartArgs: []string{"--key-name", "validator", "--price-daemon-enabled=false"},
+			},
+		},
+	})
+
+	client, network := interchaintest.DockerSetup(t)
+
+	chain := chains[0].(*cosmos.CosmosChain)
+
+	ic := interchaintest.NewInterchain().
+		AddChain(chain)
+
+	ctx := context.Background()
+
+	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
+		TestName:  t.Name(),
+		Client:    client,
+		NetworkID: network,
+		// BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
+		SkipPathCreation: false,
+	}))
+	t.Cleanup(func() {
+		_ = ic.Close()
+	})
+	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
+	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
+		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
+		Amount:  math.NewInt(1000000000000),
+		Denom:   "loya",
+	}))
+
+	val1 := chain.Validators[0]
+	val1Addr, err := val1.AccountKeyBech32(ctx, "validator")
+	require.NoError(err)
+	val1valAddr, err := val1.KeyBech32(ctx, "validator", "val")
+	require.NoError(err)
+	fmt.Println("val1 Account Address: ", val1Addr)
+	fmt.Println("val1 Validator Address: ", val1valAddr)
+	val2 := chain.Validators[1]
+	val2Addr, err := val2.AccountKeyBech32(ctx, "validator")
+	require.NoError(err)
+	val2valAddr, err := val2.KeyBech32(ctx, "validator", "val")
+	require.NoError(err)
+	fmt.Println("val2 Account Address: ", val2Addr)
+	fmt.Println("val2 Validator Address: ", val2valAddr)
+
+	// queryValidators to confirm that 2 validators are bonded
+	vals, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
+	require.NoError(err)
+	require.Equal(len(vals), 2)
+
+	// get val1 staking power
+	val1Staking, err := chain.StakingQueryValidator(ctx, val1valAddr)
+	require.NoError(err)
+	val1StartPower := val1Staking.Tokens
+	fmt.Println("val1 staking power before delegations: ", val1StartPower)
+
+	// make 2 ppl who will delegate to val1 and become reporters
+	numReporters := 2
+	reporters := make([]ReporterAccs, numReporters)
+	expectedDelTotal := math.NewInt(0)
+	var user0Addr, user1Addr string
+	var delegateAmt sdk.Coin
+	for i := range numReporters {
+		keyname := fmt.Sprintf("user%d", i)
+		fundAmt := math.NewInt(10_000 * 1e6)
+		delegateAmt = sdk.NewCoin("loya", math.NewInt(1_000*1e6))
+		user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
+		txHash, err := val1.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1valAddr, delegateAmt.String(), "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		require.NoError(err)
+		fmt.Println("TX HASH (", keyname, " delegates to val1): ", txHash)
+		reporters[i] = ReporterAccs{
+			Keyname: keyname,
+			Addr:    user.FormattedAddress(),
+		}
+		expectedDelTotal = expectedDelTotal.Add(delegateAmt.Amount)
+		fmt.Println("expectedDelTotal: ", expectedDelTotal)
+		val1Staking, err = chain.StakingQueryValidator(ctx, val1valAddr)
+		require.NoError(err)
+		fmt.Println("val1 staking power: ", val1Staking.Tokens)
+		if i == 0 {
+			user0Addr = user.FormattedAddress()
+		} else if i == 1 {
+			user1Addr = user.FormattedAddress()
+		}
+	}
+	fmt.Println("user0Addr: ", user0Addr)
+	fmt.Println("user1Addr: ", user1Addr)
+
+	// both users becomes reporters
+	for i := range numReporters {
+		minStakeAmt := "1000000"
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", val1.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
+	}
+
+	// user0 registers a new query
+	queryType := "NFLSuperBowlChampion"
+	spec := e2e.DataSpec{
+		DocumentHash:      "legit-ipfs-hash!",
+		ResponseValueType: "string",
+		AggregationMethod: "weighted-mode",
+		AbiComponents: []*registrytypes.ABIComponent{
+			{
+				Name:            "year of game",
+				FieldType:       "string",
+				NestedComponent: []*registrytypes.ABIComponent{},
+			},
+		},
+		Registrar:         user0Addr,
+		QueryType:         queryType,
+		ReportBlockWindow: 10,
+	}
+	specBz, err := json.Marshal(spec)
+	fmt.Println("specBz: ", string(specBz))
+	require.NoError(err)
+	txHash, err := val1.ExecTx(ctx, user0Addr, "registry", "register-spec", queryType, string(specBz), "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	require.NoError(err)
+	fmt.Println("TX HASH (user0 registers a new query): ", txHash)
+
+	// generate querydata
+	queryBz, _, err := val1.ExecQuery(ctx, "registry", "generate-querydata", queryType, "[\"2025\"]")
+	require.NoError(err)
+	fmt.Println("queryBz: ", queryBz)
+	var queryData e2e.QueryGenerateQuerydataResponse
+	require.NoError(json.Unmarshal(queryBz, &queryData))
+	fmt.Println("queryData: ", queryData)
+	queryDataStr := hex.EncodeToString(queryData.QueryData)
+	fmt.Println("queryDataStr: ", queryDataStr)
+
+	// val1 tips the query
+	tipAmt := math.NewInt(1_000_000)
+	tip := sdk.NewCoin("loya", tipAmt)
+	_, _, err = val1.Exec(ctx, val1.TxCommand(user0Addr, "oracle", "tip", user0Addr, queryDataStr, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	require.NoError(err)
+	fmt.Println("TX HASH (val1 tips the query): ", txHash)
+
+	// wait 1 block to prevent account sequence mismatch
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1))
+
+	// user0 and user1 report
+	value := e2e.EncodeStringValue("Pittsburgh Steelers")
+	fmt.Println("value: ", value)
+	for i := range numReporters {
+		txHash, err = val1.ExecTx(ctx, reporters[i].Keyname, "oracle", "submit-value", reporters[i].Addr, queryDataStr, value, "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		require.NoError(err)
+		fmt.Println("TX HASH (", reporters[i].Keyname, " reports the query): ", txHash)
+	}
+
+	// wait for query to expire
+	require.NoError(testutil.WaitForBlocks(ctx, 10, val1))
+
+	// verify reports
+	type UserReports struct {
+		UserReport e2e.QueryMicroReportsResponse
+		Timestamp  string
+		qId        string
+	}
+	userReports := make([]UserReports, numReporters)
+	for i := range numReporters {
+		var userReport e2e.QueryMicroReportsResponse
+		res, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
+		require.NoError(err)
+		require.NoError(json.Unmarshal(res, &userReport))
+		fmt.Println("userReport: ", userReport)
+		require.Equal(len(userReport.MicroReports), 1)
+		reportedValue := userReport.MicroReports[0].Value
+		fmt.Println("reportedValue: ", reportedValue)
+		require.Equal(reportedValue, value)
+		decodedVal, err := hex.DecodeString(reportedValue)
+		require.NoError(err)
+		fmt.Println("decodedVal: ", string(decodedVal))
+		decodedBytes, err := base64.StdEncoding.DecodeString(userReport.MicroReports[0].QueryID)
+		require.NoError(err)
+		hexStr := hex.EncodeToString(decodedBytes)
+		userReports[i] = UserReports{
+			UserReport: userReport,
+			qId:        hexStr,
+		}
+	}
+
+	// verify aggregate
+	res, _, err := val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", userReports[0].qId)
+	require.NoError(err)
+	var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
+	require.NoError(json.Unmarshal(res, &currentAggRes))
+	fmt.Println("currentAggRes: ", currentAggRes)
+	require.Equal(currentAggRes.Aggregate.AggregatePower, "2000") // 2 reporters * 1000 power
+	require.Equal(currentAggRes.Aggregate.AggregateValue, value)
+	require.Equal(currentAggRes.Aggregate.Flagged, false)
+
+	// val1 disputes both reports
+	for i := range numReporters {
+		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReports[i].UserReport.MicroReports[0].Reporter, userReports[i].UserReport.MicroReports[0].MetaId, userReports[i].qId, "warning", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		require.NoError(err)
+		fmt.Println("TX HASH (val1 disputes report ", i, "): ", txHash)
+	}
 }

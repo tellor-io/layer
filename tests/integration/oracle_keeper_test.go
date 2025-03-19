@@ -128,10 +128,10 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	s.NoError(err)
 	s.Equal(tip.Sub(twoPercent).Amount, tips)
 
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker1")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker2")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[1], reportertypes.NewSelection(repAccs[1], 1)))
 
 	value := testutil.EncodeValue(29266)
@@ -216,7 +216,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200, 300, 400, 500})
 	tipper := s.newKeysWithTokens()
 	for _, rep := range repAccs {
-		s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, rep, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+		s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, rep, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 		s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, rep, reportertypes.NewSelection(rep, 1)))
 		_, err := s.Setup.Reporterkeeper.ReporterStake(ctx, rep, []byte{})
 		s.NoError(err)
@@ -350,7 +350,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	ctx := s.Setup.Ctx
 	reporterPower := uint64(1)
 	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{reporterPower})
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 
 	qId := utils.QueryIDFromData(ethQueryData)
@@ -403,9 +403,9 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	reporterPower2 := uint64(2)
 	totalReporterPower := reporterPower1 + reporterPower2
 	repAccs, _, _ := s.createValidatorAccs([]uint64{reporterPower1, reporterPower2})
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker1")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker2")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[1], reportertypes.NewSelection(repAccs[1], 1)))
 	reporterStake, err := s.Setup.Reporterkeeper.ReporterStake(ctx, repAccs[0], qId)
 	s.NoError(err)
@@ -477,11 +477,11 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	reporterPower3 := uint64(3)
 	totalPower := uint64(12)
 	repAccs, _, _ := s.createValidatorAccs([]uint64{reporterPower1, reporterPower2, reporterPower3})
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker1")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker2")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[1], reportertypes.NewSelection(repAccs[1], 1)))
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[2], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[2], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker3")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[2], reportertypes.NewSelection(repAccs[2], 1)))
 	reporterStake, err := s.Setup.Reporterkeeper.ReporterStake(ctx, repAccs[0], qId)
 	s.NoError(err)
@@ -566,7 +566,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	app := s.Setup.App
 	msgServer := keeper.NewMsgServerImpl(ok)
 	for _, rep := range repAccs {
-		s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, rep, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+		s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, rep, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 		s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, rep, reportertypes.NewSelection(rep, 1)))
 	}
 	spec := registrytypes.DataSpec{
@@ -688,7 +688,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	app := s.Setup.App
 	msgServer := keeper.NewMsgServerImpl(ok)
 	for _, rep := range repAccs {
-		s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, rep, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+		s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, rep, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 		s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, rep, reportertypes.NewSelection(rep, 1)))
 	}
 	spec := registrytypes.DataSpec{
@@ -801,7 +801,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	ctx = ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
 	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker1")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 
 	queryData, _ := utils.QueryBytesFromString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000366696C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
@@ -872,7 +872,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	ctx := s.Setup.Ctx
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
 	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{1, 2})
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker1")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 
 	queryData, _ := utils.QueryBytesFromString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000366696C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
@@ -880,7 +880,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 
 	reporterStake1, err := s.Setup.Reporterkeeper.ReporterStake(ctx, repAccs[0], queryId)
 	require.NoError(err)
-	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt())))
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker2")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[1], reportertypes.NewSelection(repAccs[1], 1)))
 	reporterStake2, err := s.Setup.Reporterkeeper.ReporterStake(ctx, repAccs[1], queryId)
 	require.NoError(err)

@@ -3,6 +3,7 @@ package e2e
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"path/filepath"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/cometbft/cometbft/libs/rand"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
@@ -233,15 +235,6 @@ type CurrentTipsResponse struct {
 	Tips math.Int `json:"tips"`
 }
 
-type DataSpec struct {
-	DocumentHash      string                        `json:"document_hash,omitempty"`
-	ResponseValueType string                        `json:"response_value_type,omitempty"`
-	AbiComponents     []*registrytypes.ABIComponent `json:"abi_components,omitempty"`
-	AggregationMethod string                        `json:"aggregation_method,omitempty"`
-	Registrar         string                        `json:"registrar,omitempty"`
-	ReportBlockWindow int                           `json:"report_block_window,omitempty"`
-}
-
 type DataSpecResponse struct {
 	DocumentHash      string                        `json:"document_hash,omitempty"`
 	ResponseValueType string                        `json:"response_value_type,omitempty"`
@@ -316,6 +309,7 @@ type OracleReporter struct {
 	Jailed         bool   `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
 	// jailed_until is the time the reporter is jailed until
 	JailedUntil time.Time `protobuf:"bytes,4,opt,name=jailed_until,json=jailedUntil,proto3,stdtime" json:"jailed_until"`
+	Moniker     string    `json:"moniker"`
 }
 
 type QuerySelectorReporterResponse struct {
@@ -469,7 +463,51 @@ type QueryGetAttestationDataBySnapshotResponse struct {
 	LastConsensusTimestamp  string `protobuf:"bytes,9,opt,name=last_consensus_timestamp,json=lastConsensusTimestamp,proto3" json:"last_consensus_timestamp,omitempty"`
 }
 
+type QueryRetrieveDataResponse struct {
+	Aggregate *Aggregate `protobuf:"bytes,1,opt,name=aggregate,proto3" json:"aggregate,omitempty"`
+}
+
+type DataSpec struct {
+	// ipfs hash of the data spec
+	DocumentHash string `protobuf:"bytes,1,opt,name=document_hash,json=documentHash,proto3" json:"document_hash,omitempty"`
+	// the value's datatype for decoding the value
+	ResponseValueType string `protobuf:"bytes,2,opt,name=response_value_type,json=responseValueType,proto3" json:"response_value_type,omitempty"`
+	// the abi components for decoding
+	AbiComponents []*registrytypes.ABIComponent `protobuf:"bytes,3,rep,name=abi_components,json=abiComponents,proto3" json:"abi_components,omitempty"`
+	// how to aggregate the data (ie. average, median, mode, etc) for aggregating reports and arriving at final value
+	AggregationMethod string `protobuf:"bytes,4,opt,name=aggregation_method,json=aggregationMethod,proto3" json:"aggregation_method,omitempty"`
+	// address that originally registered the data spec
+	Registrar string `protobuf:"bytes,5,opt,name=registrar,proto3" json:"registrar,omitempty"`
+	// report_buffer_window specifies the duration of the time window following an initial report
+	// during which additional reports can be submitted. This duration acts as a buffer, allowing
+	// a collection of related reports in a defined time frame. The window ensures that all
+	// pertinent reports are aggregated together before arriving at a final value. This defaults
+	// to 0s if not specified.
+	// extensions: treat as a golang time.duration, don't allow nil values, don't omit empty values
+	ReportBlockWindow uint64 `protobuf:"varint,6,opt,name=report_block_window,json=reportBlockWindow,proto3" json:"report_block_window,omitempty"`
+	// querytype is the first arg in queryData
+	QueryType string `protobuf:"bytes,7,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
+}
+
+type QueryGenerateQuerydataResponse struct {
+	// query_data is the generated query_data hex string.
+	QueryData []byte `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
+}
+
 // HELPERS FOR TESTING AGAINST THE CHAIN
+
+func EncodeStringValue(value string) string {
+	// Create a string ABI type
+	stringABIType, _ := abi.NewType("string", "", nil)
+
+	// Create the arguments and pack the string
+	arguments := abi.Arguments{{Type: stringABIType}}
+	encodedBytes, _ := arguments.Pack(value)
+
+	// Convert to hex string
+	encodedString := hex.EncodeToString(encodedBytes)
+	return encodedString
+}
 
 func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos.ChainNode) (string, error) {
 	content, err := json.Marshal(prop)
@@ -568,7 +606,7 @@ func CreateDataSpec(reportBlockWindow int, registrar string) (DataSpec, error) {
 		},
 		AggregationMethod: "weighted-median",
 		Registrar:         registrar,
-		ReportBlockWindow: reportBlockWindow,
+		ReportBlockWindow: uint64(reportBlockWindow),
 	}
 
 	return spec, nil

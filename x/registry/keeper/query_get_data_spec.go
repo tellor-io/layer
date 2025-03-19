@@ -30,3 +30,18 @@ func (k Querier) GetDataSpec(goCtx context.Context, req *types.QueryGetDataSpecR
 	}
 	return &types.QueryGetDataSpecResponse{Spec: &dataSpec}, nil
 }
+
+func (k Querier) GetAllDataSpecs(goCtx context.Context, req *types.QueryGetAllDataSpecsRequest) (*types.QueryGetAllDataSpecsResponse, error) {
+	specs, err := k.Keeper.GetAllDataSpecs(goCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	// convert []types.DataSpec to []*types.DataSpec
+	specPointers := make([]*types.DataSpec, len(specs))
+	for i := range specs {
+		specPointers[i] = &specs[i]
+	}
+
+	return &types.QueryGetAllDataSpecsResponse{Specs: specPointers}, nil
+}

@@ -16,7 +16,7 @@ func TestReportersQuery(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	querier := keeper.NewQuerier(k)
 	for i := 0; i < 10; i++ {
-		err := k.Reporters.Set(ctx, sample.AccAddressBytes(), types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya))
+		err := k.Reporters.Set(ctx, sample.AccAddressBytes(), types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter_moniker"))
 		require.NoError(t, err)
 	}
 	res, err := querier.Reporters(ctx, &types.QueryReportersRequest{})
