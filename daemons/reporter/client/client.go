@@ -29,9 +29,8 @@ import (
 const defaultGas = uint64(300000)
 
 var (
-	commitedIds      = make(map[uint64]bool)
-	depositReportMap = make(map[string]bool)
-	depositTipMap    = make(map[uint64]bool) // map of deposit tips already sent to bridge daemon
+	commitedIds   = make(map[uint64]bool)
+	depositTipMap = make(map[uint64]bool) // map of deposit tips already sent to bridge daemon
 )
 
 var mutex = &sync.RWMutex{}
