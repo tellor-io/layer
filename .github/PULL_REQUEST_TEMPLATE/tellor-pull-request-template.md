@@ -13,6 +13,7 @@ Fixes #
 - [ ] State Changes (please describe)"
 - [ ] Chain Changes (please describe):
 - [ ] Daemon Changes
+- [ ] Tests
 - [ ] Added Getter
 
 ## Testing
@@ -24,4 +25,5 @@ Fixes #
 - [ ] I have added appropriate comments to my code
 - [ ] I have updated the documentation accordingly
 - [ ] I have added tests that prove my fix or feature works
-- [ ] New and existing unit tests pass locally with my changes
+- [ ] go test ./... is passing locally
+- [ ] make e2e is passing locally
