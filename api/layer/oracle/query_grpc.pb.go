@@ -28,8 +28,9 @@ type QueryClient interface {
 	GetCurrentTip(ctx context.Context, in *QueryGetCurrentTipRequest, opts ...grpc.CallOption) (*QueryGetCurrentTipResponse, error)
 	// Queries a list of GetUserTipTotal items.
 	GetUserTipTotal(ctx context.Context, in *QueryGetUserTipTotalRequest, opts ...grpc.CallOption) (*QueryGetUserTipTotalResponse, error)
-	// Queries a list of GetAggregatedReport items.
+	// Queries a list of GetAggregatedReport items before a timestamp.
 	GetDataBefore(ctx context.Context, in *QueryGetDataBeforeRequest, opts ...grpc.CallOption) (*QueryGetDataBeforeResponse, error)
+	// Queries a list of GetAggregatedReport items after a timestamp.
 	GetDataAfter(ctx context.Context, in *QueryGetDataAfterRequest, opts ...grpc.CallOption) (*QueryGetDataAfterResponse, error)
 	// Queries a list of GetTimeBasedRewards items.
 	GetTimeBasedRewards(ctx context.Context, in *QueryGetTimeBasedRewardsRequest, opts ...grpc.CallOption) (*QueryGetTimeBasedRewardsResponse, error)
@@ -292,8 +293,9 @@ type QueryServer interface {
 	GetCurrentTip(context.Context, *QueryGetCurrentTipRequest) (*QueryGetCurrentTipResponse, error)
 	// Queries a list of GetUserTipTotal items.
 	GetUserTipTotal(context.Context, *QueryGetUserTipTotalRequest) (*QueryGetUserTipTotalResponse, error)
-	// Queries a list of GetAggregatedReport items.
+	// Queries a list of GetAggregatedReport items before a timestamp.
 	GetDataBefore(context.Context, *QueryGetDataBeforeRequest) (*QueryGetDataBeforeResponse, error)
+	// Queries a list of GetAggregatedReport items after a timestamp.
 	GetDataAfter(context.Context, *QueryGetDataAfterRequest) (*QueryGetDataAfterResponse, error)
 	// Queries a list of GetTimeBasedRewards items.
 	GetTimeBasedRewards(context.Context, *QueryGetTimeBasedRewardsRequest) (*QueryGetTimeBasedRewardsResponse, error)

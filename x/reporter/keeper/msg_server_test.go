@@ -325,3 +325,44 @@ func TestWithdrawTip(t *testing.T) {
 	_, err = msg.WithdrawTip(ctx, &types.MsgWithdrawTip{SelectorAddress: selector.String(), ValidatorAddress: valAddr.String()})
 	require.NoError(t, err)
 }
+
+func TestEditReporter(t *testing.T) {
+	k, _, _, _, _, msg, ctx := setupMsgServer(t)
+	addr := sample.AccAddressBytes()
+	require.NoError(t, k.Reporters.Set(ctx, addr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "moniker")))
+	reporter, err := k.Reporters.Get(ctx, addr)
+	require.NoError(t, err)
+
+	ctx = ctx.WithBlockTime(time.Now())
+	// test trying to change commission rate by more than 1%
+	_, err = msg.EditReporter(ctx, &types.MsgEditReporter{ReporterAddress: addr.String(), CommissionRate: reporter.CommissionRate.Add(math.LegacyMustNewDecFromStr("0.05")), MinTokensRequired: reporter.MinTokensRequired.Add(math.NewInt(1_000)), Moniker: "caleb"})
+	require.ErrorContains(t, err, "commission rate can change by more than 1%")
+
+	// test trying to change MinTokensRequired by more than 10%
+	_, err = msg.EditReporter(ctx, &types.MsgEditReporter{ReporterAddress: addr.String(), CommissionRate: reporter.CommissionRate.Add(math.LegacyMustNewDecFromStr("0.01")), MinTokensRequired: reporter.MinTokensRequired.Add(math.NewInt(1_000_000)), Moniker: "caleb"})
+	require.ErrorContains(t, err, "MinTokensRequired cannot change more than 10%")
+
+	ctx = ctx.WithBlockTime(time.Now())
+	_, err = msg.EditReporter(ctx, &types.MsgEditReporter{ReporterAddress: addr.String(), CommissionRate: reporter.CommissionRate.Add(math.LegacyMustNewDecFromStr("0.01")), MinTokensRequired: reporter.MinTokensRequired.Add(math.NewInt(1_000)), Moniker: "caleb"})
+	require.NoError(t, err)
+
+	newReporter, err := k.Reporters.Get(ctx, addr)
+	require.NoError(t, err)
+	require.Equal(t, newReporter.Moniker, "caleb")
+	require.Equal(t, newReporter.CommissionRate, reporter.CommissionRate.Add(math.LegacyMustNewDecFromStr("0.01")))
+	require.Equal(t, newReporter.MinTokensRequired, reporter.MinTokensRequired.Add(math.NewInt(1_000)))
+
+	// test trying to update the reporter twice in less than 12 hours
+	_, err = msg.EditReporter(ctx, &types.MsgEditReporter{ReporterAddress: addr.String(), CommissionRate: reporter.CommissionRate.Add(math.LegacyMustNewDecFromStr("0.01")), MinTokensRequired: reporter.MinTokensRequired.Add(math.NewInt(1_000)), Moniker: "caleb"})
+	require.ErrorContains(t, err, "can only update reporters every 12 hours")
+
+	ctx = ctx.WithBlockTime(time.Now().Add(13 * time.Hour))
+	_, err = msg.EditReporter(ctx, &types.MsgEditReporter{ReporterAddress: addr.String(), CommissionRate: newReporter.CommissionRate.Add(math.LegacyMustNewDecFromStr("0.01")), MinTokensRequired: newReporter.MinTokensRequired.Add(math.NewInt(1_000)), Moniker: "caleb"})
+	require.NoError(t, err)
+
+	newReporter2, err := k.Reporters.Get(ctx, addr)
+	require.NoError(t, err)
+	require.Equal(t, newReporter2.Moniker, "caleb")
+	require.Equal(t, newReporter2.CommissionRate, newReporter.CommissionRate.Add(math.LegacyMustNewDecFromStr("0.01")))
+	require.Equal(t, newReporter2.MinTokensRequired, newReporter.MinTokensRequired.Add(math.NewInt(1_000)))
+}
