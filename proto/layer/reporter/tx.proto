@@ -40,6 +40,9 @@ service Msg {
   // WithdrawTip defines a method to withdraw tip from a reporter module.
   rpc WithdrawTip(MsgWithdrawTip) returns (MsgWithdrawTipResponse);
 
+  // EditReporter defines a method to edit a reporter object
+  rpc EditReporter(MsgEditReporter) returns (MsgEditReporterResponse);
+
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -143,3 +146,26 @@ message MsgWithdrawTip {
 
 // MsgWithdrawTipResponse defines the Msg/WithdrawTip response type.
 message MsgWithdrawTipResponse {}
+
+message MsgEditReporter {
+  option (cosmos.msg.v1.signer) = "reporter_address";
+  // the address of the reporter to edit
+  string reporter_address = 1;
+  // commission_rate is the commission rate the reporter charges to selectors
+  string commission_rate = 2 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+  // min_tokens_required is the minimum number of tokens required to select this reporter
+  string min_tokens_required = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // moniker is the moniker of the reporter
+  string moniker = 4;
+}
+
+message MsgEditReporterResponse {}

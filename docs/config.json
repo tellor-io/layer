@@ -47,7 +47,8 @@
       },
       "paths": {
         "exclude": [
-          "/layer/registry/get_data_spec/{query_type}"
+          "/layer/registry/get_data_spec/{query_type}",
+          "/layer/registry/get_all_data_specs"
         ]
       }
     },
