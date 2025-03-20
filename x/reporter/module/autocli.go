@@ -112,6 +112,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "validator_address"},
 					},
 				},
+				{
+					RpcMethod:      "EditReporter",
+					Use:            "edit-reporter [commission-rate] [min-tokens-required] [moniker]",
+					Short:          "edit commission rate, moniker, and MinTokensRequired for your reporter",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "commission_rate"}, {ProtoField: "min_tokens_required"}, {ProtoField: "moniker"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},

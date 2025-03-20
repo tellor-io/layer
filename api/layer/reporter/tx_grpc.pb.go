@@ -34,6 +34,8 @@ type MsgClient interface {
 	UnjailReporter(ctx context.Context, in *MsgUnjailReporter, opts ...grpc.CallOption) (*MsgUnjailReporterResponse, error)
 	// WithdrawTip defines a method to withdraw tip from a reporter module.
 	WithdrawTip(ctx context.Context, in *MsgWithdrawTip, opts ...grpc.CallOption) (*MsgWithdrawTipResponse, error)
+	// EditReporter defines a method to edit a reporter object
+	EditReporter(ctx context.Context, in *MsgEditReporter, opts ...grpc.CallOption) (*MsgEditReporterResponse, error)
 }
 
 type msgClient struct {
@@ -107,6 +109,15 @@ func (c *msgClient) WithdrawTip(ctx context.Context, in *MsgWithdrawTip, opts ..
 	return out, nil
 }
 
+func (c *msgClient) EditReporter(ctx context.Context, in *MsgEditReporter, opts ...grpc.CallOption) (*MsgEditReporterResponse, error) {
+	out := new(MsgEditReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Msg/EditReporter", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -127,6 +138,8 @@ type MsgServer interface {
 	UnjailReporter(context.Context, *MsgUnjailReporter) (*MsgUnjailReporterResponse, error)
 	// WithdrawTip defines a method to withdraw tip from a reporter module.
 	WithdrawTip(context.Context, *MsgWithdrawTip) (*MsgWithdrawTipResponse, error)
+	// EditReporter defines a method to edit a reporter object
+	EditReporter(context.Context, *MsgEditReporter) (*MsgEditReporterResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -154,6 +167,9 @@ func (UnimplementedMsgServer) UnjailReporter(context.Context, *MsgUnjailReporter
 }
 func (UnimplementedMsgServer) WithdrawTip(context.Context, *MsgWithdrawTip) (*MsgWithdrawTipResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawTip not implemented")
+}
+func (UnimplementedMsgServer) EditReporter(context.Context, *MsgEditReporter) (*MsgEditReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EditReporter not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -294,6 +310,24 @@ func _Msg_WithdrawTip_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_EditReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgEditReporter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).EditReporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Msg/EditReporter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).EditReporter(ctx, req.(*MsgEditReporter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -328,6 +362,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WithdrawTip",
 			Handler:    _Msg_WithdrawTip_Handler,
+		},
+		{
+			MethodName: "EditReporter",
+			Handler:    _Msg_EditReporter_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

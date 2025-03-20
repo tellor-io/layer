@@ -448,3 +448,83 @@ func validateWithdrawTip(msg *types.MsgWithdrawTip) error {
 	}
 	return nil
 }
+
+func (k msgServer) EditReporter(goCtx context.Context, msg *types.MsgEditReporter) (*types.MsgEditReporterResponse, error) {
+	err := validateEditReporter(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(goCtx)
+
+	addr := sdk.MustAccAddressFromBech32(msg.ReporterAddress)
+	params, err := k.Keeper.Params.Get(goCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	// reporter commission rate must be between 0 and 1
+	if msg.CommissionRate.GT(math.LegacyNewDec(1)) || msg.CommissionRate.LT(params.MinCommissionRate) {
+		return nil, errors.New("commission rate must be between 0 and 1 (e.g, 0.50 = 50%)")
+	}
+
+	reporter, err := k.Keeper.Reporter(goCtx, addr)
+	if err != nil {
+		return nil, err
+	}
+
+	if sdkCtx.BlockTime().Sub(reporter.LastUpdated).Seconds() < 12*60*60 {
+		return nil, errors.New("can only update reporters every 12 hours")
+	}
+
+	rateDiff := reporter.CommissionRate.Sub(msg.CommissionRate).Abs()
+	if rateDiff.GT(math.LegacyMustNewDecFromStr("0.01")) {
+		return nil, errors.New("commission rate cannot change by more than 1%")
+	}
+
+	minTokensRequiredDiff := msg.MinTokensRequired.Sub(reporter.MinTokensRequired).Abs()
+	if math.LegacyNewDecFromInt(minTokensRequiredDiff).Quo(math.LegacyNewDecFromInt(reporter.MinTokensRequired)).GT(math.LegacyMustNewDecFromStr("0.10")) {
+		return nil, errors.New("MinTokensRequired cannot change more than 10%")
+	}
+
+	reporter.CommissionRate = msg.CommissionRate
+	reporter.MinTokensRequired = msg.MinTokensRequired
+	reporter.Moniker = msg.Moniker
+	reporter.LastUpdated = sdkCtx.BlockTime()
+
+	err = k.Keeper.Reporters.Set(goCtx, addr.Bytes(), reporter)
+	if err != nil {
+		return nil, err
+	}
+
+	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"edited_reporter",
+			sdk.NewAttribute("reporter", msg.ReporterAddress),
+			sdk.NewAttribute("commission", msg.CommissionRate.String()),
+			sdk.NewAttribute("min_tokens_required", msg.MinTokensRequired.String()),
+			sdk.NewAttribute("moniker", msg.Moniker),
+		),
+	})
+
+	return &types.MsgEditReporterResponse{}, nil
+}
+
+func validateEditReporter(msg *types.MsgEditReporter) error {
+	_, err := sdk.AccAddressFromBech32(msg.ReporterAddress)
+	if err != nil {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+
+	// check that mintokensrequired is positive
+	if msg.MinTokensRequired.LTE(math.ZeroInt()) {
+		return errors.New("MinTokensRequired must be positive (%s)")
+	}
+
+	// check that moniker is not empty
+	if msg.Moniker == "" {
+		return errors.New("moniker cannot be empty")
+	}
+
+	return nil
+}

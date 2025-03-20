@@ -21822,7 +21822,7 @@ type QueryGetTimestampBeforeRequest struct {
 
 	// query_id defines the query id hex string.
 	QueryId string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-	// timestamp defines the timestamp of the aggregate report.
+	// timestamp defines the timestamp the aggregate should be before.
 	Timestamp uint64 `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
@@ -21905,7 +21905,7 @@ type QueryGetTimestampAfterRequest struct {
 
 	// query_id defines the query id hex string.
 	QueryId string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-	// timestamp defines the timestamp of the aggregate report.
+	// timestamp defines the timestamp the aggregate should be after.
 	Timestamp uint64 `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
