@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/tellor-io/layer/lib/metrics"
 	layertypes "github.com/tellor-io/layer/types"
@@ -491,7 +490,7 @@ func (k msgServer) EditReporter(goCtx context.Context, msg *types.MsgEditReporte
 	reporter.CommissionRate = msg.CommissionRate
 	reporter.MinTokensRequired = msg.MinTokensRequired
 	reporter.Moniker = msg.Moniker
-	reporter.LastUpdated = time.Now()
+	reporter.LastUpdated = sdkCtx.BlockTime()
 
 	err = k.Keeper.Reporters.Set(goCtx, addr.Bytes(), reporter)
 	if err != nil {
