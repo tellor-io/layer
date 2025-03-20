@@ -336,7 +336,7 @@ func TestEditReporter(t *testing.T) {
 	ctx = ctx.WithBlockTime(time.Now())
 	// test trying to change commission rate by more than 1%
 	_, err = msg.EditReporter(ctx, &types.MsgEditReporter{ReporterAddress: addr.String(), CommissionRate: reporter.CommissionRate.Add(math.LegacyMustNewDecFromStr("0.05")), MinTokensRequired: reporter.MinTokensRequired.Add(math.NewInt(1_000)), Moniker: "caleb"})
-	require.ErrorContains(t, err, "commission rate can change by more than 1%")
+	require.ErrorContains(t, err, "commission rate cannot change by more than 1%")
 
 	// test trying to change MinTokensRequired by more than 10%
 	_, err = msg.EditReporter(ctx, &types.MsgEditReporter{ReporterAddress: addr.String(), CommissionRate: reporter.CommissionRate.Add(math.LegacyMustNewDecFromStr("0.01")), MinTokensRequired: reporter.MinTokensRequired.Add(math.NewInt(1_000_000)), Moniker: "caleb"})
