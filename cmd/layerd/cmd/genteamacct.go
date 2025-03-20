@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 
@@ -13,16 +14,16 @@ import (
 	"github.com/spf13/cobra"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 
-	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	cfg "github.com/cometbft/cometbft/config"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	"github.com/cosmos/cosmos-sdk/runtime"
+	sdkruntime "github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/server"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -177,7 +178,7 @@ func displayInfo(info printInfo) error {
 	return err
 }
 
-func CollectGenTxsWithDelegateCmd(genBalIterator genutiltypes.GenesisBalancesIterator, defaultNodeHome string, validator genutiltypes.MessageValidator, valAddrCodec runtime.ValidatorAddressCodec) *cobra.Command {
+func CollectGenTxsWithDelegateCmd(genBalIterator genutiltypes.GenesisBalancesIterator, defaultNodeHome string, validator genutiltypes.MessageValidator, valAddrCodec sdkruntime.ValidatorAddressCodec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "collect-gentxs-delegate",
 		Short: "Collect genesis txs and output a genesis file that allows for Delegate gentxs",
@@ -225,7 +226,7 @@ func CollectGenTxsWithDelegateCmd(genBalIterator genutiltypes.GenesisBalancesIte
 
 func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodingConfig,
 	config *cfg.Config, initCfg genutiltypes.InitConfig, genesis *genutiltypes.AppGenesis, genBalIterator genutiltypes.GenesisBalancesIterator,
-	validator genutiltypes.MessageValidator, valAddrCodec runtime.ValidatorAddressCodec,
+	validator genutiltypes.MessageValidator, valAddrCodec sdkruntime.ValidatorAddressCodec,
 ) (appState json.RawMessage, err error) {
 	// process genesis transactions, else create default genesis.json
 	appGenTxs, persistentPeers, err := CollectTxs(
@@ -266,7 +267,7 @@ func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodi
 
 func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTxsDir string,
 	genesis *types.AppGenesis, genBalIterator types.GenesisBalancesIterator,
-	validator types.MessageValidator, valAddrCodec runtime.ValidatorAddressCodec,
+	validator types.MessageValidator, valAddrCodec sdkruntime.ValidatorAddressCodec,
 ) (appGenTxs []sdk.Tx, persistentPeers string, err error) {
 	// prepare a map of all balances in genesis state to then validate
 	// against the validators addresses
@@ -330,50 +331,82 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 		msgs := genTx.GetMsgs()
 
 		// TODO abstract out staking message validation back to staking
-		//validatorMsg, isValidator := msgs[0].(*stakingtypes.MsgCreateValidator)
-		delegateMsg, isDelegate := msgs[0].(*stakingtypes.MsgDelegate)
 		switch msgs[0].(type) {
-		case validatorMsg := msgs[0].(*stakingtypes.MsgCreateValidator):
-		}
-
-
-		// validate validator addresses and funds against the accounts in the state
-		valAddr, err := valAddrCodec.StringToBytes(msg.ValidatorAddress)
-		if err != nil {
-			return appGenTxs, persistentPeers, err
-		}
-
-		valAccAddr := sdk.AccAddress(valAddr).String()
-
-		delBal, delOk := balancesMap[valAccAddr]
-		if !delOk {
-			_, file, no, ok := runtime.Caller(1)
-			if ok {
-				fmt.Printf("CollectTxs-1, called from %s#%d\n", file, no)
+		case (*stakingtypes.MsgCreateValidator):
+			msg := msgs[0].(*stakingtypes.MsgCreateValidator)
+			// validate validator addresses and funds against the accounts in the state
+			valAddr, err := valAddrCodec.StringToBytes(msg.ValidatorAddress)
+			if err != nil {
+				return appGenTxs, persistentPeers, err
 			}
 
-			return appGenTxs, persistentPeers, fmt.Errorf("account %s balance not in genesis state: %+v", valAccAddr, balancesMap)
-		}
+			valAccAddr := sdk.AccAddress(valAddr).String()
 
-		_, valOk := balancesMap[sdk.AccAddress(valAddr).String()]
-		if !valOk {
-			_, file, no, ok := runtime.Caller(1)
-			if ok {
-				fmt.Printf("CollectTxs-2, called from %s#%d - %s\n", file, no, sdk.AccAddress(msg.ValidatorAddress).String())
+			delBal, delOk := balancesMap[valAccAddr]
+			if !delOk {
+				_, file, no, ok := runtime.Caller(1)
+				if ok {
+					fmt.Printf("CollectTxs-1, called from %s#%d\n", file, no)
+				}
+
+				return appGenTxs, persistentPeers, fmt.Errorf("account %s balance not in genesis state: %+v", valAccAddr, balancesMap)
 			}
-			return appGenTxs, persistentPeers, fmt.Errorf("account %s balance not in genesis state: %+v", valAddr, balancesMap)
-		}
 
-		if delBal.GetCoins().AmountOf(msg.Value.Denom).LT(msg.Value.Amount) {
-			return appGenTxs, persistentPeers, fmt.Errorf(
-				"insufficient fund for delegation %v: %v < %v",
-				delBal.GetAddress(), delBal.GetCoins().AmountOf(msg.Value.Denom), msg.Value.Amount,
-			)
-		}
+			_, valOk := balancesMap[sdk.AccAddress(valAddr).String()]
+			if !valOk {
+				_, file, no, ok := runtime.Caller(1)
+				if ok {
+					fmt.Printf("CollectTxs-2, called from %s#%d - %s\n", file, no, sdk.AccAddress(msg.ValidatorAddress).String())
+				}
+				return appGenTxs, persistentPeers, fmt.Errorf("account %s balance not in genesis state: %+v", valAddr, balancesMap)
+			}
 
-		// exclude itself from persistent peers
-		if msg.Description.Moniker != moniker {
-			addressesIPs = append(addressesIPs, nodeAddrIP)
+			if delBal.GetCoins().AmountOf(msg.Value.Denom).LT(msg.Value.Amount) {
+				return appGenTxs, persistentPeers, fmt.Errorf(
+					"insufficient fund for delegation %v: %v < %v",
+					delBal.GetAddress(), delBal.GetCoins().AmountOf(msg.Value.Denom), msg.Value.Amount,
+				)
+			}
+
+			// exclude itself from persistent peers
+			if msg.Description.Moniker != moniker {
+				addressesIPs = append(addressesIPs, nodeAddrIP)
+			}
+		case (*stakingtypes.MsgDelegate):
+			msg := msgs[0].(*stakingtypes.MsgDelegate)
+			// validate validator addresses and funds against the accounts in the state
+			valAddr, err := valAddrCodec.StringToBytes(msg.ValidatorAddress)
+			if err != nil {
+				return appGenTxs, persistentPeers, err
+			}
+
+			valAccAddr := sdk.AccAddress(valAddr).String()
+
+			delBal, delOk := balancesMap[valAccAddr]
+			if !delOk {
+				_, file, no, ok := runtime.Caller(1)
+				if ok {
+					fmt.Printf("CollectTxs-1, called from %s#%d\n", file, no)
+				}
+
+				return appGenTxs, persistentPeers, fmt.Errorf("account %s balance not in genesis state: %+v", valAccAddr, balancesMap)
+			}
+
+			_, valOk := balancesMap[sdk.AccAddress(valAddr).String()]
+			if !valOk {
+				_, file, no, ok := runtime.Caller(1)
+				if ok {
+					fmt.Printf("CollectTxs-2, called from %s#%d - %s\n", file, no, sdk.AccAddress(msg.ValidatorAddress).String())
+				}
+				return appGenTxs, persistentPeers, fmt.Errorf("account %s balance not in genesis state: %+v", valAddr, balancesMap)
+			}
+
+			if delBal.GetCoins().AmountOf(msg.Amount.Denom).LT(msg.Amount.Amount) {
+				return appGenTxs, persistentPeers, fmt.Errorf(
+					"insufficient fund for delegation %v: %v < %v",
+					delBal.GetAddress(), delBal.GetCoins().AmountOf(msg.Amount.Denom), msg.Amount.Amount,
+				)
+			}
 		}
 	}
 
