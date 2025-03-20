@@ -474,21 +474,16 @@ func (k msgServer) EditReporter(goCtx context.Context, msg *types.MsgEditReporte
 		return nil, err
 	}
 
-	fmt.Println(reporter.LastUpdated)
-	fmt.Println(sdkCtx.BlockTime())
 	if sdkCtx.BlockTime().Sub(reporter.LastUpdated).Seconds() < 12*60*60 {
 		return nil, errors.New("can only update reporters every 12 hours")
 	}
 
 	rateDiff := reporter.CommissionRate.Sub(msg.CommissionRate).Abs()
 	if rateDiff.GT(math.LegacyMustNewDecFromStr("0.01")) {
-		return nil, errors.New("commission rate can change by more than 1%")
+		return nil, errors.New("commission rate cannot change by more than 1%")
 	}
 
 	minTokensRequiredDiff := msg.MinTokensRequired.Sub(reporter.MinTokensRequired).Abs()
-	fmt.Println(minTokensRequiredDiff)
-	fmt.Println(math.LegacyNewDecFromInt(minTokensRequiredDiff).Quo(math.LegacyNewDecFromInt(reporter.MinTokensRequired)))
-	fmt.Println(math.LegacyMustNewDecFromStr("0.10"))
 	if math.LegacyNewDecFromInt(minTokensRequiredDiff).Quo(math.LegacyNewDecFromInt(reporter.MinTokensRequired)).GT(math.LegacyMustNewDecFromStr("0.10")) {
 		return nil, errors.New("MinTokensRequired cannot change more than 10%")
 	}
