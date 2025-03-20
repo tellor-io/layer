@@ -32,5 +32,11 @@ message OracleReporter {
   ];
   // moniker is the moniker of the reporter
   string moniker = 5;
+  // Time that the reporter was last updated
+  google.protobuf.Timestamp last_updated = 6 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
 }
 
