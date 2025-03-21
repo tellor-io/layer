@@ -270,6 +270,22 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			},
 		},
 		{
+			name: "err on GetOperatorAddress",
+			setupMocks: func(bk *mocks.BridgeKeeper, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
+				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+					return "", errors.New("error!")
+				})
+				return bk, patches
+			},
+			expectedError: fmt.Errorf("failed to get operator address, please check your key and flags: %w", errors.New("error!")),
+			validateResponse: func(resp *abci.ResponseExtendVote) {
+				require.NotNil(resp)
+				var voteExt app.BridgeVoteExtension
+				err := json.Unmarshal(resp.VoteExtension, &voteExt)
+				require.NoError(err)
+			},
+		},
+		{
 			name: "err on GetAttestationRequestsByHeight",
 			setupMocks: func(bk *mocks.BridgeKeeper, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
 				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
