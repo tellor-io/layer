@@ -210,7 +210,7 @@ func CollectGenTxsWithDelegateCmd(genBalIterator genutiltypes.GenesisBalancesIte
 			toPrint := newPrintInfo(config.Moniker, appGenesis.ChainID, nodeID, genTxsDir, json.RawMessage(""))
 			initCfg := genutiltypes.NewInitConfig(appGenesis.ChainID, genTxsDir, nodeID, valPubKey)
 
-			appMessage, err := genutil.GenAppStateFromConfig(cdc, clientCtx.TxConfig, config, initCfg, appGenesis, genBalIterator, validator, valAddrCodec)
+			appMessage, err := GenAppStateFromConfig(cdc, clientCtx.TxConfig, config, initCfg, appGenesis, genBalIterator, validator, valAddrCodec)
 			if err != nil {
 				return errors.Wrap(err, "failed to get genesis app state from config")
 			}
@@ -296,6 +296,8 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 	// addresses and IPs (and port) validator server info
 	var addressesIPs []string
 
+	valGenTxs := make([]sdk.Tx, 0)
+	delGenTxs := make([]sdk.Tx, 0)
 	for _, fo := range fos {
 		if fo.IsDir() {
 			continue
@@ -315,7 +317,7 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 			return appGenTxs, persistentPeers, err
 		}
 
-		appGenTxs = append(appGenTxs, genTx)
+		// appGenTxs = append(appGenTxs, genTx)
 
 		// the memo flag is used to store
 		// the ip and node-id, for example this may be:
@@ -334,6 +336,7 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 		switch msgs[0].(type) {
 		case (*stakingtypes.MsgCreateValidator):
 			msg := msgs[0].(*stakingtypes.MsgCreateValidator)
+			valGenTxs = append(valGenTxs, genTx)
 			// validate validator addresses and funds against the accounts in the state
 			valAddr, err := valAddrCodec.StringToBytes(msg.ValidatorAddress)
 			if err != nil {
@@ -374,6 +377,7 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 			}
 		case (*stakingtypes.MsgDelegate):
 			msg := msgs[0].(*stakingtypes.MsgDelegate)
+			delGenTxs = append(delGenTxs, genTx)
 			// validate validator addresses and funds against the accounts in the state
 			valAddr, err := valAddrCodec.StringToBytes(msg.ValidatorAddress)
 			if err != nil {
@@ -412,6 +416,8 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 
 	sort.Strings(addressesIPs)
 	persistentPeers = strings.Join(addressesIPs, ",")
+
+	appGenTxs = append(valGenTxs, delGenTxs...)
 
 	return appGenTxs, persistentPeers, nil
 }
