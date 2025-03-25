@@ -25,6 +25,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 )
 
 // HELPERS FOR BUILDING THE CHAIN
@@ -500,6 +501,18 @@ type QueryTeamAddressResponse struct {
 	TeamAddress string `protobuf:"bytes,1,opt,name=team_address,json=teamAddress,proto3" json:"team_address,omitempty"`
 }
 
+type QueryTeamVoteResponse struct {
+	// teamVote holds the team voter info for a dispute.
+	TeamVote Voter `protobuf:"bytes,1,opt,name=team_vote,json=teamVote,proto3" json:"team_vote"`
+}
+
+type Voter struct {
+	Vote          disputetypes.VoteEnum `protobuf:"varint,1,opt,name=vote,proto3,enum=layer.dispute.VoteEnum" json:"vote,omitempty"`
+	VoterPower    math.Int              `protobuf:"bytes,2,opt,name=voter_power,json=voterPower,proto3,customtype=cosmossdk.io/math.Int" json:"voter_power"`
+	ReporterPower math.Int              `protobuf:"bytes,3,opt,name=reporter_power,json=reporterPower,proto3,customtype=cosmossdk.io/math.Int" json:"reporter_power"`
+	RewardClaimed bool                  `protobuf:"varint,5,opt,name=reward_claimed,json=rewardClaimed,proto3" json:"reward_claimed,omitempty"`
+}
+
 // HELPERS FOR TESTING AGAINST THE CHAIN
 
 func EncodeStringValue(value string) string {
@@ -513,6 +526,45 @@ func EncodeStringValue(value string) string {
 	// Convert to hex string
 	encodedString := hex.EncodeToString(encodedBytes)
 	return encodedString
+}
+
+type Validators struct {
+	Addr    string
+	ValAddr string
+	Val     *cosmos.ChainNode
+}
+
+func GetChainVals(ctx context.Context, chain *cosmos.CosmosChain) ([]Validators, error) {
+	validators := make([]Validators, len(chain.Validators))
+	for i := range chain.Validators {
+		val := chain.Validators[i]
+		valAddr, err := val.AccountKeyBech32(ctx, "validator")
+		if err != nil {
+			return nil, err
+		}
+		valvalAddr, err := val.KeyBech32(ctx, "validator", "val")
+		if err != nil {
+			return nil, err
+		}
+		fmt.Println("val", i, " Account Address: ", valAddr)
+		fmt.Println("val", i, " Validator Address: ", valvalAddr)
+		validators[i] = Validators{
+			Addr:    valAddr,
+			ValAddr: valvalAddr,
+			Val:     val,
+		}
+	}
+	return validators, nil
+}
+
+func CreateTestAccounts(ctx context.Context, t *testing.T, chain *cosmos.CosmosChain, numAccounts int, fundAmt math.Int) ([]string, error) {
+	users := make([]string, numAccounts)
+	for i := range make([]struct{}, numAccounts) {
+		keyname := fmt.Sprintf("user%d", i)
+		user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
+		users[i] = user.FormattedAddress()
+	}
+	return users, nil
 }
 
 func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos.ChainNode) (string, error) {
@@ -629,4 +681,23 @@ func QueryTips(queryData string, ctx context.Context, validatorI *cosmos.ChainNo
 		return CurrentTipsResponse{}, err
 	}
 	return currentTips, nil
+}
+
+func DelegateToValidator(ctx context.Context, userKey string, validator *cosmos.ChainNode, valAddr string, amount math.Int) (string, error) {
+	delegateAmt := sdk.NewCoin("loya", amount)
+	txHash, err := validator.ExecTx(ctx, userKey, "staking", "delegate", valAddr, delegateAmt.String(), "--keyring-dir", validator.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	if err != nil {
+		return "", err
+	}
+	return txHash, nil
+}
+
+func CreateReporter(ctx context.Context, accountAddr string, validator *cosmos.ChainNode, moniker string) (string, error) {
+	commissRate := "0.01"
+	minStakeAmt := "1000000"
+	txHash, err := validator.ExecTx(ctx, accountAddr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", validator.HomeDir())
+	if err != nil {
+		return "", err
+	}
+	return txHash, nil
 }

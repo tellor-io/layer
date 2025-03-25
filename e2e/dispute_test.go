@@ -2471,7 +2471,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 }
 
 // add new query type, tip, report, dispute
-func TestNewQueryTipReportDispute(t *testing.T) {
+func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	require := require.New(t)
 
 	t.Helper()
@@ -2617,6 +2617,18 @@ func TestNewQueryTipReportDispute(t *testing.T) {
 		fmt.Println("TX HASH (", reporters[i].Keyname, " becomes a reporter): ", txHash)
 	}
 
+	// val1 becomes reporter
+	minStakeAmt := "1000000"
+	moniker := "validator_reporter_moniker"
+	txHash, err := val1.ExecTx(ctx, val1Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", val1.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
+
+	// make future team acct
+	team2 := interchaintest.GetAndFundTestUsers(t, ctx, "team2", math.NewInt(1000000000000), chain)[0]
+	team2Addr := team2.FormattedAddress()
+	fmt.Println("team2Addr: ", team2Addr)
+
 	// user0 registers a new query
 	queryType := "NFLSuperBowlChampion"
 	spec := e2e.DataSpec{
@@ -2637,17 +2649,15 @@ func TestNewQueryTipReportDispute(t *testing.T) {
 	specBz, err := json.Marshal(spec)
 	fmt.Println("specBz: ", string(specBz))
 	require.NoError(err)
-	txHash, err := val1.ExecTx(ctx, user0Addr, "registry", "register-spec", queryType, string(specBz), "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "registry", "register-spec", queryType, string(specBz), "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 registers a new query): ", txHash)
 
 	// generate querydata
 	queryBz, _, err := val1.ExecQuery(ctx, "registry", "generate-querydata", queryType, "[\"2025\"]")
 	require.NoError(err)
-	fmt.Println("queryBz: ", queryBz)
 	var queryData e2e.QueryGenerateQuerydataResponse
 	require.NoError(json.Unmarshal(queryBz, &queryData))
-	fmt.Println("queryData: ", queryData)
 	queryDataStr := hex.EncodeToString(queryData.QueryData)
 	fmt.Println("queryDataStr: ", queryDataStr)
 
@@ -2661,7 +2671,7 @@ func TestNewQueryTipReportDispute(t *testing.T) {
 	// wait 1 block to prevent account sequence mismatch
 	require.NoError(testutil.WaitForBlocks(ctx, 1, val1))
 
-	// user0 and user1 report
+	// user0 and user1 report, 10 block window so no need to sweat
 	value := e2e.EncodeStringValue("Pittsburgh Steelers")
 	fmt.Println("value: ", value)
 	for i := range numReporters {
@@ -2673,7 +2683,7 @@ func TestNewQueryTipReportDispute(t *testing.T) {
 	// wait for query to expire
 	require.NoError(testutil.WaitForBlocks(ctx, 10, val1))
 
-	// verify reports
+	// verify report contents, dispute both of them
 	type UserReports struct {
 		UserReport e2e.QueryMicroReportsResponse
 		Timestamp  string
@@ -2700,22 +2710,76 @@ func TestNewQueryTipReportDispute(t *testing.T) {
 			UserReport: userReport,
 			qId:        hexStr,
 		}
-	}
 
-	// verify aggregate
-	res, _, err := val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", userReports[0].qId)
-	require.NoError(err)
-	var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
-	require.NoError(json.Unmarshal(res, &currentAggRes))
-	fmt.Println("currentAggRes: ", currentAggRes)
-	require.Equal(currentAggRes.Aggregate.AggregatePower, "2000") // 2 reporters * 1000 power
-	require.Equal(currentAggRes.Aggregate.AggregateValue, value)
-	require.Equal(currentAggRes.Aggregate.Flagged, false)
+		// verify aggregate
+		aggRes, _, err := val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", userReports[i].qId)
+		require.NoError(err)
+		var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
+		require.NoError(json.Unmarshal(aggRes, &currentAggRes))
+		fmt.Println("currentAggRes: ", currentAggRes)
+		require.Equal(currentAggRes.Aggregate.AggregatePower, "2000") // 2 reporters * 1000 power
+		require.Equal(currentAggRes.Aggregate.AggregateValue, value)
+		require.Equal(currentAggRes.Aggregate.Flagged, false)
 
-	// val1 disputes both reports
-	for i := range numReporters {
-		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReports[i].UserReport.MicroReports[0].Reporter, userReports[i].UserReport.MicroReports[0].MetaId, userReports[i].qId, "warning", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReport.MicroReports[0].Reporter, userReport.MicroReports[0].MetaId, hexStr, "warning", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (val1 disputes report ", i, "): ", txHash)
 	}
+
+	// make sure 2 disputes are open
+	disRes, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	var disputes e2e.Disputes
+	require.NoError(json.Unmarshal(disRes, &disputes))
+	require.Equal(len(disputes.Disputes), 2)
+	require.Equal(disputes.Disputes[0].Metadata.DisputeID, "1")
+	require.Equal(disputes.Disputes[1].Metadata.DisputeID, "2")
+
+	// team votes on dispute 1
+	txHash, err = val1.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-support", "--keyring-dir", val1.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (team votes on dispute 1): ", txHash)
+
+	// query team vote for dispute 1
+	voteRes, _, err := val1.ExecQuery(ctx, "dispute", "team-vote", "1")
+	require.NoError(err)
+	var teamVote e2e.QueryTeamVoteResponse
+	require.NoError(json.Unmarshal(voteRes, &teamVote))
+	fmt.Println("teamVote on dispute 1: ", teamVote)
+
+	// query team vote for dispute 2, should get collections error
+	voteRes, _, err = val1.ExecQuery(ctx, "dispute", "team-vote", "2")
+	require.Error(err)
+
+	// update team address
+	txHash, err = val1.ExecTx(ctx, "team", "dispute", "update-team", team2Addr, "--fees", "25loya", "--keyring-dir", val1.HomeDir(), "--chain-id", chain.Config().ChainID)
+	require.NoError(err)
+	fmt.Println("TX HASH (update team address): ", txHash)
+
+	// query team vote for dispute 1
+	voteRes, _, err = val1.ExecQuery(ctx, "dispute", "team-vote", "1")
+	require.NoError(err)
+	var teamVote2 e2e.QueryTeamVoteResponse
+	require.NoError(json.Unmarshal(voteRes, &teamVote2))
+	fmt.Println("teamVote after update on dispute 1: ", teamVote2)
+
+	// query team vote for dispute 2, should get collections error
+	voteRes, _, err = val1.ExecQuery(ctx, "dispute", "team-vote", "2")
+	require.Error(err)
+
+	// change team addr back
+	txHash, err = val1.ExecTx(ctx, team2Addr, "dispute", "update-team", "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf", "--fees", "25loya", "--keyring-dir", val1.HomeDir(), "--chain-id", chain.Config().ChainID)
+	require.NoError(err)
+	fmt.Println("TX HASH (update team address back): ", txHash)
+
+	// query team vote for dispute 1
+	voteRes, _, err = val1.ExecQuery(ctx, "dispute", "team-vote", "1")
+	require.NoError(err)
+	var teamVote3 e2e.QueryTeamVoteResponse
+	require.NoError(json.Unmarshal(voteRes, &teamVote3))
+	fmt.Println("teamVote after update back on dispute 1: ", teamVote3)
+
+	// query team vote for dispute 2, should get collections error
+	voteRes, _, err = val1.ExecQuery(ctx, "dispute", "team-vote", "2")
+	require.Error(err)
 }
