@@ -10,11 +10,12 @@ import (
 	"sort"
 	"strings"
 
-	"cosmossdk.io/errors"
+	cfg "github.com/cometbft/cometbft/config"
 	"github.com/spf13/cobra"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 
-	cfg "github.com/cometbft/cometbft/config"
+	"cosmossdk.io/errors"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -26,7 +27,6 @@ import (
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/genutil/types"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -85,7 +85,7 @@ func AddTeamAccountCmd(defaultNodeHome string) *cobra.Command {
 			}
 
 			genFile := config.GenesisFile()
-			appState, genDoc, err := genutiltypes.GenesisStateFromGenFile(genFile)
+			appState, genDoc, err := types.GenesisStateFromGenFile(genFile)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal genesis state: %w", err)
 			}
@@ -178,7 +178,7 @@ func displayInfo(info printInfo) error {
 	return err
 }
 
-func CollectGenTxsWithDelegateCmd(genBalIterator genutiltypes.GenesisBalancesIterator, defaultNodeHome string, validator genutiltypes.MessageValidator, valAddrCodec sdkruntime.ValidatorAddressCodec) *cobra.Command {
+func CollectGenTxsWithDelegateCmd(genBalIterator types.GenesisBalancesIterator, defaultNodeHome string, validator types.MessageValidator, valAddrCodec sdkruntime.ValidatorAddressCodec) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "collect-gentxs-delegate",
 		Short: "Collect genesis txs and output a genesis file that allows for Delegate gentxs",
@@ -196,7 +196,7 @@ func CollectGenTxsWithDelegateCmd(genBalIterator genutiltypes.GenesisBalancesIte
 				return errors.Wrap(err, "failed to initialize node validator files")
 			}
 
-			appGenesis, err := genutiltypes.AppGenesisFromFile(config.GenesisFile())
+			appGenesis, err := types.AppGenesisFromFile(config.GenesisFile())
 			if err != nil {
 				return errors.Wrap(err, "failed to read genesis doc from file")
 			}
@@ -208,7 +208,7 @@ func CollectGenTxsWithDelegateCmd(genBalIterator genutiltypes.GenesisBalancesIte
 			}
 
 			toPrint := newPrintInfo(config.Moniker, appGenesis.ChainID, nodeID, genTxsDir, json.RawMessage(""))
-			initCfg := genutiltypes.NewInitConfig(appGenesis.ChainID, genTxsDir, nodeID, valPubKey)
+			initCfg := types.NewInitConfig(appGenesis.ChainID, genTxsDir, nodeID, valPubKey)
 
 			appMessage, err := GenAppStateFromConfig(cdc, clientCtx.TxConfig, config, initCfg, appGenesis, genBalIterator, validator, valAddrCodec)
 			if err != nil {
@@ -225,8 +225,8 @@ func CollectGenTxsWithDelegateCmd(genBalIterator genutiltypes.GenesisBalancesIte
 }
 
 func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodingConfig,
-	config *cfg.Config, initCfg genutiltypes.InitConfig, genesis *genutiltypes.AppGenesis, genBalIterator genutiltypes.GenesisBalancesIterator,
-	validator genutiltypes.MessageValidator, valAddrCodec sdkruntime.ValidatorAddressCodec,
+	config *cfg.Config, initCfg types.InitConfig, genesis *types.AppGenesis, genBalIterator types.GenesisBalancesIterator,
+	validator types.MessageValidator, valAddrCodec sdkruntime.ValidatorAddressCodec,
 ) (appState json.RawMessage, err error) {
 	// process genesis transactions, else create default genesis.json
 	appGenTxs, persistentPeers, err := CollectTxs(
@@ -244,7 +244,7 @@ func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodi
 	}
 
 	// create the app state
-	appGenesisState, err := genutiltypes.GenesisStateFromAppGenesis(genesis)
+	appGenesisState, err := types.GenesisStateFromAppGenesis(genesis)
 	if err != nil {
 		return appState, err
 	}
