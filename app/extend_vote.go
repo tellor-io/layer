@@ -95,17 +95,17 @@ func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper Ora
 func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
 	// check if evm address by operator exists
 	voteExt := BridgeVoteExtension{}
-	operatorAddress, err := h.GetOperatorAddress()
-	if err != nil {
-		h.logger.Error("ExtendVoteHandler: failed to get operator address", "error", err)
+	operatorAddress, errOp := h.GetOperatorAddress()
+	if errOp != nil {
+		h.logger.Error("ExtendVoteHandler: failed to get operator address", "error", errOp)
 		bz, err := json.Marshal(voteExt)
 		if err != nil {
 			h.logger.Error("ExtendVoteHandler: failed to marshal vote extension", "error", err)
 			return &abci.ResponseExtendVote{}, err
 		}
-		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
+		return &abci.ResponseExtendVote{VoteExtension: bz}, fmt.Errorf("failed to get operator address, please check your key and flags: %w", errOp)
 	}
-	_, err = h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
+	_, err := h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
 		h.logger.Info("ExtendVoteHandler: EVM address not found for operator address, registering evm address", "operatorAddress", operatorAddress)
 		initialSigA, initialSigB, err := h.SignInitialMessage(operatorAddress)
