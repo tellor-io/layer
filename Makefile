@@ -156,7 +156,11 @@ test:
 e2e:
 	@cd e2e && go test -v -race ./... -timeout 20m
 
-.PHONY: test e2e
+benchmark:
+	@echo "Running all module benchmarks..."
+	@go test -v -bench=Benchmark -benchmem ./x/dispute/... 2>&1 | tee /dev/tty | python3 scripts/benchmark/bench2csv.py
+
+.PHONY: test e2e benchmark
 ###############################################################################
 ###                                MOCKS                                    ###
 ###############################################################################
