@@ -275,7 +275,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		require.NoError(err)
 
 		// report with 1000 reporting power
-		txHash, err := val1.ExecTx(ctx, val1Addr, "oracle", "submit-value", query.QueryData, value, "--keyring-dir", val1.HomeDir())
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "oracle", "submit-value", query.QueryData, value, "--keyring-dir", val1.HomeDir())
 		fmt.Println("TX HASH (", reporters[i].Keyname, " reported): ", txHash)
 		require.NoError(err)
 
@@ -622,7 +622,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	require.NoError(err)
 
 	// user1 reports for bch spotprice
-	txHash, err = val1.ExecTx(ctx, user0Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir())
+	txHash, err = val1.ExecTx(ctx, user1Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir())
 	fmt.Println("TX HASH (user1 reported ", bchQId, "): ", txHash)
 	require.NoError(err)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
@@ -1006,7 +1006,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.NoError(err)
 
 	// user1 reports for bch spotprice
-	txHash, err = val1.ExecTx(ctx, user0Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir())
+	txHash, err = val1.ExecTx(ctx, user1Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir())
 	fmt.Println("TX HASH (user1 reported ", bchQId, "): ", txHash)
 	require.NoError(err)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
@@ -1039,7 +1039,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.NoError(err)
 
 	// user1 reports for bch spotprice again
-	txHash, err = val1.ExecTx(ctx, user0Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir())
+	txHash, err = val1.ExecTx(ctx, user1Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir())
 	fmt.Println("TX HASH (user1 reported ", bchQId, "): ", txHash)
 	require.NoError(err)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
@@ -1523,7 +1523,7 @@ func TestEscalatingDispute(t *testing.T) {
 	require.NoError(err)
 
 	// user1 reports for bch spotprice
-	txHash, err = val1.ExecTx(ctx, user0Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir())
+	txHash, err = val1.ExecTx(ctx, user1Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir())
 	fmt.Println("TX HASH (user1 reported ", bchQId, "): ", txHash)
 	require.NoError(err)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
@@ -1894,7 +1894,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	require.NoError(err)
 
 	// user1 reports for bch spotprice
-	txHash, err = val1.ExecTx(ctx, user0Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir())
+	txHash, err = val1.ExecTx(ctx, user1Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir())
 	fmt.Println("TX HASH (user1 reported ", bchQId, "): ", txHash)
 	require.NoError(err)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
@@ -2364,7 +2364,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	// 4/4 reporters submit bad prices
 	value = layerutil.EncodeValue(10000000.99)
 	for i := range reporters {
-		_, _, err = val1.Exec(ctx, val1.TxCommand(val1Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+		_, _, err = val1.Exec(ctx, val1.TxCommand(reporters[i].Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " submitted bch-usd): ", txHash)
 	}
@@ -2667,7 +2667,7 @@ func TestNewQueryTipReportDispute(t *testing.T) {
 	value := e2e.EncodeStringValue("Pittsburgh Steelers")
 	fmt.Println("value: ", value)
 	for i := range numReporters {
-		txHash, err = val1.ExecTx(ctx, reporters[i].Keyname, "oracle", "submit-value", queryDataStr, value, "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		txHash, err = val1.ExecTx(ctx, reporters[i].Addr, "oracle", "submit-value", queryDataStr, value, "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " reports the query): ", txHash)
 	}
