@@ -366,3 +366,242 @@ func TestEditReporter(t *testing.T) {
 	require.Equal(t, newReporter2.CommissionRate, newReporter.CommissionRate.Add(math.LegacyMustNewDecFromStr("0.01")))
 	require.Equal(t, newReporter2.MinTokensRequired, newReporter.MinTokensRequired.Add(math.NewInt(1_000)))
 }
+
+func BenchmarkCreateReporter(b *testing.B) {
+	_, sk, _, _, _, ms, ctx := setupMsgServer(b)
+	addr := sample.AccAddressBytes()
+
+	ctx = ctx.WithBlockHeight(1)
+	sk.On("IterateDelegatorDelegations", ctx, addr, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		delegations := []stakingtypes.Delegation{
+			{
+				DelegatorAddress: addr.String(),
+				ValidatorAddress: sdk.ValAddress(addr).String(),
+				Shares:           math.LegacyNewDec(1000),
+			},
+		}
+		for _, delegation := range delegations {
+			val := stakingtypes.Validator{
+				OperatorAddress: sdk.ValAddress(addr).String(),
+				Status:          stakingtypes.Bonded,
+				Tokens:          math.NewInt(1_000_000),
+				DelegatorShares: math.LegacyNewDec(1_000),
+			}
+			sk.On("GetValidator", ctx, sdk.ValAddress(addr)).Return(val, nil)
+			if fn(delegation) {
+				break
+			}
+		}
+	})
+
+	msg := &types.MsgCreateReporter{
+		ReporterAddress:   addr.String(),
+		CommissionRate:    types.DefaultMinCommissionRate,
+		MinTokensRequired: types.DefaultMinLoya,
+		Moniker:           "moniker!",
+	}
+
+	b.Run("Success_Create_Reporter", func(b *testing.B) {
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			ms.CreateReporter(ctx, msg)
+		}
+	})
+}
+
+func BenchmarkSelectReporter(b *testing.B) {
+	k, sk, _, _, _, ms, ctx := setupMsgServer(b)
+	selector, reporter := sample.AccAddressBytes(), sample.AccAddressBytes()
+
+	require.NoError(b, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "moniker")))
+	ctx = ctx.WithBlockHeight(1)
+	sk.On("IterateDelegatorDelegations", ctx, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		delegations := []stakingtypes.Delegation{
+			{
+				DelegatorAddress: selector.String(),
+				ValidatorAddress: sdk.ValAddress(selector).String(),
+				Shares:           math.LegacyNewDec(1000),
+			},
+		}
+		for _, delegation := range delegations {
+			val := stakingtypes.Validator{
+				OperatorAddress: sdk.ValAddress(selector).String(),
+				Status:          stakingtypes.Bonded,
+				Tokens:          math.NewInt(1_000_000),
+				DelegatorShares: math.LegacyNewDec(1_000),
+			}
+			sk.On("GetValidator", ctx, sdk.ValAddress(selector)).Return(val, nil)
+			if fn(delegation) {
+				break
+			}
+		}
+	})
+	require.NoError(b, k.Params.Set(ctx, types.Params{MaxSelectors: 10}))
+
+	msg := &types.MsgSelectReporter{
+		SelectorAddress: selector.String(),
+		ReporterAddress: reporter.String(),
+	}
+
+	b.Run("Success_Select_Reporter", func(b *testing.B) {
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			ms.SelectReporter(ctx, msg)
+		}
+	})
+}
+
+func BenchmarkSwitchReporter(b *testing.B) {
+	k, sk, _, _, _, ms, ctx := setupMsgServer(b)
+	selector, reporter, reporter2 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+
+	ctx = ctx.WithBlockTime(time.Now())
+	require.NoError(b, k.Selectors.Set(ctx, selector, types.NewSelection(reporter, 1)))
+	require.NoError(b, k.Reporters.Set(ctx, reporter2, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "moniker")))
+	require.NoError(b, k.Params.Set(ctx, types.Params{MaxSelectors: 1}))
+
+	ctx = ctx.WithBlockHeight(1)
+	sk.On("IterateDelegatorDelegations", ctx, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		delegations := []stakingtypes.Delegation{
+			{
+				DelegatorAddress: selector.String(),
+				ValidatorAddress: sdk.ValAddress(selector).String(),
+				Shares:           math.LegacyNewDec(1000),
+			},
+		}
+		for _, delegation := range delegations {
+			val := stakingtypes.Validator{
+				OperatorAddress: sdk.ValAddress(selector).String(),
+				Status:          stakingtypes.Bonded,
+				Tokens:          math.NewInt(1_000_000),
+				DelegatorShares: math.LegacyNewDec(1_000),
+			}
+			sk.On("GetValidator", ctx, sdk.ValAddress(selector)).Return(val, nil)
+			if fn(delegation) {
+				break
+			}
+		}
+	})
+
+	msg := &types.MsgSwitchReporter{
+		SelectorAddress: selector.String(),
+		ReporterAddress: reporter2.String(),
+	}
+
+	b.Run("Success_Switch_Reporter", func(b *testing.B) {
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			ms.SwitchReporter(ctx, msg)
+		}
+	})
+}
+
+func BenchmarkRemoveSelector(b *testing.B) {
+	k, sk, _, _, _, ms, ctx := setupMsgServer(b)
+	reporter, selector := sample.AccAddressBytes(), sample.AccAddressBytes()
+
+	require.NoError(b, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "moniker")))
+	require.NoError(b, k.Selectors.Set(ctx, selector, types.NewSelection(reporter, 1)))
+	require.NoError(b, k.Params.Set(ctx, types.Params{MaxSelectors: 0}))
+	sk.On("IterateDelegatorDelegations", ctx, selector, mock.Anything).Return(nil)
+
+	msg := &types.MsgRemoveSelector{
+		SelectorAddress: selector.String(),
+		AnyAddress:      reporter.String(),
+	}
+
+	b.Run("Success_Remove_Selector", func(b *testing.B) {
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			ms.RemoveSelector(ctx, msg)
+		}
+	})
+}
+
+func BenchmarkUnjailReporter(b *testing.B) {
+	k, _, _, _, _, ms, ctx := setupMsgServer(b)
+	addr := sample.AccAddressBytes()
+
+	reporter := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "moniker")
+	reporter.Jailed = true
+	reporter.JailedUntil = ctx.BlockTime()
+	require.NoError(b, k.Reporters.Set(ctx, addr, reporter))
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
+
+	msg := &types.MsgUnjailReporter{
+		ReporterAddress: addr.String(),
+	}
+
+	b.Run("Success_Unjail_Reporter", func(b *testing.B) {
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			ms.UnjailReporter(ctx, msg)
+		}
+	})
+}
+
+func BenchmarkWithdrawTip(b *testing.B) {
+	k, sk, bk, _, ak, ms, ctx := setupMsgServer(b)
+	selector, valAddr := sample.AccAddressBytes(), sdk.ValAddress(sample.AccAddressBytes())
+	escrowPoolAddr := sample.AccAddressBytes()
+
+	require.NoError(b, k.Selectors.Set(ctx, selector, types.NewSelection(selector, 1)))
+	require.NoError(b, k.SelectorTips.Set(ctx, selector, math.LegacyNewDec(1*1e6)))
+	require.NoError(b, k.Reporters.Set(ctx, selector, types.OracleReporter{CommissionRate: types.DefaultMinCommissionRate}))
+	require.NoError(b, k.Report.Set(
+		ctx, collections.Join([]byte("queryid"), collections.Join(selector.Bytes(), uint64(0))),
+		types.DelegationsAmounts{
+			TokenOrigins: []*types.TokenOriginInfo{
+				{
+					DelegatorAddress: selector,
+					Amount:           math.OneInt(),
+				},
+			},
+			Total: math.OneInt(),
+		}))
+
+	validator := stakingtypes.Validator{Status: stakingtypes.Bonded}
+	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
+	sk.On("Delegate", ctx, selector, math.NewInt(1*1e6), stakingtypes.Bonded, validator, false).Return(math.LegacyZeroDec(), nil)
+	bk.On("SendCoinsFromModuleToModule", ctx, types.TipsEscrowPool, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(1*1e6)))).Return(nil)
+	ak.On("GetModuleAddress", types.TipsEscrowPool).Return(escrowPoolAddr)
+	bk.On("DelegateCoinsFromAccountToModule", ctx, escrowPoolAddr, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(1*1e6)))).Return(nil)
+
+	msg := &types.MsgWithdrawTip{
+		SelectorAddress:  selector.String(),
+		ValidatorAddress: valAddr.String(),
+	}
+
+	b.Run("Success_Withdraw_Tip", func(b *testing.B) {
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			ms.WithdrawTip(ctx, msg)
+		}
+	})
+}
+
+func BenchmarkEditReporter(b *testing.B) {
+	k, _, _, _, _, ms, ctx := setupMsgServer(b)
+	addr := sample.AccAddressBytes()
+
+	reporter := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "moniker")
+	require.NoError(b, k.Reporters.Set(ctx, addr, reporter))
+	ctx = ctx.WithBlockTime(time.Now().Add(13 * time.Hour))
+
+	msg := &types.MsgEditReporter{
+		ReporterAddress:   addr.String(),
+		CommissionRate:    reporter.CommissionRate.Add(math.LegacyMustNewDecFromStr("0.01")),
+		MinTokensRequired: reporter.MinTokensRequired.Add(math.NewInt(1_000)),
+		Moniker:           "caleb",
+	}
+
+	b.Run("Success_Edit_Reporter", func(b *testing.B) {
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			ms.EditReporter(ctx, msg)
+		}
+	})
+}
