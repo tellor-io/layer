@@ -194,7 +194,7 @@ func TestProfitability(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("current cycle list: ", currentCycleList)
 	value := layerutil.EncodeValue(123456789.99)
-	_, _, err = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "submit-value", validators[0].Addr, currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	_, _, err = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 	require.NoError(err)
 	height, err = chain.Height(ctx)
 	require.NoError(err)
@@ -221,7 +221,7 @@ func TestProfitability(t *testing.T) {
 		fmt.Println("current cycle list: ", currentCycleList)
 
 		// report for the cycle list
-		_, _, err = v.Val.Exec(ctx, v.Val.TxCommand("validator", "oracle", "submit-value", v.Addr, currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", v.Val.HomeDir()), v.Val.Chain.Config().Env)
+		_, _, err = v.Val.Exec(ctx, v.Val.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", v.Val.HomeDir()), v.Val.Chain.Config().Env)
 		require.NoError(err)
 		height, err = chain.Height(ctx)
 		require.NoError(err)

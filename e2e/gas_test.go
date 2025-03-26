@@ -93,9 +93,9 @@ func TestGas(t *testing.T) {
 	layer3validator := layer1.Validators[2]
 	layer4validator := layer1.Validators[3]
 
-	valAddress1, err := layer1validator.AccountKeyBech32(ctx, "validator")
+	_, err = layer1validator.AccountKeyBech32(ctx, "validator")
 	require.NoError(t, err)
-	valAddress2, err := layer2validator.AccountKeyBech32(ctx, "validator")
+	_, err = layer2validator.AccountKeyBech32(ctx, "validator")
 	require.NoError(t, err)
 	// valAddress3, err := layer3validator.AccountKeyBech32(ctx, "validator")
 	// require.NoError(t, err)
@@ -113,12 +113,12 @@ func TestGas(t *testing.T) {
 	require.NoError(t, err)
 
 	// tip query
-	_, err = layer1validator.ExecTx(ctx, "validator", "oracle", "tip", valAddress1, qData, "1000000loya", "--keyring-dir", layer1.HomeDir())
+	_, err = layer1validator.ExecTx(ctx, "validator", "oracle", "tip", qData, "1000000loya", "--keyring-dir", layer1.HomeDir())
 	require.NoError(t, err)
 
 	t.Run("val1", func(t *testing.T) {
 		t.Parallel()
-		txHash, err := layer1validator.ExecTx(ctx, "validator", "oracle", "submit-value", valAddress1, qData, value, "--keyring-dir", layer1validator.HomeDir())
+		txHash, err := layer1validator.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", layer1validator.HomeDir())
 		require.NoError(t, err)
 		err = testutil.WaitForBlocks(ctx, 5, layer1)
 		require.NoError(t, err)
@@ -129,7 +129,7 @@ func TestGas(t *testing.T) {
 	})
 	t.Run("val2", func(t *testing.T) {
 		t.Parallel()
-		txHash, err := layer2validator.ExecTx(ctx, "validator", "oracle", "submit-value", valAddress2, qData, value, "--keyring-dir", layer2validator.HomeDir())
+		txHash, err := layer2validator.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", layer2validator.HomeDir())
 		require.NoError(t, err)
 		err = testutil.WaitForBlocks(ctx, 5, layer1)
 		require.NoError(t, err)

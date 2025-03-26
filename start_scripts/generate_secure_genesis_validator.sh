@@ -104,7 +104,7 @@ sed -i 's/^enable-unsafe-cors = false/enable-unsafe-cors = true/g' $LAYERD_HOME/
 
 echo "Enabled metrics sinks/promethues"
 sed -i 's/^enabled = false/enabled = true/g' $LAYERD_HOME/config/app.toml
-sed -i '/global-labels *= *\[/,/\]/ c\global-labels = [\n      ["chain_id", "layer test-4"]\n]' $LAYERD_HOME/config/app.toml
+sed -i '/global-labels *= *\[/,/\]/ c\global-labels = [\n      ["chain_id", "layertest-4"]\n]' $LAYERD_HOME/config/app.toml
 # echo "Set prometheus retention time to 60s"
 sed -i 's/^prometheus-retention-time = 0/prometheus-retention-time = 60/g' $LAYERD_HOME/config/app.toml
 
