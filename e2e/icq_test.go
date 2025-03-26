@@ -160,11 +160,11 @@ func TestIbcInterchainQuery(t *testing.T) {
 	require.NoError(t, err)
 
 	// tip query
-	_, err = layer2validator.ExecTx(ctx, "validator", "oracle", "tip", valAddress, qData, "1000000loya", "--keyring-dir", layer2.HomeDir())
+	_, err = layer2validator.ExecTx(ctx, "validator", "oracle", "tip", qData, "1000000loya", "--keyring-dir", layer2.HomeDir())
 	require.NoError(t, err)
 
 	// submit value
-	_, err = layer2validator.ExecTx(ctx, "validator", "oracle", "submit-value", valAddress, qData, value, "--keyring-dir", layer2.HomeDir())
+	_, err = layer2validator.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", layer2.HomeDir())
 	require.NoError(t, err)
 
 	// Query for the recently created channel-id.

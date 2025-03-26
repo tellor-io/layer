@@ -112,22 +112,22 @@ func TestLayerFlow(t *testing.T) {
 	fmt.Println("Tx hash: ", txHash)
 
 	// validatorI tips
-	_, _, err = validatorI.Exec(ctx, validatorI.TxCommand("validator", "oracle", "tip", valAddress, qData, "1000000loya", "--keyring-dir", layer.HomeDir()), validatorI.Chain.Config().Env)
+	_, _, err = validatorI.Exec(ctx, validatorI.TxCommand("validator", "oracle", "tip", qData, "1000000loya", "--keyring-dir", layer.HomeDir()), validatorI.Chain.Config().Env)
 	require.NoError(t, err)
 	err = testutil.WaitForBlocks(ctx, 1, validatorI)
 	require.NoError(t, err)
 	// validatorI reports
-	txHash, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", valAddress, qData, value, "--keyring-dir", layer.HomeDir())
+	txHash, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", layer.HomeDir())
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 
 	// validatorII tips
-	_, _, err = validatorII.Exec(ctx, validatorII.TxCommand("validator", "oracle", "tip", valIIAddress, qData, "1000000loya", "--keyring-dir", layer.HomeDir()), validatorII.Chain.Config().Env)
+	_, _, err = validatorII.Exec(ctx, validatorII.TxCommand("validator", "oracle", "tip", qData, "1000000loya", "--keyring-dir", layer.HomeDir()), validatorII.Chain.Config().Env)
 	require.NoError(t, err)
 	err = testutil.WaitForBlocks(ctx, 1, validatorII)
 	require.NoError(t, err)
 	// validatorII reports
-	txHash, err = validatorII.ExecTx(ctx, "validator", "oracle", "submit-value", valIIAddress, qData, value, "--keyring-dir", layer.HomeDir())
+	txHash, err = validatorII.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", layer.HomeDir())
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 
