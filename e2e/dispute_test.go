@@ -227,12 +227,12 @@ func TestTenDisputesTenPeople(t *testing.T) {
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, val1Addr, "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
 	// val2 becomes a reporter
-	txHash, err = val2.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val2_moniker", "--keyring-dir", val2.HomeDir())
+	txHash, err = val2.ExecTx(ctx, val2Addr, "reporter", "create-reporter", "0.1", "1000000", "val2_moniker", "--keyring-dir", val2.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val2 becomes a reporter): ", txHash)
 
@@ -268,14 +268,14 @@ func TestTenDisputesTenPeople(t *testing.T) {
 	tip := sdk.NewCoin("loya", tipAmt)
 	for i, query := range queryDataList {
 		// tip 1 trb
-		_, _, err := val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", val1Addr, query.QueryData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+		_, _, err := val1.Exec(ctx, val1.TxCommand(val1Addr, "oracle", "tip", query.QueryData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 		require.NoError(err)
 		fmt.Println("val1 tipped ", query.QueryID)
 		err = testutil.WaitForBlocks(ctx, 1, val1)
 		require.NoError(err)
 
 		// report with 1000 reporting power
-		txHash, err := val1.ExecTx(ctx, "validator", "oracle", "submit-value", reporters[i].Addr, query.QueryData, value, "--keyring-dir", val1.HomeDir())
+		txHash, err := val1.ExecTx(ctx, reporters[i].Addr, "oracle", "submit-value", query.QueryData, value, "--keyring-dir", val1.HomeDir())
 		fmt.Println("TX HASH (", reporters[i].Keyname, " reported): ", txHash)
 		require.NoError(err)
 
@@ -285,6 +285,8 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		microreport, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
 		require.NoError(err)
 		var microReports e2e.ReportsResponse
+		err = json.Unmarshal(microreport, &microReports)
+		require.NoError(err)
 		require.NoError(json.Unmarshal(microreport, &microReports))
 		require.Equal(microReports.MicroReports[0].Reporter, reporters[i].Addr)
 		require.Equal(microReports.MicroReports[0].Value, value)
@@ -310,7 +312,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		// since reporting power is 1000, first rd fee fee is 10 trb
 		// paying from bond, so val1 stake should decrease by 10 trb
 		// val2 stake should also decrease by 10 trb bc of slash on reporter delgated to them
-		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, queryId, "warning", "500000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, queryId, "warning", "500000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (dispute on ", microReports.MicroReports[0].Reporter, "): ", txHash)
 
@@ -341,12 +343,12 @@ func TestTenDisputesTenPeople(t *testing.T) {
 	for i := 0; i < len(queryDataList); i++ {
 		disputeId := strconv.Itoa(i + 1)
 		// vote from val1 (all tipping power)
-		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
+		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (val1 votes on dispute ", i+1, "): ", txHash)
 
 		// vote from val2 (0 power error)
-		_, err = val2.ExecTx(ctx, "validator", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val2.HomeDir())
+		_, err = val2.ExecTx(ctx, val2Addr, "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val2.HomeDir())
 		require.Error(err)
 
 		// check dispute status
@@ -380,7 +382,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		require.NoError(err)
 		fmt.Println("val2 staked tokens before fee claim: ", val2StakedBeforeFeeClaim.Tokens)
 		// withdraw fee refund from disputer (fee paid to start dispute, and 1% of naughty reporters' stake since vote settled to support)
-		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "withdraw-fee-refund", val1Addr, disputeId, "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "10loya")
+		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "withdraw-fee-refund", val1Addr, disputeId, "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "10loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (disputer claims fee refund on dispute ", disputeId, "): ", txHash)
 		// check feepayer balance after fee refund
@@ -403,7 +405,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		disputerBalBeforeRewardClaim, err := chain.BankQueryBalance(ctx, val1Addr, "loya")
 		require.NoError(err)
 		fmt.Println("disputer balance before reward claim: ", disputerBalBeforeRewardClaim)
-		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "claim-reward", disputeId, "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "10loya")
+		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "claim-reward", disputeId, "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "10loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (disputer claims reward on dispute ", disputeId, "): ", txHash)
 		// check disputer balance after reward claim
@@ -418,10 +420,10 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		fmt.Println("disputer balance after reward claim: ", disputerBalAfterRewardClaim)
 
 		// try to claim reward again - should fail
-		_, err = val1.ExecTx(ctx, "validator", "dispute", "claim-reward", disputeId, "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "10loya")
+		_, err = val1.ExecTx(ctx, val1Addr, "dispute", "claim-reward", disputeId, "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "10loya")
 		require.Error(err)
 		// try to claim fee refund again - should fail
-		_, err = val1.ExecTx(ctx, "validator", "dispute", "withdraw-fee-refund", val1Addr, disputeId, "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "10loya")
+		_, err = val1.ExecTx(ctx, val1Addr, "dispute", "withdraw-fee-refund", val1Addr, disputeId, "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "10loya")
 		require.Error(err)
 	}
 }
@@ -596,7 +598,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, val1Addr, "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
@@ -613,14 +615,14 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	value := layerutil.EncodeValue(10000000.99)
 	tipAmt := math.NewInt(1_000_000)
 	tip := sdk.NewCoin("loya", tipAmt)
-	_, _, err = val1.Exec(ctx, val1.TxCommand("user0", "oracle", "tip", user0Addr, bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	_, _, err = val1.Exec(ctx, val1.TxCommand(user0Addr, "oracle", "tip", bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 tipped ", bchQId, "): ", txHash)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
 	require.NoError(err)
 
 	// user1 reports for bch spotprice
-	txHash, err = val1.ExecTx(ctx, "user1", "oracle", "submit-value", user1Addr, bchQData, value, "--keyring-dir", val1.HomeDir())
+	txHash, err = val1.ExecTx(ctx, user1Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir())
 	fmt.Println("TX HASH (user1 reported ", bchQId, "): ", txHash)
 	require.NoError(err)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
@@ -976,7 +978,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, val1Addr, "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
@@ -997,14 +999,14 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	value := layerutil.EncodeValue(10000000.99)
 	tipAmt := math.NewInt(1_000_000)
 	tip := sdk.NewCoin("loya", tipAmt)
-	_, _, err = val1.Exec(ctx, val1.TxCommand("user0", "oracle", "tip", user0Addr, bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	_, _, err = val1.Exec(ctx, val1.TxCommand(user0Addr, "oracle", "tip", bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 tipped ", bchQId, "): ", txHash)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
 	require.NoError(err)
 
 	// user1 reports for bch spotprice
-	txHash, err = val1.ExecTx(ctx, "user1", "oracle", "submit-value", user1Addr, bchQData, value, "--keyring-dir", val1.HomeDir())
+	txHash, err = val1.ExecTx(ctx, user1Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir())
 	fmt.Println("TX HASH (user1 reported ", bchQId, "): ", txHash)
 	require.NoError(err)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
@@ -1030,14 +1032,14 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	fmt.Println("TX HASH (user1 delegates more): ", txHash)
 
 	// user0 tips 1trb for bch again
-	_, _, err = val1.Exec(ctx, val1.TxCommand("user0", "oracle", "tip", user0Addr, bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	_, _, err = val1.Exec(ctx, val1.TxCommand(user0Addr, "oracle", "tip", bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 tipped ", bchQId, "): ", txHash)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
 	require.NoError(err)
 
 	// user1 reports for bch spotprice again
-	txHash, err = val1.ExecTx(ctx, "user1", "oracle", "submit-value", user1Addr, bchQData, value, "--keyring-dir", val1.HomeDir())
+	txHash, err = val1.ExecTx(ctx, user1Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir())
 	fmt.Println("TX HASH (user1 reported ", bchQId, "): ", txHash)
 	require.NoError(err)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
@@ -1493,7 +1495,7 @@ func TestEscalatingDispute(t *testing.T) {
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, val1Addr, "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
@@ -1514,14 +1516,14 @@ func TestEscalatingDispute(t *testing.T) {
 	value := layerutil.EncodeValue(10000000.99)
 	tipAmt := math.NewInt(1_000_000)
 	tip := sdk.NewCoin("loya", tipAmt)
-	_, _, err = val1.Exec(ctx, val1.TxCommand("user0", "oracle", "tip", user0Addr, bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	_, _, err = val1.Exec(ctx, val1.TxCommand(user0Addr, "oracle", "tip", bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 tipped ", bchQId, "): ", txHash)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
 	require.NoError(err)
 
 	// user1 reports for bch spotprice
-	txHash, err = val1.ExecTx(ctx, "user1", "oracle", "submit-value", user1Addr, bchQData, value, "--keyring-dir", val1.HomeDir())
+	txHash, err = val1.ExecTx(ctx, user1Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir())
 	fmt.Println("TX HASH (user1 reported ", bchQId, "): ", txHash)
 	require.NoError(err)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
@@ -1568,7 +1570,7 @@ func TestEscalatingDispute(t *testing.T) {
 	fmt.Println("TX HASH (user0 opens minor dispute): ", txHash)
 
 	// user1 unjails reporter
-	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "unjail-reporter", reports.MicroReports[0].Reporter, "--keyring-dir", val1.HomeDir())
+	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "unjail-reporter", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (user1 unjails reporter): ", txHash)
 
@@ -1864,7 +1866,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, val1Addr, "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
@@ -1885,14 +1887,14 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	value := layerutil.EncodeValue(10000000.99)
 	tipAmt := math.NewInt(1_000_000)
 	tip := sdk.NewCoin("loya", tipAmt)
-	_, _, err = val1.Exec(ctx, val1.TxCommand("user0", "oracle", "tip", user0Addr, bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	_, _, err = val1.Exec(ctx, val1.TxCommand(user0Addr, "oracle", "tip", bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 tipped ", bchQId, "): ", txHash)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
 	require.NoError(err)
 
 	// user1 reports for bch spotprice
-	txHash, err = val1.ExecTx(ctx, "user1", "oracle", "submit-value", user1Addr, bchQData, value, "--keyring-dir", val1.HomeDir())
+	txHash, err = val1.ExecTx(ctx, user1Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir())
 	fmt.Println("TX HASH (user1 reported ", bchQId, "): ", txHash)
 	require.NoError(err)
 	err = testutil.WaitForBlocks(ctx, 1, val1)
@@ -2210,7 +2212,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	}
 
 	// val1 becomes a reporter
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
+	txHash, err := val1.ExecTx(ctx, val1Addr, "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
@@ -2230,7 +2232,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	// val 1 tips , 2/4 reporters submit, both are bad prices
 	tipAmt := math.NewInt(1_000_000)
 	tip := sdk.NewCoin("loya", tipAmt)
-	_, _, err = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", val1Addr, bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	_, _, err = val1.Exec(ctx, val1.TxCommand(val1Addr, "oracle", "tip", bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 tipped bch-usd): ", txHash)
 	require.NoError(err)
@@ -2238,7 +2240,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	// 2/4 ppl submit, both are bad
 	value := layerutil.EncodeValue(10000000.99)
 	for i := range reporters[:2] {
-		_, _, err = val1.Exec(ctx, val1.TxCommand(reporters[i].Keyname, "oracle", "submit-value", reporters[i].Addr, bchQData, value, "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+		_, _, err = val1.Exec(ctx, val1.TxCommand(reporters[i].Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " submitted bch-usd): ", txHash)
 	}
@@ -2301,12 +2303,12 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	for i := range userReports {
 		disputeId := strconv.Itoa(i + 1)
 		// vote from val1 (all tipping power)
-		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
+		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (val1 votes on dispute ", disputeId, "): ", txHash)
 
 		// vote from val2 (0 power error)
-		_, err = val2.ExecTx(ctx, "validator", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val2.HomeDir())
+		_, err = val2.ExecTx(ctx, val2Addr, "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val2.HomeDir())
 		require.Error(err)
 
 		// check disputes status
@@ -2346,7 +2348,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 
 	// unjail reporters
 	for i, usr := range userReports {
-		txHash, err = val1.ExecTx(ctx, usr.UserReport.MicroReports[0].Reporter, "reporter", "unjail-reporter", usr.UserReport.MicroReports[0].Reporter, "--keyring-dir", val1.HomeDir())
+		txHash, err = val1.ExecTx(ctx, usr.UserReport.MicroReports[0].Reporter, "reporter", "unjail-reporter", "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (user", i, "unjails reporter): ", txHash)
 	}
@@ -2354,7 +2356,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	// tip again, all 4 reporters submit bad prices
 	tipAmt = math.NewInt(1_000_000)
 	tip = sdk.NewCoin("loya", tipAmt)
-	_, _, err = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", val1Addr, bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	_, _, err = val1.Exec(ctx, val1.TxCommand(val1Addr, "oracle", "tip", bchQData, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 tipped bch-usd): ", txHash)
 	require.NoError(err)
@@ -2362,7 +2364,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	// 4/4 reporters submit bad prices
 	value = layerutil.EncodeValue(10000000.99)
 	for i := range reporters {
-		_, _, err = val1.Exec(ctx, val1.TxCommand(reporters[i].Keyname, "oracle", "submit-value", reporters[i].Addr, bchQData, value, "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+		_, _, err = val1.Exec(ctx, val1.TxCommand(reporters[i].Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " submitted bch-usd): ", txHash)
 	}
@@ -2432,12 +2434,12 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	for i := range userReports {
 		disputeId := strconv.Itoa(i + 3) // disputes 3, 4, 5, 6
 		// vote from val1 (all tipping power)
-		txHash, err = val1.ExecTx(ctx, "validator", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
+		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (val1 votes on dispute ", disputeId, "): ", txHash)
 
 		// vote from val2 (0 power error)
-		_, err = val2.ExecTx(ctx, "validator", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val2.HomeDir())
+		_, err = val2.ExecTx(ctx, val2Addr, "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val2.HomeDir())
 		require.Error(err)
 
 		// check disputes status
@@ -2654,7 +2656,7 @@ func TestNewQueryTipReportDispute(t *testing.T) {
 	// val1 tips the query
 	tipAmt := math.NewInt(1_000_000)
 	tip := sdk.NewCoin("loya", tipAmt)
-	_, _, err = val1.Exec(ctx, val1.TxCommand(user0Addr, "oracle", "tip", user0Addr, queryDataStr, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	_, _, err = val1.Exec(ctx, val1.TxCommand(user0Addr, "oracle", "tip", queryDataStr, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 tips the query): ", txHash)
 
@@ -2665,7 +2667,7 @@ func TestNewQueryTipReportDispute(t *testing.T) {
 	value := e2e.EncodeStringValue("Pittsburgh Steelers")
 	fmt.Println("value: ", value)
 	for i := range numReporters {
-		txHash, err = val1.ExecTx(ctx, reporters[i].Keyname, "oracle", "submit-value", reporters[i].Addr, queryDataStr, value, "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		txHash, err = val1.ExecTx(ctx, reporters[i].Addr, "oracle", "submit-value", queryDataStr, value, "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " reports the query): ", txHash)
 	}

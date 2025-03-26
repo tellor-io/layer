@@ -23,11 +23,11 @@ go build ./cmd/layerd
 
 # Initialize the chain
 echo "Initializing the chain..."
-./layerd init layer --chain-id layertest-2
+./layerd init layer --chain-id layertest-4
 
 # Initialize chain node with the folder for alice
 echo "Initializing chain node for alice..."
-./layerd init alicemoniker --chain-id layertest-2 --home ~/.layer/alice
+./layerd init alicemoniker --chain-id layertest-4 --home ~/.layer/alice
 
 # Add a validator account for alice
 echo "Adding validator account for alice..."
@@ -46,7 +46,7 @@ echo "Set the keyring backend in client.toml to environment variable for alice..
 sed -i '' 's/^keyring-backend = .*"/keyring-backend = "test"/g' ~/.layer/alice/config/client.toml
 
 echo "Set Chain Id to layer in client config file for alice..."
-sed -i '' 's/^chain-id = .*$/chain-id = "layertest-2"/g' ~/.layer/alice/config/app.toml
+sed -i '' 's/^chain-id = .*$/chain-id = "layertest-4"/g' ~/.layer/alice/config/app.toml
 
 echo "Set pruning to custom..."
 sed -i '' 's/^pruning = "default"/pruning = "custom"/g' ~/.layer/alice/config/app.toml
@@ -58,14 +58,14 @@ sed -i '' 's/^snapshot-interval = 0/snapshot-interval = 2000/g' ~/.layer/alice/c
 sed -i '' 's/^snapshot-keep-recent = 2/snapshot-keep-recent = 5/g' ~/.layer/alice/config/app.toml
 
 echo "set chain id in genesis file to layer..."
-sed -i '' 's/"chain_id": .*"/"chain_id": '\"layertest-2\"'/g' ~/.layer/alice/config/genesis.json
+sed -i '' 's/"chain_id": .*"/"chain_id": '\"layertest-4\"'/g' ~/.layer/alice/config/genesis.json
 
 echo "Updating vote_extensions_enable_height in genesis.json for alice..."
 jq '.consensus.params.abci.vote_extensions_enable_height = "1"'  ~/.layer/alice/config/genesis.json > temp.json && mv temp.json ~/.layer/alice/config/genesis.json
 
 # Update signed_blocks_window in genesis.json for luke
 echo "Updating signed_blocks_window in genesis.json for alice..."
-jq '.app_state.slashing.params.signed_blocks_window = "1000"' ~/.layer/alice/config/genesis.json > temp.json && mv temp.json ~/.layer/alice/config/genesis.json
+jq '.app_state.slashing.params.signed_blocks_window = "500"' ~/.layer/alice/config/genesis.json > temp.json && mv temp.json ~/.layer/alice/config/genesis.json
 jq '.app_state.globalfee.params.minimum_gas_prices[0].amount = "0.000025000000000000"' ~/.layer/alice/config/genesis.json > temp.json && mv temp.json ~/.layer/alice/config/genesis.json
 
 echo "Modifying timeout_commit in config.toml for alice..."
@@ -97,9 +97,9 @@ echo "Add team address to genesis..."
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx for alice..."
-./layerd genesis gentx alice 1000000000loya --chain-id layertest-2 --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --keyring-dir ~/.layer/alice
+./layerd genesis gentx alice 1000000000loya --chain-id layertest-4 --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice --keyring-dir ~/.layer/alice
 
-# Add the transactions to the genesis block
+# # Add the transactions to the genesis block
 echo "Collecting gentxs..."
 ./layerd genesis collect-gentxs --home ~/.layer/alice
 
@@ -107,3 +107,4 @@ echo "Collecting gentxs..."
 
 echo "Starting chain for alice..."
 #./layerd start --home ~/.layer/alice --key-name alice --api.enable --api.swagger --keyring-backend test
+

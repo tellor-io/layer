@@ -144,15 +144,15 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "SubmitValue",
-					Use:            "submit-value [creator] [qdata] [value]",
+					Use:            "submit-value [qdata] [value]",
 					Short:          "Execute the SubmitValue RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "query_data"}, {ProtoField: "value"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_data"}, {ProtoField: "value"}},
 				},
 				{
 					RpcMethod:      "Tip",
-					Use:            "tip [tipper] [query_data] [amount]",
+					Use:            "tip [query_data] [amount]",
 					Short:          "Execute the Tip RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "tipper"}, {ProtoField: "query_data"}, {ProtoField: "amount"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_data"}, {ProtoField: "amount"}},
 				},
 				{
 					RpcMethod: "UpdateCyclelist",
