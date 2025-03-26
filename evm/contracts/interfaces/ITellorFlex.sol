@@ -12,4 +12,5 @@ interface ITellorFlex {
     function retrieveData(bytes32 _queryId, uint256 _timestamp) external view returns (bytes memory);
     function verify() external pure returns (uint256);
     function getNewValueCountbyQueryId() external view returns (uint256);
+    function submitValue(bytes32 _queryId, bytes memory _value, uint256 _nonce, bytes memory _queryData) external;
 }
