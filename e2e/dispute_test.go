@@ -285,6 +285,8 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		microreport, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
 		require.NoError(err)
 		var microReports e2e.ReportsResponse
+		err = json.Unmarshal(microreport, &microReports)
+		require.NoError(err)
 		require.NoError(json.Unmarshal(microreport, &microReports))
 		require.Equal(microReports.MicroReports[0].Reporter, reporters[i].Addr)
 		require.Equal(microReports.MicroReports[0].Value, value)
