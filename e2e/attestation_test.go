@@ -169,7 +169,7 @@ func TestAttestation(t *testing.T) {
 	fmt.Println("current cycle list: ", currentCycleList)
 	for i, v := range validators {
 		// report for the cycle list
-		_, _, err = v.Val.Exec(ctx, v.Val.TxCommand("validator", "oracle", "submit-value", v.Addr, currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", v.Val.HomeDir()), v.Val.Chain.Config().Env)
+		_, _, err = v.Val.Exec(ctx, v.Val.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", v.Val.HomeDir()), v.Val.Chain.Config().Env)
 		require.NoError(err)
 		height, err := chain.Height(ctx)
 		require.NoError(err)
@@ -264,7 +264,7 @@ func TestAttestation(t *testing.T) {
 	}
 
 	// report for the cycle list from 1 val so not a consensus report
-	_, _, err = validators[0].Val.Exec(ctx, validators[0].Val.TxCommand("validator", "oracle", "submit-value", validators[0].Addr, cycleListQData, value, "--fees", "25loya", "--keyring-dir", validators[0].Val.HomeDir()), validators[0].Val.Chain.Config().Env)
+	_, _, err = validators[0].Val.Exec(ctx, validators[0].Val.TxCommand("validator", "oracle", "submit-value", cycleListQData, value, "--fees", "25loya", "--keyring-dir", validators[0].Val.HomeDir()), validators[0].Val.Chain.Config().Env)
 	require.NoError(err)
 	height, err := chain.Height(ctx)
 	require.NoError(err)
