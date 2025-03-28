@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/x/bridge/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/collections"
 )
 
 func (q Querier) GetDepositClaimed(ctx context.Context, req *types.QueryGetDepositClaimedRequest) (*types.QueryGetDepositClaimedResponse, error) {
