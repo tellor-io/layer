@@ -254,6 +254,10 @@ paths:
                         moniker:
                           type: string
                           title: moniker is the moniker of the reporter
+                        last_updated:
+                          type: string
+                          format: date-time
+                          title: Time that the reporter was last updated
                       title: >-
                         OracleReporter is the struct that holds the data for a
                         reporter
@@ -2546,6 +2550,44 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
+  /layer/bridge/get_deposit_claimed/{deposit_id}:
+    get:
+      summary: Queries whether a deposit is claimed
+      operationId: GetDepositClaimed
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              claimed:
+                type: boolean
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: deposit_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
   /layer/bridge/get_evm_address_by_validator_address/{validator_address}:
     get:
       summary: Queries the evm address by validator address
@@ -2603,6 +2645,38 @@ paths:
                     power:
                       type: string
                       format: uint64
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
+  /layer/bridge/get_last_withdrawal_id:
+    get:
+      operationId: GetLastWithdrawalId
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              withdrawal_id:
+                type: string
+                format: uint64
         default:
           description: An unexpected error response.
           schema:

@@ -83,6 +83,19 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query snapshot limit",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
+				{
+					RpcMethod:      "GetDepositClaimed",
+					Use:            "get-deposit-claimed [deposit_id]",
+					Short:          "Query deposit claimed",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "deposit_id"}},
+				},
+				{
+					RpcMethod:      "GetLastWithdrawalId",
+					Use:            "get-last-withdrawal-id",
+					Short:          "Query last withdrawal id",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
