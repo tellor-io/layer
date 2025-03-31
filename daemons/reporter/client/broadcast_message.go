@@ -105,6 +105,8 @@ func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChan
 		if data.NumRetries == 0 {
 			// Don't mark as reported if all retries failed
 			c.logger.Error(fmt.Sprintf("failed to submit deposit after all allotted attempts attempts: %v", err))
+			// Remove oldest deposit report from cache
+			c.TokenDepositsCache.RemoveOldestReport()
 			return
 		}
 
