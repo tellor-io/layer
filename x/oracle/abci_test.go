@@ -82,7 +82,7 @@ var spotSpec = registrytypes.DataSpec{
 	QueryType:         "spotprice",
 }
 
-func BenchmarkEndBlocker(b *testing.B) {
+func BenchmarkOracleEndBlocker(b *testing.B) {
 	b.Run("Rotate_Cycle_List_No_Reports", func(b *testing.B) {
 		require := require.New(b)
 		k, repk, regk, ak, bak, brk, ctx := keepertest.OracleKeeper(b)

@@ -224,7 +224,7 @@ func TestGetDelegationsAmount(t *testing.T) {
 }
 
 // called in endblocker
-func BenchmarkTrackStakeChange(b *testing.B) {
+func BenchmarkReporterTrackStakeChange(b *testing.B) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(b)
 	ctx = ctx.WithBlockHeight(3).WithBlockTime(time.Now())
 	expiration := ctx.BlockTime().Add(1)

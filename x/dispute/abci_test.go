@@ -182,7 +182,7 @@ func BenchmarkDisputeEndBlocker(b *testing.B) {
 	}
 }
 
-func BenchmarkBeginBlocker(b *testing.B) {
+func BenchmarkDisputeBeginBlocker(b *testing.B) {
 	disputeKeeper, _, rk, _, bk, ctx := keepertest.DisputeKeeper(b)
 
 	testCases := []struct {

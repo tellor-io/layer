@@ -90,6 +90,11 @@ Run an individual test:
 cd e2e
 go test -v -run TestLayerFlow -timeout 10m
 ```
+Run benchmark tests:
+```sh
+make bench-report
+```
+
 
 ## Linting
 

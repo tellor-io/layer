@@ -201,7 +201,7 @@ func TestEndBlock(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func BenchmarkEndBlock(b *testing.B) {
+func BenchmarkBridgeEndBlock(b *testing.B) {
 	app, k, ctx, sk, ok := SetupBridgeAppBenchmark(b)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

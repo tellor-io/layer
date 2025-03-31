@@ -87,7 +87,7 @@ func TestSetPreviousBlockTime(t *testing.T) {
 	require.Equal(minter.PreviousBlockTime.Unix(), time2.Unix())
 }
 
-func BenchmarkBeginBlocker(b *testing.B) {
+func BenchmarkMintBeginBlocker(b *testing.B) {
 	k, _, _, ctx := keeper.MintKeeper(b)
 
 	minter := types.DefaultMinter()
