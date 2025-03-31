@@ -46,6 +46,9 @@ type QueryClient interface {
 	GetCurrentValidatorSetTimestamp(ctx context.Context, in *QueryGetCurrentValidatorSetTimestampRequest, opts ...grpc.CallOption) (*QueryGetCurrentValidatorSetTimestampResponse, error)
 	// Queries the snapshot limit
 	GetSnapshotLimit(ctx context.Context, in *QueryGetSnapshotLimitRequest, opts ...grpc.CallOption) (*QueryGetSnapshotLimitResponse, error)
+	// Queries whether a deposit is claimed
+	GetDepositClaimed(ctx context.Context, in *QueryGetDepositClaimedRequest, opts ...grpc.CallOption) (*QueryGetDepositClaimedResponse, error)
+	GetLastWithdrawalId(ctx context.Context, in *QueryGetLastWithdrawalIdRequest, opts ...grpc.CallOption) (*QueryGetLastWithdrawalIdResponse, error)
 }
 
 type queryClient struct {
@@ -182,6 +185,24 @@ func (c *queryClient) GetSnapshotLimit(ctx context.Context, in *QueryGetSnapshot
 	return out, nil
 }
 
+func (c *queryClient) GetDepositClaimed(ctx context.Context, in *QueryGetDepositClaimedRequest, opts ...grpc.CallOption) (*QueryGetDepositClaimedResponse, error) {
+	out := new(QueryGetDepositClaimedResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetDepositClaimed", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetLastWithdrawalId(ctx context.Context, in *QueryGetLastWithdrawalIdRequest, opts ...grpc.CallOption) (*QueryGetLastWithdrawalIdResponse, error) {
+	out := new(QueryGetLastWithdrawalIdResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Query/GetLastWithdrawalId", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -214,6 +235,9 @@ type QueryServer interface {
 	GetCurrentValidatorSetTimestamp(context.Context, *QueryGetCurrentValidatorSetTimestampRequest) (*QueryGetCurrentValidatorSetTimestampResponse, error)
 	// Queries the snapshot limit
 	GetSnapshotLimit(context.Context, *QueryGetSnapshotLimitRequest) (*QueryGetSnapshotLimitResponse, error)
+	// Queries whether a deposit is claimed
+	GetDepositClaimed(context.Context, *QueryGetDepositClaimedRequest) (*QueryGetDepositClaimedResponse, error)
+	GetLastWithdrawalId(context.Context, *QueryGetLastWithdrawalIdRequest) (*QueryGetLastWithdrawalIdResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -262,6 +286,12 @@ func (UnimplementedQueryServer) GetCurrentValidatorSetTimestamp(context.Context,
 }
 func (UnimplementedQueryServer) GetSnapshotLimit(context.Context, *QueryGetSnapshotLimitRequest) (*QueryGetSnapshotLimitResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSnapshotLimit not implemented")
+}
+func (UnimplementedQueryServer) GetDepositClaimed(context.Context, *QueryGetDepositClaimedRequest) (*QueryGetDepositClaimedResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDepositClaimed not implemented")
+}
+func (UnimplementedQueryServer) GetLastWithdrawalId(context.Context, *QueryGetLastWithdrawalIdRequest) (*QueryGetLastWithdrawalIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetLastWithdrawalId not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -528,6 +558,42 @@ func _Query_GetSnapshotLimit_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetDepositClaimed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetDepositClaimedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetDepositClaimed(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Query/GetDepositClaimed",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetDepositClaimed(ctx, req.(*QueryGetDepositClaimedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetLastWithdrawalId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetLastWithdrawalIdRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetLastWithdrawalId(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Query/GetLastWithdrawalId",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetLastWithdrawalId(ctx, req.(*QueryGetLastWithdrawalIdRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -590,6 +656,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetSnapshotLimit",
 			Handler:    _Query_GetSnapshotLimit_Handler,
+		},
+		{
+			MethodName: "GetDepositClaimed",
+			Handler:    _Query_GetDepositClaimed_Handler,
+		},
+		{
+			MethodName: "GetLastWithdrawalId",
+			Handler:    _Query_GetLastWithdrawalId_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

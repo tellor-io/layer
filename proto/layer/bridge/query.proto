@@ -80,6 +80,15 @@ service Query {
   rpc GetSnapshotLimit(QueryGetSnapshotLimitRequest) returns (QueryGetSnapshotLimitResponse) {
     option (google.api.http).get = "/layer/bridge/get_snapshot_limit";
   }
+
+  // Queries whether a deposit is claimed
+  rpc GetDepositClaimed(QueryGetDepositClaimedRequest) returns (QueryGetDepositClaimedResponse) {
+    option (google.api.http).get = "/layer/bridge/get_deposit_claimed/{deposit_id}";
+  }
+
+  rpc GetLastWithdrawalId(QueryGetLastWithdrawalIdRequest) returns (QueryGetLastWithdrawalIdResponse) {
+    option (google.api.http).get = "/layer/bridge/get_last_withdrawal_id";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -233,4 +242,18 @@ message QueryGetSnapshotLimitRequest {}
 
 message QueryGetSnapshotLimitResponse {
   uint64 limit = 1;
+}
+
+message QueryGetDepositClaimedRequest {
+  uint64 deposit_id = 1;
+}
+
+message QueryGetDepositClaimedResponse {
+  bool claimed = 1;
+}
+
+message QueryGetLastWithdrawalIdRequest {}
+
+message QueryGetLastWithdrawalIdResponse {
+  uint64 withdrawal_id = 1;
 }
