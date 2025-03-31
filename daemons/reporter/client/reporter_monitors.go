@@ -46,7 +46,10 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 				continue
 			}
 
-			if bytes.Equal(querydata, prevQueryData) || commitedIds[querymeta.Id] {
+			mutex.Lock()
+			hasCommited := commitedIds[querymeta.Id]
+			mutex.Unlock()
+			if bytes.Equal(querydata, prevQueryData) || hasCommited {
 				continue
 			}
 
@@ -141,19 +144,27 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 
 			for _, query := range res.Queries {
 				queryType := c.GetQueryType(query.GetQueryData())
-				if height > query.Expiration || commitedIds[query.Id] ||
+				mutex.Lock()
+				haveCommited := commitedIds[query.Id]
+				mutex.Unlock()
+				if height > query.Expiration || haveCommited ||
 					!strings.EqualFold(queryType, "SpotPrice") && !strings.EqualFold(queryType, "TRBBridge") {
 					continue
 				}
 
 				if strings.EqualFold(queryType, "TRBBridge") {
-					if depositTipMap[query.Id] {
+					mutex.Lock()
+					haveCommitedTip := depositTipMap[query.Id]
+					mutex.Unlock()
+					if haveCommitedTip {
 						continue
 					}
 					queryData := query.GetQueryData()
 					tipQueryData := tokenbridgetipstypes.QueryData{QueryData: queryData}
 					c.TokenBridgeTipsCache.AddTip(tipQueryData)
+					mutex.Lock()
 					depositTipMap[query.Id] = true
+					mutex.Unlock()
 					continue
 				}
 
