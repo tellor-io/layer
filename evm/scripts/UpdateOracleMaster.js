@@ -117,6 +117,11 @@ async function updateOracleMaster(_pk, _nodeURL) {
     if (check2 && !check3 || check4 && !check5) {
         const answer = await askQuestion("Update oracle master? (Y/n) ");
         if (answer === "Y") {
+            if (check4) {
+                console.log("Calling mintToOracle()...");
+                const tx = await tellorMaster.mintToOracle();
+                console.log("Transaction hash: ", tx.hash);
+            }
             console.log("Updating oracle master...");
             const tx = await tellorMaster.updateOracleAddress();
             console.log("Transaction hash: ", tx.hash);
