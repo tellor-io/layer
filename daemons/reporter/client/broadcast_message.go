@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/tellor-io/layer/lib/metrics"
@@ -127,14 +126,10 @@ func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChan
 
 	// Check transaction success
 	if resp.TxResult.Code != 0 {
-		if strings.Contains(resp.TxResult.Log, "reporter has already submitted a report for this query") {
-			c.logger.Info("Reporter has already submitted for this query. Removing from deposits cache")
-		} else {
-			c.logger.Error("deposit report transaction failed",
-				"code", resp.TxResult.Code,
-				"queryId", queryId)
-			return
-		}
+		c.logger.Error("deposit report transaction failed",
+			"code", resp.TxResult.Code,
+			"queryId", queryId,
+			"log", resp.TxResult.Log)
 	}
 
 	// Remove oldest deposit report from cache

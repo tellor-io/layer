@@ -52,23 +52,20 @@ func (c *Client) WaitForTx(ctx context.Context, hash string) (*cmttypes.ResultTx
 		return nil, fmt.Errorf("unable to decode tx hash '%s'; err: %w", hash, err)
 	}
 
-	startTimestamp := time.Now().UnixMilli()
+	waitedBlockCount := 0
 	for waiting {
 		resp, err := c.cosmosCtx.Client.Tx(ctx, bz, false)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
-				if time.Now().UnixMilli()-startTimestamp > 4000 {
-					return nil, fmt.Errorf("fetching tx '%s'; err: No transaction found within the allotted time", hash)
+				err := c.WaitForNextBlock(ctx)
+				if err != nil {
+					return nil, fmt.Errorf("waiting for next block: err: %w", err)
 				}
-				time.Sleep(25 * time.Millisecond)
+				waitedBlockCount++
+				if waitedBlockCount == 2 {
+					return nil, fmt.Errorf("waited for next block and transaction is still not found")
+				}
 				continue
-
-				// Tx not found, wait for next block and try again
-				// err := c.WaitForNextBlock(ctx)
-				// if err != nil {
-				// 	return nil, fmt.Errorf("waiting for next block: err: %w", err)
-				// }
-				// continue
 			}
 			return nil, fmt.Errorf("fetching tx '%s'; err: %w", hash, err)
 		}
