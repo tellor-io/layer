@@ -222,3 +222,21 @@ func TestGetDelegationsAmount(t *testing.T) {
 	}
 	require.Equal(t, math.NewInt(15000), total)
 }
+
+// called in endblocker
+func BenchmarkTrackStakeChange(b *testing.B) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(b)
+	ctx = ctx.WithBlockHeight(3).WithBlockTime(time.Now())
+	expiration := ctx.BlockTime().Add(1)
+	err := k.Tracker.Set(ctx, types.StakeTracker{Expiration: &expiration, Amount: math.NewInt(1000)})
+	require.NoError(b, err)
+
+	sk.On("TotalBondedTokens", ctx).Return(math.OneInt(), nil)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		err := k.TrackStakeChange(ctx)
+		require.NoError(b, err)
+	}
+}
