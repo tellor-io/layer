@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -17,6 +16,8 @@ import (
 	"github.com/tellor-io/layer/x/dispute/mocks"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -99,7 +100,6 @@ func (s *TestSuite) TestEndBlocker() {
 
 	err := dispute.EndBlocker(ctx, k)
 	require.NoError(err)
-
 }
 
 func BenchmarkDisputeEndBlocker(b *testing.B) {

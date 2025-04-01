@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/testutil/sample"
 	layer "github.com/tellor-io/layer/types"
@@ -16,7 +17,6 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
 )
 
 func (k *KeeperTestSuite) TestMsgServerAddFeeToDispute() {

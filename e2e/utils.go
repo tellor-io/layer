@@ -16,6 +16,7 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/stretchr/testify/require"
+	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	"go.uber.org/zap/zaptest"
 
@@ -25,7 +26,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 )
 
 // HELPERS FOR BUILDING THE CHAIN

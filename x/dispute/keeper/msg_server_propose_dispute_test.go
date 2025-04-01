@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/hex"
+	"testing"
 	"time"
 
 	"github.com/stretchr/testify/mock"
@@ -13,8 +14,6 @@ import (
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/math"
-
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

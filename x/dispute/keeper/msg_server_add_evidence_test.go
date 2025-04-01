@@ -1,18 +1,17 @@
 package keeper_test
 
 import (
+	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
+	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
-	"testing"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	"github.com/tellor-io/layer/x/dispute/keeper"
 )
 
 func (s *KeeperTestSuite) TestAddEvidence() {

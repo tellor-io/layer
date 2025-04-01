@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"encoding/hex"
 	"errors"
+	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
@@ -15,8 +16,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
-
-	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

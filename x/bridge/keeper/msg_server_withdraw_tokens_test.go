@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/types"
@@ -12,7 +13,6 @@ import (
 	math "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/mock"
 )
 
 func TestMsgWithdrawTokens(t *testing.T) {

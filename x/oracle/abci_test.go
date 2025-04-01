@@ -4,8 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"github.com/tellor-io/layer/app/config"
@@ -17,6 +15,9 @@ import (
 	"github.com/tellor-io/layer/x/oracle/mocks"
 	"github.com/tellor-io/layer/x/oracle/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

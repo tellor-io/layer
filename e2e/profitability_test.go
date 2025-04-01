@@ -314,5 +314,4 @@ func TestProfitability(t *testing.T) {
 		require.NoError(err)
 		fmt.Println("validator [", v.Addr, "] stake amount: ", stakeAmount.Tokens)
 	}
-
 }
