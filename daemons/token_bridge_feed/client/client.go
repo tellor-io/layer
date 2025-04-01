@@ -131,6 +131,13 @@ func (c *Client) ProcessPendingTips() error {
 		return nil
 	}
 
+	// Check whether the deposit exists
+	if depositTicket.Amount.Cmp(big.NewInt(0)) == 0 {
+		c.logger.Info("Deposit does not exist", "depositId", depositId)
+		c.tokenBridgeTipsCache.RemoveOldestTip()
+		return nil
+	}
+
 	// Check finality
 	isFinal, err := c.CheckForFinality(depositTicket.BlockHeight)
 	if err != nil || !isFinal {
@@ -138,12 +145,6 @@ func (c *Client) ProcessPendingTips() error {
 		return nil
 	}
 
-	// Encode report data
-	// queryData, err := c.EncodeQueryData(depositTicket)
-	// if err != nil {
-	// 	c.logger.Error("Failed to encode query data for tip", "error", err)
-	// 	return nil
-	// }
 	reportValue, err := c.EncodeReportValue(depositTicket)
 	if err != nil {
 		c.logger.Error("Failed to encode report value for tip", "error", err)
