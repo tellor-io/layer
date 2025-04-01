@@ -62,7 +62,7 @@ func (c *Client) WaitForTx(ctx context.Context, hash string) (*cmttypes.ResultTx
 					return nil, fmt.Errorf("waiting for next block: err: %w", err)
 				}
 				waitedBlockCount++
-				if waitedBlockCount == 2 {
+				if waitedBlockCount == 3 {
 					return nil, fmt.Errorf("waited for next block and transaction is still not found")
 				}
 				continue
