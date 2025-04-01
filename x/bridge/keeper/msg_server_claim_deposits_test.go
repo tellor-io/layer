@@ -83,3 +83,84 @@ func TestMsgClaimDeposits(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, depositClaimedResult.Claimed, true)
 }
+
+func BenchmarkMsgClaimDeposits(b *testing.B) {
+	k, _, bk, ok, _, _, ctx := setupKeeper(b)
+	msgServer := keeper.NewMsgServerImpl(k)
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	aggregateTimestamp := sdkCtx.BlockTime()
+
+	AddressType, err := abi.NewType("address", "", nil)
+	require.NoError(b, err)
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	require.NoError(b, err)
+	StringType, err := abi.NewType("string", "", nil)
+	require.NoError(b, err)
+
+	reportValueArgs := abi.Arguments{
+		{Type: AddressType},
+		{Type: StringType},
+		{Type: Uint256Type},
+		{Type: Uint256Type},
+	}
+
+	ethAddress := common.HexToAddress("0x3386518F7ab3eb51591571adBE62CF94540EAd29")
+	layerAddressString := simtestutil.CreateIncrementalAccounts(1)[0].String()
+	amountUint64 := big.NewInt(100 * 1e12)
+	tipAmountUint64 := big.NewInt(1 * 1e12)
+
+	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddress, layerAddressString, amountUint64, tipAmountUint64)
+	require.NoError(b, err)
+	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
+
+	queryId, err := k.GetDepositQueryId(0)
+	require.NoError(b, err)
+
+	aggregate := oracletypes.Aggregate{
+		QueryId:        queryId,
+		AggregateValue: reportValueString,
+		AggregatePower: uint64(68),
+	}
+
+	powerThreshold := uint64(67)
+	validatorTimestamp := uint64(aggregateTimestamp.UnixMilli() - 1)
+	valSetHash := []byte("valSetHash")
+	_, err = k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, valSetHash)
+	require.NoError(b, err)
+
+	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
+	msgSender := sdk.AccAddress(ethAddress.Bytes())
+	recipient, amount, tip, err := k.DecodeDepositReportValue(ctx, reportValueString)
+	claimAmount := amount.Sub(tip...)
+
+	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(aggregateTimestamp.UnixMilli())).Return(aggregate, nil)
+	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
+	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, claimAmount).Return(err)
+	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, msgSender, tip).Return(err)
+
+	msg := &bridgetypes.MsgClaimDepositsRequest{
+		Creator:    msgSender.String(),
+		DepositIds: []uint64{0},
+		Timestamps: []uint64{uint64(aggregateTimestamp.UnixMilli())},
+	}
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		err = k.DepositIdClaimedMap.Remove(sdkCtx, uint64(0))
+		if err != nil {
+			b.Fatal(err)
+		}
+		b.StartTimer()
+
+		result, err := msgServer.ClaimDeposits(sdkCtx, msg)
+		if err != nil {
+			b.Fatal(err)
+		}
+		if result == nil {
+			b.Fatal("result should not be nil")
+		}
+	}
+}

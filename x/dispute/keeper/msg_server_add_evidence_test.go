@@ -3,10 +3,16 @@ package keeper_test
 import (
 	"time"
 
+	"github.com/stretchr/testify/require"
+	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
+	"testing"
+
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
+	"github.com/tellor-io/layer/x/dispute/keeper"
 )
 
 func (s *KeeperTestSuite) TestAddEvidence() {
@@ -73,5 +79,69 @@ func (s *KeeperTestSuite) TestAddEvidence() {
 	dispute, err = s.disputeKeeper.Disputes.Get(s.ctx, dispute.DisputeId)
 	require.NoError(err)
 	require.Equal(len(dispute.AdditionalEvidence), 3) // first + 2 additional
-	// TODO: check that aggregate is flagged in integration/e2e suite
+}
+
+func BenchmarkAddEvidence(b *testing.B) {
+	require := require.New(b)
+	k, ok, _, _, _, ctx := keepertest.DisputeKeeper(b)
+	msgServer := keeper.NewMsgServerImpl(k)
+	ctx = ctx.WithBlockTime(time.Now())
+	ctx = ctx.WithBlockHeight(10)
+
+	// create initial dispute and set it
+	dispute := types.Dispute{
+		DisputeId: 1,
+		InitialEvidence: oracletypes.MicroReport{
+			Reporter:    "reporter1",
+			Power:       100,
+			QueryType:   "test",
+			QueryId:     []byte("test1"),
+			Value:       "150",
+			Timestamp:   ctx.BlockTime(),
+			BlockNumber: uint64(ctx.BlockHeight()),
+			Cyclelist:   true,
+		},
+		Open:              true,
+		HashId:            []byte("hash"),
+		DisputeCategory:   types.Warning,
+		DisputeFee:        math.NewInt(100),
+		DisputeStatus:     types.Voting,
+		DisputeStartTime:  ctx.BlockTime().Add(-1 * time.Hour),
+		DisputeEndTime:    ctx.BlockTime().Add(1 * time.Hour),
+		DisputeStartBlock: uint64(ctx.BlockHeight()),
+		DisputeRound:      1,
+		SlashAmount:       math.NewInt(100),
+		PendingExecution:  false,
+		BurnAmount:        math.NewInt(100),
+		FeeTotal:          math.NewInt(100),
+	}
+	require.NoError(k.Disputes.Set(ctx, dispute.DisputeId, dispute))
+
+	// prepare test data
+	addtlReport := oracletypes.MicroReport{
+		Reporter:    dispute.InitialEvidence.Reporter,
+		Power:       100,
+		QueryType:   dispute.InitialEvidence.QueryType,
+		QueryId:     dispute.InitialEvidence.QueryId,
+		Value:       "100",
+		Timestamp:   ctx.BlockTime().Add(-1 * 24 * time.Hour),
+		Cyclelist:   dispute.InitialEvidence.Cyclelist,
+		BlockNumber: uint64(ctx.BlockHeight()),
+	}
+	evidence := []*oracletypes.MicroReport{&addtlReport}
+
+	// reset timer before the benchmark loop
+	b.ResetTimer()
+
+	// run the benchmark
+	for i := 0; i < b.N; i++ {
+		ok.On("FlagAggregateReport", ctx, addtlReport).Return(nil)
+		_, err := msgServer.AddEvidence(ctx, &types.MsgAddEvidence{
+			DisputeId: dispute.DisputeId,
+			Reports:   evidence,
+		})
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
 }
