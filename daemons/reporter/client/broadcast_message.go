@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/tellor-io/layer/lib/metrics"
@@ -106,6 +105,8 @@ func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChan
 		if data.NumRetries == 0 {
 			// Don't mark as reported if all retries failed
 			c.logger.Error(fmt.Sprintf("failed to submit deposit after all allotted attempts attempts: %v", err))
+			// Remove oldest deposit report from cache
+			c.TokenDepositsCache.RemoveOldestReport()
 			return
 		}
 
@@ -127,14 +128,10 @@ func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChan
 
 	// Check transaction success
 	if resp.TxResult.Code != 0 {
-		if strings.Contains(resp.TxResult.Log, "reporter has already submitted a report for this query") {
-			c.logger.Info("Reporter has already submitted for this query. Removing from deposits cache")
-		} else {
-			c.logger.Error("deposit report transaction failed",
-				"code", resp.TxResult.Code,
-				"queryId", queryId)
-			return
-		}
+		c.logger.Error("deposit report transaction failed",
+			"code", resp.TxResult.Code,
+			"queryId", queryId,
+			"log", resp.TxResult.Log)
 	}
 
 	// Remove oldest deposit report from cache
