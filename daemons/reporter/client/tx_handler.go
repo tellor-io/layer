@@ -57,14 +57,14 @@ func (c *Client) WaitForTx(ctx context.Context, hash string) (*cmttypes.ResultTx
 		resp, err := c.cosmosCtx.Client.Tx(ctx, bz, false)
 		if err != nil {
 			if strings.Contains(err.Error(), "not found") {
+				if waitedBlockCount == 2 {
+					return nil, fmt.Errorf("waited for next block and transaction is still not found")
+				}
 				err := c.WaitForNextBlock(ctx)
 				if err != nil {
 					return nil, fmt.Errorf("waiting for next block: err: %w", err)
 				}
 				waitedBlockCount++
-				if waitedBlockCount == 3 {
-					return nil, fmt.Errorf("waited for next block and transaction is still not found")
-				}
 				continue
 			}
 			return nil, fmt.Errorf("fetching tx '%s'; err: %w", hash, err)
