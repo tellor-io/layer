@@ -405,7 +405,8 @@ func BenchmarkCreateReporter(b *testing.B) {
 	b.Run("Success_Create_Reporter", func(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			ms.CreateReporter(ctx, msg)
+			_, err := ms.CreateReporter(ctx, msg)
+			require.NoError(b, err)
 		}
 	})
 }
@@ -448,7 +449,8 @@ func BenchmarkSelectReporter(b *testing.B) {
 	b.Run("Success_Select_Reporter", func(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			ms.SelectReporter(ctx, msg)
+			_, err := ms.SelectReporter(ctx, msg)
+			require.NoError(b, err)
 		}
 	})
 }
@@ -494,7 +496,8 @@ func BenchmarkSwitchReporter(b *testing.B) {
 	b.Run("Success_Switch_Reporter", func(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			ms.SwitchReporter(ctx, msg)
+			_, err := ms.SwitchReporter(ctx, msg)
+			require.NoError(b, err)
 		}
 	})
 }
@@ -516,7 +519,8 @@ func BenchmarkRemoveSelector(b *testing.B) {
 	b.Run("Success_Remove_Selector", func(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			ms.RemoveSelector(ctx, msg)
+			_, err := ms.RemoveSelector(ctx, msg)
+			require.NoError(b, err)
 		}
 	})
 }
@@ -538,7 +542,8 @@ func BenchmarkUnjailReporter(b *testing.B) {
 	b.Run("Success_Unjail_Reporter", func(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			ms.UnjailReporter(ctx, msg)
+			_, err := ms.UnjailReporter(ctx, msg)
+			require.NoError(b, err)
 		}
 	})
 }
@@ -578,7 +583,8 @@ func BenchmarkWithdrawTip(b *testing.B) {
 	b.Run("Success_Withdraw_Tip", func(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			ms.WithdrawTip(ctx, msg)
+			_, err := ms.WithdrawTip(ctx, msg)
+			require.NoError(b, err)
 		}
 	})
 }
@@ -601,7 +607,8 @@ func BenchmarkEditReporter(b *testing.B) {
 	b.Run("Success_Edit_Reporter", func(b *testing.B) {
 		b.ResetTimer()
 		for i := 0; i < b.N; i++ {
-			ms.EditReporter(ctx, msg)
+			_, err := ms.EditReporter(ctx, msg)
+			require.NoError(b, err)
 		}
 	})
 }

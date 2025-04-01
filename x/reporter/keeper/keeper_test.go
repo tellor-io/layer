@@ -162,7 +162,7 @@ func TestGetDelegationsAmount(t *testing.T) {
 	ctx = ctx.WithBlockTime(time.Now())
 
 	// 1000 delegated on block 1
-	k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter.Bytes(), uint64(1))), types.DelegationsAmounts{
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter.Bytes(), uint64(1))), types.DelegationsAmounts{
 		Total: math.NewInt(1000),
 		TokenOrigins: []*types.TokenOriginInfo{
 			{
@@ -171,7 +171,7 @@ func TestGetDelegationsAmount(t *testing.T) {
 				Amount:           math.NewInt(1000),
 			},
 		},
-	})
+	}))
 
 	delegations, err := k.GetDelegationsAmount(ctx, reporter, 1)
 	require.NoError(t, err)
@@ -182,7 +182,7 @@ func TestGetDelegationsAmount(t *testing.T) {
 	require.Equal(t, math.NewInt(1000), delegations.TokenOrigins[0].Amount)
 
 	// 4000 more to same guy delegated on block 2
-	k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter.Bytes(), uint64(2))), types.DelegationsAmounts{
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter.Bytes(), uint64(2))), types.DelegationsAmounts{
 		Total: math.NewInt(5000),
 		TokenOrigins: []*types.TokenOriginInfo{
 			{
@@ -191,11 +191,11 @@ func TestGetDelegationsAmount(t *testing.T) {
 				Amount:           math.NewInt(5000),
 			},
 		},
-	})
+	}))
 
 	// 10000 to new guy delegated on block 3
 	newValidator := sample.AccAddressBytes()
-	k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter.Bytes(), uint64(3))), types.DelegationsAmounts{
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter.Bytes(), uint64(3))), types.DelegationsAmounts{
 		Total: math.NewInt(10000),
 		TokenOrigins: []*types.TokenOriginInfo{
 			{
@@ -209,7 +209,7 @@ func TestGetDelegationsAmount(t *testing.T) {
 				Amount:           math.NewInt(5000),
 			},
 		},
-	})
+	}))
 
 	delegations, err = k.GetDelegationsAmount(ctx, reporter, 5)
 	fmt.Println(delegations)

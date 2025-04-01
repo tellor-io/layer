@@ -262,14 +262,17 @@ func createOpenExpiringDispute(ctx sdk.Context, disputeKeeper keeper.Keeper, i i
 	reporter := sample.AccAddressBytes()
 
 	// set vote end time to before block time and vote result to VoteResult_NO_TALLY
-	disputeKeeper.Votes.Set(ctx, uint64(i), types.Vote{
+	err := disputeKeeper.Votes.Set(ctx, uint64(i), types.Vote{
 		Id:         uint64(i),
 		VoteStart:  currentTime.Add(-25 * time.Hour),
 		VoteEnd:    currentTime.Add(-time.Hour),
 		VoteResult: types.VoteResult_INVALID,
 	})
+	if err != nil {
+		panic(err)
+	}
 
-	disputeKeeper.Disputes.Set(ctx, uint64(i), types.Dispute{
+	err = disputeKeeper.Disputes.Set(ctx, uint64(i), types.Dispute{
 		HashId:            fmt.Appendf(nil, "testHash%d", i),
 		BlockNumber:       uint64(currentBlock - 1),
 		Open:              true,
@@ -294,6 +297,9 @@ func createOpenExpiringDispute(ctx sdk.Context, disputeKeeper keeper.Keeper, i i
 			MetaId:          uint64(i),
 		},
 	})
+	if err != nil {
+		panic(err)
+	}
 }
 
 func createClosedDisputeForExecution(ctx sdk.Context, disputeKeeper keeper.Keeper, i int) {
@@ -302,7 +308,7 @@ func createClosedDisputeForExecution(ctx sdk.Context, disputeKeeper keeper.Keepe
 
 	reporter := sample.AccAddressBytes()
 
-	disputeKeeper.Disputes.Set(ctx, uint64(i), types.Dispute{
+	err := disputeKeeper.Disputes.Set(ctx, uint64(i), types.Dispute{
 		DisputeId:         uint64(i),
 		DisputeStatus:     types.Resolved,
 		DisputeStartTime:  currentTime.Add(-25 * time.Hour),
@@ -325,12 +331,18 @@ func createClosedDisputeForExecution(ctx sdk.Context, disputeKeeper keeper.Keepe
 			MetaId:          uint64(i),
 		},
 	})
+	if err != nil {
+		panic(err)
+	}
 
 	// Add missing vote creation
-	disputeKeeper.Votes.Set(ctx, uint64(i), types.Vote{
+	err = disputeKeeper.Votes.Set(ctx, uint64(i), types.Vote{
 		Id:         uint64(i),
 		VoteStart:  currentTime.Add(-25 * time.Hour),
 		VoteEnd:    currentTime.Add(-time.Hour),
 		VoteResult: types.VoteResult_INVALID,
 	})
+	if err != nil {
+		panic(err)
+	}
 }

@@ -2752,6 +2752,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	// query team vote for dispute 2, should get collections error
 	voteRes, _, err = val1.ExecQuery(ctx, "dispute", "team-vote", "2")
 	require.Error(err)
+	fmt.Println("voteRes: ", voteRes)
 
 	// update team address
 	txHash, err = val1.ExecTx(ctx, "team", "dispute", "update-team", team2Addr, "--fees", "25loya", "--keyring-dir", val1.HomeDir(), "--chain-id", chain.Config().ChainID)
@@ -2768,7 +2769,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	// query team vote for dispute 2, should get collections error
 	voteRes, _, err = val1.ExecQuery(ctx, "dispute", "team-vote", "2")
 	require.Error(err)
-
+	fmt.Println("voteRes: ", voteRes)
 	// change team addr back
 	txHash, err = val1.ExecTx(ctx, team2Addr, "dispute", "update-team", "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf", "--fees", "25loya", "--keyring-dir", val1.HomeDir(), "--chain-id", chain.Config().ChainID)
 	require.NoError(err)
@@ -2784,4 +2785,5 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	// query team vote for dispute 2, should get collections error
 	voteRes, _, err = val1.ExecQuery(ctx, "dispute", "team-vote", "2")
 	require.Error(err)
+	fmt.Println("voteRes: ", voteRes)
 }

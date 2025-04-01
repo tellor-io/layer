@@ -558,6 +558,7 @@ func GetChainVals(ctx context.Context, chain *cosmos.CosmosChain) ([]Validators,
 }
 
 func CreateTestAccounts(ctx context.Context, t *testing.T, chain *cosmos.CosmosChain, numAccounts int, fundAmt math.Int) ([]string, error) {
+	t.Helper()
 	users := make([]string, numAccounts)
 	for i := range make([]struct{}, numAccounts) {
 		keyname := fmt.Sprintf("user%d", i)
