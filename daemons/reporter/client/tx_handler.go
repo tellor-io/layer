@@ -100,7 +100,7 @@ func (c *Client) Status(ctx context.Context) (*cmttypes.ResultStatus, error) {
 }
 
 func (c *Client) WaitForBlockHeight(ctx context.Context, h int64) error {
-	ticker := time.NewTicker(time.Millisecond * 500)
+	ticker := time.NewTicker(time.Millisecond * 250)
 	defer ticker.Stop()
 
 	for {
