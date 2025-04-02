@@ -117,9 +117,9 @@ func TestLayerFlow(t *testing.T) {
 	err = testutil.WaitForBlocks(ctx, 1, validatorI)
 	require.NoError(t, err)
 	// query tippped queries
-	res, _, err := validatorI.ExecQuery(ctx, "oracle", "tipped-queries")
+	res, _, err := validatorI.ExecQuery(ctx, "oracle", "get-tipped-queries")
 	require.NoError(t, err)
-	var tippedQueries e2e.QueryTippedQueriesResponse
+	var tippedQueries e2e.QueryGetTippedQueriesResponse
 	err = json.Unmarshal(res, &tippedQueries)
 	require.NoError(t, err)
 	fmt.Println("Tipped queries: ", tippedQueries.Queries[0])

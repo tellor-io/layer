@@ -25,6 +25,7 @@ import (
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -506,9 +507,31 @@ type QueryTeamVoteResponse struct {
 	TeamVote Voter `protobuf:"bytes,1,opt,name=team_vote,json=teamVote,proto3" json:"team_vote"`
 }
 
-type QueryTippedQueriesResponse struct {
-	// queries defines the tipped queries.
-	Queries []*QueryMeta `protobuf:"bytes,1,rep,name=queries,proto3" json:"queries,omitempty"`
+type QueryGetTippedQueriesResponse struct {
+	// querymeta but string query data
+	Queries []*QueryMetaButString `protobuf:"bytes,1,rep,name=queries,proto3" json:"queries,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+// QueryMetaButString is QueryMeta but with the query_data as a string for query display purposes
+type QueryMetaButString struct {
+	// unique id of the query that changes after query's lifecycle ends
+	Id string `json:"id,omitempty"`
+	// amount of tokens that was tipped
+	Amount string `json:"amount"`
+	// expiration time of the query
+	Expiration string `json:"expiration,omitempty"`
+	// timeframe of the query according to the data spec
+	RegistrySpecBlockWindow string `json:"registry_spec_block_window,omitempty"`
+	// indicates whether query has revealed reports
+	HasRevealedReports bool `json:"has_revealed_reports,omitempty"`
+	// query_data: decodable bytes to field of the data spec
+	QueryData string `json:"query_data,omitempty"`
+	// string identifier of the data spec
+	QueryType string `json:"query_type,omitempty"`
+	// bool cycle list query
+	CycleList bool `json:"cycle_list,omitempty"`
 }
 
 type Voter struct {
