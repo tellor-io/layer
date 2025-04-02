@@ -116,6 +116,13 @@ func TestLayerFlow(t *testing.T) {
 	require.NoError(t, err)
 	err = testutil.WaitForBlocks(ctx, 1, validatorI)
 	require.NoError(t, err)
+	// query tippped queries
+	res, _, err := validatorI.ExecQuery(ctx, "oracle", "tipped-queries")
+	require.NoError(t, err)
+	var tippedQueries e2e.QueryTippedQueriesResponse
+	err = json.Unmarshal(res, &tippedQueries)
+	require.NoError(t, err)
+	fmt.Println("Tipped queries: ", tippedQueries.Queries[0])
 	// validatorI reports
 	txHash, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", layer.HomeDir())
 	require.NoError(t, err)

@@ -506,6 +506,11 @@ type QueryTeamVoteResponse struct {
 	TeamVote Voter `protobuf:"bytes,1,opt,name=team_vote,json=teamVote,proto3" json:"team_vote"`
 }
 
+type QueryTippedQueriesResponse struct {
+	// queries defines the tipped queries.
+	Queries []*QueryMeta `protobuf:"bytes,1,rep,name=queries,proto3" json:"queries,omitempty"`
+}
+
 type Voter struct {
 	Vote          disputetypes.VoteEnum `protobuf:"varint,1,opt,name=vote,proto3,enum=layer.dispute.VoteEnum" json:"vote,omitempty"`
 	VoterPower    math.Int              `protobuf:"bytes,2,opt,name=voter_power,json=voterPower,proto3,customtype=cosmossdk.io/math.Int" json:"voter_power"`
