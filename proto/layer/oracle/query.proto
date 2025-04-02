@@ -29,9 +29,13 @@ service Query {
   rpc GetReportsbyQid(QueryGetReportsbyQidRequest) returns (QueryMicroReportsResponse) {
     option (google.api.http).get = "/layer/oracle/get_reportsby_qid/{query_id}";
   }
+
+  // Queries a list of GetReportsbyReporter items.
   rpc GetReportsbyReporter(QueryGetReportsbyReporterRequest) returns (QueryMicroReportsResponse) {
     option (google.api.http).get = "/layer/oracle/get_reportsby_reporter/{reporter}";
   }
+
+  // Queries a list of GetReportsbyReporterQid items.
   rpc GetReportsbyReporterQid(QueryGetReportsbyReporterQidRequest) returns (QueryMicroReportsResponse) {
     option (google.api.http).get = "/layer/oracle/get_reportsby_reporter_qid/{reporter}/{query_id}";
   }
@@ -129,6 +133,11 @@ service Query {
   // Queries the timestamp after a query id and timestamp
   rpc GetTimestampAfter(QueryGetTimestampAfterRequest) returns (QueryGetTimestampAfterResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_timestamp_after/{query_id}/{timestamp}";
+  }
+
+  // Queries a readable list of tipped queries
+  rpc GetTippedQueries(QueryGetTippedQueriesRequest) returns (QueryGetTippedQueriesResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_tipped_queries";
   }
 }
 
@@ -396,4 +405,16 @@ message QueryGetTimestampAfterRequest {
 message QueryGetTimestampAfterResponse {
   // timestamp defines the timestamp of the aggregate report.
   uint64 timestamp = 1;
+}
+// QueryGetTippedQueriesRequest is the request type for the Query/GetTippedQueries RPC method.
+message QueryGetTippedQueriesRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+// QueryGetTippedQueriesResponse is the response type for the Query/GetTippedQueries RPC method.
+message QueryGetTippedQueriesResponse {
+  // querymeta but string query data 
+  repeated QueryMetaButString queries = 1; 
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

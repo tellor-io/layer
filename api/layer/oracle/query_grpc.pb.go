@@ -22,7 +22,9 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Queries a list of GetReportsbyQid items.
 	GetReportsbyQid(ctx context.Context, in *QueryGetReportsbyQidRequest, opts ...grpc.CallOption) (*QueryMicroReportsResponse, error)
+	// Queries a list of GetReportsbyReporter items.
 	GetReportsbyReporter(ctx context.Context, in *QueryGetReportsbyReporterRequest, opts ...grpc.CallOption) (*QueryMicroReportsResponse, error)
+	// Queries a list of GetReportsbyReporterQid items.
 	GetReportsbyReporterQid(ctx context.Context, in *QueryGetReportsbyReporterQidRequest, opts ...grpc.CallOption) (*QueryMicroReportsResponse, error)
 	// Queries a list of GetCurrentTip items.
 	GetCurrentTip(ctx context.Context, in *QueryGetCurrentTipRequest, opts ...grpc.CallOption) (*QueryGetCurrentTipResponse, error)
@@ -62,6 +64,8 @@ type QueryClient interface {
 	GetTimestampBefore(ctx context.Context, in *QueryGetTimestampBeforeRequest, opts ...grpc.CallOption) (*QueryGetTimestampBeforeResponse, error)
 	// Queries the timestamp after a query id and timestamp
 	GetTimestampAfter(ctx context.Context, in *QueryGetTimestampAfterRequest, opts ...grpc.CallOption) (*QueryGetTimestampAfterResponse, error)
+	// Queries a readable list of tipped queries
+	GetTippedQueries(ctx context.Context, in *QueryGetTippedQueriesRequest, opts ...grpc.CallOption) (*QueryGetTippedQueriesResponse, error)
 }
 
 type queryClient struct {
@@ -279,6 +283,15 @@ func (c *queryClient) GetTimestampAfter(ctx context.Context, in *QueryGetTimesta
 	return out, nil
 }
 
+func (c *queryClient) GetTippedQueries(ctx context.Context, in *QueryGetTippedQueriesRequest, opts ...grpc.CallOption) (*QueryGetTippedQueriesResponse, error) {
+	out := new(QueryGetTippedQueriesResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetTippedQueries", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -287,7 +300,9 @@ type QueryServer interface {
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Queries a list of GetReportsbyQid items.
 	GetReportsbyQid(context.Context, *QueryGetReportsbyQidRequest) (*QueryMicroReportsResponse, error)
+	// Queries a list of GetReportsbyReporter items.
 	GetReportsbyReporter(context.Context, *QueryGetReportsbyReporterRequest) (*QueryMicroReportsResponse, error)
+	// Queries a list of GetReportsbyReporterQid items.
 	GetReportsbyReporterQid(context.Context, *QueryGetReportsbyReporterQidRequest) (*QueryMicroReportsResponse, error)
 	// Queries a list of GetCurrentTip items.
 	GetCurrentTip(context.Context, *QueryGetCurrentTipRequest) (*QueryGetCurrentTipResponse, error)
@@ -327,6 +342,8 @@ type QueryServer interface {
 	GetTimestampBefore(context.Context, *QueryGetTimestampBeforeRequest) (*QueryGetTimestampBeforeResponse, error)
 	// Queries the timestamp after a query id and timestamp
 	GetTimestampAfter(context.Context, *QueryGetTimestampAfterRequest) (*QueryGetTimestampAfterResponse, error)
+	// Queries a readable list of tipped queries
+	GetTippedQueries(context.Context, *QueryGetTippedQueriesRequest) (*QueryGetTippedQueriesResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -402,6 +419,9 @@ func (UnimplementedQueryServer) GetTimestampBefore(context.Context, *QueryGetTim
 }
 func (UnimplementedQueryServer) GetTimestampAfter(context.Context, *QueryGetTimestampAfterRequest) (*QueryGetTimestampAfterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTimestampAfter not implemented")
+}
+func (UnimplementedQueryServer) GetTippedQueries(context.Context, *QueryGetTippedQueriesRequest) (*QueryGetTippedQueriesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTippedQueries not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -830,6 +850,24 @@ func _Query_GetTimestampAfter_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetTippedQueries_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetTippedQueriesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetTippedQueries(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Query/GetTippedQueries",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetTippedQueries(ctx, req.(*QueryGetTippedQueriesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -928,6 +966,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTimestampAfter",
 			Handler:    _Query_GetTimestampAfter_Handler,
+		},
+		{
+			MethodName: "GetTippedQueries",
+			Handler:    _Query_GetTippedQueries_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
