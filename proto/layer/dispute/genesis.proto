@@ -1,12 +1,72 @@
 syntax = "proto3";
 package layer.dispute;
 
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "layer/dispute/params.proto";
+import "layer/dispute/dispute.proto";
+import "layer/dispute/vote.proto";
+import "layer/dispute/tally.proto";
 
 option go_package = "github.com/tellor-io/layer/x/dispute/types";
 
 // GenesisState defines the dispute module's genesis state.
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
+  repeated DisputeStateEntry disputes = 2;
+  repeated VotesStateEntry votes = 3;
+  repeated VoterStateEntry voter = 4;
+  repeated ReportersWithDelegatorsWhoVotedStateEntry reporters_with_delegators_who_voted = 5;
+  repeated BlockInfoStateEntry block_info = 6;
+  repeated DisputeFeePayerStateEntry dispute_fee_payer = 7;
+  string dust = 8 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  repeated VoteCountsByGroupStateEntry vote_counts_by_group = 9;
+}
+
+message DisputeStateEntry {
+  uint64 dispute_id = 1;
+  Dispute dispute = 2;
+}
+
+message VotesStateEntry {
+  uint64 dispute_id = 1;
+  Vote vote = 2;
+}
+
+message VoterStateEntry {
+  uint64 dispute_id = 1;
+  bytes voter_address = 2;
+  Voter voter = 3;
+}
+
+message ReportersWithDelegatorsWhoVotedStateEntry {
+  uint64 dispute_id = 1;
+  bytes reporter_address = 2;
+  string voted_amount = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message BlockInfoStateEntry {
+  bytes hash_id = 1;
+  BlockInfo block_info = 2;
+}
+
+message DisputeFeePayerStateEntry {
+  uint64 dispute_id = 1;
+  bytes payer = 2;
+  PayerInfo payer_info = 3;
+}
+
+message VoteCountsByGroupStateEntry {
+  uint64 dispute_id = 1;
+  VoteCounts users = 2;
+  VoteCounts reporters = 3;
+  VoteCounts team = 4;
 }

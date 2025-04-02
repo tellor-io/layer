@@ -23,32 +23,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			panic(err)
 		}
 	}
-
-	// set token bridge spec
-	bridgeSpec := types.DataSpec{
-		DocumentHash:      "",
-		ResponseValueType: "address, string, uint256, uint256",
-		AbiComponents: []*types.ABIComponent{
-			{
-				Name:            "toLayer",
-				FieldType:       "bool",
-				NestedComponent: []*types.ABIComponent{},
-			},
-			{
-				Name:            "depositId",
-				FieldType:       "uint256",
-				NestedComponent: []*types.ABIComponent{},
-			},
-		},
-		AggregationMethod: "weighted-mode",
-		Registrar:         "genesis",
-		ReportBlockWindow: 2000,
-		QueryType:         "trbbridge",
-	}
-
-	if err := k.SetDataSpec(ctx, genQueryTypeBridgeDeposit, bridgeSpec); err != nil {
-		panic(err)
-	}
 }
 
 // ExportGenesis returns the module's exported genesis
