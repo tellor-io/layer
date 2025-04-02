@@ -323,7 +323,7 @@ func (s *KeeperTestSuite) TestTippedQueries() {
 
 	tests := []struct {
 		name        string
-		req         *types.QueryTippedQueriesRequest
+		req         *types.QueryTippedQueriesForDaemonRequest
 		setup       func()
 		err         bool
 		expectedLen int
@@ -335,7 +335,7 @@ func (s *KeeperTestSuite) TestTippedQueries() {
 		},
 		{
 			name:        "empty request",
-			req:         &types.QueryTippedQueriesRequest{},
+			req:         &types.QueryTippedQueriesForDaemonRequest{},
 			err:         false,
 			expectedLen: 0,
 		},
@@ -344,7 +344,7 @@ func (s *KeeperTestSuite) TestTippedQueries() {
 			setup: func() {
 				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryData, uint64(1)), queryMeta))
 			},
-			req: &types.QueryTippedQueriesRequest{
+			req: &types.QueryTippedQueriesForDaemonRequest{
 				Pagination: &query.PageRequest{
 					Offset: 0,
 				},
@@ -359,7 +359,7 @@ func (s *KeeperTestSuite) TestTippedQueries() {
 				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryData, uint64(2)), queryMeta))
 				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryData, uint64(3)), queryMeta))
 			},
-			req: &types.QueryTippedQueriesRequest{
+			req: &types.QueryTippedQueriesForDaemonRequest{
 				Pagination: &query.PageRequest{
 					Offset: 0,
 				},
@@ -384,7 +384,7 @@ func (s *KeeperTestSuite) TestTippedQueries() {
 				require.NoError(k.Query.Set(ctx, collections.Join(secondQueryMeta.QueryData, uint64(3)), secondQueryMeta))
 				require.NoError(k.Query.Set(ctx, collections.Join(secondQueryMeta.QueryData, uint64(4)), secondQueryMeta))
 			},
-			req: &types.QueryTippedQueriesRequest{
+			req: &types.QueryTippedQueriesForDaemonRequest{
 				Pagination: &query.PageRequest{
 					Offset: 0,
 				},
@@ -400,7 +400,7 @@ func (s *KeeperTestSuite) TestTippedQueries() {
 			if tt.setup != nil {
 				tt.setup()
 			}
-			resp, err := q.TippedQueries(ctx, tt.req)
+			resp, err := q.TippedQueriesForDaemon(ctx, tt.req)
 			if tt.err {
 				require.Error(err)
 				return

@@ -96,7 +96,7 @@ func (k Querier) GetQuery(ctx context.Context, req *types.QueryGetQueryRequest) 
 }
 
 // returns a list of queries that are not expired and have a tip available
-func (k Querier) TippedQueries(ctx context.Context, req *types.QueryTippedQueriesRequest) (*types.QueryTippedQueriesResponse, error) {
+func (k Querier) TippedQueriesForDaemon(ctx context.Context, req *types.QueryTippedQueriesForDaemonRequest) (*types.QueryTippedQueriesForDaemonResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -120,7 +120,7 @@ func (k Querier) TippedQueries(ctx context.Context, req *types.QueryTippedQuerie
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryTippedQueriesResponse{Queries: queries}, nil
+	return &types.QueryTippedQueriesForDaemonResponse{Queries: queries}, nil
 }
 
 // returns a list of reported ids by reporter

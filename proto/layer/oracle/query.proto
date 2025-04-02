@@ -92,7 +92,7 @@ service Query {
   }
 
   // Queries a list of tipped non-expired queries
-  rpc TippedQueries(QueryTippedQueriesRequest) returns (QueryTippedQueriesResponse) {
+  rpc TippedQueriesForDaemon(QueryTippedQueriesForDaemonRequest) returns (QueryTippedQueriesForDaemonResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/tipped_queries";
   }
 
@@ -308,12 +308,12 @@ message QueryGetQueryResponse {
   // query defines the query.
   QueryMeta query = 1;
 }
-// QueryTippedQueriesRequest is the request type for the Query/TippedQueries RPC method.
-message QueryTippedQueriesRequest {
+// QueryTippedQueriesForDaemonRequest is the request type for the Query/TippedQueriesForDaemon RPC method.
+message QueryTippedQueriesForDaemonRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
-// QueryTippedQueriesResponse is the response type for the Query/TippedQueries RPC method.
-message QueryTippedQueriesResponse {
+// QueryTippedQueriesForDaemonResponse is the response type for the Query/TippedQueriesForDaemon RPC method.
+message QueryTippedQueriesForDaemonResponse {
   // queries defines the tipped queries.
   repeated QueryMeta queries = 1;
 }
