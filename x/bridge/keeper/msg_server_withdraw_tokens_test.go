@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/types"
@@ -78,4 +79,34 @@ func TestMsgWithdrawTokens(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.NotNil(t, response)
+}
+
+func BenchmarkMsgWithdrawTokens(b *testing.B) {
+	k, _, bk, ok, _, sk, ctx := setupKeeper(b)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	msgServer := keeper.NewMsgServerImpl(k)
+	creatorAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	recipientAddr := "3536373839306162636465663132333435363738"
+	amount := sdk.Coin{Denom: "loya", Amount: math.NewInt(10 * 1e6)}
+
+	// setup mock expectations
+	bk.On("SendCoinsFromAccountToModule", sdkCtx, creatorAddr, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
+	bk.On("BurnCoins", sdkCtx, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
+	sk.On("TotalBondedTokens", sdkCtx).Return(math.NewInt(10*1e6), nil)
+
+	// Use AnythingOfType to match any aggregate and query data
+	ok.On("SetAggregate",
+		mock.AnythingOfType("types.Context"),
+		mock.AnythingOfType("*types.Aggregate"),
+		mock.AnythingOfType("[]uint8")).Return(nil)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		_, _ = msgServer.WithdrawTokens(ctx, &types.MsgWithdrawTokens{
+			Creator:   creatorAddr.String(),
+			Recipient: recipientAddr,
+			Amount:    amount,
+		})
+	}
 }

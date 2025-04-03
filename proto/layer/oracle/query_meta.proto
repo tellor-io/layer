@@ -56,3 +56,27 @@ message reward {
     (gogoproto.nullable) = false
   ];
 }
+
+// QueryMetaButString is QueryMeta but with the query_data as a string for query display purposes
+message QueryMetaButString {
+  // unique id of the query that changes after query's lifecycle ends
+  uint64 id = 1;
+  // amount of tokens that was tipped
+  string amount = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // expiration time of the query
+  uint64 expiration = 3;
+  // timeframe of the query according to the data spec
+  uint64 registry_spec_block_window = 4;
+  // indicates whether query has revealed reports
+  bool has_revealed_reports = 5;
+  // decoded hex string of the query_data
+  string query_data = 6;
+  // string identifier of the data spec
+  string query_type = 7;
+  // bool cycle list query
+  bool cycle_list = 8;
+}
