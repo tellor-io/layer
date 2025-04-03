@@ -9,10 +9,10 @@ set -e
 # set variables in your .bashrc before starting this script!
 source ~/.zshrc
 
-export LAYER_NODE_URL=tellorlayer.com
-export TELLORNODE_ID=5ca2c0eccb54e907ba474ce3b6827077ae40ba53
+export LAYER_NODE_URL=https://node-palmito.tellorlayer.com/rpc/
+export TELLORNODE_ID=8b8ee7bbed9d7904ba3f5a5775aa3c06075a7f80
 export KEYRING_BACKEND="test"
-export PEERS="59fd40b86c9b65ca717b29ce37b08fdb82c8e61d@3.144.113.220:26656,b26e162aaae52c917f03afd0e09889c1a9f1da13@18.224.20.250:26656,fc1caebd2550a4172bcdc073d0f18e630c44cc26@3.140.238.60:26656"
+export PEERS="c7b175a5bafb35176cdcba3027e764a0dbd0811c@34.219.95.82:26656,05105e8bb28e8c5ace1cecacefb8d4efb0338ec6@18.218.114.74:26656,705f6154c6c6aeb0ba36c8b53639a5daa1b186f6@3.80.39.230:26656,1f6522a346209ee99ecb4d3e897d9d97633ae146@3.101.138.30:26656,3822fa2eb0052b36360a7a6e285c18cc92e26215@175.41.188.192:26656"
 
 echo "Change denom to loya in config files..."
 sed -i '' 's/([0-9]+)stake/1loya/g' ~/.layer/config/app.toml
@@ -50,7 +50,7 @@ sed -i '' 's/keyring-backend = "os"/keyring-backend = "'$KEYRING_BACKEND'"/g' ~/
 rm -f ~/.layer/config/genesis.json
 # get genesis file from running node's rpc
 echo "Getting genesis from runnning node....."
-curl $LAYER_NODE_URL:26657/genesis | jq '.result.genesis' > ~/.layer/config/genesis.json
+curl $LAYER_NODE_URL/genesis | jq '.result.genesis' > ~/.layer/config/genesis.json
 
 # set initial seeds / peers
 echo "Running Tellor node id: $TELLORNODE_ID"
