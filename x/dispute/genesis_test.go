@@ -27,7 +27,7 @@ func TestGenesis(t *testing.T) {
 	}
 
 	k, _, _, _, _, ctx := keepertest.DisputeKeeper(t)
-	dispute.InitGenesis(ctx, k, genesisState)
+	require.NotPanics(t, func() { dispute.InitGenesis(ctx, k, genesisState) })
 	got := dispute.ExportGenesis(ctx, k)
 	require.NotNil(t, got)
 
@@ -44,7 +44,7 @@ func TestGenesis(t *testing.T) {
 	genesisState.VoteCountsByGroup = append(genesisState.VoteCountsByGroup, &types.VoteCountsByGroupStateEntry{DisputeId: 1, Users: &types.VoteCounts{Support: 10, Against: 10, Invalid: 10}, Reporters: &types.VoteCounts{Support: 10, Against: 10, Invalid: 10}, Team: &types.VoteCounts{Support: 10, Against: 10, Invalid: 10}})
 
 	k, _, _, _, _, ctx = keepertest.DisputeKeeper(t)
-	dispute.InitGenesis(ctx, k, genesisState)
+	require.NotPanics(t, func() { dispute.InitGenesis(ctx, k, genesisState) })
 	got = dispute.ExportGenesis(ctx, k)
 	require.NotNil(t, got)
 
