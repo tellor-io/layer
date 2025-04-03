@@ -135,6 +135,8 @@ func NewKeeper(
 		),
 		// QueryDataLimit is the maximum number of bytes query data can be
 		QueryDataLimit: collections.NewItem(sb, types.QueryDataLimitPrefix, "query_data_limit", codec.CollValue[types.QueryDataLimit](cdc)),
+		// ValuesWeightedMode maps the queryMeta.Id:valueHexstring to the total power of reporters that submitted the value
+		ValuesWeightedMode: collections.NewMap(sb, types.ValuesWeightedModePrefix, "values_weighted_mode", collections.PairKeyCodec(collections.Uint64Key, collections.StringKey), collections.Uint64Value),
 	}
 
 	schema, err := sb.Build()
