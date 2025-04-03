@@ -131,11 +131,19 @@ func InitGenesis(ctx context.Context, k keeper.Keeper, genState types.GenesisSta
 // ExportGenesis returns the module's exported genesis
 func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
+	// get params
 	params, err := k.GetParams(ctx)
 	if err != nil {
 		panic(err)
 	}
 	genesis.Params = params
+
+	// get querydata limit
+	queryDataLimit, err := k.QueryDataLimit.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
+	genesis.QueryDataLimit = queryDataLimit.Limit
 
 	// get cyclelist
 	cyclelist, err := k.GetCyclelist(ctx)
