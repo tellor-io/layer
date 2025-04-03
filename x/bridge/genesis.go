@@ -17,20 +17,32 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err := k.SnapshotLimit.Set(ctx, types.SnapshotLimit{Limit: genState.SnapshotLimit}); err != nil {
 		panic(err)
 	}
-	if err := k.BridgeValset.Set(ctx, *genState.BridgeValSet); err != nil {
-		panic(err)
+	if genState.BridgeValSet != nil {
+		if err := k.BridgeValset.Set(ctx, *genState.BridgeValSet); err != nil {
+			panic(err)
+		}
 	}
-	if err := k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{Checkpoint: genState.ValidatorCheckpoint}); err != nil {
-		panic(err)
+
+	if genState.ValidatorCheckpoint != nil {
+		if err := k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{Checkpoint: genState.ValidatorCheckpoint}); err != nil {
+			panic(err)
+		}
 	}
-	if err := k.WithdrawalId.Set(ctx, types.WithdrawalId{Id: genState.WithdrawalId}); err != nil {
-		panic(err)
+
+	if genState.WithdrawalId != 0 {
+		if err := k.WithdrawalId.Set(ctx, types.WithdrawalId{Id: genState.WithdrawalId}); err != nil {
+			panic(err)
+		}
 	}
-	if err := k.LatestCheckpointIdx.Set(ctx, types.CheckpointIdx{Index: genState.LatestValidatorCheckpointIdx}); err != nil {
-		panic(err)
+
+	if genState.LatestValidatorCheckpointIdx != 0 {
+		if err := k.LatestCheckpointIdx.Set(ctx, types.CheckpointIdx{Index: genState.LatestValidatorCheckpointIdx}); err != nil {
+			panic(err)
+		}
 	}
 
 	for _, data := range genState.OperatorToEvmAddressMap {
+		k.Logger(ctx).Info("Inside of OperatorToEvmAddressMap for loop for some reason")
 		if err := k.OperatorToEVMAddressMap.Set(ctx, data.OperatorAddress, types.EVMAddress{EVMAddress: data.EvmAddress}); err != nil {
 			panic(err)
 		}
