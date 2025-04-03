@@ -84,7 +84,7 @@ Allow a user to tip a query.
 ### GetAggregateBeforeByReporter
 - `./layerd query oracle get-aggregate-before-by-reporter [query_id] [timestamp] [reporter]`
 
-### TippedQueries
+### GetTippedQueries
 - `./layerd query oracle tipped-queries`
 
 ### GetCurrentQueryByQueryId
@@ -98,6 +98,9 @@ Allow a user to tip a query.
 
 ### GetCycleList
 - `./layerd query oracle get-cycle-list`
+
+### TippedQueriesForDaemon
+- `./layerd query tipped-queries-for-daemon`
 
 ## EndBlock
 

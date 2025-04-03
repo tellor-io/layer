@@ -124,7 +124,7 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 			return
 		case <-ticker.C:
 			queryCtx, cancel := context.WithTimeout(ctx, defaultQueryTimeout)
-			res, err := c.OracleQueryClient.TippedQueries(queryCtx, &oracletypes.QueryTippedQueriesRequest{
+			res, err := c.OracleQueryClient.TippedQueriesForDaemon(queryCtx, &oracletypes.QueryTippedQueriesForDaemonRequest{
 				Pagination: &query.PageRequest{
 					Offset: 0,
 				},

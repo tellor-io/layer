@@ -12,14 +12,15 @@
 - 2024-04-02: added option on decreasing user vote power
 - 2024-08-03: clean up
 - 2025-01-14: remove token holder voting group
+- 2025-04-01: clarifications 
 
 ## Context
 
 For voting on disputes and determining if a value is correct, these groups are weighted evenly:
 
-33.3% reporters (based on reporter weight)
-33.3% users (based on tips)
-33.3% team
+- 33.3% reporters (based on reporting power)
+- 33.3% users (based on total number of tips)
+- 33.3% team
 
 Most notable in the split is the absence of validators, relayers, and token holders.  The rationale for not including validators is the treatment of delegated tokens.  Currently delegated tokens are already counted twice (token holders and reporters they are delegated to).  If the validator was also able to use tokens delegated to themselves, you could essentially delegate tokens to yourself as a reporter and a validator and then triple your voting power.  We had to choose between giving the power to reporters or validators in this case and we chose reporters for the same reason disputes can be started with delegated tokens from reporters and not validators; data reporting and quality is done by the reporters, chain operations are done by the validators. Also, in old tellor, reporters could earn voting weight per report count, however that has been removed in Layer in favor of reporter weight.
 
@@ -35,13 +36,13 @@ We had originally wanted to give free floating token holders weight, but it is u
 
 ### Add in validators
 
-Adding in validators as an additional weighted group for settling disputes (or having validators rather than reporters) could introduce a new stake holder set that could help to decentralize the voting set further.  Additionally, it might be said that reporters are biased due to their obvious conflict of interest and that disputes should be resolved by neutral third parties.  
+Adding in validators as an additional weighted group for settling disputes (or having validators rather than reporters) could introduce a new stakeholder set that could help to decentralize the voting set further.  Additionally, it might be said that reporters are biased due to their obvious conflict of interest and that disputes should be resolved by neutral third parties.  
 
 This is valid argument, however the attack method of tripling tokens by dual self delegation could undermine chain security.  We feel that the current split (reporters over validators) gives them a say in the accuracy of the vote and gives weight to their long term interest in the validity of the data.  It is also an unknown how different validator and reporter sets will be.  There is a substantial chance that they will overlap significantly and the two sets will not require double counting. 
 
 ### Remove team
 
-The long term plan is to further decentralize the protocol by removing the team's voting weight on disputes and exploring other governance structures. In the short term, as the protocol matures to team acts as a tie breaker.
+The long term plan is to further decentralize the protocol by removing the team's voting weight on disputes and exploring other governance structures. In the short term, the team acts as a tie breaker.
 
 ### Different reporter voting weight calculation 
 

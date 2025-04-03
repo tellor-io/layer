@@ -156,7 +156,20 @@ test:
 e2e:
 	@cd e2e && go test -v -race ./... -timeout 20m
 
-.PHONY: test e2e
+benchmark:
+	@echo "Cleaning up benchmark results..."
+	@rm -f scripts/benchmark/results/benchmark_results.json
+	@echo "Running all module benchmarks..."
+	@go test -bench=. -benchmem -json ./... > scripts/benchmark/results/benchmark_results.json || true
+
+parse-benchmarks:
+	@echo "Parsing benchmark results..."
+	@mkdir -p scripts/benchmark/results
+	@python3 scripts/benchmark/parse_benchmarks.py
+
+bench-report: benchmark parse-benchmarks
+
+.PHONY: test e2e benchmark parse-benchmarks bench-report
 ###############################################################################
 ###                                MOCKS                                    ###
 ###############################################################################
