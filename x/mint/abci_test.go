@@ -86,3 +86,20 @@ func TestSetPreviousBlockTime(t *testing.T) {
 	require.Nil(err)
 	require.Equal(minter.PreviousBlockTime.Unix(), time2.Unix())
 }
+
+func BenchmarkMintBeginBlocker(b *testing.B) {
+	k, _, _, ctx := keeper.MintKeeper(b)
+
+	minter := types.DefaultMinter()
+	minter.Initialized = true
+	require.NoError(b, k.Minter.Set(ctx, minter))
+
+	ctx = ctx.WithBlockTime(time.Unix(1000, 0))
+
+	b.ResetTimer() // Start timing from here
+
+	for i := 0; i < b.N; i++ {
+		err := mint.BeginBlocker(ctx, k)
+		require.NoError(b, err)
+	}
+}

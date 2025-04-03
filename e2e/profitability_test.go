@@ -228,6 +228,51 @@ func TestProfitability(t *testing.T) {
 		fmt.Println("validator [", i, "] reported at height ", height)
 	}
 
+	// check val1 stake before claim:
+	dels, err := chain.StakingQueryDelegations(ctx, validators[1].Addr)
+	require.NoError(err)
+	fmt.Println("VAL1 delegations before claim: ", dels)
+
+	// check val1 free floating balance before claim:
+	freeFloatingBalance, err := chain.BankQueryBalance(ctx, validators[1].Addr, "loya")
+	require.NoError(err)
+	fmt.Println("VAL1 free floating balance before claim: ", freeFloatingBalance)
+
+	// check val0 stake before claim:
+	del, err := chain.StakingQueryDelegations(ctx, validators[0].Addr)
+	require.NoError(err)
+	fmt.Println("VAL0 delegations before claim: ", del)
+
+	// check val0 free floating balance before claim:
+	freeFloatingBalance, err = chain.BankQueryBalance(ctx, validators[0].Addr, "loya")
+	require.NoError(err)
+	fmt.Println("VAL0 free floating balance before claim: ", freeFloatingBalance)
+
+	// claim validator rewards
+	txHash, err := validators[0].Val.ExecTx(ctx, "validator", "distribution", "withdraw-all-rewards", "--keyring-dir", validators[0].Val.HomeDir(), "--from", validators[1].Addr, "--fees", "2222loya")
+	require.NoError(err)
+	fmt.Println("TX HASH (val1 pays for val0 to claim val0 rewards): ", txHash)
+
+	// check val1 stake after claim:
+	dels, err = chain.StakingQueryDelegations(ctx, validators[1].Addr)
+	require.NoError(err)
+	fmt.Println("VAL1 delegations after claim: ", dels)
+
+	// check val1 free floating balance after claim:
+	freeFloatingBalance, err = chain.BankQueryBalance(ctx, validators[1].Addr, "loya")
+	require.NoError(err)
+	fmt.Println("VAL1 free floating balance after claim: ", freeFloatingBalance)
+
+	// check val0 stake after claim:
+	del, err = chain.StakingQueryDelegations(ctx, validators[0].Addr)
+	require.NoError(err)
+	fmt.Println("VAL0 delegations after claim: ", del)
+
+	// check val0 free floating balance after claim:
+	freeFloatingBalance, err = chain.BankQueryBalance(ctx, validators[0].Addr, "loya")
+	require.NoError(err)
+	fmt.Println("VAL0 free floating balance after claim: ", freeFloatingBalance)
+
 	require.NoError(testutil.WaitForBlocks(ctx, 3, val1))
 
 	// check on reports per reporter

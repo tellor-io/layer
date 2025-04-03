@@ -96,7 +96,7 @@ func (k Querier) GetQuery(ctx context.Context, req *types.QueryGetQueryRequest) 
 }
 
 // returns a list of queries that are not expired and have a tip available
-func (k Querier) TippedQueries(ctx context.Context, req *types.QueryTippedQueriesRequest) (*types.QueryTippedQueriesResponse, error) {
+func (k Querier) TippedQueriesForDaemon(ctx context.Context, req *types.QueryTippedQueriesForDaemonRequest) (*types.QueryTippedQueriesForDaemonResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -120,7 +120,7 @@ func (k Querier) TippedQueries(ctx context.Context, req *types.QueryTippedQuerie
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryTippedQueriesResponse{Queries: queries}, nil
+	return &types.QueryTippedQueriesForDaemonResponse{Queries: queries}, nil
 }
 
 // returns a list of reported ids by reporter
@@ -185,4 +185,44 @@ func (k Querier) GetTimestampAfter(ctx context.Context, req *types.QueryGetTimes
 		return nil, err
 	}
 	return &types.QueryGetTimestampAfterResponse{Timestamp: uint64(timestamp.UnixMilli())}, nil
+}
+
+// returns a list of queries that are not expired and have a tip available and the query data as a string
+func (k Querier) GetTippedQueries(ctx context.Context, req *types.QueryGetTippedQueriesRequest) (*types.QueryGetTippedQueriesResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	store := runtime.KVStoreAdapter(k.keeper.storeService.OpenKVStore(ctx))
+	queryStore := prefix.NewStore(store, types.QueryTipPrefix)
+	queries := make([]*types.QueryMetaButString, 0)
+	_, err := query.Paginate(queryStore, req.Pagination, func(queryId, value []byte) error {
+		// pull querymeta from store
+		var queryMeta types.QueryMeta
+		err := k.keeper.cdc.Unmarshal(value, &queryMeta)
+		if err != nil {
+			return err
+		}
+		if queryMeta.Expiration > uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()) && queryMeta.Amount.GT(math.ZeroInt()) {
+			// write querymeta to querymetabutstring
+			queryMetaButString := types.QueryMetaButString{
+				Id:                      queryMeta.Id,
+				Amount:                  queryMeta.Amount,
+				Expiration:              queryMeta.Expiration,
+				RegistrySpecBlockWindow: queryMeta.RegistrySpecBlockWindow,
+				HasRevealedReports:      queryMeta.HasRevealedReports,
+				QueryData:               hex.EncodeToString(queryMeta.QueryData),
+				QueryType:               queryMeta.QueryType,
+				CycleList:               queryMeta.CycleList,
+			}
+			queries = append(queries, &queryMetaButString)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryGetTippedQueriesResponse{Queries: queries}, nil
 }

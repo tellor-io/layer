@@ -102,9 +102,15 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}, {ProtoField: "timestamp"}, {ProtoField: "reporter"}},
 				},
 				{
-					RpcMethod:      "TippedQueries",
-					Use:            "tipped-queries",
+					RpcMethod:      "GetTippedQueries",
+					Use:            "get-tipped-queries",
 					Short:          "Query to get all available tipped queries",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+				{
+					RpcMethod:      "TippedQueriesForDaemon",
+					Use:            "tipped-queries-for-daemon",
+					Short:          "Query to get all available tipped queries (for daemon's eyes only)",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
 				{

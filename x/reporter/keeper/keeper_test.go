@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -150,4 +151,92 @@ func TestReportIndexedMap(t *testing.T) {
 	repAkeys, err := iter.Keys()
 	require.NoError(t, err)
 	require.Equal(t, 5, len(repAkeys))
+}
+
+func TestGetDelegationsAmount(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	validator := sample.AccAddressBytes()
+	reporter := sample.AccAddressBytes()
+	blockNumber := uint64(10)
+	ctx = ctx.WithBlockHeight(int64(blockNumber))
+	ctx = ctx.WithBlockTime(time.Now())
+
+	// 1000 delegated on block 1
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter.Bytes(), uint64(1))), types.DelegationsAmounts{
+		Total: math.NewInt(1000),
+		TokenOrigins: []*types.TokenOriginInfo{
+			{
+				DelegatorAddress: reporter,
+				ValidatorAddress: validator,
+				Amount:           math.NewInt(1000),
+			},
+		},
+	}))
+
+	delegations, err := k.GetDelegationsAmount(ctx, reporter, 1)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(1000), delegations.Total)
+	require.Equal(t, 1, len(delegations.TokenOrigins))
+	require.Equal(t, validator.Bytes(), delegations.TokenOrigins[0].ValidatorAddress)
+	require.Equal(t, reporter.Bytes(), delegations.TokenOrigins[0].DelegatorAddress)
+	require.Equal(t, math.NewInt(1000), delegations.TokenOrigins[0].Amount)
+
+	// 4000 more to same guy delegated on block 2
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter.Bytes(), uint64(2))), types.DelegationsAmounts{
+		Total: math.NewInt(5000),
+		TokenOrigins: []*types.TokenOriginInfo{
+			{
+				DelegatorAddress: reporter,
+				ValidatorAddress: validator,
+				Amount:           math.NewInt(5000),
+			},
+		},
+	}))
+
+	// 10000 to new guy delegated on block 3
+	newValidator := sample.AccAddressBytes()
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter.Bytes(), uint64(3))), types.DelegationsAmounts{
+		Total: math.NewInt(10000),
+		TokenOrigins: []*types.TokenOriginInfo{
+			{
+				DelegatorAddress: reporter,
+				ValidatorAddress: newValidator,
+				Amount:           math.NewInt(10000),
+			},
+			{
+				DelegatorAddress: reporter,
+				ValidatorAddress: validator,
+				Amount:           math.NewInt(5000),
+			},
+		},
+	}))
+
+	delegations, err = k.GetDelegationsAmount(ctx, reporter, 5)
+	fmt.Println(delegations)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(delegations.TokenOrigins))
+	// add up token origins
+	total := math.NewInt(0)
+	for _, tokenOrigin := range delegations.TokenOrigins {
+		total = total.Add(tokenOrigin.Amount)
+	}
+	require.Equal(t, math.NewInt(15000), total)
+}
+
+// called in endblocker
+func BenchmarkReporterTrackStakeChange(b *testing.B) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(b)
+	ctx = ctx.WithBlockHeight(3).WithBlockTime(time.Now())
+	expiration := ctx.BlockTime().Add(1)
+	err := k.Tracker.Set(ctx, types.StakeTracker{Expiration: &expiration, Amount: math.NewInt(1000)})
+	require.NoError(b, err)
+
+	sk.On("TotalBondedTokens", ctx).Return(math.OneInt(), nil)
+
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		err := k.TrackStakeChange(ctx)
+		require.NoError(b, err)
+	}
 }

@@ -362,4 +362,9 @@ func TestAttestation(t *testing.T) {
 	require.Equal(attestationDataRes.NextReportTimestamp, "0")
 	require.Equal(attestationDataRes.LastConsensusTimestamp, prevTimestamp) // lastConsTs should equal report1 timestamp
 	fmt.Println("attestationData: ", attestationDataRes)
+
+	// claim validator rewards
+	txHash, err = validators[0].Val.ExecTx(ctx, "validator", "distribution", "withdraw-all-rewards", "--keyring-dir", validators[0].Val.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (val0 claims rewards): ", txHash)
 }
