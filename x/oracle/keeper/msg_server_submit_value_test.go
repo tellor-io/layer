@@ -3,8 +3,10 @@ package keeper_test
 import (
 	"encoding/hex"
 	"errors"
+	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
@@ -280,4 +282,70 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	require.Equal(microReport.Reporter, reporter.String())
 	require.Equal(microReport.Timestamp, ctx.BlockTime())
 	require.Equal(microReport.Value, value)
+}
+
+func BenchmarkSubmitValue(b *testing.B) {
+	// Setup a new test suite for each benchmark run
+	s := new(KeeperTestSuite)
+	s.SetupTest()
+
+	// Get the required components
+	k := s.oracleKeeper
+	rk := s.reporterKeeper
+	regk := s.registryKeeper
+
+	// Setup common test data
+	addr := sample.AccAddressBytes()
+	qDataBz, err := utils.QueryBytesFromString(qData)
+	require.NoError(b, err)
+	queryId := utils.QueryIDFromData(qDataBz)
+
+	// Get params for stake amount check
+	params, err := k.Params.Get(s.ctx)
+	require.NoError(b, err)
+	minStakeAmt := params.MinStakeAmount
+
+	// Setup the query
+	query := types.QueryMeta{
+		Id:                      1,
+		Amount:                  math.NewInt(100_000),
+		Expiration:              20,
+		RegistrySpecBlockWindow: 10,
+		HasRevealedReports:      false,
+		QueryData:               qDataBz,
+		QueryType:               "SpotPrice",
+		CycleList:               true,
+	}
+
+	// Prepare the context
+	ctx := s.ctx.WithBlockHeight(18).WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+
+	// Setup the submit request
+	submitReq := types.MsgSubmitValue{
+		Creator:   addr.String(),
+		QueryData: qDataBz,
+		Value:     value,
+	}
+
+	b.ResetTimer()
+	b.Run("Submit_Value_Success", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			// Create fresh context and setup for each iteration
+			iterCtx := ctx.WithBlockHeight(18 + int64(i))
+
+			// Setup fresh state for each iteration
+			err = k.Query.Set(iterCtx, collections.Join(queryId, query.Id), query)
+			require.NoError(b, err)
+			err = k.QueryDataLimit.Set(iterCtx, types.QueryDataLimit{Limit: types.InitialQueryDataLimit()})
+			require.NoError(b, err)
+
+			// Setup expectations for each iteration
+			rk.On("ReporterStake", iterCtx, addr, queryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
+			regk.On("GetSpec", iterCtx, "SpotPrice").Return(spotSpec, nil).Once()
+
+			// Run the actual operation we're benchmarking
+			_, err := s.msgServer.SubmitValue(iterCtx, &submitReq)
+			require.NoError(b, err)
+		}
+	})
 }

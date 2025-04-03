@@ -22,5 +22,4 @@ go test -v -run TestLayerFlow -timeout 10m
 
 Note: 
 - Image needs to be rebuilt everytime the chain logic is changed.  
-- It is recommended to build a new chain at the start of each test (dont reuse LayerSpinup)
-- 
+- When writing a test, do not reuse Layer Spinup
