@@ -1,6 +1,8 @@
 package bridge
 
 import (
+	"errors"
+
 	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/types"
@@ -112,8 +114,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	for _, data := range genState.AttestRequestsByHeightMap {
 		requests := make([]*types.AttestationRequest, len(data.Requests))
-		for _, snapshot := range data.Requests {
-			requests = append(requests, &types.AttestationRequest{Snapshot: snapshot})
+		for i, snapshot := range data.Requests {
+			requests[i] = &types.AttestationRequest{Snapshot: snapshot}
 		}
 		if err := k.AttestRequestsByHeightMap.Set(ctx, data.BlockHeight, types.AttestationRequests{Requests: requests}); err != nil {
 			panic(err)
@@ -143,19 +145,31 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	bridgeValSet, err := k.BridgeValset.Get(ctx)
 	if err != nil {
-		panic(err)
+		if errors.Is(err, collections.ErrNotFound) {
+			bridgeValSet = types.BridgeValidatorSet{}
+		} else {
+			panic(err)
+		}
 	}
 	genesis.BridgeValSet = &bridgeValSet
 
 	validatorCheckpoint, err := k.ValidatorCheckpoint.Get(ctx)
 	if err != nil {
-		panic(err)
+		if errors.Is(err, collections.ErrNotFound) {
+			validatorCheckpoint = types.ValidatorCheckpoint{}
+		} else {
+			panic(err)
+		}
 	}
 	genesis.ValidatorCheckpoint = validatorCheckpoint.Checkpoint
 
 	withdrawalId, err := k.WithdrawalId.Get(ctx)
 	if err != nil {
-		panic(err)
+		if errors.Is(err, collections.ErrNotFound) {
+			withdrawalId = types.WithdrawalId{Id: 0}
+		} else {
+			panic(err)
+		}
 	}
 	genesis.WithdrawalId = withdrawalId.Id
 
@@ -276,7 +290,11 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 
 	latestCheckpointIdx, err := k.LatestCheckpointIdx.Get(ctx)
 	if err != nil {
-		panic(err)
+		if errors.Is(err, collections.ErrNotFound) {
+			latestCheckpointIdx = types.CheckpointIdx{Index: 0}
+		} else {
+			panic(err)
+		}
 	}
 	genesis.LatestValidatorCheckpointIdx = latestCheckpointIdx.Index
 
