@@ -27,14 +27,18 @@ func InitGenesis(ctx context.Context, k keeper.Keeper, genState types.GenesisSta
 		panic(err)
 	}
 
-	// initialize sequencers from genesis state
-	err = k.CyclelistSequencer.Set(ctx, genState.CyclelistSequence)
-	if err != nil {
-		panic(err)
+	if genState.CyclelistSequence != 0 {
+		// initialize sequencers from genesis state
+		err = k.CyclelistSequencer.Set(ctx, genState.CyclelistSequence)
+		if err != nil {
+			panic(err)
+		}
 	}
-	err = k.QuerySequencer.Set(ctx, genState.QuerySequencer)
-	if err != nil {
-		panic(err)
+	if genState.QuerySequencer != 0 {
+		err = k.QuerySequencer.Set(ctx, genState.QuerySequencer)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// initialize TipperTotals from genesis state
