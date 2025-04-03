@@ -65,5 +65,22 @@ func TestGenesis(t *testing.T) {
 
 	nullify.Fill(&genesisState)
 	nullify.Fill(got)
+
+	require.Equal(t, genesisState.WithdrawalId, got.WithdrawalId)
+	require.Equal(t, genesisState.BridgeValSet, got.BridgeValSet)
+	require.Equal(t, genesisState.ValidatorCheckpoint, got.ValidatorCheckpoint)
+	require.Equal(t, genesisState.EvmRegisteredMap, got.EvmRegisteredMap)
+	require.Equal(t, genesisState.BridgeValsetSigsMap, got.BridgeValsetSigsMap)
+	require.Equal(t, genesisState.ValidatorCheckpointParamsMap, got.ValidatorCheckpointParamsMap)
+	require.Equal(t, genesisState.ValidatorCheckpointIdxMap, got.ValidatorCheckpointIdxMap)
+	require.Equal(t, genesisState.LatestValidatorCheckpointIdx, got.LatestValidatorCheckpointIdx)
+	require.Equal(t, genesisState.BridgeValsetByTimestampMap, got.BridgeValsetByTimestampMap)
+	require.Equal(t, genesisState.ValsetTimestampToIdxMap, got.ValsetTimestampToIdxMap)
+	require.Equal(t, genesisState.AttestSnapshotsByReportMap, got.AttestSnapshotsByReportMap)
+	require.Equal(t, genesisState.AttestSnapshotDataMap, got.AttestSnapshotDataMap)
+	require.Equal(t, genesisState.SnapshotToAttestationsMap, got.SnapshotToAttestationsMap)
+	require.Equal(t, genesisState.AttestRequestsByHeightMap, got.AttestRequestsByHeightMap)
+	require.Equal(t, genesisState.DepositIdClaimedMap, got.DepositIdClaimedMap)
+
 	// this line is used by starport scaffolding # genesis/test/assert
 }
