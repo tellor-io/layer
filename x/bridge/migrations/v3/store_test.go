@@ -68,6 +68,7 @@ func setupTest(t *testing.T) (context.Context, store.KVStoreService, codec.Codec
 	oracleKeeper := new(mocks.OracleKeeper)
 	reporterKeeper := new(mocks.ReporterKeeper)
 	stakingKeeper := new(mocks.StakingKeeper)
+	disputeKeeper := new(mocks.DisputeKeeper)
 
 	k := keeper.NewKeeper(
 		cdc,
@@ -76,6 +77,7 @@ func setupTest(t *testing.T) (context.Context, store.KVStoreService, codec.Codec
 		oracleKeeper,
 		bankKeeper,
 		reporterKeeper,
+		disputeKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
