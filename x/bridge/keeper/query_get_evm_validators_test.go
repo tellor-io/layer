@@ -15,7 +15,7 @@ import (
 )
 
 func TestGetEvmValidators(t *testing.T) {
-	k, _, _, _, _, sk, ctx := testkeeper.BridgeKeeper(t)
+	k, _, _, _, _, sk, _, ctx := testkeeper.BridgeKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 

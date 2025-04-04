@@ -44,6 +44,7 @@ func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, sdk.Context, *mocks
 	ok := new(mocks.OracleKeeper)
 	rk := new(mocks.ReporterKeeper)
 	sk := new(mocks.StakingKeeper)
+	dk := new(mocks.DisputeKeeper)
 
 	k := keeper.NewKeeper(
 		cdc,
@@ -52,6 +53,7 @@ func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, sdk.Context, *mocks
 		ok,
 		bk,
 		rk,
+		dk,
 		"gov",
 	)
 
@@ -90,7 +92,7 @@ func SetupBridgeAppBenchmark(b *testing.B) (AppModule, keeper.Keeper, sdk.Contex
 	ok := new(mocks.OracleKeeper)
 	rk := new(mocks.ReporterKeeper)
 	sk := new(mocks.StakingKeeper)
-
+	dk := new(mocks.DisputeKeeper)
 	k := keeper.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(storeKey),
@@ -98,6 +100,7 @@ func SetupBridgeAppBenchmark(b *testing.B) (AppModule, keeper.Keeper, sdk.Contex
 		ok,
 		bk,
 		rk,
+		dk,
 		"gov",
 	)
 
