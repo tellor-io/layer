@@ -16,7 +16,7 @@ import (
 )
 
 func TestMsgWithdrawTokens(t *testing.T) {
-	k, _, bk, ok, _, sk, ctx := setupKeeper(t)
+	k, _, bk, ok, _, sk, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	msgServer := keeper.NewMsgServerImpl(k)
@@ -82,7 +82,7 @@ func TestMsgWithdrawTokens(t *testing.T) {
 }
 
 func BenchmarkMsgWithdrawTokens(b *testing.B) {
-	k, _, bk, ok, _, sk, ctx := setupKeeper(b)
+	k, _, bk, ok, _, sk, _, ctx := setupKeeper(b)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	msgServer := keeper.NewMsgServerImpl(k)
 	creatorAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())

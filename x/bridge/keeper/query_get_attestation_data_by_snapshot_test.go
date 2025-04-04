@@ -15,7 +15,7 @@ import (
 )
 
 func TestGetAttestationDataBySnapshot(t *testing.T) {
-	k, _, _, ok, _, _, ctx := testkeeper.BridgeKeeper(t)
+	k, _, _, ok, _, _, _, ctx := testkeeper.BridgeKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 

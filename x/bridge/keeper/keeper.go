@@ -57,6 +57,7 @@ type (
 		oracleKeeper   types.OracleKeeper
 		bankKeeper     types.BankKeeper
 		reporterKeeper types.ReporterKeeper
+		disputeKeeper  types.DisputeKeeper
 		authority      string
 	}
 )
@@ -68,6 +69,7 @@ func NewKeeper(
 	oracleKeeper types.OracleKeeper,
 	bankKeeper types.BankKeeper,
 	reporterKeeper types.ReporterKeeper,
+	disputeKeeper types.DisputeKeeper,
 	authority string,
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
@@ -97,6 +99,7 @@ func NewKeeper(
 		oracleKeeper:   oracleKeeper,
 		bankKeeper:     bankKeeper,
 		reporterKeeper: reporterKeeper,
+		disputeKeeper:  disputeKeeper,
 		authority:      authority,
 	}
 

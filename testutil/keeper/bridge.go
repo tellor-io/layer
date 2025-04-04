@@ -23,7 +23,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func BridgeKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, *mocks.OracleKeeper, *mocks.ReporterKeeper, *mocks.StakingKeeper, sdk.Context) {
+func BridgeKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, *mocks.OracleKeeper, *mocks.ReporterKeeper, *mocks.StakingKeeper, *mocks.DisputeKeeper, sdk.Context) {
 	tb.Helper()
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
@@ -42,7 +42,7 @@ func BridgeKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.Ba
 	oracleKeeper := new(mocks.OracleKeeper)
 	reporterKeeper := new(mocks.ReporterKeeper)
 	stakingKeeper := new(mocks.StakingKeeper)
-
+	disputeKeeper := new(mocks.DisputeKeeper)
 	k := keeper.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(storeKey),
@@ -50,6 +50,7 @@ func BridgeKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.Ba
 		oracleKeeper,
 		bankKeeper,
 		reporterKeeper,
+		disputeKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
@@ -58,5 +59,5 @@ func BridgeKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.Ba
 	// Initialize params
 	require.NoError(tb, k.Params.Set(ctx, types.DefaultParams()))
 
-	return k, accountKeeper, bankKeeper, oracleKeeper, reporterKeeper, stakingKeeper, ctx
+	return k, accountKeeper, bankKeeper, oracleKeeper, reporterKeeper, stakingKeeper, disputeKeeper, ctx
 }

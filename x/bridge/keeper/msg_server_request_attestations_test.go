@@ -21,7 +21,7 @@ import (
 )
 
 func TestMsgRequestAttestations(t *testing.T) {
-	k, _, _, ok, _, sk, ctx := setupKeeper(t)
+	k, _, _, ok, _, sk, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	msgServer := keeper.NewMsgServerImpl(k)

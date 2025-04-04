@@ -50,3 +50,7 @@ type OracleKeeper interface {
 type ReporterKeeper interface {
 	TotalReporterPower(ctx context.Context) (math.Int, error)
 }
+
+type DisputeKeeper interface {
+	GetTeamAddress(ctx context.Context) (sdk.AccAddress, error)
+}

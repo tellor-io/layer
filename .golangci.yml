@@ -141,7 +141,7 @@ linters-settings:
   gofumpt:
     extra-rules: true
   dogsled:
-    max-blank-identifiers: 6
+    max-blank-identifiers: 8
   maligned:
     suggest-new: true
   nolintlint:

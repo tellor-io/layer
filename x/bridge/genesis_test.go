@@ -17,7 +17,7 @@ func TestGenesis(t *testing.T) {
 		// this line is used by starport scaffolding # genesis/test/state
 	}
 
-	k, _, _, _, _, _, ctx := keepertest.BridgeKeeper(t)
+	k, _, _, _, _, _, _, ctx := keepertest.BridgeKeeper(t)
 	bridge.InitGenesis(ctx, k, genesisState)
 	got := bridge.ExportGenesis(ctx, k)
 	require.NotNil(t, got)
