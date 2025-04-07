@@ -89,9 +89,9 @@ func TestMsgWithdrawTokensBadRecipient(t *testing.T) {
 	msgServer := keeper.NewMsgServerImpl(k)
 
 	creatorAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
-	badRecipientInvalidHex := "1234567890zbcdef1234567890abcdef12345678"
+	badRecipientInvalidHex := "z1234567890abcdef1234567890abcdef1234567"
 	badRecipientInvalidLength := "1234567890abcdef1234567890abcdef123456"
-	goodRecipientAddr := "1234567890abcdef1234567890abcdef12345678"
+	goodRecipientAddr := "1234567890abcdef1234567890abcdef12345679"
 
 	// bad recipient invalid hex
 	response, err := msgServer.WithdrawTokens(ctx, &types.MsgWithdrawTokens{
