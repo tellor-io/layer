@@ -25,9 +25,9 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func setupKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, *mocks.OracleKeeper, *mocks.ReporterKeeper, *mocks.StakingKeeper, context.Context) {
+func setupKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, *mocks.OracleKeeper, *mocks.ReporterKeeper, *mocks.StakingKeeper, *mocks.DisputeKeeper, context.Context) {
 	tb.Helper()
-	k, ak, bk, ok, rk, sk, ctx := keepertest.BridgeKeeper(tb)
+	k, ak, bk, ok, rk, sk, dk, ctx := keepertest.BridgeKeeper(tb)
 
 	// Initialize genesis state with default snapshot limit
 	err := k.SnapshotLimit.Set(ctx, types.SnapshotLimit{
@@ -39,22 +39,23 @@ func setupKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.Ban
 	err = k.Params.Set(ctx, types.DefaultParams())
 	require.NoError(tb, err)
 
-	return k, ak, bk, ok, rk, sk, ctx
+	return k, ak, bk, ok, rk, sk, dk, ctx
 }
 
 func TestKeeper(t *testing.T) {
-	k, ak, bk, ok, rk, sk, ctx := setupKeeper(t)
+	k, ak, bk, ok, rk, sk, dk, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ak)
 	require.NotNil(t, bk)
 	require.NotNil(t, ok)
 	require.NotNil(t, rk)
 	require.NotNil(t, sk)
+	require.NotNil(t, dk)
 	require.NotNil(t, ctx)
 }
 
 func TestGetCurrentValidatorsEVMCompatible(t *testing.T) {
-	k, _, _, _, _, sk, ctx := setupKeeper(t)
+	k, _, _, _, _, sk, _, ctx := setupKeeper(t)
 
 	validators := []stakingtypes.Validator{
 		{
@@ -98,7 +99,7 @@ func TestGetCurrentValidatorsEVMCompatible(t *testing.T) {
 }
 
 func TestGetCurrentValidatorsEVMCompatibleNoValidators(t *testing.T) {
-	k, _, _, _, _, sk, ctx := setupKeeper(t)
+	k, _, _, _, _, sk, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	validators := []stakingtypes.Validator{}
@@ -110,7 +111,7 @@ func TestGetCurrentValidatorsEVMCompatibleNoValidators(t *testing.T) {
 }
 
 func TestGetCurrentValidatorsEVMCompatibleEqualPowers(t *testing.T) {
-	k, _, _, _, _, sk, ctx := setupKeeper(t)
+	k, _, _, _, _, sk, _, ctx := setupKeeper(t)
 
 	validators := []stakingtypes.Validator{
 		{
@@ -155,7 +156,7 @@ func TestGetCurrentValidatorsEVMCompatibleEqualPowers(t *testing.T) {
 }
 
 func TestGetCurrentValidatorSetEVMCompatible(t *testing.T) {
-	k, _, _, _, _, sk, ctx := setupKeeper(t)
+	k, _, _, _, _, sk, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -200,7 +201,7 @@ func TestGetCurrentValidatorSetEVMCompatible(t *testing.T) {
 }
 
 func TestCompareAndSetBridgeValidators(t *testing.T) {
-	k, _, _, _, _, sk, ctx := setupKeeper(t)
+	k, _, _, _, _, sk, _, ctx := setupKeeper(t)
 	logger := k.Logger(ctx)
 
 	// call without setting validator set
@@ -311,7 +312,7 @@ func TestCompareAndSetBridgeValidators(t *testing.T) {
 }
 
 func TestSetBridgeValidatorParams(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -354,7 +355,7 @@ func TestSetBridgeValidatorParams(t *testing.T) {
 
 // todo: check all stores
 func TestCalculateValidatorSetCheckpoint(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -393,7 +394,7 @@ func TestCalculateValidatorSetCheckpoint(t *testing.T) {
 }
 
 func TestGetValidatorCheckpointFromStorage(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -419,7 +420,7 @@ func TestGetValidatorCheckpointFromStorage(t *testing.T) {
 }
 
 func TestGetValidatorTimestampByIdxFromStorage(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -479,7 +480,7 @@ func TestGetValidatorTimestampByIdxFromStorage(t *testing.T) {
 }
 
 func TestGetValidatorSetSignaturesFromStorage(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -522,7 +523,7 @@ func TestGetValidatorSetSignaturesFromStorage(t *testing.T) {
 }
 
 func TestEncodeAndHashValidatorSet(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -561,7 +562,7 @@ func TestEncodeAndHashValidatorSet(t *testing.T) {
 }
 
 func TestPowerDiff(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -652,7 +653,7 @@ func TestPowerDiff(t *testing.T) {
 }
 
 func TestEVMAddressFromSignatures(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -719,7 +720,7 @@ func TestEVMAddressFromSignatures(t *testing.T) {
 }
 
 func TestTryRecoverAddressWithBothIDs(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -780,7 +781,7 @@ func TestTryRecoverAddressWithBothIDs(t *testing.T) {
 }
 
 func TestSetEVMAddressByOperator(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -824,7 +825,7 @@ func TestSetEVMAddressByOperator(t *testing.T) {
 }
 
 func TestSetBridgeValsetSignature(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -889,7 +890,7 @@ func TestSetBridgeValsetSignature(t *testing.T) {
 }
 
 func TestGetEVMAddressByOperator(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -927,7 +928,7 @@ func TestGetEVMAddressByOperator(t *testing.T) {
 }
 
 func TestGetValidatorCheckpointParamsFromStorage(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -953,7 +954,7 @@ func TestGetValidatorCheckpointParamsFromStorage(t *testing.T) {
 }
 
 func TestSetOracleAttestation(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -987,7 +988,7 @@ func TestSetOracleAttestation(t *testing.T) {
 }
 
 func TestGetAttestationRequestsByHeight(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -1015,7 +1016,7 @@ func TestGetAttestationRequestsByHeight(t *testing.T) {
 }
 
 func TestGetLatestCheckpointIndex(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -1034,7 +1035,7 @@ func TestGetLatestCheckpointIndex(t *testing.T) {
 }
 
 func TestGetValidatorDidSignCheckpoint(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -1097,7 +1098,7 @@ func TestGetValidatorDidSignCheckpoint(t *testing.T) {
 }
 
 func TestCreateSnapshot(t *testing.T) {
-	k, _, _, ok, _, _, ctx := setupKeeper(t)
+	k, _, _, ok, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	timestamp := time.Now()
@@ -1183,7 +1184,7 @@ func TestCreateSnapshot(t *testing.T) {
 }
 
 func TestCreateNewReportSnapshots(t *testing.T) {
-	k, _, _, ok, _, _, ctx := setupKeeper(t)
+	k, _, _, ok, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -1253,7 +1254,7 @@ func TestCreateNewReportSnapshots(t *testing.T) {
 }
 
 func TestEncodeOracleAttestationData(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -1272,7 +1273,7 @@ func TestEncodeOracleAttestationData(t *testing.T) {
 }
 
 func TestGetCurrentValidatorSetTimestamp(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -1328,7 +1329,7 @@ func TestGetCurrentValidatorSetTimestamp(t *testing.T) {
 }
 
 func TestGetValidatorSetIndexByTimestamp(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 

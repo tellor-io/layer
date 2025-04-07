@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/hex"
 	"testing"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
@@ -16,7 +17,7 @@ import (
 )
 
 func TestMsgWithdrawTokens(t *testing.T) {
-	k, _, bk, ok, _, sk, ctx := setupKeeper(t)
+	k, _, bk, ok, _, sk, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	msgServer := keeper.NewMsgServerImpl(k)
@@ -81,8 +82,58 @@ func TestMsgWithdrawTokens(t *testing.T) {
 	require.NotNil(t, response)
 }
 
+func TestMsgWithdrawTokensBadRecipient(t *testing.T) {
+	k, _, bk, ok, _, sk, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+	msgServer := keeper.NewMsgServerImpl(k)
+
+	creatorAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+	badRecipientInvalidHex := "z1234567890abcdef1234567890abcdef1234567"
+	badRecipientInvalidLength := "1234567890abcdef1234567890abcdef123456"
+	goodRecipientAddr := "1234567890abcdef1234567890abcdef12345679"
+
+	// bad recipient invalid hex
+	response, err := msgServer.WithdrawTokens(ctx, &types.MsgWithdrawTokens{
+		Creator:   creatorAddr.String(),
+		Recipient: badRecipientInvalidHex,
+		Amount:    sdk.Coin{Denom: "loya", Amount: math.NewInt(10 * 1e6)},
+	})
+	require.ErrorContains(t, err, "invalid request")
+	require.Nil(t, response)
+
+	// bad recipient invalid length
+	response, err = msgServer.WithdrawTokens(ctx, &types.MsgWithdrawTokens{
+		Creator:   creatorAddr.String(),
+		Recipient: badRecipientInvalidLength,
+		Amount:    sdk.Coin{Denom: "loya", Amount: math.NewInt(10 * 1e6)},
+	})
+	require.ErrorContains(t, err, "invalid request")
+	require.Nil(t, response)
+
+	// good recipient
+	amount := sdk.Coin{Denom: "loya", Amount: math.NewInt(10 * 1e6)}
+	bk.On("SendCoinsFromAccountToModule", ctx, creatorAddr, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
+	bk.On("BurnCoins", ctx, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
+	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(10*1e6), nil)
+	goodRecipientHex, err := hex.DecodeString(goodRecipientAddr)
+	require.NoError(t, err)
+	agg, queryData, err := k.CreateWithdrawalAggregate(ctx, amount, creatorAddr, goodRecipientHex, 1)
+	require.NoError(t, err)
+	require.NotNil(t, agg)
+	require.NotNil(t, queryData)
+	ok.On("SetAggregate", ctx, agg, queryData).Return(nil)
+	response, err = msgServer.WithdrawTokens(ctx, &types.MsgWithdrawTokens{
+		Creator:   creatorAddr.String(),
+		Recipient: goodRecipientAddr,
+		Amount:    amount,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, response)
+}
+
 func BenchmarkMsgWithdrawTokens(b *testing.B) {
-	k, _, bk, ok, _, sk, ctx := setupKeeper(b)
+	k, _, bk, ok, _, sk, _, ctx := setupKeeper(b)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	msgServer := keeper.NewMsgServerImpl(k)
 	creatorAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())

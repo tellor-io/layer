@@ -20,7 +20,7 @@ import (
 )
 
 func TestDecodeDepositReportValue(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -98,7 +98,7 @@ func TestDecodeDepositReportValue(t *testing.T) {
 }
 
 func TestDecodeDepositReportValueInvalidReport(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -137,8 +137,42 @@ func TestDecodeDepositReportValueInvalidReport(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestDecodeDepositReportValueBadAddress(t *testing.T) {
+	k, _, _, _, _, _, dk, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	AddressType, err := abi.NewType("address", "", nil)
+	require.NoError(t, err)
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	require.NoError(t, err)
+	StringType, err := abi.NewType("string", "", nil)
+	require.NoError(t, err)
+	reportValueArgs := abi.Arguments{
+		{Type: AddressType},
+		{Type: StringType},
+		{Type: Uint256Type},
+		{Type: Uint256Type},
+	}
+	ethAddress := common.HexToAddress("0x3386518F7ab3eb51591571adBE62CF94540EAd29")
+	layerAddressString := "not-an-address"
+	amountAggregate := big.NewInt(1 * 1e12) // 1 loya, 0.00001 trb
+	tipAmount := big.NewInt(1 * 1e12)
+	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddress, layerAddressString, amountAggregate, tipAmount)
+	require.NoError(t, err)
+	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
+
+	teamAddress := simtestutil.CreateIncrementalAccounts(1)[0]
+	dk.On("GetTeamAddress", ctx).Return(teamAddress, nil)
+	recipient, amount, tip, err := k.DecodeDepositReportValue(ctx, reportValueString)
+	require.Equal(t, recipient.String(), teamAddress.String())
+	require.Equal(t, amount.AmountOf("loya").BigInt(), amountAggregate.Div(amountAggregate, big.NewInt(1e12)))
+	require.Equal(t, tip.AmountOf("loya").BigInt(), tipAmount.Div(tipAmount, big.NewInt(1e12)))
+	require.NoError(t, err)
+}
+
 func TestGetDepositQueryId(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -164,7 +198,7 @@ func TestGetDepositQueryId(t *testing.T) {
 }
 
 func TestClaimDeposit(t *testing.T) {
-	k, _, bk, ok, _, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -216,7 +250,7 @@ func TestClaimDeposit(t *testing.T) {
 }
 
 func TestClaimDepositNilAggregate(t *testing.T) {
-	k, _, _, ok, _, _, ctx := setupKeeper(t)
+	k, _, _, ok, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -230,7 +264,7 @@ func TestClaimDepositNilAggregate(t *testing.T) {
 }
 
 func TestClaimDepositFlaggedAggregate(t *testing.T) {
-	k, _, bk, ok, rk, _, ctx := setupKeeper(t)
+	k, _, bk, ok, rk, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -277,7 +311,7 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 }
 
 func TestClaimDepositNotEnoughPower(t *testing.T) {
-	k, _, bk, ok, _, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -326,7 +360,7 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 }
 
 func TestClaimDepositReportTooYoung(t *testing.T) {
-	k, _, bk, ok, _, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -374,7 +408,7 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 }
 
 func TestClaimDepositSpam(t *testing.T) {
-	k, _, bk, ok, _, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

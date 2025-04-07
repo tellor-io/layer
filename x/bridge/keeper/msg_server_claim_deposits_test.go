@@ -18,7 +18,7 @@ import (
 )
 
 func TestMsgClaimDeposits(t *testing.T) {
-	k, _, bk, ok, _, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, _, _, ctx := setupKeeper(t)
 	msgServer := keeper.NewMsgServerImpl(k)
 
 	require.Panics(t, func() {
@@ -85,7 +85,7 @@ func TestMsgClaimDeposits(t *testing.T) {
 }
 
 func BenchmarkMsgClaimDeposits(b *testing.B) {
-	k, _, bk, ok, _, _, ctx := setupKeeper(b)
+	k, _, bk, ok, _, _, _, ctx := setupKeeper(b)
 	msgServer := keeper.NewMsgServerImpl(k)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
