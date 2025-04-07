@@ -59,6 +59,7 @@ func TestGenesis(t *testing.T) {
 	genesisState.DepositIdClaimedMap = []*types.DepositIdClaimedMapEntry{{DepositId: 1, IsClaimed: true}, {DepositId: 2, IsClaimed: false}}
 
 	k, _, _, _, _, _, _, ctx = keepertest.BridgeKeeper(t)
+	ctx = ctx.WithBlockHeight(10)
 	require.NotPanics(t, func() { bridge.InitGenesis(ctx, k, genesisState) })
 	got = bridge.ExportGenesis(ctx, k)
 	require.NotNil(t, got)
