@@ -463,10 +463,10 @@ func TestFork(t *testing.T) {
 	genesis, _, err := val1.Exec(ctx, []string{
 		"layerd", "export",
 		"--home", val1.HomeDir(),
-		"--height", fmt.Sprintf("%d", height),
 	}, val1.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("genesis: ", string(genesis))
+	time.Sleep(15 * time.Second)
 
 	// Write the genesis to a temporary file in the current directory
 	exportPath := "exported_genesis.json"
