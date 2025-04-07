@@ -618,6 +618,7 @@ func New(
 		app.OracleKeeper,
 		app.BankKeeper,
 		app.ReporterKeeper,
+		app.DisputeKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	app.OracleKeeper.SetBridgeKeeper(app.BridgeKeeper)
