@@ -12,6 +12,7 @@ import (
 
 // InitGenesis initializes the module's state from a provided genesis state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// this line is used by starport scaffolding # genesis/module/init
 	if err := k.Params.Set(ctx, genState.Params); err != nil {
 		panic(err)
@@ -25,106 +26,104 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 	}
 
-	if genState.ValidatorCheckpoint != nil {
+	if sdkCtx.BlockHeight() > 1 {
+		k.Logger(ctx).Info("setting valdiator checkpoint in init genesis")
 		if err := k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{Checkpoint: genState.ValidatorCheckpoint}); err != nil {
 			panic(err)
 		}
-	}
 
-	if genState.WithdrawalId != 0 {
 		if err := k.WithdrawalId.Set(ctx, types.WithdrawalId{Id: genState.WithdrawalId}); err != nil {
 			panic(err)
 		}
-	}
 
-	if genState.LatestValidatorCheckpointIdx != 0 {
 		if err := k.LatestCheckpointIdx.Set(ctx, types.CheckpointIdx{Index: genState.LatestValidatorCheckpointIdx}); err != nil {
 			panic(err)
 		}
-	}
+		k.Logger(ctx).Info("Latest Validator checkpoint idx from genesis: ", types.CheckpointIdx{Index: genState.LatestValidatorCheckpointIdx})
 
-	for _, data := range genState.OperatorToEvmAddressMap {
-		k.Logger(ctx).Info("Inside of OperatorToEvmAddressMap for loop for some reason")
-		if err := k.OperatorToEVMAddressMap.Set(ctx, data.OperatorAddress, types.EVMAddress{EVMAddress: data.EvmAddress}); err != nil {
-			panic(err)
+		for _, data := range genState.OperatorToEvmAddressMap {
+			k.Logger(ctx).Info("Inside of OperatorToEvmAddressMap for loop for some reason")
+			if err := k.OperatorToEVMAddressMap.Set(ctx, data.OperatorAddress, types.EVMAddress{EVMAddress: data.EvmAddress}); err != nil {
+				panic(err)
+			}
 		}
-	}
 
-	for _, data := range genState.EvmRegisteredMap {
-		if err := k.EVMAddressRegisteredMap.Set(ctx, data.OperatorAddress, types.EVMAddressRegistered{Registered: data.Registered}); err != nil {
-			panic(err)
+		for _, data := range genState.EvmRegisteredMap {
+			if err := k.EVMAddressRegisteredMap.Set(ctx, data.OperatorAddress, types.EVMAddressRegistered{Registered: data.Registered}); err != nil {
+				panic(err)
+			}
 		}
-	}
 
-	for _, data := range genState.BridgeValsetSigsMap {
-		if err := k.BridgeValsetSignaturesMap.Set(ctx, data.Timestamp, types.BridgeValsetSignatures{Signatures: data.ValsetSigs}); err != nil {
-			panic(err)
+		for _, data := range genState.BridgeValsetSigsMap {
+			if err := k.BridgeValsetSignaturesMap.Set(ctx, data.Timestamp, types.BridgeValsetSignatures{Signatures: data.ValsetSigs}); err != nil {
+				panic(err)
+			}
 		}
-	}
 
-	for _, data := range genState.ValidatorCheckpointParamsMap {
-		if err := k.ValidatorCheckpointParamsMap.Set(ctx, data.Timestamp, types.ValidatorCheckpointParams{Checkpoint: data.ValidatorCheckpoint, ValsetHash: data.ValidatorSetHash, Timestamp: data.Timestamp, PowerThreshold: data.ValidatorPowerThreshold}); err != nil {
-			panic(err)
+		for _, data := range genState.ValidatorCheckpointParamsMap {
+			if err := k.ValidatorCheckpointParamsMap.Set(ctx, data.Timestamp, types.ValidatorCheckpointParams{Checkpoint: data.ValidatorCheckpoint, ValsetHash: data.ValidatorSetHash, Timestamp: data.Timestamp, PowerThreshold: data.ValidatorPowerThreshold}); err != nil {
+				panic(err)
+			}
 		}
-	}
 
-	for _, data := range genState.ValidatorCheckpointIdxMap {
-		if err := k.ValidatorCheckpointIdxMap.Set(ctx, data.Index, types.CheckpointTimestamp{Timestamp: data.Timestamp}); err != nil {
-			panic(err)
+		for _, data := range genState.ValidatorCheckpointIdxMap {
+			if err := k.ValidatorCheckpointIdxMap.Set(ctx, data.Index, types.CheckpointTimestamp{Timestamp: data.Timestamp}); err != nil {
+				panic(err)
+			}
 		}
-	}
 
-	for _, data := range genState.BridgeValsetByTimestampMap {
-		if err := k.BridgeValsetByTimestampMap.Set(ctx, data.Timestamp, *data.Valset); err != nil {
-			panic(err)
+		for _, data := range genState.BridgeValsetByTimestampMap {
+			if err := k.BridgeValsetByTimestampMap.Set(ctx, data.Timestamp, *data.Valset); err != nil {
+				panic(err)
+			}
 		}
-	}
 
-	for _, data := range genState.ValsetTimestampToIdxMap {
-		if err := k.ValsetTimestampToIdxMap.Set(ctx, data.Timestamp, types.CheckpointIdx{Index: data.Index}); err != nil {
-			panic(err)
+		for _, data := range genState.ValsetTimestampToIdxMap {
+			if err := k.ValsetTimestampToIdxMap.Set(ctx, data.Timestamp, types.CheckpointIdx{Index: data.Index}); err != nil {
+				panic(err)
+			}
 		}
-	}
 
-	for _, data := range genState.AttestSnapshotsByReportMap {
-		if err := k.AttestSnapshotsByReportMap.Set(ctx, data.Key, types.AttestationSnapshots{Snapshots: data.Snapshots}); err != nil {
-			panic(err)
+		for _, data := range genState.AttestSnapshotsByReportMap {
+			if err := k.AttestSnapshotsByReportMap.Set(ctx, data.Key, types.AttestationSnapshots{Snapshots: data.Snapshots}); err != nil {
+				panic(err)
+			}
 		}
-	}
 
-	for _, data := range genState.AttestSnapshotDataMap {
-		if err := k.AttestSnapshotDataMap.Set(ctx, data.Key, types.AttestationSnapshotData{
-			ValidatorCheckpoint:    data.ValCheckpoint,
-			AttestationTimestamp:   data.AttestationTimestamp,
-			PrevReportTimestamp:    data.PrevReportTimestamp,
-			NextReportTimestamp:    data.NextReportTimestamp,
-			QueryId:                data.QueryId,
-			Timestamp:              data.Timestamp,
-			LastConsensusTimestamp: data.LastConsensusTimestamp,
-		}); err != nil {
-			panic(err)
+		for _, data := range genState.AttestSnapshotDataMap {
+			if err := k.AttestSnapshotDataMap.Set(ctx, data.Key, types.AttestationSnapshotData{
+				ValidatorCheckpoint:    data.ValCheckpoint,
+				AttestationTimestamp:   data.AttestationTimestamp,
+				PrevReportTimestamp:    data.PrevReportTimestamp,
+				NextReportTimestamp:    data.NextReportTimestamp,
+				QueryId:                data.QueryId,
+				Timestamp:              data.Timestamp,
+				LastConsensusTimestamp: data.LastConsensusTimestamp,
+			}); err != nil {
+				panic(err)
+			}
 		}
-	}
 
-	for _, data := range genState.SnapshotToAttestationsMap {
-		if err := k.SnapshotToAttestationsMap.Set(ctx, data.Snapshot, types.OracleAttestations{Attestations: data.Attestations}); err != nil {
-			panic(err)
+		for _, data := range genState.SnapshotToAttestationsMap {
+			if err := k.SnapshotToAttestationsMap.Set(ctx, data.Snapshot, types.OracleAttestations{Attestations: data.Attestations}); err != nil {
+				panic(err)
+			}
 		}
-	}
 
-	for _, data := range genState.AttestRequestsByHeightMap {
-		requests := make([]*types.AttestationRequest, len(data.Requests))
-		for i, snapshot := range data.Requests {
-			requests[i] = &types.AttestationRequest{Snapshot: snapshot}
+		for _, data := range genState.AttestRequestsByHeightMap {
+			requests := make([]*types.AttestationRequest, len(data.Requests))
+			for i, snapshot := range data.Requests {
+				requests[i] = &types.AttestationRequest{Snapshot: snapshot}
+			}
+			if err := k.AttestRequestsByHeightMap.Set(ctx, data.BlockHeight, types.AttestationRequests{Requests: requests}); err != nil {
+				panic(err)
+			}
 		}
-		if err := k.AttestRequestsByHeightMap.Set(ctx, data.BlockHeight, types.AttestationRequests{Requests: requests}); err != nil {
-			panic(err)
-		}
-	}
 
-	for _, data := range genState.DepositIdClaimedMap {
-		if err := k.DepositIdClaimedMap.Set(ctx, data.DepositId, types.DepositClaimed{Claimed: data.IsClaimed}); err != nil {
-			panic(err)
+		for _, data := range genState.DepositIdClaimedMap {
+			if err := k.DepositIdClaimedMap.Set(ctx, data.DepositId, types.DepositClaimed{Claimed: data.IsClaimed}); err != nil {
+				panic(err)
+			}
 		}
 	}
 }
