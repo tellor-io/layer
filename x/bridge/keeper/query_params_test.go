@@ -10,7 +10,7 @@ import (
 )
 
 func TestParamsQuery(t *testing.T) {
-	k, _, _, _, _, _, ctx := testkeeper.BridgeKeeper(t)
+	k, _, _, _, _, _, _, ctx := testkeeper.BridgeKeeper(t)
 	params := types.DefaultParams()
 	require.NoError(t, k.Params.Set(ctx, params))
 

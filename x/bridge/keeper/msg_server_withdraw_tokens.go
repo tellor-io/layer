@@ -27,6 +27,10 @@ func (k msgServer) WithdrawTokens(goCtx context.Context, msg *types.MsgWithdrawT
 		return nil, sdkerrors.ErrInvalidRequest
 	}
 
+	if len(recipient) != 20 {
+		return nil, sdkerrors.ErrInvalidRequest
+	}
+
 	withdrawalId, err := k.Keeper.WithdrawTokens(sdkCtx, msg.Amount, sender, recipient)
 	if err != nil {
 		return nil, err

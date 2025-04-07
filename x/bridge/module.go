@@ -183,6 +183,7 @@ type BridgeInputs struct {
 	Oraclekeeper  types.OracleKeeper
 
 	ReporterKeeper types.ReporterKeeper
+	DisputeKeeper  types.DisputeKeeper
 }
 
 type BridgeOutputs struct {
@@ -200,6 +201,7 @@ func ProvideModule(in BridgeInputs) BridgeOutputs {
 		in.Oraclekeeper,
 		in.BankKeeper,
 		in.ReporterKeeper,
+		in.DisputeKeeper,
 		"gov",
 	)
 	m := NewAppModule(
