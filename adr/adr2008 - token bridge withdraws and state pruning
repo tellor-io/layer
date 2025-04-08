@@ -1,0 +1,30 @@
+# ADR 2008: Layer token bridge withdraws and state pruning
+
+## Authors
+
+@heavychain
+
+## Changelog
+
+- 2025-04-07: initial version
+
+## Context
+
+The Layer token bridge allows users to withdraw tokens from Layer to Ethereum mainnet. When a withdraw is initiated on Layer, a mock aggregate report is created with the withdraw amount, creator address, and recipient address. Then, 12 hours later, anyone can request new attestations for this report and relay the request to the token bridge contract on Ethereum mainnet in order to withdraw the tokens to the recipient address on Ethereum. 
+
+We will likely need to enable state pruning of old oracle data and attestations to keep the Layer state manageable. If we do enable state pruning, we will need to ensure that the token bridge can still function properly. This document outlines a proposed approach to achieving this.
+
+## Token bridge withdraws as a special case
+
+When we enable state pruning of old oracle data, we will need to add an exception for token bridge withdraw reports such that the chain stores this withdraw information indefinitely. If for whatever reason a user's withdraw is not relayed to Ethereum for a long time, and the user then wants to withdraw their tokens, the chain will need this old report information in order for the validators to create new attestations for the report. This exception likely won't amount to much state, but we could potentially implement a different solution should it become an issue in the future.
+
+Note that we don't necessarily need an exception for old withdraw attestations. We also don't need an exception for old bridge deposits. If some deposit is not claimed for a long time, anyone can add a tip to request new reports for the deposit. 
+
+## Alternative Approaches
+
+### Refund failed withdraws
+One alternative approach to this problem would be to enable failed withdraws to be refunded to the creator address. However, this would require some kind of callback from Ethereum back to Layer after each withdraw is completed, which would add more complexity to the token bridge.
+
+## Issues / Notes on Implementation
+
+
