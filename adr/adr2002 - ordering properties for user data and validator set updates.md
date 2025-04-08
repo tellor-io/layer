@@ -12,24 +12,24 @@
 - 2024-02-26: unbonding period 
 - 2024-04-04: clarity in background
 - 2024-08-05: clean up
+- 2025-04-07: last consensus timestamp
 
 ## Context
 
 Nonces generally help keep track of the order that data is added and the validator updates happen on cosmos chains.
 While blobstream has used nonces to track the order of these important pieces, in Layer we have opted to use timestamps, as described below, for oracle data attestations and validator set changes. Strict rules are applied for for the validator set updates (ADR 2005) but the user can determine what data to use for their use case based on the timestamps provided. 
 
-User data attestations - Each piece of data has 4 timestamps assoicated with it: 1) `attestationTimestamp`, 2)`reportTimestamp`, 3)`nextTimestamp`, 4)`previousTimestamp`. 
+User data attestations - Each piece of data has 5 timestamps associated with it: 1) `attestationTimestamp`, 2)`reportTimestamp`, 3)`nextTimestamp`, 4)`previousTimestamp`, 5)`lastConsensusTimestamp`. 
 
-Valicator updates - Each time the validator set is updated there is a new `validatorSetTimestamp`. This prevents the valiator set from being updated to an old set by requiring that the timstamp always increases with each update.
+Validator updates - Each time the validator set is updated there is a new `validatorSetTimestamp`. This prevents the validator set from being updated to an old set by requiring that the timstamp always increases with each update.
 
  ![ ADR2002](./graphics/adr2002.png)
 ### Data attestations
 
-Keeping track of the order of user data is important for Layer because allowing users to request old data can create optionality in the data used in their protocols (e.g. allowing users to request old price data for their benefit instead of the latest available). When users request a an attestaton for data the `attestationTimestamp`,`reportTimestamp`,`nextTimestamp` (where this should be zero if it is the latest) and `previousTimestamp` are provided to determine ordering properties of bridged user data. The attestation timestamp is used to verify there is not a stale attestation in place. This ensures that there have been no disputes and no significant validator changes. 
+Keeping track of the order of user data is important for Layer because allowing users to request old data can create optionality in the data used in their protocols (e.g. allowing users to request old price data for their benefit instead of the latest available). When users request an attestation for data the `attestationTimestamp`,`reportTimestamp`,`nextTimestamp` (where this should be zero if it is the latest), `previousTimestamp` and `lastConsensusTimestamp` are provided to determine ordering properties of bridged user data. The attestation timestamp is used to verify there is not a stale attestation in place. This ensures that there have been no disputes and no significant validator changes. 
 
-Since users may not need every single oracle data point, providing the four different timestamps allows them to skip entries when needed (e.g. if we report prices 100, 101, and 102, a user on ETH could just bridge the 102 update and skip the other two).
+Since users may not need every single oracle data point, providing the five different timestamps allows them to skip entries when needed (e.g. if we report prices 100, 101, and 102, a user on ETH could just bridge the 102 update and skip the other two). For those users who prioritize consensus data (data with 2/3 power), they can use the `lastConsensusTimestamp` to help their contracts determine whether the correct data is being used.
  
-
 ### Validator set changes
 
 The order of the validator set updates is also very important because it helps maintain a list of validators that are still bonded and active. 
