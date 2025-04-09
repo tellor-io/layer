@@ -3,7 +3,6 @@ package oracle
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -120,7 +119,7 @@ func InitGenesis(ctx context.Context, k keeper.Keeper, genState types.GenesisSta
 func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentBlockHeight := sdkCtx.BlockHeight()
-	days_ago := sdkCtx.BlockTime().Add(-21 * 24 * time.Hour) // 21 days ago
+	days_ago := time.Now().Add(-21 * 24 * time.Hour) // 21 days ago
 	genesis := types.DefaultGenesis()
 	// get params
 	params, err := k.GetParams(ctx)
@@ -299,14 +298,12 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 		}
 		timestamp := keys.K2()
 		if timestamp < uint64(olderThan21Days) {
-			fmt.Println("timestamp", timestamp, "olderThan21Days", olderThan21Days)
 			continue
 		}
 		aggregate, err := iterAggregates.Value()
 		if err != nil {
 			panic(err)
 		}
-		fmt.Println("aggregate", aggregate)
 		aggregates = append(aggregates, &types.AggregateStateEntry{Timestamp: timestamp, Aggregate: &aggregate})
 	}
 	genesis.Aggregates = aggregates
