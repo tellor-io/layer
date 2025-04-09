@@ -1,0 +1,20 @@
+syntax = "proto3";
+package layer.oracle;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+import "layer/oracle/aggregate_reporter.proto";
+
+option go_package = "github.com/tellor-io/layer/x/oracle/types";
+
+// aggregate struct to represent meta data of an aggregate report
+message DepositQueue {
+  // meta_id is the id of the querymeta iterator
+  uint64 meta_id = 1;
+  // timestamp is the timestamp of the aggregate report
+  uint64 timestamp = 2;
+  // querydata
+  string querydata = 3;
+  // deposit_id
+  uint64 deposit_id = 4;
+}

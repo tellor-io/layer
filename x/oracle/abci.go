@@ -16,5 +16,6 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 	if err := k.SetAggregatedReport(ctx); err != nil {
 		return err
 	}
+
 	return k.RotateQueries(ctx)
 }

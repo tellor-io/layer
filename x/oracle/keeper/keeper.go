@@ -50,6 +50,8 @@ type (
 		ValuesWeightSum collections.Map[uint64, uint64] // key: queryMeta.Id value: totalWeight
 		// storage for values that are aggregated via weighted mode
 		ValuesWeightedMode collections.Map[collections.Pair[uint64, string], uint64] // key: queryMeta.Id, valueHexstring  value: total power of reporters that submitted the value
+		// storage for bridge deposit reports queue
+		ClaimDepositQueue collections.Map[uint64, types.DepositQueue] // key: queryMeta.Id, value: bridge deposit report
 	}
 )
 
@@ -135,6 +137,8 @@ func NewKeeper(
 		),
 		// QueryDataLimit is the maximum number of bytes query data can be
 		QueryDataLimit: collections.NewItem(sb, types.QueryDataLimitPrefix, "query_data_limit", codec.CollValue[types.QueryDataLimit](cdc)),
+		// ClaimDepositQueue is the queue of bridge deposit reports
+		ClaimDepositQueue: collections.NewMap(sb, types.ClaimDepositQueuePrefix, "claim_deposit_queue", collections.Uint64Key, codec.CollValue[types.DepositQueue](cdc)),
 	}
 
 	schema, err := sb.Build()

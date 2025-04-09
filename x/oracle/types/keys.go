@@ -53,6 +53,7 @@ var (
 	AggregateValuePrefix             = collections.NewPrefix(27)
 	ValuesPowerPrefix                = collections.NewPrefix(28)
 	QueryByExpirationPrefix          = collections.NewPrefix(29)
+	ClaimDepositQueuePrefix          = collections.NewPrefix(30)
 )
 
 func KeyPrefix(p string) []byte {
