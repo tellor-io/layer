@@ -1,6 +1,8 @@
 package reporter
 
 import (
+	"fmt"
+
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -17,6 +19,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("set params: ", genState.Params)
 	c := ctx.BlockTime()
 	err = k.Tracker.Set(ctx, types.StakeTracker{
 		Expiration: &c,
@@ -36,6 +39,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 	// loop through selector tips found in genesis file and add them to state
 	for _, data := range genState.SelectorTips {
+		fmt.Println("adding selector tip", data.SelectorAddress, data.Tips)
 		err = k.SelectorTips.Set(ctx, data.SelectorAddress, data.Tips)
 		if err != nil {
 			panic(err)
@@ -108,7 +112,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		panic(err)
 	}
 	selectorTips := make([]*types.SelectorTipsStateEntry, 0)
-	for ; iterReporters.Valid(); iterReporters.Next() {
+	for ; iterSelectorTips.Valid(); iterSelectorTips.Next() {
 		selector_addr, err := iterSelectorTips.Key()
 		if err != nil {
 			panic(err)
@@ -194,7 +198,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		queryId := keys.K1()
 		repAddr := keys.K2().K1()
 		blockheight := keys.K2().K2()
-		if (uint64(currentBlockHeight) - 1134000) > blockheight {
+		if (uint64(currentBlockHeight)-1134000) > blockheight && currentBlockHeight > 1134000 {
 			continue
 		}
 
