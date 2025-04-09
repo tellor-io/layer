@@ -25,12 +25,7 @@ func TestGenesis(t *testing.T) {
 		LatestValidatorCheckpointIdx: 0,
 		BridgeValsetByTimestampMap:   make([]*types.BridgeValsetByTimestampMapEntry, 0),
 		ValsetTimestampToIdxMap:      make([]*types.ValsetTimestampToIdxMapEntry, 0),
-		AttestSnapshotsByReportMap:   make([]*types.AttestSnapshotsByReportMapEntry, 0),
-		AttestSnapshotDataMap:        make([]*types.AttestSnapshotDataMapEntry, 0),
-		SnapshotToAttestationsMap:    make([]*types.SnapshotToAttestationsMapEntry, 0),
-		AttestRequestsByHeightMap:    make([]*types.AttestRequestsByHeightMapEntry, 0),
 		DepositIdClaimedMap:          make([]*types.DepositIdClaimedMapEntry, 0),
-		// this line is used by starport scaffolding # genesis/test/state
 	}
 
 	k, _, _, _, _, _, _, ctx := keepertest.BridgeKeeper(t)
@@ -52,10 +47,6 @@ func TestGenesis(t *testing.T) {
 	genesisState.LatestValidatorCheckpointIdx = 10
 	genesisState.BridgeValsetByTimestampMap = []*types.BridgeValsetByTimestampMapEntry{{Timestamp: 10, Valset: &types.BridgeValidatorSet{BridgeValidatorSet: []*types.BridgeValidator{{EthereumAddress: []byte("test address"), Power: 1000}}}}}
 	genesisState.ValsetTimestampToIdxMap = []*types.ValsetTimestampToIdxMapEntry{{Timestamp: 1000, Index: 6}}
-	genesisState.AttestSnapshotsByReportMap = []*types.AttestSnapshotsByReportMapEntry{{Key: []byte("key"), Snapshots: [][]byte{[]byte("snapshot")}}}
-	genesisState.AttestSnapshotDataMap = []*types.AttestSnapshotDataMapEntry{{Key: []byte("key"), ValCheckpoint: []byte("checkpoint"), PrevReportTimestamp: 5, NextReportTimestamp: 10, QueryId: []byte("query_id"), Timestamp: 7, LastConsensusTimestamp: 6, AttestationTimestamp: 5}}
-	genesisState.SnapshotToAttestationsMap = []*types.SnapshotToAttestationsMapEntry{{Snapshot: []byte("snapshot"), Attestations: [][]byte{[]byte("attest1"), []byte("attest2")}}}
-	genesisState.AttestRequestsByHeightMap = []*types.AttestRequestsByHeightMapEntry{{BlockHeight: 10, Requests: [][]byte{[]byte("request1"), []byte("request2")}}}
 	genesisState.DepositIdClaimedMap = []*types.DepositIdClaimedMapEntry{{DepositId: 1, IsClaimed: true}, {DepositId: 2, IsClaimed: false}}
 
 	k, _, _, _, _, _, _, ctx = keepertest.BridgeKeeper(t)
@@ -77,10 +68,6 @@ func TestGenesis(t *testing.T) {
 	require.Equal(t, genesisState.LatestValidatorCheckpointIdx, got.LatestValidatorCheckpointIdx)
 	require.Equal(t, genesisState.BridgeValsetByTimestampMap, got.BridgeValsetByTimestampMap)
 	require.Equal(t, genesisState.ValsetTimestampToIdxMap, got.ValsetTimestampToIdxMap)
-	require.Equal(t, genesisState.AttestSnapshotsByReportMap, got.AttestSnapshotsByReportMap)
-	require.Equal(t, genesisState.AttestSnapshotDataMap, got.AttestSnapshotDataMap)
-	require.Equal(t, genesisState.SnapshotToAttestationsMap, got.SnapshotToAttestationsMap)
-	require.Equal(t, genesisState.AttestRequestsByHeightMap, got.AttestRequestsByHeightMap)
 	require.Equal(t, genesisState.DepositIdClaimedMap, got.DepositIdClaimedMap)
 
 	// this line is used by starport scaffolding # genesis/test/assert

@@ -17,17 +17,15 @@ message GenesisState {
   repeated bytes cyclelist = 2 [(gogoproto.nullable) = false];
   uint64 query_data_limit = 3;
   repeated MicroReport reports = 4;
-  uint64 cyclelist_sequence = 5;
-  repeated TipperTotalStateEntry tipper_total = 6;
-  repeated TotalTipsStateEntry total_tips = 7;
-  repeated NoncesStateEntry nonces = 8;
-  uint64 query_sequencer = 9;
-  repeated QueryMeta query = 10;
-  repeated AggregateStateEntry aggregates = 11;
-  repeated ValuesStateEntry values = 12;
-  repeated AggregateValueStateEntry aggregate_value = 13;
-  repeated ValuesWeightSumStateEntry values_weight_sum = 14;
-  repeated ValuesWeightedModeStateEntry values_weighted_mode = 15;
+  repeated TipperTotalStateEntry tipper_total = 5;
+  repeated TotalTipsStateEntry total_tips = 6;
+  repeated NoncesStateEntry nonces = 7;
+  repeated QueryMeta query = 8;
+  repeated AggregateStateEntry aggregates = 9;
+  repeated ValuesStateEntry values = 10;
+  repeated AggregateValueStateEntry aggregate_value = 11;
+  repeated ValuesWeightSumStateEntry values_weight_sum = 12;
+  repeated ValuesWeightedModeStateEntry values_weighted_mode = 13;
 }
 
 message AggregateStateEntry {

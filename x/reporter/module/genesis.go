@@ -184,6 +184,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		panic(err)
 	}
 	reports := make([]*types.ReportStateEntry, 0)
+	currentBlockHeight := uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())
 	for ; iterReport.Valid(); iterReport.Next() {
 		keys, err := iterReport.Key()
 		if err != nil {
@@ -193,6 +194,9 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		queryId := keys.K1()
 		repAddr := keys.K2().K1()
 		blockheight := keys.K2().K2()
+		if (uint64(currentBlockHeight) - 1134000) > blockheight {
+			continue
+		}
 
 		delAmount, err := iterReport.Value()
 		if err != nil {

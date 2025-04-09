@@ -2,6 +2,9 @@ package oracle
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"time"
 
 	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/utils"
@@ -26,21 +29,6 @@ func InitGenesis(ctx context.Context, k keeper.Keeper, genState types.GenesisSta
 	if err != nil {
 		panic(err)
 	}
-
-	if genState.CyclelistSequence != 0 {
-		// initialize sequencers from genesis state
-		err = k.CyclelistSequencer.Set(ctx, genState.CyclelistSequence)
-		if err != nil {
-			panic(err)
-		}
-	}
-	if genState.QuerySequencer != 0 {
-		err = k.QuerySequencer.Set(ctx, genState.QuerySequencer)
-		if err != nil {
-			panic(err)
-		}
-	}
-
 	// initialize TipperTotals from genesis state
 	for _, data := range genState.TipperTotal {
 		err = k.TipperTotal.Set(ctx, collections.Join(data.TipperAddr, data.BlockHeight), data.TipAmount)
@@ -130,6 +118,9 @@ func InitGenesis(ctx context.Context, k keeper.Keeper, genState types.GenesisSta
 
 // ExportGenesis returns the module's exported genesis
 func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	currentBlockHeight := sdkCtx.BlockHeight()
+	days_ago := sdkCtx.BlockTime().Add(-21 * 24 * time.Hour) // 21 days ago
 	genesis := types.DefaultGenesis()
 	// get params
 	params, err := k.GetParams(ctx)
@@ -163,7 +154,9 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 		if err != nil {
 			panic(err)
 		}
-		reports = append(reports, &report)
+		if report.Timestamp.After(days_ago) {
+			reports = append(reports, &report)
+		}
 	}
 	genesis.Reports = reports
 
@@ -179,6 +172,9 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 		}
 		tipperAddr := keys.K1()
 		blockheight := keys.K2()
+		if (uint64(currentBlockHeight)-1134000) > blockheight && currentBlockHeight > 1134000 {
+			continue
+		}
 		tipAmount, err := iterTipperTotal.Value()
 		if err != nil {
 			panic(err)
@@ -196,6 +192,10 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 		blockheight, err := iterTotalTips.Key()
 		if err != nil {
 			panic(err)
+		}
+
+		if (uint64(currentBlockHeight)-1134000) > blockheight && currentBlockHeight > 1134000 {
+			continue
 		}
 
 		tipTotal, err := iterTotalTips.Value()
@@ -224,36 +224,71 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 	}
 	genesis.Nonces = nonces
 
-	querySequencerValue, err := k.QuerySequencer.Peek(ctx)
-	if err != nil {
-		panic(err)
-	}
-	genesis.QuerySequencer = querySequencerValue
+	// querySequencerValue, err := k.QuerySequencer.Peek(ctx)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// genesis.QuerySequencer = querySequencerValue
 
-	cyclelistSequencerValue, err := k.CyclelistSequencer.Peek(ctx)
-	if err != nil {
-		panic(err)
-	}
-	genesis.CyclelistSequence = cyclelistSequencerValue
+	// cyclelistSequencerValue, err := k.CyclelistSequencer.Peek(ctx)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// genesis.CyclelistSequence = cyclelistSequencerValue
 
 	iterQuery, err := k.Query.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
 		panic(err)
 	}
 	queries := make([]*types.QueryMeta, 0)
+	values := make([]*types.ValuesStateEntry, 0)
+	aggValues := make([]*types.AggregateValueStateEntry, 0)
+	valueSums := make([]*types.ValuesWeightSumStateEntry, 0)
 	for ; iterQuery.Valid(); iterQuery.Next() {
 		query, err := iterQuery.Value()
 		if err != nil {
 			panic(err)
 		}
+		if (uint64(currentBlockHeight)-1134000) > query.Expiration && query.Amount.IsZero() && currentBlockHeight > 1134000 {
+			continue
+		}
+		rng := collections.NewPrefixedPairRange[uint64, string](query.Id)
+		err = k.Values.Walk(ctx, rng, func(key collections.Pair[uint64, string], value types.Value) (stop bool, err error) {
+			values = append(values, &types.ValuesStateEntry{MetaId: key.K1(), ValueString: key.K2(), Value: &value})
+			return false, nil
+		})
+		if err != nil {
+			panic(err)
+		}
+
+		aggValue, err := k.AggregateValue.Get(ctx, query.Id)
+		if err != nil {
+			if !errors.Is(err, collections.ErrNotFound) {
+				panic(err)
+			}
+		}
+		aggValues = append(aggValues, &types.AggregateValueStateEntry{MetaId: query.Id, RunningAggregate: &aggValue})
+
+		valueSum, err := k.ValuesWeightSum.Get(ctx, query.Id)
+		if err != nil {
+			if !errors.Is(err, collections.ErrNotFound) {
+				panic(err)
+			}
+		}
+		valueSums = append(valueSums, &types.ValuesWeightSumStateEntry{MetaId: query.Id, TotalWeight: valueSum})
+
 		queries = append(queries, &query)
 	}
 	genesis.Query = queries
+	genesis.Values = values
+	genesis.AggregateValue = aggValues
+	genesis.ValuesWeightSum = valueSums
 
 	iterAggregates, err := k.Aggregates.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
 		panic(err)
 	}
+	olderThan21Days := days_ago.UnixMilli()
 	aggregates := make([]*types.AggregateStateEntry, 0)
 	for ; iterAggregates.Valid(); iterAggregates.Next() {
 		keys, err := iterAggregates.Key()
@@ -261,6 +296,10 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 			panic(err)
 		}
 		timestamp := keys.K2()
+		if timestamp < uint64(olderThan21Days) {
+			fmt.Println("timestamp", timestamp, "olderThan21Days", olderThan21Days)
+			continue
+		}
 		aggregate, err := iterAggregates.Value()
 		if err != nil {
 			panic(err)
@@ -268,62 +307,6 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 		aggregates = append(aggregates, &types.AggregateStateEntry{Timestamp: timestamp, Aggregate: &aggregate})
 	}
 	genesis.Aggregates = aggregates
-
-	iterValues, err := k.Values.IterateRaw(ctx, nil, nil, collections.OrderDescending)
-	if err != nil {
-		panic(err)
-	}
-	values := make([]*types.ValuesStateEntry, 0)
-	for ; iterValues.Valid(); iterValues.Next() {
-		keys, err := iterValues.Key()
-		if err != nil {
-			panic(err)
-		}
-		meta_id := keys.K1()
-		valueString := keys.K2()
-		value, err := iterValues.Value()
-		if err != nil {
-			panic(err)
-		}
-		values = append(values, &types.ValuesStateEntry{MetaId: meta_id, ValueString: valueString, Value: &value})
-	}
-	genesis.Values = values
-
-	iterAggValues, err := k.AggregateValue.IterateRaw(ctx, nil, nil, collections.OrderDescending)
-	if err != nil {
-		panic(err)
-	}
-	aggValues := make([]*types.AggregateValueStateEntry, 0)
-	for ; iterAggValues.Valid(); iterAggValues.Next() {
-		metaId, err := iterAggValues.Key()
-		if err != nil {
-			panic(err)
-		}
-		aggValue, err := iterAggValues.Value()
-		if err != nil {
-			panic(err)
-		}
-		aggValues = append(aggValues, &types.AggregateValueStateEntry{MetaId: metaId, RunningAggregate: &aggValue})
-	}
-	genesis.AggregateValue = aggValues
-
-	iterValuesSum, err := k.ValuesWeightSum.IterateRaw(ctx, nil, nil, collections.OrderDescending)
-	if err != nil {
-		panic(err)
-	}
-	valueSums := make([]*types.ValuesWeightSumStateEntry, 0)
-	for ; iterValuesSum.Valid(); iterValuesSum.Next() {
-		metaId, err := iterValuesSum.Key()
-		if err != nil {
-			panic(err)
-		}
-		totalWeight, err := iterValuesSum.Value()
-		if err != nil {
-			panic(err)
-		}
-		valueSums = append(valueSums, &types.ValuesWeightSumStateEntry{MetaId: metaId, TotalWeight: totalWeight})
-	}
-	genesis.ValuesWeightSum = valueSums
 
 	iterValuesMode, err := k.ValuesWeightedMode.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {

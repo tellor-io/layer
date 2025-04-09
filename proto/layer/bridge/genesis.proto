@@ -22,11 +22,7 @@ message GenesisState {
   uint64 latest_validator_checkpoint_idx = 11;
   repeated BridgeValsetByTimestampMapEntry bridge_valset_by_timestamp_map = 12;
   repeated ValsetTimestampToIdxMapEntry valset_timestamp_to_idx_map = 13;
-  repeated AttestSnapshotsByReportMapEntry attest_snapshots_by_report_map = 14;
-  repeated AttestSnapshotDataMapEntry attest_snapshot_data_map = 15;
-  repeated SnapshotToAttestationsMapEntry snapshot_to_attestations_map = 16;
-  repeated AttestRequestsByHeightMapEntry attest_requests_by_height_map = 17;
-  repeated DepositIdClaimedMapEntry deposit_id_claimed_map = 18;
+  repeated DepositIdClaimedMapEntry deposit_id_claimed_map = 14;
 }
 
 
@@ -67,32 +63,6 @@ message BridgeValsetByTimestampMapEntry {
 message ValsetTimestampToIdxMapEntry {
   uint64 timestamp = 1;
   uint64 index = 2;
-}
-
-message AttestSnapshotsByReportMapEntry {
-  bytes key = 1;
-  repeated bytes snapshots = 2;
-}
-
-message AttestSnapshotDataMapEntry {
-  bytes key = 1;
-  bytes val_checkpoint = 2;
-  uint64 prev_report_timestamp = 3;
-  uint64 next_report_timestamp = 4;
-  bytes query_id = 5;
-  uint64 timestamp = 6;
-  uint64 last_consensus_timestamp = 7;
-  uint64 attestation_timestamp = 8;
-}
-
-message SnapshotToAttestationsMapEntry {
-  bytes snapshot = 1;
-  repeated bytes attestations = 2;
-}
-
-message AttestRequestsByHeightMapEntry {
-  uint64 block_height = 1;
-  repeated bytes requests = 2;
 }
 
 message DepositIdClaimedMapEntry {
