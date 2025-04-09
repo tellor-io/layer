@@ -17,5 +17,10 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 		return err
 	}
 
+	// AutoClaimDeposits
+	if err := k.AutoClaimDeposits(ctx); err != nil {
+		return err
+	}
+
 	return k.RotateQueries(ctx)
 }

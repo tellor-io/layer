@@ -13,6 +13,20 @@ type BridgeKeeper struct {
 	mock.Mock
 }
 
+// ClaimDeposit provides a mock function with given fields: ctx, depositId, timestamp
+func (_m *BridgeKeeper) ClaimDeposit(ctx context.Context, depositId uint64, timestamp uint64) error {
+	ret := _m.Called(ctx, depositId, timestamp)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64) error); ok {
+		r0 = rf(ctx, depositId, timestamp)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetDepositStatus provides a mock function with given fields: ctx, depositId
 func (_m *BridgeKeeper) GetDepositStatus(ctx context.Context, depositId uint64) (bool, error) {
 	ret := _m.Called(ctx, depositId)

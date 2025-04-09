@@ -20,6 +20,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	twelveHrs = 12 * 60 * 60
+)
+
 type (
 	Keeper struct {
 		cdc                codec.BinaryCodec
@@ -51,7 +55,7 @@ type (
 		// storage for values that are aggregated via weighted mode
 		ValuesWeightedMode collections.Map[collections.Pair[uint64, string], uint64] // key: queryMeta.Id, valueHexstring  value: total power of reporters that submitted the value
 		// storage for bridge deposit reports queue
-		ClaimDepositQueue collections.Map[uint64, types.DepositQueue] // key: queryMeta.Id, value: bridge deposit report
+		BridgeDepositQueue collections.Map[uint64, uint64] // key: bridge deposit id, value: aggregate timestamp
 	}
 )
 
@@ -138,7 +142,7 @@ func NewKeeper(
 		// QueryDataLimit is the maximum number of bytes query data can be
 		QueryDataLimit: collections.NewItem(sb, types.QueryDataLimitPrefix, "query_data_limit", codec.CollValue[types.QueryDataLimit](cdc)),
 		// ClaimDepositQueue is the queue of bridge deposit reports
-		ClaimDepositQueue: collections.NewMap(sb, types.ClaimDepositQueuePrefix, "claim_deposit_queue", collections.Uint64Key, codec.CollValue[types.DepositQueue](cdc)),
+		BridgeDepositQueue: collections.NewMap(sb, types.BridgeDepositQueuePrefix, "bridge_deposit_queue", collections.Uint64Key, collections.Uint64Value),
 	}
 
 	schema, err := sb.Build()
@@ -256,4 +260,45 @@ func (k Keeper) ValidateMicroReportExists(ctx context.Context, reporter sdk.AccA
 	}
 
 	return &report, true, nil
+}
+
+// iterate through DepositQueue
+// Check if any deposit aggregate timestamp is >12 hrs old
+// Call claim deposit on those deposits and remove from queue
+// claim deposit should only fail if aggregate power is not reached, meaning deposit will need tipped again
+// once tipped and reported for again, deposit should reenter the queue
+func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
+	// check if deposit queue exists for this query.Id
+	iter, err := k.BridgeDepositQueue.Iterate(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	currentBlocktime := sdkCtx.BlockTime()
+	for ; iter.Valid(); iter.Next() {
+		depositId, err := iter.Key()
+		if err != nil {
+			return err
+		}
+		fmt.Println("depositId", depositId)
+		aggregateTimestamp, err := iter.Value()
+		if err != nil {
+			return err
+		}
+		fmt.Println("aggregateTimestamp", aggregateTimestamp)
+
+		// if deposit timestamp is >12 hrs old, claim deposit
+		fmt.Println("currentBlocktime", currentBlocktime.UnixMilli())
+		fmt.Println("aggregateTimestamp", int64(aggregateTimestamp))
+		if currentBlocktime.UnixMilli() > int64(aggregateTimestamp)+twelveHrs {
+			err := k.bridgeKeeper.ClaimDeposit(ctx, depositId, aggregateTimestamp)
+			if err != nil {
+				k.Logger(ctx).Error("autoClaimDeposits", "error", err)
+			}
+		}
+	}
+
+	return nil
 }
