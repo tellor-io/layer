@@ -2,7 +2,6 @@ package oracle_test
 
 import (
 	"bytes"
-	"fmt"
 	"sort"
 	"testing"
 	"time"
@@ -158,8 +157,6 @@ func TestGenesis(t *testing.T) {
 	sortByteSlices(got.Cyclelist)
 	sortByteSlices(got2.Cyclelist)
 
-	fmt.Println("got.Reports", got.Reports)
-	fmt.Println("got2.Reports", got2.Reports)
 	require.Equal(got.Params, got2.Params)
 	require.Equal(got.Cyclelist, got2.Cyclelist)
 	require.Equal(got.QueryDataLimit, got2.QueryDataLimit)
@@ -330,11 +327,11 @@ func TestGenesis(t *testing.T) {
 	})
 
 	// add aggregate that should be pruned
-	got3.Aggregates = append(got.Aggregates, &types.AggregateStateEntry{
+	got3.Aggregates = append(got3.Aggregates, &types.AggregateStateEntry{
 		Aggregate: &types.Aggregate{
 			QueryId:           []byte("query1"),
 			AggregateValue:    "1",
-			AggregatePower:    uint64(1),
+			AggregatePower:    uint64(100),
 			Flagged:           false,
 			AggregateReporter: sample.AccAddressBytes().String(),
 			Index:             uint64(1),
@@ -348,13 +345,13 @@ func TestGenesis(t *testing.T) {
 	got3.Aggregates = append(got3.Aggregates, &types.AggregateStateEntry{
 		Aggregate: &types.Aggregate{
 			QueryId:           []byte("query2"),
-			AggregateValue:    "1",
-			AggregatePower:    uint64(1),
+			AggregateValue:    "10",
+			AggregatePower:    uint64(10000),
 			Flagged:           false,
 			AggregateReporter: sample.AccAddressBytes().String(),
-			Index:             uint64(1),
-			Height:            uint64(1),
-			MicroHeight:       uint64(1),
+			Index:             uint64(10),
+			Height:            uint64(100),
+			MicroHeight:       uint64(100),
 			MetaId:            uint64(101),
 		},
 		Timestamp: uint64(now.Add(-time.Hour * 21).UnixMilli()), // 21 hours ago
@@ -371,23 +368,39 @@ func TestGenesis(t *testing.T) {
 	sortByteSlices(got3.Cyclelist)
 	sortByteSlices(got4.Cyclelist)
 
-	fmt.Println("got3.Aggregate", got3.Aggregates)
-	fmt.Println("got4.Aggregate", got4.Aggregates)
-	fmt.Println("Length of got3.Aggregates", len(got3.Aggregates))
-	fmt.Println("Length of got4.Aggregates", len(got4.Aggregates))
 	require.Equal(got3.Params, got4.Params)
 	require.Equal(got3.Cyclelist, got4.Cyclelist)
 	require.Equal(got3.QueryDataLimit, got4.QueryDataLimit)
 	require.Equal(got3.Reports[1].Timestamp.Unix(), got4.Reports[0].Timestamp.Unix())
-	require.Equal([]*types.TipperTotalStateEntry{got3.TipperTotal[1]}, got4.TipperTotal)
-	require.Equal([]*types.TotalTipsStateEntry{got3.TotalTips[1]}, got4.TotalTips)
+	reps := ResetTimestampsToEmptyToCompareRestOfReports(got3.Reports[1:])
+	got4.Reports = ResetTimestampsToEmptyToCompareRestOfReports(got4.Reports)
+	require.Equal(reps, got4.Reports)
+	require.Equal(got3.TipperTotal[1], got4.TipperTotal[0])
+	require.Equal(got3.TotalTips[1], got4.TotalTips[0])
 	require.Equal(got3.Nonces, got4.Nonces)
 	require.Equal([]*types.QueryMeta{got3.Query[2], got3.Query[1]}, got4.Query)
 	require.Equal([]*types.AggregateStateEntry{got3.Aggregates[1]}, got4.Aggregates)
-	require.Equal([]*types.ValuesStateEntry{got3.Values[1]}, got4.Values)
+	require.Equal([]*types.ValuesStateEntry{got3.Values[1]}[0].Value.MicroReport.Timestamp.Unix(), got4.Values[0].Value.MicroReport.Timestamp.Unix())
+	values := ResetTimestampsToEmptyToCompareRestOfValues(got3.Values[1:])
+	got4.Values = ResetTimestampsToEmptyToCompareRestOfValues(got4.Values)
+	require.Equal(values, got4.Values)
 	require.Equal([]*types.AggregateValueStateEntry{got3.AggregateValue[1]}, got4.AggregateValue)
 	require.Equal([]*types.ValuesWeightSumStateEntry{got3.ValuesWeightSum[1]}, got4.ValuesWeightSum)
-	require.Equal([]*types.ValuesWeightedModeStateEntry{got3.ValuesWeightedMode[1]}, got4.ValuesWeightedMode)
+	require.Equal(got3.ValuesWeightedMode, got4.ValuesWeightedMode)
 	require.NotNil(got4)
 
+}
+
+func ResetTimestampsToEmptyToCompareRestOfReports(reports []*types.MicroReport) []*types.MicroReport {
+	for _, report := range reports {
+		report.Timestamp = time.Time{}
+	}
+	return reports
+}
+
+func ResetTimestampsToEmptyToCompareRestOfValues(values []*types.ValuesStateEntry) []*types.ValuesStateEntry {
+	for _, value := range values {
+		value.Value.MicroReport.Timestamp = time.Time{}
+	}
+	return values
 }

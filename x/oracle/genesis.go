@@ -266,16 +266,18 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 			if !errors.Is(err, collections.ErrNotFound) {
 				panic(err)
 			}
+		} else {
+			aggValues = append(aggValues, &types.AggregateValueStateEntry{MetaId: query.Id, RunningAggregate: &aggValue})
 		}
-		aggValues = append(aggValues, &types.AggregateValueStateEntry{MetaId: query.Id, RunningAggregate: &aggValue})
 
 		valueSum, err := k.ValuesWeightSum.Get(ctx, query.Id)
 		if err != nil {
 			if !errors.Is(err, collections.ErrNotFound) {
 				panic(err)
 			}
+		} else {
+			valueSums = append(valueSums, &types.ValuesWeightSumStateEntry{MetaId: query.Id, TotalWeight: valueSum})
 		}
-		valueSums = append(valueSums, &types.ValuesWeightSumStateEntry{MetaId: query.Id, TotalWeight: valueSum})
 
 		queries = append(queries, &query)
 	}
@@ -304,6 +306,7 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 		if err != nil {
 			panic(err)
 		}
+		fmt.Println("aggregate", aggregate)
 		aggregates = append(aggregates, &types.AggregateStateEntry{Timestamp: timestamp, Aggregate: &aggregate})
 	}
 	genesis.Aggregates = aggregates
