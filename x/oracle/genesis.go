@@ -117,6 +117,7 @@ func InitGenesis(ctx context.Context, k keeper.Keeper, genState types.GenesisSta
 
 // ExportGenesis returns the module's exported genesis
 func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
+	k.Logger(ctx).Info("Exporting genesis from oracle module")
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentBlockHeight := sdkCtx.BlockHeight()
 	days_ago := time.Now().Add(-21 * 24 * time.Hour) // 21 days ago
@@ -158,6 +159,10 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 		}
 	}
 	genesis.Reports = reports
+	err = iterReports.Close()
+	if err != nil {
+		panic(err)
+	}
 
 	iterTipperTotal, err := k.TipperTotal.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -181,6 +186,10 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 		tipperTotals = append(tipperTotals, &types.TipperTotalStateEntry{TipperAddr: tipperAddr, BlockHeight: blockheight, TipAmount: tipAmount})
 	}
 	genesis.TipperTotal = tipperTotals
+	err = iterTipperTotal.Close()
+	if err != nil {
+		panic(err)
+	}
 
 	iterTotalTips, err := k.TotalTips.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -204,6 +213,10 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 		totalTips = append(totalTips, &types.TotalTipsStateEntry{BlockHeight: blockheight, TipAmount: tipTotal})
 	}
 	genesis.TotalTips = totalTips
+	err = iterTotalTips.Close()
+	if err != nil {
+		panic(err)
+	}
 
 	iterNonces, err := k.Nonces.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -222,6 +235,10 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 		nonces = append(nonces, &types.NoncesStateEntry{QueryId: queryId, Nonce: nonce})
 	}
 	genesis.Nonces = nonces
+	err = iterNonces.Close()
+	if err != nil {
+		panic(err)
+	}
 
 	// querySequencerValue, err := k.QuerySequencer.Peek(ctx)
 	// if err != nil {
@@ -284,6 +301,10 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.Values = values
 	genesis.AggregateValue = aggValues
 	genesis.ValuesWeightSum = valueSums
+	err = iterQuery.Close()
+	if err != nil {
+		panic(err)
+	}
 
 	iterAggregates, err := k.Aggregates.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -307,6 +328,10 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 		aggregates = append(aggregates, &types.AggregateStateEntry{Timestamp: timestamp, Aggregate: &aggregate})
 	}
 	genesis.Aggregates = aggregates
+	err = iterAggregates.Close()
+	if err != nil {
+		panic(err)
+	}
 
 	iterValuesMode, err := k.ValuesWeightedMode.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -327,8 +352,12 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 		valueModes = append(valueModes, &types.ValuesWeightedModeStateEntry{MetaId: metaId, Value: value, TotalPower: totalPower})
 	}
 	genesis.ValuesWeightedMode = valueModes
+	err = iterValuesMode.Close()
+	if err != nil {
+		panic(err)
+	}
 
 	// this line is used by starport scaffolding # genesis/module/export
-
+	k.Logger(ctx).Info("Finished exporting from oracle module")
 	return genesis
 }

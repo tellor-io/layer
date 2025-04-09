@@ -74,6 +74,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 // ExportGenesis returns the module's exported genesis
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
+	k.Logger(ctx).Info("Exporting genesis from dispute module")
 	genesis := types.DefaultGenesis()
 	params, _ := k.Params.Get(ctx)
 	genesis.Params = params
@@ -250,6 +251,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	if err != nil {
 		panic(err)
 	}
+	k.Logger(ctx).Info("Finished exporting from dispute module")
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis

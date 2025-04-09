@@ -39,11 +39,13 @@ func (app *App) ExportAppStateAndValidators(
 		return servertypes.ExportedApp{}, err
 	}
 
+	app.Logger().Info("Exported all modules. Now marshalling app state and returning")
 	appState, err := json.MarshalIndent(genState, "", "  ")
 	if err != nil {
 		return servertypes.ExportedApp{}, err
 	}
 
+	app.Logger().Info("Marshalled app state. Now exporting validators")
 	validators, err := staking.WriteValidators(ctx, app.StakingKeeper)
 	return servertypes.ExportedApp{
 		AppState:        appState,
