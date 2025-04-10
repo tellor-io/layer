@@ -2359,7 +2359,6 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 	s.NoError(err)
 
 	aggmethod := "weighted-median"
-	s.NoError(err)
 
 	report1 := oracletypes.MicroReport{
 		Reporter:        reporter1.String(),
@@ -2412,7 +2411,12 @@ func (s *IntegrationTestSuite) TestFlagReport() {
 	s.NoError(s.Setup.Oraclekeeper.AddReport(s.Setup.Ctx, 1, report3))
 
 	// add query
-	s.NoError(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, collections.Join(queryid, uint64(1)), oracletypes.QueryMeta{Id: 1, HasRevealedReports: true}))
+	s.NoError(s.Setup.Oraclekeeper.Query.Set(s.Setup.Ctx, collections.Join(queryid, uint64(1)), oracletypes.QueryMeta{
+		Id:                 1,
+		QueryData:          btcQueryData,
+		QueryType:          "SpotPrice",
+		HasRevealedReports: true,
+	}))
 	// set aggregate
 	err = s.Setup.Oraclekeeper.SetAggregatedReport(s.Setup.Ctx)
 	s.NoError(err)

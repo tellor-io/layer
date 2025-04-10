@@ -268,7 +268,7 @@ func (k Keeper) ValidateMicroReportExists(ctx context.Context, reporter sdk.AccA
 // claim deposit should only fail if aggregate power is not reached, meaning deposit will need tipped again
 // once tipped and reported for again, deposit should reenter the queue
 func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
-	// check if deposit queue exists for this query.Id
+	// check if deposit queue exists for this depositId
 	iter, err := k.BridgeDepositQueue.Iterate(ctx, nil)
 	if err != nil {
 		return err

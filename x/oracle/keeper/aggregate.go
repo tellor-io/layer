@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -88,41 +89,44 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			totalPowerForTbr = aggregateReport.AggregatePower
 			cyclelist = append(cyclelist, aggregateReport)
 		}
-
-		if totalPowerForTbr > 0 {
-			tbr := k.GetTimeBasedRewards(ctx)
-			tipRewardAllocation, tipRewardKeys = k.DistributeTbr(
-				ctx,
-				tipRewardKeys,
-				cyclelist,
-				tipRewardAllocation,
-				totalPowerForTbr,
-				tbr,
-			)
-			err = k.bankKeeper.SendCoinsFromModuleToModule(
-				ctx,
-				minttypes.TimeBasedRewards,
-				reportertypes.TipsEscrowPool,
-				sdk.NewCoins(sdk.NewCoin(layer.BondDenom, tbr)),
-			)
-			if err != nil {
-				return err
-			}
-		}
-		err = k.DistributeRewards(ctx, tipRewardAllocation, tipRewardKeys)
+		err = k.Query.Remove(ctx, fullKey.K2())
 		if err != nil {
 			return err
 		}
-		if transferAmt.GT(math.ZeroInt()) {
-			err = k.bankKeeper.SendCoinsFromModuleToModule(
-				ctx,
-				types.ModuleName,
-				reportertypes.TipsEscrowPool,
-				sdk.NewCoins(sdk.NewCoin(layer.BondDenom, transferAmt)),
-			)
-			if err != nil {
-				return err
-			}
+	}
+	if totalPowerForTbr > 0 {
+		tbr := k.GetTimeBasedRewards(ctx)
+		tipRewardAllocation, tipRewardKeys = k.DistributeTbr(
+			ctx,
+			tipRewardKeys,
+			cyclelist,
+			tipRewardAllocation,
+			totalPowerForTbr,
+			tbr,
+		)
+		err = k.bankKeeper.SendCoinsFromModuleToModule(
+			ctx,
+			minttypes.TimeBasedRewards,
+			reportertypes.TipsEscrowPool,
+			sdk.NewCoins(sdk.NewCoin(layer.BondDenom, tbr)),
+		)
+		if err != nil {
+			return err
+		}
+	}
+	err = k.DistributeRewards(ctx, tipRewardAllocation, tipRewardKeys)
+	if err != nil {
+		return err
+	}
+	if transferAmt.GT(math.ZeroInt()) {
+		err = k.bankKeeper.SendCoinsFromModuleToModule(
+			ctx,
+			types.ModuleName,
+			reportertypes.TipsEscrowPool,
+			sdk.NewCoins(sdk.NewCoin(layer.BondDenom, transferAmt)),
+		)
+		if err != nil {
+			return err
 		}
 	}
 	return nil
@@ -170,7 +174,8 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, query
 			return err
 		}
 		fmt.Println("queryDataArgsDecoded: ", queryDataArgsDecoded)
-		depositId := queryDataArgsDecoded[1].(uint64)
+		depositId := queryDataArgsDecoded[1].(*big.Int).Uint64()
+		fmt.Println("depositId: ", depositId)
 		err = k.BridgeDepositQueue.Set(ctx, depositId, currentTimestamp)
 		if err != nil {
 			return err

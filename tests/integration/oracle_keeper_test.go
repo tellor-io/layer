@@ -370,6 +370,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	s.NoError(s.Setup.Oraclekeeper.Query.Set(ctx, collections.Join(qId, queryMetaId), types.QueryMeta{
 		Id:                 1,
 		HasRevealedReports: true,
+		QueryData:          ethQueryData,
 	}))
 	for _, r := range reports[:1] {
 		r.Cyclelist = true
@@ -444,6 +445,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	s.NoError(s.Setup.Oraclekeeper.Query.Set(ctx, collections.Join(qId, uint64(1)), types.QueryMeta{
 		Id:                 1,
 		HasRevealedReports: true,
+		QueryData:          ethQueryData,
 	}))
 	for _, r := range reports[:2] {
 		r.Cyclelist = true
@@ -526,6 +528,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	s.NoError(s.Setup.Oraclekeeper.Query.Set(ctx, collections.Join(qId, uint64(1)), types.QueryMeta{
 		Id:                 1,
 		HasRevealedReports: true,
+		QueryData:          ethQueryData,
 	}))
 	for _, r := range reports[:3] {
 		r.Cyclelist = true
