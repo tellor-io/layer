@@ -1253,6 +1253,33 @@ func TestCreateNewReportSnapshots(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestCreateSnapshotDisputedReport(t *testing.T) {
+	k, _, _, ok, _, _, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+	timestamp := time.Now()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx = sdkCtx.WithBlockTime(timestamp)
+
+	qId, err := hex.DecodeString("efa84ae5ea9eb0545e159f78f0a44911ac5a81ecb6ff0c4e32107bcfc66c4baa")
+	require.NoError(t, err)
+	ok.On("GetAggregateByTimestamp", sdkCtx, qId, uint64(timestamp.UnixMilli())).Return(oracletypes.Aggregate{
+		QueryId:        qId,
+		AggregateValue: "5000",
+		AggregatePower: uint64(100),
+		Flagged:        true,
+	}, nil)
+
+	err = k.CreateSnapshot(sdkCtx, qId, timestamp, true)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "report is flagged as dispute evidence")
+
+	// make sure no snapshot is created
+	snapshotExists, err := k.AttestRequestsByHeightMap.Has(sdkCtx, 0)
+	require.NoError(t, err)
+	require.False(t, snapshotExists)
+}
+
 func TestEncodeOracleAttestationData(t *testing.T) {
 	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)

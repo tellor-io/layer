@@ -854,6 +854,10 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 		k.Logger(ctx).Info("Error getting aggregate report by timestamp", "error", err)
 		return err
 	}
+	// check whether report is flagged as disputed. If so, do not create a snapshot.
+	if isExternalRequest && aggReport.Flagged {
+		return errors.New("report is flagged as dispute evidence")
+	}
 	// get the current validator checkpoint
 	validatorCheckpoint, err := k.GetValidatorCheckpointFromStorage(ctx)
 	if err != nil {
