@@ -117,7 +117,6 @@ func InitGenesis(ctx context.Context, k keeper.Keeper, genState types.GenesisSta
 
 // ExportGenesis returns the module's exported genesis
 func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
-	k.Logger(ctx).Info("Exporting genesis from oracle module")
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentBlockHeight := sdkCtx.BlockHeight()
 	days_ago := time.Now().Add(-21 * 24 * time.Hour) // 21 days ago
@@ -358,6 +357,5 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 	}
 
 	// this line is used by starport scaffolding # genesis/module/export
-	k.Logger(ctx).Info("Finished exporting from oracle module")
 	return genesis
 }

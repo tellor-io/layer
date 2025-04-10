@@ -81,7 +81,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 
 // ExportGenesis returns the module's exported genesis.
 func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
-	k.Logger().Info("Exporting genesis from reporter module")
 	genesis := types.DefaultGenesis()
 	params, err := k.Params.Get(ctx)
 	if err != nil {
@@ -212,6 +211,5 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.Report = reports
 
 	// this line is used by starport scaffolding # genesis/module/export
-	k.Logger().Info("Finished exporting from reporter module")
 	return genesis
 }
