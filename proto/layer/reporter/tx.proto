@@ -139,9 +139,10 @@ message MsgUnjailReporterResponse {}
 
 // MsgWithdrawTip defines the Msg/WithdrawTip request type.
 message MsgWithdrawTip {
-  option (cosmos.msg.v1.signer) = "selector_address";
+  option (cosmos.msg.v1.signer) = "creator";
   string selector_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.ValidatorAddressString"];
+  string creator = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgWithdrawTipResponse defines the Msg/WithdrawTip response type.
