@@ -20,7 +20,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64, msgSender sdk.AccAddress) error {
+func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64) error {
 	cosmosCtx := sdk.UnwrapSDKContext(ctx)
 	queryId, err := k.GetDepositQueryId(depositId)
 	if err != nil {
@@ -57,7 +57,7 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64, m
 		return types.ErrReportTooYoung
 	}
 
-	recipient, amount, tip, err := k.DecodeDepositReportValue(ctx, aggregate.AggregateValue)
+	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, aggregate.AggregateValue)
 	if err != nil {
 		k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to decode deposit report value, err: %w", err))
 		return fmt.Errorf("%s: %w", types.ErrInvalidDepositReportValue.Error(), err)
@@ -76,14 +76,14 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64, m
 	}
 
 	claimAmount := amount
-	if tip.IsAllPositive() {
-		claimAmount = amount.Sub(tip...)
-		err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, msgSender, tip)
-		if err != nil {
-			k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to send coins, err: %w", err))
-			return err
-		}
-	}
+	// if tip.IsAllPositive() {
+	// 	claimAmount = amount.Sub(tip...)
+	// 	err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, msgSender, tip)
+	// 	if err != nil {
+	// 		k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to send coins, err: %w", err))
+	// 		return err
+	// 	}
+	// }
 
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipient, claimAmount); err != nil {
 		k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to send coins, err: %w", err))

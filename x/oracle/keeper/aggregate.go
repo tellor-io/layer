@@ -5,13 +5,18 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/lib/metrics"
 	layer "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
+	regTypes "github.com/tellor-io/layer/x/registry/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
@@ -144,6 +149,38 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, query
 	currentTimestamp := uint64(sdkCtx.BlockTime().UnixMilli())
 	report.Height = uint64(sdkCtx.BlockHeight())
 
+	// decode query data to see if it is a bridge report
+	queryType, bytesArg, err := regTypes.DecodeQueryType(queryData)
+	if err != nil {
+		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
+	}
+	// if bridge report, set aggregate timestamp and deposit ID in deposit queue
+	if queryType == TRBBridgeQueryType {
+		// decode rest of query data
+		BoolType, err := abi.NewType("bool", "", nil)
+		if err != nil {
+			return err
+		}
+		Uint256Type, err := abi.NewType("uint256", "", nil)
+		if err != nil {
+			return err
+		}
+		queryDataArgs := abi.Arguments{
+			{Type: BoolType},
+			{Type: Uint256Type},
+		}
+		queryDataArgsDecoded, err := queryDataArgs.Unpack(bytesArg)
+		if err != nil {
+			return err
+		}
+		fmt.Println("queryDataArgsDecoded: ", queryDataArgsDecoded)
+		depositId := queryDataArgsDecoded[1].(*big.Int).Uint64()
+		fmt.Println("depositId: ", depositId)
+		err = k.BridgeDepositQueue.Set(ctx, depositId, currentTimestamp)
+		if err != nil {
+			return err
+		}
+	}
 	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"aggregate_report",

@@ -29,6 +29,7 @@ type BankKeeper interface {
 // BridgeKeeper
 type BridgeKeeper interface {
 	GetDepositStatus(ctx context.Context, depositId uint64) (bool, error)
+	ClaimDeposit(ctx context.Context, depositId, timestamp uint64) error
 }
 
 type RegistryKeeper interface {

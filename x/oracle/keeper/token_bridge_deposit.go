@@ -61,5 +61,6 @@ func (k Keeper) HandleBridgeDepositDirectReveal(
 	if query.Expiration < uint64(blockHeight) {
 		return types.ErrSubmissionWindowExpired.Wrapf("query for bridge deposit is expired")
 	}
+
 	return k.SetValue(ctx, reporterAcc, query, value, querydata, voterPower, true)
 }
