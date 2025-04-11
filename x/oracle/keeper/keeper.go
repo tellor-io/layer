@@ -297,6 +297,11 @@ func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
 			if err != nil {
 				k.Logger(ctx).Error("autoClaimDeposits", "error", err)
 			}
+			// remove from queue
+			err = k.BridgeDepositQueue.Remove(ctx, depositId)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
