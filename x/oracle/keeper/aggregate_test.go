@@ -166,29 +166,87 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 }
 
 func (s *KeeperTestSuite) TestSetAggregate() {
-	queryId := []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0")
-	queryData := ethQueryData
-	err := s.oracleKeeper.Nonces.Set(s.ctx, queryId, 0)
-	s.NoError(err)
-	reporter := sample.AccAddressBytes()
-
-	timestamp := time.Now()
-	s.ctx = s.ctx.WithBlockTime(timestamp)
-	report := &types.Aggregate{
-		QueryId:           queryId,
-		AggregateValue:    encodeValue(96.50),
-		AggregateReporter: reporter.String(),
-		AggregatePower:    100000000,
-		Flagged:           false,
+	bridgeQueryData, _ := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000095452424272696467650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001")
+	testCases := []struct {
+		name          string
+		setup         func()
+		queryId       []byte
+		queryData     []byte
+		report        *types.Aggregate
+		expectedValue string
+		expectedPower uint64
+		expectErr     bool
+		bridgeCheck   bool
+	}{
+		{
+			name: "successful aggregate set",
+			setup: func() {
+				// set nonce
+				err := s.oracleKeeper.Nonces.Set(s.ctx, []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"), 0)
+				s.NoError(err)
+			},
+			queryId:   []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+			queryData: ethQueryData,
+			report: &types.Aggregate{
+				QueryId:           []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+				AggregateValue:    encodeValue(100_000),
+				AggregateReporter: sample.AccAddressBytes().String(),
+				AggregatePower:    100000000,
+				Flagged:           false,
+			},
+			expectedValue: encodeValue(100_000),
+			expectedPower: uint64(100000000),
+			expectErr:     false,
+			bridgeCheck:   false,
+		},
+		{
+			name: "successful bridge aggregate set",
+			setup: func() {
+				// set nonce
+				err := s.oracleKeeper.Nonces.Set(s.ctx, []byte("0xabd24ad7de0468ea1a78db7451aa889e4bf61cc9b69500be227cadf0c00e43e9"), 0)
+				s.NoError(err)
+			},
+			queryId:   []byte("0xabd24ad7de0468ea1a78db7451aa889e4bf61cc9b69500be227cadf0c00e43e9"),
+			queryData: bridgeQueryData,
+			report: &types.Aggregate{
+				QueryId:           []byte("0xabd24ad7de0468ea1a78db7451aa889e4bf61cc9b69500be227cadf0c00e43e9"),
+				AggregateValue:    encodeValue(100_000),
+				AggregateReporter: sample.AccAddressBytes().String(),
+				AggregatePower:    100000000,
+				Flagged:           false,
+			},
+			expectedValue: encodeValue(100_000),
+			expectedPower: uint64(100000000),
+			expectErr:     false,
+			bridgeCheck:   true,
+		},
 	}
 
-	err = s.oracleKeeper.SetAggregate(s.ctx, report, queryData)
-	s.NoError(err)
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			s.SetupTest()
 
-	res, err := s.oracleKeeper.Aggregates.Get(s.ctx, collections.Join(queryId, uint64(timestamp.UnixMilli())))
-	s.NoError(err)
-	s.Equal(encodeValue(96.50), res.AggregateValue)
-	s.Equal(uint64(100000000), res.AggregatePower)
+			timestamp := time.Now()
+			s.ctx = s.ctx.WithBlockTime(timestamp)
+
+			err := s.oracleKeeper.SetAggregate(s.ctx, tc.report, tc.queryData)
+			if tc.expectErr {
+				s.Error(err)
+				return
+			}
+			s.NoError(err)
+
+			res, err := s.oracleKeeper.Aggregates.Get(s.ctx, collections.Join(tc.queryId, uint64(timestamp.UnixMilli())))
+			s.NoError(err)
+			s.Equal(tc.expectedValue, res.AggregateValue)
+			s.Equal(tc.expectedPower, res.AggregatePower)
+			if tc.bridgeCheck {
+				deposit, err := s.oracleKeeper.BridgeDepositQueue.Get(s.ctx, uint64(1))
+				s.NoError(err)
+				s.Equal(deposit, uint64(timestamp.UnixMilli()))
+			}
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestGetDataBefore() {
