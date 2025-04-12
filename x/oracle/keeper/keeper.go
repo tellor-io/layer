@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	twelveHrs = 12 * 60 * 60
+	twelveHrsInMillis = 12 * 60 * 60 * 1000
 )
 
 type (
@@ -269,14 +269,19 @@ func (k Keeper) ValidateMicroReportExists(ctx context.Context, reporter sdk.AccA
 // once tipped and reported for again, deposit should reenter the queue
 func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
 	// check if deposit queue exists for this depositId
+	// only check the oldest timestamp
 	iter, err := k.BridgeDepositQueue.Iterate(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer iter.Close()
 
+	// use walk to get lowest timestamp, claim
+	// k.BridgeDepositQueue.Walk()
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentBlocktime := sdkCtx.BlockTime()
+
 	for ; iter.Valid(); iter.Next() {
 		depositId, err := iter.Key()
 		if err != nil {
@@ -289,13 +294,16 @@ func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
 		}
 		fmt.Println("aggregateTimestamp", aggregateTimestamp)
 
-		// if deposit timestamp is >12 hrs old, claim deposit
-		fmt.Println("currentBlocktime", currentBlocktime.UnixMilli())
-		fmt.Println("aggregateTimestamp", int64(aggregateTimestamp))
-		if currentBlocktime.UnixMilli() > int64(aggregateTimestamp)+twelveHrs {
+		// convert everything to int64 and use milliseconds consistently
+		if currentBlocktime.UnixMilli() > (int64(aggregateTimestamp) + twelveHrsInMillis) {
 			err := k.bridgeKeeper.ClaimDeposit(ctx, depositId, aggregateTimestamp)
 			if err != nil {
 				k.Logger(ctx).Error("autoClaimDeposits", "error", err)
+				err = k.BridgeDepositQueue.Remove(ctx, depositId)
+				if err != nil {
+					return err
+				}
+				continue
 			}
 			// remove from queue
 			err = k.BridgeDepositQueue.Remove(ctx, depositId)

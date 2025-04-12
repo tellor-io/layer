@@ -176,6 +176,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, query
 		fmt.Println("queryDataArgsDecoded: ", queryDataArgsDecoded)
 		depositId := queryDataArgsDecoded[1].(*big.Int).Uint64()
 		fmt.Println("depositId: ", depositId)
+		// key: meta id, value: deposit id, timestamp
 		err = k.BridgeDepositQueue.Set(ctx, depositId, currentTimestamp)
 		if err != nil {
 			return err

@@ -17,7 +17,7 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 		return err
 	}
 
-	// AutoClaimDeposits
+	// call claim deposit on aggregates in queue > 12 hrs old
 	if err := k.AutoClaimDeposits(ctx); err != nil {
 		return err
 	}

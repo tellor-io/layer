@@ -55,6 +55,16 @@ func (s *TestSuite) TestEndBlocker() {
 	require := s.Require()
 	k := s.oracleKeeper
 	ctx := s.ctx
+	ctx = ctx.WithBlockTime(time.Now())
+	require.NotNil(k)
+	require.NotNil(ctx)
+	require.NotNil(s.reporterKeeper)
+	require.NotNil(s.registryKeeper)
+	require.NotNil(s.accountKeeper)
+	require.NotNil(s.bankKeeper)
+	require.NotNil(s.bridgeKeeper)
+
+	k.SetBridgeKeeper(s.bridgeKeeper)
 
 	query1, err := k.GetCurrentQueryInCycleList(ctx)
 	require.NoError(err)
@@ -68,6 +78,33 @@ func (s *TestSuite) TestEndBlocker() {
 	require.NoError(err)
 	require.NotNil(query2)
 	require.NotEqual(query1, query2)
+
+	// create deposit to be claimed
+	depositId := uint64(1)
+	depositTimestamp := time.Now().Add(-13 * time.Hour)
+	err = k.BridgeDepositQueue.Set(ctx, depositId, uint64(depositTimestamp.UnixMilli()))
+	require.NoError(err)
+	// create deposit that cant be claimed yet
+	depositId2 := uint64(2)
+	depositTimestamp2 := time.Now().Add(-1 * time.Hour)
+	err = k.BridgeDepositQueue.Set(ctx, depositId2, uint64(depositTimestamp2.UnixMilli()))
+	require.NoError(err)
+
+	s.bridgeKeeper.On("ClaimDeposit", ctx, depositId, uint64(depositTimestamp.UnixMilli())).Return(nil).Once()
+	s.bridgeKeeper.On("ClaimDeposit", ctx, depositId2, uint64(depositTimestamp2.UnixMilli())).Return(nil).Once()
+
+	// end blocker
+	err = oracle.EndBlocker(ctx, k)
+	require.NoError(err)
+
+	// check that deposit1 was removed
+	_, err = k.BridgeDepositQueue.Get(ctx, depositId)
+	require.Error(err)
+
+	// check that deposit2 was not removed
+	deposit2, err := k.BridgeDepositQueue.Get(ctx, depositId2)
+	require.NoError(err)
+	require.Equal(deposit2, uint64(depositTimestamp2.UnixMilli()))
 }
 
 var spotSpec = registrytypes.DataSpec{
