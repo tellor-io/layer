@@ -55,7 +55,7 @@ type (
 		// storage for values that are aggregated via weighted mode
 		ValuesWeightedMode collections.Map[collections.Pair[uint64, string], uint64] // key: queryMeta.Id, valueHexstring  value: total power of reporters that submitted the value
 		// storage for bridge deposit reports queue
-		BridgeDepositQueue collections.Map[collections.Pair[uint64, uint64], uint64] // key: querymeta.id, aggregate timestamp, value: depositId
+		BridgeDepositQueue collections.Map[collections.Pair[uint64, uint64], uint64] // key: aggregate timestamp, queryMetaId, value: depositId
 	}
 )
 
@@ -272,50 +272,49 @@ func (k Keeper) ValidateMicroReportExists(ctx context.Context, reporter sdk.AccA
 // claim deposit should only fail if aggregate power is not reached, meaning deposit will need tipped again
 // once tipped and reported for again, deposit should reenter the queue
 func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
-	// Create an iterator for the BridgeDepositQueue map
-	iter, err := k.BridgeDepositQueue.Iterate(ctx, nil)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	currentBlocktime := sdkCtx.BlockTime()
+	thresholdTimestamp := uint64(currentBlocktime.UnixMilli() - twelveHrsInMillis)
+	fmt.Println("threshhold: ", thresholdTimestamp)
+
+	// k1: timestamp, k2: metaId
+	rng := collections.NewPrefixUntilPairRange[uint64, uint64](thresholdTimestamp)
+	fmt.Println("rng: ", rng)
+
+	var oldestDepositId uint64
+	var aggregateTimestamp uint64
+	var metaId uint64
+
+	err := k.BridgeDepositQueue.Walk(ctx, rng, func(key collections.Pair[uint64, uint64], depositId uint64) (stop bool, err error) {
+		oldestDepositId = depositId
+		fmt.Println("oldestDepositId: ", oldestDepositId)
+		aggregateTimestamp = key.K1()
+		fmt.Println("k1: ", aggregateTimestamp)
+		metaId = key.K2()
+		fmt.Println("k2: ", metaId)
+		return true, nil // Stop after the first (most recent) match
+	})
 	if err != nil {
 		return err
 	}
-	defer iter.Close()
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	currentBlocktime := sdkCtx.BlockTime()
+	if oldestDepositId == 0 && metaId == 0 {
+		return nil
+	}
 
-	for ; iter.Valid(); iter.Next() {
-		// Retrieve the key and value from the iterator
-		key, err := iter.Key()
+	err = k.bridgeKeeper.ClaimDeposit(ctx, oldestDepositId, aggregateTimestamp)
+	if err != nil {
+		k.Logger(ctx).Error("autoClaimDeposits", "error", err)
+		// remove the deposit from the queue if claiming fails
+		err = k.BridgeDepositQueue.Remove(ctx, collections.Join(aggregateTimestamp, metaId))
 		if err != nil {
 			return err
 		}
-		depositId, err := iter.Value()
-		if err != nil {
-			return err
-		}
-
-		// Extract querymeta.id and aggregate timestamp from the key
-		// queryMetaId := key.K1()
-		aggregateTimestamp := key.K2()
-
-		// Check if the aggregate timestamp is older than 12 hours
-		if currentBlocktime.UnixMilli() > (int64(aggregateTimestamp) + twelveHrsInMillis) {
-			// Attempt to claim the deposit
-			err := k.bridgeKeeper.ClaimDeposit(ctx, depositId, aggregateTimestamp)
-			if err != nil {
-				k.Logger(ctx).Error("autoClaimDeposits", "error", err)
-				// Remove the deposit from the queue if claiming fails
-				err = k.BridgeDepositQueue.Remove(ctx, key)
-				if err != nil {
-					return err
-				}
-				continue
-			}
-			// Remove the deposit from the queue after successful claim
-			err = k.BridgeDepositQueue.Remove(ctx, key)
-			if err != nil {
-				return err
-			}
-		}
+	}
+	// remove the deposit from the queue after successful claim
+	err = k.BridgeDepositQueue.Remove(ctx, collections.Join(aggregateTimestamp, metaId))
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package oracle_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -81,30 +82,68 @@ func (s *TestSuite) TestEndBlocker() {
 
 	// create deposit to be claimed
 	depositId := uint64(1)
-	depositTimestamp := time.Now().Add(-13 * time.Hour)
-	err = k.BridgeDepositQueue.Set(ctx, depositId, uint64(depositTimestamp.UnixMilli()))
+	depositTimestamp := uint64(time.Now().Add(-13 * time.Hour).UnixMilli())
+	fmt.Println("timestamp1 : ", depositTimestamp)
+	deposit1MetaId := uint64(1)
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp, deposit1MetaId), depositId)
 	require.NoError(err)
 	// create deposit that cant be claimed yet
 	depositId2 := uint64(2)
-	depositTimestamp2 := time.Now().Add(-1 * time.Hour)
-	err = k.BridgeDepositQueue.Set(ctx, depositId2, uint64(depositTimestamp2.UnixMilli()))
+	depositTimestamp2 := uint64(time.Now().Add(-1 * time.Hour).UnixMilli())
+	fmt.Println("timestamp 2: ", depositTimestamp2)
+	deposit2MetaId := uint64(2)
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp2, deposit2MetaId), depositId2)
 	require.NoError(err)
 
-	s.bridgeKeeper.On("ClaimDeposit", ctx, depositId, uint64(depositTimestamp.UnixMilli())).Return(nil).Once()
-	s.bridgeKeeper.On("ClaimDeposit", ctx, depositId2, uint64(depositTimestamp2.UnixMilli())).Return(nil).Once()
+	s.bridgeKeeper.On("ClaimDeposit", ctx, depositId, depositTimestamp).Return(nil).Once()
 
 	// end blocker
 	err = oracle.EndBlocker(ctx, k)
 	require.NoError(err)
 
 	// check that deposit1 was removed
-	_, err = k.BridgeDepositQueue.Get(ctx, depositId)
+	_, err = k.BridgeDepositQueue.Get(ctx, collections.Join((depositTimestamp), deposit1MetaId))
 	require.Error(err)
 
 	// check that deposit2 was not removed
-	deposit2, err := k.BridgeDepositQueue.Get(ctx, depositId2)
+	deposit2, err := k.BridgeDepositQueue.Get(ctx, collections.Join((depositTimestamp2), deposit2MetaId))
 	require.NoError(err)
-	require.Equal(deposit2, uint64(depositTimestamp2.UnixMilli()))
+	fmt.Println("deposit2: ", deposit2)
+
+	// call endblock again to make sure its fine with <12 hr old report
+	err = oracle.EndBlocker(ctx, k)
+	require.NoError(err)
+
+	// put 2 >12 hr old deposits in
+	// create deposit to be claimed
+	depositId3 := uint64(3)
+	depositTimestamp3 := uint64(time.Now().Add(-13 * time.Hour).UnixMilli())
+	fmt.Println("timestamp1 : ", depositTimestamp)
+	deposit3MetaId := uint64(3)
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp3, deposit3MetaId), depositId3)
+	require.NoError(err)
+	// create deposit that cant be claimed yet
+	depositId4 := uint64(4)
+	depositTimestamp4 := uint64(time.Now().Add(-14 * time.Hour).UnixMilli())
+	fmt.Println("timestamp 2: ", depositTimestamp2)
+	deposit4MetaId := uint64(4)
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp4, deposit4MetaId), depositId4)
+	require.NoError(err)
+
+	s.bridgeKeeper.On("ClaimDeposit", ctx, depositId4, depositTimestamp4).Return(nil).Once()
+
+	// end blocker
+	err = oracle.EndBlocker(ctx, k)
+	require.NoError(err)
+
+	// check that deposit4 (oldest) was removed
+	_, err = k.BridgeDepositQueue.Get(ctx, collections.Join((depositTimestamp4), deposit4MetaId))
+	require.Error(err)
+
+	// check that deposit 3 wasnt removed yet
+	_, err = k.BridgeDepositQueue.Get(ctx, collections.Join((depositTimestamp3), deposit3MetaId))
+	require.NoError(err)
+
 }
 
 var spotSpec = registrytypes.DataSpec{

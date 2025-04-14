@@ -193,6 +193,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 				AggregateReporter: sample.AccAddressBytes().String(),
 				AggregatePower:    100000000,
 				Flagged:           false,
+				MetaId:            1,
 			},
 			expectedValue: encodeValue(100_000),
 			expectedPower: uint64(100000000),
@@ -214,6 +215,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 				AggregateReporter: sample.AccAddressBytes().String(),
 				AggregatePower:    100000000,
 				Flagged:           false,
+				MetaId:            1,
 			},
 			expectedValue: encodeValue(100_000),
 			expectedPower: uint64(100000000),
@@ -241,9 +243,9 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 			s.Equal(tc.expectedValue, res.AggregateValue)
 			s.Equal(tc.expectedPower, res.AggregatePower)
 			if tc.bridgeCheck {
-				deposit, err := s.oracleKeeper.BridgeDepositQueue.Get(s.ctx, uint64(1))
+				depositId, err := s.oracleKeeper.BridgeDepositQueue.Get(s.ctx, collections.Join(uint64(1), uint64(timestamp.UnixMilli())))
 				s.NoError(err)
-				s.Equal(deposit, uint64(timestamp.UnixMilli()))
+				s.Equal(depositId, uint64(1))
 			}
 		})
 	}
