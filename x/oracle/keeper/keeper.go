@@ -275,7 +275,7 @@ func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentBlocktime := sdkCtx.BlockTime()
 	thresholdTimestamp := uint64(currentBlocktime.UnixMilli() - twelveHrsInMillis)
-	fmt.Println("threshhold: ", thresholdTimestamp)
+	fmt.Println("threshold: ", thresholdTimestamp)
 
 	// k1: timestamp, k2: metaId
 	rng := collections.NewPrefixUntilPairRange[uint64, uint64](thresholdTimestamp)

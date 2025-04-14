@@ -143,7 +143,6 @@ func (s *TestSuite) TestEndBlocker() {
 	// check that deposit 3 wasnt removed yet
 	_, err = k.BridgeDepositQueue.Get(ctx, collections.Join((depositTimestamp3), deposit3MetaId))
 	require.NoError(err)
-
 }
 
 var spotSpec = registrytypes.DataSpec{
