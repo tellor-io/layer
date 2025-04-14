@@ -55,7 +55,7 @@ type (
 		// storage for values that are aggregated via weighted mode
 		ValuesWeightedMode collections.Map[collections.Pair[uint64, string], uint64] // key: queryMeta.Id, valueHexstring  value: total power of reporters that submitted the value
 		// storage for bridge deposit reports queue
-		BridgeDepositQueue collections.Map[uint64, uint64] // key: bridge deposit id, value: aggregate timestamp
+		BridgeDepositQueue collections.Map[collections.Pair[uint64, uint64], uint64] // key: querymeta.id, aggregate timestamp, value: depositId
 	}
 )
 
@@ -141,8 +141,12 @@ func NewKeeper(
 		),
 		// QueryDataLimit is the maximum number of bytes query data can be
 		QueryDataLimit: collections.NewItem(sb, types.QueryDataLimitPrefix, "query_data_limit", codec.CollValue[types.QueryDataLimit](cdc)),
-		// ClaimDepositQueue is the queue of bridge deposit reports
-		BridgeDepositQueue: collections.NewMap(sb, types.BridgeDepositQueuePrefix, "bridge_deposit_queue", collections.Uint64Key, collections.Uint64Value),
+		// ClaimDepositQueue maps [metad, timestamp]:depositId
+		BridgeDepositQueue: collections.NewMap(sb,
+			types.BridgeDepositQueuePrefix,
+			"bridge_deposit_queue",
+			collections.PairKeyCodec(collections.Uint64Key, collections.Uint64Key),
+			collections.Uint64Value),
 	}
 
 	schema, err := sb.Build()
@@ -268,45 +272,46 @@ func (k Keeper) ValidateMicroReportExists(ctx context.Context, reporter sdk.AccA
 // claim deposit should only fail if aggregate power is not reached, meaning deposit will need tipped again
 // once tipped and reported for again, deposit should reenter the queue
 func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
-	// check if deposit queue exists for this depositId
-	// only check the oldest timestamp
+	// Create an iterator for the BridgeDepositQueue map
 	iter, err := k.BridgeDepositQueue.Iterate(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer iter.Close()
 
-	// use walk to get lowest timestamp, claim
-	// k.BridgeDepositQueue.Walk()
-
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentBlocktime := sdkCtx.BlockTime()
 
 	for ; iter.Valid(); iter.Next() {
-		depositId, err := iter.Key()
+		// Retrieve the key and value from the iterator
+		key, err := iter.Key()
 		if err != nil {
 			return err
 		}
-		fmt.Println("depositId", depositId)
-		aggregateTimestamp, err := iter.Value()
+		depositId, err := iter.Value()
 		if err != nil {
 			return err
 		}
-		fmt.Println("aggregateTimestamp", aggregateTimestamp)
 
-		// convert everything to int64 and use milliseconds consistently
+		// Extract querymeta.id and aggregate timestamp from the key
+		// queryMetaId := key.K1()
+		aggregateTimestamp := key.K2()
+
+		// Check if the aggregate timestamp is older than 12 hours
 		if currentBlocktime.UnixMilli() > (int64(aggregateTimestamp) + twelveHrsInMillis) {
+			// Attempt to claim the deposit
 			err := k.bridgeKeeper.ClaimDeposit(ctx, depositId, aggregateTimestamp)
 			if err != nil {
 				k.Logger(ctx).Error("autoClaimDeposits", "error", err)
-				err = k.BridgeDepositQueue.Remove(ctx, depositId)
+				// Remove the deposit from the queue if claiming fails
+				err = k.BridgeDepositQueue.Remove(ctx, key)
 				if err != nil {
 					return err
 				}
 				continue
 			}
-			// remove from queue
-			err = k.BridgeDepositQueue.Remove(ctx, depositId)
+			// Remove the deposit from the queue after successful claim
+			err = k.BridgeDepositQueue.Remove(ctx, key)
 			if err != nil {
 				return err
 			}
