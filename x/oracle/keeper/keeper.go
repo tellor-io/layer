@@ -289,8 +289,8 @@ func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
 		return true, nil // stop after the first (oldest) match
 	})
 	if err != nil {
-		return err
 		k.Logger(ctx).Error("autoClaimDeposits", "error walking through queue", err)
+		return err
 	}
 
 	// if no matches, return nil
