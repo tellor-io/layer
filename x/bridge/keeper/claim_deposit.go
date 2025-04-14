@@ -76,14 +76,6 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64) e
 	}
 
 	claimAmount := amount
-	// if tip.IsAllPositive() {
-	// 	claimAmount = amount.Sub(tip...)
-	// 	err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, msgSender, tip)
-	// 	if err != nil {
-	// 		k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to send coins, err: %w", err))
-	// 		return err
-	// 	}
-	// }
 
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipient, claimAmount); err != nil {
 		k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to send coins, err: %w", err))
