@@ -243,7 +243,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 			s.Equal(tc.expectedValue, res.AggregateValue)
 			s.Equal(tc.expectedPower, res.AggregatePower)
 			if tc.bridgeCheck {
-				depositId, err := s.oracleKeeper.BridgeDepositQueue.Get(s.ctx, collections.Join(uint64(1), uint64(timestamp.UnixMilli())))
+				depositId, err := s.oracleKeeper.BridgeDepositQueue.Get(s.ctx, collections.Join(uint64(timestamp.UnixMilli()), uint64(1)))
 				s.NoError(err)
 				s.Equal(depositId, uint64(1))
 			}
