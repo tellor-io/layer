@@ -275,11 +275,8 @@ func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentBlocktime := sdkCtx.BlockTime()
 	thresholdTimestamp := uint64(currentBlocktime.UnixMilli() - twelveHrsInMillis)
-	fmt.Println("threshold: ", thresholdTimestamp)
 
-	// k1: timestamp, k2: metaId
 	rng := collections.NewPrefixUntilPairRange[uint64, uint64](thresholdTimestamp)
-	fmt.Println("rng: ", rng)
 
 	var oldestDepositId uint64
 	var aggregateTimestamp uint64
@@ -287,33 +284,34 @@ func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
 
 	err := k.BridgeDepositQueue.Walk(ctx, rng, func(key collections.Pair[uint64, uint64], depositId uint64) (stop bool, err error) {
 		oldestDepositId = depositId
-		fmt.Println("oldestDepositId: ", oldestDepositId)
 		aggregateTimestamp = key.K1()
-		fmt.Println("k1: ", aggregateTimestamp)
 		metaId = key.K2()
-		fmt.Println("k2: ", metaId)
-		return true, nil // Stop after the first (most recent) match
+		return true, nil // stop after the first (oldest) match
 	})
 	if err != nil {
 		return err
+		k.Logger(ctx).Error("autoClaimDeposits", "error walking through queue", err)
 	}
 
+	// if no matches, return nil
 	if oldestDepositId == 0 && metaId == 0 {
 		return nil
 	}
 
 	err = k.bridgeKeeper.ClaimDeposit(ctx, oldestDepositId, aggregateTimestamp)
 	if err != nil {
-		k.Logger(ctx).Error("autoClaimDeposits", "error", err)
+		k.Logger(ctx).Error("autoClaimDeposits", "error calling claim deposit", err)
 		// remove the deposit from the queue if claiming fails
 		err = k.BridgeDepositQueue.Remove(ctx, collections.Join(aggregateTimestamp, metaId))
 		if err != nil {
+			k.Logger(ctx).Error("autoClaimDeposits", "error removing bridge deposit from queue after failed claim", err)
 			return err
 		}
 	}
 	// remove the deposit from the queue after successful claim
 	err = k.BridgeDepositQueue.Remove(ctx, collections.Join(aggregateTimestamp, metaId))
 	if err != nil {
+		k.Logger(ctx).Error("autoClaimDeposits", "error removing bridge deposit from queue after successful claim", err)
 		return err
 	}
 
