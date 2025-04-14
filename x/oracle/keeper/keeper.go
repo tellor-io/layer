@@ -266,9 +266,8 @@ func (k Keeper) ValidateMicroReportExists(ctx context.Context, reporter sdk.AccA
 	return &report, true, nil
 }
 
-// iterate through DepositQueue
-// Check if any deposit aggregate timestamp is >12 hrs old
-// Call claim deposit on those deposits and remove from queue
+// ranger checks for any timestamps in queue > 12 hrs old
+// call claim deposit on the oldest deposit aggregate and remove from queue
 // claim deposit should only fail if aggregate power is not reached, meaning deposit will need tipped again
 // once tipped and reported for again, deposit should reenter the queue
 func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
