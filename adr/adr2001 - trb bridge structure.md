@@ -4,6 +4,7 @@
 @themandalore
 @brendaloya
 @tkernell
+@danflo27
 
 ## Changelog
 
@@ -13,11 +14,13 @@
 - 2024-08-20: added the claim deposit tip
 - 2024-08-29: add separate withdraw and deposit limits and minimum deposit amount
 - 2024-10-07: changing pieces for removing commit/reveal setup
+- 2025-04-14: added auto claiming deposits
+
 ## Context
 
 Tellor Tributes (TRB) is the tellor token. It exists on Ethereum and cannot be changed. It mints ~4k to the team each month and ~4k to the oracle contract for time based inflationary rewards (tbr). When starting Layer we will launch a bridging contract where parties can deposit TRB to Layer. Layer will utilize reporters then to report deposit events to itself.  When the deposit is made it will be assigned a deposit ID and an event will be kicked off. All reporters will report for that event for a 2000 block window (this is allowed so that reporters are able to wait a certain amount of blocks before reporting so that the state of Ethereum has reached a high level of finality) and then we will optimistically use the report in our system, ensuring that the report is at least 12 hours old before the tokens are minted on Layer. Once the value is 12 hours old anyone can mint the tokens on Layer for the specified deposit ID.  
 
-Claiming the deposit on Layer costs gas. A party bridging TRB to Layer for the first time will not have TRB available on Layer to pay the required gas fee to claim the deposit. This is problematic because it creates a whitelisting environment (only those with TRB balances on the chain and whoever they are willing to call the claim function for can participate on the chain). To avoid this, when depositing to the bridge a 'claim tip' for anyone that calls the claim deposit function for on Layer can be included (not required). 
+Claiming the deposit on Layer costs gas. A party bridging TRB to Layer for the first time will not have TRB available on Layer to pay the required gas fee to claim the deposit. This is problematic because it creates a whitelisting environment (only those with TRB balances on the chain and whoever they are willing to call the claim function for can participate on the chain). Our initial solution was to offer a 'claim tip' when depositing to the bridge, incentivizing anyone to call the claim deposit function on Layer. To make the system more hands-free, we created a bridge deposit queue that is checked in the oracle module's endblocker. If there is an aggregate report for deposits that is over 12 hours old, ClaimDeposit is called automatically. For efficiency and spam prevention, the automated ClaimDeposit call will only claim one deposit per block. If there are multiple deposit aggregates over 12 hours old, the oldest will be claimed, followed by the next oldest in the subsequent block, and so on. If, for some reason, the automatic claiming fails, the deposit can be tipped/reported again and will re-enter the queue, or ClaimDeposit can be called manually. The 'claim tip' is still a field when depositing, but the entire deposit amount and tip will go to the depositor.  
 
  ![ ADR2001](./graphics/adr2001.png)
 
@@ -53,7 +56,9 @@ It was considered to not allow depositors to include a tip to incentivize runnin
 
 ### Make the claimDeposit function free on Layer
 
-We considered allowing the claimDeposit function to be free but we didn't want the transaction to be used to spam Layer with microdeposits as Ethereum transactions fee continue to decrease.
+We considered allowing the claimDeposit function to be free but we didn't want the transaction to be used to spam Layer with microdeposits as Ethereum transactions fee continue to decrease. 
+
+We did end up making it free by putting it in an endblocker, but only one deposit will be claimed per block. 
 
 
 ## Issues / Notes on Implementation
