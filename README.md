@@ -199,7 +199,7 @@ This repository is maintained by the [Tellor team](https://github.com/orgs/tello
 
 ## How to Contribute<a name="how2contribute"> </a>  
 
-Check out our issues log here on Github or feel free to reach out anytime [info@tellor.io](mailto:info@tellor.io)
+Check out our issues log here on GitHub or feel free to reach out anytime [info@tellor.io](mailto:info@tellor.io)
 
 ## Community<a name="community"> </a>  
 
