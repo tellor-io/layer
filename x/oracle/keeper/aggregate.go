@@ -5,10 +5,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"math/big"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/lib/metrics"
 	layer "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
@@ -156,26 +154,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, query
 	}
 	// if bridge report, set aggregate timestamp and deposit ID in deposit queue
 	if queryType == TRBBridgeQueryType {
-		// decode rest of query data
-		BoolType, err := abi.NewType("bool", "", nil)
-		if err != nil {
-			return err
-		}
-		Uint256Type, err := abi.NewType("uint256", "", nil)
-		if err != nil {
-			return err
-		}
-		queryDataArgs := abi.Arguments{
-			{Type: BoolType},
-			{Type: Uint256Type},
-		}
-		queryDataArgsDecoded, err := queryDataArgs.Unpack(bytesArg)
-		if err != nil {
-			return err
-		}
-		depositId := queryDataArgsDecoded[1].(*big.Int).Uint64()
-
-		err = k.BridgeDepositQueue.Set(ctx, collections.Join(currentTimestamp, report.MetaId), depositId)
+		err = k.BridgeDepositQueue.Set(ctx, collections.Join(currentTimestamp, report.MetaId), bytesArg)
 		if err != nil {
 			return err
 		}

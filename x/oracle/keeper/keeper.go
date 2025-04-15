@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	gomath "math"
+	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
@@ -55,7 +57,7 @@ type (
 		// storage for values that are aggregated via weighted mode
 		ValuesWeightedMode collections.Map[collections.Pair[uint64, string], uint64] // key: queryMeta.Id, valueHexstring  value: total power of reporters that submitted the value
 		// storage for bridge deposit reports queue
-		BridgeDepositQueue collections.Map[collections.Pair[uint64, uint64], uint64] // key: aggregate timestamp, queryMetaId, value: depositId
+		BridgeDepositQueue collections.Map[collections.Pair[uint64, uint64], []byte] // key: aggregate timestamp, queryMetaId, value: queryDataBytesArg (query data arguments)
 	}
 )
 
@@ -146,7 +148,7 @@ func NewKeeper(
 			types.BridgeDepositQueuePrefix,
 			"bridge_deposit_queue",
 			collections.PairKeyCodec(collections.Uint64Key, collections.Uint64Key),
-			collections.Uint64Value),
+			collections.BytesValue),
 	}
 
 	schema, err := sb.Build()
@@ -277,27 +279,33 @@ func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
 
 	rng := collections.NewPrefixUntilPairRange[uint64, uint64](thresholdTimestamp)
 
-	var oldestDepositId uint64
+	var queryDataArgs []byte
 	var aggregateTimestamp uint64
 	var metaId uint64
 
-	err := k.BridgeDepositQueue.Walk(ctx, rng, func(key collections.Pair[uint64, uint64], depositId uint64) (stop bool, err error) {
-		oldestDepositId = depositId
+	err := k.BridgeDepositQueue.Walk(ctx, rng, func(key collections.Pair[uint64, uint64], bz []byte) (stop bool, err error) {
 		aggregateTimestamp = key.K1()
 		metaId = key.K2()
+		queryDataArgs = bz
 		return true, nil // stop after the first (oldest) match
 	})
 	if err != nil {
 		k.Logger(ctx).Error("autoClaimDeposits", "error walking through queue", err)
 		return err
 	}
-
 	// if no matches, return nil
-	if oldestDepositId == 0 && metaId == 0 {
+	if queryDataArgs == nil && metaId == 0 {
 		return nil
 	}
 
-	err = k.bridgeKeeper.ClaimDeposit(ctx, oldestDepositId, aggregateTimestamp)
+	// decode retreieved query data
+	depositId, err := k.DecodeBridgeDeposit(ctx, queryDataArgs)
+	if err != nil {
+		k.Logger(ctx).Error("autoClaimDeposits", "error walking through queue", err)
+		return err
+	}
+
+	err = k.bridgeKeeper.ClaimDeposit(ctx, depositId, aggregateTimestamp)
 	if err != nil {
 		k.Logger(ctx).Error("autoClaimDeposits", "error calling claim deposit", err)
 		// remove the deposit from the queue if claiming fails
@@ -315,4 +323,27 @@ func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (k Keeper) DecodeBridgeDeposit(ctx context.Context, queryDataBz []byte) (uint64, error) {
+	// decode rest of query data
+	BoolType, err := abi.NewType("bool", "", nil)
+	if err != nil {
+		return 0, err
+	}
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	if err != nil {
+		return 0, err
+	}
+	queryDataArgs := abi.Arguments{
+		{Type: BoolType},
+		{Type: Uint256Type},
+	}
+	queryDataArgsDecoded, err := queryDataArgs.Unpack(queryDataBz)
+	if err != nil {
+		return 0, err
+	}
+	depositId := queryDataArgsDecoded[1].(*big.Int).Uint64()
+
+	return depositId, nil
 }

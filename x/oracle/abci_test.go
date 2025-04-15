@@ -83,18 +83,19 @@ func (s *TestSuite) TestEndBlocker() {
 	depositId := uint64(1)
 	depositTimestamp := uint64(time.Now().Add(-13 * time.Hour).UnixMilli())
 	deposit1MetaId := uint64(1)
-	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp, deposit1MetaId), depositId)
+	bytesArg1 := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp, deposit1MetaId), bytesArg1)
 	require.NoError(err)
 	// create deposit that cant be claimed yet
-	depositId2 := uint64(2)
 	depositTimestamp2 := uint64(time.Now().Add(-1 * time.Hour).UnixMilli())
 	deposit2MetaId := uint64(2)
-	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp2, deposit2MetaId), depositId2)
+	bytesArg2 := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2}
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp2, deposit2MetaId), bytesArg2)
 	require.NoError(err)
 
 	s.bridgeKeeper.On("ClaimDeposit", ctx, depositId, depositTimestamp).Return(nil).Once()
 
-	// end blocker
+	// end blocker should only claim deposit 1
 	err = oracle.EndBlocker(ctx, k)
 	require.NoError(err)
 
@@ -106,27 +107,30 @@ func (s *TestSuite) TestEndBlocker() {
 	_, err = k.BridgeDepositQueue.Get(ctx, collections.Join((depositTimestamp2), deposit2MetaId))
 	require.NoError(err)
 
-	// call endblock again to make sure its fine with <12 hr old report
+	// call endblock again to make sure its fine with <12 hr old report and deposit 2 is still in queue
 	err = oracle.EndBlocker(ctx, k)
+	require.NoError(err)
+	_, err = k.BridgeDepositQueue.Get(ctx, collections.Join((depositTimestamp2), deposit2MetaId))
 	require.NoError(err)
 
 	// put 2 >12 hr old deposits in
-	// create deposit to be claimed
+	// create 2 deposits that can be claimed
 	depositId3 := uint64(3)
 	depositTimestamp3 := uint64(time.Now().Add(-13 * time.Hour).UnixMilli())
 	deposit3MetaId := uint64(3)
-	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp3, deposit3MetaId), depositId3)
+	bytesArg3 := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3}
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp3, deposit3MetaId), bytesArg3)
 	require.NoError(err)
-	// create deposit that cant be claimed yet
 	depositId4 := uint64(4)
 	depositTimestamp4 := uint64(time.Now().Add(-14 * time.Hour).UnixMilli())
 	deposit4MetaId := uint64(4)
-	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp4, deposit4MetaId), depositId4)
+	bytesArg4 := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4}
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp4, deposit4MetaId), bytesArg4)
 	require.NoError(err)
 
 	s.bridgeKeeper.On("ClaimDeposit", ctx, depositId4, depositTimestamp4).Return(nil).Once()
 
-	// end blocker
+	// end blocker should claim the oldest one (4)
 	err = oracle.EndBlocker(ctx, k)
 	require.NoError(err)
 
@@ -149,6 +153,10 @@ func (s *TestSuite) TestEndBlocker() {
 
 	// nothing to claim, should be ok
 	err = oracle.EndBlocker(ctx, k)
+	require.NoError(err)
+
+	// 2 should still be in the queue
+	_, err = k.BridgeDepositQueue.Get(ctx, collections.Join((depositTimestamp2), deposit2MetaId))
 	require.NoError(err)
 }
 
