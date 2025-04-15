@@ -34,6 +34,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 
 	if vote.VoteResult != types.VoteResult_NO_TALLY && dispute.DisputeEndTime.Before(sdk.UnwrapSDKContext(ctx).BlockTime()) {
 		dispute.DisputeStatus = types.Resolved
+		dispute.Open = false
 		if err := k.Disputes.Set(ctx, id, dispute); err != nil {
 			return err
 		}
