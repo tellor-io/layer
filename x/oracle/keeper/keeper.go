@@ -173,6 +173,7 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 }
 
 func (k *Keeper) SetBridgeKeeper(bk types.BridgeKeeper) {
+	fmt.Println("bk in SetBridgeKeeper: ", bk)
 	k.bridgeKeeper = bk
 }
 
@@ -305,6 +306,12 @@ func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
 	if err != nil {
 		k.Logger(ctx).Error("autoClaimDeposits", "error walking through queue", err)
 		return err
+	}
+
+	k.SetBridgeKeeper(k.bridgeKeeper)
+	fmt.Println("k.bridgeKeeper :", k.bridgeKeeper)
+	if k.bridgeKeeper == nil {
+		panic("!!!")
 	}
 
 	err = k.bridgeKeeper.ClaimDeposit(ctx, depositId, aggregateTimestamp)

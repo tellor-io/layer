@@ -1062,7 +1062,7 @@ func (s *IntegrationTestSuite) TestClaimingBridgeDeposit() {
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
-	// Height 2012 - ff blocks, bridge deposit should aggregate
+	// Height 2012 - fast forward blocks, bridge deposit should aggregate
 	//---------------------------------------------------------------------------
 	ctx = ctx.WithBlockHeight(2012)
 	_, err = s.Setup.App.BeginBlocker(ctx)
@@ -1072,7 +1072,7 @@ func (s *IntegrationTestSuite) TestClaimingBridgeDeposit() {
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
-	// Height 2013 - verify aggregate, ff time so 12 hrs expires
+	// Height 2013 - verify aggregate, fast forward time so 12 hrs expires
 	//---------------------------------------------------------------------------
 	ctx = ctx.WithBlockHeight(2013)
 	_, err = s.Setup.App.BeginBlocker(ctx)
@@ -1096,11 +1096,20 @@ func (s *IntegrationTestSuite) TestClaimingBridgeDeposit() {
 	// fast forward 12 hrs so deposit can be claimed
 	ctx = ctx.WithBlockTime(time.Now().Add(13 * time.Hour))
 
-	// try to claim manually
-	fmt.Println("agg timestamp: ", res.Timestamp)
+	// try to claim manually -- works fine
+	// fmt.Println("agg timestamp: ", res.Timestamp)
 	// require.NoError(s.Setup.Bridgekeeper.ClaimDeposit(ctx, uint64(1), res.Timestamp))
+	// claimed, err = s.Setup.Bridgekeeper.DepositIdClaimedMap.Get(ctx, uint64(1))
+	// require.NoError(err)
+	// require.True(claimed.Claimed)
 
-	// deposit should get autoclaimed in endblocker
+	// try to call AutoClaim manually
+	require.NoError(s.Setup.Oraclekeeper.AutoClaimDeposits(ctx))
+	claimed, err = s.Setup.Bridgekeeper.DepositIdClaimedMap.Get(ctx, uint64(1))
+	require.NoError(err)
+	require.True(claimed.Claimed)
+
+	// deposit should get autoclaimed in endblocker -- panicking from nil k.bridgekeeper
 	_, err = s.Setup.App.EndBlocker(ctx)
 	require.NoError(err)
 
