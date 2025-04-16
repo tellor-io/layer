@@ -556,6 +556,10 @@ func EncodeStringValue(value string) string {
 	return encodedString
 }
 
+type QueryGetDepositClaimedResponse struct {
+	Claimed bool `protobuf:"varint,1,opt,name=claimed,proto3" json:"claimed,omitempty"`
+}
+
 type Validators struct {
 	Addr    string
 	ValAddr string

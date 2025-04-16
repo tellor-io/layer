@@ -1110,7 +1110,7 @@ func (s *IntegrationTestSuite) TestClaimingBridgeDeposit() {
 	// require.NoError(err)
 	// require.True(claimed.Claimed)
 
-	// deposit should get autoclaimed in endblocker -- panicking from nil k.bridgekeeper
+	// deposit should get autoclaimed in endblocker -- app.Endblocker panicking from nil k.bridgekeeper (something up with setup)
 	err = oracle.EndBlocker(ctx, s.Setup.Oraclekeeper)
 	require.NoError(err)
 
