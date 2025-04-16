@@ -1103,11 +1103,11 @@ func (s *IntegrationTestSuite) TestClaimingBridgeDeposit() {
 	// require.NoError(err)
 	// require.True(claimed.Claimed)
 
-	// try to call AutoClaim manually
-	require.NoError(s.Setup.Oraclekeeper.AutoClaimDeposits(ctx))
-	claimed, err = s.Setup.Bridgekeeper.DepositIdClaimedMap.Get(ctx, uint64(1))
-	require.NoError(err)
-	require.True(claimed.Claimed)
+	// try to call AutoClaim manually -- works fine
+	// require.NoError(s.Setup.Oraclekeeper.AutoClaimDeposits(ctx))
+	// claimed, err = s.Setup.Bridgekeeper.DepositIdClaimedMap.Get(ctx, uint64(1))
+	// require.NoError(err)
+	// require.True(claimed.Claimed)
 
 	// deposit should get autoclaimed in endblocker -- panicking from nil k.bridgekeeper
 	_, err = s.Setup.App.EndBlocker(ctx)
