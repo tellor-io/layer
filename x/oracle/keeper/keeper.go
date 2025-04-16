@@ -11,6 +11,8 @@ import (
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
@@ -57,7 +59,7 @@ type (
 		// storage for values that are aggregated via weighted mode
 		ValuesWeightedMode collections.Map[collections.Pair[uint64, string], uint64] // key: queryMeta.Id, valueHexstring  value: total power of reporters that submitted the value
 		// storage for bridge deposit reports queue
-		BridgeDepositQueue collections.Map[collections.Pair[uint64, uint64], []byte] // key: aggregate timestamp, queryMetaId, value: queryDataBytesArg (query data arguments)
+		BridgeDepositQueue collections.Map[collections.Pair[uint64, uint64], []byte] // key: aggregate timestamp, queryMetaId, value: queryData
 	}
 )
 
@@ -279,14 +281,14 @@ func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
 
 	rng := collections.NewPrefixUntilPairRange[uint64, uint64](thresholdTimestamp)
 
-	var queryDataArgs []byte
+	var queryData []byte
 	var aggregateTimestamp uint64
 	var metaId uint64
 
 	err := k.BridgeDepositQueue.Walk(ctx, rng, func(key collections.Pair[uint64, uint64], bz []byte) (stop bool, err error) {
 		aggregateTimestamp = key.K1()
 		metaId = key.K2()
-		queryDataArgs = bz
+		queryData = bz
 		return true, nil // stop after the first (oldest) match
 	})
 	if err != nil {
@@ -294,12 +296,12 @@ func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
 		return err
 	}
 	// if no matches, return nil
-	if queryDataArgs == nil && metaId == 0 {
+	if queryData == nil && metaId == 0 {
 		return nil
 	}
 
 	// decode retreieved query data
-	depositId, err := k.DecodeBridgeDeposit(ctx, queryDataArgs)
+	depositId, err := k.DecodeBridgeDeposit(ctx, queryData)
 	if err != nil {
 		k.Logger(ctx).Error("autoClaimDeposits", "error walking through queue", err)
 		return err
@@ -325,8 +327,12 @@ func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
 	return nil
 }
 
-func (k Keeper) DecodeBridgeDeposit(ctx context.Context, queryDataBz []byte) (uint64, error) {
-	// decode rest of query data
+func (k Keeper) DecodeBridgeDeposit(ctx context.Context, queryData []byte) (uint64, error) {
+	_, bytesArgs, err := regTypes.DecodeQueryType(queryData)
+	if err != nil {
+		return 0, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
+	}
+	// decode query data arguments
 	BoolType, err := abi.NewType("bool", "", nil)
 	if err != nil {
 		return 0, err
@@ -339,7 +345,7 @@ func (k Keeper) DecodeBridgeDeposit(ctx context.Context, queryDataBz []byte) (ui
 		{Type: BoolType},
 		{Type: Uint256Type},
 	}
-	queryDataArgsDecoded, err := queryDataArgs.Unpack(queryDataBz)
+	queryDataArgsDecoded, err := queryDataArgs.Unpack(bytesArgs)
 	if err != nil {
 		return 0, err
 	}

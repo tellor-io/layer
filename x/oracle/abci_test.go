@@ -1,6 +1,7 @@
 package oracle_test
 
 import (
+	"encoding/hex"
 	"testing"
 	"time"
 
@@ -83,14 +84,17 @@ func (s *TestSuite) TestEndBlocker() {
 	depositId := uint64(1)
 	depositTimestamp := uint64(time.Now().Add(-13 * time.Hour).UnixMilli())
 	deposit1MetaId := uint64(1)
-	bytesArg1 := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
-	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp, deposit1MetaId), bytesArg1)
+	bridgeQueryDataString := "0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000095452424272696467650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001"
+	bridgeQueryData, _ := hex.DecodeString(bridgeQueryDataString)
+
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp, deposit1MetaId), bridgeQueryData)
 	require.NoError(err)
 	// create deposit that cant be claimed yet
 	depositTimestamp2 := uint64(time.Now().Add(-1 * time.Hour).UnixMilli())
 	deposit2MetaId := uint64(2)
-	bytesArg2 := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2}
-	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp2, deposit2MetaId), bytesArg2)
+	bridgeQueryDataString2 := "0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000095452424272696467650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002"
+	bridgeQueryData2, _ := hex.DecodeString(bridgeQueryDataString2)
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp2, deposit2MetaId), bridgeQueryData2)
 	require.NoError(err)
 
 	s.bridgeKeeper.On("ClaimDeposit", ctx, depositId, depositTimestamp).Return(nil).Once()
@@ -118,14 +122,16 @@ func (s *TestSuite) TestEndBlocker() {
 	depositId3 := uint64(3)
 	depositTimestamp3 := uint64(time.Now().Add(-13 * time.Hour).UnixMilli())
 	deposit3MetaId := uint64(3)
-	bytesArg3 := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3}
-	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp3, deposit3MetaId), bytesArg3)
+	bridgeQueryDataString3 := "0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000095452424272696467650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000003"
+	bridgeQueryData3, _ := hex.DecodeString(bridgeQueryDataString3)
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp3, deposit3MetaId), bridgeQueryData3)
 	require.NoError(err)
 	depositId4 := uint64(4)
 	depositTimestamp4 := uint64(time.Now().Add(-14 * time.Hour).UnixMilli())
 	deposit4MetaId := uint64(4)
-	bytesArg4 := []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4}
-	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp4, deposit4MetaId), bytesArg4)
+	bridgeQueryDataString4 := "0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000095452424272696467650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000004"
+	bridgeQueryData4, _ := hex.DecodeString(bridgeQueryDataString4)
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp4, deposit4MetaId), bridgeQueryData4)
 	require.NoError(err)
 
 	s.bridgeKeeper.On("ClaimDeposit", ctx, depositId4, depositTimestamp4).Return(nil).Once()

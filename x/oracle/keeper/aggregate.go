@@ -148,13 +148,13 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, query
 	report.Height = uint64(sdkCtx.BlockHeight())
 
 	// decode query data to see if it is a bridge report
-	queryType, bytesArg, err := regTypes.DecodeQueryType(queryData)
+	queryType, _, err := regTypes.DecodeQueryType(queryData)
 	if err != nil {
 		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
 	}
-	// if bridge report, set aggregate timestamp and deposit ID in deposit queue
+	// if bridge report, set in deposit queue
 	if queryType == TRBBridgeQueryType {
-		err = k.BridgeDepositQueue.Set(ctx, collections.Join(currentTimestamp, report.MetaId), bytesArg)
+		err = k.BridgeDepositQueue.Set(ctx, collections.Join(currentTimestamp, report.MetaId), queryData)
 		if err != nil {
 			return err
 		}
