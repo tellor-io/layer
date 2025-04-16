@@ -13,6 +13,7 @@ import (
 	"github.com/tellor-io/layer/utils"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
+	"github.com/tellor-io/layer/x/oracle"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
@@ -1110,7 +1111,7 @@ func (s *IntegrationTestSuite) TestClaimingBridgeDeposit() {
 	// require.True(claimed.Claimed)
 
 	// deposit should get autoclaimed in endblocker -- panicking from nil k.bridgekeeper
-	_, err = s.Setup.App.EndBlocker(ctx)
+	err = oracle.EndBlocker(ctx, s.Setup.Oraclekeeper)
 	require.NoError(err)
 
 	//---------------------------------------------------------------------------
