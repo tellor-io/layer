@@ -26,6 +26,7 @@ import (
 
 const (
 	twelveHrsInMillis = 12 * 60 * 60 * 1000
+	// twoMinInMillis    = 2 * 60 * 1000
 )
 
 type (
@@ -173,7 +174,6 @@ func (k Keeper) Logger(ctx context.Context) log.Logger {
 }
 
 func (k *Keeper) SetBridgeKeeper(bk types.BridgeKeeper) {
-	fmt.Println("bk in SetBridgeKeeper: ", bk)
 	k.bridgeKeeper = bk
 }
 
@@ -274,12 +274,13 @@ func (k Keeper) ValidateMicroReportExists(ctx context.Context, reporter sdk.AccA
 // ranger checks for any timestamps in queue > 12 hrs old
 // call claim deposit on the oldest deposit aggregate and remove from queue
 // claim deposit should only fail if aggregate power is not reached, meaning deposit will need tipped again
-// once tipped and reported for again, deposit should reenter the queue
+// once tipped and reported for again, deposit will reenter the queue
 func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentBlocktime := sdkCtx.BlockTime()
 	thresholdTimestamp := uint64(currentBlocktime.UnixMilli() - twelveHrsInMillis)
 
+	// ranger only finds timestamps exactly 12 hrs and older
 	rng := collections.NewPrefixUntilPairRange[uint64, uint64](thresholdTimestamp)
 
 	var queryData []byte
@@ -304,14 +305,8 @@ func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
 	// decode retreieved query data
 	depositId, err := k.DecodeBridgeDeposit(ctx, queryData)
 	if err != nil {
-		k.Logger(ctx).Error("autoClaimDeposits", "error walking through queue", err)
+		k.Logger(ctx).Error("autoClaimDeposits", "error decoding query data", err)
 		return err
-	}
-
-	k.SetBridgeKeeper(k.bridgeKeeper)
-	fmt.Println("k.bridgeKeeper :", k.bridgeKeeper)
-	if k.bridgeKeeper == nil {
-		panic("!!!")
 	}
 
 	err = k.bridgeKeeper.ClaimDeposit(ctx, depositId, aggregateTimestamp)

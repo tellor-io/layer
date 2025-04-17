@@ -597,5 +597,4 @@ func (s *KeeperTestSuite) TestAutoClaimDeposits() {
 	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
 	s.bridgeKeeper.On("ClaimDeposit", ctx, deposits[4].DepositId, deposits[4].AggregateTimestamp).Return(nil).Once()
 	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
-
 }
