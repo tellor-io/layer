@@ -5,7 +5,6 @@ import (
 	"os"
 
 	appflags "github.com/tellor-io/layer/app/flags"
-	daemonflags "github.com/tellor-io/layer/daemons/flags"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server/config"
@@ -46,9 +45,6 @@ func GetDefaultTestAppOptions(homePath string, customFlags map[string]interface{
 	fao := NewFakeAppOptions()
 
 	fao.Set(flags.FlagHome, homePath)
-
-	// Disable the Price Daemon for all end-to-end and integration tests by default.
-	fao.Set(daemonflags.FlagPriceDaemonEnabled, false)
 
 	// Populate the default value for gRPC.
 	fao.Set(appflags.GrpcAddress, config.DefaultGRPCAddress)

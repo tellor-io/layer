@@ -7,15 +7,14 @@ import (
 	"sync"
 	"time"
 
-	appflags "github.com/tellor-io/layer/app/flags"
 	"github.com/tellor-io/layer/daemons/constants"
 	"github.com/tellor-io/layer/daemons/flags"
+	libtime "github.com/tellor-io/layer/daemons/lib/time"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/price_fetcher"
 	handler "github.com/tellor-io/layer/daemons/pricefeed/client/queryhandler"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	servertypes "github.com/tellor-io/layer/daemons/server/types"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
-	libtime "github.com/tellor-io/layer/lib/time"
 
 	"cosmossdk.io/log"
 )
@@ -128,7 +127,7 @@ func (c *Client) Stop() {
 //  6. Start PriceUpdater to begin broadcasting prices.
 func (c *Client) start(ctx context.Context,
 	daemonFlags flags.DaemonFlags,
-	appFlags appflags.Flags,
+	grpcAddress string,
 	grpcClient daemontypes.GrpcClient,
 	marketParams []types.MarketParam,
 	exchangeIdToQueryConfig map[types.ExchangeId]*types.ExchangeQueryConfig,
@@ -136,7 +135,7 @@ func (c *Client) start(ctx context.Context,
 	subTaskRunner SubTaskRunner,
 ) (err error) {
 	// 1. Establish connections to gRPC servers.
-	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
+	queryConn, err := grpcClient.NewTcpConnection(ctx, grpcAddress)
 	if err != nil {
 		c.logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
 		return err
@@ -261,7 +260,7 @@ func (c *Client) start(ctx context.Context,
 func StartNewClient(
 	ctx context.Context,
 	daemonFlags flags.DaemonFlags,
-	appFlags appflags.Flags,
+	grpcAddress string,
 	logger log.Logger,
 	grpcClient daemontypes.GrpcClient,
 	marketParams []types.MarketParam,
@@ -282,7 +281,7 @@ func StartNewClient(
 		err := client.start(
 			ctx,
 			daemonFlags,
-			appFlags,
+			grpcAddress,
 			grpcClient,
 			marketParams,
 			exchangeIdToQueryConfig,

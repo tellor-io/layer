@@ -2,7 +2,7 @@ package constants
 
 import (
 	pricefeedclient "github.com/tellor-io/layer/daemons/pricefeed/client/types"
-	"github.com/tellor-io/layer/testutil/daemons/pricefeed/exchange_config"
+	"github.com/tellor-io/layer/daemons/testutil/daemons/pricefeed/exchange_config"
 )
 
 const (

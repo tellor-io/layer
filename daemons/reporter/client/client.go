@@ -8,7 +8,15 @@ import (
 
 	"github.com/spf13/viper"
 	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
-	appflags "github.com/tellor-io/layer/app/flags"
+
+	"cosmossdk.io/log"
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/tellor-io/layer/daemons/flags"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
@@ -17,13 +25,6 @@ import (
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
-
-	"cosmossdk.io/log"
-
-	"github.com/cosmos/cosmos-sdk/client"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const defaultGas = uint64(300000)
@@ -46,16 +47,17 @@ type Client struct {
 	AccountName string
 	// Query clients
 	OracleQueryClient oracletypes.QueryClient
-	StakingClient     stakingtypes.QueryClient
-	ReporterClient    reportertypes.QueryClient
-	GlobalfeeClient   globalfeetypes.QueryClient
+
+	ReporterClient  reportertypes.QueryClient
+	CmtService      cmtservice.ServiceClient
+	GlobalfeeClient globalfeetypes.QueryClient
+	AuthClient      authtypes.QueryClient
 
 	cosmosCtx            client.Context
 	MarketParams         []pricefeedtypes.MarketParam
 	MarketToExchange     *pricefeedservertypes.MarketToExchangePrices
 	TokenDepositsCache   *tokenbridgetypes.DepositReports
 	TokenBridgeTipsCache *tokenbridgetipstypes.DepositTips
-	StakingKeeper        stakingkeeper.Keeper
 
 	accAddr   sdk.AccAddress
 	minGasFee string
@@ -64,82 +66,97 @@ type Client struct {
 	txChan chan TxChannelInfo
 }
 
-func NewClient(clctx client.Context, logger log.Logger, accountName, valGasMin string) *Client {
+func NewClient(logger log.Logger, valGasMin string) *Client {
 	logger = logger.With("module", "reporter-client")
 	txChan := make(chan TxChannelInfo)
 	return &Client{
-		AccountName: accountName,
-		cosmosCtx:   clctx,
-		logger:      logger,
-		minGasFee:   valGasMin,
-		txChan:      txChan,
+		cosmosCtx: client.Context{},
+		logger:    logger,
+		minGasFee: valGasMin,
+		txChan:    txChan,
 	}
 }
 
 func (c *Client) Start(
 	ctx context.Context,
 	flags flags.DaemonFlags,
-	appFlags appflags.Flags,
+	grpcAddress string,
 	grpcClient daemontypes.GrpcClient,
 	marketParams []pricefeedtypes.MarketParam,
 	marketToExchange *pricefeedservertypes.MarketToExchangePrices,
 	tokenDepositsCache *tokenbridgetypes.DepositReports,
 	tokenBridgeTipsCache *tokenbridgetipstypes.DepositTips,
-	// ctxGetter func(int64, bool) (sdk.Context, error),
-	stakingKeeper stakingkeeper.Keeper,
 	chainId string,
 ) error {
 	// Log the daemon flags.
 	c.logger.Info(
 		"Starting reporter daemon with flags",
-		"ReportersFlags", flags.Reporter,
 	)
 
 	c.MarketParams = marketParams
 	c.MarketToExchange = marketToExchange
-	c.StakingKeeper = stakingKeeper
 
 	c.TokenDepositsCache = tokenDepositsCache
 	c.TokenBridgeTipsCache = tokenBridgeTipsCache
 	// Make a connection to the Cosmos gRPC query services.
-	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
+	conn, err := grpcClient.NewTcpConnection(ctx, grpcAddress)
 	if err != nil {
 		c.logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
 		return err
 	}
 	defer func() {
-		if connErr := grpcClient.CloseConnection(queryConn); connErr != nil {
+		if connErr := grpcClient.CloseConnection(conn); connErr != nil {
 			err = connErr
 		}
 	}()
 
 	// Initialize the query clients. These are used to query the Cosmos gRPC query services.
-	c.OracleQueryClient = oracletypes.NewQueryClient(queryConn)
-	c.StakingClient = stakingtypes.NewQueryClient(queryConn)
-	c.ReporterClient = reportertypes.NewQueryClient(queryConn)
-	c.GlobalfeeClient = globalfeetypes.NewQueryClient(queryConn)
+	c.OracleQueryClient = oracletypes.NewQueryClient(conn)
+	c.ReporterClient = reportertypes.NewQueryClient(conn)
+	c.GlobalfeeClient = globalfeetypes.NewQueryClient(conn)
+	c.CmtService = cmtservice.NewServiceClient(conn)
+	c.AuthClient = authtypes.NewQueryClient(conn)
 
 	ticker := time.NewTicker(time.Millisecond * 200)
 	stop := make(chan bool)
 
-	// get account
-	c.AccountName = viper.GetString("key-name")
-	if c.AccountName == "" {
-		panic("account name is empty, please use --key-name flag")
-	}
-	accountName := c.AccountName
-	c.cosmosCtx = c.cosmosCtx.WithChainID(chainId)
+	keyName := viper.GetString("from")
 	homeDir := viper.GetString("home")
-	if homeDir != "" {
-		c.cosmosCtx = c.cosmosCtx.WithHomeDir(homeDir)
-	} else {
-		panic("homeDir is empty, please use --home flag")
-	}
-	fromAddr, fromName, _, err := client.GetFromFields(c.cosmosCtx, c.cosmosCtx.Keyring, accountName)
+	brdcstMode := viper.GetString("broadcast-mode")
+	nodeUri := viper.GetString("node")
+	kb := viper.GetString("keyring-backend")
+
+	c.cosmosCtx = c.cosmosCtx.WithChainID(chainId)
+	c.cosmosCtx = c.cosmosCtx.WithHomeDir(homeDir)
+	c.cosmosCtx = c.cosmosCtx.WithKeyringDir(homeDir)
+	c.cosmosCtx = c.cosmosCtx.WithGRPCClient(conn)
+	c.cosmosCtx = c.cosmosCtx.WithBroadcastMode(brdcstMode)
+	c.cosmosCtx = c.cosmosCtx.WithAccountRetriever(authtypes.AccountRetriever{})
+
+	rpcClient, err := rpchttp.New(nodeUri, "/websocket")
 	if err != nil {
-		panic(fmt.Errorf("error getting address from keyring: %w : Keyring Type info: %v", err, c.cosmosCtx.Keyring))
+		return fmt.Errorf("failed to create RPC client: %w", err)
 	}
-	c.cosmosCtx = c.cosmosCtx.WithFrom(accountName).WithFromAddress(fromAddr).WithFromName(fromName)
+	c.cosmosCtx = c.cosmosCtx.WithClient(rpcClient)
+
+	encodingConfig := CreateEncodingConfig()
+	c.cosmosCtx = c.cosmosCtx.WithCodec(encodingConfig.Codec).WithInterfaceRegistry(encodingConfig.InterfaceRegistry).WithTxConfig(encodingConfig.TxConfig)
+
+	kr, err := keyring.New("", kb, homeDir, nil, encodingConfig.Codec)
+	if err != nil {
+		return err
+	}
+	record, err := kr.Key(keyName)
+	if err != nil {
+		return err
+	}
+	addr, err := record.GetAddress()
+	if err != nil {
+		return err
+	}
+
+	c.cosmosCtx = c.cosmosCtx.WithKeyring(kr)
+	c.cosmosCtx = c.cosmosCtx.WithFrom(keyName).WithFromName(keyName).WithFromAddress(addr)
 	c.accAddr = c.cosmosCtx.GetFromAddress()
 
 	StartReporterDaemonTaskLoop(
@@ -148,7 +165,6 @@ func (c *Client) Start(
 		flags,
 		ticker,
 		stop,
-		// ctxGetter,
 	)
 
 	return nil
@@ -160,7 +176,6 @@ func StartReporterDaemonTaskLoop(
 	flags flags.DaemonFlags,
 	ticker *time.Ticker,
 	stop <-chan bool,
-	// ctxGetter func(int64, bool) (sdk.Context, error),
 ) {
 	reporterCreated := false
 	// Check if the reporter is created

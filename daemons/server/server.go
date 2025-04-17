@@ -5,9 +5,9 @@ import (
 
 	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/constants"
+	"github.com/tellor-io/layer/daemons/lib/metrics"
 	"github.com/tellor-io/layer/daemons/server/types"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
-	"github.com/tellor-io/layer/lib/metrics"
 
 	// "syscall"
 	"cosmossdk.io/log"

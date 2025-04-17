@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package layer.daemons;
+package daemons;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";

@@ -7,10 +7,10 @@ import (
 
 	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/constants"
+	"github.com/tellor-io/layer/daemons/lib/metrics"
 	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
 	"github.com/tellor-io/layer/daemons/server/types"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
-	"github.com/tellor-io/layer/lib/metrics"
 
 	errorsmod "cosmossdk.io/errors"
 

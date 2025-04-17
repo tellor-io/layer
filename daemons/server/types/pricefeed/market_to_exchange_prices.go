@@ -5,11 +5,11 @@ import (
 	"time"
 
 	gometrics "github.com/hashicorp/go-metrics"
+	"github.com/tellor-io/layer/daemons/lib"
+	"github.com/tellor-io/layer/daemons/lib/metrics"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
 	servertypes "github.com/tellor-io/layer/daemons/server/types"
-	"github.com/tellor-io/layer/lib"
-	"github.com/tellor-io/layer/lib/metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )

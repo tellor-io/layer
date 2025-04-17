@@ -4,7 +4,7 @@ import (
 	"github.com/tellor-io/layer/daemons/constants"
 	daemonClientTypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	servertypes "github.com/tellor-io/layer/daemons/server/types"
-	"github.com/tellor-io/layer/testutil/client"
+	"github.com/tellor-io/layer/daemons/testutil/client"
 )
 
 var (

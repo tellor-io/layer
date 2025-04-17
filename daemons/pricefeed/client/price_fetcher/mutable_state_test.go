@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/daemons/mocks"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
-	"github.com/tellor-io/layer/testutil/constants"
+	"github.com/tellor-io/layer/daemons/testutil/constants"
 
 	"cosmossdk.io/log"
 )
