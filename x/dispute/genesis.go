@@ -260,6 +260,7 @@ func NewModuleStateWriter(filename string) (*ModuleStateWriter, error) {
 
 	// Write the opening structure
 	if _, err := file.Write([]byte("{\n")); err != nil {
+		fmt.Println("Failed to write opening structure")
 		file.Close()
 		return nil, err
 	}
@@ -320,9 +321,12 @@ func (w *ModuleStateWriter) WriteValue(name string, value interface{}) error {
 }
 
 func (w *ModuleStateWriter) Close() {
-	// Close the current file
-	if err := w.file.Close(); err != nil {
-		panic(err)
+	// Only close the file if it hasn't been closed yet
+	if w.file != nil {
+		if err := w.file.Close(); err != nil {
+			panic(err)
+		}
+		w.file = nil
 	}
 
 	// Calculate checksum of the temporary file
