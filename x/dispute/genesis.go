@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -228,6 +229,12 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 }
 
 func calculateFileChecksum(filename string) (string, error) {
+	// Check if file exists
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		// File doesn't exist, return empty checksum
+		return "", nil
+	}
+
 	file, err := os.Open(filename)
 	if err != nil {
 		return "", err
@@ -253,16 +260,22 @@ type ModuleStateWriter struct {
 func NewModuleStateWriter(filename string) (*ModuleStateWriter, error) {
 	// Create a temporary file first
 	tempFile := filename + ".temp"
-	file, err := os.Create(tempFile)
+
+	// Create parent directories if they don't exist
+	if err := os.MkdirAll(filepath.Dir(tempFile), 0755); err != nil {
+		return nil, fmt.Errorf("failed to create directories: %w", err)
+	}
+
+	// Create or truncate the temporary file
+	file, err := os.OpenFile(tempFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp file: %w", err)
 	}
 
 	// Write the opening structure
 	if _, err := file.Write([]byte("{\n")); err != nil {
-		fmt.Println("Failed to write opening structure")
 		file.Close()
-		return nil, err
+		return nil, fmt.Errorf("failed to write opening structure: %w", err)
 	}
 
 	return &ModuleStateWriter{
@@ -323,6 +336,11 @@ func (w *ModuleStateWriter) WriteValue(name string, value interface{}) error {
 func (w *ModuleStateWriter) Close() {
 	// Only close the file if it hasn't been closed yet
 	if w.file != nil {
+		// Flush any buffered data to disk
+		if err := w.file.Sync(); err != nil {
+			panic(err)
+		}
+		// Close the file
 		if err := w.file.Close(); err != nil {
 			panic(err)
 		}
@@ -341,8 +359,8 @@ func (w *ModuleStateWriter) Close() {
 		panic(err)
 	}
 
-	// Create the final file
-	finalFile, err := os.Create(w.finalFilename)
+	// Create or truncate the final file
+	finalFile, err := os.OpenFile(w.finalFilename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		panic(err)
 	}
