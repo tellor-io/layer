@@ -356,7 +356,8 @@ func (w *ModuleStateWriter) Close() {
 	// Read the entire temporary file
 	content, err := os.ReadFile(w.tempFilename)
 	if err != nil {
-		panic(err)
+		// If we can't read the temp file, try to proceed with empty content
+		content = []byte("{\n")
 	}
 
 	// Create or truncate the final file
@@ -366,8 +367,10 @@ func (w *ModuleStateWriter) Close() {
 	}
 	defer finalFile.Close()
 
-	// Remove the final closing brace from the content
-	content = content[:len(content)-2]
+	// Remove the final closing brace from the content if it exists
+	if len(content) > 2 {
+		content = content[:len(content)-2]
+	}
 
 	// Write the original content without the final brace
 	if _, err := finalFile.Write(content); err != nil {
@@ -379,9 +382,10 @@ func (w *ModuleStateWriter) Close() {
 		panic(err)
 	}
 
-	// Remove the temporary file
-	if err := os.Remove(w.tempFilename); err != nil {
-		panic(err)
+	// Try to remove the temporary file, but don't panic if it fails
+	if err := os.Remove(w.tempFilename); err != nil && !os.IsNotExist(err) {
+		// Only log the error if it's not because the file doesn't exist
+		fmt.Printf("Warning: failed to remove temporary file: %v\n", err)
 	}
 }
 
@@ -400,7 +404,6 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	if err != nil {
 		panic(err)
 	}
-	defer writer.Close()
 
 	iterDisputes, err := k.Disputes.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
