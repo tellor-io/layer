@@ -170,13 +170,13 @@ func (_m *OracleKeeper) GetTimestampBefore(ctx context.Context, queryId []byte, 
 	return r0, r1
 }
 
-// SetAggregate provides a mock function with given fields: ctx, report, queryData
-func (_m *OracleKeeper) SetAggregate(ctx context.Context, report *types.Aggregate, queryData []byte) error {
-	ret := _m.Called(ctx, report, queryData)
+// SetAggregate provides a mock function with given fields: ctx, report, queryData, queryType
+func (_m *OracleKeeper) SetAggregate(ctx context.Context, report *types.Aggregate, queryData []byte, queryType string) error {
+	ret := _m.Called(ctx, report, queryData, queryType)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *types.Aggregate, []byte) error); ok {
-		r0 = rf(ctx, report, queryData)
+	if rf, ok := ret.Get(0).(func(context.Context, *types.Aggregate, []byte, string) error); ok {
+		r0 = rf(ctx, report, queryData, queryType)
 	} else {
 		r0 = ret.Error(0)
 	}
