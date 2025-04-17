@@ -57,6 +57,7 @@ type (
 		oracleKeeper   types.OracleKeeper
 		bankKeeper     types.BankKeeper
 		reporterKeeper types.ReporterKeeper
+		disputeKeeper  types.DisputeKeeper
 		authority      string
 	}
 )
@@ -68,6 +69,7 @@ func NewKeeper(
 	oracleKeeper types.OracleKeeper,
 	bankKeeper types.BankKeeper,
 	reporterKeeper types.ReporterKeeper,
+	disputeKeeper types.DisputeKeeper,
 	authority string,
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
@@ -97,6 +99,7 @@ func NewKeeper(
 		oracleKeeper:   oracleKeeper,
 		bankKeeper:     bankKeeper,
 		reporterKeeper: reporterKeeper,
+		disputeKeeper:  disputeKeeper,
 		authority:      authority,
 	}
 
@@ -850,6 +853,10 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 	if err != nil {
 		k.Logger(ctx).Info("Error getting aggregate report by timestamp", "error", err)
 		return err
+	}
+	// check whether report is flagged as disputed. If so, do not create a snapshot.
+	if isExternalRequest && aggReport.Flagged {
+		return errors.New("report is flagged as dispute evidence")
 	}
 	// get the current validator checkpoint
 	validatorCheckpoint, err := k.GetValidatorCheckpointFromStorage(ctx)

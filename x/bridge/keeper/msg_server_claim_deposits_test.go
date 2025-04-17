@@ -18,7 +18,7 @@ import (
 )
 
 func TestMsgClaimDeposits(t *testing.T) {
-	k, _, bk, ok, _, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, _, _, ctx := setupKeeper(t)
 	msgServer := keeper.NewMsgServerImpl(k)
 
 	require.Panics(t, func() {
@@ -62,12 +62,10 @@ func TestMsgClaimDeposits(t *testing.T) {
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	// convert ethAddress (common.Address) to sdk.Address
 	msgSender := sdk.AccAddress(ethAddress.Bytes())
-	recipient, amount, tip, err := k.DecodeDepositReportValue(ctx, reportValueString)
-	claimAmount := amount.Sub(tip...)
+	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(aggregateTimestamp.UnixMilli())).Return(aggregate, nil)
 	bk.On("MintCoins", sdkCtx, bridgetypes.ModuleName, amount).Return(err)
-	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, claimAmount).Return(err)
-	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, msgSender, tip).Return(err)
+	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
 	depositId := uint64(0)
 
@@ -85,7 +83,7 @@ func TestMsgClaimDeposits(t *testing.T) {
 }
 
 func BenchmarkMsgClaimDeposits(b *testing.B) {
-	k, _, bk, ok, _, _, ctx := setupKeeper(b)
+	k, _, bk, ok, _, _, _, ctx := setupKeeper(b)
 	msgServer := keeper.NewMsgServerImpl(k)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

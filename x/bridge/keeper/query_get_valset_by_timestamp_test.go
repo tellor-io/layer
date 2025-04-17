@@ -11,7 +11,7 @@ import (
 )
 
 func TestGetValsetByTimestamp(t *testing.T) {
-	k, _, _, _, _, _, ctx := testkeeper.BridgeKeeper(t)
+	k, _, _, _, _, _, _, ctx := testkeeper.BridgeKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 

@@ -20,7 +20,7 @@ import (
 )
 
 func TestDecodeDepositReportValue(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -98,7 +98,7 @@ func TestDecodeDepositReportValue(t *testing.T) {
 }
 
 func TestDecodeDepositReportValueInvalidReport(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -137,8 +137,42 @@ func TestDecodeDepositReportValueInvalidReport(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestDecodeDepositReportValueBadAddress(t *testing.T) {
+	k, _, _, _, _, _, dk, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	AddressType, err := abi.NewType("address", "", nil)
+	require.NoError(t, err)
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	require.NoError(t, err)
+	StringType, err := abi.NewType("string", "", nil)
+	require.NoError(t, err)
+	reportValueArgs := abi.Arguments{
+		{Type: AddressType},
+		{Type: StringType},
+		{Type: Uint256Type},
+		{Type: Uint256Type},
+	}
+	ethAddress := common.HexToAddress("0x3386518F7ab3eb51591571adBE62CF94540EAd29")
+	layerAddressString := "not-an-address"
+	amountAggregate := big.NewInt(1 * 1e12) // 1 loya, 0.00001 trb
+	tipAmount := big.NewInt(1 * 1e12)
+	reportValueArgsEncoded, err := reportValueArgs.Pack(ethAddress, layerAddressString, amountAggregate, tipAmount)
+	require.NoError(t, err)
+	reportValueString := hex.EncodeToString(reportValueArgsEncoded)
+
+	teamAddress := simtestutil.CreateIncrementalAccounts(1)[0]
+	dk.On("GetTeamAddress", ctx).Return(teamAddress, nil)
+	recipient, amount, tip, err := k.DecodeDepositReportValue(ctx, reportValueString)
+	require.Equal(t, recipient.String(), teamAddress.String())
+	require.Equal(t, amount.AmountOf("loya").BigInt(), amountAggregate.Div(amountAggregate, big.NewInt(1e12)))
+	require.Equal(t, tip.AmountOf("loya").BigInt(), tipAmount.Div(tipAmount, big.NewInt(1e12)))
+	require.NoError(t, err)
+}
+
 func TestGetDepositQueryId(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
@@ -164,7 +198,7 @@ func TestGetDepositQueryId(t *testing.T) {
 }
 
 func TestClaimDeposit(t *testing.T) {
-	k, _, bk, ok, _, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -207,8 +241,7 @@ func TestClaimDeposit(t *testing.T) {
 
 	depositId := uint64(0)
 
-	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
-	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
+	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()))
 	require.NoError(t, err)
 	depositClaimedResult, err := k.DepositIdClaimedMap.Get(sdkCtx, depositId)
 	require.NoError(t, err)
@@ -216,7 +249,7 @@ func TestClaimDeposit(t *testing.T) {
 }
 
 func TestClaimDepositNilAggregate(t *testing.T) {
-	k, _, _, ok, _, _, ctx := setupKeeper(t)
+	k, _, _, ok, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -224,13 +257,12 @@ func TestClaimDepositNilAggregate(t *testing.T) {
 	queryId, _ := k.GetDepositQueryId(0)
 	currentTime := time.Now()
 	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(currentTime.UnixMilli())).Return(oracletypes.Aggregate{}, collections.ErrNotFound)
-	msgSender := simtestutil.CreateIncrementalAccounts(1)[0]
-	err := k.ClaimDeposit(ctx, 0, uint64(currentTime.UnixMilli()), msgSender)
+	err := k.ClaimDeposit(ctx, 0, uint64(currentTime.UnixMilli()))
 	require.ErrorContains(t, err, "not found")
 }
 
 func TestClaimDepositFlaggedAggregate(t *testing.T) {
-	k, _, bk, ok, rk, _, ctx := setupKeeper(t)
+	k, _, bk, ok, rk, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -261,7 +293,6 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 		AggregatePower: uint64(90 * 1e6),
 		Flagged:        true,
 	}
-	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	totalBondedTokens := math.NewInt(100 * 1e6)
@@ -272,12 +303,12 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 
 	depositId := uint64(0)
 
-	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
+	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()))
 	require.ErrorContains(t, err, "aggregate flagged")
 }
 
 func TestClaimDepositNotEnoughPower(t *testing.T) {
-	k, _, bk, ok, _, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -313,7 +344,6 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 	valSetHash := []byte("valSetHash")
 	_, err = k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, valSetHash)
 	require.NoError(t, err)
-	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(aggregateTimestamp.UnixMilli())).Return(aggregate, nil)
@@ -321,12 +351,12 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
 	depositId := uint64(0)
-	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
+	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()))
 	require.ErrorContains(t, err, "insufficient reporter power")
 }
 
 func TestClaimDepositReportTooYoung(t *testing.T) {
-	k, _, bk, ok, _, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -361,7 +391,7 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 	valSetHash := []byte("valSetHash")
 	_, err = k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, valSetHash)
 	require.NoError(t, err)
-	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
+	// msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(11 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(aggregateTimestamp.UnixMilli())).Return(aggregate, nil)
@@ -369,12 +399,12 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
 	depositId := uint64(0)
-	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
+	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()))
 	require.ErrorContains(t, err, "report too young")
 }
 
 func TestClaimDepositSpam(t *testing.T) {
-	k, _, bk, ok, _, _, ctx := setupKeeper(t)
+	k, _, bk, ok, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
@@ -409,7 +439,6 @@ func TestClaimDepositSpam(t *testing.T) {
 	valSetHash := []byte("valSetHash")
 	_, err = k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, valSetHash)
 	require.NoError(t, err)
-	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(aggregateTimestamp.UnixMilli())).Return(aggregate, nil)
@@ -417,7 +446,7 @@ func TestClaimDepositSpam(t *testing.T) {
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
 	depositId := uint64(0)
-	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
+	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()))
 	require.NoError(t, err)
 	depositClaimedResult, err := k.DepositIdClaimedMap.Get(sdkCtx, depositId)
 	require.NoError(t, err)
@@ -426,7 +455,7 @@ func TestClaimDepositSpam(t *testing.T) {
 	attempts := 0
 	for attempts < 100 {
 		attempts++
-		err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
+		err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()))
 		require.ErrorContains(t, err, "deposit already claimed")
 	}
 }

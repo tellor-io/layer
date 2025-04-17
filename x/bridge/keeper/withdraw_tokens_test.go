@@ -14,7 +14,7 @@ import (
 )
 
 func TestGetWithdrawalReportValue(t *testing.T) {
-	k, _, _, _, _, _, _ := setupKeeper(t)
+	k, _, _, _, _, _, _, _ := setupKeeper(t)
 
 	res, err := k.GetWithdrawalReportValue(sdk.Coin{Amount: math.NewInt(100), Denom: "loya"}, sdk.AccAddress("operatorAddr1"), []byte("evmAddress1"))
 	require.NoError(t, err)
@@ -32,7 +32,7 @@ func TestGetWithdrawalReportValue(t *testing.T) {
 }
 
 func TestGetWithdrawalQueryId(t *testing.T) {
-	k, _, _, _, _, _, _ := setupKeeper(t)
+	k, _, _, _, _, _, _, _ := setupKeeper(t)
 
 	res, queryData, err := k.GetWithdrawalQueryId(1)
 	require.NoError(t, err)
@@ -47,7 +47,7 @@ func TestGetWithdrawalQueryId(t *testing.T) {
 }
 
 func TestCreateWithdrawalAggregate(t *testing.T) {
-	k, _, _, _, _, sk, ctx := setupKeeper(t)
+	k, _, _, _, _, sk, _, ctx := setupKeeper(t)
 
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100), nil).Once()
 	agg, _, err := k.CreateWithdrawalAggregate(ctx, sdk.Coin{Amount: math.NewInt(100), Denom: "loya"}, sdk.AccAddress("operatorAddr1"), []byte("evmAddress1"), 1)
@@ -65,7 +65,7 @@ func TestCreateWithdrawalAggregate(t *testing.T) {
 }
 
 func TestIncrementWithdrawalId(t *testing.T) {
-	k, _, _, _, _, _, ctx := setupKeeper(t)
+	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 
 	id, err := k.IncrementWithdrawalId(ctx)
 	require.NoError(t, err)
@@ -77,7 +77,7 @@ func TestIncrementWithdrawalId(t *testing.T) {
 }
 
 func TestWithdrawTokens(t *testing.T) {
-	k, _, bk, ok, _, sk, ctx := setupKeeper(t)
+	k, _, bk, ok, _, sk, _, ctx := setupKeeper(t)
 
 	creatorAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
 	recipientAddr := "1234567890abcdef1234567890abcdef12345678"
