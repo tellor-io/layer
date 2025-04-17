@@ -336,8 +336,13 @@ func (w *ModuleStateWriter) EndArraySection(numItems int) error {
 		}
 	}
 	// Add newline before closing bracket
-	_, err := w.file.Write([]byte("\n    ]"))
-	return err
+	if numItems == 0 {
+		_, err := w.file.Write([]byte("]"))
+		return err
+	} else {
+		_, err := w.file.Write([]byte("\n    ]"))
+		return err
+	}
 }
 
 // For single value fields
@@ -413,7 +418,7 @@ func (w *ModuleStateWriter) Close() {
 	}
 
 	// Add the checksum and close the JSON object
-	if _, err := finalFile.Write([]byte(fmt.Sprintf("],\n    \"checksum\": \"%s\"\n}", checksum))); err != nil {
+	if _, err := finalFile.Write([]byte(fmt.Sprintf(",\n    \"checksum\": \"%s\"\n}", checksum))); err != nil {
 		panic(err)
 	}
 
