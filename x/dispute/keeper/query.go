@@ -162,3 +162,11 @@ func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest
 
 	return res, nil
 }
+
+func (k Querier) VoteResult(ctx context.Context, req *types.QueryDisputeVoteResultRequest) (*types.QueryDisputeVoteResultResponse, error) {
+	vote, err := k.Keeper.Votes.Get(ctx, req.DisputeId)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	return &types.QueryDisputeVoteResultResponse{VoteResult: vote.VoteResult}, nil
+}
