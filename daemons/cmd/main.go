@@ -26,9 +26,15 @@ var rootCmd = &cobra.Command{
 		homePath := viper.GetString(flags.FlagHome)
 		chainId := viper.GetString(flags.FlagChainID)
 		grpcAddr := viper.GetString(flags.FlagGRPC)
+		logLevelstr := viper.GetString(flags.FlagLogLevel)
 		configs.WriteDefaultPricefeedExchangeToml(homePath)
 		configs.WriteDefaultMarketParamsToml(homePath)
-		logger := log.NewLogger(os.Stderr, log.LevelOption(zerolog.InfoLevel))
+		loglevel, err := zerolog.ParseLevel(logLevelstr)
+		if err != nil {
+			fmt.Printf("Error parsing log level: %v\n", err)
+			os.Exit(1)
+		}
+		logger := log.NewLogger(os.Stderr, log.LevelOption(loglevel))
 		daemons.NewApp(logger, chainId, grpcAddr, homePath)
 	},
 }
