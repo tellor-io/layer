@@ -297,18 +297,18 @@ func (w *ModuleStateWriter) StartArraySection(name string) error {
 	w.first = false
 
 	// Write the field name and opening bracket with proper formatting
-	_, err := w.file.Write([]byte(fmt.Sprintf("\"%s\": [\n", name)))
+	_, err := w.file.Write([]byte(fmt.Sprintf("    \"%s\": [", name)))
 	return err
 }
 
 func (w *ModuleStateWriter) WriteArrayItem(item interface{}, isFirst bool) error {
 	if !isFirst {
-		if _, err := w.file.Write([]byte(",\n")); err != nil {
+		if _, err := w.file.Write([]byte(",")); err != nil {
 			return err
 		}
 	}
-	// Add indentation for array items
-	if _, err := w.file.Write([]byte("  ")); err != nil {
+	// Add newline and indentation for array items
+	if _, err := w.file.Write([]byte("\n        ")); err != nil {
 		return err
 	}
 	return w.encoder.Encode(item)
@@ -316,7 +316,7 @@ func (w *ModuleStateWriter) WriteArrayItem(item interface{}, isFirst bool) error
 
 func (w *ModuleStateWriter) EndArraySection() error {
 	// Add newline before closing bracket
-	_, err := w.file.Write([]byte("\n]"))
+	_, err := w.file.Write([]byte("\n    ]"))
 	return err
 }
 
