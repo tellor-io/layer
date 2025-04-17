@@ -34,6 +34,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 
 	if vote.VoteResult != types.VoteResult_NO_TALLY && dispute.DisputeEndTime.Before(sdk.UnwrapSDKContext(ctx).BlockTime()) {
 		dispute.DisputeStatus = types.Resolved
+		dispute.Open = false
 		if err := k.Disputes.Set(ctx, id, dispute); err != nil {
 			return err
 		}
@@ -104,6 +105,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			}
 		}
 		// refund the reporters bond to the reporter plus the remaining disputeFee; goes to bonded pool
+		ogSlashAmount := dispute.SlashAmount
 		fivePercentDec := dispute.DisputeFee.ToLegacyDec().Quo(math.LegacyNewDec(20))
 		disputeFeeMinusFivePercent := dispute.DisputeFee.Sub(fivePercentDec.TruncateInt())
 		dispute.SlashAmount = dispute.SlashAmount.Add(disputeFeeMinusFivePercent)
@@ -121,6 +123,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		if err := k.Votes.Set(ctx, id, vote); err != nil {
 			return err
 		}
+		dispute.SlashAmount = ogSlashAmount
 	case types.VoteResult_NO_TALLY:
 		return errors.New("vote hasn't been tallied yet")
 	}
