@@ -220,9 +220,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis.Dust = Dust
 
 	// write all module data to second file to persist without making genesis file massive
-	fmt.Println("Exporting module data")
 	ExportModuleData(ctx, k)
-	fmt.Println("Module data exported")
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis
@@ -288,10 +286,16 @@ func NewModuleStateWriter(filename string) (*ModuleStateWriter, error) {
 }
 
 // For array fields
-func (w *ModuleStateWriter) StartArraySection(name string) error {
+func (w *ModuleStateWriter) StartArraySection(name string, afterItem bool) error {
 	if !w.first {
-		if _, err := w.file.Write([]byte(",\n")); err != nil {
-			return err
+		if afterItem {
+			if _, err := w.file.Write([]byte("\n")); err != nil {
+				return err
+			}
+		} else {
+			if _, err := w.file.Write([]byte(",\n")); err != nil {
+				return err
+			}
 		}
 	}
 	w.first = false
@@ -401,7 +405,7 @@ func (w *ModuleStateWriter) Close() {
 	defer finalFile.Close()
 
 	// Remove the final closing brace from the content
-	content = content[:len(content)-1]
+	content = content[:len(content)-2]
 
 	// Write the original content without the final brace
 	if _, err := finalFile.Write(content); err != nil {
@@ -409,7 +413,7 @@ func (w *ModuleStateWriter) Close() {
 	}
 
 	// Add the checksum and close the JSON object
-	if _, err := finalFile.Write([]byte(fmt.Sprintf(",\n    \"checksum\": \"%s\"\n}", checksum))); err != nil {
+	if _, err := finalFile.Write([]byte(fmt.Sprintf("],\n    \"checksum\": \"%s\"\n}", checksum))); err != nil {
 		panic(err)
 	}
 
@@ -442,7 +446,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	defer iterDisputes.Close()
 
 	itemCounter := 0
-	writer.StartArraySection("disputes")
+	writer.StartArraySection("disputes", false)
 	for ; iterDisputes.Valid(); iterDisputes.Next() {
 		dispute_id, err := iterDisputes.Key()
 		if err != nil {
@@ -466,7 +470,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	defer iterVotes.Close()
 
 	itemCounter = 0
-	writer.StartArraySection("votes")
+	writer.StartArraySection("votes", false)
 	for ; iterVotes.Valid(); iterVotes.Next() {
 		dispute_id, err := iterVotes.Key()
 		if err != nil {
@@ -489,7 +493,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	defer iterVoter.Close()
 
 	itemCounter = 0
-	writer.StartArraySection("voters")
+	writer.StartArraySection("voters", false)
 	for ; iterVoter.Valid(); iterVoter.Next() {
 		key, err := iterVoter.Key()
 		if err != nil {
@@ -514,7 +518,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	defer iterReportersDelVoted.Close()
 
 	itemCounter = 0
-	writer.StartArraySection("reporters_with_delegators_who_voted")
+	writer.StartArraySection("reporters_with_delegators_who_voted", false)
 	for ; iterReportersDelVoted.Valid(); iterReportersDelVoted.Next() {
 		key, err := iterReportersDelVoted.Key()
 		if err != nil {
@@ -539,7 +543,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	defer iterBlockInfo.Close()
 
 	itemCounter = 0
-	writer.StartArraySection("block_info")
+	writer.StartArraySection("block_info", false)
 	for ; iterBlockInfo.Valid(); iterBlockInfo.Next() {
 		hash_id, err := iterBlockInfo.Key()
 		if err != nil {
@@ -562,7 +566,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	defer iterDisputeFeePayer.Close()
 
 	itemCounter = 0
-	writer.StartArraySection("dispute_fee_payer")
+	writer.StartArraySection("dispute_fee_payer", false)
 	for ; iterDisputeFeePayer.Valid(); iterDisputeFeePayer.Next() {
 		keys, err := iterDisputeFeePayer.Key()
 		if err != nil {
@@ -593,7 +597,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	defer iterVoteCountsByGroup.Close()
 
 	itemCounter = 0
-	writer.StartArraySection("vote_counts_by_group")
+	writer.StartArraySection("vote_counts_by_group", true)
 	for ; iterVoteCountsByGroup.Valid(); iterVoteCountsByGroup.Next() {
 		dispute_id, err := iterVoteCountsByGroup.Key()
 		if err != nil {
