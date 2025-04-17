@@ -301,7 +301,7 @@ func (w *ModuleStateWriter) StartArraySection(name string) error {
 	return err
 }
 
-func (w *ModuleStateWriter) WriteArrayItem(item interface{}, isFirst bool) error {
+func (w *ModuleStateWriter) WriteArrayItem(item interface{}) error {
 	// Add newline and indentation for array items
 	if _, err := w.file.Write([]byte("\n        ")); err != nil {
 		return err
@@ -317,17 +317,18 @@ func (w *ModuleStateWriter) WriteArrayItem(item interface{}, isFirst bool) error
 		return err
 	}
 
-	// Add comma if not the first item
-	if !isFirst {
-		if _, err := w.file.Write([]byte(",")); err != nil {
-			return err
-		}
+	if _, err := w.file.Write([]byte(",")); err != nil {
+		return err
 	}
 
 	return nil
 }
 
 func (w *ModuleStateWriter) EndArraySection() error {
+	// Move back one character to remove the trailing comma
+	if _, err := w.file.Seek(-1, io.SeekCurrent); err != nil {
+		return err
+	}
 	// Add newline before closing bracket
 	_, err := w.file.Write([]byte("\n    ]"))
 	return err
@@ -343,7 +344,7 @@ func (w *ModuleStateWriter) WriteValue(name string, value interface{}) error {
 	w.first = false
 
 	// Write the field name with proper indentation
-	if _, err := w.file.Write([]byte(fmt.Sprintf("  \"%s\": ", name))); err != nil {
+	if _, err := w.file.Write([]byte(fmt.Sprintf("    \"%s\": ", name))); err != nil {
 		return err
 	}
 
@@ -425,7 +426,6 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	}
 	defer iterDisputes.Close()
 
-	isFirst := true
 	writer.StartArraySection("disputes")
 	for ; iterDisputes.Valid(); iterDisputes.Next() {
 		dispute_id, err := iterDisputes.Key()
@@ -438,8 +438,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 			panic(err)
 		}
 
-		writer.WriteArrayItem(&types.DisputeStateEntry{DisputeId: dispute_id, Dispute: &dispute}, isFirst)
-		isFirst = false
+		writer.WriteArrayItem(&types.DisputeStateEntry{DisputeId: dispute_id, Dispute: &dispute})
 	}
 	writer.EndArraySection()
 
@@ -449,7 +448,6 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	}
 	defer iterVotes.Close()
 
-	isFirst = true
 	writer.StartArraySection("votes")
 	for ; iterVotes.Valid(); iterVotes.Next() {
 		dispute_id, err := iterVotes.Key()
@@ -461,8 +459,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		if err != nil {
 			panic(err)
 		}
-		writer.WriteArrayItem(&types.VotesStateEntry{DisputeId: dispute_id, Vote: &vote}, isFirst)
-		isFirst = false
+		writer.WriteArrayItem(&types.VotesStateEntry{DisputeId: dispute_id, Vote: &vote})
 	}
 	writer.EndArraySection()
 
@@ -472,7 +469,6 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	}
 	defer iterVoter.Close()
 
-	isFirst = true
 	writer.StartArraySection("voters")
 	for ; iterVoter.Valid(); iterVoter.Next() {
 		key, err := iterVoter.Key()
@@ -486,8 +482,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		if err != nil {
 			panic(err)
 		}
-		writer.WriteArrayItem(&types.VoterStateEntry{DisputeId: dispute_id, VoterAddress: voterAddr, Voter: &voter}, isFirst)
-		isFirst = false
+		writer.WriteArrayItem(&types.VoterStateEntry{DisputeId: dispute_id, VoterAddress: voterAddr, Voter: &voter})
 	}
 	writer.EndArraySection()
 
@@ -497,7 +492,6 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	}
 	defer iterReportersDelVoted.Close()
 
-	isFirst = true
 	writer.StartArraySection("reporters_with_delegators_who_voted")
 	for ; iterReportersDelVoted.Valid(); iterReportersDelVoted.Next() {
 		key, err := iterReportersDelVoted.Key()
@@ -511,8 +505,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		if err != nil {
 			panic(err)
 		}
-		writer.WriteArrayItem(&types.ReportersWithDelegatorsWhoVotedStateEntry{ReporterAddress: reporterAddr, DisputeId: dispute_id, VotedAmount: votedAmt}, isFirst)
-		isFirst = false
+		writer.WriteArrayItem(&types.ReportersWithDelegatorsWhoVotedStateEntry{ReporterAddress: reporterAddr, DisputeId: dispute_id, VotedAmount: votedAmt})
 	}
 	writer.EndArraySection()
 
@@ -522,7 +515,6 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	}
 	defer iterBlockInfo.Close()
 
-	isFirst = true
 	writer.StartArraySection("block_info")
 	for ; iterBlockInfo.Valid(); iterBlockInfo.Next() {
 		hash_id, err := iterBlockInfo.Key()
@@ -534,8 +526,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		if err != nil {
 			panic(err)
 		}
-		writer.WriteArrayItem(&types.BlockInfoStateEntry{HashId: hash_id, BlockInfo: &info}, isFirst)
-		isFirst = false
+		writer.WriteArrayItem(&types.BlockInfoStateEntry{HashId: hash_id, BlockInfo: &info})
 	}
 	writer.EndArraySection()
 
@@ -545,7 +536,6 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	}
 	defer iterDisputeFeePayer.Close()
 
-	isFirst = true
 	writer.StartArraySection("dispute_fee_payer")
 	for ; iterDisputeFeePayer.Valid(); iterDisputeFeePayer.Next() {
 		keys, err := iterDisputeFeePayer.Key()
@@ -559,8 +549,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		if err != nil {
 			panic(err)
 		}
-		writer.WriteArrayItem(&types.DisputeFeePayerStateEntry{DisputeId: dispute_id, Payer: payer, PayerInfo: &payerInfo}, isFirst)
-		isFirst = false
+		writer.WriteArrayItem(&types.DisputeFeePayerStateEntry{DisputeId: dispute_id, Payer: payer, PayerInfo: &payerInfo})
 	}
 	writer.EndArraySection()
 
@@ -576,7 +565,6 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	}
 	defer iterVoteCountsByGroup.Close()
 
-	isFirst = true
 	writer.StartArraySection("vote_counts_by_group")
 	for ; iterVoteCountsByGroup.Valid(); iterVoteCountsByGroup.Next() {
 		dispute_id, err := iterVoteCountsByGroup.Key()
@@ -588,8 +576,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		if err != nil {
 			panic(err)
 		}
-		writer.WriteArrayItem(&types.VoteCountsByGroupStateEntry{DisputeId: dispute_id, Users: &voteCount.Users, Reporters: &voteCount.Reporters, Team: &voteCount.Team}, isFirst)
-		isFirst = false
+		writer.WriteArrayItem(&types.VoteCountsByGroupStateEntry{DisputeId: dispute_id, Users: &voteCount.Users, Reporters: &voteCount.Reporters, Team: &voteCount.Team})
 	}
 	writer.EndArraySection()
 
