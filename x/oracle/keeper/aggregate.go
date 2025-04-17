@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/tellor-io/layer/lib/metrics"
@@ -145,7 +146,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, query
 	report.Height = uint64(sdkCtx.BlockHeight())
 
 	// if bridge report, set in deposit queue
-	if queryType == TRBBridgeQueryType {
+	if strings.EqualFold(queryType, TRBBridgeQueryType) {
 		err = k.BridgeDepositQueue.Set(ctx, collections.Join(currentTimestamp, report.MetaId), queryData)
 		if err != nil {
 			return err
