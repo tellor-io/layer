@@ -6,8 +6,10 @@ import (
 	gomath "math"
 	"math/big"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/stretchr/testify/suite"
@@ -519,4 +521,80 @@ func (s *KeeperTestSuite) TestBounds() {
 	n, err = s.oracleKeeper.QuerySequencer.Next(s.ctx)
 	s.NoError(err)
 	s.Equal(uint64(0), n)
+}
+
+func (s *KeeperTestSuite) TestAutoClaimDeposits() {
+	require := s.Require()
+	require.NotNil(s.bridgeKeeper)
+	timeNow := time.Now()
+	ctx := s.ctx.WithBlockTime(timeNow).WithBlockHeight(1000)
+
+	type Deposits struct {
+		DepositId          uint64
+		AggregateTimestamp uint64
+	}
+
+	// set 1 deposit right at 12 hr mark, 4 just under 12 hrs, 5 after 12 hrs
+	threshold := timeNow.Add(-12 * time.Hour)
+	deposits := make([]Deposits, 10)
+	for i := range 10 {
+		metaId := uint64(i)
+		iString := strconv.Itoa(i)
+		bridgeQueryData := "000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000009545242427269646765000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000" + iString
+		queryDataBz, err := hex.DecodeString(bridgeQueryData)
+		require.NoError(err)
+		var depositTimestamp uint64
+		var delta time.Duration
+		if i < 5 {
+			delta = time.Duration(i * 1e6) // add i ms
+		}
+		if i >= 5 {
+			delta = time.Duration(-i * 1e6) // subtract i ms
+		}
+		depositTimestamp = uint64(threshold.Add(delta).UnixMilli())
+		require.NoError(s.oracleKeeper.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp, metaId), queryDataBz))
+		deposits[i].DepositId = uint64(i)
+		deposits[i].AggregateTimestamp = depositTimestamp
+	}
+
+	// check that everything is in collections
+	iter, err := s.oracleKeeper.BridgeDepositQueue.Iterate(ctx, nil)
+	require.NoError(err)
+	var i int
+	for ; iter.Valid(); iter.Next() {
+		i++
+	}
+	require.Equal(i, 10)
+
+	// deposit 9 is the oldest, should get claimed first
+	s.bridgeKeeper.On("ClaimDeposit", ctx, deposits[9].DepositId, deposits[9].AggregateTimestamp).Return(nil).Once()
+	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
+
+	// then 8, 7, 6, 5, 0
+	s.bridgeKeeper.On("ClaimDeposit", ctx, deposits[8].DepositId, deposits[8].AggregateTimestamp).Return(nil).Once()
+	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
+	s.bridgeKeeper.On("ClaimDeposit", ctx, deposits[7].DepositId, deposits[7].AggregateTimestamp).Return(nil).Once()
+	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
+	s.bridgeKeeper.On("ClaimDeposit", ctx, deposits[6].DepositId, deposits[6].AggregateTimestamp).Return(nil).Once()
+	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
+	s.bridgeKeeper.On("ClaimDeposit", ctx, deposits[5].DepositId, deposits[5].AggregateTimestamp).Return(nil).Once()
+	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
+	s.bridgeKeeper.On("ClaimDeposit", ctx, deposits[0].DepositId, deposits[0].AggregateTimestamp).Return(nil).Once()
+	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
+
+	// everything possible is claimed
+	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
+
+	// fast forward a min to make everything else claimable
+	ctx = ctx.WithBlockTime(timeNow.Add(1 * time.Minute))
+
+	// 1 should be oldest
+	s.bridgeKeeper.On("ClaimDeposit", ctx, deposits[1].DepositId, deposits[1].AggregateTimestamp).Return(nil).Once()
+	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
+	s.bridgeKeeper.On("ClaimDeposit", ctx, deposits[2].DepositId, deposits[2].AggregateTimestamp).Return(nil).Once()
+	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
+	s.bridgeKeeper.On("ClaimDeposit", ctx, deposits[3].DepositId, deposits[3].AggregateTimestamp).Return(nil).Once()
+	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
+	s.bridgeKeeper.On("ClaimDeposit", ctx, deposits[4].DepositId, deposits[4].AggregateTimestamp).Return(nil).Once()
+	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
 }
