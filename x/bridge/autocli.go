@@ -117,9 +117,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "ClaimDeposits",
-					Use:            "claim-deposits [creator] [deposit-ids] [timestamps]",
+					Use:            "claim-deposits [deposit-ids] [timestamps]",
 					Short:          "Execute the ClaimDeposits RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "deposit_ids"}, {ProtoField: "timestamps"}},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "deposit_ids"}, {ProtoField: "timestamps"}},
 				},
 				{
 					RpcMethod:      "UpdateSnapshotLimit",
