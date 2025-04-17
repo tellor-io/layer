@@ -302,16 +302,29 @@ func (w *ModuleStateWriter) StartArraySection(name string) error {
 }
 
 func (w *ModuleStateWriter) WriteArrayItem(item interface{}, isFirst bool) error {
+	// Add newline and indentation for array items
+	if _, err := w.file.Write([]byte("\n        ")); err != nil {
+		return err
+	}
+
+	// Encode the item
+	if err := w.encoder.Encode(item); err != nil {
+		return err
+	}
+
+	// Remove the newline that Encode added
+	if _, err := w.file.Seek(-1, io.SeekCurrent); err != nil {
+		return err
+	}
+
+	// Add comma if not the first item
 	if !isFirst {
 		if _, err := w.file.Write([]byte(",")); err != nil {
 			return err
 		}
 	}
-	// Add newline and indentation for array items
-	if _, err := w.file.Write([]byte("\n        ")); err != nil {
-		return err
-	}
-	return w.encoder.Encode(item)
+
+	return nil
 }
 
 func (w *ModuleStateWriter) EndArraySection() error {
