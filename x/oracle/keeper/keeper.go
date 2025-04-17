@@ -5,10 +5,14 @@ import (
 	"errors"
 	"fmt"
 	gomath "math"
+	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
@@ -18,6 +22,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+const (
+	twelveHrsInMillis = 12 * 60 * 60 * 1000
+	// twoMinInMillis    = 2 * 60 * 1000
 )
 
 type (
@@ -50,6 +59,8 @@ type (
 		ValuesWeightSum collections.Map[uint64, uint64] // key: queryMeta.Id value: totalWeight
 		// storage for values that are aggregated via weighted mode
 		ValuesWeightedMode collections.Map[collections.Pair[uint64, string], uint64] // key: queryMeta.Id, valueHexstring  value: total power of reporters that submitted the value
+		// storage for bridge deposit reports queue
+		BridgeDepositQueue collections.Map[collections.Pair[uint64, uint64], []byte] // key: aggregate timestamp, queryMetaId, value: queryData
 	}
 )
 
@@ -135,6 +146,12 @@ func NewKeeper(
 		),
 		// QueryDataLimit is the maximum number of bytes query data can be
 		QueryDataLimit: collections.NewItem(sb, types.QueryDataLimitPrefix, "query_data_limit", codec.CollValue[types.QueryDataLimit](cdc)),
+		// ClaimDepositQueue maps [metad, timestamp]:depositId
+		BridgeDepositQueue: collections.NewMap(sb,
+			types.BridgeDepositQueuePrefix,
+			"bridge_deposit_queue",
+			collections.PairKeyCodec(collections.Uint64Key, collections.Uint64Key),
+			collections.BytesValue),
 	}
 
 	schema, err := sb.Build()
@@ -252,4 +269,89 @@ func (k Keeper) ValidateMicroReportExists(ctx context.Context, reporter sdk.AccA
 	}
 
 	return &report, true, nil
+}
+
+// ranger checks for any timestamps in queue > 12 hrs old
+// call claim deposit on the oldest deposit aggregate and remove from queue
+// claim deposit should only fail if aggregate power is not reached, meaning deposit will need tipped again
+// once tipped and reported for again, deposit will reenter the queue
+func (k Keeper) AutoClaimDeposits(ctx context.Context) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	currentBlocktime := sdkCtx.BlockTime()
+	thresholdTimestamp := uint64(currentBlocktime.UnixMilli() - twelveHrsInMillis)
+
+	// ranger only finds timestamps exactly 12 hrs and older
+	rng := collections.NewPrefixUntilPairRange[uint64, uint64](thresholdTimestamp)
+
+	var queryData []byte
+	var aggregateTimestamp uint64
+	var metaId uint64
+
+	err := k.BridgeDepositQueue.Walk(ctx, rng, func(key collections.Pair[uint64, uint64], bz []byte) (stop bool, err error) {
+		aggregateTimestamp = key.K1()
+		metaId = key.K2()
+		queryData = bz
+		return true, nil // stop after the first (oldest) match
+	})
+	if err != nil {
+		k.Logger(ctx).Error("autoClaimDeposits", "error walking through queue", err)
+		return err
+	}
+	// if no matches, return nil
+	if queryData == nil && metaId == 0 {
+		return nil
+	}
+
+	// decode retreieved query data
+	depositId, err := k.DecodeBridgeDeposit(ctx, queryData)
+	if err != nil {
+		k.Logger(ctx).Error("autoClaimDeposits", "error decoding query data", err)
+		return err
+	}
+
+	err = k.bridgeKeeper.ClaimDeposit(ctx, depositId, aggregateTimestamp)
+	if err != nil {
+		k.Logger(ctx).Error("autoClaimDeposits", "error calling claim deposit", err)
+		// remove the deposit from the queue if claiming fails
+		err = k.BridgeDepositQueue.Remove(ctx, collections.Join(aggregateTimestamp, metaId))
+		if err != nil {
+			k.Logger(ctx).Error("autoClaimDeposits", "error removing bridge deposit from queue after failed claim", err)
+			return err
+		}
+	}
+	// remove the deposit from the queue after successful claim
+	err = k.BridgeDepositQueue.Remove(ctx, collections.Join(aggregateTimestamp, metaId))
+	if err != nil {
+		k.Logger(ctx).Error("autoClaimDeposits", "error removing bridge deposit from queue after successful claim", err)
+		return err
+	}
+
+	return nil
+}
+
+func (k Keeper) DecodeBridgeDeposit(ctx context.Context, queryData []byte) (uint64, error) {
+	_, bytesArgs, err := regTypes.DecodeQueryType(queryData)
+	if err != nil {
+		return 0, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
+	}
+	// decode query data arguments
+	BoolType, err := abi.NewType("bool", "", nil)
+	if err != nil {
+		return 0, err
+	}
+	Uint256Type, err := abi.NewType("uint256", "", nil)
+	if err != nil {
+		return 0, err
+	}
+	queryDataArgs := abi.Arguments{
+		{Type: BoolType},
+		{Type: Uint256Type},
+	}
+	queryDataArgsDecoded, err := queryDataArgs.Unpack(bytesArgs)
+	if err != nil {
+		return 0, err
+	}
+	depositId := queryDataArgsDecoded[1].(*big.Int).Uint64()
+
+	return depositId, nil
 }

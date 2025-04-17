@@ -15,10 +15,9 @@ func (k msgServer) ClaimDeposits(goCtx context.Context, msg *types.MsgClaimDepos
 	if len(msg.DepositIds) != len(msg.Timestamps) {
 		return nil, types.ErrInvalidDepositIdsAndIndicesLength
 	}
-	msgSender := sdk.MustAccAddressFromBech32(msg.Creator)
 	for i, depositId := range msg.DepositIds {
 		timestamp := msg.Timestamps[i]
-		if err := k.Keeper.ClaimDeposit(sdkCtx, depositId, timestamp, msgSender); err != nil {
+		if err := k.Keeper.ClaimDeposit(sdkCtx, depositId, timestamp); err != nil {
 			return nil, err
 		}
 		sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{

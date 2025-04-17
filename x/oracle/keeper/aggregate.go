@@ -11,7 +11,10 @@ import (
 	layer "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
+	regTypes "github.com/tellor-io/layer/x/registry/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
@@ -144,6 +147,18 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, query
 	currentTimestamp := uint64(sdkCtx.BlockTime().UnixMilli())
 	report.Height = uint64(sdkCtx.BlockHeight())
 
+	// decode query data to see if it is a bridge report
+	queryType, _, err := regTypes.DecodeQueryType(queryData)
+	if err != nil {
+		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
+	}
+	// if bridge report, set in deposit queue
+	if queryType == TRBBridgeQueryType {
+		err = k.BridgeDepositQueue.Set(ctx, collections.Join(currentTimestamp, report.MetaId), queryData)
+		if err != nil {
+			return err
+		}
+	}
 	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"aggregate_report",
