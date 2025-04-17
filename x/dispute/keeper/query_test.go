@@ -212,3 +212,22 @@ func (s *KeeperTestSuite) TestTallyQuery() {
 	require.Equal(res.Users.TotalGroupPower, uint64(5000))
 	require.Equal(res.Reporters.TotalGroupPower, uint64(25000))
 }
+
+func (s *KeeperTestSuite) TestVoteResultQuery() {
+	require := s.Require()
+	k := s.disputeKeeper
+	q := keeper.NewQuerier(k)
+	require.NotNil(q)
+	ctx := s.ctx
+
+	require.NoError(k.Votes.Set(ctx, 1, types.Vote{
+		Id:         1,
+		VoteStart:  time.Now().Add(time.Hour * -24),
+		VoteEnd:    time.Now(),
+		VoteResult: types.VoteResult_SUPPORT,
+	}))
+
+	res, err := q.VoteResult(ctx, &types.QueryDisputeVoteResultRequest{DisputeId: 1})
+	require.NoError(err)
+	require.Equal(res.VoteResult, types.VoteResult_SUPPORT)
+}

@@ -38,6 +38,11 @@ service Query {
   rpc Tally(QueryDisputesTallyRequest) returns (QueryDisputesTallyResponse) {
     option (google.api.http).get = "/tellor-io/layer/dispute/tally/{dispute_id}";
   }
+  
+  // VoteResult queries the vote result of a dispute
+  rpc VoteResult(QueryDisputeVoteResultRequest) returns (QueryDisputeVoteResultResponse) {
+    option (google.api.http).get = "/tellor-io/layer/dispute/vote-result/{dispute_id}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -101,4 +106,12 @@ message QueryDisputesTallyResponse {
   GroupTally users = 1;
   GroupTally reporters = 2;
   VoteCounts team = 3;
+}
+
+message QueryDisputeVoteResultRequest {
+  uint64 dispute_id = 1;
+}
+
+message QueryDisputeVoteResultResponse {
+  VoteResult vote_result = 1;
 }
