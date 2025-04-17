@@ -5,7 +5,6 @@ import "amino/amino.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "layer/reporter/params.proto";
-import "layer/reporter/oracle_reporter.proto";
 import "layer/reporter/selection.proto";
 import "layer/reporter/token_origin.proto";
 
@@ -18,17 +17,9 @@ message GenesisState {
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
   ];
-  repeated ReporterStateEntry reporters = 2;
-  repeated SelectorTipsStateEntry selectorTips = 3;
-  repeated SelectorsStateEntry selectors = 4;
-  repeated DisputedDelegationAmountStateEntry disputed_delegation_amounts = 5;
-  repeated FeePaidFromStakeStateEntry fee_paid_from_stake = 6;
-  repeated ReportStateEntry report = 7;
-}
-
-message ReporterStateEntry {
-  bytes reporter_address = 1;
-  OracleReporter reporter = 2;
+  repeated SelectorTipsStateEntry selectorTips = 2;
+  repeated DisputedDelegationAmountStateEntry disputed_delegation_amounts = 3;
+  repeated FeePaidFromStakeStateEntry fee_paid_from_stake = 4;
 }
 
 message SelectorTipsStateEntry {
@@ -41,11 +32,6 @@ message SelectorTipsStateEntry {
   ];
 }
 
-message SelectorsStateEntry {
-  bytes selector_address = 1;
-  Selection selection = 2;
-}
-
 message DisputedDelegationAmountStateEntry {
   bytes hash_id = 1;
   DelegationsAmounts delegation_amount = 2;
@@ -54,13 +40,6 @@ message DisputedDelegationAmountStateEntry {
 message FeePaidFromStakeStateEntry {
   bytes hash_id = 1;
   DelegationsAmounts delegation_amount = 2;
-}
-
-message ReportStateEntry {
-  bytes query_id = 1;
-  bytes reporter_address = 2;
-  uint64 block_height = 3;
-  DelegationsAmounts delegation_amount = 4;
 }
 
 
