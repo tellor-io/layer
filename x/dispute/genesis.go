@@ -324,10 +324,12 @@ func (w *ModuleStateWriter) WriteArrayItem(item interface{}) error {
 	return nil
 }
 
-func (w *ModuleStateWriter) EndArraySection() error {
+func (w *ModuleStateWriter) EndArraySection(numItems int) error {
 	// Move back one character to remove the trailing comma
-	if _, err := w.file.Seek(-1, io.SeekCurrent); err != nil {
-		return err
+	if numItems > 0 {
+		if _, err := w.file.Seek(-1, io.SeekCurrent); err != nil {
+			return err
+		}
 	}
 	// Add newline before closing bracket
 	_, err := w.file.Write([]byte("\n    ]"))
@@ -349,10 +351,23 @@ func (w *ModuleStateWriter) WriteValue(name string, value interface{}) error {
 	}
 
 	// Encode the value
-	return w.encoder.Encode(value)
+	w.encoder.Encode(value)
+
+	// Remove the newline that Encode added
+	if _, err := w.file.Seek(-1, io.SeekCurrent); err != nil {
+		return err
+	}
+
+	if _, err := w.file.Write([]byte(",")); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (w *ModuleStateWriter) Close() {
+
+	w.file.Write([]byte("\n}"))
 	// Only close the file if it hasn't been closed yet
 	if w.file != nil {
 		// Flush any buffered data to disk
@@ -386,7 +401,7 @@ func (w *ModuleStateWriter) Close() {
 	defer finalFile.Close()
 
 	// Remove the final closing brace from the content
-	content = content[:len(content)-2]
+	content = content[:len(content)-1]
 
 	// Write the original content without the final brace
 	if _, err := finalFile.Write(content); err != nil {
@@ -394,7 +409,7 @@ func (w *ModuleStateWriter) Close() {
 	}
 
 	// Add the checksum and close the JSON object
-	if _, err := finalFile.Write([]byte(fmt.Sprintf(",\n\"checksum\": \"%s\"\n}", checksum))); err != nil {
+	if _, err := finalFile.Write([]byte(fmt.Sprintf(",\n    \"checksum\": \"%s\"\n}", checksum))); err != nil {
 		panic(err)
 	}
 
@@ -426,6 +441,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	}
 	defer iterDisputes.Close()
 
+	itemCounter := 0
 	writer.StartArraySection("disputes")
 	for ; iterDisputes.Valid(); iterDisputes.Next() {
 		dispute_id, err := iterDisputes.Key()
@@ -439,8 +455,9 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		}
 
 		writer.WriteArrayItem(&types.DisputeStateEntry{DisputeId: dispute_id, Dispute: &dispute})
+		itemCounter++
 	}
-	writer.EndArraySection()
+	writer.EndArraySection(itemCounter)
 
 	iterVotes, err := k.Votes.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -448,6 +465,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	}
 	defer iterVotes.Close()
 
+	itemCounter = 0
 	writer.StartArraySection("votes")
 	for ; iterVotes.Valid(); iterVotes.Next() {
 		dispute_id, err := iterVotes.Key()
@@ -460,8 +478,9 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 			panic(err)
 		}
 		writer.WriteArrayItem(&types.VotesStateEntry{DisputeId: dispute_id, Vote: &vote})
+		itemCounter++
 	}
-	writer.EndArraySection()
+	writer.EndArraySection(itemCounter)
 
 	iterVoter, err := k.Voter.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -469,6 +488,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	}
 	defer iterVoter.Close()
 
+	itemCounter = 0
 	writer.StartArraySection("voters")
 	for ; iterVoter.Valid(); iterVoter.Next() {
 		key, err := iterVoter.Key()
@@ -483,8 +503,9 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 			panic(err)
 		}
 		writer.WriteArrayItem(&types.VoterStateEntry{DisputeId: dispute_id, VoterAddress: voterAddr, Voter: &voter})
+		itemCounter++
 	}
-	writer.EndArraySection()
+	writer.EndArraySection(itemCounter)
 
 	iterReportersDelVoted, err := k.ReportersWithDelegatorsVotedBefore.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -492,6 +513,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	}
 	defer iterReportersDelVoted.Close()
 
+	itemCounter = 0
 	writer.StartArraySection("reporters_with_delegators_who_voted")
 	for ; iterReportersDelVoted.Valid(); iterReportersDelVoted.Next() {
 		key, err := iterReportersDelVoted.Key()
@@ -506,8 +528,9 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 			panic(err)
 		}
 		writer.WriteArrayItem(&types.ReportersWithDelegatorsWhoVotedStateEntry{ReporterAddress: reporterAddr, DisputeId: dispute_id, VotedAmount: votedAmt})
+		itemCounter++
 	}
-	writer.EndArraySection()
+	writer.EndArraySection(itemCounter)
 
 	iterBlockInfo, err := k.BlockInfo.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -515,6 +538,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	}
 	defer iterBlockInfo.Close()
 
+	itemCounter = 0
 	writer.StartArraySection("block_info")
 	for ; iterBlockInfo.Valid(); iterBlockInfo.Next() {
 		hash_id, err := iterBlockInfo.Key()
@@ -527,8 +551,9 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 			panic(err)
 		}
 		writer.WriteArrayItem(&types.BlockInfoStateEntry{HashId: hash_id, BlockInfo: &info})
+		itemCounter++
 	}
-	writer.EndArraySection()
+	writer.EndArraySection(itemCounter)
 
 	iterDisputeFeePayer, err := k.DisputeFeePayer.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -536,6 +561,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	}
 	defer iterDisputeFeePayer.Close()
 
+	itemCounter = 0
 	writer.StartArraySection("dispute_fee_payer")
 	for ; iterDisputeFeePayer.Valid(); iterDisputeFeePayer.Next() {
 		keys, err := iterDisputeFeePayer.Key()
@@ -550,8 +576,9 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 			panic(err)
 		}
 		writer.WriteArrayItem(&types.DisputeFeePayerStateEntry{DisputeId: dispute_id, Payer: payer, PayerInfo: &payerInfo})
+		itemCounter++
 	}
-	writer.EndArraySection()
+	writer.EndArraySection(itemCounter)
 
 	Dust, err := k.Dust.Get(ctx)
 	if err != nil {
@@ -565,6 +592,7 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	}
 	defer iterVoteCountsByGroup.Close()
 
+	itemCounter = 0
 	writer.StartArraySection("vote_counts_by_group")
 	for ; iterVoteCountsByGroup.Valid(); iterVoteCountsByGroup.Next() {
 		dispute_id, err := iterVoteCountsByGroup.Key()
@@ -577,8 +605,9 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 			panic(err)
 		}
 		writer.WriteArrayItem(&types.VoteCountsByGroupStateEntry{DisputeId: dispute_id, Users: &voteCount.Users, Reporters: &voteCount.Reporters, Team: &voteCount.Team})
+		itemCounter++
 	}
-	writer.EndArraySection()
+	writer.EndArraySection(itemCounter)
 
 	writer.Close()
 }
