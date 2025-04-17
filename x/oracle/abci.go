@@ -16,5 +16,11 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 	if err := k.SetAggregatedReport(ctx); err != nil {
 		return err
 	}
+
+	// call claim deposit on oldest aggregate in queue if > 12 hrs old
+	if err := k.AutoClaimDeposits(ctx); err != nil {
+		return err
+	}
+
 	return k.RotateQueries(ctx)
 }

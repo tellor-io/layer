@@ -241,8 +241,7 @@ func TestClaimDeposit(t *testing.T) {
 
 	depositId := uint64(0)
 
-	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
-	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
+	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()))
 	require.NoError(t, err)
 	depositClaimedResult, err := k.DepositIdClaimedMap.Get(sdkCtx, depositId)
 	require.NoError(t, err)
@@ -258,8 +257,7 @@ func TestClaimDepositNilAggregate(t *testing.T) {
 	queryId, _ := k.GetDepositQueryId(0)
 	currentTime := time.Now()
 	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(currentTime.UnixMilli())).Return(oracletypes.Aggregate{}, collections.ErrNotFound)
-	msgSender := simtestutil.CreateIncrementalAccounts(1)[0]
-	err := k.ClaimDeposit(ctx, 0, uint64(currentTime.UnixMilli()), msgSender)
+	err := k.ClaimDeposit(ctx, 0, uint64(currentTime.UnixMilli()))
 	require.ErrorContains(t, err, "not found")
 }
 
@@ -295,7 +293,6 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 		AggregatePower: uint64(90 * 1e6),
 		Flagged:        true,
 	}
-	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	totalBondedTokens := math.NewInt(100 * 1e6)
@@ -306,7 +303,7 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 
 	depositId := uint64(0)
 
-	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
+	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()))
 	require.ErrorContains(t, err, "aggregate flagged")
 }
 
@@ -347,7 +344,6 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 	valSetHash := []byte("valSetHash")
 	_, err = k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, valSetHash)
 	require.NoError(t, err)
-	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(aggregateTimestamp.UnixMilli())).Return(aggregate, nil)
@@ -355,7 +351,7 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
 	depositId := uint64(0)
-	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
+	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()))
 	require.ErrorContains(t, err, "insufficient reporter power")
 }
 
@@ -395,7 +391,7 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 	valSetHash := []byte("valSetHash")
 	_, err = k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, valSetHash)
 	require.NoError(t, err)
-	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
+	// msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(11 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(aggregateTimestamp.UnixMilli())).Return(aggregate, nil)
@@ -403,7 +399,7 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
 	depositId := uint64(0)
-	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
+	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()))
 	require.ErrorContains(t, err, "report too young")
 }
 
@@ -443,7 +439,6 @@ func TestClaimDepositSpam(t *testing.T) {
 	valSetHash := []byte("valSetHash")
 	_, err = k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, valSetHash)
 	require.NoError(t, err)
-	msgSender := simtestutil.CreateIncrementalAccounts(2)[1]
 	sdkCtx = sdkCtx.WithBlockTime(sdkCtx.BlockTime().Add(13 * time.Hour))
 	recipient, amount, _, err := k.DecodeDepositReportValue(ctx, reportValueString)
 	ok.On("GetAggregateByTimestamp", sdkCtx, queryId, uint64(aggregateTimestamp.UnixMilli())).Return(aggregate, nil)
@@ -451,7 +446,7 @@ func TestClaimDepositSpam(t *testing.T) {
 	bk.On("SendCoinsFromModuleToAccount", sdkCtx, bridgetypes.ModuleName, recipient, amount).Return(err)
 
 	depositId := uint64(0)
-	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
+	err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()))
 	require.NoError(t, err)
 	depositClaimedResult, err := k.DepositIdClaimedMap.Get(sdkCtx, depositId)
 	require.NoError(t, err)
@@ -460,7 +455,7 @@ func TestClaimDepositSpam(t *testing.T) {
 	attempts := 0
 	for attempts < 100 {
 		attempts++
-		err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()), msgSender)
+		err = k.ClaimDeposit(sdkCtx, depositId, uint64(aggregateTimestamp.UnixMilli()))
 		require.ErrorContains(t, err, "deposit already claimed")
 	}
 }
