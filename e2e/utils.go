@@ -511,27 +511,6 @@ type DataSpec2 struct {
 	// querytype is the first arg in queryData
 	QueryType string `protobuf:"bytes,7,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
 }
-type DataSpec2 struct {
-	// ipfs hash of the data spec
-	DocumentHash string `protobuf:"bytes,1,opt,name=document_hash,json=documentHash,proto3" json:"document_hash,omitempty"`
-	// the value's datatype for decoding the value
-	ResponseValueType string `protobuf:"bytes,2,opt,name=response_value_type,json=responseValueType,proto3" json:"response_value_type,omitempty"`
-	// the abi components for decoding
-	AbiComponents []*registrytypes.ABIComponent `protobuf:"bytes,3,rep,name=abi_components,json=abiComponents,proto3" json:"abi_components,omitempty"`
-	// how to aggregate the data (ie. average, median, mode, etc) for aggregating reports and arriving at final value
-	AggregationMethod string `protobuf:"bytes,4,opt,name=aggregation_method,json=aggregationMethod,proto3" json:"aggregation_method,omitempty"`
-	// address that originally registered the data spec
-	Registrar string `protobuf:"bytes,5,opt,name=registrar,proto3" json:"registrar,omitempty"`
-	// report_buffer_window specifies the duration of the time window following an initial report
-	// during which additional reports can be submitted. This duration acts as a buffer, allowing
-	// a collection of related reports in a defined time frame. The window ensures that all
-	// pertinent reports are aggregated together before arriving at a final value. This defaults
-	// to 0s if not specified.
-	// extensions: treat as a golang time.duration, don't allow nil values, don't omit empty values
-	ReportBlockWindow string `protobuf:"varint,6,opt,name=report_block_window,json=reportBlockWindow,proto3" json:"report_block_window,omitempty"`
-	// querytype is the first arg in queryData
-	QueryType string `protobuf:"bytes,7,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
-}
 type QueryGenerateQuerydataResponse struct {
 	// query_data is the generated query_data hex string.
 	QueryData []byte `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
@@ -580,11 +559,6 @@ type QueryGetDataSpecResponse struct {
 	Spec *DataSpec2 `protobuf:"bytes,1,opt,name=spec,proto3" json:"spec,omitempty"`
 }
 
-type QueryGetDataSpecResponse struct {
-	// spec is the data spec corresponding to the query type.
-	Spec *DataSpec2 `protobuf:"bytes,1,opt,name=spec,proto3" json:"spec,omitempty"`
-}
-
 type Voter struct {
 	Vote          disputetypes.VoteEnum `protobuf:"varint,1,opt,name=vote,proto3,enum=layer.dispute.VoteEnum" json:"vote,omitempty"`
 	VoterPower    math.Int              `protobuf:"bytes,2,opt,name=voter_power,json=voterPower,proto3,customtype=cosmossdk.io/math.Int" json:"voter_power"`
@@ -605,10 +579,6 @@ func EncodeStringValue(value string) string {
 	// Convert to hex string
 	encodedString := hex.EncodeToString(encodedBytes)
 	return encodedString
-}
-
-type QueryGetDepositClaimedResponse struct {
-	Claimed bool `protobuf:"varint,1,opt,name=claimed,proto3" json:"claimed,omitempty"`
 }
 
 type QueryGetDepositClaimedResponse struct {
