@@ -34,7 +34,7 @@ func (k Keeper) WithdrawTokens(ctx context.Context, amount sdk.Coin, sender sdk.
 		return 0, err
 	}
 
-	err = k.oracleKeeper.SetAggregate(ctx, aggregate, queryData)
+	err = k.oracleKeeper.SetAggregate(ctx, aggregate, queryData, "TRBBridge-withdraw")
 	if err != nil {
 		return 0, err
 	}

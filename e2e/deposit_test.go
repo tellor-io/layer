@@ -31,7 +31,7 @@ import (
 func TestDepositReport(t *testing.T) {
 	require := require.New(t)
 
-	t.Skip("")
+	t.Skip("change checks and run manually")
 
 	t.Helper()
 	if testing.Short() {
@@ -162,7 +162,8 @@ func TestDepositReport(t *testing.T) {
 	fmt.Println("TX HASH (val tips bridge deposit 1)", txHash)
 
 	// both reporters report for the bridge deposit
-	value := "0000000000000000000000003386518f7ab3eb51591571adbe62cf94540ead29000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000f424000000000000000000000000000000000000000000000000000000000000003e8000000000000000000000000000000000000000000000000000000000000002d74656c6c6f72317038386a7530796875746d6635703275373938787633756d616137756a77376763683972346600000000000000000000000000000000000000"
+
+	value := "0000000000000000000000003386518f7ab3eb51591571adbe62cf94540ead2900000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000de0b6b3a7640000000000000000000000000000000000000000000000000000000000174876e800000000000000000000000000000000000000000000000000000000000000002d74656c6c6f72317038386a7530796875746d6635703275373938787633756d616137756a77376763683972346600000000000000000000000000000000000000"
 	for i := range validators {
 		txHash, err := validators[i].Val.ExecTx(ctx, validators[i].Addr, "oracle", "submit-value", bridgeQueryDataString, value, "--keyring-dir", validators[0].Val.HomeDir())
 		require.NoError(err)
@@ -205,6 +206,7 @@ func TestDepositReport(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("Loya holders: ", loyaHolders)
 	fmt.Println("len(loyaHolders): ", len(loyaHolders))
+	numHoldersBefore := len(loyaHolders)
 
 	// wait for 2 min window to expire, deposit should get claimed
 	time.Sleep(120 * time.Second)
@@ -216,9 +218,11 @@ func TestDepositReport(t *testing.T) {
 	require.NoError(err)
 	require.True(claimedRes.Claimed)
 
-	// check destination balance
+	// check that there is a new loya holder
 	loyaHolders, err = chain.BankQueryDenomOwners(ctx, "loya")
 	require.NoError(err)
 	fmt.Println("Loya holders: ", loyaHolders)
 	fmt.Println("len(loyaHolders): ", len(loyaHolders))
+	numHoldersAfter := len(loyaHolders)
+	require.Greater(numHoldersAfter, numHoldersBefore)
 }
