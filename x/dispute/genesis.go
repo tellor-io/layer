@@ -296,7 +296,7 @@ func (w *ModuleStateWriter) StartArraySection(name string) error {
 	}
 	w.first = false
 
-	// Write the field name and opening bracket
+	// Write the field name and opening bracket with proper formatting
 	_, err := w.file.Write([]byte(fmt.Sprintf("\"%s\": [\n", name)))
 	return err
 }
@@ -307,10 +307,15 @@ func (w *ModuleStateWriter) WriteArrayItem(item interface{}, isFirst bool) error
 			return err
 		}
 	}
+	// Add indentation for array items
+	if _, err := w.file.Write([]byte("  ")); err != nil {
+		return err
+	}
 	return w.encoder.Encode(item)
 }
 
 func (w *ModuleStateWriter) EndArraySection() error {
+	// Add newline before closing bracket
 	_, err := w.file.Write([]byte("\n]"))
 	return err
 }
@@ -324,8 +329,8 @@ func (w *ModuleStateWriter) WriteValue(name string, value interface{}) error {
 	}
 	w.first = false
 
-	// Write the field name
-	if _, err := w.file.Write([]byte(fmt.Sprintf("\"%s\": ", name))); err != nil {
+	// Write the field name with proper indentation
+	if _, err := w.file.Write([]byte(fmt.Sprintf("  \"%s\": ", name))); err != nil {
 		return err
 	}
 
@@ -356,8 +361,7 @@ func (w *ModuleStateWriter) Close() {
 	// Read the entire temporary file
 	content, err := os.ReadFile(w.tempFilename)
 	if err != nil {
-		// If we can't read the temp file, try to proceed with empty content
-		content = []byte("{\n")
+		panic(err)
 	}
 
 	// Create or truncate the final file
@@ -367,10 +371,8 @@ func (w *ModuleStateWriter) Close() {
 	}
 	defer finalFile.Close()
 
-	// Remove the final closing brace from the content if it exists
-	if len(content) > 2 {
-		content = content[:len(content)-2]
-	}
+	// Remove the final closing brace from the content
+	content = content[:len(content)-2]
 
 	// Write the original content without the final brace
 	if _, err := finalFile.Write(content); err != nil {
@@ -382,10 +384,9 @@ func (w *ModuleStateWriter) Close() {
 		panic(err)
 	}
 
-	// Try to remove the temporary file, but don't panic if it fails
-	if err := os.Remove(w.tempFilename); err != nil && !os.IsNotExist(err) {
-		// Only log the error if it's not because the file doesn't exist
-		fmt.Printf("Warning: failed to remove temporary file: %v\n", err)
+	// Remove the temporary file
+	if err := os.Remove(w.tempFilename); err != nil {
+		panic(err)
 	}
 }
 
