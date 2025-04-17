@@ -221,6 +221,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	// write all module data to second file to persist without making genesis file massive
 	fmt.Println("Exporting module data")
 	ExportModuleData(ctx, k)
+	fmt.Println("Module data exported")
 	// this line is used by starport scaffolding # genesis/module/export
 
 	return genesis
