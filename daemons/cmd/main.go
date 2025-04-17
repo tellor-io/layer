@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"cosmossdk.io/log"
-
-	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -14,6 +11,10 @@ import (
 	"github.com/tellor-io/layer/daemons"
 	"github.com/tellor-io/layer/daemons/configs"
 	daemonflags "github.com/tellor-io/layer/daemons/flags"
+
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/client/flags"
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -41,7 +42,6 @@ func main() {
 }
 
 func init() {
-
 	rootCmd.Flags().String(flags.FlagHome, app.DefaultNodeHome, "Node home directory")
 	rootCmd.Flags().String(flags.FlagFrom, "", "Name of the key to use")
 	rootCmd.Flags().String(flags.FlagGRPC, "0.0.0.0:9090", "Address to listen on")
@@ -52,11 +52,23 @@ func init() {
 	rootCmd.Flags().String(flags.FlagNode, "", "<host>:<port> to CometBFT RPC interface for layer")
 
 	// Marking required flags
-	rootCmd.MarkFlagRequired(flags.FlagHome)
-	rootCmd.MarkFlagRequired(flags.FlagFrom)
-	rootCmd.MarkFlagRequired(flags.FlagGRPC)
-	rootCmd.MarkFlagRequired(flags.FlagChainID)
-	rootCmd.MarkFlagRequired(flags.FlagNode)
+	if err := rootCmd.MarkFlagRequired(flags.FlagHome); err != nil {
+		panic(err)
+	}
+	if err := rootCmd.MarkFlagRequired(flags.FlagFrom); err != nil {
+		panic(err)
+	}
+	if err := rootCmd.MarkFlagRequired(flags.FlagGRPC); err != nil {
+		panic(err)
+	}
+	if err := rootCmd.MarkFlagRequired(flags.FlagChainID); err != nil {
+		panic(err)
+	}
+	if err := rootCmd.MarkFlagRequired(flags.FlagNode); err != nil {
+		panic(err)
+	}
 
-	viper.BindPFlags(rootCmd.Flags())
+	if err := viper.BindPFlags(rootCmd.Flags()); err != nil {
+		panic(err)
+	}
 }

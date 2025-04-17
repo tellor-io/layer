@@ -161,7 +161,7 @@ func (c *Client) sendTx(ctx context.Context, msg ...sdk.Msg) (*cmttypes.ResultTx
 	for _, event := range txnResponse.TxResult.Events {
 		if event.Type == "new_report" {
 			for _, attr := range event.Attributes {
-				c.logger.Info("NewReport", string(attr.Key), string(attr.Value))
+				c.logger.Info("NewReport", attr.Key, attr.Value)
 			}
 		}
 	}

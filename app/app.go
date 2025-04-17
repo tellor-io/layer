@@ -38,7 +38,6 @@ import (
 	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
 	_ "github.com/tellor-io/layer/app/config"
 	appflags "github.com/tellor-io/layer/app/flags"
-
 	"github.com/tellor-io/layer/docs"
 	bridgemodule "github.com/tellor-io/layer/x/bridge"
 	bridgemodulekeeper "github.com/tellor-io/layer/x/bridge/keeper"

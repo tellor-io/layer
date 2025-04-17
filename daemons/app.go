@@ -2,14 +2,10 @@ package daemons
 
 import (
 	"context"
-
 	"os"
 	"runtime/debug"
 	"time"
 
-	"cosmossdk.io/log"
-
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/spf13/cast"
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/daemons/configs"
@@ -21,12 +17,15 @@ import (
 	daemonserver "github.com/tellor-io/layer/daemons/server"
 	daemonservertypes "github.com/tellor-io/layer/daemons/server/types"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
-
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge"
 	tokenbridgetipstypes "github.com/tellor-io/layer/daemons/server/types/token_bridge_tips"
 	tokenbridgeclient "github.com/tellor-io/layer/daemons/token_bridge_feed/client"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 	"google.golang.org/grpc"
+
+	"cosmossdk.io/log"
+
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 )
 
 type App struct {
@@ -43,8 +42,7 @@ func NewApp(
 	grpcAddress,
 	homePath string,
 ) {
-
-	var tempDir = func() string {
+	tempDir := func() string {
 		dir, err := os.MkdirTemp("", "tellorapp")
 		if err != nil {
 			dir = app.DefaultNodeHome

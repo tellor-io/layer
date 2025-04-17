@@ -6,17 +6,9 @@ import (
 	"sync"
 	"time"
 
+	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/spf13/viper"
 	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
-
-	"cosmossdk.io/log"
-	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	"github.com/tellor-io/layer/daemons/flags"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
@@ -25,6 +17,14 @@ import (
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const defaultGas = uint64(300000)
