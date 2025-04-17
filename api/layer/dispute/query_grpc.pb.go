@@ -30,6 +30,8 @@ type QueryClient interface {
 	TeamAddress(ctx context.Context, in *QueryTeamAddressRequest, opts ...grpc.CallOption) (*QueryTeamAddressResponse, error)
 	// Tally queries the vote count of a dispute
 	Tally(ctx context.Context, in *QueryDisputesTallyRequest, opts ...grpc.CallOption) (*QueryDisputesTallyResponse, error)
+	// VoteResult queries the vote result of a dispute
+	VoteResult(ctx context.Context, in *QueryDisputeVoteResultRequest, opts ...grpc.CallOption) (*QueryDisputeVoteResultResponse, error)
 }
 
 type queryClient struct {
@@ -94,6 +96,15 @@ func (c *queryClient) Tally(ctx context.Context, in *QueryDisputesTallyRequest, 
 	return out, nil
 }
 
+func (c *queryClient) VoteResult(ctx context.Context, in *QueryDisputeVoteResultRequest, opts ...grpc.CallOption) (*QueryDisputeVoteResultResponse, error) {
+	out := new(QueryDisputeVoteResultResponse)
+	err := c.cc.Invoke(ctx, "/layer.dispute.Query/VoteResult", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -110,6 +121,8 @@ type QueryServer interface {
 	TeamAddress(context.Context, *QueryTeamAddressRequest) (*QueryTeamAddressResponse, error)
 	// Tally queries the vote count of a dispute
 	Tally(context.Context, *QueryDisputesTallyRequest) (*QueryDisputesTallyResponse, error)
+	// VoteResult queries the vote result of a dispute
+	VoteResult(context.Context, *QueryDisputeVoteResultRequest) (*QueryDisputeVoteResultResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -134,6 +147,9 @@ func (UnimplementedQueryServer) TeamAddress(context.Context, *QueryTeamAddressRe
 }
 func (UnimplementedQueryServer) Tally(context.Context, *QueryDisputesTallyRequest) (*QueryDisputesTallyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Tally not implemented")
+}
+func (UnimplementedQueryServer) VoteResult(context.Context, *QueryDisputeVoteResultRequest) (*QueryDisputeVoteResultResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VoteResult not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -256,6 +272,24 @@ func _Query_Tally_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_VoteResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDisputeVoteResultRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).VoteResult(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.dispute.Query/VoteResult",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).VoteResult(ctx, req.(*QueryDisputeVoteResultRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -286,6 +320,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Tally",
 			Handler:    _Query_Tally_Handler,
+		},
+		{
+			MethodName: "VoteResult",
+			Handler:    _Query_VoteResult_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
