@@ -76,7 +76,7 @@ func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Tim
 
 	s.ctx = s.ctx.WithBlockTime(timestamp)
 	s.ctx = s.ctx.WithBlockHeight(10)
-	err = s.oracleKeeper.SetAggregate(s.ctx, report, queryData)
+	err = s.oracleKeeper.SetAggregate(s.ctx, report, queryData, "SpotPrice")
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
@@ -172,6 +172,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 		setup         func()
 		queryId       []byte
 		queryData     []byte
+		queryType     string
 		report        *types.Aggregate
 		expectedValue string
 		expectedPower uint64
@@ -187,6 +188,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 			},
 			queryId:   []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
 			queryData: ethQueryData,
+			queryType: "SpotPrice",
 			report: &types.Aggregate{
 				QueryId:           []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
 				AggregateValue:    encodeValue(100_000),
@@ -209,6 +211,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 			},
 			queryId:   []byte("0xabd24ad7de0468ea1a78db7451aa889e4bf61cc9b69500be227cadf0c00e43e9"),
 			queryData: bridgeQueryData,
+			queryType: "TRBBridge",
 			report: &types.Aggregate{
 				QueryId:           []byte("0xabd24ad7de0468ea1a78db7451aa889e4bf61cc9b69500be227cadf0c00e43e9"),
 				AggregateValue:    encodeValue(100_000),
@@ -231,7 +234,7 @@ func (s *KeeperTestSuite) TestSetAggregate() {
 			timestamp := time.Now()
 			s.ctx = s.ctx.WithBlockTime(timestamp)
 
-			err := s.oracleKeeper.SetAggregate(s.ctx, tc.report, tc.queryData)
+			err := s.oracleKeeper.SetAggregate(s.ctx, tc.report, tc.queryData, tc.queryType)
 			if tc.expectErr {
 				s.Error(err)
 				return

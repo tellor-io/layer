@@ -71,7 +71,7 @@ func TestMsgWithdrawTokens(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, agg)
 	require.NotNil(t, queryData)
-	ok.On("SetAggregate", ctx, agg, queryData).Return(nil)
+	ok.On("SetAggregate", ctx, agg, queryData, mock.AnythingOfType("string")).Return(nil)
 
 	response, err = msgServer.WithdrawTokens(ctx, &types.MsgWithdrawTokens{
 		Creator:   creatorAddr.String(),
@@ -122,7 +122,7 @@ func TestMsgWithdrawTokensBadRecipient(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, agg)
 	require.NotNil(t, queryData)
-	ok.On("SetAggregate", ctx, agg, queryData).Return(nil)
+	ok.On("SetAggregate", ctx, agg, queryData, mock.AnythingOfType("string")).Return(nil)
 	response, err = msgServer.WithdrawTokens(ctx, &types.MsgWithdrawTokens{
 		Creator:   creatorAddr.String(),
 		Recipient: goodRecipientAddr,
@@ -149,7 +149,8 @@ func BenchmarkMsgWithdrawTokens(b *testing.B) {
 	ok.On("SetAggregate",
 		mock.AnythingOfType("types.Context"),
 		mock.AnythingOfType("*types.Aggregate"),
-		mock.AnythingOfType("[]uint8")).Return(nil)
+		mock.AnythingOfType("[]uint8"),
+		mock.AnythingOfType("string")).Return(nil)
 
 	b.ResetTimer()
 
