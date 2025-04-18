@@ -21,7 +21,7 @@ import (
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/types"
 	daemonserver "github.com/tellor-io/layer/daemons/server"
-	servertypes "github.com/tellor-io/layer/daemons/server/types"
+	servertypes "github.com/tellor-io/layer/daemons/server/types/daemons"
 	pricefeed_types "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 	"github.com/tellor-io/layer/daemons/testutil/appoptions"
 	"github.com/tellor-io/layer/daemons/testutil/client"

@@ -10,6 +10,7 @@ import (
 	"github.com/tellor-io/layer/daemons/lib/metrics"
 	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
 	"github.com/tellor-io/layer/daemons/server/types"
+	daemontypes "github.com/tellor-io/layer/daemons/server/types/daemons"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 
 	errorsmod "cosmossdk.io/errors"
@@ -35,9 +36,9 @@ func (server *Server) WithPriceFeedMarketToExchangePrices(
 // UpdateMarketPrices updates prices from exchanges for each market provided.
 func (s *Server) UpdateMarketPrices(
 	ctx context.Context,
-	req *types.UpdateMarketPricesRequest,
+	req *daemontypes.UpdateMarketPricesRequest,
 ) (
-	response *types.UpdateMarketPricesResponse,
+	response *daemontypes.UpdateMarketPricesResponse,
 	err error,
 ) {
 	// Measure latency in ingesting and handling gRPC price update.
@@ -65,11 +66,11 @@ func (s *Server) UpdateMarketPrices(
 	// Capture valid responses in metrics.
 	s.reportValidResponse(types.PricefeedDaemonServiceName)
 
-	return &types.UpdateMarketPricesResponse{}, nil
+	return &daemontypes.UpdateMarketPricesResponse{}, nil
 }
 
 // validateMarketPricesUpdatesMessage validates a `UpdateMarketPricesRequest`.
-func validateMarketPricesUpdatesMessage(req *types.UpdateMarketPricesRequest) error {
+func validateMarketPricesUpdatesMessage(req *daemontypes.UpdateMarketPricesRequest) error {
 	if len(req.MarketPriceUpdates) == 0 {
 		return fmt.Errorf("ErrPriceFeedMarketPriceUpdateEmpty")
 	}
@@ -97,7 +98,7 @@ func validateMarketPricesUpdatesMessage(req *types.UpdateMarketPricesRequest) er
 }
 
 // validateMarketPriceUpdate validates a single `MarketPriceUpdate`.
-func validateMarketPriceUpdate(mpu *types.MarketPriceUpdate) error {
+func validateMarketPriceUpdate(mpu *daemontypes.MarketPriceUpdate) error {
 	for _, ep := range mpu.ExchangePrices {
 		if ep.Price == constants.DefaultPrice {
 			return generateSdkErrorForExchangePrice(
@@ -119,6 +120,6 @@ func validateMarketPriceUpdate(mpu *types.MarketPriceUpdate) error {
 }
 
 // generateSdkErrorForExchangePrice generates an error for an invalid `ExchangePrice`.
-func generateSdkErrorForExchangePrice(err error, ep *types.ExchangePrice, marketId uint32) error {
+func generateSdkErrorForExchangePrice(err error, ep *daemontypes.ExchangePrice, marketId uint32) error {
 	return errorsmod.Wrapf(err, "ExchangePrice: %v and MarketId: %d", ep, marketId)
 }

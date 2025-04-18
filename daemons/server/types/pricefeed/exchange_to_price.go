@@ -7,7 +7,7 @@ import (
 	"github.com/tellor-io/layer/daemons/lib/metrics"
 	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
 	"github.com/tellor-io/layer/daemons/pricefeed/types"
-	servertypes "github.com/tellor-io/layer/daemons/server/types"
+	servertypes "github.com/tellor-io/layer/daemons/server/types/daemons"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )

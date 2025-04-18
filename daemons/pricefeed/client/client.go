@@ -13,7 +13,7 @@ import (
 	"github.com/tellor-io/layer/daemons/pricefeed/client/price_fetcher"
 	handler "github.com/tellor-io/layer/daemons/pricefeed/client/queryhandler"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
-	servertypes "github.com/tellor-io/layer/daemons/server/types"
+	servertypes "github.com/tellor-io/layer/daemons/server/types/daemons"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
 
 	"cosmossdk.io/log"
