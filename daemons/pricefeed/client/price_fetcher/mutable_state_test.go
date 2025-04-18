@@ -72,7 +72,7 @@ func TestGetMarketExponents(t *testing.T) {
 	marketExponents := pf.mutableState.GetMarketExponents()
 	// Check that the mutableState contains the correct set of marketExponents
 	// and that it returns a copy of the map and not the original.
-	require.NotSame(t, marketExponents, pf.mutableState.marketExponents)
+	require.NotSame(t, &marketExponents, &pf.mutableState.marketExponents)
 	require.Equal(t, pf.mutableState.marketExponents, marketExponents)
 }
 
@@ -112,7 +112,7 @@ func TestGetTaskLoopDefinition(t *testing.T) {
 
 	// The taskLoopDefinition should use copies of shared state
 	require.NotSame(t, pf.mutableState.mutableExchangeConfig, taskLoopDefinition.mutableExchangeConfig)
-	require.NotSame(t, pf.mutableState.marketExponents, taskLoopDefinition.marketExponents)
+	require.NotSame(t, &pf.mutableState.marketExponents, &taskLoopDefinition.marketExponents)
 
 	require.Equal(t, pf.mutableState.mutableExchangeConfig, taskLoopDefinition.mutableExchangeConfig)
 	require.Equal(t, pf.mutableState.marketExponents, taskLoopDefinition.marketExponents)
