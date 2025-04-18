@@ -29,15 +29,13 @@ import (
 // cd e2e
 // go test -run TestDepositReport -timeout 10m
 func TestDepositReport(t *testing.T) {
-	require := require.New(t)
-
 	t.Skip("change checks and run manually")
 
 	t.Helper()
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
-
+	require := require.New(t)
 	t.Parallel()
 	cosmos.SetSDKConfig("tellor")
 
