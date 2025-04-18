@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/daemons/pricefeed/types"
-	"github.com/tellor-io/layer/testutil/constants"
+	"github.com/tellor-io/layer/daemons/testutil/constants"
 )
 
 func TestNewPriceTimestamp_IsEmpty(t *testing.T) {

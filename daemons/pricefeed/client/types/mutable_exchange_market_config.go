@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	"github.com/tellor-io/layer/lib"
+	"github.com/tellor-io/layer/daemons/lib"
 )
 
 // MutableExchangeMarketConfig stores all mutable market configuration per exchange.

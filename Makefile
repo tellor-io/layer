@@ -214,17 +214,6 @@ mock-gen-reporter:
 
 COSMOS_LOG_VERSION=$(shell go list -m all | grep "cosmossdk.io/log" | awk '{print $$NF}')
 
-mock-gen-daemon:
-	@go run github.com/vektra/mockery/v2 --name=AppOptions --dir=$(GOPATH)/pkg/mod/github.com/cosmos/cosmos-sdk@$(COSMOS_VERSION)/server/types --recursive --output=$(CURDIR)/daemons/mocks
-	@go run github.com/vektra/mockery/v2 --name=ExchangeQueryHandler --dir=$(CURDIR)/daemons/pricefeed/client/queryhandler --recursive --output=$(CURDIR)/daemons/mocks
-	@go run github.com/vektra/mockery/v2 --name=ExchangeToMarketPrices --dir=$(CURDIR)/daemons/pricefeed/client/types --recursive --output=$(CURDIR)/daemons/mocks
-	@go run github.com/vektra/mockery/v2 --name=GrpcClient --dir=$(CURDIR)/daemons/types --recursive --output=$(CURDIR)/daemons/mocks
-	@go run github.com/vektra/mockery/v2 --name=Logger --dir=$(GOPATH)/pkg/mod/cosmossdk.io/log@$(COSMOS_LOG_VERSION) --recursive --output=$(CURDIR)/daemons/mocks
-	@go run github.com/vektra/mockery/v2 --name=PricefeedMutableMarketConfigs --dir=$(CURDIR)/daemons/pricefeed/client/types --filename=PriceFeedMutableMarketConfigs.go --recursive --output=$(CURDIR)/daemons/mocks
-	@go run github.com/vektra/mockery/v2 --name=QueryClient --dir=$(CURDIR)/testutil/grpc --recursive --output=$(CURDIR)/daemons/mocks
-	@go run github.com/vektra/mockery/v2 --name=RequestHandler --dir=$(CURDIR)/daemons/types --recursive --output=$(CURDIR)/daemons/mocks
-	@go run github.com/vektra/mockery/v2 --name=TimeProvider --dir=$(CURDIR)/lib/time --recursive --output=$(CURDIR)/daemons/mocks
-
 mock-gen-app:
 	@go run github.com/vektra/mockery/v2 --name=StakingKeeper --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
 	@go run github.com/vektra/mockery/v2 --name=BridgeKeeper --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
@@ -239,7 +228,7 @@ mock-gen:
 	$(MAKE) mock-gen-registry
 	$(MAKE) mock-gen-reporter
 
-.PHONY: mock-gen mock-gen-bridge mock-gen-dispute mock-gen-mint mock-gen-oracle mock-gen-registry mock-gen-reporter mock-gen-daemon
+.PHONY: mock-gen mock-gen-bridge mock-gen-dispute mock-gen-mint mock-gen-oracle mock-gen-registry mock-gen-reporter
 
 get-heighliner:
 	git clone --depth 1 https://github.com/strangelove-ventures/heighliner.git

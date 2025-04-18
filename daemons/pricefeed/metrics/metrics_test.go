@@ -6,9 +6,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/daemons/exchange_common"
+	"github.com/tellor-io/layer/daemons/lib/metrics"
 	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
-	"github.com/tellor-io/layer/lib/metrics"
-	"github.com/tellor-io/layer/testutil/daemons/pricefeed/exchange_config"
+	"github.com/tellor-io/layer/daemons/testutil/daemons/pricefeed/exchange_config"
 )
 
 const (

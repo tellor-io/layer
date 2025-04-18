@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/tellor-io/layer/daemons/server/types"
+	types "github.com/tellor-io/layer/daemons/server/types/daemons"
 	tokenbridgetypes "github.com/tellor-io/layer/daemons/server/types/token_bridge_tips"
 )
 

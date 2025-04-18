@@ -15,9 +15,9 @@ import (
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pft "github.com/tellor-io/layer/daemons/pricefeed/types"
-	"github.com/tellor-io/layer/testutil/constants"
-	"github.com/tellor-io/layer/testutil/daemons/pricefeed"
-	"github.com/tellor-io/layer/testutil/daemons/pricefeed/exchange_config"
+	"github.com/tellor-io/layer/daemons/testutil/constants"
+	"github.com/tellor-io/layer/daemons/testutil/daemons/pricefeed"
+	"github.com/tellor-io/layer/daemons/testutil/daemons/pricefeed/exchange_config"
 )
 
 const (

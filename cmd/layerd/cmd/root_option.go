@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	daemonflags "github.com/tellor-io/layer/daemons/flags"
 )
 
 // RootCmdOption configures root command option.
@@ -24,8 +23,6 @@ func (o *RootCmdOption) setCustomizeStartCmd(f func(startCmd *cobra.Command)) {
 func GetOptionWithCustomStartCmd() *RootCmdOption {
 	option := newRootCmdOption()
 	f := func(cmd *cobra.Command) {
-		// Add daemon flags.
-		daemonflags.AddDaemonFlagsToCmd(cmd)
 		cmd.Flags().String("keyring-backend", "test", "Select keyring's backend (os|file|kwallet|pass|test)")
 		cmd.Flags().String("key-name", "alice", "Select key name")
 	}

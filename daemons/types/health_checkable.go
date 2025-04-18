@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	libtime "github.com/tellor-io/layer/lib/time"
+	libtime "github.com/tellor-io/layer/daemons/lib/time"
 
 	"cosmossdk.io/log"
 )

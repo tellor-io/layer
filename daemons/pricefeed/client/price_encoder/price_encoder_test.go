@@ -11,13 +11,13 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	pf_constants "github.com/tellor-io/layer/daemons/constants"
+	"github.com/tellor-io/layer/daemons/lib/metrics"
 	"github.com/tellor-io/layer/daemons/mocks"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/price_fetcher"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pft "github.com/tellor-io/layer/daemons/pricefeed/types"
-	"github.com/tellor-io/layer/lib/metrics"
-	"github.com/tellor-io/layer/testutil/constants"
+	"github.com/tellor-io/layer/daemons/testutil/constants"
 
 	"cosmossdk.io/log"
 )

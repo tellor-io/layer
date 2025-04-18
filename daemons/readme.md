@@ -68,7 +68,7 @@ type MarketParam struct {
 }
 ```
 
-**Note:** Price Daemon is enabled by default; to disable set `--price-daemon-enabled=false`
+**Note:**
 A price is valid by default up to 30 seconds; to change this to a different default edit the `constants.MaxPriceAge`
 
 **Also:** Config files are written to homedir/.layer/config/.

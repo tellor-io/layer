@@ -13,7 +13,7 @@ package server_test
 // 	pricefeedconstants "github.com/tellor-io/layer/daemons/constants"
 // 	"github.com/tellor-io/layer/daemons/server"
 // 	"github.com/tellor-io/layer/mocks"
-// 	"github.com/tellor-io/layer/testutil/grpc"
+// 	"github.com/tellor-io/layer/daemons/testutil/grpc"
 // )
 
 // const (
