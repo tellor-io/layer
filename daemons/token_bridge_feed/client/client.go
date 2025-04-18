@@ -364,30 +364,45 @@ func (c *Client) QueryTokenBridgeContract() error {
 }
 
 func (c *Client) CheckForFinality(blockHeight *big.Int) (bool, error) {
-	// Check if the block height is final
-	url := "https://sepolia.beaconcha.in/api/v1/epoch/finalized/slots"
-	body, err := c.QueryAPI(url)
-	if err != nil {
-		c.logger.Error("Failed to query API", "error", err)
-		return false, err
+	// Query current block height from all RPCs and get majority
+	var results []*big.Int
+
+	for _, client := range c.ethClients {
+		currentBlock, err := client.BlockNumber(context.Background())
+		if err != nil {
+			c.logger.Error("Failed to query current block number", "error", err)
+			continue
+		}
+		results = append(results, new(big.Int).SetUint64(currentBlock))
 	}
 
-	var apiResponse APIResponse
-	err = json.Unmarshal(body, &apiResponse)
-	if err != nil {
-		return false, fmt.Errorf("error unmarshaling JSON: %w", err)
+	if len(results) < len(c.ethClients)/2+1 {
+		return false, fmt.Errorf("failed to get majority consensus: insufficient responses")
 	}
 
-	// Find the highest exec_block_number
-	var highestBlockNumber int
-	for _, data := range apiResponse.Data {
-		if data.ExecBlockNumber > highestBlockNumber {
-			highestBlockNumber = data.ExecBlockNumber
+	// Find the majority value
+	counts := make(map[string]int)
+	for _, result := range results {
+		counts[result.String()]++
+	}
+
+	var majorityValue *big.Int
+	majorityCount := 0
+	for valueStr, count := range counts {
+		if count > majorityCount {
+			majorityCount = count
+			value, _ := new(big.Int).SetString(valueStr, 10)
+			majorityValue = value
 		}
 	}
 
-	// Check if the input blockHeight is greater than or equal to the highest exec_block_number
-	return uint64(highestBlockNumber) >= blockHeight.Uint64(), nil
+	// Ensure we have a majority
+	if majorityCount <= len(c.ethClients)/2 {
+		return false, fmt.Errorf("no majority consensus reached")
+	}
+
+	// Check if the deposit block height is at least 100 blocks behind current height
+	return majorityValue.Sub(majorityValue, blockHeight).Cmp(big.NewInt(100)) >= 0, nil
 }
 
 func (c *Client) EncodeQueryData(depositReceipt DepositReceipt) ([]byte, error) {
