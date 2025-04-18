@@ -3,6 +3,7 @@ package integration_test
 import (
 	"encoding/hex"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -10,7 +11,9 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/utils"
+	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
+	"github.com/tellor-io/layer/x/oracle"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
@@ -370,6 +373,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	s.NoError(s.Setup.Oraclekeeper.Query.Set(ctx, collections.Join(qId, queryMetaId), types.QueryMeta{
 		Id:                 1,
 		HasRevealedReports: true,
+		QueryData:          ethQueryData,
 	}))
 	for _, r := range reports[:1] {
 		r.Cyclelist = true
@@ -444,6 +448,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	s.NoError(s.Setup.Oraclekeeper.Query.Set(ctx, collections.Join(qId, uint64(1)), types.QueryMeta{
 		Id:                 1,
 		HasRevealedReports: true,
+		QueryData:          ethQueryData,
 	}))
 	for _, r := range reports[:2] {
 		r.Cyclelist = true
@@ -526,6 +531,7 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	s.NoError(s.Setup.Oraclekeeper.Query.Set(ctx, collections.Join(qId, uint64(1)), types.QueryMeta{
 		Id:                 1,
 		HasRevealedReports: true,
+		QueryData:          ethQueryData,
 	}))
 	for _, r := range reports[:3] {
 		r.Cyclelist = true
@@ -963,4 +969,162 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	s.True(del2After.GetShares().Equal(del2Before.GetShares().Add(math.LegacyNewDec(65333))), "delegation 2 shares should be half the tip minus 50 percent reporter commission")
 }
 
-// func (s IntegrationTestSuite) TestNewFlow
+func (s *IntegrationTestSuite) TestClaimingBridgeDeposit() {
+	require := s.Require()
+	ctx := s.Setup.Ctx.WithBlockHeight(10).WithBlockTime(time.Now())
+	reporterMsgServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
+	require.NotNil(reporterMsgServer)
+	oracleMsgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	require.NotNil(s.Setup.Bridgekeeper)
+
+	//---------------------------------------------------------------------------
+	// Height 10 - create bonded validators and reporters
+	//---------------------------------------------------------------------------
+	_, err := s.Setup.App.BeginBlocker(ctx)
+	require.NoError(err)
+
+	// create 5 validators
+	valAccAddrs, valAccountValAddrs, _ := s.Setup.CreateValidators(5)
+	for _, val := range valAccountValAddrs {
+		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(s.Setup.Ctx, val.String(), []byte("addr"))
+		s.NoError(err)
+	}
+	// all 5 validators get free floating tokens and become reporters
+	initCoins := sdk.NewCoin(s.Setup.Denom, math.NewInt(500*1e6))
+	for i, rep := range valAccAddrs {
+		s.NoError(s.Setup.Bankkeeper.MintCoins(s.Setup.Ctx, authtypes.Minter, sdk.NewCoins(initCoins)))
+		s.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(s.Setup.Ctx, authtypes.Minter, rep, sdk.NewCoins(initCoins)))
+
+		moniker := "rep" + strconv.Itoa(i)
+		msgCreateReporter := reportertypes.MsgCreateReporter{
+			ReporterAddress:   rep.String(),
+			CommissionRate:    math.LegacyNewDec(1),
+			MinTokensRequired: math.NewInt(1 * 1e6),
+			Moniker:           moniker,
+		}
+		_, err := reporterMsgServer.CreateReporter(ctx, &msgCreateReporter)
+		require.NoError(err)
+	}
+
+	// setup bridge validator checkpoints
+	startTime := uint64(time.Now().Add(-1 * time.Hour).UnixMilli())
+	valTimestamp := startTime
+	fmt.Println("setting val timestamp: ", valTimestamp)
+	checkpointParams := bridgetypes.ValidatorCheckpointParams{
+		Checkpoint:     []byte("checkpoint"),
+		ValsetHash:     []byte("hash"),
+		Timestamp:      valTimestamp,
+		PowerThreshold: uint64(3000 * 1e6),
+	}
+	require.NoError(s.Setup.Bridgekeeper.ValidatorCheckpointParamsMap.Set(ctx, valTimestamp, checkpointParams))
+
+	_, err = s.Setup.App.EndBlocker(ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 11 - somebody tips and everybody report a bridge deposit
+	//---------------------------------------------------------------------------
+	ctx = ctx.WithBlockHeight(11).WithBlockTime(time.Now())
+	_, err = s.Setup.App.BeginBlocker(ctx)
+	require.NoError(err)
+
+	// verify reporters exist
+	for _, rep := range valAccAddrs {
+		exists, err := s.Setup.Reporterkeeper.Reporters.Has(ctx, rep)
+		require.NoError(err)
+		require.True(exists)
+	}
+
+	// tip bridge deposit
+	bridgeQueryDataString := "0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000095452424272696467650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001"
+	bridgeQueryData, _ := hex.DecodeString(bridgeQueryDataString)
+	msgTip := types.MsgTip{
+		Tipper:    valAccAddrs[0].String(),
+		QueryData: bridgeQueryData,
+		Amount:    sdk.NewCoin("loya", math.NewInt(1*1e6)),
+	}
+	_, err = oracleMsgServer.Tip(ctx, &msgTip)
+	require.NoError(err)
+
+	// everybody reports the bridge deposit
+	// value := layerutil.EncodeValue(10000000)
+	value := "0000000000000000000000003386518f7ab3eb51591571adbe62cf94540ead29000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000f424000000000000000000000000000000000000000000000000000000000000003e8000000000000000000000000000000000000000000000000000000000000002d74656c6c6f72317038386a7530796875746d6635703275373938787633756d616137756a77376763683972346600000000000000000000000000000000000000"
+	for _, rep := range valAccAddrs {
+		msgSubmitValue := types.MsgSubmitValue{
+			Creator:   rep.String(),
+			QueryData: bridgeQueryData,
+			Value:     value,
+		}
+		_, err = oracleMsgServer.SubmitValue(ctx, &msgSubmitValue)
+		require.NoError(err)
+	}
+
+	_, err = s.Setup.App.EndBlocker(ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 2012 - fast forward blocks, bridge deposit should aggregate
+	//---------------------------------------------------------------------------
+	ctx = ctx.WithBlockHeight(2012)
+	_, err = s.Setup.App.BeginBlocker(ctx)
+	require.NoError(err)
+
+	_, err = s.Setup.App.EndBlocker(ctx)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 2013 - verify aggregate, fast forward time so 12 hrs expires
+	//---------------------------------------------------------------------------
+	ctx = ctx.WithBlockHeight(2013)
+	_, err = s.Setup.App.BeginBlocker(ctx)
+	require.NoError(err)
+
+	// verify aggregate
+	queryId := utils.QueryIDFromData(bridgeQueryData)
+	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
+	req := types.QueryGetCurrentAggregateReportRequest{
+		QueryId: hex.EncodeToString(queryId),
+	}
+	res, err := queryServer.GetCurrentAggregateReport(ctx, &req)
+	require.NotNil(res)
+	require.NoError(err)
+
+	// make sure bridge deposit hasnt been claimed yet
+	claimed, err := s.Setup.Bridgekeeper.DepositIdClaimedMap.Get(ctx, uint64(1))
+	require.ErrorContains(err, "collections: not found")
+	require.False(claimed.Claimed)
+
+	// fast forward 12 hrs so deposit can be claimed
+	ctx = ctx.WithBlockTime(time.Now().Add(13 * time.Hour))
+
+	// try to claim manually -- works fine
+	// fmt.Println("agg timestamp: ", res.Timestamp)
+	// require.NoError(s.Setup.Bridgekeeper.ClaimDeposit(ctx, uint64(1), res.Timestamp))
+	// claimed, err = s.Setup.Bridgekeeper.DepositIdClaimedMap.Get(ctx, uint64(1))
+	// require.NoError(err)
+	// require.True(claimed.Claimed)
+
+	// try to call AutoClaim manually -- works fine
+	// require.NoError(s.Setup.Oraclekeeper.AutoClaimDeposits(ctx))
+	// claimed, err = s.Setup.Bridgekeeper.DepositIdClaimedMap.Get(ctx, uint64(1))
+	// require.NoError(err)
+	// require.True(claimed.Claimed)
+
+	// deposit should get autoclaimed in endblocker -- app.Endblocker panicking from nil k.bridgekeeper (something up with setup)
+	err = oracle.EndBlocker(ctx, s.Setup.Oraclekeeper)
+	require.NoError(err)
+
+	//---------------------------------------------------------------------------
+	// Height 2014 - verify deposit is claimed
+	//---------------------------------------------------------------------------
+	ctx = ctx.WithBlockHeight(2014)
+	_, err = s.Setup.App.BeginBlocker(ctx)
+	require.NoError(err)
+
+	claimed, err = s.Setup.Bridgekeeper.DepositIdClaimedMap.Get(ctx, uint64(1))
+	require.NoError(err)
+	require.True(claimed.Claimed)
+
+	_, err = s.Setup.App.EndBlocker(ctx)
+	require.NoError(err)
+}

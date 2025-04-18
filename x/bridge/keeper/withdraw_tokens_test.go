@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/bridge/types"
 
@@ -88,7 +89,7 @@ func TestWithdrawTokens(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, agg)
 
-	ok.On("SetAggregate", ctx, agg, queryData).Return(nil)
+	ok.On("SetAggregate", ctx, agg, queryData, mock.AnythingOfType("string")).Return(nil)
 	bk.On("SendCoinsFromAccountToModule", ctx, creatorAddr, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
 	bk.On("BurnCoins", ctx, types.ModuleName, sdk.NewCoins(amount)).Return(nil)
 

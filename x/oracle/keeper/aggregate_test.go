@@ -22,6 +22,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
+var ethQueryData, _ = hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
+
 func createMicroReportForQuery(reporterAdd, aggMethod, value string, power uint64, timestamp time.Time) types.MicroReport {
 	return types.MicroReport{
 		Reporter:        reporterAdd,
@@ -61,7 +63,7 @@ func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Tim
 	rep1 = sample.AccAddressBytes()
 	rep2 = sample.AccAddressBytes()
 	queryId = []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0")
-	queryData := []byte("0xabcd")
+	queryData := ethQueryData
 
 	report := &types.Aggregate{
 		QueryId:           queryId,
@@ -74,7 +76,7 @@ func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Tim
 
 	s.ctx = s.ctx.WithBlockTime(timestamp)
 	s.ctx = s.ctx.WithBlockHeight(10)
-	err = s.oracleKeeper.SetAggregate(s.ctx, report, queryData)
+	err = s.oracleKeeper.SetAggregate(s.ctx, report, queryData, "SpotPrice")
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
@@ -99,7 +101,7 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 		Expiration:              3,
 		RegistrySpecBlockWindow: 2,
 		HasRevealedReports:      true,
-		QueryData:               []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+		QueryData:               ethQueryData,
 		QueryType:               "SpotPrice",
 	}
 	queryId := []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0")
@@ -164,29 +166,95 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 }
 
 func (s *KeeperTestSuite) TestSetAggregate() {
-	queryId := []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0")
-	queryData := []byte("0xabcd")
-	err := s.oracleKeeper.Nonces.Set(s.ctx, queryId, 0)
-	s.NoError(err)
-	reporter := sample.AccAddressBytes()
-
-	timestamp := time.Now()
-	s.ctx = s.ctx.WithBlockTime(timestamp)
-	report := &types.Aggregate{
-		QueryId:           queryId,
-		AggregateValue:    encodeValue(96.50),
-		AggregateReporter: reporter.String(),
-		AggregatePower:    100000000,
-		Flagged:           false,
+	bridgeQueryData, _ := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000095452424272696467650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001")
+	testCases := []struct {
+		name          string
+		setup         func()
+		queryId       []byte
+		queryData     []byte
+		queryType     string
+		report        *types.Aggregate
+		expectedValue string
+		expectedPower uint64
+		expectErr     bool
+		bridgeCheck   bool
+	}{
+		{
+			name: "successful aggregate set",
+			setup: func() {
+				// set nonce
+				err := s.oracleKeeper.Nonces.Set(s.ctx, []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"), 0)
+				s.NoError(err)
+			},
+			queryId:   []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+			queryData: ethQueryData,
+			queryType: "SpotPrice",
+			report: &types.Aggregate{
+				QueryId:           []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"),
+				AggregateValue:    encodeValue(100_000),
+				AggregateReporter: sample.AccAddressBytes().String(),
+				AggregatePower:    100000000,
+				Flagged:           false,
+				MetaId:            1,
+			},
+			expectedValue: encodeValue(100_000),
+			expectedPower: uint64(100000000),
+			expectErr:     false,
+			bridgeCheck:   false,
+		},
+		{
+			name: "successful bridge aggregate set",
+			setup: func() {
+				// set nonce
+				err := s.oracleKeeper.Nonces.Set(s.ctx, []byte("0xabd24ad7de0468ea1a78db7451aa889e4bf61cc9b69500be227cadf0c00e43e9"), 0)
+				s.NoError(err)
+			},
+			queryId:   []byte("0xabd24ad7de0468ea1a78db7451aa889e4bf61cc9b69500be227cadf0c00e43e9"),
+			queryData: bridgeQueryData,
+			queryType: "TRBBridge",
+			report: &types.Aggregate{
+				QueryId:           []byte("0xabd24ad7de0468ea1a78db7451aa889e4bf61cc9b69500be227cadf0c00e43e9"),
+				AggregateValue:    encodeValue(100_000),
+				AggregateReporter: sample.AccAddressBytes().String(),
+				AggregatePower:    100000000,
+				Flagged:           false,
+				MetaId:            1,
+			},
+			expectedValue: encodeValue(100_000),
+			expectedPower: uint64(100000000),
+			expectErr:     false,
+			bridgeCheck:   true,
+		},
 	}
 
-	err = s.oracleKeeper.SetAggregate(s.ctx, report, queryData)
-	s.NoError(err)
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			s.SetupTest()
 
-	res, err := s.oracleKeeper.Aggregates.Get(s.ctx, collections.Join(queryId, uint64(timestamp.UnixMilli())))
-	s.NoError(err)
-	s.Equal(encodeValue(96.50), res.AggregateValue)
-	s.Equal(uint64(100000000), res.AggregatePower)
+			timestamp := time.Now()
+			s.ctx = s.ctx.WithBlockTime(timestamp)
+
+			err := s.oracleKeeper.SetAggregate(s.ctx, tc.report, tc.queryData, tc.queryType)
+			if tc.expectErr {
+				s.Error(err)
+				return
+			}
+			s.NoError(err)
+
+			res, err := s.oracleKeeper.Aggregates.Get(s.ctx, collections.Join(tc.queryId, uint64(timestamp.UnixMilli())))
+			s.NoError(err)
+			s.Equal(tc.expectedValue, res.AggregateValue)
+			s.Equal(tc.expectedPower, res.AggregatePower)
+			if tc.bridgeCheck {
+				queryData, err := s.oracleKeeper.BridgeDepositQueue.Get(s.ctx, collections.Join(uint64(timestamp.UnixMilli()), uint64(1)))
+				s.NoError(err)
+				// decode queryData
+				depositId, err := s.oracleKeeper.DecodeBridgeDeposit(s.ctx, queryData)
+				s.NoError(err)
+				s.Equal(depositId, uint64(1))
+			}
+		})
+	}
 }
 
 func (s *KeeperTestSuite) TestGetDataBefore() {

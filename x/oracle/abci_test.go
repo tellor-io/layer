@@ -1,6 +1,7 @@
 package oracle_test
 
 import (
+	"encoding/hex"
 	"testing"
 	"time"
 
@@ -55,6 +56,16 @@ func (s *TestSuite) TestEndBlocker() {
 	require := s.Require()
 	k := s.oracleKeeper
 	ctx := s.ctx
+	ctx = ctx.WithBlockTime(time.Now())
+	require.NotNil(k)
+	require.NotNil(ctx)
+	require.NotNil(s.reporterKeeper)
+	require.NotNil(s.registryKeeper)
+	require.NotNil(s.accountKeeper)
+	require.NotNil(s.bankKeeper)
+	require.NotNil(s.bridgeKeeper)
+
+	k.SetBridgeKeeper(s.bridgeKeeper)
 
 	query1, err := k.GetCurrentQueryInCycleList(ctx)
 	require.NoError(err)
@@ -68,6 +79,91 @@ func (s *TestSuite) TestEndBlocker() {
 	require.NoError(err)
 	require.NotNil(query2)
 	require.NotEqual(query1, query2)
+
+	// create deposit to be claimed
+	depositId := uint64(1)
+	depositTimestamp := uint64(time.Now().Add(-13 * time.Hour).UnixMilli())
+	deposit1MetaId := uint64(1)
+	bridgeQueryDataString := "0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000095452424272696467650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001"
+	bridgeQueryData, _ := hex.DecodeString(bridgeQueryDataString)
+
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp, deposit1MetaId), bridgeQueryData)
+	require.NoError(err)
+	// create deposit that cant be claimed yet
+	depositTimestamp2 := uint64(time.Now().Add(-1 * time.Hour).UnixMilli())
+	deposit2MetaId := uint64(2)
+	bridgeQueryDataString2 := "0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000095452424272696467650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000002"
+	bridgeQueryData2, _ := hex.DecodeString(bridgeQueryDataString2)
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp2, deposit2MetaId), bridgeQueryData2)
+	require.NoError(err)
+
+	s.bridgeKeeper.On("ClaimDeposit", ctx, depositId, depositTimestamp).Return(nil).Once()
+
+	// end blocker should only claim deposit 1
+	err = oracle.EndBlocker(ctx, k)
+	require.NoError(err)
+
+	// check that deposit1 was removed
+	_, err = k.BridgeDepositQueue.Get(ctx, collections.Join((depositTimestamp), deposit1MetaId))
+	require.Error(err)
+
+	// check that deposit2 was not removed
+	_, err = k.BridgeDepositQueue.Get(ctx, collections.Join((depositTimestamp2), deposit2MetaId))
+	require.NoError(err)
+
+	// call endblock again to make sure its fine with <12 hr old report and deposit 2 is still in queue
+	err = oracle.EndBlocker(ctx, k)
+	require.NoError(err)
+	_, err = k.BridgeDepositQueue.Get(ctx, collections.Join((depositTimestamp2), deposit2MetaId))
+	require.NoError(err)
+
+	// put 2 >12 hr old deposits in
+	// create 2 deposits that can be claimed
+	depositId3 := uint64(3)
+	depositTimestamp3 := uint64(time.Now().Add(-13 * time.Hour).UnixMilli())
+	deposit3MetaId := uint64(3)
+	bridgeQueryDataString3 := "0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000095452424272696467650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000003"
+	bridgeQueryData3, _ := hex.DecodeString(bridgeQueryDataString3)
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp3, deposit3MetaId), bridgeQueryData3)
+	require.NoError(err)
+	depositId4 := uint64(4)
+	depositTimestamp4 := uint64(time.Now().Add(-14 * time.Hour).UnixMilli())
+	deposit4MetaId := uint64(4)
+	bridgeQueryDataString4 := "0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000095452424272696467650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000004"
+	bridgeQueryData4, _ := hex.DecodeString(bridgeQueryDataString4)
+	err = k.BridgeDepositQueue.Set(ctx, collections.Join(depositTimestamp4, deposit4MetaId), bridgeQueryData4)
+	require.NoError(err)
+
+	s.bridgeKeeper.On("ClaimDeposit", ctx, depositId4, depositTimestamp4).Return(nil).Once()
+
+	// end blocker should claim the oldest one (4)
+	err = oracle.EndBlocker(ctx, k)
+	require.NoError(err)
+
+	// check that deposit4 (oldest) was removed
+	_, err = k.BridgeDepositQueue.Get(ctx, collections.Join((depositTimestamp4), deposit4MetaId))
+	require.Error(err)
+
+	// check that deposit 3 wasnt removed yet
+	_, err = k.BridgeDepositQueue.Get(ctx, collections.Join((depositTimestamp3), deposit3MetaId))
+	require.NoError(err)
+
+	// claim 3
+	s.bridgeKeeper.On("ClaimDeposit", ctx, depositId3, depositTimestamp3).Return(nil).Once()
+	err = oracle.EndBlocker(ctx, k)
+	require.NoError(err)
+
+	// check that deposit 3 was removed now
+	_, err = k.BridgeDepositQueue.Get(ctx, collections.Join((depositTimestamp3), deposit3MetaId))
+	require.Error(err)
+
+	// nothing to claim, should be ok
+	err = oracle.EndBlocker(ctx, k)
+	require.NoError(err)
+
+	// 2 should still be in the queue
+	_, err = k.BridgeDepositQueue.Get(ctx, collections.Join((depositTimestamp2), deposit2MetaId))
+	require.NoError(err)
 }
 
 var spotSpec = registrytypes.DataSpec{

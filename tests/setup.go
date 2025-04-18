@@ -97,6 +97,7 @@ func AuthModule() configurator.ModuleOption {
 					{Account: "nft"},
 					{Account: "reporter"},
 					{Account: "tips_escrow_pool"},
+					{Account: "bridge", Permissions: []string{"minter"}},
 				},
 			}),
 		}
@@ -255,6 +256,7 @@ func (s *SharedSetup) SetupTest(t *testing.T) {
 		&s.Disputekeeper, &s.Registrykeeper, &s.Govkeeper, &s.distrKeeper, &s.Reporterkeeper)
 	require.NoError(t, err)
 	s.Ctx = sdk.UnwrapSDKContext(app.BaseApp.NewContextLegacy(false, tmproto.Header{Time: time.Now()}))
+	s.require.NotNil(s.Bridgekeeper)
 	s.Oraclekeeper.SetBridgeKeeper(s.Bridgekeeper)
 	s.require.NoError(err)
 

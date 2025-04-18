@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/tellor-io/layer/lib/metrics"
@@ -128,7 +129,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 }
 
 // SetAggregate increments the queryId's report index plus sets the timestamp and blockHeight and stores the aggregate report
-func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, queryData []byte) error {
+func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, queryData []byte, queryType string) error {
 	nonce, err := k.Nonces.Get(ctx, report.QueryId)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
@@ -144,6 +145,13 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, query
 	currentTimestamp := uint64(sdkCtx.BlockTime().UnixMilli())
 	report.Height = uint64(sdkCtx.BlockHeight())
 
+	// if bridge report, set in deposit queue
+	if strings.EqualFold(queryType, TRBBridgeQueryType) {
+		err = k.BridgeDepositQueue.Set(ctx, collections.Join(currentTimestamp, report.MetaId), queryData)
+		if err != nil {
+			return err
+		}
+	}
 	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"aggregate_report",
@@ -182,7 +190,7 @@ func (k Keeper) AggregateReport(ctx context.Context, id uint64, queryData []byte
 		MicroHeight:       microReport.BlockNumber,
 		MetaId:            id,
 	}
-	err = k.SetAggregate(ctx, aggregateReport, queryData)
+	err = k.SetAggregate(ctx, aggregateReport, queryData, microReport.QueryType)
 	if err != nil {
 		return types.Aggregate{}, false, err
 	}
