@@ -711,23 +711,6 @@ func GetTxHashFromExec(stdout []byte) (string, error) {
 	return output.TxHash, nil
 }
 
-// func CreateDataSpec(reportBlockWindow int, registrar string) (DataSpec, error) {
-// 	docHash := rand.Str(32)
-// 	spec := DataSpec{
-// 		DocumentHash:      docHash,
-// 		ResponseValueType: "uint256",
-// 		AbiComponents: []*registrytypes.ABIComponent{
-// 			{Name: "asset", FieldType: "string"},
-// 			{Name: "currency", FieldType: "string"},
-// 		},
-// 		AggregationMethod: "weighted-median",
-// 		Registrar:         registrar,
-// 		ReportBlockWindow: uint64(reportBlockWindow),
-// 	}
-
-// 	return spec, nil
-// }
-
 func QueryTips(queryData string, ctx context.Context, validatorI *cosmos.ChainNode) (CurrentTipsResponse, error) {
 	availableTips, _, err := validatorI.ExecQuery(ctx, "oracle", "get-current-tip", queryData)
 	if err != nil {

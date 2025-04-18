@@ -5,16 +5,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/tellor-io/layer/lib/metrics"
 	layer "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
-	regTypes "github.com/tellor-io/layer/x/registry/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
@@ -131,7 +129,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 }
 
 // SetAggregate increments the queryId's report index plus sets the timestamp and blockHeight and stores the aggregate report
-func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, queryData []byte) error {
+func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, queryData []byte, queryType string) error {
 	nonce, err := k.Nonces.Get(ctx, report.QueryId)
 	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
@@ -147,13 +145,8 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, query
 	currentTimestamp := uint64(sdkCtx.BlockTime().UnixMilli())
 	report.Height = uint64(sdkCtx.BlockHeight())
 
-	// decode query data to see if it is a bridge report
-	queryType, _, err := regTypes.DecodeQueryType(queryData)
-	if err != nil {
-		return status.Error(codes.InvalidArgument, fmt.Sprintf("failed to decode query type: %v", err))
-	}
 	// if bridge report, set in deposit queue
-	if queryType == TRBBridgeQueryType {
+	if strings.EqualFold(queryType, TRBBridgeQueryType) {
 		err = k.BridgeDepositQueue.Set(ctx, collections.Join(currentTimestamp, report.MetaId), queryData)
 		if err != nil {
 			return err
@@ -197,7 +190,7 @@ func (k Keeper) AggregateReport(ctx context.Context, id uint64, queryData []byte
 		MicroHeight:       microReport.BlockNumber,
 		MetaId:            id,
 	}
-	err = k.SetAggregate(ctx, aggregateReport, queryData)
+	err = k.SetAggregate(ctx, aggregateReport, queryData, microReport.QueryType)
 	if err != nil {
 		return types.Aggregate{}, false, err
 	}
