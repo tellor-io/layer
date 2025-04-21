@@ -17963,7 +17963,7 @@ func (x *fastReflection_QueryGetCycleListRequest) ProtoMethods() *protoiface.Met
 var _ protoreflect.List = (*_QueryGetCycleListResponse_1_list)(nil)
 
 type _QueryGetCycleListResponse_1_list struct {
-	list *[][]byte
+	list *[]string
 }
 
 func (x *_QueryGetCycleListResponse_1_list) Len() int {
@@ -17974,17 +17974,17 @@ func (x *_QueryGetCycleListResponse_1_list) Len() int {
 }
 
 func (x *_QueryGetCycleListResponse_1_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfBytes((*x.list)[i])
+	return protoreflect.ValueOfString((*x.list)[i])
 }
 
 func (x *_QueryGetCycleListResponse_1_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Bytes()
+	valueUnwrapped := value.String()
 	concreteValue := valueUnwrapped
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_QueryGetCycleListResponse_1_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Bytes()
+	valueUnwrapped := value.String()
 	concreteValue := valueUnwrapped
 	*x.list = append(*x.list, concreteValue)
 }
@@ -17998,8 +17998,8 @@ func (x *_QueryGetCycleListResponse_1_list) Truncate(n int) {
 }
 
 func (x *_QueryGetCycleListResponse_1_list) NewElement() protoreflect.Value {
-	var v []byte
-	return protoreflect.ValueOfBytes(v)
+	v := ""
+	return protoreflect.ValueOfString(v)
 }
 
 func (x *_QueryGetCycleListResponse_1_list) IsValid() bool {
@@ -18191,7 +18191,7 @@ func (x *fastReflection_QueryGetCycleListResponse) Mutable(fd protoreflect.Field
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetCycleListResponse.cycle_list":
 		if x.CycleList == nil {
-			x.CycleList = [][]byte{}
+			x.CycleList = []string{}
 		}
 		value := &_QueryGetCycleListResponse_1_list{list: &x.CycleList}
 		return protoreflect.ValueOfList(value)
@@ -18209,7 +18209,7 @@ func (x *fastReflection_QueryGetCycleListResponse) Mutable(fd protoreflect.Field
 func (x *fastReflection_QueryGetCycleListResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.oracle.QueryGetCycleListResponse.cycle_list":
-		list := [][]byte{}
+		list := []string{}
 		return protoreflect.ValueOfList(&_QueryGetCycleListResponse_1_list{list: &list})
 	default:
 		if fd.IsExtension() {
@@ -18281,8 +18281,8 @@ func (x *fastReflection_QueryGetCycleListResponse) ProtoMethods() *protoiface.Me
 		var l int
 		_ = l
 		if len(x.CycleList) > 0 {
-			for _, b := range x.CycleList {
-				l = len(b)
+			for _, s := range x.CycleList {
+				l = len(s)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
@@ -18377,7 +18377,7 @@ func (x *fastReflection_QueryGetCycleListResponse) ProtoMethods() *protoiface.Me
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CycleList", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -18387,23 +18387,23 @@ func (x *fastReflection_QueryGetCycleListResponse) ProtoMethods() *protoiface.Me
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.CycleList = append(x.CycleList, make([]byte, postIndex-iNdEx))
-				copy(x.CycleList[len(x.CycleList)-1], dAtA[iNdEx:postIndex])
+				x.CycleList = append(x.CycleList, string(dAtA[iNdEx:postIndex]))
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -22792,7 +22792,7 @@ type QueryGetCycleListResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// cycle_list defines the cycle list.
-	CycleList [][]byte `protobuf:"bytes,1,rep,name=cycle_list,json=cycleList,proto3" json:"cycle_list,omitempty"`
+	CycleList []string `protobuf:"bytes,1,rep,name=cycle_list,json=cycleList,proto3" json:"cycle_list,omitempty"`
 }
 
 func (x *QueryGetCycleListResponse) Reset() {
@@ -22815,7 +22815,7 @@ func (*QueryGetCycleListResponse) Descriptor() ([]byte, []int) {
 	return file_layer_oracle_query_proto_rawDescGZIP(), []int{39}
 }
 
-func (x *QueryGetCycleListResponse) GetCycleList() [][]byte {
+func (x *QueryGetCycleListResponse) GetCycleList() []string {
 	if x != nil {
 		return x.CycleList
 	}
@@ -23339,7 +23339,7 @@ var file_layer_oracle_query_proto_rawDesc = []byte{
 	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x3a, 0x0a, 0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47,
 	0x65, 0x74, 0x43, 0x79, 0x63, 0x6c, 0x65, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
 	0x6e, 0x73, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x5f, 0x6c, 0x69, 0x73,
-	0x74, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0c, 0x52, 0x09, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x4c, 0x69,
+	0x74, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x09, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x4c, 0x69,
 	0x73, 0x74, 0x22, 0x59, 0x0a, 0x1e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65, 0x74, 0x54, 0x69,
 	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x52, 0x65, 0x71,
 	0x75, 0x65, 0x73, 0x74, 0x12, 0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64,

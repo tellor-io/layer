@@ -380,7 +380,7 @@ message QueryGetCycleListRequest {}
 // QueryGetCycleListResponse is the response type for the Query/GetCycleList RPC method.
 message QueryGetCycleListResponse {
   // cycle_list defines the cycle list.
-  repeated bytes cycle_list = 1;
+  repeated string cycle_list = 1;
 }
 // QueryGetTimestampBeforeRequest is the request type for the Query/GetTimestampBefore RPC method.
 message QueryGetTimestampBeforeRequest {
