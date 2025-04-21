@@ -3,9 +3,11 @@ package reporter
 import (
 	"fmt"
 
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -63,62 +65,182 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 	genesis.Params = params
 
-	// iterSelectorTips, err := k.SelectorTips.IterateRaw(ctx, nil, nil, collections.OrderDescending)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// selectorTips := make([]*types.SelectorTipsStateEntry, 0)
-	// for ; iterSelectorTips.Valid(); iterSelectorTips.Next() {
-	// 	selector_addr, err := iterSelectorTips.Key()
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-
-	// 	tips, err := iterSelectorTips.Value()
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	selectorTips = append(selectorTips, &types.SelectorTipsStateEntry{SelectorAddress: selector_addr, Tips: tips})
-	// }
-	// genesis.SelectorTips = selectorTips
-
-	// iterDisputedDelAmt, err := k.DisputedDelegationAmounts.IterateRaw(ctx, nil, nil, collections.OrderDescending)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// disputedDelAmts := make([]*types.DisputedDelegationAmountStateEntry, 0)
-	// for ; iterDisputedDelAmt.Valid(); iterDisputedDelAmt.Next() {
-	// 	disputeHashId, err := iterDisputedDelAmt.Key()
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-
-	// 	delAmount, err := iterDisputedDelAmt.Value()
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	disputedDelAmts = append(disputedDelAmts, &types.DisputedDelegationAmountStateEntry{HashId: disputeHashId, DelegationAmount: &delAmount})
-	// }
-	// genesis.DisputedDelegationAmounts = disputedDelAmts
-
-	// iterFeePaidFromStake, err := k.FeePaidFromStake.IterateRaw(ctx, nil, nil, collections.OrderDescending)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// feePaidFromStake := make([]*types.FeePaidFromStakeStateEntry, 0)
-	// for ; iterFeePaidFromStake.Valid(); iterFeePaidFromStake.Next() {
-	// 	disputeHashId, err := iterFeePaidFromStake.Key()
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-
-	// 	delAmount, err := iterFeePaidFromStake.Value()
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	feePaidFromStake = append(feePaidFromStake, &types.FeePaidFromStakeStateEntry{HashId: disputeHashId, DelegationAmount: &delAmount})
-	// }
-	// genesis.FeePaidFromStake = feePaidFromStake
+	exportModuleData(ctx, k)
 	// this line is used by starport scaffolding # genesis/module/export
 	return genesis
+}
+
+type ReporterStateEntry struct {
+	ReporterAddr []byte
+	Reporter     types.OracleReporter
+}
+
+type SelectorStateEntry struct {
+	SelectorAddr []byte
+	Selector     types.Selection
+}
+
+func exportModuleData(ctx sdk.Context, k keeper.Keeper) {
+	writer, err := utils.NewModuleStateWriter("reporter_module_state.json")
+	if err != nil {
+		panic(err)
+	}
+
+	iterReporters, err := k.Reporters.IterateRaw(ctx, nil, nil, collections.OrderDescending)
+	if err != nil {
+		panic(err)
+	}
+	defer iterReporters.Close()
+	err = writer.StartArraySection("reporters", false)
+	if err != nil {
+		panic(err)
+	}
+	numReporters := 0
+	for ; iterReporters.Valid(); iterReporters.Next() {
+		reporter_addr, err := iterReporters.Key()
+		if err != nil {
+			panic(err)
+		}
+		reporter, err := iterReporters.Value()
+		if err != nil {
+			panic(err)
+		}
+		err = writer.WriteArrayItem(ReporterStateEntry{
+			ReporterAddr: reporter_addr,
+			Reporter:     reporter,
+		})
+		if err != nil {
+			panic(err)
+		}
+		numReporters++
+	}
+	err = writer.EndArraySection(numReporters)
+	if err != nil {
+		panic(err)
+	}
+
+	iterSelectors, err := k.Selectors.IterateRaw(ctx, nil, nil, collections.OrderDescending)
+	if err != nil {
+		panic(err)
+	}
+	defer iterSelectors.Close()
+	err = writer.StartArraySection("selectors", false)
+	if err != nil {
+		panic(err)
+	}
+	numSelectors := 0
+	for ; iterSelectors.Valid(); iterSelectors.Next() {
+		selector_addr, err := iterSelectors.Key()
+		if err != nil {
+			panic(err)
+		}
+		selector, err := iterSelectors.Value()
+		if err != nil {
+			panic(err)
+		}
+		err = writer.WriteArrayItem(SelectorStateEntry{
+			SelectorAddr: selector_addr,
+			Selector:     selector,
+		})
+		if err != nil {
+			panic(err)
+		}
+		numSelectors++
+	}
+	err = writer.EndArraySection(numSelectors)
+	if err != nil {
+		panic(err)
+	}
+
+	iterSelectorTips, err := k.SelectorTips.IterateRaw(ctx, nil, nil, collections.OrderDescending)
+	if err != nil {
+		panic(err)
+	}
+	defer iterSelectorTips.Close()
+	err = writer.StartArraySection("selector_tips", false)
+	if err != nil {
+		panic(err)
+	}
+	numSelectorTips := 0
+	for ; iterSelectorTips.Valid(); iterSelectorTips.Next() {
+		selector_addr, err := iterSelectorTips.Key()
+		if err != nil {
+			panic(err)
+		}
+
+		tips, err := iterSelectorTips.Value()
+		if err != nil {
+			panic(err)
+		}
+		err = writer.WriteArrayItem(types.SelectorTipsStateEntry{SelectorAddress: selector_addr, Tips: tips})
+		if err != nil {
+			panic(err)
+		}
+		numSelectorTips++
+	}
+	err = writer.EndArraySection(numSelectorTips)
+	if err != nil {
+		panic(err)
+	}
+
+	iterDisputedDelAmt, err := k.DisputedDelegationAmounts.IterateRaw(ctx, nil, nil, collections.OrderDescending)
+	if err != nil {
+		panic(err)
+	}
+	defer iterDisputedDelAmt.Close()
+	err = writer.StartArraySection("disputed_delegation_amounts", false)
+	if err != nil {
+		panic(err)
+	}
+	numDisputedDelAmts := 0
+	for ; iterDisputedDelAmt.Valid(); iterDisputedDelAmt.Next() {
+		disputeHashId, err := iterDisputedDelAmt.Key()
+		if err != nil {
+			panic(err)
+		}
+
+		delAmount, err := iterDisputedDelAmt.Value()
+		if err != nil {
+			panic(err)
+		}
+		err = writer.WriteArrayItem(types.DisputedDelegationAmountStateEntry{HashId: disputeHashId, DelegationAmount: &delAmount})
+		if err != nil {
+			panic(err)
+		}
+		numDisputedDelAmts++
+	}
+	err = writer.EndArraySection(numDisputedDelAmts)
+	if err != nil {
+		panic(err)
+	}
+	iterFeePaidFromStake, err := k.FeePaidFromStake.IterateRaw(ctx, nil, nil, collections.OrderDescending)
+	if err != nil {
+		panic(err)
+	}
+	defer iterFeePaidFromStake.Close()
+	err = writer.StartArraySection("fee_paid_from_stake", false)
+	if err != nil {
+		panic(err)
+	}
+	numFeePaidFromStake := 0
+	for ; iterFeePaidFromStake.Valid(); iterFeePaidFromStake.Next() {
+		disputeHashId, err := iterFeePaidFromStake.Key()
+		if err != nil {
+			panic(err)
+		}
+
+		delAmount, err := iterFeePaidFromStake.Value()
+		if err != nil {
+			panic(err)
+		}
+		err = writer.WriteArrayItem(types.FeePaidFromStakeStateEntry{HashId: disputeHashId, DelegationAmount: &delAmount})
+		if err != nil {
+			panic(err)
+		}
+		numFeePaidFromStake++
+	}
+	err = writer.EndArraySection(numFeePaidFromStake)
+	if err != nil {
+		panic(err)
+	}
 }

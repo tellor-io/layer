@@ -27,7 +27,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	if sdkCtx.BlockHeight() > 1 {
-		k.Logger(ctx).Info("setting valdiator checkpoint in init genesis")
 		if err := k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{Checkpoint: genState.ValidatorCheckpoint}); err != nil {
 			panic(err)
 		}
@@ -39,10 +38,8 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		if err := k.LatestCheckpointIdx.Set(ctx, types.CheckpointIdx{Index: genState.LatestValidatorCheckpointIdx}); err != nil {
 			panic(err)
 		}
-		k.Logger(ctx).Info("Latest Validator checkpoint idx from genesis: ", types.CheckpointIdx{Index: genState.LatestValidatorCheckpointIdx})
 
 		for _, data := range genState.OperatorToEvmAddressMap {
-			k.Logger(ctx).Info("Inside of OperatorToEvmAddressMap for loop for some reason")
 			if err := k.OperatorToEVMAddressMap.Set(ctx, data.OperatorAddress, types.EVMAddress{EVMAddress: data.EvmAddress}); err != nil {
 				panic(err)
 			}
