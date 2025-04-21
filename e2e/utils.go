@@ -177,6 +177,54 @@ type Metadata struct {
 	VoterReward       string   `json:"voter_reward"`
 }
 
+type MetaData2 struct {
+	// unique dispute hash identifier
+	HashId string `protobuf:"bytes,1,opt,name=hash_id,json=hashId,proto3" json:"hash_id,omitempty"`
+	// current dispute id
+	DisputeId string `protobuf:"varint,2,opt,name=dispute_id,json=disputeId,proto3" json:"dispute_id,omitempty"`
+	// dispute severity level
+	DisputeCategory int `protobuf:"varint,3,opt,name=dispute_category,json=disputeCategory,proto3,enum=layer.dispute.DisputeCategory" json:"dispute_category,omitempty"`
+	// cost to start dispute
+	DisputeFee string `protobuf:"bytes,4,opt,name=dispute_fee,json=disputeFee,proto3,customtype=cosmossdk.io/math.Int" json:"dispute_fee"`
+	// current dispute status
+	DisputeStatus int `protobuf:"varint,5,opt,name=dispute_status,json=disputeStatus,proto3,enum=layer.dispute.DisputeStatus" json:"dispute_status,omitempty"`
+	// start time of the dispute that begins after dispute fee is fully paid
+	DisputeStartTime string `protobuf:"bytes,6,opt,name=dispute_start_time,json=disputeStartTime,proto3,stdtime" json:"dispute_start_time"`
+	// end time that the dispute stop taking votes and creating new rounds
+	DisputeEndTime string `protobuf:"bytes,7,opt,name=dispute_end_time,json=disputeEndTime,proto3,stdtime" json:"dispute_end_time"`
+	// height of the block that started the dispute
+	DisputeStartBlock string `protobuf:"varint,8,opt,name=dispute_start_block,json=disputeStartBlock,proto3" json:"dispute_start_block,omitempty"`
+	// current dispute round
+	DisputeRound string `protobuf:"varint,9,opt,name=dispute_round,json=disputeRound,proto3" json:"dispute_round,omitempty"`
+	// reporter's slashed amount
+	SlashAmount string `protobuf:"bytes,10,opt,name=slash_amount,json=slashAmount,proto3,customtype=cosmossdk.io/math.Int" json:"slash_amount"`
+	// burn amount that will be divided in half and paid to voters and the other half burned
+	BurnAmount string `protobuf:"bytes,11,opt,name=burn_amount,json=burnAmount,proto3,customtype=cosmossdk.io/math.Int" json:"burn_amount"`
+	// initial single report evidence to be disputed
+	InitialEvidence Evidence `protobuf:"bytes,12,opt,name=initial_evidence,json=initialEvidence,proto3" json:"initial_evidence"`
+	// fee payers that were involved in paying the dispute fee in order to start the dispute
+	// total fee paid tracked to know if dispute fee is fully paid to start dispute
+	FeeTotal string `protobuf:"bytes,13,opt,name=fee_total,json=feeTotal,proto3,customtype=cosmossdk.io/math.Int" json:"fee_total"`
+	// list of dispute ids that preceded before this current round began
+	PrevDisputeIds []string `protobuf:"varint,14,rep,packed,name=prev_dispute_ids,json=prevDisputeIds,proto3" json:"prev_dispute_ids,omitempty"`
+	// block number when this specific dispute was created
+	BlockNumber        string     `protobuf:"varint,15,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
+	Open               bool       `protobuf:"varint,16,opt,name=open,proto3" json:"open,omitempty"`
+	AdditionalEvidence []Evidence `protobuf:"bytes,17,rep,name=additional_evidence,json=additionalEvidence,proto3" json:"additional_evidence,omitempty"`
+	// total tokens allocated to voters
+	VoterReward string `protobuf:"bytes,18,opt,name=voter_reward,json=voterReward,proto3,customtype=cosmossdk.io/math.Int" json:"voter_reward"`
+	// pending execution is true if the dispute has reached quorum and is pending execution.
+	// however, if a new dispute round begins, this is set to false again
+	PendingExecution bool `protobuf:"varint,19,opt,name=pending_execution,json=pendingExecution,proto3" json:"pending_execution,omitempty"`
+}
+
+type Disputes2 struct {
+	Disputes []struct {
+		DisputeID string    `json:"disputeId"`
+		Metadata  MetaData2 `json:"metadata"`
+	} `json:"disputes"`
+}
+
 type Evidence struct {
 	Reporter        string `json:"reporter"`
 	Power           string `json:"power"`
