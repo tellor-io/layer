@@ -168,8 +168,8 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 			voteCountsByGroup = append(voteCountsByGroup, &types.VoteCountsByGroupStateEntry{DisputeId: dispute.DisputeId, Users: &voteCountByGroup.Users, Reporters: &voteCountByGroup.Reporters, Team: &voteCountByGroup.Team})
 
 			rngReportersDel := (&collections.PairRange[[]byte, uint64]{}).
-				StartInclusive(uint64(3)).
-				EndInclusive(uint64(4))
+				StartInclusive(dispute.DisputeId).
+				EndInclusive(dispute.DisputeId + 1)
 			iterReportersDelVoted, err := k.ReportersWithDelegatorsVotedBefore.Iterate(ctx, rngReportersDel)
 			if err != nil {
 				panic(err)
