@@ -371,7 +371,7 @@ message QueryReportedIdsByReporterResponse {
   // ids defines the reported ids.
   repeated uint64 ids = 1;
   // query_ids defines the query ids.
-  repeated bytes query_ids =2;
+  repeated string query_ids = 2;
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }

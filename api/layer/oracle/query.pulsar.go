@@ -16914,7 +16914,7 @@ func (x *_QueryReportedIdsByReporterResponse_1_list) IsValid() bool {
 var _ protoreflect.List = (*_QueryReportedIdsByReporterResponse_2_list)(nil)
 
 type _QueryReportedIdsByReporterResponse_2_list struct {
-	list *[][]byte
+	list *[]string
 }
 
 func (x *_QueryReportedIdsByReporterResponse_2_list) Len() int {
@@ -16925,17 +16925,17 @@ func (x *_QueryReportedIdsByReporterResponse_2_list) Len() int {
 }
 
 func (x *_QueryReportedIdsByReporterResponse_2_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfBytes((*x.list)[i])
+	return protoreflect.ValueOfString((*x.list)[i])
 }
 
 func (x *_QueryReportedIdsByReporterResponse_2_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Bytes()
+	valueUnwrapped := value.String()
 	concreteValue := valueUnwrapped
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_QueryReportedIdsByReporterResponse_2_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Bytes()
+	valueUnwrapped := value.String()
 	concreteValue := valueUnwrapped
 	*x.list = append(*x.list, concreteValue)
 }
@@ -16949,8 +16949,8 @@ func (x *_QueryReportedIdsByReporterResponse_2_list) Truncate(n int) {
 }
 
 func (x *_QueryReportedIdsByReporterResponse_2_list) NewElement() protoreflect.Value {
-	var v []byte
-	return protoreflect.ValueOfBytes(v)
+	v := ""
+	return protoreflect.ValueOfString(v)
 }
 
 func (x *_QueryReportedIdsByReporterResponse_2_list) IsValid() bool {
@@ -17187,7 +17187,7 @@ func (x *fastReflection_QueryReportedIdsByReporterResponse) Mutable(fd protorefl
 		return protoreflect.ValueOfList(value)
 	case "layer.oracle.QueryReportedIdsByReporterResponse.query_ids":
 		if x.QueryIds == nil {
-			x.QueryIds = [][]byte{}
+			x.QueryIds = []string{}
 		}
 		value := &_QueryReportedIdsByReporterResponse_2_list{list: &x.QueryIds}
 		return protoreflect.ValueOfList(value)
@@ -17213,7 +17213,7 @@ func (x *fastReflection_QueryReportedIdsByReporterResponse) NewField(fd protoref
 		list := []uint64{}
 		return protoreflect.ValueOfList(&_QueryReportedIdsByReporterResponse_1_list{list: &list})
 	case "layer.oracle.QueryReportedIdsByReporterResponse.query_ids":
-		list := [][]byte{}
+		list := []string{}
 		return protoreflect.ValueOfList(&_QueryReportedIdsByReporterResponse_2_list{list: &list})
 	case "layer.oracle.QueryReportedIdsByReporterResponse.pagination":
 		m := new(v1beta1.PageResponse)
@@ -17295,8 +17295,8 @@ func (x *fastReflection_QueryReportedIdsByReporterResponse) ProtoMethods() *prot
 			n += 1 + runtime.Sov(uint64(l)) + l
 		}
 		if len(x.QueryIds) > 0 {
-			for _, b := range x.QueryIds {
-				l = len(b)
+			for _, s := range x.QueryIds {
+				l = len(s)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
@@ -17505,7 +17505,7 @@ func (x *fastReflection_QueryReportedIdsByReporterResponse) ProtoMethods() *prot
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryIds", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -17515,23 +17515,23 @@ func (x *fastReflection_QueryReportedIdsByReporterResponse) ProtoMethods() *prot
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryIds = append(x.QueryIds, make([]byte, postIndex-iNdEx))
-				copy(x.QueryIds[len(x.QueryIds)-1], dAtA[iNdEx:postIndex])
+				x.QueryIds = append(x.QueryIds, string(dAtA[iNdEx:postIndex]))
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
@@ -22712,7 +22712,7 @@ type QueryReportedIdsByReporterResponse struct {
 	// ids defines the reported ids.
 	Ids []uint64 `protobuf:"varint,1,rep,packed,name=ids,proto3" json:"ids,omitempty"`
 	// query_ids defines the query ids.
-	QueryIds [][]byte `protobuf:"bytes,2,rep,name=query_ids,json=queryIds,proto3" json:"query_ids,omitempty"`
+	QueryIds []string `protobuf:"bytes,2,rep,name=query_ids,json=queryIds,proto3" json:"query_ids,omitempty"`
 	// pagination defines the pagination in the response.
 	Pagination *v1beta1.PageResponse `protobuf:"bytes,3,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
@@ -22744,7 +22744,7 @@ func (x *QueryReportedIdsByReporterResponse) GetIds() []uint64 {
 	return nil
 }
 
-func (x *QueryReportedIdsByReporterResponse) GetQueryIds() [][]byte {
+func (x *QueryReportedIdsByReporterResponse) GetQueryIds() []string {
 	if x != nil {
 		return x.QueryIds
 	}
@@ -23329,7 +23329,7 @@ var file_layer_oracle_query_proto_rawDesc = []byte{
 	0x42, 0x79, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
 	0x73, 0x65, 0x12, 0x10, 0x0a, 0x03, 0x69, 0x64, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x04, 0x52,
 	0x03, 0x69, 0x64, 0x73, 0x12, 0x1b, 0x0a, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64,
-	0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0c, 0x52, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64,
+	0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64,
 	0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18,
 	0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
 	0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,

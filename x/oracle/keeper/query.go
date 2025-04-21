@@ -149,7 +149,12 @@ func (k Querier) ReportedIdsByReporter(ctx context.Context, req *types.QueryRepo
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryReportedIdsByReporterResponse{Ids: ids, QueryIds: queryIds, Pagination: pageRes}, nil
+	queryIdsStr := make([]string, len(queryIds))
+	for i, queryId := range queryIds {
+		queryIdsStr[i] = hex.EncodeToString(queryId)
+	}
+
+	return &types.QueryReportedIdsByReporterResponse{Ids: ids, QueryIds: queryIdsStr, Pagination: pageRes}, nil
 }
 
 // gets the timestamp before a given timestamp by query id
