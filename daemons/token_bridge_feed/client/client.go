@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"math/big"
@@ -24,21 +23,33 @@ import (
 )
 
 type Client struct {
-	// Add necessary fields
-	lastReportedDepositId *big.Int
-	logger                log.Logger
-	tokenDepositsCache    *tokenbridgetypes.DepositReports
-	tokenBridgeTipsCache  *tokenbridgetipstypes.DepositTips
-	daemonStartup         sync.WaitGroup
-
+	lastReportedDepositId    *big.Int
+	logger                   log.Logger
+	tokenDepositsCache       *tokenbridgetypes.DepositReports
+	tokenBridgeTipsCache     *tokenbridgetipstypes.DepositTips
+	daemonStartup            sync.WaitGroup
 	runningSubtasksWaitGroup sync.WaitGroup
+	tickers                  []*time.Ticker
+	stops                    []chan bool
 
-	tickers []*time.Ticker
+	primaryEthClient       *ethclient.Client
+	fallbackEthClient      *ethclient.Client
+	primaryBridgeContract  *tokenbridge.TokenBridge
+	fallbackBridgeContract *tokenbridge.TokenBridge
+}
 
-	stops []chan bool
+type DepositReceipt struct {
+	DepositId   *big.Int
+	Sender      common.Address
+	Recipient   string
+	Amount      *big.Int
+	Tip         *big.Int
+	BlockHeight *big.Int
+}
 
-	ethClients      []*ethclient.Client
-	bridgeContracts []*tokenbridge.TokenBridge
+type DepositReport struct {
+	QueryData []byte
+	Value     string
 }
 
 // Struct to unmarshal the JSON data
@@ -210,20 +221,6 @@ func (c *Client) DecodeQueryData(queryData []byte) (string, *big.Int, error) {
 	return queryType, depositId, nil
 }
 
-type DepositReceipt struct {
-	DepositId   *big.Int
-	Sender      common.Address
-	Recipient   string
-	Amount      *big.Int
-	Tip         *big.Int
-	BlockHeight *big.Int
-}
-
-type DepositReport struct {
-	QueryData []byte
-	Value     string
-}
-
 func (c *Client) QueryAPI(urlStr string) ([]byte, error) {
 	c.logger.Info("querying token_bridge_client api")
 	parsedUrl, err := url.ParseRequestURI(urlStr)
@@ -248,42 +245,52 @@ func (c *Client) QueryAPI(urlStr string) ([]byte, error) {
 	return body, nil
 }
 
+func (c *Client) getEthRpcUrls() (string, string, error) {
+	primaryUrl := os.Getenv("ETH_RPC_URL_PRIMARY")
+	if primaryUrl == "" {
+		return "", "", fmt.Errorf("ETH_RPC_URL_PRIMARY not set")
+	}
+
+	fallbackUrl := os.Getenv("ETH_RPC_URL_FALLBACK")
+	if fallbackUrl == "" {
+		return "", "", fmt.Errorf("ETH_RPC_URL_FALLBACK not set")
+	}
+
+	return strings.TrimSpace(primaryUrl), strings.TrimSpace(fallbackUrl), nil
+}
+
 func (c *Client) InitializeDeposits() error {
-	urls, err := c.getEthRpcUrls()
+	primaryUrl, fallbackUrl, err := c.getEthRpcUrls()
 	if err != nil {
 		return fmt.Errorf("failed to get ETH RPC urls: %w", err)
 	}
 
-	// Initialize slices
-	c.ethClients = make([]*ethclient.Client, len(urls))
-	c.bridgeContracts = make([]*tokenbridge.TokenBridge, len(urls))
+	// Connect to primary endpoint
+	c.primaryEthClient, err = ethclient.Dial(primaryUrl)
+	if err != nil {
+		return fmt.Errorf("failed to connect to primary RPC endpoint: %w", err)
+	}
 
-	// Connect to each RPC endpoint
-	for i, url := range urls {
-		for retries := 0; retries < 3; retries++ {
-			client, err := ethclient.Dial(url)
-			if err != nil {
-				c.logger.Error("Failed to connect to Ethereum client, retrying...",
-					"url", url, "attempt", retries+1, "error", err)
-				time.Sleep(time.Second * 5)
-				continue
-			}
-			c.ethClients[i] = client
-			break
-		}
-		if c.ethClients[i] == nil {
-			return fmt.Errorf("failed to connect to RPC endpoint: %s", url)
-		}
+	// Connect to fallback endpoint
+	c.fallbackEthClient, err = ethclient.Dial(fallbackUrl)
+	if err != nil {
+		return fmt.Errorf("failed to connect to fallback RPC endpoint: %w", err)
+	}
 
-		contractAddress, err := c.getTokenBridgeContractAddress()
-		if err != nil {
-			return fmt.Errorf("failed to get token bridge contract address: %w", err)
-		}
+	contractAddress, err := c.getTokenBridgeContractAddress()
+	if err != nil {
+		return fmt.Errorf("failed to get token bridge contract address: %w", err)
+	}
 
-		c.bridgeContracts[i], err = tokenbridge.NewTokenBridge(contractAddress, c.ethClients[i])
-		if err != nil {
-			return fmt.Errorf("failed to instantiate TokenBridge contract for endpoint %s: %w", url, err)
-		}
+	// Initialize contracts
+	c.primaryBridgeContract, err = tokenbridge.NewTokenBridge(contractAddress, c.primaryEthClient)
+	if err != nil {
+		return fmt.Errorf("failed to instantiate primary TokenBridge contract: %w", err)
+	}
+
+	c.fallbackBridgeContract, err = tokenbridge.NewTokenBridge(contractAddress, c.fallbackEthClient)
+	if err != nil {
+		return fmt.Errorf("failed to instantiate fallback TokenBridge contract: %w", err)
 	}
 
 	latestDepositId, err := c.QueryCurrentDepositId()
@@ -292,7 +299,6 @@ func (c *Client) InitializeDeposits() error {
 	}
 
 	c.lastReportedDepositId = latestDepositId
-
 	return nil
 }
 
@@ -364,45 +370,19 @@ func (c *Client) QueryTokenBridgeContract() error {
 }
 
 func (c *Client) CheckForFinality(blockHeight *big.Int) (bool, error) {
-	// Query current block height from all RPCs and get majority
-	var results []*big.Int
-
-	for _, client := range c.ethClients {
-		currentBlock, err := client.BlockNumber(context.Background())
+	// Try primary first
+	currentBlock, err := c.primaryEthClient.BlockNumber(context.Background())
+	if err != nil {
+		c.logger.Error("Failed to query primary client, trying fallback", "error", err)
+		// Try fallback
+		currentBlock, err = c.fallbackEthClient.BlockNumber(context.Background())
 		if err != nil {
-			c.logger.Error("Failed to query current block number", "error", err)
-			continue
-		}
-		results = append(results, new(big.Int).SetUint64(currentBlock))
-	}
-
-	if len(results) < len(c.ethClients)/2+1 {
-		return false, fmt.Errorf("failed to get majority consensus: insufficient responses")
-	}
-
-	// Find the majority value
-	counts := make(map[string]int)
-	for _, result := range results {
-		counts[result.String()]++
-	}
-
-	var majorityValue *big.Int
-	majorityCount := 0
-	for valueStr, count := range counts {
-		if count > majorityCount {
-			majorityCount = count
-			value, _ := new(big.Int).SetString(valueStr, 10)
-			majorityValue = value
+			return false, fmt.Errorf("failed to query block number from both endpoints: %w", err)
 		}
 	}
 
-	// Ensure we have a majority
-	if majorityCount <= len(c.ethClients)/2 {
-		return false, fmt.Errorf("no majority consensus reached")
-	}
-
-	// Check if the deposit block height is at least 100 blocks behind current height
-	return majorityValue.Sub(majorityValue, blockHeight).Cmp(big.NewInt(100)) >= 0, nil
+	currentBlockBigInt := new(big.Int).SetUint64(currentBlock)
+	return currentBlockBigInt.Sub(currentBlockBigInt, blockHeight).Cmp(big.NewInt(100)) >= 0, nil
 }
 
 func (c *Client) EncodeQueryData(depositReceipt DepositReceipt) ([]byte, error) {
@@ -493,148 +473,82 @@ func (c *Client) getTokenBridgeContractAddress() (common.Address, error) {
 
 // Add new helper function for reconnection
 func (c *Client) reconnectEthClient() error {
-	urls, err := c.getEthRpcUrls()
+	primaryUrl, fallbackUrl, err := c.getEthRpcUrls()
 	if err != nil {
 		return fmt.Errorf("failed to get ETH RPC urls: %w", err)
 	}
 
-	for i, url := range urls {
-		// Close existing client if it exists
-		if c.ethClients[i] != nil {
-			c.ethClients[i].Close()
-		}
+	// Close existing clients
+	if c.primaryEthClient != nil {
+		c.primaryEthClient.Close()
+	}
+	if c.fallbackEthClient != nil {
+		c.fallbackEthClient.Close()
+	}
 
-		client, err := ethclient.Dial(url)
-		if err != nil {
-			c.logger.Error("Failed to reconnect to Ethereum client",
-				"url", url, "error", err)
-			continue
-		}
-		c.ethClients[i] = client
+	// Reconnect primary
+	c.primaryEthClient, err = ethclient.Dial(primaryUrl)
+	if err != nil {
+		return fmt.Errorf("failed to reconnect to primary endpoint: %w", err)
+	}
 
-		contractAddress, err := c.getTokenBridgeContractAddress()
-		if err != nil {
-			return fmt.Errorf("failed to get token bridge contract address: %w", err)
-		}
+	// Reconnect fallback
+	c.fallbackEthClient, err = ethclient.Dial(fallbackUrl)
+	if err != nil {
+		return fmt.Errorf("failed to reconnect to fallback endpoint: %w", err)
+	}
 
-		c.bridgeContracts[i], err = tokenbridge.NewTokenBridge(contractAddress, client)
-		if err != nil {
-			return fmt.Errorf("failed to reinstantiate TokenBridge contract: %w", err)
-		}
+	contractAddress, err := c.getTokenBridgeContractAddress()
+	if err != nil {
+		return fmt.Errorf("failed to get token bridge contract address: %w", err)
+	}
+
+	// Reinitialize contracts
+	c.primaryBridgeContract, err = tokenbridge.NewTokenBridge(contractAddress, c.primaryEthClient)
+	if err != nil {
+		return fmt.Errorf("failed to reinstantiate primary TokenBridge contract: %w", err)
+	}
+
+	c.fallbackBridgeContract, err = tokenbridge.NewTokenBridge(contractAddress, c.fallbackEthClient)
+	if err != nil {
+		return fmt.Errorf("failed to reinstantiate fallback TokenBridge contract: %w", err)
 	}
 
 	return nil
 }
 
-func (c *Client) getEthRpcUrls() ([]string, error) {
-	ethRpcUrls := os.Getenv("ETH_RPC_URL")
-	if ethRpcUrls == "" {
-		return nil, fmt.Errorf("ETH_RPC_URL not set")
-	}
-
-	// Split by comma
-	urls := strings.Split(ethRpcUrls, ",")
-
-	// Trim whitespace
-	for i, url := range urls {
-		urls[i] = strings.TrimSpace(url)
-	}
-
-	return urls, nil
-}
-
 func (c *Client) QueryCurrentDepositId() (*big.Int, error) {
-	var results []*big.Int
-
-	// Query all RPCs
-	for i, contract := range c.bridgeContracts {
-		depositId, err := contract.DepositId(nil)
+	// try primary first
+	depositId, err := c.primaryBridgeContract.DepositId(nil)
+	if err != nil {
+		c.logger.Error("Failed to query primary contract, trying fallback", "error", err)
+		// try fallback
+		depositId, err = c.fallbackBridgeContract.DepositId(nil)
 		if err != nil {
-			c.logger.Error("Failed to query deposit ID from RPC",
-				"index", i, "error", err)
-			continue
-		}
-		results = append(results, depositId)
-	}
-
-	if len(results) < len(c.bridgeContracts)/2+1 {
-		return nil, fmt.Errorf("failed to get majority consensus: insufficient responses")
-	}
-
-	// Find the majority value
-	counts := make(map[string]int)
-	for _, result := range results {
-		counts[result.String()]++
-	}
-
-	var majorityValue *big.Int
-	majorityCount := 0
-	for valueStr, count := range counts {
-		if count > majorityCount {
-			majorityCount = count
-			value, _ := new(big.Int).SetString(valueStr, 10)
-			majorityValue = value
+			return nil, fmt.Errorf("failed to query deposit ID from both endpoints: %w", err)
 		}
 	}
-
-	// Ensure we have a majority
-	if majorityCount <= len(c.bridgeContracts)/2 {
-		return nil, fmt.Errorf("no majority consensus reached")
-	}
-
-	return majorityValue, nil
+	return depositId, nil
 }
 
 func (c *Client) QueryDepositDetails(depositId *big.Int) (DepositReceipt, error) {
-	var results []DepositReceipt
-
-	// Query all RPCs
-	for i, contract := range c.bridgeContracts {
-		deposit, err := contract.Deposits(nil, depositId)
+	// Try primary first
+	deposit, err := c.primaryBridgeContract.Deposits(nil, depositId)
+	if err != nil {
+		c.logger.Error("Failed to query primary contract, trying fallback", "error", err)
+		// Try fallback
+		deposit, err = c.fallbackBridgeContract.Deposits(nil, depositId)
 		if err != nil {
-			c.logger.Error("Failed to query deposit details from RPC",
-				"index", i, "error", err)
-			continue
-		}
-
-		results = append(results, DepositReceipt{
-			DepositId:   depositId,
-			Sender:      deposit.Sender,
-			Recipient:   deposit.Recipient,
-			Amount:      deposit.Amount,
-			Tip:         deposit.Tip,
-			BlockHeight: deposit.BlockHeight,
-		})
-	}
-
-	if len(results) < len(c.bridgeContracts)/2+1 {
-		return DepositReceipt{}, fmt.Errorf("failed to get majority consensus: insufficient responses")
-	}
-
-	// Find the majority value by comparing serialized results
-	counts := make(map[string]int)
-	receiptMap := make(map[string]DepositReceipt)
-
-	for _, result := range results {
-		serialized, _ := json.Marshal(result)
-		key := string(serialized)
-		counts[key]++
-		receiptMap[key] = result
-	}
-
-	var majorityReceipt DepositReceipt
-	majorityCount := 0
-	for key, count := range counts {
-		if count > majorityCount {
-			majorityCount = count
-			majorityReceipt = receiptMap[key]
+			return DepositReceipt{}, fmt.Errorf("failed to query deposit details from both endpoints: %w", err)
 		}
 	}
 
-	// Ensure we have a majority
-	if majorityCount <= len(c.bridgeContracts)/2 {
-		return DepositReceipt{}, fmt.Errorf("no majority consensus reached")
-	}
-
-	return majorityReceipt, nil
+	return DepositReceipt{
+		DepositId:   depositId,
+		Sender:      deposit.Sender,
+		Recipient:   deposit.Recipient,
+		Amount:      deposit.Amount,
+		Tip:         deposit.Tip,
+		BlockHeight: deposit.BlockHeight,
+	}, nil
 }
