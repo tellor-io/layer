@@ -12,7 +12,6 @@ import (
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
-	"github.com/tellor-io/layer/x/oracle/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
@@ -1162,7 +1161,7 @@ func (s *IntegrationTestSuite) TestOpenDisputePrecision() {
 	require.Equal(dispute.DisputeStartTime, disputeStartTime)
 	require.Equal(dispute.DisputeRound, uint64(1))
 	require.Equal(dispute.SlashAmount, disputeFeeTotal)
-	microReport := types.MicroReport{
+	microReport := oracletypes.MicroReport{
 		Reporter:        report.MicroReports[0].Reporter,
 		Power:           report.MicroReports[0].Power,
 		QueryType:       report.MicroReports[0].QueryType,
