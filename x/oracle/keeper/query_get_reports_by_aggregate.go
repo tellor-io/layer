@@ -28,7 +28,7 @@ func (k Querier) GetReportsByAggregate(ctx context.Context, req *types.QueryGetR
 
 	metaId := agg.MetaId
 
-	microreports := make([]types.MicroReport, 0)
+	microreports := make([]types.MicroReportStrings, 0)
 	pageRes := &query.PageResponse{
 		NextKey: nil,
 		Total:   uint64(0),
@@ -48,7 +48,19 @@ func (k Querier) GetReportsByAggregate(ctx context.Context, req *types.QueryGetR
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
-		microreports = append(microreports, rep)
+		microReport := types.MicroReportStrings{
+			Reporter:        rep.Reporter,
+			Power:           rep.Power,
+			QueryType:       rep.QueryType,
+			QueryId:         req.QueryId,
+			AggregateMethod: rep.AggregateMethod,
+			Value:           rep.Value,
+			Timestamp:       uint64(rep.Timestamp.UnixMilli()),
+			Cyclelist:       rep.Cyclelist,
+			BlockNumber:     rep.BlockNumber,
+			MetaId:          rep.MetaId,
+		}
+		microreports = append(microreports, microReport)
 
 		if uint64(len(microreports)) >= req.Pagination.Limit {
 			break
