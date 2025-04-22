@@ -2,7 +2,6 @@ package e2e_test
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -293,10 +292,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		require.Equal(microReports.MicroReports[0].AggregateMethod, "weighted-median")
 		require.Equal(microReports.MicroReports[0].Power, "1000")
 		require.Equal(microReports.MicroReports[0].QueryType, "SpotPrice")
-
-		decodedBytes, err := base64.StdEncoding.DecodeString(microReports.MicroReports[0].QueryID)
-		require.NoError(err)
-		queryId := hex.EncodeToString(decodedBytes)
+		queryId := microReports.MicroReports[0].QueryID
 
 		// get disputer staking power before dispute
 		disputerStakingBefore, err := chain.StakingQueryValidator(ctx, val1valAddr)
@@ -682,10 +678,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	fmt.Println("user0 staking before resolving dispute: ", user0StakingBeforeDispute)
 
 	// dispute from user0
-	decodedBytes, err := base64.StdEncoding.DecodeString(microReports.MicroReports[0].QueryID)
-	require.NoError(err)
-	hexStr := hex.EncodeToString(decodedBytes)
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, hexStr, "major", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, microReports.MicroReports[0].QueryID, "major", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens a major dispute on user1): ", txHash)
 
@@ -1103,10 +1096,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	fmt.Println("user1 staking before resolving dispute: ", user1StakingBeforeDispute)
 
 	// dispute from user0
-	decodedBytes, err := base64.StdEncoding.DecodeString(microReports.MicroReports[0].QueryID)
-	require.NoError(err)
-	hexStr := hex.EncodeToString(decodedBytes)
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, hexStr, "major", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, microReports.MicroReports[0].QueryID, "major", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens a major dispute on user1): ", txHash)
 
@@ -1544,10 +1534,7 @@ func TestEscalatingDispute(t *testing.T) {
 	require.Equal(reports.MicroReports[0].Power, "1000")
 
 	// open warning dispute
-	decodedBytes, err := base64.StdEncoding.DecodeString(reports.MicroReports[0].QueryID)
-	require.NoError(err)
-	hexStr := hex.EncodeToString(decodedBytes)
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, hexStr, "warning", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "warning", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens warning dispute): ", txHash)
 
@@ -1565,7 +1552,7 @@ func TestEscalatingDispute(t *testing.T) {
 	fmt.Println("open dispute: ", disputes.Disputes[0])
 
 	// try to open minor dispute on same report, errors with cannot jail already jailed reporter
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, hexStr, "minor", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "minor", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.Error(err)
 	fmt.Println("TX HASH (user0 opens minor dispute): ", txHash)
 
@@ -1575,7 +1562,7 @@ func TestEscalatingDispute(t *testing.T) {
 	fmt.Println("TX HASH (user1 unjails reporter): ", txHash)
 
 	// user0 opens minor dispute on same report
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, hexStr, "minor", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "minor", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens minor dispute): ", txHash)
 
@@ -1925,10 +1912,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	fmt.Println("user1 stake before dispute: ", user1StakingBeforeDispute.Balance.Amount.String())
 
 	// open major dispute from user0
-	decodedBytes, err := base64.StdEncoding.DecodeString(reports.MicroReports[0].QueryID)
-	require.NoError(err)
-	hexStr := hex.EncodeToString(decodedBytes)
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, hexStr, "major", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "major", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens warning dispute): ", txHash)
 
@@ -2265,16 +2249,13 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 		require.Equal(userReport.MicroReports[0].Reporter, reporters[i].Addr)
 		require.Equal(userReport.MicroReports[0].Value, value)
 		require.Equal(userReport.MicroReports[0].Power, "1000")
-		decodedBytes, err := base64.StdEncoding.DecodeString(userReport.MicroReports[0].QueryID)
-		require.NoError(err)
-		hexStr := hex.EncodeToString(decodedBytes)
 		userReports[i] = UserReports{
 			UserReport: userReport,
-			qId:        hexStr,
+			qId:        userReport.MicroReports[0].QueryID,
 		}
 		// get aggregate timestamp
-		fmt.Println("getting aggregate timestamp for", hexStr, "...")
-		res, _, err = val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hexStr)
+		fmt.Println("getting aggregate timestamp for", userReport.MicroReports[0].QueryID, "...")
+		res, _, err = val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", userReport.MicroReports[0].QueryID)
 		require.NoError(err)
 		var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
 		err = json.Unmarshal(res, &currentAggRes)
@@ -2392,16 +2373,13 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 			require.Equal(userReport2.MicroReports[0].Value, value)
 		}
 
-		decodedBytes, err := base64.StdEncoding.DecodeString(userReport2.MicroReports[0].QueryID)
-		require.NoError(err)
-		hexStr := hex.EncodeToString(decodedBytes)
 		userReports[i] = UserReports{
 			UserReport: userReport2,
-			qId:        hexStr,
+			qId:        userReport2.MicroReports[0].QueryID,
 		}
 		// get aggregate timestamp
-		fmt.Println("getting aggregate timestamp for", hexStr, "...")
-		res, _, err = val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hexStr)
+		fmt.Println("getting aggregate timestamp for", userReport2.MicroReports[0].QueryID, "...")
+		res, _, err = val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", userReport2.MicroReports[0].QueryID)
 		require.NoError(err)
 		var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
 		err = json.Unmarshal(res, &currentAggRes)
@@ -2705,12 +2683,9 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 		decodedVal, err := hex.DecodeString(reportedValue)
 		require.NoError(err)
 		fmt.Println("decodedVal: ", string(decodedVal))
-		decodedBytes, err := base64.StdEncoding.DecodeString(userReport.MicroReports[0].QueryID)
-		require.NoError(err)
-		hexStr := hex.EncodeToString(decodedBytes)
 		userReports[i] = UserReports{
 			UserReport: userReport,
-			qId:        hexStr,
+			qId:        userReport.MicroReports[0].QueryID,
 		}
 
 		// verify aggregate
@@ -2723,7 +2698,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 		require.Equal(currentAggRes.Aggregate.AggregateValue, value)
 		require.Equal(currentAggRes.Aggregate.Flagged, false)
 
-		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReport.MicroReports[0].Reporter, userReport.MicroReports[0].MetaId, hexStr, "warning", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReport.MicroReports[0].Reporter, userReport.MicroReports[0].MetaId, userReport.MicroReports[0].QueryID, "warning", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (val1 disputes report ", i, "): ", txHash)
 	}
@@ -2943,9 +2918,7 @@ func TestUnderfundedDispute(t *testing.T) {
 
 	// val0 disputes val1
 	metaId := reportsRes.MicroReports[0].MetaId
-	decodedBytes, err := base64.StdEncoding.DecodeString(reportsRes.MicroReports[0].QueryID)
-	require.NoError(err)
-	queryId := hex.EncodeToString(decodedBytes)
+	queryId := reportsRes.MicroReports[0].QueryID
 	category := "warning"
 	fee := "1000000loya"
 	payFromBond := "false"
