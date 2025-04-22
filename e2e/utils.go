@@ -561,7 +561,7 @@ type DataSpec2 struct {
 }
 type QueryGenerateQuerydataResponse struct {
 	// query_data is the generated query_data hex string.
-	QueryData []byte `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
+	QueryData string `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 }
 
 // QueryTeamAddressResponse is response type for the Query/TeamAddress RPC method.

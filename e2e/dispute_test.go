@@ -2638,7 +2638,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	require.NoError(err)
 	var queryData e2e.QueryGenerateQuerydataResponse
 	require.NoError(json.Unmarshal(queryBz, &queryData))
-	queryDataStr := hex.EncodeToString(queryData.QueryData)
+	queryDataStr := queryData.QueryData
 	fmt.Println("queryDataStr: ", queryDataStr)
 
 	// val1 tips the query
