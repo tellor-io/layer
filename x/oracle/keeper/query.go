@@ -132,7 +132,7 @@ func (k Querier) ReportedIdsByReporter(ctx context.Context, req *types.QueryRepo
 	store := runtime.KVStoreAdapter(k.keeper.storeService.OpenKVStore(ctx))
 	reportsStore := prefix.NewStore(store, types.ReportsPrefix)
 	ids := make([]uint64, 0)
-	queryIds := make([][]byte, 0)
+	queryIds := make([]string, 0)
 
 	pageRes, err := query.Paginate(reportsStore, req.Pagination, func(key, value []byte) error {
 		keycdc := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
@@ -141,7 +141,7 @@ func (k Querier) ReportedIdsByReporter(ctx context.Context, req *types.QueryRepo
 			return err
 		}
 		ids = append(ids, pk.K3())
-		queryIds = append(queryIds, pk.K1())
+		queryIds = append(queryIds, hex.EncodeToString(pk.K1()))
 
 		return nil
 	})
@@ -149,12 +149,7 @@ func (k Querier) ReportedIdsByReporter(ctx context.Context, req *types.QueryRepo
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	queryIdsStr := make([]string, len(queryIds))
-	for i, queryId := range queryIds {
-		queryIdsStr[i] = hex.EncodeToString(queryId)
-	}
-
-	return &types.QueryReportedIdsByReporterResponse{Ids: ids, QueryIds: queryIdsStr, Pagination: pageRes}, nil
+	return &types.QueryReportedIdsByReporterResponse{Ids: ids, QueryIds: queryIds, Pagination: pageRes}, nil
 }
 
 // gets the timestamp before a given timestamp by query id
