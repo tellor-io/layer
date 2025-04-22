@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/hex"
 	"time"
 
 	"github.com/tellor-io/layer/testutil/sample"
@@ -45,5 +46,13 @@ func (s *KeeperTestSuite) TestQueryGetDataBefore() {
 	})
 	s.NoError(err)
 	s.Equal(getDataBeforeResponse.Timestamp, uint64(timestamp.UnixMilli()))
-	s.Equal(getDataBeforeResponse.Aggregate, &agg)
+	s.Equal(getDataBeforeResponse.Aggregate.AggregatePower, agg.AggregatePower)
+	s.Equal(getDataBeforeResponse.Aggregate.AggregateValue, agg.AggregateValue)
+	s.Equal(getDataBeforeResponse.Aggregate.AggregateReporter, agg.AggregateReporter)
+	s.Equal(getDataBeforeResponse.Aggregate.Flagged, agg.Flagged)
+	s.Equal(getDataBeforeResponse.Aggregate.Index, agg.Index)
+	s.Equal(getDataBeforeResponse.Aggregate.Height, agg.Height)
+	s.Equal(getDataBeforeResponse.Aggregate.MicroHeight, agg.MicroHeight)
+	s.Equal(getDataBeforeResponse.Aggregate.MetaId, agg.MetaId)
+	s.Equal(getDataBeforeResponse.Aggregate.QueryId, hex.EncodeToString(agg.QueryId))
 }
