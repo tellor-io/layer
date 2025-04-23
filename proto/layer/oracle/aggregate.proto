@@ -36,3 +36,26 @@ message AvailableTimestamps {
     (gogoproto.stdtime) = true
   ];
 }
+
+// aggregate struct but with strings for queries to return
+message AggregateStrings {
+    // query_id is the id of the query
+    string query_id = 1;
+    // aggregate_value is the value of the aggregate
+    string aggregate_value = 2;
+    // aggregate_reporter is the address of the reporter
+    string aggregate_reporter = 3;
+    // aggregate_power is the power of all the reporters
+    // that reported for the aggregate
+    uint64 aggregate_power = 4;
+    // flagged is true if the aggregate was flagged by a dispute
+    bool flagged = 5;
+    // index is the index of the aggregate
+    uint64 index = 6;
+    // height of the aggregate report
+    uint64 height = 7;
+    // height of the micro report
+    uint64 micro_height = 8;
+    // meta_id is the id of the querymeta iterator
+    uint64 meta_id = 9;
+}

@@ -89,20 +89,20 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 	report, err := s.queryClient.GetReportsbyQid(ctx, &types.QueryGetReportsbyQidRequest{QueryId: hex.EncodeToString(queryId)})
 	s.Nil(err)
 
-	microReport := types.MicroReport{
+	microReport := types.MicroReportStrings{
 		Reporter:        addr.String(),
 		Power:           1,
 		QueryType:       "SpotPrice",
-		QueryId:         queryId,
+		QueryId:         hex.EncodeToString(queryId),
 		AggregateMethod: "weighted-median",
 		Value:           value,
-		Timestamp:       s.ctx.BlockTime(),
+		Timestamp:       uint64(s.ctx.BlockTime().UnixMilli()),
 		Cyclelist:       true,
 		BlockNumber:     uint64(s.ctx.BlockHeight()),
 		MetaId:          query.Id,
 	}
 	expectedReport := types.QueryMicroReportsResponse{
-		MicroReports: []types.MicroReport{microReport},
+		MicroReports: []types.MicroReportStrings{microReport},
 	}
 	require.Equal(expectedReport.MicroReports, report.MicroReports)
 

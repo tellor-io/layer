@@ -34,8 +34,20 @@ func (k Querier) GetDataBefore(ctx context.Context, req *types.QueryGetDataBefor
 
 	timeUnix := timestamp.UnixMilli()
 
+	aggregateStrings := types.AggregateStrings{
+		QueryId:           req.QueryId,
+		AggregateValue:    aggregate.AggregateValue,
+		AggregateReporter: aggregate.AggregateReporter,
+		AggregatePower:    aggregate.AggregatePower,
+		Flagged:           aggregate.Flagged,
+		Index:             aggregate.Index,
+		Height:            aggregate.Height,
+		MicroHeight:       aggregate.MicroHeight,
+		MetaId:            aggregate.MetaId,
+	}
+
 	return &types.QueryGetDataBeforeResponse{
-		Aggregate: aggregate,
+		Aggregate: &aggregateStrings,
 		Timestamp: uint64(timeUnix),
 	}, nil
 }
