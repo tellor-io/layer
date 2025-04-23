@@ -8,8 +8,8 @@ import (
 	"strconv"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/tellor-io/layer/daemons/lib"
 	"github.com/tellor-io/layer/daemons/pricefeed/types"
-	"github.com/tellor-io/layer/lib"
 )
 
 var (

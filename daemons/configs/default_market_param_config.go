@@ -63,8 +63,10 @@ func GenerateDefaultMarketParamsTomlString() bytes.Buffer {
 func WriteDefaultMarketParamsToml(homeDir string) {
 	// Write file into config folder if file does not exist.
 	configFilePath := getMarketParamsConfigFilePath(homeDir)
-	buffer := GenerateDefaultMarketParamsTomlString()
-	tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0o644)
+	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+		buffer := GenerateDefaultMarketParamsTomlString()
+		tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0o644)
+	}
 }
 
 func ReadMarketParamsConfigFile(homeDir string) []types.MarketParam {

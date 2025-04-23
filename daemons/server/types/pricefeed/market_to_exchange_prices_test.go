@@ -8,7 +8,7 @@ package types
 
 // 	"github.com/stretchr/testify/require"
 // 	"github.com/tellor-io/layer/daemons/pricefeed/api"
-// 	"github.com/tellor-io/layer/testutil/constants"
+// 	"github.com/tellor-io/layer/daemons/testutil/constants"
 // 	"github.com/tellor-io/layer/x/prices/types"
 // )
 

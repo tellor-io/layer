@@ -9,12 +9,12 @@ import (
 
 	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/constants"
+	"github.com/tellor-io/layer/daemons/lib"
+	"github.com/tellor-io/layer/daemons/lib/metrics"
 	handler "github.com/tellor-io/layer/daemons/pricefeed/client/queryhandler"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
-	"github.com/tellor-io/layer/lib"
-	"github.com/tellor-io/layer/lib/metrics"
 	"gopkg.in/typ.v4/lists"
 
 	"cosmossdk.io/log"
@@ -328,7 +328,7 @@ func (pf *PriceFetcher) runSubTask(
 // writeToBufferedChannel writes the (price, error) generated during querying to the price fetcher's
 // buffered channel, which outputs the query result to the price encoder.
 func (pf *PriceFetcher) writeToBufferedChannel(
-	exchangeId types.ExchangeId,
+	_ types.ExchangeId,
 	price *types.MarketPriceTimestamp,
 	err error,
 ) {

@@ -111,7 +111,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
 				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator", "--price-daemon-enabled=false"},
+				AdditionalStartArgs: []string{"--key-name", "validator"},
 			},
 		},
 	})
@@ -473,7 +473,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
 				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator", "--price-daemon-enabled=false"},
+				AdditionalStartArgs: []string{"--key-name", "validator"},
 			},
 		},
 	})
@@ -843,7 +843,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
 				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator", "--price-daemon-enabled=false"},
+				AdditionalStartArgs: []string{"--key-name", "validator"},
 			},
 		},
 	})
@@ -1364,7 +1364,7 @@ func TestEscalatingDispute(t *testing.T) {
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
 				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator", "--price-daemon-enabled=false"},
+				AdditionalStartArgs: []string{"--key-name", "validator"},
 			},
 		},
 	})
@@ -1732,7 +1732,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
 				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator", "--price-daemon-enabled=false"},
+				AdditionalStartArgs: []string{"--key-name", "validator"},
 			},
 		},
 	})
@@ -2060,7 +2060,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
 				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator", "--price-daemon-enabled=false"},
+				AdditionalStartArgs: []string{"--key-name", "validator"},
 			},
 		},
 	})
@@ -2499,7 +2499,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
 				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator", "--price-daemon-enabled=false"},
+				AdditionalStartArgs: []string{"--key-name", "validator"},
 			},
 		},
 	})
