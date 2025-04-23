@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -40,10 +41,22 @@ func (k Querier) GetReportsbyQid(ctx context.Context, req *types.QueryGetReports
 	if err != nil {
 		return nil, err
 	}
-	microreports := make([]types.MicroReport, 0)
+	microreports := make([]types.MicroReportStrings, 0)
 	_, pageRes, err := query.CollectionPaginate(
 		ctx, k.keeper.Reports, req.Pagination, func(_ collections.Triple[[]byte, []byte, uint64], rep types.MicroReport) (types.MicroReport, error) {
-			microreports = append(microreports, rep)
+			microReport := types.MicroReportStrings{
+				Reporter:        rep.Reporter,
+				Power:           rep.Power,
+				QueryType:       rep.QueryType,
+				QueryId:         req.QueryId,
+				AggregateMethod: rep.AggregateMethod,
+				Value:           rep.Value,
+				Timestamp:       uint64(rep.Timestamp.UnixMilli()),
+				Cyclelist:       rep.Cyclelist,
+				BlockNumber:     rep.BlockNumber,
+				MetaId:          rep.MetaId,
+			}
+			microreports = append(microreports, microReport)
 			return rep, nil
 		}, WithCollectionPaginationTriplePrefix[[]byte, []byte, uint64](qId),
 	)
@@ -72,7 +85,24 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 		return nil, err
 	}
 
-	return &types.QueryMicroReportsResponse{MicroReports: reports}, nil
+	microreports := make([]types.MicroReportStrings, 0)
+	for _, rep := range reports {
+		microReport := types.MicroReportStrings{
+			Reporter:        rep.Reporter,
+			Power:           rep.Power,
+			QueryType:       rep.QueryType,
+			QueryId:         hex.EncodeToString(rep.QueryId),
+			AggregateMethod: rep.AggregateMethod,
+			Value:           rep.Value,
+			Timestamp:       uint64(rep.Timestamp.UnixMilli()),
+			Cyclelist:       rep.Cyclelist,
+			BlockNumber:     rep.BlockNumber,
+			MetaId:          rep.MetaId,
+		}
+		microreports = append(microreports, microReport)
+	}
+
+	return &types.QueryMicroReportsResponse{MicroReports: microreports}, nil
 }
 
 func (k Querier) GetReportsbyReporterQid(ctx context.Context, req *types.QueryGetReportsbyReporterQidRequest) (*types.QueryMicroReportsResponse, error) {
@@ -90,10 +120,22 @@ func (k Querier) GetReportsbyReporterQid(ctx context.Context, req *types.QueryGe
 		return nil, err
 	}
 
-	microreports := make([]types.MicroReport, 0)
+	microreports := make([]types.MicroReportStrings, 0)
 	_, pageRes, err := query.CollectionPaginate(
 		ctx, k.keeper.Reports, req.Pagination, func(_ collections.Triple[[]byte, []byte, uint64], rep types.MicroReport) (types.MicroReport, error) {
-			microreports = append(microreports, rep)
+			microReport := types.MicroReportStrings{
+				Reporter:        rep.Reporter,
+				Power:           rep.Power,
+				QueryType:       rep.QueryType,
+				QueryId:         req.QueryId,
+				AggregateMethod: rep.AggregateMethod,
+				Value:           rep.Value,
+				Timestamp:       uint64(rep.Timestamp.UnixMilli()),
+				Cyclelist:       rep.Cyclelist,
+				BlockNumber:     rep.BlockNumber,
+				MetaId:          rep.MetaId,
+			}
+			microreports = append(microreports, microReport)
 			return rep, nil
 		}, WithCollectionPaginationTripleSuperPrefix[[]byte, []byte, uint64](qId, reporterAdd.Bytes()),
 	)

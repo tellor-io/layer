@@ -2,7 +2,6 @@ package e2e_test
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -293,10 +292,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		require.Equal(microReports.MicroReports[0].AggregateMethod, "weighted-median")
 		require.Equal(microReports.MicroReports[0].Power, "1000")
 		require.Equal(microReports.MicroReports[0].QueryType, "SpotPrice")
-
-		decodedBytes, err := base64.StdEncoding.DecodeString(microReports.MicroReports[0].QueryID)
-		require.NoError(err)
-		queryId := hex.EncodeToString(decodedBytes)
+		queryId := microReports.MicroReports[0].QueryID
 
 		// get disputer staking power before dispute
 		disputerStakingBefore, err := chain.StakingQueryValidator(ctx, val1valAddr)
@@ -682,10 +678,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	fmt.Println("user0 staking before resolving dispute: ", user0StakingBeforeDispute)
 
 	// dispute from user0
-	decodedBytes, err := base64.StdEncoding.DecodeString(microReports.MicroReports[0].QueryID)
-	require.NoError(err)
-	hexStr := hex.EncodeToString(decodedBytes)
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, hexStr, "major", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, microReports.MicroReports[0].QueryID, "major", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens a major dispute on user1): ", txHash)
 
@@ -1103,10 +1096,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	fmt.Println("user1 staking before resolving dispute: ", user1StakingBeforeDispute)
 
 	// dispute from user0
-	decodedBytes, err := base64.StdEncoding.DecodeString(microReports.MicroReports[0].QueryID)
-	require.NoError(err)
-	hexStr := hex.EncodeToString(decodedBytes)
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, hexStr, "major", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, microReports.MicroReports[0].QueryID, "major", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens a major dispute on user1): ", txHash)
 
@@ -1544,10 +1534,7 @@ func TestEscalatingDispute(t *testing.T) {
 	require.Equal(reports.MicroReports[0].Power, "1000")
 
 	// open warning dispute
-	decodedBytes, err := base64.StdEncoding.DecodeString(reports.MicroReports[0].QueryID)
-	require.NoError(err)
-	hexStr := hex.EncodeToString(decodedBytes)
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, hexStr, "warning", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "warning", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens warning dispute): ", txHash)
 
@@ -1565,7 +1552,7 @@ func TestEscalatingDispute(t *testing.T) {
 	fmt.Println("open dispute: ", disputes.Disputes[0])
 
 	// try to open minor dispute on same report, errors with cannot jail already jailed reporter
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, hexStr, "minor", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "minor", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.Error(err)
 	fmt.Println("TX HASH (user0 opens minor dispute): ", txHash)
 
@@ -1575,7 +1562,7 @@ func TestEscalatingDispute(t *testing.T) {
 	fmt.Println("TX HASH (user1 unjails reporter): ", txHash)
 
 	// user0 opens minor dispute on same report
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, hexStr, "minor", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "minor", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens minor dispute): ", txHash)
 
@@ -1925,10 +1912,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	fmt.Println("user1 stake before dispute: ", user1StakingBeforeDispute.Balance.Amount.String())
 
 	// open major dispute from user0
-	decodedBytes, err := base64.StdEncoding.DecodeString(reports.MicroReports[0].QueryID)
-	require.NoError(err)
-	hexStr := hex.EncodeToString(decodedBytes)
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, hexStr, "major", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "major", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens warning dispute): ", txHash)
 
@@ -2265,16 +2249,13 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 		require.Equal(userReport.MicroReports[0].Reporter, reporters[i].Addr)
 		require.Equal(userReport.MicroReports[0].Value, value)
 		require.Equal(userReport.MicroReports[0].Power, "1000")
-		decodedBytes, err := base64.StdEncoding.DecodeString(userReport.MicroReports[0].QueryID)
-		require.NoError(err)
-		hexStr := hex.EncodeToString(decodedBytes)
 		userReports[i] = UserReports{
 			UserReport: userReport,
-			qId:        hexStr,
+			qId:        userReport.MicroReports[0].QueryID,
 		}
 		// get aggregate timestamp
-		fmt.Println("getting aggregate timestamp for", hexStr, "...")
-		res, _, err = val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hexStr)
+		fmt.Println("getting aggregate timestamp for", userReport.MicroReports[0].QueryID, "...")
+		res, _, err = val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", userReport.MicroReports[0].QueryID)
 		require.NoError(err)
 		var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
 		err = json.Unmarshal(res, &currentAggRes)
@@ -2392,16 +2373,13 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 			require.Equal(userReport2.MicroReports[0].Value, value)
 		}
 
-		decodedBytes, err := base64.StdEncoding.DecodeString(userReport2.MicroReports[0].QueryID)
-		require.NoError(err)
-		hexStr := hex.EncodeToString(decodedBytes)
 		userReports[i] = UserReports{
 			UserReport: userReport2,
-			qId:        hexStr,
+			qId:        userReport2.MicroReports[0].QueryID,
 		}
 		// get aggregate timestamp
-		fmt.Println("getting aggregate timestamp for", hexStr, "...")
-		res, _, err = val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hexStr)
+		fmt.Println("getting aggregate timestamp for", userReport2.MicroReports[0].QueryID, "...")
+		res, _, err = val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", userReport2.MicroReports[0].QueryID)
 		require.NoError(err)
 		var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
 		err = json.Unmarshal(res, &currentAggRes)
@@ -2660,7 +2638,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	require.NoError(err)
 	var queryData e2e.QueryGenerateQuerydataResponse
 	require.NoError(json.Unmarshal(queryBz, &queryData))
-	queryDataStr := hex.EncodeToString(queryData.QueryData)
+	queryDataStr := queryData.QueryData
 	fmt.Println("queryDataStr: ", queryDataStr)
 
 	// val1 tips the query
@@ -2705,12 +2683,9 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 		decodedVal, err := hex.DecodeString(reportedValue)
 		require.NoError(err)
 		fmt.Println("decodedVal: ", string(decodedVal))
-		decodedBytes, err := base64.StdEncoding.DecodeString(userReport.MicroReports[0].QueryID)
-		require.NoError(err)
-		hexStr := hex.EncodeToString(decodedBytes)
 		userReports[i] = UserReports{
 			UserReport: userReport,
-			qId:        hexStr,
+			qId:        userReport.MicroReports[0].QueryID,
 		}
 
 		// verify aggregate
@@ -2723,7 +2698,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 		require.Equal(currentAggRes.Aggregate.AggregateValue, value)
 		require.Equal(currentAggRes.Aggregate.Flagged, false)
 
-		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReport.MicroReports[0].Reporter, userReport.MicroReports[0].MetaId, hexStr, "warning", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReport.MicroReports[0].Reporter, userReport.MicroReports[0].MetaId, userReport.MicroReports[0].QueryID, "warning", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (val1 disputes report ", i, "): ", txHash)
 	}
@@ -2786,4 +2761,210 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	voteRes, _, err = val1.ExecQuery(ctx, "dispute", "team-vote", "2")
 	require.Error(err)
 	fmt.Println("voteRes: ", voteRes)
+}
+
+// in x/dispute/keeper/dispute.go, change dispute end time to 10 sec
+func TestUnderfundedDispute(t *testing.T) {
+	require := require.New(t)
+
+	t.Skip("x.dispute/keeper/dispute.go/SetNewDispute DisputeEndTime needs changed to 10 sec for this test to work.. :/ ")
+
+	t.Helper()
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
+
+	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
+
+	modifyGenesis := []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
+		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "20s"),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+	}
+
+	nv := 2
+	nf := 0
+	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
+		{
+			NumValidators: &nv,
+			NumFullNodes:  &nf,
+			ChainConfig: ibc.ChainConfig{
+				Type:           "cosmos",
+				Name:           "layer",
+				ChainID:        "layer",
+				Bin:            "layerd",
+				Denom:          "loya",
+				Bech32Prefix:   "tellor",
+				CoinType:       "118",
+				GasPrices:      "0.0loya",
+				GasAdjustment:  1.1,
+				TrustingPeriod: "504h",
+				NoHostMount:    false,
+				Images: []ibc.DockerImage{
+					{
+						Repository: "layer",
+						Version:    "local",
+						UidGid:     "1025:1025",
+					},
+				},
+				EncodingConfig:      e2e.LayerEncoding(),
+				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
+				AdditionalStartArgs: []string{"--key-name", "validator", "--price-daemon-enabled=false"},
+			},
+		},
+	})
+
+	client, network := interchaintest.DockerSetup(t)
+
+	chain := chains[0].(*cosmos.CosmosChain)
+
+	ic := interchaintest.NewInterchain().
+		AddChain(chain)
+
+	ctx := context.Background()
+
+	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
+		TestName:  t.Name(),
+		Client:    client,
+		NetworkID: network,
+		// BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
+		SkipPathCreation: false,
+	}))
+	t.Cleanup(func() {
+		_ = ic.Close()
+	})
+	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
+	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
+		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
+		Amount:  math.NewInt(1000000000000),
+		Denom:   "loya",
+	}))
+
+	type Validators struct {
+		Addr    string
+		ValAddr string
+		Val     *cosmos.ChainNode
+	}
+
+	validators := make([]Validators, len(chain.Validators))
+	for i := range chain.Validators {
+		val := chain.Validators[i]
+		valAddr, err := val.AccountKeyBech32(ctx, "validator")
+		require.NoError(err)
+		valvalAddr, err := val.KeyBech32(ctx, "validator", "val")
+		require.NoError(err)
+		fmt.Println("val", i, " Account Address: ", valAddr)
+		fmt.Println("val", i, " Validator Address: ", valvalAddr)
+		validators[i] = Validators{
+			Addr:    valAddr,
+			ValAddr: valvalAddr,
+			Val:     val,
+		}
+	}
+
+	// queryValidators to confirm that 2 validators are bonded
+	vals, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
+	require.NoError(err)
+	require.Equal(len(vals), 2)
+
+	// submit minting proposal and vote yes on it from all validators
+	require.NoError(e2e.TurnOnMinting(ctx, chain, validators[0].Val))
+	require.NoError(testutil.WaitForBlocks(ctx, 5, validators[0].Val))
+	result, err := chain.GovQueryProposal(ctx, 1)
+	require.NoError(err)
+	fmt.Println("Proposal status: ", result.Status.String())
+	require.Equal(result.Status.String(), "PROPOSAL_STATUS_PASSED")
+
+	// both validators become reporters
+	for i := range validators {
+		minStakeAmt := "1000000"
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := validators[i].Val.ExecTx(ctx, validators[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", validators[i].Val.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (validator", i, " becomes a reporter): ", txHash)
+	}
+
+	//  both reporters submit for cyclelist
+	currentCycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
+	require.NoError(err)
+	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
+	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
+	require.NoError(err)
+	fmt.Println("current cycle list: ", currentCycleList)
+	value := layerutil.EncodeValue(123456789.99)
+	for i := range validators {
+		_, _, err = validators[i].Val.Exec(ctx, validators[i].Val.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", validators[i].Val.HomeDir()), validators[i].Val.Chain.Config().Env)
+		require.NoError(err)
+		height, err := validators[i].Val.Height(ctx)
+		require.NoError(err)
+		fmt.Println("validator [", i, "] reported at height ", height)
+	}
+
+	// wait 2 blocks for aggregation
+	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Val))
+
+	// query microreport for val1
+	reports, _, err := validators[1].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[1].Addr)
+	require.NoError(err)
+	var reportsRes e2e.QueryMicroReportsResponse
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(err)
+	fmt.Println("reports from val1: ", reportsRes)
+
+	// val0 disputes val1
+	metaId := reportsRes.MicroReports[0].MetaId
+	queryId := reportsRes.MicroReports[0].QueryID
+	category := "warning"
+	fee := "1000000loya"
+	payFromBond := "false"
+	txHash, err := validators[0].Val.ExecTx(ctx, "validator", "dispute", "propose-dispute", validators[1].Addr, metaId, queryId, category, fee, payFromBond, "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	require.NoError(err)
+	fmt.Println("TX HASH (val0 disputes val1): ", txHash)
+
+	// query dispute info before funding period ends
+	disRes, _, err := validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	var disputes e2e.Disputes2
+	err = json.Unmarshal(disRes, &disputes)
+	require.NoError(err)
+	fmt.Println("disputes: ", disputes)
+	require.Equal(len(disputes.Disputes), 1)
+	require.Equal(disputes.Disputes[0].Metadata.DisputeId, "1")
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 0) // prevote
+
+	// wait for funding period to end
+	require.NoError(testutil.WaitForBlocks(ctx, 6, validators[0].Val))
+
+	// query dispute info before funding period ends
+	disRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	var disputes2 e2e.Disputes2
+	err = json.Unmarshal(disRes, &disputes2)
+	require.NoError(err)
+	fmt.Println("disputes after funding period ends: ", disputes2)
+	require.Equal(len(disputes2.Disputes), 1)
+	require.Equal(disputes2.Disputes[0].Metadata.DisputeId, "1")
+	require.Equal(disputes2.Disputes[0].Metadata.DisputeStatus, 4) // failed
+	require.Equal(disputes2.Disputes[0].Metadata.Open, false)      // closed
+
+	// get free floating tokens before withdraw fee
+	ffTokensBefore, err := chain.BankQueryBalance(ctx, validators[0].Addr, "loya")
+	require.NoError(err)
+	fmt.Println("free floating tokens before withdraw fee: ", ffTokensBefore)
+
+	// claim fee refund
+	txHash, err = validators[0].Val.ExecTx(ctx, "validator", "dispute", "withdraw-fee-refund", validators[0].Addr, "1", "--gas", "250000", "--keyring-dir", validators[0].Val.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (claim fee refund): ", txHash)
+
+	// get free floating tokens after withdraw fee
+	ffTokensAfter, err := chain.BankQueryBalance(ctx, validators[0].Addr, "loya")
+	require.NoError(err)
+	fmt.Println("free floating tokens after withdraw fee: ", ffTokensAfter)
+	require.Greater(ffTokensAfter.Int64(), ffTokensBefore.Int64())
 }

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/tellor-io/layer/x/registry/types"
@@ -28,6 +29,8 @@ func (k Keeper) GenerateQuerydata(ctx context.Context, req *types.QueryGenerateQ
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("failed to encode query data: %v", err))
 	}
+	// CLI is bad at turning bytes into strings
+	querydataStr := hex.EncodeToString(querydata)
 
-	return &types.QueryGenerateQuerydataResponse{QueryData: querydata}, nil
+	return &types.QueryGenerateQuerydataResponse{QueryData: querydataStr}, nil
 }

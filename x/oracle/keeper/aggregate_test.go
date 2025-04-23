@@ -62,7 +62,7 @@ func encodeValue(number float64) string {
 func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Time) (agg *types.Aggregate, queryId []byte, rep1, rep2 sdk.AccAddress, err error) {
 	rep1 = sample.AccAddressBytes()
 	rep2 = sample.AccAddressBytes()
-	queryId = []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0")
+	queryId = []byte("5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0")
 	queryData := ethQueryData
 
 	report := &types.Aggregate{
@@ -72,6 +72,9 @@ func (s *KeeperTestSuite) CreateReportAndReportersAtTimestamp(timestamp time.Tim
 		AggregatePower:    math.NewInt(200000000).Mul(layertypes.PowerReduction).Uint64(),
 		Flagged:           false,
 		Height:            10,
+		Index:             1,
+		MicroHeight:       1,
+		MetaId:            1,
 	}
 
 	s.ctx = s.ctx.WithBlockTime(timestamp)
