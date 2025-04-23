@@ -5,7 +5,7 @@ import (
 	"time"
 
 	gometrics "github.com/hashicorp/go-metrics"
-	"github.com/tellor-io/layer/lib/metrics"
+	"github.com/tellor-io/layer/daemons/lib/metrics"
 
 	"cosmossdk.io/log"
 
@@ -53,11 +53,11 @@ func RunMetricsDaemonTaskLoop(
 			metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
 		},
 	)
-	logger.Info(
-		"App version",
-		metrics.AppVersion,
-		version.Version,
-		metrics.GitCommit,
-		version.GitCommit,
-	)
+	// logger.Info(
+	// 	"App version",
+	// 	metrics.AppVersion,
+	// 	version.Version,
+	// 	metrics.GitCommit,
+	// 	version.GitCommit,
+	// )
 }

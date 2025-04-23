@@ -5,6 +5,7 @@ release/
 .vscode/
 .DS_Store
 /layerd
+reporterd
 .hypothesis
 evm/artifacts
 evm/cache

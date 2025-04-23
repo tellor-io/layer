@@ -21,14 +21,14 @@ import (
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/types"
 	daemonserver "github.com/tellor-io/layer/daemons/server"
-	servertypes "github.com/tellor-io/layer/daemons/server/types"
+	servertypes "github.com/tellor-io/layer/daemons/server/types/daemons"
 	pricefeed_types "github.com/tellor-io/layer/daemons/server/types/pricefeed"
+	"github.com/tellor-io/layer/daemons/testutil/appoptions"
+	"github.com/tellor-io/layer/daemons/testutil/client"
+	"github.com/tellor-io/layer/daemons/testutil/constants"
+	daemontestutils "github.com/tellor-io/layer/daemons/testutil/daemons"
+	grpc_util "github.com/tellor-io/layer/daemons/testutil/grpc"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
-	"github.com/tellor-io/layer/testutil/appoptions"
-	"github.com/tellor-io/layer/testutil/client"
-	"github.com/tellor-io/layer/testutil/constants"
-	daemontestutils "github.com/tellor-io/layer/testutil/daemons"
-	grpc_util "github.com/tellor-io/layer/testutil/grpc"
 	"google.golang.org/grpc"
 
 	"cosmossdk.io/log"
@@ -221,7 +221,7 @@ func TestStart_InvalidConfig(t *testing.T) {
 			err := client.start(
 				grpc_util.Ctx,
 				daemonflags.GetDefaultDaemonFlags(),
-				appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
+				"localhost:9090",
 				tc.mockGrpcClient,
 				tc.marketParam,
 				tc.exchangeIdToQueryConfig,
@@ -313,7 +313,7 @@ func TestStop(t *testing.T) {
 	client := StartNewClient(
 		grpc_util.Ctx,
 		daemonFlags,
-		appFlags,
+		appFlags.GrpcAddress,
 		log.NewNopLogger(),
 		&daemontypes.GrpcClientImpl{},
 		[]types.MarketParam{},

@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/daemons/lib"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/crypto_com"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/testutil"
-	"github.com/tellor-io/layer/lib"
-	"github.com/tellor-io/layer/testutil/constants"
-	"github.com/tellor-io/layer/testutil/daemons/pricefeed"
+	"github.com/tellor-io/layer/daemons/testutil/constants"
+	"github.com/tellor-io/layer/daemons/testutil/daemons/pricefeed"
 )
 
 // Test tickers for CryptoCom.
