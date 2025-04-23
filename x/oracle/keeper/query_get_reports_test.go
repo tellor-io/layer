@@ -14,19 +14,19 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 	report, err := s.queryClient.GetReportsbyQid(s.ctx, req)
 	s.Nil(err)
 
-	MicroReport := types.MicroReport{
+	MicroReport := types.MicroReportStrings{
 		Reporter:        addr.String(),
 		Power:           1,
 		QueryType:       "SpotPrice",
-		QueryId:         queryIdStr,
+		QueryId:         hex.EncodeToString(queryIdStr),
 		AggregateMethod: "weighted-median",
 		Value:           value,
-		Timestamp:       s.ctx.BlockTime(),
+		Timestamp:       uint64(s.ctx.BlockTime().UnixMilli()),
 		Cyclelist:       true,
 		BlockNumber:     uint64(s.ctx.BlockHeight()),
 		MetaId:          1,
 	}
-	expectedReports := []types.MicroReport{MicroReport}
+	expectedReports := []types.MicroReportStrings{MicroReport}
 
 	s.Equal(expectedReports, report.MicroReports)
 

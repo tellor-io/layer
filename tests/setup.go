@@ -462,9 +462,14 @@ func (s *SharedSetup) CreateSpotPriceTip(ctx sdk.Context, tipperAccAddr sdk.AccA
 		panic(err)
 	}
 
+	queryDataBz, err := hex.DecodeString(res.QueryData)
+	if err != nil {
+		panic(err)
+	}
+
 	msgTip := oracletypes.MsgTip{
 		Tipper:    tipperAccAddr.String(),
-		QueryData: res.QueryData,
+		QueryData: queryDataBz,
 		Amount:    sdk.NewCoin(s.Denom, amountLoya),
 	}
 	oracleMsgServer := oraclekeeper.NewMsgServerImpl(s.Oraclekeeper)
@@ -473,7 +478,7 @@ func (s *SharedSetup) CreateSpotPriceTip(ctx sdk.Context, tipperAccAddr sdk.AccA
 		panic(err)
 	}
 
-	return res.QueryData
+	return queryDataBz
 }
 
 func (s *SharedSetup) Report(ctx sdk.Context, reporterAccAddr sdk.AccAddress, queryData []byte, reportValue string) {

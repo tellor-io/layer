@@ -146,6 +146,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 			sdk.NewAttribute("query_type", report.QueryType),
 			sdk.NewAttribute("query_id", hex.EncodeToString(report.QueryId)),
 			sdk.NewAttribute("report_block_number", strconv.FormatUint(report.BlockNumber, 10)),
+			sdk.NewAttribute("microreport_timestamp", strconv.FormatInt(report.Timestamp.UnixMilli(), 10)),
 		),
 	})
 	return k.Disputes.Set(ctx, dispute.DisputeId, dispute)

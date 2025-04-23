@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 
 	"github.com/tellor-io/layer/x/oracle/types"
 	"google.golang.org/grpc/codes"
@@ -18,5 +19,10 @@ func (k Querier) GetCycleList(ctx context.Context, req *types.QueryGetCycleListR
 		return nil, err
 	}
 
-	return &types.QueryGetCycleListResponse{CycleList: cycleList}, nil
+	cycleListStr := make([]string, len(cycleList))
+	for i, cycle := range cycleList {
+		cycleListStr[i] = hex.EncodeToString(cycle)
+	}
+
+	return &types.QueryGetCycleListResponse{CycleList: cycleListStr}, nil
 }
