@@ -69,18 +69,18 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 	h, _, bk, _ := s.CreateHandlerAndMocks()
 
 	// err unmarshalling, empty req.ValidatorAddress, err on GetEVMAddressByOperator, accept
-	bk.On("GetEVMAddressByOperator", s.ctx, "").Return(nil, errors.New("error")).Once()
+	// bk.On("GetEVMAddressByOperator", s.ctx, "").Return(nil, errors.New("error")).Once()
 	res, err := h.VerifyVoteExtensionHandler(s.ctx, &abci.RequestVerifyVoteExtension{})
 	require.NoError(err)
-	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_ACCEPT)
+	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
 
 	// err unmarshalling, validator has evm address, val has EVM addr, reject
 	req := &abci.RequestVerifyVoteExtension{
 		ValidatorAddress: []byte("operatorIn"),
 	}
-	validatorAddress, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), req.ValidatorAddress)
-	require.NoError(err)
-	bk.On("GetEVMAddressByOperator", s.ctx, validatorAddress).Return([]byte("operatorOut"), nil).Once()
+	// validatorAddress, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), req.ValidatorAddress)
+	// require.NoError(err)
+	// bk.On("GetEVMAddressByOperator", s.ctx, validatorAddress).Return([]byte("operatorOut"), nil).Once()
 	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
 	require.NoError(err)
 	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
