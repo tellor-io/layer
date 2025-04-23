@@ -5,7 +5,7 @@ import (
 
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/tellor-io/layer/daemons/server/types"
+	types "github.com/tellor-io/layer/daemons/server/types/daemons"
 	tokenbridgeservertypes "github.com/tellor-io/layer/daemons/server/types/token_bridge_tips"
 
 	"github.com/cosmos/cosmos-sdk/client"

@@ -20,7 +20,6 @@ func TestAddDaemonFlagsToCmd(t *testing.T) {
 		flags.FlagPanicOnDaemonFailureEnabled,
 		flags.FlagMaxDaemonUnhealthySeconds,
 
-		flags.FlagPriceDaemonEnabled,
 		flags.FlagPriceDaemonLoopDelayMs,
 	}
 
@@ -39,7 +38,6 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	optsMap[flags.FlagPanicOnDaemonFailureEnabled] = false
 	optsMap[flags.FlagMaxDaemonUnhealthySeconds] = uint32(1234)
 
-	optsMap[flags.FlagPriceDaemonEnabled] = true
 	optsMap[flags.FlagPriceDaemonLoopDelayMs] = uint32(4444)
 
 	mockOpts := mocks.AppOptions{}
@@ -60,7 +58,6 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	)
 
 	// Price Daemon.
-	require.Equal(t, optsMap[flags.FlagPriceDaemonEnabled], r.Price.Enabled)
 	require.Equal(t, optsMap[flags.FlagPriceDaemonLoopDelayMs], r.Price.LoopDelayMs)
 }
 

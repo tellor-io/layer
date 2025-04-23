@@ -16,7 +16,7 @@ package server_test
 // 	pricefeedserver_types "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 // 	"github.com/tellor-io/layer/daemons/types"
 // 	"github.com/tellor-io/layer/mocks"
-// 	"github.com/tellor-io/layer/testutil/constants"
+// 	"github.com/tellor-io/layer/daemons/testutil/constants"
 // )
 
 // func TestUpdateMarketPrices_Valid(t *testing.T) {

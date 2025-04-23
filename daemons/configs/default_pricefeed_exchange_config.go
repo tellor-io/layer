@@ -59,10 +59,11 @@ func GenerateDefaultExchangeTomlString() bytes.Buffer {
 // WriteDefaultPricefeedExchangeToml reads in the toml string for the pricefeed client and
 // writes said string to the config folder as a toml file if the config file does not exist.
 func WriteDefaultPricefeedExchangeToml(homeDir string) {
-	// Write file into config folder if file does not exist.
 	configFilePath := getConfigFilePath(homeDir)
-	buffer := GenerateDefaultExchangeTomlString()
-	tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0o644)
+	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+		buffer := GenerateDefaultExchangeTomlString()
+		tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0o644)
+	}
 }
 
 // ReadExchangeQueryConfigFile gets a mapping of `exchangeIds` to `ExchangeQueryConfigs`

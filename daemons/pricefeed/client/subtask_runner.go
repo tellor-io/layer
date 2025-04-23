@@ -7,13 +7,13 @@ import (
 	"time"
 
 	"github.com/tellor-io/layer/daemons/constants"
+	"github.com/tellor-io/layer/daemons/lib/metrics"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/price_encoder"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/price_fetcher"
 	handler "github.com/tellor-io/layer/daemons/pricefeed/client/queryhandler"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
-	servertypes "github.com/tellor-io/layer/daemons/server/types"
+	servertypes "github.com/tellor-io/layer/daemons/server/types/daemons"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
-	"github.com/tellor-io/layer/lib/metrics"
 
 	"cosmossdk.io/log"
 

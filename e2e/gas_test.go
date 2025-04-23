@@ -65,7 +65,7 @@ func TestGas(t *testing.T) {
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
 				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator", "--price-daemon-enabled=false"},
+				AdditionalStartArgs: []string{"--key-name", "validator"},
 			},
 		},
 	})

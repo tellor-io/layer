@@ -9,11 +9,12 @@ import (
 
 	cmttypes "github.com/cometbft/cometbft/rpc/core/types"
 	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
-	"github.com/tellor-io/layer/lib/metrics"
+	"github.com/tellor-io/layer/daemons/lib/metrics"
 
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -121,21 +122,17 @@ func (c *Client) WaitForBlockHeight(ctx context.Context, h int64) error {
 
 func (c *Client) sendTx(ctx context.Context, msg ...sdk.Msg) (*cmttypes.ResultTx, error) {
 	telemetry.IncrCounter(1, "daemon_sending_txs", "called")
-	block, err := c.cosmosCtx.Client.Block(ctx, nil)
+	block, err := c.CmtService.GetLatestBlock(ctx, &cmtservice.GetLatestBlockRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("error getting block: %w", err)
 	}
 	txf := newFactory(c.cosmosCtx)
-	_, nonce, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, c.accAddr)
+	_, nonce, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, c.cosmosCtx.FromAddress)
 	if err != nil {
 		return nil, fmt.Errorf("error getting account number and sequence: %w", err)
 	}
 
-	txf = txf.WithSequence(nonce)
-	txf = txf.WithGasPrices(c.minGasFee)
-	txf = txf.WithTimeoutHeight(uint64(block.Block.Header.Height + 2))
-	c.logger.Info("Transaction nonce", "nonce", nonce)
-
+	txf = txf.WithSequence(nonce).WithGasPrices(c.minGasFee).WithTimeoutHeight(uint64(block.SdkBlock.Header.Height + 2))
 	txf, err = txf.Prepare(c.cosmosCtx)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing transaction factory: %w", err)
@@ -161,7 +158,13 @@ func (c *Client) sendTx(ctx context.Context, msg ...sdk.Msg) (*cmttypes.ResultTx
 	if err != nil {
 		return nil, fmt.Errorf("error waiting for transaction: %w", err)
 	}
-	c.logger.Info("TxResult", "result", txnResponse.TxResult)
+	for _, event := range txnResponse.TxResult.Events {
+		if event.Type == "new_report" {
+			for _, attr := range event.Attributes {
+				c.logger.Info("NewReport", attr.Key, attr.Value)
+			}
+		}
+	}
 	c.logger.Info(fmt.Sprintf("transaction hash: %s", res.TxHash))
 	c.logger.Info(fmt.Sprintf("response after submit message: %d", txnResponse.TxResult.Code))
 	if txnResponse.TxResult.Code == 0 {

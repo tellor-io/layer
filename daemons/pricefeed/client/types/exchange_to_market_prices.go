@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/tellor-io/layer/daemons/lib/metrics"
 	"github.com/tellor-io/layer/daemons/pricefeed/types"
-	"github.com/tellor-io/layer/lib/metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )

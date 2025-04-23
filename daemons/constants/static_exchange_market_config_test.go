@@ -5,9 +5,9 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
-	"github.com/tellor-io/layer/testutil/daemons/pricefeed"
-	"github.com/tellor-io/layer/testutil/daemons/pricefeed/exchange_config"
-	"github.com/tellor-io/layer/testutil/json"
+	"github.com/tellor-io/layer/daemons/testutil/daemons/pricefeed"
+	"github.com/tellor-io/layer/daemons/testutil/daemons/pricefeed/exchange_config"
+	"github.com/tellor-io/layer/daemons/testutil/json"
 )
 
 func TestGenerateExchangeConfigJson(t *testing.T) {
