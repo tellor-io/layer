@@ -68,19 +68,15 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 	require := s.Require()
 	h, _, bk, _ := s.CreateHandlerAndMocks()
 
-	// err unmarshalling, empty req.ValidatorAddress, err on GetEVMAddressByOperator, accept
-	bk.On("GetEVMAddressByOperator", s.ctx, "").Return(nil, errors.New("error")).Once()
 	res, err := h.VerifyVoteExtensionHandler(s.ctx, &abci.RequestVerifyVoteExtension{})
 	require.NoError(err)
-	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_ACCEPT)
+	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
 
 	// err unmarshalling, validator has evm address, val has EVM addr, reject
 	req := &abci.RequestVerifyVoteExtension{
 		ValidatorAddress: []byte("operatorIn"),
 	}
-	validatorAddress, err := sdk.Bech32ifyAddressBytes(sdk.GetConfig().GetBech32ValidatorAddrPrefix(), req.ValidatorAddress)
-	require.NoError(err)
-	bk.On("GetEVMAddressByOperator", s.ctx, validatorAddress).Return([]byte("operatorOut"), nil).Once()
+
 	res, err = h.VerifyVoteExtensionHandler(s.ctx, req)
 	require.NoError(err)
 	require.Equal(res.Status, abci.ResponseVerifyVoteExtension_REJECT)
@@ -169,11 +165,6 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 	bridgeVoteExt.InitialSignature = app.InitialSignature{
 		SignatureA: []byte("signature"),
 		SignatureB: []byte("signature"),
-	}
-	bridgeVoteExtBz, err = json.Marshal(bridgeVoteExt)
-	require.NoError(err)
-	req = &abci.RequestVerifyVoteExtension{
-		VoteExtension: bridgeVoteExtBz,
 	}
 	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
 	bridgeVoteExt.OracleAttestations = append(bridgeVoteExt.OracleAttestations, app.OracleAttestation{
