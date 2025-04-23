@@ -1452,6 +1452,928 @@ func (x *fastReflection_Value) ProtoMethods() *protoiface.Methods {
 	}
 }
 
+var (
+	md_MicroReportStrings                  protoreflect.MessageDescriptor
+	fd_MicroReportStrings_reporter         protoreflect.FieldDescriptor
+	fd_MicroReportStrings_power            protoreflect.FieldDescriptor
+	fd_MicroReportStrings_query_type       protoreflect.FieldDescriptor
+	fd_MicroReportStrings_query_id         protoreflect.FieldDescriptor
+	fd_MicroReportStrings_aggregate_method protoreflect.FieldDescriptor
+	fd_MicroReportStrings_value            protoreflect.FieldDescriptor
+	fd_MicroReportStrings_timestamp        protoreflect.FieldDescriptor
+	fd_MicroReportStrings_cyclelist        protoreflect.FieldDescriptor
+	fd_MicroReportStrings_block_number     protoreflect.FieldDescriptor
+	fd_MicroReportStrings_meta_id          protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_oracle_micro_report_proto_init()
+	md_MicroReportStrings = File_layer_oracle_micro_report_proto.Messages().ByName("MicroReportStrings")
+	fd_MicroReportStrings_reporter = md_MicroReportStrings.Fields().ByName("reporter")
+	fd_MicroReportStrings_power = md_MicroReportStrings.Fields().ByName("power")
+	fd_MicroReportStrings_query_type = md_MicroReportStrings.Fields().ByName("query_type")
+	fd_MicroReportStrings_query_id = md_MicroReportStrings.Fields().ByName("query_id")
+	fd_MicroReportStrings_aggregate_method = md_MicroReportStrings.Fields().ByName("aggregate_method")
+	fd_MicroReportStrings_value = md_MicroReportStrings.Fields().ByName("value")
+	fd_MicroReportStrings_timestamp = md_MicroReportStrings.Fields().ByName("timestamp")
+	fd_MicroReportStrings_cyclelist = md_MicroReportStrings.Fields().ByName("cyclelist")
+	fd_MicroReportStrings_block_number = md_MicroReportStrings.Fields().ByName("block_number")
+	fd_MicroReportStrings_meta_id = md_MicroReportStrings.Fields().ByName("meta_id")
+}
+
+var _ protoreflect.Message = (*fastReflection_MicroReportStrings)(nil)
+
+type fastReflection_MicroReportStrings MicroReportStrings
+
+func (x *MicroReportStrings) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MicroReportStrings)(x)
+}
+
+func (x *MicroReportStrings) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_oracle_micro_report_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MicroReportStrings_messageType fastReflection_MicroReportStrings_messageType
+var _ protoreflect.MessageType = fastReflection_MicroReportStrings_messageType{}
+
+type fastReflection_MicroReportStrings_messageType struct{}
+
+func (x fastReflection_MicroReportStrings_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MicroReportStrings)(nil)
+}
+func (x fastReflection_MicroReportStrings_messageType) New() protoreflect.Message {
+	return new(fastReflection_MicroReportStrings)
+}
+func (x fastReflection_MicroReportStrings_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MicroReportStrings
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MicroReportStrings) Descriptor() protoreflect.MessageDescriptor {
+	return md_MicroReportStrings
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MicroReportStrings) Type() protoreflect.MessageType {
+	return _fastReflection_MicroReportStrings_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MicroReportStrings) New() protoreflect.Message {
+	return new(fastReflection_MicroReportStrings)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MicroReportStrings) Interface() protoreflect.ProtoMessage {
+	return (*MicroReportStrings)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MicroReportStrings) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Reporter != "" {
+		value := protoreflect.ValueOfString(x.Reporter)
+		if !f(fd_MicroReportStrings_reporter, value) {
+			return
+		}
+	}
+	if x.Power != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Power)
+		if !f(fd_MicroReportStrings_power, value) {
+			return
+		}
+	}
+	if x.QueryType != "" {
+		value := protoreflect.ValueOfString(x.QueryType)
+		if !f(fd_MicroReportStrings_query_type, value) {
+			return
+		}
+	}
+	if x.QueryId != "" {
+		value := protoreflect.ValueOfString(x.QueryId)
+		if !f(fd_MicroReportStrings_query_id, value) {
+			return
+		}
+	}
+	if x.AggregateMethod != "" {
+		value := protoreflect.ValueOfString(x.AggregateMethod)
+		if !f(fd_MicroReportStrings_aggregate_method, value) {
+			return
+		}
+	}
+	if x.Value != "" {
+		value := protoreflect.ValueOfString(x.Value)
+		if !f(fd_MicroReportStrings_value, value) {
+			return
+		}
+	}
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
+		if !f(fd_MicroReportStrings_timestamp, value) {
+			return
+		}
+	}
+	if x.Cyclelist != false {
+		value := protoreflect.ValueOfBool(x.Cyclelist)
+		if !f(fd_MicroReportStrings_cyclelist, value) {
+			return
+		}
+	}
+	if x.BlockNumber != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.BlockNumber)
+		if !f(fd_MicroReportStrings_block_number, value) {
+			return
+		}
+	}
+	if x.MetaId != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.MetaId)
+		if !f(fd_MicroReportStrings_meta_id, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MicroReportStrings) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.oracle.MicroReportStrings.reporter":
+		return x.Reporter != ""
+	case "layer.oracle.MicroReportStrings.power":
+		return x.Power != uint64(0)
+	case "layer.oracle.MicroReportStrings.query_type":
+		return x.QueryType != ""
+	case "layer.oracle.MicroReportStrings.query_id":
+		return x.QueryId != ""
+	case "layer.oracle.MicroReportStrings.aggregate_method":
+		return x.AggregateMethod != ""
+	case "layer.oracle.MicroReportStrings.value":
+		return x.Value != ""
+	case "layer.oracle.MicroReportStrings.timestamp":
+		return x.Timestamp != uint64(0)
+	case "layer.oracle.MicroReportStrings.cyclelist":
+		return x.Cyclelist != false
+	case "layer.oracle.MicroReportStrings.block_number":
+		return x.BlockNumber != uint64(0)
+	case "layer.oracle.MicroReportStrings.meta_id":
+		return x.MetaId != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MicroReportStrings"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MicroReportStrings does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MicroReportStrings) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.oracle.MicroReportStrings.reporter":
+		x.Reporter = ""
+	case "layer.oracle.MicroReportStrings.power":
+		x.Power = uint64(0)
+	case "layer.oracle.MicroReportStrings.query_type":
+		x.QueryType = ""
+	case "layer.oracle.MicroReportStrings.query_id":
+		x.QueryId = ""
+	case "layer.oracle.MicroReportStrings.aggregate_method":
+		x.AggregateMethod = ""
+	case "layer.oracle.MicroReportStrings.value":
+		x.Value = ""
+	case "layer.oracle.MicroReportStrings.timestamp":
+		x.Timestamp = uint64(0)
+	case "layer.oracle.MicroReportStrings.cyclelist":
+		x.Cyclelist = false
+	case "layer.oracle.MicroReportStrings.block_number":
+		x.BlockNumber = uint64(0)
+	case "layer.oracle.MicroReportStrings.meta_id":
+		x.MetaId = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MicroReportStrings"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MicroReportStrings does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MicroReportStrings) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.oracle.MicroReportStrings.reporter":
+		value := x.Reporter
+		return protoreflect.ValueOfString(value)
+	case "layer.oracle.MicroReportStrings.power":
+		value := x.Power
+		return protoreflect.ValueOfUint64(value)
+	case "layer.oracle.MicroReportStrings.query_type":
+		value := x.QueryType
+		return protoreflect.ValueOfString(value)
+	case "layer.oracle.MicroReportStrings.query_id":
+		value := x.QueryId
+		return protoreflect.ValueOfString(value)
+	case "layer.oracle.MicroReportStrings.aggregate_method":
+		value := x.AggregateMethod
+		return protoreflect.ValueOfString(value)
+	case "layer.oracle.MicroReportStrings.value":
+		value := x.Value
+		return protoreflect.ValueOfString(value)
+	case "layer.oracle.MicroReportStrings.timestamp":
+		value := x.Timestamp
+		return protoreflect.ValueOfUint64(value)
+	case "layer.oracle.MicroReportStrings.cyclelist":
+		value := x.Cyclelist
+		return protoreflect.ValueOfBool(value)
+	case "layer.oracle.MicroReportStrings.block_number":
+		value := x.BlockNumber
+		return protoreflect.ValueOfUint64(value)
+	case "layer.oracle.MicroReportStrings.meta_id":
+		value := x.MetaId
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MicroReportStrings"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MicroReportStrings does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MicroReportStrings) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.oracle.MicroReportStrings.reporter":
+		x.Reporter = value.Interface().(string)
+	case "layer.oracle.MicroReportStrings.power":
+		x.Power = value.Uint()
+	case "layer.oracle.MicroReportStrings.query_type":
+		x.QueryType = value.Interface().(string)
+	case "layer.oracle.MicroReportStrings.query_id":
+		x.QueryId = value.Interface().(string)
+	case "layer.oracle.MicroReportStrings.aggregate_method":
+		x.AggregateMethod = value.Interface().(string)
+	case "layer.oracle.MicroReportStrings.value":
+		x.Value = value.Interface().(string)
+	case "layer.oracle.MicroReportStrings.timestamp":
+		x.Timestamp = value.Uint()
+	case "layer.oracle.MicroReportStrings.cyclelist":
+		x.Cyclelist = value.Bool()
+	case "layer.oracle.MicroReportStrings.block_number":
+		x.BlockNumber = value.Uint()
+	case "layer.oracle.MicroReportStrings.meta_id":
+		x.MetaId = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MicroReportStrings"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MicroReportStrings does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MicroReportStrings) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.oracle.MicroReportStrings.reporter":
+		panic(fmt.Errorf("field reporter of message layer.oracle.MicroReportStrings is not mutable"))
+	case "layer.oracle.MicroReportStrings.power":
+		panic(fmt.Errorf("field power of message layer.oracle.MicroReportStrings is not mutable"))
+	case "layer.oracle.MicroReportStrings.query_type":
+		panic(fmt.Errorf("field query_type of message layer.oracle.MicroReportStrings is not mutable"))
+	case "layer.oracle.MicroReportStrings.query_id":
+		panic(fmt.Errorf("field query_id of message layer.oracle.MicroReportStrings is not mutable"))
+	case "layer.oracle.MicroReportStrings.aggregate_method":
+		panic(fmt.Errorf("field aggregate_method of message layer.oracle.MicroReportStrings is not mutable"))
+	case "layer.oracle.MicroReportStrings.value":
+		panic(fmt.Errorf("field value of message layer.oracle.MicroReportStrings is not mutable"))
+	case "layer.oracle.MicroReportStrings.timestamp":
+		panic(fmt.Errorf("field timestamp of message layer.oracle.MicroReportStrings is not mutable"))
+	case "layer.oracle.MicroReportStrings.cyclelist":
+		panic(fmt.Errorf("field cyclelist of message layer.oracle.MicroReportStrings is not mutable"))
+	case "layer.oracle.MicroReportStrings.block_number":
+		panic(fmt.Errorf("field block_number of message layer.oracle.MicroReportStrings is not mutable"))
+	case "layer.oracle.MicroReportStrings.meta_id":
+		panic(fmt.Errorf("field meta_id of message layer.oracle.MicroReportStrings is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MicroReportStrings"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MicroReportStrings does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MicroReportStrings) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.oracle.MicroReportStrings.reporter":
+		return protoreflect.ValueOfString("")
+	case "layer.oracle.MicroReportStrings.power":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.oracle.MicroReportStrings.query_type":
+		return protoreflect.ValueOfString("")
+	case "layer.oracle.MicroReportStrings.query_id":
+		return protoreflect.ValueOfString("")
+	case "layer.oracle.MicroReportStrings.aggregate_method":
+		return protoreflect.ValueOfString("")
+	case "layer.oracle.MicroReportStrings.value":
+		return protoreflect.ValueOfString("")
+	case "layer.oracle.MicroReportStrings.timestamp":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.oracle.MicroReportStrings.cyclelist":
+		return protoreflect.ValueOfBool(false)
+	case "layer.oracle.MicroReportStrings.block_number":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.oracle.MicroReportStrings.meta_id":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.MicroReportStrings"))
+		}
+		panic(fmt.Errorf("message layer.oracle.MicroReportStrings does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MicroReportStrings) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.oracle.MicroReportStrings", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MicroReportStrings) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MicroReportStrings) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MicroReportStrings) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MicroReportStrings) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MicroReportStrings)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Reporter)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Power != 0 {
+			n += 1 + runtime.Sov(uint64(x.Power))
+		}
+		l = len(x.QueryType)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.QueryId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.AggregateMethod)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Value)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Timestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.Timestamp))
+		}
+		if x.Cyclelist {
+			n += 2
+		}
+		if x.BlockNumber != 0 {
+			n += 1 + runtime.Sov(uint64(x.BlockNumber))
+		}
+		if x.MetaId != 0 {
+			n += 1 + runtime.Sov(uint64(x.MetaId))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MicroReportStrings)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.MetaId != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.MetaId))
+			i--
+			dAtA[i] = 0x50
+		}
+		if x.BlockNumber != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.BlockNumber))
+			i--
+			dAtA[i] = 0x48
+		}
+		if x.Cyclelist {
+			i--
+			if x.Cyclelist {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+			i--
+			dAtA[i] = 0x40
+		}
+		if x.Timestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Timestamp))
+			i--
+			dAtA[i] = 0x38
+		}
+		if len(x.Value) > 0 {
+			i -= len(x.Value)
+			copy(dAtA[i:], x.Value)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Value)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.AggregateMethod) > 0 {
+			i -= len(x.AggregateMethod)
+			copy(dAtA[i:], x.AggregateMethod)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.AggregateMethod)))
+			i--
+			dAtA[i] = 0x2a
+		}
+		if len(x.QueryId) > 0 {
+			i -= len(x.QueryId)
+			copy(dAtA[i:], x.QueryId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.QueryId)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.QueryType) > 0 {
+			i -= len(x.QueryType)
+			copy(dAtA[i:], x.QueryType)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.QueryType)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if x.Power != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Power))
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.Reporter) > 0 {
+			i -= len(x.Reporter)
+			copy(dAtA[i:], x.Reporter)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Reporter)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MicroReportStrings)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MicroReportStrings: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MicroReportStrings: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Reporter", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Reporter = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Power", wireType)
+				}
+				x.Power = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Power |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryType", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.QueryType = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.QueryId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AggregateMethod", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.AggregateMethod = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Value = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 7:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+				}
+				x.Timestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Timestamp |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 8:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Cyclelist", wireType)
+				}
+				var v int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				x.Cyclelist = bool(v != 0)
+			case 9:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BlockNumber", wireType)
+				}
+				x.BlockNumber = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.BlockNumber |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 10:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MetaId", wireType)
+				}
+				x.MetaId = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.MetaId |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -1626,6 +2548,124 @@ func (x *Value) GetMicroReport() *MicroReport {
 	return nil
 }
 
+// MicroReports but with strings to return for queries
+type MicroReportStrings struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// reporter is the address of the reporter
+	Reporter string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
+	// the power of the reporter based on total tokens normalized
+	Power uint64 `protobuf:"varint,2,opt,name=power,proto3" json:"power,omitempty"`
+	// string identifier of the data spec
+	QueryType string `protobuf:"bytes,3,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
+	// hash of the query data
+	QueryId string `protobuf:"bytes,4,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	// aggregate method to use for aggregating all the reports for the query id
+	AggregateMethod string `protobuf:"bytes,5,opt,name=aggregate_method,json=aggregateMethod,proto3" json:"aggregate_method,omitempty"`
+	// hex string of the response value
+	Value string `protobuf:"bytes,6,opt,name=value,proto3" json:"value,omitempty"`
+	// timestamp of when the report was created
+	Timestamp uint64 `protobuf:"varint,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	// indicates if the report's query id is in the cyclelist
+	Cyclelist bool `protobuf:"varint,8,opt,name=cyclelist,proto3" json:"cyclelist,omitempty"`
+	// block number of when the report was created
+	BlockNumber uint64 `protobuf:"varint,9,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
+	// identifier for the report's aggregate group
+	MetaId uint64 `protobuf:"varint,10,opt,name=meta_id,json=metaId,proto3" json:"meta_id,omitempty"`
+}
+
+func (x *MicroReportStrings) Reset() {
+	*x = MicroReportStrings{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_oracle_micro_report_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MicroReportStrings) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MicroReportStrings) ProtoMessage() {}
+
+// Deprecated: Use MicroReportStrings.ProtoReflect.Descriptor instead.
+func (*MicroReportStrings) Descriptor() ([]byte, []int) {
+	return file_layer_oracle_micro_report_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *MicroReportStrings) GetReporter() string {
+	if x != nil {
+		return x.Reporter
+	}
+	return ""
+}
+
+func (x *MicroReportStrings) GetPower() uint64 {
+	if x != nil {
+		return x.Power
+	}
+	return 0
+}
+
+func (x *MicroReportStrings) GetQueryType() string {
+	if x != nil {
+		return x.QueryType
+	}
+	return ""
+}
+
+func (x *MicroReportStrings) GetQueryId() string {
+	if x != nil {
+		return x.QueryId
+	}
+	return ""
+}
+
+func (x *MicroReportStrings) GetAggregateMethod() string {
+	if x != nil {
+		return x.AggregateMethod
+	}
+	return ""
+}
+
+func (x *MicroReportStrings) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *MicroReportStrings) GetTimestamp() uint64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+func (x *MicroReportStrings) GetCyclelist() bool {
+	if x != nil {
+		return x.Cyclelist
+	}
+	return false
+}
+
+func (x *MicroReportStrings) GetBlockNumber() uint64 {
+	if x != nil {
+		return x.BlockNumber
+	}
+	return 0
+}
+
+func (x *MicroReportStrings) GetMetaId() uint64 {
+	if x != nil {
+		return x.MetaId
+	}
+	return 0
+}
+
 var File_layer_oracle_micro_report_proto protoreflect.FileDescriptor
 
 var file_layer_oracle_micro_report_proto_rawDesc = []byte{
@@ -1664,17 +2704,37 @@ var file_layer_oracle_micro_report_proto_rawDesc = []byte{
 	0x65, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x6c, 0x61,
 	0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e, 0x4d, 0x69, 0x63, 0x72, 0x6f,
 	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x0b, 0x6d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70,
-	0x6f, 0x72, 0x74, 0x42, 0xa2, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x42, 0x10, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x52,
-	0x65, 0x70, 0x6f, 0x72, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69,
-	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d,
-	0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x4f, 0x58, 0xaa,
-	0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xca, 0x02,
-	0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xe2, 0x02, 0x18,
-	0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x5c, 0x47, 0x50, 0x42,
-	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72,
-	0x3a, 0x3a, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6f, 0x72, 0x74, 0x22, 0xb9, 0x02, 0x0a, 0x12, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70,
+	0x6f, 0x72, 0x74, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65,
+	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65,
+	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x12, 0x1d, 0x0a, 0x0a,
+	0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x54, 0x79, 0x70, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x71,
+	0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x71,
+	0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x12, 0x29, 0x0a, 0x10, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67,
+	0x61, 0x74, 0x65, 0x5f, 0x6d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x0f, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x4d, 0x65, 0x74, 0x68, 0x6f,
+	0x64, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73,
+	0x74, 0x61, 0x6d, 0x70, 0x18, 0x07, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x1c, 0x0a, 0x09, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x6c, 0x69,
+	0x73, 0x74, 0x18, 0x08, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x6c,
+	0x69, 0x73, 0x74, 0x12, 0x21, 0x0a, 0x0c, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x6e, 0x75, 0x6d,
+	0x62, 0x65, 0x72, 0x18, 0x09, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0b, 0x62, 0x6c, 0x6f, 0x63, 0x6b,
+	0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x17, 0x0a, 0x07, 0x6d, 0x65, 0x74, 0x61, 0x5f, 0x69,
+	0x64, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x04, 0x52, 0x06, 0x6d, 0x65, 0x74, 0x61, 0x49, 0x64, 0x42,
+	0xa2, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72,
+	0x61, 0x63, 0x6c, 0x65, 0x42, 0x10, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
+	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f,
+	0x72, 0x61, 0x63, 0x6c, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x4f, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61,
+	0x79, 0x65, 0x72, 0x2e, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79,
+	0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65,
+	0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x4f, 0x72,
+	0x61, 0x63, 0x6c, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1689,14 +2749,15 @@ func file_layer_oracle_micro_report_proto_rawDescGZIP() []byte {
 	return file_layer_oracle_micro_report_proto_rawDescData
 }
 
-var file_layer_oracle_micro_report_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_layer_oracle_micro_report_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_layer_oracle_micro_report_proto_goTypes = []interface{}{
 	(*MicroReport)(nil),           // 0: layer.oracle.MicroReport
 	(*Value)(nil),                 // 1: layer.oracle.Value
-	(*timestamppb.Timestamp)(nil), // 2: google.protobuf.Timestamp
+	(*MicroReportStrings)(nil),    // 2: layer.oracle.MicroReportStrings
+	(*timestamppb.Timestamp)(nil), // 3: google.protobuf.Timestamp
 }
 var file_layer_oracle_micro_report_proto_depIdxs = []int32{
-	2, // 0: layer.oracle.MicroReport.timestamp:type_name -> google.protobuf.Timestamp
+	3, // 0: layer.oracle.MicroReport.timestamp:type_name -> google.protobuf.Timestamp
 	0, // 1: layer.oracle.Value.micro_report:type_name -> layer.oracle.MicroReport
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
@@ -1735,6 +2796,18 @@ func file_layer_oracle_micro_report_proto_init() {
 				return nil
 			}
 		}
+		file_layer_oracle_micro_report_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MicroReportStrings); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1742,7 +2815,7 @@ func file_layer_oracle_micro_report_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_oracle_micro_report_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

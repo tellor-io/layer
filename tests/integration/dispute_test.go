@@ -198,7 +198,7 @@ func (s *IntegrationTestSuite) TestDisputes() {
 	require.NoError(err)
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
-	require.Equal(queryId, result.Aggregate.QueryId)
+	require.Equal(hex.EncodeToString(queryId), result.Aggregate.QueryId)
 	require.Equal(uint64(4000), result.Aggregate.AggregatePower)
 	require.Equal(uint64(3), result.Aggregate.Height)
 
@@ -368,7 +368,7 @@ func (s *IntegrationTestSuite) TestDisputes() {
 	require.NoError(err)
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
-	require.Equal(queryId, result.Aggregate.QueryId)
+	require.Equal(hex.EncodeToString(queryId), result.Aggregate.QueryId)
 	require.Equal(uint64(4000)-slashAmount.Quo(sdk.DefaultPowerReduction).Uint64(), result.Aggregate.AggregatePower)
 	require.Equal(uint64(7), result.Aggregate.Height)
 
@@ -545,7 +545,7 @@ func (s *IntegrationTestSuite) TestDisputes() {
 	require.NoError(err)
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(reporterAccount.String(), result.Aggregate.AggregateReporter)
-	require.Equal(queryId, result.Aggregate.QueryId)
+	require.Equal(hex.EncodeToString(queryId), result.Aggregate.QueryId)
 	require.Equal(uint64(7), result.Aggregate.Height)
 
 	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
@@ -891,7 +891,7 @@ func (s *IntegrationTestSuite) TestDisputeFromDelegatorPayFromBond() {
 	require.NoError(err)
 	require.Equal(testutil.EncodeValue(100_000), result.Aggregate.AggregateValue)
 	require.Equal(rickyAccAddr.String(), result.Aggregate.AggregateReporter)
-	require.Equal(queryId, result.Aggregate.QueryId)
+	require.Equal(hex.EncodeToString(queryId), result.Aggregate.QueryId)
 	require.Equal(uint64(1000), result.Aggregate.AggregatePower)
 	require.Equal(uint64(6), result.Aggregate.Height)
 
@@ -1112,7 +1112,21 @@ func (s *IntegrationTestSuite) TestOpenDisputePrecision() {
 	}
 	// anna opens dispute
 	disputeStartTime := ctx.BlockTime()
-	s.Setup.OpenDispute(ctx, annaAccAddr, report.MicroReports[0], disputetypes.Warning, disputeFeeTotal, true)
+	queryIDBz, err := hex.DecodeString(report.MicroReports[0].QueryId)
+	require.NoError(err)
+	disputeReport := oracletypes.MicroReport{
+		Reporter:        report.MicroReports[0].Reporter,
+		Power:           report.MicroReports[0].Power,
+		QueryType:       report.MicroReports[0].QueryType,
+		QueryId:         queryIDBz,
+		AggregateMethod: report.MicroReports[0].AggregateMethod,
+		Value:           report.MicroReports[0].Value,
+		Timestamp:       time.UnixMilli(int64(report.MicroReports[0].Timestamp)),
+		Cyclelist:       report.MicroReports[0].Cyclelist,
+		BlockNumber:     report.MicroReports[0].BlockNumber,
+		MetaId:          report.MicroReports[0].MetaId,
+	}
+	s.Setup.OpenDispute(ctx, annaAccAddr, disputeReport, disputetypes.Warning, disputeFeeTotal, true)
 
 	_, err = s.Setup.App.EndBlocker(ctx)
 	require.NoError(err)
@@ -1147,7 +1161,28 @@ func (s *IntegrationTestSuite) TestOpenDisputePrecision() {
 	require.Equal(dispute.DisputeStartTime, disputeStartTime)
 	require.Equal(dispute.DisputeRound, uint64(1))
 	require.Equal(dispute.SlashAmount, disputeFeeTotal)
-	require.Equal(dispute.InitialEvidence, report.MicroReports[0])
+	microReport := oracletypes.MicroReport{
+		Reporter:        report.MicroReports[0].Reporter,
+		Power:           report.MicroReports[0].Power,
+		QueryType:       report.MicroReports[0].QueryType,
+		QueryId:         queryIDBz,
+		AggregateMethod: report.MicroReports[0].AggregateMethod,
+		Value:           report.MicroReports[0].Value,
+		Timestamp:       time.UnixMilli(int64(report.MicroReports[0].Timestamp)),
+		Cyclelist:       report.MicroReports[0].Cyclelist,
+		BlockNumber:     report.MicroReports[0].BlockNumber,
+		MetaId:          report.MicroReports[0].MetaId,
+	}
+	require.Equal(dispute.InitialEvidence.Reporter, microReport.Reporter)
+	require.Equal(dispute.InitialEvidence.Power, microReport.Power)
+	require.Equal(dispute.InitialEvidence.QueryType, microReport.QueryType)
+	require.Equal(dispute.InitialEvidence.QueryId, microReport.QueryId)
+	require.Equal(dispute.InitialEvidence.AggregateMethod, microReport.AggregateMethod)
+	require.Equal(dispute.InitialEvidence.Value, microReport.Value)
+	require.Equal(dispute.InitialEvidence.Timestamp.UnixMilli(), microReport.Timestamp.UnixMilli())
+	require.Equal(dispute.InitialEvidence.Cyclelist, microReport.Cyclelist)
+	require.Equal(dispute.InitialEvidence.BlockNumber, microReport.BlockNumber)
+	require.Equal(dispute.InitialEvidence.MetaId, microReport.MetaId)
 
 	_, err = s.Setup.App.EndBlocker(ctx)
 	require.NoError(err)

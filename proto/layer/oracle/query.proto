@@ -152,7 +152,7 @@ message QueryParamsResponse {
 // QueryMicroReportsResponse is response type for the Query/MicroReports RPC method.
 message QueryMicroReportsResponse {
   // microReports is a list of individual microreports.
-  repeated MicroReport microReports = 1 [(gogoproto.nullable) = false];
+  repeated MicroReportStrings microReports = 1 [(gogoproto.nullable) = false];
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
@@ -217,7 +217,7 @@ message QueryGetDataBeforeRequest {
 // QueryGetDataBeforeResponse is response type for the Query/GetDataBefore RPC method.
 message QueryGetDataBeforeResponse {
   // aggregate defines the aggregate report.
-  Aggregate aggregate = 1;
+  AggregateStrings aggregate = 1;
   // timestamp defines the timestamp of the aggregate report.
   uint64 timestamp = 2;
 }
@@ -231,7 +231,7 @@ message QueryGetDataAfterRequest {
 // QueryGetDataAfterResponse is response type for the Query/GetDataAfter RPC method.
 message QueryGetDataAfterResponse {
   // aggregate defines the aggregate report.
-  Aggregate aggregate = 1;
+  AggregateStrings aggregate = 1;
   // timestamp defines the timestamp of the aggregate report.
   uint64 timestamp = 2;
 }
@@ -274,7 +274,7 @@ message QueryRetrieveDataRequest {
 // QueryRetrieveDataResponse is response type for the Query/RetrieveData RPC method.
 message QueryRetrieveDataResponse {
   // aggregate defines the aggregate report.
-  Aggregate aggregate = 1;
+  AggregateStrings aggregate = 1;
 }
 // QueryGetCurrentAggregateReportRequest is the request type for the Query/GetCurrentAggregateReport RPC method.
 message QueryGetCurrentAggregateReportRequest {
@@ -284,7 +284,7 @@ message QueryGetCurrentAggregateReportRequest {
 // QueryGetCurrentAggregateReportResponse is the response type for the Query/GetCurrentAggregateReport RPC method.
 message QueryGetCurrentAggregateReportResponse {
   // aggregate defines the current aggregate report.
-  Aggregate aggregate = 1;
+  AggregateStrings aggregate = 1;
   // timestamp defines the timestamp of the aggregate report.
   uint64 timestamp = 2;
 }
@@ -302,7 +302,7 @@ message QueryGetAggregateBeforeByReporterRequest {
 // QueryGetAggregateBeforeByReporterResponse is the response type for the Query/GetAggregateBeforeByReporter RPC method.
 message QueryGetAggregateBeforeByReporterResponse {
   // aggregate defines the aggregate report.
-  Aggregate aggregate = 1;
+  AggregateStrings aggregate = 1;
 }
 
 // QueryGetQueryRequest is the request type for the Query/GetQuery RPC method.
@@ -338,7 +338,7 @@ message QueryGetReportsByAggregateRequest {
 // QueryGetReportsByAggregateResponse is the response type for the Query/GetReportsByAggregate RPC method.
 message QueryGetReportsByAggregateResponse {
   // microReports defines the micro reports.
-  repeated MicroReport microReports = 1 [(gogoproto.nullable) = false];
+  repeated MicroReportStrings microReports = 1 [(gogoproto.nullable) = false];
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
@@ -371,7 +371,7 @@ message QueryReportedIdsByReporterResponse {
   // ids defines the reported ids.
   repeated uint64 ids = 1;
   // query_ids defines the query ids.
-  repeated bytes query_ids =2;
+  repeated string query_ids = 2;
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 3;
 }
@@ -380,7 +380,7 @@ message QueryGetCycleListRequest {}
 // QueryGetCycleListResponse is the response type for the Query/GetCycleList RPC method.
 message QueryGetCycleListResponse {
   // cycle_list defines the cycle list.
-  repeated bytes cycle_list = 1;
+  repeated string cycle_list = 1;
 }
 // QueryGetTimestampBeforeRequest is the request type for the Query/GetTimestampBefore RPC method.
 message QueryGetTimestampBeforeRequest {

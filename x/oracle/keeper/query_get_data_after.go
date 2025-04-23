@@ -36,8 +36,20 @@ func (k Querier) GetDataAfter(ctx context.Context, req *types.QueryGetDataAfterR
 
 	timeUnix := timestamp.UnixMilli()
 
+	aggregateStrings := types.AggregateStrings{
+		QueryId:           req.QueryId,
+		AggregateValue:    aggregate.AggregateValue,
+		AggregateReporter: aggregate.AggregateReporter,
+		AggregatePower:    aggregate.AggregatePower,
+		Flagged:           aggregate.Flagged,
+		Index:             aggregate.Index,
+		Height:            aggregate.Height,
+		MicroHeight:       aggregate.MicroHeight,
+		MetaId:            aggregate.MetaId,
+	}
+
 	return &types.QueryGetDataAfterResponse{
-		Aggregate: aggregate,
+		Aggregate: &aggregateStrings,
 		Timestamp: uint64(timeUnix),
 	}, nil
 }

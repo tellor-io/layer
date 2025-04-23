@@ -87,7 +87,7 @@ message QueryGenerateQuerydataRequest {
 // QueryGenerateQuerydataResponse is response type for the Query/GenerateQuerydata RPC method.
 message QueryGenerateQuerydataResponse {
   // query_data is the generated query_data hex string.
-  bytes query_data = 1;
+  string query_data = 1;
 }
 
 // QueryDecodeValueRequest is request type for the Query/DecodeValue RPC method.

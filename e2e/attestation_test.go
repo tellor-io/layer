@@ -2,8 +2,6 @@ package e2e_test
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -181,7 +179,7 @@ func TestAttestation(t *testing.T) {
 	require.NoError(err)
 
 	// check on reports
-	var queryId1, queryId2, decodedQueryId string
+	var queryId1, queryId2 string
 	for i, v := range validators {
 		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", v.Addr)
 		require.NoError(err)
@@ -195,16 +193,13 @@ func TestAttestation(t *testing.T) {
 		} else {
 			queryId2 = reportsRes.MicroReports[0].QueryID
 		}
-		// decode queryId
-		decodedBytes, err := base64.StdEncoding.DecodeString(reportsRes.MicroReports[0].QueryID)
-		require.NoError(err)
-		decodedQueryId = hex.EncodeToString(decodedBytes)
-		fmt.Println("decodedQueryId: ", decodedQueryId)
 	}
 	require.Equal(queryId1, queryId2) // make sure both reporters reported for the same query
+	fmt.Println("queryId1: ", queryId1)
+	fmt.Println("queryId2: ", queryId2)
 
 	// query GetCurrentAggregateReport to get aggregate timestamp
-	res, _, err = validators[0].Val.ExecQuery(ctx, "oracle", "get-current-aggregate-report", decodedQueryId)
+	res, _, err = validators[0].Val.ExecQuery(ctx, "oracle", "get-current-aggregate-report", queryId1)
 	require.NoError(err)
 	var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
 	err = json.Unmarshal(res, &currentAggRes)
@@ -212,7 +207,7 @@ func TestAttestation(t *testing.T) {
 	timestamp := currentAggRes.Timestamp
 
 	// get snapshots
-	snapshots, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", decodedQueryId, timestamp)
+	snapshots, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", queryId1, timestamp)
 	require.NoError(err)
 	var snapshotsRes e2e.QueryGetSnapshotsByReportResponse
 	err = json.Unmarshal(snapshots, &snapshotsRes)
@@ -236,7 +231,7 @@ func TestAttestation(t *testing.T) {
 		var attestationDataRes e2e.QueryGetAttestationDataBySnapshotResponse
 		err = json.Unmarshal(attestationData, &attestationDataRes)
 		require.NoError(err)
-		require.Equal(attestationDataRes.QueryId, decodedQueryId)
+		require.Equal(attestationDataRes.QueryId, queryId1)
 		require.Equal(attestationDataRes.Timestamp, timestamp)
 		require.Equal(attestationDataRes.AggregateValue, value)
 		require.Equal(attestationDataRes.AggregatePower, "10000000") // 100% power
@@ -287,7 +282,7 @@ func TestAttestation(t *testing.T) {
 	require.Equal(queryId1, queryId3) // make sure query is same as first report, then we can reuse the decoded queryId from earlier
 
 	// query GetCurrentAggregateReport to get aggregate timestamp
-	res, _, err = validators[0].Val.ExecQuery(ctx, "oracle", "get-current-aggregate-report", decodedQueryId)
+	res, _, err = validators[0].Val.ExecQuery(ctx, "oracle", "get-current-aggregate-report", queryId1)
 	require.NoError(err)
 	err = json.Unmarshal(res, &currentAggRes)
 	require.NoError(err)
@@ -297,7 +292,7 @@ func TestAttestation(t *testing.T) {
 	fmt.Println("currentAggRes: ", currentAggRes)
 
 	// get snapshots
-	snapshots, _, err = validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", decodedQueryId, timestamp)
+	snapshots, _, err = validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", queryId1, timestamp)
 	require.NoError(err)
 	err = json.Unmarshal(snapshots, &snapshotsRes)
 	require.NoError(err)
@@ -320,7 +315,7 @@ func TestAttestation(t *testing.T) {
 		var attestationDataRes e2e.QueryGetAttestationDataBySnapshotResponse
 		err = json.Unmarshal(attestationData, &attestationDataRes)
 		require.NoError(err)
-		require.Equal(attestationDataRes.QueryId, decodedQueryId)
+		require.Equal(attestationDataRes.QueryId, queryId1)
 		require.Equal(attestationDataRes.Timestamp, timestamp)
 		require.Equal(attestationDataRes.AggregateValue, value)
 		require.Equal(attestationDataRes.AggregatePower, "5000000") // 50% power
@@ -334,12 +329,12 @@ func TestAttestation(t *testing.T) {
 	// wait and request attestations for report2
 	err = testutil.WaitForBlocks(ctx, 5, validators[0].Val)
 	require.NoError(err)
-	txHash, err := validators[0].Val.ExecTx(ctx, "validator", "bridge", "request-attestations", validators[0].Addr, decodedQueryId, timestamp, "--keyring-dir", validators[0].Val.HomeDir())
+	txHash, err := validators[0].Val.ExecTx(ctx, "validator", "bridge", "request-attestations", validators[0].Addr, queryId1, timestamp, "--keyring-dir", validators[0].Val.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val0 requests attestation for report2): ", txHash)
 
 	// get snapshots by report
-	snapshots, _, err = validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", decodedQueryId, timestamp)
+	snapshots, _, err = validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", queryId1, timestamp)
 	require.NoError(err)
 	err = json.Unmarshal(snapshots, &snapshotsRes)
 	require.NoError(err)
@@ -352,7 +347,7 @@ func TestAttestation(t *testing.T) {
 	var attestationDataRes e2e.QueryGetAttestationDataBySnapshotResponse
 	err = json.Unmarshal(attestationData, &attestationDataRes)
 	require.NoError(err)
-	require.Equal(attestationDataRes.QueryId, decodedQueryId)
+	require.Equal(attestationDataRes.QueryId, queryId1)
 	require.Equal(attestationDataRes.Timestamp, timestamp)
 	require.Equal(attestationDataRes.AggregateValue, value)
 	require.Equal(attestationDataRes.AggregatePower, "5000000")         // 50% power

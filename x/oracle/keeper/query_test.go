@@ -57,14 +57,24 @@ func (s *KeeperTestSuite) TestQueryGetAggregatedReport() {
 		AggregateValue:    "100",
 		AggregateReporter: sdk.AccAddress("reporter").String(),
 		AggregatePower:    100,
+		Flagged:           false,
+		Index:             10,
+		Height:            11,
+		MicroHeight:       12,
+		MetaId:            13,
 	}))
 	res, err = q.GetCurrentAggregateReport(s.ctx, &req)
 	require.NoError(err)
 	require.NotNil(res)
-	require.Equal(res.Aggregate.QueryId, qId)
+	require.Equal(res.Aggregate.QueryId, hex.EncodeToString(qId))
 	require.Equal(res.Aggregate.AggregateValue, "100")
 	require.Equal(res.Aggregate.AggregateReporter, sdk.AccAddress("reporter").String())
 	require.Equal(res.Aggregate.AggregatePower, uint64(100))
+	require.Equal(res.Aggregate.Flagged, false)
+	require.Equal(res.Aggregate.Index, uint64(10))
+	require.Equal(res.Aggregate.Height, uint64(11))
+	require.Equal(res.Aggregate.MicroHeight, uint64(12))
+	require.Equal(res.Aggregate.MetaId, uint64(13))
 }
 
 func TestGetCurrentAggregateReport(t *testing.T) {
@@ -96,7 +106,7 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 	require.Nil(t, getCurrentAggResponse)
 
 	agg = &types.Aggregate{
-		QueryId:           []byte(queryId),
+		QueryId:           qIdBz,
 		AggregateValue:    "10_000",
 		AggregateReporter: sdk.AccAddress("reporter1").String(),
 		AggregatePower:    100,
@@ -112,7 +122,7 @@ func TestGetCurrentAggregateReport(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.Equal(t, getCurrentAggResponse.Timestamp, uint64(timestamp.UnixMilli()))
-	require.Equal(t, getCurrentAggResponse.Aggregate.QueryId, agg.QueryId)
+	require.Equal(t, getCurrentAggResponse.Aggregate.QueryId, hex.EncodeToString(agg.QueryId))
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateValue, agg.AggregateValue)
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregateReporter, agg.AggregateReporter)
 	require.Equal(t, getCurrentAggResponse.Aggregate.AggregatePower, agg.AggregatePower)
@@ -191,7 +201,7 @@ func (s *KeeperTestSuite) TestQuery_GetAggregateBeforeByReporter() {
 	q := s.queryClient
 	ctx := s.ctx
 
-	reportedAt := time.Now()
+	reportedAt := time.Now().Add(time.Second * -10)
 	_, qId, reporter, _, err := s.CreateReportAndReportersAtTimestamp(reportedAt)
 	s.NoError(err)
 
@@ -216,8 +226,9 @@ func (s *KeeperTestSuite) TestQuery_GetAggregateBeforeByReporter() {
 		{
 			name: "success",
 			request: &types.QueryGetAggregateBeforeByReporterRequest{
-				QueryId:  hex.EncodeToString(qId),
-				Reporter: reporter.String(),
+				QueryId:   hex.EncodeToString(qId),
+				Reporter:  reporter.String(),
+				Timestamp: uint64(reportedAt.UnixMilli() + 10),
 			},
 			expectedError: "",
 		},

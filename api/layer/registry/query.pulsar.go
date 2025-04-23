@@ -3062,8 +3062,8 @@ func (x *fastReflection_QueryGenerateQuerydataResponse) Interface() protoreflect
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryGenerateQuerydataResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if len(x.QueryData) != 0 {
-		value := protoreflect.ValueOfBytes(x.QueryData)
+	if x.QueryData != "" {
+		value := protoreflect.ValueOfString(x.QueryData)
 		if !f(fd_QueryGenerateQuerydataResponse_query_data, value) {
 			return
 		}
@@ -3084,7 +3084,7 @@ func (x *fastReflection_QueryGenerateQuerydataResponse) Range(f func(protoreflec
 func (x *fastReflection_QueryGenerateQuerydataResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.registry.QueryGenerateQuerydataResponse.query_data":
-		return len(x.QueryData) != 0
+		return x.QueryData != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryGenerateQuerydataResponse"))
@@ -3102,7 +3102,7 @@ func (x *fastReflection_QueryGenerateQuerydataResponse) Has(fd protoreflect.Fiel
 func (x *fastReflection_QueryGenerateQuerydataResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.registry.QueryGenerateQuerydataResponse.query_data":
-		x.QueryData = nil
+		x.QueryData = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryGenerateQuerydataResponse"))
@@ -3121,7 +3121,7 @@ func (x *fastReflection_QueryGenerateQuerydataResponse) Get(descriptor protorefl
 	switch descriptor.FullName() {
 	case "layer.registry.QueryGenerateQuerydataResponse.query_data":
 		value := x.QueryData
-		return protoreflect.ValueOfBytes(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryGenerateQuerydataResponse"))
@@ -3143,7 +3143,7 @@ func (x *fastReflection_QueryGenerateQuerydataResponse) Get(descriptor protorefl
 func (x *fastReflection_QueryGenerateQuerydataResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.registry.QueryGenerateQuerydataResponse.query_data":
-		x.QueryData = value.Bytes()
+		x.QueryData = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryGenerateQuerydataResponse"))
@@ -3180,7 +3180,7 @@ func (x *fastReflection_QueryGenerateQuerydataResponse) Mutable(fd protoreflect.
 func (x *fastReflection_QueryGenerateQuerydataResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.registry.QueryGenerateQuerydataResponse.query_data":
-		return protoreflect.ValueOfBytes(nil)
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.registry.QueryGenerateQuerydataResponse"))
@@ -3343,7 +3343,7 @@ func (x *fastReflection_QueryGenerateQuerydataResponse) ProtoMethods() *protoifa
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryData", wireType)
 				}
-				var byteLen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -3353,25 +3353,23 @@ func (x *fastReflection_QueryGenerateQuerydataResponse) ProtoMethods() *protoifa
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					byteLen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if byteLen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + byteLen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.QueryData = append(x.QueryData[:0], dAtA[iNdEx:postIndex]...)
-				if x.QueryData == nil {
-					x.QueryData = []byte{}
-				}
+				x.QueryData = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -5440,7 +5438,7 @@ type QueryGenerateQuerydataResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// query_data is the generated query_data hex string.
-	QueryData []byte `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
+	QueryData string `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 }
 
 func (x *QueryGenerateQuerydataResponse) Reset() {
@@ -5463,11 +5461,11 @@ func (*QueryGenerateQuerydataResponse) Descriptor() ([]byte, []int) {
 	return file_layer_registry_query_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *QueryGenerateQuerydataResponse) GetQueryData() []byte {
+func (x *QueryGenerateQuerydataResponse) GetQueryData() string {
 	if x != nil {
 		return x.QueryData
 	}
-	return nil
+	return ""
 }
 
 // QueryDecodeValueRequest is request type for the Query/DecodeValue RPC method.
@@ -5660,7 +5658,7 @@ var file_layer_registry_query_proto_rawDesc = []byte{
 	0x65, 0x74, 0x65, 0x72, 0x73, 0x22, 0x3f, 0x0a, 0x1e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x47, 0x65,
 	0x6e, 0x65, 0x72, 0x61, 0x74, 0x65, 0x51, 0x75, 0x65, 0x72, 0x79, 0x64, 0x61, 0x74, 0x61, 0x52,
 	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x71, 0x75, 0x65, 0x72, 0x79,
-	0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x09, 0x71, 0x75, 0x65,
+	0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x71, 0x75, 0x65,
 	0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x22, 0x4d, 0x0a, 0x17, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44,
 	0x65, 0x63, 0x6f, 0x64, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x12, 0x1c, 0x0a, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x54, 0x79, 0x70, 0x65, 0x18, 0x01,

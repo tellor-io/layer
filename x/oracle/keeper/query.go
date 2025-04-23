@@ -39,7 +39,18 @@ func (k Querier) RetrieveData(ctx context.Context, req *types.QueryRetrieveDataR
 	if err != nil {
 		return nil, err
 	}
-	return &types.QueryRetrieveDataResponse{Aggregate: &agg}, nil
+	aggregateStrings := types.AggregateStrings{
+		QueryId:           req.QueryId,
+		AggregateValue:    agg.AggregateValue,
+		AggregateReporter: agg.AggregateReporter,
+		AggregatePower:    agg.AggregatePower,
+		Flagged:           agg.Flagged,
+		Index:             agg.Index,
+		Height:            agg.Height,
+		MicroHeight:       agg.MicroHeight,
+		MetaId:            agg.MetaId,
+	}
+	return &types.QueryRetrieveDataResponse{Aggregate: &aggregateStrings}, nil
 }
 
 // gets the current aggregate report for a query id
@@ -58,8 +69,20 @@ func (k Querier) GetCurrentAggregateReport(ctx context.Context, req *types.Query
 	}
 	timeUnix := timestamp.UnixMilli()
 
+	aggregateStrings := types.AggregateStrings{
+		QueryId:           req.QueryId,
+		AggregateValue:    aggregate.AggregateValue,
+		AggregateReporter: aggregate.AggregateReporter,
+		AggregatePower:    aggregate.AggregatePower,
+		Flagged:           aggregate.Flagged,
+		Index:             aggregate.Index,
+		Height:            aggregate.Height,
+		MicroHeight:       aggregate.MicroHeight,
+		MetaId:            aggregate.MetaId,
+	}
+
 	return &types.QueryGetCurrentAggregateReportResponse{
-		Aggregate: aggregate,
+		Aggregate: &aggregateStrings,
 		Timestamp: uint64(timeUnix),
 	}, nil
 }
@@ -79,7 +102,19 @@ func (k Querier) GetAggregateBeforeByReporter(ctx context.Context, req *types.Qu
 	if err != nil {
 		return nil, err
 	}
-	return &types.QueryGetAggregateBeforeByReporterResponse{Aggregate: aggregate}, nil
+	aggregateStrings := types.AggregateStrings{
+		QueryId:           req.QueryId,
+		AggregateValue:    aggregate.AggregateValue,
+		AggregateReporter: aggregate.AggregateReporter,
+		AggregatePower:    aggregate.AggregatePower,
+		Flagged:           aggregate.Flagged,
+		Index:             aggregate.Index,
+		Height:            aggregate.Height,
+		MicroHeight:       aggregate.MicroHeight,
+		MetaId:            aggregate.MetaId,
+	}
+
+	return &types.QueryGetAggregateBeforeByReporterResponse{Aggregate: &aggregateStrings}, nil
 }
 
 // gets a query by query id and id
@@ -132,7 +167,7 @@ func (k Querier) ReportedIdsByReporter(ctx context.Context, req *types.QueryRepo
 	store := runtime.KVStoreAdapter(k.keeper.storeService.OpenKVStore(ctx))
 	reportsStore := prefix.NewStore(store, types.ReportsPrefix)
 	ids := make([]uint64, 0)
-	queryIds := make([][]byte, 0)
+	queryIds := make([]string, 0)
 
 	pageRes, err := query.Paginate(reportsStore, req.Pagination, func(key, value []byte) error {
 		keycdc := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
@@ -141,7 +176,7 @@ func (k Querier) ReportedIdsByReporter(ctx context.Context, req *types.QueryRepo
 			return err
 		}
 		ids = append(ids, pk.K3())
-		queryIds = append(queryIds, pk.K1())
+		queryIds = append(queryIds, hex.EncodeToString(pk.K1()))
 
 		return nil
 	})

@@ -36,3 +36,27 @@ message Value {
   uint64 crossover_weight = 1;
   MicroReport micro_report = 2;
 }
+
+// MicroReports but with strings to return for queries
+message MicroReportStrings {
+  // reporter is the address of the reporter
+  string reporter = 1;
+  // the power of the reporter based on total tokens normalized
+  uint64 power = 2;
+  // string identifier of the data spec
+  string query_type = 3;
+  // hash of the query data
+  string query_id = 4;
+  // aggregate method to use for aggregating all the reports for the query id
+  string aggregate_method = 5;
+  // hex string of the response value
+  string value = 6;
+  // timestamp of when the report was created
+  uint64 timestamp = 7;
+  // indicates if the report's query id is in the cyclelist
+  bool cyclelist = 8;
+  // block number of when the report was created
+  uint64 block_number = 9;
+  // identifier for the report's aggregate group
+  uint64 meta_id = 10;
+}
