@@ -166,11 +166,6 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 		SignatureA: []byte("signature"),
 		SignatureB: []byte("signature"),
 	}
-	bridgeVoteExtBz, err = json.Marshal(bridgeVoteExt)
-	require.NoError(err)
-	req = &abci.RequestVerifyVoteExtension{
-		VoteExtension: bridgeVoteExtBz,
-	}
 	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil).Once()
 	bridgeVoteExt.OracleAttestations = append(bridgeVoteExt.OracleAttestations, app.OracleAttestation{
 		Attestation: []byte("attestation2"),
