@@ -5,9 +5,9 @@ import (
 
 	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/constants"
-	"github.com/tellor-io/layer/daemons/server/types"
+	"github.com/tellor-io/layer/daemons/lib/metrics"
+	servertypes "github.com/tellor-io/layer/daemons/server/types/daemons"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
-	"github.com/tellor-io/layer/lib/metrics"
 
 	// "syscall"
 	"cosmossdk.io/log"
@@ -91,8 +91,8 @@ func (server *Server) Start() {
 	// https://pkg.go.dev/google.golang.org/grpc#Server.RegisterService
 
 	// Register Server to ingest gRPC requests from price feed daemon and update market prices.
-	types.RegisterPriceFeedServiceServer(server.gsrv, server)
-	types.RegisterTokenBridgeServiceServer(server.gsrv, server)
+	servertypes.RegisterPriceFeedServiceServer(server.gsrv, server)
+	servertypes.RegisterTokenBridgeServiceServer(server.gsrv, server)
 
 	if err := server.gsrv.Serve(ln); err != nil {
 		server.logger.Error("daemon gRPC server stopped with an error", "error", err)

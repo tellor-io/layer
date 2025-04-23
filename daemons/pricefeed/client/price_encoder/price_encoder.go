@@ -9,13 +9,13 @@ import (
 
 	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/constants"
+	"github.com/tellor-io/layer/daemons/lib"
+	"github.com/tellor-io/layer/daemons/lib/metrics"
+	"github.com/tellor-io/layer/daemons/lib/prices"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/price_fetcher"
 	price_function "github.com/tellor-io/layer/daemons/pricefeed/client/sources"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
-	"github.com/tellor-io/layer/lib"
-	"github.com/tellor-io/layer/lib/metrics"
-	"github.com/tellor-io/layer/lib/prices"
 
 	"cosmossdk.io/log"
 

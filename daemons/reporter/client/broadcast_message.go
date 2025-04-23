@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/tellor-io/layer/lib/metrics"
+	"github.com/tellor-io/layer/daemons/lib/metrics"
 	"github.com/tellor-io/layer/utils"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 

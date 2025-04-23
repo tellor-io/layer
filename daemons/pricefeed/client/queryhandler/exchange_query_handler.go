@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/tellor-io/layer/daemons/lib"
+	libtime "github.com/tellor-io/layer/daemons/lib/time"
 	price_function "github.com/tellor-io/layer/daemons/pricefeed/client/sources"
 	clienttypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
-	"github.com/tellor-io/layer/lib"
-	libtime "github.com/tellor-io/layer/lib/time"
 )
 
 const (

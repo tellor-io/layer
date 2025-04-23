@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/daemons/exchange_common"
-	"github.com/tellor-io/layer/lib"
+	"github.com/tellor-io/layer/daemons/lib"
 )
 
 const (

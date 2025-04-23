@@ -6,7 +6,7 @@ package types
 // 	"github.com/stretchr/testify/assert"
 // 	"github.com/stretchr/testify/require"
 // 	"github.com/tellor-io/layer/daemons/pricefeed/api"
-// 	"github.com/tellor-io/layer/testutil/constants"
+// 	"github.com/tellor-io/layer/daemons/testutil/constants"
 // )
 
 // func TestNewExchangeToPrices_IsEmpty(t *testing.T) {
