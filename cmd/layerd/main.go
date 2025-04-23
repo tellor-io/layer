@@ -14,7 +14,6 @@ import (
 func main() {
 	option := cmd.GetOptionWithCustomStartCmd()
 	rootCmd := cmd.NewRootCmd(option)
-	cmd.AddInitCmdPostRunE(rootCmd)
 	config.SetupConfig()
 	if err := svrcmd.Execute(rootCmd, "", app.DefaultNodeHome); err != nil {
 		fmt.Fprintln(rootCmd.OutOrStderr(), err)

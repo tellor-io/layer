@@ -1,0 +1,12 @@
+version: v1
+plugins:
+  - name: go
+    out: daemons/server/types
+    opt:
+      - paths=source_relative
+      - Mcosmos/app/v1alpha1/module.proto=cosmossdk.io/api/cosmos/app/v1alpha1
+  - name: go-grpc
+    out: daemons/server/types
+    opt:
+      - paths=source_relative
+      - Mcosmos/app/v1alpha1/module.proto=cosmossdk.io/api/cosmos/app/v1alpha1

@@ -116,7 +116,7 @@ func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
 			Images:              layerImageInfo,
 			EncodingConfig:      LayerEncoding(),
 			ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-			AdditionalStartArgs: []string{"--key-name", "validator", "--price-daemon-enabled=false"},
+			AdditionalStartArgs: []string{"--key-name", "validator"},
 			PreGenesis:          pregenesis(),
 		},
 	}
