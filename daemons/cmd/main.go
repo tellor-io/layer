@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -71,6 +72,10 @@ func init() {
 		panic(err)
 	}
 	if err := rootCmd.MarkFlagRequired(flags.FlagNode); err != nil {
+		panic(err)
+	}
+
+	if err := godotenv.Load(); err != nil {
 		panic(err)
 	}
 
