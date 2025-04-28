@@ -242,7 +242,10 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	defer iterDisputes.Close()
 
 	itemCounter := 0
-	writer.StartArraySection("disputes", false)
+	err = writer.StartArraySection("disputes", false)
+	if err != nil {
+		panic(err)
+	}
 	for ; iterDisputes.Valid(); iterDisputes.Next() {
 		dispute_id, err := iterDisputes.Key()
 		if err != nil {
@@ -254,10 +257,16 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 			panic(err)
 		}
 
-		writer.WriteArrayItem(&types.DisputeStateEntry{DisputeId: dispute_id, Dispute: &dispute})
+		err = writer.WriteArrayItem(&types.DisputeStateEntry{DisputeId: dispute_id, Dispute: &dispute})
+		if err != nil {
+			panic(err)
+		}
 		itemCounter++
 	}
-	writer.EndArraySection(itemCounter)
+	err = writer.EndArraySection(itemCounter)
+	if err != nil {
+		panic(err)
+	}
 
 	iterVotes, err := k.Votes.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -266,7 +275,10 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	defer iterVotes.Close()
 
 	itemCounter = 0
-	writer.StartArraySection("votes", false)
+	err = writer.StartArraySection("votes", false)
+	if err != nil {
+		panic(err)
+	}
 	for ; iterVotes.Valid(); iterVotes.Next() {
 		dispute_id, err := iterVotes.Key()
 		if err != nil {
@@ -277,10 +289,16 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		if err != nil {
 			panic(err)
 		}
-		writer.WriteArrayItem(&types.VotesStateEntry{DisputeId: dispute_id, Vote: &vote})
+		err = writer.WriteArrayItem(&types.VotesStateEntry{DisputeId: dispute_id, Vote: &vote})
+		if err != nil {
+			panic(err)
+		}
 		itemCounter++
 	}
-	writer.EndArraySection(itemCounter)
+	err = writer.EndArraySection(itemCounter)
+	if err != nil {
+		panic(err)
+	}
 
 	iterVoter, err := k.Voter.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -289,7 +307,10 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	defer iterVoter.Close()
 
 	itemCounter = 0
-	writer.StartArraySection("voters", false)
+	err = writer.StartArraySection("voters", false)
+	if err != nil {
+		panic(err)
+	}
 	for ; iterVoter.Valid(); iterVoter.Next() {
 		key, err := iterVoter.Key()
 		if err != nil {
@@ -302,10 +323,16 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		if err != nil {
 			panic(err)
 		}
-		writer.WriteArrayItem(&types.VoterStateEntry{DisputeId: dispute_id, VoterAddress: voterAddr, Voter: &voter})
+		err = writer.WriteArrayItem(&types.VoterStateEntry{DisputeId: dispute_id, VoterAddress: voterAddr, Voter: &voter})
+		if err != nil {
+			panic(err)
+		}
 		itemCounter++
 	}
-	writer.EndArraySection(itemCounter)
+	err = writer.EndArraySection(itemCounter)
+	if err != nil {
+		panic(err)
+	}
 
 	iterReportersDelVoted, err := k.ReportersWithDelegatorsVotedBefore.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -314,7 +341,10 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	defer iterReportersDelVoted.Close()
 
 	itemCounter = 0
-	writer.StartArraySection("reporters_with_delegators_who_voted", false)
+	err = writer.StartArraySection("reporters_with_delegators_who_voted", false)
+	if err != nil {
+		panic(err)
+	}
 	for ; iterReportersDelVoted.Valid(); iterReportersDelVoted.Next() {
 		key, err := iterReportersDelVoted.Key()
 		if err != nil {
@@ -327,10 +357,16 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		if err != nil {
 			panic(err)
 		}
-		writer.WriteArrayItem(&types.ReportersWithDelegatorsWhoVotedStateEntry{ReporterAddress: reporterAddr, DisputeId: dispute_id, VotedAmount: votedAmt})
+		err = writer.WriteArrayItem(&types.ReportersWithDelegatorsWhoVotedStateEntry{ReporterAddress: reporterAddr, DisputeId: dispute_id, VotedAmount: votedAmt})
+		if err != nil {
+			panic(err)
+		}
 		itemCounter++
 	}
-	writer.EndArraySection(itemCounter)
+	err = writer.EndArraySection(itemCounter)
+	if err != nil {
+		panic(err)
+	}
 
 	iterBlockInfo, err := k.BlockInfo.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -339,7 +375,10 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	defer iterBlockInfo.Close()
 
 	itemCounter = 0
-	writer.StartArraySection("block_info", false)
+	err = writer.StartArraySection("block_info", false)
+	if err != nil {
+		panic(err)
+	}
 	for ; iterBlockInfo.Valid(); iterBlockInfo.Next() {
 		hash_id, err := iterBlockInfo.Key()
 		if err != nil {
@@ -350,10 +389,16 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		if err != nil {
 			panic(err)
 		}
-		writer.WriteArrayItem(&types.BlockInfoStateEntry{HashId: hash_id, BlockInfo: &info})
+		err = writer.WriteArrayItem(&types.BlockInfoStateEntry{HashId: hash_id, BlockInfo: &info})
+		if err != nil {
+			panic(err)
+		}
 		itemCounter++
 	}
-	writer.EndArraySection(itemCounter)
+	err = writer.EndArraySection(itemCounter)
+	if err != nil {
+		panic(err)
+	}
 
 	iterDisputeFeePayer, err := k.DisputeFeePayer.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -362,7 +407,10 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	defer iterDisputeFeePayer.Close()
 
 	itemCounter = 0
-	writer.StartArraySection("dispute_fee_payer", false)
+	err = writer.StartArraySection("dispute_fee_payer", false)
+	if err != nil {
+		panic(err)
+	}
 	for ; iterDisputeFeePayer.Valid(); iterDisputeFeePayer.Next() {
 		keys, err := iterDisputeFeePayer.Key()
 		if err != nil {
@@ -375,16 +423,25 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		if err != nil {
 			panic(err)
 		}
-		writer.WriteArrayItem(&types.DisputeFeePayerStateEntry{DisputeId: dispute_id, Payer: payer, PayerInfo: &payerInfo})
+		err = writer.WriteArrayItem(&types.DisputeFeePayerStateEntry{DisputeId: dispute_id, Payer: payer, PayerInfo: &payerInfo})
+		if err != nil {
+			panic(err)
+		}
 		itemCounter++
 	}
-	writer.EndArraySection(itemCounter)
+	err = writer.EndArraySection(itemCounter)
+	if err != nil {
+		panic(err)
+	}
 
 	Dust, err := k.Dust.Get(ctx)
 	if err != nil {
 		panic(err)
 	}
-	writer.WriteValue("dust", Dust)
+	err = writer.WriteValue("dust", Dust)
+	if err != nil {
+		panic(err)
+	}
 
 	iterVoteCountsByGroup, err := k.VoteCountsByGroup.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {
@@ -393,7 +450,10 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	defer iterVoteCountsByGroup.Close()
 
 	itemCounter = 0
-	writer.StartArraySection("vote_counts_by_group", true)
+	err = writer.StartArraySection("vote_counts_by_group", true)
+	if err != nil {
+		panic(err)
+	}
 	for ; iterVoteCountsByGroup.Valid(); iterVoteCountsByGroup.Next() {
 		dispute_id, err := iterVoteCountsByGroup.Key()
 		if err != nil {
@@ -404,10 +464,16 @@ func ExportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		if err != nil {
 			panic(err)
 		}
-		writer.WriteArrayItem(&types.VoteCountsByGroupStateEntry{DisputeId: dispute_id, Users: &voteCount.Users, Reporters: &voteCount.Reporters, Team: &voteCount.Team})
+		err = writer.WriteArrayItem(&types.VoteCountsByGroupStateEntry{DisputeId: dispute_id, Users: &voteCount.Users, Reporters: &voteCount.Reporters, Team: &voteCount.Team})
+		if err != nil {
+			panic(err)
+		}
 		itemCounter++
 	}
-	writer.EndArraySection(itemCounter)
+	err = writer.EndArraySection(itemCounter)
+	if err != nil {
+		panic(err)
+	}
 
 	writer.Close()
 }

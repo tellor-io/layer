@@ -54,6 +54,7 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 type TipperTotalData struct {
 	TipperTotal math.Int
 	Address     []byte
+	Block       uint64
 }
 
 type TotalTipsData struct {
@@ -62,8 +63,9 @@ type TotalTipsData struct {
 }
 
 type ModuleStateData struct {
-	TipperTotal []TipperTotalData
-	TotalTips   TotalTipsData
+	TipperTotal   []TipperTotalData `json:"tipper_total"`
+	TotalTips     TotalTipsData     `json:"total_tips"`
+	TippedQueries []types.QueryMeta `json:"tipped_queries"`
 }
 
 func exportModuleData(ctx context.Context, k keeper.Keeper) {
@@ -87,31 +89,41 @@ func exportModuleData(ctx context.Context, k keeper.Keeper) {
 			tipperTotals[tipperAccString] = TipperTotalData{
 				TipperTotal: value,
 				Address:     tipperAcc,
+				Block:       blockNumber,
 			}
 			highestBlockNumbers[tipperAccString] = blockNumber
 		}
 
 		return false, nil
 	})
+	if err != nil {
+		panic(err)
+	}
 
-	writer.StartArraySection("tipper_total", false)
+	err = writer.StartArraySection("tipper_total", false)
+	if err != nil {
+		panic(err)
+	}
 	for _, tipperTotal := range tipperTotals {
 		err = writer.WriteArrayItem(tipperTotal)
 		if err != nil {
 			panic(err)
 		}
 	}
-	writer.EndArraySection(len(tipperTotals))
+	err = writer.EndArraySection(len(tipperTotals))
 	if err != nil {
 		panic(err)
 	}
 
 	rng := new(collections.Range[uint64]).Descending()
 	err = k.TotalTips.Walk(ctx, rng, func(key uint64, value math.Int) (bool, error) {
-		writer.WriteValue("latest_total_tips", TotalTipsData{
+		err = writer.WriteValue("latest_total_tips", TotalTipsData{
 			TotalTips: value,
 			Block:     key,
 		})
+		if err != nil {
+			panic(err)
+		}
 		return false, nil
 	})
 	if err != nil {
@@ -123,6 +135,9 @@ func exportModuleData(ctx context.Context, k keeper.Keeper) {
 		panic(err)
 	}
 	err = writer.StartArraySection("tipped_queries", true)
+	if err != nil {
+		panic(err)
+	}
 	numQueries := 0
 	for ; iterQuery.Valid(); iterQuery.Next() {
 		query, err := iterQuery.Value()
@@ -133,11 +148,16 @@ func exportModuleData(ctx context.Context, k keeper.Keeper) {
 			continue
 		}
 		err = writer.WriteArrayItem(query)
+		if err != nil {
+			panic(err)
+		}
 		numQueries++
 	}
-	writer.EndArraySection(numQueries)
+	err = writer.EndArraySection(numQueries)
 	if err != nil {
 		panic(err)
 	}
+
+	writer.Close()
 
 }
