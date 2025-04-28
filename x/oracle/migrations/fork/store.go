@@ -36,7 +36,7 @@ type ModuleStateData struct {
 	TippedQueries   []oracletypes.QueryMeta `json:"tipped_queries"`
 }
 
-func MigrateStore(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
+func MigrateFork(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
 	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 
 	// Open the JSON file
