@@ -22,3 +22,6 @@ jobs:
             || contains(github.event.label.name, 'noStateChange')
         )
       )
+    steps:
+      - with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
