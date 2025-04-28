@@ -34,3 +34,4 @@ dist/
 interchaintest/
 heighliner/
 testnet-gentx/
+daemons/bin/
