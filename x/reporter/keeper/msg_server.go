@@ -58,17 +58,54 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if msg.MinTokensRequired.LT(params.MinLoya) {
 		return nil, errors.New("reporters chosen min tokens for selectors to join must be gte the min requirement")
 	}
-	// reporter can't be previously a selector or a reporter
+	// reporter commission rate must be between 0 and 1
+	if msg.CommissionRate.GT(math.LegacyNewDec(1)) || msg.CommissionRate.LT(params.MinCommissionRate) {
+		return nil, errors.New("commission rate must be between 0 and 1 (e.g, 0.50 = 50%)")
+	}
+	// reporter can't be previously a reporter
 	alreadyExists, err := k.Keeper.Selectors.Has(goCtx, addr)
 	if err != nil {
 		return nil, err
 	}
 	if alreadyExists {
-		return nil, errors.New("address already exists")
-	}
-	// reporter commission rate must be between 0 and 1
-	if msg.CommissionRate.GT(math.LegacyNewDec(1)) || msg.CommissionRate.LT(params.MinCommissionRate) {
-		return nil, errors.New("commission rate must be between 0 and 1 (e.g, 0.50 = 50%)")
+		// check if they are a reporter already
+		selection, err := k.Keeper.Selectors.Get(goCtx, addr)
+		if err != nil {
+			return nil, err
+		}
+		if bytes.Equal(selection.Reporter, addr.Bytes()) {
+			return nil, errors.New("address is already a reporter")
+		}
+		// check if selector was part of a report before switching
+		prevReportedPower, err := k.Keeper.GetReporterTokensAtBlock(goCtx, selection.Reporter, uint64(sdk.UnwrapSDKContext(goCtx).BlockHeight()))
+		if err != nil {
+			return nil, err
+		}
+		if !prevReportedPower.IsZero() {
+			unbondingTime, err := k.stakingKeeper.UnbondingTime(goCtx)
+			if err != nil {
+				return nil, err
+			}
+			selection.LockedUntilTime = sdk.UnwrapSDKContext(goCtx).BlockTime().Add(unbondingTime)
+		}
+		selection.Reporter = addr.Bytes()
+		if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), selection); err != nil {
+			return nil, err
+		}
+		if err := k.Keeper.Reporters.Set(goCtx, addr.Bytes(), types.NewReporter(msg.CommissionRate, msg.MinTokensRequired, msg.Moniker)); err != nil {
+			return nil, err
+		}
+		sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				"created_reporter_from_selector",
+				sdk.NewAttribute("reporter", msg.ReporterAddress),
+				sdk.NewAttribute("commission", msg.CommissionRate.String()),
+				sdk.NewAttribute("min_tokens_required", msg.MinTokensRequired.String()),
+				sdk.NewAttribute("moniker", msg.Moniker),
+			),
+		})
+		telemetry.IncrCounterWithLabels([]string{"create_reporter_count"}, 1, []metrics.Label{{Name: "chain_id", Value: sdk.UnwrapSDKContext(goCtx).ChainID()}})
+		return &types.MsgCreateReporterResponse{}, nil
 	}
 
 	// set the reporter and set the self selector
