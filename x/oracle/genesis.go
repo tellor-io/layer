@@ -3,7 +3,6 @@ package oracle
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -128,7 +127,7 @@ func exportModuleData(ctx context.Context, k keeper.Keeper) {
 			panic(err)
 		}
 	}
-	fmt.Println("tipperTotals: ", len(tipperTotals))
+
 	err = writer.EndArraySection(len(tipperTotals))
 	if err != nil {
 		panic(err)
