@@ -3,8 +3,9 @@ package v2
 import (
 	"context"
 
-	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/x/dispute/types"
+
+	"cosmossdk.io/collections"
 )
 
 func MigrateStore(ctx context.Context, disputesMap *collections.IndexedMap[uint64, types.Dispute, types.DisputesIndex]) error {
