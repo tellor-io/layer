@@ -71,13 +71,28 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 }
 
 type ReporterStateEntry struct {
-	ReporterAddr []byte
-	Reporter     types.OracleReporter
+	ReporterAddr []byte               `json:"reporter_addr"`
+	Reporter     types.OracleReporter `json:"reporter"`
 }
 
 type SelectorStateEntry struct {
-	SelectorAddr []byte
-	Selector     types.Selection
+	SelectorAddr []byte          `json:"selector_addr"`
+	Selector     types.Selection `json:"selector"`
+}
+
+type SelectorTipsStateEntry struct {
+	SelectorAddress []byte `json:"selector_address"`
+	Tips            string `json:"tips"`
+}
+
+type DisputedDelegationAmountStateEntry struct {
+	HashId           []byte                   `json:"hash_id"`
+	DelegationAmount types.DelegationsAmounts `json:"delegation_amount"`
+}
+
+type FeePaidFromStakeStateEntry struct {
+	HashId           []byte                   `json:"hash_id"`
+	DelegationAmount types.DelegationsAmounts `json:"delegation_amount"`
 }
 
 func exportModuleData(ctx sdk.Context, k keeper.Keeper) {
@@ -172,7 +187,7 @@ func exportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		if err != nil {
 			panic(err)
 		}
-		err = writer.WriteArrayItem(types.SelectorTipsStateEntry{SelectorAddress: selector_addr, Tips: tips})
+		err = writer.WriteArrayItem(SelectorTipsStateEntry{SelectorAddress: selector_addr, Tips: tips.String()})
 		if err != nil {
 			panic(err)
 		}
@@ -243,4 +258,6 @@ func exportModuleData(ctx sdk.Context, k keeper.Keeper) {
 	if err != nil {
 		panic(err)
 	}
+
+	writer.Close()
 }
