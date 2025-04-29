@@ -245,6 +245,12 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	if err != nil {
 		return nil, err
 	}
+	// check if reporter is trying to become a selector, if so, remove them from reporters store
+	if bytes.Equal(selector.Reporter, addr.Bytes()) {
+		if err := k.Keeper.Reporters.Remove(goCtx, addr.Bytes()); err != nil {
+			return nil, err
+		}
+	}
 	// check if reporter is capped at max selectors
 	iter, err := k.Keeper.Selectors.Indexes.Reporter.MatchExact(goCtx, reporterAddr.Bytes())
 	if err != nil {
