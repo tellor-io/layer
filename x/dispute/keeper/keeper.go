@@ -32,12 +32,12 @@ type (
 		bankKeeper                         types.BankKeeper
 		oracleKeeper                       types.OracleKeeper
 		reporterKeeper                     types.ReporterKeeper
-		Disputes                           *collections.IndexedMap[uint64, types.Dispute, DisputesIndex]                           // key: dispute id
-		Votes                              collections.Map[uint64, types.Vote]                                                     // key: dispute id
-		Voter                              *collections.IndexedMap[collections.Pair[uint64, []byte], types.Voter, VotersVoteIndex] // key: dispute id + voter address
-		ReportersWithDelegatorsVotedBefore collections.Map[collections.Pair[[]byte, uint64], math.Int]                             // key: reporter address + dispute id
-		BlockInfo                          collections.Map[[]byte, types.BlockInfo]                                                // key: dispute.HashId
-		DisputeFeePayer                    collections.Map[collections.Pair[uint64, []byte], types.PayerInfo]                      // key: dispute id + payer address
+		Disputes                           *collections.IndexedMap[uint64, types.Dispute, types.DisputesIndex]                           // key: dispute id
+		Votes                              collections.Map[uint64, types.Vote]                                                           // key: dispute id
+		Voter                              *collections.IndexedMap[collections.Pair[uint64, []byte], types.Voter, types.VotersVoteIndex] // key: dispute id + voter address
+		ReportersWithDelegatorsVotedBefore collections.Map[collections.Pair[[]byte, uint64], math.Int]                                   // key: reporter address + dispute id
+		BlockInfo                          collections.Map[[]byte, types.BlockInfo]                                                      // key: dispute.HashId
+		DisputeFeePayer                    collections.Map[collections.Pair[uint64, []byte], types.PayerInfo]                            // key: dispute id + payer address
 		// dust is extra tokens leftover after truncating decimals, stored as fixed256x12
 		Dust              collections.Item[math.Int]
 		VoteCountsByGroup collections.Map[uint64, types.StakeholderVoteCounts] // key: dispute id
@@ -62,7 +62,7 @@ func NewKeeper(
 		oracleKeeper:   oracleKeeper,
 		reporterKeeper: reporterKeeper,
 		// maps dispute id to dispute, and indexes disputes by reporter, open status, and pending execution
-		Disputes: collections.NewIndexedMap(sb, types.DisputesPrefix, "disputes", collections.Uint64Key, codec.CollValue[types.Dispute](cdc), NewDisputesIndex(sb)),
+		Disputes: collections.NewIndexedMap(sb, types.DisputesPrefix, "disputes", collections.Uint64Key, codec.CollValue[types.Dispute](cdc), types.NewDisputesIndex(sb)),
 		// maps dispute id to vote
 		Votes: collections.NewMap(sb, types.VotesPrefix, "votes", collections.Uint64Key, codec.CollValue[types.Vote](cdc)),
 		// maps dispute id + voter address to voter's vote info and indexes voters by id, used for tallying votes
@@ -71,7 +71,7 @@ func NewKeeper(
 			"voter_vote",
 			collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey),
 			codec.CollValue[types.Voter](cdc),
-			NewVotersIndex(sb),
+			types.NewVotersIndex(sb),
 		),
 		// maps reporter address + dispute id to reporter's stake - selectors' belonging to the reporter share that individually voted
 		ReportersWithDelegatorsVotedBefore: collections.NewMap(sb,
