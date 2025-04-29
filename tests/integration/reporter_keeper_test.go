@@ -487,3 +487,50 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake2() {
 	leftover := reporterStake.ToLegacyDec().Sub(reporterStake.Quo(layertypes.PowerReduction).ToLegacyDec()).TruncateInt()
 	s.Equal(leftover, reporterStake)
 }
+
+func (s *IntegrationTestSuite) TestCreateAndSwitchReporterMsg() {
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
+	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	valAccs, valAddrs, _ := s.createValidatorAccs([]uint64{100, 200})
+
+	newDelegator := sample.AccAddressBytes()
+	s.Setup.MintTokens(newDelegator, math.NewInt(1000*1e6))
+	msgDelegate := stakingtypes.NewMsgDelegate(
+		newDelegator.String(),
+		valAddrs[0].String(),
+		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+	)
+
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
+	_, err := stakingMsgServer.Delegate(s.Setup.Ctx, msgDelegate)
+	s.NoError(err)
+	val1, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddrs[0])
+	s.NoError(err)
+
+	// register reporter
+	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6), Moniker: "reporter_moniker1"})
+	s.NoError(err)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(2)
+	// add selector to the reporter
+	_, err = msgServer.SelectReporter(s.Setup.Ctx, &reportertypes.MsgSelectReporter{SelectorAddress: newDelegator.String(), ReporterAddress: valAccs[0].String()})
+	s.NoError(err)
+
+	// check validator reporting status
+	validatorReporter1, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[0], []byte{})
+	s.NoError(err)
+	// validator reporter should have self tokens and delegator tokens as their total
+	s.Equal(validatorReporter1, val1.Tokens)
+
+	// check second reporter tokens
+	val2, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddrs[1])
+	s.NoError(err)
+	// register second reporter
+	_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccs[1].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6), Moniker: "reporter_moniker2"})
+	s.NoError(err)
+	validatorReporter2, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[1], []byte{})
+	s.NoError(err)
+	// validator reporter should have self tokens and delegator tokens as their total
+	s.Equal(validatorReporter2, val2.Tokens)
+	// valrep1 should have more tokens than valrep2
+	s.True(validatorReporter1.GT(validatorReporter2))
+}

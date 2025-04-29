@@ -1237,7 +1237,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	fmt.Println("user1 delegation to val1: ", user1Delegation)
 	require.Equal(user1Delegation.Balance.Amount.String(), "1000000000")
 
-	// try to create reporter from user1
+	// try to create reporter from user1, should not be allowed
 	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "create-reporter", "0.1", "1000000", "badguy", "--keyring-dir", val1.HomeDir())
 	require.Error(err)
 	fmt.Println("TX HASH (user1 tries to create reporter again): ", txHash)
@@ -1254,22 +1254,22 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Error(err)
 	fmt.Println("TX HASH (user1 tries to select another reporter): ", txHash)
 
-	// user1 tries switching reporters, errors with cannot switch reporter if selector is a reporter
-	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "switch-reporter", user0Addr, "--keyring-dir", val1.HomeDir())
-	require.Error(err)
-	fmt.Println("TX HASH (user1 tries to switch reporters): ", txHash)
-
 	// user1 tries to remove self as selector, errors selector cannot be removed if it is the reporter's own address
 	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "remove-selector", user1Addr, "--keyring-dir", val1.HomeDir())
 	require.Error(err)
 	fmt.Println("TX HASH (user1 tries to remove self as selector): ", txHash)
+
+	// user1 becomes a selector, removed from reporter store
+	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "switch-reporter", user0Addr, "--keyring-dir", val1.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (user1 becomes a selector): ", txHash)
 
 	// check reporter module
 	res, _, err = val1.ExecQuery(ctx, "reporter", "reporters")
 	require.NoError(err)
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
-	require.Equal(len(reportersRes.Reporters), numReporters+1) // 2 pure reporters + 1 validator reporter
+	require.Equal(len(reportersRes.Reporters), 2) // 1 reporter + 1 validator reporter
 	fmt.Println("reportersRes: ", reportersRes)
 
 	// user1 redelegates to val2
@@ -1288,10 +1288,10 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Error(err)
 	fmt.Println("TX HASH (user1 tries to select another reporter): ", txHash)
 
-	// user1 tries switching reporters, errors with cannot switch reporter if selector is a reporter
+	// user1 switches reporters
 	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "switch-reporter", user0Addr, "--keyring-dir", val1.HomeDir())
-	require.Error(err)
-	fmt.Println("TX HASH (user1 tries to switch reporters): ", txHash)
+	require.NoError(err)
+	fmt.Println("TX HASH (user1 switches reporters): ", txHash)
 
 	// user1 tries to remove self as selector, errors selector cannot be removed if it is the reporter's own address
 	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "remove-selector", user1Addr, "--keyring-dir", val1.HomeDir())
