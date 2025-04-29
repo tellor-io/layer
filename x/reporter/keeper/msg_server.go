@@ -77,7 +77,8 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 			return nil, errors.New("address is already a reporter")
 		}
 		// check if selector was part of a report before switching
-		prevReportedPower, err := k.Keeper.GetReporterTokensAtBlock(goCtx, selection.Reporter, uint64(sdk.UnwrapSDKContext(goCtx).BlockHeight()))
+		prevReporter := sdk.AccAddress(selection.Reporter)
+		prevReportedPower, err := k.Keeper.GetReporterTokensAtBlock(goCtx, prevReporter, uint64(sdk.UnwrapSDKContext(goCtx).BlockHeight()))
 		if err != nil {
 			return nil, err
 		}
@@ -238,9 +239,6 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 		return nil, err
 	}
 	prevReporter := sdk.AccAddress(selector.Reporter)
-	if bytes.Equal(selector.Reporter, addr.Bytes()) {
-		return nil, errors.New("cannot switch reporter if selector is a reporter")
-	}
 	// check if reporter exists
 	reporterAddr := sdk.MustAccAddressFromBech32(msg.ReporterAddress)
 	reporter, err := k.Keeper.Reporters.Get(goCtx, reporterAddr)
