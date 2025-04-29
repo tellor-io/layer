@@ -136,15 +136,17 @@ func exportModuleData(ctx context.Context, k keeper.Keeper) {
 	rng := new(collections.Range[uint64]).Descending()
 	foundTipTotal := false
 	err = k.TotalTips.Walk(ctx, rng, func(key uint64, value math.Int) (bool, error) {
-		err = writer.WriteValue("latest_total_tips", TotalTipsData{
-			TotalTips: value.String(),
-			Block:     key,
-		})
-		if err != nil {
-			panic(err)
+		if !foundTipTotal {
+			err = writer.WriteValue("latest_total_tips", TotalTipsData{
+				TotalTips: value.String(),
+				Block:     key,
+			})
+			if err != nil {
+				panic(err)
+			}
 		}
 		foundTipTotal = true
-		return false, nil
+		return true, nil
 	})
 	if err != nil {
 		panic(err)
