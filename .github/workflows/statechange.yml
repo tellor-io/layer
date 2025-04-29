@@ -1,28 +1,18 @@
-name: Statechange
+name: State Change Labels
 on:
-  pull_request_target:
-    types:
-      - closed
-      - labeled
-
+  pull_request:
+    types: [opened, labeled, unlabeled, synchronize]
 jobs:
-  statechange:
-    name: Statechange
+  label:
     runs-on: ubuntu-latest
-    # Only react to merged PRs for security reasons.
-    # See https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target.
-    if: >
-      github.event.pull_request.merged
-      && (
-        github.event.action == 'closed'
-        || (
-          github.event.action == 'labeled'
-          && (
-            contains(github.event.label.name, 'stateChange')
-            || contains(github.event.label.name, 'noStateChange')
-        )
-      )
+    permissions:
+      issues: write
+      pull-requests: write
     steps:
-      - uses: tibdex/backport@v2
-      - with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: mheap/github-action-required-labels@v5
+        with:
+          mode: exactly
+          count: 1
+          labels: |
+            stateChange
+            noStateChange
