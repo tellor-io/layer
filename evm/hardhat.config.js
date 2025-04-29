@@ -1,10 +1,5 @@
-//require("@nomicfoundation/hardhat-toolbox");
-//require("hardhat-gas-reporter");
 require("dotenv").config();
 require("@nomiclabs/hardhat-ethers");
-// require("hardhat-gas-reporter");
-
-// require("@nomiclabs/hardhat-web3");
 
 module.exports = {
   solidity: {
@@ -64,20 +59,20 @@ module.exports = {
         count: 40,
       },
       forking: {
-        url: process.env.NODE_URL,
-        blockNumber: 19891853
+        url: process.env.NODE_URL_MAINNET,
+        blockNumber: 22247348
       },
       allowUnlimitedContractSize: true
     } ,
     sepolia: {
-      url: `${process.env.NODE_URL_SEPOLIA}`,
-      seeds: [process.env.TESTNET_PK],
-      gas: 9000000 ,
+      url: `${process.env.NODE_URL_SEPOLIA_TESTNET}`,
+      accounts: [process.env.TESTNET_PK],
+      gas: 9000000,
       gasPrice: 5000000000
     } ,
-    mainnet_testnet: {
-      url: `${process.env.NODE_URL_MAINNET_TESTNET}`,
-      seeds: [process.env.TESTNET_PK],
+    mainnet: {
+      url: `${process.env.NODE_URL_MAINNET}`,
+      seeds: [process.env.MAINNET_PK],
       gas: 8000000 ,
       gasPrice: 1000000000
     },
@@ -86,18 +81,6 @@ module.exports = {
   etherscan: {
     apiKey: process.env.ETHERSCAN
   },
-
-  //etherscan: {
-  //  apiKey: {
-    // Your API key for Etherscan
-    // Obtain one at https://etherscan.io/
-    //sepolia: process.env.ETHERSCAN
-    //mainnet: process.env.ETHERSCAN
- //}
-//},
-
-
-
 };
 
 
