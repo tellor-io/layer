@@ -17,10 +17,7 @@ jobs:
         github.event.action == 'closed'
         || (
           github.event.action == 'labeled'
-          && contains(github.event.label.name, 'backport') && (
-            contains(github.event.label.name, 'stateChange')
-            || contains(github.event.label.name, 'noStateChange')
-            )
+          && contains(github.event.label.name, 'backport')
         )
       )
     steps:
