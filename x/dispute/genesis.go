@@ -1,6 +1,8 @@
 package dispute
 
 import (
+	"errors"
+
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -107,14 +109,19 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 			// add votes for this dispute to genesis
 			v, err := k.Votes.Get(ctx, dispute.DisputeId)
 			if err != nil {
-				panic(err)
+				if !errors.Is(err, collections.ErrNotFound) {
+					panic(err)
+				}
+			} else {
+				votes = append(votes, &types.VotesStateEntry{DisputeId: dispute.DisputeId, Vote: &v})
 			}
-			votes = append(votes, &types.VotesStateEntry{DisputeId: dispute.DisputeId, Vote: &v})
 
 			// iterate through all voters for this dispute
 			voterIter, err := k.Voter.Indexes.VotersById.MatchExact(ctx, dispute.DisputeId)
 			if err != nil {
-				panic(err)
+				if !errors.Is(err, collections.ErrNotFound) {
+					panic(err)
+				}
 			}
 
 			keys, err := voterIter.PrimaryKeys()
@@ -124,6 +131,9 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 			for _, key := range keys {
 				voter, err := k.Voter.Get(ctx, key)
 				if err != nil {
+					if errors.Is(err, collections.ErrNotFound) {
+						continue
+					}
 					panic(err)
 				}
 				voters = append(voters, &types.VoterStateEntry{DisputeId: key.K1(), VoterAddress: key.K2(), Voter: &voter})
@@ -163,6 +173,9 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 			// add the Vote Counts By Group for this dispute
 			voteCountByGroup, err := k.VoteCountsByGroup.Get(ctx, dispute.DisputeId)
 			if err != nil {
+				if errors.Is(err, collections.ErrNotFound) {
+					continue
+				}
 				panic(err)
 			}
 			voteCountsByGroup = append(voteCountsByGroup, &types.VoteCountsByGroupStateEntry{DisputeId: dispute.DisputeId, Users: &voteCountByGroup.Users, Reporters: &voteCountByGroup.Reporters, Team: &voteCountByGroup.Team})

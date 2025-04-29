@@ -3,6 +3,7 @@ package oracle
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -26,6 +27,11 @@ func InitGenesis(ctx context.Context, k keeper.Keeper, genState types.GenesisSta
 	if err != nil {
 		panic(err)
 	}
+
+	err = k.QuerySequencer.Set(ctx, genState.QuerySequencer)
+	if err != nil {
+		panic(err)
+	}
 }
 
 // ExportGenesis returns the module's exported genesis
@@ -44,6 +50,18 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 	}
 	genesis.Cyclelist = cyclelist
 
+	queryDataLimit, err := k.QueryDataLimit.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
+	genesis.QueryDataLimit = queryDataLimit.Limit
+
+	querySequencer, err := k.QuerySequencer.Peek(ctx)
+	if err != nil {
+		panic(err)
+	}
+	genesis.QuerySequencer = querySequencer
+
 	// export module data we want to migrate over to oracle data file
 	exportModuleData(ctx, k)
 	// this line is used by starport scaffolding # genesis/module/export
@@ -52,14 +70,14 @@ func ExportGenesis(ctx context.Context, k keeper.Keeper) *types.GenesisState {
 }
 
 type TipperTotalData struct {
-	TipperTotal math.Int
-	Address     []byte
-	Block       uint64
+	TipperTotal string `json:"tipper_total"`
+	Address     []byte `json:"address"`
+	Block       uint64 `json:"block"`
 }
 
 type TotalTipsData struct {
-	TotalTips math.Int
-	Block     uint64
+	TotalTips string `json:"total_tips"`
+	Block     uint64 `json:"block"`
 }
 
 type ModuleStateData struct {
@@ -87,7 +105,7 @@ func exportModuleData(ctx context.Context, k keeper.Keeper) {
 		// Check if this is the highest block number for this reporter
 		if highestBlock, exists := highestBlockNumbers[tipperAccString]; !exists || blockNumber > highestBlock {
 			tipperTotals[tipperAccString] = TipperTotalData{
-				TipperTotal: value,
+				TipperTotal: value.String(),
 				Address:     tipperAcc,
 				Block:       blockNumber,
 			}
@@ -110,24 +128,36 @@ func exportModuleData(ctx context.Context, k keeper.Keeper) {
 			panic(err)
 		}
 	}
+	fmt.Println("tipperTotals: ", len(tipperTotals))
 	err = writer.EndArraySection(len(tipperTotals))
 	if err != nil {
 		panic(err)
 	}
 
 	rng := new(collections.Range[uint64]).Descending()
+	foundTipTotal := false
 	err = k.TotalTips.Walk(ctx, rng, func(key uint64, value math.Int) (bool, error) {
 		err = writer.WriteValue("latest_total_tips", TotalTipsData{
-			TotalTips: value,
+			TotalTips: value.String(),
 			Block:     key,
 		})
 		if err != nil {
 			panic(err)
 		}
+		foundTipTotal = true
 		return false, nil
 	})
 	if err != nil {
 		panic(err)
+	}
+	if !foundTipTotal {
+		err = writer.WriteValue("latest_total_tips", TotalTipsData{
+			TotalTips: math.ZeroInt().String(),
+			Block:     1,
+		})
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	iterQuery, err := k.Query.IterateRaw(ctx, nil, nil, collections.OrderAscending)

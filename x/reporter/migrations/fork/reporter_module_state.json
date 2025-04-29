@@ -1,0 +1,28 @@
+{
+    "reporters": [
+        {"reporter_addr":"5aAf9D0EPkd4f5SaTgLrDTHyLKQ=","reporter":{"min_tokens_required":"1000000","commission_rate":"0.100000000000000000","jailed":true,"jailed_until":"2025-04-28T20:30:08.544823Z","moniker":"rep","last_updated":"0001-01-01T00:00:00Z"}},
+        {"reporter_addr":"lfANvbj6/z1zxfeEfugyzNrC2s4=","reporter":{"min_tokens_required":"1000000","commission_rate":"0.100000000000000000","jailed":true,"jailed_until":"2025-04-28T20:29:29.99115Z","moniker":"bill","last_updated":"0001-01-01T00:00:00Z"}},
+        {"reporter_addr":"V8zY1YydpWpKjUgc42LnLxl2Xlo=","reporter":{"min_tokens_required":"1000000","commission_rate":"0.100000000000000000","jailed":true,"jailed_until":"2025-04-28T20:28:26.17657Z","moniker":"alice","last_updated":"0001-01-01T00:00:00Z"}}
+    ],
+    "selectors": [
+        {"selector_addr":"5aAf9D0EPkd4f5SaTgLrDTHyLKQ=","selector":{"reporter":"5aAf9D0EPkd4f5SaTgLrDTHyLKQ=","locked_until_time":"0001-01-01T00:00:00Z","delegations_count":1}},
+        {"selector_addr":"lfANvbj6/z1zxfeEfugyzNrC2s4=","selector":{"reporter":"lfANvbj6/z1zxfeEfugyzNrC2s4=","locked_until_time":"0001-01-01T00:00:00Z","delegations_count":1}},
+        {"selector_addr":"V8zY1YydpWpKjUgc42LnLxl2Xlo=","selector":{"reporter":"V8zY1YydpWpKjUgc42LnLxl2Xlo=","locked_until_time":"0001-01-01T00:00:00Z","delegations_count":1}}
+    ],
+    "selector_tips": [
+        {"selector_address":"5aAf9D0EPkd4f5SaTgLrDTHyLKQ=","tips":"0.000000000000000000"},
+        {"selector_address":"lfANvbj6/z1zxfeEfugyzNrC2s4=","tips":"0.000000000000000000"},
+        {"selector_address":"V8zY1YydpWpKjUgc42LnLxl2Xlo=","tips":"0.000000000000000000"}
+    ],
+    "disputed_delegation_amounts": [
+        {"hash_id":"4NC+GZHfT08dzczBZTWNfQtBdD/qr8GM2UCDc31H1cg=","delegation_amount":{"token_origins":[{"delegator_address":"lfANvbj6/z1zxfeEfugyzNrC2s4=","validator_address":"lfANvbj6/z1zxfeEfugyzNrC2s4=","amount":"9900000"}],"total":"9900000"}},
+        {"hash_id":"dhwAo0LehfesJ6KqTbSt3qMfIDhur0w12OAxyJhgi7I=","delegation_amount":{"token_origins":[{"delegator_address":"5aAf9D0EPkd4f5SaTgLrDTHyLKQ=","validator_address":"V8zY1YydpWpKjUgc42LnLxl2Xlo=","amount":"50000"}],"total":"50000"}},
+        {"hash_id":"YLcwAlzuZ066e8wowAajSn7Df+uuLyrAzvabm8VNRTc=","delegation_amount":{"token_origins":[{"delegator_address":"V8zY1YydpWpKjUgc42LnLxl2Xlo=","validator_address":"V8zY1YydpWpKjUgc42LnLxl2Xlo=","amount":"10000000"}],"total":"10000000"}}
+    ],
+    "fee_paid_from_stake": [
+        {"hash_id":"4NC+GZHfT08dzczBZTWNfQtBdD/qr8GM2UCDc31H1cg=","delegation_amount":{"token_origins":[{"delegator_address":"V8zY1YydpWpKjUgc42LnLxl2Xlo=","validator_address":"V8zY1YydpWpKjUgc42LnLxl2Xlo=","amount":"9900000"}],"total":"9900000"}},
+        {"hash_id":"dhwAo0LehfesJ6KqTbSt3qMfIDhur0w12OAxyJhgi7I=","delegation_amount":{"token_origins":[{"delegator_address":"V8zY1YydpWpKjUgc42LnLxl2Xlo=","validator_address":"V8zY1YydpWpKjUgc42LnLxl2Xlo=","amount":"50000"}],"total":"50000"}},
+        {"hash_id":"YLcwAlzuZ066e8wowAajSn7Df+uuLyrAzvabm8VNRTc=","delegation_amount":{"token_origins":[{"delegator_address":"lfANvbj6/z1zxfeEfugyzNrC2s4=","validator_address":"lfANvbj6/z1zxfeEfugyzNrC2s4=","amount":"10000000"}],"total":"10000000"}}
+    ],
+    "checksum": "f392c7b8fd373bd0aeba8897071fbf06f075d5c983987accc017c8c1f4f70009"
+}

@@ -3,6 +3,7 @@ package fork
 import (
 	"context"
 	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -20,14 +21,14 @@ import (
 )
 
 type TipperTotalData struct {
-	TipperTotal math.Int
-	Address     []byte
-	Block       uint64
+	TipperTotal string `json:"tipper_total"`
+	Address     []byte `json:"address"`
+	Block       uint64 `json:"block"`
 }
 
 type TotalTipsData struct {
-	TotalTips math.Int
-	Block     uint64
+	TotalTips string `json:"total_tips"`
+	Block     uint64 `json:"block"`
 }
 
 type ModuleStateData struct {
@@ -104,11 +105,11 @@ func processTipperTotalSection(decoder *json.Decoder, store storetypes.KVStore) 
 		if err != nil {
 			panic(err)
 		}
-		data, err := json.Marshal(entry.TipperTotal)
-		if err != nil {
-			panic(err)
+		tipperTotal, ok := math.NewIntFromString(entry.TipperTotal)
+		if !ok {
+			panic("cannot convert tipper total to int")
 		}
-		tipperTotalStore.Set(key, data)
+		tipperTotalStore.Set(key, []byte(tipperTotal.String()))
 	}
 
 	// Read closing bracket of tipper_total array
@@ -125,7 +126,7 @@ func processTotalTipsSection(decoder *json.Decoder, store storetypes.KVStore) er
 	if err != nil {
 		return err
 	}
-	if name, ok := t.(string); !ok || name != "total_tips" {
+	if name, ok := t.(string); !ok || name != "latest_total_tips" {
 		return fmt.Errorf("expected total_tips section, got %v", t)
 	}
 
@@ -139,11 +140,11 @@ func processTotalTipsSection(decoder *json.Decoder, store storetypes.KVStore) er
 
 	key := make([]byte, 8)
 	binary.BigEndian.PutUint64(key, entry.Block)
-	data, err := json.Marshal(entry.TotalTips)
-	if err != nil {
-		panic(err)
+	totalTips, ok := math.NewIntFromString(entry.TotalTips)
+	if !ok {
+		panic("cannot convert tipper total to int")
 	}
-	totalTipsStore.Set(key, data)
+	totalTipsStore.Set(key, []byte(totalTips.String()))
 
 	return nil
 }
@@ -158,7 +159,7 @@ func processTippedQueriesSection(decoder *json.Decoder, store storetypes.KVStore
 		return fmt.Errorf("expected tipped_queries section, got %v", t)
 	}
 
-	tippedQueriesStore := prefix.NewStore(store, []byte("tipped_queries"))
+	tippedQueriesStore := prefix.NewStore(store, oracletypes.QueryTipPrefix)
 
 	// Read opening bracket of tipped_queries array
 	if _, err := decoder.Token(); err != nil {
@@ -176,13 +177,16 @@ func processTippedQueriesSection(decoder *json.Decoder, store storetypes.KVStore
 
 		queryId := utils.QueryIDFromData(entry.QueryData)
 
+		fmt.Println("queryId: ", hex.EncodeToString(queryId))
+		fmt.Println("entry.Id: ", entry.Id)
 		pair := collections.Join(queryId, entry.Id)
+		fmt.Println("Pair in migrate functions: ", pair)
 		key := make([]byte, keyCodec.Size(pair))
 		_, err = keyCodec.Encode(key, pair)
 		if err != nil {
 			panic(err)
 		}
-		data, err := json.Marshal(entry)
+		data, err := cdc.Marshal(&entry)
 		if err != nil {
 			panic(err)
 		}

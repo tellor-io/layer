@@ -1,0 +1,36 @@
+{
+    "tipper_total": [
+        {
+            "tipper_total": "30000",
+            "address": "5aAf9D0EPkd4f5SaTgLrDTHyLKQ=",
+            "block": 100
+        },
+        {
+            "tipper_total": "30000",
+            "address": "lfANvbj6/z1zxfeEfugyzNrC2s4=",
+            "block": 100
+        },
+        {
+            "tipper_total": "30000",
+            "address": "V8zY1YydpWpKjUgc42LnLxl2Xlo=",
+            "block": 100
+        }
+    ],
+    "latest_total_tips": {
+        "total_tips": "90000",
+        "block": 100
+    },
+    "tipped_queries": [
+        {
+            "query_id": "pvAT7iNoBIJ7d2ltNQ6fCsPoeTKPKjAh1HOgt3iteKw=",
+            "query_type": "SpotPrice",
+            "query_data": "00000000000000000000000000000000000000000000140a56152262e9f80000",
+            "timestamp": "2025-04-28T20:27:19.519924Z",
+            "cyclelist": true,
+            "block_number": 88,
+            "id": 43,
+            "amount": "30000"
+        }
+    ],
+    "checksum": "5be6d7dcc43e17ad30b78de55cc755b57871bbd8352e9cf4a03df53e92ba0a1f"
+}
