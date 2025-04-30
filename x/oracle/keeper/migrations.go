@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"path/filepath"
+
+	"github.com/spf13/viper"
 	"github.com/tellor-io/layer/x/oracle/migrations/fork"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -18,8 +21,17 @@ func NewMigrator(keeper Keeper) Migrator {
 
 // MigrateFork migrates from version 2 to 3.
 func (m Migrator) MigrateFork(ctx sdk.Context) error {
+	homeDir := viper.GetString("home")
+	if homeDir == "" {
+		panic("homeDir is empty, please use --home flag")
+	}
+	pathToFile := filepath.Join(
+		homeDir,
+		"config",
+	)
 	return fork.MigrateFork(ctx,
 		m.keeper.storeService,
 		m.keeper.cdc,
+		pathToFile,
 	)
 }

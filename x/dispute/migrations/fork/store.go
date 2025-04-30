@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -29,11 +30,16 @@ type StreamModuleStateData struct {
 	Dust                            *math.Int                                                 `json:"dust,omitempty"`
 }
 
-func MigrateStore(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
+func MigrateStore(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec, pathToFile string) error {
 	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 
+	path := filepath.Join(
+		pathToFile,
+		"dispute_module_state.json",
+	)
+
 	// Open the JSON file
-	file, err := os.Open("dispute_module_state.json")
+	file, err := os.Open(path)
 	if err != nil {
 		return err
 	}
