@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
@@ -44,11 +45,16 @@ type FeePaidFromStakeStateEntry struct {
 	DelegationAmount types.DelegationsAmounts `json:"delegation_amount"`
 }
 
-func MigrateFork(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
+func MigrateFork(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec, pathToFile string) error {
 	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 
+	path := filepath.Join(
+		pathToFile,
+		"reporter_module_state.json",
+	)
+
 	// Open the JSON file
-	file, err := os.Open("reporter_module_state.json")
+	file, err := os.Open(path)
 	if err != nil {
 		return err
 	}

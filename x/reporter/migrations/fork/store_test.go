@@ -26,6 +26,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/reporter/keeper"
+	"github.com/tellor-io/layer/x/reporter/migrations/fork"
 	"github.com/tellor-io/layer/x/reporter/mocks"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
@@ -90,17 +91,15 @@ func setupTest(t *testing.T) (context.Context, store.KVStoreService, codec.Codec
 }
 
 func TestMigrateFork(t *testing.T) {
-	ctx, _, _, k := setupTest(t)
+	ctx, storeService, cdc, k := setupTest(t)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	m := keeper.NewMigrator(k)
-
-	err := m.MigrateFork(sdkCtx)
+	err := fork.MigrateFork(sdkCtx, storeService, cdc, "./test_data")
 	require.NoError(t, err)
 
 	// Read the test data file
-	file, err := os.Open("reporter_module_state.json")
+	file, err := os.Open("./test_data/reporter_module_state.json")
 	require.NoError(t, err)
 	defer file.Close()
 

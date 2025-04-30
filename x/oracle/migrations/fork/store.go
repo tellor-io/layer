@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
@@ -37,11 +38,16 @@ type ModuleStateData struct {
 	TippedQueries   []oracletypes.QueryMeta `json:"tipped_queries"`
 }
 
-func MigrateFork(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
+func MigrateFork(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec, pathToFile string) error {
 	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 
+	path := filepath.Join(
+		pathToFile,
+		"oracle_module_state.json",
+	)
+
 	// Open the JSON file
-	file, err := os.Open("oracle_module_state.json")
+	file, err := os.Open(path)
 	if err != nil {
 		return err
 	}

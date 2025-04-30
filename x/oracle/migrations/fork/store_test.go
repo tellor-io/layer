@@ -28,6 +28,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/keeper"
+	"github.com/tellor-io/layer/x/oracle/migrations/fork"
 	"github.com/tellor-io/layer/x/oracle/mocks"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
@@ -76,17 +77,15 @@ func setupTest(t *testing.T) (context.Context, store.KVStoreService, codec.Codec
 }
 
 func TestMigrateStore(t *testing.T) {
-	ctx, _, _, k := setupTest(t)
+	ctx, storeService, cdc, k := setupTest(t)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	m := keeper.NewMigrator(k)
-
-	err := m.MigrateFork(sdkCtx)
+	err := fork.MigrateFork(sdkCtx, storeService, cdc, "./test_data")
 	require.NoError(t, err)
 
 	// Read the test data file
-	file, err := os.Open("oracle_module_state.json")
+	file, err := os.Open("./test_data/oracle_module_state.json")
 	require.NoError(t, err)
 	defer file.Close()
 
