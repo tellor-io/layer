@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 
 	"github.com/tellor-io/layer/x/reporter/types"
@@ -142,10 +143,12 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress, qu
 	if err != nil {
 		return math.Int{}, nil, err
 	}
+	k.logger.Info("Is Iter Valid: ", iter.Valid())
 	defer iter.Close()
 	delegates := make([]*types.TokenOriginInfo, 0)
 	for ; iter.Valid(); iter.Next() {
 		selectorAddr, err := iter.PrimaryKey()
+		k.logger.Info("Selector Addr: ", hex.EncodeToString(selectorAddr))
 		if err != nil {
 			return math.Int{}, nil, err
 		}
