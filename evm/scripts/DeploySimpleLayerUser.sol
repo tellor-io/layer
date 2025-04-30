@@ -2,10 +2,13 @@ require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-waffle");
 require("dotenv").config();
 
-//npx hardhat run scripts/DeploySimpleLayerUser.sol --network sepolia
+// npx hardhat run scripts/DeploySimpleLayerUser.sol --network sepolia
 
-var blobstreamOaddress = "0xFa600432D5f7C252D399bB1A77546a447eeCaF67"
-var queryId = "0x83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
+// update these variables
+var blobstreamOaddress = " "
+var queryId = " "
+var PK = process.env.TESTNET_PK
+var NODE_URL = process.env.NODE_URL_SEPOLIA_TESTNET
 
 async function deploySimpleLayerUser(_pk, _nodeURL) {
     // var net = hre.network.name
@@ -24,7 +27,7 @@ async function deploySimpleLayerUser(_pk, _nodeURL) {
     console.log("SimpleLayerUser deployed to:", simpleLayerUser.address);
   };
 
-  deploySimpleLayerUser(process.env.TESTNET_PK, process.env.NODE_URL_SEPOLIA_TESTNET)
+  deploySimpleLayerUser(PK, NODE_URL)
     .then(() => process.exit(0))
     .catch(error => {
 	  console.error(error);

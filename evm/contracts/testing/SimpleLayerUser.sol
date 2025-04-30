@@ -34,8 +34,8 @@ contract SimpleLayerUser {
     ) external {
         require(_attestData.queryId == queryId, "Invalid queryId");
         blobstreamO.verifyOracleData(_attestData, _currentValidatorSet, _sigs);
-        require(block.timestamp - _attestData.report.timestamp < 6 hours, "data too old");
-        require(block.timestamp - _attestData.attestationTimestamp < 10 minutes, "attestation too old");
+        require(block.timestamp - _attestData.report.timestamp / 1000 < 6 hours, "data too old");
+        require(block.timestamp - _attestData.attestationTimestamp / 1000 < 10 minutes, "attestation too old");
         if(priceData.length > 0) {
             require(_attestData.report.timestamp > priceData[priceData.length - 1].timestamp, "report timestamp not increasing");
         }

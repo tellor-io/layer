@@ -2,9 +2,12 @@ require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-waffle");
 require("dotenv").config();
 
-//npx hardhat run scripts/DeployBlobstreamO.js --network sepolia
+// npx hardhat run scripts/DeployBlobstreamO.js --network sepolia
 
-var _thegardianaddress = "0xfE2952AD10262C6b466070CA34dBB7fA54b882e3"
+// update these variables
+var guardianaddress = " "
+var PK = process.env.TESTNET_PK
+var NODE_URL = process.env.NODE_URL_SEPOLIA_TESTNET
 
 async function deployBlobstreamO(_pk, _nodeURL) {
     // var net = hre.network.name
@@ -18,12 +21,12 @@ async function deployBlobstreamO(_pk, _nodeURL) {
     ////////  Deploy Blobstream contract  ////////////////////////
     console.log("deploy BlobstreamO bridge")
     const BlobstreamO = await ethers.getContractFactory("contracts/bridge/BlobstreamO.sol:BlobstreamO", wallet);
-    const blobstreamO= await BlobstreamO.deploy(_thegardianaddress);
+    const blobstreamO= await BlobstreamO.deploy(guardianaddress);
     await blobstreamO.deployed();
     console.log("BlobstreamO deployed to:", blobstreamO.address);
   };
 
-  deployBlobstreamO(process.env.TESTNET_PK, process.env.NODE_URL_SEPOLIA_TESTNET)
+  deployBlobstreamO(PK, NODE_URL)
     .then(() => process.exit(0))
     .catch(error => {
 	  console.error(error);

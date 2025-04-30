@@ -77,10 +77,6 @@ module.exports = {
       gasPrice: 1000000000
     },
   },
-
-  etherscan: {
-    apiKey: process.env.ETHERSCAN
-  },
 };
 
 
