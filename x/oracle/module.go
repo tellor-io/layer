@@ -24,7 +24,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-const ConsensusVersion = 3
+const ConsensusVersion = 4
 
 var (
 	_ module.AppModule          = AppModule{}
@@ -124,8 +124,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	// if err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2); err != nil {
 	// 	panic(fmt.Sprintf("failed to migrate x/%s from version 1 to 2", types.ModuleName))
 	// }
-	if err := cfg.RegisterMigration(types.ModuleName, 2, m.MigrateFork); err != nil {
-		panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3", types.ModuleName))
+	// if err := cfg.RegisterMigration(types.ModuleName, 2, m.MigrateFork); err != nil {
+	// 	panic(fmt.Sprintf("failed to migrate x/%s from version 2 to 3", types.ModuleName))
+	// }
+	if err := cfg.RegisterMigration(types.ModuleName, 3, m.MigrateFork); err != nil {
+		panic(fmt.Sprintf("failed to migrate x/%s from version 3 to 4", types.ModuleName))
 	}
 }
 
