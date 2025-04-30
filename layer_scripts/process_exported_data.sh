@@ -16,15 +16,9 @@ jq -r '
 
   (reduce (
     .app_state.staking.delegations[] |
-    select(.validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv") |
+    select(.validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv") |
     .shares // "0"
   ) as $amount (0; . + ($amount | tonumber))) as $bonded_delegations_deleted_amount |
-
-  (reduce (
-    .app_state.staking.delegations[] |
-    select(.validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9") |
-    .shares // "0"
-  ) as $amount (0; . + ($amount | tonumber))) as $non_bonded_delegations_deleted_amount |
 
   (reduce (
     .app_state.staking.last_validator_powers[] |
@@ -36,8 +30,6 @@ jq -r '
 
   (.app_state.auth.accounts[] | select(.name == "bonded_tokens_pool") | .base_account.address) as $bonded_tokens_pool_address |
 
-  (.app_state.auth.accounts[] | select(.name == "not_bonded_tokens_pool") | .base_account.address) as $not_bonded_tokens_pool_address |
-
   .app_state.bank.supply[0].amount as $total_supply |
 
   .app_state.staking.last_total_power as $last_total_power |
@@ -46,39 +38,32 @@ jq -r '
 
   (.app_state.bank.balances[] | select(.address == $bonded_tokens_pool_address) | .coins[0].amount) as $bonded_tokens_pool_balance |
 
-  (.app_state.bank.balances[] | select(.address == $not_bonded_tokens_pool_address) | .coins[0].amount) as $not_bonded_tokens_pool_balance |
-
   {
     "outstanding_validator_rewards_distribution": $outstanding_validator_rewards_distribution,
     "bonded_delegations_deleted_amount": $bonded_delegations_deleted_amount,
-    "non_bonded_delegations_deleted_amount": $non_bonded_delegations_deleted_amount,
     "last_validators_power_removed": $last_validators_power_removed,
     "distribution_module_address": $distribution_module_address,
     "bonded_tokens_pool_address": $bonded_tokens_pool_address,
-    "not_bonded_tokens_pool_address": $not_bonded_tokens_pool_address,
     "total_supply": $total_supply,
     "last_total_power": $last_total_power,
     "distribution_module_balance": $distribution_module_balance,
     "bonded_tokens_pool_balance": $bonded_tokens_pool_balance,
-    "not_bonded_tokens_pool_balance": $not_bonded_tokens_pool_balance
   } |
   
   tostring
-' ./exported_state_test.json > removed_tokens.json
+' ./chick_exported_state.json > removed_tokens.json
 
 # Display the totals
 echo "Token amounts removed:"
 cat removed_tokens.json
 
-jq '.outstanding_validator_rewards_distribution |= floor | .bonded_delegations_deleted_amount |= floor | .non_bonded_delegations_deleted_amount |= floor' removed_tokens.json > temp.json && mv temp.json removed_tokens.json
+jq '.outstanding_validator_rewards_distribution |= floor | .bonded_delegations_deleted_amount |= floor' removed_tokens.json > temp.json && mv temp.json removed_tokens.json
 
 outstanding_validator_rewards_distribution=$(jq -r '.outstanding_validator_rewards_distribution' removed_tokens.json)
 bonded_delegations_deleted_amount=$(jq -r '.bonded_delegations_deleted_amount' removed_tokens.json)
-non_bonded_delegations_deleted_amount=$(jq -r '.non_bonded_delegations_deleted_amount' removed_tokens.json)
 last_validators_power_removed=$(jq -r '.last_validators_power_removed' removed_tokens.json)
 distribution_module_address=$(jq -r '.distribution_module_address' removed_tokens.json)
 bonded_tokens_pool_address=$(jq -r '.bonded_tokens_pool_address' removed_tokens.json)
-not_bonded_tokens_pool_address=$(jq -r '.not_bonded_tokens_pool_address' removed_tokens.json)
 
 # Now perform the actual removal and save to the original file
 # remove from consensus.validators
@@ -98,11 +83,9 @@ not_bonded_tokens_pool_address=$(jq -r '.not_bonded_tokens_pool_address' removed
 # update genesis time 
 jq --argjson outstanding_validator_rewards_distribution $outstanding_validator_rewards_distribution \
   --argjson bonded_delegations_deleted_amount $bonded_delegations_deleted_amount \
-  --argjson non_bonded_delegations_deleted_amount $non_bonded_delegations_deleted_amount \
   --argjson last_validators_power_removed $last_validators_power_removed \
   --arg distribution_module_address "$distribution_module_address" \
   --arg bonded_tokens_pool_address "$bonded_tokens_pool_address" \
-  --arg not_bonded_tokens_pool_address "$not_bonded_tokens_pool_address" \
   '
   .consensus.validators -= [.consensus.validators[] | 
   select(.name == "luke-moniker" or .name == "yoda-moniker" or .name == "palpatine-moniker" or .name == "darth_maul-moniker")] |
@@ -166,12 +149,12 @@ jq --argjson outstanding_validator_rewards_distribution $outstanding_validator_r
 
   .app_state.bank.balances[] |= (if .address == $bonded_tokens_pool_address then .coins[0].amount = ((.coins[0].amount | tonumber) - ($bonded_delegations_deleted_amount | tonumber) | tostring) else . end) |
 
-  .app_state.bank.balances[] |= (if .address == $not_bonded_tokens_pool_address then .coins[0].amount = ((.coins[0].amount | tonumber) - ($non_bonded_delegations_deleted_amount | tonumber) | tostring) else . end) |
-
-  .app_state.bank.supply[0].amount = ((.app_state.bank.supply[0].amount | tonumber) - ($outstanding_validator_rewards_distribution | tonumber) - ($bonded_delegations_deleted_amount | tonumber) - ($non_bonded_delegations_deleted_amount | tonumber) | tostring) |
+  .app_state.bank.supply[0].amount = ((.app_state.bank.supply[0].amount | tonumber) - ($outstanding_validator_rewards_distribution | tonumber) - ($bonded_delegations_deleted_amount | tonumber) | tostring) |
   
-  .consensus.params.abci.vote_extensions_enabled_height = ((.initial_height | tonumber) + 1 | tostring)
-' ./exported_state_test.json > test_state_edited.json
+  .consensus.params.abci.vote_extensions_enable_height = ((.initial_height | tonumber) + 1 | tostring) |
+
+  .app_state.gov.params.expedited_voting_period = "600s"
+' ./chick_exported_state.json > test_state_edited.json
 
 echo "State file updated and validators have been removed. Make sure to update the genesis time with an appropriate time for when you can start the chain back up"
 echo "Doing some queries on the new json document to get the data that should have updated"
@@ -190,9 +173,6 @@ jq --arg bonded_tokens_pool_address "$bonded_tokens_pool_address" '.app_state.ba
 
 echo "distribution module balance after edit: "
 jq --arg distribution_module_address "$distribution_module_address" '.app_state.bank.balances[] | select(.address == $distribution_module_address)' test_state_edited.json
-
-echo "not bonded tokens pool balance after edit: "
-jq --arg not_bonded_tokens_pool_address "$not_bonded_tokens_pool_address" '.app_state.bank.balances[] | select(.address == $not_bonded_tokens_pool_address)' test_state_edited.json
 
 echo "total supply after edit: "
 jq '.app_state.bank.supply[0].amount' test_state_edited.json
