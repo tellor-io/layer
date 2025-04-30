@@ -1,49 +1,62 @@
 {
     "disputes": [
-        {"dispute_id":4,"dispute":{"hash_id":"YDS3IimZyqJZrkBXQcqyuqXnfojWMlMZYvx8J/LkoXw=","dispute_id":4,"dispute_category":1,"dispute_fee":"10090000","dispute_status":4,"dispute_start_time":"2025-04-15T17:17:22.999578927Z","dispute_end_time":"2025-04-16T17:17:22.999578927Z","dispute_start_block":1403347,"dispute_round":1,"slash_amount":"10090000","burn_amount":"504500","initial_evidence":{"reporter":"tellor1gkstv3n4cpmdskh4m8mhr2mlljf540sqsm7gnp","power":1009,"query_type":"SpotPrice","query_id":"pvAT7iNoBIJ7d2ltNQ6fCsPoeTKPKjAh1HOgt3iteKw=","aggregate_method":"weighted-median","value":"0000000000000000000000000000000000000000000011fd8ba8e0d3c5740000","timestamp":"2025-04-15T17:12:12.643158828Z","cyclelist":true,"block_number":1403176,"meta_id":701681},"fee_total":"1000000","prev_dispute_ids":[4],"block_number":1403347,"voter_reward":"0"}},
-        {"dispute_id":3,"dispute":{"hash_id":"7dk4AGHoUM8qN92cx3QkXrOpYNpqZ8d0cwp2jJpX8A0=","dispute_id":3,"dispute_category":1,"dispute_fee":"750000","dispute_status":2,"dispute_start_time":"2025-04-09T17:20:54.293150565Z","dispute_end_time":"2025-04-12T17:20:54.293150565Z","dispute_start_block":1109642,"dispute_round":1,"slash_amount":"1462500","burn_amount":"37500","initial_evidence":{"reporter":"tellor1mkl462wk4q64825ce5escjcg0l3p5j2n3hu8h9","power":75,"query_type":"SpotPrice","query_id":"g6fz1IeGrCZnUDph6MQVQ47Ski64aikG5O5m2aLOSZI=","aggregate_method":"weighted-median","value":"00000000000000000000000000000000000000000000005181cf1fe756d20000","timestamp":"2025-04-09T17:14:09.724152861Z","cyclelist":true,"block_number":1109402,"meta_id":554786},"fee_total":"750000","prev_dispute_ids":[3],"block_number":1109642,"open":true,"voter_reward":"18750"}},
-        {"dispute_id":2,"dispute":{"hash_id":"VnysCz6tGz4e0UiahRFpuDljJY4V3h7k47qMQVsfNBs=","dispute_id":2,"dispute_category":1,"dispute_fee":"2130000","dispute_status":2,"dispute_start_time":"2025-04-08T17:19:56.096798398Z","dispute_end_time":"2025-04-11T17:19:56.096798398Z","dispute_start_block":1058447,"dispute_round":1,"slash_amount":"4153500","burn_amount":"106500","initial_evidence":{"reporter":"tellor1m6tuy2ek06yptcyhtd3t7h54uvv3wxgvmjckt9","power":213,"query_type":"SpotPrice","query_id":"g6fz1IeGrCZnUDph6MQVQ47Ski64aikG5O5m2aLOSZI=","aggregate_method":"weighted-median","value":"00000000000000000000000000000000000000000000004fc3c6e8304dc40000","timestamp":"2025-04-08T17:19:10.752174575Z","cyclelist":true,"block_number":1058420,"meta_id":529293},"fee_total":"2130000","prev_dispute_ids":[2],"block_number":1058447,"open":true,"voter_reward":"53250"}},
-        {"dispute_id":1,"dispute":{"hash_id":"Ua/iRdqdo2WmTK6PJLXL960x9hHZdYg/R/g76lnis4k=","dispute_id":1,"dispute_category":1,"dispute_fee":"50000","dispute_status":2,"dispute_start_time":"2025-03-24T15:00:25.898659018Z","dispute_end_time":"2025-03-27T15:00:25.898659018Z","dispute_start_block":220201,"dispute_round":1,"slash_amount":"50000","burn_amount":"2500","initial_evidence":{"reporter":"tellor17gc67q05d5rgsz9caznm0s7s5eazwg2e3fkk8e","power":5,"query_type":"AmpleforthCustomSpotPrice","query_id":"DRKtSRkxY7u+/05tuClM7SP/hgU1n9ZmeZ1OJaOqDjo=","aggregate_method":"weighted-median","value":"00000000000000000000000000000000000000000000000010eb2f7f19c6e1ed","timestamp":"2025-03-24T14:11:35.566750439Z","block_number":218261,"meta_id":109136},"fee_total":"50000","prev_dispute_ids":[1],"block_number":220201,"voter_reward":"1250"}}
+        {"dispute_id":6,"dispute":{"hash_id":"vd+3erQqyEi3/tUntDd31BMyBf+tTcFeWWb5099mmqc=","dispute_id":6,"dispute_category":1,"dispute_fee":"1019550000","dispute_status":2,"dispute_start_time":"2025-03-14T18:59:30.707812688Z","dispute_end_time":"2025-03-17T18:59:30.707812688Z","dispute_start_block":1270666,"dispute_round":1,"slash_amount":"1019550000","burn_amount":"50977500","initial_evidence":{"reporter":"tellor1t6llaazgletpqal2l37emag8x2z053mvxlzskq","power":101955,"query_type":"SpotPrice","query_id":"XBPNnJfbuY8kKcEBoqgVDmx6Ddr/YSTuF2o6QRBn3tA=","aggregate_method":"weighted-median","value":"0000000000000000000000000000000000000000000000018d993f34aef10000","timestamp":"2025-03-14T18:54:47.374968503Z","cyclelist":true,"block_number":1270542,"meta_id":636471},"fee_total":"1019550000","prev_dispute_ids":[6],"block_number":1270666,"open":true,"voter_reward":"25488750"}},
+        {"dispute_id":5,"dispute":{"hash_id":"gu5/WcjmFTcTac6oUOoy3Tn5jBueeE+q6Ue8cXVkvNw=","dispute_id":5,"dispute_category":3,"dispute_fee":"150000000","dispute_status":2,"dispute_start_time":"2025-02-04T20:40:29.906351108Z","dispute_end_time":"2025-02-07T20:40:29.906351108Z","dispute_start_block":10713,"dispute_round":1,"slash_amount":"150000000","burn_amount":"7500000","initial_evidence":{"reporter":"tellor12kq9khwenkw8j4m968wtw89pm2tnyzpe0elsse","power":150,"query_type":"SpotPrice","query_id":"XBPNnJfbuY8kKcEBoqgVDmx6Ddr/YSTuF2o6QRBn3tA=","aggregate_method":"weighted-median","value":"0000000000000000000000000000000000000000000000000000000004a5ba50","timestamp":"2025-02-04T20:32:09.820908583Z","cyclelist":true,"block_number":10398,"meta_id":5199},"fee_total":"150000000","prev_dispute_ids":[5],"block_number":10713,"voter_reward":"3750000"}},
+        {"dispute_id":4,"dispute":{"hash_id":"jWxtZMH3Aub+2k5qXhXwazDp/tfP31hFIavBLN2KgA4=","dispute_id":4,"dispute_category":2,"dispute_fee":"7500000","dispute_status":2,"dispute_start_time":"2025-02-04T20:39:04.767225148Z","dispute_end_time":"2025-02-07T20:39:04.767225148Z","dispute_start_block":10659,"dispute_round":1,"slash_amount":"7500000","burn_amount":"375000","initial_evidence":{"reporter":"tellor1hj094dgyw0yvdaeufcklq46famsnkm690l5r5g","power":150,"query_type":"SpotPrice","query_id":"XBPNnJfbuY8kKcEBoqgVDmx6Ddr/YSTuF2o6QRBn3tA=","aggregate_method":"weighted-median","value":"0000000000000000000000000000000000000000000000000000000004a5ba50","timestamp":"2025-02-04T20:32:09.820908583Z","cyclelist":true,"block_number":10398,"meta_id":5199},"fee_total":"7500000","prev_dispute_ids":[4],"block_number":10659,"voter_reward":"187500"}},
+        {"dispute_id":3,"dispute":{"hash_id":"nYx4OG0eP7ZEUlA3kONXYrnWp7Nyrfhtq/yKIzah1Q0=","dispute_id":3,"dispute_category":1,"dispute_fee":"1500000","dispute_status":2,"dispute_start_time":"2025-02-04T17:52:02.884308908Z","dispute_end_time":"2025-02-07T17:52:02.884308908Z","dispute_start_block":4353,"dispute_round":1,"slash_amount":"1500000","burn_amount":"75000","initial_evidence":{"reporter":"tellor1y88nrzut9zm53jp55gyvvda07rcxnkplt82anj","power":150,"query_type":"SpotPrice","query_id":"XBPNnJfbuY8kKcEBoqgVDmx6Ddr/YSTuF2o6QRBn3tA=","aggregate_method":"weighted-median","value":"0000000000000000000000000000000000000000000000000000000004a5ba50","timestamp":"2025-02-04T16:33:45.080898148Z","cyclelist":true,"block_number":1386,"meta_id":692},"fee_total":"1500000","prev_dispute_ids":[3],"block_number":4353,"open":true,"voter_reward":"37500"}},
+        {"dispute_id":2,"dispute":{"hash_id":"3MrekzrXyoQOVqv9oADZjF0mfjp0dkZ0Wm6OJEyv1io=","dispute_id":2,"dispute_category":1,"dispute_fee":"1500000","dispute_status":2,"dispute_start_time":"2025-02-04T17:25:20.108598075Z","dispute_end_time":"2025-02-07T17:25:20.108598075Z","dispute_start_block":3338,"dispute_round":1,"slash_amount":"1500000","burn_amount":"75000","initial_evidence":{"reporter":"tellor1n8ndrlsg3cfj2aa2muc930vztft7pns98dcv4p","power":150,"query_type":"SpotPrice","query_id":"XBPNnJfbuY8kKcEBoqgVDmx6Ddr/YSTuF2o6QRBn3tA=","aggregate_method":"weighted-median","value":"0000000000000000000000000000000000000000000000000000000004a5ba50","timestamp":"2025-02-04T16:33:45.080898148Z","cyclelist":true,"block_number":1386,"meta_id":692},"fee_total":"1500000","prev_dispute_ids":[2],"block_number":3338,"open":true,"voter_reward":"37500"}},
+        {"dispute_id":1,"dispute":{"hash_id":"PNxOGc4yrix5ryqcuFXFpXh/QGqUKISc1r0qNArTFS0=","dispute_id":1,"dispute_category":1,"dispute_fee":"1500000","dispute_status":2,"dispute_start_time":"2025-02-04T17:03:03.804507167Z","dispute_end_time":"2025-02-07T17:03:03.804507167Z","dispute_start_block":2494,"dispute_round":1,"slash_amount":"1500000","burn_amount":"75000","initial_evidence":{"reporter":"tellor1qmgjqxmh905u23qjwn5nnw7rqc7y5384rdr29n","power":150,"query_type":"SpotPrice","query_id":"XBPNnJfbuY8kKcEBoqgVDmx6Ddr/YSTuF2o6QRBn3tA=","aggregate_method":"weighted-median","value":"0000000000000000000000000000000000000000000000000000000004a5ba50","timestamp":"2025-02-04T16:33:45.080898148Z","cyclelist":true,"block_number":1386,"meta_id":692},"fee_total":"1500000","prev_dispute_ids":[1],"block_number":2494,"voter_reward":"37500"}}
     ],
     "votes": [
-        {"dispute_id":3,"vote":{"id":3,"voteStart":"2025-04-09T17:20:54.293150565Z","voteEnd":"2025-04-11T17:20:55.834415636Z","voteResult":5,"executed":true}},
-        {"dispute_id":2,"vote":{"id":2,"voteStart":"2025-04-08T17:19:56.096798398Z","voteEnd":"2025-04-10T17:19:57.756021492Z","voteResult":5,"executed":true}},
-        {"dispute_id":1,"vote":{"id":1,"voteStart":"2025-03-24T15:00:25.898659018Z","voteEnd":"2025-03-25T16:55:40.205262208Z","voteResult":3,"executed":true}}
+        {"dispute_id":6,"vote":{"id":6,"voteStart":"2025-03-14T18:59:30.707812688Z","voteEnd":"2025-03-16T18:59:30.964758448Z","voteResult":6,"executed":true}},
+        {"dispute_id":5,"vote":{"id":5,"voteStart":"2025-02-04T20:40:29.906351108Z","voteEnd":"2025-02-04T21:35:47.294886631Z","voteResult":1,"executed":true}},
+        {"dispute_id":4,"vote":{"id":4,"voteStart":"2025-02-04T20:39:04.767225148Z","voteEnd":"2025-02-04T21:35:34.503803441Z","voteResult":1,"executed":true}},
+        {"dispute_id":3,"vote":{"id":3,"voteStart":"2025-02-04T17:52:02.884308908Z","voteEnd":"2025-02-06T17:52:03.130543827Z","voteResult":4,"executed":true}},
+        {"dispute_id":2,"vote":{"id":2,"voteStart":"2025-02-04T17:25:20.108598075Z","voteEnd":"2025-02-06T17:25:20.181508153Z","voteResult":4,"executed":true}},
+        {"dispute_id":1,"vote":{"id":1,"voteStart":"2025-02-04T17:03:03.804507167Z","voteEnd":"2025-02-05T15:35:48.517433472Z","voteResult":1,"executed":true}}
     ],
     "voters": [
-        {"dispute_id":3,"voter_address":"fyBB+ZU2VcuubEVs5aF8Fema8VE=","voter":{"vote":2,"voter_power":"1018390068","reporter_power":"1018390068","reward_claimed":true}},
-        {"dispute_id":3,"voter_address":"ZZSabrKGRI6Aq/8Um4PLLUwSWl8=","voter":{"vote":2,"voter_power":"1017529979","reporter_power":"1017529979"}},
-        {"dispute_id":3,"voter_address":"RaC2RnXAdtha9dn3cat//JNKvgA=","voter":{"vote":2,"voter_power":"1013767522","reporter_power":"1013277522"}},
-        {"dispute_id":3,"voter_address":"LRSLzCWXV6yPoO2bIfA/HIuKvS8=","voter":{"vote":2,"voter_power":"1017596142","reporter_power":"1017525582"}},
-        {"dispute_id":3,"voter_address":"KdrLlmpvugYMwsQakXomXZhZYkw=","voter":{"vote":2,"voter_power":"1028351903","reporter_power":"1028351903"}},
-        {"dispute_id":2,"voter_address":"vnrCIGBCuxvXLfof0U76uROslWU=","voter":{"vote":2,"voter_power":"39200","reporter_power":"0"}},
-        {"dispute_id":2,"voter_address":"p0NJEm9XdQrQEEWo0GKC48u+0fM=","voter":{"vote":2,"voter_power":"1008000000","reporter_power":"1008000000"}},
-        {"dispute_id":2,"voter_address":"fyBB+ZU2VcuubEVs5aF8Fema8VE=","voter":{"vote":2,"voter_power":"1016281995","reporter_power":"1016281995","reward_claimed":true}},
-        {"dispute_id":2,"voter_address":"ZZSabrKGRI6Aq/8Um4PLLUwSWl8=","voter":{"vote":2,"voter_power":"1015596455","reporter_power":"1015596455"}},
-        {"dispute_id":2,"voter_address":"RaC2RnXAdtha9dn3cat//JNKvgA=","voter":{"vote":2,"voter_power":"1012699482","reporter_power":"1012209482","reward_claimed":true}},
-        {"dispute_id":2,"voter_address":"LRSLzCWXV6yPoO2bIfA/HIuKvS8=","voter":{"vote":2,"voter_power":"1015663238","reporter_power":"1015592678"}},
-        {"dispute_id":2,"voter_address":"KdrLlmpvugYMwsQakXomXZhZYkw=","voter":{"vote":2,"voter_power":"1028000000","reporter_power":"1028000000"}},
-        {"dispute_id":1,"voter_address":"fyBB+ZU2VcuubEVs5aF8Fema8VE=","voter":{"voter_power":"1008000000","reporter_power":"1008000000","reward_claimed":true}},
-        {"dispute_id":1,"voter_address":"ZZSabrKGRI6Aq/8Um4PLLUwSWl8=","voter":{"voter_power":"1008000000","reporter_power":"1008000000"}},
-        {"dispute_id":1,"voter_address":"RaC2RnXAdtha9dn3cat//JNKvgA=","voter":{"voter_power":"1008000000","reporter_power":"1008000000"}},
-        {"dispute_id":1,"voter_address":"LRSLzCWXV6yPoO2bIfA/HIuKvS8=","voter":{"voter_power":"1008000000","reporter_power":"1008000000"}},
-        {"dispute_id":1,"voter_address":"G1100jpNpeJyWjsn0fMmbntdzG0=","voter":{"voter_power":"25000000","reporter_power":"0"}}
+        {"dispute_id":6,"voter_address":"Xr/+9Ej+VhB36vx9nfUHMoT6R2w=","voter":{"voter_power":"101955493359","reporter_power":"101955483559","reward_claimed":true}},
+        {"dispute_id":6,"voter_address":"PmOFlEPtrKdUTBPAiKlHhprhvsA=","voter":{"voter_power":"100665569426","reporter_power":"100665569426"}},
+        {"dispute_id":6,"voter_address":"F9st/LHI7fhm+GVnDl9deNL1TYQ=","voter":{"voter_power":"99506930441","reporter_power":"99506930441"}},
+        {"dispute_id":5,"voter_address":"3Xv3WtcAWl1c/ThOwBtg0dOlvYQ=","voter":{"vote":1,"voter_power":"100000000000","reporter_power":"100000000000"}},
+        {"dispute_id":5,"voter_address":"u7IlHozMRUVsxaNnenWvJwNaRYk=","voter":{"vote":1,"voter_power":"99995696000","reporter_power":"99995500000"}},
+        {"dispute_id":5,"voter_address":"PmOFlEPtrKdUTBPAiKlHhprhvsA=","voter":{"vote":1,"voter_power":"100000032666","reporter_power":"100000032666"}},
+        {"dispute_id":5,"voter_address":"AfZfgx7stoRG39Pm+QwZkxlSdh8=","voter":{"vote":1,"voter_power":"99992500000","reporter_power":"99992500000"}},
+        {"dispute_id":4,"voter_address":"u7IlHozMRUVsxaNnenWvJwNaRYk=","voter":{"vote":1,"voter_power":"99995696000","reporter_power":"99995500000"}},
+        {"dispute_id":4,"voter_address":"Xr/+9Ej+VhB36vx9nfUHMoT6R2w=","voter":{"vote":1,"voter_power":"100000000000","reporter_power":"100000000000"}},
+        {"dispute_id":4,"voter_address":"F9st/LHI7fhm+GVnDl9deNL1TYQ=","voter":{"vote":1,"voter_power":"100000032666","reporter_power":"100000032666"}},
+        {"dispute_id":4,"voter_address":"AfZfgx7stoRG39Pm+QwZkxlSdh8=","voter":{"vote":1,"voter_power":"100000000000","reporter_power":"100000000000"}},
+        {"dispute_id":3,"voter_address":"u7IlHozMRUVsxaNnenWvJwNaRYk=","voter":{"vote":1,"voter_power":"99997000000","reporter_power":"99997000000"}},
+        {"dispute_id":3,"voter_address":"Xr/+9Ej+VhB36vx9nfUHMoT6R2w=","voter":{"vote":1,"voter_power":"100000000000","reporter_power":"100000000000"}},
+        {"dispute_id":3,"voter_address":"PmOFlEPtrKdUTBPAiKlHhprhvsA=","voter":{"vote":1,"voter_power":"100000000000","reporter_power":"100000000000"}},
+        {"dispute_id":3,"voter_address":"F9st/LHI7fhm+GVnDl9deNL1TYQ=","voter":{"vote":1,"voter_power":"100000000000","reporter_power":"100000000000"}},
+        {"dispute_id":2,"voter_address":"u7IlHozMRUVsxaNnenWvJwNaRYk=","voter":{"vote":1,"voter_power":"99998500000","reporter_power":"99998500000"}},
+        {"dispute_id":2,"voter_address":"Xr/+9Ej+VhB36vx9nfUHMoT6R2w=","voter":{"vote":1,"voter_power":"100000000000","reporter_power":"100000000000"}},
+        {"dispute_id":2,"voter_address":"PmOFlEPtrKdUTBPAiKlHhprhvsA=","voter":{"vote":1,"voter_power":"100000000000","reporter_power":"100000000000"}},
+        {"dispute_id":2,"voter_address":"F9st/LHI7fhm+GVnDl9deNL1TYQ=","voter":{"vote":1,"voter_power":"100000000000","reporter_power":"100000000000"}},
+        {"dispute_id":1,"voter_address":"u7IlHozMRUVsxaNnenWvJwNaRYk=","voter":{"vote":1,"voter_power":"100000000000","reporter_power":"100000000000","reward_claimed":true}},
+        {"dispute_id":1,"voter_address":"Xr/+9Ej+VhB36vx9nfUHMoT6R2w=","voter":{"vote":1,"voter_power":"100000000000","reporter_power":"100000000000","reward_claimed":true}},
+        {"dispute_id":1,"voter_address":"PmOFlEPtrKdUTBPAiKlHhprhvsA=","voter":{"vote":1,"voter_power":"100000000000","reporter_power":"100000000000"}},
+        {"dispute_id":1,"voter_address":"O6TkDfI4WVzZbemYKBLBmtpPpW4=","voter":{"vote":1,"voter_power":"25000000","reporter_power":"0"}},
+        {"dispute_id":1,"voter_address":"F9st/LHI7fhm+GVnDl9deNL1TYQ=","voter":{"vote":1,"voter_power":"100000000000","reporter_power":"100000000000"}}
     ],
     "reporters_with_delegators_who_voted": [],
-    "block_info": [
-        {"hash_id":"YDS3IimZyqJZrkBXQcqyuqXnfojWMlMZYvx8J/LkoXw=","block_info":{"total_reporter_power":"8123093024","total_user_tips":"4059160"}}
-    ],
+    "block_info": [],
     "dispute_fee_payer": [
-        {"dispute_id":4,"payer":"RaC2RnXAdtha9dn3cat//JNKvgA=","payer_info":{"amount":"1000000"}},
-        {"dispute_id":3,"payer":"Y5RCFmmLhevkhyrC6l5vION7DEs=","payer_info":{"amount":"750000"}},
-        {"dispute_id":2,"payer":"Y5RCFmmLhevkhyrC6l5vION7DEs=","payer_info":{"amount":"2130000"}},
-        {"dispute_id":1,"payer":"RaC2RnXAdtha9dn3cat//JNKvgA=","payer_info":{"amount":"50000","from_bond":true}}
+        {"dispute_id":5,"payer":"AfZfgx7stoRG39Pm+QwZkxlSdh8=","payer_info":{"amount":"150000000","from_bond":true}},
+        {"dispute_id":4,"payer":"AfZfgx7stoRG39Pm+QwZkxlSdh8=","payer_info":{"amount":"7500000","from_bond":true}},
+        {"dispute_id":3,"payer":"u7IlHozMRUVsxaNnenWvJwNaRYk=","payer_info":{"amount":"1500000","from_bond":true}},
+        {"dispute_id":2,"payer":"u7IlHozMRUVsxaNnenWvJwNaRYk=","payer_info":{"amount":"1500000","from_bond":true}}
     ],
     "dust": "0",
     "vote_counts_by_group": [
-        {"dispute_id":3,"users":{"against":560560},"reporters":{"against":5095075054},"team":{}},
-        {"dispute_id":2,"users":{"against":599760},"reporters":{"against":6095680610},"team":{}},
-        {"dispute_id":1,"users":{},"reporters":{"invalid":4032000000},"team":{"invalid":1}}
+        {"dispute_id":6,"users":{"invalid":9800},"reporters":{"invalid":302127983426},"team":{}},
+        {"dispute_id":5,"users":{"support":196000},"reporters":{"support":399988032666},"team":{}},
+        {"dispute_id":4,"users":{"support":196000},"reporters":{"support":399995532666},"team":{}},
+        {"dispute_id":3,"users":{},"reporters":{"support":399997000000},"team":{}},
+        {"dispute_id":2,"users":{},"reporters":{"support":399998500000},"team":{}},
+        {"dispute_id":1,"users":{},"reporters":{"support":400000000000},"team":{"support":1}}
     ],
-    "checksum": "ab0c35b6925d7f78b1dd99c40d2bb41bf62429a8c5fb5b23dcd8a8bc3940ca54"
+    "checksum": "1efc6d8929edc151c7e24cc74faca8c2703457f063e7c0d07aa678eea88a74f1"
 }
