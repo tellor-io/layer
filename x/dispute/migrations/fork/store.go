@@ -9,14 +9,13 @@ import (
 	"path/filepath"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
-	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // StreamModuleStateData represents a single item from each array in ModuleStateData
@@ -31,8 +30,6 @@ type StreamModuleStateData struct {
 }
 
 func MigrateStore(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec, pathToFile string) error {
-	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
-
 	path := filepath.Join(
 		pathToFile,
 		"dispute_module_state.json",
@@ -54,49 +51,86 @@ func MigrateStore(ctx context.Context, storeService store.KVStoreService, cdc co
 	}
 
 	// Process disputes array
-	if err := processDisputesSection(decoder, store, cdc); err != nil {
+	if err := processDisputesSection(ctx, decoder, storeService, cdc); err != nil {
 		return err
 	}
 
 	// Process votes array
-	if err := processVotesSection(decoder, store, cdc); err != nil {
+	if err := processVotesSection(ctx, decoder, storeService, cdc); err != nil {
 		return err
 	}
 
 	// Process voters array
-	if err := processVotersSection(decoder, store, cdc); err != nil {
+	if err := processVotersSection(ctx, decoder, storeService, cdc); err != nil {
 		return err
 	}
 
 	// Process reporters with delegators array
-	if err := processReportersWithDelegatorsSection(decoder, store); err != nil {
+	if err := processReportersWithDelegatorsSection(ctx, decoder, storeService); err != nil {
 		return err
 	}
 
 	// Process block info array
-	if err := processBlockInfoSection(decoder, store, cdc); err != nil {
+	if err := processBlockInfoSection(ctx, decoder, storeService, cdc); err != nil {
 		return err
 	}
 
 	// Process dispute fee payer array
-	if err := processDisputeFeePayerSection(decoder, store, cdc); err != nil {
+	if err := processDisputeFeePayerSection(ctx, decoder, storeService, cdc); err != nil {
 		return err
 	}
 
 	// Process dust value
-	if err := processDustSection(decoder, store); err != nil {
+	if err := processDustSection(ctx, decoder, storeService); err != nil {
 		return err
 	}
 
 	// Process vote counts by group array (if present)
-	if err := processVoteCountsSection(decoder, store, cdc); err != nil {
+	if err := processVoteCountsSection(ctx, decoder, storeService, cdc); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func processDisputesSection(decoder *json.Decoder, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+type DisputesIndex struct {
+	DisputeByReporter *indexes.Multi[[]byte, uint64, disputetypes.Dispute]
+	OpenDisputes      *indexes.Multi[bool, uint64, disputetypes.Dispute]
+	PendingExecution  *indexes.Multi[bool, uint64, disputetypes.Dispute] // New index for PendingExecution
+}
+
+func (a DisputesIndex) IndexesList() []collections.Index[uint64, disputetypes.Dispute] {
+	return []collections.Index[uint64, disputetypes.Dispute]{a.DisputeByReporter, a.OpenDisputes, a.PendingExecution}
+}
+
+func NewDisputesIndex(sb *collections.SchemaBuilder) DisputesIndex {
+	return DisputesIndex{
+		DisputeByReporter: indexes.NewMulti(
+			sb, disputetypes.DisputesByReporterIndexPrefix, "dispute_by_reporter",
+			collections.BytesKey, collections.Uint64Key,
+			func(k uint64, dispute disputetypes.Dispute) ([]byte, error) {
+				reporterKey := fmt.Sprintf("%s:%x", dispute.InitialEvidence.Reporter, dispute.HashId)
+				return []byte(reporterKey), nil
+			},
+		),
+		OpenDisputes: indexes.NewMulti(
+			sb, disputetypes.OpenDisputesIndexPrefix, "open_disputes",
+			collections.BoolKey, collections.Uint64Key,
+			func(k uint64, dispute disputetypes.Dispute) (bool, error) {
+				return dispute.Open, nil
+			},
+		),
+		PendingExecution: indexes.NewMulti(
+			sb, disputetypes.PendingExecutionIndexPrefix, "pending_execution",
+			collections.BoolKey, collections.Uint64Key,
+			func(k uint64, dispute disputetypes.Dispute) (bool, error) {
+				return dispute.PendingExecution, nil
+			},
+		),
+	}
+}
+
+func processDisputesSection(ctx context.Context, decoder *json.Decoder, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
 	// Read "disputes" property name
 	t, err := decoder.Token()
 	if err != nil {
@@ -106,8 +140,14 @@ func processDisputesSection(decoder *json.Decoder, store storetypes.KVStore, cdc
 		return fmt.Errorf("expected disputes section, got %v", t)
 	}
 
-	disputesStore := prefix.NewStore(store, disputetypes.DisputesPrefix)
-
+	sb := collections.NewSchemaBuilder(storeService)
+	disputesIndexMap := collections.NewIndexedMap(sb,
+		disputetypes.DisputesPrefix,
+		"disputes",
+		collections.Uint64Key,
+		codec.CollValue[disputetypes.Dispute](cdc),
+		NewDisputesIndex(sb),
+	)
 	// Read opening bracket of disputes array
 	if _, err := decoder.Token(); err != nil {
 		return err
@@ -120,9 +160,9 @@ func processDisputesSection(decoder *json.Decoder, store storetypes.KVStore, cdc
 			return err
 		}
 
-		key := make([]byte, collections.Uint64Key.Size(8))
-		collections.Uint64Key.Encode(key, entry.DisputeId)
-		disputesStore.Set(key, cdc.MustMarshal(entry.Dispute))
+		if err := disputesIndexMap.Set(ctx, entry.DisputeId, *entry.Dispute); err != nil {
+			return err
+		}
 	}
 
 	// Read closing bracket of disputes array
@@ -133,7 +173,7 @@ func processDisputesSection(decoder *json.Decoder, store storetypes.KVStore, cdc
 	return nil
 }
 
-func processVotesSection(decoder *json.Decoder, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+func processVotesSection(ctx context.Context, decoder *json.Decoder, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
 	// Read "votes" property name
 	t, err := decoder.Token()
 	if err != nil {
@@ -143,8 +183,15 @@ func processVotesSection(decoder *json.Decoder, store storetypes.KVStore, cdc co
 		return fmt.Errorf("expected votes section, got %v", t)
 	}
 
-	votesStore := prefix.NewStore(store, disputetypes.VotesPrefix)
+	//votesStore := prefix.NewStore(store, disputetypes.VotesPrefix)
 
+	sb := collections.NewSchemaBuilder(storeService)
+	votesMap := collections.NewMap(sb,
+		disputetypes.VotesPrefix,
+		"votes",
+		collections.Uint64Key,
+		codec.CollValue[disputetypes.Vote](cdc),
+	)
 	// Read opening bracket of votes array
 	if _, err := decoder.Token(); err != nil {
 		return err
@@ -156,9 +203,9 @@ func processVotesSection(decoder *json.Decoder, store storetypes.KVStore, cdc co
 		if err := decoder.Decode(&entry); err != nil {
 			return err
 		}
-		key := make([]byte, collections.Uint64Key.Size(8))
-		collections.Uint64Key.Encode(key, entry.DisputeId)
-		votesStore.Set(key, cdc.MustMarshal(entry.Vote))
+		if err := votesMap.Set(ctx, entry.DisputeId, *entry.Vote); err != nil {
+			return err
+		}
 	}
 
 	// Read closing bracket of votes array
@@ -169,7 +216,27 @@ func processVotesSection(decoder *json.Decoder, store storetypes.KVStore, cdc co
 	return nil
 }
 
-func processVotersSection(decoder *json.Decoder, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+type VotersVoteIndex struct {
+	VotersById *indexes.Multi[uint64, collections.Pair[uint64, []byte], disputetypes.Voter]
+}
+
+func (a VotersVoteIndex) IndexesList() []collections.Index[collections.Pair[uint64, []byte], disputetypes.Voter] {
+	return []collections.Index[collections.Pair[uint64, []byte], disputetypes.Voter]{a.VotersById}
+}
+
+func NewVotersIndex(sb *collections.SchemaBuilder) VotersVoteIndex {
+	return VotersVoteIndex{
+		VotersById: indexes.NewMulti(
+			sb, disputetypes.VotersByIdIndexPrefix, "voters_by_id",
+			collections.Uint64Key, collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey),
+			func(k collections.Pair[uint64, []byte], _ disputetypes.Voter) (uint64, error) {
+				return k.K1(), nil
+			},
+		),
+	}
+}
+
+func processVotersSection(ctx context.Context, decoder *json.Decoder, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
 	// Read "voters" property name
 	t, err := decoder.Token()
 	if err != nil {
@@ -179,14 +246,19 @@ func processVotersSection(decoder *json.Decoder, store storetypes.KVStore, cdc c
 		return fmt.Errorf("expected voters section, got %v", t)
 	}
 
-	votersStore := prefix.NewStore(store, disputetypes.VoterVotePrefix)
+	sb := collections.NewSchemaBuilder(storeService)
+	votersMap := collections.NewIndexedMap(sb,
+		disputetypes.VoterVotePrefix,
+		"voter_vote",
+		collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey),
+		codec.CollValue[disputetypes.Voter](cdc),
+		NewVotersIndex(sb),
+	)
 
 	// Read opening bracket of voters array
 	if _, err := decoder.Token(); err != nil {
 		return err
 	}
-
-	keyCodec := collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey)
 	// Read array values
 	for decoder.More() {
 		var entry disputetypes.VoterStateEntry
@@ -194,12 +266,9 @@ func processVotersSection(decoder *json.Decoder, store storetypes.KVStore, cdc c
 			return err
 		}
 		pair := collections.Join(entry.DisputeId, entry.VoterAddress)
-		key := make([]byte, keyCodec.Size(pair))
-		_, err = keyCodec.Encode(key, pair)
-		if err != nil {
-			panic(err)
+		if err := votersMap.Set(ctx, pair, *entry.Voter); err != nil {
+			return err
 		}
-		votersStore.Set(key, cdc.MustMarshal(entry.Voter))
 	}
 
 	// Read closing bracket of voters array
@@ -210,7 +279,7 @@ func processVotersSection(decoder *json.Decoder, store storetypes.KVStore, cdc c
 	return nil
 }
 
-func processReportersWithDelegatorsSection(decoder *json.Decoder, store storetypes.KVStore) error {
+func processReportersWithDelegatorsSection(ctx context.Context, decoder *json.Decoder, storeService store.KVStoreService) error {
 	// Read "reporters_with_delegators_who_voted" property name
 	t, err := decoder.Token()
 	if err != nil {
@@ -225,9 +294,13 @@ func processReportersWithDelegatorsSection(decoder *json.Decoder, store storetyp
 		return err
 	}
 
-	reportersWithDelsStore := prefix.NewStore(store, disputetypes.ReportersWithDelegatorsVotedBeforePrefix)
-	pairKeyCodec := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
-
+	sb := collections.NewSchemaBuilder(storeService)
+	reportersWithDelsMap := collections.NewMap(sb,
+		disputetypes.ReportersWithDelegatorsVotedBeforePrefix,
+		"reporters_with_delegators_voted_before",
+		collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+		sdk.IntValue,
+	)
 	// Read array values
 	for decoder.More() {
 		var entry disputetypes.ReportersWithDelegatorsWhoVotedStateEntry
@@ -235,16 +308,9 @@ func processReportersWithDelegatorsSection(decoder *json.Decoder, store storetyp
 			return err
 		}
 		pair := collections.Join(entry.ReporterAddress, entry.DisputeId)
-		key := make([]byte, pairKeyCodec.Size(pair))
-		_, err = pairKeyCodec.Encode(key, pair)
-		if err != nil {
-			panic(err)
-		}
-		data, err := json.Marshal(entry.VotedAmount)
-		if err != nil {
+		if err := reportersWithDelsMap.Set(ctx, pair, entry.VotedAmount); err != nil {
 			return err
 		}
-		reportersWithDelsStore.Set(key, data)
 	}
 
 	// Read closing bracket of reporters array
@@ -255,7 +321,7 @@ func processReportersWithDelegatorsSection(decoder *json.Decoder, store storetyp
 	return nil
 }
 
-func processBlockInfoSection(decoder *json.Decoder, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+func processBlockInfoSection(ctx context.Context, decoder *json.Decoder, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
 	// Read "block_info" property name
 	t, err := decoder.Token()
 	if err != nil {
@@ -270,8 +336,13 @@ func processBlockInfoSection(decoder *json.Decoder, store storetypes.KVStore, cd
 		return err
 	}
 
-	blockInfoStore := prefix.NewStore(store, disputetypes.BlockInfoPrefix)
-	keyCodec := collections.BytesKey
+	sb := collections.NewSchemaBuilder(storeService)
+	blockInfoMap := collections.NewMap(sb,
+		disputetypes.BlockInfoPrefix,
+		"block_info",
+		collections.BytesKey,
+		codec.CollValue[disputetypes.BlockInfo](cdc),
+	)
 
 	// Read array values
 	for decoder.More() {
@@ -279,12 +350,9 @@ func processBlockInfoSection(decoder *json.Decoder, store storetypes.KVStore, cd
 		if err := decoder.Decode(&entry); err != nil {
 			return err
 		}
-		key := make([]byte, keyCodec.Size(entry.HashId))
-		_, err = keyCodec.Encode(key, entry.HashId)
-		if err != nil {
-			panic(err)
+		if err := blockInfoMap.Set(ctx, entry.HashId, *entry.BlockInfo); err != nil {
+			return err
 		}
-		blockInfoStore.Set(key, cdc.MustMarshal(entry.BlockInfo))
 	}
 
 	// Read closing bracket of block_info array
@@ -295,7 +363,7 @@ func processBlockInfoSection(decoder *json.Decoder, store storetypes.KVStore, cd
 	return nil
 }
 
-func processDisputeFeePayerSection(decoder *json.Decoder, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+func processDisputeFeePayerSection(ctx context.Context, decoder *json.Decoder, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
 	// Read "dispute_fee_payer" property name
 	t, err := decoder.Token()
 	if err != nil {
@@ -310,9 +378,13 @@ func processDisputeFeePayerSection(decoder *json.Decoder, store storetypes.KVSto
 		return err
 	}
 
-	disputeFeePayerStore := prefix.NewStore(store, disputetypes.DisputeFeePayerPrefix)
-	keyCodec := collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey)
-
+	sb := collections.NewSchemaBuilder(storeService)
+	disputeFeePayerMap := collections.NewMap(sb,
+		disputetypes.DisputeFeePayerPrefix,
+		"dispute_fee_payer",
+		collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey),
+		codec.CollValue[disputetypes.PayerInfo](cdc),
+	)
 	// Read array values
 	for decoder.More() {
 		var entry disputetypes.DisputeFeePayerStateEntry
@@ -320,12 +392,9 @@ func processDisputeFeePayerSection(decoder *json.Decoder, store storetypes.KVSto
 			return err
 		}
 		pair := collections.Join(entry.DisputeId, entry.Payer)
-		key := make([]byte, keyCodec.Size(pair))
-		_, err = keyCodec.Encode(key, pair)
-		if err != nil {
-			panic(err)
+		if err := disputeFeePayerMap.Set(ctx, pair, *entry.PayerInfo); err != nil {
+			return err
 		}
-		disputeFeePayerStore.Set(key, cdc.MustMarshal(entry.PayerInfo))
 	}
 
 	// Read closing bracket of dispute_fee_payer array
@@ -336,7 +405,7 @@ func processDisputeFeePayerSection(decoder *json.Decoder, store storetypes.KVSto
 	return nil
 }
 
-func processDustSection(decoder *json.Decoder, store storetypes.KVStore) error {
+func processDustSection(ctx context.Context, decoder *json.Decoder, storeService store.KVStoreService) error {
 	// Read "dust" property name
 	t, err := decoder.Token()
 	if err != nil {
@@ -346,6 +415,12 @@ func processDustSection(decoder *json.Decoder, store storetypes.KVStore) error {
 		return fmt.Errorf("expected dust section, got %v", t)
 	}
 
+	sb := collections.NewSchemaBuilder(storeService)
+	dustMap := collections.NewItem(sb,
+		disputetypes.DustKeyPrefix,
+		"dust",
+		sdk.IntValue,
+	)
 	// Read dust value
 	t, err = decoder.Token()
 	if err != nil {
@@ -363,17 +438,14 @@ func processDustSection(decoder *json.Decoder, store storetypes.KVStore) error {
 	}
 	fmt.Println("Dust: ", dust)
 
-	dustStore := prefix.NewStore(store, disputetypes.DustKeyPrefix)
-	data, err := json.Marshal(dust)
-	if err != nil {
-		panic(err)
+	if err := dustMap.Set(ctx, dust); err != nil {
+		return err
 	}
-	dustStore.Set(disputetypes.DustKeyPrefix.Bytes(), data)
 
 	return nil
 }
 
-func processVoteCountsSection(decoder *json.Decoder, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+func processVoteCountsSection(ctx context.Context, decoder *json.Decoder, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
 	// Read "vote_counts_by_group" property name
 	t, err := decoder.Token()
 	if err != nil {
@@ -391,8 +463,13 @@ func processVoteCountsSection(decoder *json.Decoder, store storetypes.KVStore, c
 		return err
 	}
 
-	voteCountsStore := prefix.NewStore(store, disputetypes.VoteCountsByGroupPrefix)
-	keyCodec := collections.Uint64Key
+	sb := collections.NewSchemaBuilder(storeService)
+	voteCountsMap := collections.NewMap(sb,
+		disputetypes.VoteCountsByGroupPrefix,
+		"vote_counts_by_group",
+		collections.Uint64Key,
+		codec.CollValue[disputetypes.StakeholderVoteCounts](cdc),
+	)
 
 	// Read array values
 	for decoder.More() {
@@ -400,12 +477,13 @@ func processVoteCountsSection(decoder *json.Decoder, store storetypes.KVStore, c
 		if err := decoder.Decode(&entry); err != nil {
 			return err
 		}
-		key := make([]byte, keyCodec.Size(8))
-		_, err = keyCodec.Encode(key, entry.DisputeId)
-		if err != nil {
-			panic(err)
+		if err := voteCountsMap.Set(ctx, entry.DisputeId, disputetypes.StakeholderVoteCounts{
+			Users:     *entry.Users,
+			Reporters: *entry.Reporters,
+			Team:      *entry.Team,
+		}); err != nil {
+			return err
 		}
-		voteCountsStore.Set(key, cdc.MustMarshal(&disputetypes.StakeholderVoteCounts{Users: *entry.Users, Reporters: *entry.Reporters, Team: *entry.Team}))
 	}
 
 	// Read closing bracket of vote_counts array
