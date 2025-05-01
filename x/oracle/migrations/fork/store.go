@@ -2,20 +2,17 @@ package fork
 
 import (
 	"context"
-	"encoding/binary"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
-	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/runtime"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/tellor-io/layer/utils"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
@@ -39,8 +36,7 @@ type ModuleStateData struct {
 }
 
 func MigrateFork(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec, pathToFile string) error {
-	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
-
+	sb := collections.NewSchemaBuilder(storeService)
 	path := filepath.Join(
 		pathToFile,
 		"oracle_module_state.json",
@@ -62,24 +58,24 @@ func MigrateFork(ctx context.Context, storeService store.KVStoreService, cdc cod
 	}
 
 	// Process tipper total array
-	if err := processTipperTotalSection(decoder, store); err != nil {
+	if err := processTipperTotalSection(ctx, decoder, sb, cdc); err != nil {
 		return err
 	}
 
 	// Process total tips array
-	if err := processTotalTipsSection(decoder, store); err != nil {
+	if err := processTotalTipsSection(ctx, decoder, sb, cdc); err != nil {
 		return err
 	}
 
 	// Process tipped queries array
-	if err := processTippedQueriesSection(decoder, store, cdc); err != nil {
+	if err := processTippedQueriesSection(ctx, decoder, sb, cdc); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func processTipperTotalSection(decoder *json.Decoder, store storetypes.KVStore) error {
+func processTipperTotalSection(ctx context.Context, decoder *json.Decoder, sb *collections.SchemaBuilder, cdc codec.BinaryCodec) error {
 	// Read "tipper_total" property name
 	t, err := decoder.Token()
 	if err != nil {
@@ -89,15 +85,16 @@ func processTipperTotalSection(decoder *json.Decoder, store storetypes.KVStore) 
 		return fmt.Errorf("expected tipper_total section, got %v", t)
 	}
 
-	tipperTotalStore := prefix.NewStore(store, oracletypes.TipperTotalPrefix)
-
+	tipperTotalMap := collections.NewMap(sb,
+		oracletypes.TipperTotalPrefix,
+		"tipper_total",
+		collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+		sdk.IntValue,
+	)
 	// Read opening bracket of tipper_total array
 	if _, err := decoder.Token(); err != nil {
 		return err
 	}
-
-	keyCodec := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
-
 	// Read array values
 	for decoder.More() {
 		var entry TipperTotalData
@@ -106,16 +103,13 @@ func processTipperTotalSection(decoder *json.Decoder, store storetypes.KVStore) 
 		}
 
 		pair := collections.Join(entry.Address, entry.Block)
-		key := make([]byte, keyCodec.Size(pair))
-		_, err = keyCodec.Encode(key, pair)
-		if err != nil {
-			panic(err)
-		}
-		tipperTotal, ok := math.NewIntFromString(entry.TipperTotal)
+		tipTotal, ok := math.NewIntFromString(entry.TipperTotal)
 		if !ok {
-			panic("cannot convert tipper total to int")
+			return fmt.Errorf("cannot convert tipper total to int")
 		}
-		tipperTotalStore.Set(key, []byte(tipperTotal.String()))
+		if err := tipperTotalMap.Set(ctx, pair, tipTotal); err != nil {
+			return fmt.Errorf("failed to set tipper total: %w", err)
+		}
 	}
 
 	// Read closing bracket of tipper_total array
@@ -126,7 +120,7 @@ func processTipperTotalSection(decoder *json.Decoder, store storetypes.KVStore) 
 	return nil
 }
 
-func processTotalTipsSection(decoder *json.Decoder, store storetypes.KVStore) error {
+func processTotalTipsSection(ctx context.Context, decoder *json.Decoder, sb *collections.SchemaBuilder, cdc codec.BinaryCodec) error {
 	// Read "total_tips" property name
 	t, err := decoder.Token()
 	if err != nil {
@@ -136,7 +130,12 @@ func processTotalTipsSection(decoder *json.Decoder, store storetypes.KVStore) er
 		return fmt.Errorf("expected total_tips section, got %v", t)
 	}
 
-	totalTipsStore := prefix.NewStore(store, oracletypes.TotalTipsPrefix)
+	totalTipsMap := collections.NewMap(sb,
+		oracletypes.TotalTipsPrefix,
+		"total_tips",
+		collections.Uint64Key,
+		sdk.IntValue,
+	)
 
 	// Read and decode the single TotalTipsData object
 	var entry TotalTipsData
@@ -144,18 +143,46 @@ func processTotalTipsSection(decoder *json.Decoder, store storetypes.KVStore) er
 		return err
 	}
 
-	key := make([]byte, 8)
-	binary.BigEndian.PutUint64(key, entry.Block)
 	totalTips, ok := math.NewIntFromString(entry.TotalTips)
 	if !ok {
-		panic("cannot convert tipper total to int")
+		return fmt.Errorf("cannot convert tipper total to int")
 	}
-	totalTipsStore.Set(key, []byte(totalTips.String()))
+	if err := totalTipsMap.Set(ctx, entry.Block, totalTips); err != nil {
+		return fmt.Errorf("failed to set total tips: %w", err)
+	}
 
 	return nil
 }
 
-func processTippedQueriesSection(decoder *json.Decoder, store storetypes.KVStore, cdc codec.BinaryCodec) error {
+type QueryMetaIndex struct {
+	Expiration *indexes.Multi[collections.Pair[bool, uint64], collections.Pair[[]byte, uint64], oracletypes.QueryMeta]
+	QueryType  *indexes.Multi[string, collections.Pair[[]byte, uint64], oracletypes.QueryMeta]
+}
+
+func (a QueryMetaIndex) IndexesList() []collections.Index[collections.Pair[[]byte, uint64], oracletypes.QueryMeta] {
+	return []collections.Index[collections.Pair[[]byte, uint64], oracletypes.QueryMeta]{a.Expiration, a.QueryType}
+}
+
+func NewQueryIndex(sb *collections.SchemaBuilder) QueryMetaIndex {
+	return QueryMetaIndex{
+		Expiration: indexes.NewMulti(
+			sb, oracletypes.QueryByExpirationPrefix, "query_by_expiration",
+			collections.PairKeyCodec(collections.BoolKey, collections.Uint64Key), collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+			func(_ collections.Pair[[]byte, uint64], v oracletypes.QueryMeta) (collections.Pair[bool, uint64], error) {
+				return collections.Join(v.HasRevealedReports, v.Expiration), nil
+			},
+		),
+		QueryType: indexes.NewMulti(
+			sb, oracletypes.QueryTypeIndexPrefix, "query_by_type",
+			collections.StringKey, collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+			func(_ collections.Pair[[]byte, uint64], v oracletypes.QueryMeta) (string, error) {
+				return v.QueryType, nil
+			},
+		),
+	}
+}
+
+func processTippedQueriesSection(ctx context.Context, decoder *json.Decoder, sb *collections.SchemaBuilder, cdc codec.BinaryCodec) error {
 	// Read "tipped_queries" property name
 	t, err := decoder.Token()
 	if err != nil {
@@ -165,15 +192,18 @@ func processTippedQueriesSection(decoder *json.Decoder, store storetypes.KVStore
 		return fmt.Errorf("expected tipped_queries section, got %v", t)
 	}
 
-	tippedQueriesStore := prefix.NewStore(store, oracletypes.QueryTipPrefix)
+	tippedQueriesMap := collections.NewIndexedMap(sb,
+		oracletypes.QueryTipPrefix,
+		"query",
+		collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+		codec.CollValue[oracletypes.QueryMeta](cdc),
+		NewQueryIndex(sb),
+	)
 
 	// Read opening bracket of tipped_queries array
 	if _, err := decoder.Token(); err != nil {
 		return err
 	}
-
-	keyCodec := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
-
 	// Read array values
 	for decoder.More() {
 		var entry oracletypes.QueryMeta
@@ -183,20 +213,10 @@ func processTippedQueriesSection(decoder *json.Decoder, store storetypes.KVStore
 
 		queryId := utils.QueryIDFromData(entry.QueryData)
 
-		fmt.Println("queryId: ", hex.EncodeToString(queryId))
-		fmt.Println("entry.Id: ", entry.Id)
 		pair := collections.Join(queryId, entry.Id)
-		fmt.Println("Pair in migrate functions: ", pair)
-		key := make([]byte, keyCodec.Size(pair))
-		_, err = keyCodec.Encode(key, pair)
-		if err != nil {
-			panic(err)
+		if err := tippedQueriesMap.Set(ctx, pair, entry); err != nil {
+			return fmt.Errorf("failed to set tipped query: %w", err)
 		}
-		data, err := cdc.Marshal(&entry)
-		if err != nil {
-			panic(err)
-		}
-		tippedQueriesStore.Set(key, data)
 	}
 
 	// Read closing bracket of tipped_queries array
