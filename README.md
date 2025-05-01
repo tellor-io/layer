@@ -209,4 +209,4 @@ Check out our issues log here on Github or feel free to reach out anytime [info@
 
 ## Copyright<a name="copyright"> </a>  
 
-Tellor Inc. 2024
+Tellor Inc. 2025
