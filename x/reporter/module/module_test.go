@@ -25,7 +25,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, *mocks.RegistryKeeper, sdk.Context, types.MsgServer) {
+func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, *mocks.RegistryKeeper, *mocks.OracleKeeper, sdk.Context, types.MsgServer) {
 	t.Helper()
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
@@ -43,6 +43,8 @@ func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, *mocks.AccountKeepe
 	bk := new(mocks.BankKeeper)
 	rk := new(mocks.RegistryKeeper)
 	sk := new(mocks.StakingKeeper)
+	ok := new(mocks.OracleKeeper)
+
 	authority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
 	k := keeper.NewKeeper(
@@ -54,6 +56,7 @@ func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, *mocks.AccountKeepe
 		sk,
 		bk,
 		rk,
+		ok,
 	)
 
 	app := NewAppModule(
@@ -61,6 +64,7 @@ func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, *mocks.AccountKeepe
 		k,
 		ak,
 		bk,
+		ok,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
@@ -68,7 +72,7 @@ func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, *mocks.AccountKeepe
 
 	msgServer := keeper.NewMsgServerImpl(k)
 
-	return app, k, ak, bk, rk, ctx, msgServer
+	return app, k, ak, bk, rk, ok, ctx, msgServer
 }
 
 func TestNewAppModuleBasic(t *testing.T) {
@@ -90,12 +94,13 @@ func TestName(t *testing.T) {
 func TestNewAppModule(t *testing.T) {
 	require := require.New(t)
 
-	am, k, ak, bk, rk, ctx, msgServer := SetupBridgeApp(t)
+	am, k, ak, bk, rk, ok, ctx, msgServer := SetupBridgeApp(t)
 	require.NotNil(am)
 	require.NotNil(k)
 	require.NotNil(ak)
 	require.NotNil(bk)
 	require.NotNil(rk)
+	require.NotNil(ok)
 	require.NotNil(ctx)
 	require.NotNil(msgServer)
 }
@@ -103,7 +108,7 @@ func TestNewAppModule(t *testing.T) {
 func TestEndBlock(t *testing.T) {
 	require := require.New(t)
 
-	am, k, _, _, _, ctx, _ := SetupBridgeApp(t)
+	am, k, _, _, _, _, ctx, _ := SetupBridgeApp(t)
 
 	expiration := ctx.BlockTime().Add(time.Hour)
 	require.NoError(k.Tracker.Set(ctx, types.StakeTracker{

@@ -42,6 +42,7 @@ type (
 		stakingKeeper  types.StakingKeeper
 		bankKeeper     types.BankKeeper
 		registryKeeper types.RegistryKeeper
+		oracleKeeper   types.OracleKeeper
 	}
 )
 
@@ -55,6 +56,7 @@ func NewKeeper(
 	stakingKeeper types.StakingKeeper,
 	bankKeeper types.BankKeeper,
 	registryKeeper types.RegistryKeeper,
+	oracleKeeper types.OracleKeeper,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
@@ -81,6 +83,7 @@ func NewKeeper(
 		stakingKeeper:  stakingKeeper,
 		bankKeeper:     bankKeeper,
 		registryKeeper: registryKeeper,
+		oracleKeeper:   oracleKeeper,
 	}
 	schema, err := sb.Build()
 	if err != nil {

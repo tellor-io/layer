@@ -10,6 +10,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 // StakingKeeper defines the expected interface for the Staking module.
@@ -71,4 +72,9 @@ type StakingHooks interface {
 
 type RegistryKeeper interface {
 	MaxReportBufferWindow(ctx context.Context) (uint64, error)
+}
+
+// OracleKeeper defines the expected interface for the Oracle module.
+type OracleKeeper interface {
+	GetMostRecentReport(ctx context.Context, reporter sdk.AccAddress) (oracletypes.MicroReport, error)
 }
