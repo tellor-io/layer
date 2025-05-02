@@ -355,3 +355,38 @@ func (k Keeper) DecodeBridgeDeposit(ctx context.Context, queryData []byte) (uint
 
 	return depositId, nil
 }
+
+// getter for reporter trying to become a selector
+func (k Keeper) GetMostRecentReport(ctx context.Context, reporter sdk.AccAddress) (types.MicroReport, error) {
+	iter, err := k.Reports.Indexes.Reporter.MatchExact(ctx, reporter.Bytes())
+	if err != nil {
+		return types.MicroReport{}, err
+	}
+	defer iter.Close()
+
+	var mostRecent types.MicroReport
+
+	for iter.Valid() {
+		key, err := iter.PrimaryKey()
+		fmt.Println("key: ", key)
+		if err != nil {
+			return types.MicroReport{}, err
+		}
+		report, err := k.Reports.Get(ctx, key)
+		fmt.Println("report: ", report)
+		if err != nil {
+			return types.MicroReport{}, err
+		}
+		if report.BlockNumber > mostRecent.BlockNumber {
+			mostRecent = report
+			fmt.Println("mostRecent: ", mostRecent)
+		}
+		iter.Next()
+	}
+	// if no results, returns nil MicroReport
+	if mostRecent.BlockNumber == 0 && mostRecent.MetaId == 0 {
+		return types.MicroReport{}, errors.New("no reports found")
+	}
+
+	return mostRecent, nil
+}

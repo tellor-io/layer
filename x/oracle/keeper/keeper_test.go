@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	gomath "math"
 	"math/big"
 	"sort"
@@ -597,4 +598,76 @@ func (s *KeeperTestSuite) TestAutoClaimDeposits() {
 	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
 	s.bridgeKeeper.On("ClaimDeposit", ctx, deposits[4].DepositId, deposits[4].AggregateTimestamp).Return(nil).Once()
 	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
+}
+
+func (s *KeeperTestSuite) TestGetMostRecentReport() {
+	require := s.Require()
+	require.NotNil(s.bridgeKeeper)
+	timeNow := time.Now()
+	ctx := s.ctx.WithBlockTime(timeNow).WithBlockHeight(1000)
+
+	repAddr := sample.AccAddressBytes()
+
+	// no reports found
+	res, err := s.oracleKeeper.GetMostRecentReport(ctx, repAddr)
+	require.ErrorContains(err, "no reports found")
+	fmt.Println("res", res)
+
+	queryId := []byte("queryid1")
+	metaId := uint64(10)
+	report := types.MicroReport{
+		QueryId:     queryId,
+		MetaId:      metaId,
+		Reporter:    repAddr.String(),
+		Power:       100,
+		Value:       "0000000000000000000000000000000000000000000000000000000000000088",
+		Timestamp:   timeNow,
+		BlockNumber: 900,
+	}
+
+	s.oracleKeeper.Reports.Set(ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report)
+
+	// one report found
+	res, err = s.oracleKeeper.GetMostRecentReport(ctx, repAddr)
+	require.NoError(err)
+	fmt.Println("res", res)
+	require.Equal(res.BlockNumber, uint64(900))
+
+	metaId2 := uint64(11)
+	report2 := types.MicroReport{
+		QueryId:     queryId,
+		MetaId:      metaId2,
+		Reporter:    repAddr.String(),
+		Power:       200,
+		Value:       "0000000000000000000000000000000000000000000000000000000000000088",
+		Timestamp:   timeNow.Add(-10 * time.Second),
+		BlockNumber: 800,
+	}
+
+	s.oracleKeeper.Reports.Set(ctx, collections.Join3(report2.QueryId, repAddr.Bytes(), report2.MetaId), report2)
+
+	// two reports, return newest
+	res, err = s.oracleKeeper.GetMostRecentReport(ctx, repAddr)
+	require.NoError(err)
+	fmt.Println("res", res)
+	require.Equal(res.BlockNumber, uint64(900))
+
+	// three reports, return newest
+	metaId3 := uint64(12)
+	report3 := types.MicroReport{
+		QueryId:     queryId,
+		MetaId:      metaId3,
+		Reporter:    repAddr.String(),
+		Power:       300,
+		Value:       "0000000000000000000000000000000000000000000000000000000000000088",
+		Timestamp:   timeNow.Add(10 * time.Second),
+		BlockNumber: 1000,
+	}
+
+	s.oracleKeeper.Reports.Set(ctx, collections.Join3(report3.QueryId, repAddr.Bytes(), report3.MetaId), report3)
+
+	res, err = s.oracleKeeper.GetMostRecentReport(ctx, repAddr)
+	require.NoError(err)
+	fmt.Println("res", res)
+	require.Equal(res.BlockNumber, uint64(1000))
 }
