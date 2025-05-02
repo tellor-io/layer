@@ -625,7 +625,7 @@ func (s *KeeperTestSuite) TestGetMostRecentReport() {
 		BlockNumber: 900,
 	}
 
-	s.oracleKeeper.Reports.Set(ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report)
+	require.NoError(s.oracleKeeper.Reports.Set(ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
 
 	// one report found
 	res, err = s.oracleKeeper.GetMostRecentReport(ctx, repAddr)
@@ -644,7 +644,7 @@ func (s *KeeperTestSuite) TestGetMostRecentReport() {
 		BlockNumber: 800,
 	}
 
-	s.oracleKeeper.Reports.Set(ctx, collections.Join3(report2.QueryId, repAddr.Bytes(), report2.MetaId), report2)
+	require.NoError(s.oracleKeeper.Reports.Set(ctx, collections.Join3(report2.QueryId, repAddr.Bytes(), report2.MetaId), report2))
 
 	// two reports, return newest
 	res, err = s.oracleKeeper.GetMostRecentReport(ctx, repAddr)
@@ -664,7 +664,7 @@ func (s *KeeperTestSuite) TestGetMostRecentReport() {
 		BlockNumber: 1000,
 	}
 
-	s.oracleKeeper.Reports.Set(ctx, collections.Join3(report3.QueryId, repAddr.Bytes(), report3.MetaId), report3)
+	require.NoError(s.oracleKeeper.Reports.Set(ctx, collections.Join3(report3.QueryId, repAddr.Bytes(), report3.MetaId), report3))
 
 	res, err = s.oracleKeeper.GetMostRecentReport(ctx, repAddr)
 	require.NoError(err)

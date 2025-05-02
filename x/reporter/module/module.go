@@ -98,7 +98,6 @@ type AppModule struct {
 	keeper        keeper.Keeper
 	accountKeeper types.AccountKeeper
 	bankKeeper    types.BankKeeper
-	oracleKeeper  types.OracleKeeper
 }
 
 func NewAppModule(
@@ -106,14 +105,12 @@ func NewAppModule(
 	keeper keeper.Keeper,
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
-	oracleKeeper types.OracleKeeper,
 ) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(cdc),
 		keeper:         keeper,
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
-		oracleKeeper:   oracleKeeper,
 	}
 }
 
@@ -188,7 +185,6 @@ type ModuleInputs struct {
 	BankKeeper     types.BankKeeper
 	StakingKeeper  types.StakingKeeper
 	RegistryKeeper types.RegistryKeeper
-	OracleKeeper   types.OracleKeeper
 }
 
 type ModuleOutputs struct {
@@ -213,14 +209,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.StakingKeeper,
 		in.BankKeeper,
 		in.RegistryKeeper,
-		in.OracleKeeper,
 	)
 	m := NewAppModule(
 		in.Cdc,
 		k,
 		in.AccountKeeper,
 		in.BankKeeper,
-		in.OracleKeeper,
 	)
 
 	return ModuleOutputs{ReporterKeeper: k, Module: m}

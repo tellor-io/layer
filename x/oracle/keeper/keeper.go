@@ -384,7 +384,7 @@ func (k Keeper) GetMostRecentReport(ctx context.Context, reporter sdk.AccAddress
 		iter.Next()
 	}
 	// if no results, returns nil MicroReport
-	if mostRecent.BlockNumber == 0 && mostRecent.MetaId == 0 {
+	if mostRecent.BlockNumber == 0 {
 		return types.MicroReport{}, errors.New("no reports found")
 	}
 

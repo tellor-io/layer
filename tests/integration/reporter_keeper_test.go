@@ -589,5 +589,4 @@ func (s *IntegrationTestSuite) TestCreateAndSwitchReporterMsg() {
 	formerSelector, err = s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, newDelegator)
 	s.NoError(err)
 	s.Equal(formerSelector.Reporter, newDelegator.Bytes())
-
 }

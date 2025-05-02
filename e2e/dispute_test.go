@@ -3154,7 +3154,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	require.Equal(selectorRes.Reporter, validators[0].Addr)
 
 	// make third party user to dispute
-	keyname := fmt.Sprintf("user1")
+	keyname := "user1"
 	fundAmt := math.NewInt(100_000 * 1e6)
 	user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
 	fmt.Println("user: ", user)

@@ -56,7 +56,6 @@ func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, *mocks.AccountKeepe
 		sk,
 		bk,
 		rk,
-		ok,
 	)
 
 	app := NewAppModule(
@@ -64,7 +63,6 @@ func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, *mocks.AccountKeepe
 		k,
 		ak,
 		bk,
-		ok,
 	)
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())

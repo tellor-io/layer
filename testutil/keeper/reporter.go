@@ -40,7 +40,6 @@ func ReporterKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.
 	sk := new(mocks.StakingKeeper)
 	rk := new(mocks.RegistryKeeper)
 	ak := new(mocks.AccountKeeper)
-	ok := new(mocks.OracleKeeper)
 	storeservice := runtime.NewKVStoreService(storeKey)
 	k := keeper.NewKeeper(
 		cdc,
@@ -51,7 +50,6 @@ func ReporterKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.
 		sk,
 		bk,
 		rk,
-		ok,
 	)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())

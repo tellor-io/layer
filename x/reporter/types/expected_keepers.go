@@ -4,13 +4,14 @@ import (
 	"context"
 	"time"
 
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+
 	// "cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 // StakingKeeper defines the expected interface for the Staking module.

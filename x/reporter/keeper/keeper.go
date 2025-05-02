@@ -56,7 +56,6 @@ func NewKeeper(
 	stakingKeeper types.StakingKeeper,
 	bankKeeper types.BankKeeper,
 	registryKeeper types.RegistryKeeper,
-	oracleKeeper types.OracleKeeper,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address: %s", authority))
@@ -83,7 +82,6 @@ func NewKeeper(
 		stakingKeeper:  stakingKeeper,
 		bankKeeper:     bankKeeper,
 		registryKeeper: registryKeeper,
-		oracleKeeper:   oracleKeeper,
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -200,4 +198,8 @@ func CalculateRewardAmount(reporterPower, totalPower uint64, reward math.Int) ma
 	tPower := math.LegacyNewDec(int64(totalPower))
 	amount := rPower.Quo(tPower).Mul(reward.ToLegacyDec())
 	return amount
+}
+
+func (k *Keeper) SetOracleKeeper(ok types.OracleKeeper) {
+	k.oracleKeeper = ok
 }

@@ -250,7 +250,7 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	if bytes.Equal(selector.Reporter, addr.Bytes()) {
 		// get the most recent report for the reporter
 		microReport, err := k.oracleKeeper.GetMostRecentReport(goCtx, reporterAddr)
-		if err != nil {
+		if err != nil && err.Error() != "no reports found" {
 			return nil, err
 		}
 		lastReportTimestamp := microReport.Timestamp
