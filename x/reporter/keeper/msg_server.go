@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/tellor-io/layer/lib/metrics"
 	layertypes "github.com/tellor-io/layer/types"
@@ -245,8 +246,18 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	if err != nil {
 		return nil, err
 	}
-	// check if reporter is trying to become a selector, if so, remove them from reporters store
+	// check if reporter is trying to become a selector, can only switch if havent reported in the last 21 days
 	if bytes.Equal(selector.Reporter, addr.Bytes()) {
+		// get the most recent report for the reporter
+		microReport, err := k.oracleKeeper.GetMostRecentReport(goCtx, reporterAddr)
+		if err != nil {
+			return nil, err
+		}
+		lastReportTimestamp := microReport.Timestamp
+		if lastReportTimestamp.Add(21 * 24 * time.Hour).After(sdk.UnwrapSDKContext(goCtx).BlockTime()) {
+			return nil, errors.New("reporter has reported in the last 21 days, please wait before switching reporters")
+		}
+
 		if err := k.Keeper.Reporters.Remove(goCtx, addr.Bytes()); err != nil {
 			return nil, err
 		}
