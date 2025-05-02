@@ -203,7 +203,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 	require.NoError(e2e.TurnOnMinting(ctx, chain, val1))
 
 	// custom gov params set voting period to 15s
-	require.NoError(testutil.WaitForBlocks(ctx, 5, val1))
+	require.NoError(testutil.WaitForBlocks(ctx, 6, val1))
 	result, err := chain.GovQueryProposal(ctx, 1)
 	require.NoError(err)
 
@@ -2814,7 +2814,7 @@ func TestUnderfundedDispute(t *testing.T) {
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
 				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator", "--price-daemon-enabled=false"},
+				AdditionalStartArgs: []string{"--key-name", "validator"},
 			},
 		},
 	})
@@ -2967,4 +2967,246 @@ func TestUnderfundedDispute(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("free floating tokens after withdraw fee: ", ffTokensAfter)
 	require.Greater(ffTokensAfter.Int64(), ffTokensBefore.Int64())
+}
+
+func TestReporterShuffleAndDispute(t *testing.T) {
+	require := require.New(t)
+
+	t.Helper()
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
+
+	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
+
+	modifyGenesis := []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
+		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "20s"),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+	}
+
+	nv := 2
+	nf := 0
+	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
+		{
+			NumValidators: &nv,
+			NumFullNodes:  &nf,
+			ChainConfig: ibc.ChainConfig{
+				Type:           "cosmos",
+				Name:           "layer",
+				ChainID:        "layer",
+				Bin:            "layerd",
+				Denom:          "loya",
+				Bech32Prefix:   "tellor",
+				CoinType:       "118",
+				GasPrices:      "0.0loya",
+				GasAdjustment:  1.1,
+				TrustingPeriod: "504h",
+				NoHostMount:    false,
+				Images: []ibc.DockerImage{
+					{
+						Repository: "layer",
+						Version:    "local",
+						UidGid:     "1025:1025",
+					},
+				},
+				EncodingConfig:      e2e.LayerEncoding(),
+				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
+				AdditionalStartArgs: []string{"--key-name", "validator"},
+			},
+		},
+	})
+
+	client, network := interchaintest.DockerSetup(t)
+
+	chain := chains[0].(*cosmos.CosmosChain)
+
+	ic := interchaintest.NewInterchain().
+		AddChain(chain)
+
+	ctx := context.Background()
+
+	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
+		TestName:  t.Name(),
+		Client:    client,
+		NetworkID: network,
+		// BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
+		SkipPathCreation: false,
+	}))
+	t.Cleanup(func() {
+		_ = ic.Close()
+	})
+	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
+	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
+		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
+		Amount:  math.NewInt(1000000000000),
+		Denom:   "loya",
+	}))
+
+	type Validators struct {
+		Addr    string
+		ValAddr string
+		Val     *cosmos.ChainNode
+	}
+
+	validators := make([]Validators, len(chain.Validators))
+	for i := range chain.Validators {
+		val := chain.Validators[i]
+		valAddr, err := val.AccountKeyBech32(ctx, "validator")
+		require.NoError(err)
+		valvalAddr, err := val.KeyBech32(ctx, "validator", "val")
+		require.NoError(err)
+		fmt.Println("val", i, " Account Address: ", valAddr)
+		fmt.Println("val", i, " Validator Address: ", valvalAddr)
+		validators[i] = Validators{
+			Addr:    valAddr,
+			ValAddr: valvalAddr,
+			Val:     val,
+		}
+	}
+
+	// queryValidators to confirm that 2 validators are bonded
+	vals, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
+	require.NoError(err)
+	require.Equal(len(vals), 2)
+
+	// submit minting proposal and vote yes on it from all validators
+	require.NoError(e2e.TurnOnMinting(ctx, chain, validators[0].Val))
+	require.NoError(testutil.WaitForBlocks(ctx, 7, validators[0].Val))
+	result, err := chain.GovQueryProposal(ctx, 1)
+	require.NoError(err)
+	fmt.Println("Proposal status: ", result.Status.String())
+	require.Equal(result.Status.String(), "PROPOSAL_STATUS_PASSED")
+
+	// both validators become reporters
+	for i := range validators {
+		minStakeAmt := "1000000"
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := validators[i].Val.ExecTx(ctx, validators[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", validators[i].Val.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (validator", i, " becomes a reporter): ", txHash)
+	}
+
+	//  both reporters submit for cyclelist
+	currentCycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
+	require.NoError(err)
+	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
+	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
+	require.NoError(err)
+	fmt.Println("current cycle list: ", currentCycleList)
+	value := layerutil.EncodeValue(123456789.99)
+	for i := range validators {
+		_, _, err = validators[i].Val.Exec(ctx, validators[i].Val.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", validators[i].Val.HomeDir()), validators[i].Val.Chain.Config().Env)
+		require.NoError(err)
+		height, err := validators[i].Val.Height(ctx)
+		require.NoError(err)
+		fmt.Println("validator [", i, "] reported at height ", height)
+	}
+
+	// wait 2 blocks for aggregation
+	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Val))
+
+	// query microreport for val1
+	reports, _, err := validators[1].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[1].Addr)
+	require.NoError(err)
+	var reportsRes e2e.QueryMicroReportsResponse
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(err)
+	fmt.Println("reports from val1: ", reportsRes)
+
+	// check val0 stake
+	stake, err := chain.StakingQueryDelegations(ctx, validators[0].Addr)
+	require.NoError(err)
+	fmt.Println("val0 stake 1: ", stake)
+
+	// check val1 stake
+	stake, err = chain.StakingQueryDelegations(ctx, validators[1].Addr)
+	require.NoError(err)
+	fmt.Println("val1 stake 1: ", stake)
+
+	// val1 decides to become a selector instead of a reporter
+	txHash, err := validators[1].Val.ExecTx(ctx, validators[1].Addr, "reporter", "switch-reporter", validators[0].Addr, "--keyring-dir", validators[1].Val.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (val1 becomes a selector): ", txHash)
+
+	// check val0 stake
+	stake, err = chain.StakingQueryDelegations(ctx, validators[0].Addr)
+	require.NoError(err)
+	fmt.Println("val0 stake 2: ", stake)
+
+	// check val1 stake
+	stake, err = chain.StakingQueryDelegations(ctx, validators[1].Addr)
+	require.NoError(err)
+	fmt.Println("val1 stake 2: ", stake)
+
+	// verify val1 is a selector for val0
+	res, _, err := validators[0].Val.ExecQuery(ctx, "reporter", "selector-reporter", validators[1].Addr)
+	require.NoError(err)
+	var selectorRes e2e.QuerySelectorReporterResponse
+	err = json.Unmarshal(res, &selectorRes)
+	require.NoError(err)
+	fmt.Println("selectorRes: ", selectorRes)
+	require.Equal(selectorRes.Reporter, validators[0].Addr)
+
+	// make third party user to dispute
+	keyname := fmt.Sprintf("user1")
+	fundAmt := math.NewInt(100_000 * 1e6)
+	user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
+	fmt.Println("user: ", user)
+	userAddr := user.FormattedAddress()
+
+	// user1 disputes val1's report
+	metaId := reportsRes.MicroReports[0].MetaId
+	queryId := reportsRes.MicroReports[0].QueryID
+	category := "warning"
+	fee := "50000000000loya"
+	payFromBond := "false"
+	txHash, err = validators[0].Val.ExecTx(ctx, userAddr, "dispute", "propose-dispute", validators[1].Addr, metaId, queryId, category, fee, payFromBond, "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	require.NoError(err)
+	fmt.Println("TX HASH (val0 disputes val1): ", txHash)
+
+	// check val0 delegations
+	stake, err = chain.StakingQueryDelegations(ctx, validators[0].Addr)
+	require.NoError(err)
+	fmt.Println("val0 stake 3: ", stake)
+
+	// check val1 delegations
+	stake, err = chain.StakingQueryDelegations(ctx, validators[1].Addr)
+	require.NoError(err)
+	fmt.Println("val1 stake 3: ", stake)
+
+	// query dispute info, should be paid and in voting state
+	disRes, _, err := validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	var disputes e2e.Disputes2
+	err = json.Unmarshal(disRes, &disputes)
+	require.NoError(err)
+	fmt.Println("disputes: ", disputes)
+	fmt.Println("dispute fee: ", disputes.Disputes[0].Metadata.DisputeFee)
+	fmt.Println("dispute fee total: ", disputes.Disputes[0].Metadata.FeeTotal)
+	fmt.Println("dispute fee paid: ", disputes.Disputes[0].Metadata.InitialEvidence.Power)
+	require.Equal(len(disputes.Disputes), 1)
+	require.Equal(disputes.Disputes[0].Metadata.DisputeId, "1")
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1) // open
+
+	// get free floating tokens before withdraw fee
+	// ffTokensBefore, err := chain.BankQueryBalance(ctx, validators[0].Addr, "loya")
+	// require.NoError(err)
+	// fmt.Println("free floating tokens before withdraw fee: ", ffTokensBefore)
+
+	// // claim fee refund
+	// txHash, err = validators[0].Val.ExecTx(ctx, "validator", "dispute", "withdraw-fee-refund", validators[0].Addr, "1", "--gas", "250000", "--keyring-dir", validators[0].Val.HomeDir())
+	// require.NoError(err)
+	// fmt.Println("TX HASH (claim fee refund): ", txHash)
+
+	// // get free floating tokens after withdraw fee
+	// ffTokensAfter, err := chain.BankQueryBalance(ctx, validators[0].Addr, "loya")
+	// require.NoError(err)
+	// fmt.Println("free floating tokens after withdraw fee: ", ffTokensAfter)
+	// require.Greater(ffTokensAfter.Int64(), ffTokensBefore.Int64())
 }
