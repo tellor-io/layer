@@ -3118,7 +3118,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("reports from val1: ", reportsRes)
 
-	// val1 tries to become a selector instead of a reporter, shouldnt be allowed becuase of reporting in the last 21 days
+	// val1 tries to become a selector instead of a reporter, shouldnt be allowed because of reporting in the last 21 days
 	txHash, err := validators[1].Val.ExecTx(ctx, validators[1].Addr, "reporter", "switch-reporter", validators[0].Addr, "--keyring-dir", validators[1].Val.HomeDir())
 	require.Error(err)
 	fmt.Println("TX HASH (val1 fails to become a selector): ", txHash)
@@ -3162,5 +3162,4 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	require.Equal(len(disputes.Disputes), 1)
 	require.Equal(disputes.Disputes[0].Metadata.DisputeId, "1")
 	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1) // open
-
 }
