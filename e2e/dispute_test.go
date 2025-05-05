@@ -3119,30 +3119,10 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("reports from val1: ", reportsRes)
 
-	// check val0 stake
-	stake, err := chain.StakingQueryDelegations(ctx, validators[0].Addr)
-	require.NoError(err)
-	fmt.Println("val0 stake 1: ", stake)
-
-	// check val1 stake
-	stake, err = chain.StakingQueryDelegations(ctx, validators[1].Addr)
-	require.NoError(err)
-	fmt.Println("val1 stake 1: ", stake)
-
-	// val1 decides to become a selector instead of a reporter
+	// val1 decides to become a selector instead of a reporter, shouldnt be allowed because of reporting in the last 21 days
 	txHash, err := validators[1].Val.ExecTx(ctx, validators[1].Addr, "reporter", "switch-reporter", validators[0].Addr, "--keyring-dir", validators[1].Val.HomeDir())
-	require.NoError(err)
-	fmt.Println("TX HASH (val1 becomes a selector): ", txHash)
-
-	// check val0 stake
-	stake, err = chain.StakingQueryDelegations(ctx, validators[0].Addr)
-	require.NoError(err)
-	fmt.Println("val0 stake 2: ", stake)
-
-	// check val1 stake
-	stake, err = chain.StakingQueryDelegations(ctx, validators[1].Addr)
-	require.NoError(err)
-	fmt.Println("val1 stake 2: ", stake)
+	require.Error(err)
+	fmt.Println("TX HASH (val1 fails to become a selector): ", txHash)
 
 	// verify val1 is a selector for val0
 	res, _, err := validators[0].Val.ExecQuery(ctx, "reporter", "selector-reporter", validators[1].Addr)
@@ -3168,17 +3148,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	payFromBond := "false"
 	txHash, err = validators[0].Val.ExecTx(ctx, userAddr, "dispute", "propose-dispute", validators[1].Addr, metaId, queryId, category, fee, payFromBond, "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
-	fmt.Println("TX HASH (val0 disputes val1): ", txHash)
-
-	// check val0 delegations
-	stake, err = chain.StakingQueryDelegations(ctx, validators[0].Addr)
-	require.NoError(err)
-	fmt.Println("val0 stake 3: ", stake)
-
-	// check val1 delegations
-	stake, err = chain.StakingQueryDelegations(ctx, validators[1].Addr)
-	require.NoError(err)
-	fmt.Println("val1 stake 3: ", stake)
+	fmt.Println("TX HASH (user1 disputes val1): ", txHash)
 
 	// query dispute info, should be paid and in voting state
 	disRes, _, err := validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
