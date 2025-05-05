@@ -2765,9 +2765,8 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 
 // in x/dispute/keeper/dispute.go, change dispute end time to 10 sec
 func TestUnderfundedDispute(t *testing.T) {
-	require := require.New(t)
-
 	t.Skip("x.dispute/keeper/dispute.go/SetNewDispute DisputeEndTime needs changed to 10 sec for this test to work.. :/ ")
+	require := require.New(t)
 
 	t.Helper()
 	if testing.Short() {
@@ -3119,7 +3118,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("reports from val1: ", reportsRes)
 
-	// val1 decides to become a selector instead of a reporter, shouldnt be allowed because of reporting in the last 21 days
+	// val1 tries to become a selector instead of a reporter, shouldnt be allowed becuase of reporting in the last 21 days
 	txHash, err := validators[1].Val.ExecTx(ctx, validators[1].Addr, "reporter", "switch-reporter", validators[0].Addr, "--keyring-dir", validators[1].Val.HomeDir())
 	require.Error(err)
 	fmt.Println("TX HASH (val1 fails to become a selector): ", txHash)
@@ -3131,7 +3130,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	err = json.Unmarshal(res, &selectorRes)
 	require.NoError(err)
 	fmt.Println("selectorRes: ", selectorRes)
-	require.Equal(selectorRes.Reporter, validators[0].Addr)
+	require.Equal(selectorRes.Reporter, validators[1].Addr)
 
 	// make third party user to dispute
 	keyname := "user1"
@@ -3164,19 +3163,4 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	require.Equal(disputes.Disputes[0].Metadata.DisputeId, "1")
 	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1) // open
 
-	// get free floating tokens before withdraw fee
-	// ffTokensBefore, err := chain.BankQueryBalance(ctx, validators[0].Addr, "loya")
-	// require.NoError(err)
-	// fmt.Println("free floating tokens before withdraw fee: ", ffTokensBefore)
-
-	// // claim fee refund
-	// txHash, err = validators[0].Val.ExecTx(ctx, "validator", "dispute", "withdraw-fee-refund", validators[0].Addr, "1", "--gas", "250000", "--keyring-dir", validators[0].Val.HomeDir())
-	// require.NoError(err)
-	// fmt.Println("TX HASH (claim fee refund): ", txHash)
-
-	// // get free floating tokens after withdraw fee
-	// ffTokensAfter, err := chain.BankQueryBalance(ctx, validators[0].Addr, "loya")
-	// require.NoError(err)
-	// fmt.Println("free floating tokens after withdraw fee: ", ffTokensAfter)
-	// require.Greater(ffTokensAfter.Int64(), ffTokensBefore.Int64())
 }
