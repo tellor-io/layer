@@ -45,6 +45,7 @@ type (
 		TotalTips          collections.Map[uint64, math.Int]                                                                          // key: blockNumber
 		Nonces             collections.Map[[]byte, uint64]                                                                            // key: queryId
 		Reports            *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, types.ReportsIndex] // key: queryId, reporter, queryMeta.id
+		NoStakeReports     collections.Map[collections.Triple[[]byte, []byte, uint64], types.NoStakeMicroReport]                      // key: queryId, reporter, timestamp
 		QuerySequencer     collections.Sequence
 		Query              *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, types.QueryMetaIndex]  // key: queryId, id
 		Aggregates         *collections.IndexedMap[collections.Pair[[]byte, uint64], types.Aggregate, types.AggregatesIndex] // key: queryId, timestamp
@@ -119,6 +120,13 @@ func NewKeeper(
 			collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key),
 			codec.CollValue[types.MicroReport](cdc),
 			types.NewReportsIndex(sb),
+		),
+		// NoStakeReports maps the queryId:reporter:timestamp to the microReport
+		NoStakeReports: collections.NewMap(sb,
+			types.NoStakeReportsPrefix,
+			"no_stake_reports",
+			collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key),
+			codec.CollValue[types.NoStakeMicroReport](cdc),
 		),
 		// QuerySequencer is an id generator for queryMeta that increments with each new query to distinguish between expired queries and new queries
 		QuerySequencer: collections.NewSequence(sb, types.QuerySeqPrefix, "sequencer"),

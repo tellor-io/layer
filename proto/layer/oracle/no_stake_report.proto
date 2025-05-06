@@ -1,0 +1,41 @@
+syntax = "proto3";
+package layer.oracle;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/tellor-io/layer/x/oracle/types";
+
+// MicroReport represents data for a single report
+message NoStakeMicroReport {
+  // reporter is the address of the reporter
+  string reporter = 1;
+  // string identifier of the data spec
+  bytes query_data = 2;
+  // hex string of the response value
+  string value = 3;
+  // timestamp of when the report was created
+  google.protobuf.Timestamp timestamp = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
+  ];
+  // block number of when the report was created
+  uint64 block_number = 5;
+}
+message NoStakeValue {
+  NoStakeMicroReport micro_report = 1;
+}
+
+// MicroReports but with strings to return for queries
+message NoStakeMicroReportStrings {
+    // reporter is the address of the reporter
+    string reporter = 1;
+    // string identifier of the data spec
+    string query_data = 2;
+    // hex string of the response value
+    string value = 3;
+    // timestamp of when the report was created
+    uint64 timestamp = 4;
+    // block number of when the report was created
+    uint64 block_number = 5;
+  }

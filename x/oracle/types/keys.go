@@ -54,6 +54,7 @@ var (
 	ValuesPowerPrefix                = collections.NewPrefix(28)
 	QueryByExpirationPrefix          = collections.NewPrefix(29)
 	BridgeDepositQueuePrefix         = collections.NewPrefix(30)
+	NoStakeReportsPrefix             = collections.NewPrefix(31)
 )
 
 func KeyPrefix(p string) []byte {
