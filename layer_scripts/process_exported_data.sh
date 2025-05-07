@@ -10,7 +10,7 @@
 jq -r '
   (reduce (
     .app_state.distribution.outstanding_rewards[] |
-    select(.validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv") |
+    select(.validator_address == "tellorvaloper1t6llaazgletpqal2l37emag8x2z053mvnswz0s" or .validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv") |
     .outstanding_rewards[0].amount // "0"
   ) as $amount (0; . + ($amount | tonumber))) as $outstanding_validator_rewards_distribution |
 
@@ -29,7 +29,8 @@ jq -r '
 
 (reduce (
   .app_state.staking.delegations[] |
-  select(.validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or 
+  select(.validator_address == "tellorvaloper1t6llaazgletpqal2l37emag8x2z053mvnswz0s" or 
+         .validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or 
          .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or 
          .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or 
          .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv") |
@@ -44,7 +45,7 @@ jq -r '
 
   (reduce (
     .app_state.staking.last_validator_powers[] |
-    select(.address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv") |
+    select(.validator_address == "tellorvaloper1t6llaazgletpqal2l37emag8x2z053mvnswz0s" or .address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv") |
     .power // "0"
   ) as $amount (0; . + ($amount | tonumber))) as $last_validators_power_removed |
 
@@ -110,13 +111,14 @@ jq --argjson outstanding_validator_rewards_distribution $outstanding_validator_r
   --arg bonded_tokens_pool_address "$bonded_tokens_pool_address" \
   '
   .consensus.validators -= [.consensus.validators[] | 
-  select(.name == "luke-moniker" or .name == "yoda-moniker" or .name == "palpatine-moniker" or .name == "darth_maul-moniker")] |
+  select(.name == "luke-moniker" or .name == "yoda-moniker" or .name == "palpatine-moniker" or .name == "darth_maul-moniker" or .name == "darth_vader-moniker")] |
 
   .app_state.staking.delegations -= [.app_state.staking.delegations[] | 
-  select(.validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |
+  select(.validator_address == "tellorvaloper1t6llaazgletpqal2l37emag8x2z053mvnswz0s" or .validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |
 
   .app_state.staking.validators[] |= (
-    if .operator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or 
+    if .operator_address == "tellorvaloper1t6llaazgletpqal2l37emag8x2z053mvnswz0s" or  
+      .operator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or 
       .operator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or 
       .operator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or 
       .operator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv" 
@@ -130,13 +132,14 @@ jq --argjson outstanding_validator_rewards_distribution $outstanding_validator_r
     end) |
 
   .app_state.staking.last_validator_powers -= [.app_state.staking.last_validator_powers[] | 
-  select(.address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |
+  select(.address == "tellorvaloper1t6llaazgletpqal2l37emag8x2z053mvnswz0s" or .address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |
 
   .app_state.slashing.missed_blocks -= [.app_state.slashing.missed_blocks[] | 
-  select(.address == "tellorvalcons1qsyw9f02sxlqqls490vnqvdy2sm5uw48m83q56" or .address == "tellorvalcons1cqwtrppf6frfwkt0lfv0070sstt463kcprln8w" or .address == "tellorvalcons1dckkr3sve3cux9wnkxrnauzr064q07eles6yk4" or .address == "tellorvalcons1cpq4g5ljhh9y035ztkvnyz9p77ypahxxktpglm")] |
+  select(.address == "tellorvalcons1f2zmyxfdgge575jzuwwdgjgz998r8lhuj534nh" or .address == "tellorvalcons1qsyw9f02sxlqqls490vnqvdy2sm5uw48m83q56" or .address == "tellorvalcons1cqwtrppf6frfwkt0lfv0070sstt463kcprln8w" or .address == "tellorvalcons1dckkr3sve3cux9wnkxrnauzr064q07eles6yk4" or .address == "tellorvalcons1cpq4g5ljhh9y035ztkvnyz9p77ypahxxktpglm")] |
 
   .app_state.slashing.signing_infos[] |= (
-  if .address == "tellorvalcons1qsyw9f02sxlqqls490vnqvdy2sm5uw48m83q56" or 
+  if .address == "tellorvalcons1f2zmyxfdgge575jzuwwdgjgz998r8lhuj534nh" or 
+    .address == "tellorvalcons1qsyw9f02sxlqqls490vnqvdy2sm5uw48m83q56" or 
     .address == "tellorvalcons1cqwtrppf6frfwkt0lfv0070sstt463kcprln8w" or 
     .address == "tellorvalcons1dckkr3sve3cux9wnkxrnauzr064q07eles6yk4" or 
     .address == "tellorvalcons1cpq4g5ljhh9y035ztkvnyz9p77ypahxxktpglm" 
@@ -148,22 +151,22 @@ jq --argjson outstanding_validator_rewards_distribution $outstanding_validator_r
   end) |
 
   .app_state.distribution.delegator_starting_infos -= [.app_state.distribution.delegator_starting_infos[] | 
-  select(.validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |   
+  select(.validator_address == "tellorvaloper1t6llaazgletpqal2l37emag8x2z053mvnswz0s" or .validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |   
 
   .app_state.distribution.outstanding_rewards -= [.app_state.distribution.outstanding_rewards[] | 
-  select(.validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |
+  select(.validator_address == "tellorvaloper1t6llaazgletpqal2l37emag8x2z053mvnswz0s" or .validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |
 
   .app_state.distribution.validator_accumulated_commissions -= [.app_state.distribution.validator_accumulated_commissions[] | 
-  select(.validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |   
+  select(.validator_address == "tellorvaloper1t6llaazgletpqal2l37emag8x2z053mvnswz0s" or .validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |   
 
   .app_state.distribution.validator_historical_rewards -= [.app_state.distribution.validator_historical_rewards[] | 
-  select(.validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |
+  select(.validator_address == "tellorvaloper1t6llaazgletpqal2l37emag8x2z053mvnswz0s" or .validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |
 
   .app_state.distribution.validator_current_rewards -= [.app_state.distribution.validator_current_rewards[] | 
-  select(.validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |
+  select(.validator_address == "tellorvaloper1t6llaazgletpqal2l37emag8x2z053mvnswz0s" or .validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |
 
   .app_state.distribution.validator_slash_events -= [.app_state.distribution.validator_slash_events[] | 
-  select(.validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |
+  select(.validator_address == "tellorvaloper1t6llaazgletpqal2l37emag8x2z053mvnswz0s" or .validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")] |
 
   .app_state.staking.last_total_power = ((.app_state.staking.last_total_power | tonumber) - ($last_validators_power_removed | tonumber) | tostring) |
 
@@ -185,10 +188,10 @@ echo "Last Totel power after edit: "
 jq '.app_state.staking.last_total_power' debug_state_edited.json
 
 echo "staking.Validators after edit: "
-jq '.app_state.staking.validators[] | select(.operator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .operator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .operator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .operator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")' debug_state_edited.json
+jq '.app_state.staking.validators[] | select(.operator_address == "tellorvaloper1t6llaazgletpqal2l37emag8x2z053mvnswz0s" or .operator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .operator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .operator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .operator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")' debug_state_edited.json
 
 echo "slashing.signing_infos after edit: "
-jq '.app_state.slashing.signing_infos[] | select(.address == "tellorvalcons1qsyw9f02sxlqqls490vnqvdy2sm5uw48m83q56" or .address == "tellorvalcons1cqwtrppf6frfwkt0lfv0070sstt463kcprln8w" or .address == "tellorvalcons1dckkr3sve3cux9wnkxrnauzr064q07eles6yk4" or .address == "tellorvalcons1cpq4g5ljhh9y035ztkvnyz9p77ypahxxktpglm")' debug_state_edited.json
+jq '.app_state.slashing.signing_infos[] | select(.address == "tellorvaloper1t6llaazgletpqal2l37emag8x2z053mvnswz0s" or .address == "tellorvalcons1qsyw9f02sxlqqls490vnqvdy2sm5uw48m83q56" or .address == "tellorvalcons1cqwtrppf6frfwkt0lfv0070sstt463kcprln8w" or .address == "tellorvalcons1dckkr3sve3cux9wnkxrnauzr064q07eles6yk4" or .address == "tellorvalcons1cpq4g5ljhh9y035ztkvnyz9p77ypahxxktpglm")' debug_state_edited.json
 
 echo "bonded tokens pool balance after edit: "
 jq --arg bonded_tokens_pool_address "$bonded_tokens_pool_address" '.app_state.bank.balances[] | select(.address == $bonded_tokens_pool_address)' debug_state_edited.json
@@ -200,5 +203,5 @@ echo "total supply after edit: "
 jq '.app_state.bank.supply[0].amount' debug_state_edited.json
 
 echo "distribution.delegator_starting_infos after edit: "
-jq '.app_state.distribution.delegator_starting_infos[] | select(.validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")' debug_state_edited.json
+jq '.app_state.distribution.delegator_starting_infos[] | select(.validator_address == "tellorvaloper1t6llaazgletpqal2l37emag8x2z053mvnswz0s" or .validator_address == "tellorvaloper1hwez285ve3z52mx95dnh5ad0yup453vfy6wzkz" or .validator_address == "tellorvaloper1q8m9lqc7ajmgg3kl60n0jrqejvv4yasl4th5q9" or .validator_address == "tellorvaloper1zldjml93erklsehcv4nsuh6a0rf02nvyefqn7h" or .validator_address == "tellorvaloper18e3ct9zrakk2w4zvz0qg3228s6dwr0kqwjgkgv")' debug_state_edited.json
 
