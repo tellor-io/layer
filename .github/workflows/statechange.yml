@@ -21,4 +21,4 @@ jobs:
           mode: exactly
           count: 1
           labels: |
-            backport
+            contains(github.event.label.name, 'backport')
