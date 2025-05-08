@@ -1,9 +1,9 @@
 
 require("hardhat-gas-reporter");
-require('hardhat-contract-sizer');
+// require('hardhat-contract-sizer');
 require("@nomiclabs/hardhat-ethers");
 //require("@nomiclabs/hardhat-etherscan");
-require("@nomicfoundation/hardhat-verify");
+// require("@nomicfoundation/hardhat-verify");
 require("@nomiclabs/hardhat-waffle");
 require("dotenv").config();
 const hre = require("hardhat"); 
@@ -29,7 +29,7 @@ async function deployForMainnet(_pk, _nodeURL) {
     
     ////////  Deploy TellorDataBridge contract  ////////////////////////
     console.log("deploy TellorDataBridge")
-    const TellorDataBridge = await ethers.getContractFactory("contracts/TellorDataBridge.sol:TellorDataBridge", wallet);
+    const TellorDataBridge = await ethers.getContractFactory("contracts/bridge/TellorDataBridge.sol:TellorDataBridge", wallet);
     var TellorWithSigner = await TellorDataBridge.connect(wallet);
     const tellorDataBridge= await TellorWithSigner.deploy(_thegardianaddress);
     await tellorDataBridge.deployed();
@@ -40,7 +40,7 @@ async function deployForMainnet(_pk, _nodeURL) {
         const TokenBridge = await ethers.getContractFactory("contracts/TokenBridge.sol:TokenBridge", wallet);
         var tbWithSigner = await TokenBridge.connect(wallet);
         /// @param _token address of tellor token for bridging
-        /// @param _blobstream address of BlobstreamO data bridge
+        /// @param _dataBridge address of tellor data bridge
         /// @param _tellorFlex address of oracle(tellorFlex) on chain
         const tokenBridge= await tbWithSigner.deploy(_token,tellorDataBridge.address,_tellorFlex);
         await tokenBridge.deployed();
@@ -50,14 +50,14 @@ async function deployForMainnet(_pk, _nodeURL) {
     if (net == "mainnet"){
             console.log("Tellor token bridge deployed to:", tokenBridge.address);
             console.log("Tellor token bridge deployed to:", "https://etherscan.io/address/" + tokenBridge.address);
-            console.log("Tellor BlobstreamO bridge deployed to:", blobstreamO.address);
-            console.log("Tellor blobstreamO bridge deployed to:", "https://etherscan.io/address/" + blobstreamO.address);
+            console.log("Tellor data bridge deployed to:", tellorDataBridge.address);
+            console.log("Tellor data bridge deployed to:", "https://etherscan.io/address/" + tellorDataBridge.address);
         
         }  else if (net == "sepolia"){ 
             console.log("Tellor token bridge deployed to:", tokenBridge.address);
             console.log("Tellor token bridge deployed to:", "https://sepolia.etherscan.io/address/" + tokenBridge.address);
-            console.log("Tellor BlobstreamO bridge deployed to:", blobstreamO.address);
-            console.log("Tellor blobstreamO bridge deployed to:", "https://sepolia.etherscan.io/address/" + blobstreamO.address);
+            console.log("Tellor data bridge deployed to:", tellorDataBridge.address);
+            console.log("Tellor data bridge deployed to:", "https://sepolia.etherscan.io/address/" + tellorDataBridge.address);
 
         }  else {
         console.log("Please add network explorer details")
