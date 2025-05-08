@@ -619,6 +619,7 @@ func (s *KeeperTestSuite) TestGetLastReportedAtTimestamp() {
 	fmt.Println("timestampSet", timestampSet)
 	require.NoError(s.oracleKeeper.Aggregates.Set(ctx, collections.Join([]byte("queryid1"), timestampSet), aggregate))
 	timestampRetrieved, err := s.oracleKeeper.GetLastReportedAtTimestamp(ctx, reporter)
+	fmt.Println("timestampRetrieved", timestampRetrieved)
 	require.NoError(err)
 	require.Equal(timestampSet, timestampRetrieved)
 
@@ -633,6 +634,7 @@ func (s *KeeperTestSuite) TestGetLastReportedAtTimestamp() {
 	fmt.Println("timestampSet", timestampSet)
 	require.NoError(s.oracleKeeper.Aggregates.Set(ctx, collections.Join([]byte("queryid2"), timestampSet), aggregate))
 	timestampRetrieved, err = s.oracleKeeper.GetLastReportedAtTimestamp(ctx, reporter)
+	fmt.Println("timestampRetrieved", timestampRetrieved)
 	require.NoError(err)
 	require.Equal(timestampSet, timestampRetrieved)
 
@@ -647,6 +649,7 @@ func (s *KeeperTestSuite) TestGetLastReportedAtTimestamp() {
 	fmt.Println("timestampSet", timestampSet)
 	require.NoError(s.oracleKeeper.Aggregates.Set(ctx, collections.Join([]byte("queryid3"), timestampSet), aggregate))
 	timestampRetrieved, err = s.oracleKeeper.GetLastReportedAtTimestamp(ctx, reporter)
+	fmt.Println("timestampRetrieved", timestampRetrieved)
 	require.NoError(err)
 	require.Equal(timestampSet, timestampRetrieved)
 }

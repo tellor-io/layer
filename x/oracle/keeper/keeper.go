@@ -381,5 +381,9 @@ func (k Keeper) GetLastReportedAtTimestamp(ctx context.Context, reporter []byte)
 		timestamp = key.K2()
 	}
 
+	if timestamp == 0 && reportedAtBlock != 0 {
+		return 0, errors.New("no reports found")
+	}
+
 	return timestamp, nil
 }
