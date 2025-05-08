@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/tellor-io/layer/lib/metrics"
 	layertypes "github.com/tellor-io/layer/types"
@@ -21,6 +20,8 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+const TwentyOneDaysInMs = 21 * 24 * 60 * 60 * 1000
 
 type msgServer struct {
 	Keeper
@@ -248,13 +249,15 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	}
 	// check if reporter is trying to become a selector, can only switch if havent reported in the last 21 days
 	if bytes.Equal(selector.Reporter, addr.Bytes()) {
-		// get the most recent report for the reporter
-		microReport, err := k.oracleKeeper.GetMostRecentReport(goCtx, reporterAddr)
+		// get the timestamp of the most recent report for the reporter
+		lastReportTimestamp, err := k.Keeper.oracleKeeper.GetLastReportedAtTimestamp(goCtx, reporterAddr.Bytes())
 		if err != nil && err.Error() != "no reports found" {
 			return nil, err
 		}
-		lastReportTimestamp := microReport.Timestamp
-		if lastReportTimestamp.Add(21 * 24 * time.Hour).After(sdk.UnwrapSDKContext(goCtx).BlockTime()) {
+
+		// check if the reporter has reported in the last 21 days
+		currentBlocktime := uint64(sdk.UnwrapSDKContext(goCtx).BlockTime().UnixMilli())
+		if lastReportTimestamp > 0 && currentBlocktime-lastReportTimestamp < TwentyOneDaysInMs {
 			return nil, errors.New("reporter has reported in the last 21 days, please wait before switching reporters")
 		}
 
@@ -346,7 +349,7 @@ func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSel
 		return nil, err
 	}
 
-	// ensure that a selector cannot be removed if it is the reporter’s own address
+	// ensure that a selector cannot be removed if it is the reporter's own address
 	if bytes.Equal(selector.Reporter, selectorAddr.Bytes()) {
 		return nil, errors.New("selector cannot be removed if it is the reporter's own address")
 	}
