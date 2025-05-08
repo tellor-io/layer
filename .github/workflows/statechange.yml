@@ -21,4 +21,4 @@ jobs:
           mode: exactly
           count: 1
           labels: |
-            contains(github.event.label.name, 'backport')
+            backport release/v5.x
