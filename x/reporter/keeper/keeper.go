@@ -205,7 +205,7 @@ func (k *Keeper) SetOracleKeeper(ok types.OracleKeeper) {
 }
 
 // gets the block number of the last report for a reporter
-func (k *Keeper) GetLastReportedAtBlock(ctx context.Context, reporter []byte) (uint64, error) {
+func (k Keeper) GetLastReportedAtBlock(ctx context.Context, reporter []byte) (uint64, error) {
 	currentBlock := sdk.UnwrapSDKContext(ctx).BlockHeight()
 	pc := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
 	start := collections.Join(reporter, uint64(0))
@@ -225,7 +225,8 @@ func (k *Keeper) GetLastReportedAtBlock(ctx context.Context, reporter []byte) (u
 			return 0, err
 		}
 		fmt.Println("key.K1().K2()", key.K1().K2())
-		return key.K1().K2(), nil // block number
+		blockNumber := key.K1().K2()
+		return blockNumber, nil
 	}
 	return 0, nil
 }
