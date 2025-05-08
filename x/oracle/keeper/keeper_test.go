@@ -600,7 +600,7 @@ func (s *KeeperTestSuite) TestAutoClaimDeposits() {
 	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
 }
 
-func (s *KeeperTestSuite) TestGetMostRecentReport() {
+func (s *KeeperTestSuite) TestGetLastReportedAtTimestamp() {
 	require := s.Require()
 	require.NotNil(s.bridgeKeeper)
 	timeNow := time.Now()
@@ -609,7 +609,7 @@ func (s *KeeperTestSuite) TestGetMostRecentReport() {
 	repAddr := sample.AccAddressBytes()
 
 	// no reports found
-	res, err := s.oracleKeeper.GetMostRecentReport(ctx, repAddr)
+	res, err := s.oracleKeeper.GetLastReportedAtTimestamp(ctx, repAddr)
 	require.ErrorContains(err, "no reports found")
 	fmt.Println("res", res)
 
@@ -628,10 +628,10 @@ func (s *KeeperTestSuite) TestGetMostRecentReport() {
 	require.NoError(s.oracleKeeper.Reports.Set(ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
 
 	// one report found
-	res, err = s.oracleKeeper.GetMostRecentReport(ctx, repAddr)
+	res, err = s.oracleKeeper.GetLastReportedAtTimestamp(ctx, repAddr)
 	require.NoError(err)
 	fmt.Println("res", res)
-	require.Equal(res.BlockNumber, uint64(900))
+	require.Equal(res, uint64(900))
 
 	metaId2 := uint64(11)
 	report2 := types.MicroReport{
@@ -647,10 +647,10 @@ func (s *KeeperTestSuite) TestGetMostRecentReport() {
 	require.NoError(s.oracleKeeper.Reports.Set(ctx, collections.Join3(report2.QueryId, repAddr.Bytes(), report2.MetaId), report2))
 
 	// two reports, return newest
-	res, err = s.oracleKeeper.GetMostRecentReport(ctx, repAddr)
+	res, err = s.oracleKeeper.GetLastReportedAtTimestamp(ctx, repAddr)
 	require.NoError(err)
 	fmt.Println("res", res)
-	require.Equal(res.BlockNumber, uint64(900))
+	require.Equal(res, uint64(900))
 
 	// three reports, return newest
 	metaId3 := uint64(12)
@@ -666,8 +666,8 @@ func (s *KeeperTestSuite) TestGetMostRecentReport() {
 
 	require.NoError(s.oracleKeeper.Reports.Set(ctx, collections.Join3(report3.QueryId, repAddr.Bytes(), report3.MetaId), report3))
 
-	res, err = s.oracleKeeper.GetMostRecentReport(ctx, repAddr)
+	res, err = s.oracleKeeper.GetLastReportedAtTimestamp(ctx, repAddr)
 	require.NoError(err)
 	fmt.Println("res", res)
-	require.Equal(res.BlockNumber, uint64(1000))
+	require.Equal(res, uint64(1000))
 }
