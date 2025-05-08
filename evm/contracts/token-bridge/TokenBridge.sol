@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import "../interfaces/IBlobstreamO.sol";
+import "../interfaces/ITellorDataBridge.sol";
 import { LayerTransition } from "./LayerTransition.sol";
 
 /// @author Tellor Inc.
@@ -13,7 +13,7 @@ import { LayerTransition } from "./LayerTransition.sol";
 /// bridging back.  There is a long delay in bridging back (enforced by layer) of 12 hours
 contract TokenBridge is LayerTransition{
     /*Storage*/
-    IBlobstreamO public bridge;
+    ITellorDataBridge public dataBridge;
     uint256 public depositId; // counter of how many deposits have been made
     uint256 public depositLimitUpdateTime; // last time the deposit limit was updated
     uint256 public depositLimitRecord; // amount you can deposit per limit period
@@ -57,10 +57,10 @@ contract TokenBridge is LayerTransition{
     /*Functions*/
     /// @notice constructor
     /// @param _token address of tellor token for bridging
-    /// @param _blobstream address of BlobstreamO data bridge
+    /// @param _dataBridge address of TellorDataBridge data bridge
     /// @param _tellorFlex address of oracle(tellorFlex) on chain
-    constructor(address _token, address _blobstream, address _tellorFlex) LayerTransition(_tellorFlex, _token){
-        bridge = IBlobstreamO(_blobstream);
+    constructor(address _token, address _dataBridge, address _tellorFlex) LayerTransition(_tellorFlex, _token){
+        dataBridge = ITellorDataBridge(_dataBridge);
     }
 
     /// @notice claim extra withdraws that were not fully withdrawn
@@ -105,7 +105,7 @@ contract TokenBridge is LayerTransition{
     /// @notice temporarily pauses the bridge, only once and only by guardian at a great cost
     /// @dev guardian is the only one who can pause the bridge
     function pauseBridge() external {
-        require(msg.sender == bridge.guardian(), "TokenBridge: only guardian can pause bridge");
+        require(msg.sender == dataBridge.guardian(), "TokenBridge: only guardian can pause bridge");
         require(bridgeState == BridgeState.NORMAL, "TokenBridge: can only pause once");
         require(token.transferFrom(msg.sender, address(0xdEaD), PAUSE_TRIBUTE_AMOUNT), "TokenBridge: transfer failed");
         bridgeState = BridgeState.PAUSED;
@@ -137,8 +137,8 @@ contract TokenBridge is LayerTransition{
         require(!withdrawClaimed[_depositId], "TokenBridge: withdraw already claimed");
         require(block.timestamp - (_attestData.report.timestamp / MS_PER_SECOND) > TWELVE_HOUR_CONSTANT, "TokenBridge: premature attestation");
         require(block.timestamp - (_attestData.attestationTimestamp / MS_PER_SECOND) < TWELVE_HOUR_CONSTANT, "TokenBridge: attestation too old");
-        bridge.verifyOracleData(_attestData, _valset, _sigs);
-        require(_attestData.report.aggregatePower >= bridge.powerThreshold(), "Report aggregate power must be greater than or equal to _minimumPower");
+        dataBridge.verifyOracleData(_attestData, _valset, _sigs);
+        require(_attestData.report.aggregatePower >= dataBridge.powerThreshold(), "Report aggregate power must be greater than or equal to _minimumPower");
         withdrawClaimed[_depositId] = true;    
         (address _recipient, string memory _layerSender,uint256 _amountLoya,) = abi.decode(_attestData.report.value, (address, string, uint256, uint256));
         uint256 _amountConverted = _amountLoya * TOKEN_DECIMAL_PRECISION_MULTIPLIER; 

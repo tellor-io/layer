@@ -52,7 +52,7 @@ describe("Function Tests - NewTransition", function() {
     parachute = await ethers.getContractAt("contracts/tellor360/oldContracts/contracts/interfaces/ITellor.sol:ITellor",PARACHUTE, devWallet);
 
     blobstream = await ethers.deployContract(
-      "BlobstreamO", [
+      "TellorDataBridge", [
       DEV_WALLET
     ]
     )
