@@ -2,6 +2,7 @@ const { expect } = require("chai");
 const h = require("./helpers/evmHelpers");
 var assert = require('assert');
 const web3 = require('web3');
+const { ethers } = require("hardhat");
 
 describe("E2E Forking Tests - TokenBridge Transition", function() {
   // Mainnet addresses
@@ -56,9 +57,10 @@ describe("E2E Forking Tests - TokenBridge Transition", function() {
     flex = await ethers.getContractAt("tellorflex/contracts/TellorFlex.sol:TellorFlex", TELLORFLEX)
     parachute = await ethers.getContractAt("contracts/tellor360/oldContracts/contracts/interfaces/ITellor.sol:ITellor", PARACHUTE, devWallet)
 
-    // Deploy Blobstream
-    blobstream = await ethers.deployContract("BlobstreamO", [DEV_WALLET])
-    await blobstream.init(1, 2, UNBONDING_PERIOD, h.hash("testy"))
+    // Deploy TellorDataBridge
+    blobstream = await ethers.deployContract("TellorDataBridge", [DEV_WALLET])
+    fakeValCheckpoint = ethers.utils.solidityKeccak256(["string"], ["testy"])
+    await blobstream.init(1, 2, UNBONDING_PERIOD, fakeValCheckpoint)
 
     // Deploy TokenBridge
     tbridge = await ethers.deployContract("TokenBridge", [TELLOR_MASTER, blobstream.address, TELLORFLEX])
