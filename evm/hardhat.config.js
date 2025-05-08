@@ -60,7 +60,7 @@ module.exports = {
       },
       forking: {
         url: process.env.NODE_URL_MAINNET,
-        blockNumber: 22247348
+        blockNumber: 22438931
       },
       allowUnlimitedContractSize: true
     } ,

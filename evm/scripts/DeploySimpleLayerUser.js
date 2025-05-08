@@ -5,7 +5,7 @@ require("dotenv").config();
 // npx hardhat run scripts/DeploySimpleLayerUser.sol --network sepolia
 
 // update these variables
-var blobstreamOaddress = " "
+var dataBridgeAddress = " "
 var queryId = " "
 var PK = process.env.TESTNET_PK
 var NODE_URL = process.env.NODE_URL_SEPOLIA_TESTNET
@@ -22,7 +22,7 @@ async function deploySimpleLayerUser(_pk, _nodeURL) {
     ////////  Deploy SimpleLayerUser contract  ////////////////////////
     console.log("deploying SimpleLayerUser")
     const SimpleLayerUser = await ethers.getContractFactory("contracts/testing/SimpleLayerUser.sol:SimpleLayerUser", wallet);
-    const simpleLayerUser= await SimpleLayerUser.deploy(blobstreamOaddress, queryId);
+    const simpleLayerUser= await SimpleLayerUser.deploy(dataBridgeAddress, queryId);
     await simpleLayerUser.deployed();
     console.log("SimpleLayerUser deployed to:", simpleLayerUser.address);
   };

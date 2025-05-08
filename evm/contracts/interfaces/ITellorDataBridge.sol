@@ -27,7 +27,7 @@ struct Validator {
     uint256 power;
 }
 
-interface IBlobstreamO {
+interface ITellorDataBridge {
     function guardian() external view returns (address);
     function powerThreshold() external view returns (uint256);
     function unbondingPeriod() external view returns (uint256);
