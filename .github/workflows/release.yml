@@ -3,7 +3,8 @@ name: goreleaser
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
+      - '!reporterd/v*'
 
 permissions:
   contents: write
