@@ -249,11 +249,13 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	}
 	// check if reporter is trying to become a selector, can only switch if havent reported in the last 21 days
 	if bytes.Equal(selector.Reporter, addr.Bytes()) {
-		// get the timestamp of the most recent report for the reporter
-		lastReportTimestamp, err := k.Keeper.oracleKeeper.GetLastReportedAtTimestamp(goCtx, reporterAddr.Bytes())
-		if err != nil && err.Error() != "no reports found" {
+		// get the timestamp of the most recent report for reporter switching to selector (msg signer/selector)
+		lastReportTimestamp, err := k.Keeper.oracleKeeper.GetLastReportedAtTimestamp(goCtx, addr.Bytes())
+		k.Logger().Info("addr.Bytes()", "addr.Bytes()", addr.Bytes())
+		if err != nil {
 			return nil, err
 		}
+		k.Logger().Info("lastReportTimestamp", "lastReportTimestamp", lastReportTimestamp)
 
 		// check if the reporter has reported in the last 21 days
 		currentBlocktime := uint64(sdk.UnwrapSDKContext(goCtx).BlockTime().UnixMilli())
