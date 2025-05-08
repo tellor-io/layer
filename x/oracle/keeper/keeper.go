@@ -6,7 +6,6 @@ import (
 	"fmt"
 	gomath "math"
 	"math/big"
-	"strconv"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/utils"
@@ -365,21 +364,21 @@ func (k Keeper) GetLastReportedAtTimestamp(ctx context.Context, reporter []byte)
 	}
 
 	// get the timestamp of the report at that block
-	iter, err := k.Aggregates.Indexes.BlockHeight.MatchExact(ctx, reportedAtBlock)
+	rng := collections.NewPrefixUntilPairRange[uint64, collections.Pair[[]byte, uint64]](reportedAtBlock).Descending()
+	iter, err := k.Aggregates.Indexes.BlockHeight.Iterate(ctx, rng)
 	if err != nil {
-		return 0, errors.New("error getting aggregate report at height " + strconv.FormatUint(reportedAtBlock, 10) + ": " + err.Error())
+		return 0, errors.New("error iterating over aggregate reports: " + err.Error())
 	}
 	defer iter.Close()
 
 	// pull timestamp from the aggregate report key at given height
 	var timestamp uint64
-	for iter.Valid() {
+	if iter.Valid() {
 		key, err := iter.PrimaryKey()
 		if err != nil {
 			return 0, errors.New("error getting primary key: " + err.Error())
 		}
 		timestamp = key.K2()
-		continue
 	}
 
 	return timestamp, nil

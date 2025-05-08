@@ -224,7 +224,6 @@ func (k Keeper) GetLastReportedAtBlock(ctx context.Context, reporter []byte) (ui
 		if err != nil {
 			return 0, err
 		}
-		fmt.Println("key.K1().K2()", key.K1().K2())
 		blockNumber := key.K1().K2()
 		return blockNumber, nil
 	}

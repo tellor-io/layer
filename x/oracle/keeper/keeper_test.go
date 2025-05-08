@@ -604,70 +604,49 @@ func (s *KeeperTestSuite) TestGetLastReportedAtTimestamp() {
 	require := s.Require()
 	require.NotNil(s.bridgeKeeper)
 	timeNow := time.Now()
-	ctx := s.ctx.WithBlockTime(timeNow).WithBlockHeight(1000)
+	ctx := s.ctx.WithBlockTime(timeNow).WithBlockHeight(100)
+	rk := s.reporterKeeper
 
-	repAddr := sample.AccAddressBytes()
-
-	// no reports found
-	res, err := s.oracleKeeper.GetLastReportedAtTimestamp(ctx, repAddr)
-	require.ErrorContains(err, "no reports found")
-	fmt.Println("res", res)
-
-	queryId := []byte("queryid1")
-	metaId := uint64(10)
-	report := types.MicroReport{
-		QueryId:     queryId,
-		MetaId:      metaId,
-		Reporter:    repAddr.String(),
-		Power:       100,
-		Value:       "0000000000000000000000000000000000000000000000000000000000000088",
-		Timestamp:   timeNow,
-		BlockNumber: 900,
+	// reporter reported at block 50
+	reporter := sample.AccAddressBytes()
+	rk.On("GetLastReportedAtBlock", ctx, reporter.Bytes()).Return(uint64(50), nil).Once()
+	// Theres an aggregate on block 50
+	aggregate := types.Aggregate{
+		Height:            50,
+		AggregateReporter: reporter.String(),
 	}
-
-	require.NoError(s.oracleKeeper.Reports.Set(ctx, collections.Join3(report.QueryId, repAddr.Bytes(), report.MetaId), report))
-
-	// one report found
-	res, err = s.oracleKeeper.GetLastReportedAtTimestamp(ctx, repAddr)
+	timestampSet := uint64(time.Now().Add(-100 * time.Second).UnixMilli())
+	fmt.Println("timestampSet", timestampSet)
+	require.NoError(s.oracleKeeper.Aggregates.Set(ctx, collections.Join([]byte("queryid1"), timestampSet), aggregate))
+	timestampRetrieved, err := s.oracleKeeper.GetLastReportedAtTimestamp(ctx, reporter)
 	require.NoError(err)
-	fmt.Println("res", res)
-	require.Equal(res, uint64(900))
+	require.Equal(timestampSet, timestampRetrieved)
 
-	metaId2 := uint64(11)
-	report2 := types.MicroReport{
-		QueryId:     queryId,
-		MetaId:      metaId2,
-		Reporter:    repAddr.String(),
-		Power:       200,
-		Value:       "0000000000000000000000000000000000000000000000000000000000000088",
-		Timestamp:   timeNow.Add(-10 * time.Second),
-		BlockNumber: 800,
+	// also reported at block 60
+	rk.On("GetLastReportedAtBlock", ctx, reporter.Bytes()).Return(uint64(60), nil).Once()
+	// aggregate on block 60
+	aggregate = types.Aggregate{
+		Height:            60,
+		AggregateReporter: reporter.String(),
 	}
-
-	require.NoError(s.oracleKeeper.Reports.Set(ctx, collections.Join3(report2.QueryId, repAddr.Bytes(), report2.MetaId), report2))
-
-	// two reports, return newest
-	res, err = s.oracleKeeper.GetLastReportedAtTimestamp(ctx, repAddr)
+	timestampSet = uint64(time.Now().Add(-80 * time.Second).UnixMilli())
+	fmt.Println("timestampSet", timestampSet)
+	require.NoError(s.oracleKeeper.Aggregates.Set(ctx, collections.Join([]byte("queryid2"), timestampSet), aggregate))
+	timestampRetrieved, err = s.oracleKeeper.GetLastReportedAtTimestamp(ctx, reporter)
 	require.NoError(err)
-	fmt.Println("res", res)
-	require.Equal(res, uint64(900))
+	require.Equal(timestampSet, timestampRetrieved)
 
-	// three reports, return newest
-	metaId3 := uint64(12)
-	report3 := types.MicroReport{
-		QueryId:     queryId,
-		MetaId:      metaId3,
-		Reporter:    repAddr.String(),
-		Power:       300,
-		Value:       "0000000000000000000000000000000000000000000000000000000000000088",
-		Timestamp:   timeNow.Add(10 * time.Second),
-		BlockNumber: 1000,
+	// also reported at block 70
+	rk.On("GetLastReportedAtBlock", ctx, reporter.Bytes()).Return(uint64(70), nil).Once()
+	// aggregate is on block 69
+	aggregate = types.Aggregate{
+		Height:            69,
+		AggregateReporter: reporter.String(),
 	}
-
-	require.NoError(s.oracleKeeper.Reports.Set(ctx, collections.Join3(report3.QueryId, repAddr.Bytes(), report3.MetaId), report3))
-
-	res, err = s.oracleKeeper.GetLastReportedAtTimestamp(ctx, repAddr)
+	timestampSet = uint64(time.Now().Add(-60 * time.Second).UnixMilli())
+	fmt.Println("timestampSet", timestampSet)
+	require.NoError(s.oracleKeeper.Aggregates.Set(ctx, collections.Join([]byte("queryid3"), timestampSet), aggregate))
+	timestampRetrieved, err = s.oracleKeeper.GetLastReportedAtTimestamp(ctx, reporter)
 	require.NoError(err)
-	fmt.Println("res", res)
-	require.Equal(res, uint64(1000))
+	require.Equal(timestampSet, timestampRetrieved)
 }
