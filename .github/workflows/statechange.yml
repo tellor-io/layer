@@ -16,4 +16,9 @@ jobs:
           labels: |
             stateChange
             noStateChange
+      - uses: mheap/github-action-required-labels@v5
+        with:
+          mode: exactly
+          count: 1
+          labels: |
             backport
