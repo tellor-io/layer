@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../BlobstreamO.sol";
+import "../../interfaces/ITellorDataBridge.sol";
 
 contract BridgeCaller {
-    BlobstreamO public bridge;
+    ITellorDataBridge public dataBridge;
     bytes public oracleData;
     uint256 public oracleDataTimestamp;
 
-    constructor(address _bridge) {
-        bridge = BlobstreamO(_bridge);
+    constructor(address _dataBridge) {
+        dataBridge = ITellorDataBridge(_dataBridge);
     }
 
     function verifyAndSaveOracleData(
@@ -17,7 +17,7 @@ contract BridgeCaller {
         Validator[] calldata _currentValidatorSet,
         Signature[] calldata _sigs
     ) public {
-        bridge.verifyOracleData(_attest, _currentValidatorSet, _sigs);
+        dataBridge.verifyOracleData(_attest, _currentValidatorSet, _sigs);
         oracleData = _attest.report.value;
         oracleDataTimestamp = _attest.report.timestamp;
     }

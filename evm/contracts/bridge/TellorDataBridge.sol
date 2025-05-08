@@ -31,12 +31,12 @@ struct Validator {
 }
 
 
-/// @title BlobstreamO: Tellor Layer -> EVM, Oracle relay.
+/// @title TellorDataBridge: Tellor Layer -> EVM, Oracle relay.
 /// @dev The relay relies on a set of signers to attest to some event on
 /// Tellor Layer. These signers are the validator set, who sign over every
 /// block. At least 2/3 of the voting power of the current
 /// view of the validator set must sign off on new relayed events.
-contract BlobstreamO is ECDSA {
+contract TellorDataBridge is ECDSA {
 
     /*Storage*/
     address public guardian; /// Able to reset the validator set only if the validator set becomes stale.
@@ -66,7 +66,7 @@ contract BlobstreamO is ECDSA {
     error ValidatorTimestampMustIncrease();
 
     /*Functions*/
-    /// @notice Constructor for the BlobstreamO contract.
+    /// @notice Constructor for the TellorDataBridge contract.
     /// @param _guardian Guardian address.
     constructor(
         address _guardian

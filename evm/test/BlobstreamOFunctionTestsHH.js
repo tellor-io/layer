@@ -39,7 +39,7 @@ describe("Blobstream - Function Tests", async function () {
         valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
         // deploy contracts
         blobstream = await ethers.deployContract(
-            "BlobstreamO", [
+            "TellorDataBridge", [
             guardian.address
         ]
         )
@@ -51,7 +51,7 @@ describe("Blobstream - Function Tests", async function () {
     })
     it("init", async function() {
         // deploy a new blobstream contract, same inputs as above
-        blobstream2 = await ethers.deployContract("BlobstreamO", [
+        blobstream2 = await ethers.deployContract("TellorDataBridge", [
             guardian.address
         ])
         await h.expectThrow(blobstream2.connect(accounts[1]).init(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint))
@@ -117,7 +117,8 @@ describe("Blobstream - Function Tests", async function () {
     
     })
     it("verifyOracleData", async function () {
-        queryId = h.hash("myquery")
+        querydata = abiCoder.encode(["string"], ["myquery"])
+        queryId = h.hash(querydata)
         value = abiCoder.encode(["uint256"], [2000])
         blocky = await h.getBlock()
         timestamp = (blocky.timestamp - 2) * 1000
@@ -192,7 +193,8 @@ describe("Blobstream - Function Tests", async function () {
         
     })
     it("alternating validator set updates and verify oracle data", async function () {
-        queryId1 = h.hash("eth-usd")
+        querydata1 = abiCoder.encode(["string"], ["eth-usd"])
+        queryId1 = h.hash(querydata1)
         value1 = abiCoder.encode(["uint256"], [2000])
         blocky = await h.getBlock()
         timestamp1 = (blocky.timestamp - 2) * 1000 // report timestamp
@@ -371,7 +373,8 @@ describe("Blobstream - Function Tests", async function () {
         await blobstream.updateValidatorSet(newValHash, newThreshold, newValTimestamp, currentValSetArray, sigStructArray);
         
         // verify oracle data
-        queryId1 = h.hash("eth-usd")
+        querydata1 = abiCoder.encode(["string"], ["eth-usd"])
+        queryId1 = h.hash(querydata1)
         value1 = abiCoder.encode(["uint256"], [2000])
         blocky = await h.getBlock()
         timestamp1 = (blocky.timestamp - 2) * 1000 // report timestamp

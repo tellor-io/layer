@@ -33,7 +33,7 @@ describe("TokenBridge - Function Tests", async function () {
         valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
         // deploy contracts
         blobstream = await ethers.deployContract(
-            "BlobstreamO", [
+            "TellorDataBridge", [
             guardian.address
         ]
         )
@@ -53,7 +53,7 @@ describe("TokenBridge - Function Tests", async function () {
 
     it("constructor", async function () {
         assert.equal(await tbridge.token(), await token.address)
-        assert.equal(await tbridge.bridge(), await blobstream.address)
+        assert.equal(await tbridge.dataBridge(), await blobstream.address)
     })
     it("withdrawFromLayer", async function () {
         depositAmount = h.toWei("20")
@@ -240,7 +240,8 @@ describe("TokenBridge - Function Tests", async function () {
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit2);
     })
     it("depositLimit", async function () {
-        timeOfLastRelease = await token.getUintVar(h.hash("_LAST_RELEASE_TIME_DAO"))
+        lastReleaseTimeBytes = ethers.utils.solidityKeccak256(["string"], ["_LAST_RELEASE_TIME_DAO"])
+        timeOfLastRelease = await token.getUintVar(lastReleaseTimeBytes)
         blocky = await h.getBlock()
         expectedReleaseAmount = (BigInt(h.toWei("146.94")) *
             (BigInt(blocky.timestamp) - BigInt(timeOfLastRelease))) /
@@ -265,7 +266,8 @@ describe("TokenBridge - Function Tests", async function () {
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit2);
     })
     it("withdrawLimit", async function () {
-        timeOfLastRelease = await token.getUintVar(h.hash("_LAST_RELEASE_TIME_DAO"))
+        lastReleaseTimeBytes = ethers.utils.solidityKeccak256(["string"], ["_LAST_RELEASE_TIME_DAO"])
+        timeOfLastRelease = await token.getUintVar(lastReleaseTimeBytes)
         blocky = await h.getBlock()
         expectedReleaseAmount = (BigInt(h.toWei("146.94")) *
             (BigInt(blocky.timestamp) - BigInt(timeOfLastRelease))) /
@@ -604,7 +606,8 @@ describe("TokenBridge - Function Tests", async function () {
     it("mintToOracle on deposit", async function() {
         const bridge2 = await ethers.deployContract("TestTokenBridge", [token.address,blobstream.address, oldOracle.address])
         await token.setOracleMintRecipient(bridge2.address)
-        deployTime = await token.getUintVar(h.hash("_LAST_RELEASE_TIME_DAO"))
+        lastReleaseTimeBytes = ethers.utils.solidityKeccak256(["string"], ["_LAST_RELEASE_TIME_DAO"])
+        deployTime = await token.getUintVar(lastReleaseTimeBytes)
         bridgeBal = await token.balanceOf(await bridge2.address)
         assert(BigInt(bridgeBal) == BigInt(0), "bridge bal should be correct")
         await token.approve(bridge2.address, h.toWei("10000"))
