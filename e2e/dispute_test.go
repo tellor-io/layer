@@ -1259,10 +1259,10 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Error(err)
 	fmt.Println("TX HASH (user1 tries to remove self as selector): ", txHash)
 
-	// user1 becomes a selector, removed from reporter store
+	// user1 tries to become a selector, cant becuase of reporting in the last 21 days
 	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "switch-reporter", user0Addr, "--keyring-dir", val1.HomeDir())
-	require.NoError(err)
-	fmt.Println("TX HASH (user1 becomes a selector): ", txHash)
+	require.Error(err)
+	fmt.Println("TX HASH (user1 tries to become a selector): ", txHash)
 
 	// check reporter module
 	res, _, err = val1.ExecQuery(ctx, "reporter", "reporters")
