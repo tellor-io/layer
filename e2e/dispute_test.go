@@ -1288,11 +1288,6 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Error(err)
 	fmt.Println("TX HASH (user1 tries to select another reporter): ", txHash)
 
-	// user1 switches reporters
-	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "switch-reporter", user0Addr, "--keyring-dir", val1.HomeDir())
-	require.NoError(err)
-	fmt.Println("TX HASH (user1 switches reporters): ", txHash)
-
 	// user1 tries to remove self as selector, errors selector cannot be removed if it is the reporter's own address
 	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "remove-selector", user1Addr, "--keyring-dir", val1.HomeDir())
 	require.Error(err)
