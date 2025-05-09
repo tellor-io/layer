@@ -1259,7 +1259,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Error(err)
 	fmt.Println("TX HASH (user1 tries to remove self as selector): ", txHash)
 
-	// user1 tries to become a selector, cant becuase of reporting in the last 21 days
+	// user1 tries to become a selector, cant because of reporting in the last 21 days
 	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "switch-reporter", user0Addr, "--keyring-dir", val1.HomeDir())
 	require.Error(err)
 	fmt.Println("TX HASH (user1 tries to become a selector): ", txHash)
@@ -1269,7 +1269,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.NoError(err)
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
-	require.Equal(len(reportersRes.Reporters), 2) // 1 reporter + 1 validator reporter
+	require.Equal(len(reportersRes.Reporters), numReporters+1) // 2 reporters + 1 validator reporter
 	fmt.Println("reportersRes: ", reportersRes)
 
 	// user1 redelegates to val2
