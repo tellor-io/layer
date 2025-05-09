@@ -131,7 +131,7 @@ func TestSelectReporter(t *testing.T) {
 }
 
 func TestSwitchReporter(t *testing.T) {
-	k, sk, _, rk, _, ms, ctx := setupMsgServer(t)
+	k, sk, _, _, _, ms, ctx := setupMsgServer(t)
 	ctx = ctx.WithBlockTime(time.Now())
 	selector, reporter, reporter2 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
 
@@ -199,7 +199,7 @@ func TestSwitchReporter(t *testing.T) {
 	delegationAmounts := types.DelegationsAmounts{TokenOrigins: tokenOrigins, Total: math.NewInt(1000 * 1e6)}
 	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporter.Bytes(), uint64(ctx.BlockHeight()))), delegationAmounts))
 
-	rk.On("MaxReportBufferWindow", ctx).Return(700_000, nil)
+	// rk.On("MaxReportBufferWindow", ctx).Return(700_000, nil)
 	sk.On("UnbondingTime", ctx).Return(1814400*time.Second, nil)
 	_, err = ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selector.String(), ReporterAddress: reporter2.String()})
 	require.NoError(t, err)

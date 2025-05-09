@@ -240,3 +240,20 @@ func BenchmarkReporterTrackStakeChange(b *testing.B) {
 		require.NoError(b, err)
 	}
 }
+
+func TestGetLastReportedAtBlock(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter := sample.AccAddressBytes()
+	ctx = ctx.WithBlockHeight(4)
+
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter.Bytes(), uint64(1))), types.DelegationsAmounts{}))
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter.Bytes(), uint64(2))), types.DelegationsAmounts{}))
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter.Bytes(), uint64(3))), types.DelegationsAmounts{}))
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid2"), collections.Join(reporter.Bytes(), uint64(3))), types.DelegationsAmounts{}))
+
+	lastReportedAtBlock, err := k.GetLastReportedAtBlock(ctx, reporter)
+	require.NoError(t, err)
+
+	expectedLastReportedAtBlock := uint64(3)
+	require.Equal(t, expectedLastReportedAtBlock, lastReportedAtBlock)
+}

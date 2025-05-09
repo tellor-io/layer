@@ -31,6 +31,30 @@ func (_m *ReporterKeeper) DivvyingTips(ctx context.Context, reporterAddr types.A
 	return r0
 }
 
+// GetLastReportedAtBlock provides a mock function with given fields: ctx, reporter
+func (_m *ReporterKeeper) GetLastReportedAtBlock(ctx context.Context, reporter []byte) (uint64, error) {
+	ret := _m.Called(ctx, reporter)
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) (uint64, error)); ok {
+		return rf(ctx, reporter)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) uint64); ok {
+		r0 = rf(ctx, reporter)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []byte) error); ok {
+		r1 = rf(ctx, reporter)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ReporterStake provides a mock function with given fields: ctx, repAddress, queryId
 func (_m *ReporterKeeper) ReporterStake(ctx context.Context, repAddress types.AccAddress, queryId []byte) (math.Int, error) {
 	ret := _m.Called(ctx, repAddress, queryId)

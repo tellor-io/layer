@@ -355,3 +355,35 @@ func (k Keeper) DecodeBridgeDeposit(ctx context.Context, queryData []byte) (uint
 
 	return depositId, nil
 }
+
+func (k Keeper) GetLastReportedAtTimestamp(ctx context.Context, reporter []byte) (uint64, error) {
+	// get the last block they reported at
+	reportedAtBlock, err := k.reporterKeeper.GetLastReportedAtBlock(ctx, reporter)
+	if err != nil {
+		return 0, errors.New("error getting last reported block: " + err.Error())
+	}
+
+	// get the timestamp of the report at that block
+	rng := collections.NewPrefixUntilPairRange[uint64, collections.Pair[[]byte, uint64]](reportedAtBlock).Descending()
+	iter, err := k.Aggregates.Indexes.BlockHeight.Iterate(ctx, rng)
+	if err != nil {
+		return 0, errors.New("error iterating over aggregate reports: " + err.Error())
+	}
+	defer iter.Close()
+
+	// pull timestamp from the aggregate report key at given height
+	var timestamp uint64
+	if iter.Valid() {
+		key, err := iter.PrimaryKey()
+		if err != nil {
+			return 0, errors.New("error getting primary key: " + err.Error())
+		}
+		timestamp = key.K2()
+	}
+
+	if timestamp == 0 && reportedAtBlock != 0 {
+		return 0, errors.New("no reports found")
+	}
+
+	return timestamp, nil
+}
