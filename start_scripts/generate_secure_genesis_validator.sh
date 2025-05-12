@@ -10,7 +10,7 @@ export KEYRING_BACKEND="test"
 export PASSWORD="password"
 export MONIKER="lukemoniker"
 export KEY_NAME="luke"
-export CHAIN_ID="layertest-4"
+export CHAIN_ID="layer-mainnet-1"
 export LAYERD_HOME="/home/ubuntu/.layer/luke"
 
 # Remove old test chain data (if present)
@@ -21,11 +21,11 @@ sudo rm -rf $LAYERD_HOME
 echo "Building layerd..."
 go build ./cmd/layerd
 
-./layerd init layer --chain-id layertest-4
+./layerd init layer --chain-id layer-mainnet-1
 
 # Initialize chain node with the folder for validator
 echo "Initializing chain node for $KEY_NAME..."
-./layerd init lukemoniker --chain-id layertest-4 --home /home/ubuntu/.layer/luke
+./layerd init lukemoniker --chain-id layer-mainnet-1 --home /home/ubuntu/.layer/luke
 
 echo "Change denom to loya in genesis file..."
 sed -i 's/"stake"/"loya"/g' $LAYERD_HOME/config/genesis.json
@@ -104,7 +104,7 @@ sed -i 's/^enable-unsafe-cors = false/enable-unsafe-cors = true/g' $LAYERD_HOME/
 
 echo "Enabled metrics sinks/promethues"
 sed -i 's/^enabled = false/enabled = true/g' $LAYERD_HOME/config/app.toml
-sed -i '/global-labels *= *\[/,/\]/ c\global-labels = [\n      ["chain_id", "layertest-4"]\n]' $LAYERD_HOME/config/app.toml
+sed -i '/global-labels *= *\[/,/\]/ c\global-labels = [\n      ["chain_id", "layer-mainnet-1"]\n]' $LAYERD_HOME/config/app.toml
 # echo "Set prometheus retention time to 60s"
 sed -i 's/^prometheus-retention-time = 0/prometheus-retention-time = 60/g' $LAYERD_HOME/config/app.toml
 
