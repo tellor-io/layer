@@ -7,10 +7,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-const (
-	genQueryTypeSpotPrice     = "spotprice"
-	genQueryTypeBridgeDeposit = "trbbridge"
-)
+// const (
+// 	genQueryTypeSpotPrice     = "spotprice"
+// 	genQueryTypeBridgeDeposit = "trbbridge"
+// )
 
 // InitGenesis initializes the module's state from a provided genesis state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
