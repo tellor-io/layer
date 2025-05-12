@@ -65,6 +65,60 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	}
 	genesis.Params = params
 
+	iterSelectorTips, err := k.SelectorTips.IterateRaw(ctx, nil, nil, collections.OrderDescending)
+	if err != nil {
+		panic(err)
+	}
+	defer iterSelectorTips.Close()
+
+	for ; iterSelectorTips.Valid(); iterSelectorTips.Next() {
+		selectorAddr, err := iterSelectorTips.Key()
+		if err != nil {
+			panic(err)
+		}
+		tips, err := iterSelectorTips.Value()
+		if err != nil {
+			panic(err)
+		}
+		genesis.SelectorTips = append(genesis.SelectorTips, &types.SelectorTipsStateEntry{SelectorAddress: selectorAddr, Tips: tips})
+	}
+
+	iterDisputedDelAmt, err := k.DisputedDelegationAmounts.IterateRaw(ctx, nil, nil, collections.OrderDescending)
+	if err != nil {
+		panic(err)
+	}
+	defer iterDisputedDelAmt.Close()
+
+	for ; iterDisputedDelAmt.Valid(); iterDisputedDelAmt.Next() {
+		disputeHashId, err := iterDisputedDelAmt.Key()
+		if err != nil {
+			panic(err)
+		}
+		delAmount, err := iterDisputedDelAmt.Value()
+		if err != nil {
+			panic(err)
+		}
+		genesis.DisputedDelegationAmounts = append(genesis.DisputedDelegationAmounts, &types.DisputedDelegationAmountStateEntry{HashId: disputeHashId, DelegationAmount: &delAmount})
+	}
+
+	iterFeePaidFromStake, err := k.FeePaidFromStake.IterateRaw(ctx, nil, nil, collections.OrderDescending)
+	if err != nil {
+		panic(err)
+	}
+	defer iterFeePaidFromStake.Close()
+
+	for ; iterFeePaidFromStake.Valid(); iterFeePaidFromStake.Next() {
+		disputeHashId, err := iterFeePaidFromStake.Key()
+		if err != nil {
+			panic(err)
+		}
+		delAmount, err := iterFeePaidFromStake.Value()
+		if err != nil {
+			panic(err)
+		}
+		genesis.FeePaidFromStake = append(genesis.FeePaidFromStake, &types.FeePaidFromStakeStateEntry{HashId: disputeHashId, DelegationAmount: &delAmount})
+	}
+
 	exportModuleData(ctx, k)
 	// this line is used by starport scaffolding # genesis/module/export
 	return genesis

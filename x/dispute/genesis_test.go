@@ -1,6 +1,7 @@
 package dispute_test
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -59,5 +60,9 @@ func TestGenesis(t *testing.T) {
 	require.Equal(t, genesisState.DisputeFeePayer, got.DisputeFeePayer)
 	require.Equal(t, genesisState.Dust, got.Dust)
 	require.Equal(t, genesisState.VoteCountsByGroup, got.VoteCountsByGroup)
+	// Clean up the exported state file
+	err := os.Remove("dispute_module_state.json")
+	require.NoError(t, err)
+
 	// this line is used by starport scaffolding # genesis/test/assert
 }
