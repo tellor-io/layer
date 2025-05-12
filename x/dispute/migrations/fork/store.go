@@ -3,6 +3,7 @@ package fork
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -450,7 +451,7 @@ func processVoteCountsSection(ctx context.Context, decoder *json.Decoder, storeS
 	// Read "vote_counts_by_group" property name
 	t, err := decoder.Token()
 	if err != nil {
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return nil // Vote counts section is optional
 		}
 		return err

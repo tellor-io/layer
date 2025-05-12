@@ -144,7 +144,10 @@ func (w *ModuleStateWriter) WriteValue(name string, value interface{}) error {
 	}
 
 	// Encode the value
-	w.encoder.Encode(value)
+	err := w.encoder.Encode(value)
+	if err != nil {
+		return err
+	}
 
 	// Remove the newline that Encode added
 	if _, err := w.file.Seek(-1, io.SeekCurrent); err != nil {
@@ -159,7 +162,10 @@ func (w *ModuleStateWriter) WriteValue(name string, value interface{}) error {
 }
 
 func (w *ModuleStateWriter) Close() {
-	w.file.Write([]byte("\n}"))
+	_, err := w.file.Write([]byte("\n}"))
+	if err != nil {
+		panic(err)
+	}
 	// Only close the file if it hasn't been closed yet
 	if w.file != nil {
 		// Flush any buffered data to disk
