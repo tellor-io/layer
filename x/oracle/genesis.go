@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/hex"
 
-	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 )
 
 // InitGenesis initializes the module's state from a provided genesis state.
@@ -190,5 +191,4 @@ func exportModuleData(ctx context.Context, k keeper.Keeper) {
 	}
 
 	writer.Close()
-
 }

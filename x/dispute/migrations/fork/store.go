@@ -8,13 +8,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -183,7 +184,7 @@ func processVotesSection(ctx context.Context, decoder *json.Decoder, storeServic
 		return fmt.Errorf("expected votes section, got %v", t)
 	}
 
-	//votesStore := prefix.NewStore(store, disputetypes.VotesPrefix)
+	// votesStore := prefix.NewStore(store, disputetypes.VotesPrefix)
 
 	sb := collections.NewSchemaBuilder(storeService)
 	votesMap := collections.NewMap(sb,

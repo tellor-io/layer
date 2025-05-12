@@ -7,15 +7,16 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/tellor-io/layer/utils"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
-	"github.com/tellor-io/layer/utils"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 )
 
 type TipperTotalData struct {

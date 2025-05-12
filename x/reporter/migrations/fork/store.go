@@ -7,14 +7,15 @@ import (
 	"os"
 	"path/filepath"
 
+	layertypes "github.com/tellor-io/layer/types"
+	"github.com/tellor-io/layer/x/reporter/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/tellor-io/layer/x/reporter/types"
 
-	layertypes "github.com/tellor-io/layer/types"
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 type ReporterStateEntry struct {
@@ -43,7 +44,6 @@ type FeePaidFromStakeStateEntry struct {
 }
 
 func MigrateFork(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec, pathToFile string) error {
-
 	path := filepath.Join(
 		pathToFile,
 		"reporter_module_state.json",

@@ -91,5 +91,4 @@ func TestGenesis(t *testing.T) {
 
 	err := os.Remove("oracle_module_state.json")
 	require.NoError(err)
-
 }

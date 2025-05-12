@@ -9,6 +9,14 @@ import (
 	"os"
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cosmosdb "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/x/reporter/keeper"
+	"github.com/tellor-io/layer/x/reporter/migrations/fork"
+	"github.com/tellor-io/layer/x/reporter/mocks"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
@@ -16,19 +24,13 @@ import (
 	sdkStore "cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cosmosdb "github.com/cosmos/cosmos-db"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/stretchr/testify/require"
-	"github.com/tellor-io/layer/x/reporter/keeper"
-	"github.com/tellor-io/layer/x/reporter/migrations/fork"
-	"github.com/tellor-io/layer/x/reporter/mocks"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 )
 
 type ReporterStateEntry struct {
@@ -116,7 +118,8 @@ func TestMigrateFork(t *testing.T) {
 	// Verify reporters were migrated correctly
 	for _, entry := range moduleState.Reporters {
 		key := make([]byte, bytesKeyCodec.Size(entry.ReporterAddr))
-		bytesKeyCodec.Encode(key, entry.ReporterAddr)
+		_, err := bytesKeyCodec.Encode(key, entry.ReporterAddr)
+		require.NoError(t, err)
 		fmt.Println("key: ", hex.EncodeToString(key))
 		reporter, err := k.Reporters.Get(ctx, key)
 		require.NoError(t, err)
@@ -126,7 +129,8 @@ func TestMigrateFork(t *testing.T) {
 	// Verify selectors were migrated correctly
 	for _, entry := range moduleState.Selectors {
 		key := make([]byte, bytesKeyCodec.Size(entry.SelectorAddr))
-		bytesKeyCodec.Encode(key, entry.SelectorAddr)
+		_, err := bytesKeyCodec.Encode(key, entry.SelectorAddr)
+		require.NoError(t, err)
 		selector, err := k.Selectors.Get(ctx, key)
 		require.NoError(t, err)
 		require.Equal(t, entry.Selector, selector)
@@ -135,7 +139,8 @@ func TestMigrateFork(t *testing.T) {
 	// Verify selector tips were migrated correctly
 	for _, entry := range moduleState.SelectorTips {
 		key := make([]byte, bytesKeyCodec.Size(entry.SelectorAddress))
-		bytesKeyCodec.Encode(key, entry.SelectorAddress)
+		_, err := bytesKeyCodec.Encode(key, entry.SelectorAddress)
+		require.NoError(t, err)
 		selectorTips, err := k.SelectorTips.Get(ctx, key)
 		require.NoError(t, err)
 		tips := math.LegacyMustNewDecFromStr(entry.Tips)
@@ -145,7 +150,8 @@ func TestMigrateFork(t *testing.T) {
 	// Verify disputed delegation amounts were migrated correctly
 	for _, entry := range moduleState.DisputedDelegationAmounts {
 		key := make([]byte, bytesKeyCodec.Size(entry.HashId))
-		bytesKeyCodec.Encode(key, entry.HashId)
+		_, err := bytesKeyCodec.Encode(key, entry.HashId)
+		require.NoError(t, err)
 		disputedDelegationAmount, err := k.DisputedDelegationAmounts.Get(ctx, key)
 		require.NoError(t, err)
 		require.Equal(t, entry.DelegationAmount, disputedDelegationAmount)
@@ -154,7 +160,8 @@ func TestMigrateFork(t *testing.T) {
 	// Verify fee paid from stake were migrated correctly
 	for _, entry := range moduleState.FeePaidFromStake {
 		key := make([]byte, bytesKeyCodec.Size(entry.HashId))
-		bytesKeyCodec.Encode(key, entry.HashId)
+		_, err := bytesKeyCodec.Encode(key, entry.HashId)
+		require.NoError(t, err)
 		feePaidFromStake, err := k.FeePaidFromStake.Get(ctx, key)
 		require.NoError(t, err)
 		require.Equal(t, entry.DelegationAmount, feePaidFromStake)

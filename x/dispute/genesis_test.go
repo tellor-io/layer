@@ -5,12 +5,13 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/testutil/nullify"
 	"github.com/tellor-io/layer/x/dispute"
 	"github.com/tellor-io/layer/x/dispute/types"
+
+	"cosmossdk.io/math"
 )
 
 func TestGenesis(t *testing.T) {

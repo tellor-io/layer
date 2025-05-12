@@ -44,12 +44,12 @@ func NewModuleStateWriter(filename string) (*ModuleStateWriter, error) {
 	tempFile := filename + ".temp"
 
 	// Create parent directories if they don't exist
-	if err := os.MkdirAll(filepath.Dir(tempFile), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(tempFile), 0o755); err != nil {
 		return nil, fmt.Errorf("failed to create directories: %w", err)
 	}
 
 	// Create or truncate the temporary file
-	file, err := os.OpenFile(tempFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	file, err := os.OpenFile(tempFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create temp file: %w", err)
 	}
@@ -159,7 +159,6 @@ func (w *ModuleStateWriter) WriteValue(name string, value interface{}) error {
 }
 
 func (w *ModuleStateWriter) Close() {
-
 	w.file.Write([]byte("\n}"))
 	// Only close the file if it hasn't been closed yet
 	if w.file != nil {
@@ -187,7 +186,7 @@ func (w *ModuleStateWriter) Close() {
 	}
 
 	// Create or truncate the final file
-	finalFile, err := os.OpenFile(w.finalFilename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+	finalFile, err := os.OpenFile(w.finalFilename, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
 	if err != nil {
 		panic(err)
 	}

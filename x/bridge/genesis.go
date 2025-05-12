@@ -3,9 +3,10 @@ package bridge
 import (
 	"errors"
 
-	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/types"
+
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )

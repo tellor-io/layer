@@ -18,7 +18,7 @@ func DefaultGenesis() *GenesisState {
 		Params:         DefaultParams(),
 		Cyclelist:      InitialCycleList(),
 		QueryDataLimit: InitialQueryDataLimit(),
-		QuerySequencer: 1,
+		QuerySequencer: 0,
 	}
 }
 

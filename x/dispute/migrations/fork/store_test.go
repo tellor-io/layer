@@ -8,6 +8,14 @@ import (
 	"os"
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cosmosdb "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/x/dispute/keeper"
+	"github.com/tellor-io/layer/x/dispute/migrations/fork"
+	"github.com/tellor-io/layer/x/dispute/mocks"
+	disputetypes "github.com/tellor-io/layer/x/dispute/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
@@ -15,17 +23,11 @@ import (
 	sdkStore "cosmossdk.io/store"
 	"cosmossdk.io/store/metrics"
 	storetypes "cosmossdk.io/store/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cosmosdb "github.com/cosmos/cosmos-db"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/require"
-	"github.com/tellor-io/layer/x/dispute/keeper"
-	"github.com/tellor-io/layer/x/dispute/migrations/fork"
-	"github.com/tellor-io/layer/x/dispute/mocks"
-	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 )
 
 type StreamModuleStateData struct {
