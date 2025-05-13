@@ -48,6 +48,12 @@ func (k msgServer) NoStakeReport(ctx context.Context, msg *types.MsgNoStakeRepor
 		return nil, err
 	}
 
+	// add queryId to tracker
+	err = k.keeper.NoStakeTracker.Set(sdkCtx, collections.Join(uint64(sdkCtx.BlockHeight()), queryId), reporterAddr.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }
 

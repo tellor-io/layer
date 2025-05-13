@@ -865,6 +865,7 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 			app.ReporterKeeper,
 			app.StakingKeeper,
 			app.GlobalFeeKeeper,
+			app.OracleKeeper,
 		},
 	)
 	if err != nil {

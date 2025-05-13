@@ -5,6 +5,8 @@ import (
 
 	globalfeeante "github.com/strangelove-ventures/globalfee/x/globalfee/ante"
 	globalfeekeeper "github.com/strangelove-ventures/globalfee/x/globalfee/keeper"
+	oante "github.com/tellor-io/layer/x/oracle/ante"
+	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	rante "github.com/tellor-io/layer/x/reporter/ante"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/types"
@@ -19,6 +21,7 @@ type HandlerOptions struct {
 	ReporterKeeper  keeper.Keeper
 	StakingKeeper   types.StakingKeeper
 	GlobalFeeKeeper globalfeekeeper.Keeper
+	OracleKeeper    oraclekeeper.Keeper
 }
 
 // NewAnteHandler returns an AnteHandler that checks and increments sequence
@@ -52,6 +55,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		globalfeeante.NewFeeDecorator([]string{}, options.GlobalFeeKeeper, 2_000_000),
+		oante.NewTrackNoStakeReportingDecorator(options.OracleKeeper),
 	}
 
 	return sdk.ChainAnteDecorators(anteDecorators...), nil

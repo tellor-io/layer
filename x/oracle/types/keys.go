@@ -55,6 +55,7 @@ var (
 	QueryByExpirationPrefix          = collections.NewPrefix(29)
 	BridgeDepositQueuePrefix         = collections.NewPrefix(30)
 	NoStakeReportsPrefix             = collections.NewPrefix(31)
+	NoStakeTrackerPrefix             = collections.NewPrefix(32)
 )
 
 func KeyPrefix(p string) []byte {

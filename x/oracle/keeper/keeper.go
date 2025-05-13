@@ -62,6 +62,7 @@ type (
 		ValuesWeightedMode collections.Map[collections.Pair[uint64, string], uint64] // key: queryMeta.Id, valueHexstring  value: total power of reporters that submitted the value
 		// storage for bridge deposit reports queue
 		BridgeDepositQueue collections.Map[collections.Pair[uint64, uint64], []byte] // key: aggregate timestamp, queryMetaId, value: queryData
+		NoStakeTracker     collections.Map[collections.Pair[uint64, []byte], []byte] // key: blockHeight, queryId, value: reporter
 	}
 )
 
@@ -160,6 +161,12 @@ func NewKeeper(
 			"bridge_deposit_queue",
 			collections.PairKeyCodec(collections.Uint64Key, collections.Uint64Key),
 			collections.BytesValue),
+		NoStakeTracker: collections.NewMap(sb,
+			types.NoStakeTrackerPrefix,
+			"no_stake_tracker",
+			collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey),
+			collections.BytesValue,
+		),
 	}
 
 	schema, err := sb.Build()
