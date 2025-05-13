@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/viper"
-	"github.com/tellor-io/layer/x/oracle/migrations/fork"
+	"github.com/tellor-io/layer/x/reporter/migrations/fork"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -19,7 +19,7 @@ func NewMigrator(keeper Keeper) Migrator {
 	return Migrator{keeper: keeper}
 }
 
-// MigrateFork migrates from version 2 to 3.
+// MigrateFork migrates from version to forked state
 func (m Migrator) MigrateFork(ctx sdk.Context) error {
 	homeDir := viper.GetString("home")
 	if homeDir == "" {
