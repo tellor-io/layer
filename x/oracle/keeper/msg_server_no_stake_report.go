@@ -18,13 +18,25 @@ func (k msgServer) NoStakeReport(ctx context.Context, msg *types.MsgNoStakeRepor
 		return nil, err
 	}
 
+	queryData := msg.QueryData
+	value := msg.Value
+	timestamp := sdkCtx.BlockTime().UnixMilli()
+	queryId := utils.QueryIDFromData(queryData)
+
+	// check if report for this queryId already exists at this height
+	exists, err := k.keeper.NoStakeReports.Has(sdkCtx, collections.Join(queryId, uint64(timestamp)))
+	if err != nil && err != collections.ErrNotFound {
+		return nil, err
+	}
+	if exists {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "report for this queryId already exists at this height, please resubmit")
+	}
+
 	reporterAddr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	queryData := msg.QueryData
-	value := msg.Value
 	// Size limit check (0.5MB)
 	limit, err := k.keeper.QueryDataLimit.Get(ctx)
 	if err != nil {
@@ -34,27 +46,18 @@ func (k msgServer) NoStakeReport(ctx context.Context, msg *types.MsgNoStakeRepor
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "query data too large")
 	}
 
-	timestamp := sdkCtx.BlockTime()
-	queryId := utils.QueryIDFromData(queryData)
-
-	err = k.keeper.NoStakeReports.Set(sdkCtx, collections.Join3(queryId, reporterAddr.Bytes(), uint64(timestamp.UnixMilli())), types.NoStakeMicroReport{
+	err = k.keeper.NoStakeReports.Set(sdkCtx, collections.Join(queryId, uint64(timestamp)), types.NoStakeMicroReport{
 		Reporter:    reporterAddr.String(),
 		QueryData:   queryData,
 		Value:       value,
-		Timestamp:   timestamp,
+		Timestamp:   sdkCtx.BlockTime(),
 		BlockNumber: uint64(sdkCtx.BlockHeight()),
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	// add queryId to tracker
-	err = k.keeper.NoStakeTracker.Set(sdkCtx, collections.Join(uint64(sdkCtx.BlockHeight()), queryId), reporterAddr.Bytes())
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, nil
+	return &types.MsgNoStakeReportResponse{}, nil
 }
 
 func (k msgServer) validateNoStakeReport(msg *types.MsgNoStakeReport) error {
