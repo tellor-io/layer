@@ -72,3 +72,8 @@ type StakingHooks interface {
 type RegistryKeeper interface {
 	MaxReportBufferWindow(ctx context.Context) (uint64, error)
 }
+
+// OracleKeeper defines the expected interface for the Oracle module.
+type OracleKeeper interface {
+	GetLastReportedAtTimestamp(ctx context.Context, reporter []byte) (uint64, error)
+}

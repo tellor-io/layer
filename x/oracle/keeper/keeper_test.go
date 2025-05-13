@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"encoding/hex"
 	"errors"
+	"fmt"
 	gomath "math"
 	"math/big"
 	"sort"
@@ -597,4 +598,58 @@ func (s *KeeperTestSuite) TestAutoClaimDeposits() {
 	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
 	s.bridgeKeeper.On("ClaimDeposit", ctx, deposits[4].DepositId, deposits[4].AggregateTimestamp).Return(nil).Once()
 	require.NoError(s.oracleKeeper.AutoClaimDeposits(ctx))
+}
+
+func (s *KeeperTestSuite) TestGetLastReportedAtTimestamp() {
+	require := s.Require()
+	require.NotNil(s.bridgeKeeper)
+	timeNow := time.Now()
+	ctx := s.ctx.WithBlockTime(timeNow).WithBlockHeight(100)
+	rk := s.reporterKeeper
+
+	// reporter reported at block 50
+	reporter := sample.AccAddressBytes()
+	rk.On("GetLastReportedAtBlock", ctx, reporter.Bytes()).Return(uint64(50), nil).Once()
+	// Theres an aggregate on block 50
+	aggregate := types.Aggregate{
+		Height:            50,
+		AggregateReporter: reporter.String(),
+	}
+	timestampSet := uint64(time.Now().Add(-100 * time.Second).UnixMilli())
+	fmt.Println("timestampSet", timestampSet)
+	require.NoError(s.oracleKeeper.Aggregates.Set(ctx, collections.Join([]byte("queryid1"), timestampSet), aggregate))
+	timestampRetrieved, err := s.oracleKeeper.GetLastReportedAtTimestamp(ctx, reporter)
+	fmt.Println("timestampRetrieved", timestampRetrieved)
+	require.NoError(err)
+	require.Equal(timestampSet, timestampRetrieved)
+
+	// also reported at block 60
+	rk.On("GetLastReportedAtBlock", ctx, reporter.Bytes()).Return(uint64(60), nil).Once()
+	// aggregate on block 60
+	aggregate = types.Aggregate{
+		Height:            60,
+		AggregateReporter: reporter.String(),
+	}
+	timestampSet = uint64(time.Now().Add(-80 * time.Second).UnixMilli())
+	fmt.Println("timestampSet", timestampSet)
+	require.NoError(s.oracleKeeper.Aggregates.Set(ctx, collections.Join([]byte("queryid2"), timestampSet), aggregate))
+	timestampRetrieved, err = s.oracleKeeper.GetLastReportedAtTimestamp(ctx, reporter)
+	fmt.Println("timestampRetrieved", timestampRetrieved)
+	require.NoError(err)
+	require.Equal(timestampSet, timestampRetrieved)
+
+	// also reported at block 70
+	rk.On("GetLastReportedAtBlock", ctx, reporter.Bytes()).Return(uint64(70), nil).Once()
+	// aggregate is on block 69
+	aggregate = types.Aggregate{
+		Height:            69,
+		AggregateReporter: reporter.String(),
+	}
+	timestampSet = uint64(time.Now().Add(-60 * time.Second).UnixMilli())
+	fmt.Println("timestampSet", timestampSet)
+	require.NoError(s.oracleKeeper.Aggregates.Set(ctx, collections.Join([]byte("queryid3"), timestampSet), aggregate))
+	timestampRetrieved, err = s.oracleKeeper.GetLastReportedAtTimestamp(ctx, reporter)
+	fmt.Println("timestampRetrieved", timestampRetrieved)
+	require.NoError(err)
+	require.Equal(timestampSet, timestampRetrieved)
 }
