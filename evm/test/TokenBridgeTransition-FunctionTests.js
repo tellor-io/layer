@@ -52,11 +52,12 @@ describe("Function Tests - NewTransition", function() {
     parachute = await ethers.getContractAt("contracts/tellor360/oldContracts/contracts/interfaces/ITellor.sol:ITellor",PARACHUTE, devWallet);
 
     blobstream = await ethers.deployContract(
-      "BlobstreamO", [
+      "TellorDataBridge", [
       DEV_WALLET
     ]
     )
-    await blobstream.init(1, 2, UNBONDING_PERIOD, h.hash("testy"))
+    fakeValCheckpoint = ethers.utils.solidityKeccak256(["string"], ["testy"])
+    await blobstream.init(1, 2, UNBONDING_PERIOD, fakeValCheckpoint)
     // deploy tokenbridge
     tbridge = await ethers.deployContract("TokenBridge", [TELLOR_MASTER,await blobstream.address, TELLORFLEX])
     // stake reporter
@@ -94,7 +95,7 @@ describe("Function Tests - NewTransition", function() {
   })
   it("transition worked", async function() {
     // check if new oracle address is set
-    assert.equal(await tellor.getAddressVars(h.hash("_ORACLE_CONTRACT")), await tbridge.address)
+    assert.equal(await tellor.getAddressVars(ethers.utils.solidityKeccak256(["string"], ["_ORACLE_CONTRACT"])), await tbridge.address)
   })
 
   it("addStakingRewards()", async function () {

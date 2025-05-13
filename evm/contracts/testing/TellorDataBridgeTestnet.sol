@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "../bridge/BlobstreamO.sol";
+import "../bridge/TellorDataBridge.sol";
 
-contract BlobstreamOTestnet is BlobstreamO {
-    constructor(address _guardian) BlobstreamO(_guardian) {}
+contract TellorDataBridgeTestnet is TellorDataBridge {
+    constructor(address _guardian) TellorDataBridge(_guardian) {}
 
      /// @notice This function is called by the guardian to reset the validator set
     /// on testnet. Not to be used on mainnet.

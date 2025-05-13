@@ -15,7 +15,7 @@ const homeDirectory = os.homedir();
 const CHARLIE_MNEMONIC_FILE = path.join(homeDirectory, 'Desktop', 'charlie_mnemonic.txt');
 
 
-const hash = web3.utils.keccak256;
+const hash = ethers.utils.keccak256;
 var assert = require('assert');
 const abiCoder = new ethers.utils.AbiCoder();
 

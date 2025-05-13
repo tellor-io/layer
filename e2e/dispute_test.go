@@ -1259,17 +1259,18 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Error(err)
 	fmt.Println("TX HASH (user1 tries to remove self as selector): ", txHash)
 
-	// user1 becomes a selector, removed from reporter store
+
+	// user1 tries to become a selector, cant because of reporting in the last 21 days
 	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "switch-reporter", user0Addr, "--keyring-dir", val1.HomeDir())
-	require.NoError(err)
-	fmt.Println("TX HASH (user1 becomes a selector): ", txHash)
+	require.Error(err)
+	fmt.Println("TX HASH (user1 tries to become a selector): ", txHash)
 
 	// check reporter module
 	res, _, err = val1.ExecQuery(ctx, "reporter", "reporters")
 	require.NoError(err)
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
-	require.Equal(len(reportersRes.Reporters), 2) // 1 reporter + 1 validator reporter
+	require.Equal(len(reportersRes.Reporters), numReporters+1) // 2 reporters + 1 validator reporter
 	fmt.Println("reportersRes: ", reportersRes)
 
 	// user1 redelegates to val2
@@ -1287,11 +1288,6 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "select-reporter", user0Addr, "--keyring-dir", val1.HomeDir())
 	require.Error(err)
 	fmt.Println("TX HASH (user1 tries to select another reporter): ", txHash)
-
-	// user1 switches reporters
-	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "switch-reporter", user0Addr, "--keyring-dir", val1.HomeDir())
-	require.NoError(err)
-	fmt.Println("TX HASH (user1 switches reporters): ", txHash)
 
 	// user1 tries to remove self as selector, errors selector cannot be removed if it is the reporter's own address
 	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "remove-selector", user1Addr, "--keyring-dir", val1.HomeDir())
@@ -3118,7 +3114,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("reports from val1: ", reportsRes)
 
-	// val1 tries to become a selector instead of a reporter, shouldnt be allowed because of reporting in the last 21 days
+	// val1 tries to become a selector for val0 instead of a reporter, shouldnt be allowed because of reporting in the last 21 days
 	txHash, err := validators[1].Val.ExecTx(ctx, validators[1].Addr, "reporter", "switch-reporter", validators[0].Addr, "--keyring-dir", validators[1].Val.HomeDir())
 	require.Error(err)
 	fmt.Println("TX HASH (val1 fails to become a selector): ", txHash)

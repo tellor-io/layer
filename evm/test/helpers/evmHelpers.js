@@ -1,6 +1,6 @@
 const web3 = require('web3');
 const { ethers, network } = require("hardhat");
-const hash = web3.utils.keccak256;
+const hash = ethers.utils.keccak256;
 var assert = require('assert');
 const { impersonateAccount, takeSnapshot } = require("@nomicfoundation/hardhat-network-helpers");
 

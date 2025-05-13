@@ -203,3 +203,29 @@ func CalculateRewardAmount(reporterPower, totalPower uint64, reward math.Int) ma
 func (k *Keeper) SetOracleKeeper(ok types.OracleKeeper) {
 	k.oracleKeeper = ok
 }
+
+// gets the block number of the last report for a reporter
+func (k Keeper) GetLastReportedAtBlock(ctx context.Context, reporter []byte) (uint64, error) {
+	currentBlock := sdk.UnwrapSDKContext(ctx).BlockHeight()
+	pc := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
+	start := collections.Join(reporter, uint64(0))
+	end := collections.Join(reporter, uint64(currentBlock+1))
+	startBuf := make([]byte, pc.Size(start))
+	endBuf := make([]byte, pc.Size(end))
+	_, _ = pc.Encode(startBuf, start)
+	_, _ = pc.Encode(endBuf, end)
+	iter, err := k.Report.Indexes.BlockNumber.IterateRaw(ctx, startBuf, endBuf, collections.OrderDescending)
+	if err != nil {
+		return 0, err
+	}
+	defer iter.Close()
+	if iter.Valid() {
+		key, err := iter.Key()
+		if err != nil {
+			return 0, err
+		}
+		blockNumber := key.K1().K2()
+		return blockNumber, nil
+	}
+	return 0, nil
+}

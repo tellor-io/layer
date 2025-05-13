@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.19;
 
-import "../interfaces/IBlobstreamO.sol";
+import "../interfaces/ITellorDataBridge.sol";
 
 contract SimpleLayerUser {
-    IBlobstreamO public blobstreamO;
+    ITellorDataBridge public dataBridge;
     PriceData[] public priceData;
     bytes32 public queryId;
 
@@ -20,8 +20,8 @@ contract SimpleLayerUser {
         uint256 beginRelayTimestamp; // time relay tx initiated
     }
 
-    constructor(address _blobstreamO, bytes32 _queryId) {
-        blobstreamO = IBlobstreamO(_blobstreamO);
+    constructor(address _dataBridge, bytes32 _queryId) {
+        dataBridge = ITellorDataBridge(_dataBridge);
         queryId = _queryId;
     }
 
@@ -33,7 +33,7 @@ contract SimpleLayerUser {
         uint256 _beginRelayTimestamp
     ) external {
         require(_attestData.queryId == queryId, "Invalid queryId");
-        blobstreamO.verifyOracleData(_attestData, _currentValidatorSet, _sigs);
+        dataBridge.verifyOracleData(_attestData, _currentValidatorSet, _sigs);
         require(block.timestamp - _attestData.report.timestamp / 1000 < 6 hours, "data too old");
         require(block.timestamp - _attestData.attestationTimestamp / 1000 < 10 minutes, "attestation too old");
         if(priceData.length > 0) {

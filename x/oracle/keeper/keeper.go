@@ -365,37 +365,34 @@ func (k Keeper) DecodeBridgeDeposit(ctx context.Context, queryData []byte) (uint
 	return depositId, nil
 }
 
-// getter for reporter trying to become a selector
-func (k Keeper) GetMostRecentReport(ctx context.Context, reporter sdk.AccAddress) (types.MicroReport, error) {
-	iter, err := k.Reports.Indexes.Reporter.MatchExact(ctx, reporter.Bytes())
+func (k Keeper) GetLastReportedAtTimestamp(ctx context.Context, reporter []byte) (uint64, error) {
+	// get the last block they reported at
+	reportedAtBlock, err := k.reporterKeeper.GetLastReportedAtBlock(ctx, reporter)
 	if err != nil {
-		return types.MicroReport{}, err
+		return 0, errors.New("error getting last reported block: " + err.Error())
+	}
+
+	// get the timestamp of the report at that block
+	rng := collections.NewPrefixUntilPairRange[uint64, collections.Pair[[]byte, uint64]](reportedAtBlock).Descending()
+	iter, err := k.Aggregates.Indexes.BlockHeight.Iterate(ctx, rng)
+	if err != nil {
+		return 0, errors.New("error iterating over aggregate reports: " + err.Error())
 	}
 	defer iter.Close()
 
-	var mostRecent types.MicroReport
-
-	for iter.Valid() {
+	// pull timestamp from the aggregate report key at given height
+	var timestamp uint64
+	if iter.Valid() {
 		key, err := iter.PrimaryKey()
-		fmt.Println("key: ", key)
 		if err != nil {
-			return types.MicroReport{}, err
+			return 0, errors.New("error getting primary key: " + err.Error())
 		}
-		report, err := k.Reports.Get(ctx, key)
-		fmt.Println("report: ", report)
-		if err != nil {
-			return types.MicroReport{}, err
-		}
-		if report.BlockNumber > mostRecent.BlockNumber {
-			mostRecent = report
-			fmt.Println("mostRecent: ", mostRecent)
-		}
-		iter.Next()
-	}
-	// if no results, returns nil MicroReport
-	if mostRecent.BlockNumber == 0 {
-		return types.MicroReport{}, errors.New("no reports found")
+		timestamp = key.K2()
 	}
 
-	return mostRecent, nil
+	if timestamp == 0 && reportedAtBlock != 0 {
+		return 0, errors.New("no reports found")
+	}
+
+	return timestamp, nil
 }

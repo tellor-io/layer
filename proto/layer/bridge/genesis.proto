@@ -3,6 +3,7 @@ package layer.bridge;
 
 import "gogoproto/gogo.proto";
 import "layer/bridge/params.proto";
+import "layer/bridge/query.proto";
 
 option go_package = "github.com/tellor-io/layer/x/bridge/types";
 
@@ -10,4 +11,67 @@ option go_package = "github.com/tellor-io/layer/x/bridge/types";
 message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
   uint64 snapshot_limit = 2;
+  BridgeValidatorSet bridge_val_set = 3;
+  bytes validator_checkpoint = 4;
+  uint64 withdrawal_id = 5;
+  repeated OperatorToEVMAddressMapEntry operator_to_evm_address_map = 6;
+  repeated EVMRegisteredMapEntry evm_registered_map = 7;
+  repeated BridgeValSetSigsMapEntry bridge_valset_sigs_map = 8;
+  repeated ValidatorCheckpointParamsStateEntry validator_checkpoint_params_map = 9;
+  repeated ValidatorCheckpointIdxMapEntry validator_checkpoint_idx_map = 10;
+  uint64 latest_validator_checkpoint_idx = 11;
+  repeated BridgeValsetByTimestampMapEntry bridge_valset_by_timestamp_map = 12;
+  repeated ValsetTimestampToIdxMapEntry valset_timestamp_to_idx_map = 13;
+  repeated DepositIdClaimedMapEntry deposit_id_claimed_map = 14;
 }
+
+
+
+message OperatorToEVMAddressMapEntry {
+  string operator_address = 1;
+  bytes evm_address = 2;
+}
+
+message EVMRegisteredMapEntry {
+  string operator_address = 1;
+  bool registered = 2;
+}
+
+message BridgeValSetSigsMapEntry {
+  uint64 timestamp = 1;
+  repeated bytes valset_sigs = 2;
+}
+
+message ValidatorCheckpointParamsStateEntry {
+  uint64 timestamp = 1;
+  uint64 validator_timestamp = 2;
+  uint64 validator_power_threshold = 3;
+  bytes validator_set_hash = 4;
+  bytes validator_checkpoint = 5;
+}
+
+message ValidatorCheckpointIdxMapEntry {
+  uint64 index = 1;
+  uint64 timestamp = 2;
+}
+
+message BridgeValsetByTimestampMapEntry {
+  uint64 timestamp = 1;
+  BridgeValidatorSet valset = 2;
+}
+
+message ValsetTimestampToIdxMapEntry {
+  uint64 timestamp = 1;
+  uint64 index = 2;
+}
+
+message DepositIdClaimedMapEntry {
+  uint64 deposit_id = 1;
+  bool isClaimed = 2;
+}
+
+
+
+
+
+

@@ -77,5 +77,5 @@ type RegistryKeeper interface {
 
 // OracleKeeper defines the expected interface for the Oracle module.
 type OracleKeeper interface {
-	GetMostRecentReport(ctx context.Context, reporter sdk.AccAddress) (oracletypes.MicroReport, error)
+	GetLastReportedAtTimestamp(ctx context.Context, reporter []byte) (uint64, error)
 }
