@@ -2,7 +2,12 @@ syntax = "proto3";
 package layer.oracle;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
 import "layer/oracle/params.proto";
+import "layer/oracle/micro_report.proto";
+import "layer/oracle/aggregate_reporter.proto";
+import "layer/oracle/query_meta.proto";
+import "layer/oracle/aggregate.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
@@ -11,4 +16,6 @@ message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
   repeated bytes cyclelist = 2 [(gogoproto.nullable) = false];
   uint64 query_data_limit = 3;
+  uint64 query_sequencer = 4;
 }
+

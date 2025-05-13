@@ -13,10 +13,430 @@ import (
 	sync "sync"
 )
 
+var _ protoreflect.List = (*_GenesisState_6_list)(nil)
+
+type _GenesisState_6_list struct {
+	list *[]*OperatorToEVMAddressMapEntry
+}
+
+func (x *_GenesisState_6_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_6_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_6_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*OperatorToEVMAddressMapEntry)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_6_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*OperatorToEVMAddressMapEntry)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_6_list) AppendMutable() protoreflect.Value {
+	v := new(OperatorToEVMAddressMapEntry)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_6_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_6_list) NewElement() protoreflect.Value {
+	v := new(OperatorToEVMAddressMapEntry)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_6_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_7_list)(nil)
+
+type _GenesisState_7_list struct {
+	list *[]*EVMRegisteredMapEntry
+}
+
+func (x *_GenesisState_7_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_7_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_7_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*EVMRegisteredMapEntry)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_7_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*EVMRegisteredMapEntry)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_7_list) AppendMutable() protoreflect.Value {
+	v := new(EVMRegisteredMapEntry)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_7_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_7_list) NewElement() protoreflect.Value {
+	v := new(EVMRegisteredMapEntry)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_7_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_8_list)(nil)
+
+type _GenesisState_8_list struct {
+	list *[]*BridgeValSetSigsMapEntry
+}
+
+func (x *_GenesisState_8_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_8_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_8_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*BridgeValSetSigsMapEntry)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_8_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*BridgeValSetSigsMapEntry)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_8_list) AppendMutable() protoreflect.Value {
+	v := new(BridgeValSetSigsMapEntry)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_8_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_8_list) NewElement() protoreflect.Value {
+	v := new(BridgeValSetSigsMapEntry)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_8_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_9_list)(nil)
+
+type _GenesisState_9_list struct {
+	list *[]*ValidatorCheckpointParamsStateEntry
+}
+
+func (x *_GenesisState_9_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_9_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_9_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*ValidatorCheckpointParamsStateEntry)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_9_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*ValidatorCheckpointParamsStateEntry)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_9_list) AppendMutable() protoreflect.Value {
+	v := new(ValidatorCheckpointParamsStateEntry)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_9_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_9_list) NewElement() protoreflect.Value {
+	v := new(ValidatorCheckpointParamsStateEntry)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_9_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_10_list)(nil)
+
+type _GenesisState_10_list struct {
+	list *[]*ValidatorCheckpointIdxMapEntry
+}
+
+func (x *_GenesisState_10_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_10_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_10_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*ValidatorCheckpointIdxMapEntry)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_10_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*ValidatorCheckpointIdxMapEntry)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_10_list) AppendMutable() protoreflect.Value {
+	v := new(ValidatorCheckpointIdxMapEntry)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_10_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_10_list) NewElement() protoreflect.Value {
+	v := new(ValidatorCheckpointIdxMapEntry)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_10_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_12_list)(nil)
+
+type _GenesisState_12_list struct {
+	list *[]*BridgeValsetByTimestampMapEntry
+}
+
+func (x *_GenesisState_12_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_12_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_12_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*BridgeValsetByTimestampMapEntry)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_12_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*BridgeValsetByTimestampMapEntry)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_12_list) AppendMutable() protoreflect.Value {
+	v := new(BridgeValsetByTimestampMapEntry)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_12_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_12_list) NewElement() protoreflect.Value {
+	v := new(BridgeValsetByTimestampMapEntry)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_12_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_13_list)(nil)
+
+type _GenesisState_13_list struct {
+	list *[]*ValsetTimestampToIdxMapEntry
+}
+
+func (x *_GenesisState_13_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_13_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_13_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*ValsetTimestampToIdxMapEntry)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_13_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*ValsetTimestampToIdxMapEntry)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_13_list) AppendMutable() protoreflect.Value {
+	v := new(ValsetTimestampToIdxMapEntry)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_13_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_13_list) NewElement() protoreflect.Value {
+	v := new(ValsetTimestampToIdxMapEntry)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_13_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_GenesisState_14_list)(nil)
+
+type _GenesisState_14_list struct {
+	list *[]*DepositIdClaimedMapEntry
+}
+
+func (x *_GenesisState_14_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_14_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_14_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DepositIdClaimedMapEntry)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_14_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*DepositIdClaimedMapEntry)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_14_list) AppendMutable() protoreflect.Value {
+	v := new(DepositIdClaimedMapEntry)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_14_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_14_list) NewElement() protoreflect.Value {
+	v := new(DepositIdClaimedMapEntry)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_14_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_GenesisState                protoreflect.MessageDescriptor
-	fd_GenesisState_params         protoreflect.FieldDescriptor
-	fd_GenesisState_snapshot_limit protoreflect.FieldDescriptor
+	md_GenesisState                                 protoreflect.MessageDescriptor
+	fd_GenesisState_params                          protoreflect.FieldDescriptor
+	fd_GenesisState_snapshot_limit                  protoreflect.FieldDescriptor
+	fd_GenesisState_bridge_val_set                  protoreflect.FieldDescriptor
+	fd_GenesisState_validator_checkpoint            protoreflect.FieldDescriptor
+	fd_GenesisState_withdrawal_id                   protoreflect.FieldDescriptor
+	fd_GenesisState_operator_to_evm_address_map     protoreflect.FieldDescriptor
+	fd_GenesisState_evm_registered_map              protoreflect.FieldDescriptor
+	fd_GenesisState_bridge_valset_sigs_map          protoreflect.FieldDescriptor
+	fd_GenesisState_validator_checkpoint_params_map protoreflect.FieldDescriptor
+	fd_GenesisState_validator_checkpoint_idx_map    protoreflect.FieldDescriptor
+	fd_GenesisState_latest_validator_checkpoint_idx protoreflect.FieldDescriptor
+	fd_GenesisState_bridge_valset_by_timestamp_map  protoreflect.FieldDescriptor
+	fd_GenesisState_valset_timestamp_to_idx_map     protoreflect.FieldDescriptor
+	fd_GenesisState_deposit_id_claimed_map          protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -24,6 +444,18 @@ func init() {
 	md_GenesisState = File_layer_bridge_genesis_proto.Messages().ByName("GenesisState")
 	fd_GenesisState_params = md_GenesisState.Fields().ByName("params")
 	fd_GenesisState_snapshot_limit = md_GenesisState.Fields().ByName("snapshot_limit")
+	fd_GenesisState_bridge_val_set = md_GenesisState.Fields().ByName("bridge_val_set")
+	fd_GenesisState_validator_checkpoint = md_GenesisState.Fields().ByName("validator_checkpoint")
+	fd_GenesisState_withdrawal_id = md_GenesisState.Fields().ByName("withdrawal_id")
+	fd_GenesisState_operator_to_evm_address_map = md_GenesisState.Fields().ByName("operator_to_evm_address_map")
+	fd_GenesisState_evm_registered_map = md_GenesisState.Fields().ByName("evm_registered_map")
+	fd_GenesisState_bridge_valset_sigs_map = md_GenesisState.Fields().ByName("bridge_valset_sigs_map")
+	fd_GenesisState_validator_checkpoint_params_map = md_GenesisState.Fields().ByName("validator_checkpoint_params_map")
+	fd_GenesisState_validator_checkpoint_idx_map = md_GenesisState.Fields().ByName("validator_checkpoint_idx_map")
+	fd_GenesisState_latest_validator_checkpoint_idx = md_GenesisState.Fields().ByName("latest_validator_checkpoint_idx")
+	fd_GenesisState_bridge_valset_by_timestamp_map = md_GenesisState.Fields().ByName("bridge_valset_by_timestamp_map")
+	fd_GenesisState_valset_timestamp_to_idx_map = md_GenesisState.Fields().ByName("valset_timestamp_to_idx_map")
+	fd_GenesisState_deposit_id_claimed_map = md_GenesisState.Fields().ByName("deposit_id_claimed_map")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -103,6 +535,78 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
+	if x.BridgeValSet != nil {
+		value := protoreflect.ValueOfMessage(x.BridgeValSet.ProtoReflect())
+		if !f(fd_GenesisState_bridge_val_set, value) {
+			return
+		}
+	}
+	if len(x.ValidatorCheckpoint) != 0 {
+		value := protoreflect.ValueOfBytes(x.ValidatorCheckpoint)
+		if !f(fd_GenesisState_validator_checkpoint, value) {
+			return
+		}
+	}
+	if x.WithdrawalId != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.WithdrawalId)
+		if !f(fd_GenesisState_withdrawal_id, value) {
+			return
+		}
+	}
+	if len(x.OperatorToEvmAddressMap) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_6_list{list: &x.OperatorToEvmAddressMap})
+		if !f(fd_GenesisState_operator_to_evm_address_map, value) {
+			return
+		}
+	}
+	if len(x.EvmRegisteredMap) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_7_list{list: &x.EvmRegisteredMap})
+		if !f(fd_GenesisState_evm_registered_map, value) {
+			return
+		}
+	}
+	if len(x.BridgeValsetSigsMap) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_8_list{list: &x.BridgeValsetSigsMap})
+		if !f(fd_GenesisState_bridge_valset_sigs_map, value) {
+			return
+		}
+	}
+	if len(x.ValidatorCheckpointParamsMap) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_9_list{list: &x.ValidatorCheckpointParamsMap})
+		if !f(fd_GenesisState_validator_checkpoint_params_map, value) {
+			return
+		}
+	}
+	if len(x.ValidatorCheckpointIdxMap) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_10_list{list: &x.ValidatorCheckpointIdxMap})
+		if !f(fd_GenesisState_validator_checkpoint_idx_map, value) {
+			return
+		}
+	}
+	if x.LatestValidatorCheckpointIdx != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.LatestValidatorCheckpointIdx)
+		if !f(fd_GenesisState_latest_validator_checkpoint_idx, value) {
+			return
+		}
+	}
+	if len(x.BridgeValsetByTimestampMap) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_12_list{list: &x.BridgeValsetByTimestampMap})
+		if !f(fd_GenesisState_bridge_valset_by_timestamp_map, value) {
+			return
+		}
+	}
+	if len(x.ValsetTimestampToIdxMap) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_13_list{list: &x.ValsetTimestampToIdxMap})
+		if !f(fd_GenesisState_valset_timestamp_to_idx_map, value) {
+			return
+		}
+	}
+	if len(x.DepositIdClaimedMap) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_14_list{list: &x.DepositIdClaimedMap})
+		if !f(fd_GenesisState_deposit_id_claimed_map, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -122,6 +626,30 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return x.Params != nil
 	case "layer.bridge.GenesisState.snapshot_limit":
 		return x.SnapshotLimit != uint64(0)
+	case "layer.bridge.GenesisState.bridge_val_set":
+		return x.BridgeValSet != nil
+	case "layer.bridge.GenesisState.validator_checkpoint":
+		return len(x.ValidatorCheckpoint) != 0
+	case "layer.bridge.GenesisState.withdrawal_id":
+		return x.WithdrawalId != uint64(0)
+	case "layer.bridge.GenesisState.operator_to_evm_address_map":
+		return len(x.OperatorToEvmAddressMap) != 0
+	case "layer.bridge.GenesisState.evm_registered_map":
+		return len(x.EvmRegisteredMap) != 0
+	case "layer.bridge.GenesisState.bridge_valset_sigs_map":
+		return len(x.BridgeValsetSigsMap) != 0
+	case "layer.bridge.GenesisState.validator_checkpoint_params_map":
+		return len(x.ValidatorCheckpointParamsMap) != 0
+	case "layer.bridge.GenesisState.validator_checkpoint_idx_map":
+		return len(x.ValidatorCheckpointIdxMap) != 0
+	case "layer.bridge.GenesisState.latest_validator_checkpoint_idx":
+		return x.LatestValidatorCheckpointIdx != uint64(0)
+	case "layer.bridge.GenesisState.bridge_valset_by_timestamp_map":
+		return len(x.BridgeValsetByTimestampMap) != 0
+	case "layer.bridge.GenesisState.valset_timestamp_to_idx_map":
+		return len(x.ValsetTimestampToIdxMap) != 0
+	case "layer.bridge.GenesisState.deposit_id_claimed_map":
+		return len(x.DepositIdClaimedMap) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.GenesisState"))
@@ -142,6 +670,30 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.Params = nil
 	case "layer.bridge.GenesisState.snapshot_limit":
 		x.SnapshotLimit = uint64(0)
+	case "layer.bridge.GenesisState.bridge_val_set":
+		x.BridgeValSet = nil
+	case "layer.bridge.GenesisState.validator_checkpoint":
+		x.ValidatorCheckpoint = nil
+	case "layer.bridge.GenesisState.withdrawal_id":
+		x.WithdrawalId = uint64(0)
+	case "layer.bridge.GenesisState.operator_to_evm_address_map":
+		x.OperatorToEvmAddressMap = nil
+	case "layer.bridge.GenesisState.evm_registered_map":
+		x.EvmRegisteredMap = nil
+	case "layer.bridge.GenesisState.bridge_valset_sigs_map":
+		x.BridgeValsetSigsMap = nil
+	case "layer.bridge.GenesisState.validator_checkpoint_params_map":
+		x.ValidatorCheckpointParamsMap = nil
+	case "layer.bridge.GenesisState.validator_checkpoint_idx_map":
+		x.ValidatorCheckpointIdxMap = nil
+	case "layer.bridge.GenesisState.latest_validator_checkpoint_idx":
+		x.LatestValidatorCheckpointIdx = uint64(0)
+	case "layer.bridge.GenesisState.bridge_valset_by_timestamp_map":
+		x.BridgeValsetByTimestampMap = nil
+	case "layer.bridge.GenesisState.valset_timestamp_to_idx_map":
+		x.ValsetTimestampToIdxMap = nil
+	case "layer.bridge.GenesisState.deposit_id_claimed_map":
+		x.DepositIdClaimedMap = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.GenesisState"))
@@ -164,6 +716,66 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 	case "layer.bridge.GenesisState.snapshot_limit":
 		value := x.SnapshotLimit
 		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.GenesisState.bridge_val_set":
+		value := x.BridgeValSet
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "layer.bridge.GenesisState.validator_checkpoint":
+		value := x.ValidatorCheckpoint
+		return protoreflect.ValueOfBytes(value)
+	case "layer.bridge.GenesisState.withdrawal_id":
+		value := x.WithdrawalId
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.GenesisState.operator_to_evm_address_map":
+		if len(x.OperatorToEvmAddressMap) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_6_list{})
+		}
+		listValue := &_GenesisState_6_list{list: &x.OperatorToEvmAddressMap}
+		return protoreflect.ValueOfList(listValue)
+	case "layer.bridge.GenesisState.evm_registered_map":
+		if len(x.EvmRegisteredMap) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_7_list{})
+		}
+		listValue := &_GenesisState_7_list{list: &x.EvmRegisteredMap}
+		return protoreflect.ValueOfList(listValue)
+	case "layer.bridge.GenesisState.bridge_valset_sigs_map":
+		if len(x.BridgeValsetSigsMap) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_8_list{})
+		}
+		listValue := &_GenesisState_8_list{list: &x.BridgeValsetSigsMap}
+		return protoreflect.ValueOfList(listValue)
+	case "layer.bridge.GenesisState.validator_checkpoint_params_map":
+		if len(x.ValidatorCheckpointParamsMap) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_9_list{})
+		}
+		listValue := &_GenesisState_9_list{list: &x.ValidatorCheckpointParamsMap}
+		return protoreflect.ValueOfList(listValue)
+	case "layer.bridge.GenesisState.validator_checkpoint_idx_map":
+		if len(x.ValidatorCheckpointIdxMap) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_10_list{})
+		}
+		listValue := &_GenesisState_10_list{list: &x.ValidatorCheckpointIdxMap}
+		return protoreflect.ValueOfList(listValue)
+	case "layer.bridge.GenesisState.latest_validator_checkpoint_idx":
+		value := x.LatestValidatorCheckpointIdx
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.GenesisState.bridge_valset_by_timestamp_map":
+		if len(x.BridgeValsetByTimestampMap) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_12_list{})
+		}
+		listValue := &_GenesisState_12_list{list: &x.BridgeValsetByTimestampMap}
+		return protoreflect.ValueOfList(listValue)
+	case "layer.bridge.GenesisState.valset_timestamp_to_idx_map":
+		if len(x.ValsetTimestampToIdxMap) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_13_list{})
+		}
+		listValue := &_GenesisState_13_list{list: &x.ValsetTimestampToIdxMap}
+		return protoreflect.ValueOfList(listValue)
+	case "layer.bridge.GenesisState.deposit_id_claimed_map":
+		if len(x.DepositIdClaimedMap) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_14_list{})
+		}
+		listValue := &_GenesisState_14_list{list: &x.DepositIdClaimedMap}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.GenesisState"))
@@ -188,6 +800,46 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		x.Params = value.Message().Interface().(*Params)
 	case "layer.bridge.GenesisState.snapshot_limit":
 		x.SnapshotLimit = value.Uint()
+	case "layer.bridge.GenesisState.bridge_val_set":
+		x.BridgeValSet = value.Message().Interface().(*BridgeValidatorSet)
+	case "layer.bridge.GenesisState.validator_checkpoint":
+		x.ValidatorCheckpoint = value.Bytes()
+	case "layer.bridge.GenesisState.withdrawal_id":
+		x.WithdrawalId = value.Uint()
+	case "layer.bridge.GenesisState.operator_to_evm_address_map":
+		lv := value.List()
+		clv := lv.(*_GenesisState_6_list)
+		x.OperatorToEvmAddressMap = *clv.list
+	case "layer.bridge.GenesisState.evm_registered_map":
+		lv := value.List()
+		clv := lv.(*_GenesisState_7_list)
+		x.EvmRegisteredMap = *clv.list
+	case "layer.bridge.GenesisState.bridge_valset_sigs_map":
+		lv := value.List()
+		clv := lv.(*_GenesisState_8_list)
+		x.BridgeValsetSigsMap = *clv.list
+	case "layer.bridge.GenesisState.validator_checkpoint_params_map":
+		lv := value.List()
+		clv := lv.(*_GenesisState_9_list)
+		x.ValidatorCheckpointParamsMap = *clv.list
+	case "layer.bridge.GenesisState.validator_checkpoint_idx_map":
+		lv := value.List()
+		clv := lv.(*_GenesisState_10_list)
+		x.ValidatorCheckpointIdxMap = *clv.list
+	case "layer.bridge.GenesisState.latest_validator_checkpoint_idx":
+		x.LatestValidatorCheckpointIdx = value.Uint()
+	case "layer.bridge.GenesisState.bridge_valset_by_timestamp_map":
+		lv := value.List()
+		clv := lv.(*_GenesisState_12_list)
+		x.BridgeValsetByTimestampMap = *clv.list
+	case "layer.bridge.GenesisState.valset_timestamp_to_idx_map":
+		lv := value.List()
+		clv := lv.(*_GenesisState_13_list)
+		x.ValsetTimestampToIdxMap = *clv.list
+	case "layer.bridge.GenesisState.deposit_id_claimed_map":
+		lv := value.List()
+		clv := lv.(*_GenesisState_14_list)
+		x.DepositIdClaimedMap = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.GenesisState"))
@@ -213,8 +865,67 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 			x.Params = new(Params)
 		}
 		return protoreflect.ValueOfMessage(x.Params.ProtoReflect())
+	case "layer.bridge.GenesisState.bridge_val_set":
+		if x.BridgeValSet == nil {
+			x.BridgeValSet = new(BridgeValidatorSet)
+		}
+		return protoreflect.ValueOfMessage(x.BridgeValSet.ProtoReflect())
+	case "layer.bridge.GenesisState.operator_to_evm_address_map":
+		if x.OperatorToEvmAddressMap == nil {
+			x.OperatorToEvmAddressMap = []*OperatorToEVMAddressMapEntry{}
+		}
+		value := &_GenesisState_6_list{list: &x.OperatorToEvmAddressMap}
+		return protoreflect.ValueOfList(value)
+	case "layer.bridge.GenesisState.evm_registered_map":
+		if x.EvmRegisteredMap == nil {
+			x.EvmRegisteredMap = []*EVMRegisteredMapEntry{}
+		}
+		value := &_GenesisState_7_list{list: &x.EvmRegisteredMap}
+		return protoreflect.ValueOfList(value)
+	case "layer.bridge.GenesisState.bridge_valset_sigs_map":
+		if x.BridgeValsetSigsMap == nil {
+			x.BridgeValsetSigsMap = []*BridgeValSetSigsMapEntry{}
+		}
+		value := &_GenesisState_8_list{list: &x.BridgeValsetSigsMap}
+		return protoreflect.ValueOfList(value)
+	case "layer.bridge.GenesisState.validator_checkpoint_params_map":
+		if x.ValidatorCheckpointParamsMap == nil {
+			x.ValidatorCheckpointParamsMap = []*ValidatorCheckpointParamsStateEntry{}
+		}
+		value := &_GenesisState_9_list{list: &x.ValidatorCheckpointParamsMap}
+		return protoreflect.ValueOfList(value)
+	case "layer.bridge.GenesisState.validator_checkpoint_idx_map":
+		if x.ValidatorCheckpointIdxMap == nil {
+			x.ValidatorCheckpointIdxMap = []*ValidatorCheckpointIdxMapEntry{}
+		}
+		value := &_GenesisState_10_list{list: &x.ValidatorCheckpointIdxMap}
+		return protoreflect.ValueOfList(value)
+	case "layer.bridge.GenesisState.bridge_valset_by_timestamp_map":
+		if x.BridgeValsetByTimestampMap == nil {
+			x.BridgeValsetByTimestampMap = []*BridgeValsetByTimestampMapEntry{}
+		}
+		value := &_GenesisState_12_list{list: &x.BridgeValsetByTimestampMap}
+		return protoreflect.ValueOfList(value)
+	case "layer.bridge.GenesisState.valset_timestamp_to_idx_map":
+		if x.ValsetTimestampToIdxMap == nil {
+			x.ValsetTimestampToIdxMap = []*ValsetTimestampToIdxMapEntry{}
+		}
+		value := &_GenesisState_13_list{list: &x.ValsetTimestampToIdxMap}
+		return protoreflect.ValueOfList(value)
+	case "layer.bridge.GenesisState.deposit_id_claimed_map":
+		if x.DepositIdClaimedMap == nil {
+			x.DepositIdClaimedMap = []*DepositIdClaimedMapEntry{}
+		}
+		value := &_GenesisState_14_list{list: &x.DepositIdClaimedMap}
+		return protoreflect.ValueOfList(value)
 	case "layer.bridge.GenesisState.snapshot_limit":
 		panic(fmt.Errorf("field snapshot_limit of message layer.bridge.GenesisState is not mutable"))
+	case "layer.bridge.GenesisState.validator_checkpoint":
+		panic(fmt.Errorf("field validator_checkpoint of message layer.bridge.GenesisState is not mutable"))
+	case "layer.bridge.GenesisState.withdrawal_id":
+		panic(fmt.Errorf("field withdrawal_id of message layer.bridge.GenesisState is not mutable"))
+	case "layer.bridge.GenesisState.latest_validator_checkpoint_idx":
+		panic(fmt.Errorf("field latest_validator_checkpoint_idx of message layer.bridge.GenesisState is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.GenesisState"))
@@ -233,6 +944,39 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "layer.bridge.GenesisState.snapshot_limit":
 		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.GenesisState.bridge_val_set":
+		m := new(BridgeValidatorSet)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "layer.bridge.GenesisState.validator_checkpoint":
+		return protoreflect.ValueOfBytes(nil)
+	case "layer.bridge.GenesisState.withdrawal_id":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.GenesisState.operator_to_evm_address_map":
+		list := []*OperatorToEVMAddressMapEntry{}
+		return protoreflect.ValueOfList(&_GenesisState_6_list{list: &list})
+	case "layer.bridge.GenesisState.evm_registered_map":
+		list := []*EVMRegisteredMapEntry{}
+		return protoreflect.ValueOfList(&_GenesisState_7_list{list: &list})
+	case "layer.bridge.GenesisState.bridge_valset_sigs_map":
+		list := []*BridgeValSetSigsMapEntry{}
+		return protoreflect.ValueOfList(&_GenesisState_8_list{list: &list})
+	case "layer.bridge.GenesisState.validator_checkpoint_params_map":
+		list := []*ValidatorCheckpointParamsStateEntry{}
+		return protoreflect.ValueOfList(&_GenesisState_9_list{list: &list})
+	case "layer.bridge.GenesisState.validator_checkpoint_idx_map":
+		list := []*ValidatorCheckpointIdxMapEntry{}
+		return protoreflect.ValueOfList(&_GenesisState_10_list{list: &list})
+	case "layer.bridge.GenesisState.latest_validator_checkpoint_idx":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.GenesisState.bridge_valset_by_timestamp_map":
+		list := []*BridgeValsetByTimestampMapEntry{}
+		return protoreflect.ValueOfList(&_GenesisState_12_list{list: &list})
+	case "layer.bridge.GenesisState.valset_timestamp_to_idx_map":
+		list := []*ValsetTimestampToIdxMapEntry{}
+		return protoreflect.ValueOfList(&_GenesisState_13_list{list: &list})
+	case "layer.bridge.GenesisState.deposit_id_claimed_map":
+		list := []*DepositIdClaimedMapEntry{}
+		return protoreflect.ValueOfList(&_GenesisState_14_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.GenesisState"))
@@ -309,6 +1053,68 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.SnapshotLimit != 0 {
 			n += 1 + runtime.Sov(uint64(x.SnapshotLimit))
 		}
+		if x.BridgeValSet != nil {
+			l = options.Size(x.BridgeValSet)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.ValidatorCheckpoint)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.WithdrawalId != 0 {
+			n += 1 + runtime.Sov(uint64(x.WithdrawalId))
+		}
+		if len(x.OperatorToEvmAddressMap) > 0 {
+			for _, e := range x.OperatorToEvmAddressMap {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.EvmRegisteredMap) > 0 {
+			for _, e := range x.EvmRegisteredMap {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.BridgeValsetSigsMap) > 0 {
+			for _, e := range x.BridgeValsetSigsMap {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.ValidatorCheckpointParamsMap) > 0 {
+			for _, e := range x.ValidatorCheckpointParamsMap {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.ValidatorCheckpointIdxMap) > 0 {
+			for _, e := range x.ValidatorCheckpointIdxMap {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.LatestValidatorCheckpointIdx != 0 {
+			n += 1 + runtime.Sov(uint64(x.LatestValidatorCheckpointIdx))
+		}
+		if len(x.BridgeValsetByTimestampMap) > 0 {
+			for _, e := range x.BridgeValsetByTimestampMap {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.ValsetTimestampToIdxMap) > 0 {
+			for _, e := range x.ValsetTimestampToIdxMap {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.DepositIdClaimedMap) > 0 {
+			for _, e := range x.DepositIdClaimedMap {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -337,6 +1143,165 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.DepositIdClaimedMap) > 0 {
+			for iNdEx := len(x.DepositIdClaimedMap) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.DepositIdClaimedMap[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x72
+			}
+		}
+		if len(x.ValsetTimestampToIdxMap) > 0 {
+			for iNdEx := len(x.ValsetTimestampToIdxMap) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.ValsetTimestampToIdxMap[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x6a
+			}
+		}
+		if len(x.BridgeValsetByTimestampMap) > 0 {
+			for iNdEx := len(x.BridgeValsetByTimestampMap) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.BridgeValsetByTimestampMap[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x62
+			}
+		}
+		if x.LatestValidatorCheckpointIdx != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.LatestValidatorCheckpointIdx))
+			i--
+			dAtA[i] = 0x58
+		}
+		if len(x.ValidatorCheckpointIdxMap) > 0 {
+			for iNdEx := len(x.ValidatorCheckpointIdxMap) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.ValidatorCheckpointIdxMap[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x52
+			}
+		}
+		if len(x.ValidatorCheckpointParamsMap) > 0 {
+			for iNdEx := len(x.ValidatorCheckpointParamsMap) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.ValidatorCheckpointParamsMap[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x4a
+			}
+		}
+		if len(x.BridgeValsetSigsMap) > 0 {
+			for iNdEx := len(x.BridgeValsetSigsMap) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.BridgeValsetSigsMap[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x42
+			}
+		}
+		if len(x.EvmRegisteredMap) > 0 {
+			for iNdEx := len(x.EvmRegisteredMap) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.EvmRegisteredMap[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x3a
+			}
+		}
+		if len(x.OperatorToEvmAddressMap) > 0 {
+			for iNdEx := len(x.OperatorToEvmAddressMap) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.OperatorToEvmAddressMap[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x32
+			}
+		}
+		if x.WithdrawalId != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.WithdrawalId))
+			i--
+			dAtA[i] = 0x28
+		}
+		if len(x.ValidatorCheckpoint) > 0 {
+			i -= len(x.ValidatorCheckpoint)
+			copy(dAtA[i:], x.ValidatorCheckpoint)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ValidatorCheckpoint)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if x.BridgeValSet != nil {
+			encoded, err := options.Marshal(x.BridgeValSet)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x1a
 		}
 		if x.SnapshotLimit != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.SnapshotLimit))
@@ -461,6 +1426,4351 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BridgeValSet", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.BridgeValSet == nil {
+					x.BridgeValSet = &BridgeValidatorSet{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.BridgeValSet); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorCheckpoint", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValidatorCheckpoint = append(x.ValidatorCheckpoint[:0], dAtA[iNdEx:postIndex]...)
+				if x.ValidatorCheckpoint == nil {
+					x.ValidatorCheckpoint = []byte{}
+				}
+				iNdEx = postIndex
+			case 5:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field WithdrawalId", wireType)
+				}
+				x.WithdrawalId = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.WithdrawalId |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OperatorToEvmAddressMap", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.OperatorToEvmAddressMap = append(x.OperatorToEvmAddressMap, &OperatorToEVMAddressMapEntry{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.OperatorToEvmAddressMap[len(x.OperatorToEvmAddressMap)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 7:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field EvmRegisteredMap", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.EvmRegisteredMap = append(x.EvmRegisteredMap, &EVMRegisteredMapEntry{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.EvmRegisteredMap[len(x.EvmRegisteredMap)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 8:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BridgeValsetSigsMap", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.BridgeValsetSigsMap = append(x.BridgeValsetSigsMap, &BridgeValSetSigsMapEntry{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.BridgeValsetSigsMap[len(x.BridgeValsetSigsMap)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 9:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorCheckpointParamsMap", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValidatorCheckpointParamsMap = append(x.ValidatorCheckpointParamsMap, &ValidatorCheckpointParamsStateEntry{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ValidatorCheckpointParamsMap[len(x.ValidatorCheckpointParamsMap)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 10:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorCheckpointIdxMap", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValidatorCheckpointIdxMap = append(x.ValidatorCheckpointIdxMap, &ValidatorCheckpointIdxMapEntry{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ValidatorCheckpointIdxMap[len(x.ValidatorCheckpointIdxMap)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 11:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field LatestValidatorCheckpointIdx", wireType)
+				}
+				x.LatestValidatorCheckpointIdx = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.LatestValidatorCheckpointIdx |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 12:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BridgeValsetByTimestampMap", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.BridgeValsetByTimestampMap = append(x.BridgeValsetByTimestampMap, &BridgeValsetByTimestampMapEntry{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.BridgeValsetByTimestampMap[len(x.BridgeValsetByTimestampMap)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 13:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValsetTimestampToIdxMap", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValsetTimestampToIdxMap = append(x.ValsetTimestampToIdxMap, &ValsetTimestampToIdxMapEntry{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ValsetTimestampToIdxMap[len(x.ValsetTimestampToIdxMap)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 14:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DepositIdClaimedMap", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.DepositIdClaimedMap = append(x.DepositIdClaimedMap, &DepositIdClaimedMapEntry{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.DepositIdClaimedMap[len(x.DepositIdClaimedMap)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_OperatorToEVMAddressMapEntry                  protoreflect.MessageDescriptor
+	fd_OperatorToEVMAddressMapEntry_operator_address protoreflect.FieldDescriptor
+	fd_OperatorToEVMAddressMapEntry_evm_address      protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_genesis_proto_init()
+	md_OperatorToEVMAddressMapEntry = File_layer_bridge_genesis_proto.Messages().ByName("OperatorToEVMAddressMapEntry")
+	fd_OperatorToEVMAddressMapEntry_operator_address = md_OperatorToEVMAddressMapEntry.Fields().ByName("operator_address")
+	fd_OperatorToEVMAddressMapEntry_evm_address = md_OperatorToEVMAddressMapEntry.Fields().ByName("evm_address")
+}
+
+var _ protoreflect.Message = (*fastReflection_OperatorToEVMAddressMapEntry)(nil)
+
+type fastReflection_OperatorToEVMAddressMapEntry OperatorToEVMAddressMapEntry
+
+func (x *OperatorToEVMAddressMapEntry) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_OperatorToEVMAddressMapEntry)(x)
+}
+
+func (x *OperatorToEVMAddressMapEntry) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_genesis_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_OperatorToEVMAddressMapEntry_messageType fastReflection_OperatorToEVMAddressMapEntry_messageType
+var _ protoreflect.MessageType = fastReflection_OperatorToEVMAddressMapEntry_messageType{}
+
+type fastReflection_OperatorToEVMAddressMapEntry_messageType struct{}
+
+func (x fastReflection_OperatorToEVMAddressMapEntry_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_OperatorToEVMAddressMapEntry)(nil)
+}
+func (x fastReflection_OperatorToEVMAddressMapEntry_messageType) New() protoreflect.Message {
+	return new(fastReflection_OperatorToEVMAddressMapEntry)
+}
+func (x fastReflection_OperatorToEVMAddressMapEntry_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_OperatorToEVMAddressMapEntry
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) Descriptor() protoreflect.MessageDescriptor {
+	return md_OperatorToEVMAddressMapEntry
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) Type() protoreflect.MessageType {
+	return _fastReflection_OperatorToEVMAddressMapEntry_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) New() protoreflect.Message {
+	return new(fastReflection_OperatorToEVMAddressMapEntry)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) Interface() protoreflect.ProtoMessage {
+	return (*OperatorToEVMAddressMapEntry)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.OperatorAddress != "" {
+		value := protoreflect.ValueOfString(x.OperatorAddress)
+		if !f(fd_OperatorToEVMAddressMapEntry_operator_address, value) {
+			return
+		}
+	}
+	if len(x.EvmAddress) != 0 {
+		value := protoreflect.ValueOfBytes(x.EvmAddress)
+		if !f(fd_OperatorToEVMAddressMapEntry_evm_address, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.OperatorToEVMAddressMapEntry.operator_address":
+		return x.OperatorAddress != ""
+	case "layer.bridge.OperatorToEVMAddressMapEntry.evm_address":
+		return len(x.EvmAddress) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.OperatorToEVMAddressMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.OperatorToEVMAddressMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.OperatorToEVMAddressMapEntry.operator_address":
+		x.OperatorAddress = ""
+	case "layer.bridge.OperatorToEVMAddressMapEntry.evm_address":
+		x.EvmAddress = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.OperatorToEVMAddressMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.OperatorToEVMAddressMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.OperatorToEVMAddressMapEntry.operator_address":
+		value := x.OperatorAddress
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.OperatorToEVMAddressMapEntry.evm_address":
+		value := x.EvmAddress
+		return protoreflect.ValueOfBytes(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.OperatorToEVMAddressMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.OperatorToEVMAddressMapEntry does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.OperatorToEVMAddressMapEntry.operator_address":
+		x.OperatorAddress = value.Interface().(string)
+	case "layer.bridge.OperatorToEVMAddressMapEntry.evm_address":
+		x.EvmAddress = value.Bytes()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.OperatorToEVMAddressMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.OperatorToEVMAddressMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.OperatorToEVMAddressMapEntry.operator_address":
+		panic(fmt.Errorf("field operator_address of message layer.bridge.OperatorToEVMAddressMapEntry is not mutable"))
+	case "layer.bridge.OperatorToEVMAddressMapEntry.evm_address":
+		panic(fmt.Errorf("field evm_address of message layer.bridge.OperatorToEVMAddressMapEntry is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.OperatorToEVMAddressMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.OperatorToEVMAddressMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.OperatorToEVMAddressMapEntry.operator_address":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.OperatorToEVMAddressMapEntry.evm_address":
+		return protoreflect.ValueOfBytes(nil)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.OperatorToEVMAddressMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.OperatorToEVMAddressMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.OperatorToEVMAddressMapEntry", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_OperatorToEVMAddressMapEntry) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*OperatorToEVMAddressMapEntry)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.OperatorAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.EvmAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*OperatorToEVMAddressMapEntry)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.EvmAddress) > 0 {
+			i -= len(x.EvmAddress)
+			copy(dAtA[i:], x.EvmAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.EvmAddress)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.OperatorAddress) > 0 {
+			i -= len(x.OperatorAddress)
+			copy(dAtA[i:], x.OperatorAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OperatorAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*OperatorToEVMAddressMapEntry)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OperatorToEVMAddressMapEntry: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OperatorToEVMAddressMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OperatorAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.OperatorAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field EvmAddress", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.EvmAddress = append(x.EvmAddress[:0], dAtA[iNdEx:postIndex]...)
+				if x.EvmAddress == nil {
+					x.EvmAddress = []byte{}
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_EVMRegisteredMapEntry                  protoreflect.MessageDescriptor
+	fd_EVMRegisteredMapEntry_operator_address protoreflect.FieldDescriptor
+	fd_EVMRegisteredMapEntry_registered       protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_genesis_proto_init()
+	md_EVMRegisteredMapEntry = File_layer_bridge_genesis_proto.Messages().ByName("EVMRegisteredMapEntry")
+	fd_EVMRegisteredMapEntry_operator_address = md_EVMRegisteredMapEntry.Fields().ByName("operator_address")
+	fd_EVMRegisteredMapEntry_registered = md_EVMRegisteredMapEntry.Fields().ByName("registered")
+}
+
+var _ protoreflect.Message = (*fastReflection_EVMRegisteredMapEntry)(nil)
+
+type fastReflection_EVMRegisteredMapEntry EVMRegisteredMapEntry
+
+func (x *EVMRegisteredMapEntry) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_EVMRegisteredMapEntry)(x)
+}
+
+func (x *EVMRegisteredMapEntry) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_genesis_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_EVMRegisteredMapEntry_messageType fastReflection_EVMRegisteredMapEntry_messageType
+var _ protoreflect.MessageType = fastReflection_EVMRegisteredMapEntry_messageType{}
+
+type fastReflection_EVMRegisteredMapEntry_messageType struct{}
+
+func (x fastReflection_EVMRegisteredMapEntry_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_EVMRegisteredMapEntry)(nil)
+}
+func (x fastReflection_EVMRegisteredMapEntry_messageType) New() protoreflect.Message {
+	return new(fastReflection_EVMRegisteredMapEntry)
+}
+func (x fastReflection_EVMRegisteredMapEntry_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_EVMRegisteredMapEntry
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_EVMRegisteredMapEntry) Descriptor() protoreflect.MessageDescriptor {
+	return md_EVMRegisteredMapEntry
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_EVMRegisteredMapEntry) Type() protoreflect.MessageType {
+	return _fastReflection_EVMRegisteredMapEntry_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_EVMRegisteredMapEntry) New() protoreflect.Message {
+	return new(fastReflection_EVMRegisteredMapEntry)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_EVMRegisteredMapEntry) Interface() protoreflect.ProtoMessage {
+	return (*EVMRegisteredMapEntry)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_EVMRegisteredMapEntry) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.OperatorAddress != "" {
+		value := protoreflect.ValueOfString(x.OperatorAddress)
+		if !f(fd_EVMRegisteredMapEntry_operator_address, value) {
+			return
+		}
+	}
+	if x.Registered != false {
+		value := protoreflect.ValueOfBool(x.Registered)
+		if !f(fd_EVMRegisteredMapEntry_registered, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_EVMRegisteredMapEntry) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.EVMRegisteredMapEntry.operator_address":
+		return x.OperatorAddress != ""
+	case "layer.bridge.EVMRegisteredMapEntry.registered":
+		return x.Registered != false
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.EVMRegisteredMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.EVMRegisteredMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EVMRegisteredMapEntry) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.EVMRegisteredMapEntry.operator_address":
+		x.OperatorAddress = ""
+	case "layer.bridge.EVMRegisteredMapEntry.registered":
+		x.Registered = false
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.EVMRegisteredMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.EVMRegisteredMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_EVMRegisteredMapEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.EVMRegisteredMapEntry.operator_address":
+		value := x.OperatorAddress
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.EVMRegisteredMapEntry.registered":
+		value := x.Registered
+		return protoreflect.ValueOfBool(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.EVMRegisteredMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.EVMRegisteredMapEntry does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EVMRegisteredMapEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.EVMRegisteredMapEntry.operator_address":
+		x.OperatorAddress = value.Interface().(string)
+	case "layer.bridge.EVMRegisteredMapEntry.registered":
+		x.Registered = value.Bool()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.EVMRegisteredMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.EVMRegisteredMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EVMRegisteredMapEntry) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.EVMRegisteredMapEntry.operator_address":
+		panic(fmt.Errorf("field operator_address of message layer.bridge.EVMRegisteredMapEntry is not mutable"))
+	case "layer.bridge.EVMRegisteredMapEntry.registered":
+		panic(fmt.Errorf("field registered of message layer.bridge.EVMRegisteredMapEntry is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.EVMRegisteredMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.EVMRegisteredMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_EVMRegisteredMapEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.EVMRegisteredMapEntry.operator_address":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.EVMRegisteredMapEntry.registered":
+		return protoreflect.ValueOfBool(false)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.EVMRegisteredMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.EVMRegisteredMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_EVMRegisteredMapEntry) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.EVMRegisteredMapEntry", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_EVMRegisteredMapEntry) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EVMRegisteredMapEntry) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_EVMRegisteredMapEntry) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_EVMRegisteredMapEntry) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*EVMRegisteredMapEntry)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.OperatorAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Registered {
+			n += 2
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*EVMRegisteredMapEntry)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Registered {
+			i--
+			if x.Registered {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.OperatorAddress) > 0 {
+			i -= len(x.OperatorAddress)
+			copy(dAtA[i:], x.OperatorAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OperatorAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*EVMRegisteredMapEntry)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EVMRegisteredMapEntry: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EVMRegisteredMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OperatorAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.OperatorAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Registered", wireType)
+				}
+				var v int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				x.Registered = bool(v != 0)
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var _ protoreflect.List = (*_BridgeValSetSigsMapEntry_2_list)(nil)
+
+type _BridgeValSetSigsMapEntry_2_list struct {
+	list *[][]byte
+}
+
+func (x *_BridgeValSetSigsMapEntry_2_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_BridgeValSetSigsMapEntry_2_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfBytes((*x.list)[i])
+}
+
+func (x *_BridgeValSetSigsMapEntry_2_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Bytes()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_BridgeValSetSigsMapEntry_2_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Bytes()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_BridgeValSetSigsMapEntry_2_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message BridgeValSetSigsMapEntry at list field ValsetSigs as it is not of Message kind"))
+}
+
+func (x *_BridgeValSetSigsMapEntry_2_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_BridgeValSetSigsMapEntry_2_list) NewElement() protoreflect.Value {
+	var v []byte
+	return protoreflect.ValueOfBytes(v)
+}
+
+func (x *_BridgeValSetSigsMapEntry_2_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_BridgeValSetSigsMapEntry             protoreflect.MessageDescriptor
+	fd_BridgeValSetSigsMapEntry_timestamp   protoreflect.FieldDescriptor
+	fd_BridgeValSetSigsMapEntry_valset_sigs protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_genesis_proto_init()
+	md_BridgeValSetSigsMapEntry = File_layer_bridge_genesis_proto.Messages().ByName("BridgeValSetSigsMapEntry")
+	fd_BridgeValSetSigsMapEntry_timestamp = md_BridgeValSetSigsMapEntry.Fields().ByName("timestamp")
+	fd_BridgeValSetSigsMapEntry_valset_sigs = md_BridgeValSetSigsMapEntry.Fields().ByName("valset_sigs")
+}
+
+var _ protoreflect.Message = (*fastReflection_BridgeValSetSigsMapEntry)(nil)
+
+type fastReflection_BridgeValSetSigsMapEntry BridgeValSetSigsMapEntry
+
+func (x *BridgeValSetSigsMapEntry) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_BridgeValSetSigsMapEntry)(x)
+}
+
+func (x *BridgeValSetSigsMapEntry) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_genesis_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_BridgeValSetSigsMapEntry_messageType fastReflection_BridgeValSetSigsMapEntry_messageType
+var _ protoreflect.MessageType = fastReflection_BridgeValSetSigsMapEntry_messageType{}
+
+type fastReflection_BridgeValSetSigsMapEntry_messageType struct{}
+
+func (x fastReflection_BridgeValSetSigsMapEntry_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_BridgeValSetSigsMapEntry)(nil)
+}
+func (x fastReflection_BridgeValSetSigsMapEntry_messageType) New() protoreflect.Message {
+	return new(fastReflection_BridgeValSetSigsMapEntry)
+}
+func (x fastReflection_BridgeValSetSigsMapEntry_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_BridgeValSetSigsMapEntry
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_BridgeValSetSigsMapEntry) Descriptor() protoreflect.MessageDescriptor {
+	return md_BridgeValSetSigsMapEntry
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_BridgeValSetSigsMapEntry) Type() protoreflect.MessageType {
+	return _fastReflection_BridgeValSetSigsMapEntry_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_BridgeValSetSigsMapEntry) New() protoreflect.Message {
+	return new(fastReflection_BridgeValSetSigsMapEntry)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_BridgeValSetSigsMapEntry) Interface() protoreflect.ProtoMessage {
+	return (*BridgeValSetSigsMapEntry)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_BridgeValSetSigsMapEntry) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
+		if !f(fd_BridgeValSetSigsMapEntry_timestamp, value) {
+			return
+		}
+	}
+	if len(x.ValsetSigs) != 0 {
+		value := protoreflect.ValueOfList(&_BridgeValSetSigsMapEntry_2_list{list: &x.ValsetSigs})
+		if !f(fd_BridgeValSetSigsMapEntry_valset_sigs, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_BridgeValSetSigsMapEntry) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.BridgeValSetSigsMapEntry.timestamp":
+		return x.Timestamp != uint64(0)
+	case "layer.bridge.BridgeValSetSigsMapEntry.valset_sigs":
+		return len(x.ValsetSigs) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.BridgeValSetSigsMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.BridgeValSetSigsMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BridgeValSetSigsMapEntry) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.BridgeValSetSigsMapEntry.timestamp":
+		x.Timestamp = uint64(0)
+	case "layer.bridge.BridgeValSetSigsMapEntry.valset_sigs":
+		x.ValsetSigs = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.BridgeValSetSigsMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.BridgeValSetSigsMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_BridgeValSetSigsMapEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.BridgeValSetSigsMapEntry.timestamp":
+		value := x.Timestamp
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.BridgeValSetSigsMapEntry.valset_sigs":
+		if len(x.ValsetSigs) == 0 {
+			return protoreflect.ValueOfList(&_BridgeValSetSigsMapEntry_2_list{})
+		}
+		listValue := &_BridgeValSetSigsMapEntry_2_list{list: &x.ValsetSigs}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.BridgeValSetSigsMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.BridgeValSetSigsMapEntry does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BridgeValSetSigsMapEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.BridgeValSetSigsMapEntry.timestamp":
+		x.Timestamp = value.Uint()
+	case "layer.bridge.BridgeValSetSigsMapEntry.valset_sigs":
+		lv := value.List()
+		clv := lv.(*_BridgeValSetSigsMapEntry_2_list)
+		x.ValsetSigs = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.BridgeValSetSigsMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.BridgeValSetSigsMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BridgeValSetSigsMapEntry) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.BridgeValSetSigsMapEntry.valset_sigs":
+		if x.ValsetSigs == nil {
+			x.ValsetSigs = [][]byte{}
+		}
+		value := &_BridgeValSetSigsMapEntry_2_list{list: &x.ValsetSigs}
+		return protoreflect.ValueOfList(value)
+	case "layer.bridge.BridgeValSetSigsMapEntry.timestamp":
+		panic(fmt.Errorf("field timestamp of message layer.bridge.BridgeValSetSigsMapEntry is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.BridgeValSetSigsMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.BridgeValSetSigsMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_BridgeValSetSigsMapEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.BridgeValSetSigsMapEntry.timestamp":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.BridgeValSetSigsMapEntry.valset_sigs":
+		list := [][]byte{}
+		return protoreflect.ValueOfList(&_BridgeValSetSigsMapEntry_2_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.BridgeValSetSigsMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.BridgeValSetSigsMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_BridgeValSetSigsMapEntry) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.BridgeValSetSigsMapEntry", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_BridgeValSetSigsMapEntry) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BridgeValSetSigsMapEntry) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_BridgeValSetSigsMapEntry) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_BridgeValSetSigsMapEntry) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*BridgeValSetSigsMapEntry)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Timestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.Timestamp))
+		}
+		if len(x.ValsetSigs) > 0 {
+			for _, b := range x.ValsetSigs {
+				l = len(b)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*BridgeValSetSigsMapEntry)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.ValsetSigs) > 0 {
+			for iNdEx := len(x.ValsetSigs) - 1; iNdEx >= 0; iNdEx-- {
+				i -= len(x.ValsetSigs[iNdEx])
+				copy(dAtA[i:], x.ValsetSigs[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ValsetSigs[iNdEx])))
+				i--
+				dAtA[i] = 0x12
+			}
+		}
+		if x.Timestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Timestamp))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*BridgeValSetSigsMapEntry)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: BridgeValSetSigsMapEntry: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: BridgeValSetSigsMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+				}
+				x.Timestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Timestamp |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValsetSigs", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValsetSigs = append(x.ValsetSigs, make([]byte, postIndex-iNdEx))
+				copy(x.ValsetSigs[len(x.ValsetSigs)-1], dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_ValidatorCheckpointParamsStateEntry                           protoreflect.MessageDescriptor
+	fd_ValidatorCheckpointParamsStateEntry_timestamp                 protoreflect.FieldDescriptor
+	fd_ValidatorCheckpointParamsStateEntry_validator_timestamp       protoreflect.FieldDescriptor
+	fd_ValidatorCheckpointParamsStateEntry_validator_power_threshold protoreflect.FieldDescriptor
+	fd_ValidatorCheckpointParamsStateEntry_validator_set_hash        protoreflect.FieldDescriptor
+	fd_ValidatorCheckpointParamsStateEntry_validator_checkpoint      protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_genesis_proto_init()
+	md_ValidatorCheckpointParamsStateEntry = File_layer_bridge_genesis_proto.Messages().ByName("ValidatorCheckpointParamsStateEntry")
+	fd_ValidatorCheckpointParamsStateEntry_timestamp = md_ValidatorCheckpointParamsStateEntry.Fields().ByName("timestamp")
+	fd_ValidatorCheckpointParamsStateEntry_validator_timestamp = md_ValidatorCheckpointParamsStateEntry.Fields().ByName("validator_timestamp")
+	fd_ValidatorCheckpointParamsStateEntry_validator_power_threshold = md_ValidatorCheckpointParamsStateEntry.Fields().ByName("validator_power_threshold")
+	fd_ValidatorCheckpointParamsStateEntry_validator_set_hash = md_ValidatorCheckpointParamsStateEntry.Fields().ByName("validator_set_hash")
+	fd_ValidatorCheckpointParamsStateEntry_validator_checkpoint = md_ValidatorCheckpointParamsStateEntry.Fields().ByName("validator_checkpoint")
+}
+
+var _ protoreflect.Message = (*fastReflection_ValidatorCheckpointParamsStateEntry)(nil)
+
+type fastReflection_ValidatorCheckpointParamsStateEntry ValidatorCheckpointParamsStateEntry
+
+func (x *ValidatorCheckpointParamsStateEntry) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_ValidatorCheckpointParamsStateEntry)(x)
+}
+
+func (x *ValidatorCheckpointParamsStateEntry) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_genesis_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_ValidatorCheckpointParamsStateEntry_messageType fastReflection_ValidatorCheckpointParamsStateEntry_messageType
+var _ protoreflect.MessageType = fastReflection_ValidatorCheckpointParamsStateEntry_messageType{}
+
+type fastReflection_ValidatorCheckpointParamsStateEntry_messageType struct{}
+
+func (x fastReflection_ValidatorCheckpointParamsStateEntry_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_ValidatorCheckpointParamsStateEntry)(nil)
+}
+func (x fastReflection_ValidatorCheckpointParamsStateEntry_messageType) New() protoreflect.Message {
+	return new(fastReflection_ValidatorCheckpointParamsStateEntry)
+}
+func (x fastReflection_ValidatorCheckpointParamsStateEntry_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_ValidatorCheckpointParamsStateEntry
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) Descriptor() protoreflect.MessageDescriptor {
+	return md_ValidatorCheckpointParamsStateEntry
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) Type() protoreflect.MessageType {
+	return _fastReflection_ValidatorCheckpointParamsStateEntry_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) New() protoreflect.Message {
+	return new(fastReflection_ValidatorCheckpointParamsStateEntry)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) Interface() protoreflect.ProtoMessage {
+	return (*ValidatorCheckpointParamsStateEntry)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
+		if !f(fd_ValidatorCheckpointParamsStateEntry_timestamp, value) {
+			return
+		}
+	}
+	if x.ValidatorTimestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ValidatorTimestamp)
+		if !f(fd_ValidatorCheckpointParamsStateEntry_validator_timestamp, value) {
+			return
+		}
+	}
+	if x.ValidatorPowerThreshold != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ValidatorPowerThreshold)
+		if !f(fd_ValidatorCheckpointParamsStateEntry_validator_power_threshold, value) {
+			return
+		}
+	}
+	if len(x.ValidatorSetHash) != 0 {
+		value := protoreflect.ValueOfBytes(x.ValidatorSetHash)
+		if !f(fd_ValidatorCheckpointParamsStateEntry_validator_set_hash, value) {
+			return
+		}
+	}
+	if len(x.ValidatorCheckpoint) != 0 {
+		value := protoreflect.ValueOfBytes(x.ValidatorCheckpoint)
+		if !f(fd_ValidatorCheckpointParamsStateEntry_validator_checkpoint, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.timestamp":
+		return x.Timestamp != uint64(0)
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_timestamp":
+		return x.ValidatorTimestamp != uint64(0)
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_power_threshold":
+		return x.ValidatorPowerThreshold != uint64(0)
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_set_hash":
+		return len(x.ValidatorSetHash) != 0
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_checkpoint":
+		return len(x.ValidatorCheckpoint) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValidatorCheckpointParamsStateEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValidatorCheckpointParamsStateEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.timestamp":
+		x.Timestamp = uint64(0)
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_timestamp":
+		x.ValidatorTimestamp = uint64(0)
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_power_threshold":
+		x.ValidatorPowerThreshold = uint64(0)
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_set_hash":
+		x.ValidatorSetHash = nil
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_checkpoint":
+		x.ValidatorCheckpoint = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValidatorCheckpointParamsStateEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValidatorCheckpointParamsStateEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.timestamp":
+		value := x.Timestamp
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_timestamp":
+		value := x.ValidatorTimestamp
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_power_threshold":
+		value := x.ValidatorPowerThreshold
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_set_hash":
+		value := x.ValidatorSetHash
+		return protoreflect.ValueOfBytes(value)
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_checkpoint":
+		value := x.ValidatorCheckpoint
+		return protoreflect.ValueOfBytes(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValidatorCheckpointParamsStateEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValidatorCheckpointParamsStateEntry does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.timestamp":
+		x.Timestamp = value.Uint()
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_timestamp":
+		x.ValidatorTimestamp = value.Uint()
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_power_threshold":
+		x.ValidatorPowerThreshold = value.Uint()
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_set_hash":
+		x.ValidatorSetHash = value.Bytes()
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_checkpoint":
+		x.ValidatorCheckpoint = value.Bytes()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValidatorCheckpointParamsStateEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValidatorCheckpointParamsStateEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.timestamp":
+		panic(fmt.Errorf("field timestamp of message layer.bridge.ValidatorCheckpointParamsStateEntry is not mutable"))
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_timestamp":
+		panic(fmt.Errorf("field validator_timestamp of message layer.bridge.ValidatorCheckpointParamsStateEntry is not mutable"))
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_power_threshold":
+		panic(fmt.Errorf("field validator_power_threshold of message layer.bridge.ValidatorCheckpointParamsStateEntry is not mutable"))
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_set_hash":
+		panic(fmt.Errorf("field validator_set_hash of message layer.bridge.ValidatorCheckpointParamsStateEntry is not mutable"))
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_checkpoint":
+		panic(fmt.Errorf("field validator_checkpoint of message layer.bridge.ValidatorCheckpointParamsStateEntry is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValidatorCheckpointParamsStateEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValidatorCheckpointParamsStateEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.timestamp":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_timestamp":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_power_threshold":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_set_hash":
+		return protoreflect.ValueOfBytes(nil)
+	case "layer.bridge.ValidatorCheckpointParamsStateEntry.validator_checkpoint":
+		return protoreflect.ValueOfBytes(nil)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValidatorCheckpointParamsStateEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValidatorCheckpointParamsStateEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.ValidatorCheckpointParamsStateEntry", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_ValidatorCheckpointParamsStateEntry) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*ValidatorCheckpointParamsStateEntry)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Timestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.Timestamp))
+		}
+		if x.ValidatorTimestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.ValidatorTimestamp))
+		}
+		if x.ValidatorPowerThreshold != 0 {
+			n += 1 + runtime.Sov(uint64(x.ValidatorPowerThreshold))
+		}
+		l = len(x.ValidatorSetHash)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.ValidatorCheckpoint)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*ValidatorCheckpointParamsStateEntry)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.ValidatorCheckpoint) > 0 {
+			i -= len(x.ValidatorCheckpoint)
+			copy(dAtA[i:], x.ValidatorCheckpoint)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ValidatorCheckpoint)))
+			i--
+			dAtA[i] = 0x2a
+		}
+		if len(x.ValidatorSetHash) > 0 {
+			i -= len(x.ValidatorSetHash)
+			copy(dAtA[i:], x.ValidatorSetHash)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ValidatorSetHash)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if x.ValidatorPowerThreshold != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.ValidatorPowerThreshold))
+			i--
+			dAtA[i] = 0x18
+		}
+		if x.ValidatorTimestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.ValidatorTimestamp))
+			i--
+			dAtA[i] = 0x10
+		}
+		if x.Timestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Timestamp))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*ValidatorCheckpointParamsStateEntry)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ValidatorCheckpointParamsStateEntry: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ValidatorCheckpointParamsStateEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+				}
+				x.Timestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Timestamp |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorTimestamp", wireType)
+				}
+				x.ValidatorTimestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.ValidatorTimestamp |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorPowerThreshold", wireType)
+				}
+				x.ValidatorPowerThreshold = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.ValidatorPowerThreshold |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorSetHash", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValidatorSetHash = append(x.ValidatorSetHash[:0], dAtA[iNdEx:postIndex]...)
+				if x.ValidatorSetHash == nil {
+					x.ValidatorSetHash = []byte{}
+				}
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorCheckpoint", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValidatorCheckpoint = append(x.ValidatorCheckpoint[:0], dAtA[iNdEx:postIndex]...)
+				if x.ValidatorCheckpoint == nil {
+					x.ValidatorCheckpoint = []byte{}
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_ValidatorCheckpointIdxMapEntry           protoreflect.MessageDescriptor
+	fd_ValidatorCheckpointIdxMapEntry_index     protoreflect.FieldDescriptor
+	fd_ValidatorCheckpointIdxMapEntry_timestamp protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_genesis_proto_init()
+	md_ValidatorCheckpointIdxMapEntry = File_layer_bridge_genesis_proto.Messages().ByName("ValidatorCheckpointIdxMapEntry")
+	fd_ValidatorCheckpointIdxMapEntry_index = md_ValidatorCheckpointIdxMapEntry.Fields().ByName("index")
+	fd_ValidatorCheckpointIdxMapEntry_timestamp = md_ValidatorCheckpointIdxMapEntry.Fields().ByName("timestamp")
+}
+
+var _ protoreflect.Message = (*fastReflection_ValidatorCheckpointIdxMapEntry)(nil)
+
+type fastReflection_ValidatorCheckpointIdxMapEntry ValidatorCheckpointIdxMapEntry
+
+func (x *ValidatorCheckpointIdxMapEntry) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_ValidatorCheckpointIdxMapEntry)(x)
+}
+
+func (x *ValidatorCheckpointIdxMapEntry) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_genesis_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_ValidatorCheckpointIdxMapEntry_messageType fastReflection_ValidatorCheckpointIdxMapEntry_messageType
+var _ protoreflect.MessageType = fastReflection_ValidatorCheckpointIdxMapEntry_messageType{}
+
+type fastReflection_ValidatorCheckpointIdxMapEntry_messageType struct{}
+
+func (x fastReflection_ValidatorCheckpointIdxMapEntry_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_ValidatorCheckpointIdxMapEntry)(nil)
+}
+func (x fastReflection_ValidatorCheckpointIdxMapEntry_messageType) New() protoreflect.Message {
+	return new(fastReflection_ValidatorCheckpointIdxMapEntry)
+}
+func (x fastReflection_ValidatorCheckpointIdxMapEntry_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_ValidatorCheckpointIdxMapEntry
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) Descriptor() protoreflect.MessageDescriptor {
+	return md_ValidatorCheckpointIdxMapEntry
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) Type() protoreflect.MessageType {
+	return _fastReflection_ValidatorCheckpointIdxMapEntry_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) New() protoreflect.Message {
+	return new(fastReflection_ValidatorCheckpointIdxMapEntry)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) Interface() protoreflect.ProtoMessage {
+	return (*ValidatorCheckpointIdxMapEntry)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Index != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Index)
+		if !f(fd_ValidatorCheckpointIdxMapEntry_index, value) {
+			return
+		}
+	}
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
+		if !f(fd_ValidatorCheckpointIdxMapEntry_timestamp, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.ValidatorCheckpointIdxMapEntry.index":
+		return x.Index != uint64(0)
+	case "layer.bridge.ValidatorCheckpointIdxMapEntry.timestamp":
+		return x.Timestamp != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValidatorCheckpointIdxMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValidatorCheckpointIdxMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.ValidatorCheckpointIdxMapEntry.index":
+		x.Index = uint64(0)
+	case "layer.bridge.ValidatorCheckpointIdxMapEntry.timestamp":
+		x.Timestamp = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValidatorCheckpointIdxMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValidatorCheckpointIdxMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.ValidatorCheckpointIdxMapEntry.index":
+		value := x.Index
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.ValidatorCheckpointIdxMapEntry.timestamp":
+		value := x.Timestamp
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValidatorCheckpointIdxMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValidatorCheckpointIdxMapEntry does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.ValidatorCheckpointIdxMapEntry.index":
+		x.Index = value.Uint()
+	case "layer.bridge.ValidatorCheckpointIdxMapEntry.timestamp":
+		x.Timestamp = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValidatorCheckpointIdxMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValidatorCheckpointIdxMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.ValidatorCheckpointIdxMapEntry.index":
+		panic(fmt.Errorf("field index of message layer.bridge.ValidatorCheckpointIdxMapEntry is not mutable"))
+	case "layer.bridge.ValidatorCheckpointIdxMapEntry.timestamp":
+		panic(fmt.Errorf("field timestamp of message layer.bridge.ValidatorCheckpointIdxMapEntry is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValidatorCheckpointIdxMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValidatorCheckpointIdxMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.ValidatorCheckpointIdxMapEntry.index":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.ValidatorCheckpointIdxMapEntry.timestamp":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValidatorCheckpointIdxMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValidatorCheckpointIdxMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.ValidatorCheckpointIdxMapEntry", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_ValidatorCheckpointIdxMapEntry) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*ValidatorCheckpointIdxMapEntry)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Index != 0 {
+			n += 1 + runtime.Sov(uint64(x.Index))
+		}
+		if x.Timestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.Timestamp))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*ValidatorCheckpointIdxMapEntry)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Timestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Timestamp))
+			i--
+			dAtA[i] = 0x10
+		}
+		if x.Index != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Index))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*ValidatorCheckpointIdxMapEntry)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ValidatorCheckpointIdxMapEntry: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ValidatorCheckpointIdxMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
+				}
+				x.Index = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Index |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+				}
+				x.Timestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Timestamp |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_BridgeValsetByTimestampMapEntry           protoreflect.MessageDescriptor
+	fd_BridgeValsetByTimestampMapEntry_timestamp protoreflect.FieldDescriptor
+	fd_BridgeValsetByTimestampMapEntry_valset    protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_genesis_proto_init()
+	md_BridgeValsetByTimestampMapEntry = File_layer_bridge_genesis_proto.Messages().ByName("BridgeValsetByTimestampMapEntry")
+	fd_BridgeValsetByTimestampMapEntry_timestamp = md_BridgeValsetByTimestampMapEntry.Fields().ByName("timestamp")
+	fd_BridgeValsetByTimestampMapEntry_valset = md_BridgeValsetByTimestampMapEntry.Fields().ByName("valset")
+}
+
+var _ protoreflect.Message = (*fastReflection_BridgeValsetByTimestampMapEntry)(nil)
+
+type fastReflection_BridgeValsetByTimestampMapEntry BridgeValsetByTimestampMapEntry
+
+func (x *BridgeValsetByTimestampMapEntry) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_BridgeValsetByTimestampMapEntry)(x)
+}
+
+func (x *BridgeValsetByTimestampMapEntry) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_genesis_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_BridgeValsetByTimestampMapEntry_messageType fastReflection_BridgeValsetByTimestampMapEntry_messageType
+var _ protoreflect.MessageType = fastReflection_BridgeValsetByTimestampMapEntry_messageType{}
+
+type fastReflection_BridgeValsetByTimestampMapEntry_messageType struct{}
+
+func (x fastReflection_BridgeValsetByTimestampMapEntry_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_BridgeValsetByTimestampMapEntry)(nil)
+}
+func (x fastReflection_BridgeValsetByTimestampMapEntry_messageType) New() protoreflect.Message {
+	return new(fastReflection_BridgeValsetByTimestampMapEntry)
+}
+func (x fastReflection_BridgeValsetByTimestampMapEntry_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_BridgeValsetByTimestampMapEntry
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) Descriptor() protoreflect.MessageDescriptor {
+	return md_BridgeValsetByTimestampMapEntry
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) Type() protoreflect.MessageType {
+	return _fastReflection_BridgeValsetByTimestampMapEntry_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) New() protoreflect.Message {
+	return new(fastReflection_BridgeValsetByTimestampMapEntry)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) Interface() protoreflect.ProtoMessage {
+	return (*BridgeValsetByTimestampMapEntry)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
+		if !f(fd_BridgeValsetByTimestampMapEntry_timestamp, value) {
+			return
+		}
+	}
+	if x.Valset != nil {
+		value := protoreflect.ValueOfMessage(x.Valset.ProtoReflect())
+		if !f(fd_BridgeValsetByTimestampMapEntry_valset, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.BridgeValsetByTimestampMapEntry.timestamp":
+		return x.Timestamp != uint64(0)
+	case "layer.bridge.BridgeValsetByTimestampMapEntry.valset":
+		return x.Valset != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.BridgeValsetByTimestampMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.BridgeValsetByTimestampMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.BridgeValsetByTimestampMapEntry.timestamp":
+		x.Timestamp = uint64(0)
+	case "layer.bridge.BridgeValsetByTimestampMapEntry.valset":
+		x.Valset = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.BridgeValsetByTimestampMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.BridgeValsetByTimestampMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.BridgeValsetByTimestampMapEntry.timestamp":
+		value := x.Timestamp
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.BridgeValsetByTimestampMapEntry.valset":
+		value := x.Valset
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.BridgeValsetByTimestampMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.BridgeValsetByTimestampMapEntry does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.BridgeValsetByTimestampMapEntry.timestamp":
+		x.Timestamp = value.Uint()
+	case "layer.bridge.BridgeValsetByTimestampMapEntry.valset":
+		x.Valset = value.Message().Interface().(*BridgeValidatorSet)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.BridgeValsetByTimestampMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.BridgeValsetByTimestampMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.BridgeValsetByTimestampMapEntry.valset":
+		if x.Valset == nil {
+			x.Valset = new(BridgeValidatorSet)
+		}
+		return protoreflect.ValueOfMessage(x.Valset.ProtoReflect())
+	case "layer.bridge.BridgeValsetByTimestampMapEntry.timestamp":
+		panic(fmt.Errorf("field timestamp of message layer.bridge.BridgeValsetByTimestampMapEntry is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.BridgeValsetByTimestampMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.BridgeValsetByTimestampMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.BridgeValsetByTimestampMapEntry.timestamp":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.BridgeValsetByTimestampMapEntry.valset":
+		m := new(BridgeValidatorSet)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.BridgeValsetByTimestampMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.BridgeValsetByTimestampMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.BridgeValsetByTimestampMapEntry", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_BridgeValsetByTimestampMapEntry) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*BridgeValsetByTimestampMapEntry)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Timestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.Timestamp))
+		}
+		if x.Valset != nil {
+			l = options.Size(x.Valset)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*BridgeValsetByTimestampMapEntry)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Valset != nil {
+			encoded, err := options.Marshal(x.Valset)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if x.Timestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Timestamp))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*BridgeValsetByTimestampMapEntry)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: BridgeValsetByTimestampMapEntry: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: BridgeValsetByTimestampMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+				}
+				x.Timestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Timestamp |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Valset", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Valset == nil {
+					x.Valset = &BridgeValidatorSet{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Valset); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_ValsetTimestampToIdxMapEntry           protoreflect.MessageDescriptor
+	fd_ValsetTimestampToIdxMapEntry_timestamp protoreflect.FieldDescriptor
+	fd_ValsetTimestampToIdxMapEntry_index     protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_genesis_proto_init()
+	md_ValsetTimestampToIdxMapEntry = File_layer_bridge_genesis_proto.Messages().ByName("ValsetTimestampToIdxMapEntry")
+	fd_ValsetTimestampToIdxMapEntry_timestamp = md_ValsetTimestampToIdxMapEntry.Fields().ByName("timestamp")
+	fd_ValsetTimestampToIdxMapEntry_index = md_ValsetTimestampToIdxMapEntry.Fields().ByName("index")
+}
+
+var _ protoreflect.Message = (*fastReflection_ValsetTimestampToIdxMapEntry)(nil)
+
+type fastReflection_ValsetTimestampToIdxMapEntry ValsetTimestampToIdxMapEntry
+
+func (x *ValsetTimestampToIdxMapEntry) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_ValsetTimestampToIdxMapEntry)(x)
+}
+
+func (x *ValsetTimestampToIdxMapEntry) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_genesis_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_ValsetTimestampToIdxMapEntry_messageType fastReflection_ValsetTimestampToIdxMapEntry_messageType
+var _ protoreflect.MessageType = fastReflection_ValsetTimestampToIdxMapEntry_messageType{}
+
+type fastReflection_ValsetTimestampToIdxMapEntry_messageType struct{}
+
+func (x fastReflection_ValsetTimestampToIdxMapEntry_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_ValsetTimestampToIdxMapEntry)(nil)
+}
+func (x fastReflection_ValsetTimestampToIdxMapEntry_messageType) New() protoreflect.Message {
+	return new(fastReflection_ValsetTimestampToIdxMapEntry)
+}
+func (x fastReflection_ValsetTimestampToIdxMapEntry_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_ValsetTimestampToIdxMapEntry
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) Descriptor() protoreflect.MessageDescriptor {
+	return md_ValsetTimestampToIdxMapEntry
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) Type() protoreflect.MessageType {
+	return _fastReflection_ValsetTimestampToIdxMapEntry_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) New() protoreflect.Message {
+	return new(fastReflection_ValsetTimestampToIdxMapEntry)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) Interface() protoreflect.ProtoMessage {
+	return (*ValsetTimestampToIdxMapEntry)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
+		if !f(fd_ValsetTimestampToIdxMapEntry_timestamp, value) {
+			return
+		}
+	}
+	if x.Index != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Index)
+		if !f(fd_ValsetTimestampToIdxMapEntry_index, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.ValsetTimestampToIdxMapEntry.timestamp":
+		return x.Timestamp != uint64(0)
+	case "layer.bridge.ValsetTimestampToIdxMapEntry.index":
+		return x.Index != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValsetTimestampToIdxMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValsetTimestampToIdxMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.ValsetTimestampToIdxMapEntry.timestamp":
+		x.Timestamp = uint64(0)
+	case "layer.bridge.ValsetTimestampToIdxMapEntry.index":
+		x.Index = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValsetTimestampToIdxMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValsetTimestampToIdxMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.ValsetTimestampToIdxMapEntry.timestamp":
+		value := x.Timestamp
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.ValsetTimestampToIdxMapEntry.index":
+		value := x.Index
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValsetTimestampToIdxMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValsetTimestampToIdxMapEntry does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.ValsetTimestampToIdxMapEntry.timestamp":
+		x.Timestamp = value.Uint()
+	case "layer.bridge.ValsetTimestampToIdxMapEntry.index":
+		x.Index = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValsetTimestampToIdxMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValsetTimestampToIdxMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.ValsetTimestampToIdxMapEntry.timestamp":
+		panic(fmt.Errorf("field timestamp of message layer.bridge.ValsetTimestampToIdxMapEntry is not mutable"))
+	case "layer.bridge.ValsetTimestampToIdxMapEntry.index":
+		panic(fmt.Errorf("field index of message layer.bridge.ValsetTimestampToIdxMapEntry is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValsetTimestampToIdxMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValsetTimestampToIdxMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.ValsetTimestampToIdxMapEntry.timestamp":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.ValsetTimestampToIdxMapEntry.index":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.ValsetTimestampToIdxMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.ValsetTimestampToIdxMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.ValsetTimestampToIdxMapEntry", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_ValsetTimestampToIdxMapEntry) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*ValsetTimestampToIdxMapEntry)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Timestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.Timestamp))
+		}
+		if x.Index != 0 {
+			n += 1 + runtime.Sov(uint64(x.Index))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*ValsetTimestampToIdxMapEntry)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Index != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Index))
+			i--
+			dAtA[i] = 0x10
+		}
+		if x.Timestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Timestamp))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*ValsetTimestampToIdxMapEntry)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ValsetTimestampToIdxMapEntry: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: ValsetTimestampToIdxMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+				}
+				x.Timestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Timestamp |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
+				}
+				x.Index = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Index |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_DepositIdClaimedMapEntry            protoreflect.MessageDescriptor
+	fd_DepositIdClaimedMapEntry_deposit_id protoreflect.FieldDescriptor
+	fd_DepositIdClaimedMapEntry_isClaimed  protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_genesis_proto_init()
+	md_DepositIdClaimedMapEntry = File_layer_bridge_genesis_proto.Messages().ByName("DepositIdClaimedMapEntry")
+	fd_DepositIdClaimedMapEntry_deposit_id = md_DepositIdClaimedMapEntry.Fields().ByName("deposit_id")
+	fd_DepositIdClaimedMapEntry_isClaimed = md_DepositIdClaimedMapEntry.Fields().ByName("isClaimed")
+}
+
+var _ protoreflect.Message = (*fastReflection_DepositIdClaimedMapEntry)(nil)
+
+type fastReflection_DepositIdClaimedMapEntry DepositIdClaimedMapEntry
+
+func (x *DepositIdClaimedMapEntry) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_DepositIdClaimedMapEntry)(x)
+}
+
+func (x *DepositIdClaimedMapEntry) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_genesis_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_DepositIdClaimedMapEntry_messageType fastReflection_DepositIdClaimedMapEntry_messageType
+var _ protoreflect.MessageType = fastReflection_DepositIdClaimedMapEntry_messageType{}
+
+type fastReflection_DepositIdClaimedMapEntry_messageType struct{}
+
+func (x fastReflection_DepositIdClaimedMapEntry_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_DepositIdClaimedMapEntry)(nil)
+}
+func (x fastReflection_DepositIdClaimedMapEntry_messageType) New() protoreflect.Message {
+	return new(fastReflection_DepositIdClaimedMapEntry)
+}
+func (x fastReflection_DepositIdClaimedMapEntry_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_DepositIdClaimedMapEntry
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_DepositIdClaimedMapEntry) Descriptor() protoreflect.MessageDescriptor {
+	return md_DepositIdClaimedMapEntry
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_DepositIdClaimedMapEntry) Type() protoreflect.MessageType {
+	return _fastReflection_DepositIdClaimedMapEntry_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_DepositIdClaimedMapEntry) New() protoreflect.Message {
+	return new(fastReflection_DepositIdClaimedMapEntry)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_DepositIdClaimedMapEntry) Interface() protoreflect.ProtoMessage {
+	return (*DepositIdClaimedMapEntry)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_DepositIdClaimedMapEntry) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.DepositId != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.DepositId)
+		if !f(fd_DepositIdClaimedMapEntry_deposit_id, value) {
+			return
+		}
+	}
+	if x.IsClaimed != false {
+		value := protoreflect.ValueOfBool(x.IsClaimed)
+		if !f(fd_DepositIdClaimedMapEntry_isClaimed, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_DepositIdClaimedMapEntry) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.DepositIdClaimedMapEntry.deposit_id":
+		return x.DepositId != uint64(0)
+	case "layer.bridge.DepositIdClaimedMapEntry.isClaimed":
+		return x.IsClaimed != false
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.DepositIdClaimedMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.DepositIdClaimedMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DepositIdClaimedMapEntry) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.DepositIdClaimedMapEntry.deposit_id":
+		x.DepositId = uint64(0)
+	case "layer.bridge.DepositIdClaimedMapEntry.isClaimed":
+		x.IsClaimed = false
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.DepositIdClaimedMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.DepositIdClaimedMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_DepositIdClaimedMapEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.DepositIdClaimedMapEntry.deposit_id":
+		value := x.DepositId
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.DepositIdClaimedMapEntry.isClaimed":
+		value := x.IsClaimed
+		return protoreflect.ValueOfBool(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.DepositIdClaimedMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.DepositIdClaimedMapEntry does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DepositIdClaimedMapEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.DepositIdClaimedMapEntry.deposit_id":
+		x.DepositId = value.Uint()
+	case "layer.bridge.DepositIdClaimedMapEntry.isClaimed":
+		x.IsClaimed = value.Bool()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.DepositIdClaimedMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.DepositIdClaimedMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DepositIdClaimedMapEntry) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.DepositIdClaimedMapEntry.deposit_id":
+		panic(fmt.Errorf("field deposit_id of message layer.bridge.DepositIdClaimedMapEntry is not mutable"))
+	case "layer.bridge.DepositIdClaimedMapEntry.isClaimed":
+		panic(fmt.Errorf("field isClaimed of message layer.bridge.DepositIdClaimedMapEntry is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.DepositIdClaimedMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.DepositIdClaimedMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_DepositIdClaimedMapEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.DepositIdClaimedMapEntry.deposit_id":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.DepositIdClaimedMapEntry.isClaimed":
+		return protoreflect.ValueOfBool(false)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.DepositIdClaimedMapEntry"))
+		}
+		panic(fmt.Errorf("message layer.bridge.DepositIdClaimedMapEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_DepositIdClaimedMapEntry) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.DepositIdClaimedMapEntry", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_DepositIdClaimedMapEntry) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_DepositIdClaimedMapEntry) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_DepositIdClaimedMapEntry) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_DepositIdClaimedMapEntry) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*DepositIdClaimedMapEntry)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.DepositId != 0 {
+			n += 1 + runtime.Sov(uint64(x.DepositId))
+		}
+		if x.IsClaimed {
+			n += 2
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*DepositIdClaimedMapEntry)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.IsClaimed {
+			i--
+			if x.IsClaimed {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+			i--
+			dAtA[i] = 0x10
+		}
+		if x.DepositId != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.DepositId))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*DepositIdClaimedMapEntry)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DepositIdClaimedMapEntry: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: DepositIdClaimedMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DepositId", wireType)
+				}
+				x.DepositId = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.DepositId |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field IsClaimed", wireType)
+				}
+				var v int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				x.IsClaimed = bool(v != 0)
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -515,8 +5825,20 @@ type GenesisState struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Params        *Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
-	SnapshotLimit uint64  `protobuf:"varint,2,opt,name=snapshot_limit,json=snapshotLimit,proto3" json:"snapshot_limit,omitempty"`
+	Params                       *Params                                `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
+	SnapshotLimit                uint64                                 `protobuf:"varint,2,opt,name=snapshot_limit,json=snapshotLimit,proto3" json:"snapshot_limit,omitempty"`
+	BridgeValSet                 *BridgeValidatorSet                    `protobuf:"bytes,3,opt,name=bridge_val_set,json=bridgeValSet,proto3" json:"bridge_val_set,omitempty"`
+	ValidatorCheckpoint          []byte                                 `protobuf:"bytes,4,opt,name=validator_checkpoint,json=validatorCheckpoint,proto3" json:"validator_checkpoint,omitempty"`
+	WithdrawalId                 uint64                                 `protobuf:"varint,5,opt,name=withdrawal_id,json=withdrawalId,proto3" json:"withdrawal_id,omitempty"`
+	OperatorToEvmAddressMap      []*OperatorToEVMAddressMapEntry        `protobuf:"bytes,6,rep,name=operator_to_evm_address_map,json=operatorToEvmAddressMap,proto3" json:"operator_to_evm_address_map,omitempty"`
+	EvmRegisteredMap             []*EVMRegisteredMapEntry               `protobuf:"bytes,7,rep,name=evm_registered_map,json=evmRegisteredMap,proto3" json:"evm_registered_map,omitempty"`
+	BridgeValsetSigsMap          []*BridgeValSetSigsMapEntry            `protobuf:"bytes,8,rep,name=bridge_valset_sigs_map,json=bridgeValsetSigsMap,proto3" json:"bridge_valset_sigs_map,omitempty"`
+	ValidatorCheckpointParamsMap []*ValidatorCheckpointParamsStateEntry `protobuf:"bytes,9,rep,name=validator_checkpoint_params_map,json=validatorCheckpointParamsMap,proto3" json:"validator_checkpoint_params_map,omitempty"`
+	ValidatorCheckpointIdxMap    []*ValidatorCheckpointIdxMapEntry      `protobuf:"bytes,10,rep,name=validator_checkpoint_idx_map,json=validatorCheckpointIdxMap,proto3" json:"validator_checkpoint_idx_map,omitempty"`
+	LatestValidatorCheckpointIdx uint64                                 `protobuf:"varint,11,opt,name=latest_validator_checkpoint_idx,json=latestValidatorCheckpointIdx,proto3" json:"latest_validator_checkpoint_idx,omitempty"`
+	BridgeValsetByTimestampMap   []*BridgeValsetByTimestampMapEntry     `protobuf:"bytes,12,rep,name=bridge_valset_by_timestamp_map,json=bridgeValsetByTimestampMap,proto3" json:"bridge_valset_by_timestamp_map,omitempty"`
+	ValsetTimestampToIdxMap      []*ValsetTimestampToIdxMapEntry        `protobuf:"bytes,13,rep,name=valset_timestamp_to_idx_map,json=valsetTimestampToIdxMap,proto3" json:"valset_timestamp_to_idx_map,omitempty"`
+	DepositIdClaimedMap          []*DepositIdClaimedMapEntry            `protobuf:"bytes,14,rep,name=deposit_id_claimed_map,json=depositIdClaimedMap,proto3" json:"deposit_id_claimed_map,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -553,6 +5875,458 @@ func (x *GenesisState) GetSnapshotLimit() uint64 {
 	return 0
 }
 
+func (x *GenesisState) GetBridgeValSet() *BridgeValidatorSet {
+	if x != nil {
+		return x.BridgeValSet
+	}
+	return nil
+}
+
+func (x *GenesisState) GetValidatorCheckpoint() []byte {
+	if x != nil {
+		return x.ValidatorCheckpoint
+	}
+	return nil
+}
+
+func (x *GenesisState) GetWithdrawalId() uint64 {
+	if x != nil {
+		return x.WithdrawalId
+	}
+	return 0
+}
+
+func (x *GenesisState) GetOperatorToEvmAddressMap() []*OperatorToEVMAddressMapEntry {
+	if x != nil {
+		return x.OperatorToEvmAddressMap
+	}
+	return nil
+}
+
+func (x *GenesisState) GetEvmRegisteredMap() []*EVMRegisteredMapEntry {
+	if x != nil {
+		return x.EvmRegisteredMap
+	}
+	return nil
+}
+
+func (x *GenesisState) GetBridgeValsetSigsMap() []*BridgeValSetSigsMapEntry {
+	if x != nil {
+		return x.BridgeValsetSigsMap
+	}
+	return nil
+}
+
+func (x *GenesisState) GetValidatorCheckpointParamsMap() []*ValidatorCheckpointParamsStateEntry {
+	if x != nil {
+		return x.ValidatorCheckpointParamsMap
+	}
+	return nil
+}
+
+func (x *GenesisState) GetValidatorCheckpointIdxMap() []*ValidatorCheckpointIdxMapEntry {
+	if x != nil {
+		return x.ValidatorCheckpointIdxMap
+	}
+	return nil
+}
+
+func (x *GenesisState) GetLatestValidatorCheckpointIdx() uint64 {
+	if x != nil {
+		return x.LatestValidatorCheckpointIdx
+	}
+	return 0
+}
+
+func (x *GenesisState) GetBridgeValsetByTimestampMap() []*BridgeValsetByTimestampMapEntry {
+	if x != nil {
+		return x.BridgeValsetByTimestampMap
+	}
+	return nil
+}
+
+func (x *GenesisState) GetValsetTimestampToIdxMap() []*ValsetTimestampToIdxMapEntry {
+	if x != nil {
+		return x.ValsetTimestampToIdxMap
+	}
+	return nil
+}
+
+func (x *GenesisState) GetDepositIdClaimedMap() []*DepositIdClaimedMapEntry {
+	if x != nil {
+		return x.DepositIdClaimedMap
+	}
+	return nil
+}
+
+type OperatorToEVMAddressMapEntry struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
+	EvmAddress      []byte `protobuf:"bytes,2,opt,name=evm_address,json=evmAddress,proto3" json:"evm_address,omitempty"`
+}
+
+func (x *OperatorToEVMAddressMapEntry) Reset() {
+	*x = OperatorToEVMAddressMapEntry{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_genesis_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *OperatorToEVMAddressMapEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OperatorToEVMAddressMapEntry) ProtoMessage() {}
+
+// Deprecated: Use OperatorToEVMAddressMapEntry.ProtoReflect.Descriptor instead.
+func (*OperatorToEVMAddressMapEntry) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *OperatorToEVMAddressMapEntry) GetOperatorAddress() string {
+	if x != nil {
+		return x.OperatorAddress
+	}
+	return ""
+}
+
+func (x *OperatorToEVMAddressMapEntry) GetEvmAddress() []byte {
+	if x != nil {
+		return x.EvmAddress
+	}
+	return nil
+}
+
+type EVMRegisteredMapEntry struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
+	Registered      bool   `protobuf:"varint,2,opt,name=registered,proto3" json:"registered,omitempty"`
+}
+
+func (x *EVMRegisteredMapEntry) Reset() {
+	*x = EVMRegisteredMapEntry{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_genesis_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EVMRegisteredMapEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EVMRegisteredMapEntry) ProtoMessage() {}
+
+// Deprecated: Use EVMRegisteredMapEntry.ProtoReflect.Descriptor instead.
+func (*EVMRegisteredMapEntry) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *EVMRegisteredMapEntry) GetOperatorAddress() string {
+	if x != nil {
+		return x.OperatorAddress
+	}
+	return ""
+}
+
+func (x *EVMRegisteredMapEntry) GetRegistered() bool {
+	if x != nil {
+		return x.Registered
+	}
+	return false
+}
+
+type BridgeValSetSigsMapEntry struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Timestamp  uint64   `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	ValsetSigs [][]byte `protobuf:"bytes,2,rep,name=valset_sigs,json=valsetSigs,proto3" json:"valset_sigs,omitempty"`
+}
+
+func (x *BridgeValSetSigsMapEntry) Reset() {
+	*x = BridgeValSetSigsMapEntry{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_genesis_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *BridgeValSetSigsMapEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BridgeValSetSigsMapEntry) ProtoMessage() {}
+
+// Deprecated: Use BridgeValSetSigsMapEntry.ProtoReflect.Descriptor instead.
+func (*BridgeValSetSigsMapEntry) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *BridgeValSetSigsMapEntry) GetTimestamp() uint64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+func (x *BridgeValSetSigsMapEntry) GetValsetSigs() [][]byte {
+	if x != nil {
+		return x.ValsetSigs
+	}
+	return nil
+}
+
+type ValidatorCheckpointParamsStateEntry struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Timestamp               uint64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	ValidatorTimestamp      uint64 `protobuf:"varint,2,opt,name=validator_timestamp,json=validatorTimestamp,proto3" json:"validator_timestamp,omitempty"`
+	ValidatorPowerThreshold uint64 `protobuf:"varint,3,opt,name=validator_power_threshold,json=validatorPowerThreshold,proto3" json:"validator_power_threshold,omitempty"`
+	ValidatorSetHash        []byte `protobuf:"bytes,4,opt,name=validator_set_hash,json=validatorSetHash,proto3" json:"validator_set_hash,omitempty"`
+	ValidatorCheckpoint     []byte `protobuf:"bytes,5,opt,name=validator_checkpoint,json=validatorCheckpoint,proto3" json:"validator_checkpoint,omitempty"`
+}
+
+func (x *ValidatorCheckpointParamsStateEntry) Reset() {
+	*x = ValidatorCheckpointParamsStateEntry{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_genesis_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ValidatorCheckpointParamsStateEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidatorCheckpointParamsStateEntry) ProtoMessage() {}
+
+// Deprecated: Use ValidatorCheckpointParamsStateEntry.ProtoReflect.Descriptor instead.
+func (*ValidatorCheckpointParamsStateEntry) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *ValidatorCheckpointParamsStateEntry) GetTimestamp() uint64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+func (x *ValidatorCheckpointParamsStateEntry) GetValidatorTimestamp() uint64 {
+	if x != nil {
+		return x.ValidatorTimestamp
+	}
+	return 0
+}
+
+func (x *ValidatorCheckpointParamsStateEntry) GetValidatorPowerThreshold() uint64 {
+	if x != nil {
+		return x.ValidatorPowerThreshold
+	}
+	return 0
+}
+
+func (x *ValidatorCheckpointParamsStateEntry) GetValidatorSetHash() []byte {
+	if x != nil {
+		return x.ValidatorSetHash
+	}
+	return nil
+}
+
+func (x *ValidatorCheckpointParamsStateEntry) GetValidatorCheckpoint() []byte {
+	if x != nil {
+		return x.ValidatorCheckpoint
+	}
+	return nil
+}
+
+type ValidatorCheckpointIdxMapEntry struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Index     uint64 `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
+	Timestamp uint64 `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+}
+
+func (x *ValidatorCheckpointIdxMapEntry) Reset() {
+	*x = ValidatorCheckpointIdxMapEntry{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_genesis_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ValidatorCheckpointIdxMapEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidatorCheckpointIdxMapEntry) ProtoMessage() {}
+
+// Deprecated: Use ValidatorCheckpointIdxMapEntry.ProtoReflect.Descriptor instead.
+func (*ValidatorCheckpointIdxMapEntry) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ValidatorCheckpointIdxMapEntry) GetIndex() uint64 {
+	if x != nil {
+		return x.Index
+	}
+	return 0
+}
+
+func (x *ValidatorCheckpointIdxMapEntry) GetTimestamp() uint64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+type BridgeValsetByTimestampMapEntry struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Timestamp uint64              `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Valset    *BridgeValidatorSet `protobuf:"bytes,2,opt,name=valset,proto3" json:"valset,omitempty"`
+}
+
+func (x *BridgeValsetByTimestampMapEntry) Reset() {
+	*x = BridgeValsetByTimestampMapEntry{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_genesis_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *BridgeValsetByTimestampMapEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BridgeValsetByTimestampMapEntry) ProtoMessage() {}
+
+// Deprecated: Use BridgeValsetByTimestampMapEntry.ProtoReflect.Descriptor instead.
+func (*BridgeValsetByTimestampMapEntry) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *BridgeValsetByTimestampMapEntry) GetTimestamp() uint64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+func (x *BridgeValsetByTimestampMapEntry) GetValset() *BridgeValidatorSet {
+	if x != nil {
+		return x.Valset
+	}
+	return nil
+}
+
+type ValsetTimestampToIdxMapEntry struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Timestamp uint64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Index     uint64 `protobuf:"varint,2,opt,name=index,proto3" json:"index,omitempty"`
+}
+
+func (x *ValsetTimestampToIdxMapEntry) Reset() {
+	*x = ValsetTimestampToIdxMapEntry{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_genesis_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ValsetTimestampToIdxMapEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValsetTimestampToIdxMapEntry) ProtoMessage() {}
+
+// Deprecated: Use ValsetTimestampToIdxMapEntry.ProtoReflect.Descriptor instead.
+func (*ValsetTimestampToIdxMapEntry) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *ValsetTimestampToIdxMapEntry) GetTimestamp() uint64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+func (x *ValsetTimestampToIdxMapEntry) GetIndex() uint64 {
+	if x != nil {
+		return x.Index
+	}
+	return 0
+}
+
+type DepositIdClaimedMapEntry struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	DepositId uint64 `protobuf:"varint,1,opt,name=deposit_id,json=depositId,proto3" json:"deposit_id,omitempty"`
+	IsClaimed bool   `protobuf:"varint,2,opt,name=isClaimed,proto3" json:"isClaimed,omitempty"`
+}
+
+func (x *DepositIdClaimedMapEntry) Reset() {
+	*x = DepositIdClaimedMapEntry{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_genesis_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DepositIdClaimedMapEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DepositIdClaimedMapEntry) ProtoMessage() {}
+
+// Deprecated: Use DepositIdClaimedMapEntry.ProtoReflect.Descriptor instead.
+func (*DepositIdClaimedMapEntry) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *DepositIdClaimedMapEntry) GetDepositId() uint64 {
+	if x != nil {
+		return x.DepositId
+	}
+	return 0
+}
+
+func (x *DepositIdClaimedMapEntry) GetIsClaimed() bool {
+	if x != nil {
+		return x.IsClaimed
+	}
+	return false
+}
+
 var File_layer_bridge_genesis_proto protoreflect.FileDescriptor
 
 var file_layer_bridge_genesis_proto_rawDesc = []byte{
@@ -561,24 +6335,152 @@ var file_layer_bridge_genesis_proto_rawDesc = []byte{
 	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f,
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x1a, 0x19, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x70,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x69, 0x0a, 0x0c, 0x47,
-	0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x32, 0x0a, 0x06, 0x70,
-	0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d,
-	0x73, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12,
-	0x25, 0x0a, 0x0e, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x5f, 0x6c, 0x69, 0x6d, 0x69,
-	0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0d, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f,
-	0x74, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x42, 0x9e, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x0c, 0x47, 0x65, 0x6e,
-	0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69,
-	0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa, 0x02,
-	0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02, 0x0c,
-	0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18, 0x4c,
-	0x61, 0x79, 0x65, 0x72, 0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d,
-	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a,
-	0x3a, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x18, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x8d, 0x09, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69,
+	0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x32, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x04, 0xc8, 0xde,
+	0x1f, 0x00, 0x52, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x25, 0x0a, 0x0e, 0x73, 0x6e,
+	0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x5f, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x04, 0x52, 0x0d, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x4c, 0x69, 0x6d, 0x69,
+	0x74, 0x12, 0x46, 0x0a, 0x0e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x76, 0x61, 0x6c, 0x5f,
+	0x73, 0x65, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56,
+	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x52, 0x0c, 0x62, 0x72, 0x69,
+	0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x53, 0x65, 0x74, 0x12, 0x31, 0x0a, 0x14, 0x76, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e,
+	0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
+	0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x23, 0x0a, 0x0d,
+	0x77, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x0c, 0x77, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x49,
+	0x64, 0x12, 0x68, 0x0a, 0x1b, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x74, 0x6f,
+	0x5f, 0x65, 0x76, 0x6d, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x5f, 0x6d, 0x61, 0x70,
+	0x18, 0x06, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x6f,
+	0x45, 0x56, 0x4d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74,
+	0x72, 0x79, 0x52, 0x17, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x6f, 0x45, 0x76,
+	0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x4d, 0x61, 0x70, 0x12, 0x51, 0x0a, 0x12, 0x65,
+	0x76, 0x6d, 0x5f, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x65, 0x64, 0x5f, 0x6d, 0x61,
+	0x70, 0x18, 0x07, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x45, 0x56, 0x4d, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74,
+	0x65, 0x72, 0x65, 0x64, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x10, 0x65, 0x76,
+	0x6d, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x65, 0x64, 0x4d, 0x61, 0x70, 0x12, 0x5b,
+	0x0a, 0x16, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f,
+	0x73, 0x69, 0x67, 0x73, 0x5f, 0x6d, 0x61, 0x70, 0x18, 0x08, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x26,
+	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x42, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x53, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x4d, 0x61,
+	0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x13, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61,
+	0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x4d, 0x61, 0x70, 0x12, 0x78, 0x0a, 0x1f, 0x76,
+	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f,
+	0x69, 0x6e, 0x74, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x5f, 0x6d, 0x61, 0x70, 0x18, 0x09,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x31, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69,
+	0x64, 0x67, 0x65, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65,
+	0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x53, 0x74, 0x61,
+	0x74, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x1c, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
+	0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61,
+	0x6d, 0x73, 0x4d, 0x61, 0x70, 0x12, 0x6d, 0x0a, 0x1c, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
+	0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x5f, 0x69, 0x64,
+	0x78, 0x5f, 0x6d, 0x61, 0x70, 0x18, 0x0a, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x49, 0x64,
+	0x78, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x19, 0x76, 0x61, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x49, 0x64,
+	0x78, 0x4d, 0x61, 0x70, 0x12, 0x45, 0x0a, 0x1f, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x74, 0x5f, 0x76,
+	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f,
+	0x69, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x78, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x04, 0x52, 0x1c, 0x6c,
+	0x61, 0x74, 0x65, 0x73, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68,
+	0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x49, 0x64, 0x78, 0x12, 0x71, 0x0a, 0x1e, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x62, 0x79, 0x5f,
+	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x5f, 0x6d, 0x61, 0x70, 0x18, 0x0c, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x2d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
+	0x67, 0x65, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x42,
+	0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74,
+	0x72, 0x79, 0x52, 0x1a, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74,
+	0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x4d, 0x61, 0x70, 0x12, 0x68,
+	0x0a, 0x1b, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x5f, 0x74, 0x6f, 0x5f, 0x69, 0x64, 0x78, 0x5f, 0x6d, 0x61, 0x70, 0x18, 0x0d, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
+	0x67, 0x65, 0x2e, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x54, 0x6f, 0x49, 0x64, 0x78, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52,
+	0x17, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
+	0x54, 0x6f, 0x49, 0x64, 0x78, 0x4d, 0x61, 0x70, 0x12, 0x5b, 0x0a, 0x16, 0x64, 0x65, 0x70, 0x6f,
+	0x73, 0x69, 0x74, 0x5f, 0x69, 0x64, 0x5f, 0x63, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64, 0x5f, 0x6d,
+	0x61, 0x70, 0x18, 0x0e, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49,
+	0x64, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79,
+	0x52, 0x13, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49, 0x64, 0x43, 0x6c, 0x61, 0x69, 0x6d,
+	0x65, 0x64, 0x4d, 0x61, 0x70, 0x22, 0x6a, 0x0a, 0x1c, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f,
+	0x72, 0x54, 0x6f, 0x45, 0x56, 0x4d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x4d, 0x61, 0x70,
+	0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x29, 0x0a, 0x10, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f,
+	0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x0f, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x12, 0x1f, 0x0a, 0x0b, 0x65, 0x76, 0x6d, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0a, 0x65, 0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x22, 0x62, 0x0a, 0x15, 0x45, 0x56, 0x4d, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72,
+	0x65, 0x64, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x29, 0x0a, 0x10, 0x6f, 0x70,
+	0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1e, 0x0a, 0x0a, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65,
+	0x72, 0x65, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0a, 0x72, 0x65, 0x67, 0x69, 0x73,
+	0x74, 0x65, 0x72, 0x65, 0x64, 0x22, 0x59, 0x0a, 0x18, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56,
+	0x61, 0x6c, 0x53, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72,
+	0x79, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12,
+	0x1f, 0x0a, 0x0b, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x73, 0x69, 0x67, 0x73, 0x18, 0x02,
+	0x20, 0x03, 0x28, 0x0c, 0x52, 0x0a, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73,
+	0x22, 0x91, 0x02, 0x0a, 0x23, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68,
+	0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x53, 0x74,
+	0x61, 0x74, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x2f, 0x0a, 0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x6f, 0x72, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x12, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x3a, 0x0a, 0x19, 0x76, 0x61, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x6f, 0x72, 0x5f, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x5f, 0x74, 0x68, 0x72, 0x65, 0x73,
+	0x68, 0x6f, 0x6c, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x17, 0x76, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68,
+	0x6f, 0x6c, 0x64, 0x12, 0x2c, 0x0a, 0x12, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x5f, 0x73, 0x65, 0x74, 0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x48, 0x61, 0x73,
+	0x68, 0x12, 0x31, 0x0a, 0x14, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63,
+	0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70,
+	0x6f, 0x69, 0x6e, 0x74, 0x22, 0x54, 0x0a, 0x1e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x49, 0x64, 0x78, 0x4d, 0x61,
+	0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x1c, 0x0a, 0x09,
+	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x79, 0x0a, 0x1f, 0x42, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x1c, 0x0a,
+	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04,
+	0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x38, 0x0a, 0x06, 0x76,
+	0x61, 0x6c, 0x73, 0x65, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x52, 0x06, 0x76,
+	0x61, 0x6c, 0x73, 0x65, 0x74, 0x22, 0x52, 0x0a, 0x1c, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x54,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x54, 0x6f, 0x49, 0x64, 0x78, 0x4d, 0x61, 0x70,
+	0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74,
+	0x61, 0x6d, 0x70, 0x12, 0x14, 0x0a, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x04, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x22, 0x57, 0x0a, 0x18, 0x44, 0x65, 0x70,
+	0x6f, 0x73, 0x69, 0x74, 0x49, 0x64, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64, 0x4d, 0x61, 0x70,
+	0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x1d, 0x0a, 0x0a, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74,
+	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x64, 0x65, 0x70, 0x6f, 0x73,
+	0x69, 0x74, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x69, 0x73, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x65,
+	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x69, 0x73, 0x43, 0x6c, 0x61, 0x69, 0x6d,
+	0x65, 0x64, 0x42, 0x9e, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73,
+	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
+	0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79,
+	0x65, 0x72, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65,
+	0x72, 0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72,
+	0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x42, 0x72, 0x69,
+	0x64, 0x67, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -593,18 +6495,37 @@ func file_layer_bridge_genesis_proto_rawDescGZIP() []byte {
 	return file_layer_bridge_genesis_proto_rawDescData
 }
 
-var file_layer_bridge_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_layer_bridge_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_layer_bridge_genesis_proto_goTypes = []interface{}{
-	(*GenesisState)(nil), // 0: layer.bridge.GenesisState
-	(*Params)(nil),       // 1: layer.bridge.Params
+	(*GenesisState)(nil),                        // 0: layer.bridge.GenesisState
+	(*OperatorToEVMAddressMapEntry)(nil),        // 1: layer.bridge.OperatorToEVMAddressMapEntry
+	(*EVMRegisteredMapEntry)(nil),               // 2: layer.bridge.EVMRegisteredMapEntry
+	(*BridgeValSetSigsMapEntry)(nil),            // 3: layer.bridge.BridgeValSetSigsMapEntry
+	(*ValidatorCheckpointParamsStateEntry)(nil), // 4: layer.bridge.ValidatorCheckpointParamsStateEntry
+	(*ValidatorCheckpointIdxMapEntry)(nil),      // 5: layer.bridge.ValidatorCheckpointIdxMapEntry
+	(*BridgeValsetByTimestampMapEntry)(nil),     // 6: layer.bridge.BridgeValsetByTimestampMapEntry
+	(*ValsetTimestampToIdxMapEntry)(nil),        // 7: layer.bridge.ValsetTimestampToIdxMapEntry
+	(*DepositIdClaimedMapEntry)(nil),            // 8: layer.bridge.DepositIdClaimedMapEntry
+	(*Params)(nil),                              // 9: layer.bridge.Params
+	(*BridgeValidatorSet)(nil),                  // 10: layer.bridge.BridgeValidatorSet
 }
 var file_layer_bridge_genesis_proto_depIdxs = []int32{
-	1, // 0: layer.bridge.GenesisState.params:type_name -> layer.bridge.Params
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	9,  // 0: layer.bridge.GenesisState.params:type_name -> layer.bridge.Params
+	10, // 1: layer.bridge.GenesisState.bridge_val_set:type_name -> layer.bridge.BridgeValidatorSet
+	1,  // 2: layer.bridge.GenesisState.operator_to_evm_address_map:type_name -> layer.bridge.OperatorToEVMAddressMapEntry
+	2,  // 3: layer.bridge.GenesisState.evm_registered_map:type_name -> layer.bridge.EVMRegisteredMapEntry
+	3,  // 4: layer.bridge.GenesisState.bridge_valset_sigs_map:type_name -> layer.bridge.BridgeValSetSigsMapEntry
+	4,  // 5: layer.bridge.GenesisState.validator_checkpoint_params_map:type_name -> layer.bridge.ValidatorCheckpointParamsStateEntry
+	5,  // 6: layer.bridge.GenesisState.validator_checkpoint_idx_map:type_name -> layer.bridge.ValidatorCheckpointIdxMapEntry
+	6,  // 7: layer.bridge.GenesisState.bridge_valset_by_timestamp_map:type_name -> layer.bridge.BridgeValsetByTimestampMapEntry
+	7,  // 8: layer.bridge.GenesisState.valset_timestamp_to_idx_map:type_name -> layer.bridge.ValsetTimestampToIdxMapEntry
+	8,  // 9: layer.bridge.GenesisState.deposit_id_claimed_map:type_name -> layer.bridge.DepositIdClaimedMapEntry
+	10, // 10: layer.bridge.BridgeValsetByTimestampMapEntry.valset:type_name -> layer.bridge.BridgeValidatorSet
+	11, // [11:11] is the sub-list for method output_type
+	11, // [11:11] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_layer_bridge_genesis_proto_init() }
@@ -613,9 +6534,106 @@ func file_layer_bridge_genesis_proto_init() {
 		return
 	}
 	file_layer_bridge_params_proto_init()
+	file_layer_bridge_query_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_layer_bridge_genesis_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GenesisState); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_genesis_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*OperatorToEVMAddressMapEntry); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_genesis_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EVMRegisteredMapEntry); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_genesis_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*BridgeValSetSigsMapEntry); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_genesis_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ValidatorCheckpointParamsStateEntry); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_genesis_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ValidatorCheckpointIdxMapEntry); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_genesis_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*BridgeValsetByTimestampMapEntry); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_genesis_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ValsetTimestampToIdxMapEntry); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_genesis_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DepositIdClaimedMapEntry); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -633,7 +6651,7 @@ func file_layer_bridge_genesis_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_bridge_genesis_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   1,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
