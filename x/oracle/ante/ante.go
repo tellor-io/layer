@@ -72,9 +72,12 @@ func (t TrackNoStakeReportingDecorator) checkNoStakeReport(ctx sdk.Context, msg 
 		queryId := utils.QueryIDFromData(queryData)
 		currentHeight := uint64(ctx.BlockHeight())
 		key := collections.Join(currentHeight, queryId)
-		_, err := t.oracleKeeper.NoStakeTracker.Get(ctx, key)
-		if err == nil {
+		exists, err := t.oracleKeeper.NoStakeTracker.Has(ctx, key)
+		if exists {
 			return fmt.Errorf("no stake report already exists for this queryId at height: %d, please submit again next block", currentHeight)
+		}
+		if err != nil && err != collections.ErrNotFound {
+			return err
 		}
 		return nil
 	default:
