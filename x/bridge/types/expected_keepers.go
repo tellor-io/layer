@@ -45,6 +45,8 @@ type OracleKeeper interface {
 	GetAggregatedReportsByHeight(ctx context.Context, height uint64) []oracletypes.Aggregate
 	SetAggregate(ctx context.Context, report *oracletypes.Aggregate, queryData []byte, queryType string) error
 	GetCurrentAggregateReport(ctx context.Context, queryId []byte) (aggregate *oracletypes.Aggregate, timestamp time.Time, err error)
+	GetNoStakeReportByQueryIdTimestamp(ctx context.Context, queryId []byte, timestamp uint64) (*oracletypes.NoStakeMicroReport, error)
+	GetNoStakeReportsByReporter(ctx context.Context, reporter string) ([]*oracletypes.NoStakeMicroReport, error)
 }
 
 type ReporterKeeper interface {
