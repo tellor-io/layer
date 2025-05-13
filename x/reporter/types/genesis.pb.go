@@ -4,7 +4,9 @@
 package types
 
 import (
+	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -27,7 +29,10 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // GenesisState defines the reporter module's genesis state.
 type GenesisState struct {
 	// params defines all the parameters of the module.
-	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	Params                    Params                                `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	SelectorTips              []*SelectorTipsStateEntry             `protobuf:"bytes,2,rep,name=selectorTips,proto3" json:"selectorTips,omitempty"`
+	DisputedDelegationAmounts []*DisputedDelegationAmountStateEntry `protobuf:"bytes,3,rep,name=disputed_delegation_amounts,json=disputedDelegationAmounts,proto3" json:"disputed_delegation_amounts,omitempty"`
+	FeePaidFromStake          []*FeePaidFromStakeStateEntry         `protobuf:"bytes,4,rep,name=fee_paid_from_stake,json=feePaidFromStake,proto3" json:"fee_paid_from_stake,omitempty"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -70,28 +75,220 @@ func (m *GenesisState) GetParams() Params {
 	return Params{}
 }
 
+func (m *GenesisState) GetSelectorTips() []*SelectorTipsStateEntry {
+	if m != nil {
+		return m.SelectorTips
+	}
+	return nil
+}
+
+func (m *GenesisState) GetDisputedDelegationAmounts() []*DisputedDelegationAmountStateEntry {
+	if m != nil {
+		return m.DisputedDelegationAmounts
+	}
+	return nil
+}
+
+func (m *GenesisState) GetFeePaidFromStake() []*FeePaidFromStakeStateEntry {
+	if m != nil {
+		return m.FeePaidFromStake
+	}
+	return nil
+}
+
+type SelectorTipsStateEntry struct {
+	SelectorAddress []byte                      `protobuf:"bytes,1,opt,name=selector_address,json=selectorAddress,proto3" json:"selector_address,omitempty"`
+	Tips            cosmossdk_io_math.LegacyDec `protobuf:"bytes,2,opt,name=tips,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"tips"`
+}
+
+func (m *SelectorTipsStateEntry) Reset()         { *m = SelectorTipsStateEntry{} }
+func (m *SelectorTipsStateEntry) String() string { return proto.CompactTextString(m) }
+func (*SelectorTipsStateEntry) ProtoMessage()    {}
+func (*SelectorTipsStateEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1affa61e846a6c93, []int{1}
+}
+func (m *SelectorTipsStateEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SelectorTipsStateEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SelectorTipsStateEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SelectorTipsStateEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SelectorTipsStateEntry.Merge(m, src)
+}
+func (m *SelectorTipsStateEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *SelectorTipsStateEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_SelectorTipsStateEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SelectorTipsStateEntry proto.InternalMessageInfo
+
+func (m *SelectorTipsStateEntry) GetSelectorAddress() []byte {
+	if m != nil {
+		return m.SelectorAddress
+	}
+	return nil
+}
+
+type DisputedDelegationAmountStateEntry struct {
+	HashId           []byte              `protobuf:"bytes,1,opt,name=hash_id,json=hashId,proto3" json:"hash_id,omitempty"`
+	DelegationAmount *DelegationsAmounts `protobuf:"bytes,2,opt,name=delegation_amount,json=delegationAmount,proto3" json:"delegation_amount,omitempty"`
+}
+
+func (m *DisputedDelegationAmountStateEntry) Reset()         { *m = DisputedDelegationAmountStateEntry{} }
+func (m *DisputedDelegationAmountStateEntry) String() string { return proto.CompactTextString(m) }
+func (*DisputedDelegationAmountStateEntry) ProtoMessage()    {}
+func (*DisputedDelegationAmountStateEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1affa61e846a6c93, []int{2}
+}
+func (m *DisputedDelegationAmountStateEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DisputedDelegationAmountStateEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DisputedDelegationAmountStateEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DisputedDelegationAmountStateEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DisputedDelegationAmountStateEntry.Merge(m, src)
+}
+func (m *DisputedDelegationAmountStateEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *DisputedDelegationAmountStateEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_DisputedDelegationAmountStateEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DisputedDelegationAmountStateEntry proto.InternalMessageInfo
+
+func (m *DisputedDelegationAmountStateEntry) GetHashId() []byte {
+	if m != nil {
+		return m.HashId
+	}
+	return nil
+}
+
+func (m *DisputedDelegationAmountStateEntry) GetDelegationAmount() *DelegationsAmounts {
+	if m != nil {
+		return m.DelegationAmount
+	}
+	return nil
+}
+
+type FeePaidFromStakeStateEntry struct {
+	HashId           []byte              `protobuf:"bytes,1,opt,name=hash_id,json=hashId,proto3" json:"hash_id,omitempty"`
+	DelegationAmount *DelegationsAmounts `protobuf:"bytes,2,opt,name=delegation_amount,json=delegationAmount,proto3" json:"delegation_amount,omitempty"`
+}
+
+func (m *FeePaidFromStakeStateEntry) Reset()         { *m = FeePaidFromStakeStateEntry{} }
+func (m *FeePaidFromStakeStateEntry) String() string { return proto.CompactTextString(m) }
+func (*FeePaidFromStakeStateEntry) ProtoMessage()    {}
+func (*FeePaidFromStakeStateEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1affa61e846a6c93, []int{3}
+}
+func (m *FeePaidFromStakeStateEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *FeePaidFromStakeStateEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_FeePaidFromStakeStateEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *FeePaidFromStakeStateEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_FeePaidFromStakeStateEntry.Merge(m, src)
+}
+func (m *FeePaidFromStakeStateEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *FeePaidFromStakeStateEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_FeePaidFromStakeStateEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_FeePaidFromStakeStateEntry proto.InternalMessageInfo
+
+func (m *FeePaidFromStakeStateEntry) GetHashId() []byte {
+	if m != nil {
+		return m.HashId
+	}
+	return nil
+}
+
+func (m *FeePaidFromStakeStateEntry) GetDelegationAmount() *DelegationsAmounts {
+	if m != nil {
+		return m.DelegationAmount
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "layer.reporter.GenesisState")
+	proto.RegisterType((*SelectorTipsStateEntry)(nil), "layer.reporter.SelectorTipsStateEntry")
+	proto.RegisterType((*DisputedDelegationAmountStateEntry)(nil), "layer.reporter.DisputedDelegationAmountStateEntry")
+	proto.RegisterType((*FeePaidFromStakeStateEntry)(nil), "layer.reporter.FeePaidFromStakeStateEntry")
 }
 
 func init() { proto.RegisterFile("layer/reporter/genesis.proto", fileDescriptor_1affa61e846a6c93) }
 
 var fileDescriptor_1affa61e846a6c93 = []byte{
-	// 209 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0xc9, 0x49, 0xac, 0x4c,
-	0x2d, 0xd2, 0x2f, 0x4a, 0x2d, 0xc8, 0x2f, 0x2a, 0x49, 0x2d, 0xd2, 0x4f, 0x4f, 0xcd, 0x4b, 0x2d,
-	0xce, 0x2c, 0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x03, 0xcb, 0xea, 0xc1, 0x64, 0xa5,
-	0x04, 0x13, 0x73, 0x33, 0xf3, 0xf2, 0xf5, 0xc1, 0x24, 0x44, 0x89, 0x94, 0x48, 0x7a, 0x7e, 0x7a,
-	0x3e, 0x98, 0xa9, 0x0f, 0x62, 0x41, 0x45, 0xa5, 0xd1, 0x8c, 0x2d, 0x48, 0x2c, 0x4a, 0xcc, 0x85,
-	0x9a, 0xaa, 0xe4, 0xc9, 0xc5, 0xe3, 0x0e, 0xb1, 0x26, 0xb8, 0x24, 0xb1, 0x24, 0x55, 0xc8, 0x92,
-	0x8b, 0x0d, 0x22, 0x2f, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0x6d, 0x24, 0xa6, 0x87, 0x6a, 0xad, 0x5e,
-	0x00, 0x58, 0xd6, 0x89, 0xf3, 0xc4, 0x3d, 0x79, 0x86, 0x15, 0xcf, 0x37, 0x68, 0x31, 0x06, 0x41,
-	0x35, 0x38, 0xb9, 0x9e, 0x78, 0x24, 0xc7, 0x78, 0xe1, 0x91, 0x1c, 0xe3, 0x83, 0x47, 0x72, 0x8c,
-	0x13, 0x1e, 0xcb, 0x31, 0x5c, 0x78, 0x2c, 0xc7, 0x70, 0xe3, 0xb1, 0x1c, 0x43, 0x94, 0x76, 0x7a,
-	0x66, 0x49, 0x46, 0x69, 0x92, 0x5e, 0x72, 0x7e, 0xae, 0x7e, 0x49, 0x6a, 0x4e, 0x4e, 0x7e, 0x91,
-	0x6e, 0x66, 0xbe, 0x3e, 0xc4, 0x59, 0x15, 0x08, 0x87, 0x95, 0x54, 0x16, 0xa4, 0x16, 0x27, 0xb1,
-	0x81, 0x1d, 0x66, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0x4d, 0x1b, 0xa6, 0xa6, 0x0e, 0x01, 0x00,
-	0x00,
+	// 521 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x53, 0x4f, 0x6b, 0x13, 0x41,
+	0x14, 0xcf, 0xb6, 0x25, 0xd2, 0x49, 0xd0, 0x74, 0x95, 0x9a, 0x26, 0xb2, 0xad, 0x7b, 0x90, 0x58,
+	0xe9, 0x2e, 0x44, 0x10, 0x3c, 0x36, 0xa4, 0x15, 0x8b, 0x60, 0x49, 0xbc, 0xe8, 0x65, 0x99, 0xee,
+	0xbc, 0x6c, 0x86, 0x64, 0xf7, 0x2d, 0x33, 0x13, 0x30, 0x5f, 0xc0, 0xa3, 0xfa, 0x31, 0x3c, 0x7a,
+	0xf0, 0x43, 0xf4, 0x58, 0x3c, 0x89, 0x87, 0x22, 0x89, 0xe0, 0xd7, 0x90, 0x9d, 0xd9, 0x94, 0x74,
+	0x6b, 0xf1, 0xd6, 0xcb, 0xb2, 0xf3, 0x7e, 0xbf, 0xdf, 0xfb, 0xbd, 0x3f, 0x33, 0xe4, 0xc1, 0x98,
+	0x4e, 0x41, 0xf8, 0x02, 0x52, 0x14, 0x0a, 0x84, 0x1f, 0x41, 0x02, 0x92, 0x4b, 0x2f, 0x15, 0xa8,
+	0xd0, 0xbe, 0xad, 0x51, 0x6f, 0x81, 0x36, 0x36, 0x68, 0xcc, 0x13, 0xf4, 0xf5, 0xd7, 0x50, 0x1a,
+	0x5b, 0x21, 0xca, 0x18, 0x65, 0xa0, 0x4f, 0xbe, 0x39, 0xe4, 0xd0, 0xbd, 0x08, 0x23, 0x34, 0xf1,
+	0xec, 0x2f, 0x8f, 0x36, 0x0b, 0x8e, 0x29, 0x15, 0x34, 0x5e, 0x48, 0x9c, 0x02, 0x28, 0x61, 0x0c,
+	0xa1, 0xe2, 0x98, 0xe4, 0xf8, 0xc3, 0x02, 0xae, 0x70, 0x04, 0x49, 0x80, 0x82, 0x47, 0x3c, 0xa7,
+	0xb8, 0xbf, 0x57, 0x48, 0xf5, 0x85, 0xe9, 0xa2, 0xaf, 0xa8, 0x02, 0xfb, 0x39, 0x29, 0x1b, 0x8f,
+	0xba, 0xb5, 0x63, 0xb5, 0x2a, 0xed, 0x4d, 0xef, 0x72, 0x57, 0xde, 0xb1, 0x46, 0x3b, 0xeb, 0xa7,
+	0xe7, 0xdb, 0xa5, 0x2f, 0x7f, 0xbe, 0xee, 0x5a, 0xbd, 0x5c, 0x60, 0x1f, 0x91, 0xaa, 0xa9, 0x00,
+	0xc5, 0x1b, 0x9e, 0xca, 0xfa, 0xca, 0xce, 0x6a, 0xab, 0xd2, 0x7e, 0x54, 0x4c, 0xd0, 0x5f, 0xe2,
+	0x68, 0xcf, 0x83, 0x44, 0x89, 0x69, 0xef, 0x92, 0xd6, 0x16, 0xa4, 0xc9, 0xb8, 0x4c, 0x27, 0x0a,
+	0x58, 0xc0, 0x60, 0x0c, 0x11, 0xcd, 0xfa, 0x0a, 0x68, 0x8c, 0x93, 0x44, 0xc9, 0xfa, 0xaa, 0x4e,
+	0xdd, 0x2e, 0xa6, 0xee, 0xe6, 0x92, 0xee, 0x85, 0x62, 0x5f, 0x0b, 0x96, 0x6c, 0xb6, 0xd8, 0x35,
+	0x1c, 0x69, 0xbf, 0x25, 0x77, 0x07, 0x00, 0x41, 0x4a, 0x39, 0x0b, 0x06, 0x02, 0xe3, 0x40, 0x2a,
+	0x3a, 0x82, 0xfa, 0x9a, 0xf6, 0xda, 0x2d, 0x7a, 0x1d, 0x02, 0x1c, 0x53, 0xce, 0x0e, 0x05, 0xc6,
+	0xfd, 0x8c, 0xb7, 0xe4, 0x51, 0x1b, 0x14, 0x30, 0xf7, 0x93, 0x45, 0x36, 0xff, 0xdd, 0xb7, 0xfd,
+	0x98, 0xd4, 0x16, 0x9d, 0x07, 0x94, 0x31, 0x01, 0xd2, 0x8c, 0xbe, 0xda, 0xbb, 0xb3, 0x88, 0xef,
+	0x9b, 0xb0, 0x7d, 0x44, 0xd6, 0x94, 0x19, 0xac, 0xd5, 0x5a, 0xef, 0x3c, 0xcb, 0x36, 0xf0, 0xf3,
+	0x7c, 0xbb, 0x69, 0xae, 0x91, 0x64, 0x23, 0x8f, 0xa3, 0x1f, 0x53, 0x35, 0xf4, 0x5e, 0x41, 0x44,
+	0xc3, 0x69, 0x17, 0xc2, 0xef, 0xdf, 0xf6, 0x48, 0x7e, 0xcb, 0xba, 0x10, 0x9a, 0x75, 0xe9, 0x1c,
+	0xee, 0x47, 0x8b, 0xb8, 0xff, 0x1f, 0x97, 0x7d, 0x9f, 0xdc, 0x1a, 0x52, 0x39, 0x0c, 0x38, 0xcb,
+	0x8b, 0x2a, 0x67, 0xc7, 0x97, 0xcc, 0x7e, 0x4d, 0x36, 0xae, 0xec, 0x45, 0x17, 0x56, 0x69, 0xbb,
+	0x57, 0xd6, 0x72, 0x41, 0x94, 0xf9, 0xac, 0x7b, 0x35, 0x56, 0xf0, 0x74, 0x3f, 0x58, 0xa4, 0x71,
+	0xfd, 0x4c, 0x6f, 0xae, 0x90, 0xce, 0xc1, 0xe9, 0xcc, 0xb1, 0xce, 0x66, 0x8e, 0xf5, 0x6b, 0xe6,
+	0x58, 0x9f, 0xe7, 0x4e, 0xe9, 0x6c, 0xee, 0x94, 0x7e, 0xcc, 0x9d, 0xd2, 0xbb, 0x27, 0x11, 0x57,
+	0xc3, 0xc9, 0x89, 0x17, 0x62, 0xec, 0x2b, 0x18, 0x8f, 0x51, 0xec, 0x71, 0xf4, 0xcd, 0x23, 0x7b,
+	0xbf, 0xf4, 0xcc, 0xa6, 0x29, 0xc8, 0x93, 0xb2, 0x7e, 0x60, 0x4f, 0xff, 0x06, 0x00, 0x00, 0xff,
+	0xff, 0xe6, 0xde, 0x91, 0x31, 0x34, 0x04, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -114,6 +311,48 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.FeePaidFromStake) > 0 {
+		for iNdEx := len(m.FeePaidFromStake) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.FeePaidFromStake[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if len(m.DisputedDelegationAmounts) > 0 {
+		for iNdEx := len(m.DisputedDelegationAmounts) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.DisputedDelegationAmounts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.SelectorTips) > 0 {
+		for iNdEx := len(m.SelectorTips) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.SelectorTips[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
 	{
 		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -124,6 +363,130 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *SelectorTipsStateEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SelectorTipsStateEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SelectorTipsStateEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size := m.Tips.Size()
+		i -= size
+		if _, err := m.Tips.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.SelectorAddress) > 0 {
+		i -= len(m.SelectorAddress)
+		copy(dAtA[i:], m.SelectorAddress)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.SelectorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *DisputedDelegationAmountStateEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DisputedDelegationAmountStateEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DisputedDelegationAmountStateEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.DelegationAmount != nil {
+		{
+			size, err := m.DelegationAmount.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintGenesis(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.HashId) > 0 {
+		i -= len(m.HashId)
+		copy(dAtA[i:], m.HashId)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.HashId)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *FeePaidFromStakeStateEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *FeePaidFromStakeStateEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *FeePaidFromStakeStateEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.DelegationAmount != nil {
+		{
+			size, err := m.DelegationAmount.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintGenesis(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.HashId) > 0 {
+		i -= len(m.HashId)
+		copy(dAtA[i:], m.HashId)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.HashId)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -146,6 +509,73 @@ func (m *GenesisState) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovGenesis(uint64(l))
+	if len(m.SelectorTips) > 0 {
+		for _, e := range m.SelectorTips {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.DisputedDelegationAmounts) > 0 {
+		for _, e := range m.DisputedDelegationAmounts {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.FeePaidFromStake) > 0 {
+		for _, e := range m.FeePaidFromStake {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *SelectorTipsStateEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.SelectorAddress)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	l = m.Tips.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	return n
+}
+
+func (m *DisputedDelegationAmountStateEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.HashId)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if m.DelegationAmount != nil {
+		l = m.DelegationAmount.Size()
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	return n
+}
+
+func (m *FeePaidFromStakeStateEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.HashId)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if m.DelegationAmount != nil {
+		l = m.DelegationAmount.Size()
+		n += 1 + l + sovGenesis(uint64(l))
+	}
 	return n
 }
 
@@ -214,6 +644,466 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SelectorTips", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SelectorTips = append(m.SelectorTips, &SelectorTipsStateEntry{})
+			if err := m.SelectorTips[len(m.SelectorTips)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DisputedDelegationAmounts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DisputedDelegationAmounts = append(m.DisputedDelegationAmounts, &DisputedDelegationAmountStateEntry{})
+			if err := m.DisputedDelegationAmounts[len(m.DisputedDelegationAmounts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeePaidFromStake", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.FeePaidFromStake = append(m.FeePaidFromStake, &FeePaidFromStakeStateEntry{})
+			if err := m.FeePaidFromStake[len(m.FeePaidFromStake)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SelectorTipsStateEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SelectorTipsStateEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SelectorTipsStateEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SelectorAddress", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SelectorAddress = append(m.SelectorAddress[:0], dAtA[iNdEx:postIndex]...)
+			if m.SelectorAddress == nil {
+				m.SelectorAddress = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tips", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Tips.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DisputedDelegationAmountStateEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DisputedDelegationAmountStateEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DisputedDelegationAmountStateEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HashId", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HashId = append(m.HashId[:0], dAtA[iNdEx:postIndex]...)
+			if m.HashId == nil {
+				m.HashId = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelegationAmount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.DelegationAmount == nil {
+				m.DelegationAmount = &DelegationsAmounts{}
+			}
+			if err := m.DelegationAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *FeePaidFromStakeStateEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: FeePaidFromStakeStateEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: FeePaidFromStakeStateEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field HashId", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.HashId = append(m.HashId[:0], dAtA[iNdEx:postIndex]...)
+			if m.HashId == nil {
+				m.HashId = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DelegationAmount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.DelegationAmount == nil {
+				m.DelegationAmount = &DelegationsAmounts{}
+			}
+			if err := m.DelegationAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

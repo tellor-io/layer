@@ -25,8 +25,20 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // GenesisState defines the bridge module's genesis state.
 type GenesisState struct {
-	Params        Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
-	SnapshotLimit uint64 `protobuf:"varint,2,opt,name=snapshot_limit,json=snapshotLimit,proto3" json:"snapshot_limit,omitempty"`
+	Params                       Params                                 `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
+	SnapshotLimit                uint64                                 `protobuf:"varint,2,opt,name=snapshot_limit,json=snapshotLimit,proto3" json:"snapshot_limit,omitempty"`
+	BridgeValSet                 *BridgeValidatorSet                    `protobuf:"bytes,3,opt,name=bridge_val_set,json=bridgeValSet,proto3" json:"bridge_val_set,omitempty"`
+	ValidatorCheckpoint          []byte                                 `protobuf:"bytes,4,opt,name=validator_checkpoint,json=validatorCheckpoint,proto3" json:"validator_checkpoint,omitempty"`
+	WithdrawalId                 uint64                                 `protobuf:"varint,5,opt,name=withdrawal_id,json=withdrawalId,proto3" json:"withdrawal_id,omitempty"`
+	OperatorToEvmAddressMap      []*OperatorToEVMAddressMapEntry        `protobuf:"bytes,6,rep,name=operator_to_evm_address_map,json=operatorToEvmAddressMap,proto3" json:"operator_to_evm_address_map,omitempty"`
+	EvmRegisteredMap             []*EVMRegisteredMapEntry               `protobuf:"bytes,7,rep,name=evm_registered_map,json=evmRegisteredMap,proto3" json:"evm_registered_map,omitempty"`
+	BridgeValsetSigsMap          []*BridgeValSetSigsMapEntry            `protobuf:"bytes,8,rep,name=bridge_valset_sigs_map,json=bridgeValsetSigsMap,proto3" json:"bridge_valset_sigs_map,omitempty"`
+	ValidatorCheckpointParamsMap []*ValidatorCheckpointParamsStateEntry `protobuf:"bytes,9,rep,name=validator_checkpoint_params_map,json=validatorCheckpointParamsMap,proto3" json:"validator_checkpoint_params_map,omitempty"`
+	ValidatorCheckpointIdxMap    []*ValidatorCheckpointIdxMapEntry      `protobuf:"bytes,10,rep,name=validator_checkpoint_idx_map,json=validatorCheckpointIdxMap,proto3" json:"validator_checkpoint_idx_map,omitempty"`
+	LatestValidatorCheckpointIdx uint64                                 `protobuf:"varint,11,opt,name=latest_validator_checkpoint_idx,json=latestValidatorCheckpointIdx,proto3" json:"latest_validator_checkpoint_idx,omitempty"`
+	BridgeValsetByTimestampMap   []*BridgeValsetByTimestampMapEntry     `protobuf:"bytes,12,rep,name=bridge_valset_by_timestamp_map,json=bridgeValsetByTimestampMap,proto3" json:"bridge_valset_by_timestamp_map,omitempty"`
+	ValsetTimestampToIdxMap      []*ValsetTimestampToIdxMapEntry        `protobuf:"bytes,13,rep,name=valset_timestamp_to_idx_map,json=valsetTimestampToIdxMap,proto3" json:"valset_timestamp_to_idx_map,omitempty"`
+	DepositIdClaimedMap          []*DepositIdClaimedMapEntry            `protobuf:"bytes,14,rep,name=deposit_id_claimed_map,json=depositIdClaimedMap,proto3" json:"deposit_id_claimed_map,omitempty"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -76,28 +88,601 @@ func (m *GenesisState) GetSnapshotLimit() uint64 {
 	return 0
 }
 
+func (m *GenesisState) GetBridgeValSet() *BridgeValidatorSet {
+	if m != nil {
+		return m.BridgeValSet
+	}
+	return nil
+}
+
+func (m *GenesisState) GetValidatorCheckpoint() []byte {
+	if m != nil {
+		return m.ValidatorCheckpoint
+	}
+	return nil
+}
+
+func (m *GenesisState) GetWithdrawalId() uint64 {
+	if m != nil {
+		return m.WithdrawalId
+	}
+	return 0
+}
+
+func (m *GenesisState) GetOperatorToEvmAddressMap() []*OperatorToEVMAddressMapEntry {
+	if m != nil {
+		return m.OperatorToEvmAddressMap
+	}
+	return nil
+}
+
+func (m *GenesisState) GetEvmRegisteredMap() []*EVMRegisteredMapEntry {
+	if m != nil {
+		return m.EvmRegisteredMap
+	}
+	return nil
+}
+
+func (m *GenesisState) GetBridgeValsetSigsMap() []*BridgeValSetSigsMapEntry {
+	if m != nil {
+		return m.BridgeValsetSigsMap
+	}
+	return nil
+}
+
+func (m *GenesisState) GetValidatorCheckpointParamsMap() []*ValidatorCheckpointParamsStateEntry {
+	if m != nil {
+		return m.ValidatorCheckpointParamsMap
+	}
+	return nil
+}
+
+func (m *GenesisState) GetValidatorCheckpointIdxMap() []*ValidatorCheckpointIdxMapEntry {
+	if m != nil {
+		return m.ValidatorCheckpointIdxMap
+	}
+	return nil
+}
+
+func (m *GenesisState) GetLatestValidatorCheckpointIdx() uint64 {
+	if m != nil {
+		return m.LatestValidatorCheckpointIdx
+	}
+	return 0
+}
+
+func (m *GenesisState) GetBridgeValsetByTimestampMap() []*BridgeValsetByTimestampMapEntry {
+	if m != nil {
+		return m.BridgeValsetByTimestampMap
+	}
+	return nil
+}
+
+func (m *GenesisState) GetValsetTimestampToIdxMap() []*ValsetTimestampToIdxMapEntry {
+	if m != nil {
+		return m.ValsetTimestampToIdxMap
+	}
+	return nil
+}
+
+func (m *GenesisState) GetDepositIdClaimedMap() []*DepositIdClaimedMapEntry {
+	if m != nil {
+		return m.DepositIdClaimedMap
+	}
+	return nil
+}
+
+type OperatorToEVMAddressMapEntry struct {
+	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
+	EvmAddress      []byte `protobuf:"bytes,2,opt,name=evm_address,json=evmAddress,proto3" json:"evm_address,omitempty"`
+}
+
+func (m *OperatorToEVMAddressMapEntry) Reset()         { *m = OperatorToEVMAddressMapEntry{} }
+func (m *OperatorToEVMAddressMapEntry) String() string { return proto.CompactTextString(m) }
+func (*OperatorToEVMAddressMapEntry) ProtoMessage()    {}
+func (*OperatorToEVMAddressMapEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_233d9732da3f6137, []int{1}
+}
+func (m *OperatorToEVMAddressMapEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OperatorToEVMAddressMapEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OperatorToEVMAddressMapEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OperatorToEVMAddressMapEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OperatorToEVMAddressMapEntry.Merge(m, src)
+}
+func (m *OperatorToEVMAddressMapEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *OperatorToEVMAddressMapEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_OperatorToEVMAddressMapEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OperatorToEVMAddressMapEntry proto.InternalMessageInfo
+
+func (m *OperatorToEVMAddressMapEntry) GetOperatorAddress() string {
+	if m != nil {
+		return m.OperatorAddress
+	}
+	return ""
+}
+
+func (m *OperatorToEVMAddressMapEntry) GetEvmAddress() []byte {
+	if m != nil {
+		return m.EvmAddress
+	}
+	return nil
+}
+
+type EVMRegisteredMapEntry struct {
+	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
+	Registered      bool   `protobuf:"varint,2,opt,name=registered,proto3" json:"registered,omitempty"`
+}
+
+func (m *EVMRegisteredMapEntry) Reset()         { *m = EVMRegisteredMapEntry{} }
+func (m *EVMRegisteredMapEntry) String() string { return proto.CompactTextString(m) }
+func (*EVMRegisteredMapEntry) ProtoMessage()    {}
+func (*EVMRegisteredMapEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_233d9732da3f6137, []int{2}
+}
+func (m *EVMRegisteredMapEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EVMRegisteredMapEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EVMRegisteredMapEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EVMRegisteredMapEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EVMRegisteredMapEntry.Merge(m, src)
+}
+func (m *EVMRegisteredMapEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *EVMRegisteredMapEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_EVMRegisteredMapEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EVMRegisteredMapEntry proto.InternalMessageInfo
+
+func (m *EVMRegisteredMapEntry) GetOperatorAddress() string {
+	if m != nil {
+		return m.OperatorAddress
+	}
+	return ""
+}
+
+func (m *EVMRegisteredMapEntry) GetRegistered() bool {
+	if m != nil {
+		return m.Registered
+	}
+	return false
+}
+
+type BridgeValSetSigsMapEntry struct {
+	Timestamp  uint64   `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	ValsetSigs [][]byte `protobuf:"bytes,2,rep,name=valset_sigs,json=valsetSigs,proto3" json:"valset_sigs,omitempty"`
+}
+
+func (m *BridgeValSetSigsMapEntry) Reset()         { *m = BridgeValSetSigsMapEntry{} }
+func (m *BridgeValSetSigsMapEntry) String() string { return proto.CompactTextString(m) }
+func (*BridgeValSetSigsMapEntry) ProtoMessage()    {}
+func (*BridgeValSetSigsMapEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_233d9732da3f6137, []int{3}
+}
+func (m *BridgeValSetSigsMapEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BridgeValSetSigsMapEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BridgeValSetSigsMapEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BridgeValSetSigsMapEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BridgeValSetSigsMapEntry.Merge(m, src)
+}
+func (m *BridgeValSetSigsMapEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *BridgeValSetSigsMapEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_BridgeValSetSigsMapEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BridgeValSetSigsMapEntry proto.InternalMessageInfo
+
+func (m *BridgeValSetSigsMapEntry) GetTimestamp() uint64 {
+	if m != nil {
+		return m.Timestamp
+	}
+	return 0
+}
+
+func (m *BridgeValSetSigsMapEntry) GetValsetSigs() [][]byte {
+	if m != nil {
+		return m.ValsetSigs
+	}
+	return nil
+}
+
+type ValidatorCheckpointParamsStateEntry struct {
+	Timestamp               uint64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	ValidatorTimestamp      uint64 `protobuf:"varint,2,opt,name=validator_timestamp,json=validatorTimestamp,proto3" json:"validator_timestamp,omitempty"`
+	ValidatorPowerThreshold uint64 `protobuf:"varint,3,opt,name=validator_power_threshold,json=validatorPowerThreshold,proto3" json:"validator_power_threshold,omitempty"`
+	ValidatorSetHash        []byte `protobuf:"bytes,4,opt,name=validator_set_hash,json=validatorSetHash,proto3" json:"validator_set_hash,omitempty"`
+	ValidatorCheckpoint     []byte `protobuf:"bytes,5,opt,name=validator_checkpoint,json=validatorCheckpoint,proto3" json:"validator_checkpoint,omitempty"`
+}
+
+func (m *ValidatorCheckpointParamsStateEntry) Reset()         { *m = ValidatorCheckpointParamsStateEntry{} }
+func (m *ValidatorCheckpointParamsStateEntry) String() string { return proto.CompactTextString(m) }
+func (*ValidatorCheckpointParamsStateEntry) ProtoMessage()    {}
+func (*ValidatorCheckpointParamsStateEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_233d9732da3f6137, []int{4}
+}
+func (m *ValidatorCheckpointParamsStateEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ValidatorCheckpointParamsStateEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ValidatorCheckpointParamsStateEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ValidatorCheckpointParamsStateEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ValidatorCheckpointParamsStateEntry.Merge(m, src)
+}
+func (m *ValidatorCheckpointParamsStateEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *ValidatorCheckpointParamsStateEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_ValidatorCheckpointParamsStateEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ValidatorCheckpointParamsStateEntry proto.InternalMessageInfo
+
+func (m *ValidatorCheckpointParamsStateEntry) GetTimestamp() uint64 {
+	if m != nil {
+		return m.Timestamp
+	}
+	return 0
+}
+
+func (m *ValidatorCheckpointParamsStateEntry) GetValidatorTimestamp() uint64 {
+	if m != nil {
+		return m.ValidatorTimestamp
+	}
+	return 0
+}
+
+func (m *ValidatorCheckpointParamsStateEntry) GetValidatorPowerThreshold() uint64 {
+	if m != nil {
+		return m.ValidatorPowerThreshold
+	}
+	return 0
+}
+
+func (m *ValidatorCheckpointParamsStateEntry) GetValidatorSetHash() []byte {
+	if m != nil {
+		return m.ValidatorSetHash
+	}
+	return nil
+}
+
+func (m *ValidatorCheckpointParamsStateEntry) GetValidatorCheckpoint() []byte {
+	if m != nil {
+		return m.ValidatorCheckpoint
+	}
+	return nil
+}
+
+type ValidatorCheckpointIdxMapEntry struct {
+	Index     uint64 `protobuf:"varint,1,opt,name=index,proto3" json:"index,omitempty"`
+	Timestamp uint64 `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+}
+
+func (m *ValidatorCheckpointIdxMapEntry) Reset()         { *m = ValidatorCheckpointIdxMapEntry{} }
+func (m *ValidatorCheckpointIdxMapEntry) String() string { return proto.CompactTextString(m) }
+func (*ValidatorCheckpointIdxMapEntry) ProtoMessage()    {}
+func (*ValidatorCheckpointIdxMapEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_233d9732da3f6137, []int{5}
+}
+func (m *ValidatorCheckpointIdxMapEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ValidatorCheckpointIdxMapEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ValidatorCheckpointIdxMapEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ValidatorCheckpointIdxMapEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ValidatorCheckpointIdxMapEntry.Merge(m, src)
+}
+func (m *ValidatorCheckpointIdxMapEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *ValidatorCheckpointIdxMapEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_ValidatorCheckpointIdxMapEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ValidatorCheckpointIdxMapEntry proto.InternalMessageInfo
+
+func (m *ValidatorCheckpointIdxMapEntry) GetIndex() uint64 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
+}
+
+func (m *ValidatorCheckpointIdxMapEntry) GetTimestamp() uint64 {
+	if m != nil {
+		return m.Timestamp
+	}
+	return 0
+}
+
+type BridgeValsetByTimestampMapEntry struct {
+	Timestamp uint64              `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Valset    *BridgeValidatorSet `protobuf:"bytes,2,opt,name=valset,proto3" json:"valset,omitempty"`
+}
+
+func (m *BridgeValsetByTimestampMapEntry) Reset()         { *m = BridgeValsetByTimestampMapEntry{} }
+func (m *BridgeValsetByTimestampMapEntry) String() string { return proto.CompactTextString(m) }
+func (*BridgeValsetByTimestampMapEntry) ProtoMessage()    {}
+func (*BridgeValsetByTimestampMapEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_233d9732da3f6137, []int{6}
+}
+func (m *BridgeValsetByTimestampMapEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *BridgeValsetByTimestampMapEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_BridgeValsetByTimestampMapEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *BridgeValsetByTimestampMapEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_BridgeValsetByTimestampMapEntry.Merge(m, src)
+}
+func (m *BridgeValsetByTimestampMapEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *BridgeValsetByTimestampMapEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_BridgeValsetByTimestampMapEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_BridgeValsetByTimestampMapEntry proto.InternalMessageInfo
+
+func (m *BridgeValsetByTimestampMapEntry) GetTimestamp() uint64 {
+	if m != nil {
+		return m.Timestamp
+	}
+	return 0
+}
+
+func (m *BridgeValsetByTimestampMapEntry) GetValset() *BridgeValidatorSet {
+	if m != nil {
+		return m.Valset
+	}
+	return nil
+}
+
+type ValsetTimestampToIdxMapEntry struct {
+	Timestamp uint64 `protobuf:"varint,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Index     uint64 `protobuf:"varint,2,opt,name=index,proto3" json:"index,omitempty"`
+}
+
+func (m *ValsetTimestampToIdxMapEntry) Reset()         { *m = ValsetTimestampToIdxMapEntry{} }
+func (m *ValsetTimestampToIdxMapEntry) String() string { return proto.CompactTextString(m) }
+func (*ValsetTimestampToIdxMapEntry) ProtoMessage()    {}
+func (*ValsetTimestampToIdxMapEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_233d9732da3f6137, []int{7}
+}
+func (m *ValsetTimestampToIdxMapEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ValsetTimestampToIdxMapEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ValsetTimestampToIdxMapEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ValsetTimestampToIdxMapEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ValsetTimestampToIdxMapEntry.Merge(m, src)
+}
+func (m *ValsetTimestampToIdxMapEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *ValsetTimestampToIdxMapEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_ValsetTimestampToIdxMapEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ValsetTimestampToIdxMapEntry proto.InternalMessageInfo
+
+func (m *ValsetTimestampToIdxMapEntry) GetTimestamp() uint64 {
+	if m != nil {
+		return m.Timestamp
+	}
+	return 0
+}
+
+func (m *ValsetTimestampToIdxMapEntry) GetIndex() uint64 {
+	if m != nil {
+		return m.Index
+	}
+	return 0
+}
+
+type DepositIdClaimedMapEntry struct {
+	DepositId uint64 `protobuf:"varint,1,opt,name=deposit_id,json=depositId,proto3" json:"deposit_id,omitempty"`
+	IsClaimed bool   `protobuf:"varint,2,opt,name=isClaimed,proto3" json:"isClaimed,omitempty"`
+}
+
+func (m *DepositIdClaimedMapEntry) Reset()         { *m = DepositIdClaimedMapEntry{} }
+func (m *DepositIdClaimedMapEntry) String() string { return proto.CompactTextString(m) }
+func (*DepositIdClaimedMapEntry) ProtoMessage()    {}
+func (*DepositIdClaimedMapEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_233d9732da3f6137, []int{8}
+}
+func (m *DepositIdClaimedMapEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DepositIdClaimedMapEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DepositIdClaimedMapEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DepositIdClaimedMapEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DepositIdClaimedMapEntry.Merge(m, src)
+}
+func (m *DepositIdClaimedMapEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *DepositIdClaimedMapEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_DepositIdClaimedMapEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DepositIdClaimedMapEntry proto.InternalMessageInfo
+
+func (m *DepositIdClaimedMapEntry) GetDepositId() uint64 {
+	if m != nil {
+		return m.DepositId
+	}
+	return 0
+}
+
+func (m *DepositIdClaimedMapEntry) GetIsClaimed() bool {
+	if m != nil {
+		return m.IsClaimed
+	}
+	return false
+}
+
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "layer.bridge.GenesisState")
+	proto.RegisterType((*OperatorToEVMAddressMapEntry)(nil), "layer.bridge.OperatorToEVMAddressMapEntry")
+	proto.RegisterType((*EVMRegisteredMapEntry)(nil), "layer.bridge.EVMRegisteredMapEntry")
+	proto.RegisterType((*BridgeValSetSigsMapEntry)(nil), "layer.bridge.BridgeValSetSigsMapEntry")
+	proto.RegisterType((*ValidatorCheckpointParamsStateEntry)(nil), "layer.bridge.ValidatorCheckpointParamsStateEntry")
+	proto.RegisterType((*ValidatorCheckpointIdxMapEntry)(nil), "layer.bridge.ValidatorCheckpointIdxMapEntry")
+	proto.RegisterType((*BridgeValsetByTimestampMapEntry)(nil), "layer.bridge.BridgeValsetByTimestampMapEntry")
+	proto.RegisterType((*ValsetTimestampToIdxMapEntry)(nil), "layer.bridge.ValsetTimestampToIdxMapEntry")
+	proto.RegisterType((*DepositIdClaimedMapEntry)(nil), "layer.bridge.DepositIdClaimedMapEntry")
 }
 
 func init() { proto.RegisterFile("layer/bridge/genesis.proto", fileDescriptor_233d9732da3f6137) }
 
 var fileDescriptor_233d9732da3f6137 = []byte{
-	// 222 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0xca, 0x49, 0xac, 0x4c,
-	0x2d, 0xd2, 0x4f, 0x2a, 0xca, 0x4c, 0x49, 0x4f, 0xd5, 0x4f, 0x4f, 0xcd, 0x4b, 0x2d, 0xce, 0x2c,
-	0xd6, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x01, 0xcb, 0xe9, 0x41, 0xe4, 0xa4, 0x44, 0xd2,
-	0xf3, 0xd3, 0xf3, 0xc1, 0x12, 0xfa, 0x20, 0x16, 0x44, 0x8d, 0x94, 0x24, 0x8a, 0xfe, 0x82, 0xc4,
-	0xa2, 0xc4, 0x5c, 0xa8, 0x76, 0xa5, 0x4c, 0x2e, 0x1e, 0x77, 0x88, 0x79, 0xc1, 0x25, 0x89, 0x25,
-	0xa9, 0x42, 0x46, 0x5c, 0x6c, 0x10, 0x79, 0x09, 0x46, 0x05, 0x46, 0x0d, 0x6e, 0x23, 0x11, 0x3d,
-	0x64, 0xf3, 0xf5, 0x02, 0xc0, 0x72, 0x4e, 0x2c, 0x27, 0xee, 0xc9, 0x33, 0x04, 0x41, 0x55, 0x0a,
-	0xa9, 0x72, 0xf1, 0x15, 0xe7, 0x25, 0x16, 0x14, 0x67, 0xe4, 0x97, 0xc4, 0xe7, 0x64, 0xe6, 0x66,
-	0x96, 0x48, 0x30, 0x29, 0x30, 0x6a, 0xb0, 0x04, 0xf1, 0xc2, 0x44, 0x7d, 0x40, 0x82, 0x4e, 0xce,
-	0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7, 0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84, 0xc7, 0x72,
-	0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc, 0x78, 0x2c, 0xc7, 0x10, 0xa5, 0x99, 0x9e, 0x59, 0x92, 0x51,
-	0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0xab, 0x5f, 0x92, 0x9a, 0x93, 0x93, 0x5f, 0xa4, 0x9b, 0x99, 0xaf,
-	0x0f, 0x71, 0x74, 0x05, 0xcc, 0xd9, 0x25, 0x95, 0x05, 0xa9, 0xc5, 0x49, 0x6c, 0x60, 0x67, 0x1b,
-	0x03, 0x02, 0x00, 0x00, 0xff, 0xff, 0xba, 0x1e, 0x8a, 0x5a, 0x13, 0x01, 0x00, 0x00,
+	// 866 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x56, 0x41, 0x6f, 0xe3, 0x44,
+	0x14, 0x6e, 0xd2, 0xb4, 0x6c, 0x5f, 0xd3, 0x52, 0xcd, 0x16, 0xd6, 0x1b, 0x82, 0x13, 0xb9, 0x02,
+	0x75, 0xd1, 0x6e, 0xa2, 0x2d, 0x17, 0xc4, 0x8d, 0x96, 0x02, 0x95, 0xa8, 0x58, 0x9c, 0xa8, 0x08,
+	0x38, 0x8c, 0x26, 0xf1, 0xc8, 0x1e, 0xb0, 0x33, 0x5e, 0xcf, 0xac, 0x9b, 0xfc, 0x08, 0x24, 0xf8,
+	0x57, 0x7b, 0xdc, 0x23, 0x27, 0x84, 0xda, 0x3f, 0x82, 0x3c, 0x63, 0x8f, 0x63, 0x36, 0x6e, 0xba,
+	0xa7, 0x36, 0xef, 0x7b, 0xf3, 0xbe, 0xe7, 0x37, 0xdf, 0xf7, 0x6c, 0xe8, 0x84, 0x64, 0x41, 0x93,
+	0xe1, 0x24, 0x61, 0x9e, 0x4f, 0x87, 0x3e, 0x9d, 0x51, 0xc1, 0xc4, 0x20, 0x4e, 0xb8, 0xe4, 0xa8,
+	0xad, 0xb0, 0x81, 0xc6, 0x3a, 0x87, 0x3e, 0xf7, 0xb9, 0x02, 0x86, 0xd9, 0x7f, 0x3a, 0xa7, 0xf3,
+	0xb8, 0x72, 0x3e, 0x26, 0x09, 0x89, 0xf2, 0xe3, 0x1d, 0xab, 0x02, 0xbd, 0x7c, 0x45, 0x93, 0x85,
+	0x46, 0x9c, 0x3f, 0x76, 0xa0, 0xfd, 0xad, 0xa6, 0x1a, 0x49, 0x22, 0x29, 0x3a, 0x81, 0x6d, 0x7d,
+	0xd4, 0x6a, 0xf4, 0x1b, 0xc7, 0xbb, 0x27, 0x87, 0x83, 0x65, 0xea, 0xc1, 0x0b, 0x85, 0x9d, 0xb6,
+	0x5e, 0xff, 0xd3, 0xdb, 0x70, 0xf3, 0x4c, 0xf4, 0x09, 0xec, 0x8b, 0x19, 0x89, 0x45, 0xc0, 0x25,
+	0x0e, 0x59, 0xc4, 0xa4, 0xd5, 0xec, 0x37, 0x8e, 0x5b, 0xee, 0x5e, 0x11, 0xfd, 0x3e, 0x0b, 0xa2,
+	0x6f, 0x60, 0x5f, 0x57, 0xc1, 0x29, 0x09, 0xb1, 0xa0, 0xd2, 0xda, 0x54, 0x14, 0xfd, 0x2a, 0xc5,
+	0xa9, 0xfa, 0x73, 0x45, 0x42, 0xe6, 0x11, 0xc9, 0x93, 0x11, 0x95, 0x6e, 0x7b, 0x52, 0xc4, 0x46,
+	0x54, 0xa2, 0xe7, 0x70, 0x98, 0x16, 0x28, 0x9e, 0x06, 0x74, 0xfa, 0x7b, 0xcc, 0xd9, 0x4c, 0x5a,
+	0xad, 0x7e, 0xe3, 0xb8, 0xed, 0x3e, 0x34, 0xd8, 0x99, 0x81, 0xd0, 0x11, 0xec, 0x5d, 0x33, 0x19,
+	0x78, 0x09, 0xb9, 0x26, 0x21, 0x66, 0x9e, 0xb5, 0xa5, 0x1a, 0x6c, 0x97, 0xc1, 0x0b, 0x0f, 0x05,
+	0xf0, 0x11, 0x8f, 0x69, 0xa2, 0xca, 0x4a, 0x8e, 0x69, 0x1a, 0x61, 0xe2, 0x79, 0x09, 0x15, 0x02,
+	0x47, 0x24, 0xb6, 0xb6, 0xfb, 0x9b, 0xc7, 0xbb, 0x27, 0x9f, 0x55, 0x9b, 0xfd, 0x21, 0x3f, 0x30,
+	0xe6, 0xe7, 0x57, 0x97, 0x5f, 0xe9, 0xec, 0x4b, 0x12, 0x9f, 0xcf, 0x64, 0xb2, 0x70, 0x1f, 0xf1,
+	0x12, 0x4d, 0xa3, 0x12, 0x45, 0x3f, 0x02, 0xca, 0xaa, 0x27, 0xd4, 0x67, 0x42, 0xd2, 0x84, 0x7a,
+	0x8a, 0xe0, 0x3d, 0x45, 0x70, 0x54, 0x25, 0x38, 0xbf, 0xba, 0x74, 0x4d, 0x9a, 0xa9, 0x7c, 0x40,
+	0xd3, 0xa8, 0x12, 0x46, 0xbf, 0xc2, 0x87, 0xe5, 0x70, 0x05, 0x95, 0x58, 0x30, 0x5f, 0xf7, 0xfd,
+	0x40, 0x95, 0xfd, 0xb4, 0x66, 0xc8, 0x23, 0x2a, 0x47, 0xcc, 0x2f, 0x7b, 0x7e, 0x68, 0x46, 0x2d,
+	0x0c, 0x82, 0xe6, 0xd0, 0x5b, 0x35, 0x71, 0xac, 0xef, 0x5f, 0xb1, 0xec, 0x28, 0x96, 0xe7, 0x55,
+	0x96, 0xab, 0xb7, 0xaf, 0x42, 0x0b, 0x48, 0x69, 0x4d, 0x13, 0x76, 0xd3, 0xba, 0xa4, 0x8c, 0x39,
+	0x82, 0xee, 0x4a, 0x66, 0xe6, 0xcd, 0x15, 0x2d, 0x28, 0xda, 0xa7, 0x6b, 0x69, 0x2f, 0xbc, 0xb9,
+	0x79, 0xc4, 0xc7, 0x69, 0x1d, 0x8e, 0xce, 0xa1, 0x17, 0x12, 0x49, 0x85, 0xc4, 0x75, 0xac, 0xd6,
+	0xae, 0x52, 0x4e, 0x57, 0xa7, 0xad, 0x66, 0x42, 0x2f, 0xc1, 0xae, 0x5e, 0xc6, 0x64, 0x81, 0x25,
+	0x8b, 0xa8, 0x90, 0x24, 0x8a, 0x55, 0xdf, 0x6d, 0xd5, 0xf7, 0xb3, 0x9a, 0x4b, 0x11, 0x54, 0x9e,
+	0x2e, 0xc6, 0xc5, 0x01, 0xd3, 0x78, 0x67, 0x52, 0x9b, 0x90, 0x89, 0x37, 0xe7, 0x2a, 0x89, 0x24,
+	0x37, 0x73, 0xda, 0x5b, 0x25, 0x5e, 0x5d, 0xc8, 0x94, 0x19, 0xf3, 0xe5, 0x29, 0x3d, 0x4a, 0x57,
+	0xa3, 0x99, 0xd2, 0x3c, 0x1a, 0x73, 0xc1, 0xb2, 0x79, 0xe0, 0x69, 0x48, 0x58, 0x94, 0x0b, 0x78,
+	0x7f, 0x95, 0xd2, 0xbe, 0xd6, 0xb9, 0x17, 0xde, 0x99, 0xce, 0x2c, 0x95, 0xe6, 0xbd, 0x8d, 0x38,
+	0xbf, 0x41, 0xf7, 0x2e, 0x4b, 0xa1, 0x27, 0x70, 0x60, 0x3c, 0x9a, 0x9b, 0x53, 0x2d, 0xaa, 0x1d,
+	0xf7, 0xfd, 0x22, 0x9e, 0x1f, 0x41, 0x3d, 0xd8, 0x5d, 0xb2, 0xb0, 0x5a, 0x49, 0x6d, 0x17, 0xa8,
+	0x31, 0xa2, 0x33, 0x81, 0x0f, 0x56, 0xba, 0xeb, 0x5d, 0x48, 0x6c, 0x80, 0xd2, 0xc5, 0x8a, 0xe3,
+	0x81, 0xbb, 0x14, 0x71, 0x7e, 0x06, 0xab, 0xce, 0x6a, 0xa8, 0x0b, 0x3b, 0xe6, 0xae, 0x54, 0xfd,
+	0x96, 0x5b, 0x06, 0xb2, 0xf6, 0x97, 0x9c, 0x6c, 0x35, 0xfb, 0x9b, 0x59, 0xfb, 0xa9, 0xf1, 0xa5,
+	0xf3, 0x57, 0x13, 0x8e, 0xee, 0x61, 0xb0, 0x35, 0x34, 0x43, 0x28, 0x17, 0x66, 0x29, 0x9d, 0x7c,
+	0x81, 0x23, 0x03, 0x19, 0x19, 0xa0, 0x2f, 0xa1, 0xf4, 0x0f, 0x8e, 0xf9, 0x35, 0x4d, 0xb0, 0x0c,
+	0x12, 0x2a, 0x02, 0x1e, 0x7a, 0x6a, 0xa1, 0xb7, 0x94, 0x74, 0x74, 0xc2, 0x8b, 0x0c, 0x1f, 0x17,
+	0x30, 0x7a, 0x0a, 0x65, 0xc5, 0xec, 0x05, 0x80, 0x03, 0x22, 0x82, 0x7c, 0x6f, 0x1f, 0xa4, 0x4b,
+	0x1b, 0xff, 0x3b, 0x22, 0x82, 0xda, 0x3d, 0xbf, 0x55, 0xbb, 0xe7, 0x9d, 0x31, 0xd8, 0x77, 0x9b,
+	0x1f, 0x1d, 0xc2, 0x16, 0x9b, 0x79, 0x74, 0x9e, 0x4f, 0x42, 0xff, 0xa8, 0xce, 0xa8, 0xf9, 0xbf,
+	0x19, 0x39, 0x0b, 0xe8, 0xad, 0xb1, 0xe6, 0x9a, 0x21, 0x7f, 0x01, 0xdb, 0xfa, 0xe2, 0x54, 0xed,
+	0xfb, 0xbc, 0xf1, 0xf2, 0x7c, 0xc7, 0x85, 0xee, 0x5d, 0x2e, 0x5d, 0xc3, 0x6b, 0x1e, 0xb6, 0xb9,
+	0xf4, 0xb0, 0xce, 0x4f, 0x60, 0xd5, 0x99, 0x12, 0x7d, 0x0c, 0x50, 0x9a, 0xbb, 0x28, 0x68, 0x8c,
+	0x9a, 0xd1, 0x31, 0x91, 0x9f, 0xc9, 0xd5, 0x5e, 0x06, 0x4e, 0xcf, 0x5e, 0xdf, 0xd8, 0x8d, 0x37,
+	0x37, 0x76, 0xe3, 0xdf, 0x1b, 0xbb, 0xf1, 0xe7, 0xad, 0xbd, 0xf1, 0xe6, 0xd6, 0xde, 0xf8, 0xfb,
+	0xd6, 0xde, 0xf8, 0xe5, 0x89, 0xcf, 0x64, 0xf0, 0x6a, 0x32, 0x98, 0xf2, 0x68, 0x28, 0x69, 0x18,
+	0xf2, 0xe4, 0x19, 0xe3, 0x43, 0xfd, 0x55, 0x32, 0x2f, 0xbe, 0x4b, 0xe4, 0x22, 0xa6, 0x62, 0xb2,
+	0xad, 0x3e, 0x4c, 0x3e, 0xff, 0x2f, 0x00, 0x00, 0xff, 0xff, 0x41, 0x05, 0xde, 0xc7, 0x0f, 0x09,
+	0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -120,6 +705,147 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.DepositIdClaimedMap) > 0 {
+		for iNdEx := len(m.DepositIdClaimedMap) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.DepositIdClaimedMap[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x72
+		}
+	}
+	if len(m.ValsetTimestampToIdxMap) > 0 {
+		for iNdEx := len(m.ValsetTimestampToIdxMap) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ValsetTimestampToIdxMap[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x6a
+		}
+	}
+	if len(m.BridgeValsetByTimestampMap) > 0 {
+		for iNdEx := len(m.BridgeValsetByTimestampMap) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.BridgeValsetByTimestampMap[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x62
+		}
+	}
+	if m.LatestValidatorCheckpointIdx != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.LatestValidatorCheckpointIdx))
+		i--
+		dAtA[i] = 0x58
+	}
+	if len(m.ValidatorCheckpointIdxMap) > 0 {
+		for iNdEx := len(m.ValidatorCheckpointIdxMap) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ValidatorCheckpointIdxMap[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x52
+		}
+	}
+	if len(m.ValidatorCheckpointParamsMap) > 0 {
+		for iNdEx := len(m.ValidatorCheckpointParamsMap) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.ValidatorCheckpointParamsMap[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x4a
+		}
+	}
+	if len(m.BridgeValsetSigsMap) > 0 {
+		for iNdEx := len(m.BridgeValsetSigsMap) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.BridgeValsetSigsMap[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x42
+		}
+	}
+	if len(m.EvmRegisteredMap) > 0 {
+		for iNdEx := len(m.EvmRegisteredMap) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.EvmRegisteredMap[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x3a
+		}
+	}
+	if len(m.OperatorToEvmAddressMap) > 0 {
+		for iNdEx := len(m.OperatorToEvmAddressMap) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.OperatorToEvmAddressMap[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x32
+		}
+	}
+	if m.WithdrawalId != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.WithdrawalId))
+		i--
+		dAtA[i] = 0x28
+	}
+	if len(m.ValidatorCheckpoint) > 0 {
+		i -= len(m.ValidatorCheckpoint)
+		copy(dAtA[i:], m.ValidatorCheckpoint)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.ValidatorCheckpoint)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.BridgeValSet != nil {
+		{
+			size, err := m.BridgeValSet.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintGenesis(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x1a
+	}
 	if m.SnapshotLimit != 0 {
 		i = encodeVarintGenesis(dAtA, i, uint64(m.SnapshotLimit))
 		i--
@@ -135,6 +861,316 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *OperatorToEVMAddressMapEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OperatorToEVMAddressMapEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OperatorToEVMAddressMapEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.EvmAddress) > 0 {
+		i -= len(m.EvmAddress)
+		copy(dAtA[i:], m.EvmAddress)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.EvmAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.OperatorAddress) > 0 {
+		i -= len(m.OperatorAddress)
+		copy(dAtA[i:], m.OperatorAddress)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.OperatorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EVMRegisteredMapEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EVMRegisteredMapEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EVMRegisteredMapEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Registered {
+		i--
+		if m.Registered {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.OperatorAddress) > 0 {
+		i -= len(m.OperatorAddress)
+		copy(dAtA[i:], m.OperatorAddress)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.OperatorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BridgeValSetSigsMapEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BridgeValSetSigsMapEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BridgeValSetSigsMapEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ValsetSigs) > 0 {
+		for iNdEx := len(m.ValsetSigs) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.ValsetSigs[iNdEx])
+			copy(dAtA[i:], m.ValsetSigs[iNdEx])
+			i = encodeVarintGenesis(dAtA, i, uint64(len(m.ValsetSigs[iNdEx])))
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if m.Timestamp != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.Timestamp))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ValidatorCheckpointParamsStateEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ValidatorCheckpointParamsStateEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ValidatorCheckpointParamsStateEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ValidatorCheckpoint) > 0 {
+		i -= len(m.ValidatorCheckpoint)
+		copy(dAtA[i:], m.ValidatorCheckpoint)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.ValidatorCheckpoint)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.ValidatorSetHash) > 0 {
+		i -= len(m.ValidatorSetHash)
+		copy(dAtA[i:], m.ValidatorSetHash)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.ValidatorSetHash)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if m.ValidatorPowerThreshold != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.ValidatorPowerThreshold))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.ValidatorTimestamp != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.ValidatorTimestamp))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Timestamp != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.Timestamp))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ValidatorCheckpointIdxMapEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ValidatorCheckpointIdxMapEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ValidatorCheckpointIdxMapEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Timestamp != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.Timestamp))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Index != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.Index))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *BridgeValsetByTimestampMapEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *BridgeValsetByTimestampMapEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *BridgeValsetByTimestampMapEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Valset != nil {
+		{
+			size, err := m.Valset.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintGenesis(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Timestamp != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.Timestamp))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ValsetTimestampToIdxMapEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ValsetTimestampToIdxMapEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ValsetTimestampToIdxMapEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Index != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.Index))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Timestamp != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.Timestamp))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *DepositIdClaimedMapEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DepositIdClaimedMapEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DepositIdClaimedMapEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.IsClaimed {
+		i--
+		if m.IsClaimed {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.DepositId != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.DepositId))
+		i--
+		dAtA[i] = 0x8
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -159,6 +1195,206 @@ func (m *GenesisState) Size() (n int) {
 	n += 1 + l + sovGenesis(uint64(l))
 	if m.SnapshotLimit != 0 {
 		n += 1 + sovGenesis(uint64(m.SnapshotLimit))
+	}
+	if m.BridgeValSet != nil {
+		l = m.BridgeValSet.Size()
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	l = len(m.ValidatorCheckpoint)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if m.WithdrawalId != 0 {
+		n += 1 + sovGenesis(uint64(m.WithdrawalId))
+	}
+	if len(m.OperatorToEvmAddressMap) > 0 {
+		for _, e := range m.OperatorToEvmAddressMap {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.EvmRegisteredMap) > 0 {
+		for _, e := range m.EvmRegisteredMap {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.BridgeValsetSigsMap) > 0 {
+		for _, e := range m.BridgeValsetSigsMap {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.ValidatorCheckpointParamsMap) > 0 {
+		for _, e := range m.ValidatorCheckpointParamsMap {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.ValidatorCheckpointIdxMap) > 0 {
+		for _, e := range m.ValidatorCheckpointIdxMap {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if m.LatestValidatorCheckpointIdx != 0 {
+		n += 1 + sovGenesis(uint64(m.LatestValidatorCheckpointIdx))
+	}
+	if len(m.BridgeValsetByTimestampMap) > 0 {
+		for _, e := range m.BridgeValsetByTimestampMap {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.ValsetTimestampToIdxMap) > 0 {
+		for _, e := range m.ValsetTimestampToIdxMap {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.DepositIdClaimedMap) > 0 {
+		for _, e := range m.DepositIdClaimedMap {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *OperatorToEVMAddressMapEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.OperatorAddress)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	l = len(m.EvmAddress)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	return n
+}
+
+func (m *EVMRegisteredMapEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.OperatorAddress)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if m.Registered {
+		n += 2
+	}
+	return n
+}
+
+func (m *BridgeValSetSigsMapEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Timestamp != 0 {
+		n += 1 + sovGenesis(uint64(m.Timestamp))
+	}
+	if len(m.ValsetSigs) > 0 {
+		for _, b := range m.ValsetSigs {
+			l = len(b)
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *ValidatorCheckpointParamsStateEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Timestamp != 0 {
+		n += 1 + sovGenesis(uint64(m.Timestamp))
+	}
+	if m.ValidatorTimestamp != 0 {
+		n += 1 + sovGenesis(uint64(m.ValidatorTimestamp))
+	}
+	if m.ValidatorPowerThreshold != 0 {
+		n += 1 + sovGenesis(uint64(m.ValidatorPowerThreshold))
+	}
+	l = len(m.ValidatorSetHash)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	l = len(m.ValidatorCheckpoint)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	return n
+}
+
+func (m *ValidatorCheckpointIdxMapEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Index != 0 {
+		n += 1 + sovGenesis(uint64(m.Index))
+	}
+	if m.Timestamp != 0 {
+		n += 1 + sovGenesis(uint64(m.Timestamp))
+	}
+	return n
+}
+
+func (m *BridgeValsetByTimestampMapEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Timestamp != 0 {
+		n += 1 + sovGenesis(uint64(m.Timestamp))
+	}
+	if m.Valset != nil {
+		l = m.Valset.Size()
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	return n
+}
+
+func (m *ValsetTimestampToIdxMapEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Timestamp != 0 {
+		n += 1 + sovGenesis(uint64(m.Timestamp))
+	}
+	if m.Index != 0 {
+		n += 1 + sovGenesis(uint64(m.Index))
+	}
+	return n
+}
+
+func (m *DepositIdClaimedMapEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.DepositId != 0 {
+		n += 1 + sovGenesis(uint64(m.DepositId))
+	}
+	if m.IsClaimed {
+		n += 2
 	}
 	return n
 }
@@ -250,6 +1486,1250 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BridgeValSet", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.BridgeValSet == nil {
+				m.BridgeValSet = &BridgeValidatorSet{}
+			}
+			if err := m.BridgeValSet.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorCheckpoint", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorCheckpoint = append(m.ValidatorCheckpoint[:0], dAtA[iNdEx:postIndex]...)
+			if m.ValidatorCheckpoint == nil {
+				m.ValidatorCheckpoint = []byte{}
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field WithdrawalId", wireType)
+			}
+			m.WithdrawalId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.WithdrawalId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OperatorToEvmAddressMap", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OperatorToEvmAddressMap = append(m.OperatorToEvmAddressMap, &OperatorToEVMAddressMapEntry{})
+			if err := m.OperatorToEvmAddressMap[len(m.OperatorToEvmAddressMap)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EvmRegisteredMap", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EvmRegisteredMap = append(m.EvmRegisteredMap, &EVMRegisteredMapEntry{})
+			if err := m.EvmRegisteredMap[len(m.EvmRegisteredMap)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BridgeValsetSigsMap", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BridgeValsetSigsMap = append(m.BridgeValsetSigsMap, &BridgeValSetSigsMapEntry{})
+			if err := m.BridgeValsetSigsMap[len(m.BridgeValsetSigsMap)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorCheckpointParamsMap", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorCheckpointParamsMap = append(m.ValidatorCheckpointParamsMap, &ValidatorCheckpointParamsStateEntry{})
+			if err := m.ValidatorCheckpointParamsMap[len(m.ValidatorCheckpointParamsMap)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorCheckpointIdxMap", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorCheckpointIdxMap = append(m.ValidatorCheckpointIdxMap, &ValidatorCheckpointIdxMapEntry{})
+			if err := m.ValidatorCheckpointIdxMap[len(m.ValidatorCheckpointIdxMap)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LatestValidatorCheckpointIdx", wireType)
+			}
+			m.LatestValidatorCheckpointIdx = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LatestValidatorCheckpointIdx |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BridgeValsetByTimestampMap", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BridgeValsetByTimestampMap = append(m.BridgeValsetByTimestampMap, &BridgeValsetByTimestampMapEntry{})
+			if err := m.BridgeValsetByTimestampMap[len(m.BridgeValsetByTimestampMap)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 13:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValsetTimestampToIdxMap", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValsetTimestampToIdxMap = append(m.ValsetTimestampToIdxMap, &ValsetTimestampToIdxMapEntry{})
+			if err := m.ValsetTimestampToIdxMap[len(m.ValsetTimestampToIdxMap)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 14:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DepositIdClaimedMap", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DepositIdClaimedMap = append(m.DepositIdClaimedMap, &DepositIdClaimedMapEntry{})
+			if err := m.DepositIdClaimedMap[len(m.DepositIdClaimedMap)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OperatorToEVMAddressMapEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OperatorToEVMAddressMapEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OperatorToEVMAddressMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OperatorAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OperatorAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EvmAddress", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.EvmAddress = append(m.EvmAddress[:0], dAtA[iNdEx:postIndex]...)
+			if m.EvmAddress == nil {
+				m.EvmAddress = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EVMRegisteredMapEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EVMRegisteredMapEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EVMRegisteredMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OperatorAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OperatorAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Registered", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Registered = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BridgeValSetSigsMapEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BridgeValSetSigsMapEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BridgeValSetSigsMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			m.Timestamp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Timestamp |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValsetSigs", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValsetSigs = append(m.ValsetSigs, make([]byte, postIndex-iNdEx))
+			copy(m.ValsetSigs[len(m.ValsetSigs)-1], dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ValidatorCheckpointParamsStateEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ValidatorCheckpointParamsStateEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ValidatorCheckpointParamsStateEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			m.Timestamp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Timestamp |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorTimestamp", wireType)
+			}
+			m.ValidatorTimestamp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ValidatorTimestamp |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorPowerThreshold", wireType)
+			}
+			m.ValidatorPowerThreshold = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.ValidatorPowerThreshold |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorSetHash", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorSetHash = append(m.ValidatorSetHash[:0], dAtA[iNdEx:postIndex]...)
+			if m.ValidatorSetHash == nil {
+				m.ValidatorSetHash = []byte{}
+			}
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ValidatorCheckpoint", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ValidatorCheckpoint = append(m.ValidatorCheckpoint[:0], dAtA[iNdEx:postIndex]...)
+			if m.ValidatorCheckpoint == nil {
+				m.ValidatorCheckpoint = []byte{}
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ValidatorCheckpointIdxMapEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ValidatorCheckpointIdxMapEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ValidatorCheckpointIdxMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
+			}
+			m.Index = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Index |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			m.Timestamp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Timestamp |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *BridgeValsetByTimestampMapEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: BridgeValsetByTimestampMapEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: BridgeValsetByTimestampMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			m.Timestamp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Timestamp |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Valset", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Valset == nil {
+				m.Valset = &BridgeValidatorSet{}
+			}
+			if err := m.Valset.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ValsetTimestampToIdxMapEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ValsetTimestampToIdxMapEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ValsetTimestampToIdxMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+			}
+			m.Timestamp = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Timestamp |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Index", wireType)
+			}
+			m.Index = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Index |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DepositIdClaimedMapEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DepositIdClaimedMapEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DepositIdClaimedMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DepositId", wireType)
+			}
+			m.DepositId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DepositId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IsClaimed", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.IsClaimed = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGenesis(dAtA[iNdEx:])

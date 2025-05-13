@@ -2,8 +2,11 @@ syntax = "proto3";
 package layer.reporter;
 
 import "amino/amino.proto";
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "layer/reporter/params.proto";
+import "layer/reporter/selection.proto";
+import "layer/reporter/token_origin.proto";
 
 option go_package = "github.com/tellor-io/layer/x/reporter/types";
 
@@ -14,4 +17,29 @@ message GenesisState {
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
   ];
+  repeated SelectorTipsStateEntry selectorTips = 2;
+  repeated DisputedDelegationAmountStateEntry disputed_delegation_amounts = 3;
+  repeated FeePaidFromStakeStateEntry fee_paid_from_stake = 4;
 }
+
+message SelectorTipsStateEntry {
+  bytes selector_address = 1;
+  string tips = 2 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+message DisputedDelegationAmountStateEntry {
+  bytes hash_id = 1;
+  DelegationsAmounts delegation_amount = 2;
+}
+
+message FeePaidFromStakeStateEntry {
+  bytes hash_id = 1;
+  DelegationsAmounts delegation_amount = 2;
+}
+
+
