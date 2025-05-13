@@ -3,8 +3,9 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/collections"
 )
 
 func (k Keeper) GetNoStakeReportByQueryIdTimestamp(ctx context.Context, queryId []byte, timestamp uint64) (*types.NoStakeMicroReport, error) {

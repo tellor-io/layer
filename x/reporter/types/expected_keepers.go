@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
-
 	// "cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/math"

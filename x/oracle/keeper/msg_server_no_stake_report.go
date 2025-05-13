@@ -2,11 +2,13 @@ package keeper
 
 import (
 	"context"
+	"errors"
+
+	"github.com/tellor-io/layer/utils"
+	"github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
-	"github.com/tellor-io/layer/utils"
-	"github.com/tellor-io/layer/x/oracle/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -25,7 +27,7 @@ func (k msgServer) NoStakeReport(ctx context.Context, msg *types.MsgNoStakeRepor
 
 	// check if report for this queryId already exists at this height
 	exists, err := k.keeper.NoStakeReports.Has(sdkCtx, collections.Join(queryId, uint64(timestamp)))
-	if err != nil && err != collections.ErrNotFound {
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, err
 	}
 	if exists {

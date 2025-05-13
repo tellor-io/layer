@@ -14,9 +14,6 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/collections"
-	storetypes "cosmossdk.io/core/store"
-	"cosmossdk.io/log"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -24,6 +21,10 @@ import (
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/collections"
+	storetypes "cosmossdk.io/core/store"
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -1317,6 +1318,4 @@ func (k Keeper) CreateNoStakeSnapshot(ctx context.Context, report *oracletypes.N
 	}
 	attestRequests.AddRequest(&request)
 	return k.AttestRequestsByHeightMap.Set(ctx, blockHeight, attestRequests)
-
-	return nil
 }
