@@ -15,6 +15,7 @@ service Msg {
   rpc WithdrawTokens(MsgWithdrawTokens) returns (MsgWithdrawTokensResponse);
   rpc ClaimDeposits(MsgClaimDepositsRequest) returns (MsgClaimDepositsResponse);
   rpc UpdateSnapshotLimit(MsgUpdateSnapshotLimit) returns (MsgUpdateSnapshotLimitResponse);
+  rpc SubmitAttestationEvidence(MsgSubmitAttestationEvidence) returns (MsgSubmitAttestationEvidenceResponse);
 }
 
 message MsgRequestAttestations {
@@ -56,3 +57,22 @@ message MsgUpdateSnapshotLimit {
 }
 
 message MsgUpdateSnapshotLimitResponse {}
+
+message MsgSubmitAttestationEvidence {
+  option (cosmos.msg.v1.signer) = "creator";
+
+  string creator = 1;
+  string query_id = 2;
+  string value = 3;
+  uint64 timestamp = 4;
+  uint64 aggregate_power = 5;
+  uint64 previous_timestamp = 6;
+  uint64 next_timestamp = 7;
+  string valset_checkpoint = 8;
+  uint64 attestation_timestamp = 9;
+  uint64 last_consensus_timestamp = 10;
+  string signature = 11;
+  string operator_address = 12;
+}
+
+message MsgSubmitAttestationEvidenceResponse {}

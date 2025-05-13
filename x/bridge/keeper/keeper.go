@@ -39,6 +39,7 @@ type (
 		ValidatorCheckpoint          collections.Item[types.ValidatorCheckpoint]
 		WithdrawalId                 collections.Item[types.WithdrawalId]
 		OperatorToEVMAddressMap      collections.Map[string, types.EVMAddress]
+		EVMToOperatorAddressMap      collections.Map[string, types.OperatorAddress]
 		EVMAddressRegisteredMap      collections.Map[string, types.EVMAddressRegistered]
 		BridgeValsetSignaturesMap    collections.Map[uint64, types.BridgeValsetSignatures]
 		ValidatorCheckpointParamsMap collections.Map[uint64, types.ValidatorCheckpointParams]
@@ -81,6 +82,7 @@ func NewKeeper(
 		ValidatorCheckpoint:          collections.NewItem(sb, types.ValidatorCheckpointKey, "validator_checkpoint", codec.CollValue[types.ValidatorCheckpoint](cdc)),
 		WithdrawalId:                 collections.NewItem(sb, types.WithdrawalIdKey, "withdrawal_id", codec.CollValue[types.WithdrawalId](cdc)),
 		OperatorToEVMAddressMap:      collections.NewMap(sb, types.OperatorToEVMAddressMapKey, "operator_to_evm_address_map", collections.StringKey, codec.CollValue[types.EVMAddress](cdc)),
+		EVMToOperatorAddressMap:      collections.NewMap(sb, types.EVMToOperatorAddressMapKey, "evm_to_operator_address_map", collections.StringKey, codec.CollValue[types.OperatorAddress](cdc)),
 		EVMAddressRegisteredMap:      collections.NewMap(sb, types.EVMAddressRegisteredMapKey, "evm_address_registered_map", collections.StringKey, codec.CollValue[types.EVMAddressRegistered](cdc)),
 		BridgeValsetSignaturesMap:    collections.NewMap(sb, types.BridgeValsetSignaturesMapKey, "bridge_valset_signatures_map", collections.Uint64Key, codec.CollValue[types.BridgeValsetSignatures](cdc)),
 		ValidatorCheckpointParamsMap: collections.NewMap(sb, types.ValidatorCheckpointParamsMapKey, "validator_checkpoint_params_map", collections.Uint64Key, codec.CollValue[types.ValidatorCheckpointParams](cdc)),
@@ -596,10 +598,14 @@ func (k Keeper) EVMAddressFromSignatures(ctx context.Context, sigA, sigB []byte,
 }
 
 func (k Keeper) TryRecoverAddressWithBothIDs(sig, msgHash []byte) ([]common.Address, error) {
+	if len(sig) != 64 {
+		return []common.Address{}, fmt.Errorf("signature length is not 64")
+	}
 	var addrs []common.Address
 	for _, id := range []byte{0, 1} {
 		sigWithID := append(sig[:64], id)
 		pubKey, err := crypto.SigToPub(msgHash, sigWithID)
+		fmt.Println("pubKey", pubKey)
 		if err != nil {
 			return []common.Address{}, err
 		}
@@ -612,6 +618,16 @@ func (k Keeper) TryRecoverAddressWithBothIDs(sig, msgHash []byte) ([]common.Addr
 func (k Keeper) SetEVMAddressByOperator(ctx context.Context, operatorAddr string, evmAddr []byte) error {
 	evmAddrType := types.EVMAddress{
 		EVMAddress: evmAddr,
+	}
+
+	sdkValAddr, err := sdk.ValAddressFromBech32(operatorAddr)
+	if err != nil {
+		k.Logger(ctx).Info("Error converting operator address to SDK val address", "error", err)
+		return err
+	}
+
+	operatorAddrType := types.OperatorAddress{
+		OperatorAddress: sdkValAddr,
 	}
 
 	// check if the EVM address is already registered
@@ -634,6 +650,12 @@ func (k Keeper) SetEVMAddressByOperator(ctx context.Context, operatorAddr string
 	err = k.OperatorToEVMAddressMap.Set(ctx, operatorAddr, evmAddrType)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting EVM address by operator", "error", err)
+		return err
+	}
+
+	err = k.EVMToOperatorAddressMap.Set(ctx, evmAddressString, operatorAddrType)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting operator address by EVM address", "error", err)
 		return err
 	}
 

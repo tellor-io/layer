@@ -3798,6 +3798,1390 @@ func (x *fastReflection_MsgUpdateSnapshotLimitResponse) ProtoMethods() *protoifa
 	}
 }
 
+var (
+	md_MsgSubmitAttestationEvidence                          protoreflect.MessageDescriptor
+	fd_MsgSubmitAttestationEvidence_creator                  protoreflect.FieldDescriptor
+	fd_MsgSubmitAttestationEvidence_query_id                 protoreflect.FieldDescriptor
+	fd_MsgSubmitAttestationEvidence_value                    protoreflect.FieldDescriptor
+	fd_MsgSubmitAttestationEvidence_timestamp                protoreflect.FieldDescriptor
+	fd_MsgSubmitAttestationEvidence_aggregate_power          protoreflect.FieldDescriptor
+	fd_MsgSubmitAttestationEvidence_previous_timestamp       protoreflect.FieldDescriptor
+	fd_MsgSubmitAttestationEvidence_next_timestamp           protoreflect.FieldDescriptor
+	fd_MsgSubmitAttestationEvidence_valset_checkpoint        protoreflect.FieldDescriptor
+	fd_MsgSubmitAttestationEvidence_attestation_timestamp    protoreflect.FieldDescriptor
+	fd_MsgSubmitAttestationEvidence_last_consensus_timestamp protoreflect.FieldDescriptor
+	fd_MsgSubmitAttestationEvidence_signature                protoreflect.FieldDescriptor
+	fd_MsgSubmitAttestationEvidence_operator_address         protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_tx_proto_init()
+	md_MsgSubmitAttestationEvidence = File_layer_bridge_tx_proto.Messages().ByName("MsgSubmitAttestationEvidence")
+	fd_MsgSubmitAttestationEvidence_creator = md_MsgSubmitAttestationEvidence.Fields().ByName("creator")
+	fd_MsgSubmitAttestationEvidence_query_id = md_MsgSubmitAttestationEvidence.Fields().ByName("query_id")
+	fd_MsgSubmitAttestationEvidence_value = md_MsgSubmitAttestationEvidence.Fields().ByName("value")
+	fd_MsgSubmitAttestationEvidence_timestamp = md_MsgSubmitAttestationEvidence.Fields().ByName("timestamp")
+	fd_MsgSubmitAttestationEvidence_aggregate_power = md_MsgSubmitAttestationEvidence.Fields().ByName("aggregate_power")
+	fd_MsgSubmitAttestationEvidence_previous_timestamp = md_MsgSubmitAttestationEvidence.Fields().ByName("previous_timestamp")
+	fd_MsgSubmitAttestationEvidence_next_timestamp = md_MsgSubmitAttestationEvidence.Fields().ByName("next_timestamp")
+	fd_MsgSubmitAttestationEvidence_valset_checkpoint = md_MsgSubmitAttestationEvidence.Fields().ByName("valset_checkpoint")
+	fd_MsgSubmitAttestationEvidence_attestation_timestamp = md_MsgSubmitAttestationEvidence.Fields().ByName("attestation_timestamp")
+	fd_MsgSubmitAttestationEvidence_last_consensus_timestamp = md_MsgSubmitAttestationEvidence.Fields().ByName("last_consensus_timestamp")
+	fd_MsgSubmitAttestationEvidence_signature = md_MsgSubmitAttestationEvidence.Fields().ByName("signature")
+	fd_MsgSubmitAttestationEvidence_operator_address = md_MsgSubmitAttestationEvidence.Fields().ByName("operator_address")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgSubmitAttestationEvidence)(nil)
+
+type fastReflection_MsgSubmitAttestationEvidence MsgSubmitAttestationEvidence
+
+func (x *MsgSubmitAttestationEvidence) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgSubmitAttestationEvidence)(x)
+}
+
+func (x *MsgSubmitAttestationEvidence) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_tx_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgSubmitAttestationEvidence_messageType fastReflection_MsgSubmitAttestationEvidence_messageType
+var _ protoreflect.MessageType = fastReflection_MsgSubmitAttestationEvidence_messageType{}
+
+type fastReflection_MsgSubmitAttestationEvidence_messageType struct{}
+
+func (x fastReflection_MsgSubmitAttestationEvidence_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgSubmitAttestationEvidence)(nil)
+}
+func (x fastReflection_MsgSubmitAttestationEvidence_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgSubmitAttestationEvidence)
+}
+func (x fastReflection_MsgSubmitAttestationEvidence_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSubmitAttestationEvidence
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgSubmitAttestationEvidence) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSubmitAttestationEvidence
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgSubmitAttestationEvidence) Type() protoreflect.MessageType {
+	return _fastReflection_MsgSubmitAttestationEvidence_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgSubmitAttestationEvidence) New() protoreflect.Message {
+	return new(fastReflection_MsgSubmitAttestationEvidence)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgSubmitAttestationEvidence) Interface() protoreflect.ProtoMessage {
+	return (*MsgSubmitAttestationEvidence)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgSubmitAttestationEvidence) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Creator != "" {
+		value := protoreflect.ValueOfString(x.Creator)
+		if !f(fd_MsgSubmitAttestationEvidence_creator, value) {
+			return
+		}
+	}
+	if x.QueryId != "" {
+		value := protoreflect.ValueOfString(x.QueryId)
+		if !f(fd_MsgSubmitAttestationEvidence_query_id, value) {
+			return
+		}
+	}
+	if x.Value != "" {
+		value := protoreflect.ValueOfString(x.Value)
+		if !f(fd_MsgSubmitAttestationEvidence_value, value) {
+			return
+		}
+	}
+	if x.Timestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.Timestamp)
+		if !f(fd_MsgSubmitAttestationEvidence_timestamp, value) {
+			return
+		}
+	}
+	if x.AggregatePower != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.AggregatePower)
+		if !f(fd_MsgSubmitAttestationEvidence_aggregate_power, value) {
+			return
+		}
+	}
+	if x.PreviousTimestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.PreviousTimestamp)
+		if !f(fd_MsgSubmitAttestationEvidence_previous_timestamp, value) {
+			return
+		}
+	}
+	if x.NextTimestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.NextTimestamp)
+		if !f(fd_MsgSubmitAttestationEvidence_next_timestamp, value) {
+			return
+		}
+	}
+	if x.ValsetCheckpoint != "" {
+		value := protoreflect.ValueOfString(x.ValsetCheckpoint)
+		if !f(fd_MsgSubmitAttestationEvidence_valset_checkpoint, value) {
+			return
+		}
+	}
+	if x.AttestationTimestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.AttestationTimestamp)
+		if !f(fd_MsgSubmitAttestationEvidence_attestation_timestamp, value) {
+			return
+		}
+	}
+	if x.LastConsensusTimestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.LastConsensusTimestamp)
+		if !f(fd_MsgSubmitAttestationEvidence_last_consensus_timestamp, value) {
+			return
+		}
+	}
+	if x.Signature != "" {
+		value := protoreflect.ValueOfString(x.Signature)
+		if !f(fd_MsgSubmitAttestationEvidence_signature, value) {
+			return
+		}
+	}
+	if x.OperatorAddress != "" {
+		value := protoreflect.ValueOfString(x.OperatorAddress)
+		if !f(fd_MsgSubmitAttestationEvidence_operator_address, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgSubmitAttestationEvidence) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.MsgSubmitAttestationEvidence.creator":
+		return x.Creator != ""
+	case "layer.bridge.MsgSubmitAttestationEvidence.query_id":
+		return x.QueryId != ""
+	case "layer.bridge.MsgSubmitAttestationEvidence.value":
+		return x.Value != ""
+	case "layer.bridge.MsgSubmitAttestationEvidence.timestamp":
+		return x.Timestamp != uint64(0)
+	case "layer.bridge.MsgSubmitAttestationEvidence.aggregate_power":
+		return x.AggregatePower != uint64(0)
+	case "layer.bridge.MsgSubmitAttestationEvidence.previous_timestamp":
+		return x.PreviousTimestamp != uint64(0)
+	case "layer.bridge.MsgSubmitAttestationEvidence.next_timestamp":
+		return x.NextTimestamp != uint64(0)
+	case "layer.bridge.MsgSubmitAttestationEvidence.valset_checkpoint":
+		return x.ValsetCheckpoint != ""
+	case "layer.bridge.MsgSubmitAttestationEvidence.attestation_timestamp":
+		return x.AttestationTimestamp != uint64(0)
+	case "layer.bridge.MsgSubmitAttestationEvidence.last_consensus_timestamp":
+		return x.LastConsensusTimestamp != uint64(0)
+	case "layer.bridge.MsgSubmitAttestationEvidence.signature":
+		return x.Signature != ""
+	case "layer.bridge.MsgSubmitAttestationEvidence.operator_address":
+		return x.OperatorAddress != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidence"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitAttestationEvidence does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitAttestationEvidence) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.MsgSubmitAttestationEvidence.creator":
+		x.Creator = ""
+	case "layer.bridge.MsgSubmitAttestationEvidence.query_id":
+		x.QueryId = ""
+	case "layer.bridge.MsgSubmitAttestationEvidence.value":
+		x.Value = ""
+	case "layer.bridge.MsgSubmitAttestationEvidence.timestamp":
+		x.Timestamp = uint64(0)
+	case "layer.bridge.MsgSubmitAttestationEvidence.aggregate_power":
+		x.AggregatePower = uint64(0)
+	case "layer.bridge.MsgSubmitAttestationEvidence.previous_timestamp":
+		x.PreviousTimestamp = uint64(0)
+	case "layer.bridge.MsgSubmitAttestationEvidence.next_timestamp":
+		x.NextTimestamp = uint64(0)
+	case "layer.bridge.MsgSubmitAttestationEvidence.valset_checkpoint":
+		x.ValsetCheckpoint = ""
+	case "layer.bridge.MsgSubmitAttestationEvidence.attestation_timestamp":
+		x.AttestationTimestamp = uint64(0)
+	case "layer.bridge.MsgSubmitAttestationEvidence.last_consensus_timestamp":
+		x.LastConsensusTimestamp = uint64(0)
+	case "layer.bridge.MsgSubmitAttestationEvidence.signature":
+		x.Signature = ""
+	case "layer.bridge.MsgSubmitAttestationEvidence.operator_address":
+		x.OperatorAddress = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidence"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitAttestationEvidence does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgSubmitAttestationEvidence) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.MsgSubmitAttestationEvidence.creator":
+		value := x.Creator
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.MsgSubmitAttestationEvidence.query_id":
+		value := x.QueryId
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.MsgSubmitAttestationEvidence.value":
+		value := x.Value
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.MsgSubmitAttestationEvidence.timestamp":
+		value := x.Timestamp
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.MsgSubmitAttestationEvidence.aggregate_power":
+		value := x.AggregatePower
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.MsgSubmitAttestationEvidence.previous_timestamp":
+		value := x.PreviousTimestamp
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.MsgSubmitAttestationEvidence.next_timestamp":
+		value := x.NextTimestamp
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.MsgSubmitAttestationEvidence.valset_checkpoint":
+		value := x.ValsetCheckpoint
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.MsgSubmitAttestationEvidence.attestation_timestamp":
+		value := x.AttestationTimestamp
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.MsgSubmitAttestationEvidence.last_consensus_timestamp":
+		value := x.LastConsensusTimestamp
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.MsgSubmitAttestationEvidence.signature":
+		value := x.Signature
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.MsgSubmitAttestationEvidence.operator_address":
+		value := x.OperatorAddress
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidence"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitAttestationEvidence does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitAttestationEvidence) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.MsgSubmitAttestationEvidence.creator":
+		x.Creator = value.Interface().(string)
+	case "layer.bridge.MsgSubmitAttestationEvidence.query_id":
+		x.QueryId = value.Interface().(string)
+	case "layer.bridge.MsgSubmitAttestationEvidence.value":
+		x.Value = value.Interface().(string)
+	case "layer.bridge.MsgSubmitAttestationEvidence.timestamp":
+		x.Timestamp = value.Uint()
+	case "layer.bridge.MsgSubmitAttestationEvidence.aggregate_power":
+		x.AggregatePower = value.Uint()
+	case "layer.bridge.MsgSubmitAttestationEvidence.previous_timestamp":
+		x.PreviousTimestamp = value.Uint()
+	case "layer.bridge.MsgSubmitAttestationEvidence.next_timestamp":
+		x.NextTimestamp = value.Uint()
+	case "layer.bridge.MsgSubmitAttestationEvidence.valset_checkpoint":
+		x.ValsetCheckpoint = value.Interface().(string)
+	case "layer.bridge.MsgSubmitAttestationEvidence.attestation_timestamp":
+		x.AttestationTimestamp = value.Uint()
+	case "layer.bridge.MsgSubmitAttestationEvidence.last_consensus_timestamp":
+		x.LastConsensusTimestamp = value.Uint()
+	case "layer.bridge.MsgSubmitAttestationEvidence.signature":
+		x.Signature = value.Interface().(string)
+	case "layer.bridge.MsgSubmitAttestationEvidence.operator_address":
+		x.OperatorAddress = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidence"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitAttestationEvidence does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitAttestationEvidence) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.MsgSubmitAttestationEvidence.creator":
+		panic(fmt.Errorf("field creator of message layer.bridge.MsgSubmitAttestationEvidence is not mutable"))
+	case "layer.bridge.MsgSubmitAttestationEvidence.query_id":
+		panic(fmt.Errorf("field query_id of message layer.bridge.MsgSubmitAttestationEvidence is not mutable"))
+	case "layer.bridge.MsgSubmitAttestationEvidence.value":
+		panic(fmt.Errorf("field value of message layer.bridge.MsgSubmitAttestationEvidence is not mutable"))
+	case "layer.bridge.MsgSubmitAttestationEvidence.timestamp":
+		panic(fmt.Errorf("field timestamp of message layer.bridge.MsgSubmitAttestationEvidence is not mutable"))
+	case "layer.bridge.MsgSubmitAttestationEvidence.aggregate_power":
+		panic(fmt.Errorf("field aggregate_power of message layer.bridge.MsgSubmitAttestationEvidence is not mutable"))
+	case "layer.bridge.MsgSubmitAttestationEvidence.previous_timestamp":
+		panic(fmt.Errorf("field previous_timestamp of message layer.bridge.MsgSubmitAttestationEvidence is not mutable"))
+	case "layer.bridge.MsgSubmitAttestationEvidence.next_timestamp":
+		panic(fmt.Errorf("field next_timestamp of message layer.bridge.MsgSubmitAttestationEvidence is not mutable"))
+	case "layer.bridge.MsgSubmitAttestationEvidence.valset_checkpoint":
+		panic(fmt.Errorf("field valset_checkpoint of message layer.bridge.MsgSubmitAttestationEvidence is not mutable"))
+	case "layer.bridge.MsgSubmitAttestationEvidence.attestation_timestamp":
+		panic(fmt.Errorf("field attestation_timestamp of message layer.bridge.MsgSubmitAttestationEvidence is not mutable"))
+	case "layer.bridge.MsgSubmitAttestationEvidence.last_consensus_timestamp":
+		panic(fmt.Errorf("field last_consensus_timestamp of message layer.bridge.MsgSubmitAttestationEvidence is not mutable"))
+	case "layer.bridge.MsgSubmitAttestationEvidence.signature":
+		panic(fmt.Errorf("field signature of message layer.bridge.MsgSubmitAttestationEvidence is not mutable"))
+	case "layer.bridge.MsgSubmitAttestationEvidence.operator_address":
+		panic(fmt.Errorf("field operator_address of message layer.bridge.MsgSubmitAttestationEvidence is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidence"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitAttestationEvidence does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgSubmitAttestationEvidence) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.MsgSubmitAttestationEvidence.creator":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.MsgSubmitAttestationEvidence.query_id":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.MsgSubmitAttestationEvidence.value":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.MsgSubmitAttestationEvidence.timestamp":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.MsgSubmitAttestationEvidence.aggregate_power":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.MsgSubmitAttestationEvidence.previous_timestamp":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.MsgSubmitAttestationEvidence.next_timestamp":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.MsgSubmitAttestationEvidence.valset_checkpoint":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.MsgSubmitAttestationEvidence.attestation_timestamp":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.MsgSubmitAttestationEvidence.last_consensus_timestamp":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.MsgSubmitAttestationEvidence.signature":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.MsgSubmitAttestationEvidence.operator_address":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidence"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitAttestationEvidence does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgSubmitAttestationEvidence) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.MsgSubmitAttestationEvidence", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgSubmitAttestationEvidence) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitAttestationEvidence) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgSubmitAttestationEvidence) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgSubmitAttestationEvidence) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgSubmitAttestationEvidence)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Creator)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.QueryId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Value)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Timestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.Timestamp))
+		}
+		if x.AggregatePower != 0 {
+			n += 1 + runtime.Sov(uint64(x.AggregatePower))
+		}
+		if x.PreviousTimestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.PreviousTimestamp))
+		}
+		if x.NextTimestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.NextTimestamp))
+		}
+		l = len(x.ValsetCheckpoint)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.AttestationTimestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.AttestationTimestamp))
+		}
+		if x.LastConsensusTimestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.LastConsensusTimestamp))
+		}
+		l = len(x.Signature)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.OperatorAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSubmitAttestationEvidence)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.OperatorAddress) > 0 {
+			i -= len(x.OperatorAddress)
+			copy(dAtA[i:], x.OperatorAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OperatorAddress)))
+			i--
+			dAtA[i] = 0x62
+		}
+		if len(x.Signature) > 0 {
+			i -= len(x.Signature)
+			copy(dAtA[i:], x.Signature)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Signature)))
+			i--
+			dAtA[i] = 0x5a
+		}
+		if x.LastConsensusTimestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.LastConsensusTimestamp))
+			i--
+			dAtA[i] = 0x50
+		}
+		if x.AttestationTimestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.AttestationTimestamp))
+			i--
+			dAtA[i] = 0x48
+		}
+		if len(x.ValsetCheckpoint) > 0 {
+			i -= len(x.ValsetCheckpoint)
+			copy(dAtA[i:], x.ValsetCheckpoint)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ValsetCheckpoint)))
+			i--
+			dAtA[i] = 0x42
+		}
+		if x.NextTimestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.NextTimestamp))
+			i--
+			dAtA[i] = 0x38
+		}
+		if x.PreviousTimestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.PreviousTimestamp))
+			i--
+			dAtA[i] = 0x30
+		}
+		if x.AggregatePower != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.AggregatePower))
+			i--
+			dAtA[i] = 0x28
+		}
+		if x.Timestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Timestamp))
+			i--
+			dAtA[i] = 0x20
+		}
+		if len(x.Value) > 0 {
+			i -= len(x.Value)
+			copy(dAtA[i:], x.Value)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Value)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.QueryId) > 0 {
+			i -= len(x.QueryId)
+			copy(dAtA[i:], x.QueryId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.QueryId)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Creator) > 0 {
+			i -= len(x.Creator)
+			copy(dAtA[i:], x.Creator)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Creator)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSubmitAttestationEvidence)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitAttestationEvidence: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitAttestationEvidence: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Creator = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.QueryId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Value = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
+				}
+				x.Timestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Timestamp |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 5:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AggregatePower", wireType)
+				}
+				x.AggregatePower = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.AggregatePower |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 6:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PreviousTimestamp", wireType)
+				}
+				x.PreviousTimestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.PreviousTimestamp |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 7:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field NextTimestamp", wireType)
+				}
+				x.NextTimestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.NextTimestamp |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 8:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValsetCheckpoint", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValsetCheckpoint = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 9:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AttestationTimestamp", wireType)
+				}
+				x.AttestationTimestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.AttestationTimestamp |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 10:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field LastConsensusTimestamp", wireType)
+				}
+				x.LastConsensusTimestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.LastConsensusTimestamp |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 11:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Signature", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Signature = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 12:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OperatorAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.OperatorAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgSubmitAttestationEvidenceResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_layer_bridge_tx_proto_init()
+	md_MsgSubmitAttestationEvidenceResponse = File_layer_bridge_tx_proto.Messages().ByName("MsgSubmitAttestationEvidenceResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgSubmitAttestationEvidenceResponse)(nil)
+
+type fastReflection_MsgSubmitAttestationEvidenceResponse MsgSubmitAttestationEvidenceResponse
+
+func (x *MsgSubmitAttestationEvidenceResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgSubmitAttestationEvidenceResponse)(x)
+}
+
+func (x *MsgSubmitAttestationEvidenceResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_tx_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgSubmitAttestationEvidenceResponse_messageType fastReflection_MsgSubmitAttestationEvidenceResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgSubmitAttestationEvidenceResponse_messageType{}
+
+type fastReflection_MsgSubmitAttestationEvidenceResponse_messageType struct{}
+
+func (x fastReflection_MsgSubmitAttestationEvidenceResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgSubmitAttestationEvidenceResponse)(nil)
+}
+func (x fastReflection_MsgSubmitAttestationEvidenceResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgSubmitAttestationEvidenceResponse)
+}
+func (x fastReflection_MsgSubmitAttestationEvidenceResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSubmitAttestationEvidenceResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSubmitAttestationEvidenceResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgSubmitAttestationEvidenceResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgSubmitAttestationEvidenceResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgSubmitAttestationEvidenceResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidenceResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitAttestationEvidenceResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidenceResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitAttestationEvidenceResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidenceResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitAttestationEvidenceResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidenceResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitAttestationEvidenceResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidenceResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitAttestationEvidenceResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidenceResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitAttestationEvidenceResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.MsgSubmitAttestationEvidenceResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgSubmitAttestationEvidenceResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSubmitAttestationEvidenceResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSubmitAttestationEvidenceResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitAttestationEvidenceResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitAttestationEvidenceResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -4112,6 +5496,155 @@ func (*MsgUpdateSnapshotLimitResponse) Descriptor() ([]byte, []int) {
 	return file_layer_bridge_tx_proto_rawDescGZIP(), []int{7}
 }
 
+type MsgSubmitAttestationEvidence struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Creator                string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	QueryId                string `protobuf:"bytes,2,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	Value                  string `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
+	Timestamp              uint64 `protobuf:"varint,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	AggregatePower         uint64 `protobuf:"varint,5,opt,name=aggregate_power,json=aggregatePower,proto3" json:"aggregate_power,omitempty"`
+	PreviousTimestamp      uint64 `protobuf:"varint,6,opt,name=previous_timestamp,json=previousTimestamp,proto3" json:"previous_timestamp,omitempty"`
+	NextTimestamp          uint64 `protobuf:"varint,7,opt,name=next_timestamp,json=nextTimestamp,proto3" json:"next_timestamp,omitempty"`
+	ValsetCheckpoint       string `protobuf:"bytes,8,opt,name=valset_checkpoint,json=valsetCheckpoint,proto3" json:"valset_checkpoint,omitempty"`
+	AttestationTimestamp   uint64 `protobuf:"varint,9,opt,name=attestation_timestamp,json=attestationTimestamp,proto3" json:"attestation_timestamp,omitempty"`
+	LastConsensusTimestamp uint64 `protobuf:"varint,10,opt,name=last_consensus_timestamp,json=lastConsensusTimestamp,proto3" json:"last_consensus_timestamp,omitempty"`
+	Signature              string `protobuf:"bytes,11,opt,name=signature,proto3" json:"signature,omitempty"`
+	OperatorAddress        string `protobuf:"bytes,12,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
+}
+
+func (x *MsgSubmitAttestationEvidence) Reset() {
+	*x = MsgSubmitAttestationEvidence{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_tx_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgSubmitAttestationEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgSubmitAttestationEvidence) ProtoMessage() {}
+
+// Deprecated: Use MsgSubmitAttestationEvidence.ProtoReflect.Descriptor instead.
+func (*MsgSubmitAttestationEvidence) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_tx_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *MsgSubmitAttestationEvidence) GetCreator() string {
+	if x != nil {
+		return x.Creator
+	}
+	return ""
+}
+
+func (x *MsgSubmitAttestationEvidence) GetQueryId() string {
+	if x != nil {
+		return x.QueryId
+	}
+	return ""
+}
+
+func (x *MsgSubmitAttestationEvidence) GetValue() string {
+	if x != nil {
+		return x.Value
+	}
+	return ""
+}
+
+func (x *MsgSubmitAttestationEvidence) GetTimestamp() uint64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+func (x *MsgSubmitAttestationEvidence) GetAggregatePower() uint64 {
+	if x != nil {
+		return x.AggregatePower
+	}
+	return 0
+}
+
+func (x *MsgSubmitAttestationEvidence) GetPreviousTimestamp() uint64 {
+	if x != nil {
+		return x.PreviousTimestamp
+	}
+	return 0
+}
+
+func (x *MsgSubmitAttestationEvidence) GetNextTimestamp() uint64 {
+	if x != nil {
+		return x.NextTimestamp
+	}
+	return 0
+}
+
+func (x *MsgSubmitAttestationEvidence) GetValsetCheckpoint() string {
+	if x != nil {
+		return x.ValsetCheckpoint
+	}
+	return ""
+}
+
+func (x *MsgSubmitAttestationEvidence) GetAttestationTimestamp() uint64 {
+	if x != nil {
+		return x.AttestationTimestamp
+	}
+	return 0
+}
+
+func (x *MsgSubmitAttestationEvidence) GetLastConsensusTimestamp() uint64 {
+	if x != nil {
+		return x.LastConsensusTimestamp
+	}
+	return 0
+}
+
+func (x *MsgSubmitAttestationEvidence) GetSignature() string {
+	if x != nil {
+		return x.Signature
+	}
+	return ""
+}
+
+func (x *MsgSubmitAttestationEvidence) GetOperatorAddress() string {
+	if x != nil {
+		return x.OperatorAddress
+	}
+	return ""
+}
+
+type MsgSubmitAttestationEvidenceResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgSubmitAttestationEvidenceResponse) Reset() {
+	*x = MsgSubmitAttestationEvidenceResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_tx_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgSubmitAttestationEvidenceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgSubmitAttestationEvidenceResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgSubmitAttestationEvidenceResponse.ProtoReflect.Descriptor instead.
+func (*MsgSubmitAttestationEvidenceResponse) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_tx_proto_rawDescGZIP(), []int{9}
+}
+
 var File_layer_bridge_tx_proto protoreflect.FileDescriptor
 
 var file_layer_bridge_tx_proto_rawDesc = []byte{
@@ -4161,43 +5694,85 @@ var file_layer_bridge_tx_proto_rawDesc = []byte{
 	0x69, 0x74, 0x3a, 0x0e, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69,
 	0x74, 0x79, 0x22, 0x20, 0x0a, 0x1e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53,
 	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x32, 0x9e, 0x03, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x69, 0x0a, 0x13,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0xf9, 0x03, 0x0a, 0x1c, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d,
+	0x69, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x69,
+	0x64, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12,
+	0x19, 0x0a, 0x08, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x07, 0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61,
+	0x6c, 0x75, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65,
+	0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x27,
+	0x0a, 0x0f, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61, 0x74, 0x65, 0x5f, 0x70, 0x6f, 0x77, 0x65,
+	0x72, 0x18, 0x05, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0e, 0x61, 0x67, 0x67, 0x72, 0x65, 0x67, 0x61,
+	0x74, 0x65, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x12, 0x2d, 0x0a, 0x12, 0x70, 0x72, 0x65, 0x76, 0x69,
+	0x6f, 0x75, 0x73, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x06, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x11, 0x70, 0x72, 0x65, 0x76, 0x69, 0x6f, 0x75, 0x73, 0x54, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x25, 0x0a, 0x0e, 0x6e, 0x65, 0x78, 0x74, 0x5f, 0x74,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x07, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0d,
+	0x6e, 0x65, 0x78, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x2b, 0x0a,
+	0x11, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69,
+	0x6e, 0x74, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09, 0x52, 0x10, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74,
+	0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x33, 0x0a, 0x15, 0x61, 0x74,
+	0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74,
+	0x61, 0x6d, 0x70, 0x18, 0x09, 0x20, 0x01, 0x28, 0x04, 0x52, 0x14, 0x61, 0x74, 0x74, 0x65, 0x73,
+	0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12,
+	0x38, 0x0a, 0x18, 0x6c, 0x61, 0x73, 0x74, 0x5f, 0x63, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75,
+	0x73, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x0a, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x16, 0x6c, 0x61, 0x73, 0x74, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73,
+	0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x1c, 0x0a, 0x09, 0x73, 0x69, 0x67,
+	0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x73, 0x69,
+	0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x12, 0x29, 0x0a, 0x10, 0x6f, 0x70, 0x65, 0x72, 0x61,
+	0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x0c, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0f, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x3a, 0x0c, 0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72,
+	0x22, 0x26, 0x0a, 0x24, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x41, 0x74, 0x74,
+	0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0x9b, 0x04, 0x0a, 0x03, 0x4d, 0x73, 0x67,
+	0x12, 0x69, 0x0a, 0x13, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73,
+	0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x24, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x1a, 0x2c, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67,
 	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x73, 0x12, 0x24, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
-	0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x41, 0x74, 0x74,
-	0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x1a, 0x2c, 0x2e, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5a, 0x0a, 0x0e, 0x57, 0x69, 0x74, 0x68, 0x64,
-	0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x73, 0x12, 0x1f, 0x2e, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68,
-	0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x73, 0x1a, 0x27, 0x2e, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74,
-	0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0d, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x44, 0x65, 0x70, 0x6f,
-	0x73, 0x69, 0x74, 0x73, 0x12, 0x25, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69,
-	0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x44, 0x65, 0x70, 0x6f,
-	0x73, 0x69, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c,
-	0x61, 0x69, 0x6d, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x69, 0x0a, 0x13, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x6e, 0x61,
-	0x70, 0x73, 0x68, 0x6f, 0x74, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x12, 0x24, 0x2e, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x4c, 0x69, 0x6d, 0x69, 0x74,
-	0x1a, 0x2c, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e,
-	0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f,
-	0x74, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05,
-	0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x99, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72,
-	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
-	0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64,
-	0x67, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72,
-	0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c,
-	0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x42,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x42, 0x72, 0x69, 0x64, 0x67,
-	0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5a, 0x0a, 0x0e, 0x57,
+	0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x73, 0x12, 0x1f, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67,
+	0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x73, 0x1a, 0x27,
+	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73,
+	0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0d, 0x43, 0x6c, 0x61, 0x69, 0x6d,
+	0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x73, 0x12, 0x25, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d,
+	0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x26, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d,
+	0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x69, 0x0a, 0x13, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x12, 0x24,
+	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73,
+	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x4c,
+	0x69, 0x6d, 0x69, 0x74, 0x1a, 0x2c, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69,
+	0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x6e, 0x61,
+	0x70, 0x73, 0x68, 0x6f, 0x74, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x7b, 0x0a, 0x19, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x41, 0x74, 0x74, 0x65,
+	0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x12,
+	0x2a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d,
+	0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x1a, 0x32, 0x2e, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75,
+	0x62, 0x6d, 0x69, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45,
+	0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a,
+	0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x99, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x07, 0x54, 0x78, 0x50,
+	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
+	0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69,
+	0x64, 0x67, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65,
+	0x72, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72,
+	0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c,
+	0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x42, 0x72, 0x69, 0x64,
+	0x67, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -4212,33 +5787,37 @@ func file_layer_bridge_tx_proto_rawDescGZIP() []byte {
 	return file_layer_bridge_tx_proto_rawDescData
 }
 
-var file_layer_bridge_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_layer_bridge_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
 var file_layer_bridge_tx_proto_goTypes = []interface{}{
-	(*MsgRequestAttestations)(nil),         // 0: layer.bridge.MsgRequestAttestations
-	(*MsgRequestAttestationsResponse)(nil), // 1: layer.bridge.MsgRequestAttestationsResponse
-	(*MsgWithdrawTokens)(nil),              // 2: layer.bridge.MsgWithdrawTokens
-	(*MsgWithdrawTokensResponse)(nil),      // 3: layer.bridge.MsgWithdrawTokensResponse
-	(*MsgClaimDepositsRequest)(nil),        // 4: layer.bridge.MsgClaimDepositsRequest
-	(*MsgClaimDepositsResponse)(nil),       // 5: layer.bridge.MsgClaimDepositsResponse
-	(*MsgUpdateSnapshotLimit)(nil),         // 6: layer.bridge.MsgUpdateSnapshotLimit
-	(*MsgUpdateSnapshotLimitResponse)(nil), // 7: layer.bridge.MsgUpdateSnapshotLimitResponse
-	(*v1beta1.Coin)(nil),                   // 8: cosmos.base.v1beta1.Coin
+	(*MsgRequestAttestations)(nil),               // 0: layer.bridge.MsgRequestAttestations
+	(*MsgRequestAttestationsResponse)(nil),       // 1: layer.bridge.MsgRequestAttestationsResponse
+	(*MsgWithdrawTokens)(nil),                    // 2: layer.bridge.MsgWithdrawTokens
+	(*MsgWithdrawTokensResponse)(nil),            // 3: layer.bridge.MsgWithdrawTokensResponse
+	(*MsgClaimDepositsRequest)(nil),              // 4: layer.bridge.MsgClaimDepositsRequest
+	(*MsgClaimDepositsResponse)(nil),             // 5: layer.bridge.MsgClaimDepositsResponse
+	(*MsgUpdateSnapshotLimit)(nil),               // 6: layer.bridge.MsgUpdateSnapshotLimit
+	(*MsgUpdateSnapshotLimitResponse)(nil),       // 7: layer.bridge.MsgUpdateSnapshotLimitResponse
+	(*MsgSubmitAttestationEvidence)(nil),         // 8: layer.bridge.MsgSubmitAttestationEvidence
+	(*MsgSubmitAttestationEvidenceResponse)(nil), // 9: layer.bridge.MsgSubmitAttestationEvidenceResponse
+	(*v1beta1.Coin)(nil),                         // 10: cosmos.base.v1beta1.Coin
 }
 var file_layer_bridge_tx_proto_depIdxs = []int32{
-	8, // 0: layer.bridge.MsgWithdrawTokens.amount:type_name -> cosmos.base.v1beta1.Coin
-	0, // 1: layer.bridge.Msg.RequestAttestations:input_type -> layer.bridge.MsgRequestAttestations
-	2, // 2: layer.bridge.Msg.WithdrawTokens:input_type -> layer.bridge.MsgWithdrawTokens
-	4, // 3: layer.bridge.Msg.ClaimDeposits:input_type -> layer.bridge.MsgClaimDepositsRequest
-	6, // 4: layer.bridge.Msg.UpdateSnapshotLimit:input_type -> layer.bridge.MsgUpdateSnapshotLimit
-	1, // 5: layer.bridge.Msg.RequestAttestations:output_type -> layer.bridge.MsgRequestAttestationsResponse
-	3, // 6: layer.bridge.Msg.WithdrawTokens:output_type -> layer.bridge.MsgWithdrawTokensResponse
-	5, // 7: layer.bridge.Msg.ClaimDeposits:output_type -> layer.bridge.MsgClaimDepositsResponse
-	7, // 8: layer.bridge.Msg.UpdateSnapshotLimit:output_type -> layer.bridge.MsgUpdateSnapshotLimitResponse
-	5, // [5:9] is the sub-list for method output_type
-	1, // [1:5] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	10, // 0: layer.bridge.MsgWithdrawTokens.amount:type_name -> cosmos.base.v1beta1.Coin
+	0,  // 1: layer.bridge.Msg.RequestAttestations:input_type -> layer.bridge.MsgRequestAttestations
+	2,  // 2: layer.bridge.Msg.WithdrawTokens:input_type -> layer.bridge.MsgWithdrawTokens
+	4,  // 3: layer.bridge.Msg.ClaimDeposits:input_type -> layer.bridge.MsgClaimDepositsRequest
+	6,  // 4: layer.bridge.Msg.UpdateSnapshotLimit:input_type -> layer.bridge.MsgUpdateSnapshotLimit
+	8,  // 5: layer.bridge.Msg.SubmitAttestationEvidence:input_type -> layer.bridge.MsgSubmitAttestationEvidence
+	1,  // 6: layer.bridge.Msg.RequestAttestations:output_type -> layer.bridge.MsgRequestAttestationsResponse
+	3,  // 7: layer.bridge.Msg.WithdrawTokens:output_type -> layer.bridge.MsgWithdrawTokensResponse
+	5,  // 8: layer.bridge.Msg.ClaimDeposits:output_type -> layer.bridge.MsgClaimDepositsResponse
+	7,  // 9: layer.bridge.Msg.UpdateSnapshotLimit:output_type -> layer.bridge.MsgUpdateSnapshotLimitResponse
+	9,  // 10: layer.bridge.Msg.SubmitAttestationEvidence:output_type -> layer.bridge.MsgSubmitAttestationEvidenceResponse
+	6,  // [6:11] is the sub-list for method output_type
+	1,  // [1:6] is the sub-list for method input_type
+	1,  // [1:1] is the sub-list for extension type_name
+	1,  // [1:1] is the sub-list for extension extendee
+	0,  // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_layer_bridge_tx_proto_init() }
@@ -4343,6 +5922,30 @@ func file_layer_bridge_tx_proto_init() {
 				return nil
 			}
 		}
+		file_layer_bridge_tx_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgSubmitAttestationEvidence); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_tx_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgSubmitAttestationEvidenceResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -4350,7 +5953,7 @@ func file_layer_bridge_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_bridge_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   10,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

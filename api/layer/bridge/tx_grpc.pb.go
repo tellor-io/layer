@@ -22,6 +22,7 @@ type MsgClient interface {
 	WithdrawTokens(ctx context.Context, in *MsgWithdrawTokens, opts ...grpc.CallOption) (*MsgWithdrawTokensResponse, error)
 	ClaimDeposits(ctx context.Context, in *MsgClaimDepositsRequest, opts ...grpc.CallOption) (*MsgClaimDepositsResponse, error)
 	UpdateSnapshotLimit(ctx context.Context, in *MsgUpdateSnapshotLimit, opts ...grpc.CallOption) (*MsgUpdateSnapshotLimitResponse, error)
+	SubmitAttestationEvidence(ctx context.Context, in *MsgSubmitAttestationEvidence, opts ...grpc.CallOption) (*MsgSubmitAttestationEvidenceResponse, error)
 }
 
 type msgClient struct {
@@ -68,6 +69,15 @@ func (c *msgClient) UpdateSnapshotLimit(ctx context.Context, in *MsgUpdateSnapsh
 	return out, nil
 }
 
+func (c *msgClient) SubmitAttestationEvidence(ctx context.Context, in *MsgSubmitAttestationEvidence, opts ...grpc.CallOption) (*MsgSubmitAttestationEvidenceResponse, error) {
+	out := new(MsgSubmitAttestationEvidenceResponse)
+	err := c.cc.Invoke(ctx, "/layer.bridge.Msg/SubmitAttestationEvidence", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -76,6 +86,7 @@ type MsgServer interface {
 	WithdrawTokens(context.Context, *MsgWithdrawTokens) (*MsgWithdrawTokensResponse, error)
 	ClaimDeposits(context.Context, *MsgClaimDepositsRequest) (*MsgClaimDepositsResponse, error)
 	UpdateSnapshotLimit(context.Context, *MsgUpdateSnapshotLimit) (*MsgUpdateSnapshotLimitResponse, error)
+	SubmitAttestationEvidence(context.Context, *MsgSubmitAttestationEvidence) (*MsgSubmitAttestationEvidenceResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -94,6 +105,9 @@ func (UnimplementedMsgServer) ClaimDeposits(context.Context, *MsgClaimDepositsRe
 }
 func (UnimplementedMsgServer) UpdateSnapshotLimit(context.Context, *MsgUpdateSnapshotLimit) (*MsgUpdateSnapshotLimitResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateSnapshotLimit not implemented")
+}
+func (UnimplementedMsgServer) SubmitAttestationEvidence(context.Context, *MsgSubmitAttestationEvidence) (*MsgSubmitAttestationEvidenceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SubmitAttestationEvidence not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -180,6 +194,24 @@ func _Msg_UpdateSnapshotLimit_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SubmitAttestationEvidence_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSubmitAttestationEvidence)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SubmitAttestationEvidence(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.bridge.Msg/SubmitAttestationEvidence",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SubmitAttestationEvidence(ctx, req.(*MsgSubmitAttestationEvidence))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -202,6 +234,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateSnapshotLimit",
 			Handler:    _Msg_UpdateSnapshotLimit_Handler,
+		},
+		{
+			MethodName: "SubmitAttestationEvidence",
+			Handler:    _Msg_SubmitAttestationEvidence_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
