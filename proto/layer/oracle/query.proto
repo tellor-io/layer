@@ -15,6 +15,7 @@ import "layer/oracle/query_meta.proto";
 import "layer/oracle/reports.proto";
 import "layer/oracle/tips.proto";
 import "layer/oracle/user_tip.proto";
+import "layer/oracle/no_stake_report.proto";
 
 option go_package = "github.com/tellor-io/layer/x/oracle/types";
 
@@ -138,6 +139,11 @@ service Query {
   // Queries a readable list of tipped queries
   rpc GetTippedQueries(QueryGetTippedQueriesRequest) returns (QueryGetTippedQueriesResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_tipped_queries";
+  }
+
+  // Queries a list of no stake reports by reporter
+  rpc GetReportersNoStakeReports(QueryGetReportersNoStakeReportsRequest) returns (QueryGetReportersNoStakeReportsResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_reporters_no_stake_reports/{reporter}";
   }
 }
 
@@ -417,4 +423,17 @@ message QueryGetTippedQueriesResponse {
   repeated QueryMetaButString queries = 1; 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryGetReportersNoStakeReportsRequest is the request type for the Query/GetReportersNoStakeReports RPC method.
+message QueryGetReportersNoStakeReportsRequest {
+  // reporter defines the reporter address.
+  string reporter = 1;
+}
+// QueryGetReportersNoStakeReportsResponse is the response type for the Query/GetReportersNoStakeReports RPC method.
+message QueryGetReportersNoStakeReportsResponse {
+  // no_stake_reports defines the no stake reports.
+  repeated NoStakeMicroReport no_stake_reports = 1;
+    // pagination defines the pagination in the response.
+    cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
