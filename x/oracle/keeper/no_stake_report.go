@@ -24,7 +24,7 @@ func (k Keeper) GetNoStakeReportsByReporter(ctx context.Context, reporter string
 		return nil, err
 	}
 	reports := make([]*types.NoStakeMicroReport, 0)
-	for iter.Valid() {
+	for ; iter.Valid(); iter.Next() {
 		pk, err := iter.PrimaryKey()
 		if err != nil {
 			return nil, err
@@ -34,7 +34,6 @@ func (k Keeper) GetNoStakeReportsByReporter(ctx context.Context, reporter string
 			return nil, err
 		}
 		reports = append(reports, &report)
-		iter.Next()
 	}
 	return reports, nil
 }
