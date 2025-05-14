@@ -9,7 +9,7 @@ option go_package = "github.com/tellor-io/layer/x/oracle/types";
 // MicroReport represents data for a single report
 message NoStakeMicroReport {
   // reporter is the address of the reporter
-  string reporter = 1;
+  bytes reporter = 1;
   // string identifier of the data spec
   bytes query_data = 2;
   // hex string of the response value

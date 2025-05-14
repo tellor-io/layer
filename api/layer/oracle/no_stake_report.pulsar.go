@@ -98,8 +98,8 @@ func (x *fastReflection_NoStakeMicroReport) Interface() protoreflect.ProtoMessag
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_NoStakeMicroReport) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Reporter != "" {
-		value := protoreflect.ValueOfString(x.Reporter)
+	if len(x.Reporter) != 0 {
+		value := protoreflect.ValueOfBytes(x.Reporter)
 		if !f(fd_NoStakeMicroReport_reporter, value) {
 			return
 		}
@@ -144,7 +144,7 @@ func (x *fastReflection_NoStakeMicroReport) Range(f func(protoreflect.FieldDescr
 func (x *fastReflection_NoStakeMicroReport) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.oracle.NoStakeMicroReport.reporter":
-		return x.Reporter != ""
+		return len(x.Reporter) != 0
 	case "layer.oracle.NoStakeMicroReport.query_data":
 		return len(x.QueryData) != 0
 	case "layer.oracle.NoStakeMicroReport.value":
@@ -170,7 +170,7 @@ func (x *fastReflection_NoStakeMicroReport) Has(fd protoreflect.FieldDescriptor)
 func (x *fastReflection_NoStakeMicroReport) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.oracle.NoStakeMicroReport.reporter":
-		x.Reporter = ""
+		x.Reporter = nil
 	case "layer.oracle.NoStakeMicroReport.query_data":
 		x.QueryData = nil
 	case "layer.oracle.NoStakeMicroReport.value":
@@ -197,7 +197,7 @@ func (x *fastReflection_NoStakeMicroReport) Get(descriptor protoreflect.FieldDes
 	switch descriptor.FullName() {
 	case "layer.oracle.NoStakeMicroReport.reporter":
 		value := x.Reporter
-		return protoreflect.ValueOfString(value)
+		return protoreflect.ValueOfBytes(value)
 	case "layer.oracle.NoStakeMicroReport.query_data":
 		value := x.QueryData
 		return protoreflect.ValueOfBytes(value)
@@ -231,7 +231,7 @@ func (x *fastReflection_NoStakeMicroReport) Get(descriptor protoreflect.FieldDes
 func (x *fastReflection_NoStakeMicroReport) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.oracle.NoStakeMicroReport.reporter":
-		x.Reporter = value.Interface().(string)
+		x.Reporter = value.Bytes()
 	case "layer.oracle.NoStakeMicroReport.query_data":
 		x.QueryData = value.Bytes()
 	case "layer.oracle.NoStakeMicroReport.value":
@@ -287,7 +287,7 @@ func (x *fastReflection_NoStakeMicroReport) Mutable(fd protoreflect.FieldDescrip
 func (x *fastReflection_NoStakeMicroReport) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.oracle.NoStakeMicroReport.reporter":
-		return protoreflect.ValueOfString("")
+		return protoreflect.ValueOfBytes(nil)
 	case "layer.oracle.NoStakeMicroReport.query_data":
 		return protoreflect.ValueOfBytes(nil)
 	case "layer.oracle.NoStakeMicroReport.value":
@@ -507,7 +507,7 @@ func (x *fastReflection_NoStakeMicroReport) ProtoMethods() *protoiface.Methods {
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Reporter", wireType)
 				}
-				var stringLen uint64
+				var byteLen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -517,23 +517,25 @@ func (x *fastReflection_NoStakeMicroReport) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					byteLen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if byteLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + byteLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Reporter = string(dAtA[iNdEx:postIndex])
+				x.Reporter = append(x.Reporter[:0], dAtA[iNdEx:postIndex]...)
+				if x.Reporter == nil {
+					x.Reporter = []byte{}
+				}
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
@@ -1790,7 +1792,7 @@ type NoStakeMicroReport struct {
 	unknownFields protoimpl.UnknownFields
 
 	// reporter is the address of the reporter
-	Reporter string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
+	Reporter []byte `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
 	// string identifier of the data spec
 	QueryData []byte `protobuf:"bytes,2,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 	// hex string of the response value
@@ -1821,11 +1823,11 @@ func (*NoStakeMicroReport) Descriptor() ([]byte, []int) {
 	return file_layer_oracle_no_stake_report_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *NoStakeMicroReport) GetReporter() string {
+func (x *NoStakeMicroReport) GetReporter() []byte {
 	if x != nil {
 		return x.Reporter
 	}
-	return ""
+	return nil
 }
 
 func (x *NoStakeMicroReport) GetQueryData() []byte {
@@ -1976,7 +1978,7 @@ var file_layer_oracle_no_stake_report_proto_rawDesc = []byte{
 	0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xcc, 0x01, 0x0a, 0x12, 0x4e, 0x6f,
 	0x53, 0x74, 0x61, 0x6b, 0x65, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74,
 	0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x1d, 0x0a, 0x0a,
+	0x28, 0x0c, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x1d, 0x0a, 0x0a,
 	0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c,
 	0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x12, 0x14, 0x0a, 0x05, 0x76,
 	0x61, 0x6c, 0x75, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75,

@@ -16,7 +16,7 @@ func (s *KeeperTestSuite) TestGetNoStakeReportByQueryIdTimestamp() {
 	queryId := []byte("QueryId")
 	timestamp := time.Now().UTC()
 	report := types.NoStakeMicroReport{
-		Reporter:    reporter.String(),
+		Reporter:    reporter,
 		QueryData:   []byte("QueryData"),
 		Timestamp:   timestamp,
 		BlockNumber: 1,

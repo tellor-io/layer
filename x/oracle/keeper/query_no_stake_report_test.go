@@ -27,7 +27,7 @@ func (s *KeeperTestSuite) TestGetReportersNoStakeReports() {
 	timestamp := time.Now().UTC()
 	// 1 report
 	report := types.NoStakeMicroReport{
-		Reporter:    reporter.String(),
+		Reporter:    reporter,
 		QueryData:   []byte("QueryData"),
 		Timestamp:   timestamp,
 		BlockNumber: 1,
@@ -47,7 +47,7 @@ func (s *KeeperTestSuite) TestGetReportersNoStakeReports() {
 
 	// 2 reports
 	report2 := types.NoStakeMicroReport{
-		Reporter:    reporter.String(),
+		Reporter:    reporter,
 		QueryData:   []byte("QueryData2"),
 		Timestamp:   timestamp,
 		BlockNumber: 2,

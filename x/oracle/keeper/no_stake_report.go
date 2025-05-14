@@ -18,7 +18,7 @@ func (k Keeper) GetNoStakeReportByQueryIdTimestamp(ctx context.Context, queryId 
 }
 
 // returns all no stake reports submitted by an address
-func (k Keeper) GetNoStakeReportsByReporter(ctx context.Context, reporter string) ([]*types.NoStakeMicroReport, error) {
+func (k Keeper) GetNoStakeReportsByReporter(ctx context.Context, reporter []byte) ([]*types.NoStakeMicroReport, error) {
 	iter, err := k.NoStakeReports.Indexes.Reporter.MatchExact(ctx, reporter)
 	if err != nil {
 		return nil, err

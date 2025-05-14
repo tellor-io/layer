@@ -122,7 +122,7 @@ func NewValuesIndex(sb *collections.SchemaBuilder) ValuesIndex {
 }
 
 type ReporterIndex struct {
-	Reporter *indexes.Multi[string, collections.Pair[[]byte, uint64], NoStakeMicroReport]
+	Reporter *indexes.Multi[[]byte, collections.Pair[[]byte, uint64], NoStakeMicroReport]
 }
 
 func (a ReporterIndex) IndexesList() []collections.Index[collections.Pair[[]byte, uint64], NoStakeMicroReport] {
@@ -134,9 +134,9 @@ func NewReporterIndex(sb *collections.SchemaBuilder) ReporterIndex {
 	return ReporterIndex{
 		Reporter: indexes.NewMulti(
 			sb, ReporterIndexPrefix, "reporter_index",
-			collections.StringKey,
+			collections.BytesKey,
 			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
-			func(_ collections.Pair[[]byte, uint64], report NoStakeMicroReport) (string, error) {
+			func(_ collections.Pair[[]byte, uint64], report NoStakeMicroReport) ([]byte, error) {
 				return report.Reporter, nil
 			},
 		),

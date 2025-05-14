@@ -49,7 +49,7 @@ func (k msgServer) NoStakeReport(ctx context.Context, msg *types.MsgNoStakeRepor
 	}
 
 	err = k.keeper.NoStakeReports.Set(sdkCtx, collections.Join(queryId, uint64(timestamp)), types.NoStakeMicroReport{
-		Reporter:    reporterAddr.String(),
+		Reporter:    reporterAddr,
 		QueryData:   queryData,
 		Value:       value,
 		Timestamp:   sdkCtx.BlockTime(),
