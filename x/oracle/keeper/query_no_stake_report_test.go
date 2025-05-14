@@ -23,7 +23,7 @@ func (s *KeeperTestSuite) TestGetReportersNoStakeReports() {
 		Reporter: reporter.String(),
 	})
 	require.NoError(err)
-	require.Equal(&types.QueryGetReportersNoStakeReportsResponse{NoStakeReports: []*types.NoStakeMicroReport{}}, response)
+	require.Equal(len(response.NoStakeReports), 0)
 
 	timestamp := time.Now().UTC()
 	// 1 report

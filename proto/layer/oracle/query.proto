@@ -429,6 +429,8 @@ message QueryGetTippedQueriesResponse {
 message QueryGetReportersNoStakeReportsRequest {
   // reporter defines the reporter address.
   string reporter = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 // QueryGetReportersNoStakeReportsResponse is the response type for the Query/GetReportersNoStakeReports RPC method.
 message QueryGetReportersNoStakeReportsResponse {
