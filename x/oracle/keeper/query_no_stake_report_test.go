@@ -3,10 +3,11 @@ package keeper_test
 import (
 	"time"
 
-	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/collections"
 )
 
 func (s *KeeperTestSuite) TestGetReportersNoStakeReports() {
