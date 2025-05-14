@@ -1208,11 +1208,33 @@ func (k Keeper) CreateNoStakeSnapshot(ctx context.Context, report *oracletypes.N
 	attestationTimestamp := sdkCtx.BlockTime()
 
 	queryId := utils.QueryIDFromData(report.QueryData)
-	// concatenate the value with the reporter address
-	value := report.Value + report.Reporter
+	// tack reporter address onto the value
+	stringType, err := abi.NewType("string", "", nil)
+	if err != nil {
+		return err
+	}
+	bytesType, err := abi.NewType("bytes", "", nil)
+	if err != nil {
+		return err
+	}
+	arguments := abi.Arguments{
+		{Type: bytesType},
+		{Type: stringType},
+	}
+	valBz, err := hex.DecodeString(report.Value)
+	if err != nil {
+		return err
+	}
+	encodedData, err := arguments.Pack(
+		valBz,
+		report.Reporter,
+	)
+	if err != nil {
+		return err
+	}
 	snapshotBytes, err := k.EncodeOracleAttestationData(
 		queryId,
-		value,
+		hex.EncodeToString(encodedData),
 		uint64(report.Timestamp.UnixMilli()),
 		0,
 		0,
