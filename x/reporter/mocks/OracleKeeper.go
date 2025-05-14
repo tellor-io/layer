@@ -13,7 +13,6 @@ type OracleKeeper struct {
 	mock.Mock
 }
 
-
 // GetLastReportedAtTimestamp provides a mock function with given fields: ctx, reporter
 func (_m *OracleKeeper) GetLastReportedAtTimestamp(ctx context.Context, reporter []byte) (uint64, error) {
 	ret := _m.Called(ctx, reporter)

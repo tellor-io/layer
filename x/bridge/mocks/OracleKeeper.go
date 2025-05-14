@@ -149,15 +149,15 @@ func (_m *OracleKeeper) GetNoStakeReportByQueryIdTimestamp(ctx context.Context, 
 }
 
 // GetNoStakeReportsByReporter provides a mock function with given fields: ctx, reporter
-func (_m *OracleKeeper) GetNoStakeReportsByReporter(ctx context.Context, reporter string) ([]*types.NoStakeMicroReport, error) {
+func (_m *OracleKeeper) GetNoStakeReportsByReporter(ctx context.Context, reporter []byte) ([]*types.NoStakeMicroReport, error) {
 	ret := _m.Called(ctx, reporter)
 
 	var r0 []*types.NoStakeMicroReport
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) ([]*types.NoStakeMicroReport, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) ([]*types.NoStakeMicroReport, error)); ok {
 		return rf(ctx, reporter)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) []*types.NoStakeMicroReport); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) []*types.NoStakeMicroReport); ok {
 		r0 = rf(ctx, reporter)
 	} else {
 		if ret.Get(0) != nil {
@@ -165,7 +165,7 @@ func (_m *OracleKeeper) GetNoStakeReportsByReporter(ctx context.Context, reporte
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, []byte) error); ok {
 		r1 = rf(ctx, reporter)
 	} else {
 		r1 = ret.Error(1)
