@@ -1225,9 +1225,11 @@ func (k Keeper) CreateNoStakeSnapshot(ctx context.Context, report *oracletypes.N
 	if err != nil {
 		return err
 	}
+	reporterString := hex.EncodeToString(report.Reporter)
+	k.Logger(ctx).Info("reporterString", "reporterString", reporterString)
 	encodedData, err := arguments.Pack(
 		valBz,
-		report.Reporter,
+		reporterString,
 	)
 	if err != nil {
 		return err
