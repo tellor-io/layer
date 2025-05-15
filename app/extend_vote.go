@@ -97,7 +97,10 @@ func forceProcessTermination(logger log.Logger, format string, args ...interface
 	logger.Error(format, args...)
 	// Send SIGABRT to the current process
 	process, _ := os.FindProcess(os.Getpid())
-	process.Signal(syscall.SIGABRT)
+	err := process.Signal(syscall.SIGABRT)
+	if err != nil {
+		logger.Error("failed to send SIGABRT to process", "error", err)
+	}
 	// In case SIGABRT doesn't work, fall back to Exit
 	os.Exit(1)
 }
