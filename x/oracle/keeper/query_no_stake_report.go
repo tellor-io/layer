@@ -2,7 +2,10 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
+	"fmt"
 
+	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/x/oracle/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -47,4 +50,44 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 	pageRes.Total = uint64(len(reports))
 
 	return &types.QueryGetReportersNoStakeReportsResponse{NoStakeReports: reports, Pagination: pageRes}, nil
+}
+
+func (q Querier) GetNoStakeReportsByQueryId(ctx context.Context, req *types.QueryGetNoStakeReportsByQIdRequest) (*types.QueryGetNoStakeReportsByQIdResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	queryIdBz, err := hex.DecodeString(req.QueryId)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid query id")
+	}
+
+	pageRes := &query.PageResponse{
+		NextKey: nil,
+		Total:   uint64(0),
+	}
+	rng := collections.NewPrefixUntilPairRange[[]byte, uint64](queryIdBz)
+	iter, err := q.keeper.NoStakeReports.Iterate(ctx, rng)
+	if err != nil {
+		return nil, err
+	}
+	reports := make([]*types.NoStakeMicroReport, 0)
+	for ; iter.Valid(); iter.Next() {
+		pk, err := iter.Key()
+		if err != nil {
+			return nil, err
+		}
+		report, err := q.keeper.NoStakeReports.Get(ctx, pk)
+		if err != nil {
+			return nil, err
+		}
+		reports = append(reports, &report)
+		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
+			break
+		}
+		fmt.Println("report: ", report)
+	}
+	pageRes.Total = uint64(len(reports))
+
+	return &types.QueryGetNoStakeReportsByQIdResponse{NoStakeReports: reports, Pagination: pageRes}, nil
 }
