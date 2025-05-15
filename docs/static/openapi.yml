@@ -478,7 +478,6 @@ paths:
                       title: string identifier of the data spec
                     query_id:
                       type: string
-                      format: byte
                       title: hash of the query data
                     aggregate_method:
                       type: string
@@ -490,7 +489,7 @@ paths:
                       title: hex string of the response value
                     timestamp:
                       type: string
-                      format: date-time
+                      format: uint64
                       title: timestamp of when the report was created
                     cyclelist:
                       type: boolean
@@ -503,7 +502,7 @@ paths:
                       type: string
                       format: uint64
                       title: identifier for the report's aggregate group
-                  title: MicroReport represents data for a single report
+                  title: MicroReports but with strings to return for queries
                 description: microReports is a list of individual microreports.
               pagination:
                 description: pagination defines the pagination in the response.
@@ -638,7 +637,6 @@ paths:
                       title: string identifier of the data spec
                     query_id:
                       type: string
-                      format: byte
                       title: hash of the query data
                     aggregate_method:
                       type: string
@@ -650,7 +648,7 @@ paths:
                       title: hex string of the response value
                     timestamp:
                       type: string
-                      format: date-time
+                      format: uint64
                       title: timestamp of when the report was created
                     cyclelist:
                       type: boolean
@@ -663,7 +661,7 @@ paths:
                       type: string
                       format: uint64
                       title: identifier for the report's aggregate group
-                  title: MicroReport represents data for a single report
+                  title: MicroReports but with strings to return for queries
                 description: microReports is a list of individual microreports.
               pagination:
                 description: pagination defines the pagination in the response.
@@ -798,7 +796,6 @@ paths:
                       title: string identifier of the data spec
                     query_id:
                       type: string
-                      format: byte
                       title: hash of the query data
                     aggregate_method:
                       type: string
@@ -810,7 +807,7 @@ paths:
                       title: hex string of the response value
                     timestamp:
                       type: string
-                      format: date-time
+                      format: uint64
                       title: timestamp of when the report was created
                     cyclelist:
                       type: boolean
@@ -823,7 +820,7 @@ paths:
                       type: string
                       format: uint64
                       title: identifier for the report's aggregate group
-                  title: MicroReport represents data for a single report
+                  title: MicroReports but with strings to return for queries
                 description: microReports is a list of individual microreports.
               pagination:
                 description: pagination defines the pagination in the response.
@@ -1064,7 +1061,6 @@ paths:
                 properties:
                   query_id:
                     type: string
-                    format: byte
                     title: query_id is the id of the query
                   aggregate_value:
                     type: string
@@ -1097,7 +1093,7 @@ paths:
                     type: string
                     format: uint64
                     title: meta_id is the id of the querymeta iterator
-                title: aggregate struct to represent meta data of an aggregate report
+                title: aggregate struct but with strings for queries to return
             description: >-
               QueryGetAggregateBeforeByReporterResponse is the response type for
               the Query/GetAggregateBeforeByReporter RPC method.
@@ -1154,7 +1150,6 @@ paths:
                 properties:
                   query_id:
                     type: string
-                    format: byte
                     title: query_id is the id of the query
                   aggregate_value:
                     type: string
@@ -1187,7 +1182,7 @@ paths:
                     type: string
                     format: uint64
                     title: meta_id is the id of the querymeta iterator
-                title: aggregate struct to represent meta data of an aggregate report
+                title: aggregate struct but with strings for queries to return
               timestamp:
                 type: string
                 format: uint64
@@ -1351,7 +1346,6 @@ paths:
                 type: array
                 items:
                   type: string
-                  format: byte
                 description: cycle_list defines the cycle list.
             description: >-
               QueryGetCycleListResponse is the response type for the
@@ -1392,7 +1386,6 @@ paths:
                 properties:
                   query_id:
                     type: string
-                    format: byte
                     title: query_id is the id of the query
                   aggregate_value:
                     type: string
@@ -1425,7 +1418,7 @@ paths:
                     type: string
                     format: uint64
                     title: meta_id is the id of the querymeta iterator
-                title: aggregate struct to represent meta data of an aggregate report
+                title: aggregate struct but with strings for queries to return
               timestamp:
                 type: string
                 format: uint64
@@ -1481,7 +1474,6 @@ paths:
                 properties:
                   query_id:
                     type: string
-                    format: byte
                     title: query_id is the id of the query
                   aggregate_value:
                     type: string
@@ -1514,7 +1506,7 @@ paths:
                     type: string
                     format: uint64
                     title: meta_id is the id of the querymeta iterator
-                title: aggregate struct to represent meta data of an aggregate report
+                title: aggregate struct but with strings for queries to return
               timestamp:
                 type: string
                 format: uint64
@@ -1671,6 +1663,146 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
+  /tellor-io/layer/oracle/get_reporters_no_stake_reports/{reporter}:
+    get:
+      summary: Queries a list of no stake reports by reporter
+      operationId: GetReportersNoStakeReports
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              no_stake_reports:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    reporter:
+                      type: string
+                      format: byte
+                      title: reporter is the address of the reporter
+                    query_data:
+                      type: string
+                      format: byte
+                      title: string identifier of the data spec
+                    value:
+                      type: string
+                      title: hex string of the response value
+                    timestamp:
+                      type: string
+                      format: date-time
+                      title: timestamp of when the report was created
+                    block_number:
+                      type: string
+                      format: uint64
+                      title: block number of when the report was created
+                  title: MicroReport represents data for a single report
+                description: no_stake_reports defines the no stake reports.
+              pagination:
+                description: pagination defines the pagination in the response.
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+            description: >-
+              QueryGetReportersNoStakeReportsResponse is the response type for
+              the Query/GetReportersNoStakeReports RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reporter
+          description: reporter defines the reporter address.
+          in: path
+          required: true
+          type: string
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
   /tellor-io/layer/oracle/get_reports_by_aggregate/{query_id}/{timestamp}:
     get:
       summary: Queries reports by aggregate by query id and timestamp
@@ -1700,7 +1832,6 @@ paths:
                       title: string identifier of the data spec
                     query_id:
                       type: string
-                      format: byte
                       title: hash of the query data
                     aggregate_method:
                       type: string
@@ -1712,7 +1843,7 @@ paths:
                       title: hex string of the response value
                     timestamp:
                       type: string
-                      format: date-time
+                      format: uint64
                       title: timestamp of when the report was created
                     cyclelist:
                       type: boolean
@@ -1725,7 +1856,7 @@ paths:
                       type: string
                       format: uint64
                       title: identifier for the report's aggregate group
-                  title: MicroReport represents data for a single report
+                  title: MicroReports but with strings to return for queries
                 description: microReports defines the micro reports.
               pagination:
                 description: pagination defines the pagination in the response.
@@ -2256,7 +2387,6 @@ paths:
                 type: array
                 items:
                   type: string
-                  format: byte
                 description: query_ids defines the query ids.
               pagination:
                 description: pagination defines the pagination in the response.
@@ -2378,7 +2508,6 @@ paths:
                 properties:
                   query_id:
                     type: string
-                    format: byte
                     title: query_id is the id of the query
                   aggregate_value:
                     type: string
@@ -2411,7 +2540,7 @@ paths:
                     type: string
                     format: uint64
                     title: meta_id is the id of the querymeta iterator
-                title: aggregate struct to represent meta data of an aggregate report
+                title: aggregate struct but with strings for queries to return
             description: >-
               QueryRetrieveDataResponse is response type for the
               Query/RetrieveData RPC method.
@@ -3777,6 +3906,61 @@ paths:
           format: uint64
       tags:
         - Query
+  /tellor-io/layer/dispute/vote-result/{dispute_id}:
+    get:
+      summary: VoteResult queries the vote result of a dispute
+      operationId: VoteResult
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              vote_result:
+                type: string
+                enum:
+                  - NO_TALLY
+                  - SUPPORT
+                  - AGAINST
+                  - INVALID
+                  - NO_QUORUM_MAJORITY_SUPPORT
+                  - NO_QUORUM_MAJORITY_AGAINST
+                  - NO_QUORUM_MAJORITY_INVALID
+                default: NO_TALLY
+                title: |-
+                  - NO_TALLY: default
+                   - SUPPORT: quorum reached
+                   - AGAINST: quorum reached
+                   - INVALID: quorum reached
+                   - NO_QUORUM_MAJORITY_SUPPORT: quorum not reached
+                   - NO_QUORUM_MAJORITY_AGAINST: quorum not reached
+                   - NO_QUORUM_MAJORITY_INVALID: quorum not reached
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: dispute_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
   /layer/registry/decode_querydata/{query_data}:
     get:
       summary: Queries a list of DecodeQuerydata items.
@@ -3881,7 +4065,6 @@ paths:
             properties:
               query_data:
                 type: string
-                format: byte
                 description: query_data is the generated query_data hex string.
             description: >-
               QueryGenerateQuerydataResponse is response type for the
