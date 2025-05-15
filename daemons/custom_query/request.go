@@ -208,7 +208,7 @@ func extractValueFromJSON(data []byte, path []string) (float64, error) {
 }
 
 // aggregateResults aggregates results using the specified method
-func aggregateResults(results []Result, method string, responseType string) (string, error) {
+func aggregateResults(results []Result, method, responseType string) (string, error) {
 	if len(results) == 0 {
 		return "", fmt.Errorf("no results to aggregate")
 	}

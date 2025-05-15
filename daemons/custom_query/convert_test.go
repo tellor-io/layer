@@ -60,7 +60,8 @@ func TestConversion(t *testing.T) {
 		require.Equal(t, tc.value, v, "Expected value: %v, got: %v", tc.value, v)
 	}
 }
-func DecodeHexString(hexStr string, abiType string, bitSize int, decimals int) (float64, error) {
+
+func DecodeHexString(hexStr, abiType string, bitSize, decimals int) (float64, error) {
 	bigInt, success := new(big.Int).SetString(hexStr, 16)
 	if !success {
 		return 0, fmt.Errorf("failed to parse hex value: %s", hexStr)

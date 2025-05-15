@@ -8,7 +8,6 @@ cache_ttl = 60
     url_template = "https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd"
     method = "GET"
     timeout = 5000
-    api_key = ""
 
     [endpoints.coinpaprika]
     url_template = "https://api.coinpaprika.com/v1/tickers/{coin_id}?quotes=USD"
