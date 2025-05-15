@@ -93,13 +93,13 @@ func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper Ora
 	}
 }
 
-func forceProcessTermination(logger log.Logger, format string, args ...interface{}) {
-	logger.Error(format, args...)
+func (h *VoteExtHandler) ForceProcessTermination(format string, args ...interface{}) {
+	h.logger.Error(format, args...)
 	// Send SIGABRT to the current process
 	process, _ := os.FindProcess(os.Getpid())
 	err := process.Signal(syscall.SIGABRT)
 	if err != nil {
-		logger.Error("failed to send SIGABRT to process", "error", err)
+		h.logger.Error("failed to send SIGABRT to process", "error", err)
 	}
 	// In case SIGABRT doesn't work, fall back to Exit
 	os.Exit(1)
@@ -109,7 +109,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	voteExt := BridgeVoteExtension{}
 	operatorAddress, errOp := h.GetOperatorAddress()
 	if errOp != nil {
-		forceProcessTermination(h.logger, "CRITICAL: failed to get operator address: %v", errOp)
+		h.ForceProcessTermination("CRITICAL: failed to get operator address: %v", errOp)
 	}
 	_, err := h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
@@ -230,17 +230,17 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
 	kr, err := h.GetKeyring()
 	if err != nil {
-		forceProcessTermination(h.logger, "CRITICAL: failed to get keyring: %v", err)
+		h.ForceProcessTermination("CRITICAL: failed to get keyring: %v", err)
 		return nil, err // won't reach here
 	}
 	keyName := viper.GetString("key-name")
 	if keyName == "" {
-		forceProcessTermination(h.logger, "CRITICAL: key name not found, please set --key-name flag")
+		h.ForceProcessTermination("CRITICAL: key name not found, please set --key-name flag")
 		return nil, errors.New("missing key name") // won't reach here
 	}
 	sig, _, err := kr.Sign(keyName, msg, 1)
 	if err != nil {
-		forceProcessTermination(h.logger, "CRITICAL: failed to sign message: %v", err)
+		h.ForceProcessTermination("CRITICAL: failed to sign message: %v", err)
 		return nil, err // won't reach here
 	}
 	return sig, nil

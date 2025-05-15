@@ -238,7 +238,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 	type testCase struct {
 		name             string
 		setupMocks       func(bk *mocks.BridgeKeeper, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches)
-		expectedError    error
+		expectedPanic    bool
 		validateResponse func(*abci.ResponseExtendVote)
 	}
 
@@ -255,7 +255,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				})
 				return bk, patches
 			},
-			expectedError: nil,
+			expectedPanic: false,
 			validateResponse: func(resp *abci.ResponseExtendVote) {
 				require.NotNil(resp)
 			},
@@ -268,12 +268,9 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				})
 				return bk, patches
 			},
-			expectedError: fmt.Errorf("failed to get operator address, please check your key and flags: %w", errors.New("error!")),
+			expectedPanic: true,
 			validateResponse: func(resp *abci.ResponseExtendVote) {
-				require.NotNil(resp)
-				var voteExt app.BridgeVoteExtension
-				err := json.Unmarshal(resp.VoteExtension, &voteExt)
-				require.NoError(err)
+				// This won't be called due to the panic
 			},
 		},
 		{
@@ -289,7 +286,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return((*bridgetypes.AttestationRequests)(nil), errors.New("error!"))
 				return bk, patches
 			},
-			expectedError: nil,
+			expectedPanic: false,
 			validateResponse: func(resp *abci.ResponseExtendVote) {
 				require.NotNil(resp)
 			},
@@ -315,7 +312,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(0), errors.New("error"))
 				return bk, patches
 			},
-			expectedError: nil,
+			expectedPanic: false,
 			validateResponse: func(resp *abci.ResponseExtendVote) {
 				require.NotNil(resp)
 			},
@@ -369,7 +366,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 
 				return bk, patches
 			},
-			expectedError: nil,
+			expectedPanic: false,
 			validateResponse: func(resp *abci.ResponseExtendVote) {
 				require.NotNil(resp)
 			},
@@ -388,17 +385,27 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				require.NotNil(bk)
 				require.NotNil(patches)
 			}
+
+			// mock forceProcessTermination to prevent actual process termination
+			patches.ApplyMethod(reflect.TypeOf(h), "ForceProcessTermination",
+				func(_ *app.VoteExtHandler, format string, args ...interface{}) {
+					// instead of terminating, panic with the error message
+					panic(fmt.Sprintf(format, args...))
+				})
+
 			req := &abci.RequestExtendVote{}
-			resp, err := h.ExtendVoteHandler(ctx, req)
-			if tc.expectedError != nil {
-				require.Error(err)
-				require.Equal(tc.expectedError, err)
+
+			if tc.expectedPanic {
+				require.Panics(func() {
+					h.ExtendVoteHandler(ctx, req)
+				})
 			} else {
+				resp, err := h.ExtendVoteHandler(ctx, req)
 				require.NoError(err)
+				tc.validateResponse(resp)
 			}
-			tc.validateResponse(resp)
+
 			bk.AssertExpectations(s.T())
-			fmt.Println(tc.name, " finished!!")
 		})
 	}
 }
@@ -726,7 +733,7 @@ func (s *VoteExtensionTestSuite) TestEncodeAndSignMessage() {
 				func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
 					return tt.mockSignature, tt.mockError
 				})
-
+			fmt.Println(tt.name)
 			signature, err := h.EncodeAndSignMessage(tt.checkpointString)
 
 			if tt.expectedError != "" {
