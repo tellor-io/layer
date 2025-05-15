@@ -6,11 +6,13 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/collections"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/collections"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (

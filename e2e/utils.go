@@ -639,6 +639,33 @@ type Validators struct {
 	Val     *cosmos.ChainNode
 }
 
+type QueryGetNoStakeReportsByQIdResponse struct {
+	// no_stake_reports defines the no stake reports.
+	NoStakeReports []*NoStakeMicroReport `protobuf:"bytes,1,rep,name=no_stake_reports,json=noStakeReports,proto3" json:"no_stake_reports,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+type QueryGetReportersNoStakeReportsResponse struct {
+	// no_stake_reports defines the no stake reports.
+	NoStakeReports []*NoStakeMicroReport `protobuf:"bytes,1,rep,name=no_stake_reports,json=noStakeReports,proto3" json:"no_stake_reports,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+type NoStakeMicroReport struct {
+	// reporter is the address of the reporter
+	Reporter []byte `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
+	// string identifier of the data spec
+	QueryData []byte `protobuf:"bytes,2,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
+	// hex string of the response value
+	Value string `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
+	// timestamp of when the report was created
+	Timestamp time.Time `protobuf:"bytes,4,opt,name=timestamp,proto3,stdtime" json:"timestamp"`
+	// block number of when the report was created
+	BlockNumber uint64 `protobuf:"varint,5,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
+}
+
 func GetChainVals(ctx context.Context, chain *cosmos.CosmosChain) ([]Validators, error) {
 	validators := make([]Validators, len(chain.Validators))
 	for i := range chain.Validators {
