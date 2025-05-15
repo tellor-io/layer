@@ -145,6 +145,11 @@ service Query {
   rpc GetReportersNoStakeReports(QueryGetReportersNoStakeReportsRequest) returns (QueryGetReportersNoStakeReportsResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_reporters_no_stake_reports/{reporter}";
   }
+
+  // Queries a list of no stake reports by query id
+  rpc GetNoStakeReportsByQueryId(QueryGetNoStakeReportsByQueryIdRequest) returns (QueryGetNoStakeReportsByQueryIdResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_no_stake_reports_by_qid/{query_id}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -441,7 +446,7 @@ message QueryGetReportersNoStakeReportsResponse {
 }
 
 // QueryGetNoStakeReportsByQIdRequest is the request type for the Query/GetNoStakeReportsByQId RPC method.
-message QueryGetNoStakeReportsByQIdRequest {
+message QueryGetNoStakeReportsByQueryIdRequest {
   // query_id defines the query id hex string.
   string query_id = 1;
   // pagination defines an optional pagination for the request.
@@ -449,7 +454,7 @@ message QueryGetNoStakeReportsByQIdRequest {
 }
 
 // QueryGetNoStakeReportsByQIdResponse is the response type for the Query/GetNoStakeReportsByQId RPC method.
-message QueryGetNoStakeReportsByQIdResponse {
+message QueryGetNoStakeReportsByQueryIdResponse {
   // no_stake_reports defines the no stake reports.
   repeated NoStakeMicroReport no_stake_reports = 1;
   // pagination defines the pagination in the response.
