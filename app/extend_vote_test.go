@@ -397,7 +397,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 
 			if tc.expectedPanic {
 				require.Panics(func() {
-					h.ExtendVoteHandler(ctx, req)
+					_, _ = h.ExtendVoteHandler(ctx, req)
 				})
 			} else {
 				resp, err := h.ExtendVoteHandler(ctx, req)
