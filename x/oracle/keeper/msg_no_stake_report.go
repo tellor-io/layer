@@ -31,7 +31,7 @@ func (k msgServer) NoStakeReport(ctx context.Context, msg *types.MsgNoStakeRepor
 		return nil, err
 	}
 	if exists {
-		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "report for this queryId already exists at this height, please resubmit")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "report for this queryId already exists at this height, please resubmit next block")
 	}
 
 	reporterAddr, err := sdk.AccAddressFromBech32(msg.Creator)

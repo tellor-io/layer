@@ -3,17 +3,19 @@ package keeper
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 
-	"cosmossdk.io/collections"
 	"github.com/tellor-io/layer/x/oracle/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
+// gets all no stake reports for a reporter
+// can be paginated to return a limited number of reports
 func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.QueryGetReportersNoStakeReportsRequest) (*types.QueryGetReportersNoStakeReportsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -52,6 +54,8 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 	return &types.QueryGetReportersNoStakeReportsResponse{NoStakeReports: reports, Pagination: pageRes}, nil
 }
 
+// gets all no stake reports for a query id
+// can be paginated to return a limited number of reports
 func (q Querier) GetNoStakeReportsByQueryId(ctx context.Context, req *types.QueryGetNoStakeReportsByQIdRequest) (*types.QueryGetNoStakeReportsByQIdResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -85,7 +89,6 @@ func (q Querier) GetNoStakeReportsByQueryId(ctx context.Context, req *types.Quer
 		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
 			break
 		}
-		fmt.Println("report: ", report)
 	}
 	pageRes.Total = uint64(len(reports))
 
