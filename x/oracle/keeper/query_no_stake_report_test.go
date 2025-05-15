@@ -84,7 +84,7 @@ func (s *KeeperTestSuite) TestGetReportersNoStakeReportsByQueryId() {
 
 	// no reports
 	queryId := []byte("QueryId")
-	response, err := q.GetNoStakeReportsByQueryId(s.ctx, &types.QueryGetNoStakeReportsByQIdRequest{
+	response, err := q.GetNoStakeReportsByQueryId(s.ctx, &types.QueryGetNoStakeReportsByQueryIdRequest{
 		QueryId: hex.EncodeToString(queryId),
 	})
 	require.NoError(err)
@@ -100,7 +100,7 @@ func (s *KeeperTestSuite) TestGetReportersNoStakeReportsByQueryId() {
 		Value:       "value",
 	}
 	require.NoError(s.oracleKeeper.NoStakeReports.Set(s.ctx, collections.Join(queryId, uint64(timestamp.UnixMilli())), report))
-	response, err = q.GetNoStakeReportsByQueryId(s.ctx, &types.QueryGetNoStakeReportsByQIdRequest{
+	response, err = q.GetNoStakeReportsByQueryId(s.ctx, &types.QueryGetNoStakeReportsByQueryIdRequest{
 		QueryId: hex.EncodeToString(queryId),
 	})
 	require.NoError(err)
@@ -120,7 +120,7 @@ func (s *KeeperTestSuite) TestGetReportersNoStakeReportsByQueryId() {
 		Value:       "value2",
 	}
 	require.NoError(s.oracleKeeper.NoStakeReports.Set(s.ctx, collections.Join(queryId, uint64(s.ctx.BlockTime().UnixMilli())), report2))
-	response, err = q.GetNoStakeReportsByQueryId(s.ctx, &types.QueryGetNoStakeReportsByQIdRequest{
+	response, err = q.GetNoStakeReportsByQueryId(s.ctx, &types.QueryGetNoStakeReportsByQueryIdRequest{
 		QueryId: hex.EncodeToString(queryId),
 	})
 	require.NoError(err)

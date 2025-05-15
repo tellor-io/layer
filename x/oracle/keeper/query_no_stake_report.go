@@ -56,7 +56,7 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 
 // gets all no stake reports for a query id
 // can be paginated to return a limited number of reports
-func (q Querier) GetNoStakeReportsByQueryId(ctx context.Context, req *types.QueryGetNoStakeReportsByQIdRequest) (*types.QueryGetNoStakeReportsByQIdResponse, error) {
+func (q Querier) GetNoStakeReportsByQueryId(ctx context.Context, req *types.QueryGetNoStakeReportsByQueryIdRequest) (*types.QueryGetNoStakeReportsByQueryIdResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -92,5 +92,5 @@ func (q Querier) GetNoStakeReportsByQueryId(ctx context.Context, req *types.Quer
 	}
 	pageRes.Total = uint64(len(reports))
 
-	return &types.QueryGetNoStakeReportsByQIdResponse{NoStakeReports: reports, Pagination: pageRes}, nil
+	return &types.QueryGetNoStakeReportsByQueryIdResponse{NoStakeReports: reports, Pagination: pageRes}, nil
 }

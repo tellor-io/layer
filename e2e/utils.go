@@ -639,7 +639,7 @@ type Validators struct {
 	Val     *cosmos.ChainNode
 }
 
-type QueryGetNoStakeReportsByQIdResponse struct {
+type QueryGetNoStakeReportsByQueryIdResponse struct {
 	// no_stake_reports defines the no stake reports.
 	NoStakeReports []*NoStakeMicroReport `protobuf:"bytes,1,rep,name=no_stake_reports,json=noStakeReports,proto3" json:"no_stake_reports,omitempty"`
 	// pagination defines the pagination in the response.

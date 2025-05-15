@@ -502,7 +502,7 @@ func TestNoStakeAttestation(t *testing.T) {
 	reports, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "get-no-stake-reports-by-query-id", ltcQId)
 	require.NoError(err)
 	require.Equal(len(reports), 2)
-	var nsReportsByQIdRes e2e.QueryGetNoStakeReportsByQIdResponse
+	var nsReportsByQIdRes e2e.QueryGetNoStakeReportsByQueryIdResponse
 	err = json.Unmarshal(reports, &nsReportsByQIdRes)
 	require.NoError(err)
 	fmt.Println("nsReportsByQIdRes: ", nsReportsByQIdRes)
