@@ -489,10 +489,10 @@ func TestNoStakeAttestation(t *testing.T) {
 		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", v.Addr)
 		require.NoError(err)
 		fmt.Println("reports from: ", v.Addr, ": ", reports)
-		require.Equal(len(reports), 1)
 		var nsReportsRes e2e.QueryGetReportersNoStakeReportsResponse
 		err = json.Unmarshal(reports, &nsReportsRes)
 		require.NoError(err)
+		require.Equal(len(nsReportsRes.NoStakeReports), 1)
 		require.Equal(nsReportsRes.NoStakeReports[0].QueryData, ltcQData)
 		require.Equal(nsReportsRes.NoStakeReports[0].Value, value)
 		fmt.Println("nsReportsRes: ", nsReportsRes)
@@ -501,11 +501,11 @@ func TestNoStakeAttestation(t *testing.T) {
 	// query no stake reports per queryId
 	reports, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "get-no-stake-reports-by-query-id", ltcQId)
 	require.NoError(err)
-	require.Equal(len(reports), 2)
 	var nsReportsByQIdRes e2e.QueryGetNoStakeReportsByQueryIdResponse
 	err = json.Unmarshal(reports, &nsReportsByQIdRes)
 	require.NoError(err)
 	fmt.Println("nsReportsByQIdRes: ", nsReportsByQIdRes)
+	require.Equal(len(nsReportsByQIdRes.NoStakeReports), 2)
 	require.Equal(nsReportsByQIdRes.NoStakeReports[0].QueryData, ltcQData)
 	require.Equal(nsReportsByQIdRes.NoStakeReports[1].QueryData, ltcQData)
 	require.Equal(nsReportsByQIdRes.NoStakeReports[0].Value, value)

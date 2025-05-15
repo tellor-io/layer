@@ -33,7 +33,7 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 	if err != nil {
 		return nil, err
 	}
-	reports := make([]*types.NoStakeMicroReport, 0)
+	reports := make([]*types.NoStakeMicroReportStrings, 0)
 	for ; iter.Valid(); iter.Next() {
 		pk, err := iter.PrimaryKey()
 		if err != nil {
@@ -43,8 +43,14 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 		if err != nil {
 			return nil, err
 		}
-		reports = append(reports, &report)
-
+		stringReport := types.NoStakeMicroReportStrings{
+			Reporter:    sdk.AccAddress(report.Reporter).String(),
+			QueryData:   hex.EncodeToString(report.QueryData),
+			Value:       report.Value,
+			Timestamp:   uint64(report.Timestamp.UnixMilli()),
+			BlockNumber: report.BlockNumber,
+		}
+		reports = append(reports, &stringReport)
 		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
 			break
 		}
@@ -75,7 +81,7 @@ func (q Querier) GetNoStakeReportsByQueryId(ctx context.Context, req *types.Quer
 	if err != nil {
 		return nil, err
 	}
-	reports := make([]*types.NoStakeMicroReport, 0)
+	reports := make([]*types.NoStakeMicroReportStrings, 0)
 	for ; iter.Valid(); iter.Next() {
 		pk, err := iter.Key()
 		if err != nil {
@@ -85,7 +91,14 @@ func (q Querier) GetNoStakeReportsByQueryId(ctx context.Context, req *types.Quer
 		if err != nil {
 			return nil, err
 		}
-		reports = append(reports, &report)
+		stringReport := types.NoStakeMicroReportStrings{
+			Reporter:    sdk.AccAddress(report.Reporter).String(),
+			QueryData:   hex.EncodeToString(report.QueryData),
+			Value:       report.Value,
+			Timestamp:   uint64(report.Timestamp.UnixMilli()),
+			BlockNumber: report.BlockNumber,
+		}
+		reports = append(reports, &stringReport)
 		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
 			break
 		}

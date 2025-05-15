@@ -440,12 +440,12 @@ message QueryGetReportersNoStakeReportsRequest {
 // QueryGetReportersNoStakeReportsResponse is the response type for the Query/GetReportersNoStakeReports RPC method.
 message QueryGetReportersNoStakeReportsResponse {
   // no_stake_reports defines the no stake reports.
-  repeated NoStakeMicroReport no_stake_reports = 1;
+  repeated NoStakeMicroReportStrings no_stake_reports = 1;
     // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// QueryGetNoStakeReportsByQIdRequest is the request type for the Query/GetNoStakeReportsByQId RPC method.
+// QueryGetNoStakeReportsByQueryIdRequest is the request type for the Query/GetNoStakeReportsByQueryId RPC method.
 message QueryGetNoStakeReportsByQueryIdRequest {
   // query_id defines the query id hex string.
   string query_id = 1;
@@ -453,10 +453,10 @@ message QueryGetNoStakeReportsByQueryIdRequest {
   cosmos.base.query.v1beta1.PageRequest pagination = 2;
 }
 
-// QueryGetNoStakeReportsByQIdResponse is the response type for the Query/GetNoStakeReportsByQId RPC method.
+// QueryGetNoStakeReportsByQueryIdResponse is the response type for the Query/GetNoStakeReportsByQueryId RPC method.
 message QueryGetNoStakeReportsByQueryIdResponse {
   // no_stake_reports defines the no stake reports.
-  repeated NoStakeMicroReport no_stake_reports = 1;
+  repeated NoStakeMicroReportStrings no_stake_reports = 1;
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
