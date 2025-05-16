@@ -36,6 +36,9 @@ func (k msgServer) NoStakeReport(ctx context.Context, msg *types.MsgNoStakeRepor
 
 	// check if queryId:queryData map is already set
 	exists, err = k.keeper.NoStakeReportedQueries.Has(sdkCtx, queryId)
+	if err != nil {
+		return nil, err
+	}
 	if !exists {
 		err = k.keeper.NoStakeReportedQueries.Set(sdkCtx, queryId, queryData)
 		if err != nil {
