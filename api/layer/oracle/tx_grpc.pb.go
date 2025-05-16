@@ -25,6 +25,7 @@ type MsgClient interface {
 	Tip(ctx context.Context, in *MsgTip, opts ...grpc.CallOption) (*MsgTipResponse, error)
 	UpdateCyclelist(ctx context.Context, in *MsgUpdateCyclelist, opts ...grpc.CallOption) (*MsgUpdateCyclelistResponse, error)
 	UpdateQueryDataLimit(ctx context.Context, in *MsgUpdateQueryDataLimit, opts ...grpc.CallOption) (*MsgUpdateQueryDataLimitResponse, error)
+	NoStakeReport(ctx context.Context, in *MsgNoStakeReport, opts ...grpc.CallOption) (*MsgNoStakeReportResponse, error)
 }
 
 type msgClient struct {
@@ -80,6 +81,15 @@ func (c *msgClient) UpdateQueryDataLimit(ctx context.Context, in *MsgUpdateQuery
 	return out, nil
 }
 
+func (c *msgClient) NoStakeReport(ctx context.Context, in *MsgNoStakeReport, opts ...grpc.CallOption) (*MsgNoStakeReportResponse, error) {
+	out := new(MsgNoStakeReportResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Msg/NoStakeReport", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
@@ -91,6 +101,7 @@ type MsgServer interface {
 	Tip(context.Context, *MsgTip) (*MsgTipResponse, error)
 	UpdateCyclelist(context.Context, *MsgUpdateCyclelist) (*MsgUpdateCyclelistResponse, error)
 	UpdateQueryDataLimit(context.Context, *MsgUpdateQueryDataLimit) (*MsgUpdateQueryDataLimitResponse, error)
+	NoStakeReport(context.Context, *MsgNoStakeReport) (*MsgNoStakeReportResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -112,6 +123,9 @@ func (UnimplementedMsgServer) UpdateCyclelist(context.Context, *MsgUpdateCycleli
 }
 func (UnimplementedMsgServer) UpdateQueryDataLimit(context.Context, *MsgUpdateQueryDataLimit) (*MsgUpdateQueryDataLimitResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateQueryDataLimit not implemented")
+}
+func (UnimplementedMsgServer) NoStakeReport(context.Context, *MsgNoStakeReport) (*MsgNoStakeReportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NoStakeReport not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -216,6 +230,24 @@ func _Msg_UpdateQueryDataLimit_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_NoStakeReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgNoStakeReport)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).NoStakeReport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Msg/NoStakeReport",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).NoStakeReport(ctx, req.(*MsgNoStakeReport))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -242,6 +274,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateQueryDataLimit",
 			Handler:    _Msg_UpdateQueryDataLimit_Handler,
+		},
+		{
+			MethodName: "NoStakeReport",
+			Handler:    _Msg_NoStakeReport_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

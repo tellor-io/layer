@@ -21,6 +21,7 @@ service Msg {
   rpc Tip(MsgTip) returns (MsgTipResponse);
   rpc UpdateCyclelist(MsgUpdateCyclelist) returns (MsgUpdateCyclelistResponse);
   rpc UpdateQueryDataLimit(MsgUpdateQueryDataLimit) returns (MsgUpdateQueryDataLimitResponse);
+  rpc NoStakeReport(MsgNoStakeReport) returns (MsgNoStakeReportResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -50,6 +51,20 @@ message MsgSubmitValue {
 message MsgSubmitValueResponse {
   uint64 id = 1;
 }
+
+// MsgNoStakeReport is the Msg/NoStakeReport request type.
+message MsgNoStakeReport {
+  // msg signer is the reporter address
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // query data bytes
+  bytes query_data = 2;
+  // encoded hex value
+  string value = 3;
+}
+
+// MsgNoStakeReportResponse is the Msg/NoStakeReport response type.
+message MsgNoStakeReportResponse {}
 
 message MsgTip {
   option (cosmos.msg.v1.signer) = "tipper";

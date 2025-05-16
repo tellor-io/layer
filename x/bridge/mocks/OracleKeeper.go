@@ -122,6 +122,58 @@ func (_m *OracleKeeper) GetCurrentAggregateReport(ctx context.Context, queryId [
 	return r0, r1, r2
 }
 
+// GetNoStakeReportByQueryIdTimestamp provides a mock function with given fields: ctx, queryId, timestamp
+func (_m *OracleKeeper) GetNoStakeReportByQueryIdTimestamp(ctx context.Context, queryId []byte, timestamp uint64) (*types.NoStakeMicroReport, error) {
+	ret := _m.Called(ctx, queryId, timestamp)
+
+	var r0 *types.NoStakeMicroReport
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, uint64) (*types.NoStakeMicroReport, error)); ok {
+		return rf(ctx, queryId, timestamp)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, uint64) *types.NoStakeMicroReport); ok {
+		r0 = rf(ctx, queryId, timestamp)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*types.NoStakeMicroReport)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []byte, uint64) error); ok {
+		r1 = rf(ctx, queryId, timestamp)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetNoStakeReportsByReporter provides a mock function with given fields: ctx, reporter, limit
+func (_m *OracleKeeper) GetNoStakeReportsByReporter(ctx context.Context, reporter []byte, limit uint64) ([]*types.NoStakeMicroReport, error) {
+	ret := _m.Called(ctx, reporter, limit)
+
+	var r0 []*types.NoStakeMicroReport
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, uint64) ([]*types.NoStakeMicroReport, error)); ok {
+		return rf(ctx, reporter, limit)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, uint64) []*types.NoStakeMicroReport); ok {
+		r0 = rf(ctx, reporter, limit)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*types.NoStakeMicroReport)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []byte, uint64) error); ok {
+		r1 = rf(ctx, reporter, limit)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTimestampAfter provides a mock function with given fields: ctx, queryId, timestamp
 func (_m *OracleKeeper) GetTimestampAfter(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error) {
 	ret := _m.Called(ctx, queryId, timestamp)
