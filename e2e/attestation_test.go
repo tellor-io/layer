@@ -488,26 +488,58 @@ func TestNoStakeAttestation(t *testing.T) {
 	for _, v := range validators {
 		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", v.Addr)
 		require.NoError(err)
-		fmt.Println("reports from: ", v.Addr, ": ", reports)
 		var nsReportsRes e2e.QueryGetReportersNoStakeReportsResponse
 		err = json.Unmarshal(reports, &nsReportsRes)
 		require.NoError(err)
+		fmt.Println("nsReportsRes: ", nsReportsRes.NoStakeReports[0])
 		require.Equal(len(nsReportsRes.NoStakeReports), 1)
 		require.Equal(nsReportsRes.NoStakeReports[0].QueryData, ltcQData)
 		require.Equal(nsReportsRes.NoStakeReports[0].Value, value)
-		fmt.Println("nsReportsRes: ", nsReportsRes)
+
 	}
 
 	// query no stake reports per queryId
-	reports, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "get-no-stake-reports-by-query-id", ltcQId)
+	reports, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "get-no-stake-reports-by-query-id", ltcQId, "--page-limit", "2")
 	require.NoError(err)
 	var nsReportsByQIdRes e2e.QueryGetNoStakeReportsByQueryIdResponse
 	err = json.Unmarshal(reports, &nsReportsByQIdRes)
 	require.NoError(err)
-	fmt.Println("nsReportsByQIdRes: ", nsReportsByQIdRes)
+	fmt.Println("nsReportsByQIdRes 0 : ", nsReportsByQIdRes.NoStakeReports[0])
 	require.Equal(len(nsReportsByQIdRes.NoStakeReports), 2)
 	require.Equal(nsReportsByQIdRes.NoStakeReports[0].QueryData, ltcQData)
 	require.Equal(nsReportsByQIdRes.NoStakeReports[1].QueryData, ltcQData)
 	require.Equal(nsReportsByQIdRes.NoStakeReports[0].Value, value)
 	require.Equal(nsReportsByQIdRes.NoStakeReports[1].Value, value)
+
+	// request an attestation for the first report
+	timestamp := nsReportsByQIdRes.NoStakeReports[0].Timestamp
+	txHash, err := validators[0].Val.ExecTx(ctx, "validator", "bridge", "request-attestations", validators[0].Addr, ltcQId, timestamp, "--keyring-dir", validators[0].Val.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (val0 requests attestation for report1): ", txHash)
+
+	// get snapshot by report
+	res, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", ltcQId, timestamp)
+	require.NoError(err)
+	var snapshotsRes e2e.QueryGetSnapshotsByReportResponse
+	err = json.Unmarshal(res, &snapshotsRes)
+	require.NoError(err)
+	fmt.Println("snapshotsRes: ", snapshotsRes)
+	require.Equal(len(snapshotsRes.Snapshots), 1)
+
+	// get attestation data by snapshot
+	attestationData, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-data-by-snapshot", snapshotsRes.Snapshots[0])
+	require.NoError(err)
+	var attestationDataRes e2e.QueryGetAttestationDataBySnapshotResponse
+	err = json.Unmarshal(attestationData, &attestationDataRes)
+	require.NoError(err)
+	fmt.Println("attestationDataRes: ", attestationDataRes)
+	require.Equal(attestationDataRes.QueryId, ltcQId)
+	require.Equal(attestationDataRes.Timestamp, timestamp)
+	require.NotNil(attestationDataRes.AggregateValue)
+	require.Equal(attestationDataRes.AggregatePower, "0")
+	require.NotNil(attestationDataRes.Checkpoint)                       // validator checkpoint not nil
+	require.Greater(attestationDataRes.AttestationTimestamp, timestamp) // attestation was after report timestamp
+	require.Equal(attestationDataRes.PreviousReportTimestamp, "0")
+	require.Equal(attestationDataRes.NextReportTimestamp, "0")
+	require.Equal(attestationDataRes.LastConsensusTimestamp, "0")
 }

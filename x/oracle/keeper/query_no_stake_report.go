@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/tellor-io/layer/x/oracle/types"
 	"google.golang.org/grpc/codes"
@@ -21,6 +22,7 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
+	q.keeper.Logger(ctx).Info("GetReportersNoStakeReports req.Reporter: ", req.Reporter)
 	reporter, err := sdk.AccAddressFromBech32(req.Reporter)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid reporter address")
@@ -67,6 +69,7 @@ func (q Querier) GetNoStakeReportsByQueryId(ctx context.Context, req *types.Quer
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
+	q.keeper.Logger(ctx).Info("GetNoStakeReportsByQueryId req.QueryId: ", req.QueryId)
 	queryIdBz, err := hex.DecodeString(req.QueryId)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid query id")
@@ -76,7 +79,7 @@ func (q Querier) GetNoStakeReportsByQueryId(ctx context.Context, req *types.Quer
 		NextKey: nil,
 		Total:   uint64(0),
 	}
-	rng := collections.NewPrefixUntilPairRange[[]byte, uint64](queryIdBz)
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](queryIdBz)
 	iter, err := q.keeper.NoStakeReports.Iterate(ctx, rng)
 	if err != nil {
 		return nil, err
@@ -87,6 +90,7 @@ func (q Querier) GetNoStakeReportsByQueryId(ctx context.Context, req *types.Quer
 		if err != nil {
 			return nil, err
 		}
+		q.keeper.Logger(ctx).Info("pk: ", pk)
 		report, err := q.keeper.NoStakeReports.Get(ctx, pk)
 		if err != nil {
 			return nil, err
@@ -98,6 +102,8 @@ func (q Querier) GetNoStakeReportsByQueryId(ctx context.Context, req *types.Quer
 			Timestamp:   uint64(report.Timestamp.UnixMilli()),
 			BlockNumber: report.BlockNumber,
 		}
+		fmt.Println("GetNoStakeReportsByQueryId stringReport: ", stringReport)
+		q.keeper.Logger(ctx).Info("GetNoStakeReportsByQueryId stringReport: ", stringReport)
 		reports = append(reports, &stringReport)
 		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
 			break

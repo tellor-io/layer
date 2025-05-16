@@ -866,6 +866,7 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 				k.Logger(ctx).Info("Error creating no stake snapshot", "error", err)
 				return err
 			}
+			return nil
 		}
 		return err
 	}
