@@ -3,7 +3,7 @@ name: End to End Tests
 on:
   pull_request:
     paths_ignore:
-      - 'daemon/**'
+      - 'daemons/**'
 
 env:
   TAR_PATH: heighliner.tar
