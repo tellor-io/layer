@@ -94,7 +94,6 @@ func (s *KeeperTestSuite) TestMsgNoStakeReport() {
 				queryId := utils.QueryIDFromData(queryDataBz)
 				err := k.NoStakeReports.Set(ctx, collections.Join(queryId, uint64(timestamp.UnixMilli())), types.NoStakeMicroReport{
 					Reporter:  reporter,
-					QueryData: queryDataBz,
 					Value:     "100",
 					Timestamp: timestamp,
 				})
@@ -123,8 +122,10 @@ func (s *KeeperTestSuite) TestMsgNoStakeReport() {
 				require.NoError(err)
 				reporterAddr := sdk.AccAddress(report.Reporter)
 				require.Equal(reporterAddr.String(), tc.msg.Creator)
-				require.Equal(tc.msg.QueryData, report.QueryData)
 				require.Equal(tc.msg.Value, report.Value)
+				exists, err := k.NoStakeReportedQueries.Has(ctx, queryId)
+				require.NoError(err)
+				require.True(exists)
 			}
 		})
 	}

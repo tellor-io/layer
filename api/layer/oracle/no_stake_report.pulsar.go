@@ -17,7 +17,6 @@ import (
 var (
 	md_NoStakeMicroReport              protoreflect.MessageDescriptor
 	fd_NoStakeMicroReport_reporter     protoreflect.FieldDescriptor
-	fd_NoStakeMicroReport_query_data   protoreflect.FieldDescriptor
 	fd_NoStakeMicroReport_value        protoreflect.FieldDescriptor
 	fd_NoStakeMicroReport_timestamp    protoreflect.FieldDescriptor
 	fd_NoStakeMicroReport_block_number protoreflect.FieldDescriptor
@@ -27,7 +26,6 @@ func init() {
 	file_layer_oracle_no_stake_report_proto_init()
 	md_NoStakeMicroReport = File_layer_oracle_no_stake_report_proto.Messages().ByName("NoStakeMicroReport")
 	fd_NoStakeMicroReport_reporter = md_NoStakeMicroReport.Fields().ByName("reporter")
-	fd_NoStakeMicroReport_query_data = md_NoStakeMicroReport.Fields().ByName("query_data")
 	fd_NoStakeMicroReport_value = md_NoStakeMicroReport.Fields().ByName("value")
 	fd_NoStakeMicroReport_timestamp = md_NoStakeMicroReport.Fields().ByName("timestamp")
 	fd_NoStakeMicroReport_block_number = md_NoStakeMicroReport.Fields().ByName("block_number")
@@ -104,12 +102,6 @@ func (x *fastReflection_NoStakeMicroReport) Range(f func(protoreflect.FieldDescr
 			return
 		}
 	}
-	if len(x.QueryData) != 0 {
-		value := protoreflect.ValueOfBytes(x.QueryData)
-		if !f(fd_NoStakeMicroReport_query_data, value) {
-			return
-		}
-	}
 	if x.Value != "" {
 		value := protoreflect.ValueOfString(x.Value)
 		if !f(fd_NoStakeMicroReport_value, value) {
@@ -145,8 +137,6 @@ func (x *fastReflection_NoStakeMicroReport) Has(fd protoreflect.FieldDescriptor)
 	switch fd.FullName() {
 	case "layer.oracle.NoStakeMicroReport.reporter":
 		return len(x.Reporter) != 0
-	case "layer.oracle.NoStakeMicroReport.query_data":
-		return len(x.QueryData) != 0
 	case "layer.oracle.NoStakeMicroReport.value":
 		return x.Value != ""
 	case "layer.oracle.NoStakeMicroReport.timestamp":
@@ -171,8 +161,6 @@ func (x *fastReflection_NoStakeMicroReport) Clear(fd protoreflect.FieldDescripto
 	switch fd.FullName() {
 	case "layer.oracle.NoStakeMicroReport.reporter":
 		x.Reporter = nil
-	case "layer.oracle.NoStakeMicroReport.query_data":
-		x.QueryData = nil
 	case "layer.oracle.NoStakeMicroReport.value":
 		x.Value = ""
 	case "layer.oracle.NoStakeMicroReport.timestamp":
@@ -197,9 +185,6 @@ func (x *fastReflection_NoStakeMicroReport) Get(descriptor protoreflect.FieldDes
 	switch descriptor.FullName() {
 	case "layer.oracle.NoStakeMicroReport.reporter":
 		value := x.Reporter
-		return protoreflect.ValueOfBytes(value)
-	case "layer.oracle.NoStakeMicroReport.query_data":
-		value := x.QueryData
 		return protoreflect.ValueOfBytes(value)
 	case "layer.oracle.NoStakeMicroReport.value":
 		value := x.Value
@@ -232,8 +217,6 @@ func (x *fastReflection_NoStakeMicroReport) Set(fd protoreflect.FieldDescriptor,
 	switch fd.FullName() {
 	case "layer.oracle.NoStakeMicroReport.reporter":
 		x.Reporter = value.Bytes()
-	case "layer.oracle.NoStakeMicroReport.query_data":
-		x.QueryData = value.Bytes()
 	case "layer.oracle.NoStakeMicroReport.value":
 		x.Value = value.Interface().(string)
 	case "layer.oracle.NoStakeMicroReport.timestamp":
@@ -267,8 +250,6 @@ func (x *fastReflection_NoStakeMicroReport) Mutable(fd protoreflect.FieldDescrip
 		return protoreflect.ValueOfMessage(x.Timestamp.ProtoReflect())
 	case "layer.oracle.NoStakeMicroReport.reporter":
 		panic(fmt.Errorf("field reporter of message layer.oracle.NoStakeMicroReport is not mutable"))
-	case "layer.oracle.NoStakeMicroReport.query_data":
-		panic(fmt.Errorf("field query_data of message layer.oracle.NoStakeMicroReport is not mutable"))
 	case "layer.oracle.NoStakeMicroReport.value":
 		panic(fmt.Errorf("field value of message layer.oracle.NoStakeMicroReport is not mutable"))
 	case "layer.oracle.NoStakeMicroReport.block_number":
@@ -287,8 +268,6 @@ func (x *fastReflection_NoStakeMicroReport) Mutable(fd protoreflect.FieldDescrip
 func (x *fastReflection_NoStakeMicroReport) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.oracle.NoStakeMicroReport.reporter":
-		return protoreflect.ValueOfBytes(nil)
-	case "layer.oracle.NoStakeMicroReport.query_data":
 		return protoreflect.ValueOfBytes(nil)
 	case "layer.oracle.NoStakeMicroReport.value":
 		return protoreflect.ValueOfString("")
@@ -370,10 +349,6 @@ func (x *fastReflection_NoStakeMicroReport) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.QueryData)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		l = len(x.Value)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
@@ -417,7 +392,7 @@ func (x *fastReflection_NoStakeMicroReport) ProtoMethods() *protoiface.Methods {
 		if x.BlockNumber != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.BlockNumber))
 			i--
-			dAtA[i] = 0x28
+			dAtA[i] = 0x20
 		}
 		if x.Timestamp != nil {
 			encoded, err := options.Marshal(x.Timestamp)
@@ -431,19 +406,12 @@ func (x *fastReflection_NoStakeMicroReport) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
-			dAtA[i] = 0x22
+			dAtA[i] = 0x1a
 		}
 		if len(x.Value) > 0 {
 			i -= len(x.Value)
 			copy(dAtA[i:], x.Value)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Value)))
-			i--
-			dAtA[i] = 0x1a
-		}
-		if len(x.QueryData) > 0 {
-			i -= len(x.QueryData)
-			copy(dAtA[i:], x.QueryData)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.QueryData)))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -539,40 +507,6 @@ func (x *fastReflection_NoStakeMicroReport) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryData", wireType)
-				}
-				var byteLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					byteLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if byteLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + byteLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.QueryData = append(x.QueryData[:0], dAtA[iNdEx:postIndex]...)
-				if x.QueryData == nil {
-					x.QueryData = []byte{}
-				}
-				iNdEx = postIndex
-			case 3:
-				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
 				}
 				var stringLen uint64
@@ -603,7 +537,7 @@ func (x *fastReflection_NoStakeMicroReport) ProtoMethods() *protoiface.Methods {
 				}
 				x.Value = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			case 4:
+			case 3:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
 				}
@@ -639,7 +573,7 @@ func (x *fastReflection_NoStakeMicroReport) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 5:
+			case 4:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BlockNumber", wireType)
 				}
@@ -694,444 +628,8 @@ func (x *fastReflection_NoStakeMicroReport) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_NoStakeValue              protoreflect.MessageDescriptor
-	fd_NoStakeValue_micro_report protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_layer_oracle_no_stake_report_proto_init()
-	md_NoStakeValue = File_layer_oracle_no_stake_report_proto.Messages().ByName("NoStakeValue")
-	fd_NoStakeValue_micro_report = md_NoStakeValue.Fields().ByName("micro_report")
-}
-
-var _ protoreflect.Message = (*fastReflection_NoStakeValue)(nil)
-
-type fastReflection_NoStakeValue NoStakeValue
-
-func (x *NoStakeValue) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_NoStakeValue)(x)
-}
-
-func (x *NoStakeValue) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_oracle_no_stake_report_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_NoStakeValue_messageType fastReflection_NoStakeValue_messageType
-var _ protoreflect.MessageType = fastReflection_NoStakeValue_messageType{}
-
-type fastReflection_NoStakeValue_messageType struct{}
-
-func (x fastReflection_NoStakeValue_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_NoStakeValue)(nil)
-}
-func (x fastReflection_NoStakeValue_messageType) New() protoreflect.Message {
-	return new(fastReflection_NoStakeValue)
-}
-func (x fastReflection_NoStakeValue_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_NoStakeValue
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_NoStakeValue) Descriptor() protoreflect.MessageDescriptor {
-	return md_NoStakeValue
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_NoStakeValue) Type() protoreflect.MessageType {
-	return _fastReflection_NoStakeValue_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_NoStakeValue) New() protoreflect.Message {
-	return new(fastReflection_NoStakeValue)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_NoStakeValue) Interface() protoreflect.ProtoMessage {
-	return (*NoStakeValue)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_NoStakeValue) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.MicroReport != nil {
-		value := protoreflect.ValueOfMessage(x.MicroReport.ProtoReflect())
-		if !f(fd_NoStakeValue_micro_report, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_NoStakeValue) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "layer.oracle.NoStakeValue.micro_report":
-		return x.MicroReport != nil
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.NoStakeValue"))
-		}
-		panic(fmt.Errorf("message layer.oracle.NoStakeValue does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NoStakeValue) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "layer.oracle.NoStakeValue.micro_report":
-		x.MicroReport = nil
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.NoStakeValue"))
-		}
-		panic(fmt.Errorf("message layer.oracle.NoStakeValue does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_NoStakeValue) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "layer.oracle.NoStakeValue.micro_report":
-		value := x.MicroReport
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.NoStakeValue"))
-		}
-		panic(fmt.Errorf("message layer.oracle.NoStakeValue does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NoStakeValue) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "layer.oracle.NoStakeValue.micro_report":
-		x.MicroReport = value.Message().Interface().(*NoStakeMicroReport)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.NoStakeValue"))
-		}
-		panic(fmt.Errorf("message layer.oracle.NoStakeValue does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NoStakeValue) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.oracle.NoStakeValue.micro_report":
-		if x.MicroReport == nil {
-			x.MicroReport = new(NoStakeMicroReport)
-		}
-		return protoreflect.ValueOfMessage(x.MicroReport.ProtoReflect())
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.NoStakeValue"))
-		}
-		panic(fmt.Errorf("message layer.oracle.NoStakeValue does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_NoStakeValue) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.oracle.NoStakeValue.micro_report":
-		m := new(NoStakeMicroReport)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.NoStakeValue"))
-		}
-		panic(fmt.Errorf("message layer.oracle.NoStakeValue does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_NoStakeValue) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.oracle.NoStakeValue", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_NoStakeValue) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NoStakeValue) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_NoStakeValue) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_NoStakeValue) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*NoStakeValue)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		if x.MicroReport != nil {
-			l = options.Size(x.MicroReport)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*NoStakeValue)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if x.MicroReport != nil {
-			encoded, err := options.Marshal(x.MicroReport)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*NoStakeValue)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: NoStakeValue: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: NoStakeValue: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MicroReport", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.MicroReport == nil {
-					x.MicroReport = &NoStakeMicroReport{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.MicroReport); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
 	md_NoStakeMicroReportStrings              protoreflect.MessageDescriptor
 	fd_NoStakeMicroReportStrings_reporter     protoreflect.FieldDescriptor
-	fd_NoStakeMicroReportStrings_query_data   protoreflect.FieldDescriptor
 	fd_NoStakeMicroReportStrings_value        protoreflect.FieldDescriptor
 	fd_NoStakeMicroReportStrings_timestamp    protoreflect.FieldDescriptor
 	fd_NoStakeMicroReportStrings_block_number protoreflect.FieldDescriptor
@@ -1141,7 +639,6 @@ func init() {
 	file_layer_oracle_no_stake_report_proto_init()
 	md_NoStakeMicroReportStrings = File_layer_oracle_no_stake_report_proto.Messages().ByName("NoStakeMicroReportStrings")
 	fd_NoStakeMicroReportStrings_reporter = md_NoStakeMicroReportStrings.Fields().ByName("reporter")
-	fd_NoStakeMicroReportStrings_query_data = md_NoStakeMicroReportStrings.Fields().ByName("query_data")
 	fd_NoStakeMicroReportStrings_value = md_NoStakeMicroReportStrings.Fields().ByName("value")
 	fd_NoStakeMicroReportStrings_timestamp = md_NoStakeMicroReportStrings.Fields().ByName("timestamp")
 	fd_NoStakeMicroReportStrings_block_number = md_NoStakeMicroReportStrings.Fields().ByName("block_number")
@@ -1156,7 +653,7 @@ func (x *NoStakeMicroReportStrings) ProtoReflect() protoreflect.Message {
 }
 
 func (x *NoStakeMicroReportStrings) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_oracle_no_stake_report_proto_msgTypes[2]
+	mi := &file_layer_oracle_no_stake_report_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1218,12 +715,6 @@ func (x *fastReflection_NoStakeMicroReportStrings) Range(f func(protoreflect.Fie
 			return
 		}
 	}
-	if x.QueryData != "" {
-		value := protoreflect.ValueOfString(x.QueryData)
-		if !f(fd_NoStakeMicroReportStrings_query_data, value) {
-			return
-		}
-	}
 	if x.Value != "" {
 		value := protoreflect.ValueOfString(x.Value)
 		if !f(fd_NoStakeMicroReportStrings_value, value) {
@@ -1259,8 +750,6 @@ func (x *fastReflection_NoStakeMicroReportStrings) Has(fd protoreflect.FieldDesc
 	switch fd.FullName() {
 	case "layer.oracle.NoStakeMicroReportStrings.reporter":
 		return x.Reporter != ""
-	case "layer.oracle.NoStakeMicroReportStrings.query_data":
-		return x.QueryData != ""
 	case "layer.oracle.NoStakeMicroReportStrings.value":
 		return x.Value != ""
 	case "layer.oracle.NoStakeMicroReportStrings.timestamp":
@@ -1285,8 +774,6 @@ func (x *fastReflection_NoStakeMicroReportStrings) Clear(fd protoreflect.FieldDe
 	switch fd.FullName() {
 	case "layer.oracle.NoStakeMicroReportStrings.reporter":
 		x.Reporter = ""
-	case "layer.oracle.NoStakeMicroReportStrings.query_data":
-		x.QueryData = ""
 	case "layer.oracle.NoStakeMicroReportStrings.value":
 		x.Value = ""
 	case "layer.oracle.NoStakeMicroReportStrings.timestamp":
@@ -1311,9 +798,6 @@ func (x *fastReflection_NoStakeMicroReportStrings) Get(descriptor protoreflect.F
 	switch descriptor.FullName() {
 	case "layer.oracle.NoStakeMicroReportStrings.reporter":
 		value := x.Reporter
-		return protoreflect.ValueOfString(value)
-	case "layer.oracle.NoStakeMicroReportStrings.query_data":
-		value := x.QueryData
 		return protoreflect.ValueOfString(value)
 	case "layer.oracle.NoStakeMicroReportStrings.value":
 		value := x.Value
@@ -1346,8 +830,6 @@ func (x *fastReflection_NoStakeMicroReportStrings) Set(fd protoreflect.FieldDesc
 	switch fd.FullName() {
 	case "layer.oracle.NoStakeMicroReportStrings.reporter":
 		x.Reporter = value.Interface().(string)
-	case "layer.oracle.NoStakeMicroReportStrings.query_data":
-		x.QueryData = value.Interface().(string)
 	case "layer.oracle.NoStakeMicroReportStrings.value":
 		x.Value = value.Interface().(string)
 	case "layer.oracle.NoStakeMicroReportStrings.timestamp":
@@ -1376,8 +858,6 @@ func (x *fastReflection_NoStakeMicroReportStrings) Mutable(fd protoreflect.Field
 	switch fd.FullName() {
 	case "layer.oracle.NoStakeMicroReportStrings.reporter":
 		panic(fmt.Errorf("field reporter of message layer.oracle.NoStakeMicroReportStrings is not mutable"))
-	case "layer.oracle.NoStakeMicroReportStrings.query_data":
-		panic(fmt.Errorf("field query_data of message layer.oracle.NoStakeMicroReportStrings is not mutable"))
 	case "layer.oracle.NoStakeMicroReportStrings.value":
 		panic(fmt.Errorf("field value of message layer.oracle.NoStakeMicroReportStrings is not mutable"))
 	case "layer.oracle.NoStakeMicroReportStrings.timestamp":
@@ -1398,8 +878,6 @@ func (x *fastReflection_NoStakeMicroReportStrings) Mutable(fd protoreflect.Field
 func (x *fastReflection_NoStakeMicroReportStrings) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.oracle.NoStakeMicroReportStrings.reporter":
-		return protoreflect.ValueOfString("")
-	case "layer.oracle.NoStakeMicroReportStrings.query_data":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.NoStakeMicroReportStrings.value":
 		return protoreflect.ValueOfString("")
@@ -1480,10 +958,6 @@ func (x *fastReflection_NoStakeMicroReportStrings) ProtoMethods() *protoiface.Me
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.QueryData)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		l = len(x.Value)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
@@ -1526,24 +1000,17 @@ func (x *fastReflection_NoStakeMicroReportStrings) ProtoMethods() *protoiface.Me
 		if x.BlockNumber != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.BlockNumber))
 			i--
-			dAtA[i] = 0x28
+			dAtA[i] = 0x20
 		}
 		if x.Timestamp != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.Timestamp))
 			i--
-			dAtA[i] = 0x20
+			dAtA[i] = 0x18
 		}
 		if len(x.Value) > 0 {
 			i -= len(x.Value)
 			copy(dAtA[i:], x.Value)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Value)))
-			i--
-			dAtA[i] = 0x1a
-		}
-		if len(x.QueryData) > 0 {
-			i -= len(x.QueryData)
-			copy(dAtA[i:], x.QueryData)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.QueryData)))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -1637,38 +1104,6 @@ func (x *fastReflection_NoStakeMicroReportStrings) ProtoMethods() *protoiface.Me
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field QueryData", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.QueryData = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 3:
-				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
 				}
 				var stringLen uint64
@@ -1699,7 +1134,7 @@ func (x *fastReflection_NoStakeMicroReportStrings) ProtoMethods() *protoiface.Me
 				}
 				x.Value = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			case 4:
+			case 3:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timestamp", wireType)
 				}
@@ -1718,7 +1153,7 @@ func (x *fastReflection_NoStakeMicroReportStrings) ProtoMethods() *protoiface.Me
 						break
 					}
 				}
-			case 5:
+			case 4:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BlockNumber", wireType)
 				}
@@ -1793,14 +1228,12 @@ type NoStakeMicroReport struct {
 
 	// reporter is the address of the reporter
 	Reporter []byte `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
-	// string identifier of the data spec
-	QueryData []byte `protobuf:"bytes,2,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 	// hex string of the response value
-	Value string `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
+	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	// timestamp of when the report was created
-	Timestamp *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	// block number of when the report was created
-	BlockNumber uint64 `protobuf:"varint,5,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
+	BlockNumber uint64 `protobuf:"varint,4,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
 }
 
 func (x *NoStakeMicroReport) Reset() {
@@ -1830,13 +1263,6 @@ func (x *NoStakeMicroReport) GetReporter() []byte {
 	return nil
 }
 
-func (x *NoStakeMicroReport) GetQueryData() []byte {
-	if x != nil {
-		return x.QueryData
-	}
-	return nil
-}
-
 func (x *NoStakeMicroReport) GetValue() string {
 	if x != nil {
 		return x.Value
@@ -1858,41 +1284,6 @@ func (x *NoStakeMicroReport) GetBlockNumber() uint64 {
 	return 0
 }
 
-type NoStakeValue struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	MicroReport *NoStakeMicroReport `protobuf:"bytes,1,opt,name=micro_report,json=microReport,proto3" json:"micro_report,omitempty"`
-}
-
-func (x *NoStakeValue) Reset() {
-	*x = NoStakeValue{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_oracle_no_stake_report_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *NoStakeValue) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*NoStakeValue) ProtoMessage() {}
-
-// Deprecated: Use NoStakeValue.ProtoReflect.Descriptor instead.
-func (*NoStakeValue) Descriptor() ([]byte, []int) {
-	return file_layer_oracle_no_stake_report_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *NoStakeValue) GetMicroReport() *NoStakeMicroReport {
-	if x != nil {
-		return x.MicroReport
-	}
-	return nil
-}
-
 // MicroReports but with strings to return for queries
 type NoStakeMicroReportStrings struct {
 	state         protoimpl.MessageState
@@ -1901,20 +1292,18 @@ type NoStakeMicroReportStrings struct {
 
 	// reporter is the address of the reporter
 	Reporter string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
-	// string identifier of the data spec
-	QueryData string `protobuf:"bytes,2,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 	// hex string of the response value
-	Value string `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
+	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	// timestamp of when the report was created
-	Timestamp uint64 `protobuf:"varint,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	Timestamp uint64 `protobuf:"varint,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	// block number of when the report was created
-	BlockNumber uint64 `protobuf:"varint,5,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
+	BlockNumber uint64 `protobuf:"varint,4,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
 }
 
 func (x *NoStakeMicroReportStrings) Reset() {
 	*x = NoStakeMicroReportStrings{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_oracle_no_stake_report_proto_msgTypes[2]
+		mi := &file_layer_oracle_no_stake_report_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1928,19 +1317,12 @@ func (*NoStakeMicroReportStrings) ProtoMessage() {}
 
 // Deprecated: Use NoStakeMicroReportStrings.ProtoReflect.Descriptor instead.
 func (*NoStakeMicroReportStrings) Descriptor() ([]byte, []int) {
-	return file_layer_oracle_no_stake_report_proto_rawDescGZIP(), []int{2}
+	return file_layer_oracle_no_stake_report_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *NoStakeMicroReportStrings) GetReporter() string {
 	if x != nil {
 		return x.Reporter
-	}
-	return ""
-}
-
-func (x *NoStakeMicroReportStrings) GetQueryData() string {
-	if x != nil {
-		return x.QueryData
 	}
 	return ""
 }
@@ -1975,47 +1357,38 @@ var file_layer_oracle_no_stake_report_proto_rawDesc = []byte{
 	0x6c, 0x65, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f,
 	0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
 	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74,
-	0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xcc, 0x01, 0x0a, 0x12, 0x4e, 0x6f,
+	0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xad, 0x01, 0x0a, 0x12, 0x4e, 0x6f,
 	0x53, 0x74, 0x61, 0x6b, 0x65, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74,
 	0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0c, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x1d, 0x0a, 0x0a,
-	0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c,
-	0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x12, 0x14, 0x0a, 0x05, 0x76,
-	0x61, 0x6c, 0x75, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75,
-	0x65, 0x12, 0x42, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x04,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
-	0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65,
-	0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x21, 0x0a, 0x0c, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x6e,
-	0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x05, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0b, 0x62, 0x6c, 0x6f,
-	0x63, 0x6b, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x22, 0x53, 0x0a, 0x0c, 0x4e, 0x6f, 0x53, 0x74,
-	0x61, 0x6b, 0x65, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x43, 0x0a, 0x0c, 0x6d, 0x69, 0x63, 0x72,
-	0x6f, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20,
-	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x2e, 0x4e, 0x6f,
+	0x28, 0x0c, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05,
+	0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c,
+	0x75, 0x65, 0x12, 0x42, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
+	0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x09, 0x74, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x21, 0x0a, 0x0c, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f,
+	0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0b, 0x62, 0x6c,
+	0x6f, 0x63, 0x6b, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x22, 0x8e, 0x01, 0x0a, 0x19, 0x4e, 0x6f,
 	0x53, 0x74, 0x61, 0x6b, 0x65, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74,
-	0x52, 0x0b, 0x6d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x22, 0xad, 0x01,
-	0x0a, 0x19, 0x4e, 0x6f, 0x53, 0x74, 0x61, 0x6b, 0x65, 0x4d, 0x69, 0x63, 0x72, 0x6f, 0x52, 0x65,
-	0x70, 0x6f, 0x72, 0x74, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x72,
-	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72,
-	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x1d, 0x0a, 0x0a, 0x71, 0x75, 0x65, 0x72, 0x79,
-	0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x71, 0x75, 0x65,
-	0x72, 0x79, 0x44, 0x61, 0x74, 0x61, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18,
-	0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x1c, 0x0a, 0x09,
-	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52,
-	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x21, 0x0a, 0x0c, 0x62, 0x6c,
-	0x6f, 0x63, 0x6b, 0x5f, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x05, 0x20, 0x01, 0x28, 0x04,
-	0x52, 0x0b, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x42, 0xa4, 0x01,
-	0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63,
-	0x6c, 0x65, 0x42, 0x12, 0x4e, 0x6f, 0x53, 0x74, 0x61, 0x6b, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72,
-	0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
-	0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f,
-	0x72, 0x61, 0x63, 0x6c, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x4f, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79,
-	0x65, 0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65,
-	0x72, 0x5c, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x4f, 0x72,
-	0x61, 0x63, 0x6c, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x72, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69,
+	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x21, 0x0a, 0x0c, 0x62, 0x6c, 0x6f, 0x63, 0x6b,
+	0x5f, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0b, 0x62,
+	0x6c, 0x6f, 0x63, 0x6b, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x42, 0xa4, 0x01, 0x0a, 0x10, 0x63,
+	0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0x42,
+	0x12, 0x4e, 0x6f, 0x53, 0x74, 0x61, 0x6b, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
+	0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x6f, 0x72, 0x61, 0x63,
+	0x6c, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x4f, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c,
+	0x4f, 0x72, 0x61, 0x63, 0x6c, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x4f,
+	0x72, 0x61, 0x63, 0x6c, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
+	0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x4f, 0x72, 0x61, 0x63, 0x6c,
+	0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2030,21 +1403,19 @@ func file_layer_oracle_no_stake_report_proto_rawDescGZIP() []byte {
 	return file_layer_oracle_no_stake_report_proto_rawDescData
 }
 
-var file_layer_oracle_no_stake_report_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_layer_oracle_no_stake_report_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_layer_oracle_no_stake_report_proto_goTypes = []interface{}{
 	(*NoStakeMicroReport)(nil),        // 0: layer.oracle.NoStakeMicroReport
-	(*NoStakeValue)(nil),              // 1: layer.oracle.NoStakeValue
-	(*NoStakeMicroReportStrings)(nil), // 2: layer.oracle.NoStakeMicroReportStrings
-	(*timestamppb.Timestamp)(nil),     // 3: google.protobuf.Timestamp
+	(*NoStakeMicroReportStrings)(nil), // 1: layer.oracle.NoStakeMicroReportStrings
+	(*timestamppb.Timestamp)(nil),     // 2: google.protobuf.Timestamp
 }
 var file_layer_oracle_no_stake_report_proto_depIdxs = []int32{
-	3, // 0: layer.oracle.NoStakeMicroReport.timestamp:type_name -> google.protobuf.Timestamp
-	0, // 1: layer.oracle.NoStakeValue.micro_report:type_name -> layer.oracle.NoStakeMicroReport
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	2, // 0: layer.oracle.NoStakeMicroReport.timestamp:type_name -> google.protobuf.Timestamp
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_layer_oracle_no_stake_report_proto_init() }
@@ -2066,18 +1437,6 @@ func file_layer_oracle_no_stake_report_proto_init() {
 			}
 		}
 		file_layer_oracle_no_stake_report_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*NoStakeValue); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_layer_oracle_no_stake_report_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*NoStakeMicroReportStrings); i {
 			case 0:
 				return &v.state
@@ -2096,7 +1455,7 @@ func file_layer_oracle_no_stake_report_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_oracle_no_stake_report_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   3,
+			NumMessages:   2,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

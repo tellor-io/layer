@@ -10,32 +10,25 @@ option go_package = "github.com/tellor-io/layer/x/oracle/types";
 message NoStakeMicroReport {
   // reporter is the address of the reporter
   bytes reporter = 1;
-  // string identifier of the data spec
-  bytes query_data = 2;
   // hex string of the response value
-  string value = 3;
+  string value = 2;
   // timestamp of when the report was created
-  google.protobuf.Timestamp timestamp = 4 [
+  google.protobuf.Timestamp timestamp = 3 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
   ];
   // block number of when the report was created
-  uint64 block_number = 5;
-}
-message NoStakeValue {
-  NoStakeMicroReport micro_report = 1;
+  uint64 block_number = 4;
 }
 
 // MicroReports but with strings to return for queries
 message NoStakeMicroReportStrings {
     // reporter is the address of the reporter
     string reporter = 1;
-    // string identifier of the data spec
-    string query_data = 2;
     // hex string of the response value
-    string value = 3;
+    string value = 2;
     // timestamp of when the report was created
-    uint64 timestamp = 4;
+    uint64 timestamp = 3;
     // block number of when the report was created
-    uint64 block_number = 5;
+    uint64 block_number = 4;
   }

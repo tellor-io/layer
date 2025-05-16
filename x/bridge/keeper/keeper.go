@@ -18,7 +18,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	layertypes "github.com/tellor-io/layer/types"
-	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
@@ -861,7 +860,7 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 				k.Logger(ctx).Info("Error getting no stake report by query id and timestamp", "error", err)
 				return err
 			}
-			err = k.CreateNoStakeSnapshot(ctx, noStakeReport)
+			err = k.CreateNoStakeSnapshot(ctx, noStakeReport, queryId)
 			if err != nil {
 				k.Logger(ctx).Info("Error creating no stake snapshot", "error", err)
 				return err
@@ -1196,7 +1195,7 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
-func (k Keeper) CreateNoStakeSnapshot(ctx context.Context, report *oracletypes.NoStakeMicroReport) error {
+func (k Keeper) CreateNoStakeSnapshot(ctx context.Context, report *oracletypes.NoStakeMicroReport, queryId []byte) error {
 	// get the current validator checkpoint
 	validatorCheckpoint, err := k.GetValidatorCheckpointFromStorage(ctx)
 	if err != nil {
@@ -1208,7 +1207,6 @@ func (k Keeper) CreateNoStakeSnapshot(ctx context.Context, report *oracletypes.N
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	attestationTimestamp := sdkCtx.BlockTime()
 
-	queryId := utils.QueryIDFromData(report.QueryData)
 	// tack reporter address onto the value
 	stringType, err := abi.NewType("string", "", nil)
 	if err != nil {
@@ -1227,7 +1225,6 @@ func (k Keeper) CreateNoStakeSnapshot(ctx context.Context, report *oracletypes.N
 		return err
 	}
 	reporterString := sdk.AccAddress(report.Reporter).String()
-	k.Logger(ctx).Info("reporterString", "reporterString", reporterString)
 	encodedData, err := arguments.Pack(
 		valBz,
 		reporterString,

@@ -56,6 +56,7 @@ var (
 	BridgeDepositQueuePrefix         = collections.NewPrefix(30)
 	NoStakeReportsPrefix             = collections.NewPrefix(31)
 	ReporterIndexPrefix              = collections.NewPrefix(32)
+	NoStakeReportedQueriesPrefix     = collections.NewPrefix(33)
 )
 
 func KeyPrefix(p string) []byte {

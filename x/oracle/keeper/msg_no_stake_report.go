@@ -34,6 +34,15 @@ func (k msgServer) NoStakeReport(ctx context.Context, msg *types.MsgNoStakeRepor
 		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "report for this queryId already exists at this height, please resubmit next block")
 	}
 
+	// check if queryId:queryData map is already set
+	exists, err = k.keeper.NoStakeReportedQueries.Has(sdkCtx, queryId)
+	if !exists {
+		err = k.keeper.NoStakeReportedQueries.Set(sdkCtx, queryId, queryData)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	reporterAddr, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
@@ -50,7 +59,6 @@ func (k msgServer) NoStakeReport(ctx context.Context, msg *types.MsgNoStakeRepor
 
 	err = k.keeper.NoStakeReports.Set(sdkCtx, collections.Join(queryId, uint64(timestamp)), types.NoStakeMicroReport{
 		Reporter:    reporterAddr,
-		QueryData:   queryData,
 		Value:       value,
 		Timestamp:   sdkCtx.BlockTime(),
 		BlockNumber: uint64(sdkCtx.BlockHeight()),

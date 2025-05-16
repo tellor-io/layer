@@ -18,7 +18,6 @@ func (s *KeeperTestSuite) TestGetNoStakeReportByQueryIdTimestamp() {
 	timestamp := time.Now().UTC()
 	report := types.NoStakeMicroReport{
 		Reporter:    reporter,
-		QueryData:   []byte("QueryData"),
 		Timestamp:   timestamp,
 		BlockNumber: 1,
 		Value:       "value",
@@ -30,6 +29,5 @@ func (s *KeeperTestSuite) TestGetNoStakeReportByQueryIdTimestamp() {
 	require.Equal(res.Value, report.Value)
 	require.Equal(res.Timestamp, timestamp)
 	require.Equal(res.BlockNumber, report.BlockNumber)
-	require.Equal(res.QueryData, report.QueryData)
 	require.Equal(res.Reporter, report.Reporter)
 }

@@ -47,7 +47,6 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 		}
 		stringReport := types.NoStakeMicroReportStrings{
 			Reporter:    sdk.AccAddress(report.Reporter).String(),
-			QueryData:   hex.EncodeToString(report.QueryData),
 			Value:       report.Value,
 			Timestamp:   uint64(report.Timestamp.UnixMilli()),
 			BlockNumber: report.BlockNumber,
@@ -97,7 +96,6 @@ func (q Querier) GetNoStakeReportsByQueryId(ctx context.Context, req *types.Quer
 		}
 		stringReport := types.NoStakeMicroReportStrings{
 			Reporter:    sdk.AccAddress(report.Reporter).String(),
-			QueryData:   hex.EncodeToString(report.QueryData),
 			Value:       report.Value,
 			Timestamp:   uint64(report.Timestamp.UnixMilli()),
 			BlockNumber: report.BlockNumber,
