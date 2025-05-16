@@ -1226,7 +1226,7 @@ func (k Keeper) CreateNoStakeSnapshot(ctx context.Context, report *oracletypes.N
 	if err != nil {
 		return err
 	}
-	reporterString := hex.EncodeToString(report.Reporter)
+	reporterString := sdk.MustBech32ifyAddressBytes("tellor", report.Reporter)
 	k.Logger(ctx).Info("reporterString", "reporterString", reporterString)
 	encodedData, err := arguments.Pack(
 		valBz,
