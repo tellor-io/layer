@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 
 	"github.com/tellor-io/layer/x/oracle/types"
 	"google.golang.org/grpc/codes"
@@ -68,46 +67,27 @@ func (q Querier) GetNoStakeReportsByQueryId(ctx context.Context, req *types.Quer
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	q.keeper.Logger(ctx).Info("GetNoStakeReportsByQueryId req.QueryId: ", req.QueryId)
 	queryIdBz, err := hex.DecodeString(req.QueryId)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid query id")
 	}
 
-	pageRes := &query.PageResponse{
-		NextKey: nil,
-		Total:   uint64(0),
-	}
-	rng := collections.NewPrefixedPairRange[[]byte, uint64](queryIdBz)
-	iter, err := q.keeper.NoStakeReports.Iterate(ctx, rng)
+	microreports := make([]*types.NoStakeMicroReportStrings, 0)
+	_, pageRes, err := query.CollectionPaginate(
+		ctx, q.keeper.NoStakeReports, req.Pagination, func(_ collections.Pair[[]byte, uint64], report types.NoStakeMicroReport) (types.NoStakeMicroReport, error) {
+			microReport := types.NoStakeMicroReportStrings{
+				Reporter:    sdk.AccAddress(report.Reporter).String(),
+				Value:       report.Value,
+				Timestamp:   uint64(report.Timestamp.UnixMilli()),
+				BlockNumber: report.BlockNumber,
+			}
+			microreports = append(microreports, &microReport)
+			return report, nil
+		}, query.WithCollectionPaginationPairPrefix[[]byte, uint64](queryIdBz),
+	)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
-	reports := make([]*types.NoStakeMicroReportStrings, 0)
-	for ; iter.Valid(); iter.Next() {
-		pk, err := iter.Key()
-		if err != nil {
-			return nil, err
-		}
-		q.keeper.Logger(ctx).Info("pk: ", pk)
-		report, err := q.keeper.NoStakeReports.Get(ctx, pk)
-		if err != nil {
-			return nil, err
-		}
-		stringReport := types.NoStakeMicroReportStrings{
-			Reporter:    sdk.AccAddress(report.Reporter).String(),
-			Value:       report.Value,
-			Timestamp:   uint64(report.Timestamp.UnixMilli()),
-			BlockNumber: report.BlockNumber,
-		}
-		fmt.Println("GetNoStakeReportsByQueryId stringReport: ", stringReport)
-		q.keeper.Logger(ctx).Info("GetNoStakeReportsByQueryId stringReport: ", stringReport)
-		reports = append(reports, &stringReport)
-		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
-			break
-		}
-	}
-	pageRes.Total = uint64(len(reports))
 
-	return &types.QueryGetNoStakeReportsByQueryIdResponse{NoStakeReports: reports, Pagination: pageRes}, nil
+	return &types.QueryGetNoStakeReportsByQueryIdResponse{NoStakeReports: microreports, Pagination: pageRes}, nil
 }
