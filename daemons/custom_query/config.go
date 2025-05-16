@@ -19,15 +19,8 @@ type EndpointTemplate struct {
 }
 
 type Config struct {
-	General   GeneralConfig               `toml:"general"`
 	Endpoints map[string]EndpointTemplate `toml:"endpoints"`
 	Queries   map[string]QueryConfig      `toml:"queries"`
-}
-
-type GeneralConfig struct {
-	DefaultTimeout int `toml:"default_timeout"`
-	RetryAttempts  int `toml:"retry_attempts"`
-	CacheTTL       int `toml:"cache_ttl"`
 }
 
 type QueryConfig struct {

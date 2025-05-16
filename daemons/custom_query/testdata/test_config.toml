@@ -27,45 +27,44 @@
     headers = { "Content-Type" = "application/json" }
 
 [queries]
-    [queries.05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6]
-    id = "05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6"
+    [queries.sdai_test_id]
+    id = "sdai_test_id"
     aggregation_method = "median"
     min_responses = 2
     response_type = "ufixed256x18"
     
-        [[queries.05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6.endpoints]]
+        [[queries.sdai_test_id.endpoints]]
         endpoint_type = "coingecko"
         params = { coin_id = "savings-dai" }
         response_path = ["savings-dai", "usd"]
         
-        [[queries.05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6.endpoints]]
+        [[queries.sdai_test_id.endpoints]]
         endpoint_type = "coinpaprika"
         params = { coin_id = "sdai-savings-dai" }
         response_path = ["quotes", "USD", "price"]
         
-        [[queries.05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6.endpoints]]
+        [[queries.sdai_test_id.endpoints]]
         endpoint_type = "curve"
         params = { contract_address = "0x83F20F44975D03b1b09e64809B757c47f942BEeA" }
         response_path = ["data", "usd_price"]
     
-    [queries.5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0]
-    id = "5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"
+    [queries.trb_test_id]
+    id = "trb_test_id"
     aggregation_method = "median"
     min_responses = 2
     response_type = "ufixed256x18"
     
-        [[queries.5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0.endpoints]]
+        [[queries.trb_test_id.endpoints]]
         endpoint_type = "coingecko"
         params = { coin_id = "tellor" }
         response_path = ["tellor", "usd"]
         
-        [[queries.5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0.endpoints]]
+        [[queries.trb_test_id.endpoints]]
         endpoint_type = "coinpaprika"
         params = { coin_id = "trb-tellor" }
         response_path = ["quotes", "USD", "price"]
         
-        [[queries.5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0.endpoints]]
-        endpoint_type = "crypto"
-        params = { instrument_name = "TRB_USD" }
-        response_path = ["result", "data", "0", "a"]
-
+        [[queries.trb_test_id.endpoints]]
+        endpoint_type = "etherscan"
+        params = { timestamp = "1620000000" }
+        response_path = ["result"]
