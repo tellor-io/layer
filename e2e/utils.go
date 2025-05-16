@@ -666,8 +666,6 @@ type PageResponse struct {
 type NoStakeMicroReportStrings struct {
 	// reporter is the address of the reporter
 	Reporter string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
-	// string identifier of the data spec
-	QueryData string `protobuf:"bytes,2,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 	// hex string of the response value
 	Value string `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
 	// timestamp of when the report was created

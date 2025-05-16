@@ -493,8 +493,8 @@ func TestNoStakeAttestation(t *testing.T) {
 		require.NoError(err)
 		fmt.Println("nsReportsRes: ", nsReportsRes.NoStakeReports[0])
 		require.Equal(len(nsReportsRes.NoStakeReports), 1)
-		require.Equal(nsReportsRes.NoStakeReports[0].QueryData, ltcQData)
 		require.Equal(nsReportsRes.NoStakeReports[0].Value, value)
+		require.Equal(nsReportsRes.NoStakeReports[0].Reporter, v.Addr)
 
 	}
 
@@ -506,8 +506,6 @@ func TestNoStakeAttestation(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("nsReportsByQIdRes 0 : ", nsReportsByQIdRes.NoStakeReports[0])
 	require.Equal(len(nsReportsByQIdRes.NoStakeReports), 2)
-	require.Equal(nsReportsByQIdRes.NoStakeReports[0].QueryData, ltcQData)
-	require.Equal(nsReportsByQIdRes.NoStakeReports[1].QueryData, ltcQData)
 	require.Equal(nsReportsByQIdRes.NoStakeReports[0].Value, value)
 	require.Equal(nsReportsByQIdRes.NoStakeReports[1].Value, value)
 
