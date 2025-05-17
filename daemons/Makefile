@@ -56,7 +56,7 @@ test:
 .PHONY: lint lint-fix install-lint-deps
 
 lint:
-	@echo "Linting reporterd code..."
+	@echo "Linting daemon code..."
 	golangci-lint run ./...
 
 # Fix linting issues where possible

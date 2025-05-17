@@ -9,6 +9,7 @@ import (
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/spf13/viper"
 	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
+	customquery "github.com/tellor-io/layer/daemons/custom_query"
 	"github.com/tellor-io/layer/daemons/flags"
 	pricefeedtypes "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
@@ -58,6 +59,7 @@ type Client struct {
 	MarketToExchange     *pricefeedservertypes.MarketToExchangePrices
 	TokenDepositsCache   *tokenbridgetypes.DepositReports
 	TokenBridgeTipsCache *tokenbridgetipstypes.DepositTips
+	Custom_query         map[string]customquery.QueryConfig
 
 	accAddr   sdk.AccAddress
 	minGasFee string
@@ -86,6 +88,7 @@ func (c *Client) Start(
 	marketToExchange *pricefeedservertypes.MarketToExchangePrices,
 	tokenDepositsCache *tokenbridgetypes.DepositReports,
 	tokenBridgeTipsCache *tokenbridgetipstypes.DepositTips,
+	custom_queries map[string]customquery.QueryConfig,
 	chainId string,
 ) error {
 	// Log the daemon flags.
@@ -98,6 +101,7 @@ func (c *Client) Start(
 
 	c.TokenDepositsCache = tokenDepositsCache
 	c.TokenBridgeTipsCache = tokenBridgeTipsCache
+	c.Custom_query = custom_queries
 	// Make a connection to the Cosmos gRPC query services.
 	conn, err := grpcClient.NewTcpConnection(ctx, grpcAddress)
 	if err != nil {
@@ -189,6 +193,7 @@ func StartReporterDaemonTaskLoop(
 			}
 		} else {
 			time.Sleep(time.Second)
+			client.logger.Warn("Checking if reporter is created", "reporterCreated", reporterCreated)
 		}
 	}
 
@@ -220,5 +225,6 @@ func StartReporterDaemonTaskLoop(
 
 func (c *Client) checkReporter(ctx context.Context) bool {
 	_, err := c.ReporterClient.SelectorReporter(ctx, &reportertypes.QuerySelectorReporterRequest{SelectorAddress: c.accAddr.String()})
+	c.logger.Debug("Checking if reporter is created", "error", err)
 	return err == nil
 }
