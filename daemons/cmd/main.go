@@ -11,6 +11,7 @@ import (
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/daemons"
 	"github.com/tellor-io/layer/daemons/configs"
+	customquery "github.com/tellor-io/layer/daemons/custom_query"
 	daemonflags "github.com/tellor-io/layer/daemons/flags"
 
 	"cosmossdk.io/log"
@@ -30,6 +31,7 @@ var rootCmd = &cobra.Command{
 		logLevelstr := viper.GetString(flags.FlagLogLevel)
 		configs.WriteDefaultPricefeedExchangeToml(homePath)
 		configs.WriteDefaultMarketParamsToml(homePath)
+		customquery.WriteDefaultConfigToml(homePath)
 		loglevel, err := zerolog.ParseLevel(logLevelstr)
 		if err != nil {
 			fmt.Printf("Error parsing log level: %v\n", err)

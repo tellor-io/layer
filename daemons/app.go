@@ -54,7 +54,7 @@ func NewApp(
 	}
 	appOpts := simtestutil.NewAppOptionsWithFlagHome(tempDir())
 	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
-	queries, err := customquery.BuildQueryEndpoints("custom_query/config.toml")
+	queries, err := customquery.BuildQueryEndpoints(homePath)
 	if err != nil {
 		panic(err)
 	}

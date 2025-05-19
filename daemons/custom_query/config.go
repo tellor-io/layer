@@ -3,7 +3,6 @@ package customquery
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -50,8 +49,7 @@ func BuildQueryEndpoints(configPath string) (map[string]QueryConfig, error) {
 	// Read the TOML configuration file
 	// TODO: move the config file to a more appropriate location
 	var config Config
-	dir, _ := os.Getwd()
-	tomlFile, err := os.ReadFile(filepath.Join(dir, configPath))
+	tomlFile, err := os.ReadFile(getCustomQueryConfigFilePath(configPath))
 	if err != nil {
 		panic(err)
 	}
