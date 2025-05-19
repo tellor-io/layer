@@ -107,6 +107,7 @@ func (c *Client) Start(
 	defer func() {
 		if connErr := grpcClient.CloseConnection(conn); connErr != nil {
 			err = connErr
+			c.logger.Error("Failed to close gRPC connection to Cosmos gRPC query services", "error", err)
 		}
 	}()
 
@@ -132,6 +133,7 @@ func (c *Client) Start(
 	c.cosmosCtx = c.cosmosCtx.WithGRPCClient(conn)
 	c.cosmosCtx = c.cosmosCtx.WithBroadcastMode(brdcstMode)
 	c.cosmosCtx = c.cosmosCtx.WithAccountRetriever(authtypes.AccountRetriever{})
+	c.logger.Info("set up cosmos context")
 
 	rpcClient, err := rpchttp.New(nodeUri, "/websocket")
 	if err != nil {
@@ -159,6 +161,7 @@ func (c *Client) Start(
 	c.cosmosCtx = c.cosmosCtx.WithFrom(keyName).WithFromName(keyName).WithFromAddress(addr)
 	c.accAddr = c.cosmosCtx.GetFromAddress()
 
+	c.logger.Info("starting daemon task loop")
 	StartReporterDaemonTaskLoop(
 		c,
 		ctx,
@@ -220,5 +223,6 @@ func StartReporterDaemonTaskLoop(
 
 func (c *Client) checkReporter(ctx context.Context) bool {
 	_, err := c.ReporterClient.SelectorReporter(ctx, &reportertypes.QuerySelectorReporterRequest{SelectorAddress: c.accAddr.String()})
+	c.logger.Info("checking reporter", "error", err)
 	return err == nil
 }
