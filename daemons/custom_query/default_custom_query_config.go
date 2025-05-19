@@ -79,18 +79,20 @@ func GenerateDefaultConfigTomlString() bytes.Buffer {
 
 	return configToml
 }
-func WriteDefaultConfigToml(homeDir string) {
+
+func WriteDefaultConfigToml(homeDir, localDir, file string) {
 	// Write file into config folder if file does not exist.
-	configFilePath := getCustomQueryConfigFilePath(homeDir)
+	configFilePath := getCustomQueryConfigFilePath(homeDir, localDir, file)
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		buffer := GenerateDefaultConfigTomlString()
 		tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0o644)
 	}
 }
-func getCustomQueryConfigFilePath(homeDir string) string {
+
+func getCustomQueryConfigFilePath(homeDir, localDir, file string) string {
 	return filepath.Join(
 		homeDir,
-		"config",
-		"custom_query_config.toml",
+		localDir,
+		file,
 	)
 }

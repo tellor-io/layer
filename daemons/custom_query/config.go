@@ -45,11 +45,10 @@ type BuiltEndpoint struct {
 	Headers      map[string]string
 }
 
-func BuildQueryEndpoints(configPath string) (map[string]QueryConfig, error) {
+func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig, error) {
 	// Read the TOML configuration file
-	// TODO: move the config file to a more appropriate location
 	var config Config
-	tomlFile, err := os.ReadFile(getCustomQueryConfigFilePath(configPath))
+	tomlFile, err := os.ReadFile(getCustomQueryConfigFilePath(homeDir, localDir, file))
 	if err != nil {
 		panic(err)
 	}

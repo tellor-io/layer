@@ -2,7 +2,6 @@ package customquery
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -64,14 +63,11 @@ func TestProcessApiKeys(t *testing.T) {
 }
 
 func TestBuildQueryEndpoints(t *testing.T) {
-
 	os.Setenv("ETHERSCAN_API_KEY", "testetherscankey123")
 	defer os.Unsetenv("ETHERSCAN_API_KEY")
+	pwd, _ := os.Getwd()
 
-	testDataDir := filepath.Join("testdata")
-	configPath := filepath.Join(testDataDir, "test_config.toml")
-
-	queryMap, err := BuildQueryEndpoints(configPath)
+	queryMap, err := BuildQueryEndpoints(pwd, "testdata", "test_config.toml")
 	require.NoError(t, err)
 	require.Equal(t, len(queryMap), 2)
 
@@ -108,6 +104,7 @@ func TestBuildQueryEndpoints(t *testing.T) {
 }
 
 func TestBuildQueryEndpointsErrors(t *testing.T) {
+	pwd, _ := os.Getwd()
 	testCases := []struct {
 		name        string
 		configFile  string
@@ -127,14 +124,12 @@ func TestBuildQueryEndpointsErrors(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			configPath := filepath.Join("testdata", tc.configFile)
-			_, err := BuildQueryEndpoints(configPath)
+			_, err := BuildQueryEndpoints(pwd, "testdata", tc.configFile)
 			if tc.expectError {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
 			}
-
 		})
 	}
 }

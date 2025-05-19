@@ -31,7 +31,7 @@ var rootCmd = &cobra.Command{
 		logLevelstr := viper.GetString(flags.FlagLogLevel)
 		configs.WriteDefaultPricefeedExchangeToml(homePath)
 		configs.WriteDefaultMarketParamsToml(homePath)
-		customquery.WriteDefaultConfigToml(homePath)
+		customquery.WriteDefaultConfigToml(homePath, "config", "custom_query_config.toml")
 		loglevel, err := zerolog.ParseLevel(logLevelstr)
 		if err != nil {
 			fmt.Printf("Error parsing log level: %v\n", err)
