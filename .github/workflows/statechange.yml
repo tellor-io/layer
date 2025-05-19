@@ -4,6 +4,7 @@ on:
     types: [opened, labeled, unlabeled, synchronize]
     paths-ignore:
       - 'daemons/**'
+      - '.github/**'
 jobs:
   label:
     runs-on: ubuntu-latest

@@ -2,6 +2,9 @@ name: End to End Tests
 
 on:
   pull_request:
+    paths-ignore:
+      - 'daemons/**'
+      - '.github/**'
 
 env:
   TAR_PATH: heighliner.tar
@@ -12,25 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  path-filter:
-    runs-on: ubuntu-latest
-    outputs:
-      should_run: ${{ steps.filter.outputs.should_run }}
-    steps:
-      - uses: actions/checkout@v4
-      # https://github.com/dorny/paths-filter
-      - uses: dorny/paths-filter@v2
-        id: filter
-        with:
-          filters: |
-            should_run:
-              - '**'
-              - '!daemons/**'
-              - '!.github/**'
 
   build-primary:
-    needs: path-filter
-    if: needs.path-filter.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -59,8 +45,7 @@ jobs:
   # Second job: Build the IBC image, depends on the primary image job
   build-ibc:
     runs-on: ubuntu-latest
-    needs: [build-primary, path-filter]
-    if: needs.path-filter.outputs.should_run == 'true'
+    needs: build-primary
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -93,8 +78,9 @@ jobs:
   # Prepare job (depends on both build jobs)
   prepare:
     runs-on: ubuntu-latest
-    needs: [build-primary, build-ibc, path-filter]
-    if: needs.path-filter.outputs.should_run == 'true'
+    needs: 
+      - build-primary
+      - build-ibc
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -115,8 +101,8 @@ jobs:
   # Test job (depends on prepare, which in turn depends on both build jobs)
   test:
     runs-on: ubuntu-latest
-    needs: [prepare, path-filter]
-    if: needs.path-filter.outputs.should_run == 'true'
+    needs:
+      - prepare
     strategy:
       matrix:
         test: ${{ fromJson(needs.prepare.outputs.matrix) }}
