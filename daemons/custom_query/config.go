@@ -50,12 +50,12 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 	var config Config
 	tomlFile, err := os.ReadFile(getCustomQueryConfigFilePath(homeDir, localDir, file))
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("error reading toml file: %w", err)
 	}
 
 	if err = toml.Unmarshal(tomlFile, &config); err != nil {
 		fmt.Println("Error unmarshalling toml file", err.Error())
-		panic(err)
+		return nil, fmt.Errorf("error unmarshalling toml file: %w", err)
 	}
 
 	// loop through the queries and create a map of query ID to query config

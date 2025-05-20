@@ -83,7 +83,12 @@ func GenerateDefaultConfigTomlString() bytes.Buffer {
 func WriteDefaultConfigToml(homeDir, localDir, file string) {
 	// Write file into config folder if file does not exist.
 	configFilePath := getCustomQueryConfigFilePath(homeDir, localDir, file)
-	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
+	_, err := os.Stat(configFilePath)
+	if err != nil {
+		// if the file does not exist, create it
+		if !os.IsNotExist(err) {
+			panic(fmt.Sprintf("Error checking file: %v", err))
+		}
 		buffer := GenerateDefaultConfigTomlString()
 		tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0o644)
 	}
