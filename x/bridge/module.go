@@ -149,7 +149,7 @@ func (AppModule) ConsensusVersion() uint64 { return 3 }
 // EndBlock contains the logic that is automatically triggered at the end of each block
 func (am AppModule) EndBlock(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
-	am.keeper.Logger(ctx).Info("Start time bridge module end block: ", time.Now().UnixMilli())
+	am.keeper.Logger(ctx).Info("Start time bridge module end block: ", "time", time.Now().UnixMilli())
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// todo: handle genesis state better?
 	if sdkCtx.BlockHeight() == 1 {

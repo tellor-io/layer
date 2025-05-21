@@ -844,7 +844,7 @@ func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 		}
 		snapshotlimit.Limit--
 	}
-	k.Logger(ctx).Info("End time bridge module end block: ", time.Now().UnixMilli())
+	k.Logger(ctx).Info("End time bridge module end block: ", "time", time.Now().UnixMilli())
 	return nil
 }
 

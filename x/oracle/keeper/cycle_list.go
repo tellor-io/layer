@@ -26,7 +26,7 @@ func (k Keeper) GetCyclelist(ctx context.Context) ([][]byte, error) {
 // rotation of the cycle list (called in EndBlocker)
 func (k Keeper) RotateQueries(ctx context.Context) error {
 	defer func() {
-		k.Logger(ctx).Info("End time oracle module end block: ", time.Now().UnixMilli())
+		k.Logger(ctx).Info("End time oracle module end block: ", "time", time.Now().UnixMilli())
 	}()
 	// only rotate if current query is expired
 	// get current query

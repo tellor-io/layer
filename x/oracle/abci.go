@@ -13,7 +13,7 @@ import (
 
 func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
-	k.Logger(ctx).Info("Start time oracle module end block: ", time.Now().UnixMilli())
+	k.Logger(ctx).Info("Start time oracle module end block: ", "time", time.Now().UnixMilli())
 	// Rotate through the cycle list and set the current query index
 	if err := k.SetAggregatedReport(ctx); err != nil {
 		return err
