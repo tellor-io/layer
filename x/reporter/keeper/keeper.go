@@ -177,6 +177,7 @@ func (k Keeper) TrackStakeChange(ctx context.Context) error {
 		return err
 	}
 	if sdkctx.BlockTime().Before(*maxStake.Expiration) {
+		k.Logger().Info(fmt.Sprintf("End time reporter module end block: %d", time.Now().UnixMilli()))
 		return nil
 	}
 	// reset expiration
