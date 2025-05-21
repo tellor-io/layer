@@ -2,6 +2,7 @@ package mint
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/tellor-io/layer/x/mint/keeper"
@@ -15,7 +16,7 @@ import (
 // the block provision for the current block.
 func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
-	k.Logger(ctx).Info("Start time mint module begin block: ", "time", time.Now().UnixMilli())
+	k.Logger(ctx).Info(fmt.Sprintf("Start time mint module begin block: %d", time.Now().UnixMilli()))
 	minter, err := k.Minter.Get(ctx)
 	if err != nil {
 		return err
@@ -66,6 +67,6 @@ func SetPreviousBlockTime(ctx context.Context, k keeper.Keeper, blockTime time.T
 	if err != nil {
 		return err
 	}
-	k.Logger(ctx).Info("End time mint module begin block: ", "time", time.Now().UnixMilli())
+	k.Logger(ctx).Info(fmt.Sprintf("End time mint module begin block: %d", time.Now().UnixMilli()))
 	return nil
 }

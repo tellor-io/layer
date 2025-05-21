@@ -154,7 +154,7 @@ func (am AppModule) BeginBlock(_ context.Context) error {
 // The end block implementation is optional.
 func (am AppModule) EndBlock(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
-	am.keeper.Logger().Info("Start time reporter module end block: ", "time", time.Now().UnixMilli())
+	am.keeper.Logger().Info(fmt.Sprintf("Start time reporter module end block: %d", time.Now().UnixMilli()))
 	return am.keeper.TrackStakeChange(ctx)
 }
 

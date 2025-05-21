@@ -193,7 +193,7 @@ func (k Keeper) TrackStakeChange(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	k.Logger().Info("End time reporter module end block: ", "time", time.Now().UnixMilli())
+	k.Logger().Info(fmt.Sprintf("End time reporter module end block: %d", time.Now().UnixMilli()))
 	return nil
 }
 
