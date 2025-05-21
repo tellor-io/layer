@@ -1,5 +1,9 @@
 project_name: reporterd
 
+git:
+  tag_templates:
+    - "reporterd/v{{.Version}}"
+
 builds:
   - id: reporterd
     dir: .
