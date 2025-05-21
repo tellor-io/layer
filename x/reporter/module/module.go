@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	modulev1 "github.com/tellor-io/layer/api/layer/reporter/module"
@@ -153,6 +154,7 @@ func (am AppModule) BeginBlock(_ context.Context) error {
 // The end block implementation is optional.
 func (am AppModule) EndBlock(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
+	am.keeper.Logger().Info("Start time reporter module end block: ", time.Now().UnixMilli())
 	return am.keeper.TrackStakeChange(ctx)
 }
 

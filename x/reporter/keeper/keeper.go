@@ -189,7 +189,12 @@ func (k Keeper) TrackStakeChange(ctx context.Context) error {
 
 	maxStake.Expiration = &newExpiration
 	maxStake.Amount = total
-	return k.Tracker.Set(ctx, maxStake)
+	err = k.Tracker.Set(ctx, maxStake)
+	if err != nil {
+		return err
+	}
+	k.Logger().Info("End time reporter module end block: ", time.Now().UnixMilli())
+	return nil
 }
 
 func CalculateRewardAmount(reporterPower, totalPower uint64, reward math.Int) math.LegacyDec {

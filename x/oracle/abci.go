@@ -2,6 +2,7 @@ package oracle
 
 import (
 	"context"
+	"time"
 
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -12,6 +13,7 @@ import (
 
 func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
+	k.Logger(ctx).Info("Start time oracle module end block: ", time.Now().UnixMilli())
 	// Rotate through the cycle list and set the current query index
 	if err := k.SetAggregatedReport(ctx); err != nil {
 		return err

@@ -2,6 +2,7 @@ package dispute
 
 import (
 	"context"
+	"time"
 
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -12,6 +13,7 @@ import (
 
 func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyBeginBlocker)
+	k.Logger(ctx).Info("Start time dispute module begin block: ", time.Now().UnixMilli())
 	err := CheckOpenDisputesForExpiration(ctx, k)
 	if err != nil {
 		return err
@@ -22,6 +24,7 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 // SetBlockInfo logic should be in EndBlocker so that BlockInfo records the correct values after all delegations and tip additions for the block have been processed
 func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
+	k.Logger(ctx).Info("Start time dispute module end block: ", time.Now().UnixMilli())
 	// check if a dispute has been opened at the current block height
 	iter, err := k.Disputes.Indexes.OpenDisputes.MatchExact(ctx, true)
 	if err != nil {
@@ -46,6 +49,7 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 			k.Logger(ctx).Info("FOUND NEW OPEN DISPUTE AND SET BLOCK INFO")
 		}
 	}
+	k.Logger(ctx).Info("End time dispute module end block: ", time.Now().UnixMilli())
 	return nil
 }
 
@@ -118,5 +122,6 @@ func CheckClosedDisputesForExecution(ctx context.Context, k keeper.Keeper) error
 			}
 		}
 	}
+	k.Logger(ctx).Info("End time dispute module begin block: ", time.Now().UnixMilli())
 	return nil
 }
