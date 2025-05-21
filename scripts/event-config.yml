@@ -1,0 +1,6 @@
+event_types:
+  - alert_name: "rotate_cyclelist"
+    alert_type: "rotating-cyclelist-with-next-query.query_id EXISTS"
+  - alert_name: "tip_added"
+    alert_type: "tip_added.query_id EXISTS" 
+discord_webhook_url: "YOUR_DISCORD_WEBHOOK_URL" 
