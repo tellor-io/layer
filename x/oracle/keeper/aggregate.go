@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -158,6 +159,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, query
 			sdk.NewAttribute("query_id", hex.EncodeToString(report.QueryId)),
 			sdk.NewAttribute("query_data", hex.EncodeToString(queryData)),
 			sdk.NewAttribute("value", report.AggregateValue),
+			sdk.NewAttribute("aggregate_power", strconv.FormatUint(report.AggregatePower, 10)),
 			sdk.NewAttribute("micro_report_height", fmt.Sprintf("%d", report.MicroHeight)),
 		),
 	})
