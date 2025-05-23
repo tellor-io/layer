@@ -22,7 +22,7 @@ import (
 
 const (
 	RpcUrl              = "https://node-palmito.tellorlayer.com/rpc"
-	DefaultConfigPath   = "scripts/event-config.yml"
+	DefaultConfigPath   = "scripts/monitors/event-config.yml"
 	AlertCooldownPeriod = 2 * time.Hour
 	AlertWindowPeriod   = 10 * time.Minute
 	MaxAlertsInWindow   = 10
@@ -32,7 +32,7 @@ const (
 var (
 	eventConfig                  EventConfig
 	configMutex                  sync.RWMutex
-	configFilePath               = "scripts/event-config.yml"
+	configFilePath               = "scripts/monitors/event-config.yml"
 	discordNotifier              *utils.DiscordNotifier
 	Current_Total_Reporter_Power uint64
 	reporterPowerMutex           sync.RWMutex
