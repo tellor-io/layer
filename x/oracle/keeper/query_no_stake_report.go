@@ -21,7 +21,6 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	q.keeper.Logger(ctx).Info("GetReportersNoStakeReports req.Reporter: ", req.Reporter)
 	reporter, err := sdk.AccAddressFromBech32(req.Reporter)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid reporter address")
