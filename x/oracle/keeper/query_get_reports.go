@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/collections/indexes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -74,35 +73,47 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 
 	reporter := sdk.MustAccAddressFromBech32(req.Reporter)
 
+	pageRes := &query.PageResponse{
+		NextKey: nil,
+		Total:   uint64(0),
+	}
+
 	// Retrieve the stored reports for the current block height.
 	iter, err := k.keeper.Reports.Indexes.Reporter.MatchExact(ctx, reporter.Bytes())
 	if err != nil {
 		return nil, err
 	}
 
-	reports, err := indexes.CollectValues(ctx, k.keeper.Reports, iter)
-	if err != nil {
-		return nil, err
-	}
-
-	microreports := make([]types.MicroReportStrings, 0)
-	for _, rep := range reports {
-		microReport := types.MicroReportStrings{
-			Reporter:        rep.Reporter,
-			Power:           rep.Power,
-			QueryType:       rep.QueryType,
-			QueryId:         hex.EncodeToString(rep.QueryId),
-			AggregateMethod: rep.AggregateMethod,
-			Value:           rep.Value,
-			Timestamp:       uint64(rep.Timestamp.UnixMilli()),
-			Cyclelist:       rep.Cyclelist,
-			BlockNumber:     rep.BlockNumber,
-			MetaId:          rep.MetaId,
+	reports := make([]types.MicroReportStrings, 0)
+	for ; iter.Valid(); iter.Next() {
+		pk, err := iter.PrimaryKey()
+		if err != nil {
+			return nil, err
 		}
-		microreports = append(microreports, microReport)
+		report, err := k.keeper.Reports.Get(ctx, pk)
+		if err != nil {
+			return nil, err
+		}
+		stringReport := types.MicroReportStrings{
+			Reporter:        report.Reporter,
+			Power:           report.Power,
+			QueryType:       report.QueryType,
+			QueryId:         hex.EncodeToString(report.QueryId),
+			AggregateMethod: report.AggregateMethod,
+			Value:           report.Value,
+			Timestamp:       uint64(report.Timestamp.UnixMilli()),
+			Cyclelist:       report.Cyclelist,
+			BlockNumber:     report.BlockNumber,
+			MetaId:          report.MetaId,
+		}
+		reports = append(reports, stringReport)
+		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
+			break
+		}
 	}
+	pageRes.Total = uint64(len(reports))
 
-	return &types.QueryMicroReportsResponse{MicroReports: microreports}, nil
+	return &types.QueryMicroReportsResponse{MicroReports: reports, Pagination: pageRes}, nil
 }
 
 func (k Querier) GetReportsbyReporterQid(ctx context.Context, req *types.QueryGetReportsbyReporterQidRequest) (*types.QueryMicroReportsResponse, error) {
