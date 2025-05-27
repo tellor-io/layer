@@ -601,10 +601,13 @@ func updateTotalReporterPower(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			resp, err := http.Get(RpcUrl + "/validators")
+			resp, err := http.Get(PrimaryRpcUrl + "/validators")
 			if err != nil {
-				fmt.Printf("Error querying validators: %v\n", err)
-				continue
+				resp, err = http.Get(FallbackRpcUrl + "/validators")
+				if err != nil {
+					fmt.Printf("Error querying validators: %v\n", err)
+					continue
+				}
 			}
 
 			var validatorResp ValidatorResponse
