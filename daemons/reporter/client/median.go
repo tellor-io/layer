@@ -1,13 +1,16 @@
 package client
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"strings"
 	"time"
 
+	customquery "github.com/tellor-io/layer/daemons/custom_query"
 	"github.com/tellor-io/layer/daemons/lib/prices"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
+	"github.com/tellor-io/layer/utils"
 )
 
 func (c *Client) median(querydata []byte) (string, error) {
@@ -28,5 +31,16 @@ func (c *Client) median(querydata []byte) (string, error) {
 			return value, nil
 		}
 	}
-	return "", fmt.Errorf("no market param found for query data: %s", querydatastr)
+	// if can't find it here then check custom query config
+	queryId := utils.QueryIDFromData(querydata)
+	queryIdStr := hex.EncodeToString(queryId)
+	queryConfig, ok := c.Custom_query[queryIdStr]
+	if !ok {
+		return "", fmt.Errorf("no config found for query data: %s", querydatastr)
+	}
+	results, err := customquery.FetchPrice(context.Background(), queryConfig)
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch price: %w", err)
+	}
+	return results.EncodedValue, nil
 }

@@ -45,6 +45,7 @@ type (
 		TotalTips          collections.Map[uint64, math.Int]                                                                          // key: blockNumber
 		Nonces             collections.Map[[]byte, uint64]                                                                            // key: queryId
 		Reports            *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, types.ReportsIndex] // key: queryId, reporter, queryMeta.id
+		NoStakeReports     *collections.IndexedMap[collections.Pair[[]byte, uint64], types.NoStakeMicroReport, types.ReporterIndex]   // key: queryId, timestamp
 		QuerySequencer     collections.Sequence
 		Query              *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, types.QueryMetaIndex]  // key: queryId, id
 		Aggregates         *collections.IndexedMap[collections.Pair[[]byte, uint64], types.Aggregate, types.AggregatesIndex] // key: queryId, timestamp
@@ -61,6 +62,8 @@ type (
 		ValuesWeightedMode collections.Map[collections.Pair[uint64, string], uint64] // key: queryMeta.Id, valueHexstring  value: total power of reporters that submitted the value
 		// storage for bridge deposit reports queue
 		BridgeDepositQueue collections.Map[collections.Pair[uint64, uint64], []byte] // key: aggregate timestamp, queryMetaId, value: queryData
+		// storage for no stake report queryId / queryData
+		NoStakeReportedQueries collections.Map[[]byte, []byte] // key: queryId, value: queryData
 	}
 )
 
@@ -120,6 +123,14 @@ func NewKeeper(
 			codec.CollValue[types.MicroReport](cdc),
 			types.NewReportsIndex(sb),
 		),
+		// NoStakeReports maps the queryId:reporter:timestamp to the microReport
+		NoStakeReports: collections.NewIndexedMap(sb,
+			types.NoStakeReportsPrefix,
+			"no_stake_reports",
+			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+			codec.CollValue[types.NoStakeMicroReport](cdc),
+			types.NewReporterIndex(sb),
+		),
 		// QuerySequencer is an id generator for queryMeta that increments with each new query to distinguish between expired queries and new queries
 		QuerySequencer: collections.NewSequence(sb, types.QuerySeqPrefix, "sequencer"),
 		// Query maps the queryId:id to the queryMeta (holds information about the query and the tip, expiration time, tip amount, query spec reporting window etc.)
@@ -152,6 +163,8 @@ func NewKeeper(
 			"bridge_deposit_queue",
 			collections.PairKeyCodec(collections.Uint64Key, collections.Uint64Key),
 			collections.BytesValue),
+		// NoStakeReportedQueries maps the queryId to the queryData
+		NoStakeReportedQueries: collections.NewMap(sb, types.NoStakeReportedQueriesPrefix, "no_stake_reported_queries", collections.BytesKey, collections.BytesValue),
 	}
 
 	schema, err := sb.Build()
@@ -354,4 +367,36 @@ func (k Keeper) DecodeBridgeDeposit(ctx context.Context, queryData []byte) (uint
 	depositId := queryDataArgsDecoded[1].(*big.Int).Uint64()
 
 	return depositId, nil
+}
+
+func (k Keeper) GetLastReportedAtTimestamp(ctx context.Context, reporter []byte) (uint64, error) {
+	// get the last block they reported at
+	reportedAtBlock, err := k.reporterKeeper.GetLastReportedAtBlock(ctx, reporter)
+	if err != nil {
+		return 0, errors.New("error getting last reported block: " + err.Error())
+	}
+
+	// get the timestamp of the report at that block
+	rng := collections.NewPrefixUntilPairRange[uint64, collections.Pair[[]byte, uint64]](reportedAtBlock).Descending()
+	iter, err := k.Aggregates.Indexes.BlockHeight.Iterate(ctx, rng)
+	if err != nil {
+		return 0, errors.New("error iterating over aggregate reports: " + err.Error())
+	}
+	defer iter.Close()
+
+	// pull timestamp from the aggregate report key at given height
+	var timestamp uint64
+	if iter.Valid() {
+		key, err := iter.PrimaryKey()
+		if err != nil {
+			return 0, errors.New("error getting primary key: " + err.Error())
+		}
+		timestamp = key.K2()
+	}
+
+	if timestamp == 0 && reportedAtBlock != 0 {
+		return 0, errors.New("no reports found")
+	}
+
+	return timestamp, nil
 }

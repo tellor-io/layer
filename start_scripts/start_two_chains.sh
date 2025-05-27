@@ -9,7 +9,12 @@ set -e
 KEYRING_BACKEND="test"
 PASSWORD="password"
 KEY_NAME="alice"
-CHAIN_ID="layertest-3"
+STAKE_AMOUNT_1="1000000000000loya"
+# STAKE_AMOUNT_1="50000000loya"
+CHAIN_ID="layertest-4"
+PRIVATE_KEY_1="60d7de76caa85724ec588a5cd88a2afb77729658bcb783938109d2162779b225" # alice
+PRIVATE_KEY_2="e40bf75172f36cb722a6db1042999f7e7b78b92b0d181cdd3a2dfb323595304a" # bill
+PRIVATE_KEY_3="a6f6364de568b6a3ecfbf7d494852fc8114d52ef9a94faac987858efec3b1124" # charlie
 
 
 export LAYERD_NODE_HOME_1="$HOME/.layer/$KEY_NAME"
@@ -36,16 +41,14 @@ echo "bill..."
 # Add a validator account alice
 echo "Adding validator accounts..."
 echo "$KEY_NAME..."
-./layerd keys add $KEY_NAME --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
+# ./layerd keys add $KEY_NAME --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
+./layerd keys import-hex $KEY_NAME $PRIVATE_KEY_1 --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
 echo "bill..."
-./layerd keys add bill --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
+# ./layerd keys add bill --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
+./layerd keys import-hex bill $PRIVATE_KEY_2 --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
 echo "charlie..."
-yes | ./layerd keys add charlie --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME > ~/Desktop/charlie_key_info.txt 2>&1
-
-# # Extract the mnemonic from the key_info file
-# echo "Extracting charlie's mnemonic from key_info file..."
-# grep -A 24 'It is the only way to recover your account if you ever forget your password.' ~/Desktop/charlie_key_info.txt | tail -n 1 > ~/Desktop/charlie_mnemonic.txt
-
+# ./layerd keys add charlie --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME 
+./layerd keys import-hex charlie $PRIVATE_KEY_3 --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME 
 
 # Update vote_extensions_enable_height in genesis.json
 echo "Updating vote_extensions_enable_height in genesis.json..."
@@ -76,7 +79,7 @@ echo "charlie..."
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx $KEY_NAME..."
-./layerd genesis gentx $KEY_NAME 1000000000000loya --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1 --keyring-dir $LAYERD_NODE_HOME_1
+./layerd genesis gentx $KEY_NAME $STAKE_AMOUNT_1 --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1 --keyring-dir $LAYERD_NODE_HOME_1
 
 # Add the transactions to the genesis block:q
 echo "Collecting gentxs..."
@@ -94,4 +97,5 @@ sed -i '' "s/keyring-backend = \"os\"/keyring-backend = \"$KEYRING_BACKEND\"/" ~
 
 
 echo "Start chain..."
+# echo "password" |./layerd start --home $LAYERD_NODE_HOME_1 --api.enable --api.swagger --keyring-backend $KEYRING_BACKEND --key-name $KEY_NAME
 ./layerd start --home $LAYERD_NODE_HOME_1 --api.enable --api.swagger --keyring-backend $KEYRING_BACKEND --key-name $KEY_NAME
