@@ -1043,7 +1043,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.NoError(err)
 
 	// get report to check reporter power for second report
-	res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr)
+	res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "2")
 	require.NoError(err)
 	require.NoError(json.Unmarshal(res, &reports))
 	fmt.Println("reports: ", reports)
@@ -2351,7 +2351,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	// verify reports
 	userReports = make([]UserReports, 4)
 	for i := range reporters {
-		res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
+		res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr, "--page-limit", "2")
 		require.NoError(err)
 		var userReport2 e2e.QueryMicroReportsResponse
 		require.NoError(json.Unmarshal(res, &userReport2))
