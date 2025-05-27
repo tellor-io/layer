@@ -30,19 +30,19 @@ func (n *DiscordNotifier) SendAlert(message string) error {
 
 	jsonData, err := json.Marshal(payload)
 	if err != nil {
-		return fmt.Errorf("error marshaling discord message: %v", err)
+		return fmt.Errorf("error marshaling discord message: %w", err)
 	}
 
 	req, err := http.NewRequest("POST", n.webhookURL, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return fmt.Errorf("error creating request: %v", err)
+		return fmt.Errorf("error creating request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := n.client.Do(req)
 	if err != nil {
-		return fmt.Errorf("error sending discord message: %v", err)
+		return fmt.Errorf("error sending discord message: %w", err)
 	}
 	defer resp.Body.Close()
 

@@ -15,10 +15,9 @@ import (
 	"syscall"
 	"time"
 
-	"gopkg.in/yaml.v3"
-
 	"github.com/gorilla/websocket"
 	"github.com/tellor-io/layer/utils"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -35,7 +34,6 @@ var (
 	eventConfig                  EventConfig
 	configMutex                  sync.RWMutex
 	configFilePath               = "scripts/monitors/event-config.yml"
-	discordNotifier              *utils.DiscordNotifier
 	Current_Total_Reporter_Power uint64
 	reporterPowerMutex           sync.RWMutex
 	// Rate limiting variables
@@ -215,7 +213,7 @@ func (w *WebSocketClient) connect() error {
 	conn, _, err := dialer.Dial(w.url, nil)
 	if err != nil {
 		if strings.EqualFold(w.url, FallbackRpcUrl) {
-			return fmt.Errorf("failed to connect: %v", err)
+			return fmt.Errorf("failed to connect: %w", err)
 		} else {
 			w.url = FallbackRpcUrl
 			return w.connect()
@@ -223,17 +221,26 @@ func (w *WebSocketClient) connect() error {
 	}
 
 	// Set read deadline to detect stale connections
-	conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	err = conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+	if err != nil {
+		return fmt.Errorf("failed to set read deadline: %w", err)
+	}
 
 	// Enable ping/pong
 	conn.SetPingHandler(func(string) error {
-		conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		err = conn.SetReadDeadline(time.Now().Add(60 * time.Second))
+		if err != nil {
+			return fmt.Errorf("failed to set read deadline: %w", err)
+		}
 		return nil
 	})
 
 	w.conn = conn
 
-	subscribeToEvents(w.conn, eventConfig.EventTypes)
+	err = subscribeToEvents(w.conn, eventConfig.EventTypes)
+	if err != nil {
+		return fmt.Errorf("failed to subscribe to events: %w", err)
+	}
 	return nil
 }
 
@@ -330,12 +337,12 @@ func (w *WebSocketClient) healthCheck(ctx context.Context) {
 func loadConfig() error {
 	data, err := os.ReadFile(configFilePath)
 	if err != nil {
-		return fmt.Errorf("error reading config file: %v", err)
+		return fmt.Errorf("error reading config file: %w", err)
 	}
 
 	var newConfig EventConfig
 	if err := yaml.Unmarshal(data, &newConfig); err != nil {
-		return fmt.Errorf("error parsing config file: %v", err)
+		return fmt.Errorf("error parsing config file: %w", err)
 	}
 
 	// Initialize the event type map
@@ -368,7 +375,7 @@ func subscribeToEvents(client *websocket.Conn, eventTypes []ConfigType) error {
 	}
 	req, err := json.Marshal(&subscribeReq)
 	if err != nil {
-		fmt.Printf("Error marshalling request message: %v\n", err)
+		fmt.Printf("Error marshaling request message: %v\n", err)
 		panic(err)
 	}
 	err = client.WriteMessage(websocket.TextMessage, req)
@@ -490,7 +497,7 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 	go client.readMessages(ctx, func(message []byte) error {
 		var data WebsocketReponse
 		if err := json.Unmarshal(message, &data); err != nil {
-			return fmt.Errorf("unable to unmarshal message: %v", err)
+			return fmt.Errorf("unable to unmarshal message: %w", err)
 		}
 
 		height := data.Result.Data.Value.Block.Header.Height
@@ -520,7 +527,7 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 
 	req, err := json.Marshal(&subscribeReq)
 	if err != nil {
-		log.Printf("Error marshalling request: %v", err)
+		log.Printf("Error marshaling request: %v", err)
 		return
 	}
 
@@ -528,6 +535,7 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 		log.Printf("Error sending subscription request: %v", err)
 		return
 	}
+	go startConfigWatcher(ctx, client.conn)
 
 	// Wait for context cancellation
 	<-ctx.Done()
