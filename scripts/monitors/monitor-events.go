@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -21,7 +22,8 @@ import (
 )
 
 const (
-	RpcUrl              = "https://node-palmito.tellorlayer.com/rpc"
+	PrimaryRpcUrl       = "https://node-palmito.tellorlayer.com/rpc"
+	FallbackRpcUrl      = "https://rpc.tellorlayer.com"
 	DefaultConfigPath   = "scripts/monitors/event-config.yml"
 	AlertCooldownPeriod = 2 * time.Hour
 	AlertWindowPeriod   = 10 * time.Minute
@@ -212,7 +214,12 @@ func (w *WebSocketClient) connect() error {
 
 	conn, _, err := dialer.Dial(w.url, nil)
 	if err != nil {
-		return fmt.Errorf("failed to connect: %v", err)
+		if strings.EqualFold(w.url, FallbackRpcUrl) {
+			return fmt.Errorf("failed to connect: %v", err)
+		} else {
+			w.url = FallbackRpcUrl
+			return w.connect()
+		}
 	}
 
 	// Set read deadline to detect stale connections
