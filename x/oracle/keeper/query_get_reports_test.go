@@ -2,8 +2,18 @@ package keeper_test
 
 import (
 	"encoding/hex"
+	"time"
 
+	"github.com/stretchr/testify/mock"
+	"github.com/tellor-io/layer/testutil/sample"
+	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
+
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 func (s *KeeperTestSuite) TestGetReportsByQueryId() {
@@ -30,7 +40,7 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 
 	s.Equal(expectedReports, report.MicroReports)
 
-	report2, err := s.queryClient.GetReportsbyReporter(s.ctx, &types.QueryGetReportsbyReporterRequest{Reporter: addr.String()})
+	report2, err := s.queryClient.GetReportsbyReporter(s.ctx, &types.QueryGetReportsbyReporterRequest{Reporter: addr.String(), Pagination: &query.PageRequest{Limit: 1}})
 	s.NoError(err)
 	s.Equal(expectedReports[0], report2.MicroReports[0])
 
@@ -41,4 +51,66 @@ func (s *KeeperTestSuite) TestGetReportsByQueryId() {
 	report, err = s.queryClient.GetReportsbyQid(s.ctx, &types.QueryGetReportsbyQidRequest{QueryId: hex.EncodeToString(queryIdStr)})
 	s.NoError(err)
 	s.Equal(expectedReports, report.MicroReports)
+}
+
+func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
+	require := s.Require()
+	k := s.oracleKeeper
+	rk := s.reporterKeeper
+	ctx := s.ctx.WithBlockHeight(18).WithBlockTime(time.Now()).WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+
+	addr := sample.AccAddressBytes()
+	qDataBz, err := utils.QueryBytesFromString(qData)
+	require.NoError(err)
+	queryId := utils.QueryIDFromData(qDataBz)
+
+	err = k.QueryDataLimit.Set(ctx, types.QueryDataLimit{Limit: types.InitialQueryDataLimit()})
+	require.NoError(err)
+	params, err := k.Params.Get(ctx)
+	require.NoError(err)
+	minStakeAmt := params.MinStakeAmount
+
+	for i := 1; i < 6; i++ {
+		query := types.QueryMeta{
+			Id:                      uint64(i),
+			Amount:                  math.NewInt(100_000),
+			Expiration:              20,
+			RegistrySpecBlockWindow: 10,
+			HasRevealedReports:      false,
+			QueryData:               qDataBz,
+			QueryType:               "SpotPrice",
+			CycleList:               true,
+		}
+		err = k.Query.Set(ctx, collections.Join(queryId, query.Id), query)
+		require.NoError(err)
+
+		rk.On("ReporterStake", mock.Anything, addr, queryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
+		_ = s.registryKeeper.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil).Once()
+		submitreq := types.MsgSubmitValue{
+			Creator:   addr.String(),
+			QueryData: qDataBz,
+			Value:     value,
+		}
+		res, err := s.msgServer.SubmitValue(ctx, &submitreq)
+		require.NoError(err)
+		require.NotNil(res)
+	}
+
+	// 5 in store, search for 10
+	req := &types.QueryGetReportsbyReporterRequest{Reporter: addr.String(), Pagination: &query.PageRequest{Limit: 10}}
+	report, err := s.queryClient.GetReportsbyReporter(ctx, req)
+	s.NoError(err)
+	s.Equal(5, len(report.MicroReports))
+
+	// 5 in store, search for 2
+	req = &types.QueryGetReportsbyReporterRequest{Reporter: addr.String(), Pagination: &query.PageRequest{Limit: 2}}
+	report, err = s.queryClient.GetReportsbyReporter(ctx, req)
+	s.NoError(err)
+	s.Equal(2, len(report.MicroReports))
+
+	// 5 in store, search for 5
+	req = &types.QueryGetReportsbyReporterRequest{Reporter: addr.String(), Pagination: &query.PageRequest{Limit: 5}}
+	report, err = s.queryClient.GetReportsbyReporter(ctx, req)
+	s.NoError(err)
+	s.Equal(5, len(report.MicroReports))
 }
