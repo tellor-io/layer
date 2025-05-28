@@ -79,17 +79,30 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 	}
 
 	// Retrieve the stored reports for the current block height.
-	iter, err := k.keeper.Reports.Indexes.Reporter.MatchExact(ctx, reporter.Bytes())
-	if err != nil {
-		return nil, err
+	rng := collections.NewPrefixedPairRange[[]byte, collections.Triple[[]byte, []byte, uint64]](reporter.Bytes())
+	if req.Pagination.Reverse {
+		rng.Descending()
+	}
+	tripleKeyCodec := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
+	if len(req.Pagination.Key) > 0 {
+		_, startKey, err := tripleKeyCodec.Decode(req.Pagination.Key)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid pagination key")
+		}
+		rng.StartInclusive(startKey)
 	}
 
+	iter, err := k.keeper.Reports.Indexes.Reporter.Iterate(ctx, rng)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 	reports := make([]types.MicroReportStrings, 0)
 	for ; iter.Valid(); iter.Next() {
 		pk, err := iter.PrimaryKey()
 		if err != nil {
 			return nil, err
 		}
+
 		report, err := k.keeper.Reports.Get(ctx, pk)
 		if err != nil {
 			return nil, err
@@ -107,10 +120,50 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 			MetaId:          report.MetaId,
 		}
 		reports = append(reports, stringReport)
+
 		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
+			buffer := make([]byte, tripleKeyCodec.Size(pk))
+			_, err = tripleKeyCodec.Encode(buffer, pk)
+			if err != nil {
+				return nil, status.Error(codes.Internal, "failed to encode pagination key")
+			}
+			pageRes.NextKey = buffer
 			break
 		}
 	}
+	// // Retrieve the stored reports for the current block height.
+	// iter, err := k.keeper.Reports.Indexes.Reporter.MatchExact(ctx, reporter.Bytes())
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// reports := make([]types.MicroReportStrings, 0)
+	// for ; iter.Valid(); iter.Next() {
+	// 	pk, err := iter.PrimaryKey()
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	report, err := k.keeper.Reports.Get(ctx, pk)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	stringReport := types.MicroReportStrings{
+	// 		Reporter:        report.Reporter,
+	// 		Power:           report.Power,
+	// 		QueryType:       report.QueryType,
+	// 		QueryId:         hex.EncodeToString(report.QueryId),
+	// 		AggregateMethod: report.AggregateMethod,
+	// 		Value:           report.Value,
+	// 		Timestamp:       uint64(report.Timestamp.UnixMilli()),
+	// 		Cyclelist:       report.Cyclelist,
+	// 		BlockNumber:     report.BlockNumber,
+	// 		MetaId:          report.MetaId,
+	// 	}
+	// 	reports = append(reports, stringReport)
+	// 	if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
+	// 		break
+	// 	}
+	// }
 	pageRes.Total = uint64(len(reports))
 
 	return &types.QueryMicroReportsResponse{MicroReports: reports, Pagination: pageRes}, nil

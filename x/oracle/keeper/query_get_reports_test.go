@@ -113,4 +113,11 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	report, err = s.queryClient.GetReportsbyReporter(ctx, req)
 	s.NoError(err)
 	s.Equal(5, len(report.MicroReports))
+
+	// reverse, get most recent
+	req = &types.QueryGetReportsbyReporterRequest{Reporter: addr.String(), Pagination: &query.PageRequest{Limit: 1, Reverse: true}}
+	report, err = s.queryClient.GetReportsbyReporter(ctx, req)
+	s.NoError(err)
+	s.Equal(1, len(report.MicroReports))
+	require.Equal(report.MicroReports[0].MetaId, uint64(5))
 }
