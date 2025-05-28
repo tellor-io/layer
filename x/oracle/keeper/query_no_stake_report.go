@@ -29,9 +29,23 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 		NextKey: nil,
 		Total:   uint64(0),
 	}
-	iter, err := q.keeper.NoStakeReports.Indexes.Reporter.MatchExact(ctx, reporter)
+
+	rng := collections.NewPrefixedPairRange[[]byte, collections.Pair[[]byte, uint64]](reporter.Bytes())
+	if req.Pagination != nil && req.Pagination.Reverse {
+		rng.Descending()
+	}
+	pairKeyCodec := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
+	if req.Pagination != nil && len(req.Pagination.Key) > 0 {
+		_, startKey, err := pairKeyCodec.Decode(req.Pagination.Key)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid pagination key")
+		}
+		rng.StartInclusive(startKey)
+	}
+
+	iter, err := q.keeper.NoStakeReports.Indexes.Reporter.Iterate(ctx, rng)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 	reports := make([]*types.NoStakeMicroReportStrings, 0)
 	for ; iter.Valid(); iter.Next() {
@@ -51,6 +65,12 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 		}
 		reports = append(reports, &stringReport)
 		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
+			buffer := make([]byte, pairKeyCodec.Size(pk))
+			_, err = pairKeyCodec.Encode(buffer, pk)
+			if err != nil {
+				return nil, status.Error(codes.Internal, "failed to encode pagination key")
+			}
+			pageRes.NextKey = buffer
 			break
 		}
 	}
