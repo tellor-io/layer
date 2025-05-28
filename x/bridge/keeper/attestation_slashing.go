@@ -10,6 +10,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
+	layerconfig "github.com/tellor-io/layer/app/config"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
@@ -101,6 +103,7 @@ func (k Keeper) CheckAttestationEvidence(ctx context.Context, request types.MsgS
 }
 
 func (k Keeper) slashValidator(ctx context.Context, operatorAddr types.OperatorAddress) error {
+	k.Logger(ctx).Info("slashValidator", "operatorAddr", operatorAddr.String())
 	// get the validator address
 	validatorAddr := sdk.ValAddress(operatorAddr.OperatorAddress)
 
@@ -115,15 +118,19 @@ func (k Keeper) slashValidator(ctx context.Context, operatorAddr types.OperatorA
 		return err
 	}
 
-	consAddrString, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixConsAddr, consAddr)
+	consAddrString, err := sdk.Bech32ifyAddressBytes(layerconfig.Bech32PrefixConsAddr, consAddr)
 	if err != nil {
 		return err
 	}
 
 	power := validator.ConsensusPower(validator.Tokens)
+	k.Logger(ctx).Info("power", "power", power)
+	k.Logger(ctx).Info("tokens", "tokens", validator.Tokens)
 
-	slashFactor := math.LegacyNewDec(10000) // 10000 = 0.01%
-	slashAmount, err := k.stakingKeeper.SlashWithInfractionReason(ctx, consAddr, 1, power, slashFactor, stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
+	adjustedPower := validator.GetConsensusPower(layertypes.PowerReduction)
+	k.Logger(ctx).Info("adjustedPower", "adjustedPower", adjustedPower)
+	slashFactor := math.LegacyNewDec(1).Quo(math.LegacyNewDec(100))
+	slashAmount, err := k.stakingKeeper.SlashWithInfractionReason(ctx, consAddr, 1, adjustedPower, slashFactor, stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
 	if err != nil {
 		return err
 	}
