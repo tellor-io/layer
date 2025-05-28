@@ -19,6 +19,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/bridge/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
@@ -874,6 +875,20 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 	aggReport, err := k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, uint64(timestamp.UnixMilli()))
 	if err != nil {
 		k.Logger(ctx).Info("Error getting aggregate report by timestamp", "error", err)
+		// if not aggregate isnt found, try looking up NoStakeReport
+		if errors.Is(err, collections.ErrNotFound) {
+			noStakeReport, err := k.oracleKeeper.GetNoStakeReportByQueryIdTimestamp(ctx, queryId, uint64(timestamp.UnixMilli()))
+			if err != nil {
+				k.Logger(ctx).Info("Error getting no stake report by query id and timestamp", "error", err)
+				return err
+			}
+			err = k.CreateNoStakeSnapshot(ctx, noStakeReport, queryId)
+			if err != nil {
+				k.Logger(ctx).Info("Error creating no stake snapshot", "error", err)
+				return err
+			}
+			return nil
+		}
 		return err
 	}
 	// check whether report is flagged as disputed. If so, do not create a snapshot.
@@ -1200,4 +1215,151 @@ func (k Keeper) GetValidatorSetTimestampBefore(ctx context.Context, targetTimest
 // GetAuthority returns the module's authority.
 func (k Keeper) GetAuthority() string {
 	return k.authority
+}
+
+func (k Keeper) CreateNoStakeSnapshot(ctx context.Context, report *oracletypes.NoStakeMicroReport, queryId []byte) error {
+	// get the current validator checkpoint
+	validatorCheckpoint, err := k.GetValidatorCheckpointFromStorage(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting validator checkpoint from storage", "error", err)
+		return err
+	}
+
+	// use current block time for attestationTimestamp
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	attestationTimestamp := sdkCtx.BlockTime()
+
+	// tack reporter address onto the value
+	stringType, err := abi.NewType("string", "", nil)
+	if err != nil {
+		return err
+	}
+	bytesType, err := abi.NewType("bytes", "", nil)
+	if err != nil {
+		return err
+	}
+	arguments := abi.Arguments{
+		{Type: bytesType},
+		{Type: stringType},
+	}
+	valBz, err := hex.DecodeString(report.Value)
+	if err != nil {
+		return err
+	}
+	reporterString := sdk.AccAddress(report.Reporter).String()
+	encodedData, err := arguments.Pack(
+		valBz,
+		reporterString,
+	)
+	if err != nil {
+		return err
+	}
+	snapshotBytes, err := k.EncodeOracleAttestationData(
+		queryId,
+		hex.EncodeToString(encodedData),
+		uint64(report.Timestamp.UnixMilli()),
+		0,
+		0,
+		0,
+		validatorCheckpoint.Checkpoint,
+		uint64(attestationTimestamp.UnixMilli()),
+		0,
+	)
+	if err != nil {
+		k.Logger(ctx).Info("Error encoding oracle attestation data", "error", err)
+		return err
+	}
+
+	// set snapshot by report
+	key := crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(report.Timestamp.UnixMilli())))
+	// check if map for this key exists, otherwise create a new map
+	exists, err := k.AttestSnapshotsByReportMap.Has(ctx, key)
+	if err != nil {
+		k.Logger(ctx).Info("Error checking if attestation snapshots by report map exists", "error", err)
+		return err
+	}
+	if !exists {
+		attestationSnapshots := types.NewAttestationSnapshots()
+		err = k.AttestSnapshotsByReportMap.Set(ctx, key, *attestationSnapshots)
+		if err != nil {
+			k.Logger(ctx).Info("Error setting attestation snapshots by report", "error", err)
+			return err
+		}
+	}
+	attestationSnapshots, err := k.AttestSnapshotsByReportMap.Get(ctx, key)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting attestation snapshots by report", "error", err)
+		return err
+	}
+	// set the snapshot by report
+	attestationSnapshots.SetSnapshot(snapshotBytes)
+	err = k.AttestSnapshotsByReportMap.Set(ctx, key, attestationSnapshots)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting attestation snapshots by report", "error", err)
+		return err
+	}
+
+	// set snapshot to snapshot data map
+	snapshotData := types.AttestationSnapshotData{
+		ValidatorCheckpoint:    validatorCheckpoint.Checkpoint,
+		AttestationTimestamp:   uint64(attestationTimestamp.UnixMilli()),
+		PrevReportTimestamp:    uint64(0),
+		NextReportTimestamp:    uint64(0),
+		QueryId:                queryId,
+		Timestamp:              uint64(report.Timestamp.UnixMilli()),
+		LastConsensusTimestamp: 0,
+	}
+	err = k.AttestSnapshotDataMap.Set(ctx, snapshotBytes, snapshotData)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting attestation snapshot data", "error", err)
+		return err
+	}
+
+	// initialize snapshot to attestations map
+	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting last saved bridge validators", "error", err)
+		return err
+	}
+	oracleAttestations := types.NewOracleAttestations(len(lastSavedBridgeValidators.BridgeValidatorSet))
+	// set the map
+	err = k.SnapshotToAttestationsMap.Set(ctx, snapshotBytes, *oracleAttestations)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting snapshot to attestations map", "error", err)
+		return err
+	}
+
+	// add to attestation requests
+	blockHeight := uint64(sdkCtx.BlockHeight())
+	exists, err = k.AttestRequestsByHeightMap.Has(ctx, blockHeight)
+	if err != nil {
+		k.Logger(ctx).Info("Error checking if attestation requests by height map exists", "error", err)
+		return err
+	}
+	if !exists {
+		attestRequests := types.AttestationRequests{}
+		err = k.AttestRequestsByHeightMap.Set(ctx, blockHeight, attestRequests)
+		if err != nil {
+			k.Logger(ctx).Info("Error setting attestation requests by height", "error", err)
+			return err
+		}
+	}
+	attestRequests, err := k.AttestRequestsByHeightMap.Get(ctx, blockHeight)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting attestation requests by height", "error", err)
+		return err
+	}
+	snapshotLimit, err := k.SnapshotLimit.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting snapshot limit", "error", err)
+		return err
+	}
+	if len(attestRequests.Requests) > int(snapshotLimit.Limit) {
+		return errors.New("too many external requests")
+	}
+	request := types.AttestationRequest{
+		Snapshot: snapshotBytes,
+	}
+	attestRequests.AddRequest(&request)
+	return k.AttestRequestsByHeightMap.Set(ctx, blockHeight, attestRequests)
 }

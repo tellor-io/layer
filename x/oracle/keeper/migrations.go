@@ -1,7 +1,10 @@
 package keeper
 
 import (
-	v3 "github.com/tellor-io/layer/x/oracle/migrations/v3"
+	"path/filepath"
+
+	"github.com/spf13/viper"
+	"github.com/tellor-io/layer/x/oracle/migrations/fork"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -16,15 +19,19 @@ func NewMigrator(keeper Keeper) Migrator {
 	return Migrator{keeper: keeper}
 }
 
-// Migrate2to3 migrates from version 2 to 3.
-func (m Migrator) Migrate2to3(ctx sdk.Context) error {
-	return v3.MigrateStore(ctx,
+// MigrateFork migrates from version 2 to 3.
+func (m Migrator) MigrateFork(ctx sdk.Context) error {
+	homeDir := viper.GetString("home")
+	if homeDir == "" {
+		panic("homeDir is empty, please use --home flag")
+	}
+	pathToFile := filepath.Join(
+		homeDir,
+		"config",
+	)
+	return fork.MigrateFork(ctx,
 		m.keeper.storeService,
 		m.keeper.cdc,
-		m.keeper.Aggregates,
-		m.keeper.Query,
-		m.keeper.Reports,
-		m.keeper.AddReport,
-		m.keeper.AddReportWeightedMode,
+		pathToFile,
 	)
 }

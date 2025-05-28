@@ -8,6 +8,7 @@ set -e
 
 KEYRING_BACKEND="test"
 CHAIN_ID="layertest-4"
+PASSWORD="password"
 # Define paths to the node directories
 echo "Defining paths..."
 NODE1_HOME_DIR="$HOME/.layer/alice"
@@ -105,4 +106,3 @@ sed -i '' "s/keyring-backend = \"os\"/keyring-backend = \"$KEYRING_BACKEND\"/" ~
 # Start the second node
 echo "Starting the second node..."
 ./layerd start --home $NODE2_HOME_DIR --api.enable --keyring-backend $KEYRING_BACKEND --key-name bill 
-

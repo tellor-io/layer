@@ -35,14 +35,22 @@ func (q Querier) GetAttestationDataBySnapshot(goCtx context.Context, req *types.
 	queryId := snapshotData.QueryId
 
 	aggReport, err := q.k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, snapshotData.Timestamp)
+	var aggValueStr, aggPowerStr string
 	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("aggregate not found for queryId %s and timestamp %d", hex.EncodeToString(queryId), snapshotData.Timestamp))
+		// try to get no stake report
+		noStakeReport, err := q.k.oracleKeeper.GetNoStakeReportByQueryIdTimestamp(ctx, queryId, snapshotData.Timestamp)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("aggregate / no stake report not found for queryId %s and timestamp %d", hex.EncodeToString(queryId), snapshotData.Timestamp))
+		}
+		aggValueStr = noStakeReport.Value
+		aggPowerStr = "0"
+	} else {
+		aggValueStr = aggReport.AggregateValue
+		aggPowerStr = strconv.FormatUint(aggReport.AggregatePower, 10)
 	}
 
 	queryIdStr := hex.EncodeToString(queryId)
 	timestampStr := strconv.FormatUint(snapshotData.Timestamp, 10)
-	aggValueStr := aggReport.AggregateValue
-	aggPowerStr := strconv.FormatUint(aggReport.AggregatePower, 10)
 	checkpointStr := hex.EncodeToString(snapshotData.ValidatorCheckpoint)
 	attestationTimestampStr := strconv.FormatUint(snapshotData.AttestationTimestamp, 10)
 	previousReportTimestampStr := strconv.FormatUint(snapshotData.PrevReportTimestamp, 10)

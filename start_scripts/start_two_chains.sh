@@ -77,7 +77,7 @@ echo "charlie..."
 
 # Create a tx to stake some loyas for alice
 echo "Creating gentx $KEY_NAME..."
-./layerd genesis gentx $KEY_NAME 1000000000000loya --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1 --keyring-dir $LAYERD_NODE_HOME_1
+./layerd genesis gentx $KEY_NAME $STAKE_AMOUNT_1 --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1 --keyring-dir $LAYERD_NODE_HOME_1
 
 # Add the transactions to the genesis block:q
 echo "Collecting gentxs..."

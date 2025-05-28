@@ -27,7 +27,7 @@ However, the cap on selectors and how we handle re-selections can lead to some U
 
 The current solutions:
 
-- To ensure that any reporter only reports once per query during the unbonding time frame window (21 days) and can't reselect to exploit this, re-selection will only be allowed after a lock period of 21 days (meaning that tokens are not counted in any reporters total for that time period).    
+- To ensure that any reporter only reports once per query during the unbonding time frame window (21 days) and can't reselect to exploit this, re-selection will only be allowed after a lock period of 21 days (meaning that tokens are not counted in any reporters total for that time period). This is also taken into consideration for reporters who want to become selectors and vice-versa. If a reporter has not reported within the last 21 days, they are allowed to call SwitchReporter and become a selector. If a selector wants to become a reporter they can call CreateReporter, but if their delegated tokens have been included in any reports within the last 21 days, they cannot report for 21 days.
 
 - The reporter can set a minimum stake amount that they allow to be selected with. This prevents cheap spam attacks for larger reporters.
 

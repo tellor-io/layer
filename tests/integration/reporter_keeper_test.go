@@ -7,6 +7,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
+	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
@@ -486,4 +487,106 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake2() {
 	// leftover less than 1 trb
 	leftover := reporterStake.ToLegacyDec().Sub(reporterStake.Quo(layertypes.PowerReduction).ToLegacyDec()).TruncateInt()
 	s.Equal(leftover, reporterStake)
+}
+
+func (s *IntegrationTestSuite) TestCreateAndSwitchReporterMsg() {
+	require := s.Require()
+	msReporter := keeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
+	require.NotNil(msReporter)
+
+	msStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	require.NotNil(msStaking)
+
+	msOracle := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	require.NotNil(msOracle)
+
+	valAccs, valAddrs, _ := s.createValidatorAccs([]uint64{100, 200})
+	newDelegator := sample.AccAddressBytes()
+	s.Setup.MintTokens(newDelegator, math.NewInt(1000*1e6))
+	msgDelegate := stakingtypes.NewMsgDelegate(
+		newDelegator.String(),
+		valAddrs[0].String(),
+		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+	)
+
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
+	_, err := msStaking.Delegate(s.Setup.Ctx, msgDelegate)
+	s.NoError(err)
+	val1, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddrs[0])
+	s.NoError(err)
+
+	_, err = s.Setup.App.EndBlocker(s.Setup.Ctx)
+	s.NoError(err)
+
+	// val 1 becomes a reporter
+	_, err = msReporter.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccs[0].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6), Moniker: "reporter_moniker1"})
+	s.NoError(err)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(2)
+	// delegator selects val 1 as their reporter
+	_, err = msReporter.SelectReporter(s.Setup.Ctx, &reportertypes.MsgSelectReporter{SelectorAddress: newDelegator.String(), ReporterAddress: valAccs[0].String()})
+	s.NoError(err)
+
+	// check validator reporting status
+	validatorReporter1, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[0], []byte{})
+	s.NoError(err)
+	// validator reporter should have self tokens and delegator tokens as their total
+	s.Equal(validatorReporter1, val1.Tokens)
+
+	// check second reporter tokens
+	val2, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddrs[1])
+	s.NoError(err)
+	// val 2 becomes a reporter
+	_, err = msReporter.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{ReporterAddress: valAccs[1].String(), CommissionRate: reportertypes.DefaultMinCommissionRate, MinTokensRequired: math.NewIntWithDecimal(1, 6), Moniker: "reporter_moniker2"})
+	s.NoError(err)
+	validatorReporter2, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[1], []byte{})
+	s.NoError(err)
+	// validator reporter should have self tokens and delegator tokens as their total
+	s.Equal(validatorReporter2, val2.Tokens)
+	// valrep1 should have more tokens than valrep2
+	s.True(validatorReporter1.GT(validatorReporter2))
+
+	// selector becomes a reporter
+	_, err = msReporter.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{
+		ReporterAddress:   newDelegator.String(),
+		CommissionRate:    reportertypes.DefaultMinCommissionRate,
+		MinTokensRequired: math.NewIntWithDecimal(1, 6),
+		Moniker:           "used_to_be_a_selector",
+	})
+	s.NoError(err)
+
+	// check delegator reporter in selectors collections
+	formerSelector, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, newDelegator)
+	s.NoError(err)
+	s.Equal(formerSelector.Reporter, newDelegator.Bytes())
+	// check delegator reporter exists in reporters collections
+	reporterExists, err := s.Setup.Reporterkeeper.Reporters.Has(s.Setup.Ctx, newDelegator)
+	s.NoError(err)
+	s.True(reporterExists)
+
+	// delegator reporter decides to go back to delegator selector
+	_, err = msReporter.SwitchReporter(s.Setup.Ctx, &reportertypes.MsgSwitchReporter{SelectorAddress: newDelegator.String(), ReporterAddress: valAccs[0].String()})
+	s.NoError(err)
+
+	// check delegator reporter in selectors collections
+	formerSelector, err = s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, newDelegator)
+	s.NoError(err)
+	s.Equal(formerSelector.Reporter, valAccs[0].Bytes())
+	// check delegator reporter does not exist in reporters collections
+	reporterExists, err = s.Setup.Reporterkeeper.Reporters.Has(s.Setup.Ctx, newDelegator)
+	s.NoError(err)
+	s.False(reporterExists)
+
+	// delegator becomes reporter again
+	_, err = msReporter.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{
+		ReporterAddress:   newDelegator.String(),
+		CommissionRate:    reportertypes.DefaultMinCommissionRate,
+		MinTokensRequired: math.NewIntWithDecimal(1, 6),
+		Moniker:           "back_again_to_report_and_then_leave",
+	})
+	s.NoError(err)
+
+	// check delegator reporter in selectors collections
+	formerSelector, err = s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, newDelegator)
+	s.NoError(err)
+	s.Equal(formerSelector.Reporter, newDelegator.Bytes())
 }

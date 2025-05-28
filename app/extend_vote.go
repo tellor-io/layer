@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"syscall"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -92,18 +93,23 @@ func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper Ora
 	}
 }
 
+func (h *VoteExtHandler) ForceProcessTermination(format string, args ...interface{}) {
+	h.logger.Error(format, args...)
+	// Send SIGABRT to the current process
+	process, _ := os.FindProcess(os.Getpid())
+	err := process.Signal(syscall.SIGABRT)
+	if err != nil {
+		h.logger.Error("failed to send SIGABRT to process", "error", err)
+	}
+	// In case SIGABRT doesn't work, fall back to Exit
+	os.Exit(1)
+}
+
 func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
-	// check if evm address by operator exists
 	voteExt := BridgeVoteExtension{}
 	operatorAddress, errOp := h.GetOperatorAddress()
 	if errOp != nil {
-		h.logger.Error("ExtendVoteHandler: failed to get operator address", "error", errOp)
-		bz, err := json.Marshal(voteExt)
-		if err != nil {
-			h.logger.Error("ExtendVoteHandler: failed to marshal vote extension", "error", err)
-			return &abci.ResponseExtendVote{}, err
-		}
-		return &abci.ResponseExtendVote{VoteExtension: bz}, fmt.Errorf("failed to get operator address, please check your key and flags: %w", errOp)
+		h.ForceProcessTermination("CRITICAL: failed to get operator address: %v", errOp)
 	}
 	_, err := h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
@@ -224,15 +230,18 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
 	kr, err := h.GetKeyring()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get keyring: %w", err)
+		h.ForceProcessTermination("CRITICAL: failed to get keyring: %v", err)
+		return nil, err // won't reach here
 	}
 	keyName := viper.GetString("key-name")
 	if keyName == "" {
-		return nil, fmt.Errorf("key name not found, please set --key-name flag")
+		h.ForceProcessTermination("CRITICAL: key name not found, please set --key-name flag")
+		return nil, errors.New("missing key name") // won't reach here
 	}
 	sig, _, err := kr.Sign(keyName, msg, 1)
 	if err != nil {
-		return nil, fmt.Errorf("failed to sign message: %w", err)
+		h.ForceProcessTermination("CRITICAL: failed to sign message: %v", err)
+		return nil, err // won't reach here
 	}
 	return sig, nil
 }

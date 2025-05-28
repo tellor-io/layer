@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strconv"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -81,6 +82,15 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64) e
 		k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to send coins, err: %w", err))
 		return err
 	}
+
+	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"deposit_claimed",
+			sdk.NewAttribute("deposit_id", strconv.FormatUint(depositId, 10)),
+			sdk.NewAttribute("recipient", recipient.String()),
+			sdk.NewAttribute("amount", amount.String()),
+		),
+	})
 
 	telemetry.IncrCounterWithLabels([]string{"claimed_deposit_tracker"}, float32(amount.AmountOf("loya").Int64()), []metrics.Label{{Name: "chain_id", Value: cosmosCtx.ChainID()}})
 	return nil

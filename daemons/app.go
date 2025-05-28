@@ -10,6 +10,7 @@ import (
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/daemons/configs"
 	"github.com/tellor-io/layer/daemons/constants"
+	customquery "github.com/tellor-io/layer/daemons/custom_query"
 	daemonflags "github.com/tellor-io/layer/daemons/flags"
 	metricsclient "github.com/tellor-io/layer/daemons/metrics/client"
 	pricefeedclient "github.com/tellor-io/layer/daemons/pricefeed/client"
@@ -53,6 +54,10 @@ func NewApp(
 	}
 	appOpts := simtestutil.NewAppOptionsWithFlagHome(tempDir())
 	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
+	queries, err := customquery.BuildQueryEndpoints(homePath, "config", "custom_query_config.toml")
+	if err != nil {
+		panic(err)
+	}
 
 	indexPriceCache := pricefeedtypes.NewMarketToExchangePrices(constants.MaxPriceAge)
 
@@ -119,6 +124,7 @@ func NewApp(
 			indexPriceCache,
 			tokenDepositsCache,
 			tokenBridgeTipsCache,
+			queries,
 			chainId,
 		); err != nil {
 			panic(err)

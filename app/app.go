@@ -597,6 +597,7 @@ func New(
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	app.OracleKeeper.SetBridgeKeeper(app.BridgeKeeper)
+	app.ReporterKeeper.SetOracleKeeper(app.OracleKeeper)
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	appFlags := appflags.GetFlagValuesFromOptions(appOpts)
 	// Panic if this is not a full node and gRPC is disabled.

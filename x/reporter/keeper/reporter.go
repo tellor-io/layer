@@ -137,6 +137,11 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress, qu
 	if reporter.Jailed {
 		return math.Int{}, nil, errorsmod.Wrapf(types.ErrReporterJailed, "reporter %s is in jail", repAddr.String())
 	}
+	// selection, err := k.Selectors.Get(ctx, repAddr.Bytes())
+	// if err != nil {
+	// 	return math.Int{}, nil, err
+	// }
+	// k.logger.Info(fmt.Sprintf("Rep selection: %v", selection))
 	totalTokens := math.ZeroInt()
 	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr)
 	if err != nil {
