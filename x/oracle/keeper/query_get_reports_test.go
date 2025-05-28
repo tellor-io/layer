@@ -120,4 +120,11 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	s.NoError(err)
 	s.Equal(1, len(report.MicroReports))
 	require.Equal(report.MicroReports[0].MetaId, uint64(5))
+
+	// reverse by queryId
+	req2 := &types.QueryGetReportsbyReporterQidRequest{Reporter: addr.String(), QueryId: hex.EncodeToString(queryId), Pagination: &query.PageRequest{Limit: 1, Reverse: true}}
+	report, err = s.queryClient.GetReportsbyReporterQid(ctx, req2)
+	s.NoError(err)
+	s.Equal(1, len(report.MicroReports))
+	require.Equal(report.MicroReports[0].MetaId, uint64(5))
 }
