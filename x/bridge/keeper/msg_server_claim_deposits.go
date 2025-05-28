@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/tellor-io/layer/x/bridge/types"
 
@@ -20,12 +19,6 @@ func (k msgServer) ClaimDeposits(goCtx context.Context, msg *types.MsgClaimDepos
 		if err := k.Keeper.ClaimDeposit(sdkCtx, depositId, timestamp); err != nil {
 			return nil, err
 		}
-		sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
-			sdk.NewEvent(
-				"deposit_claimed",
-				sdk.NewAttribute("deposit_id", strconv.FormatUint(depositId, 10)),
-			),
-		})
 	}
 
 	return &types.MsgClaimDepositsResponse{}, nil
