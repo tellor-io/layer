@@ -26,7 +26,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "GetReportsbyReporter",
 					Use:            "get-reportsby-reporter [reporter]",
-					Short:          "Query reports by reporter",
+					Short:          "Query reports by reporter. Use --page-limit to return more than 1 report.",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter"}},
 				},
 				{

@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -10,7 +11,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/collections/indexes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -74,35 +74,65 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 
 	reporter := sdk.MustAccAddressFromBech32(req.Reporter)
 
-	// Retrieve the stored reports for the current block height.
-	iter, err := k.keeper.Reports.Indexes.Reporter.MatchExact(ctx, reporter.Bytes())
-	if err != nil {
-		return nil, err
+	pageRes := &query.PageResponse{
+		NextKey: nil,
+		Total:   uint64(0),
 	}
 
-	reports, err := indexes.CollectValues(ctx, k.keeper.Reports, iter)
-	if err != nil {
-		return nil, err
-	}
+	// use just the reporter address as the prefix to match all reports for this reporter
+	key := reporter.Bytes()
+	fmt.Println("key: ", key)
+	fmt.Println("decoded key: ", hex.EncodeToString(key))
 
-	microreports := make([]types.MicroReportStrings, 0)
-	for _, rep := range reports {
-		microReport := types.MicroReportStrings{
-			Reporter:        rep.Reporter,
-			Power:           rep.Power,
-			QueryType:       rep.QueryType,
-			QueryId:         hex.EncodeToString(rep.QueryId),
-			AggregateMethod: rep.AggregateMethod,
-			Value:           rep.Value,
-			Timestamp:       uint64(rep.Timestamp.UnixMilli()),
-			Cyclelist:       rep.Cyclelist,
-			BlockNumber:     rep.BlockNumber,
-			MetaId:          rep.MetaId,
+	iter, err := k.keeper.Reports.Indexes.Reporter.Iterate(ctx, nil)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	reports := make([]types.MicroReportStrings, 0)
+	tripleKeyCodec := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
+	for ; iter.Valid(); iter.Next() {
+		pk, err := iter.PrimaryKey()
+		if err != nil {
+			return nil, err
 		}
-		microreports = append(microreports, microReport)
-	}
 
-	return &types.QueryMicroReportsResponse{MicroReports: microreports}, nil
+		report, err := k.keeper.Reports.Get(ctx, pk)
+		if err != nil {
+			return nil, err
+		}
+
+		// Check if the report is from the desired reporter
+		if report.Reporter != req.Reporter {
+			continue
+		}
+
+		stringReport := types.MicroReportStrings{
+			Reporter:        report.Reporter,
+			Power:           report.Power,
+			QueryType:       report.QueryType,
+			QueryId:         hex.EncodeToString(report.QueryId),
+			AggregateMethod: report.AggregateMethod,
+			Value:           report.Value,
+			Timestamp:       uint64(report.Timestamp.UnixMilli()),
+			Cyclelist:       report.Cyclelist,
+			BlockNumber:     report.BlockNumber,
+			MetaId:          report.MetaId,
+		}
+		reports = append(reports, stringReport)
+
+		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
+			buffer := make([]byte, tripleKeyCodec.Size(pk))
+			_, err = tripleKeyCodec.Encode(buffer, pk)
+			if err != nil {
+				return nil, status.Error(codes.Internal, "failed to encode pagination key")
+			}
+			pageRes.NextKey = buffer
+			break
+		}
+	}
+	pageRes.Total = uint64(len(reports))
+
+	return &types.QueryMicroReportsResponse{MicroReports: reports, Pagination: pageRes}, nil
 }
 
 func (k Querier) GetReportsbyReporterQid(ctx context.Context, req *types.QueryGetReportsbyReporterQidRequest) (*types.QueryMicroReportsResponse, error) {

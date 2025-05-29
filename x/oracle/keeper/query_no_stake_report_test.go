@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 func (s *KeeperTestSuite) TestGetReportersNoStakeReports() {
@@ -69,6 +70,21 @@ func (s *KeeperTestSuite) TestGetReportersNoStakeReports() {
 	require.Equal(response.NoStakeReports[1].Timestamp, uint64(timestamp.UnixMilli()))
 	require.Equal(response.NoStakeReports[1].BlockNumber, report2.BlockNumber)
 	require.Equal(response.NoStakeReports[1].Reporter, sdk.AccAddress(report2.Reporter).String())
+
+	// return only most recent report
+	response, err = q.GetReportersNoStakeReports(s.ctx, &types.QueryGetReportersNoStakeReportsRequest{
+		Reporter: reporter.String(),
+		Pagination: &query.PageRequest{
+			Limit:   1,
+			Reverse: true,
+		},
+	})
+	require.NoError(err)
+	require.Equal(len(response.NoStakeReports), 1)
+	require.Equal(response.NoStakeReports[0].Value, report2.Value)
+	require.Equal(response.NoStakeReports[0].Timestamp, uint64(timestamp.UnixMilli()))
+	require.Equal(response.NoStakeReports[0].BlockNumber, report2.BlockNumber)
+	require.Equal(response.NoStakeReports[0].Reporter, sdk.AccAddress(report2.Reporter).String())
 }
 
 func (s *KeeperTestSuite) TestGetNoStakeReportsByQueryId() {

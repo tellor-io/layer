@@ -271,7 +271,7 @@ func TestAttestation(t *testing.T) {
 
 	// get reports by reporter
 	var queryId3 string
-	reports, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[0].Addr)
+	reports, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[0].Addr, "--page-limit", "2")
 	require.NoError(err)
 	var reportsRes e2e.QueryMicroReportsResponse
 	err = json.Unmarshal(reports, &reportsRes)
