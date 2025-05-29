@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -78,25 +79,17 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 		Total:   uint64(0),
 	}
 
-	// Retrieve the stored reports for the current block height.
-	rng := collections.NewPrefixedPairRange[[]byte, collections.Triple[[]byte, []byte, uint64]](reporter.Bytes())
-	if req.Pagination != nil && req.Pagination.Reverse {
-		rng.Descending()
-	}
-	tripleKeyCodec := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
-	if req.Pagination != nil && len(req.Pagination.Key) > 0 {
-		_, startKey, err := tripleKeyCodec.Decode(req.Pagination.Key)
-		if err != nil {
-			return nil, status.Error(codes.InvalidArgument, "invalid pagination key")
-		}
-		rng.StartInclusive(startKey)
-	}
+	// use just the reporter address as the prefix to match all reports for this reporter
+	key := reporter.Bytes()
+	fmt.Println("key: ", key)
+	fmt.Println("decoded key: ", hex.EncodeToString(key))
 
-	iter, err := k.keeper.Reports.Indexes.Reporter.Iterate(ctx, rng)
+	iter, err := k.keeper.Reports.Indexes.Reporter.Iterate(ctx, nil)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	reports := make([]types.MicroReportStrings, 0)
+	tripleKeyCodec := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
 	for ; iter.Valid(); iter.Next() {
 		pk, err := iter.PrimaryKey()
 		if err != nil {
@@ -107,6 +100,12 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 		if err != nil {
 			return nil, err
 		}
+
+		// Check if the report is from the desired reporter
+		if report.Reporter != req.Reporter {
+			continue
+		}
+
 		stringReport := types.MicroReportStrings{
 			Reporter:        report.Reporter,
 			Power:           report.Power,
