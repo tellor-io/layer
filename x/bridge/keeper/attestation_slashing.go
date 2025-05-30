@@ -105,7 +105,13 @@ func (k Keeper) CheckAttestationEvidence(ctx context.Context, request types.MsgS
 
 	// slash the validator
 	slashFactor := math.LegacyNewDec(1).Quo(math.LegacyNewDec(100)) // update this to be a parameter in the bridge module
-	err = k.SlashValidator(ctx, operatorAddr, slashFactor)
+	checkpointParams, err := k.GetCheckpointParamsByCheckpoint(ctx, checkpoint)
+	if err != nil {
+		// uncomment this
+		// return err
+		k.Logger(ctx).Info("Error getting checkpoint params", "error", err)
+	}
+	err = k.SlashValidator(ctx, operatorAddr, slashFactor, checkpointParams.BlockHeight)
 	if err != nil {
 		return err
 	}
@@ -123,7 +129,7 @@ func (k Keeper) CheckAttestationEvidence(ctx context.Context, request types.MsgS
 }
 
 // SlashValidator slashes a validator for malicious attestation evidence.
-func (k Keeper) SlashValidator(ctx context.Context, operatorAddr types.OperatorAddress, slashFactor math.LegacyDec) error {
+func (k Keeper) SlashValidator(ctx context.Context, operatorAddr types.OperatorAddress, slashFactor math.LegacyDec, blockHeight uint64) error {
 	k.Logger(ctx).Info("slashValidator", "operatorAddr", operatorAddr.String())
 	// get the validator address
 	validatorAddr := sdk.ValAddress(operatorAddr.OperatorAddress)
@@ -150,7 +156,7 @@ func (k Keeper) SlashValidator(ctx context.Context, operatorAddr types.OperatorA
 
 	adjustedPower := validator.GetConsensusPower(layertypes.PowerReduction)
 	k.Logger(ctx).Info("adjustedPower", "adjustedPower", adjustedPower)
-	slashAmount, err := k.stakingKeeper.SlashWithInfractionReason(ctx, consAddr, 1, adjustedPower, slashFactor, stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
+	slashAmount, err := k.stakingKeeper.SlashWithInfractionReason(ctx, consAddr, int64(blockHeight), adjustedPower, slashFactor, stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
 	if err != nil {
 		return err
 	}

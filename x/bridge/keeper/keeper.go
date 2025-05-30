@@ -43,7 +43,7 @@ type (
 		EVMToOperatorAddressMap      collections.Map[string, types.OperatorAddress]
 		EVMAddressRegisteredMap      collections.Map[string, types.EVMAddressRegistered]
 		BridgeValsetSignaturesMap    collections.Map[uint64, types.BridgeValsetSignatures]
-		ValidatorCheckpointParamsMap collections.Map[uint64, types.ValidatorCheckpointParams]
+		ValidatorCheckpointParamsMap *collections.IndexedMap[uint64, types.ValidatorCheckpointParams, types.ValidatorCheckpointParamsIndexes]
 		ValidatorCheckpointIdxMap    collections.Map[uint64, types.CheckpointTimestamp]
 		LatestCheckpointIdx          collections.Item[types.CheckpointIdx]
 		BridgeValsetByTimestampMap   collections.Map[uint64, types.BridgeValidatorSet]
@@ -77,17 +77,21 @@ func NewKeeper(
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		cdc:                          cdc,
-		storeService:                 storeService,
-		Params:                       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		BridgeValset:                 collections.NewItem(sb, types.BridgeValsetKey, "bridge_valset", codec.CollValue[types.BridgeValidatorSet](cdc)),
-		ValidatorCheckpoint:          collections.NewItem(sb, types.ValidatorCheckpointKey, "validator_checkpoint", codec.CollValue[types.ValidatorCheckpoint](cdc)),
-		WithdrawalId:                 collections.NewItem(sb, types.WithdrawalIdKey, "withdrawal_id", codec.CollValue[types.WithdrawalId](cdc)),
-		OperatorToEVMAddressMap:      collections.NewMap(sb, types.OperatorToEVMAddressMapKey, "operator_to_evm_address_map", collections.StringKey, codec.CollValue[types.EVMAddress](cdc)),
-		EVMToOperatorAddressMap:      collections.NewMap(sb, types.EVMToOperatorAddressMapKey, "evm_to_operator_address_map", collections.StringKey, codec.CollValue[types.OperatorAddress](cdc)),
-		EVMAddressRegisteredMap:      collections.NewMap(sb, types.EVMAddressRegisteredMapKey, "evm_address_registered_map", collections.StringKey, codec.CollValue[types.EVMAddressRegistered](cdc)),
-		BridgeValsetSignaturesMap:    collections.NewMap(sb, types.BridgeValsetSignaturesMapKey, "bridge_valset_signatures_map", collections.Uint64Key, codec.CollValue[types.BridgeValsetSignatures](cdc)),
-		ValidatorCheckpointParamsMap: collections.NewMap(sb, types.ValidatorCheckpointParamsMapKey, "validator_checkpoint_params_map", collections.Uint64Key, codec.CollValue[types.ValidatorCheckpointParams](cdc)),
+		cdc:                       cdc,
+		storeService:              storeService,
+		Params:                    collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		BridgeValset:              collections.NewItem(sb, types.BridgeValsetKey, "bridge_valset", codec.CollValue[types.BridgeValidatorSet](cdc)),
+		ValidatorCheckpoint:       collections.NewItem(sb, types.ValidatorCheckpointKey, "validator_checkpoint", codec.CollValue[types.ValidatorCheckpoint](cdc)),
+		WithdrawalId:              collections.NewItem(sb, types.WithdrawalIdKey, "withdrawal_id", codec.CollValue[types.WithdrawalId](cdc)),
+		OperatorToEVMAddressMap:   collections.NewMap(sb, types.OperatorToEVMAddressMapKey, "operator_to_evm_address_map", collections.StringKey, codec.CollValue[types.EVMAddress](cdc)),
+		EVMToOperatorAddressMap:   collections.NewMap(sb, types.EVMToOperatorAddressMapKey, "evm_to_operator_address_map", collections.StringKey, codec.CollValue[types.OperatorAddress](cdc)),
+		EVMAddressRegisteredMap:   collections.NewMap(sb, types.EVMAddressRegisteredMapKey, "evm_address_registered_map", collections.StringKey, codec.CollValue[types.EVMAddressRegistered](cdc)),
+		BridgeValsetSignaturesMap: collections.NewMap(sb, types.BridgeValsetSignaturesMapKey, "bridge_valset_signatures_map", collections.Uint64Key, codec.CollValue[types.BridgeValsetSignatures](cdc)),
+		ValidatorCheckpointParamsMap: collections.NewIndexedMap(
+			sb, types.ValidatorCheckpointParamsMapKey, "validator_checkpoint_params_map",
+			collections.Uint64Key, codec.CollValue[types.ValidatorCheckpointParams](cdc),
+			types.NewValidatorCheckpointParamsIndexes(sb),
+		),
 		ValidatorCheckpointIdxMap:    collections.NewMap(sb, types.ValidatorCheckpointIdxMapKey, "validator_checkpoint_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointTimestamp](cdc)),
 		LatestCheckpointIdx:          collections.NewItem(sb, types.LatestCheckpointIdxKey, "latest_checkpoint_idx", codec.CollValue[types.CheckpointIdx](cdc)),
 		BridgeValsetByTimestampMap:   collections.NewMap(sb, types.BridgeValsetByTimestampMapKey, "bridge_valset_by_timestamp_map", collections.Uint64Key, codec.CollValue[types.BridgeValidatorSet](cdc)),
@@ -349,12 +353,14 @@ func (k Keeper) CalculateValidatorSetCheckpoint(
 
 	checkpoint := crypto.Keccak256(encodedCheckpointData)
 
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// save checkpoint params
 	checkpointParams := types.ValidatorCheckpointParams{
 		Checkpoint:     checkpoint,
 		ValsetHash:     validatorSetHash,
 		Timestamp:      validatorTimestamp,
 		PowerThreshold: powerThreshold,
+		BlockHeight:    uint64(sdkCtx.BlockHeight()),
 	}
 	err = k.ValidatorCheckpointParamsMap.Set(ctx, validatorTimestamp, checkpointParams)
 	if err != nil {
@@ -1363,4 +1369,23 @@ func (k Keeper) CreateNoStakeSnapshot(ctx context.Context, report *oracletypes.N
 	}
 	attestRequests.AddRequest(&request)
 	return k.AttestRequestsByHeightMap.Set(ctx, blockHeight, attestRequests)
+}
+
+// GetCheckpointParamsByCheckpoint returns the checkpoint params for a given validator checkpoint
+func (k Keeper) GetCheckpointParamsByCheckpoint(ctx context.Context, checkpoint []byte) (types.ValidatorCheckpointParams, error) {
+	// Use the index to directly find the params for this checkpoint
+	timestamp, err := k.ValidatorCheckpointParamsMap.Indexes.ByCheckpoint.MatchExact(ctx, checkpoint)
+	if err != nil {
+		k.Logger(ctx).Info("Error finding checkpoint in index", "checkpoint", hex.EncodeToString(checkpoint), "error", err)
+		return types.ValidatorCheckpointParams{}, fmt.Errorf("checkpoint not found: %w", err)
+	}
+
+	// Get the checkpoint params
+	params, err := k.ValidatorCheckpointParamsMap.Get(ctx, timestamp)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting validator checkpoint params", "timestamp", timestamp, "error", err)
+		return types.ValidatorCheckpointParams{}, fmt.Errorf("checkpoint params not found: %w", err)
+	}
+
+	return params, nil
 }

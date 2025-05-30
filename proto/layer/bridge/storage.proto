@@ -11,3 +11,11 @@ option go_package = "github.com/tellor-io/layer/x/bridge/types";
 message BoolSubmitted {
     bool submitted = 1;
 }
+
+message ValidatorCheckpointParams {
+    bytes checkpoint = 1;
+    bytes valset_hash = 2;
+    uint64 timestamp = 3;
+    uint64 power_threshold = 4;
+    uint64 block_height = 5;
+}
