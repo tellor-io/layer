@@ -80,16 +80,34 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 	}
 
 	// use just the reporter address as the prefix to match all reports for this reporter
-	key := reporter.Bytes()
-	fmt.Println("key: ", key)
-	fmt.Println("decoded key: ", hex.EncodeToString(key))
+	// encode the uint64 value to match the Reporter index format
+	buffer := make([]byte, 8)
+	_, err := collections.Uint64Key.Encode(buffer, ^uint64(0))
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to encode start value")
+	}
 
-	iter, err := k.keeper.Reports.Indexes.Reporter.Iterate(ctx, nil)
+	// construct key: reporter_address + encoded_uint64
+	key := append(reporter.Bytes(), buffer...)
+	fmt.Println("key str: ", hex.EncodeToString(key))
+	rng := collections.NewPrefixUntilPairRange[[]byte, collections.Triple[[]byte, []byte, uint64]](key)
+	if req.Pagination != nil && req.Pagination.Reverse {
+		rng.Descending()
+	}
+	tripleKeyCodec := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
+	if req.Pagination != nil && len(req.Pagination.Key) > 0 {
+		_, startKey, err := tripleKeyCodec.Decode(req.Pagination.Key)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid pagination key")
+		}
+		rng.StartInclusive(startKey)
+	}
+
+	iter, err := k.keeper.Reports.Indexes.Reporter.Iterate(ctx, rng)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	reports := make([]types.MicroReportStrings, 0)
-	tripleKeyCodec := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
 	for ; iter.Valid(); iter.Next() {
 		pk, err := iter.PrimaryKey()
 		if err != nil {
@@ -100,12 +118,6 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 		if err != nil {
 			return nil, err
 		}
-
-		// Check if the report is from the desired reporter
-		if report.Reporter != req.Reporter {
-			continue
-		}
-
 		stringReport := types.MicroReportStrings{
 			Reporter:        report.Reporter,
 			Power:           report.Power,
