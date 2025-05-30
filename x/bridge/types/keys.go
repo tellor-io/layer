@@ -37,4 +37,5 @@ var (
 	WithdrawalIdKey                 = collections.NewPrefix(17) // Prefix for withdrawal_id key
 	DepositIdClaimedMapKey          = collections.NewPrefix(18) // Prefix for deposit_id_claimed_map key
 	SnapshotLimitKey                = collections.NewPrefix(19) // Prefix for snapshot_limit key
+	AttestationEvidenceSubmittedKey = collections.NewPrefix(20) // Prefix for attestation_evidence_submitted_map key
 )

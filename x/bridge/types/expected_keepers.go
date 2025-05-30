@@ -20,6 +20,7 @@ type StakingKeeper interface {
 	TotalBondedTokens(ctx context.Context) (math.Int, error)
 	UnbondingTime(ctx context.Context) (time.Duration, error)
 	SlashWithInfractionReason(context.Context, sdk.ConsAddress, int64, int64, math.LegacyDec, stakingtypes.Infraction) (math.Int, error)
+	Jail(ctx context.Context, consAddr sdk.ConsAddress) error
 }
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
