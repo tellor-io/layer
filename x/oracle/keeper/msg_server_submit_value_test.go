@@ -35,6 +35,27 @@ var spotSpec = registrytypes.DataSpec{
 	QueryType:         "spotprice",
 }
 
+// var bridgeSpec = registrytypes.DataSpec{
+// 	DocumentHash:      "",
+// 	ResponseValueType: "address, string, uint256, uint256",
+// 	AbiComponents: []*registrytypes.ABIComponent{
+// 		{
+// 			Name:            "toLayer",
+// 			FieldType:       "bool",
+// 			NestedComponent: []*registrytypes.ABIComponent{},
+// 		},
+// 		{
+// 			Name:            "depositId",
+// 			FieldType:       "uint256",
+// 			NestedComponent: []*registrytypes.ABIComponent{},
+// 		},
+// 	},
+// 	AggregationMethod: "weighted-mode",
+// 	Registrar:         "genesis",
+// 	ReportBlockWindow: 2000,
+// 	QueryType:         "trbbridge",
+// }
+
 func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 	require := s.Require()
 	k := s.oracleKeeper

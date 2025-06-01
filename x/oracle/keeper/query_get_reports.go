@@ -67,20 +67,19 @@ func (k Querier) GetReportsbyQid(ctx context.Context, req *types.QueryGetReports
 	return &types.QueryMicroReportsResponse{MicroReports: microreports, Pagination: pageRes}, nil
 }
 
+// gets the most recent n reports for a reporter
 func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetReportsbyReporterRequest) (*types.QueryMicroReportsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	reporter := sdk.MustAccAddressFromBech32(req.Reporter)
-
 	pageRes := &query.PageResponse{
 		NextKey: nil,
 		Total:   uint64(0),
 	}
 
-	// use just the reporter address as the prefix to match all reports for this reporter
-	// encode the uint64 value to match the Reporter index format
+	// key is Bytes (reporter address) with bytes encoded max uint64 concatenated (reporterAddr...fff...)
 	buffer := make([]byte, 8)
 	_, err := collections.Uint64Key.Encode(buffer, ^uint64(0))
 	if err != nil {

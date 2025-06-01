@@ -75,10 +75,9 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	for i := 1; i < 6; i++ {
 		fmt.Println("i: ", i)
 		fmt.Printf("Using reporter address: %s (%x)\n", addr.String(), addr.Bytes())
-		var queryType string
 		// var queryData []byte
 		// if i%2 == 0 {
-		queryType = "SpotPrice"
+		queryType := "SpotPrice"
 		_ = s.registryKeeper.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil).Once()
 		queryData := qDataBz
 		// } else {
@@ -109,12 +108,11 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 			QueryData: queryData,
 			Value:     value,
 		}
-		fmt.Println("submiting value... ")
+		fmt.Println("submitting value... ")
 		res, err := s.msgServer.SubmitValue(ctx, &submitreq)
 		require.NoError(err)
 		require.NotNil(res)
 
-		// Debug: check if report was actually stored
 		storedReport, err := k.Reports.Get(ctx, collections.Join3(queryId, addr.Bytes(), uint64(i)))
 		if err != nil {
 			fmt.Printf("ERROR: Report %d not found: %v\n", i, err)
@@ -140,6 +138,9 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	report, err = s.queryClient.GetReportsbyReporter(ctx, req)
 	s.NoError(err)
 	s.Equal(5, len(report.MicroReports))
+	for i, report := range report.MicroReports {
+		fmt.Println("report i: ", i, report)
+	}
 
 	// reverse, get most recent
 	req = &types.QueryGetReportsbyReporterRequest{Reporter: addr.String(), Pagination: &query.PageRequest{Limit: 1, Reverse: true}}
