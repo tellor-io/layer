@@ -193,6 +193,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 
 7. Run `./scripts/protoc-swagger-gen.sh ` to generate the swagger page documentation
 
+### Using pagination
+Some queries return very long lists from storage. To help only retrieve what you need, you can use pagination. 
+
+For example, if you wanted to only return the most recent 10 reports for a certain reporter, you can use 
+```bash
+./layerd query oracle get-reportsby-reporter $REP_ADDR --page-limit 10 --page-reverse true
+```
+
 ## Maintainers<a name="maintainers"> </a>
 
 This repository is maintained by the [Tellor team](https://github.com/orgs/tellor-io/people)
