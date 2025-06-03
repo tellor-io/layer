@@ -27,7 +27,7 @@ import (
 func (s *IntegrationTestSuite) TestAggregateOverMultipleBlocks() {
 	// Setup msgServers
 	require := s.Require()
-	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	msgServerOracle := oraclekeeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	require.NotNil(msgServerOracle)
 	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	require.NotNil(msgServerReporter)

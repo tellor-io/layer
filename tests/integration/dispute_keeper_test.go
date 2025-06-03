@@ -469,7 +469,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
 
 	// mint tokens to voters
 	s.Setup.MintTokens(disputer, math.NewInt(100_000_000))
-	oracleServer := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	oracleServer := oraclekeeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	msg := oracletypes.MsgTip{
 		Tipper:    disputer.String(),
 		QueryData: ethQueryData,
@@ -633,7 +633,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteAgainst() {
 
 	// mint tokens to voters
 	s.Setup.MintTokens(disputer, math.NewInt(100_000_000))
-	oracleServer := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	oracleServer := oraclekeeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	msg := oracletypes.MsgTip{
 		Tipper:    disputer.String(),
 		QueryData: ethQueryData,
@@ -2596,7 +2596,7 @@ func (s *IntegrationTestSuite) TestCurrentBug() {
 
 	s.NoError(s.Setup.SlashingKeeper.SetParams(s.Setup.Ctx, params))
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
-	oServer := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	oServer := oraclekeeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 
 	// chain has three validators
 	repAccs, valAccs, _ := s.createValidatorsbypowers([]uint64{150, 500, 100000})
@@ -2864,7 +2864,7 @@ func (s *IntegrationTestSuite) TestProposeOldDispute() {
 
 	// mint tokens to voters
 	s.Setup.MintTokens(disputer, math.NewInt(100_000_000))
-	oracleServer := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	oracleServer := oraclekeeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	msg := oracletypes.MsgTip{
 		Tipper:    disputer.String(),
 		QueryData: ethQueryData,

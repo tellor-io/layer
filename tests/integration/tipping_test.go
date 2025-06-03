@@ -41,7 +41,7 @@ func (s *IntegrationTestSuite) TestTipQueryInCycle() {
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker1")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(s.Setup.Ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 
-	oserver := keeper.NewMsgServerImpl(okpr)
+	oserver := keeper.NewMsgServerImpl(&okpr)
 	currentHeight := ctx.BlockHeight()
 	// assert height is 0
 	s.Equal(int64(0), currentHeight)
@@ -277,7 +277,7 @@ func (s *IntegrationTestSuite) TestTippingQuery() {
 	okpr := s.Setup.Oraclekeeper
 	ctx = ctx.WithBlockTime(time.Now())
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	msgServer := keeper.NewMsgServerImpl(okpr)
+	msgServer := keeper.NewMsgServerImpl(&okpr)
 	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{100})
 	for _, val := range valAddrs {
 		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(ctx, val.String(), []byte("not real"))
@@ -349,7 +349,7 @@ func (s *IntegrationTestSuite) TestRotateQueries() {
 	okpr := s.Setup.Oraclekeeper
 	ctx = ctx.WithBlockTime(time.Now())
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	msgServer := keeper.NewMsgServerImpl(okpr)
+	msgServer := keeper.NewMsgServerImpl(&okpr)
 	_, valAddrs, _ := s.createValidatorAccs([]uint64{100})
 	for _, val := range valAddrs {
 		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(ctx, val.String(), []byte("not real"))
