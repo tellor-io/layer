@@ -200,7 +200,6 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	require.Equal(report.MicroReports[0].MetaId, uint64(5))
 
 	// add bridge report from each reporter
-	queryType := "TRBBridge"
 	_ = s.registryKeeper.On("GetSpec", ctx, "TRBBridge").Return(bridgeSpec, nil).Once()
 	_ = s.bridgeKeeper.On("GetDepositStatus", ctx, uint64(8)).Return(false, nil).Maybe()
 
