@@ -117,19 +117,21 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 		if err != nil {
 			return nil, err
 		}
-		stringReport := types.MicroReportStrings{
-			Reporter:        report.Reporter,
-			Power:           report.Power,
-			QueryType:       report.QueryType,
-			QueryId:         hex.EncodeToString(report.QueryId),
-			AggregateMethod: report.AggregateMethod,
-			Value:           report.Value,
-			Timestamp:       uint64(report.Timestamp.UnixMilli()),
-			Cyclelist:       report.Cyclelist,
-			BlockNumber:     report.BlockNumber,
-			MetaId:          report.MetaId,
+		if report.Reporter == reporter.String() {
+			stringReport := types.MicroReportStrings{
+				Reporter:        report.Reporter,
+				Power:           report.Power,
+				QueryType:       report.QueryType,
+				QueryId:         hex.EncodeToString(report.QueryId),
+				AggregateMethod: report.AggregateMethod,
+				Value:           report.Value,
+				Timestamp:       uint64(report.Timestamp.UnixMilli()),
+				Cyclelist:       report.Cyclelist,
+				BlockNumber:     report.BlockNumber,
+				MetaId:          report.MetaId,
+			}
+			reports = append(reports, stringReport)
 		}
-		reports = append(reports, stringReport)
 
 		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
 			buffer := make([]byte, tripleKeyCodec.Size(pk))
