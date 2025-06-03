@@ -3811,7 +3811,6 @@ var (
 	fd_MsgSubmitAttestationEvidence_attestation_timestamp    protoreflect.FieldDescriptor
 	fd_MsgSubmitAttestationEvidence_last_consensus_timestamp protoreflect.FieldDescriptor
 	fd_MsgSubmitAttestationEvidence_signature                protoreflect.FieldDescriptor
-	fd_MsgSubmitAttestationEvidence_operator_address         protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -3828,7 +3827,6 @@ func init() {
 	fd_MsgSubmitAttestationEvidence_attestation_timestamp = md_MsgSubmitAttestationEvidence.Fields().ByName("attestation_timestamp")
 	fd_MsgSubmitAttestationEvidence_last_consensus_timestamp = md_MsgSubmitAttestationEvidence.Fields().ByName("last_consensus_timestamp")
 	fd_MsgSubmitAttestationEvidence_signature = md_MsgSubmitAttestationEvidence.Fields().ByName("signature")
-	fd_MsgSubmitAttestationEvidence_operator_address = md_MsgSubmitAttestationEvidence.Fields().ByName("operator_address")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgSubmitAttestationEvidence)(nil)
@@ -3962,12 +3960,6 @@ func (x *fastReflection_MsgSubmitAttestationEvidence) Range(f func(protoreflect.
 			return
 		}
 	}
-	if x.OperatorAddress != "" {
-		value := protoreflect.ValueOfString(x.OperatorAddress)
-		if !f(fd_MsgSubmitAttestationEvidence_operator_address, value) {
-			return
-		}
-	}
 }
 
 // Has reports whether a field is populated.
@@ -4005,8 +3997,6 @@ func (x *fastReflection_MsgSubmitAttestationEvidence) Has(fd protoreflect.FieldD
 		return x.LastConsensusTimestamp != uint64(0)
 	case "layer.bridge.MsgSubmitAttestationEvidence.signature":
 		return x.Signature != ""
-	case "layer.bridge.MsgSubmitAttestationEvidence.operator_address":
-		return x.OperatorAddress != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidence"))
@@ -4045,8 +4035,6 @@ func (x *fastReflection_MsgSubmitAttestationEvidence) Clear(fd protoreflect.Fiel
 		x.LastConsensusTimestamp = uint64(0)
 	case "layer.bridge.MsgSubmitAttestationEvidence.signature":
 		x.Signature = ""
-	case "layer.bridge.MsgSubmitAttestationEvidence.operator_address":
-		x.OperatorAddress = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidence"))
@@ -4096,9 +4084,6 @@ func (x *fastReflection_MsgSubmitAttestationEvidence) Get(descriptor protoreflec
 	case "layer.bridge.MsgSubmitAttestationEvidence.signature":
 		value := x.Signature
 		return protoreflect.ValueOfString(value)
-	case "layer.bridge.MsgSubmitAttestationEvidence.operator_address":
-		value := x.OperatorAddress
-		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidence"))
@@ -4141,8 +4126,6 @@ func (x *fastReflection_MsgSubmitAttestationEvidence) Set(fd protoreflect.FieldD
 		x.LastConsensusTimestamp = value.Uint()
 	case "layer.bridge.MsgSubmitAttestationEvidence.signature":
 		x.Signature = value.Interface().(string)
-	case "layer.bridge.MsgSubmitAttestationEvidence.operator_address":
-		x.OperatorAddress = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidence"))
@@ -4185,8 +4168,6 @@ func (x *fastReflection_MsgSubmitAttestationEvidence) Mutable(fd protoreflect.Fi
 		panic(fmt.Errorf("field last_consensus_timestamp of message layer.bridge.MsgSubmitAttestationEvidence is not mutable"))
 	case "layer.bridge.MsgSubmitAttestationEvidence.signature":
 		panic(fmt.Errorf("field signature of message layer.bridge.MsgSubmitAttestationEvidence is not mutable"))
-	case "layer.bridge.MsgSubmitAttestationEvidence.operator_address":
-		panic(fmt.Errorf("field operator_address of message layer.bridge.MsgSubmitAttestationEvidence is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitAttestationEvidence"))
@@ -4221,8 +4202,6 @@ func (x *fastReflection_MsgSubmitAttestationEvidence) NewField(fd protoreflect.F
 	case "layer.bridge.MsgSubmitAttestationEvidence.last_consensus_timestamp":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.bridge.MsgSubmitAttestationEvidence.signature":
-		return protoreflect.ValueOfString("")
-	case "layer.bridge.MsgSubmitAttestationEvidence.operator_address":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -4331,10 +4310,6 @@ func (x *fastReflection_MsgSubmitAttestationEvidence) ProtoMethods() *protoiface
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.OperatorAddress)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -4363,13 +4338,6 @@ func (x *fastReflection_MsgSubmitAttestationEvidence) ProtoMethods() *protoiface
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.OperatorAddress) > 0 {
-			i -= len(x.OperatorAddress)
-			copy(dAtA[i:], x.OperatorAddress)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OperatorAddress)))
-			i--
-			dAtA[i] = 0x62
 		}
 		if len(x.Signature) > 0 {
 			i -= len(x.Signature)
@@ -4758,38 +4726,6 @@ func (x *fastReflection_MsgSubmitAttestationEvidence) ProtoMethods() *protoiface
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				x.Signature = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 12:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OperatorAddress", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.OperatorAddress = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -5182,6 +5118,1006 @@ func (x *fastReflection_MsgSubmitAttestationEvidenceResponse) ProtoMethods() *pr
 	}
 }
 
+var (
+	md_MsgSubmitValsetSignatureEvidence                     protoreflect.MessageDescriptor
+	fd_MsgSubmitValsetSignatureEvidence_creator             protoreflect.FieldDescriptor
+	fd_MsgSubmitValsetSignatureEvidence_power_threshold     protoreflect.FieldDescriptor
+	fd_MsgSubmitValsetSignatureEvidence_valset_timestamp    protoreflect.FieldDescriptor
+	fd_MsgSubmitValsetSignatureEvidence_valset_hash         protoreflect.FieldDescriptor
+	fd_MsgSubmitValsetSignatureEvidence_validator_signature protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_bridge_tx_proto_init()
+	md_MsgSubmitValsetSignatureEvidence = File_layer_bridge_tx_proto.Messages().ByName("MsgSubmitValsetSignatureEvidence")
+	fd_MsgSubmitValsetSignatureEvidence_creator = md_MsgSubmitValsetSignatureEvidence.Fields().ByName("creator")
+	fd_MsgSubmitValsetSignatureEvidence_power_threshold = md_MsgSubmitValsetSignatureEvidence.Fields().ByName("power_threshold")
+	fd_MsgSubmitValsetSignatureEvidence_valset_timestamp = md_MsgSubmitValsetSignatureEvidence.Fields().ByName("valset_timestamp")
+	fd_MsgSubmitValsetSignatureEvidence_valset_hash = md_MsgSubmitValsetSignatureEvidence.Fields().ByName("valset_hash")
+	fd_MsgSubmitValsetSignatureEvidence_validator_signature = md_MsgSubmitValsetSignatureEvidence.Fields().ByName("validator_signature")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgSubmitValsetSignatureEvidence)(nil)
+
+type fastReflection_MsgSubmitValsetSignatureEvidence MsgSubmitValsetSignatureEvidence
+
+func (x *MsgSubmitValsetSignatureEvidence) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgSubmitValsetSignatureEvidence)(x)
+}
+
+func (x *MsgSubmitValsetSignatureEvidence) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_tx_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgSubmitValsetSignatureEvidence_messageType fastReflection_MsgSubmitValsetSignatureEvidence_messageType
+var _ protoreflect.MessageType = fastReflection_MsgSubmitValsetSignatureEvidence_messageType{}
+
+type fastReflection_MsgSubmitValsetSignatureEvidence_messageType struct{}
+
+func (x fastReflection_MsgSubmitValsetSignatureEvidence_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgSubmitValsetSignatureEvidence)(nil)
+}
+func (x fastReflection_MsgSubmitValsetSignatureEvidence_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgSubmitValsetSignatureEvidence)
+}
+func (x fastReflection_MsgSubmitValsetSignatureEvidence_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSubmitValsetSignatureEvidence
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSubmitValsetSignatureEvidence
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) Type() protoreflect.MessageType {
+	return _fastReflection_MsgSubmitValsetSignatureEvidence_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) New() protoreflect.Message {
+	return new(fastReflection_MsgSubmitValsetSignatureEvidence)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) Interface() protoreflect.ProtoMessage {
+	return (*MsgSubmitValsetSignatureEvidence)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Creator != "" {
+		value := protoreflect.ValueOfString(x.Creator)
+		if !f(fd_MsgSubmitValsetSignatureEvidence_creator, value) {
+			return
+		}
+	}
+	if x.PowerThreshold != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.PowerThreshold)
+		if !f(fd_MsgSubmitValsetSignatureEvidence_power_threshold, value) {
+			return
+		}
+	}
+	if x.ValsetTimestamp != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ValsetTimestamp)
+		if !f(fd_MsgSubmitValsetSignatureEvidence_valset_timestamp, value) {
+			return
+		}
+	}
+	if x.ValsetHash != "" {
+		value := protoreflect.ValueOfString(x.ValsetHash)
+		if !f(fd_MsgSubmitValsetSignatureEvidence_valset_hash, value) {
+			return
+		}
+	}
+	if x.ValidatorSignature != "" {
+		value := protoreflect.ValueOfString(x.ValidatorSignature)
+		if !f(fd_MsgSubmitValsetSignatureEvidence_validator_signature, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.creator":
+		return x.Creator != ""
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.power_threshold":
+		return x.PowerThreshold != uint64(0)
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.valset_timestamp":
+		return x.ValsetTimestamp != uint64(0)
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.valset_hash":
+		return x.ValsetHash != ""
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.validator_signature":
+		return x.ValidatorSignature != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitValsetSignatureEvidence"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitValsetSignatureEvidence does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.creator":
+		x.Creator = ""
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.power_threshold":
+		x.PowerThreshold = uint64(0)
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.valset_timestamp":
+		x.ValsetTimestamp = uint64(0)
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.valset_hash":
+		x.ValsetHash = ""
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.validator_signature":
+		x.ValidatorSignature = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitValsetSignatureEvidence"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitValsetSignatureEvidence does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.creator":
+		value := x.Creator
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.power_threshold":
+		value := x.PowerThreshold
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.valset_timestamp":
+		value := x.ValsetTimestamp
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.valset_hash":
+		value := x.ValsetHash
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.validator_signature":
+		value := x.ValidatorSignature
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitValsetSignatureEvidence"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitValsetSignatureEvidence does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.creator":
+		x.Creator = value.Interface().(string)
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.power_threshold":
+		x.PowerThreshold = value.Uint()
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.valset_timestamp":
+		x.ValsetTimestamp = value.Uint()
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.valset_hash":
+		x.ValsetHash = value.Interface().(string)
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.validator_signature":
+		x.ValidatorSignature = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitValsetSignatureEvidence"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitValsetSignatureEvidence does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.creator":
+		panic(fmt.Errorf("field creator of message layer.bridge.MsgSubmitValsetSignatureEvidence is not mutable"))
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.power_threshold":
+		panic(fmt.Errorf("field power_threshold of message layer.bridge.MsgSubmitValsetSignatureEvidence is not mutable"))
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.valset_timestamp":
+		panic(fmt.Errorf("field valset_timestamp of message layer.bridge.MsgSubmitValsetSignatureEvidence is not mutable"))
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.valset_hash":
+		panic(fmt.Errorf("field valset_hash of message layer.bridge.MsgSubmitValsetSignatureEvidence is not mutable"))
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.validator_signature":
+		panic(fmt.Errorf("field validator_signature of message layer.bridge.MsgSubmitValsetSignatureEvidence is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitValsetSignatureEvidence"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitValsetSignatureEvidence does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.creator":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.power_threshold":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.valset_timestamp":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.valset_hash":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.MsgSubmitValsetSignatureEvidence.validator_signature":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitValsetSignatureEvidence"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitValsetSignatureEvidence does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.MsgSubmitValsetSignatureEvidence", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidence) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgSubmitValsetSignatureEvidence)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Creator)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.PowerThreshold != 0 {
+			n += 1 + runtime.Sov(uint64(x.PowerThreshold))
+		}
+		if x.ValsetTimestamp != 0 {
+			n += 1 + runtime.Sov(uint64(x.ValsetTimestamp))
+		}
+		l = len(x.ValsetHash)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.ValidatorSignature)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSubmitValsetSignatureEvidence)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.ValidatorSignature) > 0 {
+			i -= len(x.ValidatorSignature)
+			copy(dAtA[i:], x.ValidatorSignature)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ValidatorSignature)))
+			i--
+			dAtA[i] = 0x2a
+		}
+		if len(x.ValsetHash) > 0 {
+			i -= len(x.ValsetHash)
+			copy(dAtA[i:], x.ValsetHash)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ValsetHash)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if x.ValsetTimestamp != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.ValsetTimestamp))
+			i--
+			dAtA[i] = 0x18
+		}
+		if x.PowerThreshold != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.PowerThreshold))
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.Creator) > 0 {
+			i -= len(x.Creator)
+			copy(dAtA[i:], x.Creator)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Creator)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSubmitValsetSignatureEvidence)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitValsetSignatureEvidence: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitValsetSignatureEvidence: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Creator = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PowerThreshold", wireType)
+				}
+				x.PowerThreshold = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.PowerThreshold |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValsetTimestamp", wireType)
+				}
+				x.ValsetTimestamp = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.ValsetTimestamp |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValsetHash", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValsetHash = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorSignature", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValidatorSignature = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgSubmitValsetSignatureEvidenceResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_layer_bridge_tx_proto_init()
+	md_MsgSubmitValsetSignatureEvidenceResponse = File_layer_bridge_tx_proto.Messages().ByName("MsgSubmitValsetSignatureEvidenceResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgSubmitValsetSignatureEvidenceResponse)(nil)
+
+type fastReflection_MsgSubmitValsetSignatureEvidenceResponse MsgSubmitValsetSignatureEvidenceResponse
+
+func (x *MsgSubmitValsetSignatureEvidenceResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgSubmitValsetSignatureEvidenceResponse)(x)
+}
+
+func (x *MsgSubmitValsetSignatureEvidenceResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_bridge_tx_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgSubmitValsetSignatureEvidenceResponse_messageType fastReflection_MsgSubmitValsetSignatureEvidenceResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgSubmitValsetSignatureEvidenceResponse_messageType{}
+
+type fastReflection_MsgSubmitValsetSignatureEvidenceResponse_messageType struct{}
+
+func (x fastReflection_MsgSubmitValsetSignatureEvidenceResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgSubmitValsetSignatureEvidenceResponse)(nil)
+}
+func (x fastReflection_MsgSubmitValsetSignatureEvidenceResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgSubmitValsetSignatureEvidenceResponse)
+}
+func (x fastReflection_MsgSubmitValsetSignatureEvidenceResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSubmitValsetSignatureEvidenceResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSubmitValsetSignatureEvidenceResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgSubmitValsetSignatureEvidenceResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgSubmitValsetSignatureEvidenceResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgSubmitValsetSignatureEvidenceResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitValsetSignatureEvidenceResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitValsetSignatureEvidenceResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitValsetSignatureEvidenceResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitValsetSignatureEvidenceResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitValsetSignatureEvidenceResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitValsetSignatureEvidenceResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitValsetSignatureEvidenceResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitValsetSignatureEvidenceResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitValsetSignatureEvidenceResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitValsetSignatureEvidenceResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.MsgSubmitValsetSignatureEvidenceResponse"))
+		}
+		panic(fmt.Errorf("message layer.bridge.MsgSubmitValsetSignatureEvidenceResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.MsgSubmitValsetSignatureEvidenceResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgSubmitValsetSignatureEvidenceResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgSubmitValsetSignatureEvidenceResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSubmitValsetSignatureEvidenceResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSubmitValsetSignatureEvidenceResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitValsetSignatureEvidenceResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSubmitValsetSignatureEvidenceResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -5512,7 +6448,6 @@ type MsgSubmitAttestationEvidence struct {
 	AttestationTimestamp   uint64 `protobuf:"varint,9,opt,name=attestation_timestamp,json=attestationTimestamp,proto3" json:"attestation_timestamp,omitempty"`
 	LastConsensusTimestamp uint64 `protobuf:"varint,10,opt,name=last_consensus_timestamp,json=lastConsensusTimestamp,proto3" json:"last_consensus_timestamp,omitempty"`
 	Signature              string `protobuf:"bytes,11,opt,name=signature,proto3" json:"signature,omitempty"`
-	OperatorAddress        string `protobuf:"bytes,12,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
 }
 
 func (x *MsgSubmitAttestationEvidence) Reset() {
@@ -5612,13 +6547,6 @@ func (x *MsgSubmitAttestationEvidence) GetSignature() string {
 	return ""
 }
 
-func (x *MsgSubmitAttestationEvidence) GetOperatorAddress() string {
-	if x != nil {
-		return x.OperatorAddress
-	}
-	return ""
-}
-
 type MsgSubmitAttestationEvidenceResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5643,6 +6571,99 @@ func (*MsgSubmitAttestationEvidenceResponse) ProtoMessage() {}
 // Deprecated: Use MsgSubmitAttestationEvidenceResponse.ProtoReflect.Descriptor instead.
 func (*MsgSubmitAttestationEvidenceResponse) Descriptor() ([]byte, []int) {
 	return file_layer_bridge_tx_proto_rawDescGZIP(), []int{9}
+}
+
+type MsgSubmitValsetSignatureEvidence struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Creator            string `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	PowerThreshold     uint64 `protobuf:"varint,2,opt,name=power_threshold,json=powerThreshold,proto3" json:"power_threshold,omitempty"`
+	ValsetTimestamp    uint64 `protobuf:"varint,3,opt,name=valset_timestamp,json=valsetTimestamp,proto3" json:"valset_timestamp,omitempty"`
+	ValsetHash         string `protobuf:"bytes,4,opt,name=valset_hash,json=valsetHash,proto3" json:"valset_hash,omitempty"`
+	ValidatorSignature string `protobuf:"bytes,5,opt,name=validator_signature,json=validatorSignature,proto3" json:"validator_signature,omitempty"`
+}
+
+func (x *MsgSubmitValsetSignatureEvidence) Reset() {
+	*x = MsgSubmitValsetSignatureEvidence{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_tx_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgSubmitValsetSignatureEvidence) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgSubmitValsetSignatureEvidence) ProtoMessage() {}
+
+// Deprecated: Use MsgSubmitValsetSignatureEvidence.ProtoReflect.Descriptor instead.
+func (*MsgSubmitValsetSignatureEvidence) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_tx_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *MsgSubmitValsetSignatureEvidence) GetCreator() string {
+	if x != nil {
+		return x.Creator
+	}
+	return ""
+}
+
+func (x *MsgSubmitValsetSignatureEvidence) GetPowerThreshold() uint64 {
+	if x != nil {
+		return x.PowerThreshold
+	}
+	return 0
+}
+
+func (x *MsgSubmitValsetSignatureEvidence) GetValsetTimestamp() uint64 {
+	if x != nil {
+		return x.ValsetTimestamp
+	}
+	return 0
+}
+
+func (x *MsgSubmitValsetSignatureEvidence) GetValsetHash() string {
+	if x != nil {
+		return x.ValsetHash
+	}
+	return ""
+}
+
+func (x *MsgSubmitValsetSignatureEvidence) GetValidatorSignature() string {
+	if x != nil {
+		return x.ValidatorSignature
+	}
+	return ""
+}
+
+type MsgSubmitValsetSignatureEvidenceResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgSubmitValsetSignatureEvidenceResponse) Reset() {
+	*x = MsgSubmitValsetSignatureEvidenceResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_bridge_tx_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgSubmitValsetSignatureEvidenceResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgSubmitValsetSignatureEvidenceResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgSubmitValsetSignatureEvidenceResponse.ProtoReflect.Descriptor instead.
+func (*MsgSubmitValsetSignatureEvidenceResponse) Descriptor() ([]byte, []int) {
+	return file_layer_bridge_tx_proto_rawDescGZIP(), []int{11}
 }
 
 var File_layer_bridge_tx_proto protoreflect.FileDescriptor
@@ -5694,7 +6715,7 @@ var file_layer_bridge_tx_proto_rawDesc = []byte{
 	0x69, 0x74, 0x3a, 0x0e, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69,
 	0x74, 0x79, 0x22, 0x20, 0x0a, 0x1e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53,
 	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0xf9, 0x03, 0x0a, 0x1c, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0xce, 0x03, 0x0a, 0x1c, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d,
 	0x69, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x69,
 	0x64, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12,
@@ -5722,57 +6743,81 @@ var file_layer_bridge_tx_proto_rawDesc = []byte{
 	0x04, 0x52, 0x16, 0x6c, 0x61, 0x73, 0x74, 0x43, 0x6f, 0x6e, 0x73, 0x65, 0x6e, 0x73, 0x75, 0x73,
 	0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x1c, 0x0a, 0x09, 0x73, 0x69, 0x67,
 	0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x73, 0x69,
-	0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x12, 0x29, 0x0a, 0x10, 0x6f, 0x70, 0x65, 0x72, 0x61,
-	0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x0c, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x0f, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x3a, 0x0c, 0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72,
-	0x22, 0x26, 0x0a, 0x24, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x41, 0x74, 0x74,
-	0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0x9b, 0x04, 0x0a, 0x03, 0x4d, 0x73, 0x67,
-	0x12, 0x69, 0x0a, 0x13, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73,
-	0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x24, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
-	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x1a, 0x2c, 0x2e,
-	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69,
-	0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5a, 0x0a, 0x0e, 0x57,
-	0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x73, 0x12, 0x1f, 0x2e,
-	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67,
-	0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x73, 0x1a, 0x27,
-	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73,
-	0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65, 0x6e, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0d, 0x43, 0x6c, 0x61, 0x69, 0x6d,
-	0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x73, 0x12, 0x25, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d,
-	0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x26, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d,
-	0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x69, 0x0a, 0x13, 0x55, 0x70, 0x64, 0x61, 0x74,
-	0x65, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x12, 0x24,
-	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73,
-	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x4c,
-	0x69, 0x6d, 0x69, 0x74, 0x1a, 0x2c, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69,
-	0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x6e, 0x61,
-	0x70, 0x73, 0x68, 0x6f, 0x74, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x7b, 0x0a, 0x19, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x41, 0x74, 0x74, 0x65,
-	0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x12,
-	0x2a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d,
+	0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x3a, 0x0c, 0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x63, 0x72,
+	0x65, 0x61, 0x74, 0x6f, 0x72, 0x22, 0x26, 0x0a, 0x24, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d,
+	0x69, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x69,
+	0x64, 0x65, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xf0, 0x01,
+	0x0a, 0x20, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x56, 0x61, 0x6c, 0x73, 0x65,
+	0x74, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e,
+	0x63, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x27, 0x0a, 0x0f,
+	0x70, 0x6f, 0x77, 0x65, 0x72, 0x5f, 0x74, 0x68, 0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0e, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65,
+	0x73, 0x68, 0x6f, 0x6c, 0x64, 0x12, 0x29, 0x0a, 0x10, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f,
+	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x0f, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
+	0x12, 0x1f, 0x0a, 0x0b, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x68, 0x61, 0x73, 0x68, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x48, 0x61, 0x73,
+	0x68, 0x12, 0x2f, 0x0a, 0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x73,
+	0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x12,
+	0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75,
+	0x72, 0x65, 0x3a, 0x0c, 0x82, 0xe7, 0xb0, 0x2a, 0x07, 0x63, 0x72, 0x65, 0x61, 0x74, 0x6f, 0x72,
+	0x22, 0x2a, 0x0a, 0x28, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x56, 0x61, 0x6c,
+	0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x45, 0x76, 0x69, 0x64,
+	0x65, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xa5, 0x05, 0x0a,
+	0x03, 0x4d, 0x73, 0x67, 0x12, 0x69, 0x0a, 0x13, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x41,
+	0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x24, 0x2e, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x73, 0x1a, 0x2c, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73,
+	0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x5a, 0x0a, 0x0e, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65, 0x6e,
+	0x73, 0x12, 0x1f, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b, 0x65,
+	0x6e, 0x73, 0x1a, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x6f, 0x6b,
+	0x65, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0d, 0x43,
+	0x6c, 0x61, 0x69, 0x6d, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x73, 0x12, 0x25, 0x2e, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x43,
+	0x6c, 0x61, 0x69, 0x6d, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
+	0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x44, 0x65, 0x70, 0x6f, 0x73,
+	0x69, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x69, 0x0a, 0x13, 0x55,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x4c, 0x69, 0x6d,
+	0x69, 0x74, 0x12, 0x24, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53, 0x6e, 0x61, 0x70, 0x73,
+	0x68, 0x6f, 0x74, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x1a, 0x2c, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x7b, 0x0a, 0x19, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74,
+	0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x69, 0x64, 0x65,
+	0x6e, 0x63, 0x65, 0x12, 0x2a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
+	0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x41, 0x74, 0x74, 0x65,
+	0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x1a,
+	0x32, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d,
 	0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74,
-	0x69, 0x6f, 0x6e, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x1a, 0x32, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75,
-	0x62, 0x6d, 0x69, 0x74, 0x41, 0x74, 0x74, 0x65, 0x73, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x45,
-	0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a,
-	0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x99, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x07, 0x54, 0x78, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
-	0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69,
-	0x64, 0x67, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65,
-	0x72, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72,
-	0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c,
-	0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x42, 0x72, 0x69, 0x64,
-	0x67, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x69, 0x6f, 0x6e, 0x45, 0x76, 0x69, 0x64, 0x65, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x87, 0x01, 0x0a, 0x1d, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x56, 0x61,
+	0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x45, 0x76, 0x69,
+	0x64, 0x65, 0x6e, 0x63, 0x65, 0x12, 0x2e, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x56, 0x61,
+	0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x45, 0x76, 0x69,
+	0x64, 0x65, 0x6e, 0x63, 0x65, 0x1a, 0x36, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x75, 0x62, 0x6d, 0x69, 0x74, 0x56, 0x61,
+	0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x6e, 0x61, 0x74, 0x75, 0x72, 0x65, 0x45, 0x76, 0x69,
+	0x64, 0x65, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80,
+	0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x99, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x42,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x42, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -5787,34 +6832,38 @@ func file_layer_bridge_tx_proto_rawDescGZIP() []byte {
 	return file_layer_bridge_tx_proto_rawDescData
 }
 
-var file_layer_bridge_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_layer_bridge_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_layer_bridge_tx_proto_goTypes = []interface{}{
-	(*MsgRequestAttestations)(nil),               // 0: layer.bridge.MsgRequestAttestations
-	(*MsgRequestAttestationsResponse)(nil),       // 1: layer.bridge.MsgRequestAttestationsResponse
-	(*MsgWithdrawTokens)(nil),                    // 2: layer.bridge.MsgWithdrawTokens
-	(*MsgWithdrawTokensResponse)(nil),            // 3: layer.bridge.MsgWithdrawTokensResponse
-	(*MsgClaimDepositsRequest)(nil),              // 4: layer.bridge.MsgClaimDepositsRequest
-	(*MsgClaimDepositsResponse)(nil),             // 5: layer.bridge.MsgClaimDepositsResponse
-	(*MsgUpdateSnapshotLimit)(nil),               // 6: layer.bridge.MsgUpdateSnapshotLimit
-	(*MsgUpdateSnapshotLimitResponse)(nil),       // 7: layer.bridge.MsgUpdateSnapshotLimitResponse
-	(*MsgSubmitAttestationEvidence)(nil),         // 8: layer.bridge.MsgSubmitAttestationEvidence
-	(*MsgSubmitAttestationEvidenceResponse)(nil), // 9: layer.bridge.MsgSubmitAttestationEvidenceResponse
-	(*v1beta1.Coin)(nil),                         // 10: cosmos.base.v1beta1.Coin
+	(*MsgRequestAttestations)(nil),                   // 0: layer.bridge.MsgRequestAttestations
+	(*MsgRequestAttestationsResponse)(nil),           // 1: layer.bridge.MsgRequestAttestationsResponse
+	(*MsgWithdrawTokens)(nil),                        // 2: layer.bridge.MsgWithdrawTokens
+	(*MsgWithdrawTokensResponse)(nil),                // 3: layer.bridge.MsgWithdrawTokensResponse
+	(*MsgClaimDepositsRequest)(nil),                  // 4: layer.bridge.MsgClaimDepositsRequest
+	(*MsgClaimDepositsResponse)(nil),                 // 5: layer.bridge.MsgClaimDepositsResponse
+	(*MsgUpdateSnapshotLimit)(nil),                   // 6: layer.bridge.MsgUpdateSnapshotLimit
+	(*MsgUpdateSnapshotLimitResponse)(nil),           // 7: layer.bridge.MsgUpdateSnapshotLimitResponse
+	(*MsgSubmitAttestationEvidence)(nil),             // 8: layer.bridge.MsgSubmitAttestationEvidence
+	(*MsgSubmitAttestationEvidenceResponse)(nil),     // 9: layer.bridge.MsgSubmitAttestationEvidenceResponse
+	(*MsgSubmitValsetSignatureEvidence)(nil),         // 10: layer.bridge.MsgSubmitValsetSignatureEvidence
+	(*MsgSubmitValsetSignatureEvidenceResponse)(nil), // 11: layer.bridge.MsgSubmitValsetSignatureEvidenceResponse
+	(*v1beta1.Coin)(nil),                             // 12: cosmos.base.v1beta1.Coin
 }
 var file_layer_bridge_tx_proto_depIdxs = []int32{
-	10, // 0: layer.bridge.MsgWithdrawTokens.amount:type_name -> cosmos.base.v1beta1.Coin
+	12, // 0: layer.bridge.MsgWithdrawTokens.amount:type_name -> cosmos.base.v1beta1.Coin
 	0,  // 1: layer.bridge.Msg.RequestAttestations:input_type -> layer.bridge.MsgRequestAttestations
 	2,  // 2: layer.bridge.Msg.WithdrawTokens:input_type -> layer.bridge.MsgWithdrawTokens
 	4,  // 3: layer.bridge.Msg.ClaimDeposits:input_type -> layer.bridge.MsgClaimDepositsRequest
 	6,  // 4: layer.bridge.Msg.UpdateSnapshotLimit:input_type -> layer.bridge.MsgUpdateSnapshotLimit
 	8,  // 5: layer.bridge.Msg.SubmitAttestationEvidence:input_type -> layer.bridge.MsgSubmitAttestationEvidence
-	1,  // 6: layer.bridge.Msg.RequestAttestations:output_type -> layer.bridge.MsgRequestAttestationsResponse
-	3,  // 7: layer.bridge.Msg.WithdrawTokens:output_type -> layer.bridge.MsgWithdrawTokensResponse
-	5,  // 8: layer.bridge.Msg.ClaimDeposits:output_type -> layer.bridge.MsgClaimDepositsResponse
-	7,  // 9: layer.bridge.Msg.UpdateSnapshotLimit:output_type -> layer.bridge.MsgUpdateSnapshotLimitResponse
-	9,  // 10: layer.bridge.Msg.SubmitAttestationEvidence:output_type -> layer.bridge.MsgSubmitAttestationEvidenceResponse
-	6,  // [6:11] is the sub-list for method output_type
-	1,  // [1:6] is the sub-list for method input_type
+	10, // 6: layer.bridge.Msg.SubmitValsetSignatureEvidence:input_type -> layer.bridge.MsgSubmitValsetSignatureEvidence
+	1,  // 7: layer.bridge.Msg.RequestAttestations:output_type -> layer.bridge.MsgRequestAttestationsResponse
+	3,  // 8: layer.bridge.Msg.WithdrawTokens:output_type -> layer.bridge.MsgWithdrawTokensResponse
+	5,  // 9: layer.bridge.Msg.ClaimDeposits:output_type -> layer.bridge.MsgClaimDepositsResponse
+	7,  // 10: layer.bridge.Msg.UpdateSnapshotLimit:output_type -> layer.bridge.MsgUpdateSnapshotLimitResponse
+	9,  // 11: layer.bridge.Msg.SubmitAttestationEvidence:output_type -> layer.bridge.MsgSubmitAttestationEvidenceResponse
+	11, // 12: layer.bridge.Msg.SubmitValsetSignatureEvidence:output_type -> layer.bridge.MsgSubmitValsetSignatureEvidenceResponse
+	7,  // [7:13] is the sub-list for method output_type
+	1,  // [1:7] is the sub-list for method input_type
 	1,  // [1:1] is the sub-list for extension type_name
 	1,  // [1:1] is the sub-list for extension extendee
 	0,  // [0:1] is the sub-list for field type_name
@@ -5946,6 +6995,30 @@ func file_layer_bridge_tx_proto_init() {
 				return nil
 			}
 		}
+		file_layer_bridge_tx_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgSubmitValsetSignatureEvidence); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_bridge_tx_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgSubmitValsetSignatureEvidenceResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -5953,7 +7026,7 @@ func file_layer_bridge_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_bridge_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

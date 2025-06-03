@@ -39,4 +39,5 @@ var (
 	SnapshotLimitKey                           = collections.NewPrefix(19) // Prefix for snapshot_limit key
 	AttestationEvidenceSubmittedKey            = collections.NewPrefix(20) // Prefix for attestation_evidence_submitted_map key
 	ValidatorCheckpointByCheckpointIndexPrefix = collections.NewPrefix(21) // Prefix for validator_checkpoint_by_checkpoint_index
+	ValsetSignatureEvidenceSubmittedKey        = collections.NewPrefix(22) // Prefix for valset_signature_evidence_submitted_map key
 )

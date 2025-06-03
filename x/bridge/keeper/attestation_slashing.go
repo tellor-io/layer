@@ -32,6 +32,7 @@ func (k Keeper) CheckAttestationEvidence(ctx context.Context, request types.MsgS
 		return errors.New("attestation timestamp is older than unbonding period")
 	}
 
+	// determine the snapshot from the inputted params
 	queryId, err := hex.DecodeString(request.QueryId)
 	if err != nil {
 		return err
@@ -66,33 +67,10 @@ func (k Keeper) CheckAttestationEvidence(ctx context.Context, request types.MsgS
 	}
 
 	// check whether signature is associated with a valid operator address
-	sigBytes, err := hex.DecodeString(request.Signature)
+	operatorAddr, err := k.GetOperatorAddressFromSignature(ctx, snapshotBytes, request.Signature)
 	if err != nil {
 		return err
 	}
-	snapshotSha256 := sha256.Sum256(snapshotBytes)
-	addrs, err := k.TryRecoverAddressWithBothIDs(sigBytes, snapshotSha256[:])
-	if err != nil {
-		return err
-	}
-	var operatorAddr types.OperatorAddress
-	for _, addr := range addrs {
-		evmAddrBytes := addr.Bytes()
-		evmAddrString := common.Bytes2Hex(evmAddrBytes)
-		k.Logger(ctx).Info("evmAddrString", "evmAddrString", evmAddrString)
-		exists, err := k.EVMToOperatorAddressMap.Has(ctx, evmAddrString)
-		if err != nil {
-			return err
-		}
-		if exists {
-			operatorAddr, err = k.EVMToOperatorAddressMap.Get(ctx, evmAddrString)
-			if err != nil {
-				return err
-			}
-			break
-		}
-	}
-
 	if operatorAddr.OperatorAddress == nil {
 		return errors.New("operator address not found")
 	}
@@ -129,6 +107,35 @@ func (k Keeper) CheckAttestationEvidence(ctx context.Context, request types.MsgS
 	}
 
 	return nil
+}
+
+func (k Keeper) GetOperatorAddressFromSignature(ctx context.Context, msg []byte, sig string) (types.OperatorAddress, error) {
+	sigBytes, err := hex.DecodeString(sig)
+	if err != nil {
+		return types.OperatorAddress{}, err
+	}
+	msgSha256 := sha256.Sum256(msg)
+	addrs, err := k.TryRecoverAddressWithBothIDs(sigBytes, msgSha256[:])
+	if err != nil {
+		return types.OperatorAddress{}, err
+	}
+	var operatorAddr types.OperatorAddress
+	for _, addr := range addrs {
+		evmAddrBytes := addr.Bytes()
+		evmAddrString := common.Bytes2Hex(evmAddrBytes)
+		exists, err := k.EVMToOperatorAddressMap.Has(ctx, evmAddrString)
+		if err != nil {
+			return types.OperatorAddress{}, err
+		}
+		if exists {
+			operatorAddr, err = k.EVMToOperatorAddressMap.Get(ctx, evmAddrString)
+			if err != nil {
+				return types.OperatorAddress{}, err
+			}
+			break
+		}
+	}
+	return operatorAddr, nil
 }
 
 // SlashValidator slashes a validator for malicious attestation evidence.
