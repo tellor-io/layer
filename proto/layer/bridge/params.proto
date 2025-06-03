@@ -2,6 +2,8 @@ syntax = "proto3";
 package layer.bridge;
 
 import "gogoproto/gogo.proto";
+import "cosmos_proto/cosmos.proto";
+
 
 option go_package = "github.com/tellor-io/layer/x/bridge/types";
 
@@ -9,4 +11,16 @@ option go_package = "github.com/tellor-io/layer/x/bridge/types";
 message Params {
   option (gogoproto.goproto_stringer) = false;
   
+  // Percentage of stake to slash for oracle attestation violations (as decimal)
+  string attest_slash_percentage = 1 [
+    (gogoproto.moretags) = "yaml:\"attest_slash_percentage\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false,
+    (cosmos_proto.scalar) = "cosmos.Dec"
+  ];
+  
+  // Rate limit window in milliseconds for attestation submissions
+  uint64 attest_rate_limit_window = 2 [
+    (gogoproto.moretags) = "yaml:\"attest_rate_limit_window\""
+  ];
 }

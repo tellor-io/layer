@@ -104,7 +104,10 @@ func (k Keeper) CheckAttestationEvidence(ctx context.Context, request types.MsgS
 	}
 
 	// slash the validator
-	slashFactor := math.LegacyNewDec(1).Quo(math.LegacyNewDec(100)) // update this to be a parameter in the bridge module
+	slashFactor, err := k.GetAttestSlashPercentage(ctx)
+	if err != nil {
+		return err
+	}
 	checkpointParams, err := k.GetCheckpointParamsByCheckpoint(ctx, checkpoint)
 	if err != nil {
 		// uncomment this
@@ -171,8 +174,10 @@ func (k Keeper) SlashValidator(ctx context.Context, operatorAddr types.OperatorA
 
 // CheckRateLimit checks whether attestation evidence has been submitted for a given operator address with an attestation timestamp that is within the rate limit
 func (k Keeper) CheckRateLimit(ctx context.Context, operatorAddr types.OperatorAddress, attestationTimestamp uint64) error {
-	// get the rate limit. this should be updated to be a module parameter
-	rateLimit := uint64(300000) // 5 minutes
+	rateLimit, err := k.GetAttestRateLimitWindow(ctx)
+	if err != nil {
+		return err
+	}
 
 	// first, check whether there is already a submission with this exact timestamp
 	submitted, err := k.AttestationEvidenceSubmitted.Has(ctx, collections.Join(operatorAddr.OperatorAddress, attestationTimestamp))
