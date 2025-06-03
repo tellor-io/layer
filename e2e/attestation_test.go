@@ -181,7 +181,7 @@ func TestAttestation(t *testing.T) {
 	// check on reports
 	var queryId1, queryId2 string
 	for i, v := range validators {
-		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", v.Addr)
+		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", v.Addr, "--page-limit", "1")
 		require.NoError(err)
 		var reportsRes e2e.QueryMicroReportsResponse
 		err = json.Unmarshal(reports, &reportsRes)

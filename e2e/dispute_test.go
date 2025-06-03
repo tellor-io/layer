@@ -281,7 +281,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		// wait for query to expire and dispute
 		err = testutil.WaitForBlocks(ctx, 2, val1)
 		require.NoError(err)
-		microreport, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
+		microreport, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr, "--page-limit", "1")
 		require.NoError(err)
 		var microReports e2e.ReportsResponse
 		err = json.Unmarshal(microreport, &microReports)
@@ -659,7 +659,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	// wait for query to expire and dispute from user0
 	err = testutil.WaitForBlocks(ctx, 2, val1)
 	require.NoError(err)
-	microreport, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr)
+	microreport, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
 	require.NoError(err)
 	var microReports e2e.ReportsResponse
 	require.NoError(json.Unmarshal(microreport, &microReports))
@@ -1010,7 +1010,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.NoError(err)
 
 	// get report to check reporter power
-	res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr)
+	res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
 	require.NoError(err)
 	var reports e2e.QueryMicroReportsResponse
 	require.NoError(json.Unmarshal(res, &reports))
@@ -1072,7 +1072,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Equal(len(reportersRes.Reporters), numReporters+1) // 2 reporters + 1 validator reporter
 
 	// major dispute from user0
-	microreport, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr)
+	microreport, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
 	require.NoError(err)
 	var microReports e2e.ReportsResponse
 	require.NoError(json.Unmarshal(microreport, &microReports))
@@ -1519,7 +1519,7 @@ func TestEscalatingDispute(t *testing.T) {
 	require.NoError(err)
 
 	// get report to check reporter power
-	res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr)
+	res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
 	require.NoError(err)
 	var reports e2e.QueryMicroReportsResponse
 	require.NoError(json.Unmarshal(res, &reports))
@@ -1887,7 +1887,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	require.NoError(err)
 
 	// get report to check reporter power
-	res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr)
+	res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
 	require.NoError(err)
 	var reports e2e.QueryMicroReportsResponse
 	require.NoError(json.Unmarshal(res, &reports))
@@ -2235,7 +2235,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	}
 	userReports := make([]UserReports, 2)
 	for i := range reporters[:2] {
-		res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
+		res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr, "--page-limit", "1")
 		require.NoError(err)
 		var userReport e2e.QueryMicroReportsResponse
 		require.NoError(json.Unmarshal(res, &userReport))
@@ -2667,7 +2667,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	userReports := make([]UserReports, numReporters)
 	for i := range numReporters {
 		var userReport e2e.QueryMicroReportsResponse
-		res, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr)
+		res, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr, "--page-limit", "1")
 		require.NoError(err)
 		require.NoError(json.Unmarshal(res, &userReport))
 		fmt.Println("userReport: ", userReport)
@@ -2903,7 +2903,7 @@ func TestUnderfundedDispute(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Val))
 
 	// query microreport for val1
-	reports, _, err := validators[1].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[1].Addr)
+	reports, _, err := validators[1].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[1].Addr, "--page-limit", "1")
 	require.NoError(err)
 	var reportsRes e2e.QueryMicroReportsResponse
 	err = json.Unmarshal(reports, &reportsRes)
@@ -3106,7 +3106,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Val))
 
 	// query microreport for val1
-	reports, _, err := validators[1].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[1].Addr)
+	reports, _, err := validators[1].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[1].Addr, "--page-limit", "1")
 	require.NoError(err)
 	var reportsRes e2e.QueryMicroReportsResponse
 	err = json.Unmarshal(reports, &reportsRes)
