@@ -10,6 +10,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmos "github.com/cometbft/cometbft/libs/os"
 	dbm "github.com/cosmos/cosmos-db"
+	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/gogoproto/proto"
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
 	icqkeeper "github.com/cosmos/ibc-apps/modules/async-icq/v8/keeper"
@@ -101,7 +102,6 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
-	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
@@ -933,6 +933,38 @@ func (app *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
 	return app.mm.EndBlock(ctx)
 }
 
+// Simple struct to hold upgrade plan in genesis
+type GenesisUpgrade struct {
+	Plans []upgradetypes.Plan `json:"plans,omitempty"`
+}
+
+// Helper function to create pre-upgrade version map
+func getPreUpgradeVersionMap(currentVersions module.VersionMap) module.VersionMap {
+	preUpgradeVersions := make(module.VersionMap)
+
+	// Set modules that have migrations to their previous consensus version
+	// You need to specify which modules should have their versions reduced
+	for moduleName, currentVersion := range currentVersions {
+		switch moduleName {
+		case "dispute":
+			// If dispute module upgraded from v3 to v4, set it to v3 for genesis
+			preUpgradeVersions[moduleName] = currentVersion - 1
+		case "oracle":
+			// If oracle module upgraded from v2 to v3, set it to v2
+			preUpgradeVersions[moduleName] = currentVersion - 1
+		case "reporter":
+			// If reporter module upgraded from v2 to v3, set it to v2
+			preUpgradeVersions[moduleName] = currentVersion - 1
+		// Add other modules that need migrations here
+		default:
+			// Modules without migrations keep current version
+			preUpgradeVersions[moduleName] = currentVersion
+		}
+	}
+
+	return preUpgradeVersions
+}
+
 // InitChainer application update at chain initialization
 func (app *App) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	var genesisState GenesisState
@@ -940,20 +972,98 @@ func (app *App) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.
 		panic(err)
 	}
 
-	err := app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+	// Extract upgrade plan BEFORE initializing modules
+	var upgradePlan *upgradetypes.Plan
+	if upgradeData, exists := genesisState["upgrade"]; exists {
+		var genUpgrade GenesisUpgrade
+		if err := json.Unmarshal(upgradeData, &genUpgrade); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal upgrade genesis: %w", err)
+		}
+
+		if len(genUpgrade.Plans) > 0 {
+			upgradePlan = &genUpgrade.Plans[0]
+		}
+
+		if upgradePlan != nil {
+			// Validate the plan
+			if upgradePlan.Name == "" {
+				return nil, fmt.Errorf("upgrade plan name cannot be empty")
+			}
+			if upgradePlan.Height < 0 {
+				return nil, fmt.Errorf("upgrade plan height cannot be negative")
+			}
+
+			app.Logger().Info("Found upgrade plan in genesis",
+				"name", upgradePlan.Name,
+				"height", upgradePlan.Height,
+				"info", upgradePlan.Info)
+		}
+	}
+
+	// Handle version map setup based on whether we have a genesis upgrade
+	var initialVersionMap module.VersionMap
+	if upgradePlan != nil && upgradePlan.Height <= ctx.BlockHeight() {
+		// For genesis upgrades, set initial version map to simulate "before" state
+		initialVersionMap = getPreUpgradeVersionMap(app.mm.GetVersionMap())
+		app.Logger().Info("Setting pre-upgrade version map for genesis upgrade",
+			"upgrade", upgradePlan.Name,
+			"pre_versions", initialVersionMap)
+	} else {
+		// Normal initialization - use current module versions
+		initialVersionMap = app.mm.GetVersionMap()
+	}
+
+	// Set the initial version map
+	err := app.UpgradeKeeper.SetModuleVersionMap(ctx, initialVersionMap)
 	if err != nil {
 		return nil, err
 	}
 
-	// cp := app.GetConsensusParams(ctx)
-	// cp.Abci = &protocmt.ABCIParams{
-	// 	VoteExtensionsEnableHeight: 2,
-	// }
-	// err = app.StoreConsensusParams(ctx, cp)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
+	// Initialize ALL modules first (including upgrade module)
+	response, err := app.mm.InitGenesis(ctx, app.appCodec, genesisState)
+	if err != nil {
+		return nil, err
+	}
+
+	// AFTER all modules are initialized, handle the upgrade
+	if upgradePlan != nil {
+		// Check if this upgrade should execute at genesis initial height
+		if upgradePlan.Height <= ctx.BlockHeight() {
+			app.Logger().Info("Executing upgrade plan at genesis",
+				"name", upgradePlan.Name,
+				"planned_height", upgradePlan.Height,
+				"current_height", ctx.BlockHeight())
+
+			// Get the upgrade handler
+			if hasHandler := app.UpgradeKeeper.HasHandler(upgradePlan.Name); !hasHandler {
+				return nil, fmt.Errorf("no upgrade handler registered for '%s'", upgradePlan.Name)
+			}
+
+			// Execute the upgrade handler
+			err := app.UpgradeKeeper.ApplyUpgrade(ctx, *upgradePlan)
+			if err != nil {
+				return nil, fmt.Errorf("failed to execute upgrade '%s': %w", upgradePlan.Name, err)
+			}
+
+			// Update the module version map after upgrade
+			if err := app.UpgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap()); err != nil {
+				return nil, fmt.Errorf("failed to set module version map after upgrade: %w", err)
+			}
+
+			app.Logger().Info("Successfully executed upgrade plan at genesis", "name", upgradePlan.Name)
+		} else {
+			// Schedule the upgrade for future execution
+			app.Logger().Info("Scheduling upgrade plan for future execution",
+				"name", upgradePlan.Name,
+				"height", upgradePlan.Height)
+
+			if err := app.UpgradeKeeper.ScheduleUpgrade(ctx, *upgradePlan); err != nil {
+				return nil, fmt.Errorf("failed to schedule upgrade: %w", err)
+			}
+		}
+	}
+
+	return response, nil
 }
 
 // Configurator get app configurator

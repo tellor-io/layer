@@ -19,7 +19,7 @@ func NewMigrator(keeper Keeper) Migrator {
 	return Migrator{keeper: keeper}
 }
 
-// Migrate2to3 migrates from version 2 to 3.
+// MigrateFork migrates from current version for forked version.
 func (m Migrator) MigrateFork(ctx sdk.Context) error {
 	homeDir := viper.GetString("home")
 	if homeDir == "" {
