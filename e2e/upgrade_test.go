@@ -2,6 +2,8 @@ package e2e_test
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -100,7 +102,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 		_ = ic.Close()
 	})
 	validatorI := chain.Validators[0]
-	_, err := validatorI.AccountKeyBech32(ctx, "validator")
+	valAddr, err := validatorI.AccountKeyBech32(ctx, "validator")
 	require.NoError(t, err)
 
 	_, err = validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val1_moniker", "--keyring-dir", chain.HomeDir())
@@ -111,6 +113,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	err = testutil.WaitForBlocks(ctx, 1, validatorI)
 	require.NoError(t, err)
 
+	// value submitted on old version
 	_, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", chain.HomeDir())
 	require.NoError(t, err)
 
@@ -182,4 +185,31 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	require.NoError(t, err)
 	err = testutil.WaitForBlocks(timeoutCtx, int(blocksAfterUpgrade), chain)
 	require.NoError(t, err, "chain did not produce blocks after upgrade")
+
+	// try to query old report by reporter
+	reports, _, err := validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "1")
+	require.NoError(t, err)
+	//unmarshal
+	var reportsRes e2e.QueryMicroReportsResponse
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	fmt.Println("length: ", len(reportsRes.MicroReports))
+	fmt.Println("reports: ", reportsRes)
+	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
+	blockNum, err := strconv.ParseInt(reportsRes.MicroReports[0].BlockNumber, 10, 64)
+	require.NoError(t, err)
+	require.Less(t, blockNum, haltHeight)
+
+	// try to query new report by reporter
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit=1", "--page-reverse")
+	require.NoError(t, err)
+	//unmarshal
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	fmt.Println("length: ", len(reportsRes.MicroReports))
+	fmt.Println("reports: ", reportsRes)
+	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
+	blockNum, err = strconv.ParseInt(reportsRes.MicroReports[0].BlockNumber, 10, 64)
+	require.NoError(t, err)
+	require.Greater(t, blockNum, haltHeight)
 }

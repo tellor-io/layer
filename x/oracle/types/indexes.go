@@ -1,9 +1,6 @@
 package types
 
 import (
-	"encoding/hex"
-	fmt "fmt"
-
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 
@@ -67,8 +64,6 @@ func NewReportsIndex(sb *collections.SchemaBuilder) ReportsIndex {
 					return nil, err
 				}
 				buffer = append(k.K2(), buffer...)
-				fmt.Println("buffer: ", buffer)
-				fmt.Println("buffer str: ", hex.EncodeToString(buffer))
 				return buffer, nil
 			},
 		),
@@ -81,46 +76,6 @@ func NewReportsIndex(sb *collections.SchemaBuilder) ReportsIndex {
 		),
 	}
 }
-
-// type Reports2Index struct {
-// 	Reporter       *indexes.Multi[[]byte, collections.Triple[[]byte, []byte, uint64], MicroReport]
-// 	ReporterMetaId *indexes.Multi[collections.Pair[[]byte, uint64], collections.Triple[[]byte, []byte, uint64], MicroReport]
-// 	IdQueryId      *indexes.Multi[collections.Pair[uint64, []byte], collections.Triple[[]byte, []byte, uint64], MicroReport]
-// }
-
-// func (a Reports2Index) IndexesList() []collections.Index[collections.Triple[[]byte, []byte, uint64], MicroReport] {
-// 	return []collections.Index[collections.Triple[[]byte, []byte, uint64], MicroReport]{
-// 		a.Reporter,
-// 		a.ReporterMetaId,
-// 		a.IdQueryId,
-// 	}
-// }
-
-// func NewReports2Index(sb *collections.SchemaBuilder) Reports2Index {
-// 	return Reports2Index{
-// 		Reporter: indexes.NewMulti(
-// 			sb, Reports2ReporterIndexPrefix, "reports2_by_reporter",
-// 			collections.BytesKey, collections.TripleKeyCodec[[]byte, []byte, uint64](collections.BytesKey, collections.BytesKey, collections.Uint64Key),
-// 			func(k collections.Triple[[]byte, []byte, uint64], _ MicroReport) ([]byte, error) {
-// 				return k.K2(), nil
-// 			},
-// 		),
-// 		ReporterMetaId: indexes.NewMulti(
-// 			sb, collections.NewPrefix("reporter2"), "reporters2",
-// 			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), collections.TripleKeyCodec[[]byte, []byte, uint64](collections.BytesKey, collections.BytesKey, collections.Uint64Key),
-// 			func(k collections.Triple[[]byte, []byte, uint64], _ MicroReport) (collections.Pair[[]byte, uint64], error) {
-// 				return collections.Join(k.K2(), k.K3()), nil
-// 			},
-// 		),
-// 		IdQueryId: indexes.NewMulti(
-// 			sb, collections.NewPrefix("reporter2"), "reporters2",
-// 			collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey), collections.TripleKeyCodec[[]byte, []byte, uint64](collections.BytesKey, collections.BytesKey, collections.Uint64Key),
-// 			func(k collections.Triple[[]byte, []byte, uint64], _ MicroReport) (collections.Pair[uint64, []byte], error) {
-// 				return collections.Join(k.K3(), k.K1()), nil
-// 			},
-// 		),
-// 	}
-// }
 
 type QueryMetaIndex struct {
 	Expiration *indexes.Multi[collections.Pair[bool, uint64], collections.Pair[[]byte, uint64], QueryMeta]

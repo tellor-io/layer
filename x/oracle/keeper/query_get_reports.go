@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -88,7 +87,6 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 
 	// construct key: reporter_address + encoded_uint64
 	key := append(reporter.Bytes(), buffer...)
-	fmt.Println("key str: ", hex.EncodeToString(key))
 	rng := collections.NewPrefixUntilPairRange[[]byte, collections.Triple[[]byte, []byte, uint64]](key)
 	if req.Pagination != nil && req.Pagination.Reverse {
 		rng.Descending()
