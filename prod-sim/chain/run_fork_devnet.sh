@@ -9,11 +9,21 @@ FUTURE_TIME=$(date -u -v+1d +"%Y-%m-%dT%H:%M:%S.000000000Z")
 # Set the path to layerd binary
 LAYERD_PATH="/Users/caleb/layer/layerd"
 
+# Create necessary directories
+mkdir -p bin genesis
+
 PUBLIC_GENESIS="./exported_data/public_exported_genesis.json"
 LOCAL_GENESIS="./exported_data/local_docker_genesis.json"
 DOCKER_DATA="./exported_data/docker_module_data.json"
 REPORTER_DATA="./exported_data/reporter_module_state.json"
 OUTPUT_GENESIS="./genesis/genesis.json"
+
+# Check for uncommitted changes
+if ! git diff-index --quiet HEAD --; then
+    echo "Error: You have uncommitted changes in your working directory."
+    echo "Please commit or stash your changes before running this script."
+    exit 1
+fi
 
 echo "ensure no old docker containers are running..."
 docker compose down -v
@@ -26,33 +36,49 @@ echo "checking out temp-fork-devnet-update branch"
 git checkout -b temp-fork-devnet-update
 
 echo "replace ./app/upgrades.go with template so fork upgrade is set up"
-mv ./fork-file-templates/app_upgrades_go_template.txt ../../app/upgrades.go
+cp ./fork-file-templates/app_upgrades_go_template.txt ../../app/upgrades.go
 
 echo "edit module.go for oracle module to update consensus version and register upgrade handler"
-pwd
-sleep 10
-python3 update_consensus.py ../../x/oracle/module.go
+python3 ./update_consensus.py ../../x/oracle/module.go
 echo "replace oracle migrations.go with template..."
-mv ./fork-file-templates/oracle_fork_migrations_template.txt ../../x/oracle/migrations.go
+cp ./fork-file-templates/oracle_fork_migrations_template.txt ../../x/oracle/keeper/migrations.go
 
 echo "edit module.go for reporter module to update consensus version"
-python3 update_consensus.py ../../x/reporter/module/module.go
+python3 ./update_consensus.py ../../x/reporter/module/module.go
 echo "replace reporter migrations.go with template..."
-mv ./fork-file-templates/reporter_migrations_go_template.txt ../../x/reporter/migrations.go
+cp ./fork-file-templates/reporter_migrations_go_template.txt ../../x/reporter/keeper/migrations.go
 
 echo "edit module.go for dispute module to update consensus version"
-python3 update_consensus.py ../../x/dispute/module.go
+python3 ./update_consensus.py ../../x/dispute/module.go
 echo "replace dispute migrations.go with template..."
-mv ./fork-file-templates/dispute_fork_migrations_template.txt ../../x/dispute/migrations.go
+cp ./fork-file-templates/dispute_fork_migrations_template.txt ../../x/dispute/keeper/migrations.go
 
 # switch from chain directory to repo root to build layerd binary
 cd ../..
+
+echo "add edited files to git..."
+git add ./app/upgrades.go
+git add ./x/oracle/module.go
+git add ./x/oracle/keeper/migrations.go
+git add ./x/reporter/module/module.go
+git add ./x/reporter/keeper/migrations.go
+git add ./x/dispute/module.go
+git add ./x/dispute/keeper/migrations.go
+git commit -m "update consensus version for fork upgrade"
 
 echo "build chain binary from temp-fork-devnet-update branch for docker environment..."
 CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o ./prod-sim/chain/bin/layerd ./cmd/layerd
 
 echo "checkout back to $CURRENT_BRANCH branch"
 git checkout $CURRENT_BRANCH
+
+# Clean up the temporary branch and its changes
+echo "cleaning up temporary branch..."
+git branch -D temp-fork-devnet-update
+git reset --hard HEAD
+git clean -fd
+
+sleep 10
 
 # switch back to chain directory
 cd prod-sim/chain

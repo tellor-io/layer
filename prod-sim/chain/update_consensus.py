@@ -10,7 +10,7 @@ REGISTER_SERVICES_TEMPLATE = '''func (am AppModule) RegisterServices(cfg module.
 	if err := cfg.RegisterMigration(types.ModuleName, {old_version}, m.MigrateFork); err != nil {{
 		panic(err)
 	}}
-}}'''
+'''
 
 def update_consensus_version(file_path):
     # Read the file
@@ -35,14 +35,14 @@ def update_consensus_version(file_path):
         content
     )
     
-    # Find the RegisterServices function using just the signature
-    register_services_pattern = r'func \(am AppModule\) RegisterServices\(cfg module\.Configurator\) \{.*?\}'
+    # Find the RegisterServices function using a more precise pattern
+    register_services_pattern = r'func \(am AppModule\) RegisterServices\(cfg module\.Configurator\) \{[^}]*\}'
     register_services_match = re.search(register_services_pattern, new_content, re.DOTALL)
     
     if register_services_match:
         # Replace the entire function with our template
         new_register_services = REGISTER_SERVICES_TEMPLATE.format(old_version=old_version)
-        new_content = new_content.replace(register_services_match.group(0), new_register_services)
+        new_content = re.sub(register_services_pattern, new_register_services, new_content, flags=re.DOTALL)
         print(f"Updated RegisterServices function with version {old_version}")
     else:
         print("No RegisterServices function found - this is normal for some modules")
