@@ -8,13 +8,14 @@ set -e
 
 KEYRING_BACKEND="test"
 CHAIN_ID="layertest-4"
+PASSWORD="password"
 # Define paths to the node directories
 echo "Defining paths..."
 NODE1_HOME_DIR="$HOME/.layer/alice"
 NODE2_HOME_DIR="$HOME/.layer/bill"
 NODE1_CONFIG_DIR=$NODE1_HOME_DIR"/config"
 NODE2_CONFIG_DIR=$NODE2_HOME_DIR"/config"
-# AMOUNT_IN_LOYA="45000000000loya"
+# AMOUNT_IN_LOYA="600000000000loya"
 AMOUNT_IN_LOYA="100000000loya"
 
 # Define bill's node home dir to be read by reporter daemon
@@ -104,5 +105,4 @@ sed -i '' "s/keyring-backend = \"os\"/keyring-backend = \"$KEYRING_BACKEND\"/" ~
 
 # Start the second node
 echo "Starting the second node..."
-#./layerd start --home $NODE2_HOME_DIR --api.enable --keyring-backend $KEYRING_BACKEND --key-name bill 
-
+./layerd start --home $NODE2_HOME_DIR --api.enable --keyring-backend $KEYRING_BACKEND --key-name bill 

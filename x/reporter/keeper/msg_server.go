@@ -21,6 +21,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+const TwentyOneDaysInMs = 21 * 24 * 60 * 60 * 1000
+
 type msgServer struct {
 	Keeper
 }
@@ -58,17 +60,55 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if msg.MinTokensRequired.LT(params.MinLoya) {
 		return nil, errors.New("reporters chosen min tokens for selectors to join must be gte the min requirement")
 	}
-	// reporter can't be previously a selector or a reporter
+	// reporter commission rate must be between 0 and 1
+	if msg.CommissionRate.GT(math.LegacyNewDec(1)) || msg.CommissionRate.LT(params.MinCommissionRate) {
+		return nil, errors.New("commission rate must be between 0 and 1 (e.g, 0.50 = 50%)")
+	}
+	// reporter can't be previously a reporter
 	alreadyExists, err := k.Keeper.Selectors.Has(goCtx, addr)
 	if err != nil {
 		return nil, err
 	}
 	if alreadyExists {
-		return nil, errors.New("address already exists")
-	}
-	// reporter commission rate must be between 0 and 1
-	if msg.CommissionRate.GT(math.LegacyNewDec(1)) || msg.CommissionRate.LT(params.MinCommissionRate) {
-		return nil, errors.New("commission rate must be between 0 and 1 (e.g, 0.50 = 50%)")
+		// check if they are a reporter already
+		selection, err := k.Keeper.Selectors.Get(goCtx, addr)
+		if err != nil {
+			return nil, err
+		}
+		if bytes.Equal(selection.Reporter, addr.Bytes()) {
+			return nil, errors.New("address is already a reporter")
+		}
+		// check if selector was part of a report before switching
+		prevReporter := sdk.AccAddress(selection.Reporter)
+		prevReportedPower, err := k.Keeper.GetReporterTokensAtBlock(goCtx, prevReporter, uint64(sdk.UnwrapSDKContext(goCtx).BlockHeight()))
+		if err != nil {
+			return nil, err
+		}
+		if !prevReportedPower.IsZero() {
+			unbondingTime, err := k.stakingKeeper.UnbondingTime(goCtx)
+			if err != nil {
+				return nil, err
+			}
+			selection.LockedUntilTime = sdk.UnwrapSDKContext(goCtx).BlockTime().Add(unbondingTime)
+		}
+		selection.Reporter = addr.Bytes()
+		if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), selection); err != nil {
+			return nil, err
+		}
+		if err := k.Keeper.Reporters.Set(goCtx, addr.Bytes(), types.NewReporter(msg.CommissionRate, msg.MinTokensRequired, msg.Moniker)); err != nil {
+			return nil, err
+		}
+		sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				"created_reporter_from_selector",
+				sdk.NewAttribute("reporter", msg.ReporterAddress),
+				sdk.NewAttribute("commission", msg.CommissionRate.String()),
+				sdk.NewAttribute("min_tokens_required", msg.MinTokensRequired.String()),
+				sdk.NewAttribute("moniker", msg.Moniker),
+			),
+		})
+		telemetry.IncrCounterWithLabels([]string{"create_reporter_count"}, 1, []metrics.Label{{Name: "chain_id", Value: sdk.UnwrapSDKContext(goCtx).ChainID()}})
+		return &types.MsgCreateReporterResponse{}, nil
 	}
 
 	// set the reporter and set the self selector
@@ -201,14 +241,29 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 		return nil, err
 	}
 	prevReporter := sdk.AccAddress(selector.Reporter)
-	if bytes.Equal(selector.Reporter, addr.Bytes()) {
-		return nil, errors.New("cannot switch reporter if selector is a reporter")
-	}
 	// check if reporter exists
 	reporterAddr := sdk.MustAccAddressFromBech32(msg.ReporterAddress)
 	reporter, err := k.Keeper.Reporters.Get(goCtx, reporterAddr)
 	if err != nil {
 		return nil, err
+	}
+	// check if reporter is trying to become a selector, can only switch if havent reported in the last 21 days
+	if bytes.Equal(selector.Reporter, addr.Bytes()) {
+		// get the timestamp of the most recent report for reporter switching to selector (msg signer/selector)
+		lastReportTimestamp, err := k.Keeper.oracleKeeper.GetLastReportedAtTimestamp(goCtx, addr.Bytes())
+		if err != nil {
+			return nil, err
+		}
+
+		// check if the reporter has reported in the last 21 days
+		currentBlocktime := uint64(sdk.UnwrapSDKContext(goCtx).BlockTime().UnixMilli())
+		if currentBlocktime-lastReportTimestamp < TwentyOneDaysInMs {
+			return nil, errors.New("reporter has reported in the last 21 days, please wait before switching reporters")
+		}
+
+		if err := k.Keeper.Reporters.Remove(goCtx, addr.Bytes()); err != nil {
+			return nil, err
+		}
 	}
 	// check if reporter is capped at max selectors
 	iter, err := k.Keeper.Selectors.Indexes.Reporter.MatchExact(goCtx, reporterAddr.Bytes())
@@ -294,7 +349,7 @@ func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSel
 		return nil, err
 	}
 
-	// ensure that a selector cannot be removed if it is the reporter’s own address
+	// ensure that a selector cannot be removed if it is the reporter's own address
 	if bytes.Equal(selector.Reporter, selectorAddr.Bytes()) {
 		return nil, errors.New("selector cannot be removed if it is the reporter's own address")
 	}
