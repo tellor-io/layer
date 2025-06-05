@@ -240,6 +240,9 @@ update_genesis_balance() {
     ' "$OUTPUT_GENESIS" > temp_genesis.json && mv temp_genesis.json "$OUTPUT_GENESIS"
 }
 
+echo "set IS_FORK=true in docker-compose.yml"
+sed -i '' 's/IS_FORK=false/IS_FORK=true/g' docker-compose.yml
+
 # Start docker compose
 echo "Starting docker compose environment..."
 docker compose up -d
