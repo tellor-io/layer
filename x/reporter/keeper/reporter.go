@@ -2,9 +2,7 @@ package keeper
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
-	"fmt"
 
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -139,22 +137,16 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress, qu
 	if reporter.Jailed {
 		return math.Int{}, nil, errorsmod.Wrapf(types.ErrReporterJailed, "reporter %s is in jail", repAddr.String())
 	}
-	// selection, err := k.Selectors.Get(ctx, repAddr.Bytes())
-	// if err != nil {
-	// 	return math.Int{}, nil, err
-	// }
-	// k.logger.Info(fmt.Sprintf("Rep selection: %v", selection))
+
 	totalTokens := math.ZeroInt()
 	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr)
 	if err != nil {
 		return math.Int{}, nil, err
 	}
-	k.logger.Info(fmt.Sprintf("Is Iter Valid: %t", iter.Valid()))
 	defer iter.Close()
 	delegates := make([]*types.TokenOriginInfo, 0)
 	for ; iter.Valid(); iter.Next() {
 		selectorAddr, err := iter.PrimaryKey()
-		k.logger.Info("Selector Addr: ", hex.EncodeToString(selectorAddr))
 		if err != nil {
 			return math.Int{}, nil, err
 		}
