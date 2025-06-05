@@ -73,6 +73,7 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	minStakeAmt := params.MinStakeAmount
 
 	queryData := qDataBz
+	// reporter1 reports metaIds 1-5
 	for i := 1; i < 6; i++ {
 		fmt.Println("i: ", i)
 		fmt.Printf("Using reporter address: %s (%x)\n", addr.String(), addr.Bytes())
@@ -148,9 +149,10 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	require.Equal(report.MicroReports[0].MetaId, uint64(5))
 
 	// add reports from another reporter
+	// reporter2 reports metaId 6
 	addr2 := sample.AccAddressBytes()
 	queryMeta := types.QueryMeta{
-		Id:                      uint64(7),
+		Id:                      uint64(6),
 		Amount:                  math.NewInt(100_000),
 		Expiration:              20,
 		RegistrySpecBlockWindow: 10,
@@ -175,11 +177,11 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	require.NoError(err)
 	require.NotNil(res)
 
-	storedReport, err := s.oracleKeeper.Reports.Get(ctx, collections.Join3(queryId, addr2.Bytes(), uint64(7)))
+	storedReport, err := s.oracleKeeper.Reports.Get(ctx, collections.Join3(queryId, addr2.Bytes(), uint64(6)))
 	if err != nil {
-		fmt.Printf("ERROR: Report %d not found: %v\n", 7, err)
+		fmt.Printf("ERROR: Report %d not found: %v\n", 6, err)
 	} else {
-		fmt.Printf("SUCCESS: Report %d stored with reporter %s\n", 7, storedReport.Reporter)
+		fmt.Printf("SUCCESS: Report %d stored with reporter %s\n", 6, storedReport.Reporter)
 	}
 
 	// get reports by reporter for 2nd reporter
@@ -187,8 +189,8 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	report, err = s.queryClient.GetReportsbyReporter(ctx, req)
 	s.NoError(err)
 	s.Equal(1, len(report.MicroReports))
-	fmt.Println("report 7 from 2nd reporter: ", report.MicroReports[0])
-	require.Equal(report.MicroReports[0].MetaId, uint64(7))
+	fmt.Println("report 6 from 2nd reporter: ", report.MicroReports[0])
+	require.Equal(report.MicroReports[0].MetaId, uint64(6))
 	require.Equal(report.MicroReports[0].Reporter, addr2.String())
 
 	// get reports by reporter for 1st reporter again
@@ -275,11 +277,22 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	require.Equal(report.MicroReports[0].MetaId, uint64(9))
 	require.Equal(report.MicroReports[0].Reporter, addr2.String())
 
-	// get 2 most recent reports by reporter
+	// get 2 most recent reports by reporter1
 	req = &types.QueryGetReportsbyReporterRequest{Reporter: addr.String(), Pagination: &query.PageRequest{Limit: 2, Reverse: true}}
 	report, err = s.queryClient.GetReportsbyReporter(ctx, req)
 	s.NoError(err)
 	s.Equal(2, len(report.MicroReports))
 	require.Equal(report.MicroReports[0].MetaId, uint64(8))
 	require.Equal(report.MicroReports[1].MetaId, uint64(5))
+	// get next key, should be metaId 4
+	nextKey := report.Pagination.NextKey
+	tripleKeyCodec := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
+	_, decodedNextKey, err := tripleKeyCodec.Decode(nextKey)
+	require.NoError(err)
+	fmt.Println("decodedNextKey: ", decodedNextKey)
+	nextKeyReport, err := s.oracleKeeper.Reports.Get(ctx, decodedNextKey)
+	fmt.Println("err: ", err)
+	fmt.Println("report: ", nextKeyReport)
+	require.NoError(err)
+	require.Equal(nextKeyReport.MetaId, uint64(4))
 }

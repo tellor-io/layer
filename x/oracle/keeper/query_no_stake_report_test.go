@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"encoding/hex"
+	"fmt"
 	"time"
 
 	"github.com/tellor-io/layer/testutil/sample"
@@ -29,45 +30,46 @@ func (s *KeeperTestSuite) TestGetReportersNoStakeReports() {
 	require.NoError(err)
 	require.Equal(len(response.NoStakeReports), 0)
 
-	timestamp := time.Now().UTC()
+	timestamp1 := time.Now().UTC().Add(time.Second * -10)
 	// 1 report
 	report := types.NoStakeMicroReport{
 		Reporter:    reporter,
-		Timestamp:   timestamp,
+		Timestamp:   timestamp1,
 		BlockNumber: 1,
 		Value:       "value",
 	}
 	queryId := []byte("QueryId")
-	require.NoError(s.oracleKeeper.NoStakeReports.Set(s.ctx, collections.Join(queryId, uint64(timestamp.UnixMilli())), report))
+	require.NoError(s.oracleKeeper.NoStakeReports.Set(s.ctx, collections.Join(queryId, uint64(timestamp1.UnixMilli())), report))
 	response, err = q.GetReportersNoStakeReports(s.ctx, &types.QueryGetReportersNoStakeReportsRequest{
 		Reporter: reporter.String(),
 	})
 	require.NoError(err)
 	require.Equal(response.NoStakeReports[0].Value, report.Value)
-	require.Equal(response.NoStakeReports[0].Timestamp, uint64(timestamp.UnixMilli()))
+	require.Equal(response.NoStakeReports[0].Timestamp, uint64(timestamp1.UnixMilli()))
 	require.Equal(response.NoStakeReports[0].BlockNumber, report.BlockNumber)
 	require.Equal(response.NoStakeReports[0].Reporter, sdk.AccAddress(report.Reporter).String())
 
-	// 2 reports
+	// 2 reports get both
+	timestamp2 := time.Now().UTC().Add(time.Second * 10)
 	report2 := types.NoStakeMicroReport{
 		Reporter:    reporter,
-		Timestamp:   timestamp,
+		Timestamp:   timestamp2,
 		BlockNumber: 2,
 		Value:       "value2",
 	}
 	queryId2 := []byte("QueryId2")
-	require.NoError(s.oracleKeeper.NoStakeReports.Set(s.ctx, collections.Join(queryId2, uint64(timestamp.UnixMilli())), report2))
+	require.NoError(s.oracleKeeper.NoStakeReports.Set(s.ctx, collections.Join(queryId2, uint64(timestamp2.UnixMilli())), report2))
 	response, err = q.GetReportersNoStakeReports(s.ctx, &types.QueryGetReportersNoStakeReportsRequest{
 		Reporter: reporter.String(),
 	})
 	require.NoError(err)
 	require.Equal(len(response.NoStakeReports), 2)
 	require.Equal(response.NoStakeReports[0].Value, report.Value)
-	require.Equal(response.NoStakeReports[0].Timestamp, uint64(timestamp.UnixMilli()))
+	require.Equal(response.NoStakeReports[0].Timestamp, uint64(timestamp1.UnixMilli()))
 	require.Equal(response.NoStakeReports[0].BlockNumber, report.BlockNumber)
 	require.Equal(response.NoStakeReports[0].Reporter, sdk.AccAddress(report.Reporter).String())
 	require.Equal(response.NoStakeReports[1].Value, report2.Value)
-	require.Equal(response.NoStakeReports[1].Timestamp, uint64(timestamp.UnixMilli()))
+	require.Equal(response.NoStakeReports[1].Timestamp, uint64(timestamp2.UnixMilli()))
 	require.Equal(response.NoStakeReports[1].BlockNumber, report2.BlockNumber)
 	require.Equal(response.NoStakeReports[1].Reporter, sdk.AccAddress(report2.Reporter).String())
 
@@ -82,9 +84,13 @@ func (s *KeeperTestSuite) TestGetReportersNoStakeReports() {
 	require.NoError(err)
 	require.Equal(len(response.NoStakeReports), 1)
 	require.Equal(response.NoStakeReports[0].Value, report2.Value)
-	require.Equal(response.NoStakeReports[0].Timestamp, uint64(timestamp.UnixMilli()))
+	require.Equal(response.NoStakeReports[0].Timestamp, uint64(timestamp2.UnixMilli()))
 	require.Equal(response.NoStakeReports[0].BlockNumber, report2.BlockNumber)
 	require.Equal(response.NoStakeReports[0].Reporter, sdk.AccAddress(report2.Reporter).String())
+
+	fmt.Println("nextKey: ", response.Pagination.NextKey)
+	fmt.Println("nextKey string: ", hex.EncodeToString(response.Pagination.NextKey))
+
 }
 
 func (s *KeeperTestSuite) TestGetNoStakeReportsByQueryId() {
@@ -103,29 +109,30 @@ func (s *KeeperTestSuite) TestGetNoStakeReportsByQueryId() {
 	require.NoError(err)
 	require.Equal(len(response.NoStakeReports), 0)
 
-	timestamp := time.Now().UTC()
+	timestamp1 := time.Now().UTC().Add(time.Second * -10)
 	// 1 report
 	report := types.NoStakeMicroReport{
 		Reporter:    reporter,
-		Timestamp:   timestamp,
+		Timestamp:   timestamp1,
 		BlockNumber: 1,
 		Value:       "value",
 	}
-	require.NoError(s.oracleKeeper.NoStakeReports.Set(s.ctx, collections.Join(queryId, uint64(timestamp.UnixMilli())), report))
+	require.NoError(s.oracleKeeper.NoStakeReports.Set(s.ctx, collections.Join(queryId, uint64(timestamp1.UnixMilli())), report))
 	response, err = q.GetNoStakeReportsByQueryId(s.ctx, &types.QueryGetNoStakeReportsByQueryIdRequest{
 		QueryId: hex.EncodeToString(queryId),
 	})
 	require.NoError(err)
 	require.Equal(response.NoStakeReports[0].Value, report.Value)
-	require.Equal(response.NoStakeReports[0].Timestamp, uint64(timestamp.UnixMilli()))
+	require.Equal(response.NoStakeReports[0].Timestamp, uint64(timestamp1.UnixMilli()))
 	require.Equal(response.NoStakeReports[0].BlockNumber, report.BlockNumber)
 	require.Equal(response.NoStakeReports[0].Reporter, sdk.AccAddress(report.Reporter).String())
 
 	// 2 reports
-	s.ctx = s.ctx.WithBlockHeight(2).WithBlockTime(timestamp.Add(time.Second * 10))
+	timestamp2 := time.Now().UTC().Add(time.Second * 10)
+	s.ctx = s.ctx.WithBlockHeight(2).WithBlockTime(timestamp2)
 	report2 := types.NoStakeMicroReport{
 		Reporter:    reporter,
-		Timestamp:   timestamp,
+		Timestamp:   timestamp2,
 		BlockNumber: 2,
 		Value:       "value2",
 	}
@@ -136,11 +143,29 @@ func (s *KeeperTestSuite) TestGetNoStakeReportsByQueryId() {
 	require.NoError(err)
 	require.Equal(len(response.NoStakeReports), 2)
 	require.Equal(response.NoStakeReports[0].Value, report.Value)
-	require.Equal(response.NoStakeReports[0].Timestamp, uint64(timestamp.UnixMilli()))
+	require.Equal(response.NoStakeReports[0].Timestamp, uint64(timestamp1.UnixMilli()))
 	require.Equal(response.NoStakeReports[0].BlockNumber, report.BlockNumber)
 	require.Equal(response.NoStakeReports[0].Reporter, sdk.AccAddress(report.Reporter).String())
 	require.Equal(response.NoStakeReports[1].Value, report2.Value)
-	require.Equal(response.NoStakeReports[1].Timestamp, uint64(timestamp.UnixMilli()))
+	require.Equal(response.NoStakeReports[1].Timestamp, uint64(timestamp2.UnixMilli()))
 	require.Equal(response.NoStakeReports[1].BlockNumber, report2.BlockNumber)
 	require.Equal(response.NoStakeReports[1].Reporter, sdk.AccAddress(report2.Reporter).String())
+
+	// most recent by query Id (should be timestamp2)
+	response, err = q.GetNoStakeReportsByQueryId(s.ctx, &types.QueryGetNoStakeReportsByQueryIdRequest{
+		QueryId: hex.EncodeToString(queryId),
+		Pagination: &query.PageRequest{
+			Limit:   1,
+			Reverse: true,
+		},
+	})
+	require.NoError(err)
+	require.Equal(len(response.NoStakeReports), 1)
+	require.Equal(response.NoStakeReports[0].Value, report2.Value)
+	require.Equal(response.NoStakeReports[0].Timestamp, uint64(timestamp2.UnixMilli()))
+	require.Equal(response.NoStakeReports[0].BlockNumber, report2.BlockNumber)
+	require.Equal(response.NoStakeReports[0].Reporter, sdk.AccAddress(report2.Reporter).String())
+
+	fmt.Println("nextKey: ", response.Pagination.NextKey)
+	fmt.Println("nextKey string: ", hex.EncodeToString(response.Pagination.NextKey))
 }
