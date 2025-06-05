@@ -80,7 +80,7 @@ func (k Keeper) CheckValsetSignatureEvidence(ctx context.Context, request types.
 		return err
 	}
 
-	err = k.SlashValidator(ctx, operatorAddr, slashFactor, checkpointParamsBefore.BlockHeight)
+	err = k.SlashValidator(ctx, operatorAddr, slashFactor, checkpointParamsBefore.Checkpoint)
 	if err != nil {
 		return err
 	}
@@ -137,13 +137,11 @@ func (k Keeper) CheckValsetSignatureRateLimit(ctx context.Context, operatorAddr 
 // GetValsetEvidenceSubmittedBefore returns the timestamp of any valset signature evidence submitted
 // for a given operator address before a given timestamp
 func (k Keeper) GetValsetEvidenceSubmittedBefore(ctx context.Context, operatorAddress types.OperatorAddress, timestamp uint64) (submitted bool, timestampBefore uint64, err error) {
-	// create a range that ends just before this timestamp
 	rng := collections.NewPrefixedPairRange[[]byte, uint64](operatorAddress.OperatorAddress).EndExclusive(timestamp).Descending()
 
 	var mostRecent bool
 	var mostRecentTimestamp uint64
 
-	// walk through the submissions in descending order to find the most recent one before the timestamp
 	err = k.ValsetSignatureEvidenceSubmitted.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.BoolSubmitted) (stop bool, err error) {
 		mostRecent = value.Submitted
 		mostRecentTimestamp = key.K2()
@@ -187,14 +185,11 @@ func (k Keeper) GetValsetEvidenceSubmittedAfter(ctx context.Context, operatorAdd
 // GetCheckpointParamsBefore returns the validator checkpoint params with the highest timestamp
 // that is before the specified timestamp
 func (k Keeper) GetCheckpointParamsBefore(ctx context.Context, timestamp uint64) (types.ValidatorCheckpointParams, error) {
-	// create a range that ends just before this timestamp and is in descending order
-	// to get the most recent checkpoint before the given timestamp
 	rng := new(collections.Range[uint64]).EndExclusive(timestamp).Descending()
 
 	var checkpointParams types.ValidatorCheckpointParams
 	var found bool
 
-	// walk through the checkpoint params in descending order to find the most recent one
 	err := k.ValidatorCheckpointParamsMap.Walk(ctx, rng, func(key uint64, value types.ValidatorCheckpointParams) (bool, error) {
 		checkpointParams = value
 		found = true

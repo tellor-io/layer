@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
@@ -12,8 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
-	layerconfig "github.com/tellor-io/layer/app/config"
-	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
@@ -86,13 +85,7 @@ func (k Keeper) CheckAttestationEvidence(ctx context.Context, request types.MsgS
 	if err != nil {
 		return err
 	}
-	checkpointParams, err := k.GetCheckpointParamsByCheckpoint(ctx, checkpoint)
-	if err != nil {
-		// uncomment this
-		// return err
-		k.Logger(ctx).Info("Error getting checkpoint params", "error", err)
-	}
-	err = k.SlashValidator(ctx, operatorAddr, slashFactor, checkpointParams.BlockHeight)
+	err = k.SlashValidator(ctx, operatorAddr, slashFactor, checkpoint)
 	if err != nil {
 		return err
 	}
@@ -139,7 +132,7 @@ func (k Keeper) GetOperatorAddressFromSignature(ctx context.Context, msg []byte,
 }
 
 // SlashValidator slashes a validator for malicious attestation evidence.
-func (k Keeper) SlashValidator(ctx context.Context, operatorAddr types.OperatorAddress, slashFactor math.LegacyDec, blockHeight uint64) error {
+func (k Keeper) SlashValidator(ctx context.Context, operatorAddr types.OperatorAddress, slashFactor math.LegacyDec, checkpoint []byte) error {
 	k.Logger(ctx).Info("slashValidator", "operatorAddr", operatorAddr.String())
 	// get the validator address
 	validatorAddr := sdk.ValAddress(operatorAddr.OperatorAddress)
@@ -155,27 +148,46 @@ func (k Keeper) SlashValidator(ctx context.Context, operatorAddr types.OperatorA
 		return err
 	}
 
-	consAddrString, err := sdk.Bech32ifyAddressBytes(layerconfig.Bech32PrefixConsAddr, consAddr)
+	// get the block height and validator power at the block height
+	checkpointParams, err := k.GetCheckpointParamsByCheckpoint(ctx, checkpoint)
 	if err != nil {
 		return err
 	}
-
-	power := validator.ConsensusPower(validator.Tokens)
-	k.Logger(ctx).Info("power", "power", power)
-	k.Logger(ctx).Info("tokens", "tokens", validator.Tokens)
-
-	adjustedPower := validator.GetConsensusPower(layertypes.PowerReduction)
-	k.Logger(ctx).Info("adjustedPower", "adjustedPower", adjustedPower)
-	slashAmount, err := k.stakingKeeper.SlashWithInfractionReason(ctx, consAddr, int64(blockHeight), adjustedPower, slashFactor, stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
+	validatorSet, err := k.GetBridgeValsetByTimestamp(ctx, checkpointParams.Timestamp)
 	if err != nil {
 		return err
 	}
-	k.Logger(ctx).Info("slashing validator", "consAddr", consAddrString, "slashAmount", slashAmount)
-	// jail the validator -- uncomment this
-	// err = k.stakingKeeper.Jail(ctx, consAddr)
-	// if err != nil {
-	// 	return err
-	// }
+	bech32Addr, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, operatorAddr.OperatorAddress)
+	if err != nil {
+		return err
+	}
+	evmAddress, err := k.OperatorToEVMAddressMap.Get(ctx, bech32Addr)
+	if err != nil {
+		return err
+	}
+	// find the validator's evm address in the validator set
+	var historicalPower int64
+	for _, validator := range validatorSet.BridgeValidatorSet {
+		if bytes.Equal(validator.EthereumAddress, evmAddress.EVMAddress) {
+			historicalPower = int64(validator.Power)
+			break
+		}
+	}
+	if historicalPower == 0 {
+		return errors.New("historical power not found")
+	}
+
+	k.Logger(ctx).Info("slashing historicalPower", "adjustedPower", historicalPower)
+	slashAmount, err := k.stakingKeeper.SlashWithInfractionReason(ctx, consAddr, int64(checkpointParams.BlockHeight), historicalPower, slashFactor, stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
+	if err != nil {
+		return err
+	}
+	k.Logger(ctx).Info("slashing slashAmount", "slashAmount", slashAmount)
+	// jail the validator
+	err = k.stakingKeeper.Jail(ctx, consAddr)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
