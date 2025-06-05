@@ -111,6 +111,16 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 			return nil, err
 		}
 
+		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
+			buffer := make([]byte, tripleKeyCodec.Size(pk))
+			_, err = tripleKeyCodec.Encode(buffer, pk)
+			if err != nil {
+				return nil, status.Error(codes.Internal, "failed to encode pagination key")
+			}
+			pageRes.NextKey = buffer
+			break
+		}
+
 		report, err := k.keeper.Reports.Get(ctx, pk)
 		if err != nil {
 			return nil, err
@@ -131,15 +141,6 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 			reports = append(reports, stringReport)
 		}
 
-		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
-			buffer := make([]byte, tripleKeyCodec.Size(pk))
-			_, err = tripleKeyCodec.Encode(buffer, pk)
-			if err != nil {
-				return nil, status.Error(codes.Internal, "failed to encode pagination key")
-			}
-			pageRes.NextKey = buffer
-			break
-		}
 	}
 	pageRes.Total = uint64(len(reports))
 

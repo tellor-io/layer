@@ -53,6 +53,17 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 		if err != nil {
 			return nil, err
 		}
+
+		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
+			buffer := make([]byte, pairKeyCodec.Size(pk))
+			_, err = pairKeyCodec.Encode(buffer, pk)
+			if err != nil {
+				return nil, status.Error(codes.Internal, "failed to encode pagination key")
+			}
+			pageRes.NextKey = buffer
+			break
+		}
+
 		report, err := q.keeper.NoStakeReports.Get(ctx, pk)
 		if err != nil {
 			return nil, err
@@ -64,15 +75,6 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 			BlockNumber: report.BlockNumber,
 		}
 		reports = append(reports, &stringReport)
-		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
-			buffer := make([]byte, pairKeyCodec.Size(pk))
-			_, err = pairKeyCodec.Encode(buffer, pk)
-			if err != nil {
-				return nil, status.Error(codes.Internal, "failed to encode pagination key")
-			}
-			pageRes.NextKey = buffer
-			break
-		}
 	}
 	pageRes.Total = uint64(len(reports))
 
