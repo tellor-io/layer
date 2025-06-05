@@ -57,7 +57,14 @@ func NewReportsIndex(sb *collections.SchemaBuilder) ReportsIndex {
 			sb, ReportsReporterIndexPrefix, "reports_by_reporter",
 			collections.BytesKey, collections.TripleKeyCodec[[]byte, []byte, uint64](collections.BytesKey, collections.BytesKey, collections.Uint64Key),
 			func(k collections.Triple[[]byte, []byte, uint64], _ MicroReport) ([]byte, error) {
-				return k.K2(), nil
+				size := collections.Uint64Key.Size(k.K3())
+				buffer := make([]byte, size)
+				_, err := collections.Uint64Key.Encode(buffer, k.K3())
+				if err != nil {
+					return nil, err
+				}
+				buffer = append(k.K2(), buffer...)
+				return buffer, nil
 			},
 		),
 		IdQueryId: indexes.NewMulti(

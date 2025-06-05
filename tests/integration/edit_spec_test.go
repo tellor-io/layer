@@ -28,7 +28,7 @@ func (s *IntegrationTestSuite) TestEditSpec() {
 
 	registryMsgServer := registrykeeper.NewMsgServerImpl(s.Setup.Registrykeeper)
 	require.NotNil(registryMsgServer)
-	oracleMsgServer := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	oracleMsgServer := oraclekeeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	require.NotNil(oracleMsgServer)
 	reporterMsgServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	require.NotNil(reporterMsgServer)

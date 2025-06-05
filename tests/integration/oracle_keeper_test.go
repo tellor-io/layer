@@ -32,7 +32,7 @@ import (
 )
 
 func (s *IntegrationTestSuite) TestTipping() {
-	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	msgServer := keeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	ctx := s.Setup.Ctx
 	addr := s.newKeysWithTokens()
 
@@ -84,7 +84,7 @@ func (s *IntegrationTestSuite) TestTipping() {
 }
 
 func (s *IntegrationTestSuite) TestGetCurrentTip() {
-	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	msgServer := keeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	ctx := s.Setup.Ctx
 	addr := s.newKeysWithTokens()
 
@@ -111,7 +111,7 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 	ctx := s.Setup.Ctx
 	ctx = ctx.WithBlockTime(time.Now())
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
-	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	msgServer := keeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200})
 	addr := s.newKeysWithTokens()
 
@@ -163,7 +163,7 @@ func (s *IntegrationTestSuite) TestTippingReporting() {
 }
 
 func (s *IntegrationTestSuite) TestGetUserTipTotal() {
-	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	msgServer := keeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	ctx := s.Setup.Ctx
 	addr := s.newKeysWithTokens()
 
@@ -190,7 +190,7 @@ func (s *IntegrationTestSuite) TestGetUserTipTotal() {
 }
 
 func (s *IntegrationTestSuite) TestSmallTip() {
-	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	msgServer := keeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	ctx := s.Setup.Ctx
 	addr := s.newKeysWithTokens()
 
@@ -215,7 +215,7 @@ func (s *IntegrationTestSuite) TestMedianReports() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	ctx := s.Setup.Ctx
 	ctx = ctx.WithBlockTime(time.Now())
-	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	msgServer := keeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	repAccs, _, _ := s.createValidatorAccs([]uint64{100, 200, 300, 400, 500})
 	tipper := s.newKeysWithTokens()
 	for _, rep := range repAccs {
@@ -570,7 +570,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	s.NoError(s.Setup.Mintkeeper.Minter.Set(ctx, m))
 
 	app := s.Setup.App
-	msgServer := keeper.NewMsgServerImpl(ok)
+	msgServer := keeper.NewMsgServerImpl(&ok)
 	for _, rep := range repAccs {
 		s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, rep, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 		s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, rep, reportertypes.NewSelection(rep, 1)))
@@ -692,7 +692,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	ok := s.Setup.Oraclekeeper
 	ctx := s.Setup.Ctx
 	app := s.Setup.App
-	msgServer := keeper.NewMsgServerImpl(ok)
+	msgServer := keeper.NewMsgServerImpl(&ok)
 	for _, rep := range repAccs {
 		s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, rep, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")))
 		s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, rep, reportertypes.NewSelection(rep, 1)))
@@ -805,7 +805,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	ctx := s.Setup.Ctx
 	require := s.Require()
 	ctx = ctx.WithBlockTime(time.Now())
-	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	msgServer := keeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker1")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
@@ -876,7 +876,7 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	require := s.Require()
 	ctx := s.Setup.Ctx
-	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	msgServer := keeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{1, 2})
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker1")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
@@ -974,8 +974,8 @@ func (s *IntegrationTestSuite) TestClaimingBridgeDeposit() {
 	ctx := s.Setup.Ctx.WithBlockHeight(10).WithBlockTime(time.Now())
 	reporterMsgServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	require.NotNil(reporterMsgServer)
-	oracleMsgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
-	require.NotNil(s.Setup.Bridgekeeper)
+	oracleMsgServer := keeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
+	require.NotNil(oracleMsgServer)
 
 	//---------------------------------------------------------------------------
 	// Height 10 - create bonded validators and reporters

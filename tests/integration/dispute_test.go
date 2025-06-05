@@ -31,7 +31,7 @@ import (
 
 func (s *IntegrationTestSuite) TestDisputes() {
 	require := s.Require()
-	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	msgServerOracle := oraclekeeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	require.NotNil(msgServerOracle)
 	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	require.NotNil(msgServerReporter)
@@ -705,7 +705,7 @@ func (s *IntegrationTestSuite) TestDisputes() {
 func (s *IntegrationTestSuite) TestDisputeFromDelegatorPayFromBond() {
 	// Setup msgServers
 	require := s.Require()
-	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	msgServerOracle := oraclekeeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	require.NotNil(msgServerOracle)
 	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	require.NotNil(msgServerReporter)
@@ -940,7 +940,7 @@ func (s *IntegrationTestSuite) TestOpenDisputePrecision() {
 	require := s.Require()
 
 	// setup msgServers
-	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	msgServerOracle := oraclekeeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	require.NotNil(msgServerOracle)
 	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	require.NotNil(msgServerReporter)
@@ -1190,7 +1190,7 @@ func (s *IntegrationTestSuite) TestOpenDisputePrecision() {
 
 func (s *IntegrationTestSuite) TestDisputes2() {
 	require := s.Require()
-	msgServerOracle := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	msgServerOracle := oraclekeeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
 	require.NotNil(msgServerOracle)
 	msgServerReporter := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	require.NotNil(msgServerReporter)
