@@ -200,7 +200,7 @@ At the end of a query command, you can add:
 - `--page-reverse` to retreive the keys in descending order
 - `--page-count-total` to see the total number of results returned
 
-For example, if you wanted to only return the most recent 10 reports for a certain reporter, you can use 
+For example, if you wanted to only return the most recent 10 reports for a certain reporter, you can use:
 ```bash
 ./layerd query oracle get-reportsby-reporter $REP_ADDR --page-limit 10 --page-reverse
 ```
