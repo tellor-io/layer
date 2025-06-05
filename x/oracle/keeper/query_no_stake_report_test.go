@@ -90,7 +90,6 @@ func (s *KeeperTestSuite) TestGetReportersNoStakeReports() {
 
 	fmt.Println("nextKey: ", response.Pagination.NextKey)
 	fmt.Println("nextKey string: ", hex.EncodeToString(response.Pagination.NextKey))
-
 }
 
 func (s *KeeperTestSuite) TestGetNoStakeReportsByQueryId() {

@@ -189,7 +189,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	// try to query old report by reporter
 	reports, _, err := validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "1")
 	require.NoError(t, err)
-	//unmarshal
+	// unmarshal
 	var reportsRes e2e.QueryMicroReportsResponse
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
@@ -203,7 +203,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	// try to query new report by reporter
 	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit=1", "--page-reverse")
 	require.NoError(t, err)
-	//unmarshal
+	// unmarshal
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
 	fmt.Println("length: ", len(reportsRes.MicroReports))
