@@ -1,8 +1,0 @@
-FROM --platform=linux alpine
-ARG BUILDARCH
-
-ENV LOCAL=/usr/local
-
-COPY ../build/layerd-linux-arm64 ${LOCAL}/bin/layerd
-
-ENTRYPOINT [ "layerd" ]

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/tellor-io/layer/testutil"
 	"github.com/tellor-io/layer/utils"
@@ -213,6 +214,25 @@ func (s *IntegrationTestSuite) TestSmallTip() {
 
 func (s *IntegrationTestSuite) TestMedianReports() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+	s.Setup.Ctx = s.Setup.Ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
+			MaxBytes: 200000,
+			MaxGas:   100_000_000,
+		},
+		Evidence: &cmtproto.EvidenceParams{
+			MaxAgeNumBlocks: 302400,
+			MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+			MaxBytes:        10000,
+		},
+		Validator: &cmtproto.ValidatorParams{
+			PubKeyTypes: []string{
+				cmttypes.ABCIPubKeyTypeEd25519,
+			},
+		},
+		Abci: &cmtproto.ABCIParams{
+			VoteExtensionsEnableHeight: 1,
+		},
+	})
 	ctx := s.Setup.Ctx
 	ctx = ctx.WithBlockTime(time.Now())
 	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
@@ -561,6 +581,25 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 
 func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+	s.Setup.Ctx = s.Setup.Ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
+			MaxBytes: 200000,
+			MaxGas:   100_000_000,
+		},
+		Evidence: &cmtproto.EvidenceParams{
+			MaxAgeNumBlocks: 302400,
+			MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+			MaxBytes:        10000,
+		},
+		Validator: &cmtproto.ValidatorParams{
+			PubKeyTypes: []string{
+				cmttypes.ABCIPubKeyTypeEd25519,
+			},
+		},
+		Abci: &cmtproto.ABCIParams{
+			VoteExtensionsEnableHeight: 1,
+		},
+	})
 	ctx := s.Setup.Ctx
 	repAccs, valAddr, _ := s.Setup.CreateValidators(5)
 	ok := s.Setup.Oraclekeeper
@@ -688,6 +727,25 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 
 func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+	s.Setup.Ctx = s.Setup.Ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
+			MaxBytes: 200000,
+			MaxGas:   100_000_000,
+		},
+		Evidence: &cmtproto.EvidenceParams{
+			MaxAgeNumBlocks: 302400,
+			MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+			MaxBytes:        10000,
+		},
+		Validator: &cmtproto.ValidatorParams{
+			PubKeyTypes: []string{
+				cmttypes.ABCIPubKeyTypeEd25519,
+			},
+		},
+		Abci: &cmtproto.ABCIParams{
+			VoteExtensionsEnableHeight: 1,
+		},
+	})
 	repAccs, _, _ := s.Setup.CreateValidators(5)
 	ok := s.Setup.Oraclekeeper
 	ctx := s.Setup.Ctx
@@ -972,6 +1030,26 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 func (s *IntegrationTestSuite) TestClaimingBridgeDeposit() {
 	require := s.Require()
 	ctx := s.Setup.Ctx.WithBlockHeight(10).WithBlockTime(time.Now())
+	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
+			MaxBytes: 200000,
+			MaxGas:   100_000_000,
+		},
+		Evidence: &cmtproto.EvidenceParams{
+			MaxAgeNumBlocks: 302400,
+			MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+			MaxBytes:        10000,
+		},
+		Validator: &cmtproto.ValidatorParams{
+			PubKeyTypes: []string{
+				cmttypes.ABCIPubKeyTypeEd25519,
+			},
+		},
+		Abci: &cmtproto.ABCIParams{
+			VoteExtensionsEnableHeight: 1,
+		},
+	})
+	s.Setup.Ctx = s.Setup.Ctx.WithConsensusParams(ctx.ConsensusParams())
 	reporterMsgServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	require.NotNil(reporterMsgServer)
 	oracleMsgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)

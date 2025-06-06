@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/tellor-io/layer/testutil"
 	layertypes "github.com/tellor-io/layer/types"
 	utils "github.com/tellor-io/layer/utils"
@@ -40,6 +42,25 @@ func (s *IntegrationTestSuite) TestDisputes() {
 	msgServerStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 	require.NotNil(msgServerStaking)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+	s.Setup.Ctx = s.Setup.Ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
+			MaxBytes: 200000,
+			MaxGas:   100_000_000,
+		},
+		Evidence: &cmtproto.EvidenceParams{
+			MaxAgeNumBlocks: 302400,
+			MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+			MaxBytes:        10000,
+		},
+		Validator: &cmtproto.ValidatorParams{
+			PubKeyTypes: []string{
+				cmttypes.ABCIPubKeyTypeEd25519,
+			},
+		},
+		Abci: &cmtproto.ABCIParams{
+			VoteExtensionsEnableHeight: 1,
+		},
+	})
 
 	//---------------------------------------------------------------------------
 	// Height 0 - create validator and 2 reporters
@@ -714,6 +735,25 @@ func (s *IntegrationTestSuite) TestDisputeFromDelegatorPayFromBond() {
 	msgServerStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 	require.NotNil(msgServerStaking)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+	s.Setup.Ctx = s.Setup.Ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
+			MaxBytes: 200000,
+			MaxGas:   100_000_000,
+		},
+		Evidence: &cmtproto.EvidenceParams{
+			MaxAgeNumBlocks: 302400,
+			MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+			MaxBytes:        10000,
+		},
+		Validator: &cmtproto.ValidatorParams{
+			PubKeyTypes: []string{
+				cmttypes.ABCIPubKeyTypeEd25519,
+			},
+		},
+		Abci: &cmtproto.ABCIParams{
+			VoteExtensionsEnableHeight: 1,
+		},
+	})
 
 	//---------------------------------------------------------------------------
 	// Height 0 - vicky becomes a validator
@@ -952,6 +992,25 @@ func (s *IntegrationTestSuite) TestOpenDisputePrecision() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	s.Setup.Ctx = s.Setup.Ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
+			MaxBytes: 200000,
+			MaxGas:   100_000_000,
+		},
+		Evidence: &cmtproto.EvidenceParams{
+			MaxAgeNumBlocks: 302400,
+			MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+			MaxBytes:        10000,
+		},
+		Validator: &cmtproto.ValidatorParams{
+			PubKeyTypes: []string{
+				cmttypes.ABCIPubKeyTypeEd25519,
+			},
+		},
+		Abci: &cmtproto.ABCIParams{
+			VoteExtensionsEnableHeight: 1,
+		},
+	})
 	_, err := s.Setup.App.BeginBlocker(s.Setup.Ctx)
 	require.NoError(err)
 	ctx := s.Setup.Ctx
@@ -1199,6 +1258,25 @@ func (s *IntegrationTestSuite) TestDisputes2() {
 	msgServerStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 	require.NotNil(msgServerStaking)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+	s.Setup.Ctx = s.Setup.Ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
+			MaxBytes: 200000,
+			MaxGas:   100_000_000,
+		},
+		Evidence: &cmtproto.EvidenceParams{
+			MaxAgeNumBlocks: 302400,
+			MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+			MaxBytes:        10000,
+		},
+		Validator: &cmtproto.ValidatorParams{
+			PubKeyTypes: []string{
+				cmttypes.ABCIPubKeyTypeEd25519,
+			},
+		},
+		Abci: &cmtproto.ABCIParams{
+			VoteExtensionsEnableHeight: 1,
+		},
+	})
 
 	//---------------------------------------------------------------------------
 	// Height 0 - create 3 validators and 3 reporters

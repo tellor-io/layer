@@ -72,9 +72,12 @@ echo "Adding genesis accounts..."
 echo "$KEY_NAME..."
 ./layerd genesis add-genesis-account $(./layerd keys show $KEY_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1)  10000000000000loya --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
 echo "bill..."
-./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME
-echo "charlie..."
-./layerd genesis add-genesis-account $(./layerd keys show charlie -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME
+./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
+./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
+
+
+#echo "charlie..."
+#./layerd genesis add-genesis-account $(./layerd keys show charlie -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME
 # ./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend os --home ~/.layer/bill) 10000000000000loya --keyring-backend os --home ~/.layer/bill
 
 # Create a tx to stake some loyas for alice
@@ -85,15 +88,21 @@ echo "Creating gentx $KEY_NAME..."
 echo "Collecting gentxs..."
 ./layerd genesis collect-gentxs --home $LAYERD_NODE_HOME_1
 
+./layerd genesis validate-genesis --home $LAYERD_NODE_HOME_1
+
+cp ~/.layer/alice/config/genesis.json ~/.layer/bill/config/genesis.json
+
+
 # Modify timeout_commit in config.toml for alice
 echo "Modifying timeout_commit in config.toml for $KEY_NAME..."
-sed -i '' 's/timeout_commit = "5s"/timeout_commit = "500ms"/' $LAYERD_NODE_HOME_1/config/config.toml
+sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' $LAYERD_NODE_HOME_1/config/config.toml
+sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' ~/.layer/bill/config/config.toml
 
 # Modify keyring-backend in client.toml for alice
 echo "Modifying keyring-backend in client.toml for $KEY_NAME..."
-sed -i '' "s/keyring-backend = \"os\"/keyring-backend = \"$KEYRING_BACKEND\"/" $LAYERD_NODE_HOME_1/config/client.toml
+sed -i '' "s/keyring-backend = \"test\"/keyring-backend = \"$KEYRING_BACKEND\"/" $LAYERD_NODE_HOME_1/config/client.toml
 # update for main dir as well. why is this needed?
-sed -i '' "s/keyring-backend = \"os\"/keyring-backend = \"$KEYRING_BACKEND\"/" ~/.layer/config/client.toml
+sed -i '' "s/keyring-backend = \"test\"/keyring-backend = \"$KEYRING_BACKEND\"/" ~/.layer/config/client.toml
 
 
 echo "Start chain..."

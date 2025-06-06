@@ -150,7 +150,7 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	// todo: handle genesis state better?
-	if sdkCtx.BlockHeight() == 1 {
+	if sdkCtx.BlockHeight() <= sdkCtx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
 		return nil
 	}
 	_, err := am.keeper.CompareAndSetBridgeValidators(sdkCtx)

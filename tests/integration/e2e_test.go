@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
@@ -157,6 +159,25 @@ func (s *IntegrationTestSuite) TestSetUpValidatorAndReporter() {
 
 func (s *IntegrationTestSuite) TestUnstaking() {
 	require := s.Require()
+	s.Setup.Ctx = s.Setup.Ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
+			MaxBytes: 200000,
+			MaxGas:   100_000_000,
+		},
+		Evidence: &cmtproto.EvidenceParams{
+			MaxAgeNumBlocks: 302400,
+			MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+			MaxBytes:        10000,
+		},
+		Validator: &cmtproto.ValidatorParams{
+			PubKeyTypes: []string{
+				cmttypes.ABCIPubKeyTypeEd25519,
+			},
+		},
+		Abci: &cmtproto.ABCIParams{
+			VoteExtensionsEnableHeight: 1,
+		},
+	})
 	// create 5 validators with 5_000 TRB
 	accaddr, valaddr, _ := s.Setup.CreateValidators(5)
 	for _, val := range valaddr {

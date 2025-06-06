@@ -7,7 +7,10 @@ import (
 	"testing"
 	"time"
 
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	cmtjson "github.com/cometbft/cometbft/libs/json"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
 	globalfeekeeper "github.com/strangelove-ventures/globalfee/x/globalfee/keeper"
 	"github.com/stretchr/testify/require"
@@ -60,6 +63,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
@@ -223,13 +227,105 @@ type SharedSetup struct {
 	require *require.Assertions
 }
 
+// SetupWithConfiguration initializes a new runtime.App. A Nop logger is set in runtime.App.
+// appConfig defines the application configuration (f.e. app_config.go).
+// extraOutputs defines the extra outputs to be assigned by the dependency injector (depinject).
+func SetupWithConfiguration(appConfig depinject.Config, startupConfig simtestutil.StartupConfig, extraOutputs ...interface{}) (*runtime.App, error) {
+	// create the app with depinject
+	var (
+		app        *runtime.App
+		appBuilder *runtime.AppBuilder
+		codec      codec.Codec
+	)
+
+	if err := depinject.Inject(appConfig, append(extraOutputs, &appBuilder, &codec)...); err != nil {
+		return nil, fmt.Errorf("failed to inject dependencies: %w", err)
+	}
+
+	if startupConfig.BaseAppOption != nil {
+		app = appBuilder.Build(startupConfig.DB, nil, startupConfig.BaseAppOption)
+	} else {
+		app = appBuilder.Build(startupConfig.DB, nil)
+	}
+	if err := app.Load(true); err != nil {
+		return nil, fmt.Errorf("failed to load app: %w", err)
+	}
+
+	// create validator set
+	valSet, err := startupConfig.ValidatorSet()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create validator set")
+	}
+
+	var (
+		balances    []banktypes.Balance
+		genAccounts []authtypes.GenesisAccount
+	)
+	for _, ga := range startupConfig.GenesisAccounts {
+		genAccounts = append(genAccounts, ga.GenesisAccount)
+		balances = append(balances, banktypes.Balance{Address: ga.GenesisAccount.GetAddress().String(), Coins: ga.Coins})
+	}
+
+	genesisState, err := simtestutil.GenesisStateWithValSet(codec, app.DefaultGenesis(), valSet, genAccounts, balances...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create genesis state: %w", err)
+	}
+
+	// init chain must be called to stop deliverState from being nil
+	stateBytes, err := cmtjson.MarshalIndent(genesisState, "", " ")
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal default genesis state: %w", err)
+	}
+
+	// init chain will set the validator set and initialize the genesis accounts
+	_, err = app.InitChain(&abcitypes.RequestInitChain{
+		Validators: []abcitypes.ValidatorUpdate{},
+		ConsensusParams: &tmproto.ConsensusParams{
+			Block: &tmproto.BlockParams{
+				MaxBytes: 200000,
+				MaxGas:   100_000_000,
+			},
+			Evidence: &tmproto.EvidenceParams{
+				MaxAgeNumBlocks: 302400,
+				MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+				MaxBytes:        10000,
+			},
+			Validator: &tmproto.ValidatorParams{
+				PubKeyTypes: []string{
+					cmttypes.ABCIPubKeyTypeEd25519,
+				},
+			},
+			Abci: &tmproto.ABCIParams{
+				VoteExtensionsEnableHeight: 1,
+			},
+		},
+		AppStateBytes: stateBytes,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to init chain: %w", err)
+	}
+
+	// commit genesis changes
+	if !startupConfig.AtGenesis {
+		_, err = app.FinalizeBlock(&abcitypes.RequestFinalizeBlock{
+			Height:             app.LastBlockHeight() + 1,
+			NextValidatorsHash: valSet.Hash(),
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to finalize block: %w", err)
+		}
+	}
+
+	return app, nil
+}
+
 func (s *SharedSetup) SetupTest(t *testing.T) {
 	t.Helper()
 	s.require = require.New(t)
 	sdk.DefaultBondDenom = "loya"
 	config.SetupConfig()
 
-	app, err := simtestutil.SetupWithConfiguration(
+	app, err := SetupWithConfiguration(
 		depinject.Configs(
 			configurator.NewAppConfig(
 				AuthModule(),
