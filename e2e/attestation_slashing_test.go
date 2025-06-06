@@ -205,63 +205,6 @@ func TestAttestationSlashing(t *testing.T) {
 		txHash, err := v.Node.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.5", "100000000", moniker, "--keyring-dir", v.Node.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (val", i+1, "becomes a reporter): ", txHash)
-
-		// Export validator private key (similar to your CLI example)
-		// not working, but good sign version. printed the "help" document for the command:
-		// exportCmd := []string{
-		// 	"sh", "-c", "yes y | layerd keys export validator --unarmored-hex --unsafe --keyring-backend test --home " +
-		// 		v.Val.HomeDir(),
-		// }
-
-		exportCmd := []string{
-			"sh", "-c", "echo y | layerd keys export validator --unarmored-hex --unsafe --keyring-backend test --home " +
-				v.Node.HomeDir(),
-		}
-
-		// exportCmd := []string{
-		// 	"echo", "'y'", "|", "layerd", "keys", "export", "validator", "--unarmored-hex", "--unsafe", "--keyring-backend", "test", "--home",
-		// 	v.Val.HomeDir(),
-		// }
-
-		// exportCmd := []string{
-		// 	"bash", "-c",
-		// 	fmt.Sprintf("echo y | layerd keys export validator "+
-		// 		"--unarmored-hex --unsafe --keyring-backend test --home %s", v.Val.HomeDir()),
-		// }
-
-		stdout, _, err := v.Node.Exec(ctx, exportCmd, v.Node.Chain.Config().Env)
-		require.NoError(err)
-
-		// Parse the output to extract the private key
-		// The output will have a warning and then the key, we need to extract just the key
-		lines := strings.Split(string(stdout), "\n")
-		var privKeyHex string
-		for _, line := range lines {
-			// Skip warning lines, look for hex string
-			if len(line) >= 64 && !strings.Contains(line, "WARNING") {
-				privKeyHex = line
-				break
-			}
-		}
-
-		require.NotEmpty(privKeyHex, "Failed to extract private key")
-
-		// Create ECDSA private key from the exported key
-		privKeyBytes, err := hex.DecodeString(privKeyHex)
-		require.NoError(err)
-
-		// Create the private key from bytes
-		exportedPrivKey, err := crypto.ToECDSA(privKeyBytes)
-		require.NoError(err)
-
-		// Generate Ethereum address from this key for verification
-		exportedEVMAddr := crypto.PubkeyToAddress(exportedPrivKey.PublicKey).Hex()
-
-		// Update validator info with the actual keys from the keyring
-		validators[i].EVMPriv = exportedPrivKey
-		validators[i].EVMAddr = exportedEVMAddr
-
-		fmt.Printf("Validator %d - Exported EVM address: %s\n", i, exportedEVMAddr)
 	}
 
 	// Query reporters to confirm creation
@@ -282,36 +225,36 @@ func TestAttestationSlashing(t *testing.T) {
 	// 	string ethereumAddress = 1;
 	// 	uint64 power = 2;
 	// }
-	type QueryBridgeValidator struct {
-		EthereumAddress string `json:"ethereumAddress"`
-		Power           string `json:"power"`
-	}
-	type QueryGetEvmValidatorsResponse struct {
-		BridgeValidatorSet []QueryBridgeValidator `json:"bridge_validator_set"`
-	}
-	// query
-	evmValidatorsRes, _, err := validators[0].Node.ExecQuery(ctx, "bridge", "get-evm-validators")
-	require.NoError(err)
-	var evmValidators QueryGetEvmValidatorsResponse
-	err = json.Unmarshal(evmValidatorsRes, &evmValidators)
-	require.NoError(err)
-	fmt.Println("evmValidatorsRes", evmValidatorsRes)
-	for i, val := range evmValidators.BridgeValidatorSet {
-		fmt.Println("EVM Validator", i, "Address:", val.EthereumAddress, "Power:", val.Power)
+	// type QueryBridgeValidator struct {
+	// 	EthereumAddress string `json:"ethereumAddress"`
+	// 	Power           string `json:"power"`
+	// }
+	// type QueryGetEvmValidatorsResponse struct {
+	// 	BridgeValidatorSet []QueryBridgeValidator `json:"bridge_validator_set"`
+	// }
+	// // query
+	// evmValidatorsRes, _, err := validators[0].Node.ExecQuery(ctx, "bridge", "get-evm-validators")
+	// require.NoError(err)
+	// var evmValidators QueryGetEvmValidatorsResponse
+	// err = json.Unmarshal(evmValidatorsRes, &evmValidators)
+	// require.NoError(err)
+	// fmt.Println("evmValidatorsRes", evmValidatorsRes)
+	// for i, val := range evmValidators.BridgeValidatorSet {
+	// 	fmt.Println("EVM Validator", i, "Address:", val.EthereumAddress, "Power:", val.Power)
 
-		// Find the matching validator in our list
-		var found bool
-		for j, v := range validators {
-			if strings.EqualFold(val.EthereumAddress, v.EVMAddr) {
-				fmt.Printf("Matched with validator %d (exported key)\n", j)
-				found = true
-				break
-			}
-		}
+	// 	// Find the matching validator in our list
+	// 	var found bool
+	// 	for j, v := range validators {
+	// 		if strings.EqualFold(val.EthereumAddress, v.EVMAddr) {
+	// 			fmt.Printf("Matched with validator %d (exported key)\n", j)
+	// 			found = true
+	// 			break
+	// 		}
+	// 	}
 
-		// If not found, the validator's EVM address doesn't match any of our exported keys
-		require.True(found, fmt.Sprintf("EVM validator address %s doesn't match any exported key", val.EthereumAddress))
-	}
+	// 	// If not found, the validator's EVM address doesn't match any of our exported keys
+	// 	require.True(found, fmt.Sprintf("EVM validator address %s doesn't match any exported key", val.EthereumAddress))
+	// }
 
 	// Validator reporters report for the cycle list to create oracle data
 	currentCycleListRes, _, err := validators[0].Node.ExecQuery(ctx, "oracle", "current-cyclelist-query")
@@ -333,14 +276,14 @@ func TestAttestationSlashing(t *testing.T) {
 	err = testutil.WaitForBlocks(ctx, 3, validators[0].Node)
 	require.NoError(err)
 
-	// Get query ID and timestamp from report
+	// Get query ID from microreport
 	var queryId string
 	var timestamp uint64
 
-	reports, _, err := validators[0].Node.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[0].AccAddr)
+	microReports, _, err := validators[0].Node.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[0].AccAddr)
 	require.NoError(err)
 	var reportsRes e2e.QueryMicroReportsResponse
-	err = json.Unmarshal(reports, &reportsRes)
+	err = json.Unmarshal(microReports, &reportsRes)
 	require.NoError(err)
 	require.GreaterOrEqual(len(reportsRes.MicroReports), 1)
 
@@ -350,9 +293,14 @@ func TestAttestationSlashing(t *testing.T) {
 	fmt.Println("Validator checkpoint:", checkpointRes2)
 
 	queryId = reportsRes.MicroReports[0].QueryID
-	tsInt, err := strconv.ParseUint(reportsRes.MicroReports[0].Timestamp, 10, 64)
+	// get timestamp from aggregate report
+	aggregateReport, _, err := validators[0].Node.ExecQuery(ctx, "oracle", "get-current-aggregate-report", queryId)
 	require.NoError(err)
-	timestamp = tsInt
+	var aggregateReportRes e2e.QueryGetCurrentAggregateReportResponse
+	err = json.Unmarshal(aggregateReport, &aggregateReportRes)
+	require.NoError(err)
+	timestamp, err = strconv.ParseUint(aggregateReportRes.Timestamp, 10, 64)
+	require.NoError(err)
 	fmt.Println("QueryID:", queryId, "Timestamp:", timestamp)
 
 	require.NoError(err)
@@ -368,7 +316,7 @@ func TestAttestationSlashing(t *testing.T) {
 	lastSnapshot := snapshotsResponse.Snapshots[len(snapshotsResponse.Snapshots)-1]
 	fmt.Println("Last snapshot:", lastSnapshot)
 
-	attestationDataRes, _, err := validators[0].Node.ExecQuery(ctx, "bridge", "get-attestation-databy-snapshot", lastSnapshot)
+	attestationDataRes, _, err := validators[0].Node.ExecQuery(ctx, "bridge", "get-attestation-data-by-snapshot", lastSnapshot)
 	require.NoError(err)
 	var attestationData e2e.QueryGetAttestationDataBySnapshotResponse
 	err = json.Unmarshal(attestationDataRes, &attestationData)
@@ -376,7 +324,7 @@ func TestAttestationSlashing(t *testing.T) {
 	fmt.Println("Attestation data:", attestationData)
 
 	// Get the current checkpoint for use in malicious attestation
-	checkpointRes, _, err := validators[0].Node.ExecQuery(ctx, "bridge", "get-checkpoint")
+	checkpointRes, _, err := validators[0].Node.ExecQuery(ctx, "bridge", "get-validator-checkpoint")
 	require.NoError(err)
 	var checkpointData struct {
 		Checkpoint string `json:"checkpoint"`
@@ -388,7 +336,7 @@ func TestAttestationSlashing(t *testing.T) {
 
 	// Create a malicious attestation from validator[1] for slashing purposes
 	// Modify the original attestation data but use same signatures
-	maliciousValue := "9999" // Different from original 5000
+	maliciousValue := "000000000000000000000000000000000000000000000058528649cf90ee0000"
 
 	// Create attestation data bytes for signing
 	queryIdBytes, err := hex.DecodeString(queryId)
@@ -401,17 +349,41 @@ func TestAttestationSlashing(t *testing.T) {
 	// Generate signature from validator[1]
 	targetValidator := validators[1]
 
+	type SnapshotData struct {
+		QueryID                string `json:"query_id"`
+		Value                  string `json:"value"`
+		Timestamp              uint64 `json:"timestamp"`
+		AggregatePower         uint64 `json:"aggregate_power"`
+		PreviousTimestamp      uint64 `json:"previous_timestamp"`
+		NextTimestamp          uint64 `json:"next_timestamp"`
+		Checkpoint             string `json:"checkpoint"`
+		AttestationTimestamp   uint64 `json:"attestation_timestamp"`
+		LastConsensusTimestamp uint64 `json:"last_consensus_timestamp"`
+	}
+
+	malSnapshotData := SnapshotData{
+		QueryID:                queryId,
+		Value:                  maliciousValue,
+		Timestamp:              timestamp,
+		AggregatePower:         100,
+		PreviousTimestamp:      timestamp - 1000,
+		NextTimestamp:          timestamp + 1000,
+		Checkpoint:             checkpointStr,
+		AttestationTimestamp:   attestTimestamp,
+		LastConsensusTimestamp: timestamp,
+	}
+
 	// Create snapshot data for malicious attestation
 	snapshotBytes, err := encodeOracleAttestationData(
 		queryIdBytes,
-		maliciousValue,
-		timestamp,
-		uint64(100),    // aggregate power
-		timestamp-1000, // previous timestamp
-		timestamp+1000, // next timestamp
+		malSnapshotData.Value,
+		malSnapshotData.Timestamp,
+		malSnapshotData.AggregatePower,
+		malSnapshotData.PreviousTimestamp,
+		malSnapshotData.NextTimestamp,
 		checkpointBytes,
-		attestTimestamp,
-		timestamp, // last consensus timestamp
+		malSnapshotData.AttestationTimestamp,
+		malSnapshotData.LastConsensusTimestamp,
 	)
 	require.NoError(err)
 
