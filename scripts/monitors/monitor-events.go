@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,7 +11,6 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -21,19 +21,16 @@ import (
 )
 
 const (
-	PrimaryRpcUrl       = "https://node-palmito.tellorlayer.com/rpc"
-	FallbackRpcUrl      = "https://rpc.tellorlayer.com"
-	DefaultConfigPath   = "scripts/monitors/event-config.yml"
 	AlertCooldownPeriod = 2 * time.Hour
 	AlertWindowPeriod   = 10 * time.Minute
 	MaxAlertsInWindow   = 10
 	PowerThreshold      = 2.0 / 3.0
+	DefaultRpcPort      = "26657"
 )
 
 var (
 	eventConfig                  EventConfig
 	configMutex                  sync.RWMutex
-	configFilePath               = "scripts/monitors/event-config.yml"
 	Current_Total_Reporter_Power uint64
 	reporterPowerMutex           sync.RWMutex
 	// Rate limiting variables
@@ -43,6 +40,10 @@ var (
 	aggregateAlertCooldown   time.Time
 	// Map to store event types we're interested in
 	eventTypeMap map[string]ConfigType
+	// Command line parameters
+	rpcPort        string
+	configFilePath string
+	nodeName       string
 )
 
 type Params struct {
@@ -212,12 +213,7 @@ func (w *WebSocketClient) connect() error {
 
 	conn, _, err := dialer.Dial(w.url, nil)
 	if err != nil {
-		if strings.EqualFold(w.url, FallbackRpcUrl) {
-			return fmt.Errorf("failed to connect: %w", err)
-		} else {
-			w.url = FallbackRpcUrl
-			return w.connect()
-		}
+		return fmt.Errorf("failed to connect: %w", err)
 	}
 
 	// Set read deadline to detect stale connections
@@ -268,12 +264,14 @@ func (w *WebSocketClient) readMessages(ctx context.Context, handler func([]byte)
 		case <-timeoutTicker.C:
 			w.mu.RLock()
 			if time.Since(w.lastMessage) > 10*time.Minute {
-				message := "**Alert: No NewBlock Events Received**\nNo NewBlock events have been received in the last 10 minutes. Please check the chain status."
-				discordNotifier := utils.NewDiscordNotifier(eventConfig.EventTypes[0].WebhookURL)
-				if err := discordNotifier.SendAlert(message); err != nil {
-					log.Printf("Error sending timeout Discord alert: %v", err)
-				} else {
-					log.Printf("Sent timeout Discord alert")
+				message := fmt.Sprintf("**Alert: Node %s is Not Responding**\nNo NewBlock events have been received from node %s in the last 10 minutes. Please check the node status and logs.", nodeName, nodeName)
+				if _, exists := eventTypeMap["LIVENESS-ALERT"]; exists {
+					discordNotifier := utils.NewDiscordNotifier(eventTypeMap["LIVENESS-ALERT"].WebhookURL)
+					if err := discordNotifier.SendAlert(message); err != nil {
+						log.Printf("Error sending timeout Discord alert: %v", err)
+					} else {
+						log.Printf("Sent timeout Discord alert for node %s", nodeName)
+					}
 				}
 			}
 			w.mu.RUnlock()
@@ -307,6 +305,7 @@ func (w *WebSocketClient) readMessages(ctx context.Context, handler func([]byte)
 }
 
 func (w *WebSocketClient) healthCheck(ctx context.Context) {
+	defer recoverAndAlert("WebSocketClient.healthCheck")
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
@@ -387,6 +386,7 @@ func subscribeToEvents(client *websocket.Conn, eventTypes []ConfigType) error {
 }
 
 func startConfigWatcher(ctx context.Context, client *websocket.Conn) {
+	defer recoverAndAlert("startConfigWatcher")
 	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
 
@@ -480,15 +480,19 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 }
 
 func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		recoverAndAlert("MonitorBlockEvents")
+		wg.Done()
+	}()
 
 	if err := loadConfig(); err != nil {
 		log.Printf("Error loading initial config: %v", err)
 		return
 	}
 
-	url := url.URL{Scheme: "ws", Host: "34.229.148.107:26657", Path: "/websocket"}
-	client := NewWebSocketClient(url.String())
+	// Use localhost for the WebSocket connection
+	wsUrl := url.URL{Scheme: "ws", Host: "localhost:" + rpcPort, Path: "/websocket"}
+	client := NewWebSocketClient(wsUrl.String())
 
 	// Start health check
 	go client.healthCheck(ctx)
@@ -601,6 +605,7 @@ type ValidatorResponse struct {
 }
 
 func updateTotalReporterPower(ctx context.Context) {
+	defer recoverAndAlert("updateTotalReporterPower")
 	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
 
@@ -609,13 +614,10 @@ func updateTotalReporterPower(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			resp, err := http.Get(PrimaryRpcUrl + "/validators")
+			resp, err := http.Get(fmt.Sprintf("http://localhost:%s/validators", rpcPort))
 			if err != nil {
-				resp, err = http.Get(FallbackRpcUrl + "/validators")
-				if err != nil {
-					fmt.Printf("Error querying validators: %v\n", err)
-					continue
-				}
+				fmt.Printf("Error querying validators: %v\n", err)
+				continue
 			}
 
 			var validatorResp ValidatorResponse
@@ -646,7 +648,39 @@ func updateTotalReporterPower(ctx context.Context) {
 	}
 }
 
+func recoverAndAlert(goroutineName string) {
+	var eventInfo ConfigType
+	if info, exists := eventTypeMap["crash"]; exists {
+		eventInfo = info
+	} else {
+		log.Printf("No crash event type configured, skipping alert for goroutine: %s", goroutineName)
+		return
+	}
+	if r := recover(); r != nil {
+		message := fmt.Sprintf("**CRITICAL ALERT: Goroutine Crash**\nGoroutine '%s' has crashed with panic: %v\nPlease check the logs and restart the service.", goroutineName, r)
+		discordNotifier := utils.NewDiscordNotifier(eventInfo.WebhookURL)
+		if err := discordNotifier.SendAlert(message); err != nil {
+			log.Printf("Error sending crash Discord alert: %v", err)
+		} else {
+			log.Printf("Sent crash Discord alert for goroutine: %s", goroutineName)
+		}
+		// Re-panic to maintain the original behavior
+		panic(r)
+	}
+}
+
 func main() {
+	// Parse command line flags
+	flag.StringVar(&rpcPort, "port", DefaultRpcPort, "RPC port (default: 26657)")
+	flag.StringVar(&configFilePath, "config", "", "Path to config file")
+	flag.StringVar(&nodeName, "node", "", "Name of the node being monitored")
+	flag.Parse()
+
+	// Validate required parameters
+	if configFilePath == "" || nodeName == "" {
+		log.Fatal("Usage: go run ./scripts/monitors/monitor-events.go -port=<rpc_port> -config=<config_file_path> -node=<node_name>")
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
