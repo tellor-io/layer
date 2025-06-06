@@ -431,7 +431,6 @@ func TestAttestationSlashing(t *testing.T) {
 	require.True(slashedValInfo.Jailed, "Validator should have been jailed")
 }
 
-// Helper function to encode oracle attestation data in the same way as the bridge keeper
 func encodeOracleAttestationData(
 	queryId []byte,
 	value string,
@@ -443,7 +442,6 @@ func encodeOracleAttestationData(
 	attestationTimestamp uint64,
 	lastConsensusTimestamp uint64,
 ) ([]byte, error) {
-	// Format matches the one in keeper.EncodeOracleAttestationData
 	encoded := []byte{}
 	encoded = append(encoded, queryId...)
 	encoded = append(encoded, []byte(value)...)
