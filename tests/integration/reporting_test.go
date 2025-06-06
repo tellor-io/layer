@@ -4,6 +4,8 @@ import (
 	"encoding/hex"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/tellor-io/layer/testutil"
 	utils "github.com/tellor-io/layer/utils"
 	disputekeeper "github.com/tellor-io/layer/x/dispute/keeper"
@@ -36,6 +38,25 @@ func (s *IntegrationTestSuite) TestAggregateOverMultipleBlocks() {
 	msgServerStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 	require.NotNil(msgServerStaking)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+	s.Setup.Ctx = s.Setup.Ctx.WithConsensusParams(tmproto.ConsensusParams{
+		Block: &tmproto.BlockParams{
+			MaxBytes: 200000,
+			MaxGas:   100_000_000,
+		},
+		Evidence: &tmproto.EvidenceParams{
+			MaxAgeNumBlocks: 302400,
+			MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+			MaxBytes:        10000,
+		},
+		Validator: &tmproto.ValidatorParams{
+			PubKeyTypes: []string{
+				cmttypes.ABCIPubKeyTypeEd25519,
+			},
+		},
+		Abci: &tmproto.ABCIParams{
+			VoteExtensionsEnableHeight: 1,
+		},
+	})
 
 	//---------------------------------------------------------------------------
 	// Height 0 - vicky becomes a validator
