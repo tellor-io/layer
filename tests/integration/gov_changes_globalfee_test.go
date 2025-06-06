@@ -3,12 +3,12 @@ package integration_test
 import (
 	"time"
 
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
 
 	collections "cosmossdk.io/collections"
 	math "cosmossdk.io/math"
-	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cmttypes "github.com/cometbft/cometbft/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
