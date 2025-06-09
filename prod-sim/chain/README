@@ -1,0 +1,71 @@
+For using prod-sim to stand up a testing docker environment you have 2 options:
+    - run_current_branch_devnet.sh
+    - run_fork_devnet.sh
+
+No matter which option you choose the first thing you will need to do is set up the .env files.
+
+- Please refer to the .env.example file for the variables you need to set.
+- You will need to set the variables for each validator at ./prod-sim/chain/validator-info/{validator-name}/.env
+    - You will need an infura api key to set the ETH_RPC_URL and ETH_RPC_URL_PRIMARY variables.
+    - You will need a token bridge contract address to set the TOKEN_BRIDGE_CONTRACT variable.
+    - You will need a trb playground contract address to set the TRB_PLAYGROUND_CONTRACT variable.
+    - You will need a reporters validator address to set the REPORTERS_VALIDATOR_ADDRESS variable.
+    - You will need a withdraw frequency to set the WITHDRAW_FREQUENCY variable.
+
+If you are just wanting to start a fresh chain to test you will want to run ***``bash ./run_current_branch_devnet.sh``***
+    - This will build the code as it is locally for the docker environment and start up 3 validators and reporters for you. 
+    - Usage (MUST BE RUN FROM THE PROD-SIM/CHAIN FOLDER): (bash ./run_current_branch_devnet.sh) 
+    - Please see below for more details on interacting with the chain once it is running.
+
+If you are wantin to start a chain using exported data from another running chain run ***``bash ./run_fork_devnet.sh``
+    - This script is a little more involved as it requires you to have exported data from a running chain and set up some variables in the script.
+    - Please see below for more details on how to set up the exported data.
+        - 1. Export the data from the running chain
+            - if you use (./layerd export --home {layer node home directory} >> public_exported_genesis.json) you won't need to renmae any files for the script to work
+        - 2. Download and copy the exported data into the prod-sim/chain/exported_data folder
+            - please refer to the existing files there for naming purposes. if you use a different name you will need to update the script.
+            - Feel free to overwrite the existing module_state json files and the public_exported_genesis.json file with your new exported data.
+        - 3. Update the script at ./prod-sim/chain/run_fork_devnet.sh
+            - Set the LAYERD_PATH variable to the path of the layerd binary on your machine.
+            - Make sure the file paths in the 4 variables are correct.
+                - PUBLIC_GENESIS: path to the exported genesis file from step 1
+                - LOCAL_GENESIS: path to the local docker genesis file (this should be good by default and should NOT be overwritten) that contains data needed to replace validator set with the test validators
+                - DOCKER_DATA: path to data needed to add test accounts as reporters in the exported state and properly set up the genesis file
+                - REPORTER_DATA: path to the exported reporter_module_state json file so we can add the test reporters to the data
+        - 4. Run the script (MUST BE RUN FROM THE PROD-SIM/CHAIN FOLDER)
+            - (bash ./run_fork_devnet.sh)
+
+
+
+Once you have a chain running here some commands that may be useful:
+
+- To check the logs of the chain:
+    - (docker logs -f validator-node-0) ## Can change the validator-node-0 to the number of the validator you want to check the logs of
+- To check the address of a validator account:
+    - For normal account address: ./layerd keys show validator-0 -a --keyring-backend test --keyring-dir ./prod-sim/chain/validator-info/validator-0
+    - For validator operator address: ./layerd keys show validator-0 --bech val --keyring-backend test --keyring-dir ./prod-sim/chain/validator-info/validator-0
+- To run tx's:
+    - You can run commands like usual using the layerd binary just make sure you use the following flags:
+        - --keyring-backend test
+        - --keyring-dir ./prod-sim/chain/validator-info/{validator-name}
+        - --chain-id tellor-devnet
+        - example: ./layerd tx reporter create-reporter 0.01 1000000 test-reporter --from validator-0 --keyring-backend test --keyring-dir ./prod-sim/chain/validator-info/validator-0 --chain-id tellor-devnet --fees 10loya --yes
+            - this tx will go through but should error out if you use an existing validator account as the reporter already exists
+- To query the chain:
+    - run query commands like usual using the layerd binary as the docker environment is listening on port 26657
+    - example: ./layerd query oracle get-current-aggregate-report 83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992
+- Testing Upgrades:
+    - If the pre-upgrade version is new enough to have this prod-sim setup implemented you can use the test_upgrade_local_devnet.sh script to test the upgrade.
+        - Please go to test_upgrade_local_devnet.sh and update the PRE_UPGRADE_BRANCH, UPGRADE_BRANCH, and UPGRADE_NAME variables to the branches you will be upgrading from and to.
+            - if you have a clean git history and set the variables correctly it does not matter what branch you run the script from as long as it has the docker prod-sim environment set up.
+        - Run the script with ``bash ./test_upgrade_local_devnet.sh``
+        - This script will:
+            - build the pre-upgrade and upgrade binaries
+            - start the pre-upgrade chain
+            - submit and pass an upgrade proposal
+            - build the upgrade binary
+            - monitor the logs for the upgrade success and panic message in logs when upgrade height is reached
+            - stop the chain
+            - replace the layerd binary with the upgrade binary
+            - start the upgraded chain
+            
