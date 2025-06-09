@@ -619,6 +619,34 @@ func processTransactionEvents(txResults []TxResult, height string) {
 	}
 }
 
+// Add a helper function to write timestamps to a CSV file
+func writeTimestampToCSV(timestamp string) error {
+	// Check if file exists
+	_, err := os.Stat("bridge_validator_timestamps.csv")
+	fileExists := err == nil
+
+	// Create the file if it doesn't exist, or append to it if it does
+	file, err := os.OpenFile("bridge_validator_timestamps.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("error opening file: %w", err)
+	}
+	defer file.Close()
+
+	// If file was just created, write the header
+	if !fileExists {
+		if _, err := file.WriteString("new_bridge_validator_set_timestamps\n"); err != nil {
+			return fmt.Errorf("error writing header to file: %w", err)
+		}
+	}
+
+	// Write the timestamp to the CSV file
+	if _, err := file.WriteString(timestamp + "\n"); err != nil {
+		return fmt.Errorf("error writing to file: %w", err)
+	}
+
+	return nil
+}
+
 // Add a helper function to handle events
 func handleEvent(event Event, eventType ConfigType) {
 	if event.Type == "aggregate_report" {
@@ -635,6 +663,19 @@ func handleEvent(event Event, eventType ConfigType) {
 			fmt.Printf("Error sending Discord alert for event %s: %v\n", event.Type, err)
 		} else {
 			fmt.Printf("Sent Discord alert for event: %s\n", event.Type)
+		}
+	}
+
+	if event.Type == "new_bridge_validator_set" {
+		for _, attr := range event.Attributes {
+			if attr.Key == "timestamp" {
+				if err := writeTimestampToCSV(attr.Value); err != nil {
+					fmt.Printf("Error writing timestamp to CSV: %v\n", err)
+				} else {
+					fmt.Printf("Successfully wrote timestamp %s to CSV\n", attr.Value)
+				}
+				break
+			}
 		}
 	}
 }
