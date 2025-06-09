@@ -1,0 +1,2164 @@
+{
+  "reporters": [
+    {
+      "reporter_addr": "+Jh+J4JQuHTHzhHYRUP8/KcYd6E=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "pi69",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "8jGvAfRtBogIuOint8PQpnonIVk=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.010000000000000000",
+        "jailed": true,
+        "jailed_until": "2262-04-11T23:47:16.854775807Z",
+        "moniker": "telliot_tester_2000",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7p/8OT7776QO5pWhZtdxfVf9Fgk=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "SyaNodes",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "3pfCKzZ+iBXgl1tiv16V4xkXGQw=",
+      "reporter": {
+        "min_tokens_required": "1100000",
+        "commission_rate": "0.240000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "thunderbolt",
+        "last_updated": "2025-04-04T15:37:58.348832023Z"
+      }
+    },
+    {
+      "reporter_addr": "3b9dKdaoNVOqmM0zDEsIf+IaSVM=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "REPORTER_Galaxy",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "2tOOSS5dqWbhPoMm6WuYTNhYPY8=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "1.000000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "alice",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "2QuP5nBDKH2C47TwIH5ZrGABXIQ=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.050000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "jtd",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "sdlPngEfD3xQ8xnrPfNt2eMo44I=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "UTSA",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "qf1e2JTqXae7/LWQzFEgxvRzqos=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "REPORTER_VIETNNIT",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "p0NJEm9XdQrQEEWo0GKC48u+0fM=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.040000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "dozer",
+        "last_updated": "2025-05-23T16:51:24.566473148Z"
+      }
+    },
+    {
+      "reporter_addr": "onO4pIwo2VW3+rIG2SkgA5lQxgQ=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "Krews",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "ngEahgjG54TEweIaQCWHzCRxy9A=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.050000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "file_backend_tester",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "mfqu8eF7qlHheSR2a8bdlBoFtIE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "DvlNodeReporter",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "j+iSxFxZP3PX2J7aoYUavfp9Nlw=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "airSintez_Report",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "j8Dphnj+EaM+450X5RjdPchXQ9c=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "HusoNode",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "jRSFfWe6hn1Y52bna8Mlg+mkTPg=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "Shazoe",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "jNwt0alqtcz6sh6hiJUEnEAsvHI=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.050000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "tellorvaloper13nwzm5dfd26ue74jr6sc39gyn3qze0rjja9t60",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "fyBB+ZU2VcuubEVs5aF8Fema8VE=",
+      "reporter": {
+        "min_tokens_required": "1000100",
+        "commission_rate": "0.110000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "neo",
+        "last_updated": "2025-03-20T22:21:05.790154913Z"
+      }
+    },
+    {
+      "reporter_addr": "ePuP5wqb8vMb/SXwCetRUIKkDV4=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "bozo-reporter",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "bNViSCQ1Zw9nHC7U43lDaYSnnNE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "0xHub",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "a9eg192AzhLDeQF6WIL7Shbt46g=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "Sr20de",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "ZuPXSIu0fCmQjwvNdexLd5SKk7s=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.050000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "MaxwellHill",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "ZZSabrKGRI6Aq/8Um4PLLUwSWl8=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "obi_wan",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "Y5RCFmmLhevkhyrC6l5vION7DEs=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "pazu2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "YIKqNliEl+/sKAMJDwwSSh9qkXY=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "maxwellhill",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "WmtNqGc0Xi2Ei/tbdPK0flBYU60=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "REPORTER_NodeSafe",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UwWhUyNRRuXfgPwwBfAJWv+jKdA=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.200000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "new_reporter_on_the_block",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "RaC2RnXAdtha9dn3cat//JNKvgA=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.040000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "cypher",
+        "last_updated": "2025-05-23T16:48:14.643197076Z"
+      }
+    },
+    {
+      "reporter_addr": "RMcYbtEjADEkKGiqVXFRQu0697A=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.050000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "ValidatriumReporter",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "MQzfGKSSbv63W0RckmBO32bRS8A=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.050000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "spudstest_403",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "LRSLzCWXV6yPoO2bIfA/HIuKvS8=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "yoda",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "KdrLlmpvugYMwsQakXomXZhZYkw=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.040000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "tank",
+        "last_updated": "2025-05-23T16:50:44.616299185Z"
+      }
+    },
+    {
+      "reporter_addr": "J4mtGDFg5nzq1WG74iL+lxpFSNU=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "warrion08",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "DOhMUY3MMayl9GoyWnTC7T+SEj4=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.050000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "SpaceStake",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "B4Pdy8w7Yu5mi6BcjMrL7Ic78EI=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed": true,
+        "jailed_until": "2025-05-31T19:36:07.659845144Z",
+        "moniker": "telliots-revenge",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "BvtZoGBTAC1I6uUqf7cjjzOtqp0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.250000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "tekin86",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    }
+  ],
+  "selectors": [
+    {
+      "selector_addr": "+Jh+J4JQuHTHzhHYRUP8/KcYd6E=",
+      "selector": {
+        "reporter": "+Jh+J4JQuHTHzhHYRUP8/KcYd6E=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "8jGvAfRtBogIuOint8PQpnonIVk=",
+      "selector": {
+        "reporter": "8jGvAfRtBogIuOint8PQpnonIVk=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7p/8OT7776QO5pWhZtdxfVf9Fgk=",
+      "selector": {
+        "reporter": "7p/8OT7776QO5pWhZtdxfVf9Fgk=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "52FuarkSxCdPJ0GoewjWTOn+HfE=",
+      "selector": {
+        "reporter": "KdrLlmpvugYMwsQakXomXZhZYkw=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "3pfCKzZ+iBXgl1tiv16V4xkXGQw=",
+      "selector": {
+        "reporter": "3pfCKzZ+iBXgl1tiv16V4xkXGQw=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "3b9dKdaoNVOqmM0zDEsIf+IaSVM=",
+      "selector": {
+        "reporter": "3b9dKdaoNVOqmM0zDEsIf+IaSVM=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "2tOOSS5dqWbhPoMm6WuYTNhYPY8=",
+      "selector": {
+        "reporter": "2tOOSS5dqWbhPoMm6WuYTNhYPY8=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "2QuP5nBDKH2C47TwIH5ZrGABXIQ=",
+      "selector": {
+        "reporter": "2QuP5nBDKH2C47TwIH5ZrGABXIQ=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "y0cShTJqpP/6MaNMoVkWoLa/0w4=",
+      "selector": {
+        "reporter": "p0NJEm9XdQrQEEWo0GKC48u+0fM=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "vw7LKEImVkfKuDnYEicuOPHkjBM=",
+      "selector": {
+        "reporter": "LRSLzCWXV6yPoO2bIfA/HIuKvS8=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "sdlPngEfD3xQ8xnrPfNt2eMo44I=",
+      "selector": {
+        "reporter": "sdlPngEfD3xQ8xnrPfNt2eMo44I=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "qf1e2JTqXae7/LWQzFEgxvRzqos=",
+      "selector": {
+        "reporter": "qf1e2JTqXae7/LWQzFEgxvRzqos=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "p0NJEm9XdQrQEEWo0GKC48u+0fM=",
+      "selector": {
+        "reporter": "p0NJEm9XdQrQEEWo0GKC48u+0fM=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 2
+      }
+    },
+    {
+      "selector_addr": "onO4pIwo2VW3+rIG2SkgA5lQxgQ=",
+      "selector": {
+        "reporter": "onO4pIwo2VW3+rIG2SkgA5lQxgQ=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "ngEahgjG54TEweIaQCWHzCRxy9A=",
+      "selector": {
+        "reporter": "ngEahgjG54TEweIaQCWHzCRxy9A=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "mfqu8eF7qlHheSR2a8bdlBoFtIE=",
+      "selector": {
+        "reporter": "mfqu8eF7qlHheSR2a8bdlBoFtIE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "j+iSxFxZP3PX2J7aoYUavfp9Nlw=",
+      "selector": {
+        "reporter": "j+iSxFxZP3PX2J7aoYUavfp9Nlw=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "j8Dphnj+EaM+450X5RjdPchXQ9c=",
+      "selector": {
+        "reporter": "j8Dphnj+EaM+450X5RjdPchXQ9c=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "jRSFfWe6hn1Y52bna8Mlg+mkTPg=",
+      "selector": {
+        "reporter": "jRSFfWe6hn1Y52bna8Mlg+mkTPg=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "jNwt0alqtcz6sh6hiJUEnEAsvHI=",
+      "selector": {
+        "reporter": "jNwt0alqtcz6sh6hiJUEnEAsvHI=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "fyBB+ZU2VcuubEVs5aF8Fema8VE=",
+      "selector": {
+        "reporter": "fyBB+ZU2VcuubEVs5aF8Fema8VE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "ePuP5wqb8vMb/SXwCetRUIKkDV4=",
+      "selector": {
+        "reporter": "ePuP5wqb8vMb/SXwCetRUIKkDV4=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "eKUEPU+g8nR6q9AABr5XrPZ8cIQ=",
+      "selector": {
+        "reporter": "RaC2RnXAdtha9dn3cat//JNKvgA=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "bNViSCQ1Zw9nHC7U43lDaYSnnNE=",
+      "selector": {
+        "reporter": "bNViSCQ1Zw9nHC7U43lDaYSnnNE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "a9eg192AzhLDeQF6WIL7Shbt46g=",
+      "selector": {
+        "reporter": "a9eg192AzhLDeQF6WIL7Shbt46g=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "ZuPXSIu0fCmQjwvNdexLd5SKk7s=",
+      "selector": {
+        "reporter": "ZuPXSIu0fCmQjwvNdexLd5SKk7s=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "ZZSabrKGRI6Aq/8Um4PLLUwSWl8=",
+      "selector": {
+        "reporter": "ZZSabrKGRI6Aq/8Um4PLLUwSWl8=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "Y5RCFmmLhevkhyrC6l5vION7DEs=",
+      "selector": {
+        "reporter": "Y5RCFmmLhevkhyrC6l5vION7DEs=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "YIKqNliEl+/sKAMJDwwSSh9qkXY=",
+      "selector": {
+        "reporter": "YIKqNliEl+/sKAMJDwwSSh9qkXY=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "WmtNqGc0Xi2Ei/tbdPK0flBYU60=",
+      "selector": {
+        "reporter": "WmtNqGc0Xi2Ei/tbdPK0flBYU60=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UwWhUyNRRuXfgPwwBfAJWv+jKdA=",
+      "selector": {
+        "reporter": "UwWhUyNRRuXfgPwwBfAJWv+jKdA=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "RaC2RnXAdtha9dn3cat//JNKvgA=",
+      "selector": {
+        "reporter": "RaC2RnXAdtha9dn3cat//JNKvgA=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "RMcYbtEjADEkKGiqVXFRQu0697A=",
+      "selector": {
+        "reporter": "RMcYbtEjADEkKGiqVXFRQu0697A=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "Q6d95c2bJ6XfJmUSBLiUj4LN5FI=",
+      "selector": {
+        "reporter": "RaC2RnXAdtha9dn3cat//JNKvgA=",
+        "locked_until_time": "2025-06-19T16:18:12.195843893Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "MQzfGKSSbv63W0RckmBO32bRS8A=",
+      "selector": {
+        "reporter": "MQzfGKSSbv63W0RckmBO32bRS8A=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 2
+      }
+    },
+    {
+      "selector_addr": "LRSLzCWXV6yPoO2bIfA/HIuKvS8=",
+      "selector": {
+        "reporter": "LRSLzCWXV6yPoO2bIfA/HIuKvS8=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "KdrLlmpvugYMwsQakXomXZhZYkw=",
+      "selector": {
+        "reporter": "KdrLlmpvugYMwsQakXomXZhZYkw=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 2
+      }
+    },
+    {
+      "selector_addr": "J4mtGDFg5nzq1WG74iL+lxpFSNU=",
+      "selector": {
+        "reporter": "J4mtGDFg5nzq1WG74iL+lxpFSNU=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "FdGiw4cNBB+P0rCt1nj+rm08TPE=",
+      "selector": {
+        "reporter": "fyBB+ZU2VcuubEVs5aF8Fema8VE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "D4jyMBN0eykDTISZ4nbwZI0Ndvc=",
+      "selector": {
+        "reporter": "ZZSabrKGRI6Aq/8Um4PLLUwSWl8=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "DOhMUY3MMayl9GoyWnTC7T+SEj4=",
+      "selector": {
+        "reporter": "DOhMUY3MMayl9GoyWnTC7T+SEj4=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "B4Pdy8w7Yu5mi6BcjMrL7Ic78EI=",
+      "selector": {
+        "reporter": "B4Pdy8w7Yu5mi6BcjMrL7Ic78EI=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "BvtZoGBTAC1I6uUqf7cjjzOtqp0=",
+      "selector": {
+        "reporter": "BvtZoGBTAC1I6uUqf7cjjzOtqp0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    }
+  ],
+  "selector_tips": [
+    {
+      "selector_address": "+Jh+J4JQuHTHzhHYRUP8/KcYd6E=",
+      "tips": "34282162.982793878059102723"
+    },
+    {
+      "selector_address": "8jGvAfRtBogIuOint8PQpnonIVk=",
+      "tips": "137202.450932915539095208"
+    },
+    {
+      "selector_address": "7p/8OT7776QO5pWhZtdxfVf9Fgk=",
+      "tips": "39353632.721199192199891024"
+    },
+    {
+      "selector_address": "52FuarkSxCdPJ0GoewjWTOn+HfE=",
+      "tips": "912347100.092596096273347889"
+    },
+    {
+      "selector_address": "3pfCKzZ+iBXgl1tiv16V4xkXGQw=",
+      "tips": "2255831.951743609420645565"
+    },
+    {
+      "selector_address": "3b9dKdaoNVOqmM0zDEsIf+IaSVM=",
+      "tips": "27167630.886543625463265672"
+    },
+    {
+      "selector_address": "2tOOSS5dqWbhPoMm6WuYTNhYPY8=",
+      "tips": "46503.188185758336030444"
+    },
+    {
+      "selector_address": "2QuP5nBDKH2C47TwIH5ZrGABXIQ=",
+      "tips": "439.552070381162460735"
+    },
+    {
+      "selector_address": "y0cShTJqpP/6MaNMoVkWoLa/0w4=",
+      "tips": "899068208.940226947487190545"
+    },
+    {
+      "selector_address": "vw7LKEImVkfKuDnYEicuOPHkjBM=",
+      "tips": "857741116.594786394689038954"
+    },
+    {
+      "selector_address": "sdlPngEfD3xQ8xnrPfNt2eMo44I=",
+      "tips": "124869.586387949739788501"
+    },
+    {
+      "selector_address": "qf1e2JTqXae7/LWQzFEgxvRzqos=",
+      "tips": "35692336.885280984704070695"
+    },
+    {
+      "selector_address": "p0NJEm9XdQrQEEWo0GKC48u+0fM=",
+      "tips": "62971.129075632267287692"
+    },
+    {
+      "selector_address": "onO4pIwo2VW3+rIG2SkgA5lQxgQ=",
+      "tips": "11298887.933591020102616807"
+    },
+    {
+      "selector_address": "ngEahgjG54TEweIaQCWHzCRxy9A=",
+      "tips": "26326.300879644587898157"
+    },
+    {
+      "selector_address": "mfqu8eF7qlHheSR2a8bdlBoFtIE=",
+      "tips": "29804255.262230370856925784"
+    },
+    {
+      "selector_address": "j+iSxFxZP3PX2J7aoYUavfp9Nlw=",
+      "tips": "39826.432022773955026840"
+    },
+    {
+      "selector_address": "j8Dphnj+EaM+450X5RjdPchXQ9c=",
+      "tips": "11270.926249008723623862"
+    },
+    {
+      "selector_address": "jRSFfWe6hn1Y52bna8Mlg+mkTPg=",
+      "tips": "36509400.342537567712214429"
+    },
+    {
+      "selector_address": "jNwt0alqtcz6sh6hiJUEnEAsvHI=",
+      "tips": "44970759.011715381673534140"
+    },
+    {
+      "selector_address": "fyBB+ZU2VcuubEVs5aF8Fema8VE=",
+      "tips": "727865.722563889554378798"
+    },
+    {
+      "selector_address": "ePuP5wqb8vMb/SXwCetRUIKkDV4=",
+      "tips": "5517.321537499510556828"
+    },
+    {
+      "selector_address": "eKUEPU+g8nR6q9AABr5XrPZ8cIQ=",
+      "tips": "897315306.050564431526873020"
+    },
+    {
+      "selector_address": "a9eg192AzhLDeQF6WIL7Shbt46g=",
+      "tips": "140073.149069781640084239"
+    },
+    {
+      "selector_address": "ZuPXSIu0fCmQjwvNdexLd5SKk7s=",
+      "tips": "4761.548441347358106220"
+    },
+    {
+      "selector_address": "ZZSabrKGRI6Aq/8Um4PLLUwSWl8=",
+      "tips": "313983.727153674527169174"
+    },
+    {
+      "selector_address": "Y5RCFmmLhevkhyrC6l5vION7DEs=",
+      "tips": "774846.324236907870611638"
+    },
+    {
+      "selector_address": "YIKqNliEl+/sKAMJDwwSSh9qkXY=",
+      "tips": "45391.593784758240186864"
+    },
+    {
+      "selector_address": "WmtNqGc0Xi2Ei/tbdPK0flBYU60=",
+      "tips": "31162774.120904064341930627"
+    },
+    {
+      "selector_address": "UwWhUyNRRuXfgPwwBfAJWv+jKdA=",
+      "tips": "1156.603172424800373759"
+    },
+    {
+      "selector_address": "RaC2RnXAdtha9dn3cat//JNKvgA=",
+      "tips": "21114.146208745984997529"
+    },
+    {
+      "selector_address": "RMcYbtEjADEkKGiqVXFRQu0697A=",
+      "tips": "314159.298159644134424413"
+    },
+    {
+      "selector_address": "Q6d95c2bJ6XfJmUSBLiUj4LN5FI=",
+      "tips": "0.172388369718359682"
+    },
+    {
+      "selector_address": "MQzfGKSSbv63W0RckmBO32bRS8A=",
+      "tips": "0.576492952360426791"
+    },
+    {
+      "selector_address": "LRSLzCWXV6yPoO2bIfA/HIuKvS8=",
+      "tips": "1743717.901026144695325165"
+    },
+    {
+      "selector_address": "KdrLlmpvugYMwsQakXomXZhZYkw=",
+      "tips": "95730.440618197109033754"
+    },
+    {
+      "selector_address": "FdGiw4cNBB+P0rCt1nj+rm08TPE=",
+      "tips": "849511252.524024942799733999"
+    },
+    {
+      "selector_address": "D4jyMBN0eykDTISZ4nbwZI0Ndvc=",
+      "tips": "858990101.608618070549333860"
+    },
+    {
+      "selector_address": "B4Pdy8w7Yu5mi6BcjMrL7Ic78EI=",
+      "tips": "5.698982980880641682"
+    },
+    {
+      "selector_address": "BvtZoGBTAC1I6uUqf7cjjzOtqp0=",
+      "tips": "24256605.623858872494789377"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
+    }
+  ],
+  "disputed_delegation_amounts": [
+    {
+      "hash_id": "Bvqa6Ss1sQ9aQ0e3CfcHTJZagWI4lixd7QCLco/l1nM=",
+      "delegation_amount": {
+        "token_origins": [
+          {
+            "delegator_address": "8jGvAfRtBogIuOint8PQpnonIVk=",
+            "validator_address": "RaC2RnXAdtha9dn3cat//JNKvgA=",
+            "amount": "4000000"
+          }
+        ],
+        "total": "4000000"
+      }
+    }
+  ],
+  "fee_paid_from_stake": [
+    {
+      "hash_id": "Ua/iRdqdo2WmTK6PJLXL960x9hHZdYg/R/g76lnis4k=",
+      "delegation_amount": {
+        "token_origins": [
+          {
+            "delegator_address": "RaC2RnXAdtha9dn3cat//JNKvgA=",
+            "validator_address": "RaC2RnXAdtha9dn3cat//JNKvgA=",
+            "amount": "496"
+          },
+          {
+            "delegator_address": "eKUEPU+g8nR6q9AABr5XrPZ8cIQ=",
+            "validator_address": "RaC2RnXAdtha9dn3cat//JNKvgA=",
+            "amount": "49503"
+          }
+        ],
+        "total": "49999"
+      }
+    }
+  ],
+  "checksum": "5f217f542046590cafc7decb3d11cc66e8db65f52e7927fe924b1def46cc257c"
+}

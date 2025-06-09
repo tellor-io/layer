@@ -1,0 +1,154 @@
+version: '3'
+
+services:
+  validator-node-0:
+    container_name: validator-node-0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - VALIDATOR_NUM=0
+      - IS_FORK=true
+    command: >
+      sh -c '
+        if [ ! -f /chain/validator-0/.layer/config/priv_validator_key.json ]; then
+          echo "Initializing validator 0..."
+          /chain/bin/layerd init validator-0 --chain-id tellor-devnet --home /chain/validator-0/.layer
+          cp /chain/genesis/genesis.json /chain/validator-0/.layer/config/
+          cp /chain/validator-info/validator-0/priv_validator_key.json /chain/validator-0/.layer/config/
+          cp /chain/validator-info/validator-0/node_id /chain/validator-0/.layer/config/
+          cp /chain/validator-info/validator-0/node_key.json /chain/validator-0/.layer/config/
+          cp /chain/exported-data/dispute_module_state.json /chain/validator-0/.layer/config/
+          cp /chain/exported-data/oracle_module_state.json /chain/validator-0/.layer/config/
+          cp /chain/exported-data/reporter_module_state.json /chain/validator-0/.layer/config/
+          cp -r /chain/validator-info/validator-0/keyring-test /chain/validator-0/.layer/
+          sed -i "s/^laddr = \"tcp:\/\/127.0.0.1:26657\"/laddr = \"tcp:\/\/0.0.0.0:26657\"/g" /chain/validator-0/.layer/config/config.toml
+          sed -i "s/^laddr = \"tcp:\/\/127.0.0.1:26656\"/laddr = \"tcp:\/\/0.0.0.0:26656\"/g" /chain/validator-0/.layer/config/config.toml
+          sed -i "s/^external_address = \"\"/external_address = \"validator-node-0:26656\"/" /chain/validator-0/.layer/config/config.toml
+          sed -i "s/prometheus = false/prometheus = true/" /chain/validator-0/.layer/config/config.toml
+          sed -i "s/cors_allowed_origins = \\[\\]/cors_allowed_origins = [\"*\"]/" /chain/validator-0/.layer/config/config.toml
+          sed -i "s/persistent_peers = \"\"/persistent_peers = \"$(cat /chain/validator-info/validator-1/node_id)@validator-node-1:26656,$(cat /chain/validator-info/validator-2/node_id)@validator-node-2:26656\"/" /chain/validator-0/.layer/config/config.toml
+        fi
+        cp /chain/validator-info/validator-0/.env /chain/
+        /chain/entrypoint.sh
+      '
+    ports:
+      - "26657:26657"
+      - "26656:26656"
+      - "1317:1317"
+      - "9090:9090"
+    env_file:
+      - ./validator-info/validator-0/.env
+    volumes:
+      - ./bin:/chain/bin
+      - ./genesis:/chain/genesis
+      - ./validator-info:/chain/validator-info
+      - ./exported_data:/chain/exported-data
+      - validator-0-data:/chain/validator-0
+      - reporter-0-data:/chain/reporter-0
+    networks:
+      - layer-network
+
+  validator-node-1:
+    container_name: validator-node-1
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - VALIDATOR_NUM=1
+      - IS_FORK=true
+    command: >
+      sh -c '
+        if [ ! -f /chain/validator-1/.layer/config/priv_validator_key.json ]; then
+          echo "Initializing validator 1..."
+          /chain/bin/layerd init validator-1 --chain-id tellor-devnet --home /chain/validator-1/.layer
+          cp /chain/genesis/genesis.json /chain/validator-1/.layer/config/
+          cp /chain/validator-info/validator-1/priv_validator_key.json /chain/validator-1/.layer/config/
+          cp /chain/validator-info/validator-1/node_id /chain/validator-1/.layer/config/
+          cp /chain/validator-info/validator-1/node_key.json /chain/validator-1/.layer/config/
+          cp /chain/exported-data/dispute_module_state.json /chain/validator-1/.layer/config/
+          cp /chain/exported-data/oracle_module_state.json /chain/validator-1/.layer/config/
+          cp /chain/exported-data/reporter_module_state.json /chain/validator-1/.layer/config/
+          cp -r /chain/validator-info/validator-1/keyring-test /chain/validator-1/.layer/
+          sed -i "s/^laddr = \"tcp:\/\/127.0.0.1:26657\"/laddr = \"tcp:\/\/0.0.0.0:26657\"/g" /chain/validator-1/.layer/config/config.toml
+          sed -i "s/^laddr = \"tcp:\/\/127.0.0.1:26656\"/laddr = \"tcp:\/\/0.0.0.0:26656\"/g" /chain/validator-1/.layer/config/config.toml
+          sed -i "s/^external_address = \"\"/external_address = \"validator-node-1:26656\"/" /chain/validator-1/.layer/config/config.toml
+          sed -i "s/prometheus = false/prometheus = true/" /chain/validator-1/.layer/config/config.toml
+          sed -i "s/cors_allowed_origins = \\[\\]/cors_allowed_origins = [\"*\"]/" /chain/validator-1/.layer/config/config.toml
+          sed -i "s/persistent_peers = \"\"/persistent_peers = \"$(cat /chain/validator-info/validator-0/node_id)@validator-node-0:26656,$(cat /chain/validator-info/validator-2/node_id)@validator-node-2:26656\"/" /chain/validator-1/.layer/config/config.toml
+        fi
+        cp /chain/validator-info/validator-1/.env /chain/
+        /chain/entrypoint.sh
+      '
+    ports:
+      - "26658:26657"
+      - "26659:26656"
+    env_file:
+      - ./validator-info/validator-1/.env
+    volumes:
+      - ./bin:/chain/bin
+      - ./genesis:/chain/genesis
+      - ./validator-info:/chain/validator-info
+      - ./exported_data:/chain/exported-data
+      - validator-1-data:/chain/validator-1
+      - reporter-1-data:/chain/reporter-1
+    networks:
+      - layer-network
+
+  validator-node-2:
+    container_name: validator-node-2
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - VALIDATOR_NUM=2
+      - IS_FORK=true
+    command: >
+      sh -c '
+        if [ ! -f /chain/validator-2/.layer/config/priv_validator_key.json ]; then
+          echo "Initializing validator 2..."
+          /chain/bin/layerd init validator-2 --chain-id tellor-devnet --home /chain/validator-2/.layer
+          cp /chain/genesis/genesis.json /chain/validator-2/.layer/config/
+          cp /chain/validator-info/validator-2/priv_validator_key.json /chain/validator-2/.layer/config/
+          cp /chain/validator-info/validator-2/node_id /chain/validator-2/.layer/config/
+          cp /chain/validator-info/validator-2/node_key.json /chain/validator-2/.layer/config/
+          cp /chain/exported-data/dispute_module_state.json /chain/validator-2/.layer/config/
+          cp /chain/exported-data/oracle_module_state.json /chain/validator-2/.layer/config/
+          cp /chain/exported-data/reporter_module_state.json /chain/validator-2/.layer/config/
+          cp -r /chain/validator-info/validator-2/keyring-test /chain/validator-2/.layer/
+          sed -i "s/^laddr = \"tcp:\/\/127.0.0.1:26657\"/laddr = \"tcp:\/\/0.0.0.0:26657\"/g" /chain/validator-2/.layer/config/config.toml
+          sed -i "s/^laddr = \"tcp:\/\/127.0.0.1:26656\"/laddr = \"tcp:\/\/0.0.0.0:26656\"/g" /chain/validator-2/.layer/config/config.toml
+          sed -i "s/^external_address = \"\"/external_address = \"validator-node-2:26656\"/" /chain/validator-2/.layer/config/config.toml
+          sed -i "s/prometheus = false/prometheus = true/" /chain/validator-2/.layer/config/config.toml
+          sed -i "s/cors_allowed_origins = \\[\\]/cors_allowed_origins = [\"*\"]/" /chain/validator-2/.layer/config/config.toml
+          sed -i "s/persistent_peers = \"\"/persistent_peers = \"$(cat /chain/validator-info/validator-0/node_id)@validator-node-0:26656,$(cat /chain/validator-info/validator-1/node_id)@validator-node-1:26656\"/" /chain/validator-2/.layer/config/config.toml
+        fi
+        cp /chain/validator-info/validator-2/.env /chain/
+        /chain/entrypoint.sh
+      '
+    ports:
+      - "26660:26657"
+      - "26661:26656"
+    env_file:
+      - ./validator-info/validator-2/.env
+    volumes:
+      - ./bin:/chain/bin
+      - ./genesis:/chain/genesis
+      - ./validator-info:/chain/validator-info
+      - ./exported_data:/chain/exported-data
+      - validator-2-data:/chain/validator-2
+      - reporter-2-data:/chain/reporter-2
+    networks:
+      - layer-network
+
+volumes:
+  validator-0-data:
+  validator-1-data:
+  validator-2-data:
+  reporter-0-data:
+  reporter-1-data:
+  reporter-2-data:
+
+networks:
+  layer-network:
+    name: layer-network

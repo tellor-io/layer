@@ -68,36 +68,36 @@ sed -i '' "s/persistent_peers = \"\"/persistent_peers = \"$PEER_ADDR\"/" $NODE2_
 echo "Seeds/persistent_peers set."
 
 # get bill's validator pubkey
-echo "Getting bill's validator pubkey..."
-BILL_VAL_PUBKEY=$(./layerd tendermint show-validator --home $NODE2_HOME_DIR)
-BILL_VAL_PUBKEY=$(echo "$BILL_VAL_PUBKEY" | jq -r '.key')
-echo "Bill's validator pubkey: $BILL_VAL_PUBKEY"
+# echo "Getting bill's validator pubkey..."
+# BILL_VAL_PUBKEY=$(./layerd tendermint show-validator --home $NODE2_HOME_DIR)
+# BILL_VAL_PUBKEY=$(echo "$BILL_VAL_PUBKEY" | jq -r '.key')
+# echo "Bill's validator pubkey: $BILL_VAL_PUBKEY"
 
-# Define the validator.json content
-VALIDATOR_JSON=$(cat <<EOF
-{
-    "pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"$BILL_VAL_PUBKEY"},
-    "amount": "$AMOUNT_IN_LOYA",
-    "moniker": "billmoniker",
-    "identity": "optional identity signature (ex. UPort or Keybase)",
-    "website": "validator's (optional) website",
-    "security": "validator's (optional) security contact email",
-    "details": "validator's (optional) details",
-    "commission-rate": "0.1",
-    "commission-max-rate": "0.2",
-    "commission-max-change-rate": "0.01",
-    "min-self-delegation": "1"
-}
-EOF
-)
+# # Define the validator.json content
+# VALIDATOR_JSON=$(cat <<EOF
+# {
+#     "pubkey": {"@type":"/cosmos.crypto.ed25519.PubKey","key":"$BILL_VAL_PUBKEY"},
+#     "amount": "$AMOUNT_IN_LOYA",
+#     "moniker": "billmoniker",
+#     "identity": "optional identity signature (ex. UPort or Keybase)",
+#     "website": "validator's (optional) website",
+#     "security": "validator's (optional) security contact email",
+#     "details": "validator's (optional) details",
+#     "commission-rate": "0.1",
+#     "commission-max-rate": "0.2",
+#     "commission-max-change-rate": "0.01",
+#     "min-self-delegation": "1"
+# }
+# EOF
+# )
 
-# Save the validator.json content to a file
-echo "Creating bill's validator.json..."
-echo "$VALIDATOR_JSON" > $NODE2_HOME_DIR/config/validator.json
+# # Save the validator.json content to a file
+# echo "Creating bill's validator.json..."
+# echo "$VALIDATOR_JSON" > $NODE2_HOME_DIR/config/validator.json
 
-# Stake Bill as a validator
-echo "Staking bill as a validator..."
-./layerd tx staking create-validator ~/.layer/bill/config/validator.json --from bill --keyring-backend $KEYRING_BACKEND --keyring-dir ~/.layer/bill --chain-id $CHAIN_ID --fees 600loya --yes
+# # Stake Bill as a validator
+# echo "Staking bill as a validator..."
+# ./layerd tx staking create-validator ~/.layer/bill/config/validator.json --from bill --keyring-backend $KEYRING_BACKEND --keyring-dir ~/.layer/bill --chain-id $CHAIN_ID --fees 600loya --yes
 
 # Modify keyring-backend in client.toml for bill
 echo "Modifying keyring-backend in client.toml for bill..."
