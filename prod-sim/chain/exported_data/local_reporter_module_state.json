@@ -1,0 +1,20 @@
+{
+    "reporters": [
+        {"reporter_addr":"7Z+TxMSCaf6W1FGDzaUE9F3eHuE=","reporter":{"min_tokens_required":"1000000","commission_rate":"0.100000000000000000","jailed_until":"0001-01-01T00:00:00Z","moniker":"reporter-1","last_updated":"0001-01-01T00:00:00Z"}},
+        {"reporter_addr":"UrEUVzM1FAcenzwLLPrGLoCqgI0=","reporter":{"min_tokens_required":"1000000","commission_rate":"0.100000000000000000","jailed_until":"0001-01-01T00:00:00Z","moniker":"reporter-2","last_updated":"0001-01-01T00:00:00Z"}},
+        {"reporter_addr":"QVkgc/NoEsTinT7nsaDITz4pXAo=","reporter":{"min_tokens_required":"1000000","commission_rate":"0.100000000000000000","jailed_until":"0001-01-01T00:00:00Z","moniker":"reporter-0","last_updated":"0001-01-01T00:00:00Z"}}
+    ],
+    "selectors": [
+        {"selector_addr":"7Z+TxMSCaf6W1FGDzaUE9F3eHuE=","selector":{"reporter":"7Z+TxMSCaf6W1FGDzaUE9F3eHuE=","locked_until_time":"0001-01-01T00:00:00Z","delegations_count":1}},
+        {"selector_addr":"UrEUVzM1FAcenzwLLPrGLoCqgI0=","selector":{"reporter":"UrEUVzM1FAcenzwLLPrGLoCqgI0=","locked_until_time":"0001-01-01T00:00:00Z","delegations_count":1}},
+        {"selector_addr":"QVkgc/NoEsTinT7nsaDITz4pXAo=","selector":{"reporter":"QVkgc/NoEsTinT7nsaDITz4pXAo=","locked_until_time":"0001-01-01T00:00:00Z","delegations_count":1}}
+    ],
+    "selector_tips": [
+        {"selector_address":"7Z+TxMSCaf6W1FGDzaUE9F3eHuE=","tips":"696069964.999999999303930035"},
+        {"selector_address":"UrEUVzM1FAcenzwLLPrGLoCqgI0=","tips":"696069964.999999999303930035"},
+        {"selector_address":"QVkgc/NoEsTinT7nsaDITz4pXAo=","tips":"696069964.999999999303930035"}
+    ],
+    "disputed_delegation_amounts": [],
+    "fee_paid_from_stake": [],
+    "checksum": "846964c1edaf82ca19efa40e7418b8e9bcaef933454bc11220b03c49d4b1752d"
+}
