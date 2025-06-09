@@ -78,7 +78,7 @@ git branch -D temp-fork-devnet-update
 git reset --hard HEAD
 git clean -fd
 
-sleep 10
+sleep 3
 
 # switch back to chain directory
 cd prod-sim/chain
@@ -248,7 +248,7 @@ echo "Starting docker compose environment..."
 docker compose up -d
 
 # Wait for containers to start
-sleep 5
+sleep 3
 
 # Monitor logs for error
 echo "Monitoring validator-node-0 logs for errors..."
