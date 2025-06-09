@@ -901,6 +901,36 @@
         "moniker": "reporter-0",
         "last_updated": "0001-01-01T00:00:00Z"
       }
+    },
+    {
+      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-1",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-2",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
+    },
+    {
+      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "reporter": {
+        "min_tokens_required": "1000000",
+        "commission_rate": "0.100000000000000000",
+        "jailed_until": "0001-01-01T00:00:00Z",
+        "moniker": "reporter-0",
+        "last_updated": "0001-01-01T00:00:00Z"
+      }
     }
   ],
   "selectors": [
@@ -1679,6 +1709,30 @@
         "locked_until_time": "0001-01-01T00:00:00Z",
         "delegations_count": 1
       }
+    },
+    {
+      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "selector": {
+        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "selector": {
+        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "selector": {
+        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
     }
   ],
   "selector_tips": [
@@ -1841,6 +1895,18 @@
     {
       "selector_address": "BvtZoGBTAC1I6uUqf7cjjzOtqp0=",
       "tips": "24256605.623858872494789377"
+    },
+    {
+      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+      "tips": "0"
+    },
+    {
+      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+      "tips": "0"
     },
     {
       "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",

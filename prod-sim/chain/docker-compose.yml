@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - VALIDATOR_NUM=0
-      - IS_FORK=false
+      - IS_FORK=true
     command: >
       sh -c '
         if [ ! -f /chain/validator-0/.layer/config/priv_validator_key.json ]; then
@@ -56,7 +56,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - VALIDATOR_NUM=1
-      - IS_FORK=false
+      - IS_FORK=true
     command: >
       sh -c '
         if [ ! -f /chain/validator-1/.layer/config/priv_validator_key.json ]; then
@@ -102,7 +102,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - VALIDATOR_NUM=2
-      - IS_FORK=false
+      - IS_FORK=true
     command: >
       sh -c '
         if [ ! -f /chain/validator-2/.layer/config/priv_validator_key.json ]; then
