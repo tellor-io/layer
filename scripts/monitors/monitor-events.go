@@ -626,7 +626,7 @@ func writeTimestampToCSV(timestamp string) error {
 	fileExists := err == nil
 
 	// Create the file if it doesn't exist, or append to it if it does
-	file, err := os.OpenFile("bridge_validator_timestamps.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile("bridge_validator_timestamps.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 	if err != nil {
 		return fmt.Errorf("error opening file: %w", err)
 	}
