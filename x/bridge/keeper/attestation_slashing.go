@@ -157,13 +157,15 @@ func (k Keeper) SlashValidator(ctx context.Context, operatorAddr types.OperatorA
 	if err != nil {
 		return err
 	}
-	bech32Addr, err := sdk.Bech32ifyAddressBytes(sdk.Bech32PrefixAccAddr, operatorAddr.OperatorAddress)
+	config := sdk.GetConfig()
+	bech32PrefixValAddr := config.GetBech32ValidatorAddrPrefix()
+	bech32Addr, err := sdk.Bech32ifyAddressBytes(bech32PrefixValAddr, operatorAddr.OperatorAddress)
 	if err != nil {
 		return err
 	}
 	evmAddress, err := k.OperatorToEVMAddressMap.Get(ctx, bech32Addr)
 	if err != nil {
-		return err
+		return errors.Join(err, errors.New("SlashValidator: operator address not found"))
 	}
 	// find the validator's evm address in the validator set
 	var historicalPower int64
