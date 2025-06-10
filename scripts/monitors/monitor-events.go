@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -21,19 +22,17 @@ import (
 )
 
 const (
-	PrimaryRpcUrl       = "https://node-palmito.tellorlayer.com/rpc"
-	FallbackRpcUrl      = "https://rpc.tellorlayer.com"
-	DefaultConfigPath   = "scripts/monitors/event-config.yml"
-	AlertCooldownPeriod = 2 * time.Hour
-	AlertWindowPeriod   = 10 * time.Minute
-	MaxAlertsInWindow   = 10
-	PowerThreshold      = 2.0 / 3.0
+	AlertCooldownPeriod  = 2 * time.Hour
+	AlertWindowPeriod    = 10 * time.Minute
+	MaxAlertsInWindow    = 10
+	PowerThreshold       = 2.0 / 3.0
+	DefaultRpcURL        = "127.0.0.1:26657"
+	MaxReconnectAttempts = 5
 )
 
 var (
 	eventConfig                  EventConfig
 	configMutex                  sync.RWMutex
-	configFilePath               = "scripts/monitors/event-config.yml"
 	Current_Total_Reporter_Power uint64
 	reporterPowerMutex           sync.RWMutex
 	// Rate limiting variables
@@ -43,6 +42,13 @@ var (
 	aggregateAlertCooldown   time.Time
 	// Map to store event types we're interested in
 	eventTypeMap map[string]ConfigType
+	// Command line parameters
+	rpcURL             string
+	configFilePath     string
+	nodeName           string
+	blockTimeThreshold time.Duration
+	previousBlockTime  time.Time
+	blockTimeMutex     sync.RWMutex
 )
 
 type Params struct {
@@ -189,6 +195,7 @@ type WebSocketClient struct {
 	done        chan struct{}
 	mu          sync.RWMutex
 	lastMessage time.Time
+	retryCount  int
 }
 
 func NewWebSocketClient(url string) *WebSocketClient {
@@ -197,12 +204,17 @@ func NewWebSocketClient(url string) *WebSocketClient {
 		reconnectCh: make(chan struct{}, 1),
 		done:        make(chan struct{}),
 		lastMessage: time.Now(),
+		retryCount:  0,
 	}
 }
 
 func (w *WebSocketClient) connect() error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
+
+	if w.retryCount >= MaxReconnectAttempts {
+		return fmt.Errorf("max reconnection attempts (%d) reached", MaxReconnectAttempts)
+	}
 
 	dialer := websocket.Dialer{
 		HandshakeTimeout: 45 * time.Second,
@@ -212,13 +224,12 @@ func (w *WebSocketClient) connect() error {
 
 	conn, _, err := dialer.Dial(w.url, nil)
 	if err != nil {
-		if strings.EqualFold(w.url, FallbackRpcUrl) {
-			return fmt.Errorf("failed to connect: %w", err)
-		} else {
-			w.url = FallbackRpcUrl
-			return w.connect()
-		}
+		w.retryCount++
+		return fmt.Errorf("failed to connect (attempt %d/%d): %w", w.retryCount, MaxReconnectAttempts, err)
 	}
+
+	// Reset retry count on successful connection
+	w.retryCount = 0
 
 	// Set read deadline to detect stale connections
 	err = conn.SetReadDeadline(time.Now().Add(60 * time.Second))
@@ -268,12 +279,14 @@ func (w *WebSocketClient) readMessages(ctx context.Context, handler func([]byte)
 		case <-timeoutTicker.C:
 			w.mu.RLock()
 			if time.Since(w.lastMessage) > 10*time.Minute {
-				message := "**Alert: No NewBlock Events Received**\nNo NewBlock events have been received in the last 10 minutes. Please check the chain status."
-				discordNotifier := utils.NewDiscordNotifier(eventConfig.EventTypes[0].WebhookURL)
-				if err := discordNotifier.SendAlert(message); err != nil {
-					log.Printf("Error sending timeout Discord alert: %v", err)
-				} else {
-					log.Printf("Sent timeout Discord alert")
+				message := fmt.Sprintf("**Alert: Node %s is Not Responding**\nNo NewBlock events have been received from node %s in the last 10 minutes. Please check the node status and logs.", nodeName, nodeName)
+				if _, exists := eventTypeMap["liveness-alert"]; exists {
+					discordNotifier := utils.NewDiscordNotifier(eventTypeMap["liveness-alert"].WebhookURL)
+					if err := discordNotifier.SendAlert(message); err != nil {
+						log.Printf("Error sending timeout Discord alert: %v", err)
+					} else {
+						log.Printf("Sent timeout Discord alert for node %s", nodeName)
+					}
 				}
 			}
 			w.mu.RUnlock()
@@ -307,6 +320,7 @@ func (w *WebSocketClient) readMessages(ctx context.Context, handler func([]byte)
 }
 
 func (w *WebSocketClient) healthCheck(ctx context.Context) {
+	defer recoverAndAlert("WebSocketClient.healthCheck")
 	ticker := time.NewTicker(30 * time.Second)
 	defer ticker.Stop()
 
@@ -387,6 +401,7 @@ func subscribeToEvents(client *websocket.Conn, eventTypes []ConfigType) error {
 }
 
 func startConfigWatcher(ctx context.Context, client *websocket.Conn) {
+	defer recoverAndAlert("startConfigWatcher")
 	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
 
@@ -428,10 +443,14 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 	aggregateAlertTimestamps = validTimestamps
 	aggregateAlertCount = len(validTimestamps)
 
+	reporterPowerMutex.RLock()
+	currentPower := Current_Total_Reporter_Power
+	reporterPowerMutex.RUnlock()
+
 	for j := 0; j < len(event.Attributes); j++ {
 		if event.Attributes[j].Key == "aggregate_power" {
 			if aggregatePower, err := strconv.ParseUint(event.Attributes[j].Value, 10, 64); err == nil {
-				if float64(aggregatePower) < float64(Current_Total_Reporter_Power)*2/3 {
+				if float64(aggregatePower) < float64(currentPower)*2/3 {
 					// Check if we've hit the alert limit
 					if aggregateAlertCount >= 10 {
 						// Send final alert and start cooldown
@@ -480,15 +499,19 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 }
 
 func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
+	defer func() {
+		recoverAndAlert("MonitorBlockEvents")
+		wg.Done()
+	}()
 
 	if err := loadConfig(); err != nil {
 		log.Printf("Error loading initial config: %v", err)
 		return
 	}
 
-	url := url.URL{Scheme: "ws", Host: "34.229.148.107:26657", Path: "/websocket"}
-	client := NewWebSocketClient(url.String())
+	wsProtocol, _ := getProtocol(rpcURL)
+	wsUrl := url.URL{Scheme: wsProtocol, Host: rpcURL, Path: "/rpc/websocket"}
+	client := NewWebSocketClient(wsUrl.String())
 
 	// Start health check
 	go client.healthCheck(ctx)
@@ -498,6 +521,41 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 		var data WebsocketReponse
 		if err := json.Unmarshal(message, &data); err != nil {
 			return fmt.Errorf("unable to unmarshal message: %w", err)
+		}
+
+		// Check block time threshold if it's configured
+		if blockTimeThreshold > 0 {
+			// Parse current block time
+			currentBlockTime, err := time.Parse(time.RFC3339Nano, data.Result.Data.Value.Block.Header.Time)
+			if err != nil {
+				return fmt.Errorf("unable to parse block time: %w", err)
+			}
+			blockTimeMutex.RLock()
+			prevTime := previousBlockTime
+			blockTimeMutex.RUnlock()
+
+			// Skip first block after startup
+			if !prevTime.IsZero() {
+				timeDiff := currentBlockTime.Sub(prevTime)
+				if timeDiff > blockTimeThreshold {
+					message := fmt.Sprintf("**Alert: Abnormally Long Block Time**\nNode: %s\nTime between blocks: %v\nThreshold: %v\nPrevious block time: %v\nCurrent block time: %v",
+						nodeName, timeDiff, blockTimeThreshold, prevTime, currentBlockTime)
+
+					if eventType, exists := eventTypeMap["block-time-alert"]; exists {
+						discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
+						if err := discordNotifier.SendAlert(message); err != nil {
+							fmt.Printf("Error sending block time Discord alert: %v\n", err)
+						} else {
+							fmt.Printf("Sent block time Discord alert\n")
+						}
+					}
+				}
+			}
+
+			// Update previous block time
+			blockTimeMutex.Lock()
+			previousBlockTime = currentBlockTime
+			blockTimeMutex.Unlock()
 		}
 
 		height := data.Result.Data.Value.Block.Header.Height
@@ -561,6 +619,34 @@ func processTransactionEvents(txResults []TxResult, height string) {
 	}
 }
 
+// Add a helper function to write timestamps to a CSV file
+func writeTimestampToCSV(timestamp string) error {
+	// Check if file exists
+	_, err := os.Stat("bridge_validator_timestamps.csv")
+	fileExists := err == nil
+
+	// Create the file if it doesn't exist, or append to it if it does
+	file, err := os.OpenFile("bridge_validator_timestamps.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+	if err != nil {
+		return fmt.Errorf("error opening file: %w", err)
+	}
+	defer file.Close()
+
+	// If file was just created, write the header
+	if !fileExists {
+		if _, err := file.WriteString("new_bridge_validator_set_timestamps\n"); err != nil {
+			return fmt.Errorf("error writing header to file: %w", err)
+		}
+	}
+
+	// Write the timestamp to the CSV file
+	if _, err := file.WriteString(timestamp + "\n"); err != nil {
+		return fmt.Errorf("error writing to file: %w", err)
+	}
+
+	return nil
+}
+
 // Add a helper function to handle events
 func handleEvent(event Event, eventType ConfigType) {
 	if event.Type == "aggregate_report" {
@@ -577,6 +663,19 @@ func handleEvent(event Event, eventType ConfigType) {
 			fmt.Printf("Error sending Discord alert for event %s: %v\n", event.Type, err)
 		} else {
 			fmt.Printf("Sent Discord alert for event: %s\n", event.Type)
+		}
+	}
+
+	if event.Type == "new_bridge_validator_set" {
+		for _, attr := range event.Attributes {
+			if attr.Key == "timestamp" {
+				if err := writeTimestampToCSV(attr.Value); err != nil {
+					fmt.Printf("Error writing timestamp to CSV: %v\n", err)
+				} else {
+					fmt.Printf("Successfully wrote timestamp %s to CSV\n", attr.Value)
+				}
+				break
+			}
 		}
 	}
 }
@@ -601,27 +700,40 @@ type ValidatorResponse struct {
 }
 
 func updateTotalReporterPower(ctx context.Context) {
+	defer recoverAndAlert("updateTotalReporterPower")
 	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
+
+	backoffDuration := 1 * time.Second
+	maxBackoff := 5 * time.Minute
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			resp, err := http.Get(PrimaryRpcUrl + "/validators")
+			_, httpProtocol := getProtocol(rpcURL)
+			resp, err := http.Get(fmt.Sprintf("%s://%s/rpc/validators", httpProtocol, rpcURL))
 			if err != nil {
-				resp, err = http.Get(FallbackRpcUrl + "/validators")
-				if err != nil {
-					fmt.Printf("Error querying validators: %v\n", err)
-					continue
+				fmt.Printf("Error querying validators: %v\n", err)
+				// Implement exponential backoff
+				time.Sleep(backoffDuration)
+				backoffDuration *= 2
+				if backoffDuration > maxBackoff {
+					backoffDuration = maxBackoff
 				}
+				continue
 			}
 
 			var validatorResp ValidatorResponse
 			if err := json.NewDecoder(resp.Body).Decode(&validatorResp); err != nil {
 				fmt.Printf("Error decoding validator response: %v\n", err)
 				resp.Body.Close()
+				time.Sleep(backoffDuration)
+				backoffDuration *= 2
+				if backoffDuration > maxBackoff {
+					backoffDuration = maxBackoff
+				}
 				continue
 			}
 			resp.Body.Close()
@@ -642,11 +754,61 @@ func updateTotalReporterPower(ctx context.Context) {
 			reporterPowerMutex.Unlock()
 
 			fmt.Printf("Updated total reporter power: %d\n", totalPower)
+
+			// Reset backoff on successful update
+			backoffDuration = 1 * time.Second
 		}
 	}
 }
 
+func recoverAndAlert(goroutineName string) {
+	if r := recover(); r != nil {
+		var eventInfo ConfigType
+		if info, exists := eventTypeMap["crash-alert"]; exists {
+			eventInfo = info
+		} else {
+			log.Printf("No crash event type configured, skipping alert for goroutine: %s", goroutineName)
+			panic(r)
+		}
+		message := fmt.Sprintf("**CRITICAL ALERT: Goroutine Crash**\nGoroutine '%s' has crashed with panic: %v\nPlease check the logs and restart the service.", goroutineName, r)
+		discordNotifier := utils.NewDiscordNotifier(eventInfo.WebhookURL)
+		if err := discordNotifier.SendAlert(message); err != nil {
+			log.Printf("Error sending crash Discord alert: %v", err)
+		} else {
+			log.Printf("Sent crash Discord alert for goroutine: %s", goroutineName)
+		}
+		// Re-panic to maintain the original behavior
+		panic(r)
+	}
+}
+
+// getProtocol determines whether to use secure (wss/https) or insecure (ws/http) protocol
+// based on whether the host is localhost or not
+func getProtocol(host string) (wsProtocol, httpProtocol string) {
+	if strings.Contains(host, "localhost") || strings.Contains(host, "127.0.0.1") {
+		return "ws", "http"
+	}
+	return "wss", "https"
+}
+
 func main() {
+	// Parse command line flags
+	flag.StringVar(&rpcURL, "rpc-url", DefaultRpcURL, "RPC URL (default: 127.0.0.1:26657)")
+	flag.StringVar(&configFilePath, "config", "", "Path to config file")
+	flag.StringVar(&nodeName, "node", "", "Name of the node being monitored")
+	flag.DurationVar(&blockTimeThreshold, "block-time-threshold", 0, "Block time threshold (e.g. 5m, 1h). If not set, block time monitoring is disabled.")
+	flag.Parse()
+
+	// Validate required parameters
+	if configFilePath == "" || nodeName == "" {
+		log.Fatal("Usage: go run ./scripts/monitors/monitor-events.go -rpc-url=<rpc_url> -config=<config_file_path> -node=<node_name>")
+	}
+
+	// Initialize Current_Total_Reporter_Power with a default value
+	reporterPowerMutex.Lock()
+	Current_Total_Reporter_Power = 100 // Default value until first update
+	reporterPowerMutex.Unlock()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -657,6 +819,9 @@ func main() {
 		<-sigCh
 		log.Println("Received shutdown signal")
 		cancel()
+		// Give goroutines a chance to clean up
+		time.Sleep(2 * time.Second)
+		os.Exit(0)
 	}()
 
 	wg := sync.WaitGroup{}
