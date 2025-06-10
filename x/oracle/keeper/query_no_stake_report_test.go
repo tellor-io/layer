@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/collections"
 
@@ -167,4 +169,51 @@ func (s *KeeperTestSuite) TestGetNoStakeReportsByQueryId() {
 
 	fmt.Println("nextKey: ", response.Pagination.NextKey)
 	fmt.Println("nextKey string: ", hex.EncodeToString(response.Pagination.NextKey))
+}
+
+func (s *KeeperTestSuite) TestGetReportersNoStakeReportsMixQueryIds() {
+	spec := registrytypes.DataSpec{
+		AbiComponents: []*registrytypes.ABIComponent{
+			{Name: "tolayer", FieldType: "bool"},
+			{Name: "depositId", FieldType: "uint256"},
+		},
+	}
+	trbBridqeMixed := []string{
+		`["true","1"]`,
+		`["true","2"]`,
+		`["true","3"]`,
+		`["true","4"]`,
+		`["true","5"]`,
+		`["true", "6"]`,
+		`["true", "7"]`,
+		`["true", "8"]`,
+		`["true", "9"]`,
+	}
+	reporter := sample.AccAddressBytes()
+	var timestamp time.Time
+	for i, v := range trbBridqeMixed {
+		querydata, err := spec.EncodeData("TRBBridge", v)
+		s.NoError(err)
+		queryId := crypto.Keccak256(querydata)
+		timestamp = time.Now().UTC().Add(time.Second * time.Duration(i))
+		report := types.NoStakeMicroReport{
+			Reporter:    reporter,
+			Timestamp:   timestamp,
+			BlockNumber: uint64(i + 1),
+			Value:       fmt.Sprintf("value%d", i+1),
+		}
+		fmt.Println(report.BlockNumber)
+		s.NoError(s.oracleKeeper.NoStakeReports.Set(s.ctx, collections.Join(queryId, uint64(timestamp.UnixMilli())), report))
+	}
+	response, err := s.queryClient.GetReportersNoStakeReports(s.ctx, &types.QueryGetReportersNoStakeReportsRequest{
+		Reporter: reporter.String(),
+		Pagination: &query.PageRequest{
+			Limit:   1,
+			Reverse: true,
+		},
+	})
+	s.NoError(err)
+	// should be the last block number ie 10
+	s.Equal(response.NoStakeReports[0].BlockNumber, uint64(9))
+	s.Equal(response.NoStakeReports[0].Timestamp, uint64(timestamp.UnixMilli()))
 }
