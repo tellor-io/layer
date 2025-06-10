@@ -568,7 +568,7 @@ func (s *SharedSetup) CreateSpotPriceTip(ctx sdk.Context, tipperAccAddr sdk.AccA
 		QueryData: queryDataBz,
 		Amount:    sdk.NewCoin(s.Denom, amountLoya),
 	}
-	oracleMsgServer := oraclekeeper.NewMsgServerImpl(&s.Oraclekeeper)
+	oracleMsgServer := oraclekeeper.NewMsgServerImpl(s.Oraclekeeper)
 	_, err = oracleMsgServer.Tip(ctx, &msgTip)
 	if err != nil {
 		panic(err)
@@ -584,7 +584,7 @@ func (s *SharedSetup) Report(ctx sdk.Context, reporterAccAddr sdk.AccAddress, qu
 		Value:     reportValue,
 	}
 
-	oracleMsgServer := oraclekeeper.NewMsgServerImpl(&s.Oraclekeeper)
+	oracleMsgServer := oraclekeeper.NewMsgServerImpl(s.Oraclekeeper)
 	_, err := oracleMsgServer.SubmitValue(ctx, &msgSubmitValue)
 	if err != nil {
 		fmt.Println("submit value fail")

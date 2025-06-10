@@ -61,12 +61,11 @@ func (s *KeeperTestSuite) SetupTest() {
 		s.bridgeKeeper,
 		s.ctx = keepertest.OracleKeeper(s.T())
 
-	s.msgServer = keeper.NewMsgServerImpl(&s.oracleKeeper)
+	s.msgServer = keeper.NewMsgServerImpl(s.oracleKeeper)
 	s.queryClient = keeper.NewQuerier(s.oracleKeeper)
 
 	// Initialize params
 	s.NoError(s.oracleKeeper.SetParams(s.ctx, types.DefaultParams()))
-	s.oracleKeeper.SetBridgeKeeper(s.bridgeKeeper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {

@@ -537,7 +537,7 @@ func (s *IntegrationTestSuite) TestCreateAndSwitchReporterMsg() {
 	msStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 	require.NotNil(msStaking)
 
-	msOracle := oraclekeeper.NewMsgServerImpl(&s.Setup.Oraclekeeper)
+	msOracle := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
 	require.NotNil(msOracle)
 
 	valAccs, valAddrs, _ := s.createValidatorAccs([]uint64{100, 200})
