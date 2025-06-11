@@ -87,7 +87,7 @@ func (k Keeper) CheckAttestationEvidence(ctx context.Context, request types.MsgS
 	if err != nil {
 		return err
 	}
-	err = k.SlashValidator(ctx, operatorAddr, slashFactor, checkpoint)
+	slashAmount, err := k.SlashValidator(ctx, operatorAddr, slashFactor, checkpoint)
 	if err != nil {
 		return err
 	}
@@ -101,6 +101,22 @@ func (k Keeper) CheckAttestationEvidence(ctx context.Context, request types.MsgS
 		return err
 	}
 
+	// emit the slash event
+	config := sdk.GetConfig()
+	bech32PrefixValAddr := config.GetBech32ValidatorAddrPrefix()
+	bech32Addr, err := sdk.Bech32ifyAddressBytes(bech32PrefixValAddr, operatorAddr.OperatorAddress)
+	if err != nil {
+		return err
+	}
+	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"attestation_slashed",
+			sdk.NewAttribute("operator_address", bech32Addr),
+			sdk.NewAttribute("slash_amount", slashAmount.String()),
+			sdk.NewAttribute("snapshot", hex.EncodeToString(snapshotBytes)),
+			sdk.NewAttribute("query_id", request.QueryId),
+		),
+	})
 	return nil
 }
 
@@ -134,7 +150,7 @@ func (k Keeper) GetOperatorAddressFromSignature(ctx context.Context, msg []byte,
 }
 
 // SlashValidator slashes a validator for malicious attestation evidence.
-func (k Keeper) SlashValidator(ctx context.Context, operatorAddr types.OperatorAddress, slashFactor math.LegacyDec, checkpoint []byte) error {
+func (k Keeper) SlashValidator(ctx context.Context, operatorAddr types.OperatorAddress, slashFactor math.LegacyDec, checkpoint []byte) (math.Int, error) {
 	k.Logger(ctx).Info("slashValidator", "operatorAddr", operatorAddr.String())
 	// get the validator address
 	validatorAddr := sdk.ValAddress(operatorAddr.OperatorAddress)
@@ -142,32 +158,32 @@ func (k Keeper) SlashValidator(ctx context.Context, operatorAddr types.OperatorA
 	// get the validator
 	validator, err := k.stakingKeeper.GetValidator(ctx, validatorAddr)
 	if err != nil {
-		return err
+		return math.Int{}, err
 	}
 
 	consAddr, err := validator.GetConsAddr()
 	if err != nil {
-		return err
+		return math.Int{}, err
 	}
 
 	// get the block height and validator power at the block height
 	checkpointParams, err := k.GetCheckpointParamsByCheckpoint(ctx, checkpoint)
 	if err != nil {
-		return err
+		return math.Int{}, err
 	}
 	validatorSet, err := k.GetBridgeValsetByTimestamp(ctx, checkpointParams.Timestamp)
 	if err != nil {
-		return err
+		return math.Int{}, err
 	}
 	config := sdk.GetConfig()
 	bech32PrefixValAddr := config.GetBech32ValidatorAddrPrefix()
 	bech32Addr, err := sdk.Bech32ifyAddressBytes(bech32PrefixValAddr, operatorAddr.OperatorAddress)
 	if err != nil {
-		return err
+		return math.Int{}, err
 	}
 	evmAddress, err := k.OperatorToEVMAddressMap.Get(ctx, bech32Addr)
 	if err != nil {
-		return errors.Join(err, errors.New("SlashValidator: operator address not found"))
+		return math.Int{}, errors.Join(err, errors.New("SlashValidator: operator address not found"))
 	}
 	// find the validator's evm address in the validator set
 	var historicalPower int64
@@ -178,21 +194,21 @@ func (k Keeper) SlashValidator(ctx context.Context, operatorAddr types.OperatorA
 		}
 	}
 	if historicalPower == 0 {
-		return errors.New("historical power not found")
+		return math.Int{}, errors.New("historical power not found")
 	}
 
 	k.Logger(ctx).Info("slashing historicalPower", "adjustedPower", historicalPower)
 	slashAmount, err := k.stakingKeeper.SlashWithInfractionReason(ctx, consAddr, int64(checkpointParams.BlockHeight), historicalPower, slashFactor, stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
 	if err != nil {
-		return err
+		return math.Int{}, err
 	}
 	k.Logger(ctx).Info("slashing slashAmount", "slashAmount", slashAmount)
 	// jail the validator
 	err = k.stakingKeeper.Jail(ctx, consAddr)
 	if err != nil {
-		return err
+		return math.Int{}, err
 	}
-	return nil
+	return slashAmount, nil
 }
 
 // CheckRateLimit checks whether attestation evidence has been submitted for a given operator address with an attestation timestamp that is within the rate limit

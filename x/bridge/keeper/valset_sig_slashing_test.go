@@ -1,14 +1,12 @@
 package keeper_test
 
 import (
-	"context"
 	"encoding/hex"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/require"
 	testkeeper "github.com/tellor-io/layer/testutil/keeper"
-	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/types"
 
 	"cosmossdk.io/collections"
@@ -87,13 +85,16 @@ func TestCheckValsetSignatureEvidence(t *testing.T) {
 
 	err = k.CheckValsetSignatureEvidence(ctx, invalidSigRequest)
 	require.ErrorContains(t, err, "encoding/hex")
-
-	// Test case 4: Rate limiting functionality
-	testRateLimiting(t, k, ctx)
 }
 
-func testRateLimiting(t *testing.T, k keeper.Keeper, ctx context.Context) {
-	t.Helper()
+func TestCheckValsetSignatureRateLimit(t *testing.T) {
+	k, _, _, _, _, _, _, ctx := testkeeper.BridgeKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	// Setup default parameters
+	err := k.Params.Set(ctx, types.DefaultParams())
+	require.NoError(t, err)
 
 	// get the actual rate limit window from the keeper
 	rateLimitMs, err := k.GetValsetRateLimitWindow(ctx)
@@ -108,44 +109,44 @@ func testRateLimiting(t *testing.T, k keeper.Keeper, ctx context.Context) {
 	// test timestamps
 	baseTime := uint64(1000000000) // arbitrary base timestamp
 
-	// Test case 4a: First submission should succeed (no rate limiting yet)
+	// Test case 1: First submission should succeed (no rate limiting yet)
 	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx,
 		collections.Join(operatorAddr.OperatorAddress, baseTime),
 		types.BoolSubmitted{Submitted: true})
 	require.NoError(t, err)
 
-	// Test case 4b: Exact same timestamp should fail (duplicate)
+	// Test case 2: Exact same timestamp should fail (duplicate)
 	err = k.CheckValsetSignatureRateLimit(ctx, operatorAddr, baseTime)
 	require.ErrorContains(t, err, "valset signature evidence already submitted with this timestamp")
 
-	// Test case 4c: Timestamp within rate limit window (after baseTime) should fail
+	// Test case 3: Timestamp within rate limit window (after baseTime) should fail
 	withinWindowAfter := baseTime + (rateLimitMs / 2) // 5 minutes after
 	err = k.CheckValsetSignatureRateLimit(ctx, operatorAddr, withinWindowAfter)
 	require.ErrorContains(t, err, "valset signature evidence already submitted within rate limit")
 
-	// Test case 4d: Timestamp within rate limit window (before baseTime) should fail
+	// Test case 4: Timestamp within rate limit window (before baseTime) should fail
 	withinWindowBefore := baseTime - (rateLimitMs / 2) // 5 minutes before
 	err = k.CheckValsetSignatureRateLimit(ctx, operatorAddr, withinWindowBefore)
 	require.ErrorContains(t, err, "valset signature evidence already submitted within rate limit")
 
-	// Test case 4e: Timestamp outside rate limit window (after) should succeed
+	// Test case 5: Timestamp outside rate limit window (after) should succeed
 	outsideWindowAfter := baseTime + rateLimitMs + 1000 // 10+ minutes after
 	err = k.CheckValsetSignatureRateLimit(ctx, operatorAddr, outsideWindowAfter)
 	require.NoError(t, err)
 
-	// Test case 4f: Timestamp outside rate limit window (before) should succeed
+	// Test case 6: Timestamp outside rate limit window (before) should succeed
 	outsideWindowBefore := baseTime - rateLimitMs - 1000 // 10+ minutes before
 	err = k.CheckValsetSignatureRateLimit(ctx, operatorAddr, outsideWindowBefore)
 	require.NoError(t, err)
 
-	// Test case 4g: Different operator should not be affected by rate limit
+	// Test case 7: Different operator should not be affected by rate limit
 	differentOperator := types.OperatorAddress{
 		OperatorAddress: []byte("cosmosvaloper2test"),
 	}
 	err = k.CheckValsetSignatureRateLimit(ctx, differentOperator, baseTime)
 	require.NoError(t, err)
 
-	// Test case 4h: Multiple submissions outside window should create new rate limit boundaries
+	// Test case 8: Multiple submissions outside window should create new rate limit boundaries
 	// Submit evidence at outsideWindowAfter
 	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx,
 		collections.Join(operatorAddr.OperatorAddress, outsideWindowAfter),
@@ -161,4 +162,200 @@ func testRateLimiting(t *testing.T, k keeper.Keeper, ctx context.Context) {
 	outsideNewWindow := outsideWindowAfter + rateLimitMs + 1000
 	err = k.CheckValsetSignatureRateLimit(ctx, operatorAddr, outsideNewWindow)
 	require.NoError(t, err)
+
+	// Test case 9: test rate limit parameter retrieval error handling
+	// This would be hard to test directly since GetValsetRateLimitWindow uses params
+	// but we can at least verify it behaves consistently
+	rateLimitMs2, err := k.GetValsetRateLimitWindow(ctx)
+	require.NoError(t, err)
+	require.Equal(t, rateLimitMs, rateLimitMs2)
+}
+
+func TestGetValsetEvidenceSubmittedBefore(t *testing.T) {
+	k, _, _, _, _, _, _, ctx := testkeeper.BridgeKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	operatorAddr := types.OperatorAddress{
+		OperatorAddress: []byte("cosmosvaloper1test"),
+	}
+
+	// Test case 1: No evidence submitted before timestamp
+	submitted, timestamp, err := k.GetValsetEvidenceSubmittedBefore(ctx, operatorAddr, uint64(1000))
+	require.Error(t, err)
+	require.False(t, submitted)
+	require.Equal(t, uint64(0), timestamp)
+	require.ErrorContains(t, err, "no valset evidence submitted before timestamp")
+
+	// Test case 2: Add evidence and test retrieval
+	baseTime := uint64(1000000000)
+	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx,
+		collections.Join(operatorAddr.OperatorAddress, baseTime),
+		types.BoolSubmitted{Submitted: true})
+	require.NoError(t, err)
+
+	// Search before the baseTime - should find nothing
+	submitted, timestamp, err = k.GetValsetEvidenceSubmittedBefore(ctx, operatorAddr, baseTime)
+	require.Error(t, err)
+	require.False(t, submitted)
+	require.Equal(t, uint64(0), timestamp)
+
+	// Search after the baseTime - should find the evidence
+	searchTime := baseTime + 1000
+	submitted, timestamp, err = k.GetValsetEvidenceSubmittedBefore(ctx, operatorAddr, searchTime)
+	require.NoError(t, err)
+	require.True(t, submitted)
+	require.Equal(t, baseTime, timestamp)
+
+	// Test case 3: Multiple evidence submissions - should return most recent
+	earlierTime := baseTime - 5000
+	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx,
+		collections.Join(operatorAddr.OperatorAddress, earlierTime),
+		types.BoolSubmitted{Submitted: true})
+	require.NoError(t, err)
+
+	// Should return the most recent (baseTime), not the earlier one
+	submitted, timestamp, err = k.GetValsetEvidenceSubmittedBefore(ctx, operatorAddr, searchTime)
+	require.NoError(t, err)
+	require.True(t, submitted)
+	require.Equal(t, baseTime, timestamp)
+
+	// Test case 4: Different operator should not interfere
+	differentOperator := types.OperatorAddress{
+		OperatorAddress: []byte("cosmosvaloper2test"),
+	}
+	submitted, timestamp, err = k.GetValsetEvidenceSubmittedBefore(ctx, differentOperator, searchTime)
+	require.Error(t, err)
+	require.False(t, submitted)
+	require.Equal(t, uint64(0), timestamp)
+}
+
+func TestGetValsetEvidenceSubmittedAfter(t *testing.T) {
+	k, _, _, _, _, _, _, ctx := testkeeper.BridgeKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	operatorAddr := types.OperatorAddress{
+		OperatorAddress: []byte("cosmosvaloper1test"),
+	}
+
+	// Test case 1: No evidence submitted after timestamp
+	submitted, timestamp, err := k.GetValsetEvidenceSubmittedAfter(ctx, operatorAddr, uint64(1000))
+	require.Error(t, err)
+	require.False(t, submitted)
+	require.Equal(t, uint64(0), timestamp)
+	require.ErrorContains(t, err, "no valset evidence submitted after timestamp")
+
+	// Test case 2: Add evidence and test retrieval
+	baseTime := uint64(1000000000)
+	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx,
+		collections.Join(operatorAddr.OperatorAddress, baseTime),
+		types.BoolSubmitted{Submitted: true})
+	require.NoError(t, err)
+
+	// Search after the baseTime - should find nothing
+	submitted, timestamp, err = k.GetValsetEvidenceSubmittedAfter(ctx, operatorAddr, baseTime)
+	require.Error(t, err)
+	require.False(t, submitted)
+	require.Equal(t, uint64(0), timestamp)
+
+	// Search before the baseTime - should find the evidence
+	searchTime := baseTime - 1000
+	submitted, timestamp, err = k.GetValsetEvidenceSubmittedAfter(ctx, operatorAddr, searchTime)
+	require.NoError(t, err)
+	require.True(t, submitted)
+	require.Equal(t, baseTime, timestamp)
+
+	// Test case 3: Multiple evidence submissions - should return earliest
+	laterTime := baseTime + 5000
+	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx,
+		collections.Join(operatorAddr.OperatorAddress, laterTime),
+		types.BoolSubmitted{Submitted: true})
+	require.NoError(t, err)
+
+	// Should return the earliest after search time (baseTime), not the later one
+	submitted, timestamp, err = k.GetValsetEvidenceSubmittedAfter(ctx, operatorAddr, searchTime)
+	require.NoError(t, err)
+	require.True(t, submitted)
+	require.Equal(t, baseTime, timestamp)
+
+	// Test case 4: Different operator should not interfere
+	differentOperator := types.OperatorAddress{
+		OperatorAddress: []byte("cosmosvaloper2test"),
+	}
+	submitted, timestamp, err = k.GetValsetEvidenceSubmittedAfter(ctx, differentOperator, searchTime)
+	require.Error(t, err)
+	require.False(t, submitted)
+	require.Equal(t, uint64(0), timestamp)
+}
+
+func TestGetCheckpointParamsBefore(t *testing.T) {
+	k, _, _, _, _, _, _, ctx := testkeeper.BridgeKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	// Test case 1: No checkpoint params before timestamp
+	_, err := k.GetCheckpointParamsBefore(ctx, uint64(1000))
+	require.Error(t, err)
+	require.ErrorContains(t, err, "no checkpoint params found before timestamp")
+
+	// Test case 2: Add checkpoint params and test retrieval
+	baseTime := uint64(1000000000)
+	checkpointParams := types.ValidatorCheckpointParams{
+		Checkpoint:     []byte("checkpoint1"),
+		ValsetHash:     []byte("valsetHash1"),
+		Timestamp:      baseTime,
+		PowerThreshold: uint64(66),
+		BlockHeight:    100,
+	}
+
+	err = k.ValidatorCheckpointParamsMap.Set(ctx, baseTime, checkpointParams)
+	require.NoError(t, err)
+
+	// Search before the baseTime - should find nothing
+	_, err = k.GetCheckpointParamsBefore(ctx, baseTime)
+	require.Error(t, err)
+	require.ErrorContains(t, err, "no checkpoint params found before timestamp")
+
+	// Search after the baseTime - should find the checkpoint params
+	searchTime := baseTime + 1000
+	result, err := k.GetCheckpointParamsBefore(ctx, searchTime)
+	require.NoError(t, err)
+	require.Equal(t, checkpointParams.Checkpoint, result.Checkpoint)
+	require.Equal(t, checkpointParams.ValsetHash, result.ValsetHash)
+	require.Equal(t, checkpointParams.Timestamp, result.Timestamp)
+	require.Equal(t, checkpointParams.PowerThreshold, result.PowerThreshold)
+	require.Equal(t, checkpointParams.BlockHeight, result.BlockHeight)
+
+	// Test case 3: Multiple checkpoint params - should return most recent
+	earlierTime := baseTime - 5000
+	earlierCheckpointParams := types.ValidatorCheckpointParams{
+		Checkpoint:     []byte("checkpoint0"),
+		ValsetHash:     []byte("valsetHash0"),
+		Timestamp:      earlierTime,
+		PowerThreshold: uint64(50),
+		BlockHeight:    50,
+	}
+
+	err = k.ValidatorCheckpointParamsMap.Set(ctx, earlierTime, earlierCheckpointParams)
+	require.NoError(t, err)
+
+	// Should return the most recent (baseTime), not the earlier one
+	result, err = k.GetCheckpointParamsBefore(ctx, searchTime)
+	require.NoError(t, err)
+	require.Equal(t, checkpointParams.Checkpoint, result.Checkpoint)
+	require.Equal(t, baseTime, result.Timestamp)
+
+	// Test case 4: Search between two checkpoints
+	middleSearchTime := baseTime - 1000
+	result, err = k.GetCheckpointParamsBefore(ctx, middleSearchTime)
+	require.NoError(t, err)
+	require.Equal(t, earlierCheckpointParams.Checkpoint, result.Checkpoint)
+	require.Equal(t, earlierTime, result.Timestamp)
+
+	// Test case 5: Edge case - exact timestamp match should not be included
+	result, err = k.GetCheckpointParamsBefore(ctx, baseTime)
+	require.NoError(t, err)
+	require.Equal(t, earlierCheckpointParams.Checkpoint, result.Checkpoint)
+	require.Equal(t, earlierTime, result.Timestamp)
 }

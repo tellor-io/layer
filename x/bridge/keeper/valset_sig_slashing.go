@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/tellor-io/layer/x/bridge/types"
 
@@ -82,7 +83,7 @@ func (k Keeper) CheckValsetSignatureEvidence(ctx context.Context, request types.
 		return err
 	}
 
-	err = k.SlashValidator(ctx, operatorAddr, slashFactor, checkpointParamsBefore.Checkpoint)
+	slashAmount, err := k.SlashValidator(ctx, operatorAddr, slashFactor, checkpointParamsBefore.Checkpoint)
 	if err != nil {
 		return err
 	}
@@ -94,6 +95,21 @@ func (k Keeper) CheckValsetSignatureEvidence(ctx context.Context, request types.
 	if err != nil {
 		return err
 	}
+
+	config := sdk.GetConfig()
+	bech32PrefixValAddr := config.GetBech32ValidatorAddrPrefix()
+	bech32Addr, err := sdk.Bech32ifyAddressBytes(bech32PrefixValAddr, operatorAddr.OperatorAddress)
+	if err != nil {
+		return err
+	}
+	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"valset_signature_slashed",
+			sdk.NewAttribute("operator_address", bech32Addr),
+			sdk.NewAttribute("slash_amount", slashAmount.String()),
+			sdk.NewAttribute("valset_timestamp", strconv.FormatUint(request.ValsetTimestamp, 10)),
+		),
+	})
 
 	return nil
 }
