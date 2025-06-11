@@ -50,6 +50,9 @@ func TestMsgRequestAttestations(t *testing.T) {
 	require.ErrorContains(t, err, "invalid")
 	require.Nil(t, response)
 
+	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
+	operatorAddr2 := "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+
 	validators := []stakingtypes.Validator{
 		{
 			Jailed:          false,
@@ -57,7 +60,7 @@ func TestMsgRequestAttestations(t *testing.T) {
 			Tokens:          math.NewInt(60 * 1e6),
 			DelegatorShares: math.LegacyNewDec(100 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
-			OperatorAddress: "operatorAddr1",
+			OperatorAddress: operatorAddr1,
 		},
 		{
 			Jailed:          false,
@@ -65,7 +68,7 @@ func TestMsgRequestAttestations(t *testing.T) {
 			Tokens:          math.NewInt(40 * 1e6),
 			DelegatorShares: math.LegacyNewDec(100 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
-			OperatorAddress: "operatorAddr2",
+			OperatorAddress: operatorAddr2,
 		},
 	}
 

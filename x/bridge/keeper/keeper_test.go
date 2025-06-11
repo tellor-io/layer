@@ -57,6 +57,9 @@ func TestKeeper(t *testing.T) {
 func TestGetCurrentValidatorsEVMCompatible(t *testing.T) {
 	k, _, _, _, _, sk, _, ctx := setupKeeper(t)
 
+	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
+	operatorAddr2 := "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+
 	validators := []stakingtypes.Validator{
 		{
 			Jailed:          false,
@@ -64,7 +67,7 @@ func TestGetCurrentValidatorsEVMCompatible(t *testing.T) {
 			Tokens:          math.NewInt(3000000000),
 			DelegatorShares: math.LegacyNewDec(3000),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
-			OperatorAddress: "operatorAddr1",
+			OperatorAddress: operatorAddr1,
 		},
 		{
 			Jailed:          false,
@@ -72,7 +75,7 @@ func TestGetCurrentValidatorsEVMCompatible(t *testing.T) {
 			Tokens:          math.NewInt(1000000000),
 			DelegatorShares: math.LegacyNewDec(1000),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
-			OperatorAddress: "operatorAddr2",
+			OperatorAddress: operatorAddr2,
 		},
 	}
 
@@ -113,6 +116,9 @@ func TestGetCurrentValidatorsEVMCompatibleNoValidators(t *testing.T) {
 func TestGetCurrentValidatorsEVMCompatibleEqualPowers(t *testing.T) {
 	k, _, _, _, _, sk, _, ctx := setupKeeper(t)
 
+	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
+	operatorAddr2 := "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+
 	validators := []stakingtypes.Validator{
 		{
 			Jailed:          false,
@@ -120,7 +126,7 @@ func TestGetCurrentValidatorsEVMCompatibleEqualPowers(t *testing.T) {
 			Tokens:          math.NewInt(1000000000),
 			DelegatorShares: math.LegacyNewDec(1000),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
-			OperatorAddress: "operatorAddr1",
+			OperatorAddress: operatorAddr1,
 		},
 		{
 			Jailed:          false,
@@ -128,7 +134,7 @@ func TestGetCurrentValidatorsEVMCompatibleEqualPowers(t *testing.T) {
 			Tokens:          math.NewInt(1000000000),
 			DelegatorShares: math.LegacyNewDec(1000),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
-			OperatorAddress: "operatorAddr2",
+			OperatorAddress: operatorAddr2,
 		},
 	}
 
@@ -160,6 +166,9 @@ func TestGetCurrentValidatorSetEVMCompatible(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
+	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
+	operatorAddr2 := "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+
 	validators := []stakingtypes.Validator{
 		{
 			Jailed:          false,
@@ -167,7 +176,7 @@ func TestGetCurrentValidatorSetEVMCompatible(t *testing.T) {
 			Tokens:          math.NewInt(2000000000),
 			DelegatorShares: math.LegacyNewDec(2000),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
-			OperatorAddress: "operatorAddr1",
+			OperatorAddress: operatorAddr1,
 		},
 		{
 			Jailed:          false,
@@ -175,7 +184,7 @@ func TestGetCurrentValidatorSetEVMCompatible(t *testing.T) {
 			Tokens:          math.NewInt(1000000000),
 			DelegatorShares: math.LegacyNewDec(1000),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
-			OperatorAddress: "operatorAddr2",
+			OperatorAddress: operatorAddr2,
 		},
 	}
 
@@ -218,6 +227,9 @@ func TestCompareAndSetBridgeValidators(t *testing.T) {
 	require.False(t, res)
 	logger.Error("err: ", err)
 
+	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
+	operatorAddr2 := "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+
 	// call for initial val set, should hit false since no valset exists yet
 	validators := []stakingtypes.Validator{
 		{
@@ -226,7 +238,7 @@ func TestCompareAndSetBridgeValidators(t *testing.T) {
 			Tokens:          math.NewInt(100 * 1e6),
 			DelegatorShares: math.LegacyNewDec(100 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
-			OperatorAddress: "operatorAddr1",
+			OperatorAddress: operatorAddr1,
 		},
 		{
 			Jailed:          false,
@@ -234,7 +246,7 @@ func TestCompareAndSetBridgeValidators(t *testing.T) {
 			Tokens:          math.NewInt(100 * 1e6),
 			DelegatorShares: math.LegacyNewDec(100 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
-			OperatorAddress: "operatorAddr2",
+			OperatorAddress: operatorAddr2,
 		},
 	}
 	for _, val := range validators {
@@ -255,7 +267,7 @@ func TestCompareAndSetBridgeValidators(t *testing.T) {
 			Tokens:          math.NewInt(111 * 1e6),
 			DelegatorShares: math.LegacyNewDec(111 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
-			OperatorAddress: "operatorAddr1",
+			OperatorAddress: operatorAddr1,
 		},
 		{
 			Jailed:          false,
@@ -263,7 +275,7 @@ func TestCompareAndSetBridgeValidators(t *testing.T) {
 			Tokens:          math.NewInt(100 * 1e6),
 			DelegatorShares: math.LegacyNewDec(100 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
-			OperatorAddress: "operatorAddr2",
+			OperatorAddress: operatorAddr2,
 		},
 	}
 	for _, val := range validators {
@@ -289,7 +301,7 @@ func TestCompareAndSetBridgeValidators(t *testing.T) {
 			Tokens:          math.NewInt(112 * 1e6),
 			DelegatorShares: math.LegacyNewDec(112 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
-			OperatorAddress: "operatorAddr1",
+			OperatorAddress: operatorAddr1,
 		},
 		{
 			Jailed:          false,
@@ -297,7 +309,7 @@ func TestCompareAndSetBridgeValidators(t *testing.T) {
 			Tokens:          math.NewInt(100 * 1e6),
 			DelegatorShares: math.LegacyNewDec(100 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
-			OperatorAddress: "operatorAddr2",
+			OperatorAddress: operatorAddr2,
 		},
 	}
 	for _, val := range validators {
@@ -696,7 +708,7 @@ func TestEVMAddressFromSignatures(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, sigB)
 
-	evmAddress, err := k.EVMAddressFromSignatures(ctx, sigA, sigB, operatorAddr)
+	evmAddress, err := k.EVMAddressFromSignatures(ctx, sigA[:64], sigB[:64], operatorAddr)
 	require.NoError(t, err)
 	require.NotNil(t, evmAddress)
 
@@ -705,18 +717,12 @@ func TestEVMAddressFromSignatures(t *testing.T) {
 	badSigA := []byte("badSigA")
 	badSigB := []byte("badSigB")
 
-	require.Panics(t, func() {
-		evmAddress, err = k.EVMAddressFromSignatures(ctx, badSigA, sigB, operatorAddr)
-		require.Error(t, err)
-	})
-	require.Panics(t, func() {
-		evmAddress, err = k.EVMAddressFromSignatures(ctx, sigA, badSigB, operatorAddr)
-		require.Error(t, err)
-	})
-	require.Panics(t, func() {
-		evmAddress, err = k.EVMAddressFromSignatures(ctx, badSigA, badSigB, operatorAddr)
-		require.Error(t, err)
-	})
+	_, err = k.EVMAddressFromSignatures(ctx, badSigA, sigB[:64], operatorAddr)
+	require.Error(t, err)
+	_, err = k.EVMAddressFromSignatures(ctx, sigA[:64], badSigB, operatorAddr)
+	require.Error(t, err)
+	_, err = k.EVMAddressFromSignatures(ctx, badSigA, badSigB, operatorAddr)
+	require.Error(t, err)
 }
 
 func TestTryRecoverAddressWithBothIDs(t *testing.T) {
@@ -762,7 +768,7 @@ func TestTryRecoverAddressWithBothIDs(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, sigB)
 
-	address, err := k.TryRecoverAddressWithBothIDs(sigA, msgDoubleHashBytesA)
+	address, err := k.TryRecoverAddressWithBothIDs(sigA[:64], msgDoubleHashBytesA)
 	require.NoError(t, err)
 	require.NotNil(t, address)
 	require.Equal(t, address[0].String(), addressExpected)
@@ -774,16 +780,18 @@ func TestTryRecoverAddressWithBothIDs(t *testing.T) {
 
 	// try with bad sig
 	badSig := []byte("badSig")
-	require.Panics(t, func() {
-		_, err = k.TryRecoverAddressWithBothIDs(badSig, msgDoubleHashBytesA)
-		require.Error(t, err)
-	})
+	_, err = k.TryRecoverAddressWithBothIDs(badSig, msgDoubleHashBytesA)
+	require.Error(t, err)
 }
 
 func TestSetEVMAddressByOperator(t *testing.T) {
 	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
+
+	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
+	operatorAddr2 := "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+	operatorAddr3 := "cosmosvaloper1zkue5gwhm5xyv4v5fa9lmcym7cwzaxtnpcl7jl"
 
 	validators := []stakingtypes.Validator{
 		{
@@ -792,7 +800,7 @@ func TestSetEVMAddressByOperator(t *testing.T) {
 			Tokens:          math.NewInt(2000),
 			DelegatorShares: math.LegacyNewDec(2000),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
-			OperatorAddress: "operatorAddr1",
+			OperatorAddress: operatorAddr1,
 		},
 		{
 			Jailed:          false,
@@ -800,7 +808,7 @@ func TestSetEVMAddressByOperator(t *testing.T) {
 			Tokens:          math.NewInt(1000),
 			DelegatorShares: math.LegacyNewDec(1000),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
-			OperatorAddress: "operatorAddr2",
+			OperatorAddress: operatorAddr2,
 		},
 		{
 			Jailed:          false,
@@ -808,7 +816,7 @@ func TestSetEVMAddressByOperator(t *testing.T) {
 			Tokens:          math.NewInt(5000),
 			DelegatorShares: math.LegacyNewDec(5000),
 			Description:     stakingtypes.Description{Moniker: "validator3"},
-			OperatorAddress: "operatorAddr3",
+			OperatorAddress: operatorAddr3,
 		},
 	}
 
@@ -894,6 +902,9 @@ func TestGetEVMAddressByOperator(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
+	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
+	operatorAddr2 := "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+
 	validators := []stakingtypes.Validator{
 		{
 			Jailed:          false,
@@ -901,7 +912,7 @@ func TestGetEVMAddressByOperator(t *testing.T) {
 			Tokens:          math.NewInt(2000),
 			DelegatorShares: math.LegacyNewDec(2000),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
-			OperatorAddress: "operatorAddr1",
+			OperatorAddress: operatorAddr1,
 		},
 		{
 			Jailed:          false,
@@ -909,7 +920,7 @@ func TestGetEVMAddressByOperator(t *testing.T) {
 			Tokens:          math.NewInt(1000),
 			DelegatorShares: math.LegacyNewDec(1000),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
-			OperatorAddress: "operatorAddr2",
+			OperatorAddress: operatorAddr2,
 		},
 	}
 

@@ -1,12 +1,15 @@
 package keeper_test
 
 import (
+	"context"
 	"encoding/hex"
 	"testing"
 	"time"
 
+	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
 	testkeeper "github.com/tellor-io/layer/testutil/keeper"
+	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/types"
 )
 
@@ -77,19 +80,82 @@ func TestCheckValsetSignatureEvidence(t *testing.T) {
 		Creator:            "creator",
 		ValsetHash:         "1234abcd",
 		ValidatorSignature: "invalidhex",
-		PowerThreshold:     2,
+		PowerThreshold:     3,
 		ValsetTimestamp:    uint64(recentTimestamp),
 	}
 
 	err = k.CheckValsetSignatureEvidence(ctx, invalidSigRequest)
 	require.ErrorContains(t, err, "encoding/hex")
 
-	// For the remaining test cases, we would need more complex mocking and setup
-	// that might be challenging without deeper knowledge of the codebase internals.
-	// The test can be expanded when we have a better understanding of how to mock:
-	// 1. The rate limiting functionality
-	// 2. The validator signature verification process
-	// 3. The validator slashing process
+	// Test case 4: Rate limiting functionality
+	testRateLimiting(t, k, ctx)
+}
 
-	t.Log("Additional test cases for rate limiting, signature verification, and slashing should be implemented with better understanding of module internals")
+func testRateLimiting(t *testing.T, k keeper.Keeper, ctx context.Context) {
+	// get the actual rate limit window from the keeper
+	rateLimitMs, err := k.GetValsetRateLimitWindow(ctx)
+	require.NoError(t, err)
+	require.Equal(t, uint64(10*60*1000), rateLimitMs) // should be 10 minutes default
+
+	// create a mock operator address
+	operatorAddr := types.OperatorAddress{
+		OperatorAddress: []byte("cosmosvaloper1test"),
+	}
+
+	// test timestamps
+	baseTime := uint64(1000000000) // arbitrary base timestamp
+
+	// Test case 4a: First submission should succeed (no rate limiting yet)
+	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx,
+		collections.Join(operatorAddr.OperatorAddress, baseTime),
+		types.BoolSubmitted{Submitted: true})
+	require.NoError(t, err)
+
+	// Test case 4b: Exact same timestamp should fail (duplicate)
+	err = k.CheckValsetSignatureRateLimit(ctx, operatorAddr, baseTime)
+	require.ErrorContains(t, err, "valset signature evidence already submitted with this timestamp")
+
+	// Test case 4c: Timestamp within rate limit window (after baseTime) should fail
+	withinWindowAfter := baseTime + (rateLimitMs / 2) // 5 minutes after
+	err = k.CheckValsetSignatureRateLimit(ctx, operatorAddr, withinWindowAfter)
+	require.ErrorContains(t, err, "valset signature evidence already submitted within rate limit")
+
+	// Test case 4d: Timestamp within rate limit window (before baseTime) should fail
+	withinWindowBefore := baseTime - (rateLimitMs / 2) // 5 minutes before
+	err = k.CheckValsetSignatureRateLimit(ctx, operatorAddr, withinWindowBefore)
+	require.ErrorContains(t, err, "valset signature evidence already submitted within rate limit")
+
+	// Test case 4e: Timestamp outside rate limit window (after) should succeed
+	outsideWindowAfter := baseTime + rateLimitMs + 1000 // 10+ minutes after
+	err = k.CheckValsetSignatureRateLimit(ctx, operatorAddr, outsideWindowAfter)
+	require.NoError(t, err)
+
+	// Test case 4f: Timestamp outside rate limit window (before) should succeed
+	outsideWindowBefore := baseTime - rateLimitMs - 1000 // 10+ minutes before
+	err = k.CheckValsetSignatureRateLimit(ctx, operatorAddr, outsideWindowBefore)
+	require.NoError(t, err)
+
+	// Test case 4g: Different operator should not be affected by rate limit
+	differentOperator := types.OperatorAddress{
+		OperatorAddress: []byte("cosmosvaloper2test"),
+	}
+	err = k.CheckValsetSignatureRateLimit(ctx, differentOperator, baseTime)
+	require.NoError(t, err)
+
+	// Test case 4h: Multiple submissions outside window should create new rate limit boundaries
+	// Submit evidence at outsideWindowAfter
+	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx,
+		collections.Join(operatorAddr.OperatorAddress, outsideWindowAfter),
+		types.BoolSubmitted{Submitted: true})
+	require.NoError(t, err)
+
+	// Now test rate limiting around the new timestamp
+	withinNewWindow := outsideWindowAfter + (rateLimitMs / 2)
+	err = k.CheckValsetSignatureRateLimit(ctx, operatorAddr, withinNewWindow)
+	require.ErrorContains(t, err, "valset signature evidence already submitted within rate limit")
+
+	// But outside the new window should still work
+	outsideNewWindow := outsideWindowAfter + rateLimitMs + 1000
+	err = k.CheckValsetSignatureRateLimit(ctx, operatorAddr, outsideNewWindow)
+	require.NoError(t, err)
 }
