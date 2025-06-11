@@ -5,6 +5,7 @@ import (
 	"time"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	cosmosdb "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/bridge/keeper"
@@ -127,6 +128,26 @@ func TestEndBlock(t *testing.T) {
 	require.NotNil(t, ctx)
 	require.NotNil(t, sk)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx = sdkCtx.WithConsensusParams(tmproto.ConsensusParams{
+		Block: &tmproto.BlockParams{
+			MaxBytes: 200000,
+			MaxGas:   100_000_000,
+		},
+		Evidence: &tmproto.EvidenceParams{
+			MaxAgeNumBlocks: 302400,
+			MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+			MaxBytes:        10000,
+		},
+		Validator: &tmproto.ValidatorParams{
+			PubKeyTypes: []string{
+				cmttypes.ABCIPubKeyTypeEd25519,
+			},
+		},
+		Abci: &tmproto.ABCIParams{
+			VoteExtensionsEnableHeight: 1,
+		},
+	})
+	ctx = ctx.WithConsensusParams(sdkCtx.ConsensusParams())
 
 	// create valid cosmosvaloper bech32 addresses
 	// decode existing tellor addresses to get raw bytes, then re-encode with cosmosvaloper prefix

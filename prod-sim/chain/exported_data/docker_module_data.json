@@ -1,0 +1,147 @@
+{
+    "reporters": [
+        {
+            "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+            "reporter": {
+                "min_tokens_required": "1000000",
+                "commission_rate": "0.100000000000000000",
+                "jailed_until": "0001-01-01T00:00:00Z",
+                "moniker": "reporter-1",
+                "last_updated": "0001-01-01T00:00:00Z"
+            }
+        },
+        {
+            "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+            "reporter": {
+                "min_tokens_required": "1000000",
+                "commission_rate": "0.100000000000000000",
+                "jailed_until": "0001-01-01T00:00:00Z",
+                "moniker": "reporter-2",
+                "last_updated": "0001-01-01T00:00:00Z"
+            }
+        },
+        {
+            "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+            "reporter": {
+                "min_tokens_required": "1000000",
+                "commission_rate": "0.100000000000000000",
+                "jailed_until": "0001-01-01T00:00:00Z",
+                "moniker": "reporter-0",
+                "last_updated": "0001-01-01T00:00:00Z"
+            }
+        }
+    ],
+    "selectors": [
+        {
+            "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+            "selector": {
+                "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+                "locked_until_time": "0001-01-01T00:00:00Z",
+                "delegations_count": 1
+            }
+        },
+        {
+            "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+            "selector": {
+                "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+                "locked_until_time": "0001-01-01T00:00:00Z",
+                "delegations_count": 1
+            }
+        },
+        {
+            "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+            "selector": {
+                "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+                "locked_until_time": "0001-01-01T00:00:00Z",
+                "delegations_count": 1
+            }
+        }
+    ],
+    "selector_tips": [
+        {
+            "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+            "tips": "696069964.999999999303930035"
+        },
+        {
+            "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+            "tips": "696069964.999999999303930035"
+        },
+        {
+            "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+            "tips": "696069964.999999999303930035"
+        }
+    ],
+    "fork_proposal": {
+        "id": "5",
+        "messages": [
+            {
+                "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
+                "authority": "tellor10d07y265gmmuvt4z0w9aw880jnsr700j6527vx",
+                "plan": {
+                    "name": "fork",
+                    "time": "0001-01-01T00:00:00Z",
+                    "height": "3139971",
+                    "info": "",
+                    "upgraded_client_state": null
+                }
+            }
+        ],
+        "status": "PROPOSAL_STATUS_PASSED",
+        "final_tally_result": {
+            "yes_count": "7348396006",
+            "abstain_count": "0",
+            "no_count": "0",
+            "no_with_veto_count": "0"
+        },
+        "submit_time": "2025-05-20T15:20:51.529330987Z",
+        "deposit_end_time": "2025-05-22T15:20:51.529330987Z",
+        "total_deposit": [
+            {
+                "denom": "loya",
+                "amount": "50000000"
+            }
+        ],
+        "voting_start_time": "2025-05-20T15:20:51.529330987Z",
+        "voting_end_time": "2025-05-21T15:20:51.529330987Z",
+        "metadata": "ipfs://CID",
+        "title": "v5.0.0",
+        "summary": "jail validators who don't have keyring setup to sign vote ext. modules set up to export data to make the chain compatible with forking. Allow to switch between being a reporter and a selector and vice versa",
+        "proposer": "tellor10usyr7v4xe2uhtnvg4kwtgtuzh5e4u2378zjj9",
+        "expedited": true,
+        "failed_reason": ""
+    },
+    "ibc": {
+        "client_genesis": {
+            "clients": [],
+            "clients_consensus": [],
+            "clients_metadata": [],
+            "params": {
+                "allowed_clients": [
+                    "06-solomachine",
+                    "07-tendermint",
+                    "09-localhost"
+                ]
+            },
+            "create_localhost": false,
+            "next_client_sequence": "0"
+        },
+        "connection_genesis": {
+            "connections": [],
+            "client_connection_paths": [],
+            "next_connection_sequence": "0",
+            "params": {
+                "max_expected_time_per_block": "30000000000"
+            }
+        },
+        "channel_genesis": {
+            "channels": [],
+            "acknowledgements": [],
+            "commitments": [],
+            "receipts": [],
+            "send_sequences": [],
+            "recv_sequences": [],
+            "ack_sequences": [],
+            "next_channel_sequence": "0"
+        }
+    }
+}
