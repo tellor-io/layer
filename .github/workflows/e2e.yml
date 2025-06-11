@@ -34,7 +34,7 @@ jobs:
 
       - name: Build Primary Docker Image
         run: |
-          heighliner version
+          heighliner --help | head -10
           heighliner build \
             --chain layer \
             --local \
@@ -74,6 +74,7 @@ jobs:
 
       - name: Build IBC Docker Image
         run: |
+          heighliner --help | head -10
           heighliner build \
             --chain layer-icq \
             --dockerfile Dockerfile \
