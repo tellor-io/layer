@@ -28,10 +28,13 @@ jobs:
           cd heighliner
           git checkout v1.7.2
           go install
-          heighliner version
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+          echo "heighliner installed to $(go env GOPATH)/bin/heighliner"
+          ls -la $(go env GOPATH)/bin/heighliner
 
       - name: Build Primary Docker Image
         run: |
+          heighliner version
           heighliner build \
             --chain layer \
             --local \
@@ -65,7 +68,9 @@ jobs:
           cd heighliner
           git checkout v1.7.2
           go install
-          heighliner version
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+          echo "heighliner installed to $(go env GOPATH)/bin/heighliner"
+          ls -la $(go env GOPATH)/bin/heighliner
 
       - name: Build IBC Docker Image
         run: |
