@@ -197,12 +197,10 @@ func (k Keeper) SlashValidator(ctx context.Context, operatorAddr types.OperatorA
 		return math.Int{}, errors.New("historical power not found")
 	}
 
-	k.Logger(ctx).Info("slashing historicalPower", "adjustedPower", historicalPower)
 	slashAmount, err := k.stakingKeeper.SlashWithInfractionReason(ctx, consAddr, int64(checkpointParams.BlockHeight), historicalPower, slashFactor, stakingtypes.Infraction_INFRACTION_UNSPECIFIED)
 	if err != nil {
 		return math.Int{}, err
 	}
-	k.Logger(ctx).Info("slashing slashAmount", "slashAmount", slashAmount)
 	// jail the validator
 	err = k.stakingKeeper.Jail(ctx, consAddr)
 	if err != nil {

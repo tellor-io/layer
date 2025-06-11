@@ -21,6 +21,11 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+var (
+	operatorAddress1 = "tellorvaloper15z96nf9mkz2982ptspusk8666643epaetzcgsn"
+	privateKeyHex    = "738369d786dadfef55908279f9d63a0ede8a24339854c4f2ce78dd3f11dfb925"
+)
+
 func TestCheckAttestationEvidence(t *testing.T) {
 	k, _, _, _, _, sk, _, ctx := testkeeper.BridgeKeeper(t)
 	require.NotNil(t, k)
@@ -124,18 +129,16 @@ func TestCheckAttestationEvidence(t *testing.T) {
 		k, _, _, _, _, sk, _, ctx := testkeeper.BridgeKeeper(t)
 
 		// Set up a validator and EVM address
-		privateKeyHex := "738369d786dadfef55908279f9d63a0ede8a24339854c4f2ce78dd3f11dfb925"
 		privateKey, err := crypto.HexToECDSA(privateKeyHex)
 		require.NoError(t, err)
 
 		publicKey := privateKey.Public().(*ecdsa.PublicKey)
 		evmAddress := crypto.PubkeyToAddress(*publicKey)
-		operatorAddress := "tellorvaloper15z96nf9mkz2982ptspusk8666643epaetzcgsn"
 
 		// Register the EVM address
 		evmAddressBytes := evmAddress.Bytes()
 		err = k.EVMToOperatorAddressMap.Set(ctx, common.Bytes2Hex(evmAddressBytes), types.OperatorAddress{
-			OperatorAddress: []byte(operatorAddress),
+			OperatorAddress: []byte(operatorAddress1),
 		})
 		require.NoError(t, err)
 
@@ -224,7 +227,7 @@ func TestCheckAttestationEvidence(t *testing.T) {
 		// This won't be a functional validator, but it should prevent the crash
 		sk.On("GetValidator", mock.Anything, mock.AnythingOfType("types.ValAddress")).Return(
 			stakingtypes.Validator{
-				OperatorAddress: operatorAddress,
+				OperatorAddress: operatorAddress1,
 				Status:          stakingtypes.Bonded,
 				Tokens:          math.NewInt(1000000),
 				DelegatorShares: math.LegacyNewDec(1000000),
@@ -261,20 +264,20 @@ func TestCheckAttestationEvidence(t *testing.T) {
 		// 3. Verify we can recover the operator address from the signature
 		operatorAddrResult, err := k.GetOperatorAddressFromSignature(ctx, snapshotBytes, evidenceRequest.Signature)
 		require.NoError(t, err)
-		require.Equal(t, operatorAddress, string(operatorAddrResult.OperatorAddress), "Recovered address should match")
+		require.Equal(t, operatorAddress1, string(operatorAddrResult.OperatorAddress), "Recovered address should match")
 
 		// 4. Verify the rate limit check would pass
 		err = k.CheckRateLimit(ctx, operatorAddrResult, evidenceRequest.AttestationTimestamp)
 		require.NoError(t, err, "Rate limit check should pass")
 
 		// 5. Set evidence as submitted manually
-		err = k.AttestationEvidenceSubmitted.Set(ctx, collections.Join([]byte(operatorAddress), evidenceRequest.AttestationTimestamp), types.BoolSubmitted{
+		err = k.AttestationEvidenceSubmitted.Set(ctx, collections.Join([]byte(operatorAddress1), evidenceRequest.AttestationTimestamp), types.BoolSubmitted{
 			Submitted: true,
 		})
 		require.NoError(t, err)
 
 		// 6. Verify evidence was saved
-		evidenceKey := collections.Join([]byte(operatorAddress), uint64(attestTimestamp))
+		evidenceKey := collections.Join([]byte(operatorAddress1), uint64(attestTimestamp))
 		evidenceExists, err := k.AttestationEvidenceSubmitted.Has(ctx, evidenceKey)
 		require.NoError(t, err)
 		require.True(t, evidenceExists, "Attestation evidence should be saved")
@@ -296,7 +299,6 @@ func TestGetOperatorAddressFromSignature(t *testing.T) {
 	require.ErrorContains(t, err, "encoding/hex")
 
 	// Test case 2: Valid signature but no registered operator
-	privateKeyHex := "738369d786dadfef55908279f9d63a0ede8a24339854c4f2ce78dd3f11dfb925"
 	privateKey, err := crypto.HexToECDSA(privateKeyHex)
 	require.NoError(t, err)
 
@@ -316,18 +318,17 @@ func TestGetOperatorAddressFromSignature(t *testing.T) {
 	// Test case 3: Valid signature with registered operator
 	publicKey := privateKey.Public().(*ecdsa.PublicKey)
 	evmAddress := crypto.PubkeyToAddress(*publicKey)
-	operatorAddress := "tellorvaloper15z96nf9mkz2982ptspusk8666643epaetzcgsn"
 
 	// Register the EVM address
 	evmAddressBytes := evmAddress.Bytes()
 	err = k.EVMToOperatorAddressMap.Set(ctx, common.Bytes2Hex(evmAddressBytes), types.OperatorAddress{
-		OperatorAddress: []byte(operatorAddress),
+		OperatorAddress: []byte(operatorAddress1),
 	})
 	require.NoError(t, err)
 
 	operatorAddr, err = k.GetOperatorAddressFromSignature(ctx, msg, sigHex)
 	require.NoError(t, err)
-	require.Equal(t, operatorAddress, string(operatorAddr.OperatorAddress))
+	require.Equal(t, operatorAddress1, string(operatorAddr.OperatorAddress))
 }
 
 func TestCheckRateLimit(t *testing.T) {
@@ -621,18 +622,16 @@ func TestAttestationSlashingIntegration(t *testing.T) {
 		require.NoError(t, err)
 
 		// Set up a validator and EVM address
-		privateKeyHex := "738369d786dadfef55908279f9d63a0ede8a24339854c4f2ce78dd3f11dfb925"
 		privateKey, err := crypto.HexToECDSA(privateKeyHex)
 		require.NoError(t, err)
 
 		publicKey := privateKey.Public().(*ecdsa.PublicKey)
 		evmAddress := crypto.PubkeyToAddress(*publicKey)
-		operatorAddress := "tellorvaloper15z96nf9mkz2982ptspusk8666643epaetzcgsn"
 
 		// Register the EVM address
 		evmAddressBytes := evmAddress.Bytes()
 		err = k.EVMToOperatorAddressMap.Set(ctx, common.Bytes2Hex(evmAddressBytes), types.OperatorAddress{
-			OperatorAddress: []byte(operatorAddress),
+			OperatorAddress: []byte(operatorAddress1),
 		})
 		require.NoError(t, err)
 
@@ -697,20 +696,20 @@ func TestAttestationSlashingIntegration(t *testing.T) {
 		// 1. Test operator address recovery
 		operatorAddrResult, err := k.GetOperatorAddressFromSignature(ctx, snapshotBytes, hex.EncodeToString(signature))
 		require.NoError(t, err)
-		require.Equal(t, operatorAddress, string(operatorAddrResult.OperatorAddress))
+		require.Equal(t, operatorAddress1, string(operatorAddrResult.OperatorAddress))
 
 		// 2. Test rate limiting (should pass for first submission)
 		err = k.CheckRateLimit(ctx, operatorAddrResult, uint64(attestTimestamp))
 		require.NoError(t, err)
 
 		// 3. Manually set attestation evidence as submitted
-		err = k.AttestationEvidenceSubmitted.Set(ctx, collections.Join([]byte(operatorAddress), uint64(attestTimestamp)), types.BoolSubmitted{
+		err = k.AttestationEvidenceSubmitted.Set(ctx, collections.Join([]byte(operatorAddress1), uint64(attestTimestamp)), types.BoolSubmitted{
 			Submitted: true,
 		})
 		require.NoError(t, err)
 
 		// 4. Verify evidence was saved
-		evidenceKey := collections.Join([]byte(operatorAddress), uint64(attestTimestamp))
+		evidenceKey := collections.Join([]byte(operatorAddress1), uint64(attestTimestamp))
 		evidenceExists, err := k.AttestationEvidenceSubmitted.Has(ctx, evidenceKey)
 		require.NoError(t, err)
 		require.True(t, evidenceExists, "Attestation evidence should be saved")
