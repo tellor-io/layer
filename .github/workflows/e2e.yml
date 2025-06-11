@@ -31,7 +31,7 @@ jobs:
           platform: linux/amd64
           git-ref: ${{ github.head_ref }}
           chain: layer
-          dockerfile: cosmos
+          dockerfile: Dockerfile
           build-target: make install
           binaries: |
             - /go/bin/layerd
@@ -64,7 +64,7 @@ jobs:
           platform: linux/amd64
           git-ref: ibc
           chain: layer-icq
-          dockerfile: cosmos
+          dockerfile: Dockerfile
           build-target: make install
           binaries: |
             - /go/bin/layerd
