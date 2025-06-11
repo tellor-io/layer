@@ -232,8 +232,8 @@ mock-gen:
 .PHONY: mock-gen mock-gen-bridge mock-gen-dispute mock-gen-mint mock-gen-oracle mock-gen-registry mock-gen-reporter
 
 get-heighliner:
-	git clone --depth 1 https://github.com/strangelove-ventures/heighliner.git
-	cd heighliner && go install
+	git clone https://github.com/strangelove-ventures/heighliner.git
+	cd heighliner && git checkout v1.7.2 && go install
 	@sleep 0.1
 	@echo ✅ heighliner installed to $(shell which heighliner)
 
