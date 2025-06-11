@@ -136,15 +136,22 @@ func (a ReporterIndex) IndexesList() []collections.Index[collections.Pair[[]byte
 	return []collections.Index[collections.Pair[[]byte, uint64], NoStakeMicroReport]{a.Reporter}
 }
 
-// maps a reporter address to its selectors' addresses
+// maps the reporter address and timestamp to the no stake report
 func NewReporterIndex(sb *collections.SchemaBuilder) ReporterIndex {
 	return ReporterIndex{
 		Reporter: indexes.NewMulti(
 			sb, ReporterIndexPrefix, "reporter_index",
 			collections.BytesKey,
 			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
-			func(_ collections.Pair[[]byte, uint64], report NoStakeMicroReport) ([]byte, error) {
-				return report.Reporter, nil
+			func(k collections.Pair[[]byte, uint64], report NoStakeMicroReport) ([]byte, error) {
+				size := collections.Uint64Key.Size(k.K2())
+				buffer := make([]byte, size)
+				_, err := collections.Uint64Key.Encode(buffer, k.K2())
+				if err != nil {
+					return nil, err
+				}
+				buffer = append(report.Reporter, buffer...)
+				return buffer, nil
 			},
 		),
 	}

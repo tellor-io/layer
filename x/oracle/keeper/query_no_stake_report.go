@@ -29,8 +29,17 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 		NextKey: nil,
 		Total:   uint64(0),
 	}
+	// key is Bytes (reporter address) with bytes encoded max uint64 concatenated (reporterAddr...fff...)
+	// timestamp is the last 8 bytes of the key so we can sort by timestamp
+	buffer := make([]byte, 8)
+	_, err = collections.Uint64Key.Encode(buffer, ^uint64(0))
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to encode start value")
+	}
 
-	rng := collections.NewPrefixedPairRange[[]byte, collections.Pair[[]byte, uint64]](reporter.Bytes())
+	// construct key: reporter_address + encoded_uint64
+	key := append(reporter.Bytes(), buffer...)
+	rng := collections.NewPrefixUntilPairRange[[]byte, collections.Pair[[]byte, uint64]](key)
 	if req.Pagination != nil && req.Pagination.Reverse {
 		rng.Descending()
 	}
@@ -48,6 +57,7 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	reports := make([]*types.NoStakeMicroReportStrings, 0)
+
 	for ; iter.Valid(); iter.Next() {
 		pk, err := iter.PrimaryKey()
 		if err != nil {
