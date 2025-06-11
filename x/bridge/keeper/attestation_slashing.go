@@ -151,7 +151,6 @@ func (k Keeper) GetOperatorAddressFromSignature(ctx context.Context, msg []byte,
 
 // SlashValidator slashes a validator for malicious attestation evidence.
 func (k Keeper) SlashValidator(ctx context.Context, operatorAddr types.OperatorAddress, slashFactor math.LegacyDec, checkpoint []byte) (math.Int, error) {
-	k.Logger(ctx).Info("slashValidator", "operatorAddr", operatorAddr.String())
 	// get the validator address
 	validatorAddr := sdk.ValAddress(operatorAddr.OperatorAddress)
 
