@@ -25,6 +25,11 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+const (
+	testOperatorAddr1 = "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
+	testOperatorAddr2 = "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+)
+
 func setupKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.BankKeeper, *mocks.OracleKeeper, *mocks.ReporterKeeper, *mocks.StakingKeeper, *mocks.DisputeKeeper, context.Context) {
 	tb.Helper()
 	k, ak, bk, ok, rk, sk, dk, ctx := keepertest.BridgeKeeper(tb)
@@ -57,8 +62,8 @@ func TestKeeper(t *testing.T) {
 func TestGetCurrentValidatorsEVMCompatible(t *testing.T) {
 	k, _, _, _, _, sk, _, ctx := setupKeeper(t)
 
-	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
-	operatorAddr2 := "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+	operatorAddr1 := testOperatorAddr1
+	operatorAddr2 := testOperatorAddr2
 
 	validators := []stakingtypes.Validator{
 		{
@@ -116,8 +121,8 @@ func TestGetCurrentValidatorsEVMCompatibleNoValidators(t *testing.T) {
 func TestGetCurrentValidatorsEVMCompatibleEqualPowers(t *testing.T) {
 	k, _, _, _, _, sk, _, ctx := setupKeeper(t)
 
-	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
-	operatorAddr2 := "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+	operatorAddr1 := testOperatorAddr1
+	operatorAddr2 := testOperatorAddr2
 
 	validators := []stakingtypes.Validator{
 		{
@@ -166,8 +171,8 @@ func TestGetCurrentValidatorSetEVMCompatible(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
-	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
-	operatorAddr2 := "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+	operatorAddr1 := testOperatorAddr1
+	operatorAddr2 := testOperatorAddr2
 
 	validators := []stakingtypes.Validator{
 		{
@@ -227,8 +232,8 @@ func TestCompareAndSetBridgeValidators(t *testing.T) {
 	require.False(t, res)
 	logger.Error("err: ", err)
 
-	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
-	operatorAddr2 := "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+	operatorAddr1 := testOperatorAddr1
+	operatorAddr2 := testOperatorAddr2
 
 	// call for initial val set, should hit false since no valset exists yet
 	validators := []stakingtypes.Validator{
@@ -789,8 +794,8 @@ func TestSetEVMAddressByOperator(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
-	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
-	operatorAddr2 := "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+	operatorAddr1 := testOperatorAddr1
+	operatorAddr2 := testOperatorAddr2
 	operatorAddr3 := "cosmosvaloper1zkue5gwhm5xyv4v5fa9lmcym7cwzaxtnpcl7jl"
 
 	validators := []stakingtypes.Validator{
@@ -902,8 +907,8 @@ func TestGetEVMAddressByOperator(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
-	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
-	operatorAddr2 := "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+	operatorAddr1 := testOperatorAddr1
+	operatorAddr2 := testOperatorAddr2
 
 	validators := []stakingtypes.Validator{
 		{

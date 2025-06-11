@@ -7,9 +7,11 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/collections"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/tellor-io/layer/x/bridge/types"
+
+	"cosmossdk.io/collections"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // CheckValsetSignatureEvidence checks whether malicious validator set signature evidence is valid and should be slashed.
@@ -195,7 +197,6 @@ func (k Keeper) GetCheckpointParamsBefore(ctx context.Context, timestamp uint64)
 		found = true
 		return true, nil // stop after the first (most recent) match
 	})
-
 	if err != nil {
 		return types.ValidatorCheckpointParams{}, err
 	}

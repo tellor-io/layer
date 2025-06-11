@@ -6,11 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/collections"
 	"github.com/stretchr/testify/require"
 	testkeeper "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/types"
+
+	"cosmossdk.io/collections"
 )
 
 func TestCheckValsetSignatureEvidence(t *testing.T) {
@@ -92,6 +93,8 @@ func TestCheckValsetSignatureEvidence(t *testing.T) {
 }
 
 func testRateLimiting(t *testing.T, k keeper.Keeper, ctx context.Context) {
+	t.Helper()
+
 	// get the actual rate limit window from the keeper
 	rateLimitMs, err := k.GetValsetRateLimitWindow(ctx)
 	require.NoError(t, err)

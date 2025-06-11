@@ -50,8 +50,8 @@ func TestMsgRequestAttestations(t *testing.T) {
 	require.ErrorContains(t, err, "invalid")
 	require.Nil(t, response)
 
-	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
-	operatorAddr2 := "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+	operatorAddr1 := testOperatorAddr1
+	operatorAddr2 := testOperatorAddr2
 
 	validators := []stakingtypes.Validator{
 		{

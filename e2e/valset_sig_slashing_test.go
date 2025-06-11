@@ -279,7 +279,7 @@ func TestValsetSignatureSlashing(t *testing.T) {
 }
 
 // encodeValsetCheckpoint replicates the keeper's EncodeValsetCheckpoint function
-func encodeValsetCheckpoint(powerThreshold uint64, validatorTimestamp uint64, validatorSetHash string) ([]byte, error) {
+func encodeValsetCheckpoint(powerThreshold, validatorTimestamp uint64, validatorSetHash string) ([]byte, error) {
 	// define the domain separator for the validator set hash, fixed size 32 bytes
 	VALIDATOR_SET_HASH_DOMAIN_SEPARATOR := []byte("checkpoint")
 	var domainSeparatorFixSize [32]byte
