@@ -49,6 +49,7 @@ var (
 	blockTimeThreshold time.Duration
 	previousBlockTime  time.Time
 	blockTimeMutex     sync.RWMutex
+	lastBlockHeight    uint64
 )
 
 type Params struct {
@@ -488,8 +489,6 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 						aggregateAlertTimestamps = append(aggregateAlertTimestamps, now)
 						aggregateAlertCount++
 					}
-				} else {
-					fmt.Println("Aggregate power is greater than 2/3 of total reporter power")
 				}
 			} else {
 				fmt.Printf("Error parsing aggregate power: %v\n", err)
@@ -523,6 +522,20 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 			return fmt.Errorf("unable to unmarshal message: %w", err)
 		}
 
+		height := data.Result.Data.Value.Block.Header.Height
+		configMutex.RLock()
+		if len(data.Result.Data.Value.ResultFinalizeBlock.Events) > 0 {
+			go processBlockEvents(data.Result.Data.Value.ResultFinalizeBlock.Events, height)
+		}
+		if len(data.Result.Data.Value.ResultFinalizeBlock.TxResults) > 0 {
+			go processTransactionEvents(data.Result.Data.Value.ResultFinalizeBlock.TxResults, height)
+		}
+
+		blockHeight, err := strconv.ParseUint(height, 10, 64)
+		if err != nil {
+			return fmt.Errorf("unable to parse block height: %w", err)
+		}
+
 		// Check block time threshold if it's configured
 		if blockTimeThreshold > 0 {
 			// Parse current block time
@@ -537,9 +550,12 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 			// Skip first block after startup
 			if !prevTime.IsZero() {
 				timeDiff := currentBlockTime.Sub(prevTime)
-				if timeDiff > blockTimeThreshold {
-					message := fmt.Sprintf("**Alert: Abnormally Long Block Time**\nNode: %s\nTime between blocks: %v\nThreshold: %v\nPrevious block time: %v\nCurrent block time: %v",
-						nodeName, timeDiff, blockTimeThreshold, prevTime, currentBlockTime)
+				blockDiff := blockHeight - lastBlockHeight
+				normalizedTimeDiff := time.Duration(float64(timeDiff) / float64(blockDiff))
+				fmt.Println("Normalized time per block: ", normalizedTimeDiff.String())
+				if normalizedTimeDiff > blockTimeThreshold {
+					message := fmt.Sprintf("**Alert: Abnormally Long Block Time**\nNode: %s\nTime between blocks: %v\nNormalized time per block: %v\nThreshold: %v\nPrevious block time: %v\nCurrent block time: %v",
+						nodeName, timeDiff, normalizedTimeDiff, blockTimeThreshold, prevTime, currentBlockTime)
 
 					if eventType, exists := eventTypeMap["block-time-alert"]; exists {
 						discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
@@ -556,15 +572,7 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 			blockTimeMutex.Lock()
 			previousBlockTime = currentBlockTime
 			blockTimeMutex.Unlock()
-		}
-
-		height := data.Result.Data.Value.Block.Header.Height
-		configMutex.RLock()
-		if len(data.Result.Data.Value.ResultFinalizeBlock.Events) > 0 {
-			processBlockEvents(data.Result.Data.Value.ResultFinalizeBlock.Events, height)
-		}
-		if len(data.Result.Data.Value.ResultFinalizeBlock.TxResults) > 0 {
-			processTransactionEvents(data.Result.Data.Value.ResultFinalizeBlock.TxResults, height)
+			lastBlockHeight = blockHeight
 		}
 		configMutex.RUnlock()
 		return nil
@@ -650,7 +658,6 @@ func writeTimestampToCSV(timestamp string) error {
 // Add a helper function to handle events
 func handleEvent(event Event, eventType ConfigType) {
 	if event.Type == "aggregate_report" {
-		fmt.Println("Handling aggregate report")
 		handleAggregateReport(event, eventType)
 	} else {
 		message := fmt.Sprintf("**Event Alert: %s**\n", eventType.AlertName)
@@ -808,6 +815,8 @@ func main() {
 	reporterPowerMutex.Lock()
 	Current_Total_Reporter_Power = 100 // Default value until first update
 	reporterPowerMutex.Unlock()
+
+	lastBlockHeight = 0
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
