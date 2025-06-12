@@ -1563,24 +1563,19 @@ paths:
                   properties:
                     reporter:
                       type: string
-                      format: byte
                       title: reporter is the address of the reporter
-                    query_data:
-                      type: string
-                      format: byte
-                      title: string identifier of the data spec
                     value:
                       type: string
                       title: hex string of the response value
                     timestamp:
                       type: string
-                      format: date-time
+                      format: uint64
                       title: timestamp of when the report was created
                     block_number:
                       type: string
                       format: uint64
                       title: block number of when the report was created
-                  title: MicroReport represents data for a single report
+                  title: MicroReports but with strings to return for queries
                 description: no_stake_reports defines the no stake reports.
               pagination:
                 description: pagination defines the pagination in the response.
@@ -1602,8 +1597,8 @@ paths:
 
                       was set, its value is undefined otherwise
             description: >-
-              QueryGetNoStakeReportsByQIdResponse is the response type for the
-              Query/GetNoStakeReportsByQId RPC method.
+              QueryGetNoStakeReportsByQueryIdResponse is the response type for
+              the Query/GetNoStakeReportsByQueryId RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -1820,24 +1815,19 @@ paths:
                   properties:
                     reporter:
                       type: string
-                      format: byte
                       title: reporter is the address of the reporter
-                    query_data:
-                      type: string
-                      format: byte
-                      title: string identifier of the data spec
                     value:
                       type: string
                       title: hex string of the response value
                     timestamp:
                       type: string
-                      format: date-time
+                      format: uint64
                       title: timestamp of when the report was created
                     block_number:
                       type: string
                       format: uint64
                       title: block number of when the report was created
-                  title: MicroReport represents data for a single report
+                  title: MicroReports but with strings to return for queries
                 description: no_stake_reports defines the no stake reports.
               pagination:
                 description: pagination defines the pagination in the response.

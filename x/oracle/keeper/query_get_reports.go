@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/collections/indexes"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -67,42 +66,85 @@ func (k Querier) GetReportsbyQid(ctx context.Context, req *types.QueryGetReports
 	return &types.QueryMicroReportsResponse{MicroReports: microreports, Pagination: pageRes}, nil
 }
 
+// gets the most recent n reports for a reporter
 func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetReportsbyReporterRequest) (*types.QueryMicroReportsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	reporter := sdk.MustAccAddressFromBech32(req.Reporter)
-
-	// Retrieve the stored reports for the current block height.
-	iter, err := k.keeper.Reports.Indexes.Reporter.MatchExact(ctx, reporter.Bytes())
-	if err != nil {
-		return nil, err
+	pageRes := &query.PageResponse{
+		NextKey: nil,
+		Total:   uint64(0),
 	}
 
-	reports, err := indexes.CollectValues(ctx, k.keeper.Reports, iter)
+	// key is Bytes (reporter address) with bytes encoded max uint64 concatenated (reporterAddr...fff...)
+	buffer := make([]byte, 8)
+	_, err := collections.Uint64Key.Encode(buffer, ^uint64(0))
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, "failed to encode start value")
 	}
 
-	microreports := make([]types.MicroReportStrings, 0)
-	for _, rep := range reports {
-		microReport := types.MicroReportStrings{
-			Reporter:        rep.Reporter,
-			Power:           rep.Power,
-			QueryType:       rep.QueryType,
-			QueryId:         hex.EncodeToString(rep.QueryId),
-			AggregateMethod: rep.AggregateMethod,
-			Value:           rep.Value,
-			Timestamp:       uint64(rep.Timestamp.UnixMilli()),
-			Cyclelist:       rep.Cyclelist,
-			BlockNumber:     rep.BlockNumber,
-			MetaId:          rep.MetaId,
+	// construct key: reporter_address + encoded_uint64
+	key := append(reporter.Bytes(), buffer...)
+	rng := collections.NewPrefixUntilPairRange[[]byte, collections.Triple[[]byte, []byte, uint64]](key)
+	if req.Pagination != nil && req.Pagination.Reverse {
+		rng.Descending()
+	}
+	tripleKeyCodec := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
+	if req.Pagination != nil && len(req.Pagination.Key) > 0 {
+		_, startKey, err := tripleKeyCodec.Decode(req.Pagination.Key)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid pagination key")
 		}
-		microreports = append(microreports, microReport)
+		rng.StartInclusive(startKey)
 	}
 
-	return &types.QueryMicroReportsResponse{MicroReports: microreports}, nil
+	iter, err := k.keeper.Reports.Indexes.Reporter.Iterate(ctx, rng)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	reports := make([]types.MicroReportStrings, 0)
+	for ; iter.Valid(); iter.Next() {
+		pk, err := iter.PrimaryKey()
+		if err != nil {
+			return nil, err
+		}
+
+		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
+			buffer := make([]byte, tripleKeyCodec.Size(pk))
+			_, err = tripleKeyCodec.Encode(buffer, pk)
+			if err != nil {
+				return nil, status.Error(codes.Internal, "failed to encode pagination key")
+			}
+			pageRes.NextKey = buffer
+			break
+		}
+
+		report, err := k.keeper.Reports.Get(ctx, pk)
+		if err != nil {
+			return nil, err
+		}
+		if report.Reporter == reporter.String() {
+			stringReport := types.MicroReportStrings{
+				Reporter:        report.Reporter,
+				Power:           report.Power,
+				QueryType:       report.QueryType,
+				QueryId:         hex.EncodeToString(report.QueryId),
+				AggregateMethod: report.AggregateMethod,
+				Value:           report.Value,
+				Timestamp:       uint64(report.Timestamp.UnixMilli()),
+				Cyclelist:       report.Cyclelist,
+				BlockNumber:     report.BlockNumber,
+				MetaId:          report.MetaId,
+			}
+			reports = append(reports, stringReport)
+		}
+
+	}
+	pageRes.Total = uint64(len(reports))
+
+	return &types.QueryMicroReportsResponse{MicroReports: reports, Pagination: pageRes}, nil
 }
 
 func (k Querier) GetReportsbyReporterQid(ctx context.Context, req *types.QueryGetReportsbyReporterQidRequest) (*types.QueryMicroReportsResponse, error) {

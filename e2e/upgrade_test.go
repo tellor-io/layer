@@ -2,6 +2,8 @@ package e2e_test
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -20,13 +22,13 @@ import (
 )
 
 const (
-	haltHeightDelta    = 10 // will propose upgrade this many blocks in the future
-	blocksAfterUpgrade = 10
+	haltHeightDelta    = 15 // will propose upgrade this many blocks in the future
+	blocksAfterUpgrade = 15
 )
 
 func TestLayerUpgrade(t *testing.T) {
 	t.Skip("needs to switch between binaries to run successfully")
-	ChainUpgradeTest(t, "layer", "layerup", "local", "v2.0.1")
+	ChainUpgradeTest(t, "layer", "layerup", "local", "v5.1.0")
 }
 
 func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVersion, upgradeName string) {
@@ -100,7 +102,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 		_ = ic.Close()
 	})
 	validatorI := chain.Validators[0]
-	_, err := validatorI.AccountKeyBech32(ctx, "validator")
+	valAddr, err := validatorI.AccountKeyBech32(ctx, "validator")
 	require.NoError(t, err)
 
 	_, err = validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val1_moniker", "--keyring-dir", chain.HomeDir())
@@ -111,7 +113,12 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	err = testutil.WaitForBlocks(ctx, 1, validatorI)
 	require.NoError(t, err)
 
+	// value submitted on old version
 	_, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", chain.HomeDir())
+	require.NoError(t, err)
+
+	// also submit a no stake report
+	_, err = validatorI.ExecTx(ctx, "validator", "oracle", "no-stake-report", qData, value, "--keyring-dir", chain.HomeDir())
 	require.NoError(t, err)
 
 	userFunds := math.NewInt(10_000_000_000)
@@ -182,4 +189,62 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	require.NoError(t, err)
 	err = testutil.WaitForBlocks(timeoutCtx, int(blocksAfterUpgrade), chain)
 	require.NoError(t, err, "chain did not produce blocks after upgrade")
+
+	// submit another no stake report
+	_, err = validatorI.ExecTx(ctx, "validator", "oracle", "no-stake-report", qData, value, "--keyring-dir", chain.HomeDir())
+	require.NoError(t, err)
+
+	// query old report by reporter
+	reports, _, err := validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "1")
+	require.NoError(t, err)
+	// unmarshal
+	var reportsRes e2e.QueryMicroReportsResponse
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	fmt.Println("length: ", len(reportsRes.MicroReports))
+	fmt.Println("reports: ", reportsRes)
+	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
+	blockNum, err := strconv.ParseInt(reportsRes.MicroReports[0].BlockNumber, 10, 64)
+	require.NoError(t, err)
+	require.Less(t, blockNum, haltHeight)
+
+	// query old no stake reports by reporter
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "1")
+	require.NoError(t, err)
+	// unmarshal
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	fmt.Println("length: ", len(reportsRes.MicroReports))
+	fmt.Println("reports: ", reportsRes)
+	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
+	blockNum, err = strconv.ParseInt(reportsRes.MicroReports[0].BlockNumber, 10, 64)
+	require.NoError(t, err)
+	require.Less(t, blockNum, haltHeight)
+
+	// query new report by reporter
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit=1", "--page-reverse")
+	require.NoError(t, err)
+	// unmarshal
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	fmt.Println("length: ", len(reportsRes.MicroReports))
+	fmt.Println("reports: ", reportsRes)
+	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
+	blockNum, err = strconv.ParseInt(reportsRes.MicroReports[0].BlockNumber, 10, 64)
+	require.NoError(t, err)
+	require.Greater(t, blockNum, haltHeight)
+
+	// query new no stake reports by reporter
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit=1", "--page-reverse")
+	require.NoError(t, err)
+	// unmarshal
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	fmt.Println("length: ", len(reportsRes.MicroReports))
+	fmt.Println("reports: ", reportsRes)
+	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
+	blockNum, err = strconv.ParseInt(reportsRes.MicroReports[0].BlockNumber, 10, 64)
+	require.NoError(t, err)
+	require.Greater(t, blockNum, haltHeight)
+
 }
