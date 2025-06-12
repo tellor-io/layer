@@ -22,26 +22,19 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install specific heighliner version
-        run: |
-          git clone https://github.com/strangelove-ventures/heighliner.git
-          cd heighliner
-          git checkout v1.7.2
-          go install
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-          echo "heighliner installed to $(go env GOPATH)/bin/heighliner"
-          ls -la $(go env GOPATH)/bin/heighliner
-
       - name: Build Primary Docker Image
-        run: |
-          heighliner --help | head -10
-          heighliner build \
-            --chain layer \
-            --local \
-            --dockerfile Dockerfile \
-            --build-target "make install" \
-            --binaries "/go/bin/layerd" \
-            --tar-export-path ${{ env.TAR_PATH }}
+        uses: strangelove-ventures/heighliner-build-action@v1.0.3
+        with:
+          registry: ""
+          tag: local
+          tar-export-path: ${{ env.TAR_PATH }}
+          platform: linux/amd64
+          git-ref: ${{ github.head_ref }}
+          chain: layer
+          dockerfile: cosmos
+          build-target: make install
+          binaries: |
+            - /go/bin/layerd
 
       - name: Publish Primary Tarball as Artifact
         uses: actions/upload-artifact@v4
@@ -62,25 +55,19 @@ jobs:
           git fetch --all
           git checkout ibc
 
-      - name: Install specific heighliner version
-        run: |
-          git clone https://github.com/strangelove-ventures/heighliner.git
-          cd heighliner
-          git checkout v1.7.2
-          go install
-          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
-          echo "heighliner installed to $(go env GOPATH)/bin/heighliner"
-          ls -la $(go env GOPATH)/bin/heighliner
-
       - name: Build IBC Docker Image
-        run: |
-          heighliner --help | head -10
-          heighliner build \
-            --chain layer-icq \
-            --dockerfile Dockerfile \
-            --build-target "make install" \
-            --binaries "/go/bin/layerd" \
-            --tar-export-path ${{ env.IBC_TAR_PATH }}
+        uses: strangelove-ventures/heighliner-build-action@v1.0.3
+        with:
+          registry: ""
+          tag: local
+          tar-export-path: ${{ env.IBC_TAR_PATH }}
+          platform: linux/amd64
+          git-ref: ibc
+          chain: layer-icq
+          dockerfile: cosmos
+          build-target: make install
+          binaries: |
+            - /go/bin/layerd
 
       - name: Publish IBC Tarball as Artifact
         uses: actions/upload-artifact@v4
