@@ -486,7 +486,7 @@ func TestNoStakeAttestation(t *testing.T) {
 
 	// query no stake reports for each validator
 	for _, v := range validators {
-		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", v.Addr, "--page-limit", "1", "page-reverse")
+		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", v.Addr, "--page-limit", "1", "--page-reverse")
 		require.NoError(err)
 		var nsReportsRes e2e.QueryGetReportersNoStakeReportsResponse
 		err = json.Unmarshal(reports, &nsReportsRes)
