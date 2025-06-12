@@ -22,12 +22,12 @@ import (
 )
 
 const (
-	haltHeightDelta    = 10 // will propose upgrade this many blocks in the future
-	blocksAfterUpgrade = 10
+	haltHeightDelta    = 15 // will propose upgrade this many blocks in the future
+	blocksAfterUpgrade = 15
 )
 
 func TestLayerUpgrade(t *testing.T) {
-	// t.Skip("needs to switch between binaries to run successfully")
+	t.Skip("needs to switch between binaries to run successfully")
 	ChainUpgradeTest(t, "layer", "layerup", "local", "v5.1.0")
 }
 
