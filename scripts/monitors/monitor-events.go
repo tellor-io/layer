@@ -833,36 +833,6 @@ func getProtocol(host string) (wsProtocol, httpProtocol string) {
 	return "wss", "https"
 }
 
-func recoverAndAlert(goroutineName string) {
-	if r := recover(); r != nil {
-		var eventInfo ConfigType
-		if info, exists := eventTypeMap["crash-alert"]; exists {
-			eventInfo = info
-		} else {
-			log.Printf("No crash event type configured, skipping alert for goroutine: %s", goroutineName)
-			panic(r)
-		}
-		message := fmt.Sprintf("**CRITICAL ALERT: Goroutine Crash**\nGoroutine '%s' has crashed with panic: %v\nPlease check the logs and restart the service.", goroutineName, r)
-		discordNotifier := utils.NewDiscordNotifier(eventInfo.WebhookURL)
-		if err := discordNotifier.SendAlert(message); err != nil {
-			log.Printf("Error sending crash Discord alert: %v", err)
-		} else {
-			log.Printf("Sent crash Discord alert for goroutine: %s", goroutineName)
-		}
-		// Re-panic to maintain the original behavior
-		panic(r)
-	}
-}
-
-// getProtocol determines whether to use secure (wss/https) or insecure (ws/http) protocol
-// based on whether the host is localhost or not
-func getProtocol(host string) (wsProtocol, httpProtocol string) {
-	if strings.Contains(host, "localhost") || strings.Contains(host, "127.0.0.1") {
-		return "ws", "http"
-	}
-	return "wss", "https"
-}
-
 func main() {
 	// Parse command line flags
 	flag.StringVar(&rpcURL, "rpc-url", DefaultRpcURL, "RPC URL (default: 127.0.0.1:26657)")
