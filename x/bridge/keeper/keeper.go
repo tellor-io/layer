@@ -34,25 +34,28 @@ type (
 		cdc          codec.BinaryCodec
 		storeService storetypes.KVStoreService
 
-		Schema                       collections.Schema
-		Params                       collections.Item[types.Params]
-		BridgeValset                 collections.Item[types.BridgeValidatorSet]
-		ValidatorCheckpoint          collections.Item[types.ValidatorCheckpoint]
-		WithdrawalId                 collections.Item[types.WithdrawalId]
-		OperatorToEVMAddressMap      collections.Map[string, types.EVMAddress]
-		EVMAddressRegisteredMap      collections.Map[string, types.EVMAddressRegistered]
-		BridgeValsetSignaturesMap    collections.Map[uint64, types.BridgeValsetSignatures]
-		ValidatorCheckpointParamsMap collections.Map[uint64, types.ValidatorCheckpointParams]
-		ValidatorCheckpointIdxMap    collections.Map[uint64, types.CheckpointTimestamp]
-		LatestCheckpointIdx          collections.Item[types.CheckpointIdx]
-		BridgeValsetByTimestampMap   collections.Map[uint64, types.BridgeValidatorSet]
-		ValsetTimestampToIdxMap      collections.Map[uint64, types.CheckpointIdx]
-		AttestSnapshotsByReportMap   collections.Map[[]byte, types.AttestationSnapshots]
-		AttestSnapshotDataMap        collections.Map[[]byte, types.AttestationSnapshotData]
-		SnapshotToAttestationsMap    collections.Map[[]byte, types.OracleAttestations]
-		AttestRequestsByHeightMap    collections.Map[uint64, types.AttestationRequests]
-		DepositIdClaimedMap          collections.Map[uint64, types.DepositClaimed]
-		SnapshotLimit                collections.Item[types.SnapshotLimit] // limit of number of attestation requests per block
+		Schema                           collections.Schema
+		Params                           collections.Item[types.Params]
+		BridgeValset                     collections.Item[types.BridgeValidatorSet]
+		ValidatorCheckpoint              collections.Item[types.ValidatorCheckpoint]
+		WithdrawalId                     collections.Item[types.WithdrawalId]
+		OperatorToEVMAddressMap          collections.Map[string, types.EVMAddress]
+		EVMToOperatorAddressMap          collections.Map[string, types.OperatorAddress]
+		EVMAddressRegisteredMap          collections.Map[string, types.EVMAddressRegistered]
+		BridgeValsetSignaturesMap        collections.Map[uint64, types.BridgeValsetSignatures]
+		ValidatorCheckpointParamsMap     *collections.IndexedMap[uint64, types.ValidatorCheckpointParams, types.ValidatorCheckpointParamsIndexes]
+		ValidatorCheckpointIdxMap        collections.Map[uint64, types.CheckpointTimestamp]
+		LatestCheckpointIdx              collections.Item[types.CheckpointIdx]
+		BridgeValsetByTimestampMap       collections.Map[uint64, types.BridgeValidatorSet]
+		ValsetTimestampToIdxMap          collections.Map[uint64, types.CheckpointIdx]
+		AttestSnapshotsByReportMap       collections.Map[[]byte, types.AttestationSnapshots]
+		AttestSnapshotDataMap            collections.Map[[]byte, types.AttestationSnapshotData]
+		SnapshotToAttestationsMap        collections.Map[[]byte, types.OracleAttestations]
+		AttestRequestsByHeightMap        collections.Map[uint64, types.AttestationRequests]
+		DepositIdClaimedMap              collections.Map[uint64, types.DepositClaimed]
+		SnapshotLimit                    collections.Item[types.SnapshotLimit]                   // limit of number of attestation requests per block
+		AttestationEvidenceSubmitted     collections.Map[collections.Pair[[]byte, uint64], bool] // key: operator address, timestamp
+		ValsetSignatureEvidenceSubmitted collections.Map[collections.Pair[[]byte, uint64], bool] // key: operator address, valset timestamp
 
 		stakingKeeper  types.StakingKeeper
 		oracleKeeper   types.OracleKeeper
@@ -75,33 +78,39 @@ func NewKeeper(
 ) Keeper {
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
-		cdc:                          cdc,
-		storeService:                 storeService,
-		Params:                       collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		BridgeValset:                 collections.NewItem(sb, types.BridgeValsetKey, "bridge_valset", codec.CollValue[types.BridgeValidatorSet](cdc)),
-		ValidatorCheckpoint:          collections.NewItem(sb, types.ValidatorCheckpointKey, "validator_checkpoint", codec.CollValue[types.ValidatorCheckpoint](cdc)),
-		WithdrawalId:                 collections.NewItem(sb, types.WithdrawalIdKey, "withdrawal_id", codec.CollValue[types.WithdrawalId](cdc)),
-		OperatorToEVMAddressMap:      collections.NewMap(sb, types.OperatorToEVMAddressMapKey, "operator_to_evm_address_map", collections.StringKey, codec.CollValue[types.EVMAddress](cdc)),
-		EVMAddressRegisteredMap:      collections.NewMap(sb, types.EVMAddressRegisteredMapKey, "evm_address_registered_map", collections.StringKey, codec.CollValue[types.EVMAddressRegistered](cdc)),
-		BridgeValsetSignaturesMap:    collections.NewMap(sb, types.BridgeValsetSignaturesMapKey, "bridge_valset_signatures_map", collections.Uint64Key, codec.CollValue[types.BridgeValsetSignatures](cdc)),
-		ValidatorCheckpointParamsMap: collections.NewMap(sb, types.ValidatorCheckpointParamsMapKey, "validator_checkpoint_params_map", collections.Uint64Key, codec.CollValue[types.ValidatorCheckpointParams](cdc)),
-		ValidatorCheckpointIdxMap:    collections.NewMap(sb, types.ValidatorCheckpointIdxMapKey, "validator_checkpoint_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointTimestamp](cdc)),
-		LatestCheckpointIdx:          collections.NewItem(sb, types.LatestCheckpointIdxKey, "latest_checkpoint_idx", codec.CollValue[types.CheckpointIdx](cdc)),
-		BridgeValsetByTimestampMap:   collections.NewMap(sb, types.BridgeValsetByTimestampMapKey, "bridge_valset_by_timestamp_map", collections.Uint64Key, codec.CollValue[types.BridgeValidatorSet](cdc)),
-		ValsetTimestampToIdxMap:      collections.NewMap(sb, types.ValsetTimestampToIdxMapKey, "valset_timestamp_to_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointIdx](cdc)),
-		AttestSnapshotsByReportMap:   collections.NewMap(sb, types.AttestSnapshotsByReportMapKey, "attest_snapshots_by_report_map", collections.BytesKey, codec.CollValue[types.AttestationSnapshots](cdc)),
-		AttestSnapshotDataMap:        collections.NewMap(sb, types.AttestSnapshotDataMapKey, "attest_snapshot_data_map", collections.BytesKey, codec.CollValue[types.AttestationSnapshotData](cdc)),
-		SnapshotToAttestationsMap:    collections.NewMap(sb, types.SnapshotToAttestationsMapKey, "snapshot_to_attestations_map", collections.BytesKey, codec.CollValue[types.OracleAttestations](cdc)),
-		AttestRequestsByHeightMap:    collections.NewMap(sb, types.AttestRequestsByHeightMapKey, "attest_requests_by_height_map", collections.Uint64Key, codec.CollValue[types.AttestationRequests](cdc)),
-		DepositIdClaimedMap:          collections.NewMap(sb, types.DepositIdClaimedMapKey, "deposit_id_claimed_map", collections.Uint64Key, codec.CollValue[types.DepositClaimed](cdc)),
-		SnapshotLimit:                collections.NewItem(sb, types.SnapshotLimitKey, "snapshot_limit", codec.CollValue[types.SnapshotLimit](cdc)), // attestation requests per block limit
-
-		stakingKeeper:  stakingKeeper,
-		oracleKeeper:   oracleKeeper,
-		bankKeeper:     bankKeeper,
-		reporterKeeper: reporterKeeper,
-		disputeKeeper:  disputeKeeper,
-		authority:      authority,
+		cdc:                       cdc,
+		storeService:              storeService,
+		Params:                    collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		BridgeValset:              collections.NewItem(sb, types.BridgeValsetKey, "bridge_valset", codec.CollValue[types.BridgeValidatorSet](cdc)),
+		ValidatorCheckpoint:       collections.NewItem(sb, types.ValidatorCheckpointKey, "validator_checkpoint", codec.CollValue[types.ValidatorCheckpoint](cdc)),
+		WithdrawalId:              collections.NewItem(sb, types.WithdrawalIdKey, "withdrawal_id", codec.CollValue[types.WithdrawalId](cdc)),
+		OperatorToEVMAddressMap:   collections.NewMap(sb, types.OperatorToEVMAddressMapKey, "operator_to_evm_address_map", collections.StringKey, codec.CollValue[types.EVMAddress](cdc)),
+		EVMToOperatorAddressMap:   collections.NewMap(sb, types.EVMToOperatorAddressMapKey, "evm_to_operator_address_map", collections.StringKey, codec.CollValue[types.OperatorAddress](cdc)),
+		EVMAddressRegisteredMap:   collections.NewMap(sb, types.EVMAddressRegisteredMapKey, "evm_address_registered_map", collections.StringKey, codec.CollValue[types.EVMAddressRegistered](cdc)),
+		BridgeValsetSignaturesMap: collections.NewMap(sb, types.BridgeValsetSignaturesMapKey, "bridge_valset_signatures_map", collections.Uint64Key, codec.CollValue[types.BridgeValsetSignatures](cdc)),
+		ValidatorCheckpointParamsMap: collections.NewIndexedMap(
+			sb, types.ValidatorCheckpointParamsMapKey, "validator_checkpoint_params_map",
+			collections.Uint64Key, codec.CollValue[types.ValidatorCheckpointParams](cdc),
+			types.NewValidatorCheckpointParamsIndexes(sb),
+		),
+		ValidatorCheckpointIdxMap:        collections.NewMap(sb, types.ValidatorCheckpointIdxMapKey, "validator_checkpoint_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointTimestamp](cdc)),
+		LatestCheckpointIdx:              collections.NewItem(sb, types.LatestCheckpointIdxKey, "latest_checkpoint_idx", codec.CollValue[types.CheckpointIdx](cdc)),
+		BridgeValsetByTimestampMap:       collections.NewMap(sb, types.BridgeValsetByTimestampMapKey, "bridge_valset_by_timestamp_map", collections.Uint64Key, codec.CollValue[types.BridgeValidatorSet](cdc)),
+		ValsetTimestampToIdxMap:          collections.NewMap(sb, types.ValsetTimestampToIdxMapKey, "valset_timestamp_to_idx_map", collections.Uint64Key, codec.CollValue[types.CheckpointIdx](cdc)),
+		AttestSnapshotsByReportMap:       collections.NewMap(sb, types.AttestSnapshotsByReportMapKey, "attest_snapshots_by_report_map", collections.BytesKey, codec.CollValue[types.AttestationSnapshots](cdc)),
+		AttestSnapshotDataMap:            collections.NewMap(sb, types.AttestSnapshotDataMapKey, "attest_snapshot_data_map", collections.BytesKey, codec.CollValue[types.AttestationSnapshotData](cdc)),
+		SnapshotToAttestationsMap:        collections.NewMap(sb, types.SnapshotToAttestationsMapKey, "snapshot_to_attestations_map", collections.BytesKey, codec.CollValue[types.OracleAttestations](cdc)),
+		AttestRequestsByHeightMap:        collections.NewMap(sb, types.AttestRequestsByHeightMapKey, "attest_requests_by_height_map", collections.Uint64Key, codec.CollValue[types.AttestationRequests](cdc)),
+		DepositIdClaimedMap:              collections.NewMap(sb, types.DepositIdClaimedMapKey, "deposit_id_claimed_map", collections.Uint64Key, codec.CollValue[types.DepositClaimed](cdc)),
+		SnapshotLimit:                    collections.NewItem(sb, types.SnapshotLimitKey, "snapshot_limit", codec.CollValue[types.SnapshotLimit](cdc)), // attestation requests per block limit
+		AttestationEvidenceSubmitted:     collections.NewMap(sb, types.AttestationEvidenceSubmittedKey, "attestation_evidence_submitted_map", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), collections.BoolValue),
+		ValsetSignatureEvidenceSubmitted: collections.NewMap(sb, types.ValsetSignatureEvidenceSubmittedKey, "valset_signature_evidence_submitted_map", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), collections.BoolValue),
+		stakingKeeper:                    stakingKeeper,
+		oracleKeeper:                     oracleKeeper,
+		bankKeeper:                       bankKeeper,
+		reporterKeeper:                   reporterKeeper,
+		disputeKeeper:                    disputeKeeper,
+		authority:                        authority,
 	}
 
 	schema, err := sb.Build()
@@ -300,6 +309,63 @@ func (k Keeper) CalculateValidatorSetCheckpoint(
 	validatorTimestamp uint64,
 	validatorSetHash []byte,
 ) ([]byte, error) {
+	checkpoint, err := k.EncodeValsetCheckpoint(ctx, powerThreshold, validatorTimestamp, validatorSetHash)
+	if err != nil {
+		return nil, err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// save checkpoint params
+	checkpointParams := types.ValidatorCheckpointParams{
+		Checkpoint:     checkpoint,
+		ValsetHash:     validatorSetHash,
+		Timestamp:      validatorTimestamp,
+		PowerThreshold: powerThreshold,
+		BlockHeight:    uint64(sdkCtx.BlockHeight()),
+	}
+	err = k.ValidatorCheckpointParamsMap.Set(ctx, validatorTimestamp, checkpointParams)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting validator checkpoint params: ", "error", err)
+		return nil, err
+	}
+
+	// load checkpoint index. if not found, set to 0
+	checkpointIdx := types.CheckpointIdx{}
+	lastCheckpointIdx, err := k.LatestCheckpointIdx.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting latest checkpoint index: ", "error", err)
+		checkpointIdx.Index = 0
+	} else {
+		checkpointIdx.Index = lastCheckpointIdx.Index + 1
+	}
+
+	// save checkpoint index
+	err = k.ValidatorCheckpointIdxMap.Set(ctx, checkpointIdx.Index, types.CheckpointTimestamp{Timestamp: validatorTimestamp})
+	if err != nil {
+		k.Logger(ctx).Info("Error setting validator checkpoint index: ", "error", err)
+		return nil, err
+	}
+
+	// save latest checkpoint index
+	err = k.LatestCheckpointIdx.Set(ctx, checkpointIdx)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting latest checkpoint index: ", "error", err)
+		return nil, err
+	}
+	err = k.ValsetTimestampToIdxMap.Set(ctx, validatorTimestamp, checkpointIdx)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting valset timestamp to index: ", "error", err)
+		return nil, err
+	}
+	return checkpoint, nil
+}
+
+func (k Keeper) EncodeValsetCheckpoint(
+	ctx context.Context,
+	powerThreshold uint64,
+	validatorTimestamp uint64,
+	validatorSetHash []byte,
+) ([]byte, error) {
 	// Define the domain separator for the validator set hash, fixed size 32 bytes
 	VALIDATOR_SET_HASH_DOMAIN_SEPARATOR := []byte("checkpoint")
 	var domainSeparatorFixSize [32]byte
@@ -345,48 +411,6 @@ func (k Keeper) CalculateValidatorSetCheckpoint(
 	}
 
 	checkpoint := crypto.Keccak256(encodedCheckpointData)
-
-	// save checkpoint params
-	checkpointParams := types.ValidatorCheckpointParams{
-		Checkpoint:     checkpoint,
-		ValsetHash:     validatorSetHash,
-		Timestamp:      validatorTimestamp,
-		PowerThreshold: powerThreshold,
-	}
-	err = k.ValidatorCheckpointParamsMap.Set(ctx, validatorTimestamp, checkpointParams)
-	if err != nil {
-		k.Logger(ctx).Info("Error setting validator checkpoint params: ", "error", err)
-		return nil, err
-	}
-
-	// load checkpoint index. if not found, set to 0
-	checkpointIdx := types.CheckpointIdx{}
-	lastCheckpointIdx, err := k.LatestCheckpointIdx.Get(ctx)
-	if err != nil {
-		k.Logger(ctx).Info("Error getting latest checkpoint index: ", "error", err)
-		checkpointIdx.Index = 0
-	} else {
-		checkpointIdx.Index = lastCheckpointIdx.Index + 1
-	}
-
-	// save checkpoint index
-	err = k.ValidatorCheckpointIdxMap.Set(ctx, checkpointIdx.Index, types.CheckpointTimestamp{Timestamp: validatorTimestamp})
-	if err != nil {
-		k.Logger(ctx).Info("Error setting validator checkpoint index: ", "error", err)
-		return nil, err
-	}
-
-	// save latest checkpoint index
-	err = k.LatestCheckpointIdx.Set(ctx, checkpointIdx)
-	if err != nil {
-		k.Logger(ctx).Info("Error setting latest checkpoint index: ", "error", err)
-		return nil, err
-	}
-	err = k.ValsetTimestampToIdxMap.Set(ctx, validatorTimestamp, checkpointIdx)
-	if err != nil {
-		k.Logger(ctx).Info("Error setting valset timestamp to index: ", "error", err)
-		return nil, err
-	}
 	return checkpoint, nil
 }
 
@@ -597,10 +621,14 @@ func (k Keeper) EVMAddressFromSignatures(ctx context.Context, sigA, sigB []byte,
 }
 
 func (k Keeper) TryRecoverAddressWithBothIDs(sig, msgHash []byte) ([]common.Address, error) {
+	if len(sig) != 64 {
+		return []common.Address{}, fmt.Errorf("signature length is not 64")
+	}
 	var addrs []common.Address
 	for _, id := range []byte{0, 1} {
 		sigWithID := append(sig[:64], id)
 		pubKey, err := crypto.SigToPub(msgHash, sigWithID)
+		fmt.Println("pubKey", pubKey)
 		if err != nil {
 			return []common.Address{}, err
 		}
@@ -613,6 +641,16 @@ func (k Keeper) TryRecoverAddressWithBothIDs(sig, msgHash []byte) ([]common.Addr
 func (k Keeper) SetEVMAddressByOperator(ctx context.Context, operatorAddr string, evmAddr []byte) error {
 	evmAddrType := types.EVMAddress{
 		EVMAddress: evmAddr,
+	}
+
+	sdkValAddr, err := sdk.ValAddressFromBech32(operatorAddr)
+	if err != nil {
+		k.Logger(ctx).Info("Error converting operator address to SDK val address", "error", err)
+		return err
+	}
+
+	operatorAddrType := types.OperatorAddress{
+		OperatorAddress: sdkValAddr,
 	}
 
 	// check if the EVM address is already registered
@@ -635,6 +673,12 @@ func (k Keeper) SetEVMAddressByOperator(ctx context.Context, operatorAddr string
 	err = k.OperatorToEVMAddressMap.Set(ctx, operatorAddr, evmAddrType)
 	if err != nil {
 		k.Logger(ctx).Info("Error setting EVM address by operator", "error", err)
+		return err
+	}
+
+	err = k.EVMToOperatorAddressMap.Set(ctx, evmAddressString, operatorAddrType)
+	if err != nil {
+		k.Logger(ctx).Info("Error setting operator address by EVM address", "error", err)
 		return err
 	}
 
@@ -1340,4 +1384,23 @@ func (k Keeper) CreateNoStakeSnapshot(ctx context.Context, report *oracletypes.N
 	}
 	attestRequests.AddRequest(&request)
 	return k.AttestRequestsByHeightMap.Set(ctx, blockHeight, attestRequests)
+}
+
+// GetCheckpointParamsByCheckpoint returns the checkpoint params for a given validator checkpoint
+func (k Keeper) GetCheckpointParamsByCheckpoint(ctx context.Context, checkpoint []byte) (types.ValidatorCheckpointParams, error) {
+	// Use the index to directly find the params for this checkpoint
+	timestamp, err := k.ValidatorCheckpointParamsMap.Indexes.ByCheckpoint.MatchExact(ctx, checkpoint)
+	if err != nil {
+		k.Logger(ctx).Info("Error finding checkpoint in index", "checkpoint", hex.EncodeToString(checkpoint), "error", err)
+		return types.ValidatorCheckpointParams{}, fmt.Errorf("checkpoint not found: %w", err)
+	}
+
+	// Get the checkpoint params
+	params, err := k.ValidatorCheckpointParamsMap.Get(ctx, timestamp)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting validator checkpoint params", "timestamp", timestamp, "error", err)
+		return types.ValidatorCheckpointParams{}, fmt.Errorf("checkpoint params not found: %w", err)
+	}
+
+	return params, nil
 }

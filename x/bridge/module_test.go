@@ -149,6 +149,32 @@ func TestEndBlock(t *testing.T) {
 	})
 	ctx = ctx.WithConsensusParams(sdkCtx.ConsensusParams())
 
+	// create valid cosmosvaloper bech32 addresses
+	// decode existing tellor addresses to get raw bytes, then re-encode with cosmosvaloper prefix
+	tellorAddr1 := "tellor1alcefjzkk37qmfrnel8q4eruyll0pc8arxhxxw"
+	tellorAddr2 := "tellor18lllgejqwydmnakd8mfvfxhw5lqd6kqkvf9m32"
+	tellorAddr3 := "tellor1zkue5gwhm5xyv4v5fa9lmcym7cwzaxtny6jsye"
+
+	// decode tellor addresses to get raw bytes
+	rawBytes1, err := sdk.GetFromBech32(tellorAddr1, "tellor")
+	require.NoError(t, err)
+	rawBytes2, err := sdk.GetFromBech32(tellorAddr2, "tellor")
+	require.NoError(t, err)
+	rawBytes3, err := sdk.GetFromBech32(tellorAddr3, "tellor")
+	require.NoError(t, err)
+
+	// create cosmosvaloper addresses from raw bytes
+	valAddrString1, err := sdk.Bech32ifyAddressBytes("cosmosvaloper", rawBytes1)
+	require.NoError(t, err)
+	valAddrString2, err := sdk.Bech32ifyAddressBytes("cosmosvaloper", rawBytes2)
+	require.NoError(t, err)
+	valAddrString3, err := sdk.Bech32ifyAddressBytes("cosmosvaloper", rawBytes3)
+	require.NoError(t, err)
+
+	t.Log("valAddrString1", valAddrString1)
+	t.Log("valAddrString2", valAddrString2)
+	t.Log("valAddrString3", valAddrString3)
+
 	// create validator set
 	validators := []stakingtypes.Validator{
 		{
@@ -156,14 +182,14 @@ func TestEndBlock(t *testing.T) {
 			Status:          stakingtypes.Bonded,
 			Tokens:          math.NewInt(60 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
-			OperatorAddress: "operatorAddr1",
+			OperatorAddress: valAddrString1,
 		},
 		{
 			Jailed:          false,
 			Status:          stakingtypes.Bonded,
 			Tokens:          math.NewInt(40 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
-			OperatorAddress: "operatorAddr2",
+			OperatorAddress: valAddrString2,
 		},
 	}
 	evmAddresses := make([]types.EVMAddress, len(validators))
@@ -197,7 +223,7 @@ func TestEndBlock(t *testing.T) {
 		AggregatePower: uint64(100),
 	}, nil)
 
-	err := k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{
+	err = k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{
 		Checkpoint: []byte("checkpoint"),
 	})
 	require.NoError(t, err)

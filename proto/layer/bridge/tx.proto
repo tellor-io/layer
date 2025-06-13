@@ -2,20 +2,50 @@ syntax = "proto3";
 
 package layer.bridge;
 
+import "amino/amino.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "layer/bridge/params.proto";
 
 option go_package = "github.com/tellor-io/layer/x/bridge/types";
 
 // Msg defines the Msg service.
 service Msg {
   option (cosmos.msg.v1.service) = true;
+  
+  // UpdateParams defines a (governance) operation for updating the module
+  // parameters. The authority defaults to the x/gov module account.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+  
   rpc RequestAttestations(MsgRequestAttestations) returns (MsgRequestAttestationsResponse);
   rpc WithdrawTokens(MsgWithdrawTokens) returns (MsgWithdrawTokensResponse);
   rpc ClaimDeposits(MsgClaimDepositsRequest) returns (MsgClaimDepositsResponse);
   rpc UpdateSnapshotLimit(MsgUpdateSnapshotLimit) returns (MsgUpdateSnapshotLimitResponse);
+  rpc SubmitAttestationEvidence(MsgSubmitAttestationEvidence) returns (MsgSubmitAttestationEvidenceResponse);
+  rpc SubmitValsetSignatureEvidence(MsgSubmitValsetSignatureEvidence) returns (MsgSubmitValsetSignatureEvidenceResponse);
 }
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "layer/x/bridge/MsgUpdateParams";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the module parameters to update.
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+message MsgUpdateParamsResponse {}
 
 message MsgRequestAttestations {
   option (cosmos.msg.v1.signer) = "creator";
@@ -56,3 +86,32 @@ message MsgUpdateSnapshotLimit {
 }
 
 message MsgUpdateSnapshotLimitResponse {}
+
+message MsgSubmitAttestationEvidence {
+  option (cosmos.msg.v1.signer) = "creator";
+
+  string creator = 1;
+  string query_id = 2;
+  string value = 3;
+  uint64 timestamp = 4;
+  uint64 aggregate_power = 5;
+  uint64 previous_timestamp = 6;
+  uint64 next_timestamp = 7;
+  string valset_checkpoint = 8;
+  uint64 attestation_timestamp = 9;
+  uint64 last_consensus_timestamp = 10;
+  string signature = 11;
+}
+
+message MsgSubmitAttestationEvidenceResponse {}
+
+message MsgSubmitValsetSignatureEvidence {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1;
+  uint64 power_threshold = 2;
+  uint64 valset_timestamp = 3;
+  string valset_hash = 4;
+  string validator_signature = 5;
+}
+
+message MsgSubmitValsetSignatureEvidenceResponse {}

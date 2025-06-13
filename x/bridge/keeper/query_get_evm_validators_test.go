@@ -29,6 +29,9 @@ func TestGetEvmValidators(t *testing.T) {
 	require.ErrorContains(t, err, "failed to get current validators")
 	require.Nil(t, getEvmValsResponse)
 
+	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
+	operatorAddr2 := "cosmosvaloper18lllgejqwydmnakd8mfvfxhw5lqd6kqkftg48v"
+
 	validators := []stakingtypes.Validator{
 		{
 			Jailed:          false,
@@ -36,7 +39,7 @@ func TestGetEvmValidators(t *testing.T) {
 			Tokens:          math.NewInt(200 * 1e6),
 			DelegatorShares: math.LegacyNewDec(200 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator1"},
-			OperatorAddress: "operatorAddr1",
+			OperatorAddress: operatorAddr1,
 		},
 		{
 			Jailed:          false,
@@ -44,7 +47,7 @@ func TestGetEvmValidators(t *testing.T) {
 			Tokens:          math.NewInt(100 * 1e6),
 			DelegatorShares: math.LegacyNewDec(100 * 1e6),
 			Description:     stakingtypes.Description{Moniker: "validator2"},
-			OperatorAddress: "operatorAddr2",
+			OperatorAddress: operatorAddr2,
 		},
 	}
 

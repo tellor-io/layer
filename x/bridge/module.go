@@ -117,8 +117,11 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQuerier(am.keeper))
 
 	m := keeper.NewMigrator(am.keeper)
-	if err := cfg.RegisterMigration("bridge", 2, m.Migrate3to4); err != nil {
+	if err := cfg.RegisterMigration("bridge", 2, m.Migrate2to3); err != nil {
 		panic(fmt.Sprintf("Could not migrate store from v2 to v3: %v", err))
+	}
+	if err := cfg.RegisterMigration("bridge", 3, m.Migrate3to4); err != nil {
+		panic(fmt.Sprintf("Could not migrate store from v3 to v4: %v", err))
 	}
 }
 
@@ -143,7 +146,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion is a sequence number for state-breaking change of the module. It should be incremented on each consensus-breaking change introduced by the module. To avoid wrong/empty versions, the initial version should be set to 1
-func (AppModule) ConsensusVersion() uint64 { return 3 }
+func (AppModule) ConsensusVersion() uint64 { return 4 }
 
 // EndBlock contains the logic that is automatically triggered at the end of each block
 func (am AppModule) EndBlock(ctx context.Context) error {

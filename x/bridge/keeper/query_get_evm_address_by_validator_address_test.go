@@ -23,11 +23,13 @@ func TestGetEvmAddressByValidatorAddress(t *testing.T) {
 	require.ErrorContains(t, err, "failed to get eth address")
 	require.Nil(t, getEvmAddrResponse)
 
-	err = k.SetEVMAddressByOperator(ctx, "operatorAddr1", []byte("validator1"))
+	operatorAddr1 := "cosmosvaloper1alcefjzkk37qmfrnel8q4eruyll0pc8axy6gsg"
+
+	err = k.SetEVMAddressByOperator(ctx, operatorAddr1, []byte("validator1"))
 	require.NoError(t, err)
 
 	getEvmAddrResponse, err = keeper.NewQuerier(k).GetEvmAddressByValidatorAddress(ctx, &types.QueryGetEvmAddressByValidatorAddressRequest{
-		ValidatorAddress: "operatorAddr1",
+		ValidatorAddress: operatorAddr1,
 	})
 	require.NoError(t, err)
 	require.Equal(t, getEvmAddrResponse.EvmAddress, hex.EncodeToString([]byte("validator1")))
