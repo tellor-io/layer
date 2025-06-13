@@ -1,0 +1,24 @@
+If you want to run this as a service use this:
+
+
+[Unit]
+Description=Layer Event Monitor Service
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/layer
+ExecStart=/snap/bin/go run /home/ubuntu/layer/scripts/monitors/monitor-events.go -rpc-url=127.0.0.1:26657 -config=/home/ubuntu/layer/scripts/monitors/event-config.yml -node=rpc
+Restart=always
+RestartSec=10
+StandardOutput=append:/var/log/layer/monitor-events.log
+StandardError=append:/var/log/layer/monitor-events.error.log
+
+[Install]
+WantedBy=multi-user.target
+
+
+If you want to run it locally use something like this after setting up your event config:
+go run ./scripts/monitors/monitor-events.go -rpc-url=node-palmito.tellorlayer.com -config=./scripts/monitors/event-config.yml -node=palmito -block-time-threshold=3s
