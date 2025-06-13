@@ -1,8 +1,6 @@
 module github.com/tellor-io/layer
 
-go 1.22.7
-
-toolchain go1.22.10
+go 1.22.12
 
 require (
 	cosmossdk.io/api v0.7.5
