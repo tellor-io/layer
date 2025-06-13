@@ -271,9 +271,7 @@ func TestCheckAttestationEvidence(t *testing.T) {
 		require.NoError(t, err, "Rate limit check should pass")
 
 		// 5. Set evidence as submitted manually
-		err = k.AttestationEvidenceSubmitted.Set(ctx, collections.Join([]byte(operatorAddress1), evidenceRequest.AttestationTimestamp), types.BoolSubmitted{
-			Submitted: true,
-		})
+		err = k.AttestationEvidenceSubmitted.Set(ctx, collections.Join([]byte(operatorAddress1), evidenceRequest.AttestationTimestamp), true)
 		require.NoError(t, err)
 
 		// 6. Verify evidence was saved
@@ -285,7 +283,7 @@ func TestCheckAttestationEvidence(t *testing.T) {
 		// 7. Verify evidence value
 		evidenceValue, err := k.AttestationEvidenceSubmitted.Get(ctx, evidenceKey)
 		require.NoError(t, err)
-		require.True(t, evidenceValue.Submitted, "Attestation evidence should be marked as submitted")
+		require.True(t, evidenceValue, "Attestation evidence should be marked as submitted")
 	})
 }
 
@@ -356,7 +354,7 @@ func TestCheckRateLimit(t *testing.T) {
 	// Test case 1: First submission should succeed (no rate limiting yet)
 	err = k.AttestationEvidenceSubmitted.Set(ctx,
 		collections.Join(operatorAddr.OperatorAddress, baseTime),
-		types.BoolSubmitted{Submitted: true})
+		true)
 	require.NoError(t, err)
 
 	// Test case 2: Exact same timestamp should fail (duplicate)
@@ -394,7 +392,7 @@ func TestCheckRateLimit(t *testing.T) {
 	// Submit evidence at outsideWindowAfter
 	err = k.AttestationEvidenceSubmitted.Set(ctx,
 		collections.Join(operatorAddr.OperatorAddress, outsideWindowAfter),
-		types.BoolSubmitted{Submitted: true})
+		true)
 	require.NoError(t, err)
 
 	// Now test rate limiting around the new timestamp
@@ -428,7 +426,7 @@ func TestGetAttestationEvidenceSubmittedBefore(t *testing.T) {
 	baseTime := uint64(1000000000)
 	err = k.AttestationEvidenceSubmitted.Set(ctx,
 		collections.Join(operatorAddr.OperatorAddress, baseTime),
-		types.BoolSubmitted{Submitted: true})
+		true)
 	require.NoError(t, err)
 
 	// Search before the baseTime - should find nothing
@@ -448,7 +446,7 @@ func TestGetAttestationEvidenceSubmittedBefore(t *testing.T) {
 	earlierTime := baseTime - 5000
 	err = k.AttestationEvidenceSubmitted.Set(ctx,
 		collections.Join(operatorAddr.OperatorAddress, earlierTime),
-		types.BoolSubmitted{Submitted: true})
+		true)
 	require.NoError(t, err)
 
 	// Should return the most recent (baseTime), not the earlier one
@@ -487,7 +485,7 @@ func TestGetAttestationEvidenceSubmittedAfter(t *testing.T) {
 	baseTime := uint64(1000000000)
 	err = k.AttestationEvidenceSubmitted.Set(ctx,
 		collections.Join(operatorAddr.OperatorAddress, baseTime),
-		types.BoolSubmitted{Submitted: true})
+		true)
 	require.NoError(t, err)
 
 	// Search after the baseTime - should find nothing
@@ -507,7 +505,7 @@ func TestGetAttestationEvidenceSubmittedAfter(t *testing.T) {
 	laterTime := baseTime + 5000
 	err = k.AttestationEvidenceSubmitted.Set(ctx,
 		collections.Join(operatorAddr.OperatorAddress, laterTime),
-		types.BoolSubmitted{Submitted: true})
+		true)
 	require.NoError(t, err)
 
 	// Should return the earliest after search time (baseTime), not the later one
@@ -703,9 +701,7 @@ func TestAttestationSlashingIntegration(t *testing.T) {
 		require.NoError(t, err)
 
 		// 3. Manually set attestation evidence as submitted
-		err = k.AttestationEvidenceSubmitted.Set(ctx, collections.Join([]byte(operatorAddress1), uint64(attestTimestamp)), types.BoolSubmitted{
-			Submitted: true,
-		})
+		err = k.AttestationEvidenceSubmitted.Set(ctx, collections.Join([]byte(operatorAddress1), uint64(attestTimestamp)), true)
 		require.NoError(t, err)
 
 		// 4. Verify evidence was saved
@@ -716,6 +712,6 @@ func TestAttestationSlashingIntegration(t *testing.T) {
 
 		evidenceValue, err := k.AttestationEvidenceSubmitted.Get(ctx, evidenceKey)
 		require.NoError(t, err)
-		require.True(t, evidenceValue.Submitted, "Attestation evidence should be marked as submitted")
+		require.True(t, evidenceValue, "Attestation evidence should be marked as submitted")
 	})
 }

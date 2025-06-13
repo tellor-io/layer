@@ -152,7 +152,7 @@ func (s *IntegrationTestSuite) TestAttestationSlashingIntegration() {
 
 	evidenceValue, err := s.Setup.Bridgekeeper.AttestationEvidenceSubmitted.Get(ctx, evidenceKey)
 	require.NoError(err)
-	require.True(evidenceValue.Submitted, "Evidence should be marked as submitted")
+	require.True(evidenceValue, "Attestation evidence should be marked as submitted")
 }
 
 func (s *IntegrationTestSuite) TestAttestationSlashingRateLimit() {

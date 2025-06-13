@@ -89,9 +89,7 @@ func (k Keeper) CheckValsetSignatureEvidence(ctx context.Context, request types.
 	}
 
 	// record that valset signature evidence was submitted
-	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx, collections.Join(operatorAddr.OperatorAddress, request.ValsetTimestamp), types.BoolSubmitted{
-		Submitted: true,
-	})
+	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx, collections.Join(operatorAddr.OperatorAddress, request.ValsetTimestamp), true)
 	if err != nil {
 		return err
 	}
@@ -160,8 +158,8 @@ func (k Keeper) GetValsetEvidenceSubmittedBefore(ctx context.Context, operatorAd
 	var mostRecent bool
 	var mostRecentTimestamp uint64
 
-	err = k.ValsetSignatureEvidenceSubmitted.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.BoolSubmitted) (stop bool, err error) {
-		mostRecent = value.Submitted
+	err = k.ValsetSignatureEvidenceSubmitted.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value bool) (stop bool, err error) {
+		mostRecent = value
 		mostRecentTimestamp = key.K2()
 		return true, nil // stop after the first (most recent) match
 	})
@@ -184,8 +182,8 @@ func (k Keeper) GetValsetEvidenceSubmittedAfter(ctx context.Context, operatorAdd
 	var oldest bool
 	var oldestTimestamp uint64
 
-	err := k.ValsetSignatureEvidenceSubmitted.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.BoolSubmitted) (stop bool, err error) {
-		oldest = value.Submitted
+	err := k.ValsetSignatureEvidenceSubmitted.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value bool) (stop bool, err error) {
+		oldest = value
 		oldestTimestamp = key.K2()
 		return true, nil
 	})

@@ -93,10 +93,7 @@ func (k Keeper) CheckAttestationEvidence(ctx context.Context, request types.MsgS
 	}
 
 	// set the attestation evidence submitted to true
-
-	err = k.AttestationEvidenceSubmitted.Set(ctx, collections.Join(operatorAddr.OperatorAddress, request.AttestationTimestamp), types.BoolSubmitted{
-		Submitted: true,
-	})
+	err = k.AttestationEvidenceSubmitted.Set(ctx, collections.Join(operatorAddr.OperatorAddress, request.AttestationTimestamp), true)
 	if err != nil {
 		return err
 	}
@@ -254,8 +251,8 @@ func (k Keeper) GetAttestationEvidenceSubmittedBefore(ctx context.Context, opera
 	var mostRecentTimestamp uint64
 
 	// walk through the submissions in descending order to find the most recent one before the timestamp
-	err = k.AttestationEvidenceSubmitted.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.BoolSubmitted) (stop bool, err error) {
-		mostRecent = value.Submitted
+	err = k.AttestationEvidenceSubmitted.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value bool) (stop bool, err error) {
+		mostRecent = value
 		mostRecentTimestamp = key.K2()
 		return true, nil // stop after the first (most recent) match
 	})
@@ -277,8 +274,8 @@ func (k Keeper) GetAttestationEvidenceSubmittedAfter(ctx context.Context, operat
 	var oldest bool
 	var oldestTimestamp uint64
 
-	err := k.AttestationEvidenceSubmitted.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.BoolSubmitted) (stop bool, err error) {
-		oldest = value.Submitted
+	err := k.AttestationEvidenceSubmitted.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value bool) (stop bool, err error) {
+		oldest = value
 		oldestTimestamp = key.K2()
 		return true, nil
 	})

@@ -112,7 +112,7 @@ func TestCheckValsetSignatureRateLimit(t *testing.T) {
 	// Test case 1: First submission should succeed (no rate limiting yet)
 	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx,
 		collections.Join(operatorAddr.OperatorAddress, baseTime),
-		types.BoolSubmitted{Submitted: true})
+		true)
 	require.NoError(t, err)
 
 	// Test case 2: Exact same timestamp should fail (duplicate)
@@ -150,7 +150,7 @@ func TestCheckValsetSignatureRateLimit(t *testing.T) {
 	// Submit evidence at outsideWindowAfter
 	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx,
 		collections.Join(operatorAddr.OperatorAddress, outsideWindowAfter),
-		types.BoolSubmitted{Submitted: true})
+		true)
 	require.NoError(t, err)
 
 	// Now test rate limiting around the new timestamp
@@ -191,7 +191,7 @@ func TestGetValsetEvidenceSubmittedBefore(t *testing.T) {
 	baseTime := uint64(1000000000)
 	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx,
 		collections.Join(operatorAddr.OperatorAddress, baseTime),
-		types.BoolSubmitted{Submitted: true})
+		true)
 	require.NoError(t, err)
 
 	// Search before the baseTime - should find nothing
@@ -211,7 +211,7 @@ func TestGetValsetEvidenceSubmittedBefore(t *testing.T) {
 	earlierTime := baseTime - 5000
 	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx,
 		collections.Join(operatorAddr.OperatorAddress, earlierTime),
-		types.BoolSubmitted{Submitted: true})
+		true)
 	require.NoError(t, err)
 
 	// Should return the most recent (baseTime), not the earlier one
@@ -250,7 +250,7 @@ func TestGetValsetEvidenceSubmittedAfter(t *testing.T) {
 	baseTime := uint64(1000000000)
 	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx,
 		collections.Join(operatorAddr.OperatorAddress, baseTime),
-		types.BoolSubmitted{Submitted: true})
+		true)
 	require.NoError(t, err)
 
 	// Search after the baseTime - should find nothing
@@ -270,7 +270,7 @@ func TestGetValsetEvidenceSubmittedAfter(t *testing.T) {
 	laterTime := baseTime + 5000
 	err = k.ValsetSignatureEvidenceSubmitted.Set(ctx,
 		collections.Join(operatorAddr.OperatorAddress, laterTime),
-		types.BoolSubmitted{Submitted: true})
+		true)
 	require.NoError(t, err)
 
 	// Should return the earliest after search time (baseTime), not the later one

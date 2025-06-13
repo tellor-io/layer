@@ -53,9 +53,9 @@ type (
 		SnapshotToAttestationsMap        collections.Map[[]byte, types.OracleAttestations]
 		AttestRequestsByHeightMap        collections.Map[uint64, types.AttestationRequests]
 		DepositIdClaimedMap              collections.Map[uint64, types.DepositClaimed]
-		SnapshotLimit                    collections.Item[types.SnapshotLimit]                                  // limit of number of attestation requests per block
-		AttestationEvidenceSubmitted     collections.Map[collections.Pair[[]byte, uint64], types.BoolSubmitted] // key: operator address, timestamp
-		ValsetSignatureEvidenceSubmitted collections.Map[collections.Pair[[]byte, uint64], types.BoolSubmitted] // key: operator address, valset timestamp
+		SnapshotLimit                    collections.Item[types.SnapshotLimit]                   // limit of number of attestation requests per block
+		AttestationEvidenceSubmitted     collections.Map[collections.Pair[[]byte, uint64], bool] // key: operator address, timestamp
+		ValsetSignatureEvidenceSubmitted collections.Map[collections.Pair[[]byte, uint64], bool] // key: operator address, valset timestamp
 
 		stakingKeeper  types.StakingKeeper
 		oracleKeeper   types.OracleKeeper
@@ -103,8 +103,8 @@ func NewKeeper(
 		AttestRequestsByHeightMap:        collections.NewMap(sb, types.AttestRequestsByHeightMapKey, "attest_requests_by_height_map", collections.Uint64Key, codec.CollValue[types.AttestationRequests](cdc)),
 		DepositIdClaimedMap:              collections.NewMap(sb, types.DepositIdClaimedMapKey, "deposit_id_claimed_map", collections.Uint64Key, codec.CollValue[types.DepositClaimed](cdc)),
 		SnapshotLimit:                    collections.NewItem(sb, types.SnapshotLimitKey, "snapshot_limit", codec.CollValue[types.SnapshotLimit](cdc)), // attestation requests per block limit
-		AttestationEvidenceSubmitted:     collections.NewMap(sb, types.AttestationEvidenceSubmittedKey, "attestation_evidence_submitted_map", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), codec.CollValue[types.BoolSubmitted](cdc)),
-		ValsetSignatureEvidenceSubmitted: collections.NewMap(sb, types.ValsetSignatureEvidenceSubmittedKey, "valset_signature_evidence_submitted_map", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), codec.CollValue[types.BoolSubmitted](cdc)),
+		AttestationEvidenceSubmitted:     collections.NewMap(sb, types.AttestationEvidenceSubmittedKey, "attestation_evidence_submitted_map", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), collections.BoolValue),
+		ValsetSignatureEvidenceSubmitted: collections.NewMap(sb, types.ValsetSignatureEvidenceSubmittedKey, "valset_signature_evidence_submitted_map", collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key), collections.BoolValue),
 		stakingKeeper:                    stakingKeeper,
 		oracleKeeper:                     oracleKeeper,
 		bankKeeper:                       bankKeeper,

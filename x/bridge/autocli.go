@@ -122,10 +122,8 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "deposit_ids"}, {ProtoField: "timestamps"}},
 				},
 				{
-					RpcMethod:      "UpdateSnapshotLimit",
-					Use:            "update-snapshot-limit [limit]",
-					Short:          "Execute the UpdateSnapshotLimit RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "limit"}},
+					RpcMethod: "UpdateSnapshotLimit",
+					Skip:      true, // skipped because authority gated
 				},
 				{
 					RpcMethod:      "SubmitAttestationEvidence",
@@ -138,6 +136,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:            "submit-valset-signature-evidence [creator] [valset_timestamp] [valset_hash] [power_threshold] [validator_signature]",
 					Short:          "Execute the SubmitValsetSignatureEvidence RPC method",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "creator"}, {ProtoField: "valset_timestamp"}, {ProtoField: "valset_hash"}, {ProtoField: "power_threshold"}, {ProtoField: "validator_signature"}},
+				},
+				{
+					RpcMethod: "UpdateParams",
+					Skip:      true, // skipped because authority gated
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
