@@ -522,6 +522,41 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 			return fmt.Errorf("unable to unmarshal message: %w", err)
 		}
 
+		// Check block time threshold if it's configured
+		if blockTimeThreshold > 0 {
+			// Parse current block time
+			currentBlockTime, err := time.Parse(time.RFC3339Nano, data.Result.Data.Value.Block.Header.Time)
+			if err != nil {
+				return fmt.Errorf("unable to parse block time: %w", err)
+			}
+			blockTimeMutex.RLock()
+			prevTime := previousBlockTime
+			blockTimeMutex.RUnlock()
+
+			// Skip first block after startup
+			if !prevTime.IsZero() {
+				timeDiff := currentBlockTime.Sub(prevTime)
+				if timeDiff > blockTimeThreshold {
+					message := fmt.Sprintf("**Alert: Abnormally Long Block Time**\nNode: %s\nTime between blocks: %v\nThreshold: %v\nPrevious block time: %v\nCurrent block time: %v",
+						nodeName, timeDiff, blockTimeThreshold, prevTime, currentBlockTime)
+
+					if eventType, exists := eventTypeMap["block-time-alert"]; exists {
+						discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
+						if err := discordNotifier.SendAlert(message); err != nil {
+							fmt.Printf("Error sending block time Discord alert: %v\n", err)
+						} else {
+							fmt.Printf("Sent block time Discord alert\n")
+						}
+					}
+				}
+			}
+
+			// Update previous block time
+			blockTimeMutex.Lock()
+			previousBlockTime = currentBlockTime
+			blockTimeMutex.Unlock()
+		}
+
 		height := data.Result.Data.Value.Block.Header.Height
 		configMutex.RLock()
 		if len(data.Result.Data.Value.ResultFinalizeBlock.Events) > 0 {
@@ -766,6 +801,36 @@ func updateTotalReporterPower(ctx context.Context) {
 			backoffDuration = 1 * time.Second
 		}
 	}
+}
+
+func recoverAndAlert(goroutineName string) {
+	if r := recover(); r != nil {
+		var eventInfo ConfigType
+		if info, exists := eventTypeMap["crash-alert"]; exists {
+			eventInfo = info
+		} else {
+			log.Printf("No crash event type configured, skipping alert for goroutine: %s", goroutineName)
+			panic(r)
+		}
+		message := fmt.Sprintf("**CRITICAL ALERT: Goroutine Crash**\nGoroutine '%s' has crashed with panic: %v\nPlease check the logs and restart the service.", goroutineName, r)
+		discordNotifier := utils.NewDiscordNotifier(eventInfo.WebhookURL)
+		if err := discordNotifier.SendAlert(message); err != nil {
+			log.Printf("Error sending crash Discord alert: %v", err)
+		} else {
+			log.Printf("Sent crash Discord alert for goroutine: %s", goroutineName)
+		}
+		// Re-panic to maintain the original behavior
+		panic(r)
+	}
+}
+
+// getProtocol determines whether to use secure (wss/https) or insecure (ws/http) protocol
+// based on whether the host is localhost or not
+func getProtocol(host string) (wsProtocol, httpProtocol string) {
+	if strings.Contains(host, "localhost") || strings.Contains(host, "127.0.0.1") {
+		return "ws", "http"
+	}
+	return "wss", "https"
 }
 
 func recoverAndAlert(goroutineName string) {
