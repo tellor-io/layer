@@ -57,6 +57,7 @@ func OracleKeeper(tb testing.TB) (keeper.Keeper, *mocks.ReporterKeeper, *mocks.R
 	// Initialize params
 	require.Nil(tb, k.SetParams(ctx, types.DefaultParams()))
 	require.Nil(tb, k.GenesisCycleList(ctx, types.InitialCycleList()))
+	k.SetBridgeKeeper(bridgeKeeper)
 
 	return k, reporterKeeper, registryKeeper, accountKeeper, bankKeeper, bridgeKeeper, ctx
 }

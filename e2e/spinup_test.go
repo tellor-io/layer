@@ -137,7 +137,7 @@ func TestLayerFlow(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 
-	res1, _, err := validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddress)
+	res1, _, err := validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddress, "--page-limit", "1")
 	require.NoError(t, err)
 
 	var microReports e2e.ReportsResponse
