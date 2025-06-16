@@ -3,6 +3,7 @@ package bridge
 
 import (
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -14,12 +15,20 @@ import (
 )
 
 var (
-	md_Params protoreflect.MessageDescriptor
+	md_Params                          protoreflect.MessageDescriptor
+	fd_Params_attest_slash_percentage  protoreflect.FieldDescriptor
+	fd_Params_attest_rate_limit_window protoreflect.FieldDescriptor
+	fd_Params_valset_slash_percentage  protoreflect.FieldDescriptor
+	fd_Params_valset_rate_limit_window protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_bridge_params_proto_init()
 	md_Params = File_layer_bridge_params_proto.Messages().ByName("Params")
+	fd_Params_attest_slash_percentage = md_Params.Fields().ByName("attest_slash_percentage")
+	fd_Params_attest_rate_limit_window = md_Params.Fields().ByName("attest_rate_limit_window")
+	fd_Params_valset_slash_percentage = md_Params.Fields().ByName("valset_slash_percentage")
+	fd_Params_valset_rate_limit_window = md_Params.Fields().ByName("valset_rate_limit_window")
 }
 
 var _ protoreflect.Message = (*fastReflection_Params)(nil)
@@ -87,6 +96,30 @@ func (x *fastReflection_Params) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.AttestSlashPercentage != "" {
+		value := protoreflect.ValueOfString(x.AttestSlashPercentage)
+		if !f(fd_Params_attest_slash_percentage, value) {
+			return
+		}
+	}
+	if x.AttestRateLimitWindow != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.AttestRateLimitWindow)
+		if !f(fd_Params_attest_rate_limit_window, value) {
+			return
+		}
+	}
+	if x.ValsetSlashPercentage != "" {
+		value := protoreflect.ValueOfString(x.ValsetSlashPercentage)
+		if !f(fd_Params_valset_slash_percentage, value) {
+			return
+		}
+	}
+	if x.ValsetRateLimitWindow != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.ValsetRateLimitWindow)
+		if !f(fd_Params_valset_rate_limit_window, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -102,6 +135,14 @@ func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, proto
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
+	case "layer.bridge.Params.attest_slash_percentage":
+		return x.AttestSlashPercentage != ""
+	case "layer.bridge.Params.attest_rate_limit_window":
+		return x.AttestRateLimitWindow != uint64(0)
+	case "layer.bridge.Params.valset_slash_percentage":
+		return x.ValsetSlashPercentage != ""
+	case "layer.bridge.Params.valset_rate_limit_window":
+		return x.ValsetRateLimitWindow != uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.Params"))
@@ -118,6 +159,14 @@ func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
+	case "layer.bridge.Params.attest_slash_percentage":
+		x.AttestSlashPercentage = ""
+	case "layer.bridge.Params.attest_rate_limit_window":
+		x.AttestRateLimitWindow = uint64(0)
+	case "layer.bridge.Params.valset_slash_percentage":
+		x.ValsetSlashPercentage = ""
+	case "layer.bridge.Params.valset_rate_limit_window":
+		x.ValsetRateLimitWindow = uint64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.Params"))
@@ -134,6 +183,18 @@ func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
+	case "layer.bridge.Params.attest_slash_percentage":
+		value := x.AttestSlashPercentage
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.Params.attest_rate_limit_window":
+		value := x.AttestRateLimitWindow
+		return protoreflect.ValueOfUint64(value)
+	case "layer.bridge.Params.valset_slash_percentage":
+		value := x.ValsetSlashPercentage
+		return protoreflect.ValueOfString(value)
+	case "layer.bridge.Params.valset_rate_limit_window":
+		value := x.ValsetRateLimitWindow
+		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.Params"))
@@ -154,6 +215,14 @@ func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) pro
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
+	case "layer.bridge.Params.attest_slash_percentage":
+		x.AttestSlashPercentage = value.Interface().(string)
+	case "layer.bridge.Params.attest_rate_limit_window":
+		x.AttestRateLimitWindow = value.Uint()
+	case "layer.bridge.Params.valset_slash_percentage":
+		x.ValsetSlashPercentage = value.Interface().(string)
+	case "layer.bridge.Params.valset_rate_limit_window":
+		x.ValsetRateLimitWindow = value.Uint()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.Params"))
@@ -174,6 +243,14 @@ func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value proto
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Params) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "layer.bridge.Params.attest_slash_percentage":
+		panic(fmt.Errorf("field attest_slash_percentage of message layer.bridge.Params is not mutable"))
+	case "layer.bridge.Params.attest_rate_limit_window":
+		panic(fmt.Errorf("field attest_rate_limit_window of message layer.bridge.Params is not mutable"))
+	case "layer.bridge.Params.valset_slash_percentage":
+		panic(fmt.Errorf("field valset_slash_percentage of message layer.bridge.Params is not mutable"))
+	case "layer.bridge.Params.valset_rate_limit_window":
+		panic(fmt.Errorf("field valset_rate_limit_window of message layer.bridge.Params is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.Params"))
@@ -187,6 +264,14 @@ func (x *fastReflection_Params) Mutable(fd protoreflect.FieldDescriptor) protore
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Params) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "layer.bridge.Params.attest_slash_percentage":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.Params.attest_rate_limit_window":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.bridge.Params.valset_slash_percentage":
+		return protoreflect.ValueOfString("")
+	case "layer.bridge.Params.valset_rate_limit_window":
+		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.Params"))
@@ -256,6 +341,20 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
+		l = len(x.AttestSlashPercentage)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.AttestRateLimitWindow != 0 {
+			n += 1 + runtime.Sov(uint64(x.AttestRateLimitWindow))
+		}
+		l = len(x.ValsetSlashPercentage)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.ValsetRateLimitWindow != 0 {
+			n += 1 + runtime.Sov(uint64(x.ValsetRateLimitWindow))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -284,6 +383,30 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.ValsetRateLimitWindow != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.ValsetRateLimitWindow))
+			i--
+			dAtA[i] = 0x20
+		}
+		if len(x.ValsetSlashPercentage) > 0 {
+			i -= len(x.ValsetSlashPercentage)
+			copy(dAtA[i:], x.ValsetSlashPercentage)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ValsetSlashPercentage)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if x.AttestRateLimitWindow != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.AttestRateLimitWindow))
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.AttestSlashPercentage) > 0 {
+			i -= len(x.AttestSlashPercentage)
+			copy(dAtA[i:], x.AttestSlashPercentage)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.AttestSlashPercentage)))
+			i--
+			dAtA[i] = 0xa
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -334,6 +457,108 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Params: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AttestSlashPercentage", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.AttestSlashPercentage = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AttestRateLimitWindow", wireType)
+				}
+				x.AttestRateLimitWindow = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.AttestRateLimitWindow |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValsetSlashPercentage", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ValsetSlashPercentage = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValsetRateLimitWindow", wireType)
+				}
+				x.ValsetRateLimitWindow = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.ValsetRateLimitWindow |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -387,6 +612,15 @@ type Params struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
+
+	// Percentage of stake to slash for oracle attestation violations (as decimal)
+	AttestSlashPercentage string `protobuf:"bytes,1,opt,name=attest_slash_percentage,json=attestSlashPercentage,proto3" json:"attest_slash_percentage,omitempty"`
+	// Rate limit window in milliseconds for attestation submissions
+	AttestRateLimitWindow uint64 `protobuf:"varint,2,opt,name=attest_rate_limit_window,json=attestRateLimitWindow,proto3" json:"attest_rate_limit_window,omitempty"`
+	// Percentage of stake to slash for validator set signature violations (as decimal)
+	ValsetSlashPercentage string `protobuf:"bytes,3,opt,name=valset_slash_percentage,json=valsetSlashPercentage,proto3" json:"valset_slash_percentage,omitempty"`
+	// Rate limit window in milliseconds for valset signature submissions
+	ValsetRateLimitWindow uint64 `protobuf:"varint,4,opt,name=valset_rate_limit_window,json=valsetRateLimitWindow,proto3" json:"valset_rate_limit_window,omitempty"`
 }
 
 func (x *Params) Reset() {
@@ -409,25 +643,84 @@ func (*Params) Descriptor() ([]byte, []int) {
 	return file_layer_bridge_params_proto_rawDescGZIP(), []int{0}
 }
 
+func (x *Params) GetAttestSlashPercentage() string {
+	if x != nil {
+		return x.AttestSlashPercentage
+	}
+	return ""
+}
+
+func (x *Params) GetAttestRateLimitWindow() uint64 {
+	if x != nil {
+		return x.AttestRateLimitWindow
+	}
+	return 0
+}
+
+func (x *Params) GetValsetSlashPercentage() string {
+	if x != nil {
+		return x.ValsetSlashPercentage
+	}
+	return ""
+}
+
+func (x *Params) GetValsetRateLimitWindow() uint64 {
+	if x != nil {
+		return x.ValsetRateLimitWindow
+	}
+	return 0
+}
+
 var File_layer_bridge_params_proto protoreflect.FileDescriptor
 
 var file_layer_bridge_params_proto_rawDesc = []byte{
 	0x0a, 0x19, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x70,
 	0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x0c, 0x6c, 0x61, 0x79,
 	0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22,
-	0x0e, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x3a, 0x04, 0x98, 0xa0, 0x1f, 0x00, 0x42,
-	0x9d, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x42, 0x0b, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
-	0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f,
-	0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
-	0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x42,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x42, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x42, 0x72, 0x69,
-	0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
-	0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a,
+	0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xe6, 0x03, 0x0a, 0x06, 0x50,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x8b, 0x01, 0x0a, 0x17, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74,
+	0x5f, 0x73, 0x6c, 0x61, 0x73, 0x68, 0x5f, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67,
+	0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x53, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f,
+	0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61,
+	0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63, 0xf2, 0xde, 0x1f, 0x1e,
+	0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x5f, 0x73, 0x6c, 0x61,
+	0x73, 0x68, 0x5f, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x22, 0xd2, 0xb4,
+	0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x52, 0x15, 0x61, 0x74,
+	0x74, 0x65, 0x73, 0x74, 0x53, 0x6c, 0x61, 0x73, 0x68, 0x50, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74,
+	0x61, 0x67, 0x65, 0x12, 0x5c, 0x0a, 0x18, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x5f, 0x72, 0x61,
+	0x74, 0x65, 0x5f, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x5f, 0x77, 0x69, 0x6e, 0x64, 0x6f, 0x77, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x04, 0x42, 0x23, 0xf2, 0xde, 0x1f, 0x1f, 0x79, 0x61, 0x6d, 0x6c, 0x3a,
+	0x22, 0x61, 0x74, 0x74, 0x65, 0x73, 0x74, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x5f, 0x6c, 0x69, 0x6d,
+	0x69, 0x74, 0x5f, 0x77, 0x69, 0x6e, 0x64, 0x6f, 0x77, 0x22, 0x52, 0x15, 0x61, 0x74, 0x74, 0x65,
+	0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x57, 0x69, 0x6e, 0x64, 0x6f,
+	0x77, 0x12, 0x8b, 0x01, 0x0a, 0x17, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x73, 0x6c, 0x61,
+	0x73, 0x68, 0x5f, 0x70, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x53, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c,
+	0x65, 0x67, 0x61, 0x63, 0x79, 0x44, 0x65, 0x63, 0xf2, 0xde, 0x1f, 0x1e, 0x79, 0x61, 0x6d, 0x6c,
+	0x3a, 0x22, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x73, 0x6c, 0x61, 0x73, 0x68, 0x5f, 0x70,
+	0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x22, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x52, 0x15, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74,
+	0x53, 0x6c, 0x61, 0x73, 0x68, 0x50, 0x65, 0x72, 0x63, 0x65, 0x6e, 0x74, 0x61, 0x67, 0x65, 0x12,
+	0x5c, 0x0a, 0x18, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x5f, 0x6c,
+	0x69, 0x6d, 0x69, 0x74, 0x5f, 0x77, 0x69, 0x6e, 0x64, 0x6f, 0x77, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x04, 0x42, 0x23, 0xf2, 0xde, 0x1f, 0x1f, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x76, 0x61, 0x6c,
+	0x73, 0x65, 0x74, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x5f, 0x6c, 0x69, 0x6d, 0x69, 0x74, 0x5f, 0x77,
+	0x69, 0x6e, 0x64, 0x6f, 0x77, 0x22, 0x52, 0x15, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x52, 0x61,
+	0x74, 0x65, 0x4c, 0x69, 0x6d, 0x69, 0x74, 0x57, 0x69, 0x6e, 0x64, 0x6f, 0x77, 0x3a, 0x04, 0x98,
+	0xa0, 0x1f, 0x00, 0x42, 0x9d, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x0b, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
+	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
+	0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79,
+	0x65, 0x72, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65,
+	0x72, 0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72,
+	0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x42, 0x72, 0x69,
+	0x64, 0x67, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

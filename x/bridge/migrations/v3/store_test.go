@@ -177,7 +177,7 @@ func TestMigrateStoreMalformedData(t *testing.T) {
 	// Run migration and expect panic
 	require.Panics(t, func() {
 		m := keeper.NewMigrator(bk)
-		_ = m.Migrate3to4(sdkCtx)
+		_ = m.Migrate2to3(sdkCtx)
 	}, "Migration should panic with malformed data")
 }
 
