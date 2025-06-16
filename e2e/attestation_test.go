@@ -181,7 +181,7 @@ func TestAttestation(t *testing.T) {
 	// check on reports
 	var queryId1, queryId2 string
 	for i, v := range validators {
-		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", v.Addr)
+		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", v.Addr, "--page-limit", "1")
 		require.NoError(err)
 		var reportsRes e2e.QueryMicroReportsResponse
 		err = json.Unmarshal(reports, &reportsRes)
@@ -271,7 +271,7 @@ func TestAttestation(t *testing.T) {
 
 	// get reports by reporter
 	var queryId3 string
-	reports, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[0].Addr)
+	reports, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[0].Addr, "--page-limit", "2")
 	require.NoError(err)
 	var reportsRes e2e.QueryMicroReportsResponse
 	err = json.Unmarshal(reports, &reportsRes)
@@ -486,7 +486,7 @@ func TestNoStakeAttestation(t *testing.T) {
 
 	// query no stake reports for each validator
 	for _, v := range validators {
-		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", v.Addr)
+		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", v.Addr, "--page-limit", "1", "--page-reverse")
 		require.NoError(err)
 		var nsReportsRes e2e.QueryGetReportersNoStakeReportsResponse
 		err = json.Unmarshal(reports, &nsReportsRes)
