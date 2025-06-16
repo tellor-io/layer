@@ -66,7 +66,6 @@ func (s *KeeperTestSuite) SetupTest() {
 
 	// Initialize params
 	s.NoError(s.oracleKeeper.SetParams(s.ctx, types.DefaultParams()))
-	s.oracleKeeper.SetBridgeKeeper(s.bridgeKeeper)
 }
 
 func TestKeeperTestSuite(t *testing.T) {
