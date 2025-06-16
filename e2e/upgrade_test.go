@@ -246,5 +246,4 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	blockNum, err = strconv.ParseInt(reportsRes.MicroReports[0].BlockNumber, 10, 64)
 	require.NoError(t, err)
 	require.Greater(t, blockNum, haltHeight)
-
 }
