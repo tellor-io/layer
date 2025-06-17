@@ -21,6 +21,15 @@ import (
 // CheckAttestationEvidence checks whether malicious attestation evidence is valid and should be slashed. If it is, it will slash
 // the validator.
 func (k Keeper) CheckAttestationEvidence(ctx context.Context, request types.MsgSubmitAttestationEvidence) error {
+	// check whether attestation timestamp is before the penalty time cutoff
+	cutoff, err := k.GetAttestPenaltyTimeCutoff(ctx)
+	if err != nil {
+		return err
+	}
+	if cutoff > 0 && request.AttestationTimestamp < cutoff {
+		return errors.New("attestation timestamp is before penalty cutoff")
+	}
+
 	// check whether attestation timestamp is older than unbonding period.
 	// if it is, we can return an error
 	unbondingPeriod, err := k.stakingKeeper.UnbondingTime(ctx)

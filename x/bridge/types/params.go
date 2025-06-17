@@ -25,6 +25,9 @@ var (
 
 	// Default valset rate limit window: 10 minutes in milliseconds
 	DefaultValsetRateLimitWindow = uint64(10 * 60 * 1000)
+
+	// Default attest penalty time cutoff: 0 (no cutoff)
+	DefaultAttestPenaltyTimeCutoff = uint64(0)
 )
 
 // ParamKeyTable the param key table for launch module
@@ -33,12 +36,13 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(attestSlashPercentage math.LegacyDec, attestRateLimitWindow uint64, valsetSlashPercentage math.LegacyDec, valsetRateLimitWindow uint64) Params {
+func NewParams(attestSlashPercentage math.LegacyDec, attestRateLimitWindow uint64, valsetSlashPercentage math.LegacyDec, valsetRateLimitWindow uint64, attestPenaltyTimeCutoff uint64) Params {
 	return Params{
-		AttestSlashPercentage: attestSlashPercentage,
-		AttestRateLimitWindow: attestRateLimitWindow,
-		ValsetSlashPercentage: valsetSlashPercentage,
-		ValsetRateLimitWindow: valsetRateLimitWindow,
+		AttestSlashPercentage:   attestSlashPercentage,
+		AttestRateLimitWindow:   attestRateLimitWindow,
+		ValsetSlashPercentage:   valsetSlashPercentage,
+		ValsetRateLimitWindow:   valsetRateLimitWindow,
+		AttestPenaltyTimeCutoff: attestPenaltyTimeCutoff,
 	}
 }
 
@@ -49,6 +53,7 @@ func DefaultParams() Params {
 		DefaultAttestRateLimitWindow,
 		DefaultValsetSlashPercentage,
 		DefaultValsetRateLimitWindow,
+		DefaultAttestPenaltyTimeCutoff,
 	)
 }
 
@@ -59,6 +64,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair([]byte("AttestRateLimitWindow"), &p.AttestRateLimitWindow, validateAttestRateLimitWindow),
 		paramtypes.NewParamSetPair([]byte("ValsetSlashPercentage"), &p.ValsetSlashPercentage, validateValsetSlashPercentage),
 		paramtypes.NewParamSetPair([]byte("ValsetRateLimitWindow"), &p.ValsetRateLimitWindow, validateValsetRateLimitWindow),
+		paramtypes.NewParamSetPair([]byte("AttestPenaltyTimeCutoff"), &p.AttestPenaltyTimeCutoff, validateAttestPenaltyTimeCutoff),
 	}
 }
 
@@ -77,6 +83,10 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateValsetRateLimitWindow(p.ValsetRateLimitWindow); err != nil {
+		return err
+	}
+
+	if err := validateAttestPenaltyTimeCutoff(p.AttestPenaltyTimeCutoff); err != nil {
 		return err
 	}
 
@@ -162,5 +172,17 @@ func validateValsetRateLimitWindow(v interface{}) error {
 		return fmt.Errorf("valset rate limit window too large: %d, maximum is %d milliseconds (21 days)", window, 21*24*60*60*1000)
 	}
 
+	return nil
+}
+
+func validateAttestPenaltyTimeCutoff(v interface{}) error {
+	cutoff, ok := v.(uint64)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	// cutoff can be any valid uint64 timestamp (including 0 for no cutoff)
+	// no specific validation needed beyond type checking
+	_ = cutoff
 	return nil
 }
