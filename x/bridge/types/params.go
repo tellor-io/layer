@@ -36,7 +36,7 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(attestSlashPercentage math.LegacyDec, attestRateLimitWindow uint64, valsetSlashPercentage math.LegacyDec, valsetRateLimitWindow uint64, attestPenaltyTimeCutoff uint64) Params {
+func NewParams(attestSlashPercentage math.LegacyDec, attestRateLimitWindow uint64, valsetSlashPercentage math.LegacyDec, valsetRateLimitWindow, attestPenaltyTimeCutoff uint64) Params {
 	return Params{
 		AttestSlashPercentage:   attestSlashPercentage,
 		AttestRateLimitWindow:   attestRateLimitWindow,
