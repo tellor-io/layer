@@ -3,9 +3,9 @@ package keeper
 import (
 	v3 "github.com/tellor-io/layer/x/bridge/migrations/v3"
 	v4 "github.com/tellor-io/layer/x/bridge/migrations/v4"
+	"github.com/tellor-io/layer/x/bridge/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/tellor-io/layer/x/bridge/types"
 )
 
 // Migrator is a struct for handling in-place store migrations.
