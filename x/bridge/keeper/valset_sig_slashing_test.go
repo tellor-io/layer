@@ -21,6 +21,63 @@ func TestCheckValsetSignatureEvidence(t *testing.T) {
 	err := k.Params.Set(ctx, types.DefaultParams())
 	require.NoError(t, err)
 
+	// Test case: Penalty time cutoff
+	t.Run("penalty_time_cutoff", func(t *testing.T) {
+		// Setup unbonding period mock for this test
+		unbondingTime := time.Hour * 24 * 14 // 14 days
+		sk.On("UnbondingTime", ctx).Return(unbondingTime, nil)
+
+		currentTime := ctx.BlockTime()
+		cutoffTimestamp := currentTime.Add(-time.Hour * 24 * 7).UnixMilli()        // 7 days ago
+		beforeCutoffTimestamp := currentTime.Add(-time.Hour * 24 * 10).UnixMilli() // 10 days ago (before cutoff)
+		afterCutoffTimestamp := currentTime.Add(-time.Hour * 24 * 3).UnixMilli()   // 3 days ago (after cutoff)
+
+		// Set the penalty time cutoff parameter
+		params := types.DefaultParams()
+		params.AttestPenaltyTimeCutoff = uint64(cutoffTimestamp)
+		err := k.Params.Set(ctx, params)
+		require.NoError(t, err)
+
+		// Test case 1: Evidence before cutoff should be rejected
+		beforeCutoffRequest := types.MsgSubmitValsetSignatureEvidence{
+			Creator:            "creator",
+			ValsetHash:         "1234abcd",
+			ValidatorSignature: "0123456789abcdef",
+			PowerThreshold:     2,
+			ValsetTimestamp:    uint64(beforeCutoffTimestamp),
+		}
+
+		err = k.CheckValsetSignatureEvidence(ctx, beforeCutoffRequest)
+		require.ErrorContains(t, err, "valset timestamp is before penalty cutoff")
+
+		// Test case 2: Evidence after cutoff should pass cutoff check (but may fail other checks)
+		afterCutoffRequest := types.MsgSubmitValsetSignatureEvidence{
+			Creator:            "creator",
+			ValsetHash:         "1234abcd",
+			ValidatorSignature: "0123456789abcdef",
+			PowerThreshold:     2,
+			ValsetTimestamp:    uint64(afterCutoffTimestamp),
+		}
+
+		err = k.CheckValsetSignatureEvidence(ctx, afterCutoffRequest)
+		// Should not fail with cutoff error, but may fail with other errors
+		require.NotContains(t, err.Error(), "valset timestamp is before penalty cutoff")
+
+		// Test case 3: When cutoff is 0 (disabled), evidence should pass cutoff check
+		paramsNoCutoff := types.DefaultParams()
+		paramsNoCutoff.AttestPenaltyTimeCutoff = 0
+		err = k.Params.Set(ctx, paramsNoCutoff)
+		require.NoError(t, err)
+
+		err = k.CheckValsetSignatureEvidence(ctx, beforeCutoffRequest)
+		// Should not fail with cutoff error when cutoff is disabled
+		require.NotContains(t, err.Error(), "valset timestamp is before penalty cutoff")
+
+		// Reset to default params for other tests
+		err = k.Params.Set(ctx, types.DefaultParams())
+		require.NoError(t, err)
+	})
+
 	// Test case 1: Reject evidence older than unbonding period
 	// Setup unbonding period mock
 	unbondingTime := time.Hour * 24 * 14 // 14 days

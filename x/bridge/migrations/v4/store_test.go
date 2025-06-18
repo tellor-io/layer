@@ -10,6 +10,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/bridge/keeper"
+	v4 "github.com/tellor-io/layer/x/bridge/migrations/v4"
 	"github.com/tellor-io/layer/x/bridge/mocks"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
@@ -43,6 +44,19 @@ func (m *ValidatorCheckpointParamsLegacy) String() string {
 	return proto.CompactTextString(m)
 }
 func (*ValidatorCheckpointParamsLegacy) ProtoMessage() {}
+
+// ParamsLegacy represents the old empty Params struct before v4
+type ParamsLegacy struct {
+	// Empty struct - no parameters existed before v4
+}
+
+var _ proto.Message = &ParamsLegacy{}
+
+func (*ParamsLegacy) Reset() {}
+func (m *ParamsLegacy) String() string {
+	return proto.CompactTextString(m)
+}
+func (*ParamsLegacy) ProtoMessage() {}
 
 func setupTest(t *testing.T) (context.Context, store.KVStoreService, codec.Codec, keeper.Keeper) {
 	t.Helper()
@@ -127,17 +141,14 @@ func createLegacyValidatorCheckpointParams(t *testing.T, ctx context.Context, st
 
 func TestMigrateStore(t *testing.T) {
 	// setup
-	ctx, storeService, cdc, bk := setupTest(t)
+	ctx, storeService, cdc, _ := setupTest(t)
 	legacyData := createLegacyValidatorCheckpointParams(t, ctx, storeService, cdc)
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	// create migrator
-	m := keeper.NewMigrator(bk)
-	// run migration
-	err := m.Migrate3to4(sdkCtx)
+	// run migration directly on store
+	err := v4.MigrateStore(ctx, storeService, cdc)
 	require.NoError(t, err, "Migration should succeed")
 
-	// verify migration results
+	// verify ValidatorCheckpointParams migration results
 	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 	checkpointStore := prefix.NewStore(store, bridgetypes.ValidatorCheckpointParamsMapKey)
 
@@ -169,19 +180,16 @@ func TestMigrateStore(t *testing.T) {
 
 func TestMigrateStoreEmpty(t *testing.T) {
 	// setup with no existing data
-	ctx, _, _, bk := setupTest(t)
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	ctx, storeService, cdc, _ := setupTest(t)
 
 	// run migration on empty store
-	m := keeper.NewMigrator(bk)
-	err := m.Migrate3to4(sdkCtx)
+	err := v4.MigrateStore(ctx, storeService, cdc)
 	require.NoError(t, err, "Migration should succeed even with empty store")
 }
 
 func TestMigrateStoreMalformedData(t *testing.T) {
 	// setup
-	ctx, storeService, _, bk := setupTest(t)
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	ctx, storeService, cdc, _ := setupTest(t)
 
 	// create malformed data
 	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
@@ -190,16 +198,14 @@ func TestMigrateStoreMalformedData(t *testing.T) {
 
 	// run migration and expect panic
 	require.Panics(t, func() {
-		m := keeper.NewMigrator(bk)
-		_ = m.Migrate3to4(sdkCtx)
+		_ = v4.MigrateStore(ctx, storeService, cdc)
 	}, "Migration should panic with malformed data")
 }
 
 func BenchmarkMigrateStore(b *testing.B) {
 	// setup
 	t := &testing.T{}
-	ctx, storeService, cdc, bk := setupTest(t)
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	ctx, storeService, cdc, _ := setupTest(t)
 
 	// create large dataset
 	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
@@ -222,8 +228,7 @@ func BenchmarkMigrateStore(b *testing.B) {
 
 	// run benchmark
 	for i := 0; i < b.N; i++ {
-		m := keeper.NewMigrator(bk)
-		err := m.Migrate3to4(sdkCtx)
+		err := v4.MigrateStore(ctx, storeService, cdc)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -272,4 +277,87 @@ func TestMigrateStoreIntegration(t *testing.T) {
 	retrievedParams, err := bk.ValidatorCheckpointParamsMap.Get(ctx, newParams.Timestamp)
 	require.NoError(t, err, "Should be able to read new data")
 	require.Equal(t, newParams.BlockHeight, retrievedParams.BlockHeight, "BlockHeight should be preserved for new data")
+}
+
+func TestLegacyParamsMigration(t *testing.T) {
+	// Test the migration from legacy empty params to new populated params
+	ctx, storeService, cdc, bk := setupTest(t)
+
+	// 1. Create and store legacy empty params (simulating current chain state)
+	legacyParams := ParamsLegacy{}
+	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
+	paramsKey := bridgetypes.ParamsKey.Bytes()
+	legacyValue, err := cdc.Marshal(&legacyParams)
+	require.NoError(t, err)
+	store.Set(paramsKey, legacyValue)
+
+	// 2. Verify legacy params are stored correctly (empty struct)
+	storedLegacyValue := store.Get(paramsKey)
+	require.NotNil(t, storedLegacyValue, "Legacy params should be stored")
+	var retrievedLegacy ParamsLegacy
+	err = cdc.Unmarshal(storedLegacyValue, &retrievedLegacy)
+	require.NoError(t, err, "Should be able to unmarshal legacy params")
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	// 3. Run migration
+	m := keeper.NewMigrator(bk)
+	err = m.Migrate3to4(sdkCtx)
+	require.NoError(t, err, "Migration should succeed")
+
+	// 4. Verify that new default parameters were set via Collections API
+	migratedParams, err := bk.Params.Get(ctx)
+	require.NoError(t, err, "Should be able to read migrated params")
+
+	// 5. Check all default parameters are set correctly
+	expectedParams := bridgetypes.DefaultParams()
+	require.Equal(t, expectedParams.AttestSlashPercentage, migratedParams.AttestSlashPercentage)
+	require.Equal(t, expectedParams.AttestRateLimitWindow, migratedParams.AttestRateLimitWindow)
+	require.Equal(t, expectedParams.ValsetSlashPercentage, migratedParams.ValsetSlashPercentage)
+	require.Equal(t, expectedParams.ValsetRateLimitWindow, migratedParams.ValsetRateLimitWindow)
+	require.Equal(t, expectedParams.AttestPenaltyTimeCutoff, migratedParams.AttestPenaltyTimeCutoff)
+
+	// 6. Verify runtime KVStore reading method
+	storedNewValue := store.Get(paramsKey)
+	require.NotNil(t, storedNewValue, "New params should be stored")
+	var retrievedNew bridgetypes.Params
+	err = cdc.Unmarshal(storedNewValue, &retrievedNew)
+	require.NoError(t, err, "Should be able to unmarshal new params")
+	require.Equal(t, bridgetypes.DefaultParams(), retrievedNew)
+}
+
+func TestFullMigration(t *testing.T) {
+	// Test the complete migration including both ValidatorCheckpointParams and Params
+	ctx, storeService, cdc, bk := setupTest(t)
+	legacyData := createLegacyValidatorCheckpointParams(t, ctx, storeService, cdc)
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	// Run full migration via keeper
+	m := keeper.NewMigrator(bk)
+	err := m.Migrate3to4(sdkCtx)
+	require.NoError(t, err, "Full migration should succeed")
+
+	// Verify ValidatorCheckpointParams migration
+	for _, data := range legacyData {
+		params, err := bk.ValidatorCheckpointParamsMap.Get(ctx, data.Timestamp)
+		require.NoError(t, err, "Should be able to read migrated checkpoint data")
+
+		require.Equal(t, data.Checkpoint, params.Checkpoint)
+		require.Equal(t, data.ValsetHash, params.ValsetHash)
+		require.Equal(t, data.Timestamp, params.Timestamp)
+		require.Equal(t, data.PowerThreshold, params.PowerThreshold)
+		require.Equal(t, uint64(0), params.BlockHeight, "BlockHeight should be 0 for migrated data")
+	}
+
+	// Verify Params migration via Collections API
+	migratedParams, err := bk.Params.Get(ctx)
+	require.NoError(t, err, "Should be able to read migrated params")
+
+	expectedParams := bridgetypes.DefaultParams()
+	require.Equal(t, expectedParams.AttestSlashPercentage, migratedParams.AttestSlashPercentage)
+	require.Equal(t, expectedParams.AttestRateLimitWindow, migratedParams.AttestRateLimitWindow)
+	require.Equal(t, expectedParams.ValsetSlashPercentage, migratedParams.ValsetSlashPercentage)
+	require.Equal(t, expectedParams.ValsetRateLimitWindow, migratedParams.ValsetRateLimitWindow)
+	require.Equal(t, expectedParams.AttestPenaltyTimeCutoff, migratedParams.AttestPenaltyTimeCutoff)
 }

@@ -60,3 +60,12 @@ func (k Keeper) GetValsetRateLimitWindowDuration(ctx context.Context) (time.Dura
 	}
 	return time.Duration(windowMillis) * time.Millisecond, nil
 }
+
+// GetAttestPenaltyTimeCutoff returns the attestation penalty time cutoff timestamp
+func (k Keeper) GetAttestPenaltyTimeCutoff(ctx context.Context) (uint64, error) {
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return params.AttestPenaltyTimeCutoff, nil
+}
