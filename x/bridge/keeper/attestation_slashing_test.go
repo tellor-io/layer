@@ -35,6 +35,75 @@ func TestCheckAttestationEvidence(t *testing.T) {
 	err := k.Params.Set(ctx, types.DefaultParams())
 	require.NoError(t, err)
 
+	// Test case: Penalty time cutoff
+	t.Run("penalty_time_cutoff", func(t *testing.T) {
+		// Setup unbonding period mock for this test
+		unbondingTime := time.Hour * 24 * 21 // 21 days
+		sk.On("UnbondingTime", ctx).Return(unbondingTime, nil)
+
+		currentTime := ctx.BlockTime()
+		cutoffTimestamp := currentTime.Add(-time.Hour * 24 * 10).UnixMilli()       // 10 days ago
+		beforeCutoffTimestamp := currentTime.Add(-time.Hour * 24 * 15).UnixMilli() // 15 days ago (before cutoff)
+		afterCutoffTimestamp := currentTime.Add(-time.Hour * 24 * 5).UnixMilli()   // 5 days ago (after cutoff)
+
+		// Set the penalty time cutoff parameter
+		params := types.DefaultParams()
+		params.AttestPenaltyTimeCutoff = uint64(cutoffTimestamp)
+		err := k.Params.Set(ctx, params)
+		require.NoError(t, err)
+
+		// Test case 1: Evidence before cutoff should be rejected
+		beforeCutoffRequest := types.MsgSubmitAttestationEvidence{
+			Creator:                "creator",
+			QueryId:                "1234abcd",
+			Value:                  "abcd",
+			Timestamp:              uint64(beforeCutoffTimestamp),
+			AggregatePower:         uint64(10),
+			PreviousTimestamp:      uint64(beforeCutoffTimestamp - 1),
+			NextTimestamp:          uint64(beforeCutoffTimestamp + 1),
+			ValsetCheckpoint:       "abcd1234",
+			AttestationTimestamp:   uint64(beforeCutoffTimestamp),
+			LastConsensusTimestamp: uint64(beforeCutoffTimestamp),
+			Signature:              "0123456789abcdef",
+		}
+
+		err = k.CheckAttestationEvidence(ctx, beforeCutoffRequest)
+		require.ErrorContains(t, err, "attestation timestamp is before penalty cutoff")
+
+		// Test case 2: Evidence after cutoff should pass cutoff check (but may fail other checks)
+		afterCutoffRequest := types.MsgSubmitAttestationEvidence{
+			Creator:                "creator",
+			QueryId:                "1234abcd",
+			Value:                  "abcd",
+			Timestamp:              uint64(afterCutoffTimestamp),
+			AggregatePower:         uint64(10),
+			PreviousTimestamp:      uint64(afterCutoffTimestamp - 1),
+			NextTimestamp:          uint64(afterCutoffTimestamp + 1),
+			ValsetCheckpoint:       "abcd1234",
+			AttestationTimestamp:   uint64(afterCutoffTimestamp),
+			LastConsensusTimestamp: uint64(afterCutoffTimestamp),
+			Signature:              "0123456789abcdef",
+		}
+
+		err = k.CheckAttestationEvidence(ctx, afterCutoffRequest)
+		// Should not fail with cutoff error, but may fail with other errors
+		require.NotContains(t, err.Error(), "attestation timestamp is before penalty cutoff")
+
+		// Test case 3: When cutoff is 0 (disabled), evidence should pass cutoff check
+		paramsNoCutoff := types.DefaultParams()
+		paramsNoCutoff.AttestPenaltyTimeCutoff = 0
+		err = k.Params.Set(ctx, paramsNoCutoff)
+		require.NoError(t, err)
+
+		err = k.CheckAttestationEvidence(ctx, beforeCutoffRequest)
+		// Should not fail with cutoff error when cutoff is disabled
+		require.NotContains(t, err.Error(), "attestation timestamp is before penalty cutoff")
+
+		// Reset to default params for other tests
+		err = k.Params.Set(ctx, types.DefaultParams())
+		require.NoError(t, err)
+	})
+
 	// Test case 1: Reject evidence older than unbonding period
 	// Setup unbonding period mock
 	unbondingTime := time.Hour * 24 * 21 // 21 days

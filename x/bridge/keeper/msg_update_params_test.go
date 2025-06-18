@@ -38,10 +38,11 @@ func TestMsgUpdateParams(t *testing.T) {
 			input: &types.MsgUpdateParams{
 				Authority: "cosmos10d07y265gmmuvt4z0w9aw880jnsr700j6zn9kn",
 				Params: types.Params{
-					AttestSlashPercentage: math.LegacyZeroDec(),
-					AttestRateLimitWindow: 0,
-					ValsetSlashPercentage: math.LegacyZeroDec(),
-					ValsetRateLimitWindow: 0,
+					AttestSlashPercentage:   math.LegacyZeroDec(),
+					AttestRateLimitWindow:   0,
+					ValsetSlashPercentage:   math.LegacyZeroDec(),
+					ValsetRateLimitWindow:   0,
+					AttestPenaltyTimeCutoff: 0,
 				},
 			},
 			expPass: false,
