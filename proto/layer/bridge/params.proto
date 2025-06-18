@@ -36,4 +36,9 @@ message Params {
   uint64 valset_rate_limit_window = 4 [
     (gogoproto.moretags) = "yaml:\"valset_rate_limit_window\""
   ];
+  
+  // Timestamp cutoff before which no attestations or valset signatures can be slashed
+  uint64 attest_penalty_time_cutoff = 5 [
+    (gogoproto.moretags) = "yaml:\"attest_penalty_time_cutoff\""
+  ];
 }

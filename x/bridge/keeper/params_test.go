@@ -18,3 +18,26 @@ func TestGetParams(t *testing.T) {
 	require.NoError(t, err)
 	require.EqualValues(t, params, p)
 }
+
+func TestGetAttestPenaltyTimeCutoff(t *testing.T) {
+	k, _, _, _, _, _, _, ctx := testkeeper.BridgeKeeper(t)
+
+	// Test with default params (should be 0)
+	err := k.Params.Set(ctx, types.DefaultParams())
+	require.NoError(t, err)
+
+	cutoff, err := k.GetAttestPenaltyTimeCutoff(ctx)
+	require.NoError(t, err)
+	require.Equal(t, uint64(0), cutoff)
+
+	// Test with custom cutoff value
+	customCutoff := uint64(1234567890000)
+	params := types.DefaultParams()
+	params.AttestPenaltyTimeCutoff = customCutoff
+	err = k.Params.Set(ctx, params)
+	require.NoError(t, err)
+
+	cutoff, err = k.GetAttestPenaltyTimeCutoff(ctx)
+	require.NoError(t, err)
+	require.Equal(t, customCutoff, cutoff)
+}
