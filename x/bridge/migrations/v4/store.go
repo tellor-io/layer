@@ -33,6 +33,8 @@ func (*ValidatorCheckpointParamsLegacy) ProtoMessage() {}
 // by adding the BlockHeight field with a default value of 0
 func MigrateStore(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
 	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
+
+	// Migrate ValidatorCheckpointParams
 	checkpointStore := prefix.NewStore(store, bridgetypes.ValidatorCheckpointParamsMapKey)
 	iter := checkpointStore.Iterator(nil, nil)
 	defer iter.Close()
