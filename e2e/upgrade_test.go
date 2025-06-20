@@ -27,14 +27,14 @@ const (
 )
 
 func TestLayerUpgrade(t *testing.T) {
-	// t.Skip("needs to switch between binaries to run successfully")
+	t.Skip("needs to switch between binaries to run successfully")
 	ChainUpgradeTest(t, "layer", "layerup", "local", "v5.1.0")
 }
 
 func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVersion, upgradeName string) {
 	t.Helper()
 	if testing.Short() {
-		// t.Skip("skipping in short mode")
+		t.Skip("skipping in short mode")
 	}
 
 	t.Parallel()
