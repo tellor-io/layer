@@ -136,7 +136,6 @@ func (s *KeeperTestSuite) TestUpdateQuery() {
 	ctx := s.ctx
 
 	// set spotprice query at 500ns
-	queryType := "SpotPrice"
 	queryId := utils.QueryIDFromData([]byte("SpotPrice"))
 	require.NoError(k.Query.Set(ctx, collections.Join(queryId, uint64(1)), types.QueryMeta{
 		QueryType:               queryType,
