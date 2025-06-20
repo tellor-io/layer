@@ -318,7 +318,6 @@ func (s *KeeperTestSuite) TestGetReportsByReporter_PaginationEdgeCases() {
 	queryData := qDataBz
 	// reporter reports metaIds 1-3 (fewer than default limit of 10)
 	for i := 1; i < 4; i++ {
-		queryType := "SpotPrice"
 		_ = s.registryKeeper.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil).Once()
 
 		queryMeta := types.QueryMeta{
