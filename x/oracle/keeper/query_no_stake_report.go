@@ -53,8 +53,7 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 	}
 
 	// Determine the limit to use - Default to 10 if no pagination or limit is 0
-	const defaultLimit = 10
-	limit := uint64(defaultLimit)
+	limit := uint64(10)
 	if req.Pagination != nil && req.Pagination.Limit > 0 {
 		limit = req.Pagination.Limit
 	}
