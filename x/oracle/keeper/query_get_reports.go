@@ -15,77 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
-// ReporterRange implements Ranger[collections.Pair[[]byte, collections.Triple[[]byte, []byte, uint64]]] for efficient reporter queries
-type ReporterRange struct {
-	reporterAddr []byte
-	order        collections.Order
-	startKey     *collections.Pair[[]byte, collections.Triple[[]byte, []byte, uint64]]
-}
-
-// NewReporterRange creates a new ReporterRange for the given reporter address
-func NewReporterRange(reporterAddr []byte) *ReporterRange {
-	return &ReporterRange{
-		reporterAddr: reporterAddr,
-		order:        collections.OrderAscending,
-	}
-}
-
-// Descending sets the range to iterate in descending order
-func (r *ReporterRange) Descending() *ReporterRange {
-	r.order = collections.OrderDescending
-	return r
-}
-
-// StartInclusive sets the starting key for pagination
-func (r *ReporterRange) StartInclusive(key collections.Pair[[]byte, collections.Triple[[]byte, []byte, uint64]]) *ReporterRange {
-	r.startKey = &key
-	return r
-}
-
-// RangeValues implements the Ranger interface
-func (r *ReporterRange) RangeValues() (start, end *collections.RangeKey[collections.Pair[[]byte, collections.Triple[[]byte, []byte, uint64]]], order collections.Order, err error) {
-	// The Reporter index key is: reporter_address + encoded_metaId
-	// We want to create a range that covers all entries for this reporter
-
-	// Create start bound: reporter_address + 0 (minimum metaId)
-	startBuffer := make([]byte, 8)
-	_, err = collections.Uint64Key.Encode(startBuffer, 0)
-	if err != nil {
-		return nil, nil, 0, err
-	}
-	startIndexKey := append(r.reporterAddr, startBuffer...)
-
-	// Create end bound: reporter_address + maxUint64 (maximum metaId)
-	endBuffer := make([]byte, 8)
-	_, err = collections.Uint64Key.Encode(endBuffer, ^uint64(0))
-	if err != nil {
-		return nil, nil, 0, err
-	}
-	endIndexKey := append(r.reporterAddr, endBuffer...)
-
-	// For the Pair type, we need to construct pairs with the index key and a dummy primary key
-	// The actual primary key will be determined by the iteration
-	dummyPrimaryKey := collections.Join3([]byte{}, []byte{}, uint64(0))
-
-	var startPair collections.Pair[[]byte, collections.Triple[[]byte, []byte, uint64]]
-	var endPair collections.Pair[[]byte, collections.Triple[[]byte, []byte, uint64]]
-
-	if r.startKey != nil {
-		// Use the provided start key for pagination
-		startPair = *r.startKey
-	} else {
-		// Start from the beginning of this reporter's data
-		startPair = collections.Join(startIndexKey, dummyPrimaryKey)
-	}
-
-	endPair = collections.Join(endIndexKey, dummyPrimaryKey)
-
-	start = collections.RangeKeyExact(startPair)
-	end = collections.RangeKeyNext(endPair) // Next to make it inclusive
-
-	return start, end, r.order, nil
-}
-
 // WithCollectionPaginationTriplePrefix applies a prefix to a collection, whose key is a collection.Triple,
 // being paginated that needs prefixing.
 func WithCollectionPaginationTriplePrefix[K1, K2, K3 any](prefix K1) func(o *query.CollectionsPaginateOptions[collections.Triple[K1, K2, K3]]) {
@@ -155,7 +84,7 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 	}
 
 	// Create custom range for this reporter
-	reporterRange := NewReporterRange(reporter.Bytes())
+	reporterRange := types.NewReporterRange(reporter.Bytes())
 
 	// Apply ordering
 	if req.Pagination != nil && req.Pagination.Reverse {
