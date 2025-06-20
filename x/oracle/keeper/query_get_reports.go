@@ -15,6 +15,77 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
+// ReporterRange implements Ranger[collections.Pair[[]byte, collections.Triple[[]byte, []byte, uint64]]] for efficient reporter queries
+type ReporterRange struct {
+	reporterAddr []byte
+	order        collections.Order
+	startKey     *collections.Pair[[]byte, collections.Triple[[]byte, []byte, uint64]]
+}
+
+// NewReporterRange creates a new ReporterRange for the given reporter address
+func NewReporterRange(reporterAddr []byte) *ReporterRange {
+	return &ReporterRange{
+		reporterAddr: reporterAddr,
+		order:        collections.OrderAscending,
+	}
+}
+
+// Descending sets the range to iterate in descending order
+func (r *ReporterRange) Descending() *ReporterRange {
+	r.order = collections.OrderDescending
+	return r
+}
+
+// StartInclusive sets the starting key for pagination
+func (r *ReporterRange) StartInclusive(key collections.Pair[[]byte, collections.Triple[[]byte, []byte, uint64]]) *ReporterRange {
+	r.startKey = &key
+	return r
+}
+
+// RangeValues implements the Ranger interface
+func (r *ReporterRange) RangeValues() (start, end *collections.RangeKey[collections.Pair[[]byte, collections.Triple[[]byte, []byte, uint64]]], order collections.Order, err error) {
+	// The Reporter index key is: reporter_address + encoded_metaId
+	// We want to create a range that covers all entries for this reporter
+
+	// Create start bound: reporter_address + 0 (minimum metaId)
+	startBuffer := make([]byte, 8)
+	_, err = collections.Uint64Key.Encode(startBuffer, 0)
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	startIndexKey := append(r.reporterAddr, startBuffer...)
+
+	// Create end bound: reporter_address + maxUint64 (maximum metaId)
+	endBuffer := make([]byte, 8)
+	_, err = collections.Uint64Key.Encode(endBuffer, ^uint64(0))
+	if err != nil {
+		return nil, nil, 0, err
+	}
+	endIndexKey := append(r.reporterAddr, endBuffer...)
+
+	// For the Pair type, we need to construct pairs with the index key and a dummy primary key
+	// The actual primary key will be determined by the iteration
+	dummyPrimaryKey := collections.Join3([]byte{}, []byte{}, uint64(0))
+
+	var startPair collections.Pair[[]byte, collections.Triple[[]byte, []byte, uint64]]
+	var endPair collections.Pair[[]byte, collections.Triple[[]byte, []byte, uint64]]
+
+	if r.startKey != nil {
+		// Use the provided start key for pagination
+		startPair = *r.startKey
+	} else {
+		// Start from the beginning of this reporter's data
+		startPair = collections.Join(startIndexKey, dummyPrimaryKey)
+	}
+
+	endPair = collections.Join(endIndexKey, dummyPrimaryKey)
+
+	start = collections.RangeKeyExact(startPair)
+	end = collections.RangeKeyNext(endPair) // Next to make it inclusive
+
+	return start, end, r.order, nil
+}
+
 // WithCollectionPaginationTriplePrefix applies a prefix to a collection, whose key is a collection.Triple,
 // being paginated that needs prefixing.
 func WithCollectionPaginationTriplePrefix[K1, K2, K3 any](prefix K1) func(o *query.CollectionsPaginateOptions[collections.Triple[K1, K2, K3]]) {
@@ -66,9 +137,7 @@ func (k Querier) GetReportsbyQid(ctx context.Context, req *types.QueryGetReports
 	return &types.QueryMicroReportsResponse{MicroReports: microreports, Pagination: pageRes}, nil
 }
 
-// Efficient approach: Use precise range bounds with the Reporter index
-// The Reporter index key is: reporter_address + encoded_metaId
-// We create a range from reporter_address+0 to reporter_address+maxUint64
+// GetReportsbyReporter uses a custom range to efficiently query reports by reporter
 func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetReportsbyReporterRequest) (*types.QueryMicroReportsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -87,39 +156,36 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 		limit = req.Pagination.Limit
 	}
 
-	// Create a range that efficiently targets the reporter's data
-	// The index key is: reporter_address + encoded_metaId
-	// We scan up to reporter_address + maxUint64 to get all entries for this reporter
-	reporterAddr := reporter.Bytes()
-
-	// Create upper bound: reporter_address + maxUint64
-	buffer := make([]byte, 8)
-	_, err = collections.Uint64Key.Encode(buffer, ^uint64(0))
-	if err != nil {
-		return nil, status.Error(codes.Internal, "failed to encode end value")
-	}
-	upperBound := append(reporterAddr, buffer...)
-
-	// Create range using PrefixUntilPairRange
-	rng := collections.NewPrefixUntilPairRange[[]byte, collections.Triple[[]byte, []byte, uint64]](upperBound)
+	// Create custom range for this reporter
+	reporterRange := NewReporterRange(reporter.Bytes())
 
 	// Apply ordering
 	if req.Pagination != nil && req.Pagination.Reverse {
-		rng = rng.Descending()
+		reporterRange = reporterRange.Descending()
 	}
 
 	// Handle pagination start key
-	tripleKeyCodec := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
 	if req.Pagination != nil && len(req.Pagination.Key) > 0 {
+		tripleKeyCodec := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
 		_, startKey, err := tripleKeyCodec.Decode(req.Pagination.Key)
 		if err != nil {
 			return nil, status.Error(codes.InvalidArgument, "invalid pagination key")
 		}
-		rng = rng.StartInclusive(startKey)
+		// Convert the primary key to an index pair for range starting
+		// The index key is constructed from reporter address + metaId
+		size := collections.Uint64Key.Size(startKey.K3())
+		buffer := make([]byte, size)
+		_, err = collections.Uint64Key.Encode(buffer, startKey.K3())
+		if err != nil {
+			return nil, status.Error(codes.Internal, "failed to encode metaId")
+		}
+		indexKey := append(startKey.K2(), buffer...)
+		startPair := collections.Join(indexKey, startKey)
+		reporterRange = reporterRange.StartInclusive(startPair)
 	}
 
-	// Use Iterate method with the range
-	iter, err := k.keeper.Reports.Indexes.Reporter.Iterate(ctx, rng)
+	// Use the custom range with the Reporter index
+	iter, err := k.keeper.Reports.Indexes.Reporter.Iterate(ctx, reporterRange)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
