@@ -22,19 +22,19 @@ import (
 )
 
 const (
-	haltHeightDelta    = 15 // will propose upgrade this many blocks in the future
-	blocksAfterUpgrade = 15
+	haltHeightDelta    = 12 // will propose upgrade this many blocks in the future
+	blocksAfterUpgrade = 12
 )
 
 func TestLayerUpgrade(t *testing.T) {
-	t.Skip("needs to switch between binaries to run successfully")
+	// t.Skip("needs to switch between binaries to run successfully")
 	ChainUpgradeTest(t, "layer", "layerup", "local", "v5.1.0")
 }
 
 func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVersion, upgradeName string) {
 	t.Helper()
 	if testing.Short() {
-		t.Skip("skipping in short mode")
+		// t.Skip("skipping in short mode")
 	}
 
 	t.Parallel()
@@ -208,6 +208,14 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	require.NoError(t, err)
 	require.Less(t, blockNum, haltHeight)
 
+	// query all reports by reporter, should be 2
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr)
+	require.NoError(t, err)
+	// unmarshal
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(reportsRes.MicroReports))
+
 	// query old no stake reports by reporter
 	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "1")
 	require.NoError(t, err)
@@ -221,8 +229,16 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	require.NoError(t, err)
 	require.Less(t, blockNum, haltHeight)
 
+	// query all no stake reports by reporter, should be 2
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr)
+	require.NoError(t, err)
+	// unmarshal
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(reportsRes.MicroReports))
+
 	// query new report by reporter
-	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit=1", "--page-reverse")
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-reverse", "--page-limit", "1")
 	require.NoError(t, err)
 	// unmarshal
 	err = json.Unmarshal(reports, &reportsRes)
@@ -235,7 +251,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	require.Greater(t, blockNum, haltHeight)
 
 	// query new no stake reports by reporter
-	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit=1", "--page-reverse")
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-reverse")
 	require.NoError(t, err)
 	// unmarshal
 	err = json.Unmarshal(reports, &reportsRes)
