@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"flag"
@@ -10,6 +11,8 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"slices"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -43,13 +46,14 @@ var (
 	// Map to store event types we're interested in
 	eventTypeMap map[string]ConfigType
 	// Command line parameters
-	rpcURL             string
-	configFilePath     string
-	nodeName           string
-	blockTimeThreshold time.Duration
-	previousBlockTime  time.Time
-	blockTimeMutex     sync.RWMutex
-	lastBlockHeight    uint64
+	rpcURL              string
+	configFilePath      string
+	nodeName            string
+	blockTimeThreshold  time.Duration
+	previousBlockTime   time.Time
+	blockTimeMutex      sync.RWMutex
+	lastBlockHeight     uint64
+	isTimestampAnalyzer bool
 )
 
 type Params struct {
@@ -677,7 +681,7 @@ func writeTimestampToCSV(timestamp string) error {
 
 	// If file was just created, write the header
 	if !fileExists {
-		if _, err := file.WriteString("new_bridge_validator_set_timestamps\n"); err != nil {
+		if _, err := file.WriteString("validator_set_update_timestamps\n"); err != nil {
 			return fmt.Errorf("error writing header to file: %w", err)
 		}
 	}
@@ -833,11 +837,195 @@ func getProtocol(host string) (wsProtocol, httpProtocol string) {
 	return "wss", "https"
 }
 
+// Add a helper function to analyze validator set update timestamps
+func analyzeValidatorSetUpdates(ctx context.Context) {
+	defer recoverAndAlert("analyzeValidatorSetUpdates")
+
+	// Run analysis once a day at 9 AM
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+
+	// Calculate time until next 9 AM
+	now := time.Now()
+	nextRun := time.Date(now.Year(), now.Month(), now.Day(), 9, 0, 0, 0, now.Location())
+	if now.After(nextRun) {
+		nextRun = nextRun.Add(24 * time.Hour)
+	}
+
+	// Wait until 9 AM
+	time.Sleep(nextRun.Sub(now))
+
+	// Run initial analysis
+	runAnalysis()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			runAnalysis()
+		}
+	}
+}
+
+func runAnalysis() {
+	// Check if CSV file exists
+	_, err := os.Stat("bridge_validator_timestamps.csv")
+	if err != nil {
+		log.Printf("CSV file not found, skipping analysis: %v", err)
+		return
+	}
+
+	// Read CSV file
+	file, err := os.Open("bridge_validator_timestamps.csv")
+	if err != nil {
+		log.Printf("Error opening CSV file: %v", err)
+		return
+	}
+	defer file.Close()
+
+	// Read all lines
+	scanner := bufio.NewScanner(file)
+	var timestamps []time.Time
+
+	// Skip header
+	if scanner.Scan() {
+		header := scanner.Text()
+		if header != "validator_set_update_timestamps" {
+			log.Printf("Unexpected CSV header: %s", header)
+			return
+		}
+	}
+
+	// Parse timestamps
+	for scanner.Scan() {
+		timestampStr := strings.TrimSpace(scanner.Text())
+		if timestampStr == "" {
+			continue
+		}
+
+		// Try different timestamp formats
+		var timestamp time.Time
+		var parseErr error
+
+		// Try RFC3339 format first
+		timestamp, parseErr = time.Parse(time.RFC3339, timestampStr)
+		if parseErr != nil {
+			// Try Unix timestamp
+			if unixTime, err := strconv.ParseInt(timestampStr, 10, 64); err == nil {
+				timestamp = time.Unix(unixTime, 0)
+			} else {
+				log.Printf("Error parsing timestamp %s: %v", timestampStr, parseErr)
+				continue
+			}
+		}
+		sevenDaysAgo := time.Now().Add(-7 * 24 * time.Hour)
+		if timestamp.After(sevenDaysAgo) {
+			timestamps = append(timestamps, timestamp)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Printf("Error reading CSV file: %v", err)
+		return
+	}
+
+	if len(timestamps) < 2 {
+		log.Printf("Not enough timestamps for analysis (need at least 2, got %d)", len(timestamps))
+		return
+	}
+
+	// Sort timestamps
+	sort.Slice(timestamps, func(i, j int) bool {
+		return timestamps[i].Before(timestamps[j])
+	})
+
+	if len(timestamps) < 2 {
+		log.Printf("Not enough recent timestamps for 7-day analysis (need at least 2, got %d)", len(timestamps))
+		return
+	}
+
+	// Calculate time differences
+	var timeDiffs []time.Duration
+	for i := 1; i < len(timestamps); i++ {
+		diff := timestamps[i].Sub(timestamps[i-1])
+		timeDiffs = append(timeDiffs, diff)
+	}
+
+	// Calculate average
+	var totalDuration time.Duration
+	for _, diff := range timeDiffs {
+		totalDuration += diff
+	}
+	averageDuration := totalDuration / time.Duration(len(timeDiffs))
+
+	// Calculate median
+	slices.Sort(timeDiffs)
+	medianDuration := timeDiffs[len(timeDiffs)/2]
+	if len(timeDiffs)%2 == 0 {
+		medianDuration = (timeDiffs[len(timeDiffs)/2-1] + timeDiffs[len(timeDiffs)/2]) / 2
+	}
+
+	// Get latest timestamp
+	latestTimestamp := timestamps[len(timestamps)-1]
+
+	// Format the message
+	message := fmt.Sprintf("**Daily Validator Set Update Analysis**\n\n"+
+		"**Latest Update:** %s\n"+
+		"**Analysis Period:** Last 7 days\n"+
+		"**Total Updates:** %d\n"+
+		"**Average Frequency:** %s\n"+
+		"**Median Frequency:** %s\n"+
+		"**Node:** %s",
+		latestTimestamp.Format("2006-01-02 15:04:05 UTC"),
+		len(timestamps),
+		formatDuration(averageDuration),
+		formatDuration(medianDuration),
+		nodeName)
+
+	// Send Discord alert
+	configMutex.RLock()
+	eventType, exists := eventTypeMap["valset_update_analysis"]
+	configMutex.RUnlock()
+
+	if !exists {
+		log.Printf("No valset_update_analysis event type configured, skipping alert")
+		return
+	}
+
+	discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
+	if err := discordNotifier.SendAlert(message); err != nil {
+		log.Printf("Error sending validator set analysis Discord alert: %v", err)
+	} else {
+		log.Printf("Sent daily validator set analysis Discord alert")
+	}
+}
+
+// Helper function to format duration in a human-readable way
+func formatDuration(d time.Duration) string {
+	if d < time.Minute {
+		return fmt.Sprintf("%.0f seconds", d.Seconds())
+	} else if d < time.Hour {
+		minutes := int(d.Minutes())
+		seconds := int(d.Seconds()) % 60
+		return fmt.Sprintf("%dm %ds", minutes, seconds)
+	} else if d < 24*time.Hour {
+		hours := int(d.Hours())
+		minutes := int(d.Minutes()) % 60
+		return fmt.Sprintf("%dh %dm", hours, minutes)
+	} else {
+		days := int(d.Hours()) / 24
+		hours := int(d.Hours()) % 24
+		return fmt.Sprintf("%dd %dh", days, hours)
+	}
+}
+
 func main() {
 	// Parse command line flags
 	flag.StringVar(&rpcURL, "rpc-url", DefaultRpcURL, "RPC URL (default: 127.0.0.1:26657)")
 	flag.StringVar(&configFilePath, "config", "", "Path to config file")
 	flag.StringVar(&nodeName, "node", "", "Name of the node being monitored")
+	flag.BoolVar(&isTimestampAnalyzer, "timestamp-analyzer", false, "Enable analyzer of validator set update timestamps")
 	flag.DurationVar(&blockTimeThreshold, "block-time-threshold", 0, "Block time threshold (e.g. 5m, 1h). If not set, block time monitoring is disabled.")
 	flag.Parse()
 
@@ -873,6 +1061,12 @@ func main() {
 
 	go MonitorBlockEvents(ctx, &wg)
 	go updateTotalReporterPower(ctx)
+
+	// Start validator set update analyzer if enabled
+	if isTimestampAnalyzer {
+		wg.Add(1)
+		go analyzeValidatorSetUpdates(ctx)
+	}
 
 	wg.Wait()
 	log.Println("Shutdown complete")
