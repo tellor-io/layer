@@ -148,9 +148,7 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 		return nil, status.Error(codes.InvalidArgument, "invalid reporter address")
 	}
 
-	// Determine the limit to use
-	// Default to 10 if no pagination is provided or limit is 0
-	const defaultLimit = 10
+	defaultLimit := 10
 	limit := uint64(defaultLimit)
 	if req.Pagination != nil && req.Pagination.Limit > 0 {
 		limit = req.Pagination.Limit
