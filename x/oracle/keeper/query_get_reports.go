@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"encoding/hex"
+	"math"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -66,102 +67,84 @@ func (k Querier) GetReportsbyQid(ctx context.Context, req *types.QueryGetReports
 	return &types.QueryMicroReportsResponse{MicroReports: microreports, Pagination: pageRes}, nil
 }
 
-// GetReportsbyReporter uses a custom range to efficiently query reports by reporter
+// gets the most recent n reports for a reporter
 func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetReportsbyReporterRequest) (*types.QueryMicroReportsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	reporter, err := sdk.AccAddressFromBech32(req.Reporter)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid reporter address")
+	if req.Pagination == nil {
+		req.Pagination = &query.PageRequest{}
 	}
 
-	limit := uint64(10)
-	if req.Pagination != nil && req.Pagination.Limit > 0 {
-		limit = req.Pagination.Limit
+	defaultLimit := uint64(10)
+	if req.Pagination.Limit == 0 {
+		req.Pagination.Limit = defaultLimit
 	}
 
-	// Create custom range for this reporter
-	reporterRange := types.NewReporterRange(reporter.Bytes())
+	reporter := sdk.MustAccAddressFromBech32(req.Reporter)
 
-	// Apply ordering
-	if req.Pagination != nil && req.Pagination.Reverse {
-		reporterRange = reporterRange.Descending()
-	}
-
-	// Handle pagination start key
-	if req.Pagination != nil && len(req.Pagination.Key) > 0 {
-		tripleKeyCodec := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
-		_, startKey, err := tripleKeyCodec.Decode(req.Pagination.Key)
-		if err != nil {
-			return nil, status.Error(codes.InvalidArgument, "invalid pagination key")
-		}
-		// Convert the primary key to an index pair for range starting
-		// The index key is constructed from reporter address + metaId
-		size := collections.Uint64Key.Size(startKey.K3())
-		buffer := make([]byte, size)
-		_, err = collections.Uint64Key.Encode(buffer, startKey.K3())
-		if err != nil {
-			return nil, status.Error(codes.Internal, "failed to encode metaId")
-		}
-		indexKey := append(startKey.K2(), buffer...)
-		startPair := collections.Join(indexKey, startKey)
-		reporterRange = reporterRange.StartInclusive(startPair)
-	}
-
-	// Use the custom range with the Reporter index
-	iter, err := k.keeper.Reports.Indexes.Reporter.Iterate(ctx, reporterRange)
-	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
-	}
-	defer iter.Close()
-
-	reports := make([]types.MicroReportStrings, 0)
+	// TODO: add max limit to prevent abuse
 	pageRes := &query.PageResponse{
 		NextKey: nil,
 		Total:   uint64(0),
 	}
 
-	for ; iter.Valid(); iter.Next() {
-		pk, err := iter.PrimaryKey()
-		if err != nil {
-			return nil, err
-		}
-
-		// Check if limit is reached
-		if uint64(len(reports)) >= limit {
-			tripleKeyCodec := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
-			buffer := make([]byte, tripleKeyCodec.Size(pk))
-			_, err = tripleKeyCodec.Encode(buffer, pk)
-			if err != nil {
-				return nil, status.Error(codes.Internal, "failed to encode pagination key")
-			}
-			pageRes.NextKey = buffer
-			break
-		}
-
-		report, err := k.keeper.Reports.Get(ctx, pk)
-		if err != nil {
-			return nil, err
-		}
-
-		stringReport := types.MicroReportStrings{
-			Reporter:        report.Reporter,
-			Power:           report.Power,
-			QueryType:       report.QueryType,
-			QueryId:         hex.EncodeToString(report.QueryId),
-			AggregateMethod: report.AggregateMethod,
-			Value:           report.Value,
-			Timestamp:       uint64(report.Timestamp.UnixMilli()),
-			Cyclelist:       report.Cyclelist,
-			BlockNumber:     report.BlockNumber,
-			MetaId:          report.MetaId,
-		}
-		reports = append(reports, stringReport)
+	startKey, endKey, err := k.keeper.GetStartEndKey(ctx, reporter.Bytes(), req.Pagination.Key, req.Pagination.Reverse)
+	rng := types.NewPrefixInBetween[[]byte, collections.Triple[[]byte, []byte, uint64]](startKey, endKey)
+	if req.Pagination.Reverse {
+		rng.Descending()
 	}
 
+	iter, err := k.keeper.Reports.Indexes.Reporter.Iterate(ctx, rng)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	defer iter.Close()
+	if req.Pagination.Offset > 0 {
+	}
+	if !advanceIter(iter, req.Pagination.Offset) {
+		return nil, status.Error(codes.InvalidArgument, "invalid pagination offset")
+	}
+	reports := make([]types.MicroReportStrings, 0)
+	counter := uint64(0)
+	for ; iter.Valid() && counter < req.Pagination.Limit; iter.Next() {
+		fullKey, err := iter.FullKey()
+		if err != nil {
+			return nil, err
+		}
+
+		report, err := k.keeper.Reports.Get(ctx, fullKey.K2())
+		if err != nil {
+			return nil, err
+		}
+		if report.Reporter == reporter.String() {
+			stringReport := types.MicroReportStrings{
+				Reporter:        report.Reporter,
+				Power:           report.Power,
+				QueryType:       report.QueryType,
+				QueryId:         hex.EncodeToString(report.QueryId),
+				AggregateMethod: report.AggregateMethod,
+				Value:           report.Value,
+				Timestamp:       uint64(report.Timestamp.UnixMilli()),
+				Cyclelist:       report.Cyclelist,
+				BlockNumber:     report.BlockNumber,
+				MetaId:          report.MetaId,
+			}
+			reports = append(reports, stringReport)
+		}
+		counter++
+
+	}
+	if iter.Valid() {
+		fullKeys, err := iter.FullKey()
+		if err != nil {
+			return nil, err
+		}
+		pageRes.NextKey = fullKeys.K1()
+	}
 	pageRes.Total = uint64(len(reports))
+
 	return &types.QueryMicroReportsResponse{MicroReports: reports, Pagination: pageRes}, nil
 }
 
@@ -203,4 +186,63 @@ func (k Querier) GetReportsbyReporterQid(ctx context.Context, req *types.QueryGe
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &types.QueryMicroReportsResponse{MicroReports: microreports, Pagination: pageRes}, nil
+}
+
+func (k Keeper) GetStartEndKey(ctx context.Context, reporter, nextKey []byte, reverse bool) (startKey, endKey []byte, err error) {
+	// First page: nextKey is nil, so return full range for this reporter
+	if nextKey == nil {
+		uint64Bytes := make([]byte, 8)
+		// Create startKey: reporter prefix + 0 (lowest possible value)
+		_, err = collections.Uint64Key.Encode(uint64Bytes, uint64(0))
+		if err != nil {
+			return nil, nil, err
+		}
+		startKey = append(reporter, uint64Bytes...)
+		// Create endKey: reporter prefix + MaxUint64 (highest possible value)
+		_, err := collections.Uint64Key.Encode(uint64Bytes, math.MaxUint64)
+		if err != nil {
+			return nil, nil, err
+		}
+		endKey = append(reporter, uint64Bytes...)
+
+		return startKey, endKey, nil
+	} else {
+		// Subsequent pages: nextKey provided from previous page
+		if reverse {
+			// Descending: nextKey becomes END boundary
+			// Start from beginning of reporter range, end at nextKey
+			uint64Bytes := make([]byte, 8)
+			_, err := collections.Uint64Key.Encode(uint64Bytes, uint64(0))
+			if err != nil {
+				return nil, nil, err
+			}
+			startKey = append(reporter, uint64Bytes...)
+			endKey = nextKey // nextKey becomes the upper bound
+		} else {
+			// Ascending: nextKey becomes START boundary
+			// Start from nextKey, go to end of reporter range
+			uint64Bytes := make([]byte, 8)
+			_, err := collections.Uint64Key.Encode(uint64Bytes, math.MaxUint64)
+			if err != nil {
+				return nil, nil, err
+			}
+			startKey = nextKey // nextKey becomes the lower bound
+			endKey = append(reporter, uint64Bytes...)
+		}
+		return startKey, endKey, nil
+	}
+}
+
+func advanceIter[I interface {
+	Next()
+	Valid() bool
+}](iter I, offset uint64,
+) bool {
+	for i := uint64(0); i < offset; i++ {
+		if !iter.Valid() {
+			return false
+		}
+		iter.Next()
+	}
+	return true
 }

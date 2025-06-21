@@ -286,14 +286,15 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	require.Equal(report.MicroReports[1].MetaId, uint64(5))
 	// get next key, should be metaId 4
 	nextKey := report.Pagination.NextKey
-	tripleKeyCodec := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
-	_, decodedNextKey, err := tripleKeyCodec.Decode(nextKey)
+	nextKeyReportIter, err := s.oracleKeeper.Reports.Indexes.Reporter.MatchExact(ctx, nextKey)
+	fmt.Println("err: ", err)
 	require.NoError(err)
-	fmt.Println("decodedNextKey: ", decodedNextKey)
-	nextKeyReport, err := s.oracleKeeper.Reports.Get(ctx, decodedNextKey)
+	pk, err := nextKeyReportIter.PrimaryKey()
+	require.NoError(err)
+	nextKeyReport, err := s.oracleKeeper.Reports.Get(ctx, pk)
+	require.NoError(err)
 	fmt.Println("err: ", err)
 	fmt.Println("report: ", nextKeyReport)
-	require.NoError(err)
 	require.Equal(nextKeyReport.MetaId, uint64(4))
 }
 
