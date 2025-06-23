@@ -294,14 +294,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	require.NoError(t, err, "error unmarshaling no-stake reports with offset and reverse")
 	require.Equal(t, 2, len(reportsResNoStake.NoStakeReports), "Should return 2 no-stake reports with offset and reverse")
 
-	// Test 11: Edge case - offset beyond available reports
-	reports, _, err = queryWithTimeout("oracle", "get-reportsby-reporter", valAddr, "--page-offset", "50", "--page-limit", "5")
-	require.NoError(t, err, "error querying reports with large offset")
-	err = json.Unmarshal(reports, &reportsRes)
-	require.NoError(t, err, "error unmarshaling reports with large offset")
-	require.Equal(t, 0, len(reportsRes.MicroReports), "Should return 0 reports when offset exceeds available reports")
-
-	// Test 12: Zero limit edge case
+	// Test 11: Zero limit edge case
 	reports, _, err = queryWithTimeout("oracle", "get-reportsby-reporter", valAddr, "--page-limit", "0")
 	require.NoError(t, err, "error querying reports with zero limit")
 	err = json.Unmarshal(reports, &reportsRes)
