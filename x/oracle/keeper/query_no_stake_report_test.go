@@ -6,16 +6,16 @@ import (
 	"sort"
 	"time"
 
-	"cosmossdk.io/collections"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/ethereum/go-ethereum/crypto"
-
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
+
+	"cosmossdk.io/collections"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
 func (s *KeeperTestSuite) TestGetReportersNoStakeReports() {
@@ -210,7 +210,7 @@ func (s *KeeperTestSuite) TestGetReportersNoStakeReportsMixQueryIds() {
 			BlockNumber: uint64(i + 1),
 			Value:       fmt.Sprintf("value%d", i+1),
 		})
-		s.oracleKeeper.NoStakeReports.Set(s.ctx, collections.Join(queryId, uint64(timestamp.UnixMilli())), report)
+		require.NoError(s.oracleKeeper.NoStakeReports.Set(s.ctx, collections.Join(queryId, uint64(timestamp.UnixMilli())), report))
 	}
 	response, err := s.queryClient.GetReportersNoStakeReports(s.ctx, &types.QueryGetReportersNoStakeReportsRequest{
 		Reporter: reporter.String(),

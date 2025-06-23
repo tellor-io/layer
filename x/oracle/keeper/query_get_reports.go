@@ -191,7 +191,6 @@ func (k Querier) GetReportsbyReporterQid(ctx context.Context, req *types.QueryGe
 }
 
 func (k Keeper) GetStartEndKey(ctx context.Context, reporter, nextKey []byte, reverse bool) (startKey, endKey []byte, err error) {
-
 	uint64BytesMin := make([]byte, 8)
 	binary.BigEndian.PutUint64(uint64BytesMin, uint64(0))
 	uint64BytesMax := make([]byte, 8)
