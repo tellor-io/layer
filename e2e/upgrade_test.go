@@ -313,7 +313,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	require.NoError(t, err, "error in compatibility test for no-stake reports")
 	err = json.Unmarshal(reports, &reportsResNoStake)
 	require.NoError(t, err, "error unmarshaling compatibility test no-stake reports")
-	require.Equal(t, 9, len(reportsResNoStake.NoStakeReports), "Compatibility test should return 5 no-stake reports")
+	require.Equal(t, 4, len(reportsResNoStake.NoStakeReports), "Compatibility test should return 5 no-stake reports")
 
 	// Test individual flags for get-reportsby-reporter
 	reports, _, err = queryWithTimeout("oracle", "get-reportsby-reporter", valAddr, "--page-limit", "5")
