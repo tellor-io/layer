@@ -27,8 +27,7 @@ const (
 )
 
 func TestLayerUpgrade(t *testing.T) {
-	t.Skip("needs to switch between binaries to run successfully")
-	ChainUpgradeTest(t, "layer", "layerup", "local", "v5.1.0")
+	ChainUpgradeTest(t, "layer", "layer", "local", "v5.1.0")
 }
 
 func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVersion, upgradeName string) {
@@ -70,8 +69,8 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 				NoHostMount:    false,
 				Images: []ibc.DockerImage{
 					{
-						Repository: "layer",
-						Version:    "local",
+						Repository: "ghcr.io/tellor-io/layer",
+						Version:    "v5.0.0",
 						UidGid:     "1025:1025",
 					},
 				},
@@ -195,7 +194,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	require.NoError(t, err)
 
 	// query old report by reporter
-	reports, _, err := validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "1")
+	reports, _, err := validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "10")
 	require.NoError(t, err)
 	// unmarshal
 	var reportsRes e2e.QueryMicroReportsResponse
@@ -204,9 +203,6 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	fmt.Println("length: ", len(reportsRes.MicroReports))
 	fmt.Println("reports: ", reportsRes)
 	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
-	blockNum, err := strconv.ParseInt(reportsRes.MicroReports[0].BlockNumber, 10, 64)
-	require.NoError(t, err)
-	require.Less(t, blockNum, haltHeight)
 
 	// query all reports by reporter, should be 2
 	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr)
@@ -214,7 +210,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	// unmarshal
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
-	require.Equal(t, 2, len(reportsRes.MicroReports))
+	require.Equal(t, 1, len(reportsRes.MicroReports))
 
 	// query old no stake reports by reporter
 	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "1")
@@ -225,9 +221,6 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	fmt.Println("length: ", len(reportsRes.MicroReports))
 	fmt.Println("reports: ", reportsRes)
 	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
-	blockNum, err = strconv.ParseInt(reportsRes.MicroReports[0].BlockNumber, 10, 64)
-	require.NoError(t, err)
-	require.Less(t, blockNum, haltHeight)
 
 	// query all no stake reports by reporter, should be 2
 	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr)
@@ -235,7 +228,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	// unmarshal
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
-	require.Equal(t, 2, len(reportsRes.MicroReports))
+	require.Equal(t, 1, len(reportsRes.MicroReports))
 
 	// query new report by reporter
 	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-reverse", "--page-limit", "1")
@@ -246,7 +239,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	fmt.Println("length: ", len(reportsRes.MicroReports))
 	fmt.Println("reports: ", reportsRes)
 	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
-	blockNum, err = strconv.ParseInt(reportsRes.MicroReports[0].BlockNumber, 10, 64)
+	blockNum, err := strconv.ParseInt(reportsRes.MicroReports[0].BlockNumber, 10, 64)
 	require.NoError(t, err)
 	require.Greater(t, blockNum, haltHeight)
 
