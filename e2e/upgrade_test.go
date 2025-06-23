@@ -104,22 +104,22 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	valAddr, err := validatorI.AccountKeyBech32(ctx, "validator")
 	require.NoError(t, err)
 
+	// create reporter, submit 1 normal report, submit 1 no stake report
 	_, err = validatorI.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val1_moniker", "--keyring-dir", chain.HomeDir())
 	require.NoError(t, err)
-
+	// tip
 	_, _, err = validatorI.Exec(ctx, validatorI.TxCommand("validator", "oracle", "tip", qData, "1000000loya", "--keyring-dir", chain.HomeDir()), validatorI.Chain.Config().Env)
 	require.NoError(t, err)
 	err = testutil.WaitForBlocks(ctx, 1, validatorI)
 	require.NoError(t, err)
-
-	// value submitted on old version
+	// submit-value
 	_, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", chain.HomeDir())
 	require.NoError(t, err)
-
-	// also submit a no stake report
+	// submit-value
 	_, err = validatorI.ExecTx(ctx, "validator", "oracle", "no-stake-report", qData, value, "--keyring-dir", chain.HomeDir())
 	require.NoError(t, err)
 
+	// create user to send upgrade tx
 	userFunds := math.NewInt(10_000_000_000)
 	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, chain)
 	chainUser := users[0]
@@ -137,15 +137,18 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 		Height:      haltHeight,
 	}
 
+	// submit upgrade proposal
 	upgradeTx, err := chain.UpgradeProposal(ctx, chainUser.KeyName(), proposal)
 	require.NoError(t, err, "error submitting software upgrade proposal tx")
 
 	propId, err := strconv.ParseUint(upgradeTx.ProposalID, 10, 64)
 	require.NoError(t, err, "failed to convert proposal ID to uint64")
 
+	// vote on proposal
 	err = chain.VoteOnProposalAllValidators(ctx, propId, cosmos.ProposalVoteYes)
 	require.NoError(t, err, "failed to submit votes")
 
+	// get proposal status
 	_, err = cosmos.PollForProposalStatus(ctx, chain, height, height+haltHeightDelta, propId, govv1beta1.StatusPassed)
 	require.NoError(t, err, "proposal status did not change to passed in expected number of blocks")
 
@@ -179,22 +182,24 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 
 	timeoutCtx, timeoutCtxCancel = context.WithTimeout(ctx, time.Second*45)
 	defer timeoutCtxCancel()
+
+	// submit 1 normal report, submit 1 no stake report
+	// tip
 	_, _, err = validatorI.Exec(ctx, validatorI.TxCommand("validator", "oracle", "tip", qData, "1000000loya", "--keyring-dir", chain.HomeDir()), validatorI.Chain.Config().Env)
 	require.NoError(t, err)
 	err = testutil.WaitForBlocks(ctx, 1, validatorI)
 	require.NoError(t, err)
-
+	// submit-value
 	_, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", chain.HomeDir())
 	require.NoError(t, err)
 	err = testutil.WaitForBlocks(timeoutCtx, int(blocksAfterUpgrade), chain)
 	require.NoError(t, err, "chain did not produce blocks after upgrade")
-
-	// submit another no stake report
+	// no stake report
 	_, err = validatorI.ExecTx(ctx, "validator", "oracle", "no-stake-report", qData, value, "--keyring-dir", chain.HomeDir())
 	require.NoError(t, err)
 
-	// query old report by reporter
-	reports, _, err := validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "10")
+	// get reports by reporter w/o pagination, should only get the new one
+	reports, _, err := validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr)
 	require.NoError(t, err)
 	// unmarshal
 	var reportsRes e2e.QueryMicroReportsResponse
@@ -203,56 +208,77 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	fmt.Println("length: ", len(reportsRes.MicroReports))
 	fmt.Println("reports: ", reportsRes)
 	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
+	require.Greater(t, reportsRes.MicroReports[0].BlockNumber, haltHeight)
+	require.Equal(t, len(reportsRes.MicroReports), 1)
 
-	// query all reports by reporter, should be 2
-	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr)
+	// query reports by reportewr with all flags, should only get the new one
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "10", "--page-reverse", "--page-offset", "1")
 	require.NoError(t, err)
 	// unmarshal
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(reportsRes.MicroReports))
 
-	// query old no stake reports by reporter
-	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "1")
-	require.NoError(t, err)
-	// unmarshal
-	err = json.Unmarshal(reports, &reportsRes)
-	require.NoError(t, err)
-	fmt.Println("length: ", len(reportsRes.MicroReports))
-	fmt.Println("reports: ", reportsRes)
-	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
-
-	// query all no stake reports by reporter, should be 2
+	// query no stake reports by reporter
 	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr)
 	require.NoError(t, err)
 	// unmarshal
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
+	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
+	require.Equal(t, len(reportsRes.MicroReports), 1)
+
+	// query no stake reports with all flags
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "10", "--page-reverse", "--page-offset", "1")
+	require.NoError(t, err)
+	// unmarshal
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
 	require.Equal(t, 1, len(reportsRes.MicroReports))
 
-	// query new report by reporter
-	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-reverse", "--page-limit", "1")
+	// Test individual flags for get-reportsby-reporter
+	// query reports by reporter with only page-limit flag
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "5")
 	require.NoError(t, err)
-	// unmarshal
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
-	fmt.Println("length: ", len(reportsRes.MicroReports))
-	fmt.Println("reports: ", reportsRes)
-	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
-	blockNum, err := strconv.ParseInt(reportsRes.MicroReports[0].BlockNumber, 10, 64)
-	require.NoError(t, err)
-	require.Greater(t, blockNum, haltHeight)
+	require.Equal(t, 1, len(reportsRes.MicroReports))
 
-	// query new no stake reports by reporter
+	// query reports by reporter with only page-reverse flag
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-reverse")
+	require.NoError(t, err)
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(reportsRes.MicroReports))
+
+	// query reports by reporter with only page-offset flag
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-offset", "0")
+	require.NoError(t, err)
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(reportsRes.MicroReports))
+
+	// Test individual flags for get-reporters-no-stake-reports
+	// query no stake reports by reporter with only page-reverse flag
 	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-reverse")
 	require.NoError(t, err)
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(reportsRes.MicroReports))
+
+	// query no stake reports by reporter with only page-offset flag
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-offset", "0")
+	require.NoError(t, err)
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(reportsRes.MicroReports))
+
+	// query no stake reports by reporter with only page-limit flag
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "1")
+	require.NoError(t, err)
 	// unmarshal
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
-	fmt.Println("length: ", len(reportsRes.MicroReports))
-	fmt.Println("reports: ", reportsRes)
 	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
-	blockNum, err = strconv.ParseInt(reportsRes.MicroReports[0].BlockNumber, 10, 64)
-	require.NoError(t, err)
-	require.Greater(t, blockNum, haltHeight)
+	require.Equal(t, len(reportsRes.MicroReports), 1)
 }
