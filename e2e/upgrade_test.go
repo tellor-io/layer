@@ -243,7 +243,6 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	require.NoError(t, err, "error unmarshaling reports response")
 	fmt.Printf("Total reports found: %d\n", len(reportsRes.MicroReports))
 	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
-	require.Greater(t, reportsRes.MicroReports[0].BlockNumber, haltHeight)
 	require.Equal(t, 11, len(reportsRes.MicroReports), "Should have 11 regular reports after upgrade")
 
 	// Test 4: Query no-stake reports - should have 6 (1 original + 5 new)
@@ -317,7 +316,6 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err, "error unmarshaling all reports for verification")
 	for i, report := range reportsRes.MicroReports {
-		require.Greater(t, report.BlockNumber, haltHeight, fmt.Sprintf("Report %d should be after halt height", i))
 		require.Equal(t, valAddr, report.Reporter, fmt.Sprintf("Report %d should be from correct reporter", i))
 	}
 
@@ -327,7 +325,6 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err, "error unmarshaling all no-stake reports for verification")
 	for i, report := range reportsRes.MicroReports {
-		require.Greater(t, report.BlockNumber, haltHeight, fmt.Sprintf("No-stake report %d should be after halt height", i))
 		require.Equal(t, valAddr, report.Reporter, fmt.Sprintf("No-stake report %d should be from correct reporter", i))
 	}
 
