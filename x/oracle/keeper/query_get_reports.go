@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 	"math"
 
@@ -91,6 +92,9 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 	}
 
 	startKey, endKey, err := k.keeper.GetStartEndKey(ctx, reporter.Bytes(), req.Pagination.Key, req.Pagination.Reverse)
+	if err != nil {
+		return nil, status.Error(codes.Internal, "failed to get start and end keys: "+err.Error())
+	}
 	rng := types.NewPrefixInBetween[[]byte, collections.Triple[[]byte, []byte, uint64]](startKey, endKey)
 	if req.Pagination.Reverse {
 		rng.Descending()
@@ -189,21 +193,18 @@ func (k Querier) GetReportsbyReporterQid(ctx context.Context, req *types.QueryGe
 }
 
 func (k Keeper) GetStartEndKey(ctx context.Context, reporter, nextKey []byte, reverse bool) (startKey, endKey []byte, err error) {
+
+	uint64BytesMin := make([]byte, 8)
+	binary.BigEndian.PutUint64(uint64BytesMin, uint64(0))
+	uint64BytesMax := make([]byte, 8)
+	binary.BigEndian.PutUint64(uint64BytesMax, math.MaxUint64)
+
 	// First page: nextKey is nil, so return full range for this reporter
 	if nextKey == nil {
-		uint64Bytes := make([]byte, 8)
 		// Create startKey: reporter prefix + 0 (lowest possible value)
-		_, err = collections.Uint64Key.Encode(uint64Bytes, uint64(0))
-		if err != nil {
-			return nil, nil, err
-		}
-		startKey = append(reporter, uint64Bytes...)
+		startKey = append(reporter, uint64BytesMin...)
 		// Create endKey: reporter prefix + MaxUint64 (highest possible value)
-		_, err := collections.Uint64Key.Encode(uint64Bytes, math.MaxUint64)
-		if err != nil {
-			return nil, nil, err
-		}
-		endKey = append(reporter, uint64Bytes...)
+		endKey = append(reporter, uint64BytesMax...)
 
 		return startKey, endKey, nil
 	} else {
@@ -211,23 +212,13 @@ func (k Keeper) GetStartEndKey(ctx context.Context, reporter, nextKey []byte, re
 		if reverse {
 			// Descending: nextKey becomes END boundary
 			// Start from beginning of reporter range, end at nextKey
-			uint64Bytes := make([]byte, 8)
-			_, err := collections.Uint64Key.Encode(uint64Bytes, uint64(0))
-			if err != nil {
-				return nil, nil, err
-			}
-			startKey = append(reporter, uint64Bytes...)
+			startKey = append(reporter, uint64BytesMin...)
 			endKey = nextKey // nextKey becomes the upper bound
 		} else {
 			// Ascending: nextKey becomes START boundary
 			// Start from nextKey, go to end of reporter range
-			uint64Bytes := make([]byte, 8)
-			_, err := collections.Uint64Key.Encode(uint64Bytes, math.MaxUint64)
-			if err != nil {
-				return nil, nil, err
-			}
 			startKey = nextKey // nextKey becomes the lower bound
-			endKey = append(reporter, uint64Bytes...)
+			endKey = append(reporter, uint64BytesMax...)
 		}
 		return startKey, endKey, nil
 	}
