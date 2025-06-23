@@ -21,66 +21,50 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	reporter, err := sdk.AccAddressFromBech32(req.Reporter)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "invalid reporter address")
+	if req.Pagination == nil {
+		req.Pagination = &query.PageRequest{}
 	}
+
+	defaultLimit := uint64(10)
+	if req.Pagination.Limit == 0 {
+		req.Pagination.Limit = defaultLimit
+	}
+
+	reporter := sdk.MustAccAddressFromBech32(req.Reporter)
+
 	pageRes := &query.PageResponse{
 		NextKey: nil,
 		Total:   uint64(0),
 	}
-	// key is Bytes (reporter address) with bytes encoded max uint64 concatenated (reporterAddr...fff...)
-	// timestamp is the last 8 bytes of the key so we can sort by timestamp
-	buffer := make([]byte, 8)
-	_, err = collections.Uint64Key.Encode(buffer, ^uint64(0))
-	if err != nil {
-		return nil, status.Error(codes.Internal, "failed to encode start value")
-	}
 
-	// construct key: reporter_address + encoded_uint64
-	key := append(reporter.Bytes(), buffer...)
-	rng := collections.NewPrefixUntilPairRange[[]byte, collections.Pair[[]byte, uint64]](key)
-	if req.Pagination != nil && req.Pagination.Reverse {
+	startKey, endKey, err := q.keeper.GetStartEndKey(ctx, reporter.Bytes(), req.Pagination.Key, req.Pagination.Reverse)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	rng := types.NewPrefixInBetween[[]byte, collections.Pair[[]byte, uint64]](startKey, endKey)
+	if req.Pagination.Reverse {
 		rng.Descending()
 	}
-	pairKeyCodec := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
-	if req.Pagination != nil && len(req.Pagination.Key) > 0 {
-		_, startKey, err := pairKeyCodec.Decode(req.Pagination.Key)
-		if err != nil {
-			return nil, status.Error(codes.InvalidArgument, "invalid pagination key")
-		}
-		rng.StartInclusive(startKey)
-	}
-
-	// Determine the limit to use - Default to 10 if no pagination or limit is 0
-	limit := uint64(10)
-	if req.Pagination != nil && req.Pagination.Limit > 0 {
-		limit = req.Pagination.Limit
-	}
-
 	iter, err := q.keeper.NoStakeReports.Indexes.Reporter.Iterate(ctx, rng)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
-	reports := make([]*types.NoStakeMicroReportStrings, 0)
+	defer iter.Close()
+	if req.Pagination.Offset > 0 {
+		if !advanceIter(iter, req.Pagination.Offset) {
+			return nil, status.Error(codes.InvalidArgument, "invalid pagination offset")
+		}
+	}
 
-	for ; iter.Valid(); iter.Next() {
-		pk, err := iter.PrimaryKey()
+	reports := make([]*types.NoStakeMicroReportStrings, 0)
+	counter := uint64(0)
+	for ; iter.Valid() && counter < req.Pagination.Limit; iter.Next() {
+		fullKey, err := iter.FullKey()
 		if err != nil {
 			return nil, err
 		}
 
-		if uint64(len(reports)) >= limit {
-			buffer := make([]byte, pairKeyCodec.Size(pk))
-			_, err = pairKeyCodec.Encode(buffer, pk)
-			if err != nil {
-				return nil, status.Error(codes.Internal, "failed to encode pagination key")
-			}
-			pageRes.NextKey = buffer
-			break
-		}
-
-		report, err := q.keeper.NoStakeReports.Get(ctx, pk)
+		report, err := q.keeper.NoStakeReports.Get(ctx, fullKey.K2())
 		if err != nil {
 			return nil, err
 		}
@@ -90,9 +74,75 @@ func (q Querier) GetReportersNoStakeReports(ctx context.Context, req *types.Quer
 			Timestamp:   uint64(report.Timestamp.UnixMilli()),
 			BlockNumber: report.BlockNumber,
 		}
-		reports = append(reports, &stringReport)
+		reports = append(reports, stringReport)
+		counter++
+
 	}
-	pageRes.Total = uint64(len(reports))
+
+	// key is Bytes (reporter address) with bytes encoded max uint64 concatenated (reporterAddr...fff...)
+	// timestamp is the last 8 bytes of the key so we can sort by timestamp
+	// buffer := make([]byte, 8)
+	// _, err := collections.Uint64Key.Encode(buffer, ^uint64(0))
+	// if err != nil {
+	// 	return nil, status.Error(codes.Internal, "failed to encode start value")
+	// }
+
+	// // construct key: reporter_address + encoded_uint64
+	// key := append(reporter.Bytes(), buffer...)
+	// rng := collections.NewPrefixUntilPairRange[[]byte, collections.Pair[[]byte, uint64]](key)
+	// if req.Pagination != nil && req.Pagination.Reverse {
+	// 	rng.Descending()
+	// }
+	// pairKeyCodec := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
+	// if req.Pagination != nil && len(req.Pagination.Key) > 0 {
+	// 	_, startKey, err := pairKeyCodec.Decode(req.Pagination.Key)
+	// 	if err != nil {
+	// 		return nil, status.Error(codes.InvalidArgument, "invalid pagination key")
+	// 	}
+	// 	rng.StartInclusive(startKey)
+	// }
+
+	// // Determine the limit to use - Default to 10 if no pagination or limit is 0
+	// limit := uint64(10)
+	// if req.Pagination != nil && req.Pagination.Limit > 0 {
+	// 	limit = req.Pagination.Limit
+	// }
+
+	// iter, err := q.keeper.NoStakeReports.Indexes.Reporter.Iterate(ctx, rng)
+	// if err != nil {
+	// 	return nil, status.Error(codes.Internal, err.Error())
+	// }
+	// reports := make([]*types.NoStakeMicroReportStrings, 0)
+
+	// for ; iter.Valid(); iter.Next() {
+	// 	pk, err := iter.PrimaryKey()
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+
+	// 	if uint64(len(reports)) >= limit {
+	// 		buffer := make([]byte, pairKeyCodec.Size(pk))
+	// 		_, err = pairKeyCodec.Encode(buffer, pk)
+	// 		if err != nil {
+	// 			return nil, status.Error(codes.Internal, "failed to encode pagination key")
+	// 		}
+	// 		pageRes.NextKey = buffer
+	// 		break
+	// 	}
+
+	// 	report, err := q.keeper.NoStakeReports.Get(ctx, pk)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	stringReport := types.NoStakeMicroReportStrings{
+	// 		Reporter:    sdk.AccAddress(report.Reporter).String(),
+	// 		Value:       report.Value,
+	// 		Timestamp:   uint64(report.Timestamp.UnixMilli()),
+	// 		BlockNumber: report.BlockNumber,
+	// 	}
+	// 	reports = append(reports, &stringReport)
+	// }
+	// pageRes.Total = uint64(len(reports))
 
 	return &types.QueryGetReportersNoStakeReportsResponse{NoStakeReports: reports, Pagination: pageRes}, nil
 }

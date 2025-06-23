@@ -91,6 +91,9 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 	}
 
 	startKey, endKey, err := k.keeper.GetStartEndKey(ctx, reporter.Bytes(), req.Pagination.Key, req.Pagination.Reverse)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 	rng := types.NewPrefixInBetween[[]byte, collections.Triple[[]byte, []byte, uint64]](startKey, endKey)
 	if req.Pagination.Reverse {
 		rng.Descending()
@@ -102,9 +105,9 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 	}
 	defer iter.Close()
 	if req.Pagination.Offset > 0 {
-	}
-	if !advanceIter(iter, req.Pagination.Offset) {
-		return nil, status.Error(codes.InvalidArgument, "invalid pagination offset")
+		if !advanceIter(iter, req.Pagination.Offset) {
+			return nil, status.Error(codes.InvalidArgument, "invalid pagination offset")
+		}
 	}
 	reports := make([]types.MicroReportStrings, 0)
 	counter := uint64(0)
@@ -118,21 +121,19 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 		if err != nil {
 			return nil, err
 		}
-		if report.Reporter == reporter.String() {
-			stringReport := types.MicroReportStrings{
-				Reporter:        report.Reporter,
-				Power:           report.Power,
-				QueryType:       report.QueryType,
-				QueryId:         hex.EncodeToString(report.QueryId),
-				AggregateMethod: report.AggregateMethod,
-				Value:           report.Value,
-				Timestamp:       uint64(report.Timestamp.UnixMilli()),
-				Cyclelist:       report.Cyclelist,
-				BlockNumber:     report.BlockNumber,
-				MetaId:          report.MetaId,
-			}
-			reports = append(reports, stringReport)
+		stringReport := types.MicroReportStrings{
+			Reporter:        report.Reporter,
+			Power:           report.Power,
+			QueryType:       report.QueryType,
+			QueryId:         hex.EncodeToString(report.QueryId),
+			AggregateMethod: report.AggregateMethod,
+			Value:           report.Value,
+			Timestamp:       uint64(report.Timestamp.UnixMilli()),
+			Cyclelist:       report.Cyclelist,
+			BlockNumber:     report.BlockNumber,
+			MetaId:          report.MetaId,
 		}
+		reports = append(reports, stringReport)
 		counter++
 
 	}
