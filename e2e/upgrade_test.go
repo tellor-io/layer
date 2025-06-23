@@ -14,6 +14,7 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
+	util "github.com/tellor-io/layer/testutil"
 
 	"cosmossdk.io/math"
 
@@ -24,6 +25,9 @@ import (
 const (
 	haltHeightDelta    = 12 // will propose upgrade this many blocks in the future
 	blocksAfterUpgrade = 12
+	// Test data constants
+	qData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003626368000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	value = "000000000000000000000000000000000000000000000058528649cf80ee0000"
 )
 
 func TestLayerUpgrade(t *testing.T) {
@@ -183,50 +187,156 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	timeoutCtx, timeoutCtxCancel = context.WithTimeout(ctx, time.Second*45)
 	defer timeoutCtxCancel()
 
-	// submit 1 normal report, submit 1 no stake report
-	// tip
-	_, _, err = validatorI.Exec(ctx, validatorI.TxCommand("validator", "oracle", "tip", qData, "1000000loya", "--keyring-dir", chain.HomeDir()), validatorI.Chain.Config().Env)
-	require.NoError(t, err)
-	err = testutil.WaitForBlocks(ctx, 1, validatorI)
-	require.NoError(t, err)
-	// submit-value
-	_, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", chain.HomeDir())
-	require.NoError(t, err)
+	// Enhanced testing after upgrade: 10 more tips and reports with different scenarios
+	fmt.Println("=== Testing post-upgrade oracle functionality ===")
+
+	// Test 1: Submit 10 more tip+report cycles with different values
+	for i := 0; i < 10; i++ {
+		// Generate different values for each report
+		testValue := util.EncodeValue(float64(1000000 + i*100000))
+
+		// tip
+		_, _, err = validatorI.Exec(ctx, validatorI.TxCommand("validator", "oracle", "tip", qData, "1000000loya", "--keyring-dir", chain.HomeDir()), validatorI.Chain.Config().Env)
+		require.NoError(t, err, fmt.Sprintf("error tipping for report %d", i+1))
+
+		err = testutil.WaitForBlocks(ctx, 1, validatorI)
+		require.NoError(t, err)
+
+		// submit-value
+		_, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", qData, testValue, "--keyring-dir", chain.HomeDir())
+		require.NoError(t, err, fmt.Sprintf("error submitting value for report %d", i+1))
+
+		err = testutil.WaitForBlocks(ctx, 1, validatorI)
+		require.NoError(t, err)
+
+		fmt.Printf("Completed tip+report cycle %d with value %s\n", i+1, testValue)
+	}
+
+	// Test 2: Submit 5 more no-stake reports with different values
+	for i := 0; i < 5; i++ {
+		testValue := util.EncodeValue(float64(2000000 + i*50000))
+		_, err = validatorI.ExecTx(ctx, "validator", "oracle", "no-stake-report", qData, testValue, "--keyring-dir", chain.HomeDir())
+		require.NoError(t, err, fmt.Sprintf("error submitting no-stake report %d", i+1))
+
+		err = testutil.WaitForBlocks(ctx, 1, validatorI)
+		require.NoError(t, err)
+
+		fmt.Printf("Completed no-stake report %d with value %s\n", i+1, testValue)
+	}
+
 	err = testutil.WaitForBlocks(timeoutCtx, int(blocksAfterUpgrade), chain)
 	require.NoError(t, err, "chain did not produce blocks after upgrade")
-	// no stake report
-	_, err = validatorI.ExecTx(ctx, "validator", "oracle", "no-stake-report", qData, value, "--keyring-dir", chain.HomeDir())
-	require.NoError(t, err)
 
-	// get reports by reporter w/o pagination, should only get the new one
+	// Enhanced testing scenarios
+	fmt.Println("=== Testing enhanced query scenarios ===")
+
+	// Test 3: Query reports with different pagination scenarios
+	// Should now have 11 regular reports (1 original + 10 new)
 	reports, _, err := validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr)
 	require.NoError(t, err)
-	// unmarshal
 	var reportsRes e2e.QueryMicroReportsResponse
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
-	fmt.Println("length: ", len(reportsRes.MicroReports))
-	fmt.Println("reports: ", reportsRes)
+	fmt.Printf("Total reports found: %d\n", len(reportsRes.MicroReports))
 	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
 	require.Greater(t, reportsRes.MicroReports[0].BlockNumber, haltHeight)
-	require.Equal(t, len(reportsRes.MicroReports), 1)
+	require.Equal(t, 11, len(reportsRes.MicroReports), "Should have 11 regular reports after upgrade")
 
+	// Test 4: Query no-stake reports - should have 6 (1 original + 5 new)
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr)
+	require.NoError(t, err)
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	fmt.Printf("Total no-stake reports found: %d\n", len(reportsRes.MicroReports))
+	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
+	require.Equal(t, 6, len(reportsRes.MicroReports), "Should have 6 no-stake reports after upgrade")
+
+	// Test 5: Pagination edge cases with limit
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "5")
+	require.NoError(t, err)
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	require.Equal(t, 5, len(reportsRes.MicroReports), "Should respect page limit of 5")
+
+	// Test 6: Pagination with large limit
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "20")
+	require.NoError(t, err)
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	require.Equal(t, 11, len(reportsRes.MicroReports), "Should return all 11 reports when limit is higher")
+
+	// Test 7: Pagination with offset
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-offset", "5", "--page-limit", "3")
+	require.NoError(t, err)
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	require.Equal(t, 3, len(reportsRes.MicroReports), "Should return 3 reports with offset 5")
+
+	// Test 8: Reverse pagination
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-reverse", "--page-limit", "3")
+	require.NoError(t, err)
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	require.Equal(t, 3, len(reportsRes.MicroReports), "Should return 3 reports in reverse order")
+
+	// Test 9: No-stake reports pagination scenarios
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "3")
+	require.NoError(t, err)
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	require.Equal(t, 3, len(reportsRes.MicroReports), "Should return 3 no-stake reports with limit")
+
+	// Test 10: No-stake reports with offset and reverse
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-offset", "2", "--page-reverse", "--page-limit", "2")
+	require.NoError(t, err)
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(reportsRes.MicroReports), "Should return 2 no-stake reports with offset and reverse")
+
+	// Test 11: Edge case - offset beyond available reports
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-offset", "50", "--page-limit", "5")
+	require.NoError(t, err)
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	require.Equal(t, 0, len(reportsRes.MicroReports), "Should return 0 reports when offset exceeds available reports")
+
+	// Test 12: Zero limit edge case
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "0")
+	require.NoError(t, err)
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	require.Equal(t, 0, len(reportsRes.MicroReports), "Should return 0 reports when limit is 0")
+
+	// Test 13: Verify all reports are after halt height
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "50")
+	require.NoError(t, err)
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	for i, report := range reportsRes.MicroReports {
+		require.Greater(t, report.BlockNumber, haltHeight, fmt.Sprintf("Report %d should be after halt height", i))
+		require.Equal(t, valAddr, report.Reporter, fmt.Sprintf("Report %d should be from correct reporter", i))
+	}
+
+	// Test 14: Verify all no-stake reports are after halt height
+	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "50")
+	require.NoError(t, err)
+	err = json.Unmarshal(reports, &reportsRes)
+	require.NoError(t, err)
+	for i, report := range reportsRes.MicroReports {
+		require.Greater(t, report.BlockNumber, haltHeight, fmt.Sprintf("No-stake report %d should be after halt height", i))
+		require.Equal(t, valAddr, report.Reporter, fmt.Sprintf("No-stake report %d should be from correct reporter", i))
+	}
+
+	fmt.Println("=== All enhanced upgrade tests passed! ===")
+
+	// Original test cases remain for compatibility
 	// query reports by reportewr with all flags, should only get the new one
 	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "10", "--page-reverse", "--page-offset", "1")
 	require.NoError(t, err)
 	// unmarshal
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(reportsRes.MicroReports))
-
-	// query no stake reports by reporter
-	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr)
-	require.NoError(t, err)
-	// unmarshal
-	err = json.Unmarshal(reports, &reportsRes)
-	require.NoError(t, err)
-	require.Equal(t, valAddr, reportsRes.MicroReports[0].Reporter)
-	require.Equal(t, len(reportsRes.MicroReports), 1)
+	require.Equal(t, 10, len(reportsRes.MicroReports))
 
 	// query no stake reports with all flags
 	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "10", "--page-reverse", "--page-offset", "1")
@@ -234,7 +344,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	// unmarshal
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(reportsRes.MicroReports))
+	require.Equal(t, 5, len(reportsRes.MicroReports))
 
 	// Test individual flags for get-reportsby-reporter
 	// query reports by reporter with only page-limit flag
@@ -242,21 +352,21 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	require.NoError(t, err)
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(reportsRes.MicroReports))
+	require.Equal(t, 5, len(reportsRes.MicroReports))
 
 	// query reports by reporter with only page-reverse flag
 	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-reverse")
 	require.NoError(t, err)
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(reportsRes.MicroReports))
+	require.Equal(t, 11, len(reportsRes.MicroReports))
 
 	// query reports by reporter with only page-offset flag
 	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddr, "--page-offset", "0")
 	require.NoError(t, err)
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(reportsRes.MicroReports))
+	require.Equal(t, 11, len(reportsRes.MicroReports))
 
 	// Test individual flags for get-reporters-no-stake-reports
 	// query no stake reports by reporter with only page-reverse flag
@@ -264,14 +374,14 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	require.NoError(t, err)
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(reportsRes.MicroReports))
+	require.Equal(t, 6, len(reportsRes.MicroReports))
 
 	// query no stake reports by reporter with only page-offset flag
 	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-offset", "0")
 	require.NoError(t, err)
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err)
-	require.Equal(t, 1, len(reportsRes.MicroReports))
+	require.Equal(t, 6, len(reportsRes.MicroReports))
 
 	// query no stake reports by reporter with only page-limit flag
 	reports, _, err = validatorI.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "1")
