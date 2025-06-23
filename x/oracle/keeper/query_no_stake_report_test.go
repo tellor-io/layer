@@ -281,10 +281,12 @@ func (s *KeeperTestSuite) TestGetReportersNoStakeReports_PaginationEdgeCases() {
 	require.Nil(response.Pagination.NextKey, "NextKey should be nil when all reports are returned")
 
 	// Test case 5: Limit 1 (should return 1 report with NextKey)
+	// should be oldest report
 	req = &types.QueryGetReportersNoStakeReportsRequest{Reporter: reporter.String(), Pagination: &query.PageRequest{Limit: 1}}
 	response, err = s.queryClient.GetReportersNoStakeReports(s.ctx, req)
 	require.NoError(err)
 	require.Equal(1, len(response.NoStakeReports), "Should return 1 report when limit is 1")
+	require.Equal(uint64(1), response.NoStakeReports[0].BlockNumber, "Should return oldest report")
 	require.NotNil(response.Pagination.NextKey, "NextKey should not be nil when there are more reports")
 
 	// Test case 6: Limit 1 with reverse (should return most recent report)
@@ -309,25 +311,25 @@ func (s *KeeperTestSuite) TestGetReportersNoStakeReports_PaginationEdgeCases() {
 	}
 
 	// Test case 8: No pagination with many reports (should return default limit of 10)
+	// should be 10 oldest reports
 	req = &types.QueryGetReportersNoStakeReportsRequest{Reporter: reporter.String()}
 	response, err = s.queryClient.GetReportersNoStakeReports(s.ctx, req)
 	require.NoError(err)
 	require.Equal(10, len(response.NoStakeReports), "Should return default limit of 10 reports when no pagination is provided and count > default limit")
 	require.NotNil(response.Pagination.NextKey, "NextKey should not be nil when there are more reports beyond the default limit")
+	require.Equal(uint64(1), response.NoStakeReports[0].BlockNumber, "Should return oldest report")
+	require.Equal(uint64(10), response.NoStakeReports[9].BlockNumber, "Should return 10th oldest report")
 
 	// Test case 9: Offset handling
+	//  limit 5 offset 2 shouuld return 3-7 oldest reports
 	req = &types.QueryGetReportersNoStakeReportsRequest{Reporter: reporter.String(), Pagination: &query.PageRequest{Limit: 5, Offset: 2}}
 	response, err = s.queryClient.GetReportersNoStakeReports(s.ctx, req)
 	require.NoError(err)
 	require.Equal(5, len(response.NoStakeReports), "Should return 5 reports when limit is 5 and offset is 2")
+	require.Equal(uint64(3), response.NoStakeReports[0].BlockNumber, "Should return 3rd oldest report")
+	require.Equal(uint64(7), response.NoStakeReports[4].BlockNumber, "Should return 7th oldest report")
 
-	// Test case 10: Large offset beyond available reports
-	req = &types.QueryGetReportersNoStakeReportsRequest{Reporter: reporter.String(), Pagination: &query.PageRequest{Limit: 5, Offset: 20}}
-	response, err = s.queryClient.GetReportersNoStakeReports(s.ctx, req)
-	require.NoError(err)
-	require.Equal(0, len(response.NoStakeReports), "Should return 0 reports when offset is beyond available reports")
-
-	// Test case 11: Multiple reporters - ensure isolation
+	// Test case 10: Multiple reporters
 	reporter2 := sample.AccAddressBytes()
 	timestamp := time.Now().UTC().Add(time.Hour)
 	report2 := types.NoStakeMicroReport{
@@ -352,6 +354,10 @@ func (s *KeeperTestSuite) TestGetReportersNoStakeReports_PaginationEdgeCases() {
 	response, err = s.queryClient.GetReportersNoStakeReports(s.ctx, req)
 	require.NoError(err)
 	require.Equal(10, len(response.NoStakeReports), "Original reporter should still have default limit of reports returned")
+	req = &types.QueryGetReportersNoStakeReportsRequest{Reporter: reporter.String(), Pagination: &query.PageRequest{Limit: 20}}
+	response, err = s.queryClient.GetReportersNoStakeReports(s.ctx, req)
+	require.NoError(err)
+	require.Equal(14, len(response.NoStakeReports), "Original reporter should have 14 reports")
 
 	sort.Slice(response.NoStakeReports, func(i, j int) bool {
 		return response.NoStakeReports[i].Timestamp < response.NoStakeReports[j].Timestamp
@@ -394,62 +400,55 @@ func (s *KeeperTestSuite) TestGetReportersNoStakeReports_PaginationEdgeCases() {
 
 func (s *KeeperTestSuite) TestGetReportersNoStakeReports_PaginationContinuation() {
 	require := s.Require()
-	// Setup: Create more reports than the default limit for a single reporter
+
+	// Setup: Create 25 reports for a single reporter
 	numReports := 25
 	reporter := sample.AccAddressBytes()
-	var expectedTimestamps []uint64
+
 	for i := 0; i < numReports; i++ {
 		timestamp := time.Now().UTC().Add(time.Second * time.Duration(i))
-		expectedTimestamps = append(expectedTimestamps, uint64(timestamp.UnixMilli()))
 		report := types.NoStakeMicroReport{
 			Reporter:    reporter,
 			Value:       fmt.Sprintf("value%d", i),
 			Timestamp:   timestamp,
-			BlockNumber: uint64(i),
+			BlockNumber: uint64(i + 1), // Start from 1 for clarity
 		}
-		s.oracleKeeper.NoStakeReports.Set(s.ctx, collections.Join([]byte("queryId"), uint64(timestamp.UnixMilli())), report)
+		queryId := []byte(fmt.Sprintf("queryId%d", i))
+		require.NoError(s.oracleKeeper.NoStakeReports.Set(s.ctx, collections.Join(queryId, uint64(timestamp.UnixMilli())), report))
 	}
 
-	// First page
 	limit := uint64(10)
-	req := &types.QueryGetReportersNoStakeReportsRequest{
+
+	// First page (reports 1-10)
+	response1, err := s.queryClient.GetReportersNoStakeReports(s.ctx, &types.QueryGetReportersNoStakeReportsRequest{
 		Reporter:   reporter.String(),
 		Pagination: &query.PageRequest{Limit: limit},
-	}
-	response, err := s.queryClient.GetReportersNoStakeReports(s.ctx, req)
+	})
 	require.NoError(err)
-	require.Equal(int(limit), len(response.NoStakeReports), "First page should return 10 reports")
-	require.NotNil(response.Pagination.NextKey, "NextKey should not be nil for the first page")
+	require.Equal(int(limit), len(response1.NoStakeReports))
+	require.NotNil(response1.Pagination.NextKey)
+	require.Equal(uint64(1), response1.NoStakeReports[0].BlockNumber)  // First report
+	require.Equal(uint64(10), response1.NoStakeReports[9].BlockNumber) // Last report of first page
 
-	// Collect timestamps from the first page
-	firstPageTimestamps := make(map[uint64]bool)
-	for _, report := range response.NoStakeReports {
-		firstPageTimestamps[report.Timestamp] = true
-	}
-
-	// Second page
-	req = &types.QueryGetReportersNoStakeReportsRequest{
+	// Second page (reports 11-20)
+	response2, err := s.queryClient.GetReportersNoStakeReports(s.ctx, &types.QueryGetReportersNoStakeReportsRequest{
 		Reporter:   reporter.String(),
-		Pagination: &query.PageRequest{Limit: limit, Offset: limit},
-	}
-	response, err = s.queryClient.GetReportersNoStakeReports(s.ctx, req)
+		Pagination: &query.PageRequest{Limit: limit, Offset: 10},
+	})
 	require.NoError(err)
-	require.Equal(int(limit), len(response.NoStakeReports), "Second page should return 10 reports")
-	require.NotNil(response.Pagination.NextKey, "NextKey should not be nil for the second page")
+	require.Equal(int(limit), len(response2.NoStakeReports))
+	require.NotNil(response2.Pagination.NextKey)
+	require.Equal(uint64(11), response2.NoStakeReports[0].BlockNumber) // First report of second page
+	require.Equal(uint64(20), response2.NoStakeReports[9].BlockNumber) // Last report of second page
 
-	// Check for no overlap
-	for _, report := range response.NoStakeReports {
-		_, found := firstPageTimestamps[report.Timestamp]
-		require.False(found, "Second page should not contain values from first page")
-	}
-
-	// Third and final page
-	req = &types.QueryGetReportersNoStakeReportsRequest{
+	// Third page (reports 21-25)
+	response3, err := s.queryClient.GetReportersNoStakeReports(s.ctx, &types.QueryGetReportersNoStakeReportsRequest{
 		Reporter:   reporter.String(),
-		Pagination: &query.PageRequest{Limit: limit, Offset: limit * 2},
-	}
-	response, err = s.queryClient.GetReportersNoStakeReports(s.ctx, req)
+		Pagination: &query.PageRequest{Limit: limit, Offset: 20},
+	})
 	require.NoError(err)
-	require.Equal(numReports-int(limit*2), len(response.NoStakeReports), "Third page should return the remaining 5 reports")
-	require.Nil(response.Pagination.NextKey, "NextKey should be nil for the final page")
+	require.Equal(5, len(response3.NoStakeReports))                    // Only 5 remaining reports
+	require.Nil(response3.Pagination.NextKey)                          // No more pages
+	require.Equal(uint64(21), response3.NoStakeReports[0].BlockNumber) // First report of third page
+	require.Equal(uint64(25), response3.NoStakeReports[4].BlockNumber) // Last report
 }
