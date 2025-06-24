@@ -1,4 +1,4 @@
-# Layer Blockchain Pagination Guide
+# Layer Pagination Guide
 
 Use `--help` on any query and check the available flags to see if the query supports pagination.
 
