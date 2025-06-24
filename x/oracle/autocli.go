@@ -26,7 +26,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "GetReportsbyReporter",
 					Use:            "get-reportsby-reporter [reporter]",
-					Short:          "Query reports by reporter. Use --page-limit n to return n reports.",
+					Short:          "Query reports by reporter with or without pagination",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter"}},
 				},
 				{
@@ -140,7 +140,7 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "GetReportersNoStakeReports",
 					Use:            "get-reporters-no-stake-reports [reporter]",
-					Short:          "Query no stake reports by reporter. Use 'page-limit n' to return n reports",
+					Short:          "Query no stake reports by reporter with or without pagination",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter"}},
 				},
 				{
