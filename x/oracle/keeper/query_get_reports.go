@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/hex"
+	"math"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -72,75 +74,76 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
+	if req.Pagination == nil {
+		req.Pagination = &query.PageRequest{}
+	}
+
+	defaultLimit := uint64(10)
+	if req.Pagination.Limit == 0 {
+		req.Pagination.Limit = defaultLimit
+	}
+
 	reporter := sdk.MustAccAddressFromBech32(req.Reporter)
+
+	// TODO: add max limit to prevent abuse
 	pageRes := &query.PageResponse{
 		NextKey: nil,
 		Total:   uint64(0),
 	}
 
-	// key is Bytes (reporter address) with bytes encoded max uint64 concatenated (reporterAddr...fff...)
-	buffer := make([]byte, 8)
-	_, err := collections.Uint64Key.Encode(buffer, ^uint64(0))
+	startKey, endKey, err := k.keeper.GetStartEndKey(ctx, reporter.Bytes(), req.Pagination.Key, req.Pagination.Reverse)
 	if err != nil {
-		return nil, status.Error(codes.Internal, "failed to encode start value")
+		return nil, status.Error(codes.Internal, "failed to get start and end keys: "+err.Error())
 	}
-
-	// construct key: reporter_address + encoded_uint64
-	key := append(reporter.Bytes(), buffer...)
-	rng := collections.NewPrefixUntilPairRange[[]byte, collections.Triple[[]byte, []byte, uint64]](key)
-	if req.Pagination != nil && req.Pagination.Reverse {
+	rng := types.NewPrefixInBetween[[]byte, collections.Triple[[]byte, []byte, uint64]](startKey, endKey)
+	if req.Pagination.Reverse {
 		rng.Descending()
-	}
-	tripleKeyCodec := collections.TripleKeyCodec(collections.BytesKey, collections.BytesKey, collections.Uint64Key)
-	if req.Pagination != nil && len(req.Pagination.Key) > 0 {
-		_, startKey, err := tripleKeyCodec.Decode(req.Pagination.Key)
-		if err != nil {
-			return nil, status.Error(codes.InvalidArgument, "invalid pagination key")
-		}
-		rng.StartInclusive(startKey)
 	}
 
 	iter, err := k.keeper.Reports.Indexes.Reporter.Iterate(ctx, rng)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
+	defer iter.Close()
+	if req.Pagination.Offset > 0 {
+		if !advanceIter(iter, req.Pagination.Offset) {
+			return nil, status.Error(codes.InvalidArgument, "invalid pagination offset")
+		}
+	}
 	reports := make([]types.MicroReportStrings, 0)
-	for ; iter.Valid(); iter.Next() {
-		pk, err := iter.PrimaryKey()
+	counter := uint64(0)
+	for ; iter.Valid() && counter < req.Pagination.Limit; iter.Next() {
+		fullKey, err := iter.FullKey()
 		if err != nil {
 			return nil, err
 		}
 
-		if req.Pagination != nil && uint64(len(reports)) >= req.Pagination.Limit {
-			buffer := make([]byte, tripleKeyCodec.Size(pk))
-			_, err = tripleKeyCodec.Encode(buffer, pk)
-			if err != nil {
-				return nil, status.Error(codes.Internal, "failed to encode pagination key")
-			}
-			pageRes.NextKey = buffer
-			break
-		}
-
-		report, err := k.keeper.Reports.Get(ctx, pk)
+		report, err := k.keeper.Reports.Get(ctx, fullKey.K2())
 		if err != nil {
 			return nil, err
 		}
-		if report.Reporter == reporter.String() {
-			stringReport := types.MicroReportStrings{
-				Reporter:        report.Reporter,
-				Power:           report.Power,
-				QueryType:       report.QueryType,
-				QueryId:         hex.EncodeToString(report.QueryId),
-				AggregateMethod: report.AggregateMethod,
-				Value:           report.Value,
-				Timestamp:       uint64(report.Timestamp.UnixMilli()),
-				Cyclelist:       report.Cyclelist,
-				BlockNumber:     report.BlockNumber,
-				MetaId:          report.MetaId,
-			}
-			reports = append(reports, stringReport)
+		stringReport := types.MicroReportStrings{
+			Reporter:        report.Reporter,
+			Power:           report.Power,
+			QueryType:       report.QueryType,
+			QueryId:         hex.EncodeToString(report.QueryId),
+			AggregateMethod: report.AggregateMethod,
+			Value:           report.Value,
+			Timestamp:       uint64(report.Timestamp.UnixMilli()),
+			Cyclelist:       report.Cyclelist,
+			BlockNumber:     report.BlockNumber,
+			MetaId:          report.MetaId,
 		}
+		reports = append(reports, stringReport)
+		counter++
 
+	}
+	if iter.Valid() {
+		fullKeys, err := iter.FullKey()
+		if err != nil {
+			return nil, err
+		}
+		pageRes.NextKey = fullKeys.K1()
 	}
 	pageRes.Total = uint64(len(reports))
 
@@ -185,4 +188,49 @@ func (k Querier) GetReportsbyReporterQid(ctx context.Context, req *types.QueryGe
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &types.QueryMicroReportsResponse{MicroReports: microreports, Pagination: pageRes}, nil
+}
+
+func (k Keeper) GetStartEndKey(ctx context.Context, reporter, nextKey []byte, reverse bool) (startKey, endKey []byte, err error) {
+	uint64BytesMin := make([]byte, 8)
+	binary.BigEndian.PutUint64(uint64BytesMin, uint64(0))
+	uint64BytesMax := make([]byte, 8)
+	binary.BigEndian.PutUint64(uint64BytesMax, math.MaxUint64)
+
+	// First page: nextKey is nil, so return full range for this reporter
+	if nextKey == nil {
+		// Create startKey: reporter prefix + 0 (lowest possible value)
+		startKey = append(reporter, uint64BytesMin...)
+		// Create endKey: reporter prefix + MaxUint64 (highest possible value)
+		endKey = append(reporter, uint64BytesMax...)
+
+		return startKey, endKey, nil
+	} else {
+		// Subsequent pages: nextKey provided from previous page
+		if reverse {
+			// Descending: nextKey becomes END boundary
+			// Start from beginning of reporter range, end at nextKey
+			startKey = append(reporter, uint64BytesMin...)
+			endKey = nextKey // nextKey becomes the upper bound
+		} else {
+			// Ascending: nextKey becomes START boundary
+			// Start from nextKey, go to end of reporter range
+			startKey = nextKey // nextKey becomes the lower bound
+			endKey = append(reporter, uint64BytesMax...)
+		}
+		return startKey, endKey, nil
+	}
+}
+
+func advanceIter[I interface {
+	Next()
+	Valid() bool
+}](iter I, offset uint64,
+) bool {
+	for i := uint64(0); i < offset; i++ {
+		if !iter.Valid() {
+			return false
+		}
+		iter.Next()
+	}
+	return true
 }
