@@ -1,22 +1,18 @@
 # Layer Blockchain Pagination Guide
 
-A guide to using pagination on the Layer blockchain.
-
 Use `--help` on any query and check the available flags to see if the query supports pagination.
 
 ## Pagination Flags
 
-### Core Flags
-
 - `--page-limit`: Maximum number of results to return per page. Defaults to 10 for GetReportsByReporter and GetReportersNoStakeReports
-- `--page-offset`: Number of results to skip from the beginning
 - `--page-reverse`: Return results in reverse order
+- `--page-offset`: Number of results to skip from the beginning
 - `--page-key`: NextKey from previous query response (for continuation)
 
 
-## Usage Examples
+## Usage
 
-### Basic Pagination
+### Page Limit, Page Reverse
 
 ```bash
 # Get 5 oldest reports by reporter
