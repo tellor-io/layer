@@ -72,13 +72,22 @@ layerd query <module> <command> <args> --page-key <NextKey_from_previous_respons
 
 Example:
 ```bash
-# Page 1
-response1=$(layerd query <module> <command> <args> --page-limit 10)
+response1=$(./layerd query oracle get-reportsby-reporter-qid tellor10usyr7v4xe2uhtnvg4kwtgtuzh5e4u2378zjj9 83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992 --page-limit 10 --output json)
 next_key=$(echo "$response1" | jq -r '.pagination.next_key')
 
-# Page 2
-response2=$(layerd query <module> <command> <args> --page-key "$next_key")
-next_key=$(echo "$response2" | jq -r '.pagination.next_key')
+echo "Page 1 results:"
+echo "$response1"
+echo "Next key: $next_key"
 
-# Continue until next_key is null
+# Page 2 (only if next_key is not null)
+if [ "$next_key" != "null" ] && [ -n "$next_key" ]; then
+    echo -e "\n--- Page 2 ---"
+    response2=$(./layerd query oracle get-reportsby-reporter-qid tellor10usyr7v4xe2uhtnvg4kwtgtuzh5e4u2378zjj9 83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992 --page-key "$next_key" --output json)
+    next_key=$(echo "$response2" | jq -r '.pagination.next_key')
+
+    echo "$response2"
+    echo "Next key: $next_key"
+fi
+
+# Continue as needed
 ```
