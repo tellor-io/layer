@@ -4,10 +4,10 @@
 GENESIS_TIME=$(date -u +"%Y-%m-%dT%H:%M:%S.000000000Z")
 
 # Get timestamp for tomorrow in the required format
-FUTURE_TIME=$(date -u -v+1d +"%Y-%m-%dT%H:%M:%S.000000000Z")
+FUTURE_TIME=$(date -u -d "+1 day" +"%Y-%m-%dT%H:%M:%S.000000000Z")
 
-# Set the path to layerd binary
-LAYERD_PATH="/Users/caleb/layer/layerd"
+# Set the path to layerd binary (update this path as needed)
+LAYERD_PATH="./bin/layerd"
 
 # Create necessary directories
 mkdir -p bin genesis
@@ -19,21 +19,21 @@ REPORTER_DATA="./exported_data/reporter_module_state.json"
 OUTPUT_GENESIS="./genesis/genesis.json"
 
 # Check for uncommitted changes
-if ! git diff-index --quiet HEAD --; then
-    echo "Error: You have uncommitted changes in your working directory."
-    echo "Please commit or stash your changes before running this script."
-    exit 1
-fi
+# if ! git diff-index --quiet HEAD --; then
+#     echo "Error: You have uncommitted changes in your working directory."
+#     echo "Please commit or stash your changes before running this script."
+#     exit 1
+# fi
 
 echo "ensure no old docker containers are running..."
-docker compose down -v
+sudo docker compose down -v
 
 # Store the current branch name
-CURRENT_BRANCH=$(git branch --show-current)
+# CURRENT_BRANCH=$(git branch --show-current)
 
-echo "checking out temp-fork-devnet-update branch"
+#echo "checking out temp-fork-devnet-update branch"
 # Create and checkout a temporary branch
-git checkout -b temp-fork-devnet-update
+# git checkout -b temp-fork-devnet-update
 
 echo "replace ./app/upgrades.go with template so fork upgrade is set up"
 cp ./fork-file-templates/app_upgrades_go_template.txt ../../app/upgrades.go
@@ -54,34 +54,34 @@ echo "replace dispute migrations.go with template..."
 cp ./fork-file-templates/dispute_fork_migrations_template.txt ../../x/dispute/keeper/migrations.go
 
 # switch from chain directory to repo root to build layerd binary
-cd ../..
+# cd ../..
 
-echo "add edited files to git..."
-git add ./app/upgrades.go
-git add ./x/oracle/module.go
-git add ./x/oracle/keeper/migrations.go
-git add ./x/reporter/module/module.go
-git add ./x/reporter/keeper/migrations.go
-git add ./x/dispute/module.go
-git add ./x/dispute/keeper/migrations.go
-git commit -m "update consensus version for fork upgrade"
+# echo "add edited files to git..."
+# git add ./app/upgrades.go
+# git add ./x/oracle/module.go
+# git add ./x/oracle/keeper/migrations.go
+# git add ./x/reporter/module/module.go
+# git add ./x/reporter/keeper/migrations.go
+# git add ./x/dispute/module.go
+# git add ./x/dispute/keeper/migrations.go
+# git commit -m "update consensus version for fork upgrade"
 
-echo "build chain binary from temp-fork-devnet-update branch for docker environment..."
-CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o ./prod-sim/chain/bin/layerd ./cmd/layerd
+# echo "build chain binary from temp-fork-devnet-update branch for docker environment..."
+#CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o ./prod-sim/chain/bin/layerd ./cmd/layerd
 
-echo "checkout back to $CURRENT_BRANCH branch"
-git checkout $CURRENT_BRANCH
+#echo "checkout back to $CURRENT_BRANCH branch"
+#git checkout $CURRENT_BRANCH
 
 # Clean up the temporary branch and its changes
-echo "cleaning up temporary branch..."
-git branch -D temp-fork-devnet-update
-git reset --hard HEAD
-git clean -fd
+# echo "cleaning up temporary branch..."
+# git branch -D temp-fork-devnet-update
+# git reset --hard HEAD
+# git clean -fd
 
 sleep 3
 
 # switch back to chain directory
-cd prod-sim/chain
+# cd prod-sim/chain
 
 echo "edit and merge genesis file to replace validator set"
 jq -s --arg genesis_time "$GENESIS_TIME" --arg future_time "$FUTURE_TIME" '.[0] as $public | .[1] as $local | .[2] as $docker_data |
@@ -209,7 +209,7 @@ jq -s '.[0] as $docker_data | .[1] as $reporter_data |
 
 # Function to check for error in logs and extract numbers
 check_for_error() {
-    ERROR_MSG=$(docker logs validator-node-0 2>&1 | grep "panic: not bonded pool balance is different from not bonded coins")
+    ERROR_MSG=$(sudo docker logs validator-node-0 2>&1 | grep "panic: not bonded pool balance is different from not bonded coins")
     if [ ! -z "$ERROR_MSG" ]; then
         # Extract both numbers and remove 'loya'
         FIRST_NUM=$(echo "$ERROR_MSG" | grep -o '[0-9]*loya' | head -n1 | sed 's/loya//')
@@ -241,11 +241,11 @@ update_genesis_balance() {
 }
 
 echo "set IS_FORK=true in docker-compose.yml"
-sed -i '' 's/IS_FORK=false/IS_FORK=true/g' docker-compose.yml
+sed -i 's/IS_FORK=false/IS_FORK=true/g' docker-compose.yml
 
 # Start docker compose
 echo "Starting docker compose environment..."
-docker compose up -d
+sudo docker compose up -d
 
 # Wait for containers to start
 sleep 3
@@ -257,14 +257,14 @@ for i in {1..15}; do
     if [ $? -eq 0 ]; then
         echo "Error detected in validator-node-0 logs"
         echo "Stopping docker compose environment..."
-        docker compose down -v
+        sudo docker compose down -v
         
         # Split the numbers and update genesis
         read -r FIRST_NUM SECOND_NUM <<< "$NUMBERS"
         update_genesis_balance "$FIRST_NUM" "$SECOND_NUM"
         
         echo "Restarting docker compose environment with updated genesis..."
-        docker compose up -d
+        sudo docker compose up -d
         break
     fi
     sleep 2
@@ -273,10 +273,8 @@ done
 echo "Process completed. Chain is starting please wait a second before we check the logs to ensure it is running"
 sleep 15
 echo "Pulling the last 50 lines of validator-node-0 logs to check that the chain is running..."
-docker logs validator-node-0 | grep "INF" | tail -n 50
+sudo docker logs validator-node-0 | grep "INF" | tail -n 50
 
 echo "Chain is running!!! You can now interact with the chain using the layerd binary like usual."
-echo "To stop the chain, run 'docker compose down -v'"
+echo "To stop the chain, run 'sudo docker compose down -v'"
 echo "To complete transactions on chain the key names are validator-{0,1,2} and make sure you use the --keyring-backend test and --keyring-dir ./prod-sim/chain/validator-info/validator-{val number} so it can find your keys"
-
-
