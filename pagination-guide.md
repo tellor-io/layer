@@ -4,7 +4,7 @@ Use `--help` on any query and check the available flags to see if the query supp
 
 ## Pagination Flags
 
-- `--page-limit`: Maximum number of results to return per page. Defaults to 10 for GetReportsByReporter and GetReportersNoStakeReports
+- `--page-limit`: Number of results to return. Defaults to 10 for GetReportsByReporter and GetReportersNoStakeReports
 - `--page-reverse`: Return results in reverse order
 - `--page-offset`: Number of results to skip from the beginning
 - `--page-key`: NextKey from previous query response (for continuation)
