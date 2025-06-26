@@ -1,9 +1,9 @@
 {
   "app_name": "layer",
   "app_version": "",
-  "genesis_time": "2025-06-25T17:32:34.000000000Z",
+  "genesis_time": "2025-06-25T18:50:56.000000000Z",
   "chain_id": "tellor-devnet",
-  "initial_height": 3752898,
+  "initial_height": 4764955,
   "app_hash": null,
   "app_state": {
     "auth": {
@@ -40,6 +40,13 @@
           "address": "tellor1p8xk2xqwgszmerk83dvjszddp5adqs5hwaupjt",
           "pub_key": null,
           "account_number": "24",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "tellor1p88ju0yhutmf5p2u798xv3umaa7ujw7gch9r4f",
+          "pub_key": null,
+          "account_number": "86",
           "sequence": "0"
         },
         {
@@ -177,7 +184,7 @@
             "key": "AiC0R7XKEKYAGf5u9PeAc0cEN+rvv0WT2eG05j5GG5a0"
           },
           "account_number": "52",
-          "sequence": "15"
+          "sequence": "22"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -187,7 +194,7 @@
             "key": "Am9mMyly9/H/ezhAa8GJWU1efM4FLuEeYCzJzFTW94os"
           },
           "account_number": "5",
-          "sequence": "1861715"
+          "sequence": "2367912"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -237,7 +244,7 @@
             "key": "AtnrtRi3FeRvh3I9QjCgLkHCU2vwDbfHm5YIy1yTvCI1"
           },
           "account_number": "2",
-          "sequence": "1874591"
+          "sequence": "2380604"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -277,7 +284,7 @@
             "key": "A/FHIk/X2hWDB5bDsJNnI8fPcamjNBkNJqee3eqGnn+J"
           },
           "account_number": "58",
-          "sequence": "488389"
+          "sequence": "994402"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -287,7 +294,7 @@
             "key": "AniYVm6hky5HVzHopTAqc+1PT3+bhygHvwUWGmWlREXb"
           },
           "account_number": "4",
-          "sequence": "1857737"
+          "sequence": "2355815"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -297,7 +304,7 @@
             "key": "AhzZ1SWJgpTyoe/TgwTz45i/Vhipx3iQyZ3bPmi1BsiG"
           },
           "account_number": "69",
-          "sequence": "6"
+          "sequence": "7"
         },
         {
           "@type": "/cosmos.auth.v1beta1.ModuleAccount",
@@ -382,7 +389,7 @@
             "key": "AtgPYa8KJPmZlAQDmmhLrjbP99b+MLA5Ie2uY5t5xAEO"
           },
           "account_number": "33",
-          "sequence": "490"
+          "sequence": "524"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -392,7 +399,7 @@
             "key": "A2whsztzd0EfsFhwD+zKNCb964+JhBBg9nktKiDu1TOZ"
           },
           "account_number": "3",
-          "sequence": "1876177"
+          "sequence": "2382184"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -402,7 +409,7 @@
             "key": "AoFqvt4xqKnevfxoQW7BbcUJygtCjMpmemPIlF1MlpVN"
           },
           "account_number": "78",
-          "sequence": "11516"
+          "sequence": "11518"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -495,7 +502,7 @@
             "key": "A2hivFWzedr84Tl2xVwNRL7mfols79Idnu0mxzeZ2y+M"
           },
           "account_number": "0",
-          "sequence": "1876055"
+          "sequence": "2382068"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -505,7 +512,7 @@
             "key": "AkhDt+sx9HnBAKUc+ktqOdN4cb8Yl0K3AzpynQzoqbim"
           },
           "account_number": "72",
-          "sequence": "39"
+          "sequence": "52"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -535,7 +542,7 @@
             "key": "Ar6Bxsx8cm1q+RD9QT9ExDi4Luyk/OvTYReLhFikW+ZM"
           },
           "account_number": "55",
-          "sequence": "1127276"
+          "sequence": "1632645"
         },
         {
           "@type": "/cosmos.auth.v1beta1.ModuleAccount",
@@ -556,7 +563,7 @@
             "key": "A98ysUcruN/XHfbzrg8ql19myqtK3LpCv/JjQW7AJLu0"
           },
           "account_number": "38",
-          "sequence": "320"
+          "sequence": "321"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -566,7 +573,7 @@
             "key": "Azl959UhqTbcYyXqbz1IVlLN+tKH2/NPC+jkGEkgjCQP"
           },
           "account_number": "50",
-          "sequence": "755607"
+          "sequence": "1176947"
         },
         {
           "@type": "/cosmos.auth.v1beta1.ModuleAccount",
@@ -593,6 +600,16 @@
           },
           "name": "distribution",
           "permissions": []
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "tellor1j4efgzq92x2txwjz3nj7mcuctjhhl35h9m8mfx",
+          "pub_key": {
+            "@type": "/cosmos.crypto.secp256k1.PubKey",
+            "key": "A8NC6lGawumtd3rR0kWABfwQRvKWGi8+XTNgG4yss7Ai"
+          },
+          "account_number": "83",
+          "sequence": "6"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -639,7 +656,17 @@
             "key": "A38D7275zJYWnQcPX7gJRdvYGORaPNmh0xPOZ4IvWu3+"
           },
           "account_number": "6",
-          "sequence": "1830928"
+          "sequence": "2336896"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "tellor15a4l8qg5ccsrsmnsylskkqk8qrmeudr4hav5fp",
+          "pub_key": {
+            "@type": "/cosmos.crypto.secp256k1.PubKey",
+            "key": "A5XFQ2aBckadfta5g0qE4VsGQ+xAPnHD4fETpocPXIxS"
+          },
+          "account_number": "84",
+          "sequence": "2"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -649,7 +676,7 @@
             "key": "Apsi2PCoUspkX8TSNEfSwZjRRaMiushBm1vjoLlW2KB7"
           },
           "account_number": "40",
-          "sequence": "626541"
+          "sequence": "626544"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -666,7 +693,7 @@
             "key": "AkJbdsvgi2Fl1jiTfSzhEIjJahX8lCJZTCcnpeKwjzqR"
           },
           "account_number": "21",
-          "sequence": "22"
+          "sequence": "23"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -676,7 +703,7 @@
             "key": "A+ghBpqm2uNC6wb1lxrgmLTZP7jE4NwZTEix2X9JswR4"
           },
           "account_number": "66",
-          "sequence": "8"
+          "sequence": "13"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -696,7 +723,7 @@
             "key": "AyKFWWw0qz+VJiD1rm3wnP+tAkF/Yvl4d73VjtN5G1pf"
           },
           "account_number": "76",
-          "sequence": "11"
+          "sequence": "13"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -713,7 +740,7 @@
             "key": "AvFXwQ1QwIovcra7cfC5IvBYMebvw3gnSVe1wYxSTyAG"
           },
           "account_number": "28",
-          "sequence": "26"
+          "sequence": "36"
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
@@ -724,6 +751,16 @@
           },
           "account_number": "8",
           "sequence": "2"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "tellor1cmt5j83q77mvu7m7g3mz6cvkgm4tq2zcv9tmpx",
+          "pub_key": {
+            "@type": "/cosmos.crypto.secp256k1.PubKey",
+            "key": "Augn13brVQ3Os0YSHASeUC5+q3hF10FMrh+/cPQORyFV"
+          },
+          "account_number": "85",
+          "sequence": "3"
         },
         {
           "@type": "/cosmos.auth.v1beta1.ModuleAccount",
@@ -838,7 +875,7 @@
             "key": "A81EAYcEc3JFjrC0hO63cgQc54HVDWLcH5xgfoVsBV+a"
           },
           "account_number": "57",
-          "sequence": "1116150"
+          "sequence": "1614834"
         },
         {
           "@type": "/cosmos.auth.v1beta1.ModuleAccount",
@@ -960,6 +997,15 @@
           ]
         },
         {
+          "address": "tellor1p88ju0yhutmf5p2u798xv3umaa7ujw7gch9r4f",
+          "coins": [
+            {
+              "denom": "loya",
+              "amount": "20000000"
+            }
+          ]
+        },
+        {
           "address": "tellor1pwqdg0yk3wxlhrddpkuuhkh5tx94clxth2t5vq",
           "coins": [
             {
@@ -1000,7 +1046,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "5520029964"
+              "amount": "7243635664"
             }
           ]
         },
@@ -1045,7 +1091,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "224195"
+              "amount": "650156"
             }
           ]
         },
@@ -1054,7 +1100,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "85331994"
+              "amount": "92527231"
             }
           ]
         },
@@ -1099,7 +1145,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "116325863"
+              "amount": "129119231"
             }
           ]
         },
@@ -1135,7 +1181,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "21687039"
+              "amount": "30060352"
             }
           ]
         },
@@ -1144,7 +1190,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "87136892"
+              "amount": "93603767"
             }
           ]
         },
@@ -1153,7 +1199,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "1000070"
+              "amount": "1000065"
             }
           ]
         },
@@ -1198,7 +1244,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "9296311012"
+              "amount": "10100720465"
             }
           ]
         },
@@ -1225,7 +1271,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "208874200"
+              "amount": "214279378"
             }
           ]
         },
@@ -1234,7 +1280,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "93858303"
+              "amount": "109131501"
             }
           ]
         },
@@ -1243,7 +1289,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "89907873"
+              "amount": "89907863"
             }
           ]
         },
@@ -1315,7 +1361,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "184518020"
+              "amount": "201396093"
             }
           ]
         },
@@ -1324,7 +1370,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "2405000"
+              "amount": "2340000"
             }
           ]
         },
@@ -1351,16 +1397,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "38457356"
-            }
-          ]
-        },
-        {
-          "address": "tellor1364k288xd4r0gxlnk2rve5fm3qxamdtted7v4t",
-          "coins": [
-            {
-              "denom": "loya",
-              "amount": "2223"
+              "amount": "34414404"
             }
           ]
         },
@@ -1369,7 +1406,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "1887173"
+              "amount": "1776618"
             }
           ]
         },
@@ -1378,7 +1415,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "10730600"
+              "amount": "14963912"
             }
           ]
         },
@@ -1387,7 +1424,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "25254601"
+              "amount": "25323201"
             }
           ]
         },
@@ -1396,7 +1433,16 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "2000912952"
+              "amount": "2670254133"
+            }
+          ]
+        },
+        {
+          "address": "tellor1j4efgzq92x2txwjz3nj7mcuctjhhl35h9m8mfx",
+          "coins": [
+            {
+              "denom": "loya",
+              "amount": "299970"
             }
           ]
         },
@@ -1441,7 +1487,16 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "91959853"
+              "amount": "100883732"
+            }
+          ]
+        },
+        {
+          "address": "tellor15a4l8qg5ccsrsmnsylskkqk8qrmeudr4hav5fp",
+          "coins": [
+            {
+              "denom": "loya",
+              "amount": "499970"
             }
           ]
         },
@@ -1450,7 +1505,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "18977175"
+              "amount": "26511420"
             }
           ]
         },
@@ -1468,7 +1523,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "84117093"
+              "amount": "84017088"
             }
           ]
         },
@@ -1477,7 +1532,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "196488713"
+              "amount": "6788902"
             }
           ]
         },
@@ -1495,7 +1550,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "190245"
+              "amount": "143295"
             }
           ]
         },
@@ -1513,7 +1568,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "101668646"
+              "amount": "102668506"
             }
           ]
         },
@@ -1523,6 +1578,15 @@
             {
               "denom": "loya",
               "amount": "1999985"
+            }
+          ]
+        },
+        {
+          "address": "tellor1cmt5j83q77mvu7m7g3mz6cvkgm4tq2zcv9tmpx",
+          "coins": [
+            {
+              "denom": "loya",
+              "amount": "9997982"
             }
           ]
         },
@@ -1612,16 +1676,7 @@
           "coins": [
             {
               "denom": "loya",
-              "amount": "31795806"
-            }
-          ]
-        },
-        {
-          "address": "tellor17xpfvakm2amg962yls6f84z3kell8c5ls06m3g",
-          "coins": [
-            {
-              "denom": "loya",
-              "amount": "72"
+              "amount": "27801342"
             }
           ]
         },
@@ -1683,7 +1738,7 @@
       "supply": [
         {
           "denom": "loya",
-          "amount": "20880019322"
+          "amount": "24004682630"
         }
       ],
       "denom_metadata": [
@@ -1814,6 +1869,10 @@
           "evm_address": "m85GWr3YpOPYbsuM/IeQWN26zA8="
         },
         {
+          "operator_address": "tellorvaloper1j4efgzq92x2txwjz3nj7mcuctjhhl35hs5tfsk",
+          "evm_address": "y19tqF7WsjF0VH6gsDw4RzEBVkE="
+        },
+        {
           "operator_address": "tellorvaloper1h2ekr5q6aydeedcdzrf6gdwetsygqyepawekmk",
           "evm_address": "QTjcGU20Q8+HyTqcbldJrUATXVM="
         },
@@ -1840,6 +1899,10 @@
         {
           "operator_address": "tellorvaloper1d0t6p47asr8p9smeq9a93qhmfgtwmcag7tqxw7",
           "evm_address": "WkFT4XWZuaBsLUT2SNwNHIvUPKo="
+        },
+        {
+          "operator_address": "tellorvaloper1cmt5j83q77mvu7m7g3mz6cvkgm4tq2zce28fck",
+          "evm_address": "nHs3F2+MM3449vZpaYPkeaoT2xc="
         },
         {
           "operator_address": "tellorvaloper1a60lcwf7l0h6grhxjkskd4m304tl69sfufnlyp",
@@ -1932,6 +1995,10 @@
           "registered": true
         },
         {
+          "operator_address": "cb5f6da85ed6b23174547ea0b03c384731015641",
+          "registered": true
+        },
+        {
           "operator_address": "c61ee66c58a11e482c11fae61cfd3127c0de4e82",
           "registered": true
         },
@@ -1957,6 +2024,10 @@
         },
         {
           "operator_address": "9d2f5cb841eb47d0c8e2ffc57751fa5eb6327396",
+          "registered": true
+        },
+        {
+          "operator_address": "9c7b37176f8c337e38f6f6696983e479aa13db17",
           "registered": true
         },
         {
@@ -2081,6 +2152,89 @@
         }
       ],
       "bridge_valset_sigs_map": [
+        {
+          "timestamp": "1750588699232",
+          "valset_sigs": [
+            "BR28Sl5gkkvcf0mxfSM/mpa7jkOibhTM2OGjDl4ZKihzfIpO6PxZZ9MpkCUJmdyo4HLjYtgluL+uls0avQHu4g==",
+            "i7sQd4SHxSL4L9YjO/iKopyTI44Z+EPSl6CwVWvazOonxtURH/7ExDx+9kcAk2EuYm8B/qi3/LX6UmEc3PxPRQ==",
+            "wOdTjU3tO9HvDqE9STpicAlOEV0ZbXEag+fBDP8Gz01b55V1VXFnL/fQlWtCievd57V/lN1TA5iS2wGj89xGqw==",
+            "hs4EYmJ+WhEGXrTn80XEz5ddyKKPB2OviOwXGqDuqA97IoTvId5rQBMG+vPicom6QpmxotpGedaA2kWQ4pyceQ==",
+            "6DYkBsguLcLejD4C7DzBcZMGkKcS7WNmzrBj+OE70aMcI9t7mnBTANDEr4Bt+Q17ZYT7KUszZPWEf0l7My4pCw==",
+            "670joKQ2HpdweT24+/tPuQWbTJ7LPEU3RYdbYk/LsaYzrYPTzB2QJyR4uTjHYCdtaWZMBcUgJiQvJlbH+Awb+A==",
+            "Q02X0qz+WyRmTO2uLlH++Ahz/oU68dpgA5fhgPfNJ9hga9oQILRoIU4CBk3mcf2eLrFt6H2todprtQwPXGvfNA==",
+            "His3nLL9m+cgVHaMXGVxzaKV1wD3goPPPNNcF0TIbaM20oM9KRXOJKWu2kljpo5KhAJMz3Md3mcMOcCOYvROIA==",
+            "XV2OHZ0WUM4v1s1Jp/2BL34VxcykpTOSqyKkHpcsWU08OwoFEDEZkQ22j1GhWj8xgr71HSUVHpgnxTBPfxbmJg==",
+            "UY/m/U3O3Vb9a9pD6VRKfASPICEh+Lr1waLt3KQ6+HYardA5+KupLuvJPTMSSUowsIpoG0h6f8i37sXUX0TtZA==",
+            "rdOZt6Mc/+t4b3h2oY+YLg8e7HEgrkq3nb2qHErgjjpel9DoS3G7zm0R+2SZLHgt6IJIvPjkQ3Lek5wx68jyXg==",
+            "n+TPh17Mb8DOYSCHb0BHb2hY7lNEB0k1IVryf3/QIkhF1Xg1YCcQaUAQaq9/Ar30PzAazsRrNxeLUP8zpKen3w==",
+            "gt2B55ssj0aXX3Fc1rX+Wyj/9Exam5XvW4lpToH94zkNls/wdHsyHTm8kvIO6z1eOVHIxJAzHrzuFxGVncM/XQ==",
+            "NMp91qzHsa5/ULvFXmnZlOfJ9HVsy25WQMgu7NIXHBgl29Z0CVjqHaZ0qpCsC4Ioij/Dbns2cLsYF57Yy+YROA==",
+            "EBIu0R8qkuDT8mV9usvPcJ+TxgAPxPgrteKdXFNGafRF/E/JHrsvH66FuYkKO3QXvAVPpD9xM730kiar6ZymVQ==",
+            "ThXnuXP2URukConXn2ap9XECwx1hmVm9hD2h9L8S4p99h/BidUnRfcFcbAdp2difQNkb0N8GkmUvdUKRbv9c8A==",
+            "nPLFfe94BWCe2ClR6angB1QRUfXThRrSghRaTvJHbNQkBMmSfJou9glZKtu3c9tkHo6ZHOzxz3mRpV8T7IcRFQ==",
+            "+2FXAVlgLTX7GTO3TOANsTiNuYBWKdihnP3xontU62B4kstiM2P0pXpRXA/HA0M0yeuPruJiJz3bgZv+h58b+g==",
+            "po7zxfI3cAWdOVTK5bt8ejBFRIbxMCsEF/5jaIEcj/Y/ugdVZCWEvJeCH3vlGPiQ5ieBu3yBVYpXQkwAdmd7ew==",
+            "/xHNkDLJk7+mhj4+M0Vvp+8rPka9YY4ufn5EtG10Zbp4apEga+f5NBr29qRQ/niU0dB03uS4cZtzKxQvI0JTlg==",
+            "GLxeUBLOS75ldaSEru0CM1fvwwsLxKZrWJ/HvshNcmQr8vZUxyDxox3Z48kBAjk21CFbTLvWzp4u+NWk37kcBw=="
+          ]
+        },
+        {
+          "timestamp": "1749950862132",
+          "valset_sigs": [
+            "/8koBfCD4fl33tY4ZmbtfSKV1K8n0jqFMbeF2v3iaWdjU2vZRXtHKoedZ9nLcv+bIv4MpyWjxVrwQC4wruouOw==",
+            "HQKEAUAYqsMptEzCvVWOs2XTpoLVxzmbOYYhrolBCWZm8v9azsh5tuYEcBG56/BmiVKoKED0pMfqfdeDF3a9lw==",
+            "Cw4Eh1C39B+FACTkj3TQ6CtETO6J7t2RDT697lKgZOwZjcghZUAeZLFUA/E9tPX33XoXVGBQ/YGLNgITqgwJOg==",
+            "PwZYWPUv+0FeA8bkh69hmuzdoqp4DCYXJ34QHbMxgUYYcIRjmlm3wlgrjrtuD6KvizNv6XDY7BrTBbsA9PGQ9w==",
+            "RPo1naQEOobJN9hh6A5s1sSoh8BvnstCieQTpQoie4FoQjZo94CxIvVPnJ3syTPVWoBNvTayfp0bq07zifcW6A==",
+            "T015M7inSjhWZC7R+5clBnvFuRxLuHtgXqraYrt9LJgX4a0EECY0NuQcYlLpgVbO2IkMCZhZxaPtnX2JOm/4Xw==",
+            "cyXAeskTYrr7s/NCzQFiDI8zkPWID1wAciQPGeviD/wV+bsb2+Pn7aa4VdAgSHntBg1wF4W8pi0uNeADJfSyGg==",
+            "3clPUze/C+fpbTa/NiUp9EKtDVrB1XOykjsDSMD0SCp7PmCeppxwVxtjBlDUuLhmC/GkOd4PCm6xeBrdOxqW/w==",
+            "qwJ9oEOfbrEk7wgSZlVLQVDWrXbWo4b2/D035udNdj5uvBAkZtFV99I/UCJqf3MVWN4+Xqgi9oDU60ozqPboyA==",
+            "v0MCMrhs4vK1YtFl7ma+keGEFRFMtdbBjgLBa9/jXLUrB56ITQqF9Hjk/C9jwcRW33/xYOCmmcGDZsKvxJ6e9Q==",
+            "OTTp4zWJTG7gTf9bn9O3PElz6i9GXJOqzN9GUJAciBUwdpVDTLBk1ZO30kRdbqxOmi7HWZYeG4w4kLVERbtHWw==",
+            "3roH9s5+r/TI3jqfYxiMRs05d+xUe3JddAtPxOjFLZhm5nibHPvUYRmprpPJ33uzs/UG5t33btIMIYSQvMIrRA==",
+            "8ubMZsply+9Z3eD0013cf6JqFco71R3DcWtccWwRPVpYdUTkMvFcgPiYUXZRJ4fxGrKRvl2gJfwALRtkLfzCaA==",
+            "A+kRW0QGskiqloEaRuk4A5LpP14Iq0pcY30i84bSE31ztCWSw4NbtBTkbdbT95l9pJs9aVEbjVhGiLbvFjWW4Q==",
+            "TP4EdpsBNp8BHBHc+aUsdlcmpS/9W+pn91jx1LPR/Ox2ktxgDxULxhrD83hodbbavkkraKS7c2VEOI0EbVWVxA==",
+            "Vae2wlKdBHghTYQLCgYNZc8GA/kzKyq9pM6340baJVwBuoRRyku62I+Ked81aC8DFAL1TTJiGE0IifqGl311bg==",
+            "mriDCTiB4nfVvxO6806eSmLRAVG4kayR/RMjLtC4xpJCs7ERLg+EQ/yJ1hoIGE6MxuafkGad6VLpyMTDxMskDg==",
+            "2r620U+5+ZG5RXI7eAjpr2XhQO1prGADxFX6ZGjxP8szAh43z3q7QeKCqjZGDc3WBTB+YvSnKNMBcrTSwcGSCg==",
+            "",
+            "qiehlNXDzAP8Uuyn23V05HZQbIo8BuFyNyZnA5xD86ZtOAi1ezEsbc5i2XC74AkDU90Wvh2/vHsYUd4Wi62Thg==",
+            "SB8VxJ/+4A5LgW1zpvwBekGYOeHGC1C9/7cJ5gFJ4KMdOGkxgrCPmppz2DzRSZnjclU1mXx6gLDq4Etj+y0qjA==",
+            "XuM8JucYWoM84FdrHE0FZl8MNWbXLn8h09dM4FpYDNBi5BDPLSEmDc6Nfw3v6SviqNcDnnMS26yRIqrxNo+qhA=="
+          ]
+        },
+        {
+          "timestamp": "1749166087024",
+          "valset_sigs": [
+            "CTxFrELWjyg8HYYqtcUIMcDxb63H8PgNds/doIEUtqYMbvwSdVlhMEeTnHjHIp6s73ynq3xbk9t7ftZKG9+4NA==",
+            "WXHyB77jXOpZkHt0E5U2RqaULed9AFDd2uOBaJQdtaQVvjk/qeSM/HWMXxny09mLZeKdvUZ0M7LRhEkis32gqA==",
+            "BzamyIPu2t+aeG3U6f935dSmm/oCWNtRGKZ4CoBInA8ey0R85Rq2uvSYt8X/5pAr57YmhvaxuJDJa1UknI/zLw==",
+            "ESwhByU0763QbvLdJ//1RWX/sPKsVMZ5p76RM1wigK9yH8svuw4ycLWTpFTTENijuHEPeqRgdDgFYULFow7RNw==",
+            "bhEoaF4TFvrw6Ce53ZOE+PeireXqghD0tSE+Q1zvU6g85SWME1CI8ykjb7Jf95DtBUDhZpDji0D24Jz/O3ajag==",
+            "U0VyGah5mXSVF2G6nZO6bUvUVbfHhn0kc+7CVa/lwohL4pecG0HlGF7qnRuGxYWpwTApTyPOHbXDvAxDMWgWYg==",
+            "8J0lA4nrKPgZFQjhsAluXFyaPMpvffCy9z+RhfW/QoItiVWYTXnNG7jUQZTFS5d6k61mGUuuQGV9ugW6FPbdnA==",
+            "PG7unuye9f94KPG3MYlWSpdLOx9UvsA2Dja9w/ZkCJQGXU7Qu1lxNDB0zhggto5xnSDJrcYjlGzQPX4zBahzVw==",
+            "ByDiASqhgi2XrQM9oVPE2hbVoGkV4IV1UqB1kz5UQ9NzfnKJJ7GN1s88gtttI6FynXl93NeVGqjLyMjLRs29bw==",
+            "NWK+PfoPgO+3aZMEIKVj4X9XmM5swv+u7+uw+M1rY6kQ2D5IudBtpaq91FYg70CoEX2cVlvDkHth308HjbmgIA==",
+            "KwkQ8V9VqXNwZgJU0IOMgpWL3MN7MiRY3EXEAR1s6WVgmvdD/Sstd9SP1/08NcN5F3Gl3OFnnwPX0kuUUi/obg==",
+            "kAvHAMspDQfBNAQFsrQrWM9F6itZN53SziSgxzjKDoIkeRhy2F9uH8d/uxMB0HSknXkvYYf2dJegPPULI+BnNA==",
+            "Pbso8Wgy9klarrZ/39nZcEx/IyrxtrvY2aE815b0JOwsgEfx2j4bhJvdfaeOwtywxFO8RnU1DrdK2W317HH5LA==",
+            "f/emRiXjVzUMhZ36RSx9tMVbNelNFK9ypIP2s1iKDOB7BScv3Qgr4IHPA6698mltOCM5kJx8dTL+9NHgi06FXw==",
+            "zkv1VA2JNkOyWsk1aC8NCsee0FsH0AKRNzCT2Rb1z8l9pzxBIual0H5H31YMaos7OZAQVuI7+J0IMPjrfG745w==",
+            "SH75A9SJQ/n5iqyZ+ET8wpEhK68jVblas3g9ekIvqGk6Q7Vxo7ALMuvL7SXuTlR7LpDLpaAD9dkhwQ8QjpcE6A==",
+            "qvdZobpikd/qAjt3fJwM/JVaFHLm20aHPgsrwqy1V/BYGDESEUefly1MkPE2NFw+1bBTUny8u21VI00TcC4CHQ==",
+            "KSMuf/LF9wOlW0ZSTfTIZYV5cXvB51PskLT56iZsdz9BmB9h//5ZMIOGZCchBj7oU8rSkc9KZMxgqHKvrvRD6g==",
+            "I4ufnQYitipk5LwmYiWE32uBR8FEwoLfgSBLGcJNhmMm1aaS4zT/oEQib0P0o2RPnJ+FmPJwltOlzL3vDjFPXQ==",
+            "OzBSSYv05ouEcxApOcNRCPREu9xWwo0iHUW6JrN4ZBEBGpG6UYgrmLKWaJtCu7duSwNAY5+5rkuKXgpH+piZvg==",
+            "IV/Azgg4Kq3mdndsWABFgk3ZfdIoQhZEW1klz6uhUclZj+6LCS2qAlkx0sEEUP/b9w0NNVCouBgh2Lw0EhJEsQ==",
+            "jdnMy+O4u/CDLLg8kMB5nD2HcQz2n7X9tGwjf9s1Ihs9ptecXUEilEe64In8eAR/QAvQf/LHqYUSejNZa7I4TQ==",
+            "szNA+Z2Ns9pHQ5lFtpeEP4rpvEsN7pMmtTzoWWFn3R4pecKl2xgMaEHczBBkPuYPX1u+yHtDNlnMrNuY/y38yg==",
+            "",
+            "6yYmihq7KwXbOfI4GoJ8fN7sRP6O2jVemafR3wSuys0EJO11xFlFy2ymy3FtKkxOHUPjfEgfMRRpjNcEnamfOA=="
+          ]
+        },
         {
           "timestamp": "1749023941257",
           "valset_sigs": [
@@ -2809,6 +2963,27 @@
       ],
       "validator_checkpoint_params_map": [
         {
+          "timestamp": "1750588699232",
+          "validator_timestamp": "1750588699232",
+          "validator_power_threshold": "6065",
+          "validator_set_hash": "8RWJFpzA+Yjnq40CA+yKxpdOVjjbalTW7p01B6LliXw=",
+          "validator_checkpoint": "aTaJj4Mn4IwgjW/SzCTmMSJcOm1+/IFH92hk55L9qyE="
+        },
+        {
+          "timestamp": "1749950862132",
+          "validator_timestamp": "1749950862132",
+          "validator_power_threshold": "5775",
+          "validator_set_hash": "8uSBLy6pqEWr2dnjJrnBwmK4HZ3VuhQO/tWVrjFwncg=",
+          "validator_checkpoint": "nEwqqhmtWn/2n73AN2KET7z4QWvyY8WWK8eGYcf92eI="
+        },
+        {
+          "timestamp": "1749166087024",
+          "validator_timestamp": "1749166087024",
+          "validator_power_threshold": "5690",
+          "validator_set_hash": "j2byzTvw0tf3urcZvuRXlOTjVCC93PjoQAjDeMSn1h8=",
+          "validator_checkpoint": "7KZ8+AG1IxRdf8ztA88sm74CRV53l1zYOsygfDaW+K4="
+        },
+        {
           "timestamp": "1749023941257",
           "validator_timestamp": "1749023941257",
           "validator_power_threshold": "5654",
@@ -3021,6 +3196,18 @@
       ],
       "validator_checkpoint_idx_map": [
         {
+          "index": "31",
+          "timestamp": "1750588699232"
+        },
+        {
+          "index": "30",
+          "timestamp": "1749950862132"
+        },
+        {
+          "index": "29",
+          "timestamp": "1749166087024"
+        },
+        {
           "index": "28",
           "timestamp": "1749023941257"
         },
@@ -3137,12 +3324,297 @@
           "timestamp": "1742491901895"
         },
         {
-          "index": "29",
+          "index": "32",
           "timestamp": "1748878178054"
         }
       ],
-      "latest_validator_checkpoint_idx": "29",
+      "latest_validator_checkpoint_idx": "32",
       "bridge_valset_by_timestamp_map": [
+        {
+          "timestamp": "1750588699232",
+          "valset": {
+            "bridge_validator_set": [
+              {
+                "ethereumAddress": "nZHStvxSoz1/JDvrtJ94tYAJpxo=",
+                "power": "1400"
+              },
+              {
+                "ethereumAddress": "H+k8A7/EXugJNni5t7WYdApgOZs=",
+                "power": "1292"
+              },
+              {
+                "ethereumAddress": "Fm2trZwmwcSF7f6bLrOLhuO7INM=",
+                "power": "1270"
+              },
+              {
+                "ethereumAddress": "jPagt3mdOylCd1a8VRASZm8oHys=",
+                "power": "1267"
+              },
+              {
+                "ethereumAddress": "Z2pvDQgmwUs/TPt8pyNzigig8ZI=",
+                "power": "1206"
+              },
+              {
+                "ethereumAddress": "RcOE1edN5aOaXfIccyw+98oz/+s=",
+                "power": "997"
+              },
+              {
+                "ethereumAddress": "pjOnybFyh/9GwEhEbfBL+8slBQw=",
+                "power": "202"
+              },
+              {
+                "ethereumAddress": "HDSj2pIt5jQdiCfFvYfSInMXwxA=",
+                "power": "167"
+              },
+              {
+                "ethereumAddress": "nS9cuEHrR9DI4v/Fd1H6XrYyc5Y=",
+                "power": "118"
+              },
+              {
+                "ethereumAddress": "QTjcGU20Q8+HyTqcbldJrUATXVM=",
+                "power": "113"
+              },
+              {
+                "ethereumAddress": "Yuty7SYhuZG5bHs2XTq7blcVOpY=",
+                "power": "102"
+              },
+              {
+                "ethereumAddress": "LuEXXIK8tNW/j1OwEZ/4ilOcVl8=",
+                "power": "99"
+              },
+              {
+                "ethereumAddress": "aipodfyrhtV0OI2gA97/PqszX14=",
+                "power": "95"
+              },
+              {
+                "ethereumAddress": "4WFgPSxfsCRLM6PnXfjEEFkJwUk=",
+                "power": "95"
+              },
+              {
+                "ethereumAddress": "xh7mbFihHkgsEfrmHP0xJ8DeToI=",
+                "power": "93"
+              },
+              {
+                "ethereumAddress": "XYfj1bPNFjYrzjGRDq6ckxYmzMw=",
+                "power": "92"
+              },
+              {
+                "ethereumAddress": "UPYE8MdFYry4o2yinh3TFGQDzYM=",
+                "power": "91"
+              },
+              {
+                "ethereumAddress": "EWIujpnqDHp8PtiY6nqAMSIk9cM=",
+                "power": "90"
+              },
+              {
+                "ethereumAddress": "Z+l/7tpEaJ8+SZCdteem9YY05xs=",
+                "power": "86"
+              },
+              {
+                "ethereumAddress": "WkFT4XWZuaBsLUT2SNwNHIvUPKo=",
+                "power": "68"
+              },
+              {
+                "ethereumAddress": "dCNl1WYXPhVlFoo9fzvORoBh5K0=",
+                "power": "54"
+              },
+              {
+                "ethereumAddress": "b33Q93SxCYNOwGCwj/UQuh3bROY=",
+                "power": "52"
+              },
+              {
+                "ethereumAddress": "1ujKFoeochBJQJLulnhTkwSSUcQ=",
+                "power": "49"
+              }
+            ]
+          }
+        },
+        {
+          "timestamp": "1749950862132",
+          "valset": {
+            "bridge_validator_set": [
+              {
+                "ethereumAddress": "nZHStvxSoz1/JDvrtJ94tYAJpxo=",
+                "power": "1353"
+              },
+              {
+                "ethereumAddress": "H+k8A7/EXugJNni5t7WYdApgOZs=",
+                "power": "1251"
+              },
+              {
+                "ethereumAddress": "Fm2trZwmwcSF7f6bLrOLhuO7INM=",
+                "power": "1231"
+              },
+              {
+                "ethereumAddress": "jPagt3mdOylCd1a8VRASZm8oHys=",
+                "power": "1230"
+              },
+              {
+                "ethereumAddress": "Z2pvDQgmwUs/TPt8pyNzigig8ZI=",
+                "power": "1177"
+              },
+              {
+                "ethereumAddress": "RcOE1edN5aOaXfIccyw+98oz/+s=",
+                "power": "997"
+              },
+              {
+                "ethereumAddress": "pjOnybFyh/9GwEhEbfBL+8slBQw=",
+                "power": "202"
+              },
+              {
+                "ethereumAddress": "HDSj2pIt5jQdiCfFvYfSInMXwxA=",
+                "power": "150"
+              },
+              {
+                "ethereumAddress": "QTjcGU20Q8+HyTqcbldJrUATXVM=",
+                "power": "105"
+              },
+              {
+                "ethereumAddress": "Yuty7SYhuZG5bHs2XTq7blcVOpY=",
+                "power": "102"
+              },
+              {
+                "ethereumAddress": "aipodfyrhtV0OI2gA97/PqszX14=",
+                "power": "95"
+              },
+              {
+                "ethereumAddress": "4WFgPSxfsCRLM6PnXfjEEFkJwUk=",
+                "power": "95"
+              },
+              {
+                "ethereumAddress": "xh7mbFihHkgsEfrmHP0xJ8DeToI=",
+                "power": "93"
+              },
+              {
+                "ethereumAddress": "XYfj1bPNFjYrzjGRDq6ckxYmzMw=",
+                "power": "92"
+              },
+              {
+                "ethereumAddress": "UPYE8MdFYry4o2yinh3TFGQDzYM=",
+                "power": "91"
+              },
+              {
+                "ethereumAddress": "EWIujpnqDHp8PtiY6nqAMSIk9cM=",
+                "power": "90"
+              },
+              {
+                "ethereumAddress": "Z+l/7tpEaJ8+SZCdteem9YY05xs=",
+                "power": "86"
+              },
+              {
+                "ethereumAddress": "WkFT4XWZuaBsLUT2SNwNHIvUPKo=",
+                "power": "68"
+              },
+              {
+                "ethereumAddress": "dCNl1WYXPhVlFoo9fzvORoBh5K0=",
+                "power": "54"
+              },
+              {
+                "ethereumAddress": "b33Q93SxCYNOwGCwj/UQuh3bROY=",
+                "power": "52"
+              },
+              {
+                "ethereumAddress": "1ujKFoeochBJQJLulnhTkwSSUcQ=",
+                "power": "49"
+              }
+            ]
+          }
+        },
+        {
+          "timestamp": "1749166087024",
+          "valset": {
+            "bridge_validator_set": [
+              {
+                "ethereumAddress": "nZHStvxSoz1/JDvrtJ94tYAJpxo=",
+                "power": "1300"
+              },
+              {
+                "ethereumAddress": "H+k8A7/EXugJNni5t7WYdApgOZs=",
+                "power": "1204"
+              },
+              {
+                "ethereumAddress": "Fm2trZwmwcSF7f6bLrOLhuO7INM=",
+                "power": "1189"
+              },
+              {
+                "ethereumAddress": "jPagt3mdOylCd1a8VRASZm8oHys=",
+                "power": "1187"
+              },
+              {
+                "ethereumAddress": "Z2pvDQgmwUs/TPt8pyNzigig8ZI=",
+                "power": "1144"
+              },
+              {
+                "ethereumAddress": "RcOE1edN5aOaXfIccyw+98oz/+s=",
+                "power": "997"
+              },
+              {
+                "ethereumAddress": "pjOnybFyh/9GwEhEbfBL+8slBQw=",
+                "power": "202"
+              },
+              {
+                "ethereumAddress": "HDSj2pIt5jQdiCfFvYfSInMXwxA=",
+                "power": "131"
+              },
+              {
+                "ethereumAddress": "QTjcGU20Q8+HyTqcbldJrUATXVM=",
+                "power": "105"
+              },
+              {
+                "ethereumAddress": "Yuty7SYhuZG5bHs2XTq7blcVOpY=",
+                "power": "102"
+              },
+              {
+                "ethereumAddress": "aipodfyrhtV0OI2gA97/PqszX14=",
+                "power": "95"
+              },
+              {
+                "ethereumAddress": "4WFgPSxfsCRLM6PnXfjEEFkJwUk=",
+                "power": "95"
+              },
+              {
+                "ethereumAddress": "xh7mbFihHkgsEfrmHP0xJ8DeToI=",
+                "power": "93"
+              },
+              {
+                "ethereumAddress": "XYfj1bPNFjYrzjGRDq6ckxYmzMw=",
+                "power": "92"
+              },
+              {
+                "ethereumAddress": "UPYE8MdFYry4o2yinh3TFGQDzYM=",
+                "power": "91"
+              },
+              {
+                "ethereumAddress": "EWIujpnqDHp8PtiY6nqAMSIk9cM=",
+                "power": "90"
+              },
+              {
+                "ethereumAddress": "Z+l/7tpEaJ8+SZCdteem9YY05xs=",
+                "power": "86"
+              },
+              {
+                "ethereumAddress": "LuEXXIK8tNW/j1OwEZ/4ilOcVl8=",
+                "power": "83"
+              },
+              {
+                "ethereumAddress": "w/FYMMQcfwFruyFiCsB7xKk4HWM=",
+                "power": "80"
+              },
+              {
+                "ethereumAddress": "WkFT4XWZuaBsLUT2SNwNHIvUPKo=",
+                "power": "68"
+              },
+              {
+                "ethereumAddress": "b33Q93SxCYNOwGCwj/UQuh3bROY=",
+                "power": "52"
+              },
+              {
+                "ethereumAddress": "1ujKFoeochBJQJLulnhTkwSSUcQ=",
+                "power": "49"
+              }
+            ]
+          }
+        },
         {
           "timestamp": "1749023941257",
           "valset": {
@@ -5736,127 +6208,155 @@
       ],
       "valset_timestamp_to_idx_map": [
         {
+          "timestamp": "1750588699232",
+          "index": "32"
+        },
+        {
+          "timestamp": "1749950862132",
+          "index": "32"
+        },
+        {
+          "timestamp": "1749166087024",
+          "index": "32"
+        },
+        {
           "timestamp": "1749023941257",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1748235599384",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1747946476247",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1747921172703",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1747917890349",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1747624289160",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1747010929186",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1746573868282",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1746361506285",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1746200287747",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1746122334667",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1746110806717",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1746109806114",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1746109804540",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1745998682105",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1745691050338",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1745595703437",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1745483963329",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1744736229547",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1744729424269",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1744502717568",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1744214082525",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1744211380199",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1744021954522",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1743880886435",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1743808874650",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1743701667587",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1742492067731",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1742491901895",
-          "index": "29"
+          "index": "32"
         },
         {
           "timestamp": "1748878178054",
-          "index": "29"
+          "index": "32"
         }
       ],
       "deposit_id_claimed_map": [
+        {
+          "deposit_id": "107",
+          "isClaimed": true
+        },
+        {
+          "deposit_id": "106",
+          "isClaimed": true
+        },
+        {
+          "deposit_id": "105",
+          "isClaimed": true
+        },
+        {
+          "deposit_id": "104",
+          "isClaimed": true
+        },
         {
           "deposit_id": "103",
           "isClaimed": true
@@ -6341,12 +6841,12 @@
         "community_pool": [
           {
             "denom": "loya",
-            "amount": "2512.943782000754241825"
+            "amount": "3585.930499716365959606"
           }
         ]
       },
       "delegator_withdraw_infos": [],
-      "previous_proposer": "tellorvalcons1ka9wv8yfp2enf3c273nn3wmg6u5r5hg4at6r6w",
+      "previous_proposer": "tellorvalcons1vgmvhge3k385dhtv7mdnks5ed683lud7z9udpx",
       "outstanding_rewards": [
         {
           "validator_address": "tellorvaloper1qma4ngrq2vqz6j82u548lder3ue6m25aa0qh6m",
@@ -6371,7 +6871,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "6863061.261366648877680959"
+              "amount": "3238001.053336610737945333"
             }
           ]
         },
@@ -6380,7 +6880,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "160909342.145623976830509523"
+              "amount": "258411799.228887654590517032"
             }
           ]
         },
@@ -6398,7 +6898,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "15718473.037276261831404498"
+              "amount": "25133616.288547690135639291"
             }
           ]
         },
@@ -6407,7 +6907,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "312848434.989330739872918065"
+              "amount": "407308844.416549147042100160"
             }
           ]
         },
@@ -6434,7 +6934,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "2527536.003233116987413791"
+              "amount": "3991880.697886084814854180"
             }
           ]
         },
@@ -6443,7 +6943,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "324795158.530127295927886679"
+              "amount": "420989853.664990903985912856"
             }
           ]
         },
@@ -6452,7 +6952,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "1081977.507795021696307698"
+              "amount": "1082404.819316079823546550"
             }
           ]
         },
@@ -6461,7 +6961,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "14187477.105372420139496053"
+              "amount": "22587261.770722419854885629"
             }
           ]
         },
@@ -6479,7 +6979,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "312820468.651225172878256433"
+              "amount": "407280538.737175580483776608"
             }
           ]
         },
@@ -6506,7 +7006,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "9764135.578146699877509911"
+              "amount": "16040897.745660985277069890"
             }
           ]
         },
@@ -6524,7 +7024,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "14669639.944572216484312097"
+              "amount": "23438645.913893644792175405"
             }
           ]
         },
@@ -6542,7 +7042,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "312874033.931088203800950033"
+              "amount": "407456193.437191997655691758"
             }
           ]
         },
@@ -6551,7 +7051,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "16357093.121777141715531076"
+              "amount": "24161714.267995568355759138"
             }
           ]
         },
@@ -6560,7 +7060,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "14557415.754900884859311427"
+              "amount": "22555370.972065473206967718"
             }
           ]
         },
@@ -6569,7 +7069,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "13187992.987350850236080401"
+              "amount": "17710953.961000849921282155"
             }
           ]
         },
@@ -6578,7 +7078,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "16352338.816871978264431041"
+              "amount": "21316816.733868986406193218"
             }
           ]
         },
@@ -6587,7 +7087,16 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "1371253.889473290981998671"
+              "amount": "2217756.070508857284024242"
+            }
+          ]
+        },
+        {
+          "validator_address": "tellorvaloper1j4efgzq92x2txwjz3nj7mcuctjhhl35hs5tfsk",
+          "outstanding_rewards": [
+            {
+              "denom": "loya",
+              "amount": "4336.673798122833155194"
             }
           ]
         },
@@ -6596,7 +7105,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "22725135.466724977732681908"
+              "amount": "24376022.124735049987133805"
             }
           ]
         },
@@ -6605,7 +7114,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "1615688.978359667469433277"
+              "amount": "1680217.510927597175612849"
             }
           ]
         },
@@ -6623,16 +7132,20 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "310170106.498384147382201946"
+              "amount": "402198516.513262719720912937"
             }
           ]
+        },
+        {
+          "validator_address": "tellorvaloper15a4l8qg5ccsrsmnsylskkqk8qrmeudr4zjqxs3",
+          "outstanding_rewards": []
         },
         {
           "validator_address": "tellorvaloper14874aky5afw60wlukkgvc5fqcm68825t0axjth",
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "4042125.673767441954303974"
+              "amount": "4815343.205549735446227220"
             }
           ]
         },
@@ -6641,7 +7154,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "1489611.662195562085740254"
+              "amount": "18612638.363336672107439215"
             }
           ]
         },
@@ -6659,7 +7172,16 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "39344.938771383592234261"
+              "amount": "1590873.976070107055409265"
+            }
+          ]
+        },
+        {
+          "validator_address": "tellorvaloper1cmt5j83q77mvu7m7g3mz6cvkgm4tq2zce28fck",
+          "outstanding_rewards": [
+            {
+              "denom": "loya",
+              "amount": "26117.422808704183037333"
             }
           ]
         },
@@ -6686,7 +7208,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "23504001.251948256806566192"
+              "amount": "32088396.569283970832568572"
             }
           ]
         },
@@ -6704,7 +7226,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "14030891.363627853170866248"
+              "amount": "18758828.993900853826607774"
             }
           ]
         },
@@ -6713,7 +7235,7 @@
           "outstanding_rewards": [
             {
               "denom": "loya",
-              "amount": "14882610.315471755203334355"
+              "amount": "23651616.284793183511197663"
             }
           ]
         },
@@ -6774,7 +7296,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "686359.589905134980562922"
+                "amount": "323834.266943866698864799"
               }
             ]
           }
@@ -6785,7 +7307,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "32755393.479096567937103482"
+                "amount": "43630145.121022332874679194"
               }
             ]
           }
@@ -6807,7 +7329,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "1596352.456635178572256673"
+                "amount": "2537866.781762321402679942"
               }
             ]
           }
@@ -6818,7 +7340,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "33441324.754148172703834689"
+                "amount": "44803518.266700500571941692"
               }
             ]
           }
@@ -6851,7 +7373,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "2444167.924392817290482152"
+                "amount": "3832747.726135006675941618"
               }
             ]
           }
@@ -6862,7 +7384,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "35076408.491462091864413512"
+                "amount": "47579792.416138402293923297"
               }
             ]
           }
@@ -6879,7 +7401,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "2314111.281260929047218310"
+                "amount": "3154089.747795929018757107"
               }
             ]
           }
@@ -6901,7 +7423,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "33473997.607130868495780243"
+                "amount": "44852134.115414552918458356"
               }
             ]
           }
@@ -6934,7 +7456,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "1476522.253242259927637409"
+                "amount": "2104198.469993688467593016"
               }
             ]
           }
@@ -6956,7 +7478,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "1466964.591933276528031502"
+                "amount": "2343865.188865419358817895"
               }
             ]
           }
@@ -6978,7 +7500,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "33640489.620355206361269990"
+                "amount": "45196328.217725859653943398"
               }
             ]
           }
@@ -6989,7 +7511,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "1635709.312177714171554074"
+                "amount": "2416171.426799556835575948"
               }
             ]
           }
@@ -7000,7 +7522,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "727871.044885376307947108"
+                "amount": "1127768.805743605725329591"
               }
             ]
           }
@@ -7011,7 +7533,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "1318799.298735085023608133"
+                "amount": "1771095.396100084992128745"
               }
             ]
           }
@@ -7022,7 +7544,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "1635233.881687197826444314"
+                "amount": "2131681.673386898640620761"
               }
             ]
           }
@@ -7033,7 +7555,18 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "1360384.477026561784247469"
+                "amount": "2205457.103107155521958084"
+              }
+            ]
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1j4efgzq92x2txwjz3nj7mcuctjhhl35hs5tfsk",
+          "accumulated": {
+            "commission": [
+              {
+                "denom": "loya",
+                "amount": "433.667379812283315462"
               }
             ]
           }
@@ -7044,7 +7577,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "2272514.186832224696769188"
+                "amount": "2437602.852633231922214111"
               }
             ]
           }
@@ -7055,7 +7588,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "102356.268311214671629539"
+                "amount": "105582.694939611156938369"
               }
             ]
           }
@@ -7077,9 +7610,15 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "31017010.649838414738355348"
+                "amount": "40219851.651326271972226574"
               }
             ]
+          }
+        },
+        {
+          "validator_address": "tellorvaloper15a4l8qg5ccsrsmnsylskkqk8qrmeudr4zjqxs3",
+          "accumulated": {
+            "commission": []
           }
         },
         {
@@ -7088,7 +7627,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "2662989.970616385234757892"
+                "amount": "3493737.904552099489177400"
               }
             ]
           }
@@ -7099,7 +7638,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "197859.590642587302365094"
+                "amount": "2040294.272951947451487267"
               }
             ]
           }
@@ -7121,7 +7660,18 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "4000.247710165736250442"
+                "amount": "159100.757994657931191388"
+              }
+            ]
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1cmt5j83q77mvu7m7g3mz6cvkgm4tq2zce28fck",
+          "accumulated": {
+            "commission": [
+              {
+                "denom": "loya",
+                "amount": "1305.871140435209151871"
               }
             ]
           }
@@ -7154,7 +7704,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "2673473.129203987643902932"
+                "amount": "3531912.660937559046503051"
               }
             ]
           }
@@ -7176,7 +7726,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "1403089.136362785317087655"
+                "amount": "1875882.899390085382661914"
               }
             ]
           }
@@ -7187,7 +7737,7 @@
             "commission": [
               {
                 "denom": "loya",
-                "amount": "2692069.246920350892903597"
+                "amount": "3568969.843852493723689990"
               }
             ]
           }
@@ -7398,12 +7948,12 @@
         },
         {
           "validator_address": "tellorvaloper1y7y66xp3vrn8e6k4vxa7ygh7judy2jx46vxyj7",
-          "period": "13",
+          "period": "14",
           "rewards": {
             "cumulative_reward_ratio": [
               {
                 "denom": "loya",
-                "amount": "0.083100279063185966"
+                "amount": "0.101692322226321629"
               }
             ],
             "reference_count": 1
@@ -7411,12 +7961,64 @@
         },
         {
           "validator_address": "tellorvaloper1y7y66xp3vrn8e6k4vxa7ygh7judy2jx46vxyj7",
-          "period": "14",
+          "period": "15",
           "rewards": {
             "cumulative_reward_ratio": [
               {
                 "denom": "loya",
-                "amount": "0.101692322226321629"
+                "amount": "0.139437141108541694"
+              }
+            ],
+            "reference_count": 1
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1y7y66xp3vrn8e6k4vxa7ygh7judy2jx46vxyj7",
+          "period": "16",
+          "rewards": {
+            "cumulative_reward_ratio": [
+              {
+                "denom": "loya",
+                "amount": "0.140289561605762608"
+              }
+            ],
+            "reference_count": 1
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1y7y66xp3vrn8e6k4vxa7ygh7judy2jx46vxyj7",
+          "period": "18",
+          "rewards": {
+            "cumulative_reward_ratio": [
+              {
+                "denom": "loya",
+                "amount": "0.140296222775043654"
+              }
+            ],
+            "reference_count": 1
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1y7y66xp3vrn8e6k4vxa7ygh7judy2jx46vxyj7",
+          "period": "19",
+          "rewards": {
+            "cumulative_reward_ratio": [
+              {
+                "denom": "loya",
+                "amount": "0.140331507247986008"
+              }
+            ],
+            "reference_count": 1
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1y7y66xp3vrn8e6k4vxa7ygh7judy2jx46vxyj7",
+          "period": "20",
+          "rewards": {
+            "cumulative_reward_ratio": [
+              {
+                "denom": "loya",
+                "amount": "0.140373713409649602"
               }
             ],
             "reference_count": 2
@@ -7450,12 +8052,12 @@
         },
         {
           "validator_address": "tellorvaloper198dvh9n2d7aqvrxzcsdfz73xtkv9jcjvpv3y62",
-          "period": "479",
+          "period": "970",
           "rewards": {
             "cumulative_reward_ratio": [
               {
                 "denom": "loya",
-                "amount": "0.279569554218607680"
+                "amount": "0.362636071895465460"
               }
             ],
             "reference_count": 2
@@ -7544,12 +8146,12 @@
         },
         {
           "validator_address": "tellorvaloper1952ghnp9jat6eraqakdjruplrj9c40f07ucqxa",
-          "period": "234",
+          "period": "312",
           "rewards": {
             "cumulative_reward_ratio": [
               {
                 "denom": "loya",
-                "amount": "0.278026080253013801"
+                "amount": "0.360868880099301432"
               }
             ],
             "reference_count": 2
@@ -7656,12 +8258,12 @@
         },
         {
           "validator_address": "tellorvaloper1gnr3smk3yvqrzfpgdz492u23gtkn4aasat9kt2",
-          "period": "83",
+          "period": "164",
           "rewards": {
             "cumulative_reward_ratio": [
               {
                 "denom": "loya",
-                "amount": "0.220698886858290242"
+                "amount": "0.303248696018625464"
               }
             ],
             "reference_count": 2
@@ -7760,12 +8362,12 @@
         },
         {
           "validator_address": "tellorvaloper1gkstv3n4cpmdskh4m8mhr2mlljf540sq95j623",
-          "period": "134",
+          "period": "3437",
           "rewards": {
             "cumulative_reward_ratio": [
               {
                 "denom": "loya",
-                "amount": "0.034516036505565790"
+                "amount": "0.362185766411160847"
               }
             ],
             "reference_count": 1
@@ -7773,25 +8375,12 @@
         },
         {
           "validator_address": "tellorvaloper1gkstv3n4cpmdskh4m8mhr2mlljf540sq95j623",
-          "period": "2477",
+          "period": "3438",
           "rewards": {
             "cumulative_reward_ratio": [
               {
                 "denom": "loya",
-                "amount": "0.279184314351367366"
-              }
-            ],
-            "reference_count": 1
-          }
-        },
-        {
-          "validator_address": "tellorvaloper1gkstv3n4cpmdskh4m8mhr2mlljf540sq95j623",
-          "period": "2478",
-          "rewards": {
-            "cumulative_reward_ratio": [
-              {
-                "denom": "loya",
-                "amount": "0.279220427897816919"
+                "amount": "0.362289886450691932"
               }
             ],
             "reference_count": 2
@@ -7805,6 +8394,19 @@
               {
                 "denom": "loya",
                 "amount": "0.139926598372768154"
+              }
+            ],
+            "reference_count": 1
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1gkstv3n4cpmdskh4m8mhr2mlljf540sq95j623",
+          "period": "2803",
+          "rewards": {
+            "cumulative_reward_ratio": [
+              {
+                "denom": "loya",
+                "amount": "0.307738182892076175"
               }
             ],
             "reference_count": 1
@@ -7878,6 +8480,19 @@
               {
                 "denom": "loya",
                 "amount": "0.109621055425783690"
+              }
+            ],
+            "reference_count": 1
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1fqghwt2h3jkm5nw0ju5rzt7x80x5eyptfx7gwp",
+          "period": "7",
+          "rewards": {
+            "cumulative_reward_ratio": [
+              {
+                "denom": "loya",
+                "amount": "0.109665812370488146"
               }
             ],
             "reference_count": 2
@@ -8049,12 +8664,12 @@
         },
         {
           "validator_address": "tellorvaloper1vk2f5m4jsezgaq9tlu2fhq7t94xpykjlw05pdx",
-          "period": "284",
+          "period": "364",
           "rewards": {
             "cumulative_reward_ratio": [
               {
                 "denom": "loya",
-                "amount": "0.279380787439380420"
+                "amount": "0.362144578337704315"
               }
             ],
             "reference_count": 2
@@ -8268,12 +8883,12 @@
         },
         {
           "validator_address": "tellorvaloper10usyr7v4xe2uhtnvg4kwtgtuzh5e4u23tgwqt4",
-          "period": "238",
+          "period": "320",
           "rewards": {
             "cumulative_reward_ratio": [
               {
                 "denom": "loya",
-                "amount": "0.279045934647244641"
+                "amount": "0.361829277305694905"
               }
             ],
             "reference_count": 2
@@ -8334,6 +8949,19 @@
               {
                 "denom": "loya",
                 "amount": "0.128428154528217570"
+              }
+            ],
+            "reference_count": 1
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1srsvq5facrpzdsmc32nn2rdzfg0mrlk3nece9j",
+          "period": "6",
+          "rewards": {
+            "cumulative_reward_ratio": [
+              {
+                "denom": "loya",
+                "amount": "0.249070758032625054"
               }
             ],
             "reference_count": 2
@@ -8401,6 +9029,19 @@
                 "amount": "0.157714467793306820"
               }
             ],
+            "reference_count": 1
+          }
+        },
+        {
+          "validator_address": "tellorvaloper13nwzm5dfd26ue74jr6sc39gyn3qze0rjja9t60",
+          "period": "10",
+          "rewards": {
+            "cumulative_reward_ratio": [
+              {
+                "denom": "loya",
+                "amount": "0.296636030956154197"
+              }
+            ],
             "reference_count": 2
           }
         },
@@ -8441,6 +9082,19 @@
               {
                 "denom": "loya",
                 "amount": "0.129795981423236875"
+              }
+            ],
+            "reference_count": 1
+          }
+        },
+        {
+          "validator_address": "tellorvaloper13lqwnpnclcg6x0hrn5t72xxa8hy9ws7h2auxgw",
+          "period": "3",
+          "rewards": {
+            "cumulative_reward_ratio": [
+              {
+                "denom": "loya",
+                "amount": "0.273559531867374063"
               }
             ],
             "reference_count": 2
@@ -8500,12 +9154,38 @@
         },
         {
           "validator_address": "tellorvaloper13l5f93zutylh847cnmd2rpg6hha86dju06fhr9",
+          "period": "1064",
+          "rewards": {
+            "cumulative_reward_ratio": [
+              {
+                "denom": "loya",
+                "amount": "0.326690678460524794"
+              }
+            ],
+            "reference_count": 2
+          }
+        },
+        {
+          "validator_address": "tellorvaloper13l5f93zutylh847cnmd2rpg6hha86dju06fhr9",
           "period": "566",
           "rewards": {
             "cumulative_reward_ratio": [
               {
                 "denom": "loya",
                 "amount": "0.223174353502384706"
+              }
+            ],
+            "reference_count": 1
+          }
+        },
+        {
+          "validator_address": "tellorvaloper13l5f93zutylh847cnmd2rpg6hha86dju06fhr9",
+          "period": "900",
+          "rewards": {
+            "cumulative_reward_ratio": [
+              {
+                "denom": "loya",
+                "amount": "0.286359121936623352"
               }
             ],
             "reference_count": 1
@@ -8538,13 +9218,21 @@
           }
         },
         {
-          "validator_address": "tellorvaloper13l5f93zutylh847cnmd2rpg6hha86dju06fhr9",
-          "period": "671",
+          "validator_address": "tellorvaloper1j4efgzq92x2txwjz3nj7mcuctjhhl35hs5tfsk",
+          "period": "1",
+          "rewards": {
+            "cumulative_reward_ratio": [],
+            "reference_count": 1
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1j4efgzq92x2txwjz3nj7mcuctjhhl35hs5tfsk",
+          "period": "2",
           "rewards": {
             "cumulative_reward_ratio": [
               {
                 "denom": "loya",
-                "amount": "0.244810762662995466"
+                "amount": "0.003902854803166402"
               }
             ],
             "reference_count": 2
@@ -8584,6 +9272,19 @@
               {
                 "denom": "loya",
                 "amount": "0.111216988349929245"
+              }
+            ],
+            "reference_count": 1
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1n8a2au0p0w49rctey3mxh3kajsdqtdypqr0esj",
+          "period": "6",
+          "rewards": {
+            "cumulative_reward_ratio": [
+              {
+                "denom": "loya",
+                "amount": "0.270717515190431966"
               }
             ],
             "reference_count": 2
@@ -8729,6 +9430,19 @@
                 "amount": "0.078075428270383859"
               }
             ],
+            "reference_count": 1
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1ncq34psgcmncf3xpugdyqfv8esj8rj7s8xny95",
+          "period": "13",
+          "rewards": {
+            "cumulative_reward_ratio": [
+              {
+                "denom": "loya",
+                "amount": "0.110985662431646546"
+              }
+            ],
             "reference_count": 2
           }
         },
@@ -8788,6 +9502,14 @@
           }
         },
         {
+          "validator_address": "tellorvaloper15a4l8qg5ccsrsmnsylskkqk8qrmeudr4zjqxs3",
+          "period": "1",
+          "rewards": {
+            "cumulative_reward_ratio": [],
+            "reference_count": 2
+          }
+        },
+        {
           "validator_address": "tellorvaloper14874aky5afw60wlukkgvc5fqcm68825t0axjth",
           "period": "8",
           "rewards": {
@@ -8802,12 +9524,12 @@
         },
         {
           "validator_address": "tellorvaloper14874aky5afw60wlukkgvc5fqcm68825t0axjth",
-          "period": "13",
+          "period": "16",
           "rewards": {
             "cumulative_reward_ratio": [
               {
                 "denom": "loya",
-                "amount": "0.248624489114312313"
+                "amount": "0.331895965711815757"
               }
             ],
             "reference_count": 2
@@ -8828,12 +9550,12 @@
         },
         {
           "validator_address": "tellorvaloper1kxchhyvpc6mz7y8sc8vr8peqqle820awwmfj3a",
-          "period": "5",
+          "period": "6",
           "rewards": {
             "cumulative_reward_ratio": [
               {
                 "denom": "loya",
-                "amount": "0.054336200539650958"
+                "amount": "0.136363237239635699"
               }
             ],
             "reference_count": 1
@@ -8841,12 +9563,12 @@
         },
         {
           "validator_address": "tellorvaloper1kxchhyvpc6mz7y8sc8vr8peqqle820awwmfj3a",
-          "period": "6",
+          "period": "11",
           "rewards": {
             "cumulative_reward_ratio": [
               {
                 "denom": "loya",
-                "amount": "0.136363237239635699"
+                "amount": "0.186074607136029474"
               }
             ],
             "reference_count": 2
@@ -8919,12 +9641,33 @@
         },
         {
           "validator_address": "tellorvaloper1h2ekr5q6aydeedcdzrf6gdwetsygqyepawekmk",
-          "period": "9",
+          "period": "11",
           "rewards": {
             "cumulative_reward_ratio": [
               {
                 "denom": "loya",
-                "amount": "0.088786219125924541"
+                "amount": "0.159231857076855862"
+              }
+            ],
+            "reference_count": 2
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1cmt5j83q77mvu7m7g3mz6cvkgm4tq2zce28fck",
+          "period": "1",
+          "rewards": {
+            "cumulative_reward_ratio": [],
+            "reference_count": 1
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1cmt5j83q77mvu7m7g3mz6cvkgm4tq2zce28fck",
+          "period": "2",
+          "rewards": {
+            "cumulative_reward_ratio": [
+              {
+                "denom": "loya",
+                "amount": "0.000041604936653560"
               }
             ],
             "reference_count": 2
@@ -9202,10 +9945,10 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "3989161.872886971361179347"
+                "amount": "2904827.540746807471736020"
               }
             ],
-            "period": "15"
+            "period": "21"
           }
         },
         {
@@ -9214,10 +9957,10 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "130919.009474182850973842"
+                "amount": "108242.239113573406512381"
               }
             ],
-            "period": "480"
+            "period": "971"
           }
         },
         {
@@ -9238,7 +9981,7 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "10816314.443122123080268642"
+                "amount": "19289943.369266408554080166"
               }
             ],
             "period": "5"
@@ -9250,10 +9993,10 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "1937082.142674669591248894"
+                "amount": "2358183.810745646747320631"
               }
             ],
-            "period": "235"
+            "period": "313"
           }
         },
         {
@@ -9286,10 +10029,10 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "83368.078840295201970032"
+                "amount": "159132.971751068082459907"
               }
             ],
-            "period": "84"
+            "period": "165"
           }
         },
         {
@@ -9298,10 +10041,10 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "54428.608372809094980142"
+                "amount": "23974.021894736842077440"
               }
             ],
-            "period": "2479"
+            "period": "3439"
           }
         },
         {
@@ -9310,10 +10053,10 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "1.649894440534833132"
+                "amount": "1.537069265576052352"
               }
             ],
-            "period": "7"
+            "period": "8"
           }
         },
         {
@@ -9322,7 +10065,7 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "3129810.100778292578064543"
+                "amount": "10689616.299593292321915322"
               }
             ],
             "period": "19"
@@ -9341,10 +10084,10 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "345537.312621456345693357"
+                "amount": "733434.225335041925282282"
               }
             ],
-            "period": "285"
+            "period": "365"
           }
         },
         {
@@ -9377,7 +10120,7 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "2908699.438359568049925602"
+                "amount": "8557785.389122424909529974"
               }
             ],
             "period": "72"
@@ -9401,7 +10144,7 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "13202675.352638939956024319"
+                "amount": "21094780.725028225433101234"
               }
             ],
             "period": "3"
@@ -9425,10 +10168,10 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "745701.532782720415111187"
+                "amount": "1154246.468382445026336209"
               }
             ],
-            "period": "239"
+            "period": "321"
           }
         },
         {
@@ -9437,10 +10180,10 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "3406629.866471815789706148"
+                "amount": "29.399077328646748250"
               }
             ],
-            "period": "6"
+            "period": "7"
           }
         },
         {
@@ -9449,10 +10192,10 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "5213303.576223106754631123"
+                "amount": "14.477651680488869344"
               }
             ],
-            "period": "10"
+            "period": "11"
           }
         },
         {
@@ -9461,7 +10204,7 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "7095387.931237820763269421"
+                "amount": "11166052.807522820479950563"
               }
             ],
             "period": "3"
@@ -9473,10 +10216,10 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "7563864.088656575208153160"
+                "amount": "4187950.757480126863568029"
               }
             ],
-            "period": "3"
+            "period": "4"
           }
         },
         {
@@ -9485,10 +10228,22 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "10869.412446707721062375"
+                "amount": "12298.967401662049716630"
               }
             ],
-            "period": "672"
+            "period": "1065"
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1j4efgzq92x2txwjz3nj7mcuctjhhl35hs5tfsk",
+          "rewards": {
+            "rewards": [
+              {
+                "denom": "loya",
+                "amount": "0.151615144147272575"
+              }
+            ],
+            "period": "3"
           }
         },
         {
@@ -9497,10 +10252,10 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "11333287.124590552132960042"
+                "amount": "27.774628413411683369"
               }
             ],
-            "period": "6"
+            "period": "7"
           }
         },
         {
@@ -9509,10 +10264,10 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "504427.564403326430034529"
+                "amount": "2.745110754045677877"
               }
             ],
-            "period": "13"
+            "period": "14"
           }
         },
         {
@@ -9533,10 +10288,17 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "244214236.228291430054284977"
+                "amount": "327039805.241682145159124742"
               }
             ],
             "period": "4"
+          }
+        },
+        {
+          "validator_address": "tellorvaloper15a4l8qg5ccsrsmnsylskkqk8qrmeudr4zjqxs3",
+          "rewards": {
+            "rewards": [],
+            "period": "2"
           }
         },
         {
@@ -9545,10 +10307,10 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "1379135.703151056381842114"
+                "amount": "1321605.300997635434560959"
               }
             ],
-            "period": "14"
+            "period": "17"
           }
         },
         {
@@ -9557,10 +10319,10 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "478864.137856125986199460"
+                "amount": "16572344.090384724558576295"
               }
             ],
-            "period": "7"
+            "period": "12"
           }
         },
         {
@@ -9581,10 +10343,22 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "35344.691061217574838644"
+                "amount": "1431773.218075448707848328"
               }
             ],
-            "period": "10"
+            "period": "12"
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1cmt5j83q77mvu7m7g3mz6cvkgm4tq2zce28fck",
+          "rewards": {
+            "rewards": [
+              {
+                "denom": "loya",
+                "amount": "24603.526985001171364918"
+              }
+            ],
+            "period": "3"
           }
         },
         {
@@ -9617,7 +10391,7 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "13473496.238537927026551944"
+                "amount": "21199452.024140069649954205"
               }
             ],
             "period": "22"
@@ -9641,7 +10415,7 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "8.948668395003535160"
+                "amount": "4255152.815914095593702427"
               }
             ],
             "period": "6"
@@ -9653,7 +10427,7 @@
             "rewards": [
               {
                 "denom": "loya",
-                "amount": "1268803.903967349463533766"
+                "amount": "9160909.276356634940610681"
               }
             ],
             "period": "9"
@@ -9719,18 +10493,18 @@
           "delegator_address": "tellor1y7y66xp3vrn8e6k4vxa7ygh7judy2jx40r2ktw",
           "validator_address": "tellorvaloper1y7y66xp3vrn8e6k4vxa7ygh7judy2jx46vxyj7",
           "starting_info": {
-            "previous_period": "13",
-            "stake": "117660000.000000000000000000",
-            "height": "3141457"
+            "previous_period": "18",
+            "stake": "121180000.000000000000000000",
+            "height": "3828103"
           }
         },
         {
           "delegator_address": "tellor198dvh9n2d7aqvrxzcsdfz73xtkv9jcjv5rakr6",
           "validator_address": "tellorvaloper198dvh9n2d7aqvrxzcsdfz73xtkv9jcjvpv3y62",
           "starting_info": {
-            "previous_period": "479",
-            "stake": "97214436.000000000000000000",
-            "height": "3751601"
+            "previous_period": "970",
+            "stake": "177826619.000000000000000000",
+            "height": "4763852"
           }
         },
         {
@@ -9773,9 +10547,9 @@
           "delegator_address": "tellor1952ghnp9jat6eraqakdjruplrj9c40f0tn5jld",
           "validator_address": "tellorvaloper1952ghnp9jat6eraqakdjruplrj9c40f07ucqxa",
           "starting_info": {
-            "previous_period": "234",
-            "stake": "183171288.000000000000000000",
-            "height": "3734352"
+            "previous_period": "312",
+            "stake": "285874575.000000000000000000",
+            "height": "4742082"
           }
         },
         {
@@ -9809,9 +10583,9 @@
           "delegator_address": "tellor1gnr3smk3yvqrzfpgdz492u23gtkn4aasgyfyj6",
           "validator_address": "tellorvaloper1gnr3smk3yvqrzfpgdz492u23gtkn4aasat9kt2",
           "starting_info": {
-            "previous_period": "83",
-            "stake": "128642967.000000000000000000",
-            "height": "3745569"
+            "previous_period": "164",
+            "stake": "175150365.000000000000000000",
+            "height": "4753603"
           }
         },
         {
@@ -9854,18 +10628,18 @@
           "delegator_address": "tellor1gkstv3n4cpmdskh4m8mhr2mlljf540sqsm7gnp",
           "validator_address": "tellorvaloper1gkstv3n4cpmdskh4m8mhr2mlljf540sq95j623",
           "starting_info": {
-            "previous_period": "2478",
-            "stake": "102222146.557793842712117784",
-            "height": "3752423"
+            "previous_period": "3437",
+            "stake": "152504397.557793842712117595",
+            "height": "4763447"
           }
         },
         {
           "delegator_address": "tellor1vw2yy9nf3wz7hey89tpw5hn0yr3hkrzt889x47",
           "validator_address": "tellorvaloper1gkstv3n4cpmdskh4m8mhr2mlljf540sq95j623",
           "starting_info": {
-            "previous_period": "134",
-            "stake": "20000000.000000000000000000",
-            "height": "1103731"
+            "previous_period": "2803",
+            "stake": "20604336.117646420897920772",
+            "height": "4091035"
           }
         },
         {
@@ -9881,9 +10655,9 @@
           "delegator_address": "tellor15ap5jyn02a6s45qsgk5dqc5zu09ma50nrepq2v",
           "validator_address": "tellorvaloper1gkstv3n4cpmdskh4m8mhr2mlljf540sq95j623",
           "starting_info": {
-            "previous_period": "2477",
-            "stake": "119112289.999999999999999672",
-            "height": "3752013"
+            "previous_period": "3438",
+            "stake": "197258065.999999999999999475",
+            "height": "4764747"
           }
         },
         {
@@ -9953,9 +10727,9 @@
           "delegator_address": "tellor1vk2f5m4jsezgaq9tlu2fhq7t94xpykjlmqcn5k",
           "validator_address": "tellorvaloper1vk2f5m4jsezgaq9tlu2fhq7t94xpykjlw05pdx",
           "starting_info": {
-            "previous_period": "284",
-            "stake": "185031154.000000000000000000",
-            "height": "3749597"
+            "previous_period": "364",
+            "stake": "288256904.000000000000000000",
+            "height": "4757842"
           }
         },
         {
@@ -10025,9 +10799,9 @@
           "delegator_address": "tellor10usyr7v4xe2uhtnvg4kwtgtuzh5e4u2378zjj9",
           "validator_address": "tellorvaloper10usyr7v4xe2uhtnvg4kwtgtuzh5e4u23tgwqt4",
           "starting_info": {
-            "previous_period": "238",
-            "stake": "200560976.000000000000000000",
-            "height": "3745887"
+            "previous_period": "320",
+            "stake": "313096085.000000000000000000",
+            "height": "4753966"
           }
         },
         {
@@ -10070,9 +10844,18 @@
           "delegator_address": "tellor13l5f93zutylh847cnmd2rpg6hha86dju649964",
           "validator_address": "tellorvaloper13l5f93zutylh847cnmd2rpg6hha86dju06fhr9",
           "starting_info": {
-            "previous_period": "671",
-            "stake": "81567355.000000000000000000",
-            "height": "3751381"
+            "previous_period": "1064",
+            "stake": "104510808.000000000000000000",
+            "height": "4763479"
+          }
+        },
+        {
+          "delegator_address": "tellor1j4efgzq92x2txwjz3nj7mcuctjhhl35h9m8mfx",
+          "validator_address": "tellorvaloper1j4efgzq92x2txwjz3nj7mcuctjhhl35hs5tfsk",
+          "starting_info": {
+            "previous_period": "1",
+            "stake": "1000000.000000000000000000",
+            "height": "3996413"
           }
         },
         {
@@ -10121,21 +10904,30 @@
           }
         },
         {
+          "delegator_address": "tellor15a4l8qg5ccsrsmnsylskkqk8qrmeudr4hav5fp",
+          "validator_address": "tellorvaloper15a4l8qg5ccsrsmnsylskkqk8qrmeudr4zjqxs3",
+          "starting_info": {
+            "previous_period": "1",
+            "stake": "500000.000000000000000000",
+            "height": "4085955"
+          }
+        },
+        {
           "delegator_address": "tellor14874aky5afw60wlukkgvc5fqcm68825t6j2qj8",
           "validator_address": "tellorvaloper14874aky5afw60wlukkgvc5fqcm68825t0axjth",
           "starting_info": {
-            "previous_period": "13",
+            "previous_period": "16",
             "stake": "90478302.000000000000000000",
-            "height": "3578859"
+            "height": "4581767"
           }
         },
         {
           "delegator_address": "tellor1kxchhyvpc6mz7y8sc8vr8peqqle820awm59qgd",
           "validator_address": "tellorvaloper1kxchhyvpc6mz7y8sc8vr8peqqle820awwmfj3a",
           "starting_info": {
-            "previous_period": "5",
-            "stake": "9910000.000000000000000000",
-            "height": "2154562"
+            "previous_period": "11",
+            "stake": "202820000.000000000000000000",
+            "height": "3764908"
           }
         },
         {
@@ -10151,9 +10943,18 @@
           "delegator_address": "tellor1h2ekr5q6aydeedcdzrf6gdwetsygqyepgp4yzx",
           "validator_address": "tellorvaloper1h2ekr5q6aydeedcdzrf6gdwetsygqyepawekmk",
           "starting_info": {
-            "previous_period": "9",
-            "stake": "105440000.000000000000000000",
-            "height": "3749086"
+            "previous_period": "11",
+            "stake": "113740000.000000000000000000",
+            "height": "4606775"
+          }
+        },
+        {
+          "delegator_address": "tellor1cmt5j83q77mvu7m7g3mz6cvkgm4tq2zcv9tmpx",
+          "validator_address": "tellorvaloper1cmt5j83q77mvu7m7g3mz6cvkgm4tq2zce28fck",
+          "starting_info": {
+            "previous_period": "1",
+            "stake": "5000000.000000000000000000",
+            "height": "4691187"
           }
         },
         {
@@ -10348,6 +11149,42 @@
           }
         },
         {
+          "validator_address": "tellorvaloper1y7y66xp3vrn8e6k4vxa7ygh7judy2jx46vxyj7",
+          "height": "3793954",
+          "period": "15",
+          "validator_slash_event": {
+            "validator_period": "15",
+            "fraction": "0.009957936303545369"
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1y7y66xp3vrn8e6k4vxa7ygh7judy2jx46vxyj7",
+          "height": "3804895",
+          "period": "16",
+          "validator_slash_event": {
+            "validator_period": "16",
+            "fraction": "0.009971386456255962"
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1y7y66xp3vrn8e6k4vxa7ygh7judy2jx46vxyj7",
+          "height": "3828523",
+          "period": "19",
+          "validator_slash_event": {
+            "validator_period": "19",
+            "fraction": "0.009985146063706883"
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1y7y66xp3vrn8e6k4vxa7ygh7judy2jx46vxyj7",
+          "height": "3832345",
+          "period": "20",
+          "validator_slash_event": {
+            "validator_period": "20",
+            "fraction": "0.009919146453279987"
+          }
+        },
+        {
           "validator_address": "tellorvaloper1938h80mmea97qf8r0w9d4y7trtk5ra5l069k4c",
           "height": "225464",
           "period": "2",
@@ -10489,6 +11326,15 @@
           "validator_slash_event": {
             "validator_period": "6",
             "fraction": "0.009336196433572963"
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1fqghwt2h3jkm5nw0ju5rzt7x80x5eyptfx7gwp",
+          "height": "3848687",
+          "period": "7",
+          "validator_slash_event": {
+            "validator_period": "7",
+            "fraction": "0.009424182452172275"
           }
         },
         {
@@ -10699,6 +11545,15 @@
           }
         },
         {
+          "validator_address": "tellorvaloper1srsvq5facrpzdsmc32nn2rdzfg0mrlk3nece9j",
+          "height": "4747526",
+          "period": "6",
+          "validator_slash_event": {
+            "validator_period": "6",
+            "fraction": "0.009946796206338192"
+          }
+        },
+        {
           "validator_address": "tellorvaloper13nwzm5dfd26ue74jr6sc39gyn3qze0rjja9t60",
           "height": "2154252",
           "period": "5",
@@ -10735,6 +11590,15 @@
           }
         },
         {
+          "validator_address": "tellorvaloper13nwzm5dfd26ue74jr6sc39gyn3qze0rjja9t60",
+          "height": "4704672",
+          "period": "10",
+          "validator_slash_event": {
+            "validator_period": "10",
+            "fraction": "0.009976144003469964"
+          }
+        },
+        {
           "validator_address": "tellorvaloper1352g2lt8h2r86k88vmnkhse9s056gn8ceqqwwa",
           "height": "2154252",
           "period": "2",
@@ -10750,6 +11614,15 @@
           "validator_slash_event": {
             "validator_period": "2",
             "fraction": "0.009979782774604611"
+          }
+        },
+        {
+          "validator_address": "tellorvaloper13lqwnpnclcg6x0hrn5t72xxa8hy9ws7h2auxgw",
+          "height": "3813713",
+          "period": "3",
+          "validator_slash_event": {
+            "validator_period": "3",
+            "fraction": "0.009897103117917386"
           }
         },
         {
@@ -10816,6 +11689,24 @@
           }
         },
         {
+          "validator_address": "tellorvaloper13l5f93zutylh847cnmd2rpg6hha86dju06fhr9",
+          "height": "4250908",
+          "period": "900",
+          "validator_slash_event": {
+            "validator_period": "900",
+            "fraction": "0.009991434080630200"
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1j4efgzq92x2txwjz3nj7mcuctjhhl35hs5tfsk",
+          "height": "4042986",
+          "period": "2",
+          "validator_slash_event": {
+            "validator_period": "2",
+            "fraction": "0.010000000000000000"
+          }
+        },
+        {
           "validator_address": "tellorvaloper1n8a2au0p0w49rctey3mxh3kajsdqtdypqr0esj",
           "height": "2154251",
           "period": "4",
@@ -10831,6 +11722,15 @@
           "validator_slash_event": {
             "validator_period": "5",
             "fraction": "0.009977827050997783"
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1n8a2au0p0w49rctey3mxh3kajsdqtdypqr0esj",
+          "height": "3972436",
+          "period": "6",
+          "validator_slash_event": {
+            "validator_period": "6",
+            "fraction": "0.009953962921488118"
           }
         },
         {
@@ -10924,6 +11824,15 @@
           }
         },
         {
+          "validator_address": "tellorvaloper1ncq34psgcmncf3xpugdyqfv8esj8rj7s8xny95",
+          "height": "3792811",
+          "period": "13",
+          "validator_slash_event": {
+            "validator_period": "13",
+            "fraction": "0.009889470622454916"
+          }
+        },
+        {
           "validator_address": "tellorvaloper15fem3fyv9rv4tdl6kgrdj2fqqwv4p3syd8ydl8",
           "height": "2345852",
           "period": "105",
@@ -11002,6 +11911,15 @@
           "validator_slash_event": {
             "validator_period": "6",
             "fraction": "0.009902011346054668"
+          }
+        },
+        {
+          "validator_address": "tellorvaloper1cmt5j83q77mvu7m7g3mz6cvkgm4tq2zce28fck",
+          "height": "4691688",
+          "period": "2",
+          "validator_slash_event": {
+            "validator_period": "2",
+            "fraction": "0.010000000000000000"
           }
         },
         {
@@ -11428,7 +12346,7 @@
     "mint": {
       "bond_denom": "loya",
       "initialized": true,
-      "previous_block_time": "2025-06-04T16:29:11.622936544Z"
+      "previous_block_time": "2025-06-25T18:20:49.813858432Z"
     },
     "oracle": {
       "params": {
@@ -11442,7 +12360,7 @@
         "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2J0YwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
       ],
       "query_data_limit": "524288",
-      "query_sequencer": "1876717"
+      "query_sequencer": "2382754"
     },
     "registry": {
       "params": {
@@ -11513,6 +12431,26 @@
           "registrar": "tellor1vw2yy9nf3wz7hey89tpw5hn0yr3hkrzt889x47",
           "report_block_window": "150",
           "query_type": "EthDenverTest"
+        },
+        {
+          "document_hash": "RegistryTest_v5.0.0",
+          "response_value_type": "string",
+          "abi_components": [
+            {
+              "name": "test_arg_1",
+              "field_type": "string",
+              "nested_component": []
+            },
+            {
+              "name": "test_arg_2",
+              "field_type": "uint256",
+              "nested_component": []
+            }
+          ],
+          "aggregation_method": "weighted-mode",
+          "registrar": "tellor1vw2yy9nf3wz7hey89tpw5hn0yr3hkrzt889x47",
+          "report_block_window": "100",
+          "query_type": "RegistryTest_v5.0.0"
         },
         {
           "document_hash": "",
@@ -11674,11 +12612,11 @@
         },
         {
           "selector_address": "7p/8OT7776QO5pWhZtdxfVf9Fgk=",
-          "tips": "39353632.721199192199891024"
+          "tips": "55283504.963508005229364056"
         },
         {
           "selector_address": "52FuarkSxCdPJ0GoewjWTOn+HfE=",
-          "tips": "912347100.092596096273347889"
+          "tips": "1212686372.987186084471542995"
         },
         {
           "selector_address": "3pfCKzZ+iBXgl1tiv16V4xkXGQw=",
@@ -11698,11 +12636,11 @@
         },
         {
           "selector_address": "y0cShTJqpP/6MaNMoVkWoLa/0w4=",
-          "tips": "899068208.940226947487190545"
+          "tips": "1193469323.889521855446597387"
         },
         {
           "selector_address": "vw7LKEImVkfKuDnYEicuOPHkjBM=",
-          "tips": "857741116.594786394689038954"
+          "tips": "1136968304.580737578741753272"
         },
         {
           "selector_address": "sdlPngEfD3xQ8xnrPfNt2eMo44I=",
@@ -11714,7 +12652,7 @@
         },
         {
           "selector_address": "p0NJEm9XdQrQEEWo0GKC48u+0fM=",
-          "tips": "62971.129075632267287692"
+          "tips": "18239.545252599751608548"
         },
         {
           "selector_address": "onO4pIwo2VW3+rIG2SkgA5lQxgQ=",
@@ -11729,8 +12667,12 @@
           "tips": "29804255.262230370856925784"
         },
         {
+          "selector_address": "lXKUCAVRlLM6Qozl7eOYXK9/xpc=",
+          "tips": "1526.089480300712951970"
+        },
+        {
           "selector_address": "j+iSxFxZP3PX2J7aoYUavfp9Nlw=",
-          "tips": "39826.432022773955026840"
+          "tips": "44044.968828989405946705"
         },
         {
           "selector_address": "j8Dphnj+EaM+450X5RjdPchXQ9c=",
@@ -11738,7 +12680,7 @@
         },
         {
           "selector_address": "jRSFfWe6hn1Y52bna8Mlg+mkTPg=",
-          "tips": "36509400.342537567712214429"
+          "tips": "51735003.463517228277131159"
         },
         {
           "selector_address": "jNwt0alqtcz6sh6hiJUEnEAsvHI=",
@@ -11746,7 +12688,7 @@
         },
         {
           "selector_address": "fyBB+ZU2VcuubEVs5aF8Fema8VE=",
-          "tips": "727865.722563889554378798"
+          "tips": "1357480.758961068180950493"
         },
         {
           "selector_address": "ePuP5wqb8vMb/SXwCetRUIKkDV4=",
@@ -11754,7 +12696,7 @@
         },
         {
           "selector_address": "eKUEPU+g8nR6q9AABr5XrPZ8cIQ=",
-          "tips": "897315306.050564431526873020"
+          "tips": "1185032235.489075686678594249"
         },
         {
           "selector_address": "a9eg192AzhLDeQF6WIL7Shbt46g=",
@@ -11766,11 +12708,11 @@
         },
         {
           "selector_address": "ZZSabrKGRI6Aq/8Um4PLLUwSWl8=",
-          "tips": "313983.727153674527169174"
+          "tips": "806177.933553018577562346"
         },
         {
           "selector_address": "Y5RCFmmLhevkhyrC6l5vION7DEs=",
-          "tips": "774846.324236907870611638"
+          "tips": "0.324236907870611638"
         },
         {
           "selector_address": "YIKqNliEl+/sKAMJDwwSSh9qkXY=",
@@ -11786,15 +12728,15 @@
         },
         {
           "selector_address": "RaC2RnXAdtha9dn3cat//JNKvgA=",
-          "tips": "21114.146208745984997529"
+          "tips": "85052.306640315540724478"
         },
         {
           "selector_address": "RMcYbtEjADEkKGiqVXFRQu0697A=",
-          "tips": "314159.298159644134424413"
+          "tips": "580192.232293487630096945"
         },
         {
           "selector_address": "Q6d95c2bJ6XfJmUSBLiUj4LN5FI=",
-          "tips": "0.172388369718359682"
+          "tips": "2918723.178557087473862171"
         },
         {
           "selector_address": "MQzfGKSSbv63W0RckmBO32bRS8A=",
@@ -11802,19 +12744,19 @@
         },
         {
           "selector_address": "LRSLzCWXV6yPoO2bIfA/HIuKvS8=",
-          "tips": "1743717.901026144695325165"
+          "tips": "2592897.252313405398783033"
         },
         {
           "selector_address": "KdrLlmpvugYMwsQakXomXZhZYkw=",
-          "tips": "95730.440618197109033754"
+          "tips": "98453.044880271330140021"
         },
         {
           "selector_address": "FdGiw4cNBB+P0rCt1nj+rm08TPE=",
-          "tips": "849511252.524024942799733999"
+          "tips": "1125633290.301210792178457458"
         },
         {
           "selector_address": "D4jyMBN0eykDTISZ4nbwZI0Ndvc=",
-          "tips": "858990101.608618070549333860"
+          "tips": "1138213678.790327237637936466"
         },
         {
           "selector_address": "B4Pdy8w7Yu5mi6BcjMrL7Ic78EI=",
@@ -11887,10 +12829,10 @@
           "validator_signing_info": {
             "address": "tellorvalcons1p0a9cmkw3frlrvcddhlrcj69r6dvn5fjdt9e33",
             "start_height": "3306849",
-            "index_offset": "446046",
+            "index_offset": "0",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "2"
+            "missed_blocks_counter": "0"
           }
         },
         {
@@ -11909,10 +12851,10 @@
           "validator_signing_info": {
             "address": "tellorvalcons1pexhhdwsr3t92hje48mxr9tw7wysr95zrtpv6z",
             "start_height": "3601095",
-            "index_offset": "151800",
+            "index_offset": "1163857",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "2"
+            "missed_blocks_counter": "5"
           }
         },
         {
@@ -11920,10 +12862,10 @@
           "validator_signing_info": {
             "address": "tellorvalcons1z9x9hndmtvnvq85ua3as6s7lvheszaw2ytdzr8",
             "start_height": "2216066",
-            "index_offset": "1536829",
+            "index_offset": "2548886",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "1"
+            "missed_blocks_counter": "0"
           }
         },
         {
@@ -11942,7 +12884,7 @@
           "validator_signing_info": {
             "address": "tellorvalcons1yd5w53ur32sc59j3awrsfzr5uh9wk5g8jxzrq0",
             "start_height": "1106568",
-            "index_offset": "2646327",
+            "index_offset": "3658384",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
             "missed_blocks_counter": "0"
@@ -11952,11 +12894,11 @@
           "address": "tellorvalcons19ww5sycp5fesdmymwrpxj8qn7ks2v4zd5xpjwy",
           "validator_signing_info": {
             "address": "tellorvalcons19ww5sycp5fesdmymwrpxj8qn7ks2v4zd5xpjwy",
-            "start_height": "3504540",
-            "index_offset": "248355",
+            "start_height": "4261040",
+            "index_offset": "503912",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "29"
+            "missed_blocks_counter": "16"
           }
         },
         {
@@ -11975,10 +12917,10 @@
           "validator_signing_info": {
             "address": "tellorvalcons180qf7d6v7e0lj245lsy5ah0c9ugdl2vwydhua8",
             "start_height": "2154883",
-            "index_offset": "1598012",
+            "index_offset": "2610069",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "1"
+            "missed_blocks_counter": "0"
           }
         },
         {
@@ -11986,10 +12928,10 @@
           "validator_signing_info": {
             "address": "tellorvalcons18ut6un57ryfayv3lwvwl98qangx2s42eud63ft",
             "start_height": "3365377",
-            "index_offset": "387518",
+            "index_offset": "1399575",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "2"
+            "missed_blocks_counter": "1"
           }
         },
         {
@@ -12008,17 +12950,17 @@
           "validator_signing_info": {
             "address": "tellorvalcons1fxytc80vx4tgygqpu6fdqs3x2tev37d8axaj9j",
             "start_height": "2154825",
-            "index_offset": "1598070",
+            "index_offset": "2610127",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "1"
+            "missed_blocks_counter": "0"
           }
         },
         {
           "address": "tellorvalcons1fsxedvxx53njxxgllwgs20skdzcutealdzs9uj",
           "validator_signing_info": {
             "address": "tellorvalcons1fsxedvxx53njxxgllwgs20skdzcutealdzs9uj",
-            "start_height": "3552555",
+            "start_height": "3848186",
             "index_offset": "0",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
@@ -12037,14 +12979,25 @@
           }
         },
         {
+          "address": "tellorvalcons1240lp0a4667khv6475gj4tvwclutpa4jx5aqnv",
+          "validator_signing_info": {
+            "address": "tellorvalcons1240lp0a4667khv6475gj4tvwclutpa4jx5aqnv",
+            "start_height": "4692196",
+            "index_offset": "72756",
+            "jailed_until": "2025-05-31T23:59:59Z",
+            "tombstoned": false,
+            "missed_blocks_counter": "1"
+          }
+        },
+        {
           "address": "tellorvalcons1v9wsmymwpndgfv5a24ce2gcrgtlayf8py4pn5v",
           "validator_signing_info": {
             "address": "tellorvalcons1v9wsmymwpndgfv5a24ce2gcrgtlayf8py4pn5v",
             "start_height": "2155258",
-            "index_offset": "1597637",
+            "index_offset": "2609694",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "2"
+            "missed_blocks_counter": "0"
           }
         },
         {
@@ -12052,10 +13005,10 @@
           "validator_signing_info": {
             "address": "tellorvalcons1vgmvhge3k385dhtv7mdnks5ed683lud7z9udpx",
             "start_height": "3142165",
-            "index_offset": "610730",
+            "index_offset": "1622787",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "2"
+            "missed_blocks_counter": "1"
           }
         },
         {
@@ -12063,21 +13016,21 @@
           "validator_signing_info": {
             "address": "tellorvalcons1d95n6w3qg5rvqptpj7fjs2vsvwh2zakeuhqz0s",
             "start_height": "3271302",
-            "index_offset": "481593",
+            "index_offset": "1493650",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "2"
+            "missed_blocks_counter": "1"
           }
         },
         {
           "address": "tellorvalcons1d24x3zzch5g3k4td40y5yah0zg0r3fykkmg85g",
           "validator_signing_info": {
             "address": "tellorvalcons1d24x3zzch5g3k4td40y5yah0zg0r3fykkmg85g",
-            "start_height": "3506010",
-            "index_offset": "0",
+            "start_height": "3767439",
+            "index_offset": "997513",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "0"
+            "missed_blocks_counter": "1"
           }
         },
         {
@@ -12095,8 +13048,8 @@
           "address": "tellorvalcons1dhzw6ulac790kp4zuxkdh5s342p83kxe9yf04v",
           "validator_signing_info": {
             "address": "tellorvalcons1dhzw6ulac790kp4zuxkdh5s342p83kxe9yf04v",
-            "start_height": "2204243",
-            "index_offset": "1548652",
+            "start_height": "3817495",
+            "index_offset": "947457",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
             "missed_blocks_counter": "1"
@@ -12136,14 +13089,25 @@
           }
         },
         {
+          "address": "tellorvalcons104s8c2mungj57fmmhmg93tehwhvc68ke5cqs4e",
+          "validator_signing_info": {
+            "address": "tellorvalcons104s8c2mungj57fmmhmg93tehwhvc68ke5cqs4e",
+            "start_height": "3996413",
+            "index_offset": "0",
+            "jailed_until": "2025-05-31T23:59:59Z",
+            "tombstoned": false,
+            "missed_blocks_counter": "0"
+          }
+        },
+        {
           "address": "tellorvalcons1sxlg7m7drdpr9r7kyv9zgvnssv9j8pdydj3ay6",
           "validator_signing_info": {
             "address": "tellorvalcons1sxlg7m7drdpr9r7kyv9zgvnssv9j8pdydj3ay6",
-            "start_height": "3365425",
-            "index_offset": "387470",
+            "start_height": "4459754",
+            "index_offset": "305198",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "2"
+            "missed_blocks_counter": "0"
           }
         },
         {
@@ -12151,10 +13115,10 @@
           "validator_signing_info": {
             "address": "tellorvalcons1saxlus7h3t57ppp3uwk34gsfettymmwsmws063",
             "start_height": "2576742",
-            "index_offset": "1176153",
+            "index_offset": "2188210",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "2"
+            "missed_blocks_counter": "0"
           }
         },
         {
@@ -12173,10 +13137,10 @@
           "validator_signing_info": {
             "address": "tellorvalcons13ga5tzpmuhnf5hs05a5s8q24rtv4jq7m42hlyj",
             "start_height": "2187593",
-            "index_offset": "1565302",
+            "index_offset": "0",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "2"
+            "missed_blocks_counter": "0"
           }
         },
         {
@@ -12195,10 +13159,10 @@
           "validator_signing_info": {
             "address": "tellorvalcons14dv7f432j97ku4pvfd9j9hm8vlgxkcmchlcthj",
             "start_height": "0",
-            "index_offset": "3752896",
+            "index_offset": "4764953",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "0"
+            "missed_blocks_counter": "1"
           }
         },
         {
@@ -12206,10 +13170,10 @@
           "validator_signing_info": {
             "address": "tellorvalcons1kj7lc5d57v4w9cfwktt3dq6t5atfg2jnws54lu",
             "start_height": "3149871",
-            "index_offset": "603024",
+            "index_offset": "0",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "2"
+            "missed_blocks_counter": "0"
           }
         },
         {
@@ -12228,7 +13192,7 @@
           "validator_signing_info": {
             "address": "tellorvalcons1ka9wv8yfp2enf3c273nn3wmg6u5r5hg4at6r6w",
             "start_height": "0",
-            "index_offset": "3752896",
+            "index_offset": "4764953",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
             "missed_blocks_counter": "0"
@@ -12239,10 +13203,10 @@
           "validator_signing_info": {
             "address": "tellorvalcons1hrumcgyjc4w3p9vqpy5wc9uplg5csvlsmjlshk",
             "start_height": "3155060",
-            "index_offset": "597835",
+            "index_offset": "1609892",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "10"
+            "missed_blocks_counter": "1"
           }
         },
         {
@@ -12250,10 +13214,10 @@
           "validator_signing_info": {
             "address": "tellorvalcons1c0p3nc9m72q3vrrl2rc8d5etzvga988y2trv5v",
             "start_height": "3435938",
-            "index_offset": "316957",
+            "index_offset": "0",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "1"
+            "missed_blocks_counter": "0"
           }
         },
         {
@@ -12272,10 +13236,10 @@
           "validator_signing_info": {
             "address": "tellorvalcons1eqk3wuzl0pzja9x7kvqmyjt4v6mara8tv8hj2k",
             "start_height": "1402739",
-            "index_offset": "2350156",
+            "index_offset": "3362213",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "24"
+            "missed_blocks_counter": "0"
           }
         },
         {
@@ -12294,7 +13258,7 @@
           "validator_signing_info": {
             "address": "tellorvalcons16r63m60h90umtex9hj48pv7fq0msezrkd3nery",
             "start_height": "2155290",
-            "index_offset": "1597605",
+            "index_offset": "2609662",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
             "missed_blocks_counter": "1"
@@ -12305,10 +13269,10 @@
           "validator_signing_info": {
             "address": "tellorvalcons168lygeza3mu4g8d8qg0vxwn6wgg2mnxdca6js2",
             "start_height": "0",
-            "index_offset": "3752896",
+            "index_offset": "4764953",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "1"
+            "missed_blocks_counter": "0"
           }
         },
         {
@@ -12316,10 +13280,10 @@
           "validator_signing_info": {
             "address": "tellorvalcons165u7qw4f8rzwae5fg0yect2eelfj5fnu7eshrt",
             "start_height": "0",
-            "index_offset": "3752896",
+            "index_offset": "4764953",
             "jailed_until": "2025-05-31T23:59:59Z",
             "tombstoned": false,
-            "missed_blocks_counter": "1"
+            "missed_blocks_counter": "0"
           }
         },
         {
@@ -12370,16 +13334,7 @@
       "missed_blocks": [
         {
           "address": "tellorvalcons1p0a9cmkw3frlrvcddhlrcj69r6dvn5fjdt9e33",
-          "missed_blocks": [
-            {
-              "index": "301",
-              "missed": true
-            },
-            {
-              "index": "432",
-              "missed": true
-            }
-          ]
+          "missed_blocks": []
         },
         {
           "address": "tellorvalcons1ps3j2c4ae9ehqze3y64y5k0r7vpxzrmyr7tgcw",
@@ -12389,23 +13344,30 @@
           "address": "tellorvalcons1pexhhdwsr3t92hje48mxr9tw7wysr95zrtpv6z",
           "missed_blocks": [
             {
-              "index": "55",
+              "index": "102",
               "missed": true
             },
             {
-              "index": "186",
+              "index": "103",
+              "missed": true
+            },
+            {
+              "index": "104",
+              "missed": true
+            },
+            {
+              "index": "105",
+              "missed": true
+            },
+            {
+              "index": "499",
               "missed": true
             }
           ]
         },
         {
           "address": "tellorvalcons1z9x9hndmtvnvq85ua3as6s7lvheszaw2ytdzr8",
-          "missed_blocks": [
-            {
-              "index": "215",
-              "missed": true
-            }
-          ]
+          "missed_blocks": []
         },
         {
           "address": "tellorvalcons1rc8llf629tnuefww7taqfpy0crdvkzvd4u862e",
@@ -12419,67 +13381,27 @@
           "address": "tellorvalcons19ww5sycp5fesdmymwrpxj8qn7ks2v4zd5xpjwy",
           "missed_blocks": [
             {
-              "index": "1",
+              "index": "18",
               "missed": true
             },
             {
-              "index": "2",
+              "index": "19",
               "missed": true
             },
             {
-              "index": "28",
+              "index": "51",
               "missed": true
             },
             {
-              "index": "29",
+              "index": "56",
               "missed": true
             },
             {
-              "index": "30",
+              "index": "220",
               "missed": true
             },
             {
-              "index": "34",
-              "missed": true
-            },
-            {
-              "index": "61",
-              "missed": true
-            },
-            {
-              "index": "62",
-              "missed": true
-            },
-            {
-              "index": "63",
-              "missed": true
-            },
-            {
-              "index": "64",
-              "missed": true
-            },
-            {
-              "index": "65",
-              "missed": true
-            },
-            {
-              "index": "66",
-              "missed": true
-            },
-            {
-              "index": "67",
-              "missed": true
-            },
-            {
-              "index": "110",
-              "missed": true
-            },
-            {
-              "index": "124",
-              "missed": true
-            },
-            {
-              "index": "191",
+              "index": "222",
               "missed": true
             },
             {
@@ -12487,51 +13409,39 @@
               "missed": true
             },
             {
-              "index": "224",
+              "index": "228",
               "missed": true
             },
             {
-              "index": "225",
+              "index": "250",
               "missed": true
             },
             {
-              "index": "226",
+              "index": "286",
               "missed": true
             },
             {
-              "index": "230",
+              "index": "287",
               "missed": true
             },
             {
-              "index": "235",
+              "index": "321",
               "missed": true
             },
             {
-              "index": "241",
+              "index": "355",
               "missed": true
             },
             {
-              "index": "368",
+              "index": "383",
               "missed": true
             },
             {
-              "index": "369",
+              "index": "384",
               "missed": true
             },
             {
-              "index": "382",
-              "missed": true
-            },
-            {
-              "index": "467",
-              "missed": true
-            },
-            {
-              "index": "469",
-              "missed": true
-            },
-            {
-              "index": "470",
+              "index": "385",
               "missed": true
             }
           ]
@@ -12542,22 +13452,13 @@
         },
         {
           "address": "tellorvalcons180qf7d6v7e0lj245lsy5ah0c9ugdl2vwydhua8",
-          "missed_blocks": [
-            {
-              "index": "398",
-              "missed": true
-            }
-          ]
+          "missed_blocks": []
         },
         {
           "address": "tellorvalcons18ut6un57ryfayv3lwvwl98qangx2s42eud63ft",
           "missed_blocks": [
             {
-              "index": "273",
-              "missed": true
-            },
-            {
-              "index": "404",
+              "index": "217",
               "missed": true
             }
           ]
@@ -12568,12 +13469,7 @@
         },
         {
           "address": "tellorvalcons1fxytc80vx4tgygqpu6fdqs3x2tev37d8axaj9j",
-          "missed_blocks": [
-            {
-              "index": "456",
-              "missed": true
-            }
-          ]
+          "missed_blocks": []
         },
         {
           "address": "tellorvalcons1fsxedvxx53njxxgllwgs20skdzcutealdzs9uj",
@@ -12584,27 +13480,23 @@
           "missed_blocks": []
         },
         {
-          "address": "tellorvalcons1v9wsmymwpndgfv5a24ce2gcrgtlayf8py4pn5v",
+          "address": "tellorvalcons1240lp0a4667khv6475gj4tvwclutpa4jx5aqnv",
           "missed_blocks": [
             {
-              "index": "23",
-              "missed": true
-            },
-            {
-              "index": "392",
+              "index": "398",
               "missed": true
             }
           ]
         },
         {
+          "address": "tellorvalcons1v9wsmymwpndgfv5a24ce2gcrgtlayf8py4pn5v",
+          "missed_blocks": []
+        },
+        {
           "address": "tellorvalcons1vgmvhge3k385dhtv7mdnks5ed683lud7z9udpx",
           "missed_blocks": [
             {
-              "index": "116",
-              "missed": true
-            },
-            {
-              "index": "485",
+              "index": "429",
               "missed": true
             }
           ]
@@ -12613,18 +13505,19 @@
           "address": "tellorvalcons1d95n6w3qg5rvqptpj7fjs2vsvwh2zakeuhqz0s",
           "missed_blocks": [
             {
-              "index": "348",
-              "missed": true
-            },
-            {
-              "index": "479",
+              "index": "292",
               "missed": true
             }
           ]
         },
         {
           "address": "tellorvalcons1d24x3zzch5g3k4td40y5yah0zg0r3fykkmg85g",
-          "missed_blocks": []
+          "missed_blocks": [
+            {
+              "index": "155",
+              "missed": true
+            }
+          ]
         },
         {
           "address": "tellorvalcons1dvezvg03njqyht7ej6dt2rql3rltgf7p8d2lgq",
@@ -12634,7 +13527,7 @@
           "address": "tellorvalcons1dhzw6ulac790kp4zuxkdh5s342p83kxe9yf04v",
           "missed_blocks": [
             {
-              "index": "38",
+              "index": "99",
               "missed": true
             }
           ]
@@ -12652,30 +13545,16 @@
           "missed_blocks": []
         },
         {
+          "address": "tellorvalcons104s8c2mungj57fmmhmg93tehwhvc68ke5cqs4e",
+          "missed_blocks": []
+        },
+        {
           "address": "tellorvalcons1sxlg7m7drdpr9r7kyv9zgvnssv9j8pdydj3ay6",
-          "missed_blocks": [
-            {
-              "index": "225",
-              "missed": true
-            },
-            {
-              "index": "356",
-              "missed": true
-            }
-          ]
+          "missed_blocks": []
         },
         {
           "address": "tellorvalcons1saxlus7h3t57ppp3uwk34gsfettymmwsmws063",
-          "missed_blocks": [
-            {
-              "index": "39",
-              "missed": true
-            },
-            {
-              "index": "408",
-              "missed": true
-            }
-          ]
+          "missed_blocks": []
         },
         {
           "address": "tellorvalcons13qhvptdjqpzczqmzvwraap23ukf073fahsnqcd",
@@ -12683,16 +13562,7 @@
         },
         {
           "address": "tellorvalcons13ga5tzpmuhnf5hs05a5s8q24rtv4jq7m42hlyj",
-          "missed_blocks": [
-            {
-              "index": "57",
-              "missed": true
-            },
-            {
-              "index": "188",
-              "missed": true
-            }
-          ]
+          "missed_blocks": []
         },
         {
           "address": "tellorvalcons1nlywmcm8zurrdq744qx2vw063tfwpn2w8d22ey",
@@ -12700,20 +13570,16 @@
         },
         {
           "address": "tellorvalcons14dv7f432j97ku4pvfd9j9hm8vlgxkcmchlcthj",
-          "missed_blocks": []
-        },
-        {
-          "address": "tellorvalcons1kj7lc5d57v4w9cfwktt3dq6t5atfg2jnws54lu",
           "missed_blocks": [
             {
-              "index": "279",
-              "missed": true
-            },
-            {
-              "index": "410",
+              "index": "95",
               "missed": true
             }
           ]
+        },
+        {
+          "address": "tellorvalcons1kj7lc5d57v4w9cfwktt3dq6t5atfg2jnws54lu",
+          "missed_blocks": []
         },
         {
           "address": "tellorvalcons1kareyjckp24t2ta2qgdt3gw6u8cxg98u7f3jkc",
@@ -12727,55 +13593,14 @@
           "address": "tellorvalcons1hrumcgyjc4w3p9vqpy5wc9uplg5csvlsmjlshk",
           "missed_blocks": [
             {
-              "index": "57",
-              "missed": true
-            },
-            {
-              "index": "58",
-              "missed": true
-            },
-            {
-              "index": "190",
-              "missed": true
-            },
-            {
-              "index": "221",
-              "missed": true
-            },
-            {
-              "index": "255",
-              "missed": true
-            },
-            {
-              "index": "357",
-              "missed": true
-            },
-            {
-              "index": "358",
-              "missed": true
-            },
-            {
-              "index": "424",
-              "missed": true
-            },
-            {
-              "index": "425",
-              "missed": true
-            },
-            {
-              "index": "491",
+              "index": "34",
               "missed": true
             }
           ]
         },
         {
           "address": "tellorvalcons1c0p3nc9m72q3vrrl2rc8d5etzvga988y2trv5v",
-          "missed_blocks": [
-            {
-              "index": "212",
-              "missed": true
-            }
-          ]
+          "missed_blocks": []
         },
         {
           "address": "tellorvalcons1c3770tp8wf6xzmlmdenj83tms8ttah8kfxmwk5",
@@ -12783,104 +13608,7 @@
         },
         {
           "address": "tellorvalcons1eqk3wuzl0pzja9x7kvqmyjt4v6mara8tv8hj2k",
-          "missed_blocks": [
-            {
-              "index": "41",
-              "missed": true
-            },
-            {
-              "index": "43",
-              "missed": true
-            },
-            {
-              "index": "73",
-              "missed": true
-            },
-            {
-              "index": "74",
-              "missed": true
-            },
-            {
-              "index": "76",
-              "missed": true
-            },
-            {
-              "index": "77",
-              "missed": true
-            },
-            {
-              "index": "125",
-              "missed": true
-            },
-            {
-              "index": "126",
-              "missed": true
-            },
-            {
-              "index": "127",
-              "missed": true
-            },
-            {
-              "index": "194",
-              "missed": true
-            },
-            {
-              "index": "195",
-              "missed": true
-            },
-            {
-              "index": "196",
-              "missed": true
-            },
-            {
-              "index": "245",
-              "missed": true
-            },
-            {
-              "index": "246",
-              "missed": true
-            },
-            {
-              "index": "355",
-              "missed": true
-            },
-            {
-              "index": "356",
-              "missed": true
-            },
-            {
-              "index": "357",
-              "missed": true
-            },
-            {
-              "index": "358",
-              "missed": true
-            },
-            {
-              "index": "359",
-              "missed": true
-            },
-            {
-              "index": "410",
-              "missed": true
-            },
-            {
-              "index": "453",
-              "missed": true
-            },
-            {
-              "index": "454",
-              "missed": true
-            },
-            {
-              "index": "455",
-              "missed": true
-            },
-            {
-              "index": "456",
-              "missed": true
-            }
-          ]
+          "missed_blocks": []
         },
         {
           "address": "tellorvalcons1eyd0jrq85x3duwjc5xc0qemau4y7msrhphn2av",
@@ -12890,28 +13618,18 @@
           "address": "tellorvalcons16r63m60h90umtex9hj48pv7fq0msezrkd3nery",
           "missed_blocks": [
             {
-              "index": "491",
+              "index": "304",
               "missed": true
             }
           ]
         },
         {
           "address": "tellorvalcons168lygeza3mu4g8d8qg0vxwn6wgg2mnxdca6js2",
-          "missed_blocks": [
-            {
-              "index": "282",
-              "missed": true
-            }
-          ]
+          "missed_blocks": []
         },
         {
           "address": "tellorvalcons165u7qw4f8rzwae5fg0yect2eelfj5fnu7eshrt",
-          "missed_blocks": [
-            {
-              "index": "151",
-              "missed": true
-            }
-          ]
+          "missed_blocks": []
         },
         {
           "address": "tellorvalcons1myfvws7n7fw7f9cpnm9nz6zckjhw8t4ymqzvpx",
@@ -13035,8 +13753,8 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "116490000",
-          "delegator_shares": "122409861.305692927532140187",
+          "tokens": "118780000",
+          "delegator_shares": "129914407.015448142917715430",
           "description": {
             "moniker": "warrion08",
             "identity": "05CD957F42AA815F",
@@ -13044,15 +13762,15 @@
             "security_contact": "warrion08@gmail.com",
             "details": "IT enthusiast and crypto fan. For contact use warrion08@gmail.com"
           },
-          "unbonding_height": "3349941",
-          "unbonding_time": "2025-06-16T23:32:43.974690015Z",
+          "unbonding_height": "3832345",
+          "unbonding_time": "2025-06-27T08:49:41.476930867Z",
           "commission": {
             "commission_rates": {
               "rate": "0.100000000000000000",
               "max_rate": "0.200000000000000000",
               "max_change_rate": "0.050000000000000000"
             },
-            "update_time": "2025-04-20T17:47:24.703206684Z"
+            "update_time": "2025-06-19T07:50:58.622328282Z"
           },
           "min_self_delegation": "1",
           "unbonding_on_hold_ref_count": "0",
@@ -13061,7 +13779,11 @@
             "58",
             "67",
             "72",
-            "90"
+            "90",
+            "101",
+            "102",
+            "104",
+            "105"
           ]
         },
         {
@@ -13072,8 +13794,8 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "1140358950",
-          "delegator_shares": "1140358950.000000000000000000",
+          "tokens": "1220971133",
+          "delegator_shares": "1220971133.000000000000000000",
           "description": {
             "moniker": "layer",
             "identity": "",
@@ -13171,8 +13893,8 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "1181171288",
-          "delegator_shares": "1181171288.000000000000000000",
+          "tokens": "1283874575",
+          "delegator_shares": "1283874575.000000000000000000",
           "description": {
             "moniker": "layer",
             "identity": "",
@@ -13271,8 +13993,8 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "128642967",
-          "delegator_shares": "129942390.909090909090909043",
+          "tokens": "175150365",
+          "delegator_shares": "176919560.606060606060605948",
           "description": {
             "moniker": "Validatrium",
             "identity": "9E31CFA37DA22B31",
@@ -13304,8 +14026,8 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "1293712489",
-          "delegator_shares": "1306774344.271297528205907718",
+          "tokens": "1422944762",
+          "delegator_shares": "1437311399.640378307195999384",
           "description": {
             "moniker": "layer",
             "identity": "",
@@ -13337,7 +14059,7 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "9549900",
+          "tokens": "9459900",
           "delegator_shares": "9999900.000000000000000000",
           "description": {
             "moniker": "Nodes Hub 🛡️ 100% Slash Protected 🛡️",
@@ -13346,8 +14068,8 @@
             "security_contact": "contact@nodeshub.online",
             "details": "Empowering Decentralization, Ensuring Security"
           },
-          "unbonding_height": "3611441",
-          "unbonding_time": "2025-06-22T15:01:13.790807781Z",
+          "unbonding_height": "3848687",
+          "unbonding_time": "2025-06-27T17:08:59.425502561Z",
           "commission": {
             "commission_rates": {
               "rate": "0.000000000000000000",
@@ -13363,7 +14085,8 @@
             "80",
             "84",
             "95",
-            "97"
+            "97",
+            "106"
           ]
         },
         {
@@ -13448,8 +14171,8 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "1184188343",
-          "delegator_shares": "1184188343.000000000000000000",
+          "tokens": "1287414093",
+          "delegator_shares": "1287414093.000000000000000000",
           "description": {
             "moniker": "layer",
             "identity": "",
@@ -13679,8 +14402,8 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "1198560976",
-          "delegator_shares": "1198560976.000000000000000000",
+          "tokens": "1311096085",
+          "delegator_shares": "1311096085.000000000000000000",
           "description": {
             "moniker": "layer",
             "identity": "",
@@ -13710,7 +14433,7 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "86460000",
+          "tokens": "85600000",
           "delegator_shares": "90000000.000000000000000000",
           "description": {
             "moniker": "MIPEnode",
@@ -13719,8 +14442,8 @@
             "security_contact": "MIPEnode",
             "details": "i love validator"
           },
-          "unbonding_height": "3140223",
-          "unbonding_time": "2025-06-12T12:44:50.349917367Z",
+          "unbonding_height": "4747526",
+          "unbonding_time": "2025-07-16T09:37:56.954331655Z",
           "commission": {
             "commission_rates": {
               "rate": "0.100000000000000000",
@@ -13735,7 +14458,8 @@
             "15",
             "28",
             "29",
-            "76"
+            "76",
+            "112"
           ]
         },
         {
@@ -13746,7 +14470,7 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "92220000",
+          "tokens": "91300000",
           "delegator_shares": "96000000.000000000000000000",
           "description": {
             "moniker": "BonyNode💚",
@@ -13755,8 +14479,8 @@
             "security_contact": "suppport@bonynode.online",
             "details": "💚24/7 management and monitoring!"
           },
-          "unbonding_height": "3148169",
-          "unbonding_time": "2025-06-12T16:44:34.713575852Z",
+          "unbonding_height": "4704672",
+          "unbonding_time": "2025-07-15T12:03:58.325140418Z",
           "commission": {
             "commission_rates": {
               "rate": "0.050000000000000000",
@@ -13771,7 +14495,8 @@
             "47",
             "54",
             "77",
-            "86"
+            "86",
+            "111"
           ]
         },
         {
@@ -13815,7 +14540,7 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "54561420",
+          "tokens": "54021420",
           "delegator_shares": "55111420.000000000000000000",
           "description": {
             "moniker": "HusoNode",
@@ -13824,8 +14549,8 @@
             "security_contact": "aksamlan.01@gmail.com",
             "details": "Your Security Validator"
           },
-          "unbonding_height": "2154251",
-          "unbonding_time": "2025-05-22T14:30:04.540645340Z",
+          "unbonding_height": "3813713",
+          "unbonding_time": "2025-06-26T23:28:07.024280099Z",
           "commission": {
             "commission_rates": {
               "rate": "0.100000000000000000",
@@ -13837,7 +14562,8 @@
           "min_self_delegation": "1",
           "unbonding_on_hold_ref_count": "0",
           "unbonding_ids": [
-            "37"
+            "37",
+            "103"
           ]
         },
         {
@@ -13848,8 +14574,8 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "81567355",
-          "delegator_shares": "87470999.899496844936463762",
+          "tokens": "104510808",
+          "delegator_shares": "113206135.338090428017687030",
           "description": {
             "moniker": "airSintez",
             "identity": "F0655DEF468411B6",
@@ -13857,8 +14583,8 @@
             "security_contact": "",
             "details": ""
           },
-          "unbonding_height": "3497447",
-          "unbonding_time": "2025-06-20T03:42:12.533201583Z",
+          "unbonding_height": "4250908",
+          "unbonding_time": "2025-07-06T01:27:42.132092284Z",
           "commission": {
             "commission_rates": {
               "rate": "0.100000000000000000",
@@ -13876,7 +14602,41 @@
             "69",
             "70",
             "92",
-            "93"
+            "93",
+            "109"
+          ]
+        },
+        {
+          "operator_address": "tellorvaloper1j4efgzq92x2txwjz3nj7mcuctjhhl35hs5tfsk",
+          "consensus_pubkey": {
+            "@type": "/cosmos.crypto.ed25519.PubKey",
+            "key": "emP6Ce9VTHOHlklj1g4Ca35gCDjkMTQMopdkJvWDVJU="
+          },
+          "jailed": true,
+          "status": "BOND_STATUS_UNBONDED",
+          "tokens": "990000",
+          "delegator_shares": "1000000.000000000000000000",
+          "description": {
+            "moniker": "Igan",
+            "identity": "optional identity signature (ex. UPort or Keybase)",
+            "website": "validator's (optional) website",
+            "security_contact": "validator's (optional) security contact email",
+            "details": "validator's (optional) details"
+          },
+          "unbonding_height": "4042986",
+          "unbonding_time": "2025-07-01T18:27:01.496336791Z",
+          "commission": {
+            "commission_rates": {
+              "rate": "0.100000000000000000",
+              "max_rate": "0.200000000000000000",
+              "max_change_rate": "0.010000000000000000"
+            },
+            "update_time": "2025-06-09T19:12:26.842494143Z"
+          },
+          "min_self_delegation": "1",
+          "unbonding_on_hold_ref_count": "0",
+          "unbonding_ids": [
+            "108"
           ]
         },
         {
@@ -13887,7 +14647,7 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "80370000",
+          "tokens": "79570000",
           "delegator_shares": "82000000.000000000000000000",
           "description": {
             "moniker": "DvlNode",
@@ -13896,8 +14656,8 @@
             "security_contact": "dvlnode0@gmail.com",
             "details": "Node Operator"
           },
-          "unbonding_height": "2161600",
-          "unbonding_time": "2025-05-22T18:01:56.610386031Z",
+          "unbonding_height": "3972436",
+          "unbonding_time": "2025-06-30T07:12:56.244420926Z",
           "commission": {
             "commission_rates": {
               "rate": "0.100000000000000000",
@@ -13910,7 +14670,8 @@
           "unbonding_on_hold_ref_count": "0",
           "unbonding_ids": [
             "38",
-            "52"
+            "52",
+            "107"
           ]
         },
         {
@@ -13921,7 +14682,7 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "17190000",
+          "tokens": "17020000",
           "delegator_shares": "18959958.398335933437337494",
           "description": {
             "moniker": "not_spuddy",
@@ -13930,8 +14691,8 @@
             "security_contact": "yes",
             "details": "no"
           },
-          "unbonding_height": "3434983",
-          "unbonding_time": "2025-06-18T18:59:01.432179777Z",
+          "unbonding_height": "3792811",
+          "unbonding_time": "2025-06-26T12:52:56.777814692Z",
           "commission": {
             "commission_rates": {
               "rate": "0.050000000000000000",
@@ -13952,7 +14713,8 @@
             "61",
             "65",
             "66",
-            "91"
+            "91",
+            "100"
           ]
         },
         {
@@ -14022,6 +14784,37 @@
           ]
         },
         {
+          "operator_address": "tellorvaloper15a4l8qg5ccsrsmnsylskkqk8qrmeudr4zjqxs3",
+          "consensus_pubkey": {
+            "@type": "/cosmos.crypto.ed25519.PubKey",
+            "key": "ssYGEG+D24hn5MBfaZH1Uf/e1YKG8EYLrQX72Z6KNTY="
+          },
+          "jailed": true,
+          "status": "BOND_STATUS_UNBONDED",
+          "tokens": "500000",
+          "delegator_shares": "500000.000000000000000000",
+          "description": {
+            "moniker": "myvalidator",
+            "identity": "optional identity signature (ex. UPort or Keybase)",
+            "website": "validator's (optional) website",
+            "security_contact": "validator's (optional) security contact email",
+            "details": "validator's (optional) details"
+          },
+          "unbonding_height": "0",
+          "unbonding_time": "1970-01-01T00:00:00Z",
+          "commission": {
+            "commission_rates": {
+              "rate": "0.100000000000000000",
+              "max_rate": "0.200000000000000000",
+              "max_change_rate": "0.010000000000000000"
+            },
+            "update_time": "2025-06-11T15:47:57.607042462Z"
+          },
+          "min_self_delegation": "1",
+          "unbonding_on_hold_ref_count": "0",
+          "unbonding_ids": []
+        },
+        {
           "operator_address": "tellorvaloper14874aky5afw60wlukkgvc5fqcm68825t0axjth",
           "consensus_pubkey": {
             "@type": "/cosmos.crypto.ed25519.PubKey",
@@ -14062,8 +14855,8 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "9820000",
-          "delegator_shares": "10010101.010101010101010101",
+          "tokens": "202820000",
+          "delegator_shares": "206746302.125120862391738111",
           "description": {
             "moniker": "NodeRuneR",
             "identity": "D11D6116821283C3",
@@ -14129,8 +14922,8 @@
           },
           "jailed": true,
           "status": "BOND_STATUS_UNBONDED",
-          "tokens": "105440000",
-          "delegator_shares": "108636482.966975726638191477",
+          "tokens": "113740000",
+          "delegator_shares": "117188102.927388269611417854",
           "description": {
             "moniker": "HaruNode",
             "identity": "279BA45C3BDA1E65",
@@ -14154,6 +14947,39 @@
             "59",
             "63",
             "79"
+          ]
+        },
+        {
+          "operator_address": "tellorvaloper1cmt5j83q77mvu7m7g3mz6cvkgm4tq2zce28fck",
+          "consensus_pubkey": {
+            "@type": "/cosmos.crypto.ed25519.PubKey",
+            "key": "f63yW7x/Kb4inOnYtCKQ3zfYzxORTXqa3Vqv1JBl3IQ="
+          },
+          "jailed": true,
+          "status": "BOND_STATUS_UNBONDED",
+          "tokens": "4950000",
+          "delegator_shares": "5000000.000000000000000000",
+          "description": {
+            "moniker": "NodeStake",
+            "identity": "94EFE192B2C52424",
+            "website": "https://nodestake.org/tellor",
+            "security_contact": "info@nodestake.org",
+            "details": "NodeStake is the professional validator, infrastructure provider and IBC relayer.⚛️7*24h | https://twitter.com/Nodestake_top"
+          },
+          "unbonding_height": "4691688",
+          "unbonding_time": "2025-07-15T05:31:32.602197570Z",
+          "commission": {
+            "commission_rates": {
+              "rate": "0.050000000000000000",
+              "max_rate": "0.200000000000000000",
+              "max_change_rate": "0.050000000000000000"
+            },
+            "update_time": "2025-06-24T05:16:32.164227020Z"
+          },
+          "min_self_delegation": "1",
+          "unbonding_on_hold_ref_count": "0",
+          "unbonding_ids": [
+            "110"
           ]
         },
         {
@@ -14482,12 +15308,12 @@
         {
           "delegator_address": "tellor1y7y66xp3vrn8e6k4vxa7ygh7judy2jx40r2ktw",
           "validator_address": "tellorvaloper1y7y66xp3vrn8e6k4vxa7ygh7judy2jx46vxyj7",
-          "shares": "122409861.305692927532140187"
+          "shares": "129914407.015448142917715430"
         },
         {
           "delegator_address": "tellor198dvh9n2d7aqvrxzcsdfz73xtkv9jcjv5rakr6",
           "validator_address": "tellorvaloper198dvh9n2d7aqvrxzcsdfz73xtkv9jcjvpv3y62",
-          "shares": "97214436.000000000000000000"
+          "shares": "177826619.000000000000000000"
         },
         {
           "delegator_address": "tellor198dvh9n2d7aqvrxzcsdfz73xtkv9jcjv5rakr6",
@@ -14512,7 +15338,7 @@
         {
           "delegator_address": "tellor1952ghnp9jat6eraqakdjruplrj9c40f0tn5jld",
           "validator_address": "tellorvaloper1952ghnp9jat6eraqakdjruplrj9c40f07ucqxa",
-          "shares": "183171288.000000000000000000"
+          "shares": "285874575.000000000000000000"
         },
         {
           "delegator_address": "tellor1xyxd7x9yjfh0ad6mg3wfyczwmandzj7qlgl3ug",
@@ -14537,12 +15363,12 @@
         {
           "delegator_address": "tellor1gnr3smk3yvqrzfpgdz492u23gtkn4aasgyfyj6",
           "validator_address": "tellorvaloper1gnr3smk3yvqrzfpgdz492u23gtkn4aasat9kt2",
-          "shares": "129942390.909090909090909043"
+          "shares": "176919560.606060606060605948"
         },
         {
           "delegator_address": "tellor1gkstv3n4cpmdskh4m8mhr2mlljf540sqsm7gnp",
           "validator_address": "tellorvaloper1gkstv3n4cpmdskh4m8mhr2mlljf540sq95j623",
-          "shares": "103254223.541831729651330904"
+          "shares": "154044144.902024917373528670"
         },
         {
           "delegator_address": "tellor1fqghwt2h3jkm5nw0ju5rzt7x80x5eyptufj6h3",
@@ -14567,12 +15393,12 @@
         {
           "delegator_address": "tellor1vw2yy9nf3wz7hey89tpw5hn0yr3hkrzt889x47",
           "validator_address": "tellorvaloper1gkstv3n4cpmdskh4m8mhr2mlljf540sq95j623",
-          "shares": "20000000.000000000000000000"
+          "shares": "20812365.999570105372824833"
         },
         {
           "delegator_address": "tellor1vk2f5m4jsezgaq9tlu2fhq7t94xpykjlmqcn5k",
           "validator_address": "tellorvaloper1vk2f5m4jsezgaq9tlu2fhq7t94xpykjlw05pdx",
-          "shares": "185031154.000000000000000000"
+          "shares": "288256904.000000000000000000"
         },
         {
           "delegator_address": "tellor1vm3awjytk37znyy0p0xhtmztw72g4yamq5wyf9",
@@ -14612,7 +15438,7 @@
         {
           "delegator_address": "tellor10usyr7v4xe2uhtnvg4kwtgtuzh5e4u2378zjj9",
           "validator_address": "tellorvaloper10usyr7v4xe2uhtnvg4kwtgtuzh5e4u23tgwqt4",
-          "shares": "200560976.000000000000000000"
+          "shares": "313096085.000000000000000000"
         },
         {
           "delegator_address": "tellor1srsvq5facrpzdsmc32nn2rdzfg0mrlk3xk5tuz",
@@ -14637,7 +15463,12 @@
         {
           "delegator_address": "tellor13l5f93zutylh847cnmd2rpg6hha86dju649964",
           "validator_address": "tellorvaloper13l5f93zutylh847cnmd2rpg6hha86dju06fhr9",
-          "shares": "87470999.899496844936463762"
+          "shares": "113206135.338090428017687030"
+        },
+        {
+          "delegator_address": "tellor1j4efgzq92x2txwjz3nj7mcuctjhhl35h9m8mfx",
+          "validator_address": "tellorvaloper1j4efgzq92x2txwjz3nj7mcuctjhhl35hs5tfsk",
+          "shares": "1000000.000000000000000000"
         },
         {
           "delegator_address": "tellor1n8a2au0p0w49rctey3mxh3kajsdqtdyp4vrtfz",
@@ -14657,12 +15488,17 @@
         {
           "delegator_address": "tellor15ap5jyn02a6s45qsgk5dqc5zu09ma50nrepq2v",
           "validator_address": "tellorvaloper1gkstv3n4cpmdskh4m8mhr2mlljf540sq95j623",
-          "shares": "120314896.843670054309837332"
+          "shares": "199249664.852987540204906399"
         },
         {
           "delegator_address": "tellor15ap5jyn02a6s45qsgk5dqc5zu09ma50nrepq2v",
           "validator_address": "tellorvaloper15ap5jyn02a6s45qsgk5dqc5zu09ma50nkkdjnu",
           "shares": "10000000.000000000000000000"
+        },
+        {
+          "delegator_address": "tellor15a4l8qg5ccsrsmnsylskkqk8qrmeudr4hav5fp",
+          "validator_address": "tellorvaloper15a4l8qg5ccsrsmnsylskkqk8qrmeudr4zjqxs3",
+          "shares": "500000.000000000000000000"
         },
         {
           "delegator_address": "tellor14874aky5afw60wlukkgvc5fqcm68825t6j2qj8",
@@ -14672,7 +15508,7 @@
         {
           "delegator_address": "tellor1kxchhyvpc6mz7y8sc8vr8peqqle820awm59qgd",
           "validator_address": "tellorvaloper1kxchhyvpc6mz7y8sc8vr8peqqle820awwmfj3a",
-          "shares": "10010101.010101010101010101"
+          "shares": "206746302.125120862391738111"
         },
         {
           "delegator_address": "tellor1k8v5l8spru8hc58nr84nmumdm83j3cuz4ecpl6",
@@ -14682,12 +15518,17 @@
         {
           "delegator_address": "tellor1h2ekr5q6aydeedcdzrf6gdwetsygqyepgp4yzx",
           "validator_address": "tellorvaloper1h2ekr5q6aydeedcdzrf6gdwetsygqyepawekmk",
-          "shares": "108636482.966975726638191477"
+          "shares": "117188102.927388269611417854"
         },
         {
           "delegator_address": "tellor1hu8vk2zzyety0j4c88vpyfew8rc7frqnjf63nm",
           "validator_address": "tellorvaloper1952ghnp9jat6eraqakdjruplrj9c40f07ucqxa",
           "shares": "998000000.000000000000000000"
+        },
+        {
+          "delegator_address": "tellor1cmt5j83q77mvu7m7g3mz6cvkgm4tq2zcv9tmpx",
+          "validator_address": "tellorvaloper1cmt5j83q77mvu7m7g3mz6cvkgm4tq2zce28fck",
+          "shares": "5000000.000000000000000000"
         },
         {
           "delegator_address": "tellor1edr39pfjd2j0l7335dx2zkgk5zmtl5cwnuh6xw",
@@ -14772,7 +15613,7 @@
       "plans": [
         {
           "name": "fork",
-          "height": 3752898,
+          "height": 4764955,
           "info": "migrate over rest of module data from forked chain"
         }
       ]
@@ -14828,7 +15669,7 @@
         "app": "0"
       },
       "abci": {
-        "vote_extensions_enable_height": "3752899"
+        "vote_extensions_enable_height": "4764956"
       }
     }
   }

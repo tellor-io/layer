@@ -391,606 +391,6 @@
         "moniker": "reporter-0",
         "last_updated": "0001-01-01T00:00:00Z"
       }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-1",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-2",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
-    },
-    {
-      "reporter_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "reporter": {
-        "min_tokens_required": "1000000",
-        "commission_rate": "0.100000000000000000",
-        "jailed_until": "0001-01-01T00:00:00Z",
-        "moniker": "reporter-0",
-        "last_updated": "0001-01-01T00:00:00Z"
-      }
     }
   ],
   "selectors": [
@@ -1118,6 +518,14 @@
       "selector_addr": "mfqu8eF7qlHheSR2a8bdlBoFtIE=",
       "selector": {
         "reporter": "mfqu8eF7qlHheSR2a8bdlBoFtIE=",
+        "locked_until_time": "0001-01-01T00:00:00Z",
+        "delegations_count": 1
+      }
+    },
+    {
+      "selector_addr": "lXKUCAVRlLM6Qozl7eOYXK9/xpc=",
+      "selector": {
+        "reporter": "LRSLzCWXV6yPoO2bIfA/HIuKvS8=",
         "locked_until_time": "0001-01-01T00:00:00Z",
         "delegations_count": 1
       }
@@ -1361,486 +769,6 @@
         "locked_until_time": "0001-01-01T00:00:00Z",
         "delegations_count": 1
       }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "selector": {
-        "reporter": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "selector": {
-        "reporter": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
-    },
-    {
-      "selector_addr": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "selector": {
-        "reporter": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-        "locked_until_time": "0001-01-01T00:00:00Z",
-        "delegations_count": 1
-      }
     }
   ],
   "selector_tips": [
@@ -1854,11 +782,11 @@
     },
     {
       "selector_address": "7p/8OT7776QO5pWhZtdxfVf9Fgk=",
-      "tips": "39353632.721199192199891024"
+      "tips": "55283504.963508005229364056"
     },
     {
       "selector_address": "52FuarkSxCdPJ0GoewjWTOn+HfE=",
-      "tips": "912347100.092596096273347889"
+      "tips": "1212686372.987186084471542995"
     },
     {
       "selector_address": "3pfCKzZ+iBXgl1tiv16V4xkXGQw=",
@@ -1878,11 +806,11 @@
     },
     {
       "selector_address": "y0cShTJqpP/6MaNMoVkWoLa/0w4=",
-      "tips": "899068208.940226947487190545"
+      "tips": "1193469323.889521855446597387"
     },
     {
       "selector_address": "vw7LKEImVkfKuDnYEicuOPHkjBM=",
-      "tips": "857741116.594786394689038954"
+      "tips": "1136968304.580737578741753272"
     },
     {
       "selector_address": "sdlPngEfD3xQ8xnrPfNt2eMo44I=",
@@ -1894,7 +822,7 @@
     },
     {
       "selector_address": "p0NJEm9XdQrQEEWo0GKC48u+0fM=",
-      "tips": "62971.129075632267287692"
+      "tips": "18239.545252599751608548"
     },
     {
       "selector_address": "onO4pIwo2VW3+rIG2SkgA5lQxgQ=",
@@ -1909,8 +837,12 @@
       "tips": "29804255.262230370856925784"
     },
     {
+      "selector_address": "lXKUCAVRlLM6Qozl7eOYXK9/xpc=",
+      "tips": "1526.089480300712951970"
+    },
+    {
       "selector_address": "j+iSxFxZP3PX2J7aoYUavfp9Nlw=",
-      "tips": "39826.432022773955026840"
+      "tips": "44044.968828989405946705"
     },
     {
       "selector_address": "j8Dphnj+EaM+450X5RjdPchXQ9c=",
@@ -1918,7 +850,7 @@
     },
     {
       "selector_address": "jRSFfWe6hn1Y52bna8Mlg+mkTPg=",
-      "tips": "36509400.342537567712214429"
+      "tips": "51735003.463517228277131159"
     },
     {
       "selector_address": "jNwt0alqtcz6sh6hiJUEnEAsvHI=",
@@ -1926,7 +858,7 @@
     },
     {
       "selector_address": "fyBB+ZU2VcuubEVs5aF8Fema8VE=",
-      "tips": "727865.722563889554378798"
+      "tips": "1357480.758961068180950493"
     },
     {
       "selector_address": "ePuP5wqb8vMb/SXwCetRUIKkDV4=",
@@ -1934,7 +866,7 @@
     },
     {
       "selector_address": "eKUEPU+g8nR6q9AABr5XrPZ8cIQ=",
-      "tips": "897315306.050564431526873020"
+      "tips": "1185032235.489075686678594249"
     },
     {
       "selector_address": "a9eg192AzhLDeQF6WIL7Shbt46g=",
@@ -1946,11 +878,11 @@
     },
     {
       "selector_address": "ZZSabrKGRI6Aq/8Um4PLLUwSWl8=",
-      "tips": "313983.727153674527169174"
+      "tips": "806177.933553018577562346"
     },
     {
       "selector_address": "Y5RCFmmLhevkhyrC6l5vION7DEs=",
-      "tips": "774846.324236907870611638"
+      "tips": "0.324236907870611638"
     },
     {
       "selector_address": "YIKqNliEl+/sKAMJDwwSSh9qkXY=",
@@ -1966,15 +898,15 @@
     },
     {
       "selector_address": "RaC2RnXAdtha9dn3cat//JNKvgA=",
-      "tips": "21114.146208745984997529"
+      "tips": "85052.306640315540724478"
     },
     {
       "selector_address": "RMcYbtEjADEkKGiqVXFRQu0697A=",
-      "tips": "314159.298159644134424413"
+      "tips": "580192.232293487630096945"
     },
     {
       "selector_address": "Q6d95c2bJ6XfJmUSBLiUj4LN5FI=",
-      "tips": "0.172388369718359682"
+      "tips": "2918723.178557087473862171"
     },
     {
       "selector_address": "MQzfGKSSbv63W0RckmBO32bRS8A=",
@@ -1982,19 +914,19 @@
     },
     {
       "selector_address": "LRSLzCWXV6yPoO2bIfA/HIuKvS8=",
-      "tips": "1743717.901026144695325165"
+      "tips": "2592897.252313405398783033"
     },
     {
       "selector_address": "KdrLlmpvugYMwsQakXomXZhZYkw=",
-      "tips": "95730.440618197109033754"
+      "tips": "98453.044880271330140021"
     },
     {
       "selector_address": "FdGiw4cNBB+P0rCt1nj+rm08TPE=",
-      "tips": "849511252.524024942799733999"
+      "tips": "1125633290.301210792178457458"
     },
     {
       "selector_address": "D4jyMBN0eykDTISZ4nbwZI0Ndvc=",
-      "tips": "858990101.608618070549333860"
+      "tips": "1138213678.790327237637936466"
     },
     {
       "selector_address": "B4Pdy8w7Yu5mi6BcjMrL7Ic78EI=",
@@ -2003,246 +935,6 @@
     {
       "selector_address": "BvtZoGBTAC1I6uUqf7cjjzOtqp0=",
       "tips": "24256605.623858872494789377"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
-      "tips": "0"
-    },
-    {
-      "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
-      "tips": "0"
     },
     {
       "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
@@ -2292,5 +984,5 @@
       }
     }
   ],
-  "checksum": "5f217f542046590cafc7decb3d11cc66e8db65f52e7927fe924b1def46cc257c"
+  "checksum": "57a88d0e7ea7edf0ac9e5b323bafbd8328802ceca60ea1332a95a8ffc6d6ef3e"
 }
