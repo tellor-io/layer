@@ -7,6 +7,7 @@ import (
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cosmosdb "github.com/cosmos/cosmos-db"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/gogo/protobuf/proto"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/bridge/keeper"
@@ -23,6 +24,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -127,16 +129,175 @@ func createLegacyValidatorCheckpointParams(t *testing.T, ctx context.Context, st
 	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 	checkpointStore := prefix.NewStore(store, bridgetypes.ValidatorCheckpointParamsMapKey)
 
-	for i, data := range legacyData {
+	for _, data := range legacyData {
 		// use timestamp as key (uint64 -> []byte)
 		key := sdk.Uint64ToBigEndian(data.Timestamp)
 		value, err := cdc.Marshal(&data)
 		require.NoError(t, err)
 		checkpointStore.Set(key, value)
-		t.Logf("Stored legacy checkpoint %d with timestamp %d", i, data.Timestamp)
 	}
 
 	return legacyData
+}
+
+// TestEVMAddressMigration tests the migration of OperatorToEVMAddressMap to EVMToOperatorAddressMap
+func TestEVMAddressMigration(t *testing.T) {
+	ctx, storeService, cdc, _ := setupTest(t)
+
+	// Generate valid validator addresses for testing
+	pk1 := secp256k1.GenPrivKey()
+	pk2 := secp256k1.GenPrivKey()
+	pk3 := secp256k1.GenPrivKey()
+
+	addr1 := sdk.AccAddress(pk1.PubKey().Address())
+	addr2 := sdk.AccAddress(pk2.PubKey().Address())
+	addr3 := sdk.AccAddress(pk3.PubKey().Address())
+
+	valAddr1 := sdk.ValAddress(addr1)
+	valAddr2 := sdk.ValAddress(addr2)
+	valAddr3 := sdk.ValAddress(addr3)
+
+	evmHex1 := "1234567890abcdef1234567890abcdef12345678"
+	evmHex2 := "abcdef1234567890abcdef1234567890abcdef12"
+	evmHex3 := "fedcba0987654321fedcba0987654321fedcba09"
+
+	// Test data: operator addresses and corresponding EVM addresses
+	testData := []struct {
+		operatorAddr string
+		evmAddrHex   string
+		evmAddrBytes []byte
+	}{
+		{
+			operatorAddr: valAddr1.String(),
+			evmAddrHex:   evmHex1,
+			evmAddrBytes: common.FromHex(evmHex1),
+		},
+		{
+			operatorAddr: valAddr2.String(),
+			evmAddrHex:   evmHex2,
+			evmAddrBytes: common.FromHex(evmHex2),
+		},
+		{
+			operatorAddr: valAddr3.String(),
+			evmAddrHex:   evmHex3,
+			evmAddrBytes: common.FromHex(evmHex3),
+		},
+	}
+
+	// Create and store test data in OperatorToEVMAddressMap
+	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
+	operatorToEVMStore := prefix.NewStore(store, bridgetypes.OperatorToEVMAddressMapKey)
+
+	for _, data := range testData {
+		evmAddr := bridgetypes.EVMAddress{
+			EVMAddress: data.evmAddrBytes,
+		}
+		value, err := cdc.Marshal(&evmAddr)
+		require.NoError(t, err)
+
+		operatorToEVMStore.Set([]byte(data.operatorAddr), value)
+	}
+
+	// Run migration
+	err := v4.MigrateStore(ctx, storeService, cdc)
+	require.NoError(t, err, "Migration should succeed")
+
+	// Verify EVMToOperatorAddressMap was populated correctly
+	evmToOperatorStore := prefix.NewStore(store, bridgetypes.EVMToOperatorAddressMapKey)
+
+	for i, data := range testData {
+		// Key should be the hex string (without 0x prefix)
+		evmKey := []byte(data.evmAddrHex)
+
+		// Verify the reverse mapping exists
+		require.True(t, evmToOperatorStore.Has(evmKey),
+			"Reverse mapping should exist for EVM address %s", data.evmAddrHex)
+
+		// Get and verify the value
+		value := evmToOperatorStore.Get(evmKey)
+		require.NotNil(t, value, "Value should not be nil for EVM address %s", data.evmAddrHex)
+
+		var operatorAddr bridgetypes.OperatorAddress
+		err := cdc.Unmarshal(value, &operatorAddr)
+		require.NoError(t, err, "Should unmarshal operator address")
+
+		// Verify the operator address matches
+		expectedValAddr, err := sdk.ValAddressFromBech32(data.operatorAddr)
+		require.NoError(t, err)
+		require.Equal(t, expectedValAddr.Bytes(), operatorAddr.OperatorAddress,
+			"Operator address should match for entry %d", i)
+	}
+}
+
+// TestEVMAddressMigrationWithKeeper tests the migration through the keeper interface
+func TestEVMAddressMigrationWithKeeper(t *testing.T) {
+	ctx, storeService, cdc, bk := setupTest(t)
+
+	// Generate valid validator address
+	pk := secp256k1.GenPrivKey()
+	addr := sdk.AccAddress(pk.PubKey().Address())
+	valAddr := sdk.ValAddress(addr)
+
+	operatorAddr := valAddr.String()
+	evmAddrBytes := common.FromHex("0x1234567890abcdef1234567890abcdef12345678")
+	evmAddrHex := "1234567890abcdef1234567890abcdef12345678"
+
+	// Create initial mapping using the store directly (simulating pre-migration state)
+	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
+	operatorToEVMStore := prefix.NewStore(store, bridgetypes.OperatorToEVMAddressMapKey)
+
+	evmAddr := bridgetypes.EVMAddress{EVMAddress: evmAddrBytes}
+	value, err := cdc.Marshal(&evmAddr)
+	require.NoError(t, err)
+	operatorToEVMStore.Set([]byte(operatorAddr), value)
+
+	// Run migration through keeper
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	m := keeper.NewMigrator(bk)
+	err = m.Migrate3to4(sdkCtx)
+	require.NoError(t, err)
+
+	// Test that the keeper can now access the reverse mapping
+	// verify original mapping still exists
+	storedEVMAddr, err := bk.OperatorToEVMAddressMap.Get(ctx, operatorAddr)
+	require.NoError(t, err)
+	require.Equal(t, evmAddrBytes, storedEVMAddr.EVMAddress)
+
+	// Verify reverse mapping exists and is accessible via raw store access
+	// (since the keeper doesn't have a direct method for EVMToOperatorAddressMap access in the test)
+	evmToOperatorStore := prefix.NewStore(store, bridgetypes.EVMToOperatorAddressMapKey)
+	evmKey := []byte(evmAddrHex)
+	require.True(t, evmToOperatorStore.Has(evmKey))
+
+	value = evmToOperatorStore.Get(evmKey)
+	var operatorAddrResult bridgetypes.OperatorAddress
+	err = cdc.Unmarshal(value, &operatorAddrResult)
+	require.NoError(t, err)
+
+	expectedValAddr, err := sdk.ValAddressFromBech32(operatorAddr)
+	require.NoError(t, err)
+	require.Equal(t, expectedValAddr.Bytes(), operatorAddrResult.OperatorAddress)
+
+	storedOperatorAddr, err := bk.EVMToOperatorAddressMap.Get(ctx, evmAddrHex)
+	require.NoError(t, err)
+	require.Equal(t, operatorAddr, sdk.ValAddress(storedOperatorAddr.OperatorAddress).String())
+}
+
+// TestEVMAddressMigrationEmpty tests migration with empty stores
+func TestEVMAddressMigrationEmpty(t *testing.T) {
+	ctx, storeService, cdc, _ := setupTest(t)
+
+	// Run migration on empty store
+	err := v4.MigrateStore(ctx, storeService, cdc)
+	require.NoError(t, err, "Migration should succeed even with empty OperatorToEVMAddressMap")
+
+	// Verify EVMToOperatorAddressMap is still empty
+	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
+	evmToOperatorStore := prefix.NewStore(store, bridgetypes.EVMToOperatorAddressMapKey)
+
+	iter := evmToOperatorStore.Iterator(nil, nil)
+	defer iter.Close()
+	require.False(t, iter.Valid(), "EVMToOperatorAddressMap should be empty")
 }
 
 func TestMigrateStore(t *testing.T) {
@@ -173,8 +334,6 @@ func TestMigrateStore(t *testing.T) {
 
 		// verify new field was set to 0 (as specified in the migration)
 		require.Equal(t, uint64(0), newParams.BlockHeight, "BlockHeight should be set to 0 for existing entries")
-
-		t.Logf("Successfully migrated checkpoint with timestamp %d", data.Timestamp)
 	}
 }
 

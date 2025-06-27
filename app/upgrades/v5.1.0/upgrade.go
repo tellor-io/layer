@@ -13,9 +13,10 @@ import (
 /*
 	Upgrade to v5.1.0 will include:
 		- test upgrade handler for upgrade testing
+		- migration to populate EVMToOperatorAddressMap for existing validators
 
 	Migrations:
-		- None
+		- Bridge module migration from v3 to v4 includes EVMToOperatorAddressMap population and ValidatorCheckpointParams migration
 */
 
 func CreateUpgradeHandler(
