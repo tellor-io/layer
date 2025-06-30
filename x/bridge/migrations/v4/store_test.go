@@ -507,6 +507,15 @@ func TestFullMigration(t *testing.T) {
 		require.Equal(t, data.Timestamp, params.Timestamp)
 		require.Equal(t, data.PowerThreshold, params.PowerThreshold)
 		require.Equal(t, uint64(0), params.BlockHeight, "BlockHeight should be 0 for migrated data")
+
+		// verify the index was created correctly - the IndexedMap should handle index creation automatically
+		paramsByIndex, err := bk.GetCheckpointParamsByCheckpoint(ctx, data.Checkpoint)
+		require.NoError(t, err, "Should be able to read migrated checkpoint data")
+		require.Equal(t, data.Checkpoint, paramsByIndex.Checkpoint)
+		require.Equal(t, data.ValsetHash, paramsByIndex.ValsetHash)
+		require.Equal(t, data.Timestamp, paramsByIndex.Timestamp)
+		require.Equal(t, data.PowerThreshold, paramsByIndex.PowerThreshold)
+		require.Equal(t, uint64(0), paramsByIndex.BlockHeight, "BlockHeight should be 0 for migrated data")
 	}
 
 	// Verify Params migration via Collections API
