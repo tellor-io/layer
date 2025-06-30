@@ -153,7 +153,7 @@ func main() {
 	fmt.Println()
 
 	cliCommand := fmt.Sprintf(
-		"./layerd tx bridge submit-attestation-evidence %s %s %s %d %d %d %d %s %d %d %s --from %s--keyring-backend test --chain-id layertest-4 --fees 500loya",
+		"./layerd tx bridge submit-attestation-evidence %s %s %s %d %d %d %d %s %d %d %s --from %s --keyring-backend test --chain-id layertest-4 --fees 500loya",
 		creatorAddress,
 		queryId,
 		maliciousValue,

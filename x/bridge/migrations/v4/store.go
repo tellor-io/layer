@@ -3,10 +3,12 @@ package v4
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 
 	"github.com/gogo/protobuf/proto"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
@@ -34,17 +36,18 @@ func (*ValidatorCheckpointParamsLegacy) ProtoMessage() {}
 
 // MigrateStore migrates the bridge module from v3 to v4:
 // 1. Migrates ValidatorCheckpointParams from the legacy format to the new format by adding the BlockHeight field
-// 2. Populates EVMToOperatorAddressMap from existing OperatorToEVMAddressMap entries for slashing functionality
+// 2. Migrates ValidatorCheckpointParamsMap from Map to IndexedMap format
+// 3. Populates EVMToOperatorAddressMap from existing OperatorToEVMAddressMap entries for slashing functionality
 func MigrateStore(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
 	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 
-	// migrate ValidatorCheckpointParams (existing migration)
-	err := migrateValidatorCheckpointParams(store, cdc)
+	// migrate ValidatorCheckpointParams (add BlockHeight field + Map->IndexedMap migration)
+	err := migrateValidatorCheckpointParams(ctx, storeService, cdc)
 	if err != nil {
 		return err
 	}
 
-	// migrate EVMToOperatorAddressMap (new migration)
+	// migrate EVMToOperatorAddressMap for existing validators
 	err = migrateEVMToOperatorAddressMap(store, cdc)
 	if err != nil {
 		return err
@@ -54,11 +57,25 @@ func MigrateStore(ctx context.Context, storeService store.KVStoreService, cdc co
 }
 
 // migrateValidatorCheckpointParams migrates ValidatorCheckpointParams from legacy format to new format
-func migrateValidatorCheckpointParams(store storetypes.KVStore, cdc codec.BinaryCodec) error {
+// and from Map to IndexedMap format
+func migrateValidatorCheckpointParams(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
+	store := runtime.KVStoreAdapter(storeService.OpenKVStore(ctx))
 	checkpointStore := prefix.NewStore(store, bridgetypes.ValidatorCheckpointParamsMapKey)
 	iter := checkpointStore.Iterator(nil, nil)
-	defer iter.Close()
 
+	// create schema builder and temporary IndexedMap for migration
+	sb := collections.NewSchemaBuilder(storeService)
+	tempIndexedMap := collections.NewIndexedMap(
+		sb, bridgetypes.ValidatorCheckpointParamsMapKey, "validator_checkpoint_params_map",
+		collections.Uint64Key, codec.CollValue[bridgetypes.ValidatorCheckpointParams](cdc),
+		bridgetypes.NewValidatorCheckpointParamsIndexes(sb),
+	)
+
+	// collect all existing entries
+	allKeys := make([][]byte, 0)
+	newValues := make([]bridgetypes.ValidatorCheckpointParams, 0)
+
+	defer iter.Close()
 	for ; iter.Valid(); iter.Next() {
 		var legacyParams ValidatorCheckpointParamsLegacy
 		if err := cdc.Unmarshal(iter.Value(), &legacyParams); err != nil {
@@ -74,12 +91,30 @@ func migrateValidatorCheckpointParams(store storetypes.KVStore, cdc codec.Binary
 			BlockHeight:    0, // default value for existing entries
 		}
 
-		newData, err := cdc.Marshal(&newParams)
+		allKeys = append(allKeys, iter.Key())
+		newValues = append(newValues, newParams)
+	}
+
+	// remove old entries and re-add them using IndexedMap
+	for i, key := range allKeys {
+		// decode key to get timestamp
+		kcdc := collections.Uint64Key
+		_, timestamp, err := kcdc.Decode(key)
 		if err != nil {
-			panic("unable to marshal new ValidatorCheckpointParams")
+			panic("failed to decode key")
 		}
 
-		checkpointStore.Set(iter.Key(), newData)
+		// remove old entry first
+		err = tempIndexedMap.Remove(ctx, timestamp)
+		if err != nil && !errors.Is(err, collections.ErrNotFound) {
+			panic("failed to remove old ValidatorCheckpointParams entry")
+		}
+
+		// set new entry using IndexedMap to populate indexes
+		err = tempIndexedMap.Set(ctx, timestamp, newValues[i])
+		if err != nil {
+			panic("failed to set new ValidatorCheckpointParams entry")
+		}
 	}
 
 	return nil
