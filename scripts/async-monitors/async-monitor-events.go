@@ -165,35 +165,28 @@ type BlockResultsResponse struct {
 	Jsonrpc string `json:"jsonrpc"`
 	Id      int    `json:"id"`
 	Result  struct {
-		Height  string `json:"height"`
-		Results struct {
-			DeliverTx []TxResult `json:"deliver_tx"`
-			EndBlock  struct {
-				Events                []Event       `json:"events"`
-				ValidatorUpdates      []interface{} `json:"validator_updates"`
-				ConsensusParamUpdates struct {
-					Block struct {
-						MaxBytes string `json:"max_bytes"`
-						MaxGas   string `json:"max_gas"`
-					} `json:"block"`
-					Evidence struct {
-						MaxAgeNumBlocks string `json:"max_age_num_blocks"`
-						MaxAgeDuration  string `json:"max_age_duration"`
-						MaxBytes        string `json:"max_bytes"`
-					} `json:"evidence"`
-					Validator struct {
-						PubKeyTypes []string `json:"pub_key_types"`
-					} `json:"validator"`
-					Version struct{} `json:"version"`
-					Abci    struct {
-						VoteExtensionsEnableHeight string `json:"vote_extensions_enable_height"`
-					} `json:"abci"`
-				} `json:"consensus_param_updates"`
-			} `json:"end_block"`
-			BeginBlock struct {
-				Events []Event `json:"events"`
-			} `json:"begin_block"`
-		} `json:"results"`
+		Height                string        `json:"height"`
+		TxsResults            []TxResult    `json:"txs_results"`
+		FinalizeBlockEvents   []Event       `json:"finalize_block_events"`
+		ValidatorUpdates      []interface{} `json:"validator_updates"`
+		ConsensusParamUpdates struct {
+			Block struct {
+				MaxBytes string `json:"max_bytes"`
+				MaxGas   string `json:"max_gas"`
+			} `json:"block"`
+			Evidence struct {
+				MaxAgeNumBlocks string `json:"max_age_num_blocks"`
+				MaxAgeDuration  string `json:"max_age_duration"`
+				MaxBytes        string `json:"max_bytes"`
+			} `json:"evidence"`
+			Validator struct {
+				PubKeyTypes []string `json:"pub_key_types"`
+			} `json:"validator"`
+			Version struct{} `json:"version"`
+			Abci    struct {
+				VoteExtensionsEnableHeight string `json:"vote_extensions_enable_height"`
+			} `json:"abci"`
+		} `json:"consensus_param_updates"`
 	} `json:"result"`
 }
 
@@ -210,6 +203,17 @@ type HTTPClient struct {
 }
 
 func NewHTTPClient(rpcURL string) *HTTPClient {
+	// Check if URL already has a protocol
+	if strings.HasPrefix(rpcURL, "http://") || strings.HasPrefix(rpcURL, "https://") {
+		return &HTTPClient{
+			client: &http.Client{
+				Timeout: 30 * time.Second,
+			},
+			baseURL:  rpcURL,
+			protocol: "https", // Default to https for external URLs
+		}
+	}
+
 	protocol := "http"
 	if !strings.Contains(rpcURL, "localhost") && !strings.Contains(rpcURL, "127.0.0.1") {
 		protocol = "https"
@@ -286,7 +290,7 @@ func (h *HTTPClient) getLatestBlockHeight() (uint64, error) {
 func (h *HTTPClient) getBlock(height uint64) (*BlockResponse, *BlockResultsResponse, error) {
 	// Get block data
 	blockBody, err := h.makeRPCRequest("block", map[string]interface{}{
-		"height": height,
+		"height": fmt.Sprintf("%d", height),
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get block: %w", err)
@@ -299,7 +303,7 @@ func (h *HTTPClient) getBlock(height uint64) (*BlockResponse, *BlockResultsRespo
 
 	// Get block results
 	resultsBody, err := h.makeRPCRequest("block_results", map[string]interface{}{
-		"height": height,
+		"height": fmt.Sprintf("%d", height),
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to get block results: %w", err)
@@ -526,60 +530,117 @@ func (h *HTTPClient) healthCheck(ctx context.Context) {
 }
 
 func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsResponse, height uint64) error {
+	// Check if this is an empty block (all fields are empty)
+	if blockResponse.Result.Block.Header.Height == "" &&
+		blockResponse.Result.Block.Header.Time == "" &&
+		blockResponse.Result.Block.Header.ChainID == "" {
+		fmt.Printf("Block %d appears to be empty (not yet available), sleeping and continuing...\n", height)
+		time.Sleep(BlockQueryInterval)
+		return nil
+	}
+
 	// Check block time threshold if it's configured
 	if blockTimeThreshold > 0 {
 		// Parse current block time
-		currentBlockTime, err := time.Parse(time.RFC3339Nano, blockResponse.Result.Block.Header.Time)
-		if err != nil {
-			return fmt.Errorf("unable to parse block time: %w", err)
-		}
-		blockTimeMutex.RLock()
-		prevTime := previousBlockTime
-		blockTimeMutex.RUnlock()
+		blockTimeStr := blockResponse.Result.Block.Header.Time
 
-		// Skip first block after startup
-		if !prevTime.IsZero() {
-			timeDiff := currentBlockTime.Sub(prevTime)
-			blockDiff := height - lastBlockHeight
-			if blockDiff > 0 {
-				normalizedTimeDiff := time.Duration(float64(timeDiff) / float64(blockDiff))
-				fmt.Println("Normalized time per block: ", normalizedTimeDiff.String())
-				if normalizedTimeDiff > blockTimeThreshold {
-					message := fmt.Sprintf("**Alert: Abnormally Long Block Time**\nNode: %s\nTime between blocks: %v\nNormalized time per block: %v\nThreshold: %v\nPrevious block time: %v\nCurrent block time: %v",
-						nodeName, timeDiff, normalizedTimeDiff, blockTimeThreshold, prevTime, currentBlockTime)
+		// Skip block time analysis if the time field is empty
+		if blockTimeStr == "" {
+			fmt.Printf("Warning: Block %d has empty time field, skipping block time analysis\n", height)
 
-					if eventType, exists := eventTypeMap["block-time-alert"]; exists {
-						discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
-						if err := discordNotifier.SendAlert(message); err != nil {
-							fmt.Printf("Error sending block time Discord alert: %v\n", err)
-						} else {
-							fmt.Printf("Sent block time Discord alert\n")
+			// Log the entire block response for debugging
+			responseJSON, err := json.MarshalIndent(blockResponse, "", "  ")
+			if err != nil {
+				fmt.Printf("Error marshaling block response: %v\n", err)
+			} else {
+				fmt.Printf("Full block response for block %d:\n%s\n", height, string(responseJSON))
+			}
+		} else {
+			currentBlockTime, err := time.Parse(time.RFC3339Nano, blockTimeStr)
+			if err != nil {
+				return fmt.Errorf("unable to parse block time: %w", err)
+			}
+
+			// Always log the extracted time field when block time threshold is set
+			fmt.Printf("Block %d time: %s\n", height, blockTimeStr)
+
+			blockTimeMutex.RLock()
+			prevTime := previousBlockTime
+			blockTimeMutex.RUnlock()
+
+			// Skip first block after startup
+			if !prevTime.IsZero() {
+				timeDiff := currentBlockTime.Sub(prevTime)
+				blockDiff := height - lastBlockHeight
+				if blockDiff > 0 {
+					normalizedTimeDiff := time.Duration(float64(timeDiff) / float64(blockDiff))
+					fmt.Println("Normalized time per block: ", normalizedTimeDiff.String())
+					if normalizedTimeDiff > blockTimeThreshold {
+						message := fmt.Sprintf("**Alert: Abnormally Long Block Time**\nNode: %s\nTime between blocks: %v\nNormalized time per block: %v\nThreshold: %v\nPrevious block time: %v\nCurrent block time: %v",
+							nodeName, timeDiff, normalizedTimeDiff, blockTimeThreshold, prevTime, currentBlockTime)
+
+						if eventType, exists := eventTypeMap["block-time-alert"]; exists {
+							discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
+							if err := discordNotifier.SendAlert(message); err != nil {
+								fmt.Printf("Error sending block time Discord alert: %v\n", err)
+							} else {
+								fmt.Printf("Sent block time Discord alert\n")
+							}
 						}
+					}
+				}
+			}
+
+			// Update previous block time
+			blockTimeMutex.Lock()
+			previousBlockTime = currentBlockTime
+			lastBlockHeight = height
+			blockTimeMutex.Unlock()
+		}
+	}
+
+	// Process events from finalize block events
+	if len(resultsResponse.Result.FinalizeBlockEvents) > 0 {
+		// Count configured events for logging
+		configuredEventCount := 0
+		for _, event := range resultsResponse.Result.FinalizeBlockEvents {
+			if _, exists := eventTypeMap[event.Type]; exists {
+				configuredEventCount++
+				// Skip logging aggregate_report events
+				if event.Type != "aggregate_report" {
+					fmt.Printf("Found configured event: %s\n", event.Type)
+				}
+			}
+		}
+
+		if configuredEventCount > 0 {
+			fmt.Printf("Found %d configured events in block %d\n", configuredEventCount, height)
+		}
+
+		go processBlockEvents(resultsResponse.Result.FinalizeBlockEvents, fmt.Sprintf("%d", height))
+	}
+
+	// Process transaction events
+	if len(resultsResponse.Result.TxsResults) > 0 {
+		// Count configured events in transactions for logging
+		txConfiguredEventCount := 0
+		for i, txResult := range resultsResponse.Result.TxsResults {
+			for _, event := range txResult.Events {
+				if _, exists := eventTypeMap[event.Type]; exists {
+					txConfiguredEventCount++
+					// Skip logging aggregate_report events
+					if event.Type != "aggregate_report" {
+						fmt.Printf("Found configured event in tx %d: %s\n", i, event.Type)
 					}
 				}
 			}
 		}
 
-		// Update previous block time
-		blockTimeMutex.Lock()
-		previousBlockTime = currentBlockTime
-		lastBlockHeight = height
-		blockTimeMutex.Unlock()
-	}
+		if txConfiguredEventCount > 0 {
+			fmt.Printf("Found %d configured events in transactions for block %d\n", txConfiguredEventCount, height)
+		}
 
-	// Process events from begin block
-	if len(resultsResponse.Result.Results.BeginBlock.Events) > 0 {
-		go processBlockEvents(resultsResponse.Result.Results.BeginBlock.Events, fmt.Sprintf("%d", height))
-	}
-
-	// Process events from end block
-	if len(resultsResponse.Result.Results.EndBlock.Events) > 0 {
-		go processBlockEvents(resultsResponse.Result.Results.EndBlock.Events, fmt.Sprintf("%d", height))
-	}
-
-	// Process transaction events
-	if len(resultsResponse.Result.Results.DeliverTx) > 0 {
-		go processTransactionEvents(resultsResponse.Result.Results.DeliverTx, fmt.Sprintf("%d", height))
+		go processTransactionEvents(resultsResponse.Result.TxsResults, fmt.Sprintf("%d", height))
 	}
 
 	return nil
