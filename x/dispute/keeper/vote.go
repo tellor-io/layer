@@ -65,7 +65,7 @@ func (k Keeper) SetTeamVote(ctx context.Context, id uint64, voter sdk.AccAddress
 		if err != nil {
 			return math.Int{}, err
 		}
-		return math.NewInt(25000000), nil
+		return math.NewInt(33000000), nil
 	}
 	return math.ZeroInt(), nil
 }
