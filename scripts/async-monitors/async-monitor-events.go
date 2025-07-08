@@ -501,9 +501,20 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 			// Process the block
 			if err := processBlock(blockResponse, resultsResponse, height+1); err != nil {
 				log.Printf("Error processing block %d: %v", height+1, err)
+				// Don't increment block height on error, retry the same block
+				continue
 			}
 
-			// Increment block height
+			// Check if the block was actually valid (not empty)
+			if blockResponse.Result.Block.Header.Height == "" &&
+				blockResponse.Result.Block.Header.Time == "" &&
+				blockResponse.Result.Block.Header.ChainID == "" {
+				// Block is empty, don't increment height, retry the same block
+				log.Printf("Block %d is empty, retrying...", height+1)
+				continue
+			}
+
+			// Only increment block height if we successfully processed a valid block
 			blockHeightMutex.Lock()
 			currentBlockHeight = height + 1
 			blockHeightMutex.Unlock()
@@ -543,15 +554,6 @@ func (h *HTTPClient) healthCheck(ctx context.Context) {
 }
 
 func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsResponse, height uint64) error {
-	// Check if this is an empty block (all fields are empty)
-	if blockResponse.Result.Block.Header.Height == "" &&
-		blockResponse.Result.Block.Header.Time == "" &&
-		blockResponse.Result.Block.Header.ChainID == "" {
-		fmt.Printf("Block %d appears to be empty (not yet available), sleeping and continuing...\n", height)
-		time.Sleep(BlockQueryInterval)
-		return nil
-	}
-
 	// Check block time threshold if it's configured
 	if blockTimeThreshold > 0 {
 		// Parse current block time
