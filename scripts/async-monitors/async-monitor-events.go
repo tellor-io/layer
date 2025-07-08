@@ -232,9 +232,9 @@ func (h *HTTPClient) makeRPCRequest(method string, params interface{}) ([]byte, 
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	// Rate limiting: ensure at least 1 second between requests
-	if time.Since(h.lastQuery) < BlockQueryInterval {
-		time.Sleep(BlockQueryInterval - time.Since(h.lastQuery))
+	// Rate limiting: ensure at least 500ms between requests (instead of 1 second)
+	if time.Since(h.lastQuery) < 100*time.Millisecond {
+		time.Sleep(100*time.Millisecond - time.Since(h.lastQuery))
 	}
 
 	request := RPCRequest{
@@ -477,12 +477,25 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 			height := currentBlockHeight
 			blockHeightMutex.RUnlock()
 
-			// Try to get the next block
-			blockResponse, resultsResponse, err := client.getBlock(height + 1)
-			if err != nil {
-				// Block not available yet, wait and try again
-				time.Sleep(BlockQueryInterval)
-				continue
+			// Try to get the next block with retry logic
+			var blockResponse *BlockResponse
+			var resultsResponse *BlockResultsResponse
+			var err error
+			retryCount := 0
+			fastRetries := 5
+
+			for {
+				blockResponse, resultsResponse, err = client.getBlock(height + 1)
+				if err == nil {
+					break
+				}
+				retryCount++
+				log.Printf("Failed to get block %d (attempt %d/%d): %v", height+1, retryCount, fastRetries, err)
+				if retryCount < fastRetries {
+					time.Sleep(100 * time.Millisecond)
+				} else {
+					time.Sleep(BlockQueryInterval)
+				}
 			}
 
 			// Process the block
