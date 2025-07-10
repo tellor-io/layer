@@ -195,11 +195,12 @@ type EventConfig struct {
 }
 
 type HTTPClient struct {
-	client    *http.Client
-	baseURL   string
-	protocol  string
-	lastQuery time.Time
-	mu        sync.RWMutex
+	client      *http.Client
+	baseURL     string
+	protocol    string
+	isLocalhost bool
+	lastQuery   time.Time
+	mu          sync.RWMutex
 }
 
 func NewHTTPClient(rpcURL string) *HTTPClient {
@@ -209,13 +210,15 @@ func NewHTTPClient(rpcURL string) *HTTPClient {
 			client: &http.Client{
 				Timeout: 30 * time.Second,
 			},
-			baseURL:  rpcURL,
-			protocol: "https", // Default to https for external URLs
+			baseURL:     rpcURL,
+			protocol:    "https", // Default to https for external URLs
+			isLocalhost: false,
 		}
 	}
 
 	protocol := "http"
-	if !strings.Contains(rpcURL, "localhost") && !strings.Contains(rpcURL, "127.0.0.1") {
+	isLocalhost := strings.Contains(rpcURL, "localhost") || strings.Contains(rpcURL, "127.0.0.1")
+	if !isLocalhost {
 		protocol = "https"
 	}
 
@@ -223,8 +226,9 @@ func NewHTTPClient(rpcURL string) *HTTPClient {
 		client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		baseURL:  fmt.Sprintf("%s://%s", protocol, rpcURL),
-		protocol: protocol,
+		baseURL:     fmt.Sprintf("%s://%s", protocol, rpcURL),
+		protocol:    protocol,
+		isLocalhost: isLocalhost,
 	}
 }
 
@@ -249,7 +253,14 @@ func (h *HTTPClient) makeRPCRequest(method string, params interface{}) ([]byte, 
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	resp, err := h.client.Post(h.baseURL+"/rpc", "application/json", strings.NewReader(string(jsonData)))
+	var url string
+	if h.isLocalhost {
+		url = h.baseURL
+	} else {
+		url = h.baseURL + "/rpc"
+	}
+
+	resp, err := h.client.Post(url, "application/json", strings.NewReader(string(jsonData)))
 	if err != nil {
 		return nil, fmt.Errorf("failed to make HTTP request: %w", err)
 	}
