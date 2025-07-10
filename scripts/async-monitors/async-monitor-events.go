@@ -237,8 +237,8 @@ func (h *HTTPClient) makeRPCRequest(method string, params interface{}) ([]byte, 
 	defer h.mu.Unlock()
 
 	// Rate limiting: ensure at least 500ms between requests (instead of 1 second)
-	if time.Since(h.lastQuery) < 10*time.Millisecond {
-		time.Sleep(10*time.Millisecond - time.Since(h.lastQuery))
+	if time.Since(h.lastQuery) < 250*time.Millisecond {
+		time.Sleep(250*time.Millisecond - time.Since(h.lastQuery))
 	}
 
 	request := RPCRequest{
@@ -504,9 +504,9 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 				retryCount++
 				log.Printf("Failed to get block %d (attempt %d/%d): %v", height+1, retryCount, fastRetries, err)
 				if retryCount < fastRetries {
-					time.Sleep(2 * time.Millisecond)
+					time.Sleep(100 * time.Millisecond)
 				} else {
-					time.Sleep(50 * time.Millisecond)
+					time.Sleep(500 * time.Millisecond)
 				}
 
 				if totalAttempts > 15 {
@@ -592,14 +592,6 @@ func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsRes
 		// Skip block time analysis if the time field is empty
 		if blockTimeStr == "" {
 			fmt.Printf("Warning: Block %d has empty time field, skipping block time analysis\n", height)
-
-			// Log the entire block response for debugging
-			responseJSON, err := json.MarshalIndent(blockResponse, "", "  ")
-			if err != nil {
-				fmt.Printf("Error marshaling block response: %v\n", err)
-			} else {
-				fmt.Printf("Full block response for block %d:\n%s\n", height, string(responseJSON))
-			}
 		} else {
 			currentBlockTime, err := time.Parse(time.RFC3339Nano, blockTimeStr)
 			if err != nil {
