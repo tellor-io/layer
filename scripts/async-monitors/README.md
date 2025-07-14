@@ -6,7 +6,7 @@ This script provides an alternative to the WebSocket-based monitor that uses HTT
 
 - **HTTP RPC-based monitoring**: Uses HTTP requests instead of WebSocket connections
 - **Block-by-block processing**: Queries for each block sequentially
-- **Rate limiting**: Ensures at least 1 second between requests
+- **Rate limiting**: Ensures only 4 requests per second
 - **Event monitoring**: Monitors all configured event types from the config file
 - **Block time monitoring**: Alerts when block times exceed thresholds
 - **Validator power tracking**: Updates total reporter power every 10 minutes
