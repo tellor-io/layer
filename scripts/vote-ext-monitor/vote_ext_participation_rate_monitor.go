@@ -31,7 +31,6 @@ var (
 	configFilePath string
 	nodeName       string
 	// Block tracking variables
-	lastBlockHeight    uint64
 	currentBlockHeight uint64
 	blockHeightMutex   sync.RWMutex
 	// CSV file variables
@@ -562,8 +561,6 @@ func main() {
 			csvFile.Close()
 		}
 	}()
-
-	lastBlockHeight = 0
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

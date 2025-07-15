@@ -34,11 +34,11 @@ const (
 )
 
 var (
-	eventConfig                  EventConfig
 	configMutex                  sync.RWMutex
 	Current_Total_Reporter_Power uint64
 	reporterPowerMutex           sync.RWMutex
 	// Rate limiting variables
+	AGGREGATE_REPORT_NAME    = "aggregate-report"
 	aggregateAlertCount      int
 	aggregateAlertTimestamps []time.Time
 	aggregateAlertMutex      sync.RWMutex
@@ -347,7 +347,6 @@ func loadConfig() error {
 	}
 
 	configMutex.Lock()
-	eventConfig = newConfig
 	eventTypeMap = newEventTypeMap
 	configMutex.Unlock()
 	return nil
@@ -397,7 +396,7 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 	reporterPowerMutex.RUnlock()
 
 	for j := 0; j < len(event.Attributes); j++ {
-		if event.Attributes[j].Key == "aggregate_power" {
+		if event.Attributes[j].Key == AGGREGATE_REPORT_NAME {
 			if aggregatePower, err := strconv.ParseUint(event.Attributes[j].Value, 10, 64); err == nil {
 				if float64(aggregatePower) < float64(currentPower)*2/3 {
 					// Check if we've hit the alert limit
@@ -644,7 +643,7 @@ func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsRes
 			if _, exists := eventTypeMap[event.Type]; exists {
 				configuredEventCount++
 				// Skip logging aggregate_report events
-				if event.Type != "aggregate_report" {
+				if event.Type != AGGREGATE_REPORT_NAME {
 					fmt.Printf("Found configured event: %s\n", event.Type)
 				}
 			}
@@ -666,7 +665,7 @@ func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsRes
 				if _, exists := eventTypeMap[event.Type]; exists {
 					txConfiguredEventCount++
 					// Skip logging aggregate_report events
-					if event.Type != "aggregate_report" {
+					if event.Type != AGGREGATE_REPORT_NAME {
 						fmt.Printf("Found configured event in tx %d: %s\n", i, event.Type)
 					}
 				}
@@ -733,7 +732,7 @@ func writeTimestampToCSV(timestamp string) error {
 
 // Add a helper function to handle events
 func handleEvent(event Event, eventType ConfigType) {
-	if event.Type == "aggregate_report" {
+	if event.Type == AGGREGATE_REPORT_NAME {
 		handleAggregateReport(event, eventType)
 	} else {
 		message := fmt.Sprintf("**Event Alert: %s**\n", eventType.AlertName)
