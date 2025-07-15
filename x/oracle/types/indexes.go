@@ -1,6 +1,8 @@
 package types
 
 import (
+	"encoding/binary"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/collections/indexes"
 
@@ -57,12 +59,8 @@ func NewReportsIndex(sb *collections.SchemaBuilder) ReportsIndex {
 			sb, ReportsReporterIndexPrefix, "reports_by_reporter",
 			collections.BytesKey, collections.TripleKeyCodec[[]byte, []byte, uint64](collections.BytesKey, collections.BytesKey, collections.Uint64Key),
 			func(k collections.Triple[[]byte, []byte, uint64], _ MicroReport) ([]byte, error) {
-				size := collections.Uint64Key.Size(k.K3())
-				buffer := make([]byte, size)
-				_, err := collections.Uint64Key.Encode(buffer, k.K3())
-				if err != nil {
-					return nil, err
-				}
+				buffer := make([]byte, 8)
+				binary.BigEndian.PutUint64(buffer, k.K3())
 				buffer = append(k.K2(), buffer...)
 				return buffer, nil
 			},
@@ -144,12 +142,8 @@ func NewReporterIndex(sb *collections.SchemaBuilder) ReporterIndex {
 			collections.BytesKey,
 			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
 			func(k collections.Pair[[]byte, uint64], report NoStakeMicroReport) ([]byte, error) {
-				size := collections.Uint64Key.Size(k.K2())
-				buffer := make([]byte, size)
-				_, err := collections.Uint64Key.Encode(buffer, k.K2())
-				if err != nil {
-					return nil, err
-				}
+				buffer := make([]byte, 8)
+				binary.BigEndian.PutUint64(buffer, k.K2())
 				buffer = append(report.Reporter, buffer...)
 				return buffer, nil
 			},

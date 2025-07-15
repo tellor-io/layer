@@ -95,6 +95,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query last withdrawal id",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
+				{
+					RpcMethod:      "GetValidatorSetIndexByTimestamp",
+					Use:            "get-validator-set-index-by-timestamp [timestamp]",
+					Short:          "Query validator set index by timestamp",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "timestamp"}},
+				},
 
 				// this line is used by ignite scaffolding # autocli/query
 			},
