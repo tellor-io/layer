@@ -164,7 +164,7 @@ func initCSVFile() error {
 
 	// Open file in append mode if it exists, create if it doesn't
 	if fileExists {
-		csvFile, err = os.OpenFile("vote_extension_participation.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		csvFile, err = os.OpenFile("vote_extension_participation.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
 		if err != nil {
 			return fmt.Errorf("failed to open existing CSV file: %w", err)
 		}
