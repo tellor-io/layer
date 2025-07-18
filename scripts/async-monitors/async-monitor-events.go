@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"slices"
@@ -19,7 +19,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/tellor-io/layer/utils"
 	"gopkg.in/yaml.v3"
 )
@@ -31,14 +30,15 @@ const (
 	PowerThreshold       = 2.0 / 3.0
 	DefaultRpcURL        = "127.0.0.1:26657"
 	MaxReconnectAttempts = 5
+	BlockQueryInterval   = 1 * time.Second
 )
 
 var (
-	eventConfig                  EventConfig
 	configMutex                  sync.RWMutex
 	Current_Total_Reporter_Power uint64
 	reporterPowerMutex           sync.RWMutex
 	// Rate limiting variables
+	AGGREGATE_REPORT_NAME    = "aggregate-report"
 	aggregateAlertCount      int
 	aggregateAlertTimestamps []time.Time
 	aggregateAlertMutex      sync.RWMutex
@@ -54,6 +54,8 @@ var (
 	blockTimeMutex      sync.RWMutex
 	lastBlockHeight     uint64
 	isTimestampAnalyzer bool
+	currentBlockHeight  uint64
+	blockHeightMutex    sync.RWMutex
 )
 
 type Params struct {
@@ -67,11 +69,11 @@ type ConfigType struct {
 	WebhookURL string `yaml:"webhook_url"`
 }
 
-type WebsocketSubscribeRequest struct {
-	Jsonrpc string `json:"jsonrpc"`
-	Method  string `json:"method"`
-	Id      int    `json:"id"`
-	Params  Params `json:"params"`
+type RPCRequest struct {
+	Jsonrpc string      `json:"jsonrpc"`
+	Method  string      `json:"method"`
+	Id      int         `json:"id"`
+	Params  interface{} `json:"params"`
 }
 
 type Attribute struct {
@@ -96,63 +98,51 @@ type TxResult struct {
 	Codespace string      `json:"codespace"`
 }
 
-type WebsocketReponse struct {
+type BlockResponse struct {
 	Jsonrpc string `json:"jsonrpc"`
 	Id      int    `json:"id"`
 	Result  struct {
-		Query string `json:"query"`
-		Data  struct {
-			Type  string `json:"type"`
-			Value struct {
-				Block struct {
-					Header struct {
-						Version struct {
-							Block string `json:"block"`
-						} `json:"version"`
-						ChainID     string `json:"chain_id"`
-						Height      string `json:"height"`
-						Time        string `json:"time"`
-						LastBlockID struct {
-							Hash  string `json:"hash"`
-							Parts struct {
-								Total int    `json:"total"`
-								Hash  string `json:"hash"`
-							} `json:"parts"`
-						} `json:"last_block_id"`
-						LastCommitHash     string `json:"last_commit_hash"`
-						DataHash           string `json:"data_hash"`
-						ValidatorsHash     string `json:"validators_hash"`
-						NextValidatorsHash string `json:"next_validators_hash"`
-						ConsensusHash      string `json:"consensus_hash"`
-						AppHash            string `json:"app_hash"`
-						LastResultsHash    string `json:"last_results_hash"`
-						EvidenceHash       string `json:"evidence_hash"`
-						ProposerAddress    string `json:"proposer_address"`
-					} `json:"header"`
-					Data struct {
-						Txs []string `json:"txs"`
-					} `json:"data"`
-					Evidence struct {
-						Evidence []interface{} `json:"evidence"`
-					} `json:"evidence"`
-					LastCommit struct {
-						Height  string `json:"height"`
-						Round   int    `json:"round"`
-						BlockID struct {
-							Hash  string `json:"hash"`
-							Parts struct {
-								Total int    `json:"total"`
-								Hash  string `json:"hash"`
-							} `json:"parts"`
-						} `json:"block_id"`
-						Signatures []struct {
-							BlockIDFlag      int    `json:"block_id_flag"`
-							ValidatorAddress string `json:"validator_address"`
-							Timestamp        string `json:"timestamp"`
-							Signature        string `json:"signature"`
-						} `json:"signatures"`
-					} `json:"last_commit"`
-				} `json:"block"`
+		BlockID struct {
+			Hash  string `json:"hash"`
+			Parts struct {
+				Total int    `json:"total"`
+				Hash  string `json:"hash"`
+			} `json:"parts"`
+		} `json:"block_id"`
+		Block struct {
+			Header struct {
+				Version struct {
+					Block string `json:"block"`
+				} `json:"version"`
+				ChainID     string `json:"chain_id"`
+				Height      string `json:"height"`
+				Time        string `json:"time"`
+				LastBlockID struct {
+					Hash  string `json:"hash"`
+					Parts struct {
+						Total int    `json:"total"`
+						Hash  string `json:"hash"`
+					} `json:"parts"`
+				} `json:"last_block_id"`
+				LastCommitHash     string `json:"last_commit_hash"`
+				DataHash           string `json:"data_hash"`
+				ValidatorsHash     string `json:"validators_hash"`
+				NextValidatorsHash string `json:"next_validators_hash"`
+				ConsensusHash      string `json:"consensus_hash"`
+				AppHash            string `json:"app_hash"`
+				LastResultsHash    string `json:"last_results_hash"`
+				EvidenceHash       string `json:"evidence_hash"`
+				ProposerAddress    string `json:"proposer_address"`
+			} `json:"header"`
+			Data struct {
+				Txs []string `json:"txs"`
+			} `json:"data"`
+			Evidence struct {
+				Evidence []interface{} `json:"evidence"`
+			} `json:"evidence"`
+			LastCommit struct {
+				Height  string `json:"height"`
+				Round   int    `json:"round"`
 				BlockID struct {
 					Hash  string `json:"hash"`
 					Parts struct {
@@ -160,32 +150,43 @@ type WebsocketReponse struct {
 						Hash  string `json:"hash"`
 					} `json:"parts"`
 				} `json:"block_id"`
-				ResultFinalizeBlock struct {
-					Events                []Event       `json:"events"`
-					TxResults             []TxResult    `json:"tx_results"`
-					ValidatorUpdates      []interface{} `json:"validator_updates"`
-					ConsensusParamUpdates struct {
-						Block struct {
-							MaxBytes string `json:"max_bytes"`
-							MaxGas   string `json:"max_gas"`
-						} `json:"block"`
-						Evidence struct {
-							MaxAgeNumBlocks string `json:"max_age_num_blocks"`
-							MaxAgeDuration  string `json:"max_age_duration"`
-							MaxBytes        string `json:"max_bytes"`
-						} `json:"evidence"`
-						Validator struct {
-							PubKeyTypes []string `json:"pub_key_types"`
-						} `json:"validator"`
-						Version struct{} `json:"version"`
-						Abci    struct {
-							VoteExtensionsEnableHeight string `json:"vote_extensions_enable_height"`
-						} `json:"abci"`
-					} `json:"consensus_param_updates"`
-					AppHash string `json:"app_hash"`
-				} `json:"result_finalize_block"`
-			} `json:"value"`
-		} `json:"data"`
+				Signatures []struct {
+					BlockIDFlag      int    `json:"block_id_flag"`
+					ValidatorAddress string `json:"validator_address"`
+					Timestamp        string `json:"timestamp"`
+					Signature        string `json:"signature"`
+				} `json:"signatures"`
+			} `json:"last_commit"`
+		} `json:"block"`
+	} `json:"result"`
+}
+
+type BlockResultsResponse struct {
+	Jsonrpc string `json:"jsonrpc"`
+	Id      int    `json:"id"`
+	Result  struct {
+		Height                string        `json:"height"`
+		TxsResults            []TxResult    `json:"txs_results"`
+		FinalizeBlockEvents   []Event       `json:"finalize_block_events"`
+		ValidatorUpdates      []interface{} `json:"validator_updates"`
+		ConsensusParamUpdates struct {
+			Block struct {
+				MaxBytes string `json:"max_bytes"`
+				MaxGas   string `json:"max_gas"`
+			} `json:"block"`
+			Evidence struct {
+				MaxAgeNumBlocks string `json:"max_age_num_blocks"`
+				MaxAgeDuration  string `json:"max_age_duration"`
+				MaxBytes        string `json:"max_bytes"`
+			} `json:"evidence"`
+			Validator struct {
+				PubKeyTypes []string `json:"pub_key_types"`
+			} `json:"validator"`
+			Version struct{} `json:"version"`
+			Abci    struct {
+				VoteExtensionsEnableHeight string `json:"vote_extensions_enable_height"`
+			} `json:"abci"`
+		} `json:"consensus_param_updates"`
 	} `json:"result"`
 }
 
@@ -193,164 +194,138 @@ type EventConfig struct {
 	EventTypes []ConfigType `yaml:"event_types"`
 }
 
-type WebSocketClient struct {
-	conn        *websocket.Conn
-	url         string
-	reconnectCh chan struct{}
-	done        chan struct{}
+type HTTPClient struct {
+	client      *http.Client
+	baseURL     string
+	protocol    string
+	isLocalhost bool
+	lastQuery   time.Time
 	mu          sync.RWMutex
-	lastMessage time.Time
-	retryCount  int
 }
 
-func NewWebSocketClient(url string) *WebSocketClient {
-	return &WebSocketClient{
-		url:         url,
-		reconnectCh: make(chan struct{}, 1),
-		done:        make(chan struct{}),
-		lastMessage: time.Now(),
-		retryCount:  0,
-	}
-}
-
-func (w *WebSocketClient) connect() error {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-
-	if w.retryCount >= MaxReconnectAttempts {
-		return fmt.Errorf("max reconnection attempts (%d) reached", MaxReconnectAttempts)
-	}
-
-	dialer := websocket.Dialer{
-		HandshakeTimeout: 45 * time.Second,
-		ReadBufferSize:   1024,
-		WriteBufferSize:  1024,
-	}
-
-	conn, _, err := dialer.Dial(w.url, nil)
-	if err != nil {
-		w.retryCount++
-		return fmt.Errorf("failed to connect (attempt %d/%d): %w", w.retryCount, MaxReconnectAttempts, err)
-	}
-
-	// Reset retry count on successful connection
-	w.retryCount = 0
-
-	// Set read deadline to detect stale connections
-	err = conn.SetReadDeadline(time.Now().Add(60 * time.Second))
-	if err != nil {
-		return fmt.Errorf("failed to set read deadline: %w", err)
-	}
-
-	// Enable ping/pong
-	conn.SetPingHandler(func(string) error {
-		err = conn.SetReadDeadline(time.Now().Add(60 * time.Second))
-		if err != nil {
-			return fmt.Errorf("failed to set read deadline: %w", err)
+func NewHTTPClient(rpcURL string) *HTTPClient {
+	// Check if URL already has a protocol
+	if strings.HasPrefix(rpcURL, "http://") || strings.HasPrefix(rpcURL, "https://") {
+		return &HTTPClient{
+			client: &http.Client{
+				Timeout: 30 * time.Second,
+			},
+			baseURL:     rpcURL,
+			protocol:    "https", // Default to https for external URLs
+			isLocalhost: false,
 		}
-		return nil
+	}
+
+	protocol := "http"
+	isLocalhost := strings.Contains(rpcURL, "localhost") || strings.Contains(rpcURL, "127.0.0.1")
+	if !isLocalhost {
+		protocol = "https"
+	}
+
+	return &HTTPClient{
+		client: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+		baseURL:     fmt.Sprintf("%s://%s", protocol, rpcURL),
+		protocol:    protocol,
+		isLocalhost: isLocalhost,
+	}
+}
+
+func (h *HTTPClient) makeRPCRequest(method string, params interface{}) ([]byte, error) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	// Rate limiting: ensure at least 500ms between requests (instead of 1 second)
+	if time.Since(h.lastQuery) < 250*time.Millisecond {
+		time.Sleep(250*time.Millisecond - time.Since(h.lastQuery))
+	}
+
+	request := RPCRequest{
+		Jsonrpc: "2.0",
+		Method:  method,
+		Id:      1,
+		Params:  params,
+	}
+
+	jsonData, err := json.Marshal(request)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	var url string
+	if h.isLocalhost {
+		url = h.baseURL
+	} else {
+		url = h.baseURL + "/rpc"
+	}
+
+	resp, err := h.client.Post(url, "application/json", strings.NewReader(string(jsonData)))
+	if err != nil {
+		return nil, fmt.Errorf("failed to make HTTP request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("HTTP request failed with status: %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	h.lastQuery = time.Now()
+	return body, nil
+}
+
+func (h *HTTPClient) getLatestBlockHeight() (uint64, error) {
+	body, err := h.makeRPCRequest("block", nil)
+	if err != nil {
+		return 0, err
+	}
+
+	var response BlockResponse
+	if err := json.Unmarshal(body, &response); err != nil {
+		return 0, fmt.Errorf("failed to unmarshal block response: %w", err)
+	}
+
+	height, err := strconv.ParseUint(response.Result.Block.Header.Height, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse block height: %w", err)
+	}
+
+	return height, nil
+}
+
+func (h *HTTPClient) getBlock(height uint64) (*BlockResponse, *BlockResultsResponse, error) {
+	// Get block data
+	blockBody, err := h.makeRPCRequest("block", map[string]interface{}{
+		"height": fmt.Sprintf("%d", height),
 	})
-
-	w.conn = conn
-
-	err = subscribeToEvents(w.conn, eventConfig.EventTypes)
 	if err != nil {
-		return fmt.Errorf("failed to subscribe to events: %w", err)
+		return nil, nil, fmt.Errorf("failed to get block: %w", err)
 	}
-	return nil
-}
 
-func (w *WebSocketClient) ensureConnection() error {
-	if w.conn == nil {
-		return w.connect()
+	var blockResponse BlockResponse
+	if err := json.Unmarshal(blockBody, &blockResponse); err != nil {
+		return nil, nil, fmt.Errorf("failed to unmarshal block response: %w", err)
 	}
-	return nil
-}
 
-func (w *WebSocketClient) readMessages(ctx context.Context, handler func([]byte) error) {
-	timeoutTicker := time.NewTicker(1 * time.Minute)
-	defer timeoutTicker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-w.reconnectCh:
-			if err := w.connect(); err != nil {
-				log.Printf("Failed to reconnect: %v", err)
-				time.Sleep(5 * time.Second)
-				w.reconnectCh <- struct{}{}
-			}
-		case <-timeoutTicker.C:
-			w.mu.RLock()
-			if time.Since(w.lastMessage) > 10*time.Minute {
-				message := fmt.Sprintf("**Alert: Node %s is Not Responding**\nNo NewBlock events have been received from node %s in the last 10 minutes. Please check the node status and logs.", nodeName, nodeName)
-				if _, exists := eventTypeMap["liveness-alert"]; exists {
-					discordNotifier := utils.NewDiscordNotifier(eventTypeMap["liveness-alert"].WebhookURL)
-					if err := discordNotifier.SendAlert(message); err != nil {
-						log.Printf("Error sending timeout Discord alert: %v", err)
-					} else {
-						log.Printf("Sent timeout Discord alert for node %s", nodeName)
-					}
-				}
-			}
-			w.mu.RUnlock()
-		default:
-			if err := w.ensureConnection(); err != nil {
-				log.Printf("Connection error: %v", err)
-				w.reconnectCh <- struct{}{}
-				continue
-			}
-
-			_, message, err := w.conn.ReadMessage()
-			if err != nil {
-				log.Printf("Read error: %v", err)
-				w.mu.Lock()
-				w.conn.Close()
-				w.conn = nil
-				w.mu.Unlock()
-				w.reconnectCh <- struct{}{}
-				continue
-			}
-
-			w.mu.Lock()
-			w.lastMessage = time.Now()
-			w.mu.Unlock()
-
-			if err := handler(message); err != nil {
-				log.Printf("Handler error: %v", err)
-			}
-		}
+	// Get block results
+	resultsBody, err := h.makeRPCRequest("block_results", map[string]interface{}{
+		"height": fmt.Sprintf("%d", height),
+	})
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to get block results: %w", err)
 	}
-}
 
-func (w *WebSocketClient) healthCheck(ctx context.Context) {
-	defer recoverAndAlert("WebSocketClient.healthCheck")
-	ticker := time.NewTicker(30 * time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			w.mu.RLock()
-			if w.conn == nil {
-				w.mu.RUnlock()
-				w.reconnectCh <- struct{}{}
-				continue
-			}
-
-			// Send ping to check connection
-			if err := w.conn.WriteControl(websocket.PingMessage, []byte{}, time.Now().Add(10*time.Second)); err != nil {
-				w.mu.RUnlock()
-				log.Printf("Health check failed: %v", err)
-				w.reconnectCh <- struct{}{}
-				continue
-			}
-			w.mu.RUnlock()
-		}
+	var resultsResponse BlockResultsResponse
+	if err := json.Unmarshal(resultsBody, &resultsResponse); err != nil {
+		return nil, nil, fmt.Errorf("failed to unmarshal block results response: %w", err)
 	}
+
+	return &blockResponse, &resultsResponse, nil
 }
 
 func loadConfig() error {
@@ -372,40 +347,12 @@ func loadConfig() error {
 	}
 
 	configMutex.Lock()
-	eventConfig = newConfig
 	eventTypeMap = newEventTypeMap
 	configMutex.Unlock()
 	return nil
 }
 
-func subscribeToEvents(client *websocket.Conn, eventTypes []ConfigType) error {
-	if len(eventTypes) == 0 {
-		return fmt.Errorf("no event types configured")
-	}
-
-	configMutex.RLock()
-	defer configMutex.RUnlock()
-
-	subscribeReq := WebsocketSubscribeRequest{
-		Jsonrpc: "2.0",
-		Method:  "subscribe",
-		Id:      1,
-		Params:  Params{Query: "tm.event = 'NewBlock'"},
-	}
-	req, err := json.Marshal(&subscribeReq)
-	if err != nil {
-		fmt.Printf("Error marshaling request message: %v\n", err)
-		panic(err)
-	}
-	err = client.WriteMessage(websocket.TextMessage, req)
-	if err != nil {
-		fmt.Printf("Error writing message: %v\n", err)
-		return err
-	}
-	return nil
-}
-
-func startConfigWatcher(ctx context.Context, client *websocket.Conn) {
+func startConfigWatcher(ctx context.Context) {
 	defer recoverAndAlert("startConfigWatcher")
 	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
@@ -417,10 +364,6 @@ func startConfigWatcher(ctx context.Context, client *websocket.Conn) {
 		case <-ticker.C:
 			if err := loadConfig(); err != nil {
 				fmt.Printf("Error reloading config: %v\n", err)
-			}
-			err := subscribeToEvents(client, eventConfig.EventTypes)
-			if err != nil {
-				fmt.Printf("Error updating subscriptions: %v\n", err)
 			}
 		}
 	}
@@ -453,7 +396,7 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 	reporterPowerMutex.RUnlock()
 
 	for j := 0; j < len(event.Attributes); j++ {
-		if event.Attributes[j].Key == "aggregate_power" {
+		if event.Attributes[j].Key == AGGREGATE_REPORT_NAME {
 			if aggregatePower, err := strconv.ParseUint(event.Attributes[j].Value, 10, 64); err == nil {
 				if float64(aggregatePower) < float64(currentPower)*2/3 {
 					// Check if we've hit the alert limit
@@ -512,27 +455,151 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 		return
 	}
 
-	wsProtocol, _ := getProtocol(rpcURL)
-	wsUrl := url.URL{Scheme: wsProtocol, Host: rpcURL, Path: "/rpc/websocket"}
-	client := NewWebSocketClient(wsUrl.String())
+	client := NewHTTPClient(rpcURL)
+
+	// Get initial block height
+	initialHeight, err := client.getLatestBlockHeight()
+	if err != nil {
+		log.Printf("Failed to get initial block height: %v", err)
+		return
+	}
+
+	blockHeightMutex.Lock()
+	currentBlockHeight = initialHeight
+	blockHeightMutex.Unlock()
+
+	log.Printf("Starting monitoring from block height: %d", initialHeight)
 
 	// Start health check
 	go client.healthCheck(ctx)
 
-	// Start the message handler
-	go client.readMessages(ctx, func(message []byte) error {
-		var data WebsocketReponse
-		if err := json.Unmarshal(message, &data); err != nil {
-			return fmt.Errorf("unable to unmarshal message: %w", err)
-		}
+	// Start config watcher
+	go startConfigWatcher(ctx)
 
-		// Check block time threshold if it's configured
-		if blockTimeThreshold > 0 {
-			// Parse current block time
-			currentBlockTime, err := time.Parse(time.RFC3339Nano, data.Result.Data.Value.Block.Header.Time)
+	// Main monitoring loop
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			// Get current block height
+			blockHeightMutex.RLock()
+			height := currentBlockHeight
+			blockHeightMutex.RUnlock()
+
+			// Try to get the next block with retry logic
+			var blockResponse *BlockResponse
+			var resultsResponse *BlockResultsResponse
+			var err error
+			retryCount := 0
+			fastRetries := 5
+			totalAttempts := 0
+
+			for {
+				blockResponse, resultsResponse, err = client.getBlock(height + 1)
+				if err == nil {
+					break
+				}
+				retryCount++
+				log.Printf("Failed to get block %d (attempt %d/%d): %v", height+1, retryCount, fastRetries, err)
+				if retryCount < fastRetries {
+					time.Sleep(100 * time.Millisecond)
+				} else {
+					time.Sleep(500 * time.Millisecond)
+				}
+
+				if totalAttempts > 15 {
+					log.Printf("Failed to get block %d after 15 attempts, sending crash alert and panicking", height+1)
+
+					// Send crash alert before panicking
+					if eventType, exists := eventTypeMap["crash-alert"]; exists {
+						message := fmt.Sprintf("**CRITICAL ALERT: Block Retrieval Failure**\nFailed to get block %d after 15 attempts on node %s. The monitor is crashing to prevent data loss.", height+1, nodeName)
+						discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
+						if err := discordNotifier.SendAlert(message); err != nil {
+							log.Printf("Error sending crash Discord alert: %v", err)
+						} else {
+							log.Printf("Sent crash Discord alert for block retrieval failure")
+						}
+					}
+
+					// Panic to crash the application
+					panic(fmt.Sprintf("Failed to get block %d after 15 attempts", height+1))
+				}
+			}
+
+			// Process the block
+			if err := processBlock(blockResponse, resultsResponse, height+1); err != nil {
+				log.Printf("Error processing block %d: %v", height+1, err)
+				// Don't increment block height on error, retry the same block
+				continue
+			}
+
+			// Check if the block was actually valid (not empty)
+			if blockResponse.Result.Block.Header.Height == "" &&
+				blockResponse.Result.Block.Header.Time == "" &&
+				blockResponse.Result.Block.Header.ChainID == "" {
+				// Block is empty, don't increment height, retry the same block
+				log.Printf("Block %d is empty, retrying...", height+1)
+				continue
+			}
+
+			// Only increment block height if we successfully processed a valid block
+			blockHeightMutex.Lock()
+			currentBlockHeight = height + 1
+			blockHeightMutex.Unlock()
+
+			log.Printf("Processed block %d", height+1)
+		}
+	}
+}
+
+func (h *HTTPClient) healthCheck(ctx context.Context) {
+	defer recoverAndAlert("HTTPClient.healthCheck")
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			// Check if we can still get the latest block height
+			_, err := h.getLatestBlockHeight()
+			if err != nil {
+				log.Printf("Health check failed: %v", err)
+				// Send liveness alert
+				message := fmt.Sprintf("**Alert: Node %s is Not Responding**\nFailed to get latest block height from node %s. Please check the node status and logs.", nodeName, nodeName)
+				if _, exists := eventTypeMap["liveness-alert"]; exists {
+					discordNotifier := utils.NewDiscordNotifier(eventTypeMap["liveness-alert"].WebhookURL)
+					if err := discordNotifier.SendAlert(message); err != nil {
+						log.Printf("Error sending timeout Discord alert: %v", err)
+					} else {
+						log.Printf("Sent timeout Discord alert for node %s", nodeName)
+					}
+				}
+			}
+		}
+	}
+}
+
+func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsResponse, height uint64) error {
+	// Check block time threshold if it's configured
+	if blockTimeThreshold > 0 {
+		// Parse current block time
+		blockTimeStr := blockResponse.Result.Block.Header.Time
+
+		// Skip block time analysis if the time field is empty
+		if blockTimeStr == "" {
+			fmt.Printf("Warning: Block %d has empty time field, skipping block time analysis\n", height)
+		} else {
+			currentBlockTime, err := time.Parse(time.RFC3339Nano, blockTimeStr)
 			if err != nil {
 				return fmt.Errorf("unable to parse block time: %w", err)
 			}
+
+			// Always log the extracted time field when block time threshold is set
+			fmt.Printf("Block %d time: %s\n", height, blockTimeStr)
+
 			blockTimeMutex.RLock()
 			prevTime := previousBlockTime
 			blockTimeMutex.RUnlock()
@@ -540,16 +607,21 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 			// Skip first block after startup
 			if !prevTime.IsZero() {
 				timeDiff := currentBlockTime.Sub(prevTime)
-				if timeDiff > blockTimeThreshold {
-					message := fmt.Sprintf("**Alert: Abnormally Long Block Time**\nNode: %s\nTime between blocks: %v\nThreshold: %v\nPrevious block time: %v\nCurrent block time: %v",
-						nodeName, timeDiff, blockTimeThreshold, prevTime, currentBlockTime)
+				blockDiff := height - lastBlockHeight
+				if blockDiff > 0 {
+					normalizedTimeDiff := time.Duration(float64(timeDiff) / float64(blockDiff))
+					fmt.Println("Normalized time per block: ", normalizedTimeDiff.String())
+					if normalizedTimeDiff > blockTimeThreshold {
+						message := fmt.Sprintf("**Alert: Abnormally Long Block Time**\nNode: %s\nTime between blocks: %v\nNormalized time per block: %v\nThreshold: %v\nPrevious block time: %v\nCurrent block time: %v",
+							nodeName, timeDiff, normalizedTimeDiff, blockTimeThreshold, prevTime, currentBlockTime)
 
-					if eventType, exists := eventTypeMap["block-time-alert"]; exists {
-						discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
-						if err := discordNotifier.SendAlert(message); err != nil {
-							fmt.Printf("Error sending block time Discord alert: %v\n", err)
-						} else {
-							fmt.Printf("Sent block time Discord alert\n")
+						if eventType, exists := eventTypeMap["block-time-alert"]; exists {
+							discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
+							if err := discordNotifier.SendAlert(message); err != nil {
+								fmt.Printf("Error sending block time Discord alert: %v\n", err)
+							} else {
+								fmt.Printf("Sent block time Discord alert\n")
+							}
 						}
 					}
 				}
@@ -558,92 +630,56 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 			// Update previous block time
 			blockTimeMutex.Lock()
 			previousBlockTime = currentBlockTime
+			lastBlockHeight = height
 			blockTimeMutex.Unlock()
 		}
+	}
 
-		height := data.Result.Data.Value.Block.Header.Height
-		configMutex.RLock()
-		if len(data.Result.Data.Value.ResultFinalizeBlock.Events) > 0 {
-			go processBlockEvents(data.Result.Data.Value.ResultFinalizeBlock.Events, height)
-		}
-		if len(data.Result.Data.Value.ResultFinalizeBlock.TxResults) > 0 {
-			go processTransactionEvents(data.Result.Data.Value.ResultFinalizeBlock.TxResults, height)
-		}
-
-		blockHeight, err := strconv.ParseUint(height, 10, 64)
-		if err != nil {
-			return fmt.Errorf("unable to parse block height: %w", err)
-		}
-
-		// Check block time threshold if it's configured
-		if blockTimeThreshold > 0 {
-			// Parse current block time
-			currentBlockTime, err := time.Parse(time.RFC3339Nano, data.Result.Data.Value.Block.Header.Time)
-			if err != nil {
-				return fmt.Errorf("unable to parse block time: %w", err)
+	// Process events from finalize block events
+	if len(resultsResponse.Result.FinalizeBlockEvents) > 0 {
+		// Count configured events for logging
+		configuredEventCount := 0
+		for _, event := range resultsResponse.Result.FinalizeBlockEvents {
+			if _, exists := eventTypeMap[event.Type]; exists {
+				configuredEventCount++
+				// Skip logging aggregate_report events
+				if event.Type != AGGREGATE_REPORT_NAME {
+					fmt.Printf("Found configured event: %s\n", event.Type)
+				}
 			}
-			blockTimeMutex.RLock()
-			prevTime := previousBlockTime
-			blockTimeMutex.RUnlock()
+		}
 
-			// Skip first block after startup
-			if !prevTime.IsZero() {
-				timeDiff := currentBlockTime.Sub(prevTime)
-				blockDiff := blockHeight - lastBlockHeight
-				normalizedTimeDiff := time.Duration(float64(timeDiff) / float64(blockDiff))
-				fmt.Println("Normalized time per block: ", normalizedTimeDiff.String())
-				if normalizedTimeDiff > blockTimeThreshold {
-					message := fmt.Sprintf("**Alert: Abnormally Long Block Time**\nNode: %s\nTime between blocks: %v\nNormalized time per block: %v\nThreshold: %v\nPrevious block time: %v\nCurrent block time: %v",
-						nodeName, timeDiff, normalizedTimeDiff, blockTimeThreshold, prevTime, currentBlockTime)
+		if configuredEventCount > 0 {
+			fmt.Printf("Found %d configured events in block %d\n", configuredEventCount, height)
+		}
 
-					if eventType, exists := eventTypeMap["block-time-alert"]; exists {
-						discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
-						if err := discordNotifier.SendAlert(message); err != nil {
-							fmt.Printf("Error sending block time Discord alert: %v\n", err)
-						} else {
-							fmt.Printf("Sent block time Discord alert\n")
-						}
+		go processBlockEvents(resultsResponse.Result.FinalizeBlockEvents, fmt.Sprintf("%d", height))
+	}
+
+	// Process transaction events
+	if len(resultsResponse.Result.TxsResults) > 0 {
+		// Count configured events in transactions for logging
+		txConfiguredEventCount := 0
+		for i, txResult := range resultsResponse.Result.TxsResults {
+			for _, event := range txResult.Events {
+				if _, exists := eventTypeMap[event.Type]; exists {
+					txConfiguredEventCount++
+					// Skip logging aggregate_report events
+					if event.Type != AGGREGATE_REPORT_NAME {
+						fmt.Printf("Found configured event in tx %d: %s\n", i, event.Type)
 					}
 				}
 			}
-
-			// Update previous block time
-			blockTimeMutex.Lock()
-			previousBlockTime = currentBlockTime
-			blockTimeMutex.Unlock()
-			lastBlockHeight = blockHeight
 		}
-		configMutex.RUnlock()
-		return nil
-	})
 
-	// Subscribe to events
-	if err := client.ensureConnection(); err != nil {
-		log.Printf("Failed to establish initial connection: %v", err)
-		return
+		if txConfiguredEventCount > 0 {
+			fmt.Printf("Found %d configured events in transactions for block %d\n", txConfiguredEventCount, height)
+		}
+
+		go processTransactionEvents(resultsResponse.Result.TxsResults, fmt.Sprintf("%d", height))
 	}
 
-	subscribeReq := WebsocketSubscribeRequest{
-		Jsonrpc: "2.0",
-		Method:  "subscribe",
-		Id:      1,
-		Params:  Params{Query: "tm.event = 'NewBlock'"},
-	}
-
-	req, err := json.Marshal(&subscribeReq)
-	if err != nil {
-		log.Printf("Error marshaling request: %v", err)
-		return
-	}
-
-	if err := client.conn.WriteMessage(websocket.TextMessage, req); err != nil {
-		log.Printf("Error sending subscription request: %v", err)
-		return
-	}
-	go startConfigWatcher(ctx, client.conn)
-
-	// Wait for context cancellation
-	<-ctx.Done()
+	return nil
 }
 
 func processBlockEvents(events []Event, height string) {
@@ -696,7 +732,7 @@ func writeTimestampToCSV(timestamp string) error {
 
 // Add a helper function to handle events
 func handleEvent(event Event, eventType ConfigType) {
-	if event.Type == "aggregate_report" {
+	if event.Type == AGGREGATE_REPORT_NAME {
 		handleAggregateReport(event, eventType)
 	} else {
 		message := fmt.Sprintf("**Event Alert: %s**\n", eventType.AlertName)
@@ -750,6 +786,7 @@ func updateTotalReporterPower(ctx context.Context) {
 	ticker := time.NewTicker(10 * time.Minute)
 	defer ticker.Stop()
 
+	client := NewHTTPClient(rpcURL)
 	backoffDuration := 1 * time.Second
 	maxBackoff := 5 * time.Minute
 
@@ -758,8 +795,7 @@ func updateTotalReporterPower(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			_, httpProtocol := getProtocol(rpcURL)
-			resp, err := http.Get(fmt.Sprintf("%s://%s/rpc/validators", httpProtocol, rpcURL))
+			body, err := client.makeRPCRequest("validators", nil)
 			if err != nil {
 				fmt.Printf("Error querying validators: %v\n", err)
 				// Implement exponential backoff
@@ -772,9 +808,8 @@ func updateTotalReporterPower(ctx context.Context) {
 			}
 
 			var validatorResp ValidatorResponse
-			if err := json.NewDecoder(resp.Body).Decode(&validatorResp); err != nil {
+			if err := json.Unmarshal(body, &validatorResp); err != nil {
 				fmt.Printf("Error decoding validator response: %v\n", err)
-				resp.Body.Close()
 				time.Sleep(backoffDuration)
 				backoffDuration *= 2
 				if backoffDuration > maxBackoff {
@@ -782,7 +817,6 @@ func updateTotalReporterPower(ctx context.Context) {
 				}
 				continue
 			}
-			resp.Body.Close()
 
 			var totalPower int64
 			for _, validator := range validatorResp.Result.Validators {
@@ -826,15 +860,6 @@ func recoverAndAlert(goroutineName string) {
 		// Re-panic to maintain the original behavior
 		panic(r)
 	}
-}
-
-// getProtocol determines whether to use secure (wss/https) or insecure (ws/http) protocol
-// based on whether the host is localhost or not
-func getProtocol(host string) (wsProtocol, httpProtocol string) {
-	if strings.Contains(host, "localhost") || strings.Contains(host, "127.0.0.1") {
-		return "ws", "http"
-	}
-	return "wss", "https"
 }
 
 // Add a helper function to analyze validator set update timestamps
@@ -1031,7 +1056,7 @@ func main() {
 
 	// Validate required parameters
 	if configFilePath == "" || nodeName == "" {
-		log.Fatal("Usage: go run ./scripts/monitors/monitor-events.go -rpc-url=<rpc_url> -config=<config_file_path> -node=<node_name>")
+		log.Fatal("Usage: go run ./scripts/async-monitors/async-monitor-events.go -rpc-url=<rpc_url> -config=<config_file_path> -node=<node_name>")
 	}
 
 	// Initialize Current_Total_Reporter_Power with a default value
