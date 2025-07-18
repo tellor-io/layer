@@ -315,6 +315,15 @@ func (pf *PriceFetcher) runSubTask(
 		availableMarkets[price.MarketId] = true
 
 		pf.writeToBufferedChannel(exchangeId, price, err)
+
+		telemetry.SetGaugeWithLabels(
+			[]string{metrics.PricefeedDaemon, "price_fetcher_price"},
+			float32(price.Price), // or convert to float32 as needed
+			[]gometrics.Label{
+				pricefeedmetrics.GetLabelForMarketId(price.MarketId),
+				pricefeedmetrics.GetLabelForExchangeId(exchangeId),
+			},
+		)
 	}
 
 	// Emit metrics on this exchange's market availability according to the sampling rate.
