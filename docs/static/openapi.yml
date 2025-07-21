@@ -3900,13 +3900,10 @@ paths:
                     properties:
                       support:
                         type: string
-                        format: uint64
                       against:
                         type: string
-                        format: uint64
                       invalid:
                         type: string
-                        format: uint64
                   totalPowerVoted:
                     type: string
                     format: uint64
@@ -3921,13 +3918,10 @@ paths:
                     properties:
                       support:
                         type: string
-                        format: uint64
                       against:
                         type: string
-                        format: uint64
                       invalid:
                         type: string
-                        format: uint64
                   totalPowerVoted:
                     type: string
                     format: uint64
@@ -3935,6 +3929,15 @@ paths:
                     type: string
                     format: uint64
               team:
+                type: object
+                properties:
+                  support:
+                    type: string
+                  against:
+                    type: string
+                  invalid:
+                    type: string
+              combinedTotal:
                 type: object
                 properties:
                   support:
