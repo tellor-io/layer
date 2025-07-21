@@ -312,7 +312,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		// since reporting power is 1000, first rd fee fee is 10 trb
 		// paying from bond, so val1 stake should decrease by 10 trb
 		// val2 stake should also decrease by 10 trb bc of slash on reporter delgated to them
-		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, queryId, warning, "500000000loya", notFromBond, "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, queryId, warning, "500000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (dispute on ", microReports.MicroReports[0].Reporter, "): ", txHash)
 
@@ -1533,7 +1533,7 @@ func TestEscalatingDispute(t *testing.T) {
 	require.Equal(reports.MicroReports[0].Power, "1000")
 
 	// open warning dispute
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, warning, "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens warning dispute): ", txHash)
 
