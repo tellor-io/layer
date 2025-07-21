@@ -366,18 +366,25 @@ type QuerySelectorReporterResponse struct {
 }
 
 type QueryDisputesTallyResponse struct {
-	Users     *GroupTally `protobuf:"bytes,1,opt,name=users,proto3" json:"users,omitempty"`
-	Reporters *GroupTally `protobuf:"bytes,2,opt,name=reporters,proto3" json:"reporters,omitempty"`
-	Team      *VoteCounts `protobuf:"bytes,3,opt,name=team,proto3" json:"team,omitempty"`
+	Users       *GroupTally          `protobuf:"bytes,1,opt,name=users,proto3" json:"users,omitempty"`
+	Reporters   *GroupTally          `protobuf:"bytes,2,opt,name=reporters,proto3" json:"reporters,omitempty"`
+	Team        *FormattedVoteCounts `protobuf:"bytes,3,opt,name=team,proto3" json:"team,omitempty"`
+	ChoiceTotal *ChoiceTotal         `protobuf:"bytes,4,opt,name=choiceTotal,proto3" json:"choiceTotal,omitempty"`
+}
+
+type ChoiceTotal struct {
+	Support string `protobuf:"varint,1,opt,name=support,proto3" json:"support,omitempty"`
+	Against string `protobuf:"varint,2,opt,name=against,proto3" json:"against,omitempty"`
+	Invalid string `protobuf:"varint,3,opt,name=invalid,proto3" json:"invalid,omitempty"`
 }
 
 type GroupTally struct {
-	VoteCount       *VoteCounts `protobuf:"bytes,1,opt,name=voteCount,proto3" json:"voteCount,omitempty"`
-	TotalPowerVoted string      `protobuf:"varint,2,opt,name=totalPowerVoted,proto3" json:"totalPowerVoted,omitempty"`
-	TotalGroupPower string      `protobuf:"varint,3,opt,name=totalGroupPower,proto3" json:"totalGroupPower,omitempty"`
+	VoteCount       *FormattedVoteCounts `protobuf:"bytes,1,opt,name=voteCount,proto3" json:"voteCount,omitempty"`
+	TotalPowerVoted string               `protobuf:"varint,2,opt,name=totalPowerVoted,proto3" json:"totalPowerVoted,omitempty"`
+	TotalGroupPower string               `protobuf:"varint,3,opt,name=totalGroupPower,proto3" json:"totalGroupPower,omitempty"`
 }
 
-type VoteCounts struct {
+type FormattedVoteCounts struct {
 	Support string `protobuf:"varint,1,opt,name=support,proto3" json:"support,omitempty"`
 	Against string `protobuf:"varint,2,opt,name=against,proto3" json:"against,omitempty"`
 	Invalid string `protobuf:"varint,3,opt,name=invalid,proto3" json:"invalid,omitempty"`

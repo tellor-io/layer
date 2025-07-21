@@ -3158,3 +3158,274 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	require.Equal(disputes.Disputes[0].Metadata.DisputeId, "1")
 	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1) // open
 }
+
+func TestGroupPowers(t *testing.T) {
+	require := require.New(t)
+
+	t.Helper()
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
+
+	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
+
+	modifyGenesis := []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
+		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "20s"),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+	}
+
+	nv := 3
+	nf := 0
+	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
+		{
+			NumValidators: &nv,
+			NumFullNodes:  &nf,
+			ChainConfig: ibc.ChainConfig{
+				Type:           "cosmos",
+				Name:           "layer",
+				ChainID:        "layer",
+				Bin:            "layerd",
+				Denom:          "loya",
+				Bech32Prefix:   "tellor",
+				CoinType:       "118",
+				GasPrices:      "0.0loya",
+				GasAdjustment:  1.1,
+				TrustingPeriod: "504h",
+				NoHostMount:    false,
+				Images: []ibc.DockerImage{
+					{
+						Repository: "layer",
+						Version:    "local",
+						UidGid:     "1025:1025",
+					},
+				},
+				EncodingConfig:      e2e.LayerEncoding(),
+				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
+				AdditionalStartArgs: []string{"--key-name", "validator"},
+			},
+		},
+	})
+
+	client, network := interchaintest.DockerSetup(t)
+
+	chain := chains[0].(*cosmos.CosmosChain)
+
+	ic := interchaintest.NewInterchain().
+		AddChain(chain)
+
+	ctx := context.Background()
+
+	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
+		TestName:  t.Name(),
+		Client:    client,
+		NetworkID: network,
+		// BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
+		SkipPathCreation: false,
+	}))
+	t.Cleanup(func() {
+		_ = ic.Close()
+	})
+	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
+	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
+		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
+		Amount:  math.NewInt(1000000000000),
+		Denom:   "loya",
+	}))
+
+	type Validators struct {
+		Addr    string
+		ValAddr string
+		Val     *cosmos.ChainNode
+	}
+
+	validators := make([]Validators, len(chain.Validators))
+	for i := range chain.Validators {
+		val := chain.Validators[i]
+		valAddr, err := val.AccountKeyBech32(ctx, "validator")
+		require.NoError(err)
+		valvalAddr, err := val.KeyBech32(ctx, "validator", "val")
+		require.NoError(err)
+		fmt.Println("val", i, " Account Address: ", valAddr)
+		fmt.Println("val", i, " Validator Address: ", valvalAddr)
+		validators[i] = Validators{
+			Addr:    valAddr,
+			ValAddr: valvalAddr,
+			Val:     val,
+		}
+	}
+
+	// queryValidators to confirm that 3 validators are bonded
+	vals, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
+	require.NoError(err)
+	require.Equal(len(vals), 3)
+
+	// submit minting proposal and vote yes on it from all validators
+	require.NoError(e2e.TurnOnMinting(ctx, chain, validators[0].Val))
+	require.NoError(testutil.WaitForBlocks(ctx, 7, validators[0].Val))
+	result, err := chain.GovQueryProposal(ctx, 1)
+	require.NoError(err)
+	fmt.Println("Proposal status: ", result.Status.String())
+	require.Equal(result.Status.String(), "PROPOSAL_STATUS_PASSED")
+
+	// all 3 validators become reporters
+	for i := range validators {
+		minStakeAmt := "1000000"
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := validators[i].Val.ExecTx(ctx, validators[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", validators[i].Val.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (validator", i, " becomes a reporter): ", txHash)
+	}
+
+	currentCycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
+	require.NoError(err)
+	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
+	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
+	require.NoError(err)
+	fmt.Println("current cycle list: ", currentCycleList)
+	value := layerutil.EncodeValue(123456789.99)
+
+	// 3 validators submit tips and report for whatever was in cycle list
+	tipAmt := sdk.NewCoin("loya", math.NewInt(2*1e6))
+	for i := range validators {
+		// wait 1 block
+		require.NoError(testutil.WaitForBlocks(ctx, 1, validators[i].Val))
+		// tip
+		_, _, err = validators[i].Val.Exec(ctx, validators[i].Val.TxCommand("validator", "oracle", "tip", currentCycleList.QueryData, tipAmt.String(), "--fees", "25loya", "--keyring-dir", validators[i].Val.HomeDir()), validators[i].Val.Chain.Config().Env)
+		require.NoError(err)
+		// wait 1 block to prevent account sequence mismatch
+		require.NoError(testutil.WaitForBlocks(ctx, 1, validators[i].Val))
+		// submit
+		_, err := validators[i].Val.ExecTx(ctx, validators[i].Addr, "oracle", "submit-value", currentCycleList.QueryData, value, "--keyring-dir", validators[i].Val.HomeDir())
+		require.NoError(err)
+		height, err := validators[i].Val.Height(ctx)
+		require.NoError(err)
+		fmt.Println("validator [", i, "] reported at height ", height)
+	}
+
+	// all val/reporters should have 1 report
+	var disputedReport e2e.MicroReport
+	for i := range validators {
+		reports, _, err := validators[i].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[i].Addr, "--page-limit", "5")
+		require.NoError(err)
+		var reportsRes e2e.QueryMicroReportsResponse
+		err = json.Unmarshal(reports, &reportsRes)
+		require.NoError(err)
+		fmt.Println("reports from val", i, ": ", reportsRes)
+		require.Equal(len(reportsRes.MicroReports), 1)
+		disputedReport = reportsRes.MicroReports[0]
+	}
+
+	// val2's first report gets disputed by val0
+	disputeQueryId := disputedReport.QueryID
+	disputeMetaId := disputedReport.MetaId
+	disputeCategory := "warning"
+	disputeFee := "500000000000loya"
+	disputePayFromBond := "false"
+	txHash, err := validators[0].Val.ExecTx(ctx, validators[0].Addr, "dispute", "propose-dispute", validators[2].Addr, disputeMetaId, disputeQueryId, disputeCategory, disputeFee, disputePayFromBond, "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	require.NoError(err)
+	fmt.Println("TX HASH (val0 disputes val2's first report): ", txHash)
+
+	// wait 1 block for dispute to be processed and BlockInfo to be created
+	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[0].Val))
+
+	// verify dispute exists and is in voting state
+	disRes, _, err := validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	var disputes e2e.Disputes2
+	err = json.Unmarshal(disRes, &disputes)
+	require.NoError(err)
+	openDispute := disputes.Disputes[0]
+	fmt.Println("disputes: ", disputes)
+	fmt.Println("dispute fee: ", openDispute.Metadata.DisputeFee)
+	fmt.Println("dispute fee total: ", openDispute.Metadata.FeeTotal)
+	fmt.Println("dispute fee paid: ", openDispute.Metadata.InitialEvidence.Power)
+	require.Equal(openDispute.Metadata.DisputeId, "1")
+	require.Equal(openDispute.Metadata.DisputeStatus, 1) // open
+
+	// team votes support on the dispute
+	txHash, err = validators[0].Val.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-support", "--keyring-dir", validators[1].Val.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (team votes on dispute 1): ", txHash)
+
+	// wait 1 block for vote to be processed
+	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[1].Val))
+
+	// query voting info
+	// layerd dispute team-vote
+	teamVoteRes, _, err := validators[1].Val.ExecQuery(ctx, "dispute", "team-vote", "1")
+	require.NoError(err)
+	var teamVote e2e.QueryTeamVoteResponse
+	err = json.Unmarshal(teamVoteRes, &teamVote)
+	require.NoError(err)
+	fmt.Println("teamVote: ", teamVote)
+	// layerd dispute tally
+	tallyRes, _, err := validators[0].Val.ExecQuery(ctx, "dispute", "tally", "1")
+	require.NoError(err)
+	fmt.Println("Raw tally response:", string(tallyRes))
+	var tally e2e.QueryDisputesTallyResponse
+	err = json.Unmarshal(tallyRes, &tally)
+	require.NoError(err)
+	fmt.Println("tally: ", tally)
+	fmt.Println("tally.Team Support: ", tally.Team.Support)
+	fmt.Println("tally.Team Against: ", tally.Team.Against)
+	fmt.Println("tally.Team Invalid: ", tally.Team.Invalid)
+	fmt.Println("tally.Users Total Power Voted: ", tally.Users.TotalPowerVoted)
+	fmt.Println("tally.users.support: ", tally.Users.VoteCount.Support)
+	fmt.Println("tally.users.against: ", tally.Users.VoteCount.Against)
+	fmt.Println("tally.users.invalid: ", tally.Users.VoteCount.Invalid)
+	fmt.Println("tally.Reporters Total Power Voted: ", tally.Reporters.TotalPowerVoted)
+	fmt.Println("tally.reporters.support: ", tally.Reporters.VoteCount.Support)
+	fmt.Println("tally.reporters.against: ", tally.Reporters.VoteCount.Against)
+	fmt.Println("tally.reporters.invalid: ", tally.Reporters.VoteCount.Invalid)
+	fmt.Println("tally.team.support: ", tally.Team.Support)
+	fmt.Println("tally.Users.TotalGroupPower: ", tally.Users.TotalGroupPower)
+	fmt.Println("tally.Reporters.TotalGroupPower: ", tally.Reporters.TotalGroupPower)
+
+	// vote from val1, should have a third of user power and ~ a third of reporting power
+	// team is 33% + 11% + 11% should be 55% and dispute should execute after this vote
+	txHash, err = validators[1].Val.ExecTx(ctx, validators[1].Addr, "dispute", "vote", "1", "vote-against", "--keyring-dir", validators[1].Val.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (val1 votes against dispute 1): ", txHash)
+
+	// wait 1 block for vote to be processed
+	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[1].Val))
+
+	// query tally again, should be executed but still show all voting percents
+	tallyRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "tally", "1")
+	require.NoError(err)
+	fmt.Println("--------------------------------")
+	fmt.Println("Raw tally response:", string(tallyRes))
+	err = json.Unmarshal(tallyRes, &tally)
+	require.NoError(err)
+	fmt.Println("tally: ", tally)
+	fmt.Println("tally.Team Support: ", tally.Team.Support)
+	fmt.Println("tally.Team Against: ", tally.Team.Against)
+	fmt.Println("tally.Team Invalid: ", tally.Team.Invalid)
+	fmt.Println("tally.Users Total Power Voted: ", tally.Users.TotalPowerVoted)
+	fmt.Println("tally.users.support: ", tally.Users.VoteCount.Support)
+	fmt.Println("tally.users.against: ", tally.Users.VoteCount.Against)
+	fmt.Println("tally.users.invalid: ", tally.Users.VoteCount.Invalid)
+	fmt.Println("tally.Reporters Total Power Voted: ", tally.Reporters.TotalPowerVoted)
+	fmt.Println("tally.reporters.support: ", tally.Reporters.VoteCount.Support)
+	fmt.Println("tally.reporters.against: ", tally.Reporters.VoteCount.Against)
+	fmt.Println("tally.reporters.invalid: ", tally.Reporters.VoteCount.Invalid)
+	fmt.Println("tally.team.support: ", tally.Team.Support)
+	fmt.Println("tally.Users.TotalGroupPower: ", tally.Users.TotalGroupPower)
+	fmt.Println("tally.Reporters.TotalGroupPower: ", tally.Reporters.TotalGroupPower)
+
+	// check that dispute is executed
+	disRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	err = json.Unmarshal(disRes, &disputes)
+	require.NoError(err)
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 2) // executed
+
+	// check that dispute is executed
+
+}
