@@ -54,18 +54,19 @@ func (k Keeper) SetTeamVote(ctx context.Context, id uint64, voter sdk.AccAddress
 			}
 			voteCounts = types.StakeholderVoteCounts{}
 		}
-		if choice == types.VoteEnum_VOTE_SUPPORT {
+		switch choice {
+		case types.VoteEnum_VOTE_SUPPORT:
 			voteCounts.Team.Support = 1
-		} else if choice == types.VoteEnum_VOTE_AGAINST {
+		case types.VoteEnum_VOTE_AGAINST:
 			voteCounts.Team.Against = 1
-		} else {
+		default:
 			voteCounts.Team.Invalid = 1
 		}
 		err = k.VoteCountsByGroup.Set(ctx, id, voteCounts)
 		if err != nil {
 			return math.Int{}, err
 		}
-		return math.NewInt(33000000), nil
+		return math.NewInt(33333333), nil
 	}
 	return math.ZeroInt(), nil
 }
