@@ -197,7 +197,7 @@ func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest
 				Against: fmt.Sprintf("%.2f%%", reporterAgainstPerc),
 				Invalid: fmt.Sprintf("%.2f%%", reporterInvalidPerc),
 			},
-			TotalPowerVoted: uint64(sumOfReporterVotes),
+			TotalPowerVoted: sumOfReporterVotes,
 			TotalGroupPower: totalReporterPower.Uint64(),
 		},
 		Team:          teamVote,
