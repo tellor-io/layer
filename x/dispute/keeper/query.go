@@ -103,7 +103,7 @@ func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest
 	if err != nil {
 		return &types.QueryDisputesTallyResponse{}, err
 	}
-	blockInfo, err := k.BlockInfo.Get(ctx, dispute.HashId)
+	blockInfo, err := k.Keeper.BlockInfo.Get(ctx, dispute.HashId)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			blockInfo.TotalReporterPower = math.ZeroInt()
@@ -138,11 +138,11 @@ func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest
 
 		switch vote.Vote {
 		case types.VoteEnum_VOTE_SUPPORT:
-			teamVote.Support = math.OneInt().Mul(layertypes.PowerReduction).Uint64()
+			teamVote.Support = math.LegacyNewDec(100).Mul(layertypes.PowerReduction.ToLegacyDec()).Quo(math.LegacyNewDec(3)).TruncateInt().Uint64()
 		case types.VoteEnum_VOTE_AGAINST:
-			teamVote.Against = math.OneInt().Mul(layertypes.PowerReduction).Uint64()
+			teamVote.Against = math.LegacyNewDec(100).Mul(layertypes.PowerReduction.ToLegacyDec()).Quo(math.LegacyNewDec(3)).TruncateInt().Uint64()
 		case types.VoteEnum_VOTE_INVALID:
-			teamVote.Invalid = math.OneInt().Mul(layertypes.PowerReduction).Uint64()
+			teamVote.Invalid = math.LegacyNewDec(100).Mul(layertypes.PowerReduction.ToLegacyDec()).Quo(math.LegacyNewDec(3)).TruncateInt().Uint64()
 		}
 	}
 
