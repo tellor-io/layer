@@ -38,7 +38,7 @@ var (
 	Current_Total_Reporter_Power uint64
 	reporterPowerMutex           sync.RWMutex
 	// Rate limiting variables
-	AGGREGATE_REPORT_NAME    = "aggregate-report"
+	AGGREGATE_REPORT_NAME    = "aggregate_report"
 	aggregateAlertCount      int
 	aggregateAlertTimestamps []time.Time
 	aggregateAlertMutex      sync.RWMutex
@@ -204,29 +204,20 @@ type HTTPClient struct {
 }
 
 func NewHTTPClient(rpcURL string) *HTTPClient {
-	// Check if URL already has a protocol
-	if strings.HasPrefix(rpcURL, "http://") || strings.HasPrefix(rpcURL, "https://") {
-		return &HTTPClient{
-			client: &http.Client{
-				Timeout: 30 * time.Second,
-			},
-			baseURL:     rpcURL,
-			protocol:    "https", // Default to https for external URLs
-			isLocalhost: false,
-		}
-	}
-
-	protocol := "http"
-	isLocalhost := strings.Contains(rpcURL, "localhost") || strings.Contains(rpcURL, "127.0.0.1")
-	if !isLocalhost {
+	var protocol string
+	if strings.HasPrefix(rpcURL, "http://") || strings.HasPrefix(rpcURL, "localhost") {
+		protocol = "http"
+	} else {
 		protocol = "https"
 	}
+
+	isLocalhost := strings.Contains(rpcURL, "localhost") || strings.Contains(rpcURL, "127.0.0.1")
 
 	return &HTTPClient{
 		client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		baseURL:     fmt.Sprintf("%s://%s", protocol, rpcURL),
+		baseURL:     rpcURL,
 		protocol:    protocol,
 		isLocalhost: isLocalhost,
 	}
@@ -253,16 +244,9 @@ func (h *HTTPClient) makeRPCRequest(method string, params interface{}) ([]byte, 
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	var url string
-	if h.isLocalhost {
-		url = h.baseURL
-	} else {
-		url = h.baseURL + "/rpc"
-	}
-
-	resp, err := h.client.Post(url, "application/json", strings.NewReader(string(jsonData)))
+	resp, err := h.client.Post(h.baseURL, "application/json", strings.NewReader(string(jsonData)))
 	if err != nil {
-		return nil, fmt.Errorf("failed to make HTTP request: %w", err)
+		return nil, fmt.Errorf("failed to make HTTP request: %w, Request: %v", err, request)
 	}
 	defer resp.Body.Close()
 
@@ -343,7 +327,7 @@ func loadConfig() error {
 	newEventTypeMap := make(map[string]ConfigType)
 	for _, et := range newConfig.EventTypes {
 		newEventTypeMap[et.AlertType] = et
-		fmt.Printf("Loaded event type: %s (%s)\n", et.AlertName, et.AlertType)
+		log.Printf("Loaded event type: %s (%s)\n", et.AlertName, et.AlertType)
 	}
 
 	configMutex.Lock()
@@ -363,7 +347,7 @@ func startConfigWatcher(ctx context.Context) {
 			return
 		case <-ticker.C:
 			if err := loadConfig(); err != nil {
-				fmt.Printf("Error reloading config: %v\n", err)
+				log.Printf("Error reloading config: %v\n", err)
 			}
 		}
 	}
@@ -375,7 +359,7 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 
 	// Check if we're in cooldown
 	if time.Now().Before(aggregateAlertCooldown) {
-		fmt.Printf("In cooldown, skipping aggregate report\n")
+		log.Printf("In cooldown, skipping aggregate report\n")
 		return
 	}
 
@@ -399,6 +383,7 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 		if event.Attributes[j].Key == AGGREGATE_REPORT_NAME {
 			if aggregatePower, err := strconv.ParseUint(event.Attributes[j].Value, 10, 64); err == nil {
 				if float64(aggregatePower) < float64(currentPower)*2/3 {
+					log.Printf("Aggregate power is less than 2/3 of current power: %d\n", currentPower)
 					// Check if we've hit the alert limit
 					if aggregateAlertCount >= 10 {
 						// Send final alert and start cooldown
@@ -409,9 +394,9 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 
 						discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
 						if err := discordNotifier.SendAlert(message); err != nil {
-							fmt.Printf("Error sending final Discord alert: %v\n", err)
+							log.Printf("Error sending final Discord alert: %v\n", err)
 						} else {
-							fmt.Printf("Sent final Discord alert and starting cooldown\n")
+							log.Printf("Sent final Discord alert and starting cooldown\n")
 						}
 
 						// Set cooldown for 2 hours
@@ -429,16 +414,16 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 
 					discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
 					if err := discordNotifier.SendAlert(message); err != nil {
-						fmt.Printf("Error sending Discord alert for event %s: %v\n", event.Type, err)
+						log.Printf("Error sending Discord alert for event %s: %v\n", event.Type, err)
 					} else {
-						fmt.Printf("Sent Discord alert for event: %s\n", event.Type)
+						log.Printf("Sent Discord alert for event: %s\n", event.Type)
 						// Add timestamp for this alert
 						aggregateAlertTimestamps = append(aggregateAlertTimestamps, now)
 						aggregateAlertCount++
 					}
 				}
 			} else {
-				fmt.Printf("Error parsing aggregate power: %v\n", err)
+				log.Printf("Error parsing aggregate power: %v\n", err)
 			}
 		}
 	}
@@ -590,7 +575,7 @@ func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsRes
 
 		// Skip block time analysis if the time field is empty
 		if blockTimeStr == "" {
-			fmt.Printf("Warning: Block %d has empty time field, skipping block time analysis\n", height)
+			log.Printf("Warning: Block %d has empty time field, skipping block time analysis\n", height)
 		} else {
 			currentBlockTime, err := time.Parse(time.RFC3339Nano, blockTimeStr)
 			if err != nil {
@@ -598,7 +583,7 @@ func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsRes
 			}
 
 			// Always log the extracted time field when block time threshold is set
-			fmt.Printf("Block %d time: %s\n", height, blockTimeStr)
+			log.Printf("Block %d time: %s\n", height, blockTimeStr)
 
 			blockTimeMutex.RLock()
 			prevTime := previousBlockTime
@@ -618,9 +603,9 @@ func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsRes
 						if eventType, exists := eventTypeMap["block-time-alert"]; exists {
 							discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
 							if err := discordNotifier.SendAlert(message); err != nil {
-								fmt.Printf("Error sending block time Discord alert: %v\n", err)
+								log.Printf("Error sending block time Discord alert: %v\n", err)
 							} else {
-								fmt.Printf("Sent block time Discord alert\n")
+								log.Printf("Sent block time Discord alert\n")
 							}
 						}
 					}
@@ -644,13 +629,13 @@ func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsRes
 				configuredEventCount++
 				// Skip logging aggregate_report events
 				if event.Type != AGGREGATE_REPORT_NAME {
-					fmt.Printf("Found configured event: %s\n", event.Type)
+					log.Printf("Found configured event: %s\n", event.Type)
 				}
 			}
 		}
 
 		if configuredEventCount > 0 {
-			fmt.Printf("Found %d configured events in block %d\n", configuredEventCount, height)
+			log.Printf("Found %d configured events in block %d\n", configuredEventCount, height)
 		}
 
 		go processBlockEvents(resultsResponse.Result.FinalizeBlockEvents, fmt.Sprintf("%d", height))
@@ -666,14 +651,14 @@ func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsRes
 					txConfiguredEventCount++
 					// Skip logging aggregate_report events
 					if event.Type != AGGREGATE_REPORT_NAME {
-						fmt.Printf("Found configured event in tx %d: %s\n", i, event.Type)
+						log.Printf("Found configured event in tx %d: %s\n", i, event.Type)
 					}
 				}
 			}
 		}
 
 		if txConfiguredEventCount > 0 {
-			fmt.Printf("Found %d configured events in transactions for block %d\n", txConfiguredEventCount, height)
+			log.Printf("Found %d configured events in transactions for block %d\n", txConfiguredEventCount, height)
 		}
 
 		go processTransactionEvents(resultsResponse.Result.TxsResults, fmt.Sprintf("%d", height))
@@ -685,7 +670,7 @@ func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsRes
 func processBlockEvents(events []Event, height string) {
 	for _, event := range events {
 		if eventType, exists := eventTypeMap[event.Type]; exists {
-			fmt.Printf("Event at %s: %s\n", height, event.Type)
+			log.Printf("Event at %s: %s\n", height, event.Type)
 			handleEvent(event, eventType)
 		}
 	}
@@ -695,7 +680,7 @@ func processTransactionEvents(txResults []TxResult, height string) {
 	for _, txResult := range txResults {
 		for _, event := range txResult.Events {
 			if eventType, exists := eventTypeMap[event.Type]; exists {
-				fmt.Printf("Event at %s: %s\n", height, event.Type)
+				log.Printf("Event at %s: %s\n", height, event.Type)
 				handleEvent(event, eventType)
 			}
 		}
@@ -733,6 +718,7 @@ func writeTimestampToCSV(timestamp string) error {
 // Add a helper function to handle events
 func handleEvent(event Event, eventType ConfigType) {
 	if event.Type == AGGREGATE_REPORT_NAME {
+		fmt.Println("Calling handleAggregateReport")
 		handleAggregateReport(event, eventType)
 	} else {
 		message := fmt.Sprintf("**Event Alert: %s**\n", eventType.AlertName)
@@ -742,9 +728,10 @@ func handleEvent(event Event, eventType ConfigType) {
 
 		discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
 		if err := discordNotifier.SendAlert(message); err != nil {
-			fmt.Printf("Error sending Discord alert for event %s: %v\n", event.Type, err)
+			log.Printf("error is being thrown in handleEvent")
+			log.Printf("Error sending Discord alert for event %s: %v\n", event.Type, err)
 		} else {
-			fmt.Printf("Sent Discord alert for event: %s\n", event.Type)
+			log.Printf("Sent Discord alert for event: %s\n", event.Type)
 		}
 	}
 
@@ -752,9 +739,9 @@ func handleEvent(event Event, eventType ConfigType) {
 		for _, attr := range event.Attributes {
 			if attr.Key == "timestamp" {
 				if err := writeTimestampToCSV(attr.Value); err != nil {
-					fmt.Printf("Error writing timestamp to CSV: %v\n", err)
+					log.Printf("Error writing timestamp to CSV: %v\n", err)
 				} else {
-					fmt.Printf("Successfully wrote timestamp %s to CSV\n", attr.Value)
+					log.Printf("Successfully wrote timestamp %s to CSV\n", attr.Value)
 				}
 				break
 			}
@@ -797,7 +784,7 @@ func updateTotalReporterPower(ctx context.Context) {
 		case <-ticker.C:
 			body, err := client.makeRPCRequest("validators", nil)
 			if err != nil {
-				fmt.Printf("Error querying validators: %v\n", err)
+				log.Printf("Error querying validators: %v\n", err)
 				// Implement exponential backoff
 				time.Sleep(backoffDuration)
 				backoffDuration *= 2
@@ -809,7 +796,7 @@ func updateTotalReporterPower(ctx context.Context) {
 
 			var validatorResp ValidatorResponse
 			if err := json.Unmarshal(body, &validatorResp); err != nil {
-				fmt.Printf("Error decoding validator response: %v\n", err)
+				log.Printf("Error decoding validator response: %v\n", err)
 				time.Sleep(backoffDuration)
 				backoffDuration *= 2
 				if backoffDuration > maxBackoff {
@@ -822,18 +809,18 @@ func updateTotalReporterPower(ctx context.Context) {
 			for _, validator := range validatorResp.Result.Validators {
 				power, err := strconv.ParseInt(validator.VotingPower, 10, 64)
 				if err != nil {
-					fmt.Printf("Error parsing voting power: %v\n", err)
+					log.Printf("Error parsing voting power: %v\n", err)
 					continue
 				}
 				totalPower += power
 			}
-			fmt.Printf("Total power: %d\n", totalPower)
+			log.Printf("Total power: %d\n", totalPower)
 
 			reporterPowerMutex.Lock()
 			Current_Total_Reporter_Power = uint64(totalPower)
 			reporterPowerMutex.Unlock()
 
-			fmt.Printf("Updated total reporter power: %d\n", totalPower)
+			log.Printf("Updated total reporter power: %d\n", totalPower)
 
 			// Reset backoff on successful update
 			backoffDuration = 1 * time.Second
