@@ -66,8 +66,10 @@ func (k Keeper) SetTeamVote(ctx context.Context, id uint64, voter sdk.AccAddress
 		if err != nil {
 			return math.Int{}, err
 		}
-		// return doesnt get used in any calculations
-		return math.NewInt(33333333), nil
+		// return doesnt get used in dispute calculations
+		// just gets set in Voter collection as the team's voter.VoterPower which doesnt matter for tally calculations
+		power := math.NewInt(100000000).Quo(math.NewInt(3))
+		return power, nil
 	}
 	return math.ZeroInt(), nil
 }

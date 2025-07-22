@@ -48,7 +48,6 @@ func Ratio(total, part math.LegacyDec) math.LegacyDec {
 // TallyVote determines whether the dispute vote has either reached quorum or the vote period has ended.
 // If so, it calculates the given dispute round's outcome.
 func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
-	numGroups := math.NewIntFromUint64(4)
 	scaledSupport := math.ZeroInt()
 	scaledAgainst := math.ZeroInt()
 	scaledInvalid := math.ZeroInt()
@@ -165,11 +164,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		scaledInvalidDec = scaledInvalidDec.Add(invalidReportersDec)
 	}
 	if totalRatio.GTE(math.LegacyNewDec(51).Mul(layertypes.PowerReduction.ToLegacyDec())) {
-		numGroupsDec := math.LegacyNewDecFromInt(numGroups)
-		scaledSupportDec = scaledSupportDec.Quo(numGroupsDec)
-		scaledAgainstDec = scaledAgainstDec.Quo(numGroupsDec)
-		scaledInvalidDec = scaledInvalidDec.Quo(numGroupsDec)
-
 		scaledSupport = scaledSupportDec.TruncateInt()
 		scaledAgainst = scaledAgainstDec.TruncateInt()
 		scaledInvalid = scaledInvalidDec.TruncateInt()
