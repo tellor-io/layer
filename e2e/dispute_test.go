@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -3384,9 +3385,12 @@ func TestGroupPowers(t *testing.T) {
 	fmt.Println("tally.team.support: ", tally.Team.Support)
 	fmt.Println("tally.Users.TotalGroupPower: ", tally.Users.TotalGroupPower)
 	fmt.Println("tally.Reporters.TotalGroupPower: ", tally.Reporters.TotalGroupPower)
+	require.Equal(tally.Users.TotalPowerVoted, "")
+	require.Equal(tally.Reporters.TotalPowerVoted, "")
+	require.Equal(tally.Team.Support, "33.33%")
 
 	// vote from val1, should have a third of user power and ~ a third of reporting power
-	// team is 33% + 11% + 11% should be 55% and dispute should execute after this vote
+	// 33% team + 11% users + 11% reporters = 55% have voted, dispute should execute after this vote
 	txHash, err = validators[1].Val.ExecTx(ctx, validators[1].Addr, "dispute", "vote", "1", "vote-against", "--keyring-dir", validators[1].Val.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 votes against dispute 1): ", txHash)
@@ -3417,12 +3421,44 @@ func TestGroupPowers(t *testing.T) {
 	fmt.Println("tally.Users.TotalGroupPower: ", tally.Users.TotalGroupPower)
 	fmt.Println("tally.Reporters.TotalGroupPower: ", tally.Reporters.TotalGroupPower)
 
+	userAgainstStr := strings.TrimSuffix(tally.Users.VoteCount.Against, "%")
+	userAgainst, err := strconv.ParseFloat(userAgainstStr, 64)
+	require.NoError(err)
+	userSupportStr := strings.TrimSuffix(tally.Users.VoteCount.Support, "%")
+	userSupport, err := strconv.ParseFloat(userSupportStr, 64)
+	require.NoError(err)
+	userInvalidStr := strings.TrimSuffix(tally.Users.VoteCount.Invalid, "%")
+	userInvalid, err := strconv.ParseFloat(userInvalidStr, 64)
+	require.NoError(err)
+	totalUsersPowerVoted := userAgainst + userSupport + userInvalid
+	require.Greater(totalUsersPowerVoted, 0.0)
+
+	reporterAgainstStr := strings.TrimSuffix(tally.Reporters.VoteCount.Against, "%")
+	reporterAgainst, err := strconv.ParseFloat(reporterAgainstStr, 64)
+	require.NoError(err)
+	reporterSupportStr := strings.TrimSuffix(tally.Reporters.VoteCount.Support, "%")
+	reporterSupport, err := strconv.ParseFloat(reporterSupportStr, 64)
+	require.NoError(err)
+	reporterInvalidStr := strings.TrimSuffix(tally.Reporters.VoteCount.Invalid, "%")
+	reporterInvalid, err := strconv.ParseFloat(reporterInvalidStr, 64)
+	require.NoError(err)
+
+	teamSupportStr := strings.TrimSuffix(tally.Team.Support, "%")
+	teamSupport, err := strconv.ParseFloat(teamSupportStr, 64)
+	require.NoError(err)
+	totalTeamPowerVoted := teamSupport
+	require.Greater(totalTeamPowerVoted, 0.0)
+
+	totalReportersPowerVoted := reporterAgainst + reporterSupport + reporterInvalid
+	require.Greater(totalReportersPowerVoted, 0.0)
+	totalPowerVoted := totalUsersPowerVoted + totalReportersPowerVoted + totalTeamPowerVoted
+	require.Greater(totalPowerVoted, 55.0)
+	require.Less(totalPowerVoted, 56.0)
+
 	// check that dispute is executed
 	disRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
 	require.NoError(err)
 	err = json.Unmarshal(disRes, &disputes)
 	require.NoError(err)
 	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 2) // executed
-
-	// check that dispute is executed
 }
