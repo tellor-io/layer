@@ -220,36 +220,31 @@ func writeToCSV(height uint64, participationRate float64) error {
 }
 
 type HTTPClient struct {
-	client    *http.Client
-	baseURL   string
-	protocol  string
-	lastQuery time.Time
-	mu        sync.RWMutex
+	client      *http.Client
+	baseURL     string
+	protocol    string
+	isLocalhost bool
+	lastQuery   time.Time
+	mu          sync.RWMutex
 }
 
 func NewHTTPClient(rpcURL string) *HTTPClient {
-	// Check if URL already has a protocol
-	if strings.HasPrefix(rpcURL, "http://") || strings.HasPrefix(rpcURL, "https://") {
-		return &HTTPClient{
-			client: &http.Client{
-				Timeout: 30 * time.Second,
-			},
-			baseURL:  rpcURL,
-			protocol: "https", // Default to https for external URLs
-		}
-	}
-
-	protocol := "http"
-	if !strings.Contains(rpcURL, "localhost") && !strings.Contains(rpcURL, "127.0.0.1") {
+	var protocol string
+	if strings.HasPrefix(rpcURL, "http://") || strings.HasPrefix(rpcURL, "localhost") {
+		protocol = "http"
+	} else {
 		protocol = "https"
 	}
+
+	isLocalhost := strings.Contains(rpcURL, "localhost") || strings.Contains(rpcURL, "127.0.0.1")
 
 	return &HTTPClient{
 		client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		baseURL:  fmt.Sprintf("%s://%s", protocol, rpcURL),
-		protocol: protocol,
+		baseURL:     rpcURL,
+		protocol:    protocol,
+		isLocalhost: isLocalhost,
 	}
 }
 
@@ -274,7 +269,7 @@ func (h *HTTPClient) makeRPCRequest(method string, params interface{}) ([]byte, 
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	resp, err := h.client.Post(h.baseURL+"/rpc", "application/json", strings.NewReader(string(jsonData)))
+	resp, err := h.client.Post(h.baseURL, "application/json", strings.NewReader(string(jsonData)))
 	if err != nil {
 		return nil, fmt.Errorf("failed to make HTTP request: %w", err)
 	}
