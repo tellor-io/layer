@@ -178,6 +178,8 @@ message QuerySelectionsToRequest {
 }
 
 message QuerySelectionsToResponse {
-  // selections_to defines the selections to for a given selector.
-  repeated FormattedSelection selections_to = 1;
+  // reporter is the address of the reporter
+  string reporter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // selections contains all selectors delegated to this reporter
+  repeated FormattedSelection selections = 2;
 }
