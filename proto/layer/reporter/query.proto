@@ -48,9 +48,9 @@ service Query {
   rpc AvailableTips(QueryAvailableTipsRequest) returns (QueryAvailableTipsResponse) {
     option (google.api.http).get = "/tellor-io/layer/reporter/available-tips/{selector_address}";
   }
-  // SelectionsTo queries the selections for a given selector.
+  // SelectionsTo queries the selections for a given reporter.
   rpc SelectionsTo(QuerySelectionsToRequest) returns (QuerySelectionsToResponse) {
-    option (google.api.http).get = "/tellor-io/layer/reporter/selections-to/{selector_address}";
+    option (google.api.http).get = "/tellor-io/layer/reporter/selections-to/{reporter_address}";
   }
 }
 

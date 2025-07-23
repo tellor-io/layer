@@ -33,7 +33,7 @@ type QueryClient interface {
 	SpaceAvailableByReporter(ctx context.Context, in *QuerySpaceAvailableByReporterRequest, opts ...grpc.CallOption) (*QuerySpaceAvailableByReporterResponse, error)
 	// AvailableTips queries the tips available for withdrawal for a given selector.
 	AvailableTips(ctx context.Context, in *QueryAvailableTipsRequest, opts ...grpc.CallOption) (*QueryAvailableTipsResponse, error)
-	// SelectionsTo queries the selections for a given selector.
+	// SelectionsTo queries the selections for a given reporter.
 	SelectionsTo(ctx context.Context, in *QuerySelectionsToRequest, opts ...grpc.CallOption) (*QuerySelectionsToResponse, error)
 }
 
@@ -145,7 +145,7 @@ type QueryServer interface {
 	SpaceAvailableByReporter(context.Context, *QuerySpaceAvailableByReporterRequest) (*QuerySpaceAvailableByReporterResponse, error)
 	// AvailableTips queries the tips available for withdrawal for a given selector.
 	AvailableTips(context.Context, *QueryAvailableTipsRequest) (*QueryAvailableTipsResponse, error)
-	// SelectionsTo queries the selections for a given selector.
+	// SelectionsTo queries the selections for a given reporter.
 	SelectionsTo(context.Context, *QuerySelectionsToRequest) (*QuerySelectionsToResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
