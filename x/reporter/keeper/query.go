@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type Querier struct {
@@ -163,5 +164,88 @@ func (k Querier) SelectionsTo(ctx context.Context, req *types.QuerySelectionsToR
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	return &types.QuerySelectionsToResponse{SelectionsTo: []*types.Selection{}}, nil
+	// make sure reporter exists
+	repAddr := sdk.MustAccAddressFromBech32(req.ReporterAddress)
+	_, err := k.Keeper.Reporters.Get(ctx, repAddr.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	// get all selections to this reporter
+	selections := make([]*types.FormattedSelection, 0)
+	iter, err := k.Keeper.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr)
+	if err != nil {
+		return nil, err
+	}
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		selectorAddr, err := iter.PrimaryKey()
+		if err != nil {
+			return nil, err
+		}
+		// get selection
+		selection, err := k.Keeper.Selectors.Get(ctx, selectorAddr)
+		if err != nil {
+			return nil, err
+		}
+		// get selection total power and delegation count
+		tokens, count, err := k.Keeper.CheckSelectorsDelegations(ctx, selectorAddr)
+		if err != nil {
+			return nil, err
+		}
+		// if count > 1, get individual delegations
+		var individualDelegations []*types.IndividualDelegation
+		if count > 1 {
+			individualDelegations, err = k.getIndividualDelegations(ctx, selectorAddr)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		formattedSelection := &types.FormattedSelection{
+			Selector:              sdk.AccAddress(selectorAddr).String(),
+			LockedUntilTime:       selection.GetLockedUntilTime(),
+			DelegationsCount:      uint64(count),
+			DelegationsTotal:      tokens,
+			IndividualDelegations: individualDelegations,
+		}
+		selections = append(selections, formattedSelection)
+	}
+	return &types.QuerySelectionsToResponse{
+		Reporter:   repAddr.String(),
+		Selections: selections,
+	}, nil
+}
+
+func (k Querier) getIndividualDelegations(ctx context.Context, selectorAddr sdk.AccAddress) ([]*types.IndividualDelegation, error) {
+	var individualDelegations []*types.IndividualDelegation
+	var iterError error
+
+	err := k.stakingKeeper.IterateDelegatorDelegations(ctx, selectorAddr, func(delegation stakingtypes.Delegation) (stop bool) {
+		valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		if err != nil {
+			iterError = err
+			return true
+		}
+		val, err := k.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
+			iterError = err
+			return true
+		}
+		if val.IsBonded() {
+			delTokens := val.TokensFromShares(delegation.Shares).TruncateInt()
+			individualDelegations = append(individualDelegations, &types.IndividualDelegation{
+				ValidatorAddress: delegation.ValidatorAddress,
+				Amount:           delTokens,
+			})
+		}
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+	if iterError != nil {
+		return nil, iterError
+	}
+	return individualDelegations, nil
 }
