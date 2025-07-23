@@ -47,6 +47,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Shows the team address",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
+				{
+					RpcMethod:      "VoteResult",
+					Use:            "vote-result [dispute-id]",
+					Short:          "Shows the vote result for a dispute",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dispute_id"}},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{

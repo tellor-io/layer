@@ -23,3 +23,15 @@ func (q Querier) GetUserTipTotal(ctx context.Context, req *types.QueryGetUserTip
 
 	return &types.QueryGetUserTipTotalResponse{TotalTips: totalTips}, nil
 }
+
+func (q Querier) GetTipTotal(ctx context.Context, req *types.QueryGetTipTotalRequest) (*types.QueryGetTipTotalResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	totalTips, err := q.keeper.GetTotalTips(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &types.QueryGetTipTotalResponse{TotalTips: totalTips}, nil
+}
