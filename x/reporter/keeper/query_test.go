@@ -213,7 +213,7 @@ func TestSelectionsTo(t *testing.T) {
 			}
 			sk.On("GetValidator", ctx, sdk.ValAddress(selectorAddr)).Return(validator, nil).Once()
 			fn(delegation)
-		}).Once()
+		}).Twice()
 	}
 
 	// Add a selector with multiple delegations (3 validators with varying amounts)
@@ -339,7 +339,7 @@ func TestSelectionsTo(t *testing.T) {
 			// Verify single-delegation selectors
 			require.Equal(t, uint64(1), selection.DelegationsCount)
 			require.Equal(t, math.NewInt(1000*1e6), selection.DelegationsTotal)
-			require.Empty(t, selection.IndividualDelegations) // Should be empty when count == 1
+			require.NotEmpty(t, selection.IndividualDelegations)
 		}
 
 		// Remove from expected to ensure no duplicates

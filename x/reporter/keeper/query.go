@@ -195,11 +195,10 @@ func (k Querier) SelectionsTo(ctx context.Context, req *types.QuerySelectionsToR
 		}
 		// if count > 1, get individual delegations
 		var individualDelegations []*types.IndividualDelegation
-		if count > 1 {
-			individualDelegations, err = k.getIndividualDelegations(ctx, selectorAddr)
-			if err != nil {
-				return nil, err
-			}
+
+		individualDelegations, err = k.getIndividualDelegations(ctx, selectorAddr)
+		if err != nil {
+			return nil, err
 		}
 
 		formattedSelection := &types.FormattedSelection{
