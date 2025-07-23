@@ -157,3 +157,11 @@ func (k Querier) AvailableTips(ctx context.Context, req *types.QueryAvailableTip
 	}
 	return &types.QueryAvailableTipsResponse{AvailableTips: rewards}, nil
 }
+
+func (k Querier) SelectionsTo(ctx context.Context, req *types.QuerySelectionsToRequest) (*types.QuerySelectionsToResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	return &types.QuerySelectionsToResponse{SelectionsTo: []*types.Selection{}}, nil
+}
