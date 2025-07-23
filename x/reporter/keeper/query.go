@@ -193,9 +193,8 @@ func (k Querier) SelectionsTo(ctx context.Context, req *types.QuerySelectionsToR
 		if err != nil {
 			return nil, err
 		}
-		// if count > 1, get individual delegations
+		// get individual delegation(s) info
 		var individualDelegations []*types.IndividualDelegation
-
 		individualDelegations, err = k.getIndividualDelegations(ctx, selectorAddr)
 		if err != nil {
 			return nil, err
