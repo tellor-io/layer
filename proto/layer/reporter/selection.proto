@@ -21,3 +21,20 @@ message Selection {
   // delegations_count is the number of delegations to the reporter
   uint64 delegations_count = 3;
 }
+
+// FormattedSelection is a type that represents a  delegator's selection for the SelectionsTo query
+message FormattedSelection {
+  // reporter is the address of the reporter being delegated to
+  string reporter = 1;
+  string selector = 2;
+  // locked_until_time is the time until which the tokens are locked before they
+  // can be used for reporting again
+  google.protobuf.Timestamp locked_until_time = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
+  ];
+  // delegations_count is the number of delegations the selector has made to validators
+  uint64 delegations_count = 4;
+  // delegations_total is the total power of the delegations the selector has made to validators
+  uint64 delegations_total = 5;
+}

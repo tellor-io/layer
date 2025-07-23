@@ -179,5 +179,5 @@ message QuerySelectionsToRequest {
 
 message QuerySelectionsToResponse {
   // selections_to defines the selections to for a given selector.
-  repeated Selection selections_to = 1;
+  repeated FormattedSelection selections_to = 1;
 }
