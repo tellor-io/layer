@@ -150,6 +150,11 @@ service Query {
   rpc GetNoStakeReportsByQueryId(QueryGetNoStakeReportsByQueryIdRequest) returns (QueryGetNoStakeReportsByQueryIdResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_no_stake_reports_by_qid/{query_id}";
   }
+
+  // Queries the total tips
+  rpc GetTipTotal(QueryGetTipTotalRequest) returns (QueryGetTipTotalResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_tip_total";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -459,4 +464,16 @@ message QueryGetNoStakeReportsByQueryIdResponse {
   repeated NoStakeMicroReportStrings no_stake_reports = 1;
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryGetTipTotalRequest is the request type for the Query/GetTipTotal RPC method.
+message QueryGetTipTotalRequest {}
+// QueryGetTipTotalResponse is the response type for the Query/GetTipTotal RPC method.
+message QueryGetTipTotalResponse {
+  // total_tips defines the total tips.
+  string total_tips = 1 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
 }

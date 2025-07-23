@@ -139,7 +139,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			sdk.NewAttribute("vote_result", vote.VoteResult.String()),
 		),
 	})
-	return k.BlockInfo.Remove(ctx, dispute.HashId)
+	return nil
 }
 
 func (k Keeper) RefundFailedDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, hashId []byte) error {
