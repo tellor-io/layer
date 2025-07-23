@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -25,27 +26,31 @@ import (
 )
 
 const (
-	trxQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747278000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	trxQId      = "954476140bd7309c72b6bdc8d71a293ec3df5ad00b79809dc21c98f7fc495bfb"
-	suiQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003737569000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	suiQId      = "8f76558fd2800ccaeb236d250830d068a8d9fb0568fe1b32fc916386558547f4"
-	bchQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003626368000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	bchQId      = "efa84ae5ea9eb0545e159f78f0a44911ac5a81ecb6ff0c4e32107bcfc66c4baa"
-	ltcQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000036c7463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	ltcQId      = "19585d912afb72378e3986a7a53f1eae1fbae792cd17e1d0df063681326823ae"
-	solQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003736f6c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	solQId      = "b211d6f1abbd5bb431618547402a92250b765151acbe749e7f9c26dc19e5dd9a"
-	dogeQData   = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004646f67650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	dogeQId     = "15d3cb16e8175919781af07b2ce06714d24f168284b1b47b14b6bfbe9a5a02ff"
-	dotQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003646f74000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	dotQId      = "8810ffb0cfcb6131da29ed4b229f252d6bac6fc98fc4a61ffbde5b48131e0228"
-	bnbQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003626e62000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	bnbQId      = "235b53e7caaba06517ae5af902e0e765b4032e8a75b82fd832c4da22486e47b4"
-	xrpQData    = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003787270000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	xrpQId      = "ba615496c4671e5b931b0bbd81046d3f63fb453c414a830d6c4f923864eebf8b"
-	hypeQData   = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004687970650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	hypeQId     = "48318e44abe415e4eabf291f1aab42a0af0e87ca25868e86b07df7f385b2ff81"
+	trxQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747278000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	trxQId    = "954476140bd7309c72b6bdc8d71a293ec3df5ad00b79809dc21c98f7fc495bfb"
+	suiQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003737569000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	suiQId    = "8f76558fd2800ccaeb236d250830d068a8d9fb0568fe1b32fc916386558547f4"
+	bchQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003626368000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	bchQId    = "efa84ae5ea9eb0545e159f78f0a44911ac5a81ecb6ff0c4e32107bcfc66c4baa"
+	ltcQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000036c7463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	ltcQId    = "19585d912afb72378e3986a7a53f1eae1fbae792cd17e1d0df063681326823ae"
+	solQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003736f6c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	solQId    = "b211d6f1abbd5bb431618547402a92250b765151acbe749e7f9c26dc19e5dd9a"
+	dogeQData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004646f67650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	dogeQId   = "15d3cb16e8175919781af07b2ce06714d24f168284b1b47b14b6bfbe9a5a02ff"
+	dotQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003646f74000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	dotQId    = "8810ffb0cfcb6131da29ed4b229f252d6bac6fc98fc4a61ffbde5b48131e0228"
+	bnbQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003626e62000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	bnbQId    = "235b53e7caaba06517ae5af902e0e765b4032e8a75b82fd832c4da22486e47b4"
+	xrpQData  = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003787270000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	xrpQId    = "ba615496c4671e5b931b0bbd81046d3f63fb453c414a830d6c4f923864eebf8b"
+	hypeQData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004687970650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	hypeQId   = "48318e44abe415e4eabf291f1aab42a0af0e87ca25868e86b07df7f385b2ff81"
+
 	commissRate = "0.1"
+
+	warning     = "warning"
+	notFromBond = "false"
 )
 
 type QueryData struct {
@@ -308,7 +313,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		// since reporting power is 1000, first rd fee fee is 10 trb
 		// paying from bond, so val1 stake should decrease by 10 trb
 		// val2 stake should also decrease by 10 trb bc of slash on reporter delgated to them
-		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, queryId, "warning", "500000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, queryId, warning, "500000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (dispute on ", microReports.MicroReports[0].Reporter, "): ", txHash)
 
@@ -1529,7 +1534,7 @@ func TestEscalatingDispute(t *testing.T) {
 	require.Equal(reports.MicroReports[0].Power, "1000")
 
 	// open warning dispute
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "warning", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, warning, "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens warning dispute): ", txHash)
 
@@ -2260,10 +2265,10 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	}
 
 	// open dispute on both reports from user3
-	txHash, err = val1.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", userReports[0].UserReport.MicroReports[0].Reporter, userReports[0].UserReport.MicroReports[0].MetaId, userReports[0].qId, "warning", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", userReports[0].UserReport.MicroReports[0].Reporter, userReports[0].UserReport.MicroReports[0].MetaId, userReports[0].qId, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 proposed dispute on user0): ", txHash)
-	txHash, err = val1.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", userReports[1].UserReport.MicroReports[0].Reporter, userReports[1].UserReport.MicroReports[0].MetaId, userReports[1].qId, "warning", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = val1.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", userReports[1].UserReport.MicroReports[0].Reporter, userReports[1].UserReport.MicroReports[0].MetaId, userReports[1].qId, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 proposed dispute on user1): ", txHash)
 
@@ -2386,9 +2391,9 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	// open dispute on all reports from user3
 	for i := range userReports {
 		if i < 2 {
-			txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReports[i].UserReport.MicroReports[1].Reporter, userReports[i].UserReport.MicroReports[1].MetaId, userReports[i].qId, "warning", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+			txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReports[i].UserReport.MicroReports[1].Reporter, userReports[i].UserReport.MicroReports[1].MetaId, userReports[i].qId, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 		} else {
-			txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReports[i].UserReport.MicroReports[0].Reporter, userReports[i].UserReport.MicroReports[0].MetaId, userReports[i].qId, "warning", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+			txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReports[i].UserReport.MicroReports[0].Reporter, userReports[i].UserReport.MicroReports[0].MetaId, userReports[i].qId, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 		}
 		require.NoError(err)
 		fmt.Println("TX HASH (val1 proposed dispute on user", i, "): ", txHash)
@@ -2693,7 +2698,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 		require.Equal(currentAggRes.Aggregate.AggregateValue, value)
 		require.Equal(currentAggRes.Aggregate.Flagged, false)
 
-		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReport.MicroReports[0].Reporter, userReport.MicroReports[0].MetaId, userReport.MicroReports[0].QueryID, "warning", "1000000000loya", "false", "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+		txHash, err = val1.ExecTx(ctx, val1Addr, "dispute", "propose-dispute", userReport.MicroReports[0].Reporter, userReport.MicroReports[0].MetaId, userReport.MicroReports[0].QueryID, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (val1 disputes report ", i, "): ", txHash)
 	}
@@ -2913,10 +2918,8 @@ func TestUnderfundedDispute(t *testing.T) {
 	// val0 disputes val1
 	metaId := reportsRes.MicroReports[0].MetaId
 	queryId := reportsRes.MicroReports[0].QueryID
-	category := "warning"
 	fee := "1000000loya"
-	payFromBond := "false"
-	txHash, err := validators[0].Val.ExecTx(ctx, "validator", "dispute", "propose-dispute", validators[1].Addr, metaId, queryId, category, fee, payFromBond, "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err := validators[0].Val.ExecTx(ctx, "validator", "dispute", "propose-dispute", validators[1].Addr, metaId, queryId, warning, fee, notFromBond, "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (val0 disputes val1): ", txHash)
 
@@ -3137,10 +3140,8 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	// user1 disputes val1's report
 	metaId := reportsRes.MicroReports[0].MetaId
 	queryId := reportsRes.MicroReports[0].QueryID
-	category := "warning"
 	fee := "50000000000loya"
-	payFromBond := "false"
-	txHash, err = validators[0].Val.ExecTx(ctx, userAddr, "dispute", "propose-dispute", validators[1].Addr, metaId, queryId, category, fee, payFromBond, "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = validators[0].Val.ExecTx(ctx, userAddr, "dispute", "propose-dispute", validators[1].Addr, metaId, queryId, warning, fee, notFromBond, "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user1 disputes val1): ", txHash)
 
@@ -3157,4 +3158,307 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	require.Equal(len(disputes.Disputes), 1)
 	require.Equal(disputes.Disputes[0].Metadata.DisputeId, "1")
 	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1) // open
+}
+
+func TestGroupPowers(t *testing.T) {
+	require := require.New(t)
+
+	t.Helper()
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
+
+	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
+
+	modifyGenesis := []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
+		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "20s"),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+	}
+
+	nv := 3
+	nf := 0
+	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
+		{
+			NumValidators: &nv,
+			NumFullNodes:  &nf,
+			ChainConfig: ibc.ChainConfig{
+				Type:           "cosmos",
+				Name:           "layer",
+				ChainID:        "layer",
+				Bin:            "layerd",
+				Denom:          "loya",
+				Bech32Prefix:   "tellor",
+				CoinType:       "118",
+				GasPrices:      "0.0loya",
+				GasAdjustment:  1.1,
+				TrustingPeriod: "504h",
+				NoHostMount:    false,
+				Images: []ibc.DockerImage{
+					{
+						Repository: "layer",
+						Version:    "local",
+						UidGid:     "1025:1025",
+					},
+				},
+				EncodingConfig:      e2e.LayerEncoding(),
+				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
+				AdditionalStartArgs: []string{"--key-name", "validator"},
+			},
+		},
+	})
+
+	client, network := interchaintest.DockerSetup(t)
+
+	chain := chains[0].(*cosmos.CosmosChain)
+
+	ic := interchaintest.NewInterchain().
+		AddChain(chain)
+
+	ctx := context.Background()
+
+	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
+		TestName:  t.Name(),
+		Client:    client,
+		NetworkID: network,
+		// BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
+		SkipPathCreation: false,
+	}))
+	t.Cleanup(func() {
+		_ = ic.Close()
+	})
+	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
+	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
+		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
+		Amount:  math.NewInt(1000000000000),
+		Denom:   "loya",
+	}))
+
+	type Validators struct {
+		Addr    string
+		ValAddr string
+		Val     *cosmos.ChainNode
+	}
+
+	validators := make([]Validators, len(chain.Validators))
+	for i := range chain.Validators {
+		val := chain.Validators[i]
+		valAddr, err := val.AccountKeyBech32(ctx, "validator")
+		require.NoError(err)
+		valvalAddr, err := val.KeyBech32(ctx, "validator", "val")
+		require.NoError(err)
+		fmt.Println("val", i, " Account Address: ", valAddr)
+		fmt.Println("val", i, " Validator Address: ", valvalAddr)
+		validators[i] = Validators{
+			Addr:    valAddr,
+			ValAddr: valvalAddr,
+			Val:     val,
+		}
+	}
+
+	// queryValidators to confirm that 3 validators are bonded
+	vals, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
+	require.NoError(err)
+	require.Equal(len(vals), 3)
+
+	// submit minting proposal and vote yes on it from all validators
+	require.NoError(e2e.TurnOnMinting(ctx, chain, validators[0].Val))
+	require.NoError(testutil.WaitForBlocks(ctx, 7, validators[0].Val))
+	result, err := chain.GovQueryProposal(ctx, 1)
+	require.NoError(err)
+	fmt.Println("Proposal status: ", result.Status.String())
+	require.Equal(result.Status.String(), "PROPOSAL_STATUS_PASSED")
+
+	// all 3 validators become reporters
+	for i := range validators {
+		minStakeAmt := "1000000"
+		moniker := fmt.Sprintf("reporter_moniker%d", i)
+		txHash, err := validators[i].Val.ExecTx(ctx, validators[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", validators[i].Val.HomeDir())
+		require.NoError(err)
+		fmt.Println("TX HASH (validator", i, " becomes a reporter): ", txHash)
+	}
+
+	currentCycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
+	require.NoError(err)
+	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
+	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
+	require.NoError(err)
+	fmt.Println("current cycle list: ", currentCycleList)
+	value := layerutil.EncodeValue(123456789.99)
+
+	// 3 validators submit tips and report for whatever was in cycle list
+	tipAmt := sdk.NewCoin("loya", math.NewInt(2*1e6))
+	for i := range validators {
+		// wait 1 block
+		require.NoError(testutil.WaitForBlocks(ctx, 1, validators[i].Val))
+		// tip
+		_, _, err = validators[i].Val.Exec(ctx, validators[i].Val.TxCommand("validator", "oracle", "tip", currentCycleList.QueryData, tipAmt.String(), "--fees", "25loya", "--keyring-dir", validators[i].Val.HomeDir()), validators[i].Val.Chain.Config().Env)
+		require.NoError(err)
+		// wait 1 block to prevent account sequence mismatch
+		require.NoError(testutil.WaitForBlocks(ctx, 1, validators[i].Val))
+		// submit
+		_, err := validators[i].Val.ExecTx(ctx, validators[i].Addr, "oracle", "submit-value", currentCycleList.QueryData, value, "--keyring-dir", validators[i].Val.HomeDir())
+		require.NoError(err)
+		height, err := validators[i].Val.Height(ctx)
+		require.NoError(err)
+		fmt.Println("validator [", i, "] reported at height ", height)
+	}
+
+	// all val/reporters should have 1 report
+	var disputedReport e2e.MicroReport
+	for i := range validators {
+		reports, _, err := validators[i].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[i].Addr, "--page-limit", "5")
+		require.NoError(err)
+		var reportsRes e2e.QueryMicroReportsResponse
+		err = json.Unmarshal(reports, &reportsRes)
+		require.NoError(err)
+		fmt.Println("reports from val", i, ": ", reportsRes)
+		require.Equal(len(reportsRes.MicroReports), 1)
+		disputedReport = reportsRes.MicroReports[0]
+	}
+
+	// val2's first report gets disputed by val0
+	disputeQueryId := disputedReport.QueryID
+	disputeMetaId := disputedReport.MetaId
+	disputeFee := "500000000000loya"
+	txHash, err := validators[0].Val.ExecTx(ctx, validators[0].Addr, "dispute", "propose-dispute", validators[2].Addr, disputeMetaId, disputeQueryId, warning, disputeFee, notFromBond, "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	require.NoError(err)
+	fmt.Println("TX HASH (val0 disputes val2's first report): ", txHash)
+
+	// wait 1 block for dispute to be processed and BlockInfo to be created
+	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[0].Val))
+
+	// verify dispute exists and is in voting state
+	disRes, _, err := validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	var disputes e2e.Disputes2
+	err = json.Unmarshal(disRes, &disputes)
+	require.NoError(err)
+	openDispute := disputes.Disputes[0]
+	fmt.Println("disputes: ", disputes)
+	fmt.Println("dispute fee: ", openDispute.Metadata.DisputeFee)
+	fmt.Println("dispute fee total: ", openDispute.Metadata.FeeTotal)
+	fmt.Println("dispute fee paid: ", openDispute.Metadata.InitialEvidence.Power)
+	require.Equal(openDispute.Metadata.DisputeId, "1")
+	require.Equal(openDispute.Metadata.DisputeStatus, 1) // open
+
+	// team votes support on the dispute
+	txHash, err = validators[0].Val.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-support", "--keyring-dir", validators[1].Val.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (team votes on dispute 1): ", txHash)
+
+	// wait 1 block for vote to be processed
+	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[1].Val))
+
+	// query voting info
+	// layerd dispute team-vote
+	teamVoteRes, _, err := validators[1].Val.ExecQuery(ctx, "dispute", "team-vote", "1")
+	require.NoError(err)
+	var teamVote e2e.QueryTeamVoteResponse
+	err = json.Unmarshal(teamVoteRes, &teamVote)
+	require.NoError(err)
+	fmt.Println("teamVote: ", teamVote)
+	// layerd dispute tally
+	tallyRes, _, err := validators[0].Val.ExecQuery(ctx, "dispute", "tally", "1")
+	require.NoError(err)
+	fmt.Println("Raw tally response:", string(tallyRes))
+	var tally e2e.QueryDisputesTallyResponse
+	err = json.Unmarshal(tallyRes, &tally)
+	require.NoError(err)
+	fmt.Println("tally: ", tally)
+	fmt.Println("tally.Team Support: ", tally.Team.Support)
+	fmt.Println("tally.Team Against: ", tally.Team.Against)
+	fmt.Println("tally.Team Invalid: ", tally.Team.Invalid)
+	fmt.Println("tally.Users Total Power Voted: ", tally.Users.TotalPowerVoted)
+	fmt.Println("tally.users.support: ", tally.Users.VoteCount.Support)
+	fmt.Println("tally.users.against: ", tally.Users.VoteCount.Against)
+	fmt.Println("tally.users.invalid: ", tally.Users.VoteCount.Invalid)
+	fmt.Println("tally.Reporters Total Power Voted: ", tally.Reporters.TotalPowerVoted)
+	fmt.Println("tally.reporters.support: ", tally.Reporters.VoteCount.Support)
+	fmt.Println("tally.reporters.against: ", tally.Reporters.VoteCount.Against)
+	fmt.Println("tally.reporters.invalid: ", tally.Reporters.VoteCount.Invalid)
+	fmt.Println("tally.team.support: ", tally.Team.Support)
+	fmt.Println("tally.Users.TotalGroupPower: ", tally.Users.TotalGroupPower)
+	fmt.Println("tally.Reporters.TotalGroupPower: ", tally.Reporters.TotalGroupPower)
+	require.Equal(tally.Users.TotalPowerVoted, "")
+	require.Equal(tally.Reporters.TotalPowerVoted, "")
+	require.Equal(tally.Team.Support, "33.33%")
+
+	// vote from val1, should have a third of user power and ~ a third of reporting power
+	// 33% team + 11% users + 11% reporters = 55% have voted, dispute should execute after this vote
+	txHash, err = validators[1].Val.ExecTx(ctx, validators[1].Addr, "dispute", "vote", "1", "vote-against", "--keyring-dir", validators[1].Val.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (val1 votes against dispute 1): ", txHash)
+
+	// wait 1 block for vote to be processed
+	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[1].Val))
+
+	// query tally again, should be executed but still show all voting percents
+	tallyRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "tally", "1")
+	require.NoError(err)
+	fmt.Println("--------------------------------")
+	fmt.Println("Raw tally response:", string(tallyRes))
+	err = json.Unmarshal(tallyRes, &tally)
+	require.NoError(err)
+	fmt.Println("tally: ", tally)
+	fmt.Println("tally.Team Support: ", tally.Team.Support)
+	fmt.Println("tally.Team Against: ", tally.Team.Against)
+	fmt.Println("tally.Team Invalid: ", tally.Team.Invalid)
+	fmt.Println("tally.Users Total Power Voted: ", tally.Users.TotalPowerVoted)
+	fmt.Println("tally.users.support: ", tally.Users.VoteCount.Support)
+	fmt.Println("tally.users.against: ", tally.Users.VoteCount.Against)
+	fmt.Println("tally.users.invalid: ", tally.Users.VoteCount.Invalid)
+	fmt.Println("tally.Reporters Total Power Voted: ", tally.Reporters.TotalPowerVoted)
+	fmt.Println("tally.reporters.support: ", tally.Reporters.VoteCount.Support)
+	fmt.Println("tally.reporters.against: ", tally.Reporters.VoteCount.Against)
+	fmt.Println("tally.reporters.invalid: ", tally.Reporters.VoteCount.Invalid)
+	fmt.Println("tally.team.support: ", tally.Team.Support)
+	fmt.Println("tally.Users.TotalGroupPower: ", tally.Users.TotalGroupPower)
+	fmt.Println("tally.Reporters.TotalGroupPower: ", tally.Reporters.TotalGroupPower)
+
+	userAgainstStr := strings.TrimSuffix(tally.Users.VoteCount.Against, "%")
+	userAgainst, err := strconv.ParseFloat(userAgainstStr, 64)
+	require.NoError(err)
+	userSupportStr := strings.TrimSuffix(tally.Users.VoteCount.Support, "%")
+	userSupport, err := strconv.ParseFloat(userSupportStr, 64)
+	require.NoError(err)
+	userInvalidStr := strings.TrimSuffix(tally.Users.VoteCount.Invalid, "%")
+	userInvalid, err := strconv.ParseFloat(userInvalidStr, 64)
+	require.NoError(err)
+	totalUsersPowerVoted := userAgainst + userSupport + userInvalid
+	require.Greater(totalUsersPowerVoted, 0.0)
+
+	reporterAgainstStr := strings.TrimSuffix(tally.Reporters.VoteCount.Against, "%")
+	reporterAgainst, err := strconv.ParseFloat(reporterAgainstStr, 64)
+	require.NoError(err)
+	reporterSupportStr := strings.TrimSuffix(tally.Reporters.VoteCount.Support, "%")
+	reporterSupport, err := strconv.ParseFloat(reporterSupportStr, 64)
+	require.NoError(err)
+	reporterInvalidStr := strings.TrimSuffix(tally.Reporters.VoteCount.Invalid, "%")
+	reporterInvalid, err := strconv.ParseFloat(reporterInvalidStr, 64)
+	require.NoError(err)
+
+	teamSupportStr := strings.TrimSuffix(tally.Team.Support, "%")
+	teamSupport, err := strconv.ParseFloat(teamSupportStr, 64)
+	require.NoError(err)
+	totalTeamPowerVoted := teamSupport
+	require.Greater(totalTeamPowerVoted, 0.0)
+
+	totalReportersPowerVoted := reporterAgainst + reporterSupport + reporterInvalid
+	require.Greater(totalReportersPowerVoted, 0.0)
+	totalPowerVoted := totalUsersPowerVoted + totalReportersPowerVoted + totalTeamPowerVoted
+	require.Greater(totalPowerVoted, 55.0)
+	require.Less(totalPowerVoted, 56.0)
+
+	// check that dispute is executed
+	disRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	err = json.Unmarshal(disRes, &disputes)
+	require.NoError(err)
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 2) // executed
 }

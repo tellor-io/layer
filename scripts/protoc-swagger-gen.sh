@@ -28,7 +28,7 @@ mkdir ./layer/tmp/slashing
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/slashing/v1beta1/query.proto -O ./layer/tmp/slashing/query.proto
 
 mkdir ./layer/tmp/gov
-wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/gov/v1beta1/query.proto -O ./layer/tmp/gov/query.proto
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/gov/v1/query.proto -O ./layer/tmp/gov/query.proto
 
 mkdir ./layer/tmp/feegrant
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/feegrant/v1beta1/query.proto -O ./layer/tmp/feegrant/query.proto

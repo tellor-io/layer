@@ -63,12 +63,12 @@ func (s *KeeperTestSuite) TestTeamVote_SetTeamVote() {
 
 	disputeId := uint64(1)
 
-	// team votes SUPPORT, expect return 25000000
+	// team votes SUPPORT
 	teamAddr, err := k.GetTeamAddress(ctx)
 	require.NoError(err)
 	teamVote, err := k.SetTeamVote(ctx, disputeId, teamAddr, types.VoteEnum_VOTE_SUPPORT)
 	require.NoError(err)
-	require.Equal(teamVote, math.NewInt(25000000))
+	require.Equal(teamVote, math.NewInt(100000000).Quo(math.NewInt(3)))
 	// check on vote
 	votesByGroup, err := k.VoteCountsByGroup.Get(ctx, disputeId)
 	require.Equal(votesByGroup.Team.Against, uint64(0))

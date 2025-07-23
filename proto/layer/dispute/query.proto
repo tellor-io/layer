@@ -105,7 +105,8 @@ message QueryDisputesTallyRequest {
 message QueryDisputesTallyResponse {
   GroupTally users = 1;
   GroupTally reporters = 2;
-  VoteCounts team = 3;
+  FormattedVoteCounts team = 3;
+  CombinedTotal combinedTotal = 4;
 }
 
 message QueryDisputeVoteResultRequest {
