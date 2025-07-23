@@ -149,6 +149,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query no stake reports by query id",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}},
 				},
+				{
+					RpcMethod:      "GetTipTotal",
+					Use:            "get-tip-total",
+					Short:          "Query total tips",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},

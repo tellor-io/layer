@@ -18,10 +18,21 @@ message VoteCounts {
   uint64 invalid = 3;
 }
 
+message FormattedVoteCounts {
+  string support = 1;
+  string against = 2;
+  string invalid = 3;
+}
+
 message GroupTally {
-  VoteCounts voteCount = 1;
+  FormattedVoteCounts voteCount = 1;
   uint64 totalPowerVoted = 2;
   uint64 totalGroupPower = 3;
 }
 
+message CombinedTotal {
+  string support = 1;
+  string against = 2;
+  string invalid = 3;
+}
 
