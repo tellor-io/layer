@@ -163,7 +163,7 @@ func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest
 		if err != nil {
 			return &types.QueryDisputesTallyResponse{}, err
 		}
-		teamVoteWeight := float64(100 / 3)
+		teamVoteWeight := float64(100.0 / 3.0)
 		switch vote.Vote {
 		case types.VoteEnum_VOTE_SUPPORT:
 			teamVote.Support = fmt.Sprintf("%.2f%%", teamVoteWeight)
