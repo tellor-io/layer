@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/tellor-io/layer/x/dispute/keeper"
@@ -205,6 +206,7 @@ func (s *KeeperTestSuite) TestTallyQuery() {
 
 	res, err := q.Tally(ctx, &types.QueryDisputesTallyRequest{DisputeId: 1})
 	require.NoError(err)
+	fmt.Println(res)
 
 	require.Equal(res.Users.TotalPowerVoted, uint64(1600))
 	require.Equal(res.Reporters.TotalPowerVoted, uint64(10660))

@@ -31,8 +31,8 @@ message GroupTally {
 }
 
 message CombinedTotal {
-  uint64 support = 1;
-  uint64 against = 2;
-  uint64 invalid = 3;
+  string support = 1;
+  string against = 2;
+  string invalid = 3;
 }
 

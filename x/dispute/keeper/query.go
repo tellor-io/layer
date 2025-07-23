@@ -143,12 +143,9 @@ func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest
 		userInvalidPerc = 0
 	}
 
-	// sum up each vote choice total (excluding team for now)
-	combinedTotal := &types.CombinedTotal{
-		Support: uint64(userForPerc + reporterForPerc),
-		Against: uint64(userAgainstPerc + reporterAgainstPerc),
-		Invalid: uint64(userInvalidPerc + reporterInvalidPerc),
-	}
+	supportFloat := userForPerc + reporterForPerc
+	againstFloat := userAgainstPerc + reporterAgainstPerc
+	invalidFloat := userInvalidPerc + reporterInvalidPerc
 
 	// get team address and check if they voted
 	teamVote := &types.FormattedVoteCounts{Support: "0.00%", Against: "0.00%", Invalid: "0.00%"}
@@ -166,18 +163,25 @@ func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest
 		if err != nil {
 			return &types.QueryDisputesTallyResponse{}, err
 		}
-		teamVoteWeight := uint64(100 / 3)
+		teamVoteWeight := float64(100 / 3)
 		switch vote.Vote {
 		case types.VoteEnum_VOTE_SUPPORT:
-			teamVote.Support = fmt.Sprintf("%.2f%%", 100.0/3.0)
-			combinedTotal.Support += teamVoteWeight
+			teamVote.Support = fmt.Sprintf("%.2f%%", teamVoteWeight)
+			supportFloat += teamVoteWeight
 		case types.VoteEnum_VOTE_AGAINST:
-			teamVote.Against = fmt.Sprintf("%.2f%%", 100.0/3.0)
-			combinedTotal.Against += teamVoteWeight
+			teamVote.Against = fmt.Sprintf("%.2f%%", teamVoteWeight)
+			againstFloat += teamVoteWeight
 		case types.VoteEnum_VOTE_INVALID:
-			teamVote.Invalid = fmt.Sprintf("%.2f%%", 100.0/3.0)
-			combinedTotal.Invalid += teamVoteWeight
+			teamVote.Invalid = fmt.Sprintf("%.2f%%", teamVoteWeight)
+			invalidFloat += teamVoteWeight
 		}
+	}
+
+	// sum up each vote choice total
+	combinedTotal := &types.CombinedTotal{
+		Support: fmt.Sprintf("%.2f%%", supportFloat),
+		Against: fmt.Sprintf("%.2f%%", againstFloat),
+		Invalid: fmt.Sprintf("%.2f%%", invalidFloat),
 	}
 
 	// return % for each category by group, and total % for each category

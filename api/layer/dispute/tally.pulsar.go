@@ -2264,20 +2264,20 @@ func (x *fastReflection_CombinedTotal) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_CombinedTotal) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Support != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.Support)
+	if x.Support != "" {
+		value := protoreflect.ValueOfString(x.Support)
 		if !f(fd_CombinedTotal_support, value) {
 			return
 		}
 	}
-	if x.Against != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.Against)
+	if x.Against != "" {
+		value := protoreflect.ValueOfString(x.Against)
 		if !f(fd_CombinedTotal_against, value) {
 			return
 		}
 	}
-	if x.Invalid != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.Invalid)
+	if x.Invalid != "" {
+		value := protoreflect.ValueOfString(x.Invalid)
 		if !f(fd_CombinedTotal_invalid, value) {
 			return
 		}
@@ -2298,11 +2298,11 @@ func (x *fastReflection_CombinedTotal) Range(f func(protoreflect.FieldDescriptor
 func (x *fastReflection_CombinedTotal) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "layer.dispute.CombinedTotal.support":
-		return x.Support != uint64(0)
+		return x.Support != ""
 	case "layer.dispute.CombinedTotal.against":
-		return x.Against != uint64(0)
+		return x.Against != ""
 	case "layer.dispute.CombinedTotal.invalid":
-		return x.Invalid != uint64(0)
+		return x.Invalid != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.CombinedTotal"))
@@ -2320,11 +2320,11 @@ func (x *fastReflection_CombinedTotal) Has(fd protoreflect.FieldDescriptor) bool
 func (x *fastReflection_CombinedTotal) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "layer.dispute.CombinedTotal.support":
-		x.Support = uint64(0)
+		x.Support = ""
 	case "layer.dispute.CombinedTotal.against":
-		x.Against = uint64(0)
+		x.Against = ""
 	case "layer.dispute.CombinedTotal.invalid":
-		x.Invalid = uint64(0)
+		x.Invalid = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.CombinedTotal"))
@@ -2343,13 +2343,13 @@ func (x *fastReflection_CombinedTotal) Get(descriptor protoreflect.FieldDescript
 	switch descriptor.FullName() {
 	case "layer.dispute.CombinedTotal.support":
 		value := x.Support
-		return protoreflect.ValueOfUint64(value)
+		return protoreflect.ValueOfString(value)
 	case "layer.dispute.CombinedTotal.against":
 		value := x.Against
-		return protoreflect.ValueOfUint64(value)
+		return protoreflect.ValueOfString(value)
 	case "layer.dispute.CombinedTotal.invalid":
 		value := x.Invalid
-		return protoreflect.ValueOfUint64(value)
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.CombinedTotal"))
@@ -2371,11 +2371,11 @@ func (x *fastReflection_CombinedTotal) Get(descriptor protoreflect.FieldDescript
 func (x *fastReflection_CombinedTotal) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "layer.dispute.CombinedTotal.support":
-		x.Support = value.Uint()
+		x.Support = value.Interface().(string)
 	case "layer.dispute.CombinedTotal.against":
-		x.Against = value.Uint()
+		x.Against = value.Interface().(string)
 	case "layer.dispute.CombinedTotal.invalid":
-		x.Invalid = value.Uint()
+		x.Invalid = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.CombinedTotal"))
@@ -2416,11 +2416,11 @@ func (x *fastReflection_CombinedTotal) Mutable(fd protoreflect.FieldDescriptor) 
 func (x *fastReflection_CombinedTotal) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "layer.dispute.CombinedTotal.support":
-		return protoreflect.ValueOfUint64(uint64(0))
+		return protoreflect.ValueOfString("")
 	case "layer.dispute.CombinedTotal.against":
-		return protoreflect.ValueOfUint64(uint64(0))
+		return protoreflect.ValueOfString("")
 	case "layer.dispute.CombinedTotal.invalid":
-		return protoreflect.ValueOfUint64(uint64(0))
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.CombinedTotal"))
@@ -2490,14 +2490,17 @@ func (x *fastReflection_CombinedTotal) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.Support != 0 {
-			n += 1 + runtime.Sov(uint64(x.Support))
+		l = len(x.Support)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Against != 0 {
-			n += 1 + runtime.Sov(uint64(x.Against))
+		l = len(x.Against)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Invalid != 0 {
-			n += 1 + runtime.Sov(uint64(x.Invalid))
+		l = len(x.Invalid)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -2528,20 +2531,26 @@ func (x *fastReflection_CombinedTotal) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Invalid != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Invalid))
+		if len(x.Invalid) > 0 {
+			i -= len(x.Invalid)
+			copy(dAtA[i:], x.Invalid)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Invalid)))
 			i--
-			dAtA[i] = 0x18
+			dAtA[i] = 0x1a
 		}
-		if x.Against != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Against))
+		if len(x.Against) > 0 {
+			i -= len(x.Against)
+			copy(dAtA[i:], x.Against)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Against)))
 			i--
-			dAtA[i] = 0x10
+			dAtA[i] = 0x12
 		}
-		if x.Support != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Support))
+		if len(x.Support) > 0 {
+			i -= len(x.Support)
+			copy(dAtA[i:], x.Support)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Support)))
 			i--
-			dAtA[i] = 0x8
+			dAtA[i] = 0xa
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -2593,10 +2602,10 @@ func (x *fastReflection_CombinedTotal) ProtoMethods() *protoiface.Methods {
 			}
 			switch fieldNum {
 			case 1:
-				if wireType != 0 {
+				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Support", wireType)
 				}
-				x.Support = 0
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -2606,16 +2615,29 @@ func (x *fastReflection_CombinedTotal) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Support |= uint64(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Support = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
 			case 2:
-				if wireType != 0 {
+				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Against", wireType)
 				}
-				x.Against = 0
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -2625,16 +2647,29 @@ func (x *fastReflection_CombinedTotal) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Against |= uint64(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Against = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
 			case 3:
-				if wireType != 0 {
+				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Invalid", wireType)
 				}
-				x.Invalid = 0
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -2644,11 +2679,24 @@ func (x *fastReflection_CombinedTotal) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Invalid |= uint64(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Invalid = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2906,9 +2954,9 @@ type CombinedTotal struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Support uint64 `protobuf:"varint,1,opt,name=support,proto3" json:"support,omitempty"`
-	Against uint64 `protobuf:"varint,2,opt,name=against,proto3" json:"against,omitempty"`
-	Invalid uint64 `protobuf:"varint,3,opt,name=invalid,proto3" json:"invalid,omitempty"`
+	Support string `protobuf:"bytes,1,opt,name=support,proto3" json:"support,omitempty"`
+	Against string `protobuf:"bytes,2,opt,name=against,proto3" json:"against,omitempty"`
+	Invalid string `protobuf:"bytes,3,opt,name=invalid,proto3" json:"invalid,omitempty"`
 }
 
 func (x *CombinedTotal) Reset() {
@@ -2931,25 +2979,25 @@ func (*CombinedTotal) Descriptor() ([]byte, []int) {
 	return file_layer_dispute_tally_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *CombinedTotal) GetSupport() uint64 {
+func (x *CombinedTotal) GetSupport() string {
 	if x != nil {
 		return x.Support
 	}
-	return 0
+	return ""
 }
 
-func (x *CombinedTotal) GetAgainst() uint64 {
+func (x *CombinedTotal) GetAgainst() string {
 	if x != nil {
 		return x.Against
 	}
-	return 0
+	return ""
 }
 
-func (x *CombinedTotal) GetInvalid() uint64 {
+func (x *CombinedTotal) GetInvalid() string {
 	if x != nil {
 		return x.Invalid
 	}
-	return 0
+	return ""
 }
 
 var File_layer_dispute_tally_proto protoreflect.FileDescriptor
@@ -2995,11 +3043,11 @@ var file_layer_dispute_tally_proto_rawDesc = []byte{
 	0x75, 0x70, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0f, 0x74,
 	0x6f, 0x74, 0x61, 0x6c, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x22, 0x5d,
 	0x0a, 0x0d, 0x43, 0x6f, 0x6d, 0x62, 0x69, 0x6e, 0x65, 0x64, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x12,
-	0x18, 0x0a, 0x07, 0x73, 0x75, 0x70, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04,
+	0x18, 0x0a, 0x07, 0x73, 0x75, 0x70, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
 	0x52, 0x07, 0x73, 0x75, 0x70, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x67, 0x61,
-	0x69, 0x6e, 0x73, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x61, 0x67, 0x61, 0x69,
+	0x69, 0x6e, 0x73, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x67, 0x61, 0x69,
 	0x6e, 0x73, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x69, 0x6e, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x04, 0x52, 0x07, 0x69, 0x6e, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x42, 0xa2, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x69, 0x6e, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x42, 0xa2, 0x01,
 	0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70,
 	0x75, 0x74, 0x65, 0x42, 0x0a, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
 	0x01, 0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65,

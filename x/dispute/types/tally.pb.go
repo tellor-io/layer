@@ -263,9 +263,9 @@ func (m *GroupTally) GetTotalGroupPower() uint64 {
 }
 
 type CombinedTotal struct {
-	Support uint64 `protobuf:"varint,1,opt,name=support,proto3" json:"support,omitempty"`
-	Against uint64 `protobuf:"varint,2,opt,name=against,proto3" json:"against,omitempty"`
-	Invalid uint64 `protobuf:"varint,3,opt,name=invalid,proto3" json:"invalid,omitempty"`
+	Support string `protobuf:"bytes,1,opt,name=support,proto3" json:"support,omitempty"`
+	Against string `protobuf:"bytes,2,opt,name=against,proto3" json:"against,omitempty"`
+	Invalid string `protobuf:"bytes,3,opt,name=invalid,proto3" json:"invalid,omitempty"`
 }
 
 func (m *CombinedTotal) Reset()         { *m = CombinedTotal{} }
@@ -301,25 +301,25 @@ func (m *CombinedTotal) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_CombinedTotal proto.InternalMessageInfo
 
-func (m *CombinedTotal) GetSupport() uint64 {
+func (m *CombinedTotal) GetSupport() string {
 	if m != nil {
 		return m.Support
 	}
-	return 0
+	return ""
 }
 
-func (m *CombinedTotal) GetAgainst() uint64 {
+func (m *CombinedTotal) GetAgainst() string {
 	if m != nil {
 		return m.Against
 	}
-	return 0
+	return ""
 }
 
-func (m *CombinedTotal) GetInvalid() uint64 {
+func (m *CombinedTotal) GetInvalid() string {
 	if m != nil {
 		return m.Invalid
 	}
-	return 0
+	return ""
 }
 
 func init() {
@@ -352,11 +352,11 @@ var fileDescriptor_d158d5fe40855c9d = []byte{
 	0x96, 0x98, 0xc4, 0xd9, 0x02, 0xce, 0xc1, 0xec, 0x17, 0xa8, 0x7c, 0x03, 0xce, 0xdc, 0x20, 0x7e,
 	0xe9, 0xc9, 0x9f, 0x9a, 0xac, 0x3a, 0x6c, 0x12, 0x12, 0x13, 0xb7, 0xf8, 0xcc, 0xf5, 0x72, 0x82,
 	0xfc, 0xc7, 0xf3, 0xe9, 0x49, 0xa5, 0xc6, 0xeb, 0x7c, 0x3e, 0x81, 0xf9, 0xb4, 0x73, 0x0f, 0xd5,
-	0x06, 0xf6, 0xda, 0x61, 0xc4, 0x83, 0x66, 0x2a, 0xfd, 0xed, 0xa0, 0x2f, 0x2e, 0x3f, 0x46, 0xb6,
+	0x06, 0xf6, 0xda, 0x61, 0xc4, 0x83, 0x66, 0x2a, 0xfd, 0xed, 0x0c, 0x2e, 0x2e, 0x3f, 0x46, 0xb6,
 	0x31, 0x1c, 0xd9, 0xc6, 0xd7, 0xc8, 0x36, 0x5e, 0xc7, 0x76, 0x69, 0x38, 0xb6, 0x4b, 0x9f, 0x63,
 	0xbb, 0xd4, 0x3a, 0xe8, 0x86, 0xf4, 0x94, 0xb4, 0xdd, 0x0e, 0xf6, 0x3c, 0xe2, 0x42, 0xa0, 0x3c,
 	0x0c, 0xd1, 0xcb, 0x2e, 0xfa, 0x65, 0x7a, 0xfd, 0x83, 0x98, 0xab, 0xf6, 0xaa, 0x3e, 0xe6, 0xe3,
-	0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0x45, 0xcb, 0xdd, 0xcf, 0x1b, 0x03, 0x00, 0x00,
+	0xef, 0x00, 0x00, 0x00, 0xff, 0xff, 0x8f, 0x03, 0x9f, 0x0d, 0x1b, 0x03, 0x00, 0x00,
 }
 
 func (m *Tally) Marshal() (dAtA []byte, err error) {
@@ -565,20 +565,26 @@ func (m *CombinedTotal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.Invalid != 0 {
-		i = encodeVarintTally(dAtA, i, uint64(m.Invalid))
+	if len(m.Invalid) > 0 {
+		i -= len(m.Invalid)
+		copy(dAtA[i:], m.Invalid)
+		i = encodeVarintTally(dAtA, i, uint64(len(m.Invalid)))
 		i--
-		dAtA[i] = 0x18
+		dAtA[i] = 0x1a
 	}
-	if m.Against != 0 {
-		i = encodeVarintTally(dAtA, i, uint64(m.Against))
+	if len(m.Against) > 0 {
+		i -= len(m.Against)
+		copy(dAtA[i:], m.Against)
+		i = encodeVarintTally(dAtA, i, uint64(len(m.Against)))
 		i--
-		dAtA[i] = 0x10
+		dAtA[i] = 0x12
 	}
-	if m.Support != 0 {
-		i = encodeVarintTally(dAtA, i, uint64(m.Support))
+	if len(m.Support) > 0 {
+		i -= len(m.Support)
+		copy(dAtA[i:], m.Support)
+		i = encodeVarintTally(dAtA, i, uint64(len(m.Support)))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -679,14 +685,17 @@ func (m *CombinedTotal) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if m.Support != 0 {
-		n += 1 + sovTally(uint64(m.Support))
+	l = len(m.Support)
+	if l > 0 {
+		n += 1 + l + sovTally(uint64(l))
 	}
-	if m.Against != 0 {
-		n += 1 + sovTally(uint64(m.Against))
+	l = len(m.Against)
+	if l > 0 {
+		n += 1 + l + sovTally(uint64(l))
 	}
-	if m.Invalid != 0 {
-		n += 1 + sovTally(uint64(m.Invalid))
+	l = len(m.Invalid)
+	if l > 0 {
+		n += 1 + l + sovTally(uint64(l))
 	}
 	return n
 }
@@ -1262,10 +1271,10 @@ func (m *CombinedTotal) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Support", wireType)
 			}
-			m.Support = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTally
@@ -1275,16 +1284,29 @@ func (m *CombinedTotal) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Support |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTally
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTally
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Support = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		case 2:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Against", wireType)
 			}
-			m.Against = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTally
@@ -1294,16 +1316,29 @@ func (m *CombinedTotal) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Against |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTally
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTally
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Against = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		case 3:
-			if wireType != 0 {
+			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Invalid", wireType)
 			}
-			m.Invalid = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowTally
@@ -1313,11 +1348,24 @@ func (m *CombinedTotal) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Invalid |= uint64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTally
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTally
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Invalid = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTally(dAtA[iNdEx:])
