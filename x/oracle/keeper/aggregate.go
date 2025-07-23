@@ -161,6 +161,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, query
 			sdk.NewAttribute("value", report.AggregateValue),
 			sdk.NewAttribute("aggregate_power", strconv.FormatUint(report.AggregatePower, 10)),
 			sdk.NewAttribute("micro_report_height", fmt.Sprintf("%d", report.MicroHeight)),
+			sdk.NewAttribute("micro_report_type", queryType),
 		),
 	})
 	telemetry.SetGaugeWithLabels([]string{"reporter_power_in_aggregates"}, float32(report.AggregatePower), []metrics.Label{{Name: "chain_id", Value: sdkCtx.ChainID()}, {Name: "query_id", Value: hex.EncodeToString(report.QueryId)}})
