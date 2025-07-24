@@ -1,12 +1,14 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -205,6 +207,7 @@ func (s *KeeperTestSuite) TestTallyQuery() {
 
 	res, err := q.Tally(ctx, &types.QueryDisputesTallyRequest{DisputeId: 1})
 	require.NoError(err)
+	fmt.Println(res)
 
 	require.Equal(res.Users.TotalPowerVoted, uint64(1600))
 	require.Equal(res.Reporters.TotalPowerVoted, uint64(10660))
@@ -230,4 +233,50 @@ func (s *KeeperTestSuite) TestVoteResultQuery() {
 	res, err := q.VoteResult(ctx, &types.QueryDisputeVoteResultRequest{DisputeId: 1})
 	require.NoError(err)
 	require.Equal(res.VoteResult, types.VoteResult_SUPPORT)
+}
+
+func (s *KeeperTestSuite) TestTeamVoteQuery() {
+	require := s.Require()
+	k := s.disputeKeeper
+	q := keeper.NewQuerier(k)
+	require.NotNil(q)
+	ctx := s.ctx
+
+	teamAddr, err := k.GetTeamAddress(ctx)
+	require.NoError(err)
+
+	require.NoError(k.Voter.Set(ctx, collections.Join(uint64(1), teamAddr.Bytes()), types.Voter{
+		Vote:          types.VoteEnum_VOTE_SUPPORT,
+		VoterPower:    math.NewInt(100000000).Quo(math.NewInt(3)),
+		ReporterPower: math.NewInt(0),
+		RewardClaimed: false,
+	}))
+
+	res, err := q.TeamVote(ctx, &types.QueryTeamVoteRequest{DisputeId: 1})
+	require.NoError(err)
+	require.Equal(res.TeamVote.Vote, types.VoteEnum_VOTE_SUPPORT)
+	require.Equal(res.TeamVote.VoterPower, math.NewInt(100000000).Quo(math.NewInt(3)))
+	require.Equal(res.TeamVote.ReporterPower, math.NewInt(0))
+	require.Equal(res.TeamVote.RewardClaimed, false)
+
+	// on second dispute team votes against
+	require.NoError(k.Voter.Set(ctx, collections.Join(uint64(2), teamAddr.Bytes()), types.Voter{
+		Vote:          types.VoteEnum_VOTE_AGAINST,
+		VoterPower:    math.NewInt(100000000).Quo(math.NewInt(3)),
+		ReporterPower: math.NewInt(0),
+		RewardClaimed: false,
+	}))
+
+	res, err = q.TeamVote(ctx, &types.QueryTeamVoteRequest{DisputeId: 2})
+	require.NoError(err)
+	require.Equal(res.TeamVote.Vote, types.VoteEnum_VOTE_AGAINST)
+	require.Equal(res.TeamVote.VoterPower, math.NewInt(100000000).Quo(math.NewInt(3)))
+
+	// query dispute 1 again, expect no change
+	res, err = q.TeamVote(ctx, &types.QueryTeamVoteRequest{DisputeId: 1})
+	require.NoError(err)
+	require.Equal(res.TeamVote.Vote, types.VoteEnum_VOTE_SUPPORT)
+	require.Equal(res.TeamVote.VoterPower, math.NewInt(100000000).Quo(math.NewInt(3)))
+	require.Equal(res.TeamVote.ReporterPower, math.NewInt(0))
+	require.Equal(res.TeamVote.RewardClaimed, false)
 }

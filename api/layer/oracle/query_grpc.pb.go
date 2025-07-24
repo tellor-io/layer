@@ -70,6 +70,8 @@ type QueryClient interface {
 	GetReportersNoStakeReports(ctx context.Context, in *QueryGetReportersNoStakeReportsRequest, opts ...grpc.CallOption) (*QueryGetReportersNoStakeReportsResponse, error)
 	// Queries a list of no stake reports by query id
 	GetNoStakeReportsByQueryId(ctx context.Context, in *QueryGetNoStakeReportsByQueryIdRequest, opts ...grpc.CallOption) (*QueryGetNoStakeReportsByQueryIdResponse, error)
+	// Queries the total tips
+	GetTipTotal(ctx context.Context, in *QueryGetTipTotalRequest, opts ...grpc.CallOption) (*QueryGetTipTotalResponse, error)
 }
 
 type queryClient struct {
@@ -314,6 +316,15 @@ func (c *queryClient) GetNoStakeReportsByQueryId(ctx context.Context, in *QueryG
 	return out, nil
 }
 
+func (c *queryClient) GetTipTotal(ctx context.Context, in *QueryGetTipTotalRequest, opts ...grpc.CallOption) (*QueryGetTipTotalResponse, error) {
+	out := new(QueryGetTipTotalResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetTipTotal", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -370,6 +381,8 @@ type QueryServer interface {
 	GetReportersNoStakeReports(context.Context, *QueryGetReportersNoStakeReportsRequest) (*QueryGetReportersNoStakeReportsResponse, error)
 	// Queries a list of no stake reports by query id
 	GetNoStakeReportsByQueryId(context.Context, *QueryGetNoStakeReportsByQueryIdRequest) (*QueryGetNoStakeReportsByQueryIdResponse, error)
+	// Queries the total tips
+	GetTipTotal(context.Context, *QueryGetTipTotalRequest) (*QueryGetTipTotalResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -454,6 +467,9 @@ func (UnimplementedQueryServer) GetReportersNoStakeReports(context.Context, *Que
 }
 func (UnimplementedQueryServer) GetNoStakeReportsByQueryId(context.Context, *QueryGetNoStakeReportsByQueryIdRequest) (*QueryGetNoStakeReportsByQueryIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetNoStakeReportsByQueryId not implemented")
+}
+func (UnimplementedQueryServer) GetTipTotal(context.Context, *QueryGetTipTotalRequest) (*QueryGetTipTotalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTipTotal not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -936,6 +952,24 @@ func _Query_GetNoStakeReportsByQueryId_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetTipTotal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetTipTotalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetTipTotal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Query/GetTipTotal",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetTipTotal(ctx, req.(*QueryGetTipTotalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1046,6 +1080,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetNoStakeReportsByQueryId",
 			Handler:    _Query_GetNoStakeReportsByQueryId_Handler,
+		},
+		{
+			MethodName: "GetTipTotal",
+			Handler:    _Query_GetTipTotal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

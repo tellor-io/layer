@@ -38,3 +38,28 @@ func (s *KeeperTestSuite) TestQueryGetUserTipTotal() {
 	require.NoError(err)
 	require.Equal(res.TotalTips, math.NewInt(1))
 }
+
+func (s *KeeperTestSuite) TestQueryGetTipTotal() {
+	require := s.Require()
+	k := s.oracleKeeper
+	q := s.queryClient
+	ctx := s.ctx
+
+	// nil request
+	_, err := q.GetTipTotal(ctx, nil)
+	require.ErrorContains(err, "invalid request")
+
+	// query with 0 tips
+	req := &types.QueryGetTipTotalRequest{}
+	res, err := q.GetTipTotal(ctx, req)
+	require.NoError(err)
+	require.Equal(res.TotalTips, math.ZeroInt())
+
+	// query with a tip set
+	require.NoError(k.TotalTips.Set(ctx, 1, math.NewInt(1)))
+
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	res, err = q.GetTipTotal(ctx, req)
+	require.NoError(err)
+	require.Equal(res.TotalTips, math.NewInt(1))
+}
