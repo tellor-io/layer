@@ -43,4 +43,5 @@ echo "Starting reporter..."
   --home /chain/validator-${VALIDATOR_NUM}/.layer \
   --keyring-backend test \
   --node tcp://localhost:26657 \
-  --broadcast-mode sync 
+  --broadcast-mode sync \
+  --prometheus-port 26661

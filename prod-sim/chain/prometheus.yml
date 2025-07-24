@@ -25,3 +25,24 @@ scrape_configs:
       - targets: ['validator-node-2:26660']
     params:
       format: ['prometheus']
+  - job_name: 'reporter-0'
+    scrape_interval: 5s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['validator-node-0:26661']
+    params:
+      format: ['prometheus']
+  - job_name: 'reporter-1'
+    scrape_interval: 5s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['validator-node-1:26661']
+    params:
+      format: ['prometheus']
+  - job_name: 'reporter-2'
+    scrape_interval: 5s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['validator-node-2:26661']
+    params:
+      format: ['prometheus']
