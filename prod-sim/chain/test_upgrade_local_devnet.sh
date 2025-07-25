@@ -1,8 +1,8 @@
 #!/bin/bash
 
-PRE_UPGRADE_BRANCH="tags/v4.0.3"
-UPGRADE_BRANCH="tags/v5.0.0"
-UPGRADE_NAME="v5.0.0"
+PRE_UPGRADE_BRANCH="tags/v5.1.0"
+UPGRADE_BRANCH="tags/v5.1.1"
+UPGRADE_NAME="v5.1.1"
 
 # Function to execute transaction with retry
 execute_with_retry() {
