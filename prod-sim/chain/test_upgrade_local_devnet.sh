@@ -4,6 +4,11 @@ PRE_UPGRADE_BRANCH="tags/v5.1.0"
 UPGRADE_BRANCH="tags/v5.1.1"
 UPGRADE_NAME="v5.1.1"
 
+# Function to log messages
+log_message() {
+    echo "[$TIMESTAMP] $1" | tee -a "$LOG_FILE"
+}
+
 # Function to execute transaction with retry
 execute_with_retry() {
     local cmd=$1
