@@ -188,23 +188,16 @@ func (k Querier) SelectionsTo(ctx context.Context, req *types.QuerySelectionsToR
 		if err != nil {
 			return nil, err
 		}
-		// get individual delegation(s) info
-		var individualDelegations []*types.IndividualDelegation
-		individualDelegations, err = k.getIndividualDelegations(ctx, selectorAddr)
+		// get individual delegation(s) info with totals calculated
+		individualDelegations, totalTokens, delegationCount, err := k.getIndividualDelegations(ctx, selectorAddr)
 		if err != nil {
 			return nil, err
-		}
-
-		// calculate total tokens and count from individual delegations
-		var totalTokens math.Int
-		for _, delegation := range individualDelegations {
-			totalTokens = totalTokens.Add(delegation.Amount)
 		}
 
 		formattedSelection := &types.FormattedSelection{
 			Selector:              sdk.AccAddress(selectorAddr).String(),
 			LockedUntilTime:       selection.GetLockedUntilTime(),
-			DelegationsCount:      uint64(len(individualDelegations)),
+			DelegationsCount:      delegationCount,
 			DelegationsTotal:      totalTokens,
 			IndividualDelegations: individualDelegations,
 		}
@@ -216,8 +209,9 @@ func (k Querier) SelectionsTo(ctx context.Context, req *types.QuerySelectionsToR
 	}, nil
 }
 
-func (k Querier) getIndividualDelegations(ctx context.Context, selectorAddr sdk.AccAddress) ([]*types.IndividualDelegation, error) {
+func (k Querier) getIndividualDelegations(ctx context.Context, selectorAddr sdk.AccAddress) ([]*types.IndividualDelegation, math.Int, uint64, error) {
 	var individualDelegations []*types.IndividualDelegation
+	var totalTokens math.Int = math.ZeroInt()
 	var iterError error
 
 	err := k.stakingKeeper.IterateDelegatorDelegations(ctx, selectorAddr, func(delegation stakingtypes.Delegation) (stop bool) {
@@ -237,14 +231,15 @@ func (k Querier) getIndividualDelegations(ctx context.Context, selectorAddr sdk.
 				ValidatorAddress: delegation.ValidatorAddress,
 				Amount:           delTokens,
 			})
+			totalTokens = totalTokens.Add(delTokens)
 		}
 		return false
 	})
 	if err != nil {
-		return nil, err
+		return nil, math.ZeroInt(), 0, err
 	}
 	if iterError != nil {
-		return nil, iterError
+		return nil, math.ZeroInt(), 0, iterError
 	}
-	return individualDelegations, nil
+	return individualDelegations, totalTokens, uint64(len(individualDelegations)), nil
 }
