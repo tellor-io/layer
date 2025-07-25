@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PRE_UPGRADE_BRANCH="tags/v5.1.0"
-UPGRADE_BRANCH="tags/v5.1.1"
+UPGRADE_BRANCH="feat/v5.1.1-upgrade-handler"
 UPGRADE_NAME="v5.1.1"
 
 # Function to log messages
