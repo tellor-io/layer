@@ -21,3 +21,37 @@ message Selection {
   // delegations_count is the number of delegations to the reporter
   uint64 delegations_count = 3;
 }
+
+// IndividualDelegation represents a single delegation to a validator
+message IndividualDelegation {
+  // validator_address is the address of the validator
+  string validator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // amount is the delegation amount in tokens
+  string amount = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// FormattedSelection is a type that represents a selector's information for the SelectionsTo query
+message FormattedSelection {
+  // selector is the address of the selector
+  string selector = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // locked_until_time is the time until which the tokens are locked before they
+  // can be used for reporting again
+  google.protobuf.Timestamp locked_until_time = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
+  ];
+  // delegations_count is the number of delegations the selector has made to validators
+  uint64 delegations_count = 3;
+  // delegations_total is the total power of the delegations the selector has made to validators
+  string delegations_total = 4 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // individual_delegations contains details of each delegation (only populated when delegations_count > 1)
+  repeated IndividualDelegation individual_delegations = 5;
+}

@@ -62,6 +62,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query how much tips a selector has",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}},
 				},
+				{
+					RpcMethod:      "SelectionsTo",
+					Use:            "selections-to [reporter-address]",
+					Short:          "Query the selectors for a reporter",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},

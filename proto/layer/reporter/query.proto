@@ -9,6 +9,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "layer/reporter/oracle_reporter.proto";
 import "layer/reporter/params.proto";
+import "layer/reporter/selection.proto";
 
 option go_package = "github.com/tellor-io/layer/x/reporter/types";
 
@@ -46,6 +47,10 @@ service Query {
   //  AvailableTips queries the tips available for withdrawal for a given selector.
   rpc AvailableTips(QueryAvailableTipsRequest) returns (QueryAvailableTipsResponse) {
     option (google.api.http).get = "/tellor-io/layer/reporter/available-tips/{selector_address}";
+  }
+  // SelectionsTo queries the selections for a given reporter.
+  rpc SelectionsTo(QuerySelectionsToRequest) returns (QuerySelectionsToResponse) {
+    option (google.api.http).get = "/tellor-io/layer/reporter/selections-to/{reporter_address}";
   }
 }
 
@@ -165,4 +170,16 @@ message QueryAvailableTipsResponse {
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
     (gogoproto.nullable) = false
   ];
+}
+
+message QuerySelectionsToRequest {
+  // reporter address defines the address of the reporter to query selections for.
+  string reporter_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+message QuerySelectionsToResponse {
+  // reporter is the address of the reporter
+  string reporter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // selections contains all selectors delegated to this reporter
+  repeated FormattedSelection selections = 2;
 }
