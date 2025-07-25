@@ -196,7 +196,7 @@ func (k Querier) SelectionsTo(ctx context.Context, req *types.QuerySelectionsToR
 		}
 
 		// calculate total tokens and count from individual delegations
-		var totalTokens math.Int = math.ZeroInt()
+		var totalTokens math.Int
 		for _, delegation := range individualDelegations {
 			totalTokens = totalTokens.Add(delegation.Amount)
 		}
