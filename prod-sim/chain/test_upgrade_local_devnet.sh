@@ -1,8 +1,13 @@
 #!/bin/bash
 
-PRE_UPGRADE_BRANCH="tags/v4.0.3"
-UPGRADE_BRANCH="tags/v5.0.0"
-UPGRADE_NAME="v5.0.0"
+PRE_UPGRADE_BRANCH="tags/v5.1.0"
+UPGRADE_BRANCH="feat/v5.1.1-upgrade-handler"
+UPGRADE_NAME="v5.1.1"
+
+# Function to log messages
+log_message() {
+    echo "[$TIMESTAMP] $1" | tee -a "$LOG_FILE"
+}
 
 # Function to execute transaction with retry
 execute_with_retry() {
@@ -54,8 +59,10 @@ echo "We will be switching branches and uncommitted changes could result in erro
 echo "Switching to $PRE_UPGRADE_BRANCH branch"
 git checkout $PRE_UPGRADE_BRANCH
 
+echo "starting devnet from $PRE_UPGRADE_BRANCH branch"
 bash ./run_current_branch_devnet.sh
 
+echo "building layerd binary for tx's called using the local layerd binary"
 go build -o ../../layerd ../../cmd/layerd
 
 echo "Create upgrade proposal json"
