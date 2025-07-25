@@ -188,11 +188,6 @@ func (k Querier) SelectionsTo(ctx context.Context, req *types.QuerySelectionsToR
 		if err != nil {
 			return nil, err
 		}
-		// get selection total power and delegation count
-		tokens, count, err := k.Keeper.CheckSelectorsDelegations(ctx, selectorAddr)
-		if err != nil {
-			return nil, err
-		}
 		// get individual delegation(s) info
 		var individualDelegations []*types.IndividualDelegation
 		individualDelegations, err = k.getIndividualDelegations(ctx, selectorAddr)
@@ -200,11 +195,17 @@ func (k Querier) SelectionsTo(ctx context.Context, req *types.QuerySelectionsToR
 			return nil, err
 		}
 
+		// calculate total tokens and count from individual delegations
+		var totalTokens math.Int = math.ZeroInt()
+		for _, delegation := range individualDelegations {
+			totalTokens = totalTokens.Add(delegation.Amount)
+		}
+
 		formattedSelection := &types.FormattedSelection{
 			Selector:              sdk.AccAddress(selectorAddr).String(),
 			LockedUntilTime:       selection.GetLockedUntilTime(),
-			DelegationsCount:      uint64(count),
-			DelegationsTotal:      tokens,
+			DelegationsCount:      uint64(len(individualDelegations)),
+			DelegationsTotal:      totalTokens,
 			IndividualDelegations: individualDelegations,
 		}
 		selections = append(selections, formattedSelection)
