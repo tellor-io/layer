@@ -54,8 +54,10 @@ echo "We will be switching branches and uncommitted changes could result in erro
 echo "Switching to $PRE_UPGRADE_BRANCH branch"
 git checkout $PRE_UPGRADE_BRANCH
 
+echo "starting devnet from $PRE_UPGRADE_BRANCH branch"
 bash ./run_current_branch_devnet.sh
 
+echo "building layerd binary for tx's called using the local layerd binary"
 go build -o ../../layerd ../../cmd/layerd
 
 echo "Create upgrade proposal json"
