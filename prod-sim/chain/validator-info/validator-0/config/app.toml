@@ -87,7 +87,7 @@ service-name = ""
 # Enabled enables the application telemetry functionality. When enabled,
 # an in-memory sink is also enabled by default. Operators may also enabled
 # other sinks such as Prometheus.
-enabled = false
+enabled = true
 
 # Enable prefixing gauge values with hostname.
 enable-hostname = false
@@ -99,7 +99,7 @@ enable-hostname-label = false
 enable-service-label = false
 
 # PrometheusRetentionTime, when positive, enables a Prometheus metrics sink.
-prometheus-retention-time = 0
+prometheus-retention-time = 60
 
 # GlobalLabels defines a global set of name/value label tuples applied to all
 # metrics emitted using the wrapper functions defined in telemetry package.
@@ -107,6 +107,7 @@ prometheus-retention-time = 0
 # Example:
 # [["chain_id", "cosmoshub-1"]]
 global-labels = [
+    ["chain_id", "tellor-devnet"]
 ]
 
 # MetricsSink defines the type of metrics sink to use.

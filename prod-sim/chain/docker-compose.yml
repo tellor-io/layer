@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - VALIDATOR_NUM=0
-      - IS_FORK=true
+      - IS_FORK=false
     command: >
       sh -c '
         if [ ! -f /chain/validator-0/.layer/config/priv_validator_key.json ]; then
@@ -28,6 +28,9 @@ services:
           sed -i "s/prometheus = false/prometheus = true/" /chain/validator-0/.layer/config/config.toml
           sed -i "s/cors_allowed_origins = \\[\\]/cors_allowed_origins = [\"*\"]/" /chain/validator-0/.layer/config/config.toml
           sed -i "s/persistent_peers = \"\"/persistent_peers = \"$(cat /chain/validator-info/validator-1/node_id)@validator-node-1:26656,$(cat /chain/validator-info/validator-2/node_id)@validator-node-2:26656\"/" /chain/validator-0/.layer/config/config.toml
+          sed -i "s/prometheus-retention-time = 0/prometheus-retention-time = 60/" /chain/validator-0/.layer/config/app.toml
+          sed -i "s/global-labels = \[\]/global-labels = [[\"chain_id\", \"tellor-devnet\"]]/" /chain/validator-0/.layer/config/app.toml
+          sed -i "s/enabled = false/enabled = true/" /chain/validator-0/.layer/config/app.toml
         fi
         cp /chain/validator-info/validator-0/.env /chain/
         /chain/entrypoint.sh
@@ -37,6 +40,7 @@ services:
       - "26656:26656"
       - "1317:1317"
       - "9090:9090"
+      - "26661:26661"
     env_file:
       - ./validator-info/validator-0/.env
     volumes:
@@ -56,7 +60,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - VALIDATOR_NUM=1
-      - IS_FORK=true
+      - IS_FORK=false
     command: >
       sh -c '
         if [ ! -f /chain/validator-1/.layer/config/priv_validator_key.json ]; then
@@ -76,6 +80,9 @@ services:
           sed -i "s/prometheus = false/prometheus = true/" /chain/validator-1/.layer/config/config.toml
           sed -i "s/cors_allowed_origins = \\[\\]/cors_allowed_origins = [\"*\"]/" /chain/validator-1/.layer/config/config.toml
           sed -i "s/persistent_peers = \"\"/persistent_peers = \"$(cat /chain/validator-info/validator-0/node_id)@validator-node-0:26656,$(cat /chain/validator-info/validator-2/node_id)@validator-node-2:26656\"/" /chain/validator-1/.layer/config/config.toml
+          sed -i "s/prometheus-retention-time = 0/prometheus-retention-time = 60/" /chain/validator-1/.layer/config/app.toml
+          sed -i "s/global-labels = \[\]/global-labels = [[\"chain_id\", \"tellor-devnet\"]]/" /chain/validator-1/.layer/config/app.toml
+          sed -i "s/enabled = false/enabled = true/" /chain/validator-1/.layer/config/app.toml
         fi
         cp /chain/validator-info/validator-1/.env /chain/
         /chain/entrypoint.sh
@@ -102,7 +109,7 @@ services:
       dockerfile: Dockerfile
     environment:
       - VALIDATOR_NUM=2
-      - IS_FORK=true
+      - IS_FORK=false
     command: >
       sh -c '
         if [ ! -f /chain/validator-2/.layer/config/priv_validator_key.json ]; then
@@ -122,13 +129,16 @@ services:
           sed -i "s/prometheus = false/prometheus = true/" /chain/validator-2/.layer/config/config.toml
           sed -i "s/cors_allowed_origins = \\[\\]/cors_allowed_origins = [\"*\"]/" /chain/validator-2/.layer/config/config.toml
           sed -i "s/persistent_peers = \"\"/persistent_peers = \"$(cat /chain/validator-info/validator-0/node_id)@validator-node-0:26656,$(cat /chain/validator-info/validator-1/node_id)@validator-node-1:26656\"/" /chain/validator-2/.layer/config/config.toml
+          sed -i "s/prometheus-retention-time = 0/prometheus-retention-time = 60/" /chain/validator-2/.layer/config/app.toml
+          sed -i "s/global-labels = \[\]/global-labels = \[\[\"chain_id\", \"tellor-devnet\"]\]/" /chain/validator-2/.layer/config/app.toml
+          sed -i "s/enabled = false/enabled = true/" /chain/validator-2/.layer/config/app.toml
         fi
         cp /chain/validator-info/validator-2/.env /chain/
         /chain/entrypoint.sh
       '
     ports:
-      - "26660:26657"
-      - "26661:26656"
+      - "26662:26657"
+      - "26663:26656"
     env_file:
       - ./validator-info/validator-2/.env
     volumes:
@@ -140,6 +150,23 @@ services:
       - reporter-2-data:/chain/reporter-2
     networks:
       - layer-network
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9091:9090"  # Different port to avoid conflict
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - layer-network
 
 volumes:
   validator-0-data:
@@ -148,6 +175,7 @@ volumes:
   reporter-0-data:
   reporter-1-data:
   reporter-2-data:
+  prometheus-data:
 
 networks:
   layer-network:

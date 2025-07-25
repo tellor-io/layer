@@ -3283,32 +3283,60 @@ func TestGroupPowers(t *testing.T) {
 		fmt.Println("TX HASH (validator", i, " becomes a reporter): ", txHash)
 	}
 
-	currentCycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
+	// Register NFLSuperBowlChampion query type
+	queryType := "NFLSuperBowlChampion"
+	spec := e2e.DataSpec{
+		DocumentHash:      "legit-ipfs-hash!",
+		ResponseValueType: "string",
+		AggregationMethod: "weighted-mode",
+		AbiComponents: []*registrytypes.ABIComponent{
+			{
+				Name:            "year of game",
+				FieldType:       "string",
+				NestedComponent: []*registrytypes.ABIComponent{},
+			},
+		},
+		Registrar:         validators[0].Addr,
+		QueryType:         queryType,
+		ReportBlockWindow: 5,
+	}
+	specBz, err := json.Marshal(spec)
 	require.NoError(err)
-	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
-	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
+	txHash, err := validators[0].Val.ExecTx(ctx, validators[0].Addr, "registry", "register-spec", queryType, string(specBz), "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
-	fmt.Println("current cycle list: ", currentCycleList)
-	value := layerutil.EncodeValue(123456789.99)
+	fmt.Println("TX HASH (val0 registers NFLSuperBowlChampion query): ", txHash)
 
-	// 3 validators submit tips and report for whatever was in cycle list
+	// Generate query data for NFLSuperBowlChampion
+	queryBz, _, err := validators[0].Val.ExecQuery(ctx, "registry", "generate-querydata", queryType, "[\"2025\"]")
+	require.NoError(err)
+	var queryData e2e.QueryGenerateQuerydataResponse
+	err = json.Unmarshal(queryBz, &queryData)
+	require.NoError(err)
+	queryDataStr := queryData.QueryData
+	fmt.Println("NFLSuperBowlChampion queryData: ", queryDataStr)
+
+	value := e2e.EncodeStringValue("Pittsburgh Steelers")
+
+	// 3 validators submit tips and report for NFLSuperBowlChampion
 	tipAmt := sdk.NewCoin("loya", math.NewInt(2*1e6))
 	for i := range validators {
 		// wait 1 block
 		require.NoError(testutil.WaitForBlocks(ctx, 1, validators[i].Val))
 		// tip
-		_, _, err = validators[i].Val.Exec(ctx, validators[i].Val.TxCommand("validator", "oracle", "tip", currentCycleList.QueryData, tipAmt.String(), "--fees", "25loya", "--keyring-dir", validators[i].Val.HomeDir()), validators[i].Val.Chain.Config().Env)
+		_, _, err = validators[i].Val.Exec(ctx, validators[i].Val.TxCommand("validator", "oracle", "tip", queryDataStr, tipAmt.String(), "--fees", "25loya", "--keyring-dir", validators[i].Val.HomeDir()), validators[i].Val.Chain.Config().Env)
 		require.NoError(err)
 		// wait 1 block to prevent account sequence mismatch
 		require.NoError(testutil.WaitForBlocks(ctx, 1, validators[i].Val))
 		// submit
-		_, err := validators[i].Val.ExecTx(ctx, validators[i].Addr, "oracle", "submit-value", currentCycleList.QueryData, value, "--keyring-dir", validators[i].Val.HomeDir())
+		_, err := validators[i].Val.ExecTx(ctx, validators[i].Addr, "oracle", "submit-value", queryDataStr, value, "--keyring-dir", validators[i].Val.HomeDir())
 		require.NoError(err)
 		height, err := validators[i].Val.Height(ctx)
 		require.NoError(err)
 		fmt.Println("validator [", i, "] reported at height ", height)
 	}
 
+	// wait 5 blocks for aggregation
+	require.NoError(testutil.WaitForBlocks(ctx, 5, validators[0].Val))
 	// all val/reporters should have 1 report
 	var disputedReport e2e.MicroReport
 	for i := range validators {
@@ -3326,7 +3354,7 @@ func TestGroupPowers(t *testing.T) {
 	disputeQueryId := disputedReport.QueryID
 	disputeMetaId := disputedReport.MetaId
 	disputeFee := "500000000000loya"
-	txHash, err := validators[0].Val.ExecTx(ctx, validators[0].Addr, "dispute", "propose-dispute", validators[2].Addr, disputeMetaId, disputeQueryId, warning, disputeFee, notFromBond, "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = validators[0].Val.ExecTx(ctx, validators[0].Addr, "dispute", "propose-dispute", validators[2].Addr, disputeMetaId, disputeQueryId, warning, disputeFee, notFromBond, "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (val0 disputes val2's first report): ", txHash)
 
