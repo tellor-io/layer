@@ -211,7 +211,7 @@ func (k Querier) SelectionsTo(ctx context.Context, req *types.QuerySelectionsToR
 
 func (k Querier) getIndividualDelegations(ctx context.Context, selectorAddr sdk.AccAddress) ([]*types.IndividualDelegation, math.Int, uint64, error) {
 	var individualDelegations []*types.IndividualDelegation
-	var totalTokens math.Int = math.ZeroInt()
+	totalTokens := math.ZeroInt()
 	var iterError error
 
 	err := k.stakingKeeper.IterateDelegatorDelegations(ctx, selectorAddr, func(delegation stakingtypes.Delegation) (stop bool) {
