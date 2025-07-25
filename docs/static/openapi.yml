@@ -364,6 +364,95 @@ paths:
           type: boolean
       tags:
         - Query
+  /tellor-io/layer/reporter/selections-to/{reporter_address}:
+    get:
+      summary: SelectionsTo queries the selections for a given reporter.
+      operationId: SelectionsTo
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reporter:
+                type: string
+                title: reporter is the address of the reporter
+              selections:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    selector:
+                      type: string
+                      title: selector is the address of the selector
+                    locked_until_time:
+                      type: string
+                      format: date-time
+                      title: >-
+                        locked_until_time is the time until which the tokens are
+                        locked before they
+
+                        can be used for reporting again
+                    delegations_count:
+                      type: string
+                      format: uint64
+                      title: >-
+                        delegations_count is the number of delegations the
+                        selector has made to validators
+                    delegations_total:
+                      type: string
+                      title: >-
+                        delegations_total is the total power of the delegations
+                        the selector has made to validators
+                    individual_delegations:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          validator_address:
+                            type: string
+                            title: validator_address is the address of the validator
+                          amount:
+                            type: string
+                            title: amount is the delegation amount in tokens
+                        title: >-
+                          IndividualDelegation represents a single delegation to
+                          a validator
+                      title: >-
+                        individual_delegations contains details of each
+                        delegation (only populated when delegations_count > 1)
+                  title: >-
+                    FormattedSelection is a type that represents a selector's
+                    information for the SelectionsTo query
+                title: selections contains all selectors delegated to this reporter
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reporter_address
+          description: >-
+            reporter address defines the address of the reporter to query
+            selections for.
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
   /tellor-io/layer/reporter/selector-reporter/{selector_address}:
     get:
       summary: SelectorReporter queries the reporter of a selector.
@@ -3978,13 +4067,10 @@ paths:
                 properties:
                   support:
                     type: string
-                    format: uint64
                   against:
                     type: string
-                    format: uint64
                   invalid:
                     type: string
-                    format: uint64
         default:
           description: An unexpected error response.
           schema:
