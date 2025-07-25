@@ -347,6 +347,14 @@ func (h *HTTPClient) healthCheck(ctx context.Context) {
 	}
 }
 
+func calculateTotalValidatorSetPower(votes VoteExtensionData) (uint64, error) {
+	totalPower := uint64(0)
+	for _, vote := range votes.ExtendedCommitInfo.Votes {
+		totalPower += uint64(vote.Validator.Power)
+	}
+	return totalPower, nil
+}
+
 func processBlock(blockResponse *BlockResponse, height uint64) error {
 	log.Printf("Processing block %d", height)
 
@@ -384,6 +392,12 @@ func processBlock(blockResponse *BlockResponse, height uint64) error {
 		return fmt.Errorf("failed to unmarshal vote extension data: %w", err)
 	}
 
+	totalValidatorSetPower, err := calculateTotalValidatorSetPower(voteExtData)
+	if err != nil {
+		log.Printf("Block %d failed to calculate total validator set power: %v", height, err)
+		return fmt.Errorf("failed to calculate total validator set power: %w", err)
+	}
+
 	// Calculate vote extension participation rate
 	totalVotes := len(blockResponse.Result.Block.LastCommit.Signatures)
 	if totalVotes == 0 {
@@ -393,14 +407,16 @@ func processBlock(blockResponse *BlockResponse, height uint64) error {
 
 	// Count votes with valid vote extensions (non-empty vote_extension field)
 	votesWithExtensions := 0
+	powerThatVoted := 0
 	for _, vote := range voteExtData.ExtendedCommitInfo.Votes {
 		if vote.VoteExtension != "" {
 			votesWithExtensions++
+			powerThatVoted += vote.Validator.Power
 		}
 	}
 
 	// Calculate participation rate
-	participationRate := float64(votesWithExtensions) / float64(totalVotes) * 100.0
+	participationRate := float64(powerThatVoted) / float64(totalValidatorSetPower) * 100.0
 
 	// Write to CSV file
 	if err := writeToCSV(height, participationRate); err != nil {
@@ -413,6 +429,8 @@ func processBlock(blockResponse *BlockResponse, height uint64) error {
 	log.Printf("  - Total votes: %d", totalVotes)
 	log.Printf("  - Votes with extensions: %d", votesWithExtensions)
 	log.Printf("  - Participation rate: %.2f%%", participationRate)
+	log.Printf("  - Power that voted: %d", powerThatVoted)
+	log.Printf("  - Total validator set power: %d", totalValidatorSetPower)
 
 	// Log individual validator information for debugging
 	for i, vote := range voteExtData.ExtendedCommitInfo.Votes {
@@ -483,9 +501,9 @@ func MonitorBlocks(ctx context.Context, wg *sync.WaitGroup) {
 				retryCount++
 				log.Printf("Failed to get block %d (attempt %d/%d): %v", height+1, retryCount, fastRetries, err)
 				if retryCount < fastRetries {
-					time.Sleep(2 * time.Millisecond)
-				} else {
 					time.Sleep(50 * time.Millisecond)
+				} else {
+					time.Sleep(250 * time.Millisecond)
 				}
 
 				if totalAttempts > 15 {

@@ -7,16 +7,17 @@ import (
 	"sync"
 	"time"
 
+	"cosmossdk.io/log"
+
 	"github.com/tellor-io/layer/daemons/constants"
 	"github.com/tellor-io/layer/daemons/flags"
 	libtime "github.com/tellor-io/layer/daemons/lib/time"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/price_fetcher"
 	handler "github.com/tellor-io/layer/daemons/pricefeed/client/queryhandler"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/types"
+	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
 	servertypes "github.com/tellor-io/layer/daemons/server/types/daemons"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
-
-	"cosmossdk.io/log"
 )
 
 // Client encapsulates the logic for executing and cleanly stopping all subtasks associated with the
@@ -233,6 +234,12 @@ func (c *Client) start(ctx context.Context,
 	if err != nil {
 		panic(err)
 	}
+
+	// Initialize market pair telemetry map
+	for _, marketParam := range marketParams {
+		pricefeedmetrics.SetMarketPairForTelemetry(types.MarketId(marketParam.Id), marketParam.Pair)
+	}
+
 	priceUpdaterTicker, priceUpdaterStop := c.newTickerWithStop(int(daemonFlags.Price.LoopDelayMs))
 	// Now that all persistent subtasks have been started and all tickers and stop channels are created,
 	// signal that the startup process is complete. This needs to be called before entering the
