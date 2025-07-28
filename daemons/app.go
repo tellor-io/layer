@@ -37,12 +37,15 @@ type App struct {
 	TokenBridgeClient   *tokenbridgeclient.Client
 }
 
+// NewAppWithPrometheusPort allows specifying the prometheus port.
 func NewApp(
 	logger log.Logger,
 	chainId,
 	grpcAddress,
 	homePath string,
+	prometheusPort int,
 ) {
+	RegisterTelemetryIfEnabled(logger, homePath, prometheusPort)
 	tempDir := func() string {
 		dir, err := os.MkdirTemp("", "tellorapp")
 		if err != nil {

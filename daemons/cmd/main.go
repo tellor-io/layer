@@ -38,9 +38,12 @@ var rootCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		logger := log.NewLogger(os.Stderr, log.LevelOption(loglevel))
-		daemons.NewApp(logger, chainId, grpcAddr, homePath)
+		// Pass prometheusPort to NewApp
+		daemons.NewApp(logger, chainId, grpcAddr, homePath, prometheusPort)
 	},
 }
+
+var prometheusPort int
 
 func main() {
 	daemonflags.AddDaemonFlagsToCmd(rootCmd)
@@ -59,6 +62,7 @@ func init() {
 	rootCmd.Flags().String(flags.FlagLogLevel, zerolog.InfoLevel.String(), "The logging level (trace|debug|info|warn|error|fatal|panic|disabled or '*:<level>,<key>:<level>')")
 	rootCmd.Flags().String(flags.FlagBroadcastMode, flags.BroadcastSync, "Transaction broadcasting mode (sync|async)")
 	rootCmd.Flags().String(flags.FlagNode, "", "<host>:<port> to CometBFT RPC interface for layer")
+	rootCmd.Flags().IntVar(&prometheusPort, "prometheus-port", 26661, "Port to serve Prometheus metrics on (default 26661). Applicable only if telemetry is enabled in app.toml.")
 
 	// Marking required flags
 	if err := rootCmd.MarkFlagRequired(flags.FlagHome); err != nil {
