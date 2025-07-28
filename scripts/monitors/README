@@ -1,16 +1,41 @@
-If you want to run this as a service use this:
+Installation:
 
+1) From your layer directory, edit the event monitor's config adding your Discord webhook URL to each monitor that you would like to use.
 
+```shell
+nano scripts/monitors/event-config.yml
+```
+
+2) Test if the monitor is working. Add a webhook to the `BLOCK-TIME-ALERT` configuration in event-config.yaml:
+
+```yaml
+  - alert_name: "BLOCK-TIME-ALERT"
+    alert_type: "block-time-alert"
+    query: ""
+    webhook_url: "https://discord.com/api/edit/me/3Lqdeblahblahblah_your_webhook_url___Vd28ojxuF"
+```
+
+This start command sets the -block-time-threshold to 1s so that alert condition will be triggered:
+```shell
+go run ./scripts/monitors/monitor-events.go -config=./scripts/monitors/event-config.yml -node=palmito -block-time-threshold=1s
+```
+*note: the `-rpc-url=` flag can be used for setting a remote rpc to monitor on-chain events only.*
+
+3) Example .service file for running the event monitor as a systemd service. 
+
+Be sure to edit this example with your correct local paths. `/YOUR/GO/PATH` is the output of `which go` on your machine:
+
+```shell
 [Unit]
 Description=Layer Event Monitor Service
 After=network.target
 
 [Service]
 Type=simple
-User=ubuntu
-Group=ubuntu
-WorkingDirectory=/home/ubuntu/layer
-ExecStart=/snap/bin/go run /home/ubuntu/layer/scripts/monitors/monitor-events.go -rpc-url=127.0.0.1:26657 -config=/home/ubuntu/layer/scripts/monitors/event-config.yml -node=rpc
+User=<USERNAME>
+Group=<USERNAME>
+WorkingDirectory=/home/<USERNAME>/layer
+ExecStart=/YOUR/GO/PATH run /home/<USERNAME>/layer/scripts/monitors/monitor-events.go -rpc-url=127.0.0.1:26657 -config=/home/<USERNAME>/layer/scripts/monitors/event-config.yml
 Restart=always
 RestartSec=10
 StandardOutput=append:/var/log/layer/monitor-events.log
@@ -18,7 +43,4 @@ StandardError=append:/var/log/layer/monitor-events.error.log
 
 [Install]
 WantedBy=multi-user.target
-
-
-If you want to run it locally use something like this after setting up your event config:
-go run ./scripts/monitors/monitor-events.go -rpc-url=node-palmito.tellorlayer.com -config=./scripts/monitors/event-config.yml -node=palmito -block-time-threshold=3s
+```
