@@ -92,7 +92,7 @@ func main() {
 	if runOnce {
 		log.Println("Running report once immediately...")
 		if err := generateAndSendReports(ctx, dataFolder, valsetUpdateChannel, voteExtParticipationChannel); err != nil {
-			log.Fatalf("Error generating reports: %v", err)
+			log.Printf("Error generating reports: %v", err)
 		}
 		return
 	}
