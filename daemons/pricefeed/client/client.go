@@ -7,8 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"cosmossdk.io/log"
-
 	"github.com/tellor-io/layer/daemons/constants"
 	"github.com/tellor-io/layer/daemons/flags"
 	libtime "github.com/tellor-io/layer/daemons/lib/time"
@@ -18,6 +16,8 @@ import (
 	pricefeedmetrics "github.com/tellor-io/layer/daemons/pricefeed/metrics"
 	servertypes "github.com/tellor-io/layer/daemons/server/types/daemons"
 	daemontypes "github.com/tellor-io/layer/daemons/types"
+
+	"cosmossdk.io/log"
 )
 
 // Client encapsulates the logic for executing and cleanly stopping all subtasks associated with the
