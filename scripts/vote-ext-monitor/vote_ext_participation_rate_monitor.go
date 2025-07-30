@@ -179,7 +179,7 @@ func initCSVFile() error {
 	// Only write headers if this is a new file
 	if !fileExists {
 		// Write headers
-		headers := []string{"height", "vote_ext_participation_rate"}
+		headers := []string{"height", "timestamp", "vote_ext_participation_rate"}
 		if err := csvWriter.Write(headers); err != nil {
 			return fmt.Errorf("failed to write CSV headers: %w", err)
 		}
@@ -198,12 +198,13 @@ func initCSVFile() error {
 }
 
 // writeToCSV writes a row to the CSV file
-func writeToCSV(height uint64, participationRate float64) error {
+func writeToCSV(height, timestamp uint64, participationRate float64) error {
 	csvMutex.Lock()
 	defer csvMutex.Unlock()
 
 	row := []string{
 		strconv.FormatUint(height, 10),
+		strconv.FormatUint(timestamp, 10),
 		fmt.Sprintf("%.2f", participationRate),
 	}
 
@@ -419,7 +420,7 @@ func processBlock(blockResponse *BlockResponse, height uint64) error {
 	participationRate := float64(powerThatVoted) / float64(totalValidatorSetPower) * 100.0
 
 	// Write to CSV file
-	if err := writeToCSV(height, participationRate); err != nil {
+	if err := writeToCSV(height, uint64(time.Now().Unix()), participationRate); err != nil {
 		log.Printf("Block %d failed to write to CSV: %v", height, err)
 		// Don't return error here as we still want to log the results
 	}
