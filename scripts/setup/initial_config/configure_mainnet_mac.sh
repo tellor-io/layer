@@ -1,18 +1,46 @@
 #!/bin/bash
 
-# clear the terminal
-clear
-
 # Stop execution if any command fails
 set -e
 
-export LAYER_NODE_URL=https://node-palmito.tellorlayer.com/rpc/
-export RPC_NODE_ID=ac7c10dc3de67c4394271c564671eeed4ac6f0e0
+export LAYER_NODE_URL=https://mainnet.tellorlayer.com/rpc/
+export RPC_NODE_ID=cbb94e01df344fdfdee1fdf2f9bb481712e7ef8d
 export KEYRING_BACKEND="test"
-export PEERS="8d19cdf430e491d6d6106863c4c466b75a17088a@54.153.125.203:26656,c7b175a5bafb35176cdcba3027e764a0dbd0811c@34.219.95.82:26656,05105e8bb28e8c5ace1cecacefb8d4efb0338ec6@18.218.114.74:26656,705f6154c6c6aeb0ba36c8b53639a5daa1b186f6@3.80.39.230:26656,1f6522a346209ee99ecb4d3e897d9d97633ae146@3.101.138.30:26656"
-export LAYER_HOME="/home/$(logname)/.layer"
-export STATE_SYNC_RPC="https://node-palmito.tellorlayer.com/rpc/"
-# export KEY_NAME="test"
+export PEERS="5a9db46eceb055c9238833aa54e15a2a32a09c9a@54.67.36.145:26656,f2644778a8a2ca3b55ec65f1b7799d32d4a7098e@54.149.160.93:26656,2904aa32501548e127d3198c8f5181fb4d67bbe6@18.116.23.104:26656"
+export LAYER_HOME="/Users/$USER/.layer"
+export STATE_SYNC_RPC="https://mainnet.tellorlayer.com/rpc/"
+export KEY_NAME="test"
+
+#print an ascii art of the tellor logo
+echo "--------------------------------"
+echo "Welcome to the..."
+echo "
+████████╗███████╗██╗     ██╗      ██████╗ ██████╗ 
+╚══██╔══╝██╔════╝██║     ██║     ██╔═══██╗██╔══██╗
+   ██║   █████╗  ██║     ██║     ██║   ██║██████╔╝
+   ██║   ██╔══╝  ██║     ██║     ██║   ██║██╔══██╗
+   ██║   ███████╗███████╗███████╗╚██████╔╝██║  ██║
+   ╚═╝   ╚══════╝╚══════╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝                                                                   
+"
+echo "Mainnet Setup Script for Mac"
+echo "--------------------------------"
+echo "This is a guided setup script for the Tellor Mainnet."
+echo ""
+echo "LAYER_NODE_URL: $LAYER_NODE_URL"
+echo "RPC_NODE_ID: $RPC_NODE_ID"
+echo "KEYRING_BACKEND: $KEYRING_BACKEND"
+echo "PEERS: $PEERS"
+echo "LAYER_HOME: $LAYER_HOME"
+echo "STATE_SYNC_RPC: $STATE_SYNC_RPC"
+echo ""
+echo "--------------------------------"
+read -p "Do you want to continue? (y/n): " continue_choice
+
+
+if [ "$continue_choice" != "y" ]; then
+    echo "Exiting..."
+    exit 1
+fi
 
 # check if .layer directory exists
 if [ -d "$LAYER_HOME" ]; then
@@ -26,19 +54,19 @@ fi
 
 # initialize layer directory
 echo "Initializing layer directory..."
-./layerd init layer --chain-id layertest-4
+./layerd init layer --chain-id tellor-1
 
 export STATE_SYNC_NODE_ID=$(./layerd status --node $STATE_SYNC_RPC | jq -r '.node_info.id')
 
 echo "Change min gas price to 1loya in config files..."
-sed -i 's/[0-9]\+stake/1loya/g' $LAYER_HOME/config/app.toml
+sed -i '' 's/[0-9]\+stake/1loya/g' $LAYER_HOME/config/app.toml
 
 echo "Set Chain Id to layer in client config file..."
-sed -i 's/^chain-id = .*$/chain-id = "layertest-4"/g' $LAYER_HOME/config/client.toml
+sed -i '' 's/^chain-id = .*$/chain-id = "tellor-1"/g' $LAYER_HOME/config/client.toml
 
 # Modify timeout_commit in config.toml for node
 echo "Modifying timeout_commit in config.toml for node..."
-sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/' $LAYER_HOME/config/config.toml
+sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' $LAYER_HOME/config/config.toml
 
 # Check if user wants to open up node's API and RPC to outside traffic
 echo "--------------------------------"
@@ -53,10 +81,10 @@ read -p "Select an option [1-2]: " open_ports_choice
 case "$open_ports_choice" in
   1)
     echo "Opening up node's API to outside traffic..."
-    sed -i 's/^address = "tcp:\/\/localhost:1317"/address = "tcp:\/\/0.0.0.0:1317"/g' $LAYER_HOME/config/app.toml
+    sed -i '' 's/^address = "tcp:\/\/localhost:1317"/address = "tcp:\/\/0.0.0.0:1317"/g' $LAYER_HOME/config/app.toml
 
     echo "Opening up node's RPC to outside traffic..."
-    sed -i 's/^laddr = "tcp:\/\/127.0.0.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/g' $LAYER_HOME/config/config.toml
+    sed -i '' 's/^laddr = "tcp:\/\/127.0.0.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/g' $LAYER_HOME/config/config.toml
     ;;
   2)
     echo "Leaving API and RPC bound to localhost only."
@@ -68,13 +96,13 @@ esac
 
 # Modify cors to accept *
 echo "Modify cors to accept *"
-sed -i 's/^cors_allowed_origins = \[\]/cors_allowed_origins = \["\*"\]/g' $LAYER_HOME/config/config.toml
+sed -i '' 's/^cors_allowed_origins = \[\]/cors_allowed_origins = \["\*"\]/g' $LAYER_HOME/config/config.toml
 
 # Modify keyring-backend in client.toml for node
 echo "Modifying keyring-backend in client.toml for node..."
-sed -i 's/^keyring-backend = "os"/keyring-backend = "'$KEYRING_BACKEND'"/g' $LAYER_HOME/config/client.toml
+sed -i '' 's/^keyring-backend = "os"/keyring-backend = "'$KEYRING_BACKEND'"/g' $LAYER_HOME/config/client.toml
 # update for main dir as well. why is this needed?
-sed -i 's/keyring-backend = "os"/keyring-backend = "'$KEYRING_BACKEND'"/g' $LAYER_HOME/config/client.toml
+sed -i '' 's/keyring-backend = "os"/keyring-backend = "'$KEYRING_BACKEND'"/g' $LAYER_HOME/config/client.toml
 
 rm -f $LAYER_HOME/config/genesis.json
 # get genesis file from running node's rpc
@@ -86,7 +114,7 @@ fi
 
 # set initial seeds / peers
 echo "Running Tellor node id: $RPC_NODE_ID. Configuring persistent peers..."
-sed -i 's/persistent_peers = ""/persistent_peers = "'$PEERS'"/g' $LAYER_HOME/config/config.toml
+sed -i '' 's/persistent_peers = ""/persistent_peers = "'$PEERS'"/g' $LAYER_HOME/config/config.toml
 
 # Check if user wants to create or import an account
 while true; do
@@ -143,17 +171,17 @@ case "$statesync_choice" in
     echo "Configuring state sync..."
     
     # set statesync enable = true
-    sed -i "s|^enable = .*|enable = true|" $LAYER_HOME/config/config.toml
-    sed -i "s|^rpc_servers = .*|rpc_servers = \"$STATE_SYNC_RPC,$STATE_SYNC_RPC\"|" $LAYER_HOME/config/config.toml
+    sed -i '' "s|^enable = .*|enable = true|" $LAYER_HOME/config/config.toml
+    sed -i '' "s|^rpc_servers = .*|rpc_servers = \"$STATE_SYNC_RPC,$STATE_SYNC_RPC\"|" $LAYER_HOME/config/config.toml
 
     # get current height from state sync node
     CURRENT_HEIGHT=$(./layerd status --node $STATE_SYNC_RPC | jq -r '.sync_info.latest_block_height')
 
     # set configs so temporary node will start
     export TRUSTED_HEIGHT=$(($CURRENT_HEIGHT - 35500))
-    sed -i "s|^trust_height = .*|trust_height = $TRUSTED_HEIGHT|" $LAYER_HOME/config/config.toml
+    sed -i '' "s|^trust_height = .*|trust_height = $TRUSTED_HEIGHT|" $LAYER_HOME/config/config.toml
     export TRUSTED_HASH=$(curl -s "$STATE_SYNC_RPC/block?height=$TRUSTED_HEIGHT" | jq -r .result.block_id.hash)
-    sed -i "s|^trust_hash = .*|trust_hash = \"$TRUSTED_HASH\"|" $LAYER_HOME/config/config.toml
+    sed -i '' "s|^trust_hash = .*|trust_hash = \"$TRUSTED_HASH\"|" $LAYER_HOME/config/config.toml
     
     echo "State sync configuration complete!"
     ;;
