@@ -7,10 +7,12 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/pelletier/go-toml"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+
+	"cosmossdk.io/log"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 type TelemetryConfig struct {
