@@ -513,7 +513,7 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 	}
 
 	wsProtocol, _ := getProtocol(rpcURL)
-	wsUrl := url.URL{Scheme: wsProtocol, Host: rpcURL, Path: "/rpc/websocket"}
+	wsUrl := url.URL{Scheme: wsProtocol, Host: rpcURL, Path: "/websocket"}
 	client := NewWebSocketClient(wsUrl.String())
 
 	// Start health check
