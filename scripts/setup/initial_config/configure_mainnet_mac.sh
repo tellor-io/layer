@@ -6,7 +6,7 @@ set -e
 export LAYER_NODE_URL=https://mainnet.tellorlayer.com/rpc/
 export RPC_NODE_ID=cbb94e01df344fdfdee1fdf2f9bb481712e7ef8d
 export KEYRING_BACKEND="test"
-export PEERS="5a9db46eceb055c9238833aa54e15a2a32a09c9a@54.67.36.145:26656,f2644778a8a2ca3b55ec65f1b7799d32d4a7098e@54.149.160.93:26656,2904aa32501548e127d3198c8f5181fb4d67bbe6@18.116.23.104:26656"
+export PEERS="5a9db46eceb055c9238833aa54e15a2a32a09c9a@54.67.36.145:26656,f2644778a8a2ca3b55ec65f1b7799d32d4a7098e@54.149.160.93:26656,2904aa32501548e127d3198c8f5181fb4d67bbe6@18.116.23.104:26656,7fd4d34f3b19c41218027d3b91c90d073ab2ba66@54.221.149.61:26656,2b8af463a1f0e84aec6e4dbf3126edf3225df85e@13.52.231.70:26656,9358c72aa8be31ce151ef591e6ecf08d25812993@18.143.181.83:26656,cbb94e01df344fdfdee1fdf2f9bb481712e7ef8d@34.228.44.252:26656"
 export LAYER_HOME="/Users/$USER/.layer"
 export STATE_SYNC_RPC="https://mainnet.tellorlayer.com/rpc/"
 export KEY_NAME="test"
@@ -72,8 +72,8 @@ echo "Initializing layer directory..."
 
 export STATE_SYNC_NODE_ID=$(./layerd status --node $STATE_SYNC_RPC | jq -r '.node_info.id')
 
-echo "Change min gas price to 1loya in config files..."
-sed -i '' 's/[0-9]\+stake/1loya/g' $LAYER_HOME/config/app.toml
+echo "Change min gas price to 0loya in config files..."
+sed -i '' 's/[0-9]\+stake/0loya/g' $LAYER_HOME/config/app.toml
 
 echo "Set Chain Id to layer in client config file..."
 sed -i '' 's/^chain-id = .*$/chain-id = "tellor-1"/g' $LAYER_HOME/config/client.toml
@@ -83,10 +83,10 @@ echo "Modifying timeout_commit in config.toml for node..."
 sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' $LAYER_HOME/config/config.toml
 
 # Rate at which packets can be sent, in bytes/second
-sed -i 's/^send_rate = .*/send_rate = 10240000/' $LAYER_HOME/config/config.toml
+sed -i '' 's/^send_rate = .*/send_rate = 10240000/' $LAYER_HOME/config/config.toml
 
 # Rate at which packets can be received, in bytes/second
-sed -i 's/^recv_rate = .*/recv_rate = 10240000/' $LAYER_HOME/config/config.toml
+sed -i '' 's/^recv_rate = .*/recv_rate = 10240000/' $LAYER_HOME/config/config.toml
 
 # Check if user wants to open up node's API and RPC to outside traffic
 while true; do
@@ -214,10 +214,10 @@ while true; do
         sed -i '' "s|^trust_hash = .*|trust_hash = \"$TRUSTED_HASH\"|" $LAYER_HOME/config/config.toml
 
         # set chunk_request_timeout = "30s"
-        sed -i "s|^chunk_request_timeout = .*|chunk_request_timeout = \"30s\"|" $LAYER_HOME/config/config.toml
+        sed -i '' "s|^chunk_request_timeout = .*|chunk_request_timeout = \"30s\"|" $LAYER_HOME/config/config.toml
 
         # set chunk_fetchers = "2"
-        sed -i "s|^chunk_fetchers = .*|chunk_fetchers = \"2\"|" $LAYER_HOME/config/config.toml
+        sed -i '' "s|^chunk_fetchers = .*|chunk_fetchers = \"2\"|" $LAYER_HOME/config/config.toml
         
         echo "State sync configuration complete!"
         break
