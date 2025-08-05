@@ -6,7 +6,7 @@ set -e
 export LAYER_NODE_URL=https://node-palmito.tellorlayer.com/rpc/
 export RPC_NODE_ID=ac7c10dc3de67c4394271c564671eeed4ac6f0e0
 export KEYRING_BACKEND="test"
-export PEERS="8d19cdf430e491d6d6106863c4c466b75a17088a@54.153.125.203:26656,c7b175a5bafb35176cdcba3027e764a0dbd0811c@34.219.95.82:26656,05105e8bb28e8c5ace1cecacefb8d4efb0338ec6@18.218.114.74:26656,705f6154c6c6aeb0ba36c8b53639a5daa1b186f6@3.80.39.230:26656,1f6522a346209ee99ecb4d3e897d9d97633ae146@3.101.138.30:26656"
+export PEERS="ac7c10dc3de67c4394271c564671eeed4ac6f0e0@34.229.148.107:26656,8d19cdf430e491d6d6106863c4c466b75a17088a@54.153.125.203:26656,c7b175a5bafb35176cdcba3027e764a0dbd0811c@34.219.95.82:26656,05105e8bb28e8c5ace1cecacefb8d4efb0338ec6@18.218.114.74:26656,705f6154c6c6aeb0ba36c8b53639a5daa1b186f6@3.80.39.230:26656,1f6522a346209ee99ecb4d3e897d9d97633ae146@3.101.138.30:26656,3822fa2eb0052b36360a7a6e285c18cc92e26215@175.41.188.192:26656"
 export LAYER_HOME="/Users/$USER/.layer"
 export STATE_SYNC_RPC="https://node-palmito.tellorlayer.com/rpc/"
 export KEY_NAME="test"
@@ -34,12 +34,28 @@ echo "LAYER_HOME: $LAYER_HOME"
 echo "STATE_SYNC_RPC: $STATE_SYNC_RPC"
 echo ""
 echo "--------------------------------"
-read -p "Do you want to continue? (y/n): " continue_choice
+while true; do
+    read -p "Do you want to continue? (y/n): " continue_choice
+    
+    case "$continue_choice" in
+      y|Y|yes|Yes|YES)
+        break
+        ;;
+      n|N|no|No|NO)
+        echo "Exiting..."
+        exit 1
+        ;;
+      "")
+        echo "Please enter y (yes) or n (no)."
+        echo ""
+        ;;
+      *)
+        echo "Please enter y (yes) or n (no)."
+        echo ""
+        ;;
+    esac
+done
 
-if [ "$continue_choice" != "y" ]; then
-    echo "Exiting..."
-    exit 1
-fi
 # check if .layer directory exists
 if [ -d "$LAYER_HOME" ]; then
     echo "--------------------------------"
@@ -66,31 +82,46 @@ sed -i '' 's/^chain-id = .*$/chain-id = "layertest-4"/g' $LAYER_HOME/config/clie
 echo "Modifying timeout_commit in config.toml for node..."
 sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' $LAYER_HOME/config/config.toml
 
+# Rate at which packets can be sent, in bytes/second
+sed -i 's/^send_rate = .*/send_rate = 10240000/' $LAYER_HOME/config/config.toml
+
+# Rate at which packets can be received, in bytes/second
+sed -i 's/^recv_rate = .*/recv_rate = 10240000/' $LAYER_HOME/config/config.toml
+
 # Check if user wants to open up node's API and RPC to outside traffic
-echo "--------------------------------"
-echo ""
-echo "Do you want to open up node's API and RPC to outside traffic?"
-echo "(Optional. May require additional configuration in your firewall...)"
-echo "1) Yes, open up traffic to the ports"
-echo "2) No, keep default (localhost only)"
-echo "--------------------------------"
-read -p "Select an option [1-2]: " open_ports_choice
+while true; do
+    echo "--------------------------------"
+    echo ""
+    echo "Do you want to open up node's API and RPC to outside traffic?"
+    echo "(Optional. May require additional configuration in your firewall...)"
+    echo "1) Yes, open up traffic to the ports"
+    echo "2) No, keep default (localhost only)"
+    echo "--------------------------------"
+    read -p "Select an option [1-2]: " open_ports_choice
 
-case "$open_ports_choice" in
-  1)
-    echo "Opening up node's API to outside traffic..."
-    sed -i '' 's/^address = "tcp:\/\/localhost:1317"/address = "tcp:\/\/0.0.0.0:1317"/g' $LAYER_HOME/config/app.toml
+    case "$open_ports_choice" in
+      1)
+        echo "Opening up node's API to outside traffic..."
+        sed -i '' 's/^address = "tcp:\/\/localhost:1317"/address = "tcp:\/\/0.0.0.0:1317"/g' $LAYER_HOME/config/app.toml
 
-    echo "Opening up node's RPC to outside traffic..."
-    sed -i '' 's/^laddr = "tcp:\/\/127.0.0.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/g' $LAYER_HOME/config/config.toml
-    ;;
-  2)
-    echo "Leaving API and RPC bound to localhost only."
-    ;;
-  *)
-    echo "Invalid option. Leaving API and RPC bound to localhost only."
-    ;;
-esac
+        echo "Opening up node's RPC to outside traffic..."
+        sed -i '' 's/^laddr = "tcp:\/\/127.0.0.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/g' $LAYER_HOME/config/config.toml
+        break
+        ;;
+      2)
+        echo "Leaving API and RPC bound to localhost only."
+        break
+        ;;
+      "")
+        echo "Invalid option. Please select 1 or 2"
+        echo ""
+        ;;
+      *)
+        echo "Invalid option. Please select 1 or 2"
+        echo ""
+        ;;
+    esac
+done
 
 # Modify cors to accept *
 echo "Modify cors to accept *"
@@ -156,69 +187,91 @@ while true; do
 done
 
 # Check if user wants to configure state sync
-echo "--------------------------------"
-echo ""
-echo "Do you want to configure state sync?"
-echo "1) Yes, configure state sync"
-echo "2) No, skip state sync configuration"
-echo "--------------------------------"
-read -p "Select an option [1-2]: " statesync_choice
+while true; do
+    echo "--------------------------------"
+    echo ""
+    echo "Do you want to configure state sync?"
+    echo "1) Yes, configure state sync"
+    echo "2) No, skip state sync configuration"
+    echo "--------------------------------"
+    read -p "Select an option [1-2]: " statesync_choice
 
-case "$statesync_choice" in
-  1)
-    echo "Configuring state sync..."
-    
-    # set statesync enable = true
-    sed -i '' "s|^enable = .*|enable = true|" $LAYER_HOME/config/config.toml
-    sed -i '' "s|^rpc_servers = .*|rpc_servers = \"$STATE_SYNC_RPC,$STATE_SYNC_RPC\"|" $LAYER_HOME/config/config.toml
+    case "$statesync_choice" in
+      1)
+        echo "Configuring state sync..."
+        
+        # set statesync enable = true
+        sed -i '' "s|^enable = .*|enable = true|" $LAYER_HOME/config/config.toml
+        sed -i '' "s|^rpc_servers = .*|rpc_servers = \"$STATE_SYNC_RPC,$STATE_SYNC_RPC\"|" $LAYER_HOME/config/config.toml
 
-    # get current height from state sync node
-    CURRENT_HEIGHT=$(./layerd status --node $STATE_SYNC_RPC | jq -r '.sync_info.latest_block_height')
+        # get current height from state sync node
+        CURRENT_HEIGHT=$(./layerd status --node $STATE_SYNC_RPC | jq -r '.sync_info.latest_block_height')
 
-    # set configs so temporary node will start
-    export TRUSTED_HEIGHT=$(($CURRENT_HEIGHT - 35500))
-    sed -i '' "s|^trust_height = .*|trust_height = $TRUSTED_HEIGHT|" $LAYER_HOME/config/config.toml
-    export TRUSTED_HASH=$(curl -s "$STATE_SYNC_RPC/block?height=$TRUSTED_HEIGHT" | jq -r .result.block_id.hash)
-    sed -i '' "s|^trust_hash = .*|trust_hash = \"$TRUSTED_HASH\"|" $LAYER_HOME/config/config.toml
-    
-    echo "State sync configuration complete!"
-    ;;
-  2)
-    echo "Skipping state sync configuration."
-    ;;
-  *)
-    echo "Invalid option. Skipping state sync configuration."
-    ;;
-esac
+        # set configs so temporary node will start
+        export TRUSTED_HEIGHT=$(($CURRENT_HEIGHT - 35500))
+        sed -i '' "s|^trust_height = .*|trust_height = $TRUSTED_HEIGHT|" $LAYER_HOME/config/config.toml
+        export TRUSTED_HASH=$(curl -s "$STATE_SYNC_RPC/block?height=$TRUSTED_HEIGHT" | jq -r .result.block_id.hash)
+        sed -i "s|^trust_hash = .*|trust_hash = \"$TRUSTED_HASH\"|" $LAYER_HOME/config/config.toml
+        
+        # set chunk_request_timeout = "30s"
+        sed -i '' "s|^chunk_request_timeout = .*|chunk_request_timeout = \"30s\"|" $LAYER_HOME/config/config.toml
+
+        # set chunk_fetchers = "2"
+        sed -i '' "s|^chunk_fetchers = .*|chunk_fetchers = \"2\"|" $LAYER_HOME/config/config.toml
+        
+        echo "State sync configuration complete!"
+        break
+        ;;
+      2)
+        echo "Skipping state sync configuration."
+        break
+        ;;
+      "")
+        echo "Invalid option. Please select 1 or 2"
+        echo ""
+        ;;
+      *)
+        echo "Invalid option. Please select 1 or 2"
+        echo ""
+        ;;
+    esac
+done
 
 echo "Configuration Complete!"
 
 # Check if user wants to start the node now
-echo "--------------------------------"
-echo ""
-echo "Do you want to start the layer node now?"
-echo "1) Yes, start the node now"
-echo "2) No, I'll start it manually later"
-echo "--------------------------------"
-read -p "Select an option [1-2]: " start_node_choice
+while true; do
+    echo "--------------------------------"
+    echo ""
+    echo "Do you want to start the layer node now?"
+    echo "1) Yes, start the node now"
+    echo "2) No, I'll start it manually later"
+    echo "--------------------------------"
+    read -p "Select an option [1-2]: " start_node_choice
 
-case "$start_node_choice" in
-  1)
-    echo "Starting layer node..."
-    echo "It can take a few hours to download the state and begin syncing."
-    echo "Note: The node will run in the foreground. Press Ctrl+C to stop."
-    echo "Starting in 3 seconds..."
-    sleep 3
-    ./layerd start --home ~/.layer --keyring-backend test --key-name $KEY_NAME --api.enable --api.swagger
-    ;;
-  2)
-    echo "Node startup skipped."
-    echo "To start the node later, run:"
-    echo "./layerd start --home ~/.layer --keyring-backend test --key-name $KEY_NAME --api.enable --api.swagger"
-    ;;
-  *)
-    echo "Invalid option. Node startup skipped."
-    echo "To start the node later, run:"
-    echo "./layerd start --home ~/.layer --keyring-backend test --key-name $KEY_NAME --api.enable --api.swagger"
-    ;;
-esac
+    case "$start_node_choice" in
+      1)
+        echo "Starting layer node..."
+        echo "It can take a few hours to download the state and begin syncing."
+        echo "Note: The node will run in the foreground. Press Ctrl+C to stop."
+        echo "Starting in 3 seconds..."
+        sleep 3
+        ./layerd start --home ~/.layer --keyring-backend test --key-name $KEY_NAME --api.enable --api.swagger
+        break
+        ;;
+      2)
+        echo "Node startup skipped."
+        echo "To start the node later, run:"
+        echo "./layerd start --home ~/.layer --keyring-backend test --key-name $KEY_NAME --api.enable --api.swagger"
+        break
+        ;;
+      "")
+        echo "Invalid option. Please select 1 or 2"
+        echo ""
+        ;;
+      *)
+        echo "Invalid option. Please select 1 or 2"
+        echo ""
+        ;;
+    esac
+done
