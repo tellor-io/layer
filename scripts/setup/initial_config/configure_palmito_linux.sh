@@ -72,8 +72,8 @@ echo "Initializing layer directory..."
 
 export STATE_SYNC_NODE_ID=$(./layerd status --node $STATE_SYNC_RPC | jq -r '.node_info.id')
 
-echo "Change min gas price to 1loya in config files..."
-sed -i 's/[0-9]\+stake/1loya/g' $LAYER_HOME/config/app.toml
+echo "Change min gas price to 0loya in config files..."
+sed -i 's/[0-9]\+stake/0loya/g' $LAYER_HOME/config/app.toml
 
 echo "Set Chain Id to layer in client config file..."
 sed -i 's/^chain-id = .*$/chain-id = "layertest-4"/g' $LAYER_HOME/config/client.toml
