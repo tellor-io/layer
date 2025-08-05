@@ -1,0 +1,70 @@
+j[endpoints]
+    [endpoints.coingecko]
+    url_template = "https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd"
+    method = "GET"
+    timeout = 5000
+
+    [endpoints.coinpaprika]
+    url_template = "https://api.coinpaprika.com/v1/tickers/{coin_id}?quotes=USD"
+    method = "GET"
+    timeout = 5000
+
+    [endpoints.curve]
+    url_template = "https://prices.curve.fi/v1/usd_price/ethereum/{contract_address}"
+    method = "GET"
+    timeout = 5000
+
+    [endpoints.crypto]
+    url_template = "https://api.crypto.com/v2/public/get-ticker?instrument_name={instrument_name}"
+    method = "GET"
+    timeout = 5000
+
+    [endpoints.etherscan]
+    url_template = "https://api.etherscan.io/api?module=block&action=getblocknobytime&timestamp={timestamp}&closest=before&apikey={api_key}"
+    method = "GET"
+    timeout = 5000
+    api_key = "${ETHERSCAN_API_KEY}"
+    headers = { "Content-Type" = "application/json" }
+
+[queries]
+    [queries.05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6]
+    id = "05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6"
+    aggregation_method = "median"
+    min_responses = 2
+    response_type = "ufixed256x18"
+
+        [[queries.05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6.endpoints]]
+        endpoint_type = "coingecko"
+        params = { coin_id = "savings-dai" }
+        response_path = ["savings-dai", "usd"]
+
+        [[queries.05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6.endpoints]]
+        endpoint_type = "coinpaprika"
+        params = { coin_id = "sdai-savings-dai" }
+        response_path = ["quotes", "USD", "price"]
+
+        [[queries.05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6.endpoints]]
+        endpoint_type = "curve"
+        params = { contract_address = "0x83F20F44975D03b1b09e64809B757c47f942BEeA" }
+        response_path = ["data", "usd_price"]
+
+    [queries.5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0]
+    id = "5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0"
+    aggregation_method = "median"
+    min_responses = 2
+    response_type = "ufixed256x18"
+
+        [[queries.5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0.endpoints]]
+        endpoint_type = "coingecko"
+        params = { coin_id = "tellor" }
+        response_path = ["tellor", "usd"]
+
+        [[queries.5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0.endpoints]]
+        endpoint_type = "coinpaprika"
+        params = { coin_id = "trb-tellor" }
+        response_path = ["quotes", "USD", "price"]
+
+        [[queries.5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0.endpoints]]
+        endpoint_type = "crypto"
+        params = { instrument_name = "TRB_USD" }
+        response_path = ["result", "data", "0", "a"]

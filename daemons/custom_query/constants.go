@@ -21,6 +21,16 @@ var StaticEndpointTemplateConfig = map[string]*EndpointTemplate{
 		Method:      "GET",
 		Timeout:     5000,
 	},
+	"coinmarketcap": {
+		URLTemplate: "https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest?symbol={symbol}",
+		Method:      "GET",
+		Timeout:     5000,
+		ApiKey:      "${CMC_PRO_API_KEY}",
+		Headers: map[string]string{
+			"Accept":            "application/json",
+			"X-CMC_PRO_API_KEY": "api_key",
+		},
+	},
 }
 
 var StaticQueriesConfig = map[string]*QueryConfig{
@@ -49,6 +59,35 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				ResponsePath: []string{"data", "usd_price"},
 				Params: map[string]string{
 					"contract_address": "0x83F20F44975D03b1b09e64809B757c47f942BEeA",
+				},
+			},
+		},
+	},
+	"c444759b83c7bb0f6694306e1f719e65679d48ad754a31d3a366856becf1e71e": {
+		ID:                "c444759b83c7bb0f6694306e1f719e65679d48ad754a31d3a366856becf1e71e",
+		AggregationMethod: "median",
+		MinResponses:      2,
+		ResponseType:      "ufixed256x18",
+		Endpoints: []EndpointConfig{
+			{
+				EndpointType: "coingecko",
+				ResponsePath: []string{"ignition-fbtc", "usd"},
+				Params: map[string]string{
+					"coin_id": "ignition-fbtc",
+				},
+			},
+			{
+				EndpointType: "coinpaprika",
+				ResponsePath: []string{"quotes", "USD", "price"},
+				Params: map[string]string{
+					"coin_id": "fbtc-ignition-fbtc",
+				},
+			},
+			{
+				EndpointType: "coinmarketcap",
+				ResponsePath: []string{"data", "FBTC", "quote", "USD", "price"},
+				Params: map[string]string{
+					"symbol": "FBTC",
 				},
 			},
 		},
