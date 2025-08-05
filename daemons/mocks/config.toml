@@ -1,4 +1,4 @@
-j[endpoints]
+[endpoints]
     [endpoints.coingecko]
     url_template = "https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd"
     method = "GET"
