@@ -72,8 +72,8 @@ echo "Initializing layer directory..."
 
 export STATE_SYNC_NODE_ID=$(./layerd status --node $STATE_SYNC_RPC | jq -r '.node_info.id')
 
-echo "Change min gas price to 1loya in config files..."
-sed -i '' 's/[0-9]\+stake/1loya/g' $LAYER_HOME/config/app.toml
+echo "Change min gas price to 0loya in config files..."
+sed -i '' 's/[0-9]\+stake/0loya/g' $LAYER_HOME/config/app.toml
 
 echo "Set Chain Id to layer in client config file..."
 sed -i '' 's/^chain-id = .*$/chain-id = "layertest-4"/g' $LAYER_HOME/config/client.toml
@@ -83,10 +83,10 @@ echo "Modifying timeout_commit in config.toml for node..."
 sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' $LAYER_HOME/config/config.toml
 
 # Rate at which packets can be sent, in bytes/second
-sed -i 's/^send_rate = .*/send_rate = 10240000/' $LAYER_HOME/config/config.toml
+sed -i '' 's/^send_rate = .*/send_rate = 10240000/' $LAYER_HOME/config/config.toml
 
 # Rate at which packets can be received, in bytes/second
-sed -i 's/^recv_rate = .*/recv_rate = 10240000/' $LAYER_HOME/config/config.toml
+sed -i '' 's/^recv_rate = .*/recv_rate = 10240000/' $LAYER_HOME/config/config.toml
 
 # Check if user wants to open up node's API and RPC to outside traffic
 while true; do
@@ -211,7 +211,7 @@ while true; do
         export TRUSTED_HEIGHT=$(($CURRENT_HEIGHT - 35500))
         sed -i '' "s|^trust_height = .*|trust_height = $TRUSTED_HEIGHT|" $LAYER_HOME/config/config.toml
         export TRUSTED_HASH=$(curl -s "$STATE_SYNC_RPC/block?height=$TRUSTED_HEIGHT" | jq -r .result.block_id.hash)
-        sed -i "s|^trust_hash = .*|trust_hash = \"$TRUSTED_HASH\"|" $LAYER_HOME/config/config.toml
+        sed -i '' "s|^trust_hash = .*|trust_hash = \"$TRUSTED_HASH\"|" $LAYER_HOME/config/config.toml
         
         # set chunk_request_timeout = "30s"
         sed -i '' "s|^chunk_request_timeout = .*|chunk_request_timeout = \"30s\"|" $LAYER_HOME/config/config.toml
