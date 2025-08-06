@@ -144,6 +144,11 @@ func processApiKeys(config *Config) {
 			if len(matches) > 1 {
 				envVar := matches[1]
 				envValue := os.Getenv(envVar)
+				if envValue == "" {
+					fmt.Printf("⚠️  Warning: API key environment variable '%s' for endpoint '%s' is not set\n", envVar, endpointName)
+				} else {
+					fmt.Printf("✓ Loaded API key from environment variable '%s' for endpoint '%s'\n", envVar, endpointName)
+				}
 				endpoint.ApiKey = envValue
 				config.Endpoints[endpointName] = endpoint
 			}

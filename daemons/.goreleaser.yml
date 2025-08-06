@@ -1,8 +1,6 @@
-project_name: reporterd
+version: 2
 
-git:
-  tag_templates:
-    - "reporterd/v{{.Version}}"
+project_name: reporterd
 
 builds:
   - id: reporterd
@@ -38,5 +36,5 @@ changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
+      - "^docs:"
+      - "^test:"

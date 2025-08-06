@@ -24,6 +24,12 @@ const (
     url_template = "{{ $endpoint.URLTemplate }}"
     method = "{{ $endpoint.Method }}"
     timeout = {{ $endpoint.Timeout }}
+    {{- if $endpoint.ApiKey }}
+    api_key = "{{ $endpoint.ApiKey }}"
+    {{- end }}
+    {{- if $endpoint.Headers }}
+    headers = { {{ formatParams $endpoint.Headers }} }
+    {{- end }}
 {{- end }}
 
 [queries]
@@ -33,7 +39,7 @@ const (
     aggregation_method = "{{ $query.AggregationMethod }}"
     min_responses = {{ $query.MinResponses }}
     response_type = "{{ $query.ResponseType }}"
-    
+
     {{- range $idx, $endpoint := $query.Endpoints }}
         [[queries.{{ $key }}.endpoints]]
         endpoint_type = "{{ $endpoint.EndpointType }}"
