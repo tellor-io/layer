@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/pelletier/go-toml"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -95,7 +96,14 @@ func RegisterTelemetryIfEnabled(logger log.Logger, homePath string, prometheusPo
 				mux.Handle("/metrics", promhttp.Handler())
 				addr := ":" + strconv.Itoa(port)
 				logger.Info("Starting Prometheus metrics HTTP server", "port", port)
-				if err := http.ListenAndServe(addr, mux); err != nil {
+				server := &http.Server{
+					Addr:         addr,
+					Handler:      mux,
+					ReadTimeout:  10 * time.Second,
+					WriteTimeout: 10 * time.Second,
+					IdleTimeout:  120 * time.Second,
+				}
+				if err := server.ListenAndServe(); err != nil {
 					logger.Error("Prometheus HTTP server failed", "error", err)
 					panic(fmt.Sprintf("Prometheus HTTP server failed: %v", err))
 				}

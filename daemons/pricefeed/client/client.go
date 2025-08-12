@@ -237,7 +237,7 @@ func (c *Client) start(ctx context.Context,
 
 	// Initialize market pair telemetry map
 	for _, marketParam := range marketParams {
-		pricefeedmetrics.SetMarketPairForTelemetry(types.MarketId(marketParam.Id), marketParam.Pair)
+		pricefeedmetrics.SetMarketPairForTelemetry(marketParam.Id, marketParam.Pair)
 	}
 
 	priceUpdaterTicker, priceUpdaterStop := c.newTickerWithStop(int(daemonFlags.Price.LoopDelayMs))
