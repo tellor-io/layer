@@ -48,6 +48,7 @@ func (k Querier) GetReportsByAggregate(ctx context.Context, req *types.QueryGetR
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
+		k.keeper.Logger(ctx).Info("Query GetReportsByAggregate", "report", rep)
 		microReport := types.MicroReportStrings{
 			Reporter:        rep.Reporter,
 			Power:           rep.Power,
@@ -61,12 +62,14 @@ func (k Querier) GetReportsByAggregate(ctx context.Context, req *types.QueryGetR
 			MetaId:          rep.MetaId,
 		}
 		microreports = append(microreports, microReport)
+		k.keeper.Logger(ctx).Info("Query GetReportsByAggregate", "added microreport to array number: ", len(microreports))
 
 		if uint64(len(microreports)) >= req.Pagination.Limit {
 			break
 		}
 	}
 	pageRes.Total = uint64(len(microreports))
-
+	k.keeper.Logger(ctx).Info("Query GetReportsByAggregate", "total microreports: ", len(microreports))
+	k.keeper.Logger(ctx).Info("Query GetReportsByAggregate", "MicroReports: ", microreports)
 	return &types.QueryGetReportsByAggregateResponse{MicroReports: microreports, Pagination: pageRes}, nil
 }
