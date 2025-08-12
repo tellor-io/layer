@@ -20,7 +20,7 @@ builds:
       - arm64
 
 archives:
-  - format: tar.gz
+  - formats: tar.gz
     name_template: >-
       {{ .ProjectName }}_
       {{- title .Os }}_
@@ -29,8 +29,11 @@ archives:
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
 
+checksum:
+  name_template: "{{ .ProjectName }}_checksums.txt"
+
 release:
-  prerelease: auto
+  prerelease: "true"
   header: |
     ## Release {{ .Tag }} - ({{ .Date }})
 
