@@ -17,6 +17,9 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/tellor-io/layer/utils"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -37,6 +40,9 @@ var (
 	csvFile   *os.File
 	csvWriter *csv.Writer
 	csvMutex  sync.Mutex
+
+	eventTypeMap map[string]ConfigType
+	configMutex  sync.RWMutex
 )
 
 type RPCRequest struct {
@@ -339,10 +345,19 @@ func (h *HTTPClient) healthCheck(ctx context.Context) {
 			_, err := h.getLatestBlockHeight()
 			if err != nil {
 				log.Printf("Health check failed: %v", err)
+				eventType, ok := eventTypeMap["liveness-alert"]
+				if !ok {
+					log.Printf("liveness alert event not found")
+					continue
+				}
 				// Send liveness alert
 				message := fmt.Sprintf("**Alert: Node %s is Not Responding**\nFailed to get latest block height from node %s. Please check the node status and logs.", nodeName, nodeName)
-				// TODO: Implement alert sending logic
-				log.Printf("Would send alert: %s", message)
+				discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
+				if err := discordNotifier.SendAlert(message); err != nil {
+					log.Printf("Error sending final Discord alert: %v\n", err)
+				} else {
+					log.Printf("Sent final Discord alert and starting cooldown\n")
+				}
 			}
 		}
 	}
@@ -445,8 +460,18 @@ func processBlock(blockResponse *BlockResponse, height uint64) error {
 
 	// TODO: Add alerting logic for low participation rates
 	if participationRate < 80.0 {
-		log.Printf("WARNING: Block %d has low vote extension participation rate: %.2f%%", height, participationRate)
-		// TODO: Send alert for low participation rate
+		message := fmt.Sprintf("WARNING: Block %d has low vote extension participation rate: %.2f%%", height, participationRate)
+		eventType, ok := eventTypeMap["vote-ext-part-rate"]
+		if !ok {
+			panic("error getting vote ext event type")
+		}
+
+		discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
+		if err := discordNotifier.SendAlert(message); err != nil {
+			log.Printf("Error sending Discord alert: %v\n", err)
+		} else {
+			log.Printf("Sent Discord alert for low participation rate\n")
+		}
 	}
 
 	return nil
@@ -554,6 +579,30 @@ func recoverAndAlert(goroutineName string) {
 	}
 }
 
+func loadConfig() error {
+	data, err := os.ReadFile(configFilePath)
+	if err != nil {
+		return fmt.Errorf("error reading config file: %w", err)
+	}
+
+	var newConfig EventConfig
+	if err := yaml.Unmarshal(data, &newConfig); err != nil {
+		return fmt.Errorf("error parsing config file: %w", err)
+	}
+
+	// Initialize the event type map
+	newEventTypeMap := make(map[string]ConfigType)
+	for _, et := range newConfig.EventTypes {
+		newEventTypeMap[et.AlertType] = et
+		log.Printf("Loaded event type: %s (%s)\n", et.AlertName, et.AlertType)
+	}
+
+	configMutex.Lock()
+	eventTypeMap = newEventTypeMap
+	configMutex.Unlock()
+	return nil
+}
+
 func main() {
 	// Parse command line flags
 	flag.StringVar(&rpcURL, "rpc-url", DefaultRpcURL, "RPC URL (default: 127.0.0.1:26657)")
@@ -575,6 +624,11 @@ func main() {
 			csvFile.Close()
 		}
 	}()
+
+	err := loadConfig()
+	if err != nil {
+		panic(err)
+	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()

@@ -881,6 +881,7 @@ func analyzeValidatorSetUpdates(ctx context.Context) {
 }
 
 func runAnalysis() {
+	log.Printf("Running analysis")
 	// Check if CSV file exists
 	_, err := os.Stat("bridge_validator_timestamps.csv")
 	if err != nil {
