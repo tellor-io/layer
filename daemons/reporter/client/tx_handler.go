@@ -120,8 +120,21 @@ func (c *Client) WaitForBlockHeight(ctx context.Context, h int64) error {
 	}
 }
 
-func (c *Client) sendTx(ctx context.Context, msg ...sdk.Msg) (*cmttypes.ResultTx, error) {
+func (c *Client) sendTx(ctx context.Context, queryMetaId uint64, msg ...sdk.Msg) (*cmttypes.ResultTx, error) {
 	telemetry.IncrCounter(1, "daemon_sending_txs", "called")
+
+	// Track success status for defer cleanup
+	var txSuccess bool = false
+
+	// Always reset commitedIds on any error, unless explicitly successful
+	defer func() {
+		if !txSuccess && queryMetaId != 0 {
+			mutex.Lock()
+			delete(commitedIds, queryMetaId)
+			mutex.Unlock()
+		}
+	}()
+
 	block, err := c.CmtService.GetLatestBlock(ctx, &cmtservice.GetLatestBlockRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("error getting block: %w", err)
@@ -131,6 +144,16 @@ func (c *Client) sendTx(ctx context.Context, msg ...sdk.Msg) (*cmttypes.ResultTx
 	if err != nil {
 		return nil, fmt.Errorf("error getting account number and sequence: %w", err)
 	}
+
+	// handle sequence conflicts for concurrent transaction submission
+	mutex.Lock()
+	if nonce <= lastSequenceUsed {
+		// if chain sequence hasn't advanced, increment to avoid conflicts
+		c.logger.Info(fmt.Sprintf("sequence conflict detected, sequence queried: %d, using incremented sequence: %d", nonce, lastSequenceUsed+1))
+		nonce = lastSequenceUsed + 1
+	}
+	lastSequenceUsed = nonce
+	mutex.Unlock()
 
 	txf = txf.WithSequence(nonce).WithGasPrices(c.minGasFee).WithTimeoutHeight(uint64(block.SdkBlock.Header.Height + 2))
 	txf, err = txf.Prepare(c.cosmosCtx)
@@ -152,8 +175,13 @@ func (c *Client) sendTx(ctx context.Context, msg ...sdk.Msg) (*cmttypes.ResultTx
 	}
 	res, err := c.cosmosCtx.BroadcastTx(txBytes)
 	if err := handleBroadcastResult(res, err); err != nil {
+		// check for sequence mismatch error and reset tracking if needed
+		if res != nil && res.Code == 32 {
+			c.handleSequenceError(nonce)
+		}
 		return nil, fmt.Errorf("error broadcasting transaction result: %w", err)
 	}
+
 	txnResponse, err := c.WaitForTx(ctx, res.TxHash)
 	if err != nil {
 		return nil, fmt.Errorf("error waiting for transaction: %w", err)
@@ -168,9 +196,11 @@ func (c *Client) sendTx(ctx context.Context, msg ...sdk.Msg) (*cmttypes.ResultTx
 	c.logger.Info(fmt.Sprintf("transaction hash: %s", res.TxHash))
 	c.logger.Info(fmt.Sprintf("response after submit message: %d", txnResponse.TxResult.Code))
 	if txnResponse.TxResult.Code == 0 {
+		txSuccess = true // Prevent defer cleanup - keep queryMeta marked as committed
 		telemetry.IncrCounter(1, "daemon_sending_txs", "success")
 		telemetry.IncrCounterWithLabels([]string{"daemon_tx_gas_used_count"}, float32(txnResponse.TxResult.GasUsed), []metrics.Label{{Name: "chain_id", Value: c.cosmosCtx.ChainID}})
 	}
+	// If txSuccess stays false, defer will reset commitedIds[queryMetaId]
 
 	return txnResponse, nil
 }
@@ -229,3 +259,25 @@ func gasprice(local, global sdk.DecCoins) sdk.DecCoin {
 // 	}
 // 	return 0, fmt.Errorf("commit_id not found")
 // }
+
+// handleSequenceError resets global sequence tracking by querying current chain state
+func (c *Client) handleSequenceError(failedSequence uint64) {
+	// query current sequence directly from chain instead of parsing error strings
+	_, currentChainSeq, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, c.cosmosCtx.FromAddress)
+	if err != nil {
+		c.logger.Error(fmt.Sprintf("failed to query chain sequence during error recovery: %v", err))
+		return
+	}
+
+	mutex.Lock()
+	// only reset if our tracking is ahead of chain state (indicating failed transactions)
+	if lastSequenceUsed >= currentChainSeq {
+		lastSequenceUsed = currentChainSeq - 1
+		c.logger.Warn(fmt.Sprintf("sequence error recovery - failed seq: %d, chain seq: %d, reset tracking to: %d",
+			failedSequence, currentChainSeq, currentChainSeq-1))
+	} else {
+		c.logger.Info(fmt.Sprintf("sequence tracking already correct - failed seq: %d, chain seq: %d, tracking: %d",
+			failedSequence, currentChainSeq, lastSequenceUsed))
+	}
+	mutex.Unlock()
+}

@@ -40,7 +40,7 @@ func (c *Client) GenerateDepositMessages(ctx context.Context) error {
 	}
 
 	telemetry.IncrCounterWithLabels([]string{"daemon_bridge_deposit", "found"}, 1, []metrics.Label{{Name: "chain_id", Value: c.cosmosCtx.ChainID}})
-	c.txChan <- TxChannelInfo{Msg: msg, isBridge: true, NumRetries: 5}
+	c.txChan <- TxChannelInfo{Msg: msg, isBridge: true, NumRetries: 5, QueryMetaId: 0}
 
 	return nil
 }
@@ -84,8 +84,14 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 		Value:     value,
 	}
 
-	c.txChan <- TxChannelInfo{Msg: msg, isBridge: false, NumRetries: 0}
+	c.txChan <- TxChannelInfo{
+		Msg:         msg,
+		isBridge:    false,
+		NumRetries:  0,
+		QueryMetaId: querymeta.Id,
+	}
 
+	// Mark as committed immediately to prevent duplicate processing
 	mutex.Lock()
 	commitedIds[querymeta.Id] = true
 	mutex.Unlock()
@@ -96,7 +102,7 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 }
 
 func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChannelInfo) {
-	resp, err := c.sendTx(ctx, data.Msg)
+	resp, err := c.sendTx(ctx, 0, data.Msg) // 0 = no queryMeta tracking for bridge transactions
 	if err != nil {
 		c.logger.Error("submitting deposit report transaction",
 			"error", err,
@@ -143,28 +149,22 @@ func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChan
 
 func (c *Client) BroadcastTxMsgToChain() {
 	for obj := range c.txChan {
-		ctx, cancel := context.WithTimeout(context.Background(), 4500*time.Millisecond)
-		done := make(chan struct{})
-		go func() {
-			defer close(done)
-			if !obj.isBridge {
-				_, err := c.sendTx(ctx, obj.Msg)
+		// submit transaction in goroutine without waiting for completion
+		go func(txInfo TxChannelInfo) {
+			ctx, cancel := context.WithTimeout(context.Background(), 4500*time.Millisecond)
+			defer cancel()
+
+			if !txInfo.isBridge {
+				_, err := c.sendTx(ctx, txInfo.QueryMetaId, txInfo.Msg)
 				if err != nil {
 					c.logger.Error(fmt.Sprintf("Error sending tx: %v", err))
 				}
 			} else {
-				c.HandleBridgeDepositTxInChannel(ctx, obj)
+				c.HandleBridgeDepositTxInChannel(ctx, txInfo)
 			}
-		}()
+		}(obj)
 
-		select {
-		case <-done:
-			cancel()
-		case <-ctx.Done():
-			c.logger.Error("broadcasting tx timed out")
-			cancel()
-		}
-
+		// log channel status and immediately continue to next transaction
 		c.logger.Info(fmt.Sprintf("Tx in Channel: %d", len(c.txChan)))
 	}
 }
