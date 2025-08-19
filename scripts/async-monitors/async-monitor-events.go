@@ -46,16 +46,18 @@ var (
 	// Map to store event types we're interested in
 	eventTypeMap map[string]ConfigType
 	// Command line parameters
-	rpcURL              string
-	configFilePath      string
-	nodeName            string
-	blockTimeThreshold  time.Duration
-	previousBlockTime   time.Time
-	blockTimeMutex      sync.RWMutex
-	lastBlockHeight     uint64
-	isTimestampAnalyzer bool
-	currentBlockHeight  uint64
-	blockHeightMutex    sync.RWMutex
+	rpcURL                          string
+	configFilePath                  string
+	nodeName                        string
+	blockTimeThreshold              time.Duration
+	previousBlockTime               time.Time
+	blockTimeMutex                  sync.RWMutex
+	lastBlockHeight                 uint64
+	isTimestampAnalyzer             bool
+	currentBlockHeight              uint64
+	blockHeightMutex                sync.RWMutex
+	last_bridge_valset_update       string
+	last_bridge_valset_update_mutex sync.RWMutex
 )
 
 type Params struct {
@@ -367,6 +369,7 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 	now := time.Now()
 	tenMinutesAgo := now.Add(-10 * time.Minute)
 	var validTimestamps []time.Time
+	log.Printf("Num of aggregateAlertTimestamps: %v\n", len(aggregateAlertTimestamps))
 	for _, ts := range aggregateAlertTimestamps {
 		if ts.After(tenMinutesAgo) {
 			validTimestamps = append(validTimestamps, ts)
@@ -379,9 +382,11 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 	currentPower := Current_Total_Reporter_Power
 	reporterPowerMutex.RUnlock()
 
+	log.Printf("Event attributes: %+v", event.Attributes)
 	for j := 0; j < len(event.Attributes); j++ {
-		if event.Attributes[j].Key == AGGREGATE_REPORT_NAME {
+		if event.Attributes[j].Key == "aggregate_power" {
 			if aggregatePower, err := strconv.ParseUint(event.Attributes[j].Value, 10, 64); err == nil {
+				log.Printf("Aggregate power: %v, Current power: %v\n", aggregatePower, currentPower)
 				if float64(aggregatePower) < float64(currentPower)*2/3 {
 					log.Printf("Aggregate power is less than 2/3 of current power: %d\n", currentPower)
 					// Check if we've hit the alert limit
@@ -721,29 +726,39 @@ func handleEvent(event Event, eventType ConfigType) {
 		fmt.Println("Calling handleAggregateReport")
 		handleAggregateReport(event, eventType)
 	} else {
-		message := fmt.Sprintf("**Event Alert: %s**\n", eventType.AlertName)
-		for _, attr := range event.Attributes {
-			message += fmt.Sprintf("%s: %s\n", attr.Key, attr.Value)
-		}
-
-		discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
-		if err := discordNotifier.SendAlert(message); err != nil {
-			log.Printf("error is being thrown in handleEvent")
-			log.Printf("Error sending Discord alert for event %s: %v\n", event.Type, err)
-		} else {
-			log.Printf("Sent Discord alert for event: %s\n", event.Type)
-		}
-	}
-
-	if event.Type == "new_bridge_validator_set" {
-		for _, attr := range event.Attributes {
-			if attr.Key == "timestamp" {
-				if err := writeTimestampToCSV(attr.Value); err != nil {
-					log.Printf("Error writing timestamp to CSV: %v\n", err)
-				} else {
-					log.Printf("Successfully wrote timestamp %s to CSV\n", attr.Value)
+		isDuplicate := false
+		if event.Type == "new_bridge_validator_set" {
+			for _, attr := range event.Attributes {
+				if attr.Key == "timestamp" {
+					if strings.Contains(attr.Value, last_bridge_valset_update) {
+						log.Printf("Skipping duplicate timestamp %s\n", attr.Value)
+						isDuplicate = true
+						break
+					}
+					if err := writeTimestampToCSV(attr.Value); err != nil {
+						log.Printf("Error writing timestamp to CSV: %v\n", err)
+					} else {
+						log.Printf("Successfully wrote timestamp %s to CSV\n", attr.Value)
+					}
+					last_bridge_valset_update_mutex.Lock()
+					last_bridge_valset_update = attr.Value
+					last_bridge_valset_update_mutex.Unlock()
+					break
 				}
-				break
+			}
+		}
+		if !isDuplicate {
+			message := fmt.Sprintf("**Event Alert: %s**\n", eventType.AlertName)
+			for _, attr := range event.Attributes {
+				message += fmt.Sprintf("%s: %s\n", attr.Key, attr.Value)
+			}
+
+			discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
+			if err := discordNotifier.SendAlert(message); err != nil {
+				log.Printf("error is being thrown in handleEvent")
+				log.Printf("Error sending Discord alert for event %s: %v\n", event.Type, err)
+			} else {
+				log.Printf("Sent Discord alert for event: %s\n", event.Type)
 			}
 		}
 	}
@@ -770,51 +785,21 @@ type ValidatorResponse struct {
 
 func updateTotalReporterPower(ctx context.Context) {
 	defer recoverAndAlert("updateTotalReporterPower")
-	ticker := time.NewTicker(10 * time.Minute)
+	ticker := time.NewTicker(5 * time.Minute)
 	defer ticker.Stop()
 
-	client := NewHTTPClient(rpcURL)
-	backoffDuration := 1 * time.Second
-	maxBackoff := 5 * time.Minute
+	isStart := true
 
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			body, err := client.makeRPCRequest("validators", nil)
+			totalPower, err := GetTotalReporterPower(ctx)
 			if err != nil {
-				log.Printf("Error querying validators: %v\n", err)
-				// Implement exponential backoff
-				time.Sleep(backoffDuration)
-				backoffDuration *= 2
-				if backoffDuration > maxBackoff {
-					backoffDuration = maxBackoff
-				}
+				log.Printf("Error getting total reporter power: %v\n", err)
 				continue
 			}
-
-			var validatorResp ValidatorResponse
-			if err := json.Unmarshal(body, &validatorResp); err != nil {
-				log.Printf("Error decoding validator response: %v\n", err)
-				time.Sleep(backoffDuration)
-				backoffDuration *= 2
-				if backoffDuration > maxBackoff {
-					backoffDuration = maxBackoff
-				}
-				continue
-			}
-
-			var totalPower int64
-			for _, validator := range validatorResp.Result.Validators {
-				power, err := strconv.ParseInt(validator.VotingPower, 10, 64)
-				if err != nil {
-					log.Printf("Error parsing voting power: %v\n", err)
-					continue
-				}
-				totalPower += power
-			}
-			log.Printf("Total power: %d\n", totalPower)
 
 			reporterPowerMutex.Lock()
 			Current_Total_Reporter_Power = uint64(totalPower)
@@ -822,10 +807,50 @@ func updateTotalReporterPower(ctx context.Context) {
 
 			log.Printf("Updated total reporter power: %d\n", totalPower)
 
-			// Reset backoff on successful update
-			backoffDuration = 1 * time.Second
+		default:
+			if isStart {
+				isStart = false
+				totalPower, err := GetTotalReporterPower(ctx)
+				if err != nil {
+					log.Printf("Error getting total reporter power: %v\n", err)
+					continue
+				}
+
+				reporterPowerMutex.Lock()
+				Current_Total_Reporter_Power = uint64(totalPower)
+				reporterPowerMutex.Unlock()
+
+				log.Printf("Updated total reporter power: %d\n", totalPower)
+			}
 		}
 	}
+}
+
+func GetTotalReporterPower(ctx context.Context) (int64, error) {
+	client := NewHTTPClient(rpcURL)
+	body, err := client.makeRPCRequest("validators", nil)
+	if err != nil {
+		log.Printf("Error querying validators: %v\n", err)
+		return 0, err
+	}
+
+	var validatorResp ValidatorResponse
+	if err := json.Unmarshal(body, &validatorResp); err != nil {
+		log.Printf("Error decoding validator response: %v\n", err)
+		return 0, err
+	}
+
+	var totalPower int64
+	for _, validator := range validatorResp.Result.Validators {
+		power, err := strconv.ParseInt(validator.VotingPower, 10, 64)
+		if err != nil {
+			log.Printf("Error parsing voting power: %v\n", err)
+			continue
+		}
+		totalPower += power
+	}
+	log.Printf("Total power: %d\n", totalPower)
+	return totalPower, nil
 }
 
 func recoverAndAlert(goroutineName string) {
@@ -923,9 +948,12 @@ func runAnalysis() {
 		// Try RFC3339 format first
 		timestamp, parseErr = time.Parse(time.RFC3339, timestampStr)
 		if parseErr != nil {
-			// Try Unix timestamp
+			// Try Unix timestamp (milliseconds)
 			if unixTime, err := strconv.ParseInt(timestampStr, 10, 64); err == nil {
-				timestamp = time.Unix(unixTime, 0)
+				// Convert milliseconds to seconds and nanoseconds
+				seconds := unixTime / 1000
+				nanoseconds := (unixTime % 1000) * 1000000
+				timestamp = time.Unix(seconds, nanoseconds)
 			} else {
 				log.Printf("Error parsing timestamp %s: %v", timestampStr, parseErr)
 				continue
@@ -1052,6 +1080,10 @@ func main() {
 	reporterPowerMutex.Unlock()
 
 	lastBlockHeight = 0
+
+	last_bridge_valset_update_mutex.Lock()
+	last_bridge_valset_update = "0"
+	last_bridge_valset_update_mutex.Unlock()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
