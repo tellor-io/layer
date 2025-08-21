@@ -39,10 +39,11 @@ var (
 var mutex = &sync.RWMutex{}
 
 type TxChannelInfo struct {
-	Msg         sdk.Msg
-	isBridge    bool
-	NumRetries  uint8
-	QueryMetaId uint64 // track which queryMeta this transaction is for (0 if not applicable)
+	Msg            sdk.Msg
+	isBridge       bool
+	NumRetries     uint8
+	QueryMetaId    uint64 // track which queryMeta this transaction is for (0 if not applicable)
+	startTimestamp int64  // track the start time of processing a transaction to track the time it takes to process a transaction
 }
 
 type Client struct {

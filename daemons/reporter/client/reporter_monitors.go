@@ -179,6 +179,7 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 					}
 				}(query)
 
+				// could remove this and just move the context.WithTimeout to the go routine to ensure that it is cleaned up after the timeout
 				select {
 				case <-done:
 					cancel()

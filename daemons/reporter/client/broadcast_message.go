@@ -2,7 +2,10 @@ package client
 
 import (
 	"context"
+	"encoding/csv"
 	"fmt"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/tellor-io/layer/daemons/lib/metrics"
@@ -73,6 +76,7 @@ func (c *Client) GenerateDepositMessages(ctx context.Context) error {
 // }
 
 func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []byte, querymeta *oracletypes.QueryMeta) error {
+	startTimestamp := time.Now().UnixMilli()
 	value, err := c.median(qd)
 	if err != nil {
 		return fmt.Errorf("error getting median from median client': %w", err)
@@ -85,10 +89,11 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 	}
 
 	c.txChan <- TxChannelInfo{
-		Msg:         msg,
-		isBridge:    false,
-		NumRetries:  0,
-		QueryMetaId: querymeta.Id,
+		Msg:            msg,
+		isBridge:       false,
+		NumRetries:     0,
+		QueryMetaId:    querymeta.Id,
+		startTimestamp: startTimestamp,
 	}
 
 	// Mark as committed immediately to prevent duplicate processing
@@ -159,6 +164,10 @@ func (c *Client) BroadcastTxMsgToChain() {
 				if err != nil {
 					c.logger.Error(fmt.Sprintf("Error sending tx: %v", err))
 				}
+				err = WriteReportProcessTime(strconv.FormatUint(txInfo.QueryMetaId, 10), (time.Now().UnixMilli() - txInfo.startTimestamp), err)
+				if err != nil {
+					c.logger.Error(fmt.Sprintf("Error writing report process time: %v", err))
+				}
 			} else {
 				c.HandleBridgeDepositTxInChannel(ctx, txInfo)
 			}
@@ -167,4 +176,48 @@ func (c *Client) BroadcastTxMsgToChain() {
 		// log channel status and immediately continue to next transaction
 		c.logger.Info(fmt.Sprintf("Tx in Channel: %d", len(c.txChan)))
 	}
+}
+
+// WriteReportProcessTime writes query meta ID and timestamp to a CSV file
+func WriteReportProcessTime(queryMetaID string, timestamp int64, passedInError error) error {
+	// Create or open the CSV file
+	file, err := os.OpenFile("report_process_time.csv", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open CSV file: %w", err)
+	}
+	defer file.Close()
+
+	// Create CSV writer
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	// Check if file is empty to write header
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to get file info: %w", err)
+	}
+
+	// Write header if file is empty
+	if fileInfo.Size() == 0 {
+		header := []string{"query_meta_id", "timestamp", "error"}
+		if err := writer.Write(header); err != nil {
+			return fmt.Errorf("failed to write CSV header: %w", err)
+		}
+	}
+
+	timestampStr := strconv.FormatInt(timestamp, 10)
+
+	var errorString string
+	if passedInError != nil {
+		errorString = passedInError.Error()
+	} else {
+		errorString = "nil"
+	}
+	// Write data row
+	row := []string{queryMetaID, timestampStr, errorString}
+	if err := writer.Write(row); err != nil {
+		return fmt.Errorf("failed to write CSV row: %w", err)
+	}
+
+	return nil
 }
