@@ -76,9 +76,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	if err != nil {
 		return err
 	}
-	if vote.VoteEnd.Before(sdk.UnwrapSDKContext(ctx).BlockTime()) {
-		dispute.Open = false
-	}
 
 	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
 	if err != nil {
