@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -45,6 +46,13 @@ func Ratio(total, part math.LegacyDec) math.LegacyDec {
 	return ratioDec
 }
 
+func (k Keeper) markDisputeForExecution(ctx context.Context, id uint64, scaledSupport, scaledAgainst, scaledInvalid math.Int, dispute types.Dispute, vote types.Vote) error {
+	dispute.DisputeStatus = types.Resolved
+	dispute.Open = false
+	dispute.PendingExecution = true
+	return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
+}
+
 // TallyVote determines whether the dispute vote has either reached quorum or the vote period has ended.
 // If so, it calculates the given dispute round's outcome.
 func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
@@ -68,6 +76,9 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	info, err := k.BlockInfo.Get(ctx, dispute.HashId)
 	if err != nil {
 		return err
+	}
+	if vote.VoteEnd.Before(sdk.UnwrapSDKContext(ctx).BlockTime()) {
+		dispute.Open = false
 	}
 
 	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
@@ -99,6 +110,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 			return err
 		}
 	} else {
+		fmt.Println("team did vote")
 		teamDidVote = true
 	}
 	if teamDidVote {
@@ -163,14 +175,25 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		scaledAgainstDec = scaledAgainstDec.Add(againstReportersDec)
 		scaledInvalidDec = scaledInvalidDec.Add(invalidReportersDec)
 	}
-	if totalRatio.GTE(math.LegacyNewDec(51).Mul(layertypes.PowerReduction.ToLegacyDec())) {
-		scaledSupport = scaledSupportDec.TruncateInt()
-		scaledAgainst = scaledAgainstDec.TruncateInt()
-		scaledInvalid = scaledInvalidDec.TruncateInt()
-		dispute.DisputeStatus = types.Resolved
-		dispute.Open = false
-		dispute.PendingExecution = true
-		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
+	fmt.Println("totalRatio", totalRatio)
+	totalPossiblePower := math.LegacyNewDec(1).Mul(layertypes.PowerReduction.ToLegacyDec()).Add(math.LegacyNewDecFromInt(info.TotalReporterPower)).Add(math.LegacyNewDecFromInt(info.TotalUserTips))
+
+	if dispute.Open {
+		fmt.Println("scaledSupportDec", scaledSupportDec)
+		fmt.Println("totalPossiblePower", totalPossiblePower)
+		fmt.Println("scaledSupportDec.Quo(totalPossiblePower)", scaledSupportDec.Quo(totalPossiblePower))
+		fmt.Println("scaledSupportDec.Quo(totalPossiblePower).GTE(math.LegacyNewDec(51))", scaledSupportDec.Quo(totalPossiblePower).GTE(math.LegacyNewDec(51)))
+		if scaledSupportDec.Quo(totalPossiblePower).GTE(math.LegacyNewDec(51)) {
+			return k.markDisputeForExecution(ctx, id, scaledSupport, scaledAgainst, scaledInvalid, dispute, vote)
+		} else if scaledAgainstDec.Quo(totalPossiblePower).GTE(math.LegacyNewDec(51)) {
+			return k.markDisputeForExecution(ctx, id, scaledSupport, scaledAgainst, scaledInvalid, dispute, vote)
+		} else if scaledInvalidDec.Quo(totalPossiblePower).GTE(math.LegacyNewDec(51)) {
+			return k.markDisputeForExecution(ctx, id, scaledSupport, scaledAgainst, scaledInvalid, dispute, vote)
+		}
+	}
+
+	if totalRatio.GTE(math.LegacyNewDec(51).Mul(layertypes.PowerReduction.ToLegacyDec()).Quo(totalPossiblePower)) && !dispute.Open {
+		return k.markDisputeForExecution(ctx, id, scaledSupport, scaledAgainst, scaledInvalid, dispute, vote)
 	}
 
 	sdkctx := sdk.UnwrapSDKContext(ctx)

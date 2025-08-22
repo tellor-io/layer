@@ -66,7 +66,7 @@ func (s *KeeperTestSuite) TestTeamVote_SetTeamVote() {
 	// team votes SUPPORT
 	teamAddr, err := k.GetTeamAddress(ctx)
 	require.NoError(err)
-	teamVote, err := k.SetTeamVote(ctx, disputeId, teamAddr, types.VoteEnum_VOTE_SUPPORT)
+	teamVote, err := k.SetTeamVote(ctx, disputeId, teamAddr, types.VoteEnum_VOTE_SUPPORT, nil)
 	require.NoError(err)
 	require.Equal(teamVote, math.NewInt(100000000).Quo(math.NewInt(3)))
 	// check on vote
@@ -77,7 +77,7 @@ func (s *KeeperTestSuite) TestTeamVote_SetTeamVote() {
 	require.NoError(err)
 
 	// vote from bad account, expect return 0
-	badTeamVote, err := k.SetTeamVote(ctx, disputeId, sample.AccAddressBytes(), types.VoteEnum_VOTE_SUPPORT)
+	badTeamVote, err := k.SetTeamVote(ctx, disputeId, sample.AccAddressBytes(), types.VoteEnum_VOTE_SUPPORT, nil)
 	require.NoError(err)
 	require.Equal(badTeamVote, math.NewInt(0))
 
@@ -120,7 +120,7 @@ func (s *KeeperTestSuite) TestSetVoterTips() {
 	// user1 has tipped 100 trb, votes support
 	user1 := sample.AccAddressBytes()
 	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, blockNum, user1).Return(math.NewInt(100), nil).Once()
-	tips, err := k.SetVoterTips(ctx, disputeId, user1, uint64(10), types.VoteEnum_VOTE_SUPPORT)
+	tips, err := k.SetVoterTips(ctx, disputeId, user1, uint64(10), types.VoteEnum_VOTE_SUPPORT, nil)
 	require.NoError(err)
 	require.Equal(tips, math.NewInt(100))
 	// check on vote
@@ -133,7 +133,7 @@ func (s *KeeperTestSuite) TestSetVoterTips() {
 	// user2 has tipped 200 trb, votes against
 	user2 := sample.AccAddressBytes()
 	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, blockNum, user2).Return(math.NewInt(200), nil).Once()
-	tips, err = k.SetVoterTips(ctx, disputeId, user2, uint64(10), types.VoteEnum_VOTE_AGAINST)
+	tips, err = k.SetVoterTips(ctx, disputeId, user2, uint64(10), types.VoteEnum_VOTE_AGAINST, nil)
 	require.NoError(err)
 	require.Equal(tips, math.NewInt(200))
 	// check on vote
@@ -146,13 +146,13 @@ func (s *KeeperTestSuite) TestSetVoterTips() {
 	// nonUser, expect return 0
 	nonUser := sample.AccAddressBytes()
 	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, blockNum, nonUser).Return(math.NewInt(0), nil).Once()
-	tips, err = k.SetVoterTips(ctx, disputeId, nonUser, blockNum, types.VoteEnum_VOTE_SUPPORT)
+	tips, err = k.SetVoterTips(ctx, disputeId, nonUser, blockNum, types.VoteEnum_VOTE_SUPPORT, nil)
 	require.NoError(err)
 	require.Equal(tips, math.NewInt(0))
 
 	// non collections not found error on GetUserTotalTips, expect return math.Int{}, err
 	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, blockNum, nonUser).Return(math.NewInt(0), errors.New("error")).Once()
-	tips, err = k.SetVoterTips(ctx, disputeId, nonUser, blockNum, types.VoteEnum_VOTE_SUPPORT)
+	tips, err = k.SetVoterTips(ctx, disputeId, nonUser, blockNum, types.VoteEnum_VOTE_SUPPORT, nil)
 	require.Error(err)
 	require.Equal(tips, math.Int{})
 }
@@ -358,7 +358,7 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 		if tc.setup != nil {
 			s.Run(tc.name, tc.setup)
 		}
-		tokensVoted, err := k.SetVoterReporterStake(ctx, disputeId, tc.voter, blockNum, types.VoteEnum_VOTE_SUPPORT)
+		tokensVoted, err := k.SetVoterReporterStake(ctx, disputeId, tc.voter, blockNum, types.VoteEnum_VOTE_SUPPORT, nil)
 		if tc.expectedError {
 			require.Error(err)
 		} else {
@@ -510,7 +510,7 @@ func (s *KeeperTestSuite) TestAddAndSubtractReporterVoteCount() {
 	disputeId := uint64(1)
 
 	// add 100 support
-	err := k.AddReporterVoteCount(ctx, disputeId, 100, types.VoteEnum_VOTE_SUPPORT)
+	err := k.AddReporterVoteCount(ctx, disputeId, 100, types.VoteEnum_VOTE_SUPPORT, nil)
 	require.NoError(err)
 	votesByGroup, err := k.VoteCountsByGroup.Get(ctx, disputeId)
 	require.NoError(err)
@@ -522,7 +522,7 @@ func (s *KeeperTestSuite) TestAddAndSubtractReporterVoteCount() {
 	require.NoError(err)
 	require.Equal(votesByGroup.Reporters.Support, uint64(0))
 
-	err = k.AddReporterVoteCount(ctx, disputeId, 100, types.VoteEnum_VOTE_AGAINST)
+	err = k.AddReporterVoteCount(ctx, disputeId, 100, types.VoteEnum_VOTE_AGAINST, nil)
 	require.NoError(err)
 	votesByGroup, err = k.VoteCountsByGroup.Get(ctx, disputeId)
 	require.NoError(err)
@@ -534,7 +534,7 @@ func (s *KeeperTestSuite) TestAddAndSubtractReporterVoteCount() {
 	require.NoError(err)
 	require.Equal(votesByGroup.Reporters.Against, uint64(0))
 
-	err = k.AddReporterVoteCount(ctx, disputeId, 100, types.VoteEnum_VOTE_INVALID)
+	err = k.AddReporterVoteCount(ctx, disputeId, 100, types.VoteEnum_VOTE_INVALID, nil)
 	require.NoError(err)
 	votesByGroup, err = k.VoteCountsByGroup.Get(ctx, disputeId)
 	require.NoError(err)
