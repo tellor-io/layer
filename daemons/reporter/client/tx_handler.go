@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -166,7 +167,7 @@ func (c *Client) sendTx(ctx context.Context, queryMetaId uint64, msg ...sdk.Msg)
 	mutex.Unlock()
 	if concurrentTxs >= maxConcurrentTxs {
 		c.logger.Info(fmt.Sprintf("max concurrent transactions reached, skipping transaction with sequence: %d", nonce))
-		return nil, fmt.Errorf(ErrorMaxConcurrentTxs)
+		return nil, errors.New(ErrorMaxConcurrentTxs)
 	}
 
 	txf = txf.WithSequence(nonce).WithGasPrices(c.minGasFee).WithTimeoutHeight(uint64(block.SdkBlock.Header.Height + 2))
