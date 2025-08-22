@@ -38,31 +38,32 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if err != nil {
 		return nil, err
 	}
-	var oldVote types.Voter
+	var oldVote *types.Voter
 	// Check if voter has already voted
 	if voted {
-		oldVote, err = k.Voter.Get(ctx, collections.Join(msg.Id, voterAcc.Bytes()))
+		voteData, err := k.Voter.Get(ctx, collections.Join(msg.Id, voterAcc.Bytes()))
 		if err != nil {
 			return nil, err
 		}
-		if oldVote.Vote == msg.Vote {
+		if voteData.Vote == msg.Vote {
 			return nil, types.ErrVoterHasAlreadyVoted
 		}
+		oldVote = &voteData
 	}
 
 	// Assert again voting hasn't ended
 	if vote.VoteEnd.Before(ctx.BlockTime()) {
 		return nil, types.ErrVotingPeriodEnded
 	}
-	teampower, err := k.SetTeamVote(ctx, msg.Id, voterAcc, msg.Vote, &oldVote)
+	teampower, err := k.SetTeamVote(ctx, msg.Id, voterAcc, msg.Vote, oldVote)
 	if err != nil {
 		return nil, err
 	}
-	upower, err := k.Keeper.SetVoterTips(ctx, msg.Id, voterAcc, dispute.BlockNumber, msg.Vote, &oldVote)
+	upower, err := k.Keeper.SetVoterTips(ctx, msg.Id, voterAcc, dispute.BlockNumber, msg.Vote, oldVote)
 	if err != nil {
 		return nil, err
 	}
-	repP, err := k.SetVoterReporterStake(ctx, msg.Id, voterAcc, dispute.BlockNumber, msg.Vote, &oldVote)
+	repP, err := k.SetVoterReporterStake(ctx, msg.Id, voterAcc, dispute.BlockNumber, msg.Vote, oldVote)
 	if err != nil {
 		return nil, err
 	}

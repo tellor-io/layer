@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"encoding/hex"
-	"fmt"
 	"testing"
 	"time"
 
@@ -67,17 +66,19 @@ func (s *KeeperTestSuite) TestVote() {
 	// vote from team
 	teamAddr, err := s.disputeKeeper.GetTeamAddress(s.ctx)
 	s.NoError(err)
+
 	_, err = s.disputeKeeper.SetTeamVote(s.ctx, uint64(1), teamAddr, types.VoteEnum_VOTE_SUPPORT, nil)
 	s.NoError(err)
 
-	err = s.disputeKeeper.TallyVote(s.ctx, uint64(1))
+	// check on voting tally
+	_, err = s.disputeKeeper.VoteCountsByGroup.Get(s.ctx, uint64(1))
 	s.NoError(err)
 
-	// check on voting tally
-	data, err := s.disputeKeeper.VoteCountsByGroup.Get(s.ctx, uint64(1))
-	s.NoError(err)
-	fmt.Println(data)
 	// vote calls tally, enough ppl have voted to reach quorum
+	vote, err = s.disputeKeeper.Votes.Get(s.ctx, 1)
+	s.NoError(err)
+	s.NotNil(vote)
+
 	s.Equal(vote.VoteResult, types.VoteResult_SUPPORT)
 	s.Equal(vote.Id, uint64(1))
 }

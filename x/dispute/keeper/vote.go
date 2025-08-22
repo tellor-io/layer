@@ -46,7 +46,6 @@ func (k Keeper) SetTeamVote(ctx context.Context, id uint64, voter sdk.AccAddress
 	}
 
 	if bytes.Equal(voter, teamAddr) {
-
 		voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
 		if err != nil {
 			if !errors.Is(err, collections.ErrNotFound) {
@@ -69,19 +68,19 @@ func (k Keeper) SetTeamVote(ctx context.Context, id uint64, voter sdk.AccAddress
 					voteCounts.Team.Support = 0
 				case types.VoteEnum_VOTE_AGAINST:
 					voteCounts.Team.Against = 0
-				default:
+				case types.VoteEnum_VOTE_INVALID:
 					voteCounts.Team.Invalid = 0
 				}
 			}
-			err = k.VoteCountsByGroup.Set(ctx, id, voteCounts)
-			if err != nil {
-				return math.Int{}, err
-			}
-			// return doesnt get used in dispute calculations
-			// just gets set in Voter collection as the team's voter.VoterPower which doesnt matter for tally calculations
-			power := math.NewInt(100000000).Quo(math.NewInt(3))
-			return power, nil
 		}
+		err = k.VoteCountsByGroup.Set(ctx, id, voteCounts)
+		if err != nil {
+			return math.Int{}, err
+		}
+		// return doesnt get used in dispute calculations
+		// just gets set in Voter collection as the team's voter.VoterPower which doesnt matter for tally calculations
+		power := math.NewInt(100000000).Quo(math.NewInt(3))
+		return power, nil
 	}
 	return math.ZeroInt(), nil
 }
@@ -124,7 +123,7 @@ func (k Keeper) SetVoterTips(ctx context.Context, id uint64, voter sdk.AccAddres
 					voteCounts.Users.Support -= tips.Uint64()
 				case types.VoteEnum_VOTE_AGAINST:
 					voteCounts.Users.Against -= tips.Uint64()
-				default:
+				case types.VoteEnum_VOTE_INVALID:
 					voteCounts.Users.Invalid -= tips.Uint64()
 				}
 			}
@@ -241,7 +240,7 @@ func (k Keeper) AddReporterVoteCount(ctx context.Context, id, amount uint64, cho
 				voteCounts.Reporters.Support -= amount
 			case types.VoteEnum_VOTE_AGAINST:
 				voteCounts.Reporters.Against -= amount
-			default:
+			case types.VoteEnum_VOTE_INVALID:
 				voteCounts.Reporters.Invalid -= amount
 			}
 		}

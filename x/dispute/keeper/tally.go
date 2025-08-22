@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -110,7 +109,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 			return err
 		}
 	} else {
-		fmt.Println("team did vote")
 		teamDidVote = true
 	}
 	if teamDidVote {
@@ -175,25 +173,29 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		scaledAgainstDec = scaledAgainstDec.Add(againstReportersDec)
 		scaledInvalidDec = scaledInvalidDec.Add(invalidReportersDec)
 	}
-	fmt.Println("totalRatio", totalRatio)
-	totalPossiblePower := math.LegacyNewDec(1).Mul(layertypes.PowerReduction.ToLegacyDec()).Add(math.LegacyNewDecFromInt(info.TotalReporterPower)).Add(math.LegacyNewDecFromInt(info.TotalUserTips))
 
-	if dispute.Open {
-		fmt.Println("scaledSupportDec", scaledSupportDec)
-		fmt.Println("totalPossiblePower", totalPossiblePower)
-		fmt.Println("scaledSupportDec.Quo(totalPossiblePower)", scaledSupportDec.Quo(totalPossiblePower))
-		fmt.Println("scaledSupportDec.Quo(totalPossiblePower).GTE(math.LegacyNewDec(51))", scaledSupportDec.Quo(totalPossiblePower).GTE(math.LegacyNewDec(51)))
-		if scaledSupportDec.Quo(totalPossiblePower).GTE(math.LegacyNewDec(51)) {
-			return k.markDisputeForExecution(ctx, id, scaledSupport, scaledAgainst, scaledInvalid, dispute, vote)
-		} else if scaledAgainstDec.Quo(totalPossiblePower).GTE(math.LegacyNewDec(51)) {
-			return k.markDisputeForExecution(ctx, id, scaledSupport, scaledAgainst, scaledInvalid, dispute, vote)
-		} else if scaledInvalidDec.Quo(totalPossiblePower).GTE(math.LegacyNewDec(51)) {
-			return k.markDisputeForExecution(ctx, id, scaledSupport, scaledAgainst, scaledInvalid, dispute, vote)
+	if totalRatio.GTE(math.LegacyNewDec(51).Mul(layertypes.PowerReduction.ToLegacyDec())) {
+		scaledSupport = scaledSupportDec.TruncateInt()
+		scaledAgainst = scaledAgainstDec.TruncateInt()
+		scaledInvalid = scaledInvalidDec.TruncateInt()
+
+		// Check if any single vote category has reached majority (> 50% of votes)
+		// Using 1.5 * 1e6 as the threshold for > 50% (since 1.5e6 / 3e6 = 0.5)
+		majorityThreshold := math.NewInt(1_500_000) // 1.5 * 1e6
+
+		if dispute.Open {
+			if scaledSupport.GT(majorityThreshold) || scaledAgainst.GT(majorityThreshold) || scaledInvalid.GT(majorityThreshold) {
+				dispute.DisputeStatus = types.Resolved
+				dispute.Open = false
+				dispute.PendingExecution = true
+				return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
+			}
+		} else {
+			dispute.DisputeStatus = types.Resolved
+			dispute.Open = false
+			dispute.PendingExecution = true
+			return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
 		}
-	}
-
-	if totalRatio.GTE(math.LegacyNewDec(51).Mul(layertypes.PowerReduction.ToLegacyDec())) && !dispute.Open {
-		return k.markDisputeForExecution(ctx, id, scaledSupport, scaledAgainst, scaledInvalid, dispute, vote)
 	}
 
 	sdkctx := sdk.UnwrapSDKContext(ctx)
