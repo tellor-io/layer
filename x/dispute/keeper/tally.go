@@ -192,7 +192,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		}
 	}
 
-	if totalRatio.GTE(math.LegacyNewDec(51).Mul(layertypes.PowerReduction.ToLegacyDec()).Quo(totalPossiblePower)) && !dispute.Open {
+	if totalRatio.GTE(math.LegacyNewDec(51).Mul(layertypes.PowerReduction.ToLegacyDec())) && !dispute.Open {
 		return k.markDisputeForExecution(ctx, id, scaledSupport, scaledAgainst, scaledInvalid, dispute, vote)
 	}
 
