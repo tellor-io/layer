@@ -21,6 +21,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
+const maxConcurrentTxs = 14
+
+const (
+	ErrorMaxConcurrentTxs = "max concurrent transactions reached"
+)
+
 func newFactory(clientCtx client.Context) tx.Factory {
 	return tx.Factory{}.
 		WithChainID(clientCtx.ChainID).
@@ -146,14 +152,22 @@ func (c *Client) sendTx(ctx context.Context, queryMetaId uint64, msg ...sdk.Msg)
 	}
 
 	// handle sequence conflicts for concurrent transaction submission
+	concurrentTxs := 0
 	mutex.Lock()
 	if nonce <= lastSequenceUsed {
+		concurrentTxs = int(lastSequenceUsed - nonce + 1)
 		// if chain sequence hasn't advanced, increment to avoid conflicts
 		c.logger.Info(fmt.Sprintf("sequence conflict detected, sequence queried: %d, using incremented sequence: %d", nonce, lastSequenceUsed+1))
 		nonce = lastSequenceUsed + 1
 	}
-	lastSequenceUsed = nonce
+	if concurrentTxs < maxConcurrentTxs {
+		lastSequenceUsed = nonce
+	}
 	mutex.Unlock()
+	if concurrentTxs >= maxConcurrentTxs {
+		c.logger.Info(fmt.Sprintf("max concurrent transactions reached, skipping transaction with sequence: %d", nonce))
+		return nil, fmt.Errorf(ErrorMaxConcurrentTxs)
+	}
 
 	txf = txf.WithSequence(nonce).WithGasPrices(c.minGasFee).WithTimeoutHeight(uint64(block.SdkBlock.Header.Height + 2))
 	txf, err = txf.Prepare(c.cosmosCtx)
