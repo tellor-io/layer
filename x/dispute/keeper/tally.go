@@ -45,13 +45,6 @@ func Ratio(total, part math.LegacyDec) math.LegacyDec {
 	return ratioDec
 }
 
-func (k Keeper) markDisputeForExecution(ctx context.Context, id uint64, scaledSupport, scaledAgainst, scaledInvalid math.Int, dispute types.Dispute, vote types.Vote) error {
-	dispute.DisputeStatus = types.Resolved
-	dispute.Open = false
-	dispute.PendingExecution = true
-	return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
-}
-
 // TallyVote determines whether the dispute vote has either reached quorum or the vote period has ended.
 // If so, it calculates the given dispute round's outcome.
 func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
