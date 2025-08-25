@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
@@ -171,15 +170,11 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		scaledAgainstDec = scaledAgainstDec.Add(againstReportersDec)
 		scaledInvalidDec = scaledInvalidDec.Add(invalidReportersDec)
 	}
-	fmt.Println("totalRatio: ", totalRatio)
 
 	if totalRatio.GTE(math.LegacyNewDec(51).Mul(layertypes.PowerReduction.ToLegacyDec())) {
 		scaledSupport = scaledSupportDec.TruncateInt()
 		scaledAgainst = scaledAgainstDec.TruncateInt()
 		scaledInvalid = scaledInvalidDec.TruncateInt()
-		fmt.Println("scaledSupport: ", scaledSupport)
-		fmt.Println("scaledAgainst: ", scaledAgainst)
-		fmt.Println("scaledInvalid: ", scaledInvalid)
 
 		// Check if any single vote category has reached majority (> 50% of votes)
 		// Using 1.5 * 1e6 as the threshold for > 50% (since 1.5e6 / 3e6 = 0.5)
@@ -187,14 +182,12 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 
 		if dispute.Open {
 			if scaledSupport.GT(majorityThreshold) || scaledAgainst.GT(majorityThreshold) || scaledInvalid.GT(majorityThreshold) {
-				fmt.Println("dispute is open and quorum is reached for one vote category so we are marking to execute")
 				dispute.DisputeStatus = types.Resolved
 				dispute.Open = false
 				dispute.PendingExecution = true
 				return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
 			}
 		} else {
-			fmt.Println("dispute is closed so we are marking to execute")
 			dispute.DisputeStatus = types.Resolved
 			dispute.Open = false
 			dispute.PendingExecution = true
@@ -224,7 +217,6 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 			vote.VoteEnd = sdkctx.BlockTime()
 			return k.Votes.Set(ctx, id, vote)
 		}
-		fmt.Println("Returning here for some reason: ", dispute)
 		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupportDec.TruncateInt(), scaledAgainstDec.TruncateInt(), scaledInvalidDec.TruncateInt(), false)
 	} else {
 		return errors.New(types.ErrNoQuorumStillVoting.Error())

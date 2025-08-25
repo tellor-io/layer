@@ -207,7 +207,7 @@ func (s *KeeperTestSuite) TestTallyVote() {
 			},
 		},
 		{
-			name:      "team votes, all users vote, reporters vote, quorum reached",
+			name:      "team votes, all users vote, reporters vote, quorum reached but not in aggreement and voting is still open",
 			disputeId: uint64(2),
 			setup: func() {
 				disputeId := uint64(2)
@@ -227,7 +227,7 @@ func (s *KeeperTestSuite) TestTallyVote() {
 				}))
 			},
 			teardown:      func() {},
-			expectedError: nil,
+			expectedError: errors.New(types.ErrNoQuorumStillVoting.Error()),
 			expectedVotes: types.StakeholderVoteCounts{
 				Team:      types.VoteCounts{Support: 33333333, Against: 0, Invalid: 0},
 				Reporters: types.VoteCounts{Support: 0, Against: 20 * 1e6, Invalid: 0},
