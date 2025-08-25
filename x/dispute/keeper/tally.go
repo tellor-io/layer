@@ -158,7 +158,7 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	reporterRatio := Ratio(totalReporterPowerDec, reporterVoteSumDec)
 	totalRatio = totalRatio.Add(reporterRatio)
 	if reporterVoteSum.GT(math.ZeroInt()) {
-		//reporterVoteSumDec := math.LegacyNewDecFromInt(reporterVoteSum)
+		// reporterVoteSumDec := math.LegacyNewDecFromInt(reporterVoteSum)
 		reportersForVotesDec := math.LegacyNewDecFromInt(tallies.ForVotes.Reporters)
 		reportersAgainstVotesDec := math.LegacyNewDecFromInt(tallies.AgainstVotes.Reporters)
 		reportersInvalidVotesDec := math.LegacyNewDecFromInt(tallies.Invalid.Reporters)

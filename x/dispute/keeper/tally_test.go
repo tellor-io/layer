@@ -207,7 +207,7 @@ func (s *KeeperTestSuite) TestTallyVote() {
 			},
 		},
 		{
-			name:      "team votes, all users vote, reporters vote, quorum reached but not in aggreement and voting is still open",
+			name:      "team votes, all users vote, reporters vote, quorum reached but not in agreement and voting is still open",
 			disputeId: uint64(2),
 			setup: func() {
 				disputeId := uint64(2)

@@ -157,7 +157,7 @@ func (s *KeeperTestSuite) TestSetVoterTips() {
 	require.Equal(votesByGroup.Users.Invalid, uint64(0))
 	require.NoError(err)
 
-	//user2 revotes as invalid, expect the against vote to be removed and the invalid vote to be added
+	// user2 revotes as invalid, expect the against vote to be removed and the invalid vote to be added
 	tips, err = k.SetVoterTips(ctx, disputeId, user2, blockNum, types.VoteEnum_VOTE_INVALID, &types.Voter{
 		Vote:       types.VoteEnum_VOTE_AGAINST,
 		VoterPower: math.NewInt(200),

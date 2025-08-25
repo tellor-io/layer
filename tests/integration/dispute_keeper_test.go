@@ -173,7 +173,6 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	voters, err = iter.PrimaryKeys()
 	s.NoError(err)
 	s.Equal(voters[0].K2(), teamAddr.Bytes())
-
 }
 
 func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
