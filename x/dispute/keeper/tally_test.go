@@ -175,7 +175,7 @@ func (s *KeeperTestSuite) TestTallyVote() {
 					Team: types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
 				}))
 				// set team vote
-				require.NoError(k.Voter.Set(ctx, collections.Join(disputeId, teamAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_SUPPORT, VoterPower: math.NewInt(25000000)}))
+				require.NoError(k.Voter.Set(ctx, collections.Join(disputeId, teamAddr.Bytes()), types.Voter{Vote: types.VoteEnum_VOTE_SUPPORT, VoterPower: math.NewInt(33333333)}))
 				// mock for GetTotalSupply
 				bk.On("GetSupply", ctx, layertypes.BondDenom).Return(sdk.Coin{Denom: layertypes.BondDenom, Amount: math.NewInt(250 * 1e6)}, nil)
 			},
@@ -211,18 +211,27 @@ func (s *KeeperTestSuite) TestTallyVote() {
 			disputeId: uint64(2),
 			setup: func() {
 				disputeId := uint64(2)
+				require.NoError(k.Disputes.Set(ctx, disputeId, types.Dispute{
+					HashId:    []byte("hashId4"),
+					DisputeId: disputeId,
+					Open:      true,
+				}))
+				require.NoError(k.BlockInfo.Set(ctx, []byte("hashId4"), types.BlockInfo{
+					TotalReporterPower: math.NewInt(60 * 1e6),
+					TotalUserTips:      math.NewInt(60 * 1e6),
+				}))
 				require.NoError(k.VoteCountsByGroup.Set(ctx, disputeId, types.StakeholderVoteCounts{
 					Team:      types.VoteCounts{Support: 33333333, Against: 0, Invalid: 0},
-					Users:     types.VoteCounts{Support: 50000000, Against: 0, Invalid: 0},
-					Reporters: types.VoteCounts{Support: 50000000, Against: 0, Invalid: 0},
+					Users:     types.VoteCounts{Support: 0, Against: 20 * 1e6, Invalid: 0},
+					Reporters: types.VoteCounts{Support: 0, Against: 20 * 1e6, Invalid: 0},
 				}))
 			},
 			teardown:      func() {},
 			expectedError: nil,
 			expectedVotes: types.StakeholderVoteCounts{
 				Team:      types.VoteCounts{Support: 33333333, Against: 0, Invalid: 0},
-				Reporters: types.VoteCounts{Support: 50000000, Against: 0, Invalid: 0},
-				Users:     types.VoteCounts{Support: 50000000, Against: 0, Invalid: 0},
+				Reporters: types.VoteCounts{Support: 0, Against: 20 * 1e6, Invalid: 0},
+				Users:     types.VoteCounts{Support: 0, Against: 20 * 1e6, Invalid: 0},
 			},
 		},
 		{
