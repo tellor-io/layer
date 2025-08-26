@@ -214,7 +214,7 @@ func (c *Client) WithdrawAndStakeEarnedRewardsPeriodically(ctx context.Context, 
 			SelectorAddress:  c.accAddr.String(),
 			ValidatorAddress: valAddr,
 		}
-		c.txChan <- TxChannelInfo{Msg: withdrawMsg, isBridge: false, NumRetries: 0}
+		c.txChan <- TxChannelInfo{Msg: withdrawMsg, isBridge: false, NumRetries: 0, QueryMetaId: 0}
 
 		time.Sleep(time.Duration(frequency) * time.Second)
 	}
