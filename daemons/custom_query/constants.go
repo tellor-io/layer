@@ -31,6 +31,11 @@ var StaticEndpointTemplateConfig = map[string]*EndpointTemplate{
 			"X-CMC_PRO_API_KEY": "api_key",
 		},
 	},
+	"coinbase": {
+		URLTemplate: "https://api.coinbase.com/v2/prices/{currency_pair}/spot",
+		Method:      "GET",
+		Timeout:     5000,
+	},
 }
 
 var StaticQueriesConfig = map[string]*QueryConfig{
@@ -188,6 +193,13 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					// "symbol": "TBTC",
 					"id": "26133",
+				},
+			},
+			{
+				EndpointType: "coinbase",
+				ResponsePath: []string{"data", "amount"},
+				Params: map[string]string{
+					"currency_pair": "TBTC-USD",
 				},
 			},
 		},

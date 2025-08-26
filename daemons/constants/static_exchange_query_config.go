@@ -120,6 +120,13 @@ var StaticExchangeQueryConfig = map[types.ExchangeId]*types.ExchangeQueryConfig{
 	// 	TimeoutMs:  defaultTimeoutMs,
 	// 	MaxQueries: defaultMaxQueries,
 	// },
+
+	exchange_common.EXCHANGE_ID_COINBASE_RATES: {
+		ExchangeId: exchange_common.EXCHANGE_ID_COINBASE_RATES,
+		IntervalMs: defaultIntervalMs,
+		TimeoutMs:  defaultTimeoutMs,
+		MaxQueries: defaultMultiMarketMaxQueries,
+	},
 	exchange_common.EXCHANGE_ID_TEST_VOLATILE_EXCHANGE: {
 		ExchangeId: exchange_common.EXCHANGE_ID_TEST_VOLATILE_EXCHANGE,
 		IntervalMs: defaultIntervalMs,
