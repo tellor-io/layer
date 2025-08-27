@@ -1684,6 +1684,17 @@ func (s *IntegrationTestSuite) TestDisputes2() {
 	msgVote = disputetypes.MsgVote{
 		Voter: teamAddr.String(),
 		Id:    dispute.DisputeId,
+		Vote:  disputetypes.VoteEnum_VOTE_AGAINST,
+	}
+	voteResponse, err = msgServerDispute.Vote(s.Setup.Ctx, &msgVote)
+	require.NoError(err)
+	require.NotNil(voteResponse)
+
+	// vote from team again with different vote
+	require.NoError(err)
+	msgVote = disputetypes.MsgVote{
+		Voter: teamAddr.String(),
+		Id:    dispute.DisputeId,
 		Vote:  disputetypes.VoteEnum_VOTE_SUPPORT,
 	}
 	voteResponse, err = msgServerDispute.Vote(s.Setup.Ctx, &msgVote)
