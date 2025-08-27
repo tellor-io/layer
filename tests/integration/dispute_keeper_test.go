@@ -120,18 +120,57 @@ func (s *IntegrationTestSuite) TestVotingOnDispute() {
 	_, err = msgServer.Vote(s.Setup.Ctx, &types.MsgVote{
 		Voter: teamAddr.String(),
 		Id:    1,
-		Vote:  types.VoteEnum_VOTE_SUPPORT,
+		Vote:  types.VoteEnum_VOTE_INVALID,
 	})
 	s.NoError(err)
 	vtr, err := s.Setup.Disputekeeper.Voter.Get(s.Setup.Ctx, collections.Join(uint64(1), teamAddr.Bytes()))
 	s.NoError(err)
-	s.Equal(types.VoteEnum_VOTE_SUPPORT, vtr.Vote)
+	s.Equal(types.VoteEnum_VOTE_INVALID, vtr.Vote)
 	v, err := s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
 	s.NoError(err)
 	s.Equal(v.VoteResult, types.VoteResult_NO_TALLY)
+	expectedTally := types.StakeholderVoteCounts{
+		Team: types.VoteCounts{
+			Invalid: 1,
+		},
+	}
+	t, err := s.Setup.Disputekeeper.VoteCountsByGroup.Get(s.Setup.Ctx, uint64(1))
+	s.NoError(err)
+	s.Equal(expectedTally, t)
+	s.Equal(t.Reporters.Invalid, uint64(0))
+	s.Equal(t.Users.Invalid, uint64(0))
 	iter, err := s.Setup.Disputekeeper.Voter.Indexes.VotersById.MatchExact(s.Setup.Ctx, uint64(1))
 	s.NoError(err)
 	voters, err := iter.PrimaryKeys()
+	s.NoError(err)
+	s.Equal(voters[0].K2(), teamAddr.Bytes())
+
+	_, err = msgServer.Vote(s.Setup.Ctx, &types.MsgVote{
+		Voter: teamAddr.String(),
+		Id:    1,
+		Vote:  types.VoteEnum_VOTE_AGAINST,
+	})
+	s.NoError(err)
+	vtr, err = s.Setup.Disputekeeper.Voter.Get(s.Setup.Ctx, collections.Join(uint64(1), teamAddr.Bytes()))
+	s.NoError(err)
+	s.Equal(types.VoteEnum_VOTE_AGAINST, vtr.Vote)
+	v, err = s.Setup.Disputekeeper.Votes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	s.Equal(v.VoteResult, types.VoteResult_NO_TALLY)
+	expectedTally = types.StakeholderVoteCounts{
+		Team: types.VoteCounts{
+			Against: 1,
+			Invalid: 0,
+		},
+	}
+	t, err = s.Setup.Disputekeeper.VoteCountsByGroup.Get(s.Setup.Ctx, uint64(1))
+	s.NoError(err)
+	s.Equal(expectedTally, t)
+	s.Equal(t.Reporters.Invalid, uint64(0))
+	s.Equal(t.Users.Invalid, uint64(0))
+	iter, err = s.Setup.Disputekeeper.Voter.Indexes.VotersById.MatchExact(s.Setup.Ctx, uint64(1))
+	s.NoError(err)
+	voters, err = iter.PrimaryKeys()
 	s.NoError(err)
 	s.Equal(voters[0].K2(), teamAddr.Bytes())
 }

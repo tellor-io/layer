@@ -128,8 +128,8 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	scaledSupportDec := math.LegacyNewDecFromInt(scaledSupport)
 	scaledAgainstDec := math.LegacyNewDecFromInt(scaledAgainst)
 	scaledInvalidDec := math.LegacyNewDecFromInt(scaledInvalid)
+	totalUserTipsDec := math.LegacyNewDecFromInt(info.TotalUserTips)
 	if userVoteSum.GT(math.ZeroInt()) {
-		totalUserTipsDec := math.LegacyNewDecFromInt(info.TotalUserTips)
 		userVoteSumDec := math.LegacyNewDecFromInt(userVoteSum)
 		totalRatio = totalRatio.Add(Ratio(totalUserTipsDec, userVoteSumDec))
 
@@ -137,9 +137,9 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 		usersAgainstVotesDec := math.LegacyNewDecFromInt(tallies.AgainstVotes.Users)
 		usersInvalidVotesDec := math.LegacyNewDecFromInt(tallies.Invalid.Users)
 
-		scaledSupportDec = scaledSupportDec.Add(usersForVotesDec.Mul(powerReductionDec).Quo(userVoteSumDec))
-		scaledAgainstDec = scaledAgainstDec.Add(usersAgainstVotesDec.Mul(powerReductionDec).Quo(userVoteSumDec))
-		scaledInvalidDec = scaledInvalidDec.Add(usersInvalidVotesDec.Mul(powerReductionDec).Quo(userVoteSumDec))
+		scaledSupportDec = scaledSupportDec.Add(usersForVotesDec.Mul(powerReductionDec).Quo(totalUserTipsDec))
+		scaledAgainstDec = scaledAgainstDec.Add(usersAgainstVotesDec.Mul(powerReductionDec).Quo(totalUserTipsDec))
+		scaledInvalidDec = scaledInvalidDec.Add(usersInvalidVotesDec.Mul(powerReductionDec).Quo(totalUserTipsDec))
 	}
 
 	tallies.ForVotes.Reporters = math.NewIntFromUint64(voteCounts.Reporters.Support)
@@ -151,26 +151,41 @@ func (k Keeper) TallyVote(ctx context.Context, id uint64) error {
 	reporterRatio := Ratio(totalReporterPowerDec, reporterVoteSumDec)
 	totalRatio = totalRatio.Add(reporterRatio)
 	if reporterVoteSum.GT(math.ZeroInt()) {
-		reporterVoteSumDec := math.LegacyNewDecFromInt(reporterVoteSum)
+		// reporterVoteSumDec := math.LegacyNewDecFromInt(reporterVoteSum)
 		reportersForVotesDec := math.LegacyNewDecFromInt(tallies.ForVotes.Reporters)
 		reportersAgainstVotesDec := math.LegacyNewDecFromInt(tallies.AgainstVotes.Reporters)
 		reportersInvalidVotesDec := math.LegacyNewDecFromInt(tallies.Invalid.Reporters)
 
-		forReportersDec := reportersForVotesDec.Mul(powerReductionDec).Quo(reporterVoteSumDec)
-		againstReportersDec := reportersAgainstVotesDec.Mul(powerReductionDec).Quo(reporterVoteSumDec)
-		invalidReportersDec := reportersInvalidVotesDec.Mul(powerReductionDec).Quo(reporterVoteSumDec)
+		forReportersDec := reportersForVotesDec.Mul(powerReductionDec).Quo(totalReporterPowerDec)
+		againstReportersDec := reportersAgainstVotesDec.Mul(powerReductionDec).Quo(totalReporterPowerDec)
+		invalidReportersDec := reportersInvalidVotesDec.Mul(powerReductionDec).Quo(totalReporterPowerDec)
 		scaledSupportDec = scaledSupportDec.Add(forReportersDec)
 		scaledAgainstDec = scaledAgainstDec.Add(againstReportersDec)
 		scaledInvalidDec = scaledInvalidDec.Add(invalidReportersDec)
 	}
+
 	if totalRatio.GTE(math.LegacyNewDec(51).Mul(layertypes.PowerReduction.ToLegacyDec())) {
 		scaledSupport = scaledSupportDec.TruncateInt()
 		scaledAgainst = scaledAgainstDec.TruncateInt()
 		scaledInvalid = scaledInvalidDec.TruncateInt()
-		dispute.DisputeStatus = types.Resolved
-		dispute.Open = false
-		dispute.PendingExecution = true
-		return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
+
+		// Check if any single vote category has reached majority (> 50% of votes)
+		// Using 1.5 * 1e6 as the threshold for > 50% (since 1.5e6 / 3e6 = 0.5)
+		majorityThreshold := math.NewInt(1_500_000) // 1.5 * 1e6
+
+		if dispute.Open {
+			if scaledSupport.GT(majorityThreshold) || scaledAgainst.GT(majorityThreshold) || scaledInvalid.GT(majorityThreshold) {
+				dispute.DisputeStatus = types.Resolved
+				dispute.Open = false
+				dispute.PendingExecution = true
+				return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
+			}
+		} else {
+			dispute.DisputeStatus = types.Resolved
+			dispute.Open = false
+			dispute.PendingExecution = true
+			return k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true)
+		}
 	}
 
 	sdkctx := sdk.UnwrapSDKContext(ctx)
