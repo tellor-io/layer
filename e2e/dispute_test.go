@@ -3380,7 +3380,6 @@ func TestGroupPowers(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("TX HASH (team votes on dispute 1): ", txHash)
 
-	// wait 1 block for vote to be processed
 	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[1].Val))
 
 	// query voting info
@@ -3417,16 +3416,74 @@ func TestGroupPowers(t *testing.T) {
 	require.Equal(tally.Reporters.TotalPowerVoted, "")
 	require.Equal(tally.Team.Support, "33.33%")
 
+	// query dispute info
+	disRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	err = json.Unmarshal(disRes, &disputes)
+	require.NoError(err)
+	openDispute = disputes.Disputes[0]
+	fmt.Println("!!!disputes: ", disputes)
+	require.Equal(openDispute.Metadata.DisputeId, "1")
+	fmt.Println("!!!openDispute.Metadata.DisputeStatus: ", openDispute.Metadata.DisputeStatus)
+	fmt.Println("!!!openDispute.Metadata.Open: ", openDispute.Metadata.Open)
+	fmt.Println("!!!openDispute.Metadata.PendingExecution: ", openDispute.Metadata.PendingExecution)
+	fmt.Println("!!!openDispute.Metadata.DisputeFee: ", openDispute.Metadata.DisputeFee)
+	fmt.Println("!!!openDispute.Metadata.FeeTotal: ", openDispute.Metadata.FeeTotal)
+	fmt.Println("!!!openDispute.Metadata.InitialEvidence.Power: ", openDispute.Metadata.InitialEvidence.Power)
+	fmt.Println("!!!openDispute.Metadata.InitialEvidence.Reporter: ", openDispute.Metadata.InitialEvidence.Reporter)
+	fmt.Println("!!!openDispute.Metadata.InitialEvidence.Timestamp: ", openDispute.Metadata.InitialEvidence.Timestamp)
+	fmt.Println("!!!openDispute.Metadata.InitialEvidence.Value: ", openDispute.Metadata.InitialEvidence.Value)
+	fmt.Println("!!!openDispute.Metadata.InitialEvidence.ValueHash: ", openDispute.Metadata.DisputeEndTime)
+
 	// vote from val1, should have a third of user power and ~ a third of reporting power
-	// 33% team + 11% users + 11% reporters = 55% have voted, dispute should execute after this vote
+	// 33% team + 11% users + 11% reporters = 55% have voted, but not all in same direction, dispute should NOT execute after this vote
 	txHash, err = validators[1].Val.ExecTx(ctx, validators[1].Addr, "dispute", "vote", "1", "vote-against", "--keyring-dir", validators[1].Val.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 votes against dispute 1): ", txHash)
 
-	// wait 1 block for vote to be processed
 	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[1].Val))
+	// check tally
+	tallyRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "tally", "1")
+	require.NoError(err)
+	fmt.Println("!!!!Raw tally response:", string(tallyRes))
 
-	// query tally again, should be executed but still show all voting percents
+	// query dispute, should still be open
+	disRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	err = json.Unmarshal(disRes, &disputes)
+	require.NoError(err)
+	openDispute = disputes.Disputes[0]
+	fmt.Println("!!!** disputes: ", disputes)
+	require.Equal(openDispute.Metadata.DisputeId, "1")
+	fmt.Println("!!!** openDispute.Metadata.DisputeStatus: ", openDispute.Metadata.DisputeStatus)
+	fmt.Println("!!!** openDispute.Metadata.Open: ", openDispute.Metadata.Open)
+	fmt.Println("!!!** openDispute.Metadata.PendingExecution: ", openDispute.Metadata.PendingExecution)
+	fmt.Println("!!!** openDispute.Metadata.DisputeFee: ", openDispute.Metadata.DisputeFee)
+	fmt.Println("!!!** openDispute.Metadata.FeeTotal: ", openDispute.Metadata.FeeTotal)
+	fmt.Println("!!!** openDispute.Metadata.InitialEvidence.Power: ", openDispute.Metadata.InitialEvidence.Power)
+	fmt.Println("!!!** openDispute.Metadata.InitialEvidence.Reporter: ", openDispute.Metadata.InitialEvidence.Reporter)
+	fmt.Println("!!!** openDispute.Metadata.InitialEvidence.Timestamp: ", openDispute.Metadata.InitialEvidence.Timestamp)
+	fmt.Println("!!!** openDispute.Metadata.InitialEvidence.Value: ", openDispute.Metadata.InitialEvidence.Value)
+	fmt.Println("!!!** openDispute.Metadata.InitialEvidence.ValueHash: ", openDispute.Metadata.DisputeEndTime)
+	require.Equal(openDispute.Metadata.DisputeStatus, 1) // open
+
+	// val1 switches vote to support, should have a third of user power and ~ a third of reporting power and team vote (>50% total) for support, dispute should execute
+	txHash, err = validators[1].Val.ExecTx(ctx, validators[1].Addr, "dispute", "vote", "1", "vote-support", "--keyring-dir", validators[1].Val.HomeDir())
+	require.NoError(err)
+	fmt.Println("TX HASH (val1 switches vote to support dispute 1): ", txHash)
+
+	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[1].Val))
+	// query tally, should not be open
+	disRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	require.NoError(err)
+	err = json.Unmarshal(disRes, &disputes)
+	require.NoError(err)
+	openDispute = disputes.Disputes[0]
+	fmt.Println("disputes: ", disputes)
+	require.Equal(openDispute.Metadata.DisputeId, "1")
+	require.Equal(openDispute.Metadata.DisputeStatus, 2) // executed
+
+	// query tally, should be executed
 	tallyRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "tally", "1")
 	require.NoError(err)
 	fmt.Println("--------------------------------")
