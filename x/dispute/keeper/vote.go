@@ -39,14 +39,13 @@ func (k Keeper) GetTeamAddress(ctx context.Context) (sdk.AccAddress, error) {
 	return params.TeamAddress, nil
 }
 
-func (k Keeper) SetTeamVote(ctx context.Context, id uint64, voter sdk.AccAddress, choice types.VoteEnum) (math.Int, error) {
+func (k Keeper) SetTeamVote(ctx context.Context, id uint64, voter sdk.AccAddress, choice types.VoteEnum, oldVote *types.Voter) (math.Int, error) {
 	teamAddr, err := k.GetTeamAddress(ctx)
 	if err != nil {
 		return math.Int{}, err
 	}
 
 	if bytes.Equal(voter, teamAddr) {
-
 		voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
 		if err != nil {
 			if !errors.Is(err, collections.ErrNotFound) {
@@ -61,6 +60,18 @@ func (k Keeper) SetTeamVote(ctx context.Context, id uint64, voter sdk.AccAddress
 			voteCounts.Team.Against = 1
 		default:
 			voteCounts.Team.Invalid = 1
+		}
+		if oldVote != nil {
+			if oldVote.Vote != choice {
+				switch oldVote.Vote {
+				case types.VoteEnum_VOTE_SUPPORT:
+					voteCounts.Team.Support = 0
+				case types.VoteEnum_VOTE_AGAINST:
+					voteCounts.Team.Against = 0
+				case types.VoteEnum_VOTE_INVALID:
+					voteCounts.Team.Invalid = 0
+				}
+			}
 		}
 		err = k.VoteCountsByGroup.Set(ctx, id, voteCounts)
 		if err != nil {
@@ -85,7 +96,7 @@ func (k Keeper) GetUserTotalTips(ctx context.Context, voter sdk.AccAddress, bloc
 	return tips, nil
 }
 
-func (k Keeper) SetVoterTips(ctx context.Context, id uint64, voter sdk.AccAddress, blockNumber uint64, choice types.VoteEnum) (math.Int, error) {
+func (k Keeper) SetVoterTips(ctx context.Context, id uint64, voter sdk.AccAddress, blockNumber uint64, choice types.VoteEnum, oldVote *types.Voter) (math.Int, error) {
 	tips, err := k.GetUserTotalTips(ctx, voter, blockNumber)
 	if err != nil {
 		return math.Int{}, err
@@ -105,6 +116,18 @@ func (k Keeper) SetVoterTips(ctx context.Context, id uint64, voter sdk.AccAddres
 		} else {
 			voteCounts.Users.Invalid += tips.Uint64()
 		}
+		if oldVote != nil {
+			if oldVote.Vote != choice {
+				switch oldVote.Vote {
+				case types.VoteEnum_VOTE_SUPPORT:
+					voteCounts.Users.Support -= tips.Uint64()
+				case types.VoteEnum_VOTE_AGAINST:
+					voteCounts.Users.Against -= tips.Uint64()
+				case types.VoteEnum_VOTE_INVALID:
+					voteCounts.Users.Invalid -= tips.Uint64()
+				}
+			}
+		}
 		err = k.VoteCountsByGroup.Set(ctx, id, voteCounts)
 		if err != nil {
 			return math.Int{}, err
@@ -114,7 +137,7 @@ func (k Keeper) SetVoterTips(ctx context.Context, id uint64, voter sdk.AccAddres
 	return math.ZeroInt(), nil
 }
 
-func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.AccAddress, blockNumber uint64, choice types.VoteEnum) (math.Int, error) {
+func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.AccAddress, blockNumber uint64, choice types.VoteEnum, oldVote *types.Voter) (math.Int, error) {
 	// get delegation
 	delegation, err := k.reporterKeeper.Delegation(ctx, voter)
 	if err != nil {
@@ -143,7 +166,7 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 			tokensVotedBefore = math.ZeroInt()
 		}
 		reporterTokens = reporterTokens.Sub(tokensVotedBefore)
-		return reporterTokens, k.AddReporterVoteCount(ctx, id, reporterTokens.Uint64(), choice)
+		return reporterTokens, k.AddReporterVoteCount(ctx, id, reporterTokens.Uint64(), choice, oldVote)
 	}
 	// voter is non-reporter selector
 	// skip selectors that are locked from switching reporters
@@ -178,7 +201,7 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		if err != nil {
 			return math.Int{}, err
 		}
-		return selectorTokens, k.AddReporterVoteCount(ctx, id, selectorTokens.Uint64(), choice)
+		return selectorTokens, k.AddReporterVoteCount(ctx, id, selectorTokens.Uint64(), choice, oldVote)
 	}
 	delegatorTokensVoted, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), id))
 	if err != nil {
@@ -192,10 +215,10 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 	if err != nil {
 		return math.Int{}, err
 	}
-	return selectorTokens, k.AddReporterVoteCount(ctx, id, selectorTokens.Uint64(), choice)
+	return selectorTokens, k.AddReporterVoteCount(ctx, id, selectorTokens.Uint64(), choice, oldVote)
 }
 
-func (k Keeper) AddReporterVoteCount(ctx context.Context, id, amount uint64, choice types.VoteEnum) error {
+func (k Keeper) AddReporterVoteCount(ctx context.Context, id, amount uint64, choice types.VoteEnum, oldVote *types.Voter) error {
 	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
@@ -210,6 +233,19 @@ func (k Keeper) AddReporterVoteCount(ctx context.Context, id, amount uint64, cho
 	} else {
 		voteCounts.Reporters.Invalid += amount
 	}
+	if oldVote != nil {
+		if oldVote.Vote != choice {
+			switch oldVote.Vote {
+			case types.VoteEnum_VOTE_SUPPORT:
+				voteCounts.Reporters.Support -= amount
+			case types.VoteEnum_VOTE_AGAINST:
+				voteCounts.Reporters.Against -= amount
+			case types.VoteEnum_VOTE_INVALID:
+				voteCounts.Reporters.Invalid -= amount
+			}
+		}
+	}
+
 	return k.VoteCountsByGroup.Set(ctx, id, voteCounts)
 }
 
