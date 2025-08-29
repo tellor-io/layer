@@ -526,40 +526,65 @@ type EvmAddressResponse struct {
 	EvmAddress string `json:"evm_address"`
 }
 
+// Custom error types for EVM address lookup
+type EVMAddressNotFoundError struct {
+	OperatorAddress string
+}
+
+func (e *EVMAddressNotFoundError) Error() string {
+	return fmt.Sprintf("no EVM address found for operator %s", e.OperatorAddress)
+}
+
+type EVMAddressLookupError struct {
+	OperatorAddress string
+	Err             error
+}
+
+func (e *EVMAddressLookupError) Error() string {
+	return fmt.Sprintf("failed to lookup EVM address for operator %s: %v", e.OperatorAddress, e.Err)
+}
+
 // getEVMAddressFromOperatorAddress calls the Swagger API to get EVM address by validator address
-func getEVMAddressFromOperatorAddress(operatorAddress string) (string, bool) {
-	// Use swagger API URL if provided, otherwise return false
+func getEVMAddressFromOperatorAddress(operatorAddress string) (string, error) {
+	// Use swagger API URL if provided, otherwise return error
 	if swaggerAPIURL == "" {
-		log.Printf("Swagger API URL is not provided, cannot query EVM address for operator %s", operatorAddress)
-		return "", false
+		return "", &EVMAddressLookupError{
+			OperatorAddress: operatorAddress,
+			Err:             fmt.Errorf("swagger API URL is not provided"),
+		}
 	}
 
 	url := fmt.Sprintf("%s/layer/bridge/get_evm_address_by_validator_address/%s", swaggerAPIURL, operatorAddress)
 
 	resp, err := http.Get(url)
 	if err != nil {
-		log.Printf("Failed to query EVM address for operator %s: %v", operatorAddress, err)
-		return "", false
+		return "", &EVMAddressLookupError{
+			OperatorAddress: operatorAddress,
+			Err:             err,
+		}
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		log.Printf("EVM address query failed with status: %d for operator %s", resp.StatusCode, operatorAddress)
-		return "", false
+		return "", &EVMAddressLookupError{
+			OperatorAddress: operatorAddress,
+			Err:             fmt.Errorf("HTTP status %d", resp.StatusCode),
+		}
 	}
 
 	var evmAddressResp EvmAddressResponse
 	if err := json.NewDecoder(resp.Body).Decode(&evmAddressResp); err != nil {
-		log.Printf("Failed to decode EVM address response for operator %s: %v", operatorAddress, err)
-		return "", false
+		return "", &EVMAddressLookupError{
+			OperatorAddress: operatorAddress,
+			Err:             err,
+		}
 	}
 
 	if evmAddressResp.EvmAddress == "" {
-		log.Printf("No EVM address found for operator %s", operatorAddress)
-		return "", false
+		return "", &EVMAddressNotFoundError{OperatorAddress: operatorAddress}
 	}
 
-	return evmAddressResp.EvmAddress, true
+	return evmAddressResp.EvmAddress, nil
 }
 
 // verifySignaturesInVoteExtension verifies all signatures found in a vote extension
@@ -593,10 +618,16 @@ func verifySignaturesInVoteExtension(voteExtData VoteExtensionData, height uint6
 			}
 
 			// Get expected EVM address from API
-			expectedEVMAddr, found := getEVMAddressFromOperatorAddress(operatorAddr)
-			if !found {
-				log.Printf("Could not get expected EVM address for operator %s", operatorAddr)
-				invalidSignatures = append(invalidSignatures, fmt.Sprintf("Valset signature for operator %s: Could not get expected EVM address", operatorAddr))
+			expectedEVMAddr, err := getEVMAddressFromOperatorAddress(operatorAddr)
+			if err != nil {
+				// Check if it's a lookup error (RPC down, network issues, etc.) vs not found
+				if _, ok := err.(*EVMAddressLookupError); ok {
+					log.Printf("Could not get expected EVM address for operator %s due to lookup error: %v", operatorAddr, err)
+					// Don't add to invalidSignatures for lookup errors - just log and continue
+					continue
+				}
+				// For other errors (like not found), we still want to track as invalid
+				log.Printf("Could not get expected EVM address for operator %s: %v", operatorAddr, err)
 				continue
 			}
 
@@ -622,9 +653,16 @@ func verifySignaturesInVoteExtension(voteExtData VoteExtensionData, height uint6
 		} else {
 			// Verify each derived address against expected address
 			for operatorAddr, derivedEVMAddr := range derivedEVMAddresses {
-				expectedEVMAddr, found := getEVMAddressFromOperatorAddress(operatorAddr)
-				if !found {
-					log.Printf("Could not get expected EVM address for oracle operator %s", operatorAddr)
+				expectedEVMAddr, err := getEVMAddressFromOperatorAddress(operatorAddr)
+				if err != nil {
+					// Check if it's a lookup error (RPC down, network issues, etc.) vs not found
+					if _, ok := err.(*EVMAddressLookupError); ok {
+						log.Printf("Could not get expected EVM address for oracle operator %s due to lookup error: %v", operatorAddr, err)
+						// Don't add to invalidSignatures for lookup errors - just log and continue
+						continue
+					}
+					// For other errors (like not found), we still want to track as invalid
+					log.Printf("Could not get expected EVM address for oracle operator %s: %v", operatorAddr, err)
 					invalidSignatures = append(invalidSignatures, fmt.Sprintf("Oracle attestation for operator %s: Could not get expected EVM address", operatorAddr))
 					continue
 				}
@@ -1072,6 +1110,7 @@ func fileRotationManager(ctx context.Context, wg *sync.WaitGroup) {
 
 // generateDailyReport analyzes yesterday's data and sends a report
 func generateDailyReport() {
+	log.Printf("Generating daily report")
 	yesterday := time.Now().AddDate(0, 0, -1).Format("2006-01-02")
 	fileName := fmt.Sprintf("vote_extension_participation_%s.csv", yesterday)
 
