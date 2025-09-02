@@ -173,6 +173,19 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_data"}, {ProtoField: "value"}},
 				},
 				{
+					RpcMethod: "BatchSubmitValue",
+					Use:       "batch-submit-value",
+					Short:     "Submit multiple values in a batch",
+					FlagOptions: map[string]*autocliv1.FlagOptions{
+						"values": {
+							Name: "values",
+							Usage: `Value to submit in the batch. Can be specified multiple times using the --values flag.
+							
+							Example: --values '{"query_data":"AQIDBAUGBwg=","value":"123.45"}' --values '{"query_data":"BAUGBwgJCgs=","value":"678.90"}'`,
+						},
+					},
+				},
+				{
 					RpcMethod:      "Tip",
 					Use:            "tip [query_data] [amount]",
 					Short:          "Execute the Tip RPC method",
