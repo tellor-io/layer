@@ -14,7 +14,6 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
-
 	"github.com/tellor-io/layer/utils"
 
 	"cosmossdk.io/math"
@@ -25,7 +24,6 @@ import (
 func TestBatchSubmitValue(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
@@ -168,7 +166,7 @@ func TestBatchSubmitValue(t *testing.T) {
 
 	fmt.Println("Tipped query 1")
 	output := cosmos.CosmosTx{}
-	err = json.Unmarshal([]byte(stdout), &output)
+	err = json.Unmarshal(stdout, &output)
 	require.NoError(err)
 	fmt.Println("Transaction output for first tip:", output)
 
@@ -180,7 +178,7 @@ func TestBatchSubmitValue(t *testing.T) {
 	fmt.Println("Tipped query 2")
 
 	output = cosmos.CosmosTx{}
-	err = json.Unmarshal([]byte(stdout), &output)
+	err = json.Unmarshal(stdout, &output)
 	require.NoError(err)
 	fmt.Println("Transaction output for second tip:", output)
 
@@ -192,7 +190,7 @@ func TestBatchSubmitValue(t *testing.T) {
 	fmt.Println("Tipped query 3")
 
 	output = cosmos.CosmosTx{}
-	err = json.Unmarshal([]byte(stdout), &output)
+	err = json.Unmarshal(stdout, &output)
 	require.NoError(err)
 	fmt.Println("Transaction output for third tip:", output)
 	// ======================================================================================
@@ -216,7 +214,7 @@ func TestBatchSubmitValue(t *testing.T) {
 	err = json.Unmarshal(stdout, &output2)
 	require.NoError(err)
 	fmt.Println("Second batch submit tx hash:", output2)
-	testutil.WaitForBlocks(ctx, 4, val1)
+	require.NoError(testutil.WaitForBlocks(ctx, 4, val1))
 
 	// Verify all three reports were created by querying reports
 	fmt.Println("\n=== Verifying reports were created ===")
@@ -278,6 +276,7 @@ func getValidators(t *testing.T, ctx context.Context, chain *cosmos.CosmosChain)
 	Val  *cosmos.ChainNode
 	Addr string
 } {
+	t.Helper()
 	validators := make([]struct {
 		Val  *cosmos.ChainNode
 		Addr string
