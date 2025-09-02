@@ -132,10 +132,21 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []
 			tokenSrc = stakingtypes.Unbonded
 			pool = stakingtypes.NotBondedPoolName
 		}
-		_, err = k.stakingKeeper.Delegate(ctx, delAddr, shareAmt.TruncateInt(), tokenSrc, val, false) // false means to not subtract tokens from an account
+		newShares, err := k.stakingKeeper.Delegate(ctx, delAddr, shareAmt.TruncateInt(), tokenSrc, val, false) // false means to not subtract tokens from an account
 		if err != nil {
 			return "", err
 		}
+		// TODO: emit event for each delegation
+		sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				"tokens_added_to_stake",
+				sdk.NewAttribute("delegator", delAddr.String()),
+				sdk.NewAttribute("validator", val.OperatorAddress),
+				sdk.NewAttribute("shares", newShares.String()),
+				sdk.NewAttribute("amount", shareAmt.String()),
+			),
+		})
+
 	}
 	return pool, k.DisputedDelegationAmounts.Remove(ctx, hashId)
 }
@@ -181,10 +192,19 @@ func (k Keeper) FeeRefund(ctx context.Context, hashId []byte, amt math.Int) erro
 		amtDec := math.LegacyNewDecFromInt(amt)
 		shareAmtDec := sourceAmountDec.Mul(amtDec).Quo(trackedFeesTotalDec)
 		shareAmt := shareAmtDec.TruncateInt()
-		_, err = k.stakingKeeper.Delegate(ctx, sdk.AccAddress(source.DelegatorAddress), shareAmt, stakingtypes.Bonded, val, false)
+		newShares, err := k.stakingKeeper.Delegate(ctx, sdk.AccAddress(source.DelegatorAddress), shareAmt, stakingtypes.Bonded, val, false)
 		if err != nil {
 			return err
 		}
+		sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				"tokens_added_to_stake",
+				sdk.NewAttribute("delegator", sdk.AccAddress(source.DelegatorAddress).String()),
+				sdk.NewAttribute("validator", val.OperatorAddress),
+				sdk.NewAttribute("shares", newShares.String()),
+				sdk.NewAttribute("amount", shareAmt.String()),
+			),
+		})
 	}
 	return k.FeePaidFromStake.Remove(ctx, hashId)
 }
@@ -238,10 +258,19 @@ func (k Keeper) AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt ma
 		// if val is bonded, delegate winnings to that validator and exit iteration
 		if val.IsBonded() {
 			isDelegated = true
-			_, err = k.stakingKeeper.Delegate(ctx, acc, amt, stakingtypes.Bonded, val, false)
+			newShares, err := k.stakingKeeper.Delegate(ctx, acc, amt, stakingtypes.Bonded, val, false)
 			if err != nil {
 				return true
 			}
+			sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
+				sdk.NewEvent(
+					"tokens_added_to_stake",
+					sdk.NewAttribute("delegator", acc.String()),
+					sdk.NewAttribute("validator", val.OperatorAddress),
+					sdk.NewAttribute("amount", amt.String()),
+					sdk.NewAttribute("shares", newShares.String()),
+				),
+			})
 			return true
 		}
 		return false // continue iteration if not bonded
@@ -257,10 +286,20 @@ func (k Keeper) AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt ma
 			return err
 		}
 		validator := vals[0]
-		_, err = k.stakingKeeper.Delegate(ctx, acc, amt, stakingtypes.Bonded, validator, false)
+		newShares, err := k.stakingKeeper.Delegate(ctx, acc, amt, stakingtypes.Bonded, validator, false)
 		if err != nil {
 			return err
 		}
+		// TODO: emit event for delegation
+		sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				"tokens_added_to_stake",
+				sdk.NewAttribute("delegator", acc.String()),
+				sdk.NewAttribute("validator", validator.OperatorAddress),
+				sdk.NewAttribute("amount", amt.String()),
+				sdk.NewAttribute("shares", newShares.String()),
+			),
+		})
 	}
 
 	return nil
