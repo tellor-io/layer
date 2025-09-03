@@ -112,7 +112,15 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 				if err != nil {
 					return err
 				}
-
+				sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
+					sdk.NewEvent(
+						"deducted_stake_in_dispute",
+						sdk.NewAttribute("delegator", selectors.delAddr.String()),
+						sdk.NewAttribute("validator", info.valAddr.String()),
+						sdk.NewAttribute("shares", sharesToUnbond.String()),
+						sdk.NewAttribute("amount", escrowedAmt.String()),
+					),
+				})
 				feeTracker = append(feeTracker, &types.TokenOriginInfo{
 					DelegatorAddress: selectors.delAddr.Bytes(),
 					ValidatorAddress: info.valAddr.Bytes(),
@@ -127,6 +135,15 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 				if err != nil {
 					return err
 				}
+				sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
+					sdk.NewEvent(
+						"deducted_stake_in_dispute",
+						sdk.NewAttribute("delegator", selectors.delAddr.String()),
+						sdk.NewAttribute("validator", info.validator.OperatorAddress),
+						sdk.NewAttribute("shares", info.shares.String()),
+						sdk.NewAttribute("amount", escrowedAmt.String()),
+					),
+				})
 				feeTracker = append(feeTracker, &types.TokenOriginInfo{
 					DelegatorAddress: selectors.delAddr.Bytes(),
 					ValidatorAddress: info.valAddr.Bytes(),
@@ -323,6 +340,16 @@ func (k Keeper) deductFromdelegation(ctx context.Context, delAddr sdk.AccAddress
 		if err != nil {
 			return math.LegacyDec{}, err
 		}
+		// TODO: emit event for unbonding
+		sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
+			sdk.NewEvent(
+				"deducted_stake_in_dispute",
+				sdk.NewAttribute("delegator", delAddr.String()),
+				sdk.NewAttribute("validator", valAddr.String()),
+				sdk.NewAttribute("shares", shares.String()),
+				sdk.NewAttribute("amount", removedTokens.String()),
+			),
+		})
 		err = k.MoveTokensFromValidator(ctx, validator, removedTokens)
 		if err != nil {
 			return math.LegacyDec{}, err
