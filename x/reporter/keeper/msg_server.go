@@ -458,7 +458,7 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	if amtToDelegate.IsZero() {
 		return nil, errors.New("no tips to withdraw")
 	}
-	_, err = k.Keeper.stakingKeeper.Delegate(ctx, delAddr, amtToDelegate, val.Status, val, false)
+	newShares, err := k.Keeper.stakingKeeper.Delegate(ctx, delAddr, amtToDelegate, val.Status, val, false)
 	if err != nil {
 		return nil, err
 	}
@@ -489,6 +489,7 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 			sdk.NewAttribute("selector", msg.SelectorAddress),
 			sdk.NewAttribute("validator", msg.ValidatorAddress),
 			sdk.NewAttribute("amount", amtToDelegate.String()),
+			sdk.NewAttribute("shares", newShares.String()),
 		),
 	})
 	// allow for people to track the amount they have withdrawn based on their address
