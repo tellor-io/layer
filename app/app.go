@@ -353,6 +353,7 @@ func New(
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
 		sdk.GetConfig().GetBech32AccountAddrPrefix(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		authkeeper.WithUnorderedTransactions(true),
 	)
 
 	app.AuthzKeeper = authzkeeper.NewKeeper(
@@ -763,6 +764,12 @@ func New(
 		reportermoduletypes.ModuleName,
 		// this line is used by starport scaffolding # stargate/app/endBlockers
 	)
+	// required since v0.53.0
+	// additional: https://github.com/cosmos/cosmos-sdk/blob/908df9d4e2e07c2cd923d7b35f18b1e008c5106c/simapp/app.go#L550C2-L550C55
+	app.mm.SetOrderPreBlockers(
+		upgradetypes.ModuleName,
+		authtypes.ModuleName,
+	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
@@ -861,6 +868,10 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 				SignModeHandler: txConfig.SignModeHandler(),
 				FeegrantKeeper:  app.FeeGrantKeeper,
 				SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+				SigVerifyOptions: []ante.SigVerificationDecoratorOption{
+					ante.WithUnorderedTxGasCost(ante.DefaultUnorderedTxGasCost),
+					ante.WithMaxUnorderedTxTimeoutDuration(ante.DefaultMaxTimeoutDuration),
+				},
 			},
 			app.ReporterKeeper,
 			app.StakingKeeper,
