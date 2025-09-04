@@ -45,17 +45,21 @@ var (
 	aggregateAlertCooldown   time.Time
 	// Map to store event types we're interested in
 	eventTypeMap map[string]ConfigType
+	// Supported query IDs map for asset pair lookups
+	supportedQueryIDsMap *SupportedQueryIDsMap
+	queryIDsMutex        sync.RWMutex
 	// Command line parameters
-	rpcURL              string
-	configFilePath      string
-	nodeName            string
-	blockTimeThreshold  time.Duration
-	previousBlockTime   time.Time
-	blockTimeMutex      sync.RWMutex
-	lastBlockHeight     uint64
-	isTimestampAnalyzer bool
-	currentBlockHeight  uint64
-	blockHeightMutex    sync.RWMutex
+	rpcURL                   string
+	configFilePath           string
+	supportedQueryIDsMapPath string
+	nodeName                 string
+	blockTimeThreshold       time.Duration
+	previousBlockTime        time.Time
+	blockTimeMutex           sync.RWMutex
+	lastBlockHeight          uint64
+	isTimestampAnalyzer      bool
+	currentBlockHeight       uint64
+	blockHeightMutex         sync.RWMutex
 )
 
 type Params struct {
@@ -192,6 +196,12 @@ type BlockResultsResponse struct {
 
 type EventConfig struct {
 	EventTypes []ConfigType `yaml:"event_types"`
+}
+
+// SupportedQueryIDsMap represents the structure of the supported_query_ids_map.json file
+type SupportedQueryIDsMap struct {
+	QueryIDToAssetPairMap   map[string]string `json:"queryIdToAssetPairMap"`
+	QueryDataToAssetPairMap map[string]string `json:"queryDataToAssetPairMap"`
 }
 
 type HTTPClient struct {
@@ -336,6 +346,49 @@ func loadConfig() error {
 	return nil
 }
 
+// loadSupportedQueryIDsMap loads the supported query IDs map from the JSON file
+func loadSupportedQueryIDsMap() error {
+	if supportedQueryIDsMapPath == "" {
+		return fmt.Errorf("supported query IDs map file path not provided")
+	}
+
+	data, err := os.ReadFile(supportedQueryIDsMapPath)
+	if err != nil {
+		return fmt.Errorf("error reading supported query IDs map file at %s: %w", supportedQueryIDsMapPath, err)
+	}
+
+	var newQueryIDsMap SupportedQueryIDsMap
+	if err := json.Unmarshal(data, &newQueryIDsMap); err != nil {
+		return fmt.Errorf("error parsing supported query IDs map file at %s: %w", supportedQueryIDsMapPath, err)
+	}
+
+	queryIDsMutex.Lock()
+	supportedQueryIDsMap = &newQueryIDsMap
+	queryIDsMutex.Unlock()
+
+	log.Printf("Loaded supported query IDs map from %s with %d query ID mappings and %d query data mappings\n",
+		supportedQueryIDsMapPath, len(newQueryIDsMap.QueryIDToAssetPairMap), len(newQueryIDsMap.QueryDataToAssetPairMap))
+	return nil
+}
+
+// getAssetPairFromQueryID returns the asset pair for a given query ID, or empty string if not found
+func getAssetPairFromQueryID(queryID string) string {
+	queryIDsMutex.RLock()
+	defer queryIDsMutex.RUnlock()
+
+	if supportedQueryIDsMap == nil {
+		return ""
+	}
+
+	// First try to find in QueryIDToAssetPairMap
+	if assetPair, exists := supportedQueryIDsMap.QueryIDToAssetPairMap[queryID]; exists {
+		return assetPair
+	}
+
+	// If not found, return empty string
+	return ""
+}
+
 func startConfigWatcher(ctx context.Context) {
 	defer recoverAndAlert("startConfigWatcher")
 	ticker := time.NewTicker(1 * time.Hour)
@@ -390,6 +443,12 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 						message := fmt.Sprintf("**Rate Limit Reached: %s**\nToo many alerts in the last 10 minutes. Alerts will be paused for 2 hours. Please check on reporters and see what is going on\n", eventType.AlertName)
 						for _, attr := range event.Attributes {
 							message += fmt.Sprintf("%s: %s\n", attr.Key, attr.Value)
+							if attr.Key == "query_id" {
+								assetPair := getAssetPairFromQueryID(attr.Value)
+								if assetPair != "" {
+									message += fmt.Sprintf("Asset Pair: %s\n", assetPair)
+								}
+							}
 						}
 
 						discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
@@ -440,13 +499,19 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 		return
 	}
 
+	// Load supported query IDs map
+	if err := loadSupportedQueryIDsMap(); err != nil {
+		log.Printf("Error loading supported query IDs map: %v", err)
+		return
+	}
+
 	client := NewHTTPClient(rpcURL)
 
 	// Get initial block height
 	initialHeight, err := client.getLatestBlockHeight()
 	if err != nil {
 		log.Printf("Failed to get initial block height: %v", err)
-		return
+		panic(err)
 	}
 
 	blockHeightMutex.Lock()
@@ -724,6 +789,13 @@ func handleEvent(event Event, eventType ConfigType) {
 		message := fmt.Sprintf("**Event Alert: %s**\n", eventType.AlertName)
 		for _, attr := range event.Attributes {
 			message += fmt.Sprintf("%s: %s\n", attr.Key, attr.Value)
+			if attr.Key == "query_id" {
+				// Try to get the asset pair for this query ID
+				assetPair := getAssetPairFromQueryID(attr.Value)
+				if assetPair != "" {
+					message += fmt.Sprintf("Asset Pair: %s\n", assetPair)
+				}
+			}
 		}
 
 		discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
@@ -1037,14 +1109,15 @@ func main() {
 	// Parse command line flags
 	flag.StringVar(&rpcURL, "rpc-url", DefaultRpcURL, "RPC URL (default: 127.0.0.1:26657)")
 	flag.StringVar(&configFilePath, "config", "", "Path to config file")
+	flag.StringVar(&supportedQueryIDsMapPath, "query-ids-map", "", "Path to supported query IDs map JSON file")
 	flag.StringVar(&nodeName, "node", "", "Name of the node being monitored")
 	flag.BoolVar(&isTimestampAnalyzer, "timestamp-analyzer", false, "Enable analyzer of validator set update timestamps")
 	flag.DurationVar(&blockTimeThreshold, "block-time-threshold", 0, "Block time threshold (e.g. 5m, 1h). If not set, block time monitoring is disabled.")
 	flag.Parse()
 
 	// Validate required parameters
-	if configFilePath == "" || nodeName == "" {
-		log.Fatal("Usage: go run ./scripts/async-monitors/async-monitor-events.go -rpc-url=<rpc_url> -config=<config_file_path> -node=<node_name>")
+	if configFilePath == "" || nodeName == "" || supportedQueryIDsMapPath == "" {
+		log.Fatal("Usage: go run ./scripts/async-monitors/async-monitor-events.go -rpc-url=<rpc_url> -config=<config_file_path> -query-ids-map=<query_ids_map_file_path> -node=<node_name>")
 	}
 
 	// Initialize Current_Total_Reporter_Power with a default value
