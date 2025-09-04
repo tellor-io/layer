@@ -200,6 +200,10 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Skip:      true, // skipped because authority gated
 				},
 				{
+					RpcMethod: "UpdateMaxBatchSize",
+					Skip:      true, // skipped because authority gated
+				},
+				{
 					RpcMethod:      "NoStakeReport",
 					Use:            "no-stake-report [query_data] [value]",
 					Short:          "Execute the NoStakeReport RPC method",
