@@ -114,3 +114,107 @@ func (k Keeper) SendInflationaryRewards(ctx context.Context, coins sdk.Coins) er
 func (k Keeper) GetAuthority() string {
 	return k.authority
 }
+
+// func (k Keeper) CalculateExtraRewards(ctx context.Context, current, previous time.Time) (sdk.Coin, error) {
+//     if current.Before(previous) {
+//         return sdk.Coin{}, fmt.Errorf("current time %v cannot be before previous time %v", current, previous)
+//     }
+
+//     // TODO:
+// 	// params := k.GetParams(ctx)
+// 	// dailyExtraRewardRate := params.ExtraRewardRate
+
+//     dailyExtraRewards := types.DailyMintRate
+
+//     timeElapsedMs := current.Sub(previous).Milliseconds()
+//     rewardAmount := dailyExtraRewards * timeElapsedMs / 86400000
+
+//     return sdk.NewCoin(layer.BondDenom, cosmosmath.NewInt(rewardAmount)), nil
+// }
+
+func (k Keeper) SendExtraRewards(ctx context.Context, coins sdk.Coins) error {
+	if coins.Empty() {
+		return nil
+	}
+	coinsAmt := coins.AmountOf(layer.BondDenom)
+	// return nil if amt is zero to avoid constructing invalid transactions
+	if coinsAmt.IsZero() {
+		return nil
+	}
+	// get balance
+	balance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.ExtraRewardsPool), layer.BondDenom)
+	if balance.IsZero() {
+		return nil
+	}
+
+	// only send if we have enough balance so the minimum/rate is the the TBR mint rate
+	if balance.Amount.LT(coinsAmt) {
+		return nil
+	}
+	quarter := coinsAmt.QuoRaw(4)
+	threequarters := coinsAmt.Sub(quarter)
+	outputs := []banktypes.Output{
+		{
+			Address: authtypes.NewModuleAddressOrBech32Address(types.TimeBasedRewards).String(),
+			Coins:   sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters)),
+		},
+		{
+			Address: authtypes.NewModuleAddressOrBech32Address(authtypes.FeeCollectorName).String(),
+			Coins:   sdk.NewCoins(sdk.NewCoin(layer.BondDenom, quarter)),
+		},
+	}
+	moduleAddress := authtypes.NewModuleAddressOrBech32Address(types.ExtraRewardsPool)
+	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters.Add(quarter))))
+	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+}
+
+// PreMintingSendExtraRewards sends extra rewards from the extra rewards pool before minting new TBR coins is initiated.
+// Use same rate as TBR minting rate.
+func (k Keeper) PreMintingSendExtraRewards(ctx context.Context) error {
+	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
+
+	minter, err := k.Minter.Get(ctx)
+	if err != nil {
+		return err
+	}
+
+	coin, err := minter.CalculateBlockProvision(currentTime, *minter.PreviousBlockTime)
+	if err != nil {
+		return err
+	}
+	amt := coin.Amount
+
+	if amt.IsZero() {
+		return nil
+	}
+	// get balance
+	balance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.ExtraRewardsPool), layer.BondDenom)
+	if balance.IsZero() {
+		return nil
+	}
+
+	// only send if we have enough balance so the minimum/rate is the the TBR mint rate
+	if balance.Amount.LT(amt) {
+		return nil
+	}
+	quarter := amt.QuoRaw(4)
+	threequarters := amt.Sub(quarter)
+	outputs := []banktypes.Output{
+		{
+			Address: authtypes.NewModuleAddressOrBech32Address(types.TimeBasedRewards).String(),
+			Coins:   sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters)),
+		},
+		{
+			Address: authtypes.NewModuleAddressOrBech32Address(authtypes.FeeCollectorName).String(),
+			Coins:   sdk.NewCoins(sdk.NewCoin(layer.BondDenom, quarter)),
+		},
+	}
+	moduleAddress := authtypes.NewModuleAddressOrBech32Address(types.ExtraRewardsPool)
+	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters.Add(quarter))))
+	err = k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	if err != nil {
+		return err
+	}
+	minter.PreviousBlockTime = &currentTime
+	return k.Minter.Set(ctx, minter)
+}

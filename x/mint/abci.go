@@ -20,7 +20,7 @@ func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 		return err
 	}
 	if !minter.Initialized {
-		return nil
+		return k.PreMintingSendExtraRewards(ctx)
 	}
 
 	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
@@ -51,7 +51,12 @@ func MintBlockProvision(ctx context.Context, k keeper.Keeper, currentTime time.T
 	if err != nil {
 		return err
 	}
-
+	// extraRewardMint, err := k.CalculateExtraRewards(ctx)
+	// TODO: consolidate with SendInflationaryRewards
+	err = k.SendExtraRewards(ctx, toMintCoins)
+	if err != nil {
+		return err
+	}
 	return k.SendInflationaryRewards(ctx, toMintCoins)
 }
 

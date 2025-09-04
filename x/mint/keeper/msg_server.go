@@ -32,6 +32,8 @@ func (k msgServer) Init(goCtx context.Context, msg *types.MsgInit) (*types.MsgMs
 		return nil, types.ErrAlreadyInitialized
 	}
 	minter.Initialized = true
+	// currentTime := sdk.UnwrapSDKContext(goCtx).BlockTime()
+	// minter.PreviousBlockTime = &currentTime
 	if err := k.Minter.Set(goCtx, minter); err != nil {
 		return nil, err
 	}
