@@ -9,6 +9,7 @@ import (
 
 func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSubmitValue{}, "oracle/SubmitValue", nil)
+	cdc.RegisterConcrete(&MsgBatchSubmitValue{}, "oracle/BatchSubmitValue", nil)
 	cdc.RegisterConcrete(&MsgTip{}, "oracle/Tip", nil)
 	cdc.RegisterConcrete(&MsgUpdateParams{}, "oracle/UpdateParams", nil)
 	cdc.RegisterConcrete(&MsgUpdateCyclelist{}, "oracle/UpdateCyclelist", nil)
@@ -18,6 +19,9 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgSubmitValue{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgBatchSubmitValue{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgTip{},

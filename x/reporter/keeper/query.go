@@ -41,7 +41,7 @@ func (k Querier) Reporters(ctx context.Context, req *types.QueryReportersRequest
 		if err != nil {
 			return err
 		}
-		stake, _, err := k.GetReporterStake(ctx, sdk.AccAddress(repAddr), nil)
+		stake, _, err := k.GetReporterStake(ctx, sdk.AccAddress(repAddr))
 		if err != nil {
 			stake = math.ZeroInt()
 		}

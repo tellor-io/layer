@@ -40,6 +40,8 @@ jobs:
             go.sum
             **/go.mod
             **/go.sum
+          PATTERNS_EXCLUDE: |
+            daemons/**
       - name: run linting (short)
         if: steps.lint_long.outcome == 'skipped' && env.GIT_DIFF
         run: |

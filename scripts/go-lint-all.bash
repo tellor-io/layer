@@ -37,7 +37,7 @@ if [[ -n "${FOLDER:-}" ]]; then
 
 # if LINT_DIFF env is set, only lint the files in the current commit otherwise lint all files
 elif [[ -z "${LINT_DIFF:-}" ]]; then
-  find "${REPO_ROOT}" -type f -name go.mod -print0 | xargs -0 -I{} bash -c 'lint_module "$@"' _ {} "$@"
+  find "${REPO_ROOT}" -path "${REPO_ROOT}/daemons" -prune -o -type f -name go.mod -print0 | xargs -0 -I{} bash -c 'lint_module "$@"' _ {} "$@"
 else
   if [[ -z $GIT_DIFF ]]; then
     GIT_DIFF=$(git diff --name-only) || true

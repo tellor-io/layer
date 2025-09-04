@@ -3,8 +3,6 @@ package layer.mint.module;
 
 import "cosmos/app/v1alpha1/module.proto";
 
-option go_package = "github.com/tellor-io/layer/x/mint/module";
-
 // Module is the config object for the module.
 message Module {
   option (cosmos.app.v1alpha1.module) = {go_import: "github.com/tellor-io/layer/x/mint"};
