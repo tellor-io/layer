@@ -15,12 +15,13 @@ import (
 // the block provision for the current block.
 func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+	_ = k.SendExtraRewards(ctx)
 	minter, err := k.Minter.Get(ctx)
 	if err != nil {
 		return err
 	}
 	if !minter.Initialized {
-		return k.PreMintingSendExtraRewards(ctx)
+		return nil
 	}
 
 	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
@@ -51,12 +52,7 @@ func MintBlockProvision(ctx context.Context, k keeper.Keeper, currentTime time.T
 	if err != nil {
 		return err
 	}
-	// extraRewardMint, err := k.CalculateExtraRewards(ctx)
-	// TODO: consolidate with SendInflationaryRewards
-	err = k.SendExtraRewards(ctx, toMintCoins)
-	if err != nil {
-		return err
-	}
+
 	return k.SendInflationaryRewards(ctx, toMintCoins)
 }
 

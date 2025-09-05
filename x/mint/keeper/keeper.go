@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,7 +26,8 @@ type Keeper struct {
 	bankKeeper    types.BankKeeper
 	accountKeeper types.AccountKeeper
 
-	Minter collections.Item[types.Minter]
+	Minter            collections.Item[types.Minter]
+	ExtraRewardParams collections.Item[types.ExtraRewardParams]
 
 	authority string
 }
@@ -57,8 +59,9 @@ func NewKeeper(
 		bankKeeper:    bankKeeper,
 		accountKeeper: accountKeeper,
 
-		Minter:    collections.NewItem(sb, collections.NewPrefix(0), "minter", codec.CollValue[types.Minter](cdc)),
-		authority: authority,
+		Minter:            collections.NewItem(sb, collections.NewPrefix(0), "minter", codec.CollValue[types.Minter](cdc)),
+		ExtraRewardParams: collections.NewItem(sb, collections.NewPrefix(1), "extra_reward_params", codec.CollValue[types.ExtraRewardParams](cdc)),
+		authority:         authority,
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -115,106 +118,63 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
-// func (k Keeper) CalculateExtraRewards(ctx context.Context, current, previous time.Time) (sdk.Coin, error) {
-//     if current.Before(previous) {
-//         return sdk.Coin{}, fmt.Errorf("current time %v cannot be before previous time %v", current, previous)
-//     }
-
-//     // TODO:
-// 	// params := k.GetParams(ctx)
-// 	// dailyExtraRewardRate := params.ExtraRewardRate
-
-//     dailyExtraRewards := types.DailyMintRate
-
-//     timeElapsedMs := current.Sub(previous).Milliseconds()
-//     rewardAmount := dailyExtraRewards * timeElapsedMs / 86400000
-
-//     return sdk.NewCoin(layer.BondDenom, cosmosmath.NewInt(rewardAmount)), nil
-// }
-
-func (k Keeper) SendExtraRewards(ctx context.Context, coins sdk.Coins) error {
-	if coins.Empty() {
-		return nil
+func (k Keeper) GetExtraRewardRateParams(ctx context.Context) types.ExtraRewardParams {
+	params, err := k.ExtraRewardParams.Get(ctx)
+	if err != nil {
+		return types.ExtraRewardParams{BondDenom: types.DefaultBondDenom}
 	}
-	coinsAmt := coins.AmountOf(layer.BondDenom)
-	// return nil if amt is zero to avoid constructing invalid transactions
-	if coinsAmt.IsZero() {
-		return nil
-	}
-	// get balance
-	balance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.ExtraRewardsPool), layer.BondDenom)
-	if balance.IsZero() {
-		return nil
-	}
-
-	// only send if we have enough balance so the minimum/rate is the the TBR mint rate
-	if balance.Amount.LT(coinsAmt) {
-		return nil
-	}
-	quarter := coinsAmt.QuoRaw(4)
-	threequarters := coinsAmt.Sub(quarter)
-	outputs := []banktypes.Output{
-		{
-			Address: authtypes.NewModuleAddressOrBech32Address(types.TimeBasedRewards).String(),
-			Coins:   sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters)),
-		},
-		{
-			Address: authtypes.NewModuleAddressOrBech32Address(authtypes.FeeCollectorName).String(),
-			Coins:   sdk.NewCoins(sdk.NewCoin(layer.BondDenom, quarter)),
-		},
-	}
-	moduleAddress := authtypes.NewModuleAddressOrBech32Address(types.ExtraRewardsPool)
-	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters.Add(quarter))))
-	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	return params
 }
 
-// PreMintingSendExtraRewards sends extra rewards from the extra rewards pool before minting new TBR coins is initiated.
+// SendExtraRewards sends extra rewards from the extra rewards pool before minting new TBR coins is initiated.
 // Use same rate as TBR minting rate.
-func (k Keeper) PreMintingSendExtraRewards(ctx context.Context) error {
+func (k Keeper) SendExtraRewards(ctx context.Context) error {
 	currentTime := sdk.UnwrapSDKContext(ctx).BlockTime()
 
-	minter, err := k.Minter.Get(ctx)
-	if err != nil {
+	rewardParams := k.GetExtraRewardRateParams(ctx)
+	previousBlockTime := rewardParams.PreviousBlockTime
+	// set a new previous block time regardless of whether we can pay out rewards or not
+	rewardParams.PreviousBlockTime = &currentTime
+	if err := k.ExtraRewardParams.Set(ctx, rewardParams); err != nil {
 		return err
 	}
 
-	coin, err := minter.CalculateBlockProvision(currentTime, *minter.PreviousBlockTime)
-	if err != nil {
-		return err
-	}
-	amt := coin.Amount
-
-	if amt.IsZero() {
+	if previousBlockTime == nil {
 		return nil
 	}
 	// get balance
-	balance := k.bankKeeper.GetBalance(ctx, k.accountKeeper.GetModuleAddress(types.ExtraRewardsPool), layer.BondDenom)
+	moduleAddr := k.accountKeeper.GetModuleAddress(types.ExtraRewardsPool)
+	balance := k.bankKeeper.GetBalance(ctx, moduleAddr, rewardParams.BondDenom)
 	if balance.IsZero() {
 		return nil
 	}
 
+	dailyExtraRewardRate := rewardParams.DailyExtraRewards
+	if dailyExtraRewardRate == 0 {
+		dailyExtraRewardRate = types.DailyMintRate
+	}
+
+	timeElapsed := currentTime.Sub(*previousBlockTime).Milliseconds()
+	rewardAmount := dailyExtraRewardRate * timeElapsed / types.MillisecondsInDay
+	rewardAmountInt := math.NewInt(rewardAmount)
 	// only send if we have enough balance so the minimum/rate is the the TBR mint rate
-	if balance.Amount.LT(amt) {
+	if rewardAmountInt.IsZero() || balance.Amount.LT(rewardAmountInt) {
 		return nil
 	}
-	quarter := amt.QuoRaw(4)
-	threequarters := amt.Sub(quarter)
+
+	quarter := rewardAmountInt.QuoRaw(4)
+	threequarters := rewardAmountInt.Sub(quarter)
 	outputs := []banktypes.Output{
 		{
 			Address: authtypes.NewModuleAddressOrBech32Address(types.TimeBasedRewards).String(),
-			Coins:   sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters)),
+			Coins:   sdk.NewCoins(sdk.NewCoin(rewardParams.BondDenom, threequarters)),
 		},
 		{
 			Address: authtypes.NewModuleAddressOrBech32Address(authtypes.FeeCollectorName).String(),
-			Coins:   sdk.NewCoins(sdk.NewCoin(layer.BondDenom, quarter)),
+			Coins:   sdk.NewCoins(sdk.NewCoin(rewardParams.BondDenom, quarter)),
 		},
 	}
 	moduleAddress := authtypes.NewModuleAddressOrBech32Address(types.ExtraRewardsPool)
-	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters.Add(quarter))))
-	err = k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
-	if err != nil {
-		return err
-	}
-	minter.PreviousBlockTime = &currentTime
-	return k.Minter.Set(ctx, minter)
+	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(rewardParams.BondDenom, threequarters.Add(quarter))))
+	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
 }
