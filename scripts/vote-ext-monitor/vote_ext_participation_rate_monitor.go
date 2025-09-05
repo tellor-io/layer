@@ -733,9 +733,9 @@ func verifySignaturesInVoteExtension(voteExtData VoteExtensionData, height uint6
 							lastNotificationTimeMapMutex.Lock()
 							lastNotificationTimeMap[operatorAddr] = time.Now()
 							lastNotificationTimeMapMutex.Unlock()
-							invalidSignatures = append(invalidSignatures, fmt.Sprintf("Oracle attestation for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddr, expectedEVMAddr))
+							invalidSignatures = append(invalidSignatures, fmt.Sprintf("Oracle attestation for operator %s: EVM address not found", operatorAddr))
 						} else {
-							log.Printf("Skipping duplicate oracle attestation for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddr, expectedEVMAddr)
+							log.Printf("Skipping duplicate oracle attestation for operator %s: EVM address not found", operatorAddr)
 						}
 						continue
 					}
@@ -746,9 +746,9 @@ func verifySignaturesInVoteExtension(voteExtData VoteExtensionData, height uint6
 						lastNotificationTimeMapMutex.Lock()
 						lastNotificationTimeMap[operatorAddr] = time.Now()
 						lastNotificationTimeMapMutex.Unlock()
-						invalidSignatures = append(invalidSignatures, fmt.Sprintf("Oracle attestation for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddr, expectedEVMAddr))
+						invalidSignatures = append(invalidSignatures, fmt.Sprintf("Oracle attestation for operator %s: Could not get expected EVM address", operatorAddr))
 					} else {
-						log.Printf("Skipping duplicate oracle attestation for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddr, expectedEVMAddr)
+						log.Printf("Skipping duplicate oracle attestation for operator %s: Could not get expected EVM address", operatorAddr)
 					}
 					continue
 				}
