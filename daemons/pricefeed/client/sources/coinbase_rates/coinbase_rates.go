@@ -48,7 +48,6 @@ func CoinbaseRatesPriceFunction(
 	tickerToExponent map[string]int32,
 	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
-
 	var ratesResponse CoinbaseRatesResponse
 	err = json.NewDecoder(response.Body).Decode(&ratesResponse)
 	if err != nil {
