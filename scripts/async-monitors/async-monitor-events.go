@@ -996,16 +996,16 @@ func runAnalysis() {
 		// Try RFC3339 format first
 		timestamp, parseErr = time.Parse(time.RFC3339, timestampStr)
 		if parseErr != nil {
-			// Try Unix timestamp
+			// Try Unix timestamp (assuming milliseconds)
 			if unixTime, err := strconv.ParseInt(timestampStr, 10, 64); err == nil {
-				timestamp = time.Unix(unixTime, 0)
+				timestamp = time.Unix(unixTime/1000, (unixTime%1000)*1000000)
 			} else {
 				log.Printf("Error parsing timestamp %s: %v", timestampStr, parseErr)
 				continue
 			}
 		}
-		sevenDaysAgo := time.Now().Add(-7 * 24 * time.Hour)
-		if timestamp.After(sevenDaysAgo) {
+		fourteenDaysAgo := time.Now().Add(-14 * 24 * time.Hour)
+		if timestamp.After(fourteenDaysAgo) {
 			timestamps = append(timestamps, timestamp)
 		}
 	}
@@ -1015,8 +1015,56 @@ func runAnalysis() {
 		return
 	}
 
+	// Check if we have any timestamps in the last 2 weeks
+	if len(timestamps) == 0 {
+		log.Printf("No timestamps found in the last 2 weeks - this indicates an issue")
+		// Send alert about no recent timestamps
+		message := fmt.Sprintf("**Daily Validator Set Update Analysis**\n\n"+
+			"**⚠️ ALERT: No validator set updates found in the last 2 weeks**\n"+
+			"**Analysis Period:** Last 14 days\n"+
+			"**Total Updates:** 0\n"+
+			"**Status:** No recent activity detected\n"+
+			"**Node:** %s",
+			nodeName)
+
+		configMutex.RLock()
+		eventType, exists := eventTypeMap["valset_update_analysis"]
+		configMutex.RUnlock()
+
+		if exists {
+			discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
+			if err := discordNotifier.SendAlert(message); err != nil {
+				log.Printf("Error sending no-timestamps Discord alert: %v", err)
+			} else {
+				log.Printf("Sent no-timestamps Discord alert")
+			}
+		}
+		return
+	}
+
 	if len(timestamps) < 2 {
-		log.Printf("Not enough timestamps for analysis (need at least 2, got %d)", len(timestamps))
+		log.Printf("Only %d timestamp(s) found in the last 2 weeks (need at least 2 for frequency analysis)", len(timestamps))
+		// Send alert about insufficient data
+		message := fmt.Sprintf("**Daily Validator Set Update Analysis**\n\n"+
+			"**⚠️ ALERT: Insufficient data for frequency analysis**\n"+
+			"**Analysis Period:** Last 14 days\n"+
+			"**Total Updates:** %d\n"+
+			"**Status:** Only %d update(s) found - cannot calculate frequency\n"+
+			"**Node:** %s",
+			len(timestamps), len(timestamps), nodeName)
+
+		configMutex.RLock()
+		eventType, exists := eventTypeMap["valset_update_analysis"]
+		configMutex.RUnlock()
+
+		if exists {
+			discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
+			if err := discordNotifier.SendAlert(message); err != nil {
+				log.Printf("Error sending insufficient-data Discord alert: %v", err)
+			} else {
+				log.Printf("Sent insufficient-data Discord alert")
+			}
+		}
 		return
 	}
 
@@ -1024,11 +1072,6 @@ func runAnalysis() {
 	sort.Slice(timestamps, func(i, j int) bool {
 		return timestamps[i].Before(timestamps[j])
 	})
-
-	if len(timestamps) < 2 {
-		log.Printf("Not enough recent timestamps for 7-day analysis (need at least 2, got %d)", len(timestamps))
-		return
-	}
 
 	// Calculate time differences
 	var timeDiffs []time.Duration
@@ -1057,7 +1100,7 @@ func runAnalysis() {
 	// Format the message
 	message := fmt.Sprintf("**Daily Validator Set Update Analysis**\n\n"+
 		"**Latest Update:** %s\n"+
-		"**Analysis Period:** Last 7 days\n"+
+		"**Analysis Period:** Last 14 days\n"+
 		"**Total Updates:** %d\n"+
 		"**Average Frequency:** %s\n"+
 		"**Median Frequency:** %s\n"+

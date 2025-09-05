@@ -12,6 +12,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -53,6 +54,9 @@ var (
 	currentCSVFileName string
 	rotationTicker     *time.Ticker
 	lastRotationDate   time.Time
+
+	lastNotificationTimeMapMutex sync.RWMutex
+	lastNotificationTimeMap      map[string]time.Time
 )
 
 type RPCRequest struct {
@@ -526,6 +530,13 @@ type EvmAddressResponse struct {
 	EvmAddress string `json:"evm_address"`
 }
 
+// APIErrorResponse represents an error response from the API
+type APIErrorResponse struct {
+	Code    int           `json:"code"`
+	Message string        `json:"message"`
+	Details []interface{} `json:"details"`
+}
+
 // Custom error types for EVM address lookup
 type EVMAddressNotFoundError struct {
 	OperatorAddress string
@@ -554,7 +565,9 @@ func getEVMAddressFromOperatorAddress(operatorAddress string) (string, error) {
 		}
 	}
 
-	url := fmt.Sprintf("%s/layer/bridge/get_evm_address_by_validator_address/%s", swaggerAPIURL, operatorAddress)
+	// URL encode the operator address to handle special characters
+	encodedAddress := url.QueryEscape(operatorAddress)
+	url := fmt.Sprintf("%s/layer/bridge/get_evm_address_by_validator_address/%s", swaggerAPIURL, encodedAddress)
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -565,6 +578,26 @@ func getEVMAddressFromOperatorAddress(operatorAddress string) (string, error) {
 	}
 	defer resp.Body.Close()
 
+	// Read the response body first to see what we got
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", &EVMAddressLookupError{
+			OperatorAddress: operatorAddress,
+			Err:             err,
+		}
+	}
+
+	// First try to parse as an error response (regardless of HTTP status code)
+	var apiError APIErrorResponse
+	if err := json.Unmarshal(body, &apiError); err == nil && apiError.Code != 0 {
+		// This is an API error response (like code 13 "failed to get eth address")
+		// Treat this as an invalid signature case by returning a specific error
+		log.Printf("API error response detected: code=%d, message=%s", apiError.Code, apiError.Message)
+		return "", &EVMAddressNotFoundError{
+			OperatorAddress: operatorAddress,
+		}
+	}
+
 	if resp.StatusCode != http.StatusOK {
 		return "", &EVMAddressLookupError{
 			OperatorAddress: operatorAddress,
@@ -572,8 +605,9 @@ func getEVMAddressFromOperatorAddress(operatorAddress string) (string, error) {
 		}
 	}
 
+	// Try to parse as successful response
 	var evmAddressResp EvmAddressResponse
-	if err := json.NewDecoder(resp.Body).Decode(&evmAddressResp); err != nil {
+	if err := json.Unmarshal(body, &evmAddressResp); err != nil {
 		return "", &EVMAddressLookupError{
 			OperatorAddress: operatorAddress,
 			Err:             err,
@@ -613,20 +647,42 @@ func verifySignaturesInVoteExtension(voteExtData VoteExtensionData, height uint6
 			derivedEVMAddrs, err := deriveEVMAddressFromValsetSigs(signature, timestamp)
 			if err != nil {
 				log.Printf("Failed to derive EVM address from valset signature for operator %s: %v", operatorAddr, err)
-				invalidSignatures = append(invalidSignatures, fmt.Sprintf("Valset signature for operator %s: %v", operatorAddr, err))
+				lastNotificationTime, ok := lastNotificationTimeMap[operatorAddr]
+				if !ok || time.Since(lastNotificationTime) > 24*time.Hour {
+					lastNotificationTimeMapMutex.Lock()
+					lastNotificationTimeMap[operatorAddr] = time.Now()
+					lastNotificationTimeMapMutex.Unlock()
+					invalidSignatures = append(invalidSignatures, fmt.Sprintf("failure to derive evm address from signature for operator %s: %v", operatorAddr, err))
+				} else {
+					log.Printf("Skipping duplicate failure to derive evm address from signature for operator %s", operatorAddr)
+				}
 				continue
 			}
 
 			// Get expected EVM address from API
 			expectedEVMAddr, err := getEVMAddressFromOperatorAddress(operatorAddr)
 			if err != nil {
-				// Check if it's a lookup error (RPC down, network issues, etc.) vs not found
+				// Check if it's a lookup error (RPC down, network issues, etc.) vs not found/API error
 				if _, ok := err.(*EVMAddressLookupError); ok {
 					log.Printf("Could not get expected EVM address for operator %s due to lookup error: %v", operatorAddr, err)
 					// Don't add to invalidSignatures for lookup errors - just log and continue
 					continue
 				}
-				// For other errors (like not found), we still want to track as invalid
+				// For EVMAddressNotFoundError (including API errors like code 13), treat as invalid signature
+				if _, ok := err.(*EVMAddressNotFoundError); ok {
+					log.Printf("EVM address not found for operator %s (API error): %v", operatorAddr, err)
+					lastNotificationTime, ok := lastNotificationTimeMap[operatorAddr]
+					if !ok || time.Since(lastNotificationTime) > 24*time.Hour {
+						lastNotificationTimeMapMutex.Lock()
+						lastNotificationTimeMap[operatorAddr] = time.Now()
+						lastNotificationTimeMapMutex.Unlock()
+						invalidSignatures = append(invalidSignatures, fmt.Sprintf("Valset signature for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddrs[0], expectedEVMAddr))
+					} else {
+						log.Printf("Skipping duplicate valset signature attestation for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddrs[0], expectedEVMAddr)
+					}
+					continue
+				}
+				// For other errors, we still want to track as invalid
 				log.Printf("Could not get expected EVM address for operator %s: %v", operatorAddr, err)
 				continue
 			}
@@ -634,7 +690,15 @@ func verifySignaturesInVoteExtension(voteExtData VoteExtensionData, height uint6
 			// Compare derived vs expected EVM address
 			if derivedEVMAddrs[0] != expectedEVMAddr && derivedEVMAddrs[1] != expectedEVMAddr {
 				log.Printf("Invalid valset signature for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddrs[0], expectedEVMAddr)
-				invalidSignatures = append(invalidSignatures, fmt.Sprintf("Valset signature for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddrs[0], expectedEVMAddr))
+				lastNotificationTime, ok := lastNotificationTimeMap[operatorAddr]
+				if !ok || time.Since(lastNotificationTime) > 24*time.Hour {
+					lastNotificationTimeMapMutex.Lock()
+					lastNotificationTimeMap[operatorAddr] = time.Now()
+					lastNotificationTimeMapMutex.Unlock()
+					invalidSignatures = append(invalidSignatures, fmt.Sprintf("Valset signature for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddrs[0], expectedEVMAddr))
+				} else {
+					log.Printf("Skipping duplicate valset signature attestation for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddrs[0], expectedEVMAddr)
+				}
 			} else {
 				log.Printf("Valid valset signature for operator %s: %s", operatorAddr, derivedEVMAddrs[0])
 			}
@@ -655,21 +719,52 @@ func verifySignaturesInVoteExtension(voteExtData VoteExtensionData, height uint6
 			for operatorAddr, derivedEVMAddr := range derivedEVMAddresses {
 				expectedEVMAddr, err := getEVMAddressFromOperatorAddress(operatorAddr)
 				if err != nil {
-					// Check if it's a lookup error (RPC down, network issues, etc.) vs not found
+					// Check if it's a lookup error (RPC down, network issues, etc.) vs not found/API error
 					if _, ok := err.(*EVMAddressLookupError); ok {
 						log.Printf("Could not get expected EVM address for oracle operator %s due to lookup error: %v", operatorAddr, err)
 						// Don't add to invalidSignatures for lookup errors - just log and continue
 						continue
 					}
-					// For other errors (like not found), we still want to track as invalid
+					// For EVMAddressNotFoundError (including API errors like code 13), treat as invalid signature
+					if _, ok := err.(*EVMAddressNotFoundError); ok {
+						log.Printf("EVM address not found for oracle operator %s (API error): %v", operatorAddr, err)
+						lastNotificationTime, ok := lastNotificationTimeMap[operatorAddr]
+						if !ok || time.Since(lastNotificationTime) > 24*time.Hour {
+							lastNotificationTimeMapMutex.Lock()
+							lastNotificationTimeMap[operatorAddr] = time.Now()
+							lastNotificationTimeMapMutex.Unlock()
+							invalidSignatures = append(invalidSignatures, fmt.Sprintf("Oracle attestation for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddr, expectedEVMAddr))
+						} else {
+							log.Printf("Skipping duplicate oracle attestation for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddr, expectedEVMAddr)
+						}
+						continue
+					}
+					// For other errors, we still want to track as invalid
 					log.Printf("Could not get expected EVM address for oracle operator %s: %v", operatorAddr, err)
-					invalidSignatures = append(invalidSignatures, fmt.Sprintf("Oracle attestation for operator %s: Could not get expected EVM address", operatorAddr))
+					lastNotificationTime, ok := lastNotificationTimeMap[operatorAddr]
+					if !ok || time.Since(lastNotificationTime) > 24*time.Hour {
+						lastNotificationTimeMapMutex.Lock()
+						lastNotificationTimeMap[operatorAddr] = time.Now()
+						lastNotificationTimeMapMutex.Unlock()
+						invalidSignatures = append(invalidSignatures, fmt.Sprintf("Oracle attestation for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddr, expectedEVMAddr))
+					} else {
+						log.Printf("Skipping duplicate oracle attestation for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddr, expectedEVMAddr)
+					}
 					continue
 				}
 
-				if strings.EqualFold(derivedEVMAddr[0], expectedEVMAddr) && strings.EqualFold(derivedEVMAddr[1], expectedEVMAddr) {
+				if !strings.EqualFold(derivedEVMAddr[0], expectedEVMAddr) && !strings.EqualFold(derivedEVMAddr[1], expectedEVMAddr) {
 					log.Printf("Invalid oracle attestation for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddr, expectedEVMAddr)
-					invalidSignatures = append(invalidSignatures, fmt.Sprintf("Oracle attestation for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddr, expectedEVMAddr))
+					lastNotificationTime, ok := lastNotificationTimeMap[operatorAddr]
+					if !ok || time.Since(lastNotificationTime) > 24*time.Hour {
+						lastNotificationTimeMapMutex.Lock()
+						lastNotificationTimeMap[operatorAddr] = time.Now()
+						lastNotificationTimeMapMutex.Unlock()
+						invalidSignatures = append(invalidSignatures, fmt.Sprintf("Oracle attestation for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddr, expectedEVMAddr))
+					} else {
+						log.Printf("Skipping duplicate oracle attestation for operator %s: derived %s, expected %s", operatorAddr, derivedEVMAddr, expectedEVMAddr)
+					}
+
 				}
 			}
 		}
@@ -1144,6 +1239,9 @@ func main() {
 	if nodeName == "" {
 		log.Fatal("Usage: go run ./scripts/vote-ext-monitor/vote_ext_participation_rate_monitor.go -rpc-url=<rpc_url> -node=<node_name> [-swagger-api-url=<swagger_api_url>]")
 	}
+
+	// Initialize the notification time map
+	lastNotificationTimeMap = make(map[string]time.Time)
 
 	// Initialize CSV file with rotation
 	if err := initCSVFile(); err != nil {
