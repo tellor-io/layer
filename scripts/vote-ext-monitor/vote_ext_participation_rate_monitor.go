@@ -555,6 +555,18 @@ func (e *EVMAddressLookupError) Error() string {
 	return fmt.Sprintf("failed to lookup EVM address for operator %s: %v", e.OperatorAddress, e.Err)
 }
 
+// logNotificationMapState logs the current state of the notification map for debugging
+func logNotificationMapState() {
+	lastNotificationTimeMapMutex.RLock()
+	defer lastNotificationTimeMapMutex.RUnlock()
+
+	log.Printf("DEBUG: Current notification map has %d entries:", len(lastNotificationTimeMap))
+	for operator, lastTime := range lastNotificationTimeMap {
+		timeSince := time.Since(lastTime)
+		log.Printf("DEBUG:   %s: last notification %v ago", operator, timeSince)
+	}
+}
+
 // getEVMAddressFromOperatorAddress calls the Swagger API to get EVM address by validator address
 func getEVMAddressFromOperatorAddress(operatorAddress string) (string, error) {
 	// Use swagger API URL if provided, otherwise return error
@@ -729,26 +741,40 @@ func verifySignaturesInVoteExtension(voteExtData VoteExtensionData, height uint6
 					if _, ok := err.(*EVMAddressNotFoundError); ok {
 						log.Printf("EVM address not found for oracle operator %s (API error): %v", operatorAddr, err)
 						lastNotificationTime, ok := lastNotificationTimeMap[operatorAddr]
-						if !ok || time.Since(lastNotificationTime) > 24*time.Hour {
+						if !ok {
+							log.Printf("DEBUG: No previous notification time found for operator %s (EVM not found), will send alert", operatorAddr)
+							lastNotificationTimeMapMutex.Lock()
+							lastNotificationTimeMap[operatorAddr] = time.Now()
+							lastNotificationTimeMapMutex.Unlock()
+							invalidSignatures = append(invalidSignatures, fmt.Sprintf("Oracle attestation for operator %s: EVM address not found", operatorAddr))
+						} else if time.Since(lastNotificationTime) > 24*time.Hour {
+							log.Printf("DEBUG: Previous notification for operator %s (EVM not found) was %v ago (>24h), will send alert", operatorAddr, time.Since(lastNotificationTime))
 							lastNotificationTimeMapMutex.Lock()
 							lastNotificationTimeMap[operatorAddr] = time.Now()
 							lastNotificationTimeMapMutex.Unlock()
 							invalidSignatures = append(invalidSignatures, fmt.Sprintf("Oracle attestation for operator %s: EVM address not found", operatorAddr))
 						} else {
-							log.Printf("Skipping duplicate oracle attestation for operator %s: EVM address not found", operatorAddr)
+							log.Printf("DEBUG: Skipping duplicate oracle attestation for operator %s (EVM not found): last notification was %v ago", operatorAddr, time.Since(lastNotificationTime))
 						}
 						continue
 					}
 					// For other errors, we still want to track as invalid
 					log.Printf("Could not get expected EVM address for oracle operator %s: %v", operatorAddr, err)
 					lastNotificationTime, ok := lastNotificationTimeMap[operatorAddr]
-					if !ok || time.Since(lastNotificationTime) > 24*time.Hour {
+					if !ok {
+						log.Printf("DEBUG: No previous notification time found for operator %s, will send alert", operatorAddr)
+						lastNotificationTimeMapMutex.Lock()
+						lastNotificationTimeMap[operatorAddr] = time.Now()
+						lastNotificationTimeMapMutex.Unlock()
+						invalidSignatures = append(invalidSignatures, fmt.Sprintf("Oracle attestation for operator %s: Could not get expected EVM address", operatorAddr))
+					} else if time.Since(lastNotificationTime) > 24*time.Hour {
+						log.Printf("DEBUG: Previous notification for operator %s was %v ago (>24h), will send alert", operatorAddr, time.Since(lastNotificationTime))
 						lastNotificationTimeMapMutex.Lock()
 						lastNotificationTimeMap[operatorAddr] = time.Now()
 						lastNotificationTimeMapMutex.Unlock()
 						invalidSignatures = append(invalidSignatures, fmt.Sprintf("Oracle attestation for operator %s: Could not get expected EVM address", operatorAddr))
 					} else {
-						log.Printf("Skipping duplicate oracle attestation for operator %s: Could not get expected EVM address", operatorAddr)
+						log.Printf("DEBUG: Skipping duplicate oracle attestation for operator %s: last notification was %v ago", operatorAddr, time.Since(lastNotificationTime))
 					}
 					continue
 				}
@@ -850,6 +876,11 @@ func processBlock(blockResponse *BlockResponse, height uint64) error {
 	if err := verifySignaturesInVoteExtension(voteExtData, height, timestamp); err != nil {
 		log.Printf("Block %d signature verification failed: %v", height, err)
 		// Continue with participation rate monitoring even if signature verification fails
+	}
+
+	// Log notification map state every 100 blocks for debugging
+	if height%100 == 0 {
+		logNotificationMapState()
 	}
 
 	totalValidatorSetPower, err := calculateTotalValidatorSetPower(voteExtData)
@@ -1242,6 +1273,8 @@ func main() {
 
 	// Initialize the notification time map
 	lastNotificationTimeMap = make(map[string]time.Time)
+	log.Printf("DEBUG: Process started with PID %d at %v", os.Getpid(), time.Now())
+	log.Printf("DEBUG: Initialized lastNotificationTimeMap at %v", time.Now())
 
 	// Initialize CSV file with rotation
 	if err := initCSVFile(); err != nil {
