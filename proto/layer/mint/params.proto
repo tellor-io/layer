@@ -1,0 +1,14 @@
+syntax = "proto3";
+package layer.mint;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/tellor-io/layer/x/mint/types";
+
+message ExtraRewardParams {
+  // ExtraRewardRate is the extra reward rate per day.
+  int64 daily_extra_rewards = 1;
+  google.protobuf.Timestamp previous_block_time = 2 [(gogoproto.stdtime) = true];
+  string bond_denom = 3;
+}

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -117,4 +118,120 @@ func (s *KeeperTestSuite) TestGetAuthority() {
 
 	authority := k.GetAuthority()
 	require.Equal(authority, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+}
+
+func (s *KeeperTestSuite) TestSendExtraRewards() {
+	require := s.Require()
+	k := s.mintKeeper
+	bk := s.bankKeeper
+	ak := s.accountKeeper
+
+	extraRewardsAddr := authtypes.NewModuleAddress(types.ExtraRewardsPool)
+	ak.On("GetModuleAddress", types.ExtraRewardsPool).Return(extraRewardsAddr)
+
+	// Zero balance in extra rewards pool should return nil
+	bk.On("GetBalance", s.ctx, extraRewardsAddr, types.DefaultBondDenom).Return(sdk.NewCoin(types.DefaultBondDenom, math.ZeroInt())).Once()
+	err := k.SendExtraRewards(s.ctx)
+	require.Nil(err)
+
+	// First time call with no previous block time should return nil
+	params := types.ExtraRewardParams{
+		DailyExtraRewards: types.DailyMintRate,
+		PreviousBlockTime: nil,
+		BondDenom:         types.DefaultBondDenom,
+	}
+	err = k.ExtraRewardParams.Set(s.ctx, params)
+	require.NoError(err)
+	err = k.SendExtraRewards(s.ctx)
+	require.NoError(err)
+
+	// Sufficient balance with valid previous block time
+	currentTime := time.Now().UTC()
+	s.ctx = s.ctx.WithBlockTime(currentTime)
+	previousTime := currentTime.Add(-24 * time.Hour) // 1 day ago
+	params.PreviousBlockTime = &previousTime
+	err = k.ExtraRewardParams.Set(s.ctx, params)
+	require.NoError(err)
+
+	// Calculate expected reward amount (1 day worth)
+	expectedRewardAmount := math.NewInt(types.DailyMintRate)
+
+	// Pool has sufficient balance
+	poolBalance := sdk.NewCoin(types.DefaultBondDenom, expectedRewardAmount.MulRaw(2))
+	bk.On("GetBalance", s.ctx, extraRewardsAddr, types.DefaultBondDenom).Return(poolBalance).Once()
+
+	// Set up expected InputOutputCoins call
+	banktypesInput := banktypes.NewInput(extraRewardsAddr, sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, expectedRewardAmount)))
+	banktypesOutputs := []banktypes.Output{
+		{
+			Address: authtypes.NewModuleAddressOrBech32Address(types.TimeBasedRewards).String(),
+			Coins:   sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, expectedRewardAmount.QuoRaw(4).MulRaw(3))),
+		},
+		{
+			Address: authtypes.NewModuleAddressOrBech32Address(authtypes.FeeCollectorName).String(),
+			Coins:   sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, expectedRewardAmount.QuoRaw(4))),
+		},
+	}
+	bk.On("InputOutputCoins", s.ctx, banktypesInput, banktypesOutputs).Return(nil).Once()
+
+	err = k.SendExtraRewards(s.ctx)
+	require.NoError(err)
+
+	// Verify previous block time was updated
+	updatedParams, err := k.ExtraRewardParams.Get(s.ctx)
+	require.NoError(err)
+	require.Equal(currentTime, *updatedParams.PreviousBlockTime)
+
+	// Insufficient balance in pool should return nil
+	params.PreviousBlockTime = &previousTime
+	err = k.ExtraRewardParams.Set(s.ctx, params)
+	require.NoError(err)
+
+	insufficientBalance := sdk.NewCoin(types.DefaultBondDenom, math.NewInt(100)) // Very small balance
+	bk.On("GetBalance", s.ctx, extraRewardsAddr, types.DefaultBondDenom).Return(insufficientBalance).Once()
+
+	err = k.SendExtraRewards(s.ctx)
+	require.NoError(err)
+
+	// Verify previous block time was still updated even though no rewards sent
+	updatedParams, err = k.ExtraRewardParams.Get(s.ctx)
+	require.NoError(err)
+	require.Equal(currentTime, *updatedParams.PreviousBlockTime)
+
+	// Zero time elapsed - should handle gracefully
+	params.PreviousBlockTime = &currentTime // Same as current time
+	err = k.ExtraRewardParams.Set(s.ctx, params)
+	require.NoError(err)
+
+	bk.On("GetBalance", s.ctx, extraRewardsAddr, types.DefaultBondDenom).Return(poolBalance).Once()
+
+	err = k.SendExtraRewards(s.ctx)
+	require.NoError(err)
+}
+
+func (s *KeeperTestSuite) TestGetExtraRewardRateParams() {
+	require := s.Require()
+	k := s.mintKeeper
+
+	// Get params when not set should return defults
+	params := k.GetExtraRewardRateParams(s.ctx)
+	require.Equal(types.DefaultBondDenom, params.BondDenom)
+	require.Equal(int64(0), params.DailyExtraRewards)
+	require.Nil(params.PreviousBlockTime)
+
+	// Set and get params
+	currentTime := s.ctx.BlockTime()
+	expectedParams := types.ExtraRewardParams{
+		DailyExtraRewards: 1000000,
+		PreviousBlockTime: &currentTime,
+		BondDenom:         "testdenom",
+	}
+	err := k.ExtraRewardParams.Set(s.ctx, expectedParams)
+	require.NoError(err)
+
+	retrievedParams := k.GetExtraRewardRateParams(s.ctx)
+	require.Equal(expectedParams.DailyExtraRewards, retrievedParams.DailyExtraRewards)
+	require.Equal(expectedParams.BondDenom, retrievedParams.BondDenom)
+	require.NotNil(retrievedParams.PreviousBlockTime)
+	require.Equal(*expectedParams.PreviousBlockTime, *retrievedParams.PreviousBlockTime)
 }

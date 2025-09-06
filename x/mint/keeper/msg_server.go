@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/tellor-io/layer/x/mint/types"
 
@@ -41,4 +42,29 @@ func (k msgServer) Init(goCtx context.Context, msg *types.MsgInit) (*types.MsgMs
 		),
 	})
 	return &types.MsgMsgInitResponse{}, nil
+}
+
+func (k msgServer) UpdateExtraRewardRate(ctx context.Context, msg *types.MsgUpdateExtraRewardRate) (*types.MsgUpdateExtraRewardRateResponse, error) {
+	if k.Keeper.GetAuthority() != msg.Authority {
+		return nil, errors.Wrapf(types.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.Keeper.GetAuthority(), msg.Authority)
+	}
+	extraRewardParams, err := k.Keeper.ExtraRewardParams.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if msg.DailyExtraRewards <= 0 {
+		return nil, errors.Wrapf(types.ErrInvalidRequest, "daily extra rewards must be positive: %d", msg.DailyExtraRewards)
+	}
+	extraRewardParams.DailyExtraRewards = msg.DailyExtraRewards
+	if err := k.Keeper.ExtraRewardParams.Set(ctx, extraRewardParams); err != nil {
+		return nil, err
+	}
+
+	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"new_extra_reward_rate",
+			sdk.NewAttribute("daily_extra_rewards_rate", fmt.Sprintf("%d", msg.DailyExtraRewards)),
+		),
+	})
+	return &types.MsgUpdateExtraRewardRateResponse{}, nil
 }

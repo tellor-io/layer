@@ -5,9 +5,7 @@ import (
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmdb "github.com/cosmos/cosmos-db"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/mint/keeper"
 	"github.com/tellor-io/layer/x/mint/mocks"
 	"github.com/tellor-io/layer/x/mint/types"
@@ -36,11 +34,14 @@ func MintKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.Bank
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 	registry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(registry)
-	add := sample.AccAddressBytes()
 
 	accountKeeper := new(mocks.AccountKeeper)
 	bankKeeper := new(mocks.BankKeeper)
-	accountKeeper.On("GetModuleAddress", mock.Anything).Return(add)
+	moduleAddr := authtypes.NewModuleAddress(types.ModuleName)
+	timeBasedRewardsAddr := authtypes.NewModuleAddress(types.TimeBasedRewards)
+	accountKeeper.On("GetModuleAddress", types.ModuleName).Return(moduleAddr)
+	accountKeeper.On("GetModuleAddress", types.TimeBasedRewards).Return(timeBasedRewardsAddr)
+
 	k := keeper.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(storeKey),

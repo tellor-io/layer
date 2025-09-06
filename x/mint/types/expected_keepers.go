@@ -19,4 +19,5 @@ type BankKeeper interface {
 	SendCoinsFromModuleToModule(ctx context.Context, senderModule, recipientModule string, amt sdk.Coins) error
 	MintCoins(ctx context.Context, name string, amt sdk.Coins) error
 	InputOutputCoins(ctx context.Context, inputs banktypes.Input, outputs []banktypes.Output) error
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }
