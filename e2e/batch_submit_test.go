@@ -219,6 +219,7 @@ func TestBatchSubmitValue(t *testing.T) {
 	// Verify all three reports were created by querying reports
 	fmt.Println("\n=== Verifying reports were created ===")
 
+	microReports := make([]e2e.MicroReport, 3)
 	// Query reports for each query ID
 	for i, qDataBytes := range [][]byte{ethQueryData, btcQueryData, trbQueryData} {
 		// Convert query data to query ID
@@ -234,7 +235,7 @@ func TestBatchSubmitValue(t *testing.T) {
 
 		fmt.Printf("Query %d (ID: %s) has %d reports\n", i+1, queryId, len(reports.MicroReports))
 		require.Greater(len(reports.MicroReports), 0, "Query %d should have at least one report", i+1)
-
+		microReports[i] = reports.MicroReports[len(reports.MicroReports)-1]
 		// Verify the latest report has the expected value
 		if len(reports.MicroReports) > 0 {
 			latestReport := reports.MicroReports[len(reports.MicroReports)-1]
@@ -269,6 +270,46 @@ func TestBatchSubmitValue(t *testing.T) {
 	}
 
 	fmt.Println("\n=== Batch submit test completed successfully ===")
+
+	// dispute values submitted in batch by validator 1
+	fmt.Println("\n=== Dispute a report that was submitted via batch ===")
+	_, err = val1.ExecTx(
+		ctx, "validator", "dispute", "propose-dispute",
+		microReports[0].Reporter, microReports[0].MetaId,
+		microReports[0].QueryID, warning, "500000000loya", "true", "--keyring-dir", val1.HomeDir(),
+	)
+	require.Error(err, "proposer cannot pay from their bond when creating a dispute on themselves")
+	fmt.Println("Reporter power: ", microReports[0].Power)
+
+	//
+	val1valAddr, err := val1.KeyBech32(ctx, "validator", "val")
+	require.NoError(err)
+	val1StakingBefore, err := chain.StakingQueryValidator(ctx, val1valAddr)
+	require.NoError(err)
+	fmt.Println("val1 staking power before dispute: ", val1StakingBefore.Tokens)
+
+	txHash, err = val2.ExecTx(
+		ctx, "validator", "dispute", "propose-dispute",
+		microReports[0].Reporter, microReports[0].MetaId,
+		microReports[0].QueryID, warning, "500000000000loya", "false", "--keyring-dir", val2.HomeDir(), "--gas", "1000000", "--fees", "1000000loya",
+	)
+	require.NoError(err)
+	fmt.Println("TX HASH (dispute on ", microReports[0].Reporter, "): ", txHash)
+	txRes, _, err = val2.ExecQuery(ctx, "tx", txHash)
+	require.NoError(err)
+	fmt.Println("Transaction result for first submission:", string(txRes))
+
+	val1StakingAfter, err := chain.StakingQueryValidator(ctx, val1valAddr)
+	require.NoError(err)
+	fmt.Println("val1 staking power after dispute: ", val1StakingAfter.Tokens)
+	require.Equal(val1StakingAfter.Tokens, val1StakingBefore.Tokens.Sub(math.NewInt(50000*1e6)))
+
+	openDisputesRes, _, err := val1.ExecQuery(ctx, "dispute", "open-disputes")
+	require.NoError(err)
+	var openDisputes e2e.QueryOpenDisputesResponse
+	require.NoError(json.Unmarshal(openDisputesRes, &openDisputes))
+	require.Greater(len(openDisputes.OpenDisputes.Ids), 0)
+	fmt.Println("openDisputes: ", openDisputes.OpenDisputes.Ids)
 }
 
 // Helper function to get validators
