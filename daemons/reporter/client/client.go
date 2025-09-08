@@ -31,16 +31,18 @@ import (
 const defaultGas = uint64(300000)
 
 var (
-	commitedIds   = make(map[uint64]bool)
-	depositTipMap = make(map[uint64]bool) // map of deposit tips already sent to bridge daemon
+	commitedIds             = make(map[uint64]bool)
+	depositTipMap           = make(map[uint64]bool) // map of deposit tips already sent to bridge daemon
+	lastSequenceUsed uint64 = 0                     // tracks the last sequence number used to prevent conflicts
 )
 
 var mutex = &sync.RWMutex{}
 
 type TxChannelInfo struct {
-	Msg        sdk.Msg
-	isBridge   bool
-	NumRetries uint8
+	Msg         sdk.Msg
+	isBridge    bool
+	NumRetries  uint8
+	QueryMetaId uint64 // track which queryMeta this transaction is for (0 if not applicable)
 }
 
 type Client struct {

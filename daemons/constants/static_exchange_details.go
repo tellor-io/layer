@@ -5,6 +5,7 @@ import (
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/binance"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/bitfinex"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/bitstamp"
+	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/coinbase_rates"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/crypto_com"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/gate"
 	"github.com/tellor-io/layer/daemons/pricefeed/client/sources/huobi"
@@ -33,6 +34,7 @@ var StaticExchangeDetails = map[types.ExchangeId]types.ExchangeQueryDetails{
 	exchange_common.EXCHANGE_ID_OKX:        okx.OkxDetails,
 	exchange_common.EXCHANGE_ID_MEXC:       mexc.MexcDetails,
 	// exchange_common.EXCHANGE_ID_COINBASE_PRO:              coinbase_pro.CoinbaseProDetails,
+	exchange_common.EXCHANGE_ID_COINBASE_RATES:            coinbase_rates.CoinbaseRatesDetails,
 	exchange_common.EXCHANGE_ID_TEST_EXCHANGE:             testexchange.TestExchangeDetails,
 	exchange_common.EXCHANGE_ID_TEST_VOLATILE_EXCHANGE:    test_volatile_exchange.TestVolatileExchangeDetails,
 	exchange_common.EXCHANGE_ID_TEST_FIXED_PRICE_EXCHANGE: test_fixed_price_exchange.TestFixedPriceExchangeDetails,

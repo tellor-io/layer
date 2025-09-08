@@ -33,7 +33,7 @@ func FetchPrice(ctx context.Context, query QueryConfig) (*FetchPriceResult, erro
 	// Create a context with timeout
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	fmt.Println(query)
+
 	results := make(chan Result, len(query.Endpoints))
 	var wg sync.WaitGroup
 
