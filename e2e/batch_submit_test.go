@@ -310,6 +310,12 @@ func TestBatchSubmitValue(t *testing.T) {
 	require.NoError(json.Unmarshal(openDisputesRes, &openDisputes))
 	require.Greater(len(openDisputes.OpenDisputes.Ids), 0)
 	fmt.Println("openDisputes: ", openDisputes.OpenDisputes.Ids)
+
+	res, _, err := val1.ExecQuery(ctx, "oracle", "retrieve-data", microReports[0].QueryID, microReports[0].Timestamp)
+	require.NoError(err)
+	var data e2e.QueryRetrieveDataResponse
+	require.NoError(json.Unmarshal(res, &data))
+	require.Equal(data.Aggregate.Flagged, true)
 }
 
 // Helper function to get validators
