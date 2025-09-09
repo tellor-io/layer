@@ -2,28 +2,23 @@
 
 set -e
 
-GOSUMDB=off GOTOOLCHAIN=local+path go mod tidy
-
-# Function to check if a command exists and install it if it does not
-ensure_command() {
+# Function to check if a command exists
+check_command() {
     local cmd=$1
-    local package=$2
-
     if ! command -v "$cmd" &> /dev/null; then
-        echo "$cmd could not be found, installing..."
-        go install "$package"
+        echo "Error: $cmd is not installed. Run 'make proto-install-deps' first."
+        exit 1
     fi
 }
 
-# Ensure buf and other required tools are installed
-ensure_command buf github.com/bufbuild/buf/cmd/buf@latest
-ensure_command protoc-gen-gocosmos github.com/cosmos/gogoproto/protoc-gen-gocosmos@latest
-ensure_command protoc-gen-go-grpc google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
-ensure_command protoc-gen-go google.golang.org/protobuf/cmd/protoc-gen-go@latest
-ensure_command protoc-gen-go-pulsar github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest
-ensure_command protoc-gen-grpc-gateway github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@latest
-ensure_command protoc-gen-openapiv2 github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest
-ensure_command goimports golang.org/x/tools/cmd/goimports@latest
+# Verify required tools are installed
+check_command buf
+check_command protoc-gen-gocosmos
+check_command protoc-gen-go-grpc
+check_command protoc-gen-go
+check_command protoc-gen-go-pulsar
+check_command protoc-gen-grpc-gateway
+check_command protoc-gen-openapiv2
 
 # Directory containing proto files relative to the script's location
 PROTO_DIR="./proto"
@@ -32,14 +27,27 @@ TEMPLATE_PATH="${PROTO_DIR}/buf.gen.gogo.yaml"
 # Create a temporary directory for the output
 OUTPUT_DIR="."
 
-# Find and process all proto files
-find "${PROTO_DIR}" -name '*.proto' -print0 | while IFS= read -r -d '' proto_file; do
-    buf generate --template "${TEMPLATE_PATH}" --output "${OUTPUT_DIR}" --error-format=json --log-format=json "${proto_file}"
-    if [ $? -ne 0 ]; then
-        echo "Failed to process ${proto_file}"
-        exit 1
+# Find and process all proto files, excluding module.proto files
+# Module config files should only get pulsar generation, not gogo
+failed_files=""
+while IFS= read -r -d '' proto_file; do
+    # Only generate gogo proto if the file has a go_package option
+    # This follows the Cosmos SDK pattern where module configs don't have go_package
+    if grep -q "option go_package" "${proto_file}"; then
+        echo "Generating gogo for: ${proto_file}"
+        if ! buf generate --template "${TEMPLATE_PATH}" --output "${OUTPUT_DIR}" --error-format=json --log-format=json "${proto_file}"; then
+            failed_files="${failed_files}${proto_file}\n"
+            echo "Error: Failed to process ${proto_file}"
+        fi
+    else
+        echo "Skipping gogo generation for ${proto_file} (no go_package option)"
     fi
-done
+done < <(find "${PROTO_DIR}" -name '*.proto' -not -path '*/module/*' -print0)
+
+if [ -n "${failed_files}" ]; then
+    echo -e "\nFailed to generate the following files:\n${failed_files}"
+    exit 1
+fi
 
 # move proto files to the right places
 cp -r github.com/tellor-io/layer/* ./

@@ -48,7 +48,7 @@ func (k Keeper) HasMin(ctx context.Context, addr sdk.AccAddress, minRequired mat
 // at the time of reporting and returns the total amount plus stores
 // the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties
 func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, queryId []byte) (math.Int, error) {
-	totalTokens, delegates, err := k.GetReporterStake(ctx, repAddr, queryId)
+	totalTokens, delegates, err := k.GetReporterStake(ctx, repAddr)
 	if err != nil {
 		return math.Int{}, err
 	}
@@ -129,7 +129,7 @@ func (k Keeper) GetSelector(ctx context.Context, selectorAddr sdk.AccAddress) (t
 // GetReporterStake counts the total amount of BONDED tokens for a given reporter's selectors
 // at the time of reporting and returns the total amount plus stores
 // the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties
-func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress, queryId []byte) (math.Int, []*types.TokenOriginInfo, error) {
+func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math.Int, []*types.TokenOriginInfo, error) {
 	reporter, err := k.Reporters.Get(ctx, repAddr.Bytes())
 	if err != nil {
 		return math.Int{}, nil, err
@@ -220,4 +220,9 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress, qu
 		}
 	}
 	return totalTokens, delegates, nil
+}
+
+// Stores the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties
+func (k Keeper) SetReporterStakeByQueryId(ctx context.Context, repAddr sdk.AccAddress, delegates []*types.TokenOriginInfo, totalTokens math.Int, queryId []byte) error {
+	return k.Report.Set(ctx, collections.Join(queryId, collections.Join(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
 }
