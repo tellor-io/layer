@@ -22,6 +22,8 @@ service Msg {
   rpc UpdateCyclelist(MsgUpdateCyclelist) returns (MsgUpdateCyclelistResponse);
   rpc UpdateQueryDataLimit(MsgUpdateQueryDataLimit) returns (MsgUpdateQueryDataLimitResponse);
   rpc NoStakeReport(MsgNoStakeReport) returns (MsgNoStakeReportResponse);
+  rpc BatchSubmitValue(MsgBatchSubmitValue) returns (MsgBatchSubmitValueResponse);
+  rpc UpdateMaxBatchSize(MsgUpdateMaxBatchSize) returns (MsgUpdateMaxBatchSizeResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -96,3 +98,28 @@ message MsgUpdateQueryDataLimit {
 }
 
 message MsgUpdateQueryDataLimitResponse {}
+
+message MsgBatchSubmitValue {
+  option (cosmos.msg.v1.signer) = "creator";
+  string creator = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  repeated SubmitValueItem values = 2;
+}
+
+message MsgBatchSubmitValueResponse {
+  repeated uint32 failed_indices = 1;
+}
+
+message SubmitValueItem {
+  bytes query_data = 1;
+  string value = 2;
+}
+
+message MsgUpdateMaxBatchSize {
+  option (cosmos.msg.v1.signer) = "authority";
+  option (amino.name) = "layer/x/oracle/MsgUpdateMaxBatchSize";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint32 max_batch_size = 2;
+}
+message MsgUpdateMaxBatchSizeResponse {}

@@ -57,6 +57,7 @@ var (
 	NoStakeReportsPrefix             = collections.NewPrefix(31)
 	ReporterIndexPrefix              = collections.NewPrefix(32)
 	NoStakeReportedQueriesPrefix     = collections.NewPrefix(33)
+	MaxBatchSizePrefix               = collections.NewPrefix(34)
 )
 
 func KeyPrefix(p string) []byte {
