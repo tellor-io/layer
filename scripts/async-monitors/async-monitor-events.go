@@ -794,6 +794,8 @@ func handleEvent(event Event, eventType ConfigType) {
 				assetPair := getAssetPairFromQueryID(attr.Value)
 				if assetPair != "" {
 					message += fmt.Sprintf("Asset Pair: %s\n", assetPair)
+				} else {
+					message += "Asset Pair: Unknown\n"
 				}
 			}
 		}
