@@ -377,15 +377,19 @@ func getAssetPairFromQueryID(queryID string) string {
 	defer queryIDsMutex.RUnlock()
 
 	if supportedQueryIDsMap == nil {
+		fmt.Println("supportedQueryIDsMap is nil")
 		return ""
 	}
 
 	// First try to find in QueryIDToAssetPairMap
+	fmt.Println("supportedQueryIDsMap.QueryIDToAssetPairMap id: ", queryID)
 	if assetPair, exists := supportedQueryIDsMap.QueryIDToAssetPairMap[queryID]; exists {
+		fmt.Println("assetPair: ", assetPair)
 		return assetPair
 	}
 
 	// If not found, return empty string
+	fmt.Println("assetPair not found")
 	return ""
 }
 
@@ -789,6 +793,7 @@ func handleEvent(event Event, eventType ConfigType) {
 		message := fmt.Sprintf("**Event Alert: %s**\n", eventType.AlertName)
 		for _, attr := range event.Attributes {
 			message += fmt.Sprintf("%s: %s\n", attr.Key, attr.Value)
+			fmt.Println("attr.Key: ", attr.Key)
 			if attr.Key == "query_id" {
 				// Try to get the asset pair for this query ID
 				assetPair := getAssetPairFromQueryID(attr.Value)
