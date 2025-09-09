@@ -7,6 +7,7 @@ import (
 	"encoding/csv"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -53,7 +54,6 @@ var (
 	// Add new variables for file rotation
 	currentCSVFileName string
 	rotationTicker     *time.Ticker
-	lastRotationDate   time.Time
 
 	lastNotificationTimeMapMutex sync.RWMutex
 	lastNotificationTimeMap      map[string]time.Time
@@ -454,9 +454,7 @@ func getValidatorCheckpointParams(timestamp uint64) (*CheckpointResponse, error)
 		return nil, fmt.Errorf("swagger API URL is not provided")
 	}
 
-	url := fmt.Sprintf("%s/layer/bridge/get_validator_checkpoint_params/%d", swaggerAPIURL, timestamp)
-
-	resp, err := http.Get(url)
+	resp, err := http.Get(fmt.Sprintf("%s/layer/bridge/get_validator_checkpoint_params/%d", swaggerAPIURL, timestamp))
 	if err != nil {
 		return nil, fmt.Errorf("failed to query checkpoint params: %w", err)
 	}
@@ -579,9 +577,8 @@ func getEVMAddressFromOperatorAddress(operatorAddress string) (string, error) {
 
 	// URL encode the operator address to handle special characters
 	encodedAddress := url.QueryEscape(operatorAddress)
-	url := fmt.Sprintf("%s/layer/bridge/get_evm_address_by_validator_address/%s", swaggerAPIURL, encodedAddress)
 
-	resp, err := http.Get(url)
+	resp, err := http.Get(fmt.Sprintf("%s/layer/bridge/get_evm_address_by_validator_address/%s", swaggerAPIURL, encodedAddress))
 	if err != nil {
 		return "", &EVMAddressLookupError{
 			OperatorAddress: operatorAddress,
@@ -634,7 +631,7 @@ func getEVMAddressFromOperatorAddress(operatorAddress string) (string, error) {
 }
 
 // verifySignaturesInVoteExtension verifies all signatures found in a vote extension
-func verifySignaturesInVoteExtension(voteExtData VoteExtensionData, height uint64, timestamp uint64) error {
+func verifySignaturesInVoteExtension(voteExtData VoteExtensionData, height, timestamp uint64) error {
 	log.Printf("Verifying signatures in vote extension for block %d", height)
 
 	invalidSignatures := []string{}
@@ -675,13 +672,15 @@ func verifySignaturesInVoteExtension(voteExtData VoteExtensionData, height uint6
 			expectedEVMAddr, err := getEVMAddressFromOperatorAddress(operatorAddr)
 			if err != nil {
 				// Check if it's a lookup error (RPC down, network issues, etc.) vs not found/API error
-				if _, ok := err.(*EVMAddressLookupError); ok {
+				var lookupErr *EVMAddressLookupError
+				if ok := errors.As(err, &lookupErr); ok {
 					log.Printf("Could not get expected EVM address for operator %s due to lookup error: %v", operatorAddr, err)
 					// Don't add to invalidSignatures for lookup errors - just log and continue
 					continue
 				}
 				// For EVMAddressNotFoundError (including API errors like code 13), treat as invalid signature
-				if _, ok := err.(*EVMAddressNotFoundError); ok {
+				var lookupErr2 *EVMAddressLookupError
+				if ok := errors.As(err, &lookupErr2); ok {
 					log.Printf("EVM address not found for operator %s (API error): %v", operatorAddr, err)
 					lastNotificationTime, ok := lastNotificationTimeMap[operatorAddr]
 					if !ok || time.Since(lastNotificationTime) > 24*time.Hour {
@@ -732,13 +731,15 @@ func verifySignaturesInVoteExtension(voteExtData VoteExtensionData, height uint6
 				expectedEVMAddr, err := getEVMAddressFromOperatorAddress(operatorAddr)
 				if err != nil {
 					// Check if it's a lookup error (RPC down, network issues, etc.) vs not found/API error
-					if _, ok := err.(*EVMAddressLookupError); ok {
+					var lookupErr3 *EVMAddressLookupError
+					if ok := errors.As(err, &lookupErr3); ok {
 						log.Printf("Could not get expected EVM address for oracle operator %s due to lookup error: %v", operatorAddr, err)
 						// Don't add to invalidSignatures for lookup errors - just log and continue
 						continue
 					}
 					// For EVMAddressNotFoundError (including API errors like code 13), treat as invalid signature
-					if _, ok := err.(*EVMAddressNotFoundError); ok {
+					var lookupErr4 *EVMAddressLookupError
+					if ok := errors.As(err, &lookupErr4); ok {
 						log.Printf("EVM address not found for oracle operator %s (API error): %v", operatorAddr, err)
 						lastNotificationTime, ok := lastNotificationTimeMap[operatorAddr]
 						if !ok {
@@ -1137,7 +1138,6 @@ func rotateCSVFile() error {
 		log.Printf("Appending to existing CSV file: %s", newFileName)
 	}
 
-	lastRotationDate = time.Now()
 	return nil
 }
 

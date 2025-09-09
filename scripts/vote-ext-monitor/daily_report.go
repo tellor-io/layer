@@ -139,13 +139,13 @@ func formatDailyReport(report *DailyReport) string {
 
 	sb.WriteString(fmt.Sprintf("**📊 Daily Vote Extension Report - %s**\n\n", report.Date))
 
-	sb.WriteString(fmt.Sprintf("**�� Summary Statistics:**\n"))
+	sb.WriteString("**�� Summary Statistics:**\n")
 	sb.WriteString(fmt.Sprintf("• Total Blocks Processed: %d\n", report.TotalBlocks))
 	sb.WriteString(fmt.Sprintf("• Average Participation Rate: %.2f%%\n", report.AverageParticipation))
 	sb.WriteString(fmt.Sprintf("• Min Participation Rate: %.2f%%\n", report.MinParticipation))
 	sb.WriteString(fmt.Sprintf("• Max Participation Rate: %.2f%%\n", report.MaxParticipation))
 
-	sb.WriteString(fmt.Sprintf("\n**⚠️ Alert Statistics:**\n"))
+	sb.WriteString("\n**⚠️ Alert Statistics:**\n")
 	sb.WriteString(fmt.Sprintf("• Low Participation Blocks (<80%%): %d\n", report.LowParticipationBlocks))
 	sb.WriteString(fmt.Sprintf("• High Participation Blocks (>95%%): %d\n", report.HighParticipationBlocks))
 
@@ -154,11 +154,11 @@ func formatDailyReport(report *DailyReport) string {
 	}
 
 	if report.AverageParticipation < 85.0 {
-		sb.WriteString(fmt.Sprintf("\n**🔴 Critical:** Daily average participation rate is below 85%%\n"))
+		sb.WriteString("\n**🔴 Critical:** Daily average participation rate is below 85%%\n")
 	} else if report.AverageParticipation < 90.0 {
-		sb.WriteString(fmt.Sprintf("\n**🟡 Warning:** Daily average participation rate is below 90%%\n"))
+		sb.WriteString("\n**🟡 Warning:** Daily average participation rate is below 90%%\n")
 	} else {
-		sb.WriteString(fmt.Sprintf("\n**🟢 Good:** Daily average participation rate is healthy\n"))
+		sb.WriteString("\n**🟢 Good:** Daily average participation rate is healthy\n")
 	}
 
 	return sb.String()
