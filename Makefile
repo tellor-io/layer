@@ -79,7 +79,7 @@ build-with-checksum: build-linux-with-checksum build-darwin-with-checksum
 ###                                Linting                                  ###
 ###############################################################################
 # Golangci-lint version
-golangci_version=v1.61.0
+golangci_version=v1.64.0
 
 #? setup-pre-commit: Set pre-commit git hook
 setup-pre-commit:
@@ -117,35 +117,77 @@ lint-folder-fix:
 ###############################################################################
 ###                                Protobuf                                 ###
 ###############################################################################
-CURRENT_UID := $(shell id -u)
-CURRENT_GID := $(shell id -g)
 
-protoVer=0.14.0
-protoImageName=ghcr.io/cosmos/proto-builder:$(protoVer)
-protoImage="$(DOCKER)" run -e BUF_CACHE_DIR=/tmp/buf --rm -v "$(CURDIR)":/workspace:rw --user ${CURRENT_UID}:${CURRENT_GID} --workdir /workspace $(protoImageName)
+proto-all: proto-gen proto-swagger-gen
 
-proto-all: proto-format proto-lint proto-gen format
 
-proto-gen:
-	@go install cosmossdk.io/orm/cmd/protoc-gen-go-cosmos-orm@v1.0.0-beta.3
-	@echo "Generating Protobuf files"
-	@$(protoImage) sh ./scripts/protocgen.sh
-	@go mod tidy
+proto-gen: proto-install-deps
+	@echo "Generating protocol buffer files using buf..."
+	@echo "Generating proto code using protocgen.sh script..."
+	@./scripts/protocgen.sh || { echo "Failed to generate proto files"; exit 1; }
+	@echo "Proto generation completed"
 
-proto-format:
-	@echo "Formatting Protobuf files"
-	@$(protoImage) find ./ -name "*.proto" -exec clang-format -i {} \;
+proto-install-deps:
+	@echo "Checking and installing protobuf dependencies..."
+	@if ! command -v buf > /dev/null 2>&1; then \
+		echo "Installing buf..."; \
+		go install github.com/bufbuild/buf/cmd/buf@latest || exit 1; \
+	else \
+		echo "buf already installed"; \
+	fi
+	@if ! command -v protoc-gen-go-cosmos-orm > /dev/null 2>&1; then \
+		echo "Installing protoc-gen-go-cosmos-orm..."; \
+		go install cosmossdk.io/orm/cmd/protoc-gen-go-cosmos-orm@v1.0.0-beta.3 || exit 1; \
+	else \
+		echo "protoc-gen-go-cosmos-orm already installed"; \
+	fi
+	@if ! command -v protoc-gen-gocosmos > /dev/null 2>&1; then \
+		echo "Installing protoc-gen-gocosmos..."; \
+		go install github.com/cosmos/gogoproto/protoc-gen-gocosmos@latest || exit 1; \
+	else \
+		echo "protoc-gen-gocosmos already installed"; \
+	fi
+	@if ! command -v protoc-gen-grpc-gateway > /dev/null 2>&1; then \
+		echo "Installing protoc-gen-grpc-gateway..."; \
+		go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0 || exit 1; \
+	else \
+		echo "protoc-gen-grpc-gateway already installed"; \
+	fi
+	@if ! command -v protoc-gen-go > /dev/null 2>&1; then \
+		echo "Installing protoc-gen-go..."; \
+		go install google.golang.org/protobuf/cmd/protoc-gen-go@latest || exit 1; \
+	else \
+		echo "protoc-gen-go already installed"; \
+	fi
+	@if ! command -v protoc-gen-go-grpc > /dev/null 2>&1; then \
+		echo "Installing protoc-gen-go-grpc..."; \
+		go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest || exit 1; \
+	else \
+		echo "protoc-gen-go-grpc already installed"; \
+	fi
+	@if ! command -v protoc-gen-go-pulsar > /dev/null 2>&1; then \
+		echo "Installing protoc-gen-go-pulsar..."; \
+		go install github.com/cosmos/cosmos-proto/cmd/protoc-gen-go-pulsar@latest || exit 1; \
+	else \
+		echo "protoc-gen-go-pulsar already installed"; \
+	fi
+	@if ! command -v protoc-gen-openapiv2 > /dev/null 2>&1; then \
+		echo "Installing protoc-gen-openapiv2..."; \
+		go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@latest || exit 1; \
+	else \
+		echo "protoc-gen-openapiv2 already installed"; \
+	fi
+
 
 proto-swagger-gen:
 	@./scripts/protoc-swagger-gen.sh
 
-proto-lint:
-	@$(protoImage) buf lint --error-format=json
+proto-update-deps:
+	@echo "Updating buf dependencies..."
+	@cd proto && buf dep update
+	@echo "Dependencies updated. Note: This may break swagger generation if newer cosmos-sdk versions are incompatible."
 
-proto-check-breaking:
-	@$(protoImage) buf breaking --against $(HTTPS_GIT)#branch=main
-
-.PHONY: proto-all proto-gen proto-swagger-gen proto-format proto-lint proto-check-breaking
+.PHONY: proto-all proto-gen proto-install-deps proto-swagger-gen proto-update-deps
 
 ###############################################################################
 ###                                tests                                    ###
