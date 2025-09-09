@@ -605,6 +605,243 @@ func (m *MsgUpdateQueryDataLimitResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateQueryDataLimitResponse proto.InternalMessageInfo
 
+type MsgBatchSubmitValue struct {
+	Creator string             `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Values  []*SubmitValueItem `protobuf:"bytes,2,rep,name=values,proto3" json:"values,omitempty"`
+}
+
+func (m *MsgBatchSubmitValue) Reset()         { *m = MsgBatchSubmitValue{} }
+func (m *MsgBatchSubmitValue) String() string { return proto.CompactTextString(m) }
+func (*MsgBatchSubmitValue) ProtoMessage()    {}
+func (*MsgBatchSubmitValue) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85ff275c542a231a, []int{12}
+}
+func (m *MsgBatchSubmitValue) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBatchSubmitValue) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBatchSubmitValue.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBatchSubmitValue) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBatchSubmitValue.Merge(m, src)
+}
+func (m *MsgBatchSubmitValue) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBatchSubmitValue) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBatchSubmitValue.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBatchSubmitValue proto.InternalMessageInfo
+
+func (m *MsgBatchSubmitValue) GetCreator() string {
+	if m != nil {
+		return m.Creator
+	}
+	return ""
+}
+
+func (m *MsgBatchSubmitValue) GetValues() []*SubmitValueItem {
+	if m != nil {
+		return m.Values
+	}
+	return nil
+}
+
+type MsgBatchSubmitValueResponse struct {
+	FailedIndices []uint32 `protobuf:"varint,1,rep,packed,name=failed_indices,json=failedIndices,proto3" json:"failed_indices,omitempty"`
+}
+
+func (m *MsgBatchSubmitValueResponse) Reset()         { *m = MsgBatchSubmitValueResponse{} }
+func (m *MsgBatchSubmitValueResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgBatchSubmitValueResponse) ProtoMessage()    {}
+func (*MsgBatchSubmitValueResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85ff275c542a231a, []int{13}
+}
+func (m *MsgBatchSubmitValueResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBatchSubmitValueResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBatchSubmitValueResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBatchSubmitValueResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBatchSubmitValueResponse.Merge(m, src)
+}
+func (m *MsgBatchSubmitValueResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBatchSubmitValueResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBatchSubmitValueResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBatchSubmitValueResponse proto.InternalMessageInfo
+
+func (m *MsgBatchSubmitValueResponse) GetFailedIndices() []uint32 {
+	if m != nil {
+		return m.FailedIndices
+	}
+	return nil
+}
+
+type SubmitValueItem struct {
+	QueryData []byte `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
+	Value     string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+}
+
+func (m *SubmitValueItem) Reset()         { *m = SubmitValueItem{} }
+func (m *SubmitValueItem) String() string { return proto.CompactTextString(m) }
+func (*SubmitValueItem) ProtoMessage()    {}
+func (*SubmitValueItem) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85ff275c542a231a, []int{14}
+}
+func (m *SubmitValueItem) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SubmitValueItem) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SubmitValueItem.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SubmitValueItem) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SubmitValueItem.Merge(m, src)
+}
+func (m *SubmitValueItem) XXX_Size() int {
+	return m.Size()
+}
+func (m *SubmitValueItem) XXX_DiscardUnknown() {
+	xxx_messageInfo_SubmitValueItem.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SubmitValueItem proto.InternalMessageInfo
+
+func (m *SubmitValueItem) GetQueryData() []byte {
+	if m != nil {
+		return m.QueryData
+	}
+	return nil
+}
+
+func (m *SubmitValueItem) GetValue() string {
+	if m != nil {
+		return m.Value
+	}
+	return ""
+}
+
+type MsgUpdateMaxBatchSize struct {
+	// authority is the address that controls the module (defaults to x/gov unless overwritten).
+	Authority    string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	MaxBatchSize uint32 `protobuf:"varint,2,opt,name=max_batch_size,json=maxBatchSize,proto3" json:"max_batch_size,omitempty"`
+}
+
+func (m *MsgUpdateMaxBatchSize) Reset()         { *m = MsgUpdateMaxBatchSize{} }
+func (m *MsgUpdateMaxBatchSize) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateMaxBatchSize) ProtoMessage()    {}
+func (*MsgUpdateMaxBatchSize) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85ff275c542a231a, []int{15}
+}
+func (m *MsgUpdateMaxBatchSize) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateMaxBatchSize) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateMaxBatchSize.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateMaxBatchSize) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateMaxBatchSize.Merge(m, src)
+}
+func (m *MsgUpdateMaxBatchSize) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateMaxBatchSize) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateMaxBatchSize.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateMaxBatchSize proto.InternalMessageInfo
+
+func (m *MsgUpdateMaxBatchSize) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateMaxBatchSize) GetMaxBatchSize() uint32 {
+	if m != nil {
+		return m.MaxBatchSize
+	}
+	return 0
+}
+
+type MsgUpdateMaxBatchSizeResponse struct {
+}
+
+func (m *MsgUpdateMaxBatchSizeResponse) Reset()         { *m = MsgUpdateMaxBatchSizeResponse{} }
+func (m *MsgUpdateMaxBatchSizeResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateMaxBatchSizeResponse) ProtoMessage()    {}
+func (*MsgUpdateMaxBatchSizeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_85ff275c542a231a, []int{16}
+}
+func (m *MsgUpdateMaxBatchSizeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateMaxBatchSizeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateMaxBatchSizeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateMaxBatchSizeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateMaxBatchSizeResponse.Merge(m, src)
+}
+func (m *MsgUpdateMaxBatchSizeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateMaxBatchSizeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateMaxBatchSizeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateMaxBatchSizeResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgUpdateParams)(nil), "layer.oracle.MsgUpdateParams")
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "layer.oracle.MsgUpdateParamsResponse")
@@ -618,57 +855,74 @@ func init() {
 	proto.RegisterType((*MsgUpdateCyclelistResponse)(nil), "layer.oracle.MsgUpdateCyclelistResponse")
 	proto.RegisterType((*MsgUpdateQueryDataLimit)(nil), "layer.oracle.MsgUpdateQueryDataLimit")
 	proto.RegisterType((*MsgUpdateQueryDataLimitResponse)(nil), "layer.oracle.MsgUpdateQueryDataLimitResponse")
+	proto.RegisterType((*MsgBatchSubmitValue)(nil), "layer.oracle.MsgBatchSubmitValue")
+	proto.RegisterType((*MsgBatchSubmitValueResponse)(nil), "layer.oracle.MsgBatchSubmitValueResponse")
+	proto.RegisterType((*SubmitValueItem)(nil), "layer.oracle.SubmitValueItem")
+	proto.RegisterType((*MsgUpdateMaxBatchSize)(nil), "layer.oracle.MsgUpdateMaxBatchSize")
+	proto.RegisterType((*MsgUpdateMaxBatchSizeResponse)(nil), "layer.oracle.MsgUpdateMaxBatchSizeResponse")
 }
 
 func init() { proto.RegisterFile("layer/oracle/tx.proto", fileDescriptor_85ff275c542a231a) }
 
 var fileDescriptor_85ff275c542a231a = []byte{
-	// 716 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x55, 0xcf, 0x6f, 0x12, 0x41,
-	0x14, 0x66, 0x81, 0x62, 0x78, 0x60, 0x5b, 0x37, 0x68, 0xe9, 0x86, 0x6e, 0xe9, 0x46, 0x0d, 0x36,
-	0xe9, 0xae, 0xa0, 0xb1, 0x91, 0x9b, 0xd4, 0xa3, 0x18, 0xbb, 0x45, 0x4d, 0x4c, 0x4c, 0x33, 0xc0,
-	0x64, 0x3b, 0x71, 0x97, 0x59, 0x77, 0x86, 0x5a, 0x6e, 0xc6, 0x8b, 0xd1, 0x93, 0x27, 0xaf, 0x7a,
-	0xf4, 0xd8, 0x83, 0xfe, 0x0f, 0x3d, 0x36, 0x9e, 0x3c, 0x19, 0xd3, 0x1e, 0xfa, 0x6f, 0x98, 0xfd,
-	0x59, 0x16, 0x4a, 0x31, 0xbd, 0x78, 0x01, 0xe6, 0x7d, 0xdf, 0xfb, 0xe6, 0x7b, 0x33, 0xef, 0x0d,
-	0x70, 0xd5, 0x44, 0x03, 0xec, 0x68, 0xd4, 0x41, 0x1d, 0x13, 0x6b, 0x7c, 0x4f, 0xb5, 0x1d, 0xca,
-	0xa9, 0x98, 0xf7, 0xc2, 0xaa, 0x1f, 0x96, 0xae, 0x20, 0x8b, 0xf4, 0xa8, 0xe6, 0x7d, 0xfa, 0x04,
-	0x49, 0xee, 0x50, 0x66, 0x51, 0xa6, 0xb5, 0x11, 0xc3, 0xda, 0x6e, 0xb5, 0x8d, 0x39, 0xaa, 0x6a,
-	0x1d, 0x4a, 0x7a, 0x01, 0xbe, 0x10, 0xe0, 0x16, 0x33, 0xb4, 0xdd, 0xaa, 0xfb, 0x15, 0x00, 0x8b,
-	0x3e, 0xb0, 0xed, 0xad, 0x34, 0x7f, 0x11, 0x40, 0x05, 0x83, 0x1a, 0xd4, 0x8f, 0xbb, 0xbf, 0xc2,
-	0x84, 0x98, 0x43, 0x1b, 0x39, 0xc8, 0x0a, 0x12, 0x94, 0x1f, 0x02, 0xcc, 0x35, 0x99, 0xf1, 0xd4,
-	0xee, 0x22, 0x8e, 0x9f, 0x78, 0x88, 0x78, 0x0f, 0xb2, 0xa8, 0xcf, 0x77, 0xa8, 0x43, 0xf8, 0xa0,
-	0x28, 0x94, 0x85, 0x4a, 0xb6, 0x51, 0xfc, 0xf9, 0x7d, 0xad, 0x10, 0xec, 0xf4, 0xa0, 0xdb, 0x75,
-	0x30, 0x63, 0x5b, 0xdc, 0x21, 0x3d, 0x43, 0x3f, 0xa5, 0x8a, 0xeb, 0x90, 0xf1, 0xb5, 0x8b, 0xc9,
-	0xb2, 0x50, 0xc9, 0xd5, 0x0a, 0xea, 0xf0, 0x11, 0xa8, 0xbe, 0x7a, 0x23, 0x7b, 0xf0, 0x7b, 0x39,
-	0xf1, 0xed, 0x64, 0x7f, 0x55, 0xd0, 0x03, 0x7a, 0xbd, 0xfa, 0xee, 0x64, 0x7f, 0xf5, 0x54, 0xe8,
-	0xe3, 0xc9, 0xfe, 0xaa, 0xec, 0x5b, 0xde, 0x0b, 0x4d, 0x8f, 0x78, 0x54, 0x16, 0x61, 0x61, 0x24,
-	0xa4, 0x63, 0x66, 0xd3, 0x1e, 0xc3, 0xca, 0x7b, 0x01, 0x66, 0x9b, 0xcc, 0xd8, 0xea, 0xb7, 0x2d,
-	0xc2, 0x9f, 0x21, 0xb3, 0x8f, 0xc5, 0x1a, 0x5c, 0xea, 0x38, 0x18, 0x71, 0xea, 0x4c, 0xad, 0x27,
-	0x24, 0x8a, 0x4b, 0x00, 0xaf, 0xfb, 0xd8, 0x19, 0x6c, 0x77, 0x11, 0x47, 0x5e, 0x45, 0x79, 0x3d,
-	0xeb, 0x45, 0x1e, 0x22, 0x8e, 0xc4, 0x02, 0xcc, 0xec, 0xba, 0xda, 0xc5, 0x94, 0x2b, 0xa8, 0xfb,
-	0x8b, 0x7a, 0xde, 0xad, 0x24, 0x94, 0x50, 0x2a, 0x70, 0x2d, 0x6e, 0x24, 0xf4, 0x28, 0xce, 0x42,
-	0x92, 0x74, 0x3d, 0x2f, 0x69, 0x3d, 0x49, 0xba, 0xca, 0x07, 0x01, 0xe6, 0x9b, 0xcc, 0x78, 0x4c,
-	0xb7, 0x38, 0x7a, 0x85, 0x75, 0x6c, 0x53, 0x87, 0xff, 0x2f, 0xd7, 0x12, 0x14, 0x47, 0xad, 0x44,
-	0x67, 0xfb, 0x45, 0x80, 0x4c, 0x93, 0x19, 0x2d, 0x62, 0x8b, 0xb7, 0x21, 0xc3, 0x89, 0x6d, 0xe3,
-	0xe9, 0xe6, 0x02, 0xde, 0x34, 0x6f, 0xeb, 0x90, 0x41, 0x16, 0xed, 0xf7, 0xb8, 0x67, 0x2e, 0x57,
-	0x5b, 0x54, 0x03, 0x35, 0x77, 0x40, 0xd4, 0x60, 0x40, 0xd4, 0x0d, 0x4a, 0x7a, 0x8d, 0xb4, 0xdb,
-	0x43, 0x7a, 0x40, 0xaf, 0xe7, 0x5c, 0xfb, 0xc1, 0x26, 0xca, 0xbc, 0x77, 0xf9, 0x2d, 0x62, 0x47,
-	0x9e, 0xbf, 0x0a, 0x20, 0x46, 0xbd, 0xb2, 0x31, 0xe8, 0x98, 0xd8, 0x24, 0x8c, 0x5f, 0xb8, 0xcb,
-	0x4b, 0x90, 0xed, 0x84, 0x22, 0xc5, 0x64, 0x39, 0xe5, 0x16, 0x11, 0x05, 0xea, 0x77, 0xc7, 0x5b,
-	0x79, 0x65, 0x52, 0x2b, 0x47, 0x5e, 0x94, 0x12, 0x48, 0xe3, 0xd1, 0xa8, 0x80, 0x37, 0x43, 0xbd,
-	0xbe, 0x19, 0x1e, 0xd7, 0x23, 0x62, 0x91, 0x8b, 0x17, 0x51, 0x80, 0x19, 0xd3, 0x15, 0xf0, 0x6e,
-	0x21, 0xad, 0xfb, 0x8b, 0xfa, 0x6c, 0xdc, 0xbc, 0xb2, 0x02, 0xcb, 0x13, 0x36, 0x0e, 0xbd, 0xd5,
-	0x3e, 0xa7, 0x21, 0xd5, 0x64, 0x86, 0xd8, 0x82, 0x7c, 0xec, 0x0d, 0x59, 0x8a, 0xcf, 0xfe, 0xc8,
-	0xac, 0x4a, 0x37, 0xce, 0x85, 0xa3, 0x31, 0xd9, 0x84, 0xdc, 0xf0, 0x18, 0x97, 0xc6, 0xb2, 0x86,
-	0x50, 0xe9, 0xfa, 0x79, 0x68, 0x24, 0x79, 0x1f, 0x52, 0x6e, 0xf7, 0x16, 0xc6, 0xc8, 0x2d, 0x62,
-	0x4b, 0xa5, 0xb3, 0xa2, 0x51, 0xea, 0x4b, 0x98, 0x1b, 0x6d, 0xa2, 0xf2, 0x84, 0x3a, 0x22, 0x86,
-	0x54, 0x99, 0xc6, 0x88, 0xe4, 0x4d, 0x28, 0x9c, 0x79, 0xc7, 0x93, 0xce, 0x2a, 0x4e, 0x93, 0xd6,
-	0xfe, 0x89, 0x16, 0xed, 0xf6, 0x1c, 0x2e, 0xc7, 0x5f, 0x1b, 0x79, 0x2c, 0x3f, 0x86, 0x4b, 0x37,
-	0xcf, 0xc7, 0x43, 0x61, 0x69, 0xe6, 0xad, 0xfb, 0xb6, 0x37, 0x36, 0x0e, 0x8e, 0x64, 0xe1, 0xf0,
-	0x48, 0x16, 0xfe, 0x1c, 0xc9, 0xc2, 0xa7, 0x63, 0x39, 0x71, 0x78, 0x2c, 0x27, 0x7e, 0x1d, 0xcb,
-	0x89, 0x17, 0xb7, 0x0c, 0xc2, 0x77, 0xfa, 0x6d, 0xb5, 0x43, 0x2d, 0x8d, 0x63, 0xd3, 0xa4, 0xce,
-	0x1a, 0xa1, 0xda, 0xc8, 0x90, 0xf0, 0x81, 0x8d, 0x59, 0x3b, 0xe3, 0xfd, 0x49, 0xdd, 0xf9, 0x1b,
-	0x00, 0x00, 0xff, 0xff, 0xa7, 0x6e, 0xf9, 0xe3, 0x63, 0x07, 0x00, 0x00,
+	// 897 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x56, 0x4f, 0x6f, 0xe3, 0x44,
+	0x14, 0xaf, 0x93, 0x36, 0x28, 0x2f, 0x69, 0x5a, 0x4c, 0x96, 0x4d, 0x4d, 0xeb, 0xa6, 0xa6, 0x8b,
+	0xb2, 0x45, 0x8d, 0x69, 0xf8, 0x53, 0x91, 0x1b, 0xe9, 0x0a, 0x69, 0x25, 0x82, 0x58, 0xb7, 0x80,
+	0x84, 0x84, 0xc2, 0xc4, 0x99, 0x75, 0x47, 0xd8, 0x19, 0xe3, 0x99, 0x94, 0x64, 0x4f, 0x88, 0x0b,
+	0x82, 0x03, 0xe2, 0x1b, 0xc0, 0x91, 0x13, 0xea, 0x01, 0xbe, 0xc3, 0x1e, 0x57, 0x9c, 0x38, 0xa1,
+	0x55, 0x7b, 0xe8, 0xd7, 0x40, 0xfe, 0x37, 0xeb, 0xd8, 0x49, 0xb3, 0x2a, 0x87, 0xbd, 0x24, 0x9e,
+	0xf7, 0x7e, 0xf3, 0x7b, 0xbf, 0xf7, 0xe6, 0xbd, 0xb1, 0xe1, 0x96, 0x8d, 0x26, 0xd8, 0xd3, 0xa9,
+	0x87, 0x4c, 0x1b, 0xeb, 0x7c, 0xdc, 0x74, 0x3d, 0xca, 0xa9, 0x5c, 0x0e, 0xcc, 0xcd, 0xd0, 0xac,
+	0xbc, 0x8c, 0x1c, 0x32, 0xa4, 0x7a, 0xf0, 0x1b, 0x02, 0x14, 0xd5, 0xa4, 0xcc, 0xa1, 0x4c, 0xef,
+	0x23, 0x86, 0xf5, 0xb3, 0x83, 0x3e, 0xe6, 0xe8, 0x40, 0x37, 0x29, 0x19, 0x46, 0xfe, 0xdb, 0x91,
+	0xdf, 0x61, 0x96, 0x7e, 0x76, 0xe0, 0xff, 0x45, 0x8e, 0x8d, 0xd0, 0xd1, 0x0b, 0x56, 0x7a, 0xb8,
+	0x88, 0x5c, 0x55, 0x8b, 0x5a, 0x34, 0xb4, 0xfb, 0x4f, 0xf1, 0x86, 0x29, 0x85, 0x2e, 0xf2, 0x90,
+	0x13, 0x6d, 0xd0, 0xfe, 0x92, 0x60, 0xad, 0xcb, 0xac, 0x4f, 0xdd, 0x01, 0xe2, 0xf8, 0x93, 0xc0,
+	0x23, 0xbf, 0x07, 0x45, 0x34, 0xe2, 0xa7, 0xd4, 0x23, 0x7c, 0x52, 0x93, 0xea, 0x52, 0xa3, 0xd8,
+	0xa9, 0xfd, 0xfd, 0xe7, 0x7e, 0x35, 0x8a, 0xf4, 0xc1, 0x60, 0xe0, 0x61, 0xc6, 0x8e, 0xb9, 0x47,
+	0x86, 0x96, 0xf1, 0x0c, 0x2a, 0x1f, 0x42, 0x21, 0xe4, 0xae, 0xe5, 0xea, 0x52, 0xa3, 0xd4, 0xaa,
+	0x36, 0x93, 0x25, 0x68, 0x86, 0xec, 0x9d, 0xe2, 0xe3, 0x7f, 0xb7, 0x97, 0x7e, 0xbf, 0x3a, 0xdf,
+	0x93, 0x8c, 0x08, 0xde, 0x3e, 0xf8, 0xfe, 0xea, 0x7c, 0xef, 0x19, 0xd1, 0x4f, 0x57, 0xe7, 0x7b,
+	0x6a, 0x28, 0x79, 0x1c, 0x8b, 0x4e, 0x69, 0xd4, 0x36, 0xe0, 0x76, 0xca, 0x64, 0x60, 0xe6, 0xd2,
+	0x21, 0xc3, 0xda, 0x0f, 0x12, 0x54, 0xba, 0xcc, 0x3a, 0x1e, 0xf5, 0x1d, 0xc2, 0x3f, 0x43, 0xf6,
+	0x08, 0xcb, 0x2d, 0x78, 0xc9, 0xf4, 0x30, 0xe2, 0xd4, 0x5b, 0x98, 0x4f, 0x0c, 0x94, 0xb7, 0x00,
+	0xbe, 0x19, 0x61, 0x6f, 0xd2, 0x1b, 0x20, 0x8e, 0x82, 0x8c, 0xca, 0x46, 0x31, 0xb0, 0xdc, 0x43,
+	0x1c, 0xc9, 0x55, 0x58, 0x39, 0xf3, 0xb9, 0x6b, 0x79, 0x9f, 0xd0, 0x08, 0x17, 0xed, 0xb2, 0x9f,
+	0x49, 0x4c, 0xa1, 0x35, 0xe0, 0xd5, 0x69, 0x21, 0xb1, 0x46, 0xb9, 0x02, 0x39, 0x32, 0x08, 0xb4,
+	0x2c, 0x1b, 0x39, 0x32, 0xd0, 0x7e, 0x94, 0x60, 0xbd, 0xcb, 0xac, 0x8f, 0xe9, 0x31, 0x47, 0x5f,
+	0x63, 0x03, 0xbb, 0xd4, 0xe3, 0x2f, 0x4a, 0xb5, 0x02, 0xb5, 0xb4, 0x14, 0x51, 0xdb, 0x5f, 0x25,
+	0x28, 0x74, 0x99, 0x75, 0x42, 0x5c, 0xf9, 0x2d, 0x28, 0x70, 0xe2, 0xba, 0x78, 0xb1, 0xb8, 0x08,
+	0xb7, 0x48, 0xdb, 0x21, 0x14, 0x90, 0x43, 0x47, 0x43, 0x1e, 0x88, 0x2b, 0xb5, 0x36, 0x9a, 0x11,
+	0x9b, 0x3f, 0x20, 0xcd, 0x68, 0x40, 0x9a, 0x47, 0x94, 0x0c, 0x3b, 0xcb, 0x7e, 0x0f, 0x19, 0x11,
+	0xbc, 0x5d, 0xf2, 0xe5, 0x47, 0x41, 0xb4, 0xf5, 0xe0, 0xf0, 0x4f, 0x88, 0x2b, 0x34, 0xff, 0x26,
+	0x81, 0x2c, 0x7a, 0xe5, 0x68, 0x62, 0xda, 0xd8, 0x26, 0x8c, 0xdf, 0xb8, 0xcb, 0x37, 0xa1, 0x68,
+	0xc6, 0x24, 0xb5, 0x5c, 0x3d, 0xef, 0x27, 0x21, 0x0c, 0xed, 0x77, 0xb2, 0xad, 0xbc, 0x33, 0xaf,
+	0x95, 0x85, 0x16, 0x6d, 0x13, 0x94, 0xac, 0x55, 0x24, 0xf0, 0x6d, 0xa2, 0xd7, 0x1f, 0xc4, 0xe5,
+	0xfa, 0x88, 0x38, 0xe4, 0xe6, 0x49, 0x54, 0x61, 0xc5, 0xf6, 0x09, 0x82, 0x53, 0x58, 0x36, 0xc2,
+	0x45, 0xbb, 0x32, 0x2d, 0x5e, 0xdb, 0x81, 0xed, 0x39, 0x81, 0x85, 0xb6, 0x9f, 0x25, 0x78, 0xa5,
+	0xcb, 0xac, 0x0e, 0xe2, 0xe6, 0xe9, 0xff, 0x9d, 0xb8, 0x77, 0xa1, 0x10, 0xf4, 0x23, 0x0b, 0xca,
+	0x5a, 0x6a, 0x6d, 0x4d, 0xdf, 0x1f, 0x09, 0xfa, 0xfb, 0x1c, 0x3b, 0x46, 0x04, 0x4e, 0x75, 0xef,
+	0x3d, 0x78, 0x6d, 0x86, 0x1e, 0x31, 0x78, 0x77, 0xa0, 0xf2, 0x10, 0x11, 0x1b, 0x0f, 0x7a, 0x64,
+	0x38, 0x20, 0x26, 0x66, 0x35, 0xa9, 0x9e, 0x6f, 0xac, 0x1a, 0xab, 0xa1, 0xf5, 0x7e, 0x68, 0xd4,
+	0x3e, 0x84, 0xb5, 0x54, 0xb8, 0x54, 0xf7, 0x4a, 0x73, 0x27, 0x2b, 0x97, 0x98, 0x2c, 0xed, 0x0f,
+	0x09, 0x6e, 0x89, 0x12, 0x76, 0xd1, 0x38, 0xd4, 0x45, 0x1e, 0xe1, 0x1b, 0x9f, 0xdc, 0x2e, 0x54,
+	0x1c, 0x34, 0xee, 0xf5, 0x7d, 0xa2, 0x1e, 0x23, 0x8f, 0xc2, 0x80, 0xab, 0x46, 0xd9, 0x49, 0xb0,
+	0xb7, 0x0f, 0xb3, 0x6d, 0xb8, 0x3b, 0xaf, 0x0d, 0x93, 0xb2, 0xb4, 0x6d, 0xd8, 0x9a, 0xe9, 0x88,
+	0x0b, 0xd8, 0x7a, 0xba, 0x02, 0xf9, 0x2e, 0xb3, 0xe4, 0x13, 0x28, 0x4f, 0xbd, 0x34, 0x52, 0x87,
+	0x95, 0xba, 0x9c, 0x95, 0x3b, 0xd7, 0xba, 0xc5, 0xf1, 0x3c, 0x80, 0x52, 0xb2, 0x8b, 0x36, 0x33,
+	0xbb, 0x12, 0x5e, 0x65, 0xf7, 0x3a, 0xaf, 0xa0, 0x7c, 0x1f, 0xf2, 0xfe, 0x75, 0x55, 0xcd, 0x80,
+	0x4f, 0x88, 0xab, 0x6c, 0xce, 0xb2, 0x8a, 0xad, 0x5f, 0xc2, 0x5a, 0xfa, 0xd6, 0xa8, 0xcf, 0xc9,
+	0x43, 0x20, 0x94, 0xc6, 0x22, 0x84, 0xa0, 0xb7, 0xa1, 0x3a, 0x73, 0xa8, 0xe7, 0xd5, 0x6a, 0x1a,
+	0xa6, 0xec, 0x3f, 0x17, 0x4c, 0x44, 0xfb, 0x1c, 0x56, 0xa7, 0x5f, 0x2f, 0x6a, 0x66, 0xff, 0x94,
+	0x5f, 0x79, 0xe3, 0x7a, 0xbf, 0x20, 0xfe, 0x0a, 0xd6, 0x33, 0xe3, 0xbf, 0x93, 0xd9, 0x9b, 0x86,
+	0x28, 0x77, 0x17, 0x42, 0x44, 0x84, 0x87, 0x20, 0xcf, 0x98, 0xa0, 0xd7, 0xe7, 0xe4, 0x9f, 0x04,
+	0x29, 0x6f, 0x3e, 0x07, 0x28, 0x8e, 0xa3, 0xac, 0x7c, 0xe7, 0x7f, 0x96, 0x74, 0x8e, 0x1e, 0x5f,
+	0xa8, 0xd2, 0x93, 0x0b, 0x55, 0x7a, 0x7a, 0xa1, 0x4a, 0xbf, 0x5c, 0xaa, 0x4b, 0x4f, 0x2e, 0xd5,
+	0xa5, 0x7f, 0x2e, 0xd5, 0xa5, 0x2f, 0xee, 0x5a, 0x84, 0x9f, 0x8e, 0xfa, 0x4d, 0x93, 0x3a, 0x3a,
+	0xc7, 0xb6, 0x4d, 0xbd, 0x7d, 0x42, 0xf5, 0xd4, 0x60, 0xf1, 0x89, 0x8b, 0x59, 0xbf, 0x10, 0x7c,
+	0x5f, 0xbd, 0xfd, 0x5f, 0x00, 0x00, 0x00, 0xff, 0xff, 0x25, 0x2e, 0x1e, 0xd4, 0x1e, 0x0a, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -691,6 +945,8 @@ type MsgClient interface {
 	UpdateCyclelist(ctx context.Context, in *MsgUpdateCyclelist, opts ...grpc.CallOption) (*MsgUpdateCyclelistResponse, error)
 	UpdateQueryDataLimit(ctx context.Context, in *MsgUpdateQueryDataLimit, opts ...grpc.CallOption) (*MsgUpdateQueryDataLimitResponse, error)
 	NoStakeReport(ctx context.Context, in *MsgNoStakeReport, opts ...grpc.CallOption) (*MsgNoStakeReportResponse, error)
+	BatchSubmitValue(ctx context.Context, in *MsgBatchSubmitValue, opts ...grpc.CallOption) (*MsgBatchSubmitValueResponse, error)
+	UpdateMaxBatchSize(ctx context.Context, in *MsgUpdateMaxBatchSize, opts ...grpc.CallOption) (*MsgUpdateMaxBatchSizeResponse, error)
 }
 
 type msgClient struct {
@@ -755,6 +1011,24 @@ func (c *msgClient) NoStakeReport(ctx context.Context, in *MsgNoStakeReport, opt
 	return out, nil
 }
 
+func (c *msgClient) BatchSubmitValue(ctx context.Context, in *MsgBatchSubmitValue, opts ...grpc.CallOption) (*MsgBatchSubmitValueResponse, error) {
+	out := new(MsgBatchSubmitValueResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Msg/BatchSubmitValue", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateMaxBatchSize(ctx context.Context, in *MsgUpdateMaxBatchSize, opts ...grpc.CallOption) (*MsgUpdateMaxBatchSizeResponse, error) {
+	out := new(MsgUpdateMaxBatchSizeResponse)
+	err := c.cc.Invoke(ctx, "/layer.oracle.Msg/UpdateMaxBatchSize", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// UpdateParams defines a (governance) operation for updating the module
@@ -765,6 +1039,8 @@ type MsgServer interface {
 	UpdateCyclelist(context.Context, *MsgUpdateCyclelist) (*MsgUpdateCyclelistResponse, error)
 	UpdateQueryDataLimit(context.Context, *MsgUpdateQueryDataLimit) (*MsgUpdateQueryDataLimitResponse, error)
 	NoStakeReport(context.Context, *MsgNoStakeReport) (*MsgNoStakeReportResponse, error)
+	BatchSubmitValue(context.Context, *MsgBatchSubmitValue) (*MsgBatchSubmitValueResponse, error)
+	UpdateMaxBatchSize(context.Context, *MsgUpdateMaxBatchSize) (*MsgUpdateMaxBatchSizeResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -788,6 +1064,12 @@ func (*UnimplementedMsgServer) UpdateQueryDataLimit(ctx context.Context, req *Ms
 }
 func (*UnimplementedMsgServer) NoStakeReport(ctx context.Context, req *MsgNoStakeReport) (*MsgNoStakeReportResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NoStakeReport not implemented")
+}
+func (*UnimplementedMsgServer) BatchSubmitValue(ctx context.Context, req *MsgBatchSubmitValue) (*MsgBatchSubmitValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BatchSubmitValue not implemented")
+}
+func (*UnimplementedMsgServer) UpdateMaxBatchSize(ctx context.Context, req *MsgUpdateMaxBatchSize) (*MsgUpdateMaxBatchSizeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMaxBatchSize not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -902,6 +1184,42 @@ func _Msg_NoStakeReport_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_BatchSubmitValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgBatchSubmitValue)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).BatchSubmitValue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Msg/BatchSubmitValue",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).BatchSubmitValue(ctx, req.(*MsgBatchSubmitValue))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateMaxBatchSize_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateMaxBatchSize)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateMaxBatchSize(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.oracle.Msg/UpdateMaxBatchSize",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateMaxBatchSize(ctx, req.(*MsgUpdateMaxBatchSize))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.oracle.Msg",
@@ -930,6 +1248,14 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "NoStakeReport",
 			Handler:    _Msg_NoStakeReport_Handler,
+		},
+		{
+			MethodName: "BatchSubmitValue",
+			Handler:    _Msg_BatchSubmitValue_Handler,
+		},
+		{
+			MethodName: "UpdateMaxBatchSize",
+			Handler:    _Msg_UpdateMaxBatchSize_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1328,6 +1654,186 @@ func (m *MsgUpdateQueryDataLimitResponse) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgBatchSubmitValue) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBatchSubmitValue) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBatchSubmitValue) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Values) > 0 {
+		for iNdEx := len(m.Values) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Values[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintTx(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.Creator) > 0 {
+		i -= len(m.Creator)
+		copy(dAtA[i:], m.Creator)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Creator)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgBatchSubmitValueResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBatchSubmitValueResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBatchSubmitValueResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.FailedIndices) > 0 {
+		dAtA4 := make([]byte, len(m.FailedIndices)*10)
+		var j3 int
+		for _, num := range m.FailedIndices {
+			for num >= 1<<7 {
+				dAtA4[j3] = uint8(uint64(num)&0x7f | 0x80)
+				num >>= 7
+				j3++
+			}
+			dAtA4[j3] = uint8(num)
+			j3++
+		}
+		i -= j3
+		copy(dAtA[i:], dAtA4[:j3])
+		i = encodeVarintTx(dAtA, i, uint64(j3))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SubmitValueItem) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SubmitValueItem) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SubmitValueItem) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Value) > 0 {
+		i -= len(m.Value)
+		copy(dAtA[i:], m.Value)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Value)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.QueryData) > 0 {
+		i -= len(m.QueryData)
+		copy(dAtA[i:], m.QueryData)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.QueryData)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateMaxBatchSize) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateMaxBatchSize) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateMaxBatchSize) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.MaxBatchSize != 0 {
+		i = encodeVarintTx(dAtA, i, uint64(m.MaxBatchSize))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateMaxBatchSizeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateMaxBatchSizeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateMaxBatchSizeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -1499,6 +2005,83 @@ func (m *MsgUpdateQueryDataLimit) Size() (n int) {
 }
 
 func (m *MsgUpdateQueryDataLimitResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgBatchSubmitValue) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Creator)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if len(m.Values) > 0 {
+		for _, e := range m.Values {
+			l = e.Size()
+			n += 1 + l + sovTx(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *MsgBatchSubmitValueResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.FailedIndices) > 0 {
+		l = 0
+		for _, e := range m.FailedIndices {
+			l += sovTx(uint64(e))
+		}
+		n += 1 + sovTx(uint64(l)) + l
+	}
+	return n
+}
+
+func (m *SubmitValueItem) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.QueryData)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.Value)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgUpdateMaxBatchSize) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.MaxBatchSize != 0 {
+		n += 1 + sovTx(uint64(m.MaxBatchSize))
+	}
+	return n
+}
+
+func (m *MsgUpdateMaxBatchSizeResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -2584,6 +3167,515 @@ func (m *MsgUpdateQueryDataLimitResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUpdateQueryDataLimitResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBatchSubmitValue) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBatchSubmitValue: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBatchSubmitValue: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Creator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Creator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Values", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Values = append(m.Values, &SubmitValueItem{})
+			if err := m.Values[len(m.Values)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBatchSubmitValueResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBatchSubmitValueResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBatchSubmitValueResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType == 0 {
+				var v uint32
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTx
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= uint32(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				m.FailedIndices = append(m.FailedIndices, v)
+			} else if wireType == 2 {
+				var packedLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowTx
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					packedLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if packedLen < 0 {
+					return ErrInvalidLengthTx
+				}
+				postIndex := iNdEx + packedLen
+				if postIndex < 0 {
+					return ErrInvalidLengthTx
+				}
+				if postIndex > l {
+					return io.ErrUnexpectedEOF
+				}
+				var elementCount int
+				var count int
+				for _, integer := range dAtA[iNdEx:postIndex] {
+					if integer < 128 {
+						count++
+					}
+				}
+				elementCount = count
+				if elementCount != 0 && len(m.FailedIndices) == 0 {
+					m.FailedIndices = make([]uint32, 0, elementCount)
+				}
+				for iNdEx < postIndex {
+					var v uint32
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowTx
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						v |= uint32(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					m.FailedIndices = append(m.FailedIndices, v)
+				}
+			} else {
+				return fmt.Errorf("proto: wrong wireType = %d for field FailedIndices", wireType)
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SubmitValueItem) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SubmitValueItem: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SubmitValueItem: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field QueryData", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.QueryData = append(m.QueryData[:0], dAtA[iNdEx:postIndex]...)
+			if m.QueryData == nil {
+				m.QueryData = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Value", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Value = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateMaxBatchSize) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateMaxBatchSize: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateMaxBatchSize: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxBatchSize", wireType)
+			}
+			m.MaxBatchSize = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.MaxBatchSize |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateMaxBatchSizeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateMaxBatchSizeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateMaxBatchSizeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
