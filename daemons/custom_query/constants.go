@@ -273,4 +273,27 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 			},
 		},
 	},
+	"611fd0e88850bf0cc036d96d04d47605c90b993485c2971e022b5751bbb04f23": {
+		ID:                "611fd0e88850bf0cc036d96d04d47605c90b993485c2971e022b5751bbb04f23",
+		AggregationMethod: "median",
+		MinResponses:      2,
+		ResponseType:      "ufixed256x18",
+		Endpoints: []EndpointConfig{
+			{
+				EndpointType: "coingecko",
+				ResponsePath: []string{"stride-staked-atom", "usd"},
+				Params: map[string]string{
+					"coin_id": "stride-staked-atom",
+				},
+			},
+			{
+				EndpointType: "coinmarketcap",
+				ResponsePath: []string{"data", "21686", "quote", "USD", "price"},
+				Params: map[string]string{
+					"id": "21686",
+					// "symbol": "stATOM",
+				},
+			},
+		},
+	},
 }
