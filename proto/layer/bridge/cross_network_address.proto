@@ -1,0 +1,19 @@
+syntax = "proto3";
+package layer.bridge;
+
+import "gogoproto/gogo.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/tellor-io/layer/x/bridge/types";
+
+// CrossNetworkAddressEntry represents a tracked address across networks
+message CrossNetworkAddressEntry {
+  // address is the validator address being tracked
+  string address = 1;
+  // reporter is the address of the reporter who reported this
+  string reporter = 2;
+  // timestamp is when this was reported
+  google.protobuf.Timestamp timestamp = 3 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  // disputed indicates if this entry is currently under dispute
+  bool disputed = 4;
+}

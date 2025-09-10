@@ -11,7 +11,8 @@ import (
 )
 
 const (
-	TRBBridgeQueryType = "TRBBridge"
+	TRBBridgeQueryType           = "TRBBridge"
+	CrossNetworkAddressQueryType = "CrossTellorNetworkAddress"
 )
 
 // Generates a new QueryMeta for a TRBBridgeQueryType
