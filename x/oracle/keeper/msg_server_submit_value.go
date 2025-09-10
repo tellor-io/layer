@@ -45,7 +45,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 		return nil, err
 	}
 
-	isTokenBridgeDeposit, err := k.keeper.PreventBridgeWithdrawalReport(ctx, msg.QueryData)
+	isTokenBridgeDeposit, isCrossNetworkAddress, err := k.keeper.PreventBridgeWithdrawalReport(ctx, msg.QueryData)
 	if err != nil {
 		return nil, err
 	}
@@ -75,6 +75,9 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return nil, err
+		}
+		if isCrossNetworkAddress {
+			return nil, types.ErrNotCrossNetworkAddress
 		}
 		if !isTokenBridgeDeposit {
 			return nil, types.ErrNotTokenDeposit

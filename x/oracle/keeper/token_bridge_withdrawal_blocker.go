@@ -18,23 +18,23 @@ import (
 // PreventBridgeWithdrawalReport verifies if the queryData is a TRBBridgeQueryType. If not, it returns false, nil.
 // If it is, then it further checks whether it is a withdrawal or deposit report. If it is a withdrawal report, it returns an error
 // indicating that such reports should not be processed.
-func (k Keeper) PreventBridgeWithdrawalReport(ctx context.Context, queryData []byte) (bool, error) {
+func (k Keeper) PreventBridgeWithdrawalReport(ctx context.Context, queryData []byte) (bool, bool, error) {
 	// Size limit check (0.5MB)
 	limit, err := k.QueryDataLimit.Get(ctx)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 	if len(queryData) > int(limit.Limit) {
-		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "query data too large")
+		return false, false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "query data too large")
 	}
 	// decode query data partial
 	StringType, err := abi.NewType("string", "", nil)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 	BytesType, err := abi.NewType("bytes", "", nil)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 	initialArgs := abi.Arguments{
 		{Type: StringType},
@@ -42,26 +42,30 @@ func (k Keeper) PreventBridgeWithdrawalReport(ctx context.Context, queryData []b
 	}
 	queryDataDecodedPartial, err := initialArgs.Unpack(queryData)
 	if err != nil {
-		return false, types.ErrInvalidQueryData.Wrapf("failed to unpack query data: %v", err)
+		return false, false, types.ErrInvalidQueryData.Wrapf("failed to unpack query data: %v", err)
 	}
 	if len(queryDataDecodedPartial) != 2 {
-		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data length")
+		return false, false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data length")
 	}
 	// check if first arg is a string
 	if reflect.TypeOf(queryDataDecodedPartial[0]).Kind() != reflect.String {
-		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data type")
+		return false, false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data type")
+	}
+	if queryDataDecodedPartial[0].(string) == CrossNetworkAddressQueryType {
+		return false, true, nil
 	}
 	if queryDataDecodedPartial[0].(string) != TRBBridgeQueryType {
-		return false, nil
+		return false, false, nil
 	}
+
 	// decode query data arguments
 	BoolType, err := abi.NewType("bool", "", nil)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 	Uint256Type, err := abi.NewType("uint256", "", nil)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 
 	queryDataArgs := abi.Arguments{
@@ -71,32 +75,32 @@ func (k Keeper) PreventBridgeWithdrawalReport(ctx context.Context, queryData []b
 
 	queryDataArgsDecoded, err := queryDataArgs.Unpack(queryDataDecodedPartial[1].([]byte))
 	if err != nil {
-		return false, types.ErrInvalidQueryData.Wrapf("failed to unpack query data arguments: %v", err)
+		return false, false, types.ErrInvalidQueryData.Wrapf("failed to unpack query data arguments: %v", err)
 	}
 
 	if len(queryDataArgsDecoded) != 2 {
-		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data arguments length")
+		return false, false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data arguments length")
 	}
 
 	// check if first arg is a bool
 	if reflect.TypeOf(queryDataArgsDecoded[0]).Kind() != reflect.Bool {
-		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data arguments type")
+		return false, false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data arguments type")
 	}
 
 	if !queryDataArgsDecoded[0].(bool) {
-		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid report type, cannot report token bridge withdrawal")
+		return false, false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid report type, cannot report token bridge withdrawal")
 	}
 	// get depositId status
 	depositId := queryDataArgsDecoded[1].(*big.Int).Uint64()
 	claimStatus, err := k.bridgeKeeper.GetDepositStatus(ctx, depositId)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
-			return true, nil
+			return true, false, nil
 		}
-		return false, err
+		return false, false, err
 	}
 	if claimStatus {
-		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid report type, cannot report token bridge deposit that has already been claimed")
+		return false, false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid report type, cannot report token bridge deposit that has already been claimed")
 	}
-	return true, nil
+	return true, false, nil
 }
