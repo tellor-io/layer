@@ -101,7 +101,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"e010d752f28dcd2804004d0b57ab1bdc4eca092895d49160204120af11d15f3e": {
 		ID:                "e010d752f28dcd2804004d0b57ab1bdc4eca092895d49160204120af11d15f3e",
 		AggregationMethod: "median",
-		MinResponses:      2,
+		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -154,7 +154,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"03731257e35c49e44b267640126358e5decebdd8f18b5e8f229542ec86e318cf": {
 		ID:                "03731257e35c49e44b267640126358e5decebdd8f18b5e8f229542ec86e318cf",
 		AggregationMethod: "median",
-		MinResponses:      2,
+		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -207,7 +207,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"0bc2d41117ae8779da7623ee76a109c88b84b9bf4d9b404524df04f7d0ca4ca7": {
 		ID:                "0bc2d41117ae8779da7623ee76a109c88b84b9bf4d9b404524df04f7d0ca4ca7",
 		AggregationMethod: "median",
-		MinResponses:      2,
+		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -230,7 +230,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"1962cde2f19178fe2bb2229e78a6d386e6406979edc7b9a1966d89d83b3ebf2e": {
 		ID:                "1962cde2f19178fe2bb2229e78a6d386e6406979edc7b9a1966d89d83b3ebf2e",
 		AggregationMethod: "median",
-		MinResponses:      2,
+		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -253,7 +253,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"d62f132d9d04dde6e223d4366c48b47cd9f90228acdc6fa755dab93266db5176": {
 		ID:                "d62f132d9d04dde6e223d4366c48b47cd9f90228acdc6fa755dab93266db5176",
 		AggregationMethod: "median",
-		MinResponses:      2,
+		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -276,7 +276,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"611fd0e88850bf0cc036d96d04d47605c90b993485c2971e022b5751bbb04f23": {
 		ID:                "611fd0e88850bf0cc036d96d04d47605c90b993485c2971e022b5751bbb04f23",
 		AggregationMethod: "median",
-		MinResponses:      2,
+		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{

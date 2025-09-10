@@ -12,7 +12,7 @@ var StaticMarketParamsConfig = map[uint32]*types.MarketParam{
 		Exponent:           -5,
 		MinExchanges:       3,
 		MinPriceChangePpm:  1000,
-		ExchangeConfigJson: `{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"SAGAUSDT\\\"\"},{\"exchangeName\":\"Gate\",\"ticker\":\"SAGA_USDC\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"sagausdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"SAGAUSD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"SAGA_USDT\"}]}`,
+		ExchangeConfigJson: `{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"SAGAUSDT\\\"\"},{\"exchangeName\":\"Gate\",\"ticker\":\"SAGA_USDC\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"sagausdt\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"SAGAUSD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"SAGAUSDT\"}]}`,
 		QueryData:          `"00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004736167610000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"`,
 	},
 	exchange_common.BTCUSD_ID: {
@@ -48,7 +48,7 @@ var StaticMarketParamsConfig = map[uint32]*types.MarketParam{
 		Exponent:           -6,
 		MinExchanges:       2,
 		MinPriceChangePpm:  1000,
-		ExchangeConfigJson: `{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"USDCUSDT\\\"\"},{\"exchangeName\":\"Okx\",\"ticker\":\"USDC-USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"usdcusdt\"},{\"exchangeName\":\"Bitstamp\",\"ticker\":\"USDC/USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"USDC_USDT\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"USDCUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"USDC-USDT\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"USDC_USDT\"}]}`,
+		ExchangeConfigJson: `{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"\\\"USDCUSDT\\\"\"},{\"exchangeName\":\"Okx\",\"ticker\":\"USDC-USDT\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"usdcusdt\"},{\"exchangeName\":\"Bitstamp\",\"ticker\":\"USDC/USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"USDC_USDT\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"USDCUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"USDC-USDT\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"USDCUSDT\"}]}`,
 		QueryData:          `"00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004757364630000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"`,
 	},
 	exchange_common.USDTUSD_ID: {
