@@ -18,6 +18,8 @@ import (
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/math"
+
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (
@@ -73,6 +75,38 @@ func TestLayerFlow(t *testing.T) {
 
 	disputer := interchaintest.GetAndFundTestUsers(t, ctx, "disputer", math.NewInt(1*1e12), layer)[0]
 	disputerFA := disputer.FormattedAddress()
+
+	// Test sending funds to extra_rewards_pool module account
+	testFunder := interchaintest.GetAndFundTestUsers(t, ctx, "testFunder", math.NewInt(1_000_000), layer)[0]
+	type Balance struct {
+		Amount string `json:"amount"`
+		Denom  string `json:"denom"`
+	}
+	type Response struct {
+		AccountBalance Balance `json:"balance"`
+	}
+	// Test the module account can receive funds from an external account
+	extraRewardsAddr := authtypes.NewModuleAddress("extra_rewards_pool").String()
+	// check initial balance is zero
+	balanceRes, _, err := validatorI.ExecQuery(ctx, "bank", "balance", extraRewardsAddr, "loya")
+	require.NoError(t, err)
+	var balance Response
+	err = json.Unmarshal(balanceRes, &balance)
+	require.NoError(t, err)
+	require.Equal(t, "0", balance.AccountBalance.Amount)
+	// send funds to extra rewards pool
+	_, err = validatorI.ExecTx(ctx, testFunder.KeyName(), "bank", "send", testFunder.FormattedAddress(), extraRewardsAddr, "100000loya", "--keyring-dir", layer.HomeDir())
+	require.NoError(t, err)
+
+	// Verify the funds were received
+	balanceRes, _, err = validatorI.ExecQuery(ctx, "bank", "balance", extraRewardsAddr, "loya")
+	require.NoError(t, err)
+	err = json.Unmarshal(balanceRes, &balance)
+	require.NoError(t, err)
+	// convert to math.Int for comparison
+	balInt, ok := math.NewIntFromString(balance.AccountBalance.Amount)
+	require.True(t, ok)
+	require.True(t, balInt.GT(math.ZeroInt()))
 
 	// turn on minting
 	prop := Proposal{

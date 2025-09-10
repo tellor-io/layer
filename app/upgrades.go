@@ -5,6 +5,7 @@ import (
 
 	"github.com/tellor-io/layer/app/upgrades"
 	v_5_1_1 "github.com/tellor-io/layer/app/upgrades/v5.1.1"
+	v_5_1_2 "github.com/tellor-io/layer/app/upgrades/v5.1.2"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -21,14 +22,15 @@ var (
 // setupUpgradeHandlers registers the upgrade handlers to perform custom upgrade
 // logic and state migrations for software upgrades.
 func (app *App) setupUpgradeHandlers() {
-	if app.UpgradeKeeper.HasHandler(v_5_1_1.UpgradeName) {
-		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v_5_1_1.UpgradeName))
+	if app.UpgradeKeeper.HasHandler(v_5_1_2.UpgradeName) {
+		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v_5_1_2.UpgradeName))
 	}
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v_5_1_1.UpgradeName,
-		v_5_1_1.CreateUpgradeHandler(
+		v_5_1_2.UpgradeName,
+		v_5_1_2.CreateUpgradeHandler(
 			app.ModuleManager(),
 			app.configurator,
+			app.AccountKeeper,
 		),
 	)
 }

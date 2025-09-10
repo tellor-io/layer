@@ -15,6 +15,7 @@ import (
 // the block provision for the current block.
 func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
+	_ = k.SendExtraRewards(ctx)
 	minter, err := k.Minter.Get(ctx)
 	if err != nil {
 		return err
