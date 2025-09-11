@@ -1,0 +1,20 @@
+event_types:
+  - alert_name: "Vote Extension Participation Rate Alert"
+    alert_type: "vote-ext-part-rate"
+    query: "vote_extension_participation_rate < 80"
+    webhook_url: "YOUR_DISCORD_WEBHOOK_URL"
+
+  - alert_name: "Daily Vote Extension Report"
+    alert_type: "daily-report"
+    query: "daily_summary"
+    webhook_url: "YOUR_DISCORD_WEBHOOK_URL"
+
+  - alert_name: "Liveness Alert"
+    alert_type: "liveness-alert"
+    query: "node_not_responding"
+    webhook_url: "YOUR_DISCORD_WEBHOOK_URL"
+
+  - alert_name: "Invalid Signature Alert"
+    alert_type: "invalid-signature-alert"
+    query: "invalid_signatures_detected"
+    webhook_url: "YOUR_DISCORD_WEBHOOK_URL"
