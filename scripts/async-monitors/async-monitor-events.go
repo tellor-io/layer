@@ -377,19 +377,16 @@ func getAssetPairFromQueryID(queryID string) string {
 	defer queryIDsMutex.RUnlock()
 
 	if supportedQueryIDsMap == nil {
-		fmt.Println("supportedQueryIDsMap is nil")
+		log.Println("supportedQueryIDsMap is nil")
 		return ""
 	}
 
-	// First try to find in QueryIDToAssetPairMap
-	fmt.Println("supportedQueryIDsMap.QueryIDToAssetPairMap id: ", queryID)
 	if assetPair, exists := supportedQueryIDsMap.QueryIDToAssetPairMap[queryID]; exists {
-		fmt.Println("assetPair: ", assetPair)
 		return assetPair
 	}
 
 	// If not found, return empty string
-	fmt.Println("assetPair not found")
+	log.Println("assetPair not found")
 	return ""
 }
 
@@ -664,7 +661,7 @@ func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsRes
 				blockDiff := height - lastBlockHeight
 				if blockDiff > 0 {
 					normalizedTimeDiff := time.Duration(float64(timeDiff) / float64(blockDiff))
-					fmt.Println("Normalized time per block: ", normalizedTimeDiff.String())
+					log.Println("Normalized time per block: ", normalizedTimeDiff.String())
 					if normalizedTimeDiff > blockTimeThreshold {
 						message := fmt.Sprintf("**Alert: Abnormally Long Block Time**\nNode: %s\nTime between blocks: %v\nNormalized time per block: %v\nThreshold: %v\nPrevious block time: %v\nCurrent block time: %v",
 							nodeName, timeDiff, normalizedTimeDiff, blockTimeThreshold, prevTime, currentBlockTime)
@@ -787,13 +784,11 @@ func writeTimestampToCSV(timestamp string) error {
 // Add a helper function to handle events
 func handleEvent(event Event, eventType ConfigType) {
 	if event.Type == AGGREGATE_REPORT_NAME {
-		fmt.Println("Calling handleAggregateReport")
 		handleAggregateReport(event, eventType)
 	} else {
 		message := fmt.Sprintf("**Event Alert: %s**\n", eventType.AlertName)
 		for _, attr := range event.Attributes {
 			message += fmt.Sprintf("%s: %s\n", attr.Key, attr.Value)
-			fmt.Println("attr.Key: ", attr.Key)
 			if attr.Key == "query_id" {
 				// Try to get the asset pair for this query ID
 				assetPair := getAssetPairFromQueryID(attr.Value)
