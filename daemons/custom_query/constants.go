@@ -36,6 +36,21 @@ var StaticEndpointTemplateConfig = map[string]*EndpointTemplate{
 		Method:      "GET",
 		Timeout:     5000,
 	},
+	"cosmos": {
+		URLTemplate: "https://lcd.osmosis.zone/osmosis/gamm/v1beta1/pools/{pool_id}",
+		Method:      "GET",
+		Timeout:     5000,
+	},
+}
+
+var StaticRPCEndpointTemplateConfig = map[string]*RPCEndpointTemplate{
+	"ethereum": {
+		URLs: []string{
+			"https://mainnet.infura.io/v3/${INFURA_API_KEY}",
+			"https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_API_KEY}",
+			"https://rpc.ankr.com/eth",
+		},
+	},
 }
 
 var StaticQueriesConfig = map[string]*QueryConfig{
@@ -207,7 +222,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"0bc2d41117ae8779da7623ee76a109c88b84b9bf4d9b404524df04f7d0ca4ca7": {
 		ID:                "0bc2d41117ae8779da7623ee76a109c88b84b9bf4d9b404524df04f7d0ca4ca7",
 		AggregationMethod: "median",
-		MinResponses:      1,
+		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -224,6 +239,11 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					// "symbol": "RETH",
 					"id": "15060",
 				},
+			},
+			{
+				EndpointType: "contract",
+				Handler:      "reth_handler",
+				Chain:        "ethereum",
 			},
 		},
 	},
@@ -271,6 +291,11 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					// "symbol": "KING",
 				},
 			},
+			{
+				EndpointType: "contract",
+				Handler:      "king_handler",
+				Chain:        "ethereum",
+			},
 		},
 	},
 	"611fd0e88850bf0cc036d96d04d47605c90b993485c2971e022b5751bbb04f23": {
@@ -293,6 +318,16 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					"id": "21686",
 					// "symbol": "stATOM",
 				},
+			},
+			{
+				EndpointType: "cosmos",
+				Handler:      "osmosis_pool_price_handler",
+				ResponsePath: []string{"pool", "current_sqrt_price"},
+				Params: map[string]string{
+					"pool_id": "1136",
+				},
+				UsdViaID: 7,
+				Invert:   false,
 			},
 		},
 	},
