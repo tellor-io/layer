@@ -12,8 +12,9 @@ import (
 )
 
 type CombinedConfig struct {
-	Endpoints map[string]*EndpointTemplate
-	Queries   map[string]*QueryConfig
+	Endpoints    map[string]*EndpointTemplate
+	RPCEndpoints map[string]*RPCEndpointTemplate
+	Queries      map[string]*QueryConfig
 }
 
 const (
@@ -31,6 +32,11 @@ const (
     headers = { {{ formatParams $endpoint.Headers }} }
     {{- end }}
 {{- end }}
+[rpc_endpoints]
+{{- range $key, $rpcEndpoint := .RPCEndpoints }}
+    [rpc_endpoints.{{ $key }}]
+    urls = [{{ range $i, $url := $rpcEndpoint.URLs }}{{if $i}}, {{end}}"{{ $url }}"{{ end }}]
+{{- end }}
 
 [queries]
 {{- range $key, $query := .Queries }}
@@ -45,6 +51,18 @@ const (
         endpoint_type = "{{ $endpoint.EndpointType }}"
         response_path = [{{ range $i, $path := $endpoint.ResponsePath }}{{if $i}}, {{end}}"{{ $path }}"{{ end }}]
         params = { {{ formatParams $endpoint.Params }} }
+		{{- if $endpoint.Handler }}
+        handler = "{{ $endpoint.Handler }}"
+		{{- end }}
+		{{- if $endpoint.Chain }}
+		chain = "{{ $endpoint.Chain }}"
+		{{- end }}
+		{{- if $endpoint.Invert }}
+		invert = {{ $endpoint.Invert }}
+		{{- end }}
+		{{- if $endpoint.UsdViaID }}
+		usd_via_id = {{ $endpoint.UsdViaID }}
+		{{- end }}
     {{- end }}
 {{- end }}
 `
@@ -62,8 +80,9 @@ func formatParams(params map[string]string) string {
 func GenerateDefaultConfigTomlString() bytes.Buffer {
 	// Create the combined config
 	combined := CombinedConfig{
-		Endpoints: StaticEndpointTemplateConfig,
-		Queries:   StaticQueriesConfig,
+		Endpoints:    StaticEndpointTemplateConfig,
+		Queries:      StaticQueriesConfig,
+		RPCEndpoints: StaticRPCEndpointTemplateConfig,
 	}
 
 	// Create a template with the helper function
