@@ -10,6 +10,10 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/tellor-io/layer/daemons/custom_query/contracts/contract_handlers"
+	rpc_handler "github.com/tellor-io/layer/daemons/custom_query/rpc/rpc_handler"
+	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 )
 
 // Result holds the value returned from an endpoint
@@ -29,15 +33,20 @@ type FetchPriceResult struct {
 }
 
 // FetchPrice fetches price data for the given query ID
-func FetchPrice(ctx context.Context, query QueryConfig) (*FetchPriceResult, error) {
+func FetchPrice(
+	ctx context.Context,
+	query QueryConfig,
+	priceCache *pricefeedservertypes.MarketToExchangePrices,
+) (*FetchPriceResult, error) {
 	// Create a context with timeout
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	results := make(chan Result, len(query.Endpoints))
+	totalEndpoints := len(query.BuiltEndpoints) + len(query.ContractReaders)
+	results := make(chan Result, totalEndpoints)
 	var wg sync.WaitGroup
 
-	// Launch a goroutine for each endpoint
+	// Launch goroutines for REST API endpoints
 	for _, endpoint := range query.BuiltEndpoints {
 		wg.Add(1)
 		go func(ep BuiltEndpoint) {
@@ -47,6 +56,25 @@ func FetchPrice(ctx context.Context, query QueryConfig) (*FetchPriceResult, erro
 		}(endpoint)
 	}
 
+	// Launch goroutines for contract endpoints
+	for _, contractEndpoint := range query.ContractReaders {
+		wg.Add(1)
+		go func(ep ContractHandler) {
+			defer wg.Done()
+			result := fetchFromContractEndpoint(ctx, ep, priceCache)
+			results <- result
+		}(contractEndpoint)
+	}
+
+	for _, rpchandler := range query.RpcReaders {
+		wg.Add(1)
+		go func(ep RpcHandler) {
+			defer wg.Done()
+			result := fetchFromRpcEndpoint(ctx, ep, priceCache)
+			results <- result
+		}(rpchandler)
+
+	}
 	// Close results channel when all goroutines complete
 	go func() {
 		wg.Wait()
@@ -80,7 +108,7 @@ func FetchPrice(ctx context.Context, query QueryConfig) (*FetchPriceResult, erro
 		RawResults:   allResults,
 		QueryID:      query.ID,
 		ResponseType: query.ResponseType,
-		SuccessRate:  float64(len(successfulResults)) / float64(len(query.Endpoints)),
+		SuccessRate:  float64(len(successfulResults)) / float64(totalEndpoints),
 	}, nil
 }
 
@@ -142,6 +170,66 @@ func fetchFromEndpoint(ctx context.Context, endpoint BuiltEndpoint) Result {
 	return Result{
 		Value:      value,
 		EndpointID: endpoint.EndpointID,
+	}
+}
+
+// fetchFromContractEndpoint fetches data from a smart contract
+func fetchFromContractEndpoint(
+	ctx context.Context,
+	contractReader ContractHandler,
+	priceCache *pricefeedservertypes.MarketToExchangePrices,
+) Result {
+
+	handler, err := contract_handlers.GetHandler(contractReader.Handler)
+	if err != nil {
+		return Result{
+			Err:        fmt.Errorf("failed to get contract handler: %w", err),
+			EndpointID: contractReader.Handler,
+		}
+	}
+	value, err := handler.FetchValue(ctx, contractReader.Reader, priceCache)
+	if err != nil {
+		return Result{
+			Err:        fmt.Errorf("failed to fetch contract value: %w", err),
+			EndpointID: contractReader.Handler,
+		}
+	}
+
+	defer contractReader.Reader.Close()
+
+	fmt.Println("Contract value:", value)
+	return Result{
+		Value:      value,
+		EndpointID: "contract:" + contractReader.Handler,
+	}
+}
+
+func fetchFromRpcEndpoint(
+	ctx context.Context,
+	rpchandler RpcHandler,
+	priceCache *pricefeedservertypes.MarketToExchangePrices,
+) Result {
+
+	handler, err := rpc_handler.GetHandler(rpchandler.Handler)
+	if err != nil {
+		return Result{
+			Err:        fmt.Errorf("failed to get RPC handler: %w", err),
+			EndpointID: rpchandler.Handler,
+		}
+	}
+
+	value, err := handler.FetchValue(ctx, rpchandler.Reader, rpchandler.Invert, rpchandler.UsdViaID, priceCache)
+	if err != nil {
+		return Result{
+			Err:        fmt.Errorf("failed to fetch RPC value: %w", err),
+			EndpointID: rpchandler.Handler,
+		}
+	}
+
+	fmt.Println("RPC value:", value)
+	return Result{
+		Value:      value,
+		EndpointID: "cosmos:" + rpchandler.Handler,
 	}
 }
 
