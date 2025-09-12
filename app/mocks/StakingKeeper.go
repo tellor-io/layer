@@ -64,6 +64,20 @@ func (_m *StakingKeeper) GetValidatorByConsAddr(ctx context.Context, consAddr co
 	return r0, r1
 }
 
+// Jail provides a mock function with given fields: ctx, consAddr
+func (_m *StakingKeeper) Jail(ctx context.Context, consAddr cosmos_sdktypes.ConsAddress) error {
+	ret := _m.Called(ctx, consAddr)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, cosmos_sdktypes.ConsAddress) error); ok {
+		r0 = rf(ctx, consAddr)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 type mockConstructorTestingTNewStakingKeeper interface {
 	mock.TestingT
 	Cleanup(func())

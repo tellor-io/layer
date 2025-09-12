@@ -172,11 +172,17 @@ func (s *ProposalHandlerTestSuite) TestCheckInitialSignaturesFromLastCommit() {
 	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
 		OperatorAddress: valAddr.String(),
 	}, nil)
-	bk.On("EVMAddressFromSignatures", ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB, valAddr.String()).Return(addrsExpected, nil)
+	bk.On("EVMAddressFromSignatures", ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB, valAddr.String()).Return(addrsExpected, nil).Once()
 	bk.On("GetEVMAddressByOperator", ctx, valAddr.String()).Return(nil, errors.New("error"))
 	res1, res2 = p.CheckInitialSignaturesFromLastCommit(ctx, commit)
 	require.Equal(valAddr.String(), res1[0])
 	require.Equal(addrsExpected.String(), res2[0])
+
+	bk.On("EVMAddressFromSignatures", ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB, valAddr.String()).Return(nil, errors.New("error")).Once()
+	sk.On("Jail", ctx, consAddr).Return(nil).Once()
+	res1, res2 = p.CheckInitialSignaturesFromLastCommit(ctx, commit)
+	require.Empty(res1)
+	require.Empty(res2)
 }
 
 func (s *ProposalHandlerTestSuite) TestCheckValsetSignaturesFromLastCommit() {
