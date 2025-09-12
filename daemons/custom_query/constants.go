@@ -268,6 +268,11 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					"id": "12409",
 				},
 			},
+			{
+				EndpointType: "contract",
+				Handler:      "wsteth_handler",
+				Chain:        "ethereum",
+			},
 		},
 	},
 	"d62f132d9d04dde6e223d4366c48b47cd9f90228acdc6fa755dab93266db5176": {
