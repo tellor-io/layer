@@ -53,6 +53,7 @@ type BridgeKeeper interface {
 type StakingKeeper interface {
 	GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator stakingtypes.Validator, err error)
 	GetParams(ctx context.Context) (stakingtypes.Params, error)
+	Jail(ctx context.Context, consAddr sdk.ConsAddress) error
 }
 
 type VoteExtHandler struct {

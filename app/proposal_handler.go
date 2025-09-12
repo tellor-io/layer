@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
+	"strconv"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -269,6 +270,7 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 				evmAddress, err := h.bridgeKeeper.EVMAddressFromSignatures(ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB, operatorAddress)
 				if err != nil {
 					h.logger.Error("CheckInitialSignaturesFromLastCommit: failed to get evm address from initial sig", "error", err)
+					h.jailValidatorWithError(ctx, vote, "failed to get evm address from initial sig", err.Error())
 				} else {
 					// check for existing EVM address for operator
 					_, err := h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
@@ -286,6 +288,50 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 		return emptyStringArray, emptyStringArray
 	}
 	return operatorAddresses, evmAddresses
+}
+
+func (h *ProposalHandler) jailValidatorWithError(ctx sdk.Context, vote abci.ExtendedVoteInfo, errorType, errorMessage string) {
+	// Convert the validator address to ConsAddress
+	consAddr := sdk.ConsAddress(vote.Validator.Address)
+
+	// Get the validator to find the operator address
+	validator, err := h.stakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	if err != nil {
+		h.logger.Error("jailValidatorWithError: failed to get validator by consensus address", "error", err, "consAddr", consAddr)
+		return
+	}
+
+	// Check if validator is already jailed
+	if validator.Jailed {
+		h.logger.Info("jailValidatorWithError: validator already jailed", "valAddr", validator.OperatorAddress, "errorType", errorType)
+		return
+	}
+
+	// Jail the validator
+	err = h.stakingKeeper.Jail(ctx, consAddr)
+	if err != nil {
+		h.logger.Error("jailValidatorWithError: failed to jail validator", "error", err, "valAddr", validator.OperatorAddress, "errorType", errorType)
+		return
+	}
+
+	// Emit custom event with detailed error information
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"validator_jailed_signature_problem",
+			sdk.NewAttribute("validator_address", validator.OperatorAddress),
+			sdk.NewAttribute("consensus_address", consAddr.String()),
+			sdk.NewAttribute("error_type", errorType),
+			sdk.NewAttribute("error_message", errorMessage),
+			sdk.NewAttribute("block_height", strconv.FormatInt(ctx.BlockHeight(), 10)),
+		),
+	})
+
+	h.logger.Info("jailValidatorWithError: successfully jailed validator for signature problem",
+		"valAddr", validator.OperatorAddress,
+		"errorType", errorType,
+		"errorMessage", errorMessage,
+		"blockHeight", strconv.FormatInt(ctx.BlockHeight(), 10),
+	)
 }
 
 func (h *ProposalHandler) GetMaxValidators(ctx sdk.Context) (uint32, error) {
