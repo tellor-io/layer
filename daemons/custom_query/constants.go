@@ -36,7 +36,7 @@ var StaticEndpointTemplateConfig = map[string]*EndpointTemplate{
 		Method:      "GET",
 		Timeout:     5000,
 	},
-	"cosmos": {
+	"osmosis": {
 		URLTemplate: "https://lcd.osmosis.zone/osmosis/gamm/v1beta1/pools/{pool_id}",
 		Method:      "GET",
 		Timeout:     5000,
@@ -325,7 +325,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				},
 			},
 			{
-				EndpointType: "cosmos",
+				EndpointType: "osmosis",
 				Handler:      "osmosis_pool_price_handler",
 				ResponsePath: []string{"pool", "current_sqrt_price"},
 				Params: map[string]string{

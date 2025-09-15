@@ -3,6 +3,7 @@ package rpchandler
 import "fmt"
 
 var HandlerRegistry = map[string]RpcHandler{
+	"generic":                    &GenericHandler{},
 	"osmosis_pool_price_handler": &OsmosisPoolPriceHandler{},
 }
 

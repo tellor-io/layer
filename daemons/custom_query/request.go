@@ -2,10 +2,7 @@ package customquery
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -42,19 +39,9 @@ func FetchPrice(
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	totalEndpoints := len(query.BuiltEndpoints) + len(query.ContractReaders)
+	totalEndpoints := len(query.RpcReaders) + len(query.ContractReaders)
 	results := make(chan Result, totalEndpoints)
 	var wg sync.WaitGroup
-
-	// Launch goroutines for REST API endpoints
-	for _, endpoint := range query.BuiltEndpoints {
-		wg.Add(1)
-		go func(ep BuiltEndpoint) {
-			defer wg.Done()
-			result := fetchFromEndpoint(ctx, ep)
-			results <- result
-		}(endpoint)
-	}
 
 	// Launch goroutines for contract endpoints
 	for _, contractEndpoint := range query.ContractReaders {
@@ -65,7 +52,7 @@ func FetchPrice(
 			results <- result
 		}(contractEndpoint)
 	}
-
+	// Launch goroutines for REST API endpoints
 	for _, rpchandler := range query.RpcReaders {
 		wg.Add(1)
 		go func(ep RpcHandler) {
@@ -112,74 +99,12 @@ func FetchPrice(
 	}, nil
 }
 
-// fetchFromEndpoint fetches data from a single endpoint
-func fetchFromEndpoint(ctx context.Context, endpoint BuiltEndpoint) Result {
-	// Create a context with the endpoint's timeout
-	timeoutDuration := time.Duration(endpoint.Timeout) * time.Millisecond
-	ctx, cancel := context.WithTimeout(ctx, timeoutDuration)
-	defer cancel()
-
-	// Create request
-	req, err := http.NewRequestWithContext(ctx, endpoint.Method, endpoint.URL, nil)
-	if err != nil {
-		return Result{
-			Err:        fmt.Errorf("error creating request: %w", err),
-			EndpointID: endpoint.EndpointID,
-		}
-	}
-	if endpoint.Headers != nil {
-		addHeaders(req, endpoint.Headers)
-	}
-	// Execute request
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return Result{
-			Err:        fmt.Errorf("request failed: %w", err),
-			EndpointID: endpoint.EndpointID,
-		}
-	}
-	defer resp.Body.Close()
-
-	// Check response status
-	if resp.StatusCode != http.StatusOK {
-		return Result{
-			Err:        fmt.Errorf("received non-OK response code: %d", resp.StatusCode),
-			EndpointID: endpoint.EndpointID,
-		}
-	}
-
-	// Read response body
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return Result{
-			Err:        fmt.Errorf("error reading response body: %w", err),
-			EndpointID: endpoint.EndpointID,
-		}
-	}
-
-	// Extract value from response according to response path
-	value, err := extractValueFromJSON(body, endpoint.ResponsePath)
-	if err != nil {
-		return Result{
-			Err:        fmt.Errorf("error extracting value: %w", err),
-			EndpointID: endpoint.EndpointID,
-		}
-	}
-
-	return Result{
-		Value:      value,
-		EndpointID: endpoint.EndpointID,
-	}
-}
-
 // fetchFromContractEndpoint fetches data from a smart contract
 func fetchFromContractEndpoint(
 	ctx context.Context,
 	contractReader ContractHandler,
 	priceCache *pricefeedservertypes.MarketToExchangePrices,
 ) Result {
-
 	handler, err := contract_handlers.GetHandler(contractReader.Handler)
 	if err != nil {
 		return Result{
@@ -209,8 +134,12 @@ func fetchFromRpcEndpoint(
 	rpchandler RpcHandler,
 	priceCache *pricefeedservertypes.MarketToExchangePrices,
 ) Result {
+	handlerStr := rpchandler.Handler
+	if handlerStr == "" {
+		handlerStr = "generic"
+	}
 
-	handler, err := rpc_handler.GetHandler(rpchandler.Handler)
+	handler, err := rpc_handler.GetHandler(handlerStr)
 	if err != nil {
 		return Result{
 			Err:        fmt.Errorf("failed to get RPC handler: %w", err),
@@ -226,72 +155,10 @@ func fetchFromRpcEndpoint(
 		}
 	}
 
-	fmt.Println("RPC value:", value)
+	fmt.Println("RPC value:", value, rpchandler.EndpointID)
 	return Result{
 		Value:      value,
-		EndpointID: "cosmos:" + rpchandler.Handler,
-	}
-}
-
-// extractValueFromJSON extracts a float64 value from JSON based on the given path
-func extractValueFromJSON(data []byte, path []string) (float64, error) {
-	var result interface{}
-	if err := json.Unmarshal(data, &result); err != nil {
-		return 0, fmt.Errorf("error unmarshaling JSON: %w", err)
-	}
-
-	// Navigate through the JSON path
-	current := result
-	for i, key := range path {
-		if current == nil {
-			return 0, fmt.Errorf("null value at path segment %d: %s", i, key)
-		}
-
-		mapValue, ok := current.(map[string]interface{})
-		if !ok {
-			// if not a map, check if it's an array
-			if currentArray, ok := current.([]interface{}); ok {
-				// Try to parse key as an index
-				index, err := strconv.Atoi(key)
-				if err != nil {
-					return 0, fmt.Errorf("expected numeric index for array, got: %s", key)
-				}
-
-				if index < 0 || index >= len(currentArray) {
-					return 0, fmt.Errorf("array index out of bounds: %d", index)
-				}
-
-				current = currentArray[index]
-				continue
-			}
-			return 0, fmt.Errorf("expected object at path segment %d: %s, got %T", i, key, current)
-		}
-
-		current, ok = mapValue[key]
-		if !ok {
-			return 0, fmt.Errorf("key not found at path segment %d: %s", i, key)
-		}
-	}
-
-	// Convert the final value to float64
-	switch v := current.(type) {
-	case float64:
-		return v, nil
-	case float32:
-		return float64(v), nil
-	case int:
-		return float64(v), nil
-	case int64:
-		return float64(v), nil
-	case string:
-		var f float64
-		_, err := fmt.Sscanf(v, "%f", &f)
-		if err != nil {
-			return 0, fmt.Errorf("error parsing string as float: %w", err)
-		}
-		return f, nil
-	default:
-		return 0, fmt.Errorf("unsupported value type: %T", current)
+		EndpointID: rpchandler.Handler,
 	}
 }
 
@@ -319,10 +186,4 @@ func aggregateResults(results []Result, method, responseType string) (string, er
 
 func ConvertFloat64ToString(num float64) string {
 	return strconv.FormatFloat(num, 'f', -1, 64)
-}
-
-func addHeaders(req *http.Request, headers map[string]string) {
-	for key, value := range headers {
-		req.Header.Add(key, value)
-	}
 }

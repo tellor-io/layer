@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"time"
 
@@ -40,7 +41,7 @@ func NewReader(url string, headers map[string]string, responsePath []string, tim
 
 	reader := &Reader{
 		client:       client,
-		timeout:      time.Duration(timeout) * time.Second,
+		timeout:      time.Duration(timeout) * time.Millisecond,
 		maxRetries:   3,
 		retryDelay:   100 * time.Millisecond,
 		Headers:      headers,
@@ -57,75 +58,71 @@ func (r *Reader) FetchJSON(ctx context.Context) ([]byte, error) {
 	}()
 
 	var lastErr error
-
 	for retry := 0; retry <= r.maxRetries; retry++ {
-		url := r.client.baseURL
-		ctxWithTimeout, cancel := context.WithTimeout(ctx, r.timeout)
-		req, err := http.NewRequestWithContext(ctxWithTimeout, "GET", url, nil)
+		// Check if context is already canceled
+		if ctx.Err() != nil {
+			return nil, ctx.Err()
+		}
 
-		if err != nil {
-			cancel()
-			lastErr = fmt.Errorf("failed to create request: %w", err)
-			log.Warnf("Failed to create request (attempt %d/%d): %v", retry+1, r.maxRetries+1, err)
-			if retry < r.maxRetries {
-				time.Sleep(r.retryDelay * time.Duration(retry+1))
-				continue
+		// Add retry delay (except for first attempt)
+		if retry > 0 {
+			delay := time.Duration(math.Pow(2, float64(retry-1))) * r.retryDelay
+			select {
+			case <-time.After(delay):
+			case <-ctx.Done():
+				return nil, ctx.Err()
 			}
-			break
 		}
 
-		for key, value := range r.Headers {
-			req.Header.Add(key, value)
+		body, err := r.attemptFetch(ctx)
+		if err == nil {
+			log.Infof("RPC call successful: url=%s", r.client.baseURL)
+			metrics.RPCCallSuccess.Inc()
+			return body, nil
 		}
 
-		resp, err := r.client.client.Do(req)
-		cancel()
-
-		if err != nil {
-			lastErr = fmt.Errorf("request failed: %w", err)
-			log.Warnf("Request failed (attempt %d/%d): %v", retry+1, r.maxRetries+1, err)
-			if retry < r.maxRetries {
-				time.Sleep(r.retryDelay * time.Duration(retry+1))
-				continue
-			}
-			break
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			resp.Body.Close()
-			lastErr = fmt.Errorf("received non-OK response code: %d", resp.StatusCode)
-			log.Warnf("Non-OK response (attempt %d/%d): status=%d", retry+1, r.maxRetries+1, resp.StatusCode)
-			if retry < r.maxRetries {
-				time.Sleep(r.retryDelay * time.Duration(retry+1))
-				continue
-			}
-			break
-		}
-
-		body, err := io.ReadAll(resp.Body)
-		resp.Body.Close()
-
-		if err != nil {
-			lastErr = fmt.Errorf("error reading response body: %w", err)
-			log.Warnf("Failed to read response body (attempt %d/%d): %v", retry+1, r.maxRetries+1, err)
-			if retry < r.maxRetries {
-				time.Sleep(r.retryDelay * time.Duration(retry+1))
-				continue
-			}
-			break
-		}
-
-		log.Debugf("RPC call successful: url=%s", url)
-		metrics.RPCCallSuccess.Inc()
-		return body, nil
+		lastErr = err
+		log.Warnf("Request failed (attempt %d/%d): %v", retry+1, r.maxRetries+1, err)
 	}
 
 	metrics.RPCCallErrors.Inc()
 	return nil, fmt.Errorf("all RPC endpoints failed: %w", lastErr)
 }
 
+func (r *Reader) attemptFetch(ctx context.Context) ([]byte, error) {
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, r.timeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctxWithTimeout, "GET", r.client.baseURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	for key, value := range r.Headers {
+		req.Header.Add(key, value)
+	}
+
+	resp, err := r.client.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("received non-OK response code: %d", resp.StatusCode)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Warnf("Error reading response body: %v, url=%s", err, r.client.baseURL)
+		return nil, fmt.Errorf("error reading response body: %w", err)
+	}
+
+	return body, nil
+}
+
 func (r *Reader) ExtractValueFromJSON(data []byte, path []string) (interface{}, error) {
-	var result interface{}
+	var result any
 	if err := json.Unmarshal(data, &result); err != nil {
 		return nil, fmt.Errorf("error unmarshaling JSON: %w", err)
 	}
@@ -137,13 +134,13 @@ func (r *Reader) ExtractValueFromJSON(data []byte, path []string) (interface{}, 
 		}
 
 		switch v := current.(type) {
-		case map[string]interface{}:
+		case map[string]any:
 			var ok bool
 			current, ok = v[key]
 			if !ok {
 				return nil, fmt.Errorf("key not found at path segment %d: %s", i, key)
 			}
-		case []interface{}:
+		case []any:
 			var index int
 			if _, err := fmt.Sscanf(key, "%d", &index); err != nil {
 				return nil, fmt.Errorf("expected numeric index for array, got: %s", key)

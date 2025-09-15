@@ -18,7 +18,8 @@ type OsmosisPoolPriceHandler struct{}
 
 func (h *OsmosisPoolPriceHandler) FetchValue(
 	ctx context.Context, reader *reader.Reader, _ bool, usdViaID int,
-	priceCache *pricefeedservertypes.MarketToExchangePrices) (float64, error) {
+	priceCache *pricefeedservertypes.MarketToExchangePrices,
+) (float64, error) {
 	resp, err := reader.FetchJSON(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("failed to fetch JSON: %w", err)

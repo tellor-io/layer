@@ -72,7 +72,7 @@ func NewReader(urls []string, timeout int) (*Reader, error) {
 	return reader, nil
 }
 
-func (r *Reader) ReadContract(ctx context.Context, address string, functionSig string, args []string) ([]byte, error) {
+func (r *Reader) ReadContract(ctx context.Context, address, functionSig string, args []string) ([]byte, error) {
 	startTime := time.Now()
 	defer func() {
 		metrics.ContractCallDuration.Observe(time.Since(startTime).Seconds())
@@ -187,7 +187,7 @@ func (r *Reader) encodeFunctionCall(functionSig string, args []string) ([]byte, 
 	return methodID, encodedArgs, nil
 }
 
-func (r *Reader) parseArgument(arg string, paramType string) (interface{}, error) {
+func (r *Reader) parseArgument(arg, paramType string) (interface{}, error) {
 	switch {
 	case strings.HasPrefix(paramType, "uint"):
 		value := new(big.Int)
@@ -253,18 +253,6 @@ func (r *Reader) markClientUnhealthy(client *ethClient) {
 	client.mu.Unlock()
 	log.Warnf("Marked RPC client %s as unhealthy", client.url)
 }
-
-func (r *Reader) markClientHealthy(client *ethClient) {
-	client.mu.Lock()
-	wasUnhealthy := !client.healthy
-	client.healthy = true
-	client.mu.Unlock()
-
-	if wasUnhealthy {
-		log.Infof("RPC client %s is now healthy", client.url)
-	}
-}
-
 
 func (r *Reader) Close() {
 	for _, client := range r.clients {

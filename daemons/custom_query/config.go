@@ -34,10 +34,12 @@ type ContractHandler struct {
 }
 
 type RpcHandler struct {
-	Handler  string
-	Reader   *rpcreader.Reader
-	Invert   bool
-	UsdViaID int
+	Handler    string
+	Reader     *rpcreader.Reader
+	Invert     bool
+	UsdViaID   int
+	Method     string
+	EndpointID string
 }
 type QueryConfig struct {
 	ID                string            `toml:"id"`
@@ -45,7 +47,6 @@ type QueryConfig struct {
 	MinResponses      int               `toml:"min_responses"`
 	ResponseType      string            `toml:"response_type"`
 	Endpoints         []EndpointConfig  `toml:"endpoints"`
-	BuiltEndpoints    []BuiltEndpoint   `toml:"built_endpoints"`
 	ContractReaders   []ContractHandler `toml:"-"`
 	RpcReaders        []RpcHandler      `toml:"-"`
 }
@@ -61,14 +62,6 @@ type EndpointConfig struct {
 	// cosmosis
 	Invert   bool `toml:"invert"`
 	UsdViaID int  `toml:"usd_via_id"`
-}
-type BuiltEndpoint struct {
-	URL          string
-	Method       string
-	Timeout      int
-	ResponsePath []string
-	EndpointID   string
-	Headers      map[string]string
 }
 
 func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig, error) {
@@ -111,7 +104,6 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 	processApiKeys(&config)
 	// for each query in the query map, build the endpoints
 	for _, query := range config.Queries {
-		result := make([]BuiltEndpoint, 0, len(query.Endpoints))
 		contractReaders := make([]ContractHandler, 0)
 		rpcReaders := make([]RpcHandler, 0)
 		for _, endpoint := range query.Endpoints {
@@ -180,26 +172,18 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 				}
 				processedHeaders[key] = value
 			}
-			if endpoint.EndpointType == "cosmos" {
-				rpcReader, err := rpcreader.NewReader(url, processedHeaders, endpoint.ResponsePath, 3)
-				if err != nil {
-					return nil, fmt.Errorf("failed to create RPC reader for endpoint %s in query %s: %w", endpoint.EndpointType, query.ID, err)
-				}
-				rpcReaders = append(rpcReaders, RpcHandler{
-					Handler:  endpoint.Handler,
-					Reader:   rpcReader,
-					Invert:   endpoint.Invert,
-					UsdViaID: endpoint.UsdViaID,
-				})
-				continue
+
+			rpcReader, err := rpcreader.NewReader(url, processedHeaders, endpoint.ResponsePath, template.Timeout)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create RPC reader for endpoint %s in query %s: %w", endpoint.EndpointType, query.ID, err)
 			}
-			result = append(result, BuiltEndpoint{
-				URL:          url,
-				Method:       template.Method,
-				Timeout:      template.Timeout,
-				ResponsePath: endpoint.ResponsePath,
-				EndpointID:   endpoint.EndpointType,
-				Headers:      processedHeaders,
+			rpcReaders = append(rpcReaders, RpcHandler{
+				Handler:    endpoint.Handler,
+				Reader:     rpcReader,
+				Invert:     endpoint.Invert,
+				UsdViaID:   endpoint.UsdViaID,
+				Method:     template.Method,
+				EndpointID: endpoint.EndpointType,
 			})
 		}
 		queryMap[query.ID] = QueryConfig{
@@ -207,7 +191,6 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 			AggregationMethod: query.AggregationMethod,
 			MinResponses:      query.MinResponses,
 			ResponseType:      query.ResponseType,
-			BuiltEndpoints:    result,
 			ContractReaders:   contractReaders,
 			RpcReaders:        rpcReaders,
 		}

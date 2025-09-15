@@ -17,7 +17,6 @@ func (r *KingHandler) FetchValue(
 	ctx context.Context, reader *reader.Reader,
 	priceCache *pricefeedservertypes.MarketToExchangePrices,
 ) (float64, error) {
-
 	result, err := reader.ReadContract(ctx, KING_CONTRACT, "fairValueOf(uint256)", []string{"1000000000000000000"})
 	if err != nil {
 		return 0, fmt.Errorf("failed to call fairValueOf: %w", err)

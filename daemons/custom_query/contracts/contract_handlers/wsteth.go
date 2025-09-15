@@ -52,5 +52,4 @@ func (s *WSTETHHandler) FetchValue(
 	fmt.Printf("wstETH Price: $%.2f USD\n", valueFloat)
 
 	return valueFloat, nil
-
 }
