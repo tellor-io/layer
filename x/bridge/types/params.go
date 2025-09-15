@@ -28,6 +28,9 @@ var (
 
 	// Default attest penalty time cutoff: 0 (no cutoff)
 	DefaultAttestPenaltyTimeCutoff = uint64(0)
+
+	// Default mainnet chain ID: "tellor-1"
+	DefaultMainnetChainId = "tellor-1"
 )
 
 // ParamKeyTable the param key table for launch module
@@ -36,13 +39,14 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(attestSlashPercentage math.LegacyDec, attestRateLimitWindow uint64, valsetSlashPercentage math.LegacyDec, valsetRateLimitWindow, attestPenaltyTimeCutoff uint64) Params {
+func NewParams(attestSlashPercentage math.LegacyDec, attestRateLimitWindow uint64, valsetSlashPercentage math.LegacyDec, valsetRateLimitWindow, attestPenaltyTimeCutoff uint64, mainnetChainId string) Params {
 	return Params{
 		AttestSlashPercentage:   attestSlashPercentage,
 		AttestRateLimitWindow:   attestRateLimitWindow,
 		ValsetSlashPercentage:   valsetSlashPercentage,
 		ValsetRateLimitWindow:   valsetRateLimitWindow,
 		AttestPenaltyTimeCutoff: attestPenaltyTimeCutoff,
+		MainnetChainId:          mainnetChainId,
 	}
 }
 
@@ -54,6 +58,7 @@ func DefaultParams() Params {
 		DefaultValsetSlashPercentage,
 		DefaultValsetRateLimitWindow,
 		DefaultAttestPenaltyTimeCutoff,
+		DefaultMainnetChainId,
 	)
 }
 
@@ -65,6 +70,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair([]byte("ValsetSlashPercentage"), &p.ValsetSlashPercentage, validateValsetSlashPercentage),
 		paramtypes.NewParamSetPair([]byte("ValsetRateLimitWindow"), &p.ValsetRateLimitWindow, validateValsetRateLimitWindow),
 		paramtypes.NewParamSetPair([]byte("AttestPenaltyTimeCutoff"), &p.AttestPenaltyTimeCutoff, validateAttestPenaltyTimeCutoff),
+		paramtypes.NewParamSetPair([]byte("MainnetChainId"), &p.MainnetChainId, validateMainnetChainId),
 	}
 }
 
@@ -87,6 +93,10 @@ func (p Params) Validate() error {
 	}
 
 	if err := validateAttestPenaltyTimeCutoff(p.AttestPenaltyTimeCutoff); err != nil {
+		return err
+	}
+
+	if err := validateMainnetChainId(p.MainnetChainId); err != nil {
 		return err
 	}
 
@@ -184,5 +194,28 @@ func validateAttestPenaltyTimeCutoff(v interface{}) error {
 	// cutoff can be any valid uint64 timestamp (including 0 for no cutoff)
 	// no specific validation needed beyond type checking
 	_ = cutoff
+	return nil
+}
+
+func validateMainnetChainId(v interface{}) error {
+	chainId, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+
+	// Chain ID must not be empty
+	if chainId == "" {
+		return fmt.Errorf("mainnet chain ID cannot be empty")
+	}
+
+	// Chain ID should be reasonable length (not too short or too long)
+	if len(chainId) < 3 {
+		return fmt.Errorf("mainnet chain ID too short: %s, minimum length is 3 characters", chainId)
+	}
+
+	if len(chainId) > 50 {
+		return fmt.Errorf("mainnet chain ID too long: %s, maximum length is 50 characters", chainId)
+	}
+
 	return nil
 }

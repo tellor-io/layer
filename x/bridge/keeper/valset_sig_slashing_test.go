@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	testkeeper "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/x/bridge/types"
@@ -16,6 +17,8 @@ func TestCheckValsetSignatureEvidence(t *testing.T) {
 	k, _, _, _, _, sk, _, ctx := testkeeper.BridgeKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	// Setup default parameters
 	err := k.Params.Set(ctx, types.DefaultParams())
@@ -148,6 +151,8 @@ func TestCheckValsetSignatureRateLimit(t *testing.T) {
 	k, _, _, _, _, _, _, ctx := testkeeper.BridgeKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	// Setup default parameters
 	err := k.Params.Set(ctx, types.DefaultParams())

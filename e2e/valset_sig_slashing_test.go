@@ -232,7 +232,8 @@ func TestValsetSignatureSlashing(t *testing.T) {
 	fmt.Printf("Target validator for slashing: %s (EVM: %s)\n", targetValidator.AccAddr, targetValidator.EVMAddr)
 
 	// encode the malicious valset checkpoint
-	maliciousCheckpoint, err := encodeValsetCheckpoint(powerThreshold, valsetTimestamp, fakeValsetHash)
+	chainId := "layer"
+	maliciousCheckpoint, err := encodeValsetCheckpoint(powerThreshold, valsetTimestamp, fakeValsetHash, chainId)
 	require.NoError(err)
 
 	// sign the malicious checkpoint
@@ -279,11 +280,28 @@ func TestValsetSignatureSlashing(t *testing.T) {
 }
 
 // encodeValsetCheckpoint replicates the keeper's EncodeValsetCheckpoint function
-func encodeValsetCheckpoint(powerThreshold, validatorTimestamp uint64, validatorSetHash string) ([]byte, error) {
-	// define the domain separator for the validator set hash, fixed size 32 bytes
-	VALIDATOR_SET_HASH_DOMAIN_SEPARATOR := []byte("checkpoint")
+func encodeValsetCheckpoint(powerThreshold, validatorTimestamp uint64, validatorSetHash, chainId string) ([]byte, error) {
+	// Create domain separator by ABI encoding "checkpoint" and chain ID
+	// This matches the Solidity implementation: keccak256(abi.encode("checkpoint", chainId))
+	stringType, err := abi.NewType("string", "", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// ABI encode "checkpoint" and chain ID (both as strings)
+	domainSeparatorArgs := abi.Arguments{
+		{Type: stringType},
+		{Type: stringType},
+	}
+	domainSeparatorEncoded, err := domainSeparatorArgs.Pack("checkpoint", chainId)
+	if err != nil {
+		return nil, err
+	}
+	domainSeparator := crypto.Keccak256(domainSeparatorEncoded)
+
+	// Convert domain separator to fixed size 32 bytes
 	var domainSeparatorFixSize [32]byte
-	copy(domainSeparatorFixSize[:], VALIDATOR_SET_HASH_DOMAIN_SEPARATOR)
+	copy(domainSeparatorFixSize[:], domainSeparator)
 
 	// convert validatorSetHash to bytes
 	validatorSetHashBytes, err := hex.DecodeString(validatorSetHash)
