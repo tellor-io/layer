@@ -327,7 +327,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 			{
 				EndpointType: "osmosis",
 				Handler:      "osmosis_pool_price_handler",
-				ResponsePath: []string{"pool", "current_sqrt_price"},
+				ResponsePath: []string{"pool"},
 				Params: map[string]string{
 					"pool_id": "1136",
 				},
