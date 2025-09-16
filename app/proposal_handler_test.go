@@ -474,14 +474,14 @@ func (s *ProposalHandlerTestSuite) TestPreBlocker() {
 	err = json.Unmarshal(injBz, &veTx)
 	require.NoError(err)
 
-	// bk.On("EVMAddressFromSignatures", ctx, sigA, sigB).Return(evmAddr, nil)
-	// bk.On("GetEVMAddressByOperator", ctx, consAddr.String()).Return(nil, errors.New("error"))
-	// sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
-	// 	OperatorAddress: consAddr.String(),
-	// }, nil)
+	bk.On("EVMAddressFromSignatures", ctx, sigA, sigB, consAddr.String()).Return(evmAddr, nil)
+	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
+		OperatorAddress: consAddr.String(),
+	}, nil)
 	bk.On("SetEVMAddressByOperator", ctx, consAddr.String(), evmAddr.Bytes()).Return(nil)
 	bk.On("SetBridgeValsetSignature", ctx, consAddr.String(), ve.ValsetSignature.Timestamp, veTx.ValsetSigs.Signatures[0]).Return(nil)
 	bk.On("SetOracleAttestation", ctx, consAddr.String(), ve.OracleAttestations[0].Snapshot, ve.OracleAttestations[0].Attestation).Return(nil)
+
 	res, err := p.PreBlocker(ctx, &req)
 	require.NoError(err)
 	require.NotNil(res)

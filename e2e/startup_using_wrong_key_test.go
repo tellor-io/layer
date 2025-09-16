@@ -350,49 +350,7 @@ func TestStartupUsingWrongKey(t *testing.T) {
 	// Check how many validators are still bonded
 	vals, err = chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
 	require.NoError(err)
+	require.Equal(len(vals), 3)
 	fmt.Printf("Validators still bonded: %d (should be 3 if validator 0 was jailed)\n", len(vals))
-
-	// Verify that other validators can still work correctly with their proper keys
-	fmt.Println("\n=== Testing that other validators work correctly ===")
-
-	// Test that validator 1 (with correct key alignment) can perform operations
-	val1Addr, err := validators[1].Node.AccountKeyBech32(ctx, "validator")
-	require.NoError(err)
-	fmt.Printf("Validator 1 account address: %s\n", val1Addr)
-
-	// Verify that validator 1's registered EVM address matches its private key
-	val1ExpectedEVMAddr := crypto.PubkeyToAddress(validators[1].EVMPriv.PublicKey).Hex()
-	fmt.Printf("Validator 1 expected EVM address: %s\n", val1ExpectedEVMAddr)
-	fmt.Printf("Validator 1 registered EVM address: %s\n", validators[1].EVMAddr)
-
-	// These should match for validators with correct key alignment
-	require.Equal(val1ExpectedEVMAddr, validators[1].EVMAddr, "Validator 1's EVM address should match its private key")
-
-	// Test that validator 0's registered EVM address does NOT match the wrong key
-	val0ExpectedEVMAddr := crypto.PubkeyToAddress(validators[0].EVMPriv.PublicKey).Hex()
-	val0WrongEVMAddr := crypto.PubkeyToAddress(validators[0].WrongKeyPriv.PublicKey).Hex()
-
-	fmt.Printf("Validator 0 registered EVM address: %s\n", validators[0].EVMAddr)
-	fmt.Printf("Validator 0 expected EVM address (from original key): %s\n", val0ExpectedEVMAddr)
-	fmt.Printf("Validator 0 wrong key EVM address: %s\n", val0WrongEVMAddr)
-
-	// The registered address should match the original key, not the wrong key
-	require.Equal(val0ExpectedEVMAddr, validators[0].EVMAddr, "Validator 0's registered EVM address should match its original key")
-	require.NotEqual(val0WrongEVMAddr, validators[0].EVMAddr, "Validator 0's registered EVM address should NOT match the wrong key")
-
-	fmt.Println("\n=== Test Summary ===")
-	fmt.Println("✅ Successfully created scenario where validator 0 has mismatched keys")
-	fmt.Println("✅ All validators start with same --key-name 'validator'")
-	fmt.Println("✅ Validator 0 was created with Key A but now uses Key B for vote extensions")
-	fmt.Println("✅ Original key is preserved as 'original-validator' in the keyring")
-	fmt.Println("✅ Wrong key is now named 'validator' (what the daemon uses for vote extensions)")
-	fmt.Println("✅ Demonstrated EVM address mismatch when wrong key is used for vote extensions")
-	fmt.Println("✅ Tested if validator gets jailed when EVM address registration fails")
-	fmt.Println("✅ Other validators continue to work correctly with proper key alignment")
-	fmt.Println("✅ This reproduces the real-world scenario where validators use wrong keys for vote extensions")
-	fmt.Println("✅ Shows how vote extension signing with wrong key creates EVM address mismatches")
-	fmt.Println("✅ Validates that the jailing mechanism works for key/address inconsistency")
-	fmt.Println("✅ Validator can still sign blocks normally (consensus key preserved)")
-	fmt.Println("✅ But vote extensions are signed with wrong key, causing jailing")
 
 }

@@ -219,6 +219,31 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 			}
 		}
 
+		if len(injectedVoteExtTx.ExtendedCommitInfo.Votes) > 0 {
+			for _, vote := range injectedVoteExtTx.ExtendedCommitInfo.Votes {
+				extension := vote.GetVoteExtension()
+				voteExt := BridgeVoteExtension{}
+				err := json.Unmarshal(extension, &voteExt)
+				if err != nil {
+					h.logger.Error("PreBlocker: failed to unmarshal vote extension", "error", err)
+				} else if len(voteExt.ValsetSignature.Signature) > 0 {
+					// get operator address from vote
+					operatorAddress, err := h.ValidatorOperatorAddressFromVote(ctx, vote)
+					if err != nil {
+						h.logger.Error("PreBlocker: failed to get operator address from vote", "error", err)
+					} else {
+						// verify initial sig
+						_, err := h.bridgeKeeper.EVMAddressFromSignatures(ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB, operatorAddress)
+						if err != nil {
+							h.logger.Error("PreBlocker: failed to get evm address from valset sig", "error", err)
+							h.jailValidatorWithError(ctx, vote, "failed to get evm address from valset sig", err.Error())
+						}
+					}
+				}
+			}
+
+		}
+
 		if len(injectedVoteExtTx.ValsetSigs.OperatorAddresses) > 0 {
 			for i, operatorAddress := range injectedVoteExtTx.ValsetSigs.OperatorAddresses {
 				timestamp := injectedVoteExtTx.ValsetSigs.Timestamps[i]
@@ -270,7 +295,6 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 				evmAddress, err := h.bridgeKeeper.EVMAddressFromSignatures(ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB, operatorAddress)
 				if err != nil {
 					h.logger.Error("CheckInitialSignaturesFromLastCommit: failed to get evm address from initial sig", "error", err)
-					h.jailValidatorWithError(ctx, vote, "failed to get evm address from initial sig", err.Error())
 				} else {
 					// check for existing EVM address for operator
 					_, err := h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
