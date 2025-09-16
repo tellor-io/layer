@@ -31,9 +31,8 @@ import (
 const defaultGas = uint64(300000)
 
 var (
-	commitedIds             = make(map[uint64]bool)
-	depositTipMap           = make(map[uint64]bool) // map of deposit tips already sent to bridge daemon
-	lastSequenceUsed uint64 = 0                     // tracks the last sequence number used to prevent conflicts
+	commitedIds   = make(map[uint64]bool)
+	depositTipMap = make(map[uint64]bool) // map of deposit tips already sent to bridge daemon
 )
 
 var mutex = &sync.RWMutex{}
