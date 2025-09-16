@@ -5,12 +5,13 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	testkeeper "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/x/bridge/types"
 
 	"cosmossdk.io/collections"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestCheckValsetSignatureEvidence(t *testing.T) {

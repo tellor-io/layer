@@ -15,6 +15,7 @@ import (
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
 	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
