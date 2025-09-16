@@ -19,6 +19,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	chainId = "test-chain"
+)
+
 func (s *IntegrationTestSuite) TestValsetSignatureSlashingIntegration() {
 	require := s.Require()
 	ctx := s.Setup.Ctx.WithBlockHeight(10).WithBlockTime(time.Now())
@@ -84,7 +88,6 @@ func (s *IntegrationTestSuite) TestValsetSignatureSlashingIntegration() {
 	powerThreshold := uint64(5000) // fake power threshold
 
 	// create and sign malicious valset checkpoint
-	chainId := "test-chain"
 	maliciousCheckpoint, signature := s.createMaliciousValsetSignature(
 		ctx,
 		powerThreshold,
@@ -200,7 +203,6 @@ func (s *IntegrationTestSuite) TestValsetSignatureSlashingRateLimit() {
 	valsetTimestamp1 := uint64(time.Now().UnixMilli())
 	fakeValsetHash1 := "1111111111111111111111111111111111111111111111111111111111111111"
 	powerThreshold := uint64(1500)
-	chainId := "test-chain"
 
 	_, signature1 := s.createMaliciousValsetSignature(
 		ctx,
@@ -305,7 +307,6 @@ func (s *IntegrationTestSuite) TestValsetSignatureSlashingUnbondingPeriod() {
 
 	fakeValsetHash := "4444444444444444444444444444444444444444444444444444444444444444"
 	powerThreshold := uint64(500)
-	chainId := "test-chain"
 
 	_, signature := s.createMaliciousValsetSignature(
 		ctx,
@@ -344,7 +345,6 @@ func (s *IntegrationTestSuite) TestValsetSignatureSlashingNonMalicious() {
 	valsetTimestamp := uint64(time.Now().UnixMilli())
 	realValsetHash := "5555555555555555555555555555555555555555555555555555555555555555"
 	powerThreshold := uint64(1000)
-	chainId := "test-chain"
 
 	// create the real checkpoint and store it
 	realCheckpoint, signature := s.createMaliciousValsetSignature(

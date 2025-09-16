@@ -4,9 +4,9 @@ import (
 	"context"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/tellor-io/layer/x/bridge/keeper"
 
+	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
