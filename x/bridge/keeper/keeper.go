@@ -132,10 +132,13 @@ func (k Keeper) SetValsetCheckpointDomainSeparator(ctx context.Context) {
 		k.Logger(ctx).Warn("Error getting mainnet chain ID", "error", err)
 		panic(err)
 	}
+	k.Logger(ctx).Info("mainnetChainId", "mainnetChainId", mainnetChainId)
+	k.Logger(ctx).Info("chainId", "chainId", sdkCtx.ChainID())
 
 	var domainSeparatorEncoded []byte
 	if sdkCtx.ChainID() == mainnetChainId {
 		domainSeparatorEncoded = []byte("checkpoint")
+		k.Logger(ctx).Info("domainSeparatorEncoded mainnet", "domainSeparatorEncoded", hex.EncodeToString(domainSeparatorEncoded))
 	} else {
 		// Create domain separator by ABI encoding "checkpoint" and chain ID
 		// This matches the Solidity implementation: keccak256(abi.encode("checkpoint", chainId))
@@ -155,12 +158,16 @@ func (k Keeper) SetValsetCheckpointDomainSeparator(ctx context.Context) {
 			k.Logger(ctx).Warn("Error encoding domain separator", "error", err)
 			panic(err)
 		}
+		k.Logger(ctx).Info("domainSeparatorEncoded non-mainnet", "domainSeparatorEncoded", hex.EncodeToString(domainSeparatorEncoded))
 	}
 
 	domainSeparator := crypto.Keccak256(domainSeparatorEncoded)
 
-	// Store the domain separator as bytes
-	k.ValsetCheckpointDomainSeparator.Set(ctx, domainSeparator)
+	// Store the domain separator in keeper storage
+	if err := k.ValsetCheckpointDomainSeparator.Set(ctx, domainSeparator); err != nil {
+		k.Logger(ctx).Warn("Error storing domain separator", "error", err)
+		panic(err)
+	}
 }
 
 func (k Keeper) Logger(ctx context.Context) log.Logger {
@@ -408,14 +415,13 @@ func (k Keeper) EncodeValsetCheckpoint(
 	validatorTimestamp uint64,
 	validatorSetHash []byte,
 ) ([]byte, error) {
-	fmt.Println("getting domain separator")
+	k.Logger(ctx).Info("getting domain separator")
 	domainSeparator, err := k.ValsetCheckpointDomainSeparator.Get(ctx)
 	if err != nil {
 		k.Logger(ctx).Warn("Error getting domain separator", "error", err)
 		return nil, err
 	}
-
-	fmt.Println("domainSeparator", hex.EncodeToString(domainSeparator))
+	k.Logger(ctx).Info("domainSeparator", "domainSeparator", hex.EncodeToString(domainSeparator))
 
 	// Convert domain separator to fixed size 32 bytes
 	var domainSeparatorFixSize [32]byte

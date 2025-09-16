@@ -1027,8 +1027,6 @@ func (app *App) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.
 		return nil, err
 	}
 
-	app.mm.Modules[bridgemoduletypes.ModuleName].(bridgemodulekeeper.Keeper).SetValsetCheckpointDomainSeparator(ctx)
-
 	// AFTER all modules are initialized, handle the upgrade
 	if upgradePlan != nil {
 		// Check if this upgrade should execute at genesis initial height
