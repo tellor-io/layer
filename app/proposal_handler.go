@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"reflect"
 	"strconv"
 
@@ -213,6 +214,7 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 		}
 
 		if len(injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses) > 0 {
+			h.logger.Info("PreBlocker: setting EVM addresses", "operatorAddresses", injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses, "evmAddresses", injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses)
 			if err := h.SetEVMAddresses(ctx, injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses, injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses); err != nil {
 				h.logger.Error("PreBlocker: failed to set EVM addresses", "error", err)
 				return nil, err
@@ -222,6 +224,7 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 		if len(injectedVoteExtTx.ExtendedCommitInfo.Votes) > 0 {
 			for _, vote := range injectedVoteExtTx.ExtendedCommitInfo.Votes {
 				extension := vote.GetVoteExtension()
+				fmt.Println("extension", extension)
 				voteExt := BridgeVoteExtension{}
 				err := json.Unmarshal(extension, &voteExt)
 				if err != nil {
