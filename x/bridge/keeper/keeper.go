@@ -132,13 +132,15 @@ func (k Keeper) SetValsetCheckpointDomainSeparator(ctx context.Context) {
 		k.Logger(ctx).Warn("Error getting mainnet chain ID", "error", err)
 		panic(err)
 	}
-	k.Logger(ctx).Info("mainnetChainId", "mainnetChainId", mainnetChainId)
-	k.Logger(ctx).Info("chainId", "chainId", sdkCtx.ChainID())
 
-	var domainSeparatorEncoded []byte
+	var domainSeparator []byte
 	if sdkCtx.ChainID() == mainnetChainId {
-		domainSeparatorEncoded = []byte("checkpoint")
-		k.Logger(ctx).Info("domainSeparatorEncoded mainnet", "domainSeparatorEncoded", hex.EncodeToString(domainSeparatorEncoded))
+		// For mainnet, use the fixed domain separator: "checkpoint" padded to 32 bytes with zeros
+		// This matches the Solidity constant: 0x636865636b706f696e7400000000000000000000000000000000000000000000
+		domainSeparator = make([]byte, 32)
+		copy(domainSeparator, []byte("checkpoint"))
+		fmt.Println("domainSeparator mainnet", hex.EncodeToString(domainSeparator))
+		k.Logger(ctx).Info("domainSeparator mainnet", "domainSeparator", hex.EncodeToString(domainSeparator))
 	} else {
 		// Create domain separator by ABI encoding "checkpoint" and chain ID
 		// This matches the Solidity implementation: keccak256(abi.encode("checkpoint", chainId))
@@ -153,15 +155,15 @@ func (k Keeper) SetValsetCheckpointDomainSeparator(ctx context.Context) {
 			{Type: StringType},
 			{Type: StringType},
 		}
-		domainSeparatorEncoded, err = domainSeparatorArgs.Pack("checkpoint", sdkCtx.ChainID())
+		domainSeparatorEncoded, err := domainSeparatorArgs.Pack("checkpoint", sdkCtx.ChainID())
 		if err != nil {
 			k.Logger(ctx).Warn("Error encoding domain separator", "error", err)
 			panic(err)
 		}
 		k.Logger(ctx).Info("domainSeparatorEncoded non-mainnet", "domainSeparatorEncoded", hex.EncodeToString(domainSeparatorEncoded))
+		domainSeparator = crypto.Keccak256(domainSeparatorEncoded)
+		fmt.Println("domainSeparator", hex.EncodeToString(domainSeparator))
 	}
-
-	domainSeparator := crypto.Keccak256(domainSeparatorEncoded)
 
 	// Store the domain separator in keeper storage
 	if err := k.ValsetCheckpointDomainSeparator.Set(ctx, domainSeparator); err != nil {
