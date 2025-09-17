@@ -246,7 +246,6 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 					}
 				}
 			}
-
 		}
 
 		if len(injectedVoteExtTx.ValsetSigs.OperatorAddresses) > 0 {
