@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/pelletier/go-toml"
+	contractreader "github.com/tellor-io/layer/daemons/custom_query/contracts/contract_reader"
+	rpcreader "github.com/tellor-io/layer/daemons/custom_query/rpc/rpc_reader"
 )
 
 type EndpointTemplate struct {
@@ -17,45 +19,80 @@ type EndpointTemplate struct {
 	Headers     map[string]string `toml:"headers"`
 }
 
+type RPCEndpointTemplate struct {
+	URLs []string `toml:"urls"`
+}
 type Config struct {
-	Endpoints map[string]EndpointTemplate `toml:"endpoints"`
-	Queries   map[string]QueryConfig      `toml:"queries"`
+	Endpoints    map[string]EndpointTemplate    `toml:"endpoints"`
+	RPCEndpoints map[string]RPCEndpointTemplate `toml:"rpc_endpoints"`
+	Queries      map[string]QueryConfig         `toml:"queries"`
 }
 
+type ContractHandler struct {
+	Handler string
+	Reader  *contractreader.Reader
+}
+
+type RpcHandler struct {
+	Handler    string
+	Reader     *rpcreader.Reader
+	Invert     bool
+	UsdViaID   int
+	Method     string
+	EndpointID string
+}
 type QueryConfig struct {
-	ID                string           `toml:"id"`
-	AggregationMethod string           `toml:"aggregation_method"`
-	MinResponses      int              `toml:"min_responses"`
-	ResponseType      string           `toml:"response_type"`
-	Endpoints         []EndpointConfig `toml:"endpoints"`
-	BuiltEndpoints    []BuiltEndpoint  `toml:"built_endpoints"`
+	ID                string            `toml:"id"`
+	AggregationMethod string            `toml:"aggregation_method"`
+	MinResponses      int               `toml:"min_responses"`
+	ResponseType      string            `toml:"response_type"`
+	Endpoints         []EndpointConfig  `toml:"endpoints"`
+	ContractReaders   []ContractHandler `toml:"-"`
+	RpcReaders        []RpcHandler      `toml:"-"`
 }
 
 type EndpointConfig struct {
 	EndpointType string            `toml:"endpoint_type"`
 	ResponsePath []string          `toml:"response_path"`
 	Params       map[string]string `toml:"params"`
-}
-type BuiltEndpoint struct {
-	URL          string
-	Method       string
-	Timeout      int
-	ResponsePath []string
-	EndpointID   string
-	Headers      map[string]string
+
+	// Contract-specific fields
+	Handler string `toml:"handler"`
+	Chain   string `toml:"chain"`
+	// cosmosis
+	Invert   bool `toml:"invert"`
+	UsdViaID int  `toml:"usd_via_id"`
 }
 
 func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig, error) {
 	// Read the TOML configuration file
-	var config Config
 	tomlFile, err := os.ReadFile(getCustomQueryConfigFilePath(homeDir, localDir, file))
 	if err != nil {
 		return nil, fmt.Errorf("error reading toml file: %w", err)
 	}
 
+	var config Config
 	if err = toml.Unmarshal(tomlFile, &config); err != nil {
 		fmt.Println("Error unmarshalling toml file", err.Error())
 		return nil, fmt.Errorf("error unmarshalling toml file: %w", err)
+	}
+
+	// Process RPC endpoints
+	processedRPCEndpoints := make(map[string][]string)
+	for chain, endpointConfig := range config.RPCEndpoints {
+		var urls []string
+		for _, url := range endpointConfig.URLs {
+			expandedURL := os.ExpandEnv(url)
+			// Skip if env var still contains ${}
+			if strings.Contains(expandedURL, "${") && strings.Contains(expandedURL, "}") {
+				fmt.Printf("Skipping RPC endpoint with missing env var: %s\n", url)
+				continue
+			}
+			urls = append(urls, expandedURL)
+		}
+		if len(urls) > 0 {
+			processedRPCEndpoints[chain] = urls
+		}
 	}
 
 	// loop through the queries and create a map of query ID to query config
@@ -67,9 +104,31 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 	processApiKeys(&config)
 	// for each query in the query map, build the endpoints
 	for _, query := range config.Queries {
-		result := make([]BuiltEndpoint, 0, len(query.Endpoints))
+		contractReaders := make([]ContractHandler, 0)
+		rpcReaders := make([]RpcHandler, 0)
 		for _, endpoint := range query.Endpoints {
-			// check if the endpoint type exists in the config
+			if endpoint.EndpointType == "contract" {
+				if endpoint.Handler == "" || endpoint.Chain == "" {
+					return nil, fmt.Errorf("contract endpoint missing required fields (handler, chain) for query %s", query.ID)
+				}
+
+				urls, exists := processedRPCEndpoints[endpoint.Chain]
+				if !exists {
+					return nil, fmt.Errorf("no RPC endpoints configured for chain %s in query %s", endpoint.Chain, query.ID)
+				}
+				contractReader, err := contractreader.NewReader(urls, 3) // 3 second timeout
+				if err != nil {
+					return nil, fmt.Errorf("failed to create contract reader for chain %s in query %s: %w", endpoint.Chain, query.ID, err)
+				}
+
+				contractReaders = append(contractReaders, ContractHandler{
+					Handler: endpoint.Handler,
+					Reader:  contractReader,
+				})
+				continue
+			}
+
+			// Regular REST API endpoint handling (existing logic)
 			template, exists := config.Endpoints[endpoint.EndpointType]
 			if !exists {
 				return nil, fmt.Errorf("endpoint template not found: %s for query %s",
@@ -114,13 +173,17 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 				processedHeaders[key] = value
 			}
 
-			result = append(result, BuiltEndpoint{
-				URL:          url,
-				Method:       template.Method,
-				Timeout:      template.Timeout,
-				ResponsePath: endpoint.ResponsePath,
-				EndpointID:   endpoint.EndpointType,
-				Headers:      processedHeaders,
+			rpcReader, err := rpcreader.NewReader(url, processedHeaders, endpoint.ResponsePath, template.Timeout)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create RPC reader for endpoint %s in query %s: %w", endpoint.EndpointType, query.ID, err)
+			}
+			rpcReaders = append(rpcReaders, RpcHandler{
+				Handler:    endpoint.Handler,
+				Reader:     rpcReader,
+				Invert:     endpoint.Invert,
+				UsdViaID:   endpoint.UsdViaID,
+				Method:     template.Method,
+				EndpointID: endpoint.EndpointType,
 			})
 		}
 		queryMap[query.ID] = QueryConfig{
@@ -128,7 +191,8 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 			AggregationMethod: query.AggregationMethod,
 			MinResponses:      query.MinResponses,
 			ResponseType:      query.ResponseType,
-			BuiltEndpoints:    result,
+			ContractReaders:   contractReaders,
+			RpcReaders:        rpcReaders,
 		}
 	}
 

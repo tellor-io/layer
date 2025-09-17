@@ -74,33 +74,33 @@ func TestBuildQueryEndpoints(t *testing.T) {
 	sdaiQuery, exists := queryMap["sdai_test_id"]
 	require.True(t, exists)
 	require.Equal(t, sdaiQuery.AggregationMethod, "median")
-	require.Equal(t, len(sdaiQuery.BuiltEndpoints), 3)
+	require.Equal(t, len(sdaiQuery.RpcReaders), 3)
 
-	var coingeckoEndpoint BuiltEndpoint
-	for _, endpoint := range sdaiQuery.BuiltEndpoints {
+	var coingeckoEndpoint RpcHandler
+	for _, endpoint := range sdaiQuery.RpcReaders {
 		if endpoint.EndpointID == "coingecko" {
 			coingeckoEndpoint = endpoint
 			break
 		}
 	}
 
-	expectedCoingeckoURL := "https://api.coingecko.com/api/v3/simple/price?ids=savings-dai&vs_currencies=usd"
-	require.Equal(t, coingeckoEndpoint.URL, expectedCoingeckoURL)
+	// expectedCoingeckoURL := "https://api.coingecko.com/api/v3/simple/price?ids=savings-dai&vs_currencies=usd"
+	require.Equal(t, coingeckoEndpoint.Reader.ResponsePath, []string{"savings-dai", "usd"})
 
 	trbQuery, exists := queryMap["trb_test_id"]
 	require.True(t, exists)
 	require.Equal(t, sdaiQuery.AggregationMethod, "median")
-	require.Equal(t, len(trbQuery.BuiltEndpoints), 3)
+	require.Equal(t, len(trbQuery.RpcReaders), 3)
 
-	var etherscanEndpoint BuiltEndpoint
-	for _, endpoint := range trbQuery.BuiltEndpoints {
+	var etherscanEndpoint RpcHandler
+	for _, endpoint := range trbQuery.RpcReaders {
 		if endpoint.EndpointID == "etherscan" {
 			etherscanEndpoint = endpoint
 			break
 		}
 	}
-	require.NotEmpty(t, etherscanEndpoint.URL)
-	require.Contains(t, etherscanEndpoint.URL, "testetherscankey123")
+	require.NotEmpty(t, etherscanEndpoint)
+	require.Contains(t, etherscanEndpoint.Reader.ResponsePath, "result")
 }
 
 func TestBuildQueryEndpointsErrors(t *testing.T) {

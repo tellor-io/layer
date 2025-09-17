@@ -8,7 +8,7 @@ import (
 )
 
 func TestMexcUrl(t *testing.T) {
-	require.Equal(t, "https://www.mexc.com/open/api/v2/market/ticker", mexc.MexcDetails.Url)
+	require.Equal(t, "https://api.mexc.com/api/v3/ticker/24hr", mexc.MexcDetails.Url)
 }
 
 func TestMexcIsMultiMarket(t *testing.T) {
