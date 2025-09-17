@@ -179,7 +179,6 @@ func (s *ProposalHandlerTestSuite) TestCheckInitialSignaturesFromLastCommit() {
 	require.Equal(addrsExpected.String(), res2[0])
 
 	bk.On("EVMAddressFromSignatures", ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB, valAddr.String()).Return(nil, errors.New("error")).Once()
-	sk.On("Jail", ctx, consAddr).Return(nil).Once()
 	res1, res2 = p.CheckInitialSignaturesFromLastCommit(ctx, commit)
 	require.Empty(res1)
 	require.Empty(res2)
