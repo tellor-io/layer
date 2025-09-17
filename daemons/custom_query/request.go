@@ -2,14 +2,15 @@ package customquery
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/tellor-io/layer/daemons/custom_query/contracts/contract_handlers"
+	rpc_handler "github.com/tellor-io/layer/daemons/custom_query/rpc/rpc_handler"
+	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 )
 
 // Result holds the value returned from an endpoint
@@ -29,24 +30,38 @@ type FetchPriceResult struct {
 }
 
 // FetchPrice fetches price data for the given query ID
-func FetchPrice(ctx context.Context, query QueryConfig) (*FetchPriceResult, error) {
+func FetchPrice(
+	ctx context.Context,
+	query QueryConfig,
+	priceCache *pricefeedservertypes.MarketToExchangePrices,
+) (*FetchPriceResult, error) {
 	// Create a context with timeout
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	results := make(chan Result, len(query.Endpoints))
+	totalEndpoints := len(query.RpcReaders) + len(query.ContractReaders)
+	results := make(chan Result, totalEndpoints)
 	var wg sync.WaitGroup
 
-	// Launch a goroutine for each endpoint
-	for _, endpoint := range query.BuiltEndpoints {
+	// Launch goroutines for contract endpoints
+	for _, contractEndpoint := range query.ContractReaders {
 		wg.Add(1)
-		go func(ep BuiltEndpoint) {
+		go func(ep ContractHandler) {
 			defer wg.Done()
-			result := fetchFromEndpoint(ctx, ep)
+			result := fetchFromContractEndpoint(ctx, ep, priceCache)
 			results <- result
-		}(endpoint)
+		}(contractEndpoint)
 	}
+	// Launch goroutines for REST API endpoints
+	for _, rpchandler := range query.RpcReaders {
+		wg.Add(1)
+		go func(ep RpcHandler) {
+			defer wg.Done()
+			result := fetchFromRpcEndpoint(ctx, ep, priceCache)
+			results <- result
+		}(rpchandler)
 
+	}
 	// Close results channel when all goroutines complete
 	go func() {
 		wg.Wait()
@@ -80,130 +95,70 @@ func FetchPrice(ctx context.Context, query QueryConfig) (*FetchPriceResult, erro
 		RawResults:   allResults,
 		QueryID:      query.ID,
 		ResponseType: query.ResponseType,
-		SuccessRate:  float64(len(successfulResults)) / float64(len(query.Endpoints)),
+		SuccessRate:  float64(len(successfulResults)) / float64(totalEndpoints),
 	}, nil
 }
 
-// fetchFromEndpoint fetches data from a single endpoint
-func fetchFromEndpoint(ctx context.Context, endpoint BuiltEndpoint) Result {
-	// Create a context with the endpoint's timeout
-	timeoutDuration := time.Duration(endpoint.Timeout) * time.Millisecond
-	ctx, cancel := context.WithTimeout(ctx, timeoutDuration)
-	defer cancel()
-
-	// Create request
-	req, err := http.NewRequestWithContext(ctx, endpoint.Method, endpoint.URL, nil)
+// fetchFromContractEndpoint fetches data from a smart contract
+func fetchFromContractEndpoint(
+	ctx context.Context,
+	contractReader ContractHandler,
+	priceCache *pricefeedservertypes.MarketToExchangePrices,
+) Result {
+	handler, err := contract_handlers.GetHandler(contractReader.Handler)
 	if err != nil {
 		return Result{
-			Err:        fmt.Errorf("error creating request: %w", err),
-			EndpointID: endpoint.EndpointID,
+			Err:        fmt.Errorf("failed to get contract handler: %w", err),
+			EndpointID: contractReader.Handler,
 		}
 	}
-	if endpoint.Headers != nil {
-		addHeaders(req, endpoint.Headers)
-	}
-	// Execute request
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	value, err := handler.FetchValue(ctx, contractReader.Reader, priceCache)
 	if err != nil {
 		return Result{
-			Err:        fmt.Errorf("request failed: %w", err),
-			EndpointID: endpoint.EndpointID,
-		}
-	}
-	defer resp.Body.Close()
-
-	// Check response status
-	if resp.StatusCode != http.StatusOK {
-		return Result{
-			Err:        fmt.Errorf("received non-OK response code: %d", resp.StatusCode),
-			EndpointID: endpoint.EndpointID,
+			Err:        fmt.Errorf("failed to fetch contract value: %w", err),
+			EndpointID: contractReader.Handler,
 		}
 	}
 
-	// Read response body
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return Result{
-			Err:        fmt.Errorf("error reading response body: %w", err),
-			EndpointID: endpoint.EndpointID,
-		}
-	}
+	defer contractReader.Reader.Close()
 
-	// Extract value from response according to response path
-	value, err := extractValueFromJSON(body, endpoint.ResponsePath)
-	if err != nil {
-		return Result{
-			Err:        fmt.Errorf("error extracting value: %w", err),
-			EndpointID: endpoint.EndpointID,
-		}
-	}
-
+	fmt.Println("Contract value:", value)
 	return Result{
 		Value:      value,
-		EndpointID: endpoint.EndpointID,
+		EndpointID: "contract:" + contractReader.Handler,
 	}
 }
 
-// extractValueFromJSON extracts a float64 value from JSON based on the given path
-func extractValueFromJSON(data []byte, path []string) (float64, error) {
-	var result interface{}
-	if err := json.Unmarshal(data, &result); err != nil {
-		return 0, fmt.Errorf("error unmarshaling JSON: %w", err)
+func fetchFromRpcEndpoint(
+	ctx context.Context,
+	rpchandler RpcHandler,
+	priceCache *pricefeedservertypes.MarketToExchangePrices,
+) Result {
+	handlerStr := rpchandler.Handler
+	if handlerStr == "" {
+		handlerStr = "generic"
 	}
 
-	// Navigate through the JSON path
-	current := result
-	for i, key := range path {
-		if current == nil {
-			return 0, fmt.Errorf("null value at path segment %d: %s", i, key)
-		}
-
-		mapValue, ok := current.(map[string]interface{})
-		if !ok {
-			// if not a map, check if it's an array
-			if currentArray, ok := current.([]interface{}); ok {
-				// Try to parse key as an index
-				index, err := strconv.Atoi(key)
-				if err != nil {
-					return 0, fmt.Errorf("expected numeric index for array, got: %s", key)
-				}
-
-				if index < 0 || index >= len(currentArray) {
-					return 0, fmt.Errorf("array index out of bounds: %d", index)
-				}
-
-				current = currentArray[index]
-				continue
-			}
-			return 0, fmt.Errorf("expected object at path segment %d: %s, got %T", i, key, current)
-		}
-
-		current, ok = mapValue[key]
-		if !ok {
-			return 0, fmt.Errorf("key not found at path segment %d: %s", i, key)
+	handler, err := rpc_handler.GetHandler(handlerStr)
+	if err != nil {
+		return Result{
+			Err:        fmt.Errorf("failed to get RPC handler: %w", err),
+			EndpointID: rpchandler.Handler,
 		}
 	}
 
-	// Convert the final value to float64
-	switch v := current.(type) {
-	case float64:
-		return v, nil
-	case float32:
-		return float64(v), nil
-	case int:
-		return float64(v), nil
-	case int64:
-		return float64(v), nil
-	case string:
-		var f float64
-		_, err := fmt.Sscanf(v, "%f", &f)
-		if err != nil {
-			return 0, fmt.Errorf("error parsing string as float: %w", err)
+	value, err := handler.FetchValue(ctx, rpchandler.Reader, rpchandler.Invert, rpchandler.UsdViaID, priceCache)
+	if err != nil {
+		return Result{
+			Err:        fmt.Errorf("failed to fetch RPC value: %w", err),
+			EndpointID: rpchandler.Handler,
 		}
-		return f, nil
-	default:
-		return 0, fmt.Errorf("unsupported value type: %T", current)
+	}
+
+	fmt.Println("RPC value:", value, rpchandler.EndpointID)
+	return Result{
+		Value:      value,
+		EndpointID: rpchandler.Handler,
 	}
 }
 
@@ -231,10 +186,4 @@ func aggregateResults(results []Result, method, responseType string) (string, er
 
 func ConvertFloat64ToString(num float64) string {
 	return strconv.FormatFloat(num, 'f', -1, 64)
-}
-
-func addHeaders(req *http.Request, headers map[string]string) {
-	for key, value := range headers {
-		req.Header.Add(key, value)
-	}
 }

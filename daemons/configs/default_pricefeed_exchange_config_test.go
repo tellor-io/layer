@@ -53,6 +53,11 @@ const (
 	TimeoutMs = 3000
 	MaxQueries = 1
 	[[exchanges]]
+	ExchangeId = "CoinbaseRates"
+	IntervalMs = 2000
+	TimeoutMs = 3000
+	MaxQueries = 1
+	[[exchanges]]
 	ExchangeId = "CryptoCom"
 	IntervalMs = 2000
 	TimeoutMs = 3000

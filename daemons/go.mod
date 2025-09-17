@@ -21,6 +21,7 @@ require (
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/pelletier/go-toml v1.9.5
 	github.com/shopspring/decimal v1.3.1
+	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cast v1.7.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.20.0
@@ -227,7 +228,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.34.0 // indirect
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.40.0 // indirect
+	golang.org/x/crypto v0.40.0
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/oauth2 v0.25.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
