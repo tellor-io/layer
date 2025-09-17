@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/hex"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -16,7 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/tellor-io/layer/e2e"
 )
@@ -41,8 +39,8 @@ func TestStartupUsingWrongKey(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
 	}
 
-	nv := 4
-	nf := 1
+	nv := 2
+	nf := 0
 	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
 		{
 			NumValidators: &nv,
@@ -121,7 +119,7 @@ func TestStartupUsingWrongKey(t *testing.T) {
 	}
 
 	// Wait for vote extensions to register EVM addresses
-	waitErr := testutil.WaitForBlocks(ctx, 5, validators[0].Node)
+	waitErr := testutil.WaitForBlocks(ctx, 7, validators[0].Node)
 	require.NoError(waitErr)
 
 	// Define types for bridge validator queries
@@ -247,7 +245,7 @@ func TestStartupUsingWrongKey(t *testing.T) {
 	fmt.Printf("Height before waiting: %d\n", initialHeight)
 
 	// Wait for 3 blocks to see if validator 0 can still sign blocks
-	err = testutil.WaitForBlocks(ctx, 8, validators[0].Node)
+	err = testutil.WaitForBlocks(ctx, 3, validators[0].Node)
 	require.NoError(err)
 
 	finalHeight, err := chain.Height(ctx)
@@ -258,99 +256,6 @@ func TestStartupUsingWrongKey(t *testing.T) {
 	val0Info, err := chain.StakingQueryValidator(ctx, validators[0].ValAddr)
 	require.NoError(err)
 
-	if !val0Info.Jailed {
-		fmt.Println("✅ Validator 0 can still sign blocks normally (not jailed yet)")
-		fmt.Println("✅ This confirms the validator can participate in consensus with its consensus key")
-	} else {
-		fmt.Println("❌ Validator 0 is already jailed - this might indicate an issue with the test setup")
-	}
-
-	fmt.Println("✅ But vote extensions will be signed with the wrong key, causing EVM address mismatch")
-
-	// Query the actual registered EVM addresses (these should be from the original keys)
-	evmValidatorsRes, _, queryErr := validators[0].Node.ExecQuery(ctx, "bridge", "get-evm-validators")
-	require.NoError(queryErr)
-	var evmValidators QueryGetEvmValidatorsResponse
-	unmarshalErr := json.Unmarshal(evmValidatorsRes, &evmValidators)
-	require.NoError(unmarshalErr)
-
-	fmt.Println("Registered EVM validators from bridge:")
-	for i, val := range evmValidators.BridgeValidatorSet {
-		fmt.Printf("  Validator %d: Address %s, Power %s\n", i, val.EthereumAddress, val.Power)
-		// Assign the registered EVM addresses to our validator structs
-		if i < len(validators) {
-			validators[i].EVMAddr = "0x" + val.EthereumAddress
-		}
-	}
-
-	// Verify we have the correct number of validators
-	require.Equal(len(evmValidators.BridgeValidatorSet), len(validators), "Number of registered EVM validators should match number of test validators")
-
-	// Confirm that all validators are bonded
-	vals, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
-	require.NoError(err)
-	require.Equal(len(vals), 4)
-
-	// Now test the scenario: What happens when validator 0 tries to sign vote extensions with wrong key
-	fmt.Println("\n=== Testing validator with mismatched key ===")
-
-	// The scenario we've created:
-	// - Validator 0 was created with Key A (original key) - used for block signing
-	// - Validator 0 now has Key B as its "validator" key (wrong key) - used for vote extensions
-	// - When validator 0 signs vote extensions, it will use Key B
-	// - This should cause EVM address registration to fail and potentially jail the validator
-	// - Note: Validator can still sign blocks normally with its consensus key
-
-	fmt.Printf("Validator 0 was created with key that generates EVM address: %s\n", validators[0].EVMAddr)
-	fmt.Printf("Validator 0 now has wrong key that generates EVM address: %s\n", validators[0].WrongKeyAddr)
-
-	// Verify the mismatch
-	require.NotEqual(validators[0].WrongKeyAddr, validators[0].EVMAddr, "Wrong key should generate different EVM address")
-
-	fmt.Println("\nCurrent registered EVM addresses from vote extensions:")
-	for i, val := range evmValidators.BridgeValidatorSet {
-		fmt.Printf("  Validator %d: %s\n", i, "0x"+val.EthereumAddress)
-	}
-
-	// Now we need to wait for the validator to sign vote extensions with the wrong key
-	// This should cause issues with EVM address registration and jail the validator by the 2nd block
-	// Note: The validator can still sign blocks normally with its consensus key
-	fmt.Println("\n=== Waiting for validator 0 to sign vote extensions with wrong key ===")
-	fmt.Println("This should cause EVM address registration to fail and jail the validator...")
-	fmt.Println("(Validator can still sign blocks normally with its consensus key)")
-
-	// Wait for 2 blocks - the validator should be jailed by the 2nd block
-	initialHeight, err = chain.Height(ctx)
-	require.NoError(err)
-	fmt.Printf("Starting at height: %d\n", initialHeight)
-
-	// Wait for 2 blocks
-	err = testutil.WaitForBlocks(ctx, 5, validators[0].Node)
-	require.NoError(err)
-
-	finalHeight, err = chain.Height(ctx)
-	require.NoError(err)
-	fmt.Printf("After 2 blocks, at height: %d\n", finalHeight)
-
-	// Check if validator 0 is jailed
-	val0Info, err = chain.StakingQueryValidator(ctx, validators[0].ValAddr)
-	require.NoError(err)
-
-	fmt.Println("val0Info: ", val0Info)
-
-	if val0Info.Jailed {
-		fmt.Printf("✅ Validator 0 was jailed by height %d!\n", finalHeight)
-		fmt.Println("✅ This confirms that using wrong key in --key-name causes validator jailing")
-	} else {
-		fmt.Printf("❌ Validator 0 was NOT jailed by height %d\n", finalHeight)
-		fmt.Println("❌ This indicates the jailing mechanism may not be working as expected")
-		// Don't fail the test, just report the issue
-	}
-
-	// Check how many validators are still bonded
-	vals, err = chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
-	require.NoError(err)
-	require.Equal(len(vals), 3)
-	fmt.Printf("Validators still bonded: %d (should be 3 if validator 0 was jailed)\n", len(vals))
+	require.True(val0Info.Jailed)
 
 }

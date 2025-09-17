@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"reflect"
 	"strconv"
 
@@ -223,13 +222,16 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 
 		if len(injectedVoteExtTx.ExtendedCommitInfo.Votes) > 0 {
 			for _, vote := range injectedVoteExtTx.ExtendedCommitInfo.Votes {
+				// Only check if the vote is a commit vote
+				if vote.BlockIdFlag != cmtproto.BlockIDFlagCommit {
+					continue
+				}
 				extension := vote.GetVoteExtension()
-				fmt.Println("extension", extension)
 				voteExt := BridgeVoteExtension{}
 				err := json.Unmarshal(extension, &voteExt)
 				if err != nil {
 					h.logger.Error("PreBlocker: failed to unmarshal vote extension", "error", err)
-				} else if len(voteExt.ValsetSignature.Signature) > 0 {
+				} else if len(voteExt.InitialSignature.SignatureA) > 0 {
 					// get operator address from vote
 					operatorAddress, err := h.ValidatorOperatorAddressFromVote(ctx, vote)
 					if err != nil {

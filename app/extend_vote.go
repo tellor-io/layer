@@ -108,10 +108,14 @@ func (h *VoteExtHandler) ForceProcessTermination(format string, args ...interfac
 
 func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
 	voteExt := BridgeVoteExtension{}
+
+	h.logger.Info("ExtendVoteHandler: starting", "blockHeight", ctx.BlockHeight())
 	operatorAddress, errOp := h.GetOperatorAddress()
 	if errOp != nil {
+		h.logger.Error("ExtendVoteHandler: failed to get operator address", "error", errOp)
 		h.ForceProcessTermination("CRITICAL: failed to get operator address: %v", errOp)
 	}
+	h.logger.Info("ExtendVoteHandler: operator address", "operatorAddress", operatorAddress)
 	_, err := h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
 		h.logger.Info("ExtendVoteHandler: EVM address not found for operator address, registering evm address", "operatorAddress", operatorAddress)
@@ -279,24 +283,29 @@ func (h *VoteExtHandler) SignInitialMessage(operatorAddress string) ([]byte, []b
 func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
 	kr, err := h.GetKeyring()
 	if err != nil {
+		h.logger.Error("GetOperatorAddress: failed to get keyring", "error", err)
 		return "", fmt.Errorf("failed to get keyring: %w", err)
 	}
 	keyName := viper.GetString("key-name")
 	if keyName == "" {
+		h.logger.Error("GetOperatorAddress: key name not found")
 		return "", fmt.Errorf("key name not found, please set --key-name flag")
 	}
 	// list all keys
 	krlist, err := kr.List()
 	if err != nil {
+		h.logger.Error("GetOperatorAddress: failed to list keys", "error", err)
 		return "", fmt.Errorf("failed to list keys: %w", err)
 	}
 	if len(krlist) == 0 {
+		h.logger.Error("GetOperatorAddress: no keys found in keyring")
 		return "", fmt.Errorf("no keys found in keyring")
 	}
 
 	// Fetch the operator key from the keyring.
 	info, err := kr.Key(keyName)
 	if err != nil {
+		h.logger.Error("GetOperatorAddress: failed to get operator key", "keyName", keyName, "error", err)
 		return "", fmt.Errorf("failed to get operator key: %w", err)
 	}
 	// Output the public key associated with the operator key.
