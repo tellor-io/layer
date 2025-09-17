@@ -139,8 +139,6 @@ func (k Keeper) SetValsetCheckpointDomainSeparator(ctx context.Context) {
 		// This matches the Solidity constant: 0x636865636b706f696e7400000000000000000000000000000000000000000000
 		domainSeparator = make([]byte, 32)
 		copy(domainSeparator, []byte("checkpoint"))
-		fmt.Println("domainSeparator mainnet", hex.EncodeToString(domainSeparator))
-		k.Logger(ctx).Info("domainSeparator mainnet", "domainSeparator", hex.EncodeToString(domainSeparator))
 	} else {
 		// Create domain separator by ABI encoding "checkpoint" and chain ID
 		// This matches the Solidity implementation: keccak256(abi.encode("checkpoint", chainId))
@@ -160,9 +158,7 @@ func (k Keeper) SetValsetCheckpointDomainSeparator(ctx context.Context) {
 			k.Logger(ctx).Warn("Error encoding domain separator", "error", err)
 			panic(err)
 		}
-		k.Logger(ctx).Info("domainSeparatorEncoded non-mainnet", "domainSeparatorEncoded", hex.EncodeToString(domainSeparatorEncoded))
 		domainSeparator = crypto.Keccak256(domainSeparatorEncoded)
-		fmt.Println("domainSeparator", hex.EncodeToString(domainSeparator))
 	}
 
 	// Store the domain separator in keeper storage
