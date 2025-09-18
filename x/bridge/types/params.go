@@ -208,14 +208,5 @@ func validateMainnetChainId(v interface{}) error {
 		return fmt.Errorf("mainnet chain ID cannot be empty")
 	}
 
-	// Chain ID should be reasonable length (not too short or too long)
-	if len(chainId) < 3 {
-		return fmt.Errorf("mainnet chain ID too short: %s, minimum length is 3 characters", chainId)
-	}
-
-	if len(chainId) > 50 {
-		return fmt.Errorf("mainnet chain ID too long: %s, maximum length is 50 characters", chainId)
-	}
-
 	return nil
 }

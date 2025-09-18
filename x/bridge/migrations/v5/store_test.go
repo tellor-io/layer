@@ -90,7 +90,6 @@ func TestMigrateStore(t *testing.T) {
 	params, err := k.Params.Get(ctx)
 	require.NoError(t, err)
 	require.Equal(t, "", params.MainnetChainId, "MainnetChainId should be empty initially")
-	fmt.Println("params", params)
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	sdkCtx = sdkCtx.WithChainID("tellor-1")
@@ -101,7 +100,6 @@ func TestMigrateStore(t *testing.T) {
 
 	// Verify migration results
 	params, err = k.Params.Get(sdkCtx)
-	fmt.Println("params", params)
 	require.NoError(t, err)
 	require.Equal(t, "tellor-1", params.MainnetChainId, "Mainnet chain ID should be set to 'tellor-1'")
 
