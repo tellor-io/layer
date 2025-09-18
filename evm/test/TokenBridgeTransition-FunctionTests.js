@@ -19,6 +19,7 @@ describe("Function Tests - NewTransition", function() {
   const ORACLE_ADDR_UPDATE_QUERY_DATA_ARGS = abiCoder.encode(["bytes"], ["0x"])
   const ORACLE_ADDR_UPDATE_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TellorOracleAddress", ORACLE_ADDR_UPDATE_QUERY_DATA_ARGS])
   const ORACLE_ADDR_UPDATE_QUERY_ID = h.hash(ORACLE_ADDR_UPDATE_QUERY_DATA);
+  const VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET = "0x636865636b706f696e7400000000000000000000000000000000000000000000";
 
   let accounts = null
   let flex = null
@@ -53,7 +54,8 @@ describe("Function Tests - NewTransition", function() {
 
     blobstream = await ethers.deployContract(
       "TellorDataBridge", [
-      DEV_WALLET
+      DEV_WALLET,
+      VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET
     ]
     )
     fakeValCheckpoint = ethers.utils.solidityKeccak256(["string"], ["testy"])
