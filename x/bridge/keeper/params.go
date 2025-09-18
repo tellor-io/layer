@@ -69,3 +69,12 @@ func (k Keeper) GetAttestPenaltyTimeCutoff(ctx context.Context) (uint64, error) 
 	}
 	return params.AttestPenaltyTimeCutoff, nil
 }
+
+// GetMainnetChainId returns the mainnet chain ID for domain separator encoding
+func (k Keeper) GetMainnetChainId(ctx context.Context) (string, error) {
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		return "", err
+	}
+	return params.MainnetChainId, nil
+}

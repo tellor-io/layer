@@ -217,6 +217,8 @@ func TestGetCurrentValidatorSetEVMCompatible(t *testing.T) {
 func TestCompareAndSetBridgeValidators(t *testing.T) {
 	k, _, _, _, _, sk, _, ctx := setupKeeper(t)
 	logger := k.Logger(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	// call without setting validator set
 	sk.On("GetAllValidators", ctx).Return(nil, nil).Once()
@@ -332,6 +334,8 @@ func TestSetBridgeValidatorParams(t *testing.T) {
 	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	bridgeValSet := types.BridgeValidatorSet{
 		BridgeValidatorSet: []*types.BridgeValidator{
@@ -380,7 +384,12 @@ func TestCalculateValidatorSetCheckpoint(t *testing.T) {
 	validatorTimestamp := uint64(100_000)
 	valSetHash := []byte("valSetHash")
 
-	checkpoint, err := k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, valSetHash)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx = sdkCtx.WithChainID("tellor-1")
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
+
+	// call using tellor-1 chain id
+	checkpoint, err := k.CalculateValidatorSetCheckpoint(sdkCtx, powerThreshold, validatorTimestamp, valSetHash)
 	require.NoError(t, err)
 	require.NotNil(t, checkpoint)
 	lastCheckpointIdx, err := k.LatestCheckpointIdx.Get(ctx)
@@ -391,7 +400,9 @@ func TestCalculateValidatorSetCheckpoint(t *testing.T) {
 	validatorTimestamp = 0
 	valSetHash = []byte{}
 
-	checkpoint, err = k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, valSetHash)
+	// call using non tellor-1 chain id
+	sdkCtx = sdkCtx.WithChainID("layertest")
+	checkpoint, err = k.CalculateValidatorSetCheckpoint(sdkCtx, powerThreshold, validatorTimestamp, valSetHash)
 	require.NoError(t, err)
 	require.NotNil(t, checkpoint)
 	lastCheckpointIdx, err = k.LatestCheckpointIdx.Get(ctx)
@@ -402,7 +413,7 @@ func TestCalculateValidatorSetCheckpoint(t *testing.T) {
 	validatorTimestamp = ^uint64(0)
 	valSetHash = []byte("hash0123456789")
 
-	checkpoint, err = k.CalculateValidatorSetCheckpoint(ctx, powerThreshold, validatorTimestamp, valSetHash)
+	checkpoint, err = k.CalculateValidatorSetCheckpoint(sdkCtx, powerThreshold, validatorTimestamp, valSetHash)
 	require.NoError(t, err)
 	require.NotNil(t, checkpoint)
 	lastCheckpointIdx, err = k.LatestCheckpointIdx.Get(ctx)
@@ -414,6 +425,8 @@ func TestGetValidatorCheckpointFromStorage(t *testing.T) {
 	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	res, err := k.GetValidatorCheckpointFromStorage(ctx)
 	require.Error(t, err)
@@ -441,6 +454,9 @@ func TestGetValidatorTimestampByIdxFromStorage(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
+
 	res, err := k.GetValidatorTimestampByIdxFromStorage(ctx, 0)
 	require.Error(t, err)
 	require.Equal(t, res.Timestamp, uint64(0))
@@ -461,7 +477,6 @@ func TestGetValidatorTimestampByIdxFromStorage(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	validatorTimestamp := uint64(sdkCtx.BlockTime().UnixMilli())
 	require.Equal(t, res.Timestamp, validatorTimestamp)
 
@@ -500,6 +515,8 @@ func TestGetValidatorSetSignaturesFromStorage(t *testing.T) {
 	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	res, err := k.GetValidatorSetSignaturesFromStorage(ctx, 0)
 	require.Error(t, err)
@@ -543,6 +560,8 @@ func TestEncodeAndHashValidatorSet(t *testing.T) {
 	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	bridgeValSet := types.BridgeValidatorSet{
 		BridgeValidatorSet: []*types.BridgeValidator{
