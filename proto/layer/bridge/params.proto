@@ -41,4 +41,9 @@ message Params {
   uint64 attest_penalty_time_cutoff = 5 [
     (gogoproto.moretags) = "yaml:\"attest_penalty_time_cutoff\""
   ];
+  
+  // Mainnet chain ID for domain separator encoding
+  string mainnet_chain_id = 6 [
+    (gogoproto.moretags) = "yaml:\"mainnet_chain_id\""
+  ];
 }

@@ -20,13 +20,14 @@ import (
 func TestMsgClaimDeposits(t *testing.T) {
 	k, _, bk, ok, _, _, _, ctx := setupKeeper(t)
 	msgServer := keeper.NewMsgServerImpl(k)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	require.Panics(t, func() {
 		_, err := msgServer.ClaimDeposits(ctx, nil)
 		require.Error(t, err)
 	})
 
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	aggregateTimestamp := sdkCtx.BlockTime()
 	AddressType, err := abi.NewType("address", "", nil)
 	require.NoError(t, err)

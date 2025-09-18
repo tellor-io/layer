@@ -26,6 +26,8 @@ func TestMsgRequestAttestations(t *testing.T) {
 	require.NotNil(t, ctx)
 	msgServer := keeper.NewMsgServerImpl(k)
 	require.NotNil(t, msgServer)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	// empty message
 	response, err := msgServer.RequestAttestations(ctx, &types.MsgRequestAttestations{})
@@ -129,7 +131,7 @@ func TestMsgRequestAttestations(t *testing.T) {
 	})
 	require.NoError(t, err)
 	require.NotNil(t, response)
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
 	expectedAttestationTimestamp := sdkCtx.BlockTime()
 
 	// retrieve newly created snapshot & data
