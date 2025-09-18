@@ -16,6 +16,7 @@ describe("TokenBridge - Function Tests", async function () {
     const EVM_RECIPIENT = "0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0"
     const LAYER_RECIPIENT = "tellor1zy50vdk8fdae0var2ryjhj2ysxtcm8dp2qtckd"
     const INITIAL_LAYER_TOKEN_SUPPLY = h.toWei("100")
+    const VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET = "0x636865636b706f696e7400000000000000000000000000000000000000000000";
 
 
     beforeEach(async function () {
@@ -34,7 +35,8 @@ describe("TokenBridge - Function Tests", async function () {
         // deploy contracts
         blobstream = await ethers.deployContract(
             "TellorDataBridge", [
-            guardian.address
+            guardian.address,
+            VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET
         ]
         )
         await blobstream.init(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint)
