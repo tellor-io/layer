@@ -3,6 +3,7 @@ package keeper
 import (
 	v3 "github.com/tellor-io/layer/x/bridge/migrations/v3"
 	v4 "github.com/tellor-io/layer/x/bridge/migrations/v4"
+	v5 "github.com/tellor-io/layer/x/bridge/migrations/v5"
 	"github.com/tellor-io/layer/x/bridge/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,4 +42,12 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	// The Params structure existed before but was empty (no fields)
 	defaultParams := types.DefaultParams()
 	return m.keeper.Params.Set(ctx, defaultParams)
+}
+
+// Migrate4to5 migrates from version 4 to 5.
+func (m Migrator) Migrate4to5(ctx sdk.Context) error {
+	return v5.MigrateStore(ctx,
+		&m.keeper,
+		m.keeper.cdc,
+	)
 }
