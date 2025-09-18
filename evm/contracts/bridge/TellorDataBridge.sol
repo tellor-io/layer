@@ -2,7 +2,6 @@
 pragma solidity 0.8.19;
 
 import {ECDSA} from "./ECDSA.sol";
-import "./Constants.sol";
 
 struct OracleAttestationData {
     bytes32 queryId;
@@ -47,6 +46,12 @@ contract TellorDataBridge is ECDSA {
     address public deployer; /// Address that deployed the contract.
     bool public initialized; /// True if the contract is initialized.
     uint256 public constant MS_PER_SECOND = 1000; // factor to convert milliseconds to seconds
+    bytes32 public constant NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR = // "tellorCurrentAttestation"
+        0x74656c6c6f7243757272656e744174746573746174696f6e0000000000000000;
+    // For tellor mainnet, this is "0x636865636b706f696e7400000000000000000000000000000000000000000000". 
+    // Otherwise, we take the tellor chain id as a string, and the validator set domain separator is 
+    // keccak256(abi.encode("checkpoint", TELLOR_CHAIN_ID)). This differentiates between different networks.
+    bytes32 public immutable VALIDATOR_SET_HASH_DOMAIN_SEPARATOR;
 
     /*Events*/
     event GuardianResetValidatorSet(uint256 _powerThreshold, uint256 _validatorTimestamp, bytes32 _validatorSetHash);
@@ -69,10 +74,12 @@ contract TellorDataBridge is ECDSA {
     /// @notice Constructor for the TellorDataBridge contract.
     /// @param _guardian Guardian address.
     constructor(
-        address _guardian
+        address _guardian,
+        bytes32 _validatorSetHashDomainSeparator
     ) {
         guardian = _guardian;
         deployer = msg.sender;
+        VALIDATOR_SET_HASH_DOMAIN_SEPARATOR = _validatorSetHashDomainSeparator;
     }
 
     /// @notice This function is called only once by the deployer to initialize the contract
@@ -272,7 +279,7 @@ contract TellorDataBridge is ECDSA {
         uint256 _powerThreshold,
         uint256 _validatorTimestamp,
         bytes32 _validatorSetHash
-    ) internal pure returns (bytes32) {
+    ) internal view returns (bytes32) {
         return
             keccak256(
                 abi.encode(
@@ -302,4 +309,3 @@ contract TellorDataBridge is ECDSA {
         return _signer == _recovered;
     }
 }
-

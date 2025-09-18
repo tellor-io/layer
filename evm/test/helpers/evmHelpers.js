@@ -98,8 +98,7 @@ function sleep(s) {
 }
 
 
-calculateValCheckpoint = (valHash, threshold, valTimestamp) => {
-  domainSeparator = "0x636865636b706f696e7400000000000000000000000000000000000000000000"
+calculateValCheckpoint = (valHash, threshold, valTimestamp, domainSeparator="0x636865636b706f696e7400000000000000000000000000000000000000000000") => {
   enc = abiCoder.encode(["bytes32", "uint256", "uint256", "bytes32"], [domainSeparator, threshold, valTimestamp, valHash])
   valCheckpoint = hash(enc)
   //valCheckpoint = ethers.solidityPackedKeccak256(["bytes32", "uint256", "uint256", "bytes32"], [domainSeparator, threshold, valTimestamp, valHash])
@@ -248,4 +247,3 @@ module.exports = {
   impersonateAccount,
   layerSign
 };
-
