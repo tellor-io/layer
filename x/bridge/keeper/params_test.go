@@ -41,3 +41,26 @@ func TestGetAttestPenaltyTimeCutoff(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, customCutoff, cutoff)
 }
+
+func TestGetMainnetChainId(t *testing.T) {
+	k, _, _, _, _, _, _, ctx := testkeeper.BridgeKeeper(t)
+
+	// Test with default params (should be "tellor-1")
+	err := k.Params.Set(ctx, types.DefaultParams())
+	require.NoError(t, err)
+
+	chainId, err := k.GetMainnetChainId(ctx)
+	require.NoError(t, err)
+	require.Equal(t, "tellor-1", chainId)
+
+	// Test with custom chain ID
+	customChainId := "custom-chain-1"
+	params := types.DefaultParams()
+	params.MainnetChainId = customChainId
+	err = k.Params.Set(ctx, params)
+	require.NoError(t, err)
+
+	chainId, err = k.GetMainnetChainId(ctx)
+	require.NoError(t, err)
+	require.Equal(t, customChainId, chainId)
+}
