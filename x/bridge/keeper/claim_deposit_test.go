@@ -23,6 +23,8 @@ func TestDecodeDepositReportValue(t *testing.T) {
 	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	AddressType, err := abi.NewType("address", "", nil)
 	require.NoError(t, err)
@@ -101,6 +103,8 @@ func TestDecodeDepositReportValueInvalidReport(t *testing.T) {
 	k, _, _, _, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	badString := "0x"
 	_, _, _, err := k.DecodeDepositReportValue(ctx, badString)
@@ -141,6 +145,8 @@ func TestDecodeDepositReportValueBadAddress(t *testing.T) {
 	k, _, _, _, _, _, dk, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	AddressType, err := abi.NewType("address", "", nil)
 	require.NoError(t, err)
@@ -202,6 +208,7 @@ func TestClaimDeposit(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	aggregateTimestamp := sdkCtx.BlockTime()
 	AddressType, err := abi.NewType("address", "", nil)
@@ -253,6 +260,7 @@ func TestClaimDepositNilAggregate(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	queryId, _ := k.GetDepositQueryId(0)
 	currentTime := time.Now()
@@ -266,6 +274,7 @@ func TestClaimDepositFlaggedAggregate(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	aggregateTimestamp := sdkCtx.BlockTime()
 	AddressType, err := abi.NewType("address", "", nil)
@@ -312,6 +321,7 @@ func TestClaimDepositNotEnoughPower(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	aggregateTimestamp := sdkCtx.BlockTime()
 	AddressType, err := abi.NewType("address", "", nil)
@@ -360,6 +370,7 @@ func TestClaimDepositReportTooYoung(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	aggregateTimestamp := sdkCtx.BlockTime()
 	AddressType, err := abi.NewType("address", "", nil)
@@ -408,6 +419,7 @@ func TestClaimDepositSpam(t *testing.T) {
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.SetValsetCheckpointDomainSeparator(sdkCtx)
 
 	aggregateTimestamp := sdkCtx.BlockTime()
 	AddressType, err := abi.NewType("address", "", nil)

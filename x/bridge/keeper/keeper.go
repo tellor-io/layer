@@ -56,6 +56,7 @@ type (
 		SnapshotLimit                    collections.Item[types.SnapshotLimit]                   // limit of number of attestation requests per block
 		AttestationEvidenceSubmitted     collections.Map[collections.Pair[[]byte, uint64], bool] // key: operator address, timestamp
 		ValsetSignatureEvidenceSubmitted collections.Map[collections.Pair[[]byte, uint64], bool] // key: operator address, valset timestamp
+		ValsetCheckpointDomainSeparator  collections.Item[[]byte]                                // key: chain ID, value: domain separator
 
 		stakingKeeper  types.StakingKeeper
 		oracleKeeper   types.OracleKeeper
@@ -111,6 +112,7 @@ func NewKeeper(
 		reporterKeeper:                   reporterKeeper,
 		disputeKeeper:                    disputeKeeper,
 		authority:                        authority,
+		ValsetCheckpointDomainSeparator:  collections.NewItem(sb, types.ValsetCheckpointDomainSeparatorKey, "valset_checkpoint_domain_separator", collections.BytesValue),
 	}
 
 	schema, err := sb.Build()
@@ -119,6 +121,51 @@ func NewKeeper(
 	}
 	k.Schema = schema
 	return k
+}
+
+func (k Keeper) SetValsetCheckpointDomainSeparator(ctx context.Context) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	// Get the mainnet chain ID from parameters
+	mainnetChainId, err := k.GetMainnetChainId(ctx)
+	if err != nil {
+		k.Logger(ctx).Warn("Error getting mainnet chain ID", "error", err)
+		panic(err)
+	}
+
+	var domainSeparator []byte
+	if sdkCtx.ChainID() == mainnetChainId {
+		// For mainnet, use the fixed domain separator: "checkpoint" padded to 32 bytes with zeros
+		// This matches the Solidity constant: 0x636865636b706f696e7400000000000000000000000000000000000000000000
+		domainSeparator = make([]byte, 32)
+		copy(domainSeparator, []byte("checkpoint"))
+	} else {
+		// Create domain separator by ABI encoding "checkpoint" and chain ID
+		// This matches the Solidity implementation: keccak256(abi.encode("checkpoint", chainId))
+		StringType, err := abi.NewType("string", "", nil)
+		if err != nil {
+			k.Logger(ctx).Warn("Error creating new string ABI type", "error", err)
+			panic(err)
+		}
+
+		// ABI encode "checkpoint" and chain ID (both as strings)
+		domainSeparatorArgs := abi.Arguments{
+			{Type: StringType},
+			{Type: StringType},
+		}
+		domainSeparatorEncoded, err := domainSeparatorArgs.Pack("checkpoint", sdkCtx.ChainID())
+		if err != nil {
+			k.Logger(ctx).Warn("Error encoding domain separator", "error", err)
+			panic(err)
+		}
+		domainSeparator = crypto.Keccak256(domainSeparatorEncoded)
+	}
+
+	// Store the domain separator in keeper storage
+	if err := k.ValsetCheckpointDomainSeparator.Set(ctx, domainSeparator); err != nil {
+		k.Logger(ctx).Warn("Error storing domain separator", "error", err)
+		panic(err)
+	}
 }
 
 func (k Keeper) Logger(ctx context.Context) log.Logger {
@@ -366,10 +413,17 @@ func (k Keeper) EncodeValsetCheckpoint(
 	validatorTimestamp uint64,
 	validatorSetHash []byte,
 ) ([]byte, error) {
-	// Define the domain separator for the validator set hash, fixed size 32 bytes
-	VALIDATOR_SET_HASH_DOMAIN_SEPARATOR := []byte("checkpoint")
+	k.Logger(ctx).Info("getting domain separator")
+	domainSeparator, err := k.ValsetCheckpointDomainSeparator.Get(ctx)
+	if err != nil {
+		k.Logger(ctx).Warn("Error getting domain separator", "error", err)
+		return nil, err
+	}
+	k.Logger(ctx).Info("domainSeparator", "domainSeparator", hex.EncodeToString(domainSeparator))
+
+	// Convert domain separator to fixed size 32 bytes
 	var domainSeparatorFixSize [32]byte
-	copy(domainSeparatorFixSize[:], VALIDATOR_SET_HASH_DOMAIN_SEPARATOR)
+	copy(domainSeparatorFixSize[:], domainSeparator)
 
 	// Convert validatorSetHash to a fixed size 32 bytes
 	var validatorSetHashFixSize [32]byte
@@ -628,7 +682,6 @@ func (k Keeper) TryRecoverAddressWithBothIDs(sig, msgHash []byte) ([]common.Addr
 	for _, id := range []byte{0, 1} {
 		sigWithID := append(sig[:64], id)
 		pubKey, err := crypto.SigToPub(msgHash, sigWithID)
-		fmt.Println("pubKey", pubKey)
 		if err != nil {
 			return []common.Address{}, err
 		}
@@ -1114,8 +1167,8 @@ func (k Keeper) EncodeOracleAttestationData(
 	attestationTimestamp uint64,
 	lastConsensusTimestamp uint64,
 ) ([]byte, error) {
-	// domainSeparator is bytes "tellorCurrentAttestation"
 	NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR := []byte("tellorCurrentAttestation")
+
 	// Convert domain separator to bytes32
 	var domainSepBytes32 [32]byte
 	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR)
