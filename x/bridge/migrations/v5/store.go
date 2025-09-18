@@ -5,10 +5,10 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/crypto"
+	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/store"
-	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
