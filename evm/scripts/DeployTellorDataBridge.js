@@ -1,15 +1,23 @@
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-waffle");
 require("dotenv").config();
+const h = require("../test/helpers/evmHelpers");
 
 // npx hardhat run scripts/DeployTellorDataBridge.js --network sepolia
 
 // update these variables
 var guardianaddress = " "
+var tellorChainId = ""
 var PK = process.env.TESTNET_PK
 var NODE_URL = process.env.NODE_URL_SEPOLIA_TESTNET
 
+valsetDomainSep = h.getDomainSeparator(tellorChainId)
+
 async function deployTellorDataBridge(_pk, _nodeURL) {
+    console.log("deploy TellorDataBridge")
+    console.log("guardianaddress", guardianaddress)
+    console.log("tellorChainId", tellorChainId)
+    console.log("valsetDomainSep", valsetDomainSep)
     // var net = hre.network.name
     await run("compile")
 
