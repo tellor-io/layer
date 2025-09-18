@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"bytes"
+	"context"
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/hex"
@@ -14,11 +15,18 @@ import (
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
 	"cosmossdk.io/collections"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+)
+
+const (
+	chainId = "test-chain"
 )
 
 func (s *IntegrationTestSuite) TestValsetSignatureSlashingIntegration() {
 	require := s.Require()
 	ctx := s.Setup.Ctx.WithBlockHeight(10).WithBlockTime(time.Now())
+	s.Setup.Bridgekeeper.SetValsetCheckpointDomainSeparator(ctx)
 
 	// create validators with real staking
 	numValidators := 3
@@ -81,9 +89,11 @@ func (s *IntegrationTestSuite) TestValsetSignatureSlashingIntegration() {
 
 	// create and sign malicious valset checkpoint
 	maliciousCheckpoint, signature := s.createMaliciousValsetSignature(
+		ctx,
 		powerThreshold,
 		valsetTimestamp,
 		fakeValsetHash,
+		chainId,
 		targetPrivKey,
 	)
 
@@ -149,6 +159,7 @@ func (s *IntegrationTestSuite) TestValsetSignatureSlashingIntegration() {
 func (s *IntegrationTestSuite) TestValsetSignatureSlashingRateLimit() {
 	require := s.Require()
 	ctx := s.Setup.Ctx.WithBlockHeight(20).WithBlockTime(time.Now())
+	s.Setup.Bridgekeeper.SetValsetCheckpointDomainSeparator(ctx)
 
 	// create multiple validators for rate limit testing (since first one gets jailed)
 	valAccAddrs, valAddrs, privKeys := s.createValidatorsWithEVMKeys(2, []uint64{1000, 1000})
@@ -194,9 +205,11 @@ func (s *IntegrationTestSuite) TestValsetSignatureSlashingRateLimit() {
 	powerThreshold := uint64(1500)
 
 	_, signature1 := s.createMaliciousValsetSignature(
+		ctx,
 		powerThreshold,
 		valsetTimestamp1,
 		fakeValsetHash1,
+		chainId,
 		targetPrivKey1,
 	)
 
@@ -221,9 +234,11 @@ func (s *IntegrationTestSuite) TestValsetSignatureSlashingRateLimit() {
 	fakeValsetHash2 := "2222222222222222222222222222222222222222222222222222222222222222"
 
 	_, signature2 := s.createMaliciousValsetSignature(
+		ctx,
 		powerThreshold,
 		valsetTimestamp2,
 		fakeValsetHash2,
+		chainId,
 		targetPrivKey1, // same validator for rate limit test
 	)
 
@@ -244,9 +259,11 @@ func (s *IntegrationTestSuite) TestValsetSignatureSlashingRateLimit() {
 	fakeValsetHash3 := "3333333333333333333333333333333333333333333333333333333333333333"
 
 	_, signature3 := s.createMaliciousValsetSignature(
+		ctx,
 		powerThreshold,
 		valsetTimestamp3,
 		fakeValsetHash3,
+		chainId,
 		targetPrivKey2, // use second validator for third attempt
 	)
 
@@ -265,6 +282,7 @@ func (s *IntegrationTestSuite) TestValsetSignatureSlashingRateLimit() {
 func (s *IntegrationTestSuite) TestValsetSignatureSlashingUnbondingPeriod() {
 	require := s.Require()
 	ctx := s.Setup.Ctx.WithBlockHeight(30).WithBlockTime(time.Now())
+	s.Setup.Bridgekeeper.SetValsetCheckpointDomainSeparator(ctx)
 
 	// create validator
 	valAccAddrs, _, privKeys := s.createValidatorsWithEVMKeys(1, []uint64{1000})
@@ -291,9 +309,11 @@ func (s *IntegrationTestSuite) TestValsetSignatureSlashingUnbondingPeriod() {
 	powerThreshold := uint64(500)
 
 	_, signature := s.createMaliciousValsetSignature(
+		ctx,
 		powerThreshold,
 		oldValsetTimestamp,
 		fakeValsetHash,
+		chainId,
 		targetPrivKey,
 	)
 
@@ -314,6 +334,7 @@ func (s *IntegrationTestSuite) TestValsetSignatureSlashingUnbondingPeriod() {
 func (s *IntegrationTestSuite) TestValsetSignatureSlashingNonMalicious() {
 	require := s.Require()
 	ctx := s.Setup.Ctx.WithBlockHeight(40).WithBlockTime(time.Now())
+	s.Setup.Bridgekeeper.SetValsetCheckpointDomainSeparator(ctx)
 
 	// create validator
 	valAccAddrs, valAddrs, privKeys := s.createValidatorsWithEVMKeys(1, []uint64{1000})
@@ -327,9 +348,11 @@ func (s *IntegrationTestSuite) TestValsetSignatureSlashingNonMalicious() {
 
 	// create the real checkpoint and store it
 	realCheckpoint, signature := s.createMaliciousValsetSignature(
+		ctx,
 		powerThreshold,
 		valsetTimestamp,
 		realValsetHash,
+		chainId,
 		targetPrivKey,
 	)
 
@@ -371,18 +394,74 @@ func (s *IntegrationTestSuite) TestValsetSignatureSlashingNonMalicious() {
 	require.ErrorContains(err, "checkpoint matches the actual checkpoint, not malicious")
 }
 
+func (s *IntegrationTestSuite) TestValsetSignatureSlashingWithDifferentChainId() {
+	require := s.Require()
+	// Set context chain ID to tellor-1
+	ctx := s.Setup.Ctx.WithBlockHeight(40).WithBlockTime(time.Now()).WithChainID("tellor-1")
+	s.Setup.Bridgekeeper.SetValsetCheckpointDomainSeparator(ctx)
+
+	// create validator
+	valAccAddrs, _, privKeys := s.createValidatorsWithEVMKeys(1, []uint64{1000})
+	targetPrivKey := privKeys[0]
+
+	// create malicious valset signature data
+	valsetTimestamp := uint64(time.Now().UnixMilli())
+	fakeValsetHash := "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+	powerThreshold := uint64(5000) // fake power threshold
+
+	// create malicious valset signature with a different chain ID (not tellor-1)
+	maliciousChainId := "different-chain"
+	maliciousCheckpoint, signature := s.createMaliciousValsetSignature(
+		ctx,
+		powerThreshold,
+		valsetTimestamp,
+		fakeValsetHash,
+		maliciousChainId, // This should be different from the context chain ID
+		targetPrivKey,
+	)
+
+	// verify this valset doesn't exist or has different checkpoint (making it malicious)
+	exists, err := s.Setup.Bridgekeeper.BridgeValsetByTimestampMap.Has(ctx, valsetTimestamp)
+	require.NoError(err)
+	if exists {
+		// if it exists, make sure the checkpoint is different
+		existingParams, err := s.Setup.Bridgekeeper.ValidatorCheckpointParamsMap.Get(ctx, valsetTimestamp)
+		require.NoError(err)
+		require.False(bytes.Equal(maliciousCheckpoint, existingParams.Checkpoint),
+			"Checkpoint should be different to be considered malicious")
+	}
+
+	// submit valset signature evidence - this should fail because the chain ID doesn't match
+	bridgeMsgServer := bridgekeeper.NewMsgServerImpl(s.Setup.Bridgekeeper)
+	evidenceMsg := &bridgetypes.MsgSubmitValsetSignatureEvidence{
+		Creator:            valAccAddrs[0].String(),
+		ValsetTimestamp:    valsetTimestamp,
+		ValsetHash:         fakeValsetHash,
+		PowerThreshold:     powerThreshold,
+		ValidatorSignature: signature,
+	}
+
+	// This should fail because the attestation is from a different chain
+	_, err = bridgeMsgServer.SubmitValsetSignatureEvidence(ctx, evidenceMsg)
+	require.Error(err)
+	// The error should be from signature verification failure due to chain ID mismatch
+	// This could be "operator address not found" or a signature verification error
+}
+
 // helper functions
 
 func (s *IntegrationTestSuite) createMaliciousValsetSignature(
+	ctx context.Context,
 	powerThreshold uint64,
 	valsetTimestamp uint64,
 	valsetHash string,
+	chainId string,
 	privKey *ecdsa.PrivateKey,
 ) ([]byte, string) {
 	require := s.Require()
 
 	// create valset checkpoint using the same encoding as the keeper
-	checkpoint, err := s.encodeValsetCheckpoint(powerThreshold, valsetTimestamp, valsetHash)
+	checkpoint, err := s.encodeValsetCheckpoint(ctx, powerThreshold, valsetTimestamp, valsetHash, chainId)
 	require.NoError(err)
 
 	// sign the checkpoint
@@ -397,11 +476,35 @@ func (s *IntegrationTestSuite) createMaliciousValsetSignature(
 	return checkpoint, sigHex
 }
 
-func (s *IntegrationTestSuite) encodeValsetCheckpoint(powerThreshold, valsetTimestamp uint64, valsetHash string) ([]byte, error) {
-	// define the domain separator for the validator set hash, fixed size 32 bytes
-	VALIDATOR_SET_HASH_DOMAIN_SEPARATOR := []byte("checkpoint")
+func (s *IntegrationTestSuite) encodeValsetCheckpoint(ctx context.Context, powerThreshold, valsetTimestamp uint64, valsetHash, chainId string) ([]byte, error) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	var domainSeparatorEncoded []byte
+	if sdkCtx.ChainID() == chainId {
+		domainSeparatorEncoded = []byte("checkpoint")
+	} else {
+		// Create domain separator by ABI encoding "checkpoint" and chain ID
+		// This matches the Solidity implementation: keccak256(abi.encode("checkpoint", chainId))
+		StringType, err := abi.NewType("string", "", nil)
+		if err != nil {
+			return nil, err
+		}
+
+		// ABI encode "checkpoint" and chain ID (both as strings)
+		domainSeparatorArgs := abi.Arguments{
+			{Type: StringType},
+			{Type: StringType},
+		}
+		domainSeparatorEncoded, err = domainSeparatorArgs.Pack("checkpoint", sdkCtx.ChainID())
+		if err != nil {
+			return nil, err
+		}
+	}
+	domainSeparator := crypto.Keccak256(domainSeparatorEncoded)
+
+	// Convert domain separator to fixed size 32 bytes
 	var domainSeparatorFixSize [32]byte
-	copy(domainSeparatorFixSize[:], VALIDATOR_SET_HASH_DOMAIN_SEPARATOR)
+	copy(domainSeparatorFixSize[:], domainSeparator)
 
 	// convert valsetHash to bytes
 	valsetHashBytes, err := hex.DecodeString(valsetHash)
