@@ -1,13 +1,13 @@
-const { expect } = require("chai");
+// const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const h = require("./helpers/evmHelpers");
 var assert = require('assert');
 const abiCoder = new ethers.utils.AbiCoder();
 // const Web3 = require('web3');
 // const web3 = require("@nomiclabs/hardhat-web3");
-const hre = require("hardhat");
-const EC = require('elliptic').ec;
-const ec = new EC('secp256k1');
+// const hre = require("hardhat");
+// const EC = require('elliptic').ec;
+// const ec = new EC('secp256k1');
 
 
 describe("Blobstream - Function Tests", async function () {
@@ -15,6 +15,7 @@ describe("Blobstream - Function Tests", async function () {
     let blobstream, accounts, guardian, initialPowers, initialValAddrs;
     let val1, val2, val3;
     const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks
+    const VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET = "0x636865636b706f696e7400000000000000000000000000000000000000000000";
 
     beforeEach(async function () {
         // init accounts
@@ -40,7 +41,8 @@ describe("Blobstream - Function Tests", async function () {
         // deploy contracts
         blobstream = await ethers.deployContract(
             "TellorDataBridge", [
-            guardian.address
+            guardian.address,
+            VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET
         ]
         )
         await blobstream.init(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint)
@@ -52,7 +54,8 @@ describe("Blobstream - Function Tests", async function () {
     it("init", async function() {
         // deploy a new blobstream contract, same inputs as above
         blobstream2 = await ethers.deployContract("TellorDataBridge", [
-            guardian.address
+            guardian.address,
+            VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET
         ])
         await h.expectThrow(blobstream2.connect(accounts[1]).init(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint))
         await blobstream2.init(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint)
@@ -431,4 +434,67 @@ describe("Blobstream - Function Tests", async function () {
         sigStructArray2 = await h.getSigStructArray(sigs2)
         await blobstream.updateValidatorSet(newValHash2, newThreshold2, newValTimestamp2, currentValSetArray1, sigStructArray2);
     })
+
+    it("other domain separators work", async function () {
+        domainSepPalmitoArgs = abiCoder.encode(["string", "string"], ["checkpoint", "layertest-4"])
+        domainSepPalmito = h.hash(domainSepPalmitoArgs)
+        initialValAddrs = [val1.address, val2.address]
+        initialPowers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        threshold = 2
+        blocky = await h.getBlock()
+        valTimestamp = (blocky.timestamp - 2) * 1000
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, valTimestamp, domainSepPalmito)
+        // deploy contracts
+        blobstream2 = await ethers.deployContract(
+            "TellorDataBridge", [
+            guardian.address,
+            domainSepPalmito
+        ]
+        )
+        await blobstream2.init(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint)
+
+        querydata = abiCoder.encode(["string"], ["myquery"])
+        queryId = h.hash(querydata)
+        value = abiCoder.encode(["uint256"], [2000])
+        blocky = await h.getBlock()
+        timestamp = (blocky.timestamp - 2) * 1000
+        aggregatePower = 3
+        attestTimestamp = timestamp + 1000
+        previousTimestamp = 0
+        nextTimestamp = 0
+        lastConsensusTimestamp = timestamp
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = await h.calculateValCheckpoint(newValHash, threshold, valTimestamp, domainSepPalmito)
+        dataDigest = await h.getDataDigest(
+            queryId,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
+        sig1 = await h.layerSign(dataDigest, val1.privateKey)
+        sig2 = await h.layerSign(dataDigest, val2.privateKey)
+        sigStructArray = await h.getSigStructArray([sig1, sig2])
+        oracleDataStruct = await h.getOracleDataStruct(
+            queryId,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        await blobstream2.verifyOracleData(
+            oracleDataStruct,
+            currentValSetArray,
+            sigStructArray
+        )
     })
+})

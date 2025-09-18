@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../bridge/TellorDataBridge.sol";
 
 contract TellorDataBridgeTestnet is TellorDataBridge {
-    constructor(address _guardian) TellorDataBridge(_guardian) {}
+    constructor(address _guardian, bytes32 _validatorSetHashDomainSeparator) TellorDataBridge(_guardian, _validatorSetHashDomainSeparator) {}
 
      /// @notice This function is called by the guardian to reset the validator set
     /// on testnet. Not to be used on mainnet.
