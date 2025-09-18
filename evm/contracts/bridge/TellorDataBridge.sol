@@ -48,6 +48,9 @@ contract TellorDataBridge is ECDSA {
     uint256 public constant MS_PER_SECOND = 1000; // factor to convert milliseconds to seconds
     bytes32 public constant NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR = // "tellorCurrentAttestation"
         0x74656c6c6f7243757272656e744174746573746174696f6e0000000000000000;
+    // For tellor mainnet, this is "0x636865636b706f696e7400000000000000000000000000000000000000000000". 
+    // Otherwise, we take the tellor chain id as a string, and the validator set domain separator is 
+    // keccak256(abi.encode("checkpoint", TELLOR_CHAIN_ID)). This differentiates between different networks.
     bytes32 public immutable VALIDATOR_SET_HASH_DOMAIN_SEPARATOR;
 
     /*Events*/
