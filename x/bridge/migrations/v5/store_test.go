@@ -1,13 +1,16 @@
-package v5
+package v5_test
 
 import (
 	"context"
+	"encoding/hex"
+	"fmt"
 	"testing"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cosmosdb "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/bridge/keeper"
+	v5 "github.com/tellor-io/layer/x/bridge/migrations/v5"
 	"github.com/tellor-io/layer/x/bridge/mocks"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
@@ -69,7 +72,7 @@ func setupTest(t *testing.T) (context.Context, store.KVStoreService, codec.Codec
 
 func TestMigrateStore(t *testing.T) {
 	// Setup
-	ctx, _, cdc, k := setupTest(t)
+	ctx, storeService, cdc, k := setupTest(t)
 
 	// Set initial parameters without MainnetChainId (since it's a new parameter)
 	initialParams := bridgetypes.Params{
@@ -87,20 +90,30 @@ func TestMigrateStore(t *testing.T) {
 	params, err := k.Params.Get(ctx)
 	require.NoError(t, err)
 	require.Equal(t, "", params.MainnetChainId, "MainnetChainId should be empty initially")
+	fmt.Println("params", params)
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx = sdkCtx.WithChainID("tellor-1")
 
 	// Run migration
-	err = MigrateStore(ctx, &k, cdc)
+	err = v5.MigrateStore(sdkCtx, storeService, cdc)
 	require.NoError(t, err, "Migration should succeed")
 
 	// Verify migration results
-	params, err = k.Params.Get(ctx)
+	params, err = k.Params.Get(sdkCtx)
+	fmt.Println("params", params)
 	require.NoError(t, err)
 	require.Equal(t, "tellor-1", params.MainnetChainId, "Mainnet chain ID should be set to 'tellor-1'")
+
+	// verify that the domain separator was set
+	domainSeparator, err := k.ValsetCheckpointDomainSeparator.Get(sdkCtx)
+	require.NoError(t, err)
+	fmt.Println("domainSeparator", hex.EncodeToString(domainSeparator))
 }
 
 func TestMigrateStorePreservesOtherParams(t *testing.T) {
 	// Setup
-	ctx, _, cdc, k := setupTest(t)
+	ctx, storeService, cdc, k := setupTest(t)
 
 	// Set initial parameters with various values (without MainnetChainId since it's new)
 	initialParams := bridgetypes.Params{
@@ -115,7 +128,7 @@ func TestMigrateStorePreservesOtherParams(t *testing.T) {
 	require.NoError(t, err)
 
 	// Run migration
-	err = MigrateStore(ctx, &k, cdc)
+	err = v5.MigrateStore(ctx, storeService, cdc)
 	require.NoError(t, err, "Migration should succeed")
 
 	// Verify migration results
@@ -135,7 +148,7 @@ func TestMigrateStorePreservesOtherParams(t *testing.T) {
 
 func TestMigrateStoreCallsSetValsetCheckpointDomainSeparator(t *testing.T) {
 	// Setup
-	ctx, _, cdc, k := setupTest(t)
+	ctx, storeService, cdc, k := setupTest(t)
 
 	// Set initial parameters without MainnetChainId (since it's a new parameter)
 	initialParams := bridgetypes.Params{
@@ -146,7 +159,7 @@ func TestMigrateStoreCallsSetValsetCheckpointDomainSeparator(t *testing.T) {
 	require.NoError(t, err)
 
 	// Run migration
-	err = MigrateStore(ctx, &k, cdc)
+	err = v5.MigrateStore(ctx, storeService, cdc)
 	require.NoError(t, err, "Migration should succeed")
 
 	// Verify that SetValsetCheckpointDomainSeparator was called by checking
@@ -154,4 +167,9 @@ func TestMigrateStoreCallsSetValsetCheckpointDomainSeparator(t *testing.T) {
 	chainId, err := k.GetMainnetChainId(ctx)
 	require.NoError(t, err)
 	require.Equal(t, "tellor-1", chainId, "Should be able to get the updated chain ID")
+
+	// verify that the domain separator was set
+	domainSeparator, err := k.ValsetCheckpointDomainSeparator.Get(ctx)
+	require.NoError(t, err)
+	fmt.Println("domainSeparator", hex.EncodeToString(domainSeparator))
 }

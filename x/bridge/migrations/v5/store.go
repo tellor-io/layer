@@ -2,44 +2,72 @@ package v5
 
 import (
 	"context"
-	"strings"
 
-	"github.com/tellor-io/layer/x/bridge/keeper"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/crypto"
+
+	"cosmossdk.io/collections"
+	"cosmossdk.io/core/store"
+	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-func MigrateStore(ctx context.Context, keeper *keeper.Keeper, cdc codec.BinaryCodec) error {
-	params, err := keeper.Params.Get(ctx)
+func MigrateStore(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec) error {
+	// Create schema builder to use Collections API
+	sb := collections.NewSchemaBuilder(storeService)
+
+	// Create Collections API objects for params and domain separator
+	paramsCollection := collections.NewItem(sb, bridgetypes.ParamsKey, "params", codec.CollValue[bridgetypes.Params](cdc))
+	domainSeparatorCollection := collections.NewItem(sb, bridgetypes.ValsetCheckpointDomainSeparatorKey, "valset_checkpoint_domain_separator", collections.BytesValue)
+
+	// Handle params migration
+	params, err := paramsCollection.Get(ctx)
 	if err != nil {
-		return err
+		// If params don't exist, create default params
+		params = bridgetypes.DefaultParams()
 	}
 	params.MainnetChainId = "tellor-1"
-	err = keeper.Params.Set(ctx, params)
+	err = paramsCollection.Set(ctx, params)
 	if err != nil {
 		return err
 	}
-	keeper.SetValsetCheckpointDomainSeparator(ctx)
 
+	// Set the domain separator using the same logic as SetValsetCheckpointDomainSeparator
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if strings.EqualFold(sdkCtx.ChainID(), "layertest-4") {
-		currentValidatorSetEVMCompatible, err := keeper.GetCurrentValidatorSetEVMCompatible(ctx)
+	mainnetChainId := "tellor-1" // We just set this in the params above
+
+	var domainSeparator []byte
+	if sdkCtx.ChainID() == mainnetChainId {
+		// For mainnet, use the fixed domain separator: "checkpoint" padded to 32 bytes with zeros
+		// This matches the Solidity constant: 0x636865636b706f696e7400000000000000000000000000000000000000000000
+		domainSeparator = make([]byte, 32)
+		copy(domainSeparator, []byte("checkpoint"))
+	} else {
+		// Create domain separator by ABI encoding "checkpoint" and chain ID
+		// This matches the Solidity implementation: keccak256(abi.encode("checkpoint", chainId))
+		StringType, err := abi.NewType("string", "", nil)
 		if err != nil {
-			keeper.Logger(ctx).Info("No current validator set found")
 			return err
 		}
 
-		err = keeper.BridgeValset.Set(ctx, *currentValidatorSetEVMCompatible)
+		// ABI encode "checkpoint" and chain ID (both as strings)
+		domainSeparatorArgs := abi.Arguments{
+			{Type: StringType},
+			{Type: StringType},
+		}
+		domainSeparatorEncoded, err := domainSeparatorArgs.Pack("checkpoint", sdkCtx.ChainID())
 		if err != nil {
-			keeper.Logger(ctx).Info("Error setting bridge validator set: ", "error", err)
 			return err
 		}
-		error := keeper.SetBridgeValidatorParams(ctx, currentValidatorSetEVMCompatible)
-		if error != nil {
-			keeper.Logger(ctx).Info("Error setting bridge validator params: ", "error", error)
-			return error
-		}
+		domainSeparator = crypto.Keccak256(domainSeparatorEncoded)
+	}
+
+	// Store the domain separator using Collections API
+	err = domainSeparatorCollection.Set(ctx, domainSeparator)
+	if err != nil {
+		return err
 	}
 
 	return nil
