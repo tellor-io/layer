@@ -83,6 +83,15 @@ func (k Keeper) MintCoins(ctx context.Context, newCoins sdk.Coins) error {
 		return nil
 	}
 	k.Logger(ctx).Info("minting tbr", "coins", newCoins)
+	// emit event with amount and destination
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"mint_coins",
+			sdk.NewAttribute("amount", newCoins.String()),
+			sdk.NewAttribute("destination", types.ModuleName),
+		),
+	})
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
 }
 
