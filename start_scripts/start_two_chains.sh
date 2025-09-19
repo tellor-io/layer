@@ -48,6 +48,15 @@ echo "bill..."
 echo "charlie..."
 # ./layerd keys add charlie --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME 
 ./layerd keys import-hex charlie $PRIVATE_KEY_3 --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME 
+# import bill to alice
+./layerd keys import-hex bill $PRIVATE_KEY_2 --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
+
+# Create team multisig account
+echo "Creating team multisig account..."
+MULTISIG_NAME="team"
+MULTISIG_THRESHOLD="2"
+MULTISIG_MEMBERS="$KEY_NAME,bill"
+./layerd keys add $MULTISIG_NAME --multisig="$MULTISIG_MEMBERS" --multisig-threshold=$MULTISIG_THRESHOLD --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
 
 # Update vote_extensions_enable_height in genesis.json
 echo "Updating vote_extensions_enable_height in genesis.json..."
@@ -66,6 +75,29 @@ jq '.app_state.slashing.params.signed_blocks_window = "1000"' ~/.layer/config/ge
 echo "Updating signed_blocks_window in genesis.json for bill..."
 jq '.app_state.slashing.params.signed_blocks_window = "1000"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
 
+# Update gov params in genesis.json
+echo "Updating gov params in genesis.json..."
+echo "main..."
+jq '.app_state.gov.params.voting_period = "5m"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
+jq '.app_state.gov.params.max_deposit_period = "1m"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
+jq '.app_state.gov.params.min_deposit[0].denom = "loya"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
+jq '.app_state.gov.params.min_deposit[0].amount = "100"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
+jq '.app_state.gov.params.expedited_voting_period = "3m"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
+
+echo "$KEY_NAME..."
+jq '.app_state.gov.params.voting_period = "5m"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
+jq '.app_state.gov.params.max_deposit_period = "1m"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
+jq '.app_state.gov.params.min_deposit[0].denom = "loya"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
+jq '.app_state.gov.params.min_deposit[0].amount = "100"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
+jq '.app_state.gov.params.expedited_voting_period = "3m"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
+
+echo "bill..."
+jq '.app_state.gov.params.voting_period = "5m"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
+jq '.app_state.gov.params.max_deposit_period = "1m"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
+jq '.app_state.gov.params.min_deposit[0].denom = "loya"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
+jq '.app_state.gov.params.min_deposit[0].amount = "100"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
+jq '.app_state.gov.params.expedited_voting_period = "3m"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
+
 # Create a tx to give alice loyas to stake
 echo "Adding genesis accounts..."
 echo "$KEY_NAME..."
@@ -74,6 +106,11 @@ echo "bill..."
 ./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
 ./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
+echo "team multisig..."
+# ./layerd genesis add-genesis-account $(./layerd keys show $MULTISIG_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1) 5000000000000loya --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
+
+echo "Add team address to dispute params..."
+./layerd genesis add-team-account $(./layerd keys show $MULTISIG_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1) --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
 
 #echo "charlie..."
 #./layerd genesis add-genesis-account $(./layerd keys show charlie -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME
@@ -107,3 +144,46 @@ sed -i '' "s/keyring-backend = \"test\"/keyring-backend = \"$KEYRING_BACKEND\"/"
 echo "Start chain..."
 # echo "password" |./layerd start --home $LAYERD_NODE_HOME_1 --api.enable --api.swagger --keyring-backend $KEYRING_BACKEND --key-name $KEY_NAME
 ./layerd start --home $LAYERD_NODE_HOME_1 --api.enable --api.swagger --keyring-backend $KEYRING_BACKEND --key-name $KEY_NAME
+
+
+# Make alice a reporter
+# ./layerd tx reporter create-reporter 0.1 1000000 alice --from alice --keyring-backend test --chain-id layertest-4 --home ~/.layer/alice --keyring-dir ~/.layer/alice --fees 500loya --yes
+# 
+# ----- Multisig 
+# 1. Create a transaction (unsigned):
+# ./layerd tx bank send team <recipient> 1000000loya --generate-only --from alice --keyring-backend test --chain-id layertest-4 --home ~/.layer/alice > tx.json
+#
+# 2. Sign the transaction with alice:
+# ./layerd tx sign tx.json --from alice --keyring-backend test --chain-id layertest-4 --home ~/.layer/alice --multisig team --output-document tx-signed-alice.json
+#
+# 3. Sign the transaction with bill:
+# ./layerd tx sign tx.json --from bill --keyring-backend test --chain-id layertest-4 --home ~/.layer/alice --multisig team --output-document tx-signed-bill.json
+#
+# 4. Combine signatures and broadcast (both signatures required):
+# ./layerd tx multisign tx.json team tx-signed-alice.json tx-signed-bill.json --keyring-backend test --chain-id layertest-4 --home ~/.layer/alice > tx-final.json
+# ./layerd tx broadcast tx-final.json --keyring-backend test --chain-id layertest-4 --home ~/.layer/alice
+#
+
+
+# ----- Gov Proposals
+# 
+# ./layerd tx gov submit-proposal mint_proposal.json \
+#   --from alice --chain-id layertest-4 \
+#   --keyring-backend test --home ~/.layer/alice \
+#   --fees 500loya --yes
+
+# {
+#   "messages": [
+#     {
+#       "@type": "/layer.mint.MsgInit",
+#       "authority": "tellor10d07y265gmmuvt4z0w9aw880jnsr700j6527vx"
+#     }
+#   ],
+#   "metadata": "mint initialization proposal",
+#   "deposit": "1000000loya",
+#   "title": "Initialize Mint Module",
+#   "summary": "Initialize the mint module to start time-based rewards minting"
+# }
+# 
+# ./layerd tx gov vote 1 yes --from alice --chain-id layertest-4 \
+#   --keyring-backend test --home ~/.layer/alice --fees 500loya --yes
