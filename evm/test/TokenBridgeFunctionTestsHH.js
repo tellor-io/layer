@@ -48,6 +48,8 @@ describe("TokenBridge - Function Tests", async function () {
         await token.faucet(accounts[0].address)
         await token.faucet(accounts[10].address)
         await token.connect(accounts[10]).transfer(tbridge.address, INITIAL_LAYER_TOKEN_SUPPLY)
+        // init tokenbridge (only on testnet)
+        await tbridge.init(0, 0)
 
         // sleep 1 second for api rate limit
         await new Promise(r => setTimeout(r, 1000));
@@ -607,6 +609,7 @@ describe("TokenBridge - Function Tests", async function () {
 
     it("mintToOracle on deposit", async function() {
         const bridge2 = await ethers.deployContract("TestTokenBridge", [token.address,blobstream.address, oldOracle.address])
+        await bridge2.init(0, 0)
         await token.setOracleMintRecipient(bridge2.address)
         lastReleaseTimeBytes = ethers.utils.solidityKeccak256(["string"], ["_LAST_RELEASE_TIME_DAO"])
         deployTime = await token.getUintVar(lastReleaseTimeBytes)
@@ -629,5 +632,106 @@ describe("TokenBridge - Function Tests", async function () {
         expectedBal = expectedBal + BigInt(h.toWei("20"))
         bridgeBal = await token.balanceOf(await bridge2.address)
         assert(BigInt(bridgeBal) == BigInt(expectedBal), "bridge bal should be correct")
+    })
+
+    it.only("init", async function() {
+        // deploy fresh bridge contract for testing init
+        const freshBridge = await ethers.deployContract("TestTokenBridge", [token.address,blobstream.address, oldOracle.address])
+        
+        // test only deployer can initialize
+        await h.expectThrow(freshBridge.connect(accounts[1]).init(5, 3)) // not deployer
+        
+        // test successful initialization
+        assert.equal(await freshBridge.initialized(), false, "should not be initialized yet")
+        assert.equal(await freshBridge.depositId(), 0, "depositId should be 0 initially")
+        
+        await freshBridge.init(5, 3)
+        
+        // verify initialization state
+        assert.equal(await freshBridge.initialized(), true, "should be initialized")
+        assert.equal(await freshBridge.depositId(), 5, "depositId should be set correctly")
+        
+        // verify withdraw claims are set correctly
+        assert.equal(await freshBridge.withdrawClaimed(0), true, "withdrawId 0 should be claimed")
+        assert.equal(await freshBridge.withdrawClaimed(1), true, "withdrawId 1 should be claimed")
+        assert.equal(await freshBridge.withdrawClaimed(2), true, "withdrawId 2 should be claimed")
+        assert.equal(await freshBridge.withdrawClaimed(3), false, "withdrawId 3 should not be claimed")
+        assert.equal(await freshBridge.withdrawClaimed(4), false, "withdrawId 4 should not be claimed")
+        
+        // test cannot initialize twice
+        await h.expectThrow(freshBridge.init(10, 5)) // already initialized
+
+        // fund the fresh bridge with tokens for testing
+        await token.connect(accounts[10]).transfer(freshBridge.address, INITIAL_LAYER_TOKEN_SUPPLY)
+
+        // test deposit with higher starting depositId
+        depositAmount = h.toWei("2")
+        tip = h.toWei("0")
+        await token.approve(freshBridge.address, h.toWei("100"))
+        await freshBridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)
+        
+        // verify deposit worked with correct incremented ID
+        assert.equal(await freshBridge.depositId(), 6, "depositId should increment from 5 to 6")
+        depositDetails = await freshBridge.deposits(6)
+        assert.equal(depositDetails.amount.toString(), depositAmount, "deposit amount should be correct")
+        assert.equal(depositDetails.recipient, LAYER_RECIPIENT, "deposit recipient should be correct")
+        assert.equal(depositDetails.sender, await accounts[0].address, "deposit sender should be correct")
+
+        // test withdraw with higher starting withdrawId
+        await h.advanceTime(43200)
+        value = h.getWithdrawValue(EVM_RECIPIENT, LAYER_RECIPIENT, 20)
+        blocky = await h.getBlock()
+        timestamp = (blocky.timestamp - 43200) * 1000
+        aggregatePower = 3
+        attestTimestamp = blocky.timestamp * 1000
+        previousTimestamp = 0
+        nextTimestamp = 0
+        lastConsensusTimestamp = timestamp
+        
+        // create withdraw for depositId 4 (which should not be claimed)
+        WITHDRAW4_QUERY_DATA_ARGS = abiCoder.encode(["bool", "uint256"], [false, 4])
+        WITHDRAW4_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TRBBridge", WITHDRAW4_QUERY_DATA_ARGS])
+        WITHDRAW4_QUERY_ID = h.hash(WITHDRAW4_QUERY_DATA)
+        
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = await h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
+        dataDigest = await h.getDataDigest(
+            WITHDRAW4_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
+        sig1 = await h.layerSign(dataDigest, val1.privateKey)
+        sig2 = await h.layerSign(dataDigest, val2.privateKey)
+        sigStructArray = await h.getSigStructArray([sig1, sig2])
+        oracleDataStruct = await h.getOracleDataStruct(
+            WITHDRAW4_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        
+        await freshBridge.withdrawFromLayer(
+            oracleDataStruct,
+            currentValSetArray,
+            sigStructArray,
+            4
+        )
+        
+        // verify withdraw worked
+        recipientBal = await token.balanceOf(EVM_RECIPIENT)
+        expectedBal = 20e12 // 20 loya converted to wei
+        assert.equal(recipientBal.toString(), expectedBal, "recipient balance should be correct")
+        assert.equal(await freshBridge.withdrawClaimed(4), true, "withdrawId 4 should now be claimed")
     })
 })
