@@ -86,6 +86,9 @@ describe("E2E Forking Tests - TokenBridge Transition", function() {
     await tellor.updateOracleAddress()
     await h.advanceTime(86400 * 7)
     await tellor.updateOracleAddress()
+
+    // init tokenbridge (only on testnet)
+    await tbridge.init(0, 0)
   })
 
   it("Liquity reads from TokenBridge after transition", async function() {

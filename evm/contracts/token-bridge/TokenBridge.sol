@@ -21,6 +21,8 @@ contract TokenBridge is LayerTransition{
     uint256 public bridgeStateUpdateTime; // last time the bridge state was updated
     uint256 public withdrawLimitUpdateTime; // last time the withdraw limit was updated
     uint256 public withdrawLimitRecord; // amount you can withdraw per limit period
+    bool public initialized; // whether the bridge has been initialized
+    address public deployer; // address that deployed the bridge
     uint256 public constant DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
     uint256 public constant MS_PER_SECOND = 1000; // factor to convert milliseconds to seconds
     uint256 public constant PAUSE_PERIOD = 21 days; // time period guardian can pause bridge, only once
@@ -61,12 +63,28 @@ contract TokenBridge is LayerTransition{
     /// @param _tellorFlex address of oracle(tellorFlex) on chain
     constructor(address _token, address _dataBridge, address _tellorFlex) LayerTransition(_tellorFlex, _token){
         dataBridge = ITellorDataBridge(_dataBridge);
+        deployer = msg.sender;
+    }
+
+    /// @notice initializes the bridge, only on testnet
+    /// @param _depositId the last deposit id used
+    /// @param _withdrawId the last withdraw id used
+    function init(uint256 _depositId, uint256 _withdrawId) external {
+        require(msg.sender == deployer, "TokenBridge: only deployer can initialize");
+        require(!initialized, "TokenBridge: already initialized");
+        depositId = _depositId;
+        // set withdraws up to _withdrawId to all claimed
+        for(uint256 i = 0; i < _withdrawId; i++){
+            withdrawClaimed[i] = true;
+        }
+        initialized = true;
     }
 
     /// @notice claim extra withdraws that were not fully withdrawn
     /// @param _recipient address of the recipient
     function claimExtraWithdraw(address _recipient) external {
         require(bridgeState != BridgeState.PAUSED, "TokenBridge: bridge is paused");
+        require(initialized, "TokenBridge: not initialized");
         uint256 _amountConverted = tokensToClaim[_recipient];
         require(_amountConverted > 0, "amount must be > 0");
         uint256 _withdrawLimit = _refreshWithdrawLimit(_amountConverted);
@@ -88,6 +106,7 @@ contract TokenBridge is LayerTransition{
     /// @param _tip amount of tokens to tip the claimDeposit caller on layer
     /// @param _layerRecipient your cosmos address on layer (don't get it wrong!!)
     function depositToLayer(uint256 _amount, uint256 _tip, string memory _layerRecipient) external {
+        require(initialized, "TokenBridge: not initialized");
         require(_amount > 0.1 ether, "TokenBridge: amount must be greater than 0.1 tokens");
         require(_amount % TOKEN_DECIMAL_PRECISION_MULTIPLIER == 0, "TokenBridge: amount must be divisible by 1e12");
         require(_amount <= _refreshDepositLimit(_amount), "TokenBridge: amount exceeds deposit limit for time period");
@@ -133,6 +152,7 @@ contract TokenBridge is LayerTransition{
         uint256 _depositId
     ) external {
         require(bridgeState != BridgeState.PAUSED, "TokenBridge: bridge is paused");
+        require(initialized, "TokenBridge: not initialized");
         require(_attestData.queryId == keccak256(abi.encode("TRBBridge", abi.encode(false, _depositId))), "TokenBridge: invalid queryId");
         require(!withdrawClaimed[_depositId], "TokenBridge: withdraw already claimed");
         require(block.timestamp - (_attestData.report.timestamp / MS_PER_SECOND) > TWELVE_HOUR_CONSTANT, "TokenBridge: premature attestation");

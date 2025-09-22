@@ -62,6 +62,7 @@ describe("Function Tests - NewTransition", function() {
     await blobstream.init(1, 2, UNBONDING_PERIOD, fakeValCheckpoint)
     // deploy tokenbridge
     tbridge = await ethers.deployContract("TokenBridge", [TELLOR_MASTER,await blobstream.address, TELLORFLEX])
+    await tbridge.init(0, 0)
     // stake reporter
     await tellor.connect(bigWallet).transfer(await accounts[0].address, h.toWei("1000"))
     await tellor.connect(accounts[0]).approve(TELLORFLEX, h.toWei("1000"))
