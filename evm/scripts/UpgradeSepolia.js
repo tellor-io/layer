@@ -12,6 +12,7 @@ const TELLOR_MASTER = "0x80fc34a2f9FfE86F41580F47368289C402DEc660"; // proxy (to
 const TELLOR_360_CONTRACT = "0x726737F28EA0BA5D23e16d1C3bb852982ff8651A"; // current implementation
 const TELLOR_TOKEN_BRIDGE_NEW = "0x0000000000000000000000000000000000000000"; // deployed token bridge new
 const UPDATE_ORACLE_TESTNET_IMPL = "0x0000000000000000000000000000000000000000"; // deployed UpdateOracleTestnet(address newTokenBridge)
+const TELLOR_TOKEN_BRIDGE_OLD = "0x5acb5977f35b1A91C4fE0F4386eB669E046776F2"; // just for sanity checks
 
 async function main(pk, rpcUrl) {
   await hre.run("compile");
@@ -51,6 +52,15 @@ async function main(pk, rpcUrl) {
   const beforeOracle = await tellorAsITellor.getAddressVars(HASH_ORACLE_CONTRACT);
   console.log("Before - _TELLOR_CONTRACT:", beforeImpl);
   console.log("Before - _ORACLE_CONTRACT:", beforeOracle);
+
+  // sanity checks
+  console.log("\nSanity checks...");
+  if (beforeImpl.toLowerCase() !== TELLOR_360_CONTRACT.toLowerCase()) {
+    throw new Error("Pre-check failed: _TELLOR_CONTRACT not pointing to Tellor360");
+  }
+  if (beforeOracle.toLowerCase() !== TELLOR_TOKEN_BRIDGE_OLD.toLowerCase()) {
+    throw new Error("Pre-check failed: _ORACLE_CONTRACT not pointing to TellorTokenBridge");
+  }
 
   // 1) Point implementation to UpdateOracleTestnet
   console.log("\n1) changeTellorContract -> UpdateOracleTestnet...");
