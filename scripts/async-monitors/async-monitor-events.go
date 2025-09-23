@@ -1172,7 +1172,7 @@ func checkEventTypeHeartbeats(ctx context.Context) {
 	defer recoverAndAlert("checkEventTypeHeartbeats")
 
 	// Run check once a day at 10 AM
-	ticker := time.NewTicker(24 * time.Hour)
+	ticker := time.NewTicker(12 * time.Hour)
 	defer ticker.Stop()
 
 	// Calculate time until next 10 AM
@@ -1206,7 +1206,7 @@ func runHeartbeatCheck() {
 	}
 	configMutex.RUnlock()
 
-	sevenDaysAgo := time.Now().Add(-7 * 24 * time.Hour)
+	sevenDaysAgo := time.Now().Add(-12 * time.Hour)
 	var inactiveEventTypes []string
 
 	// Check each event type
