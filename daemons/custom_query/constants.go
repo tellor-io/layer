@@ -92,6 +92,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "savings-dai",
 				},
+				MarketId: "SDAI-USD",
 			},
 			{
 				EndpointType: "coinpaprika",
@@ -99,6 +100,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "sdai-savings-dai",
 				},
+				MarketId: "SDAI-USD",
 			},
 			{
 				EndpointType: "curve",
@@ -106,6 +108,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"contract_address": "0x83F20F44975D03b1b09e64809B757c47f942BEeA",
 				},
+				MarketId: "SDAI-USD",
 			},
 		},
 	},
@@ -121,6 +124,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "ignition-fbtc",
 				},
+				MarketId: "FBTC-USD",
 			},
 			{
 				EndpointType: "coinpaprika",
@@ -128,6 +132,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "fbtc-ignition-fbtc",
 				},
+				MarketId: "FBTC-USD",
 			},
 			{
 				EndpointType: "coinmarketcap",
@@ -136,6 +141,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					// "symbol": "FBTC",
 					"id": "32306",
 				},
+				MarketId: "FBTC-USD",
 			},
 		},
 	},
@@ -151,6 +157,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "noble-dollar-usdn",
 				},
+				MarketId: "USDN-USD",
 			},
 			{
 				EndpointType: "coinmarketcap",
@@ -159,6 +166,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					// "symbol": "USDN",
 					"id": "36538",
 				},
+				MarketId: "USDN-USD",
 			},
 		},
 	},
@@ -174,6 +182,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "susds",
 				},
+				MarketId: "SUSDS-USD",
 			},
 		},
 	},
@@ -189,10 +198,12 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "yieldfi-ytoken",
 				},
+				MarketId: "YTOKEN-USD",
 			},
 			{
 				EndpointType: "sushiswapKatana",
 				ResponsePath: []string{"0x4772d2e014f9fc3a820c444e3313968e9a5c8121"},
+				MarketId:     "YTOKEN-USD",
 			},
 		},
 	},
@@ -208,6 +219,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "ethena-staked-usde",
 				},
+				MarketId: "USDE-USD",
 			},
 			{
 				EndpointType: "coinmarketcap",
@@ -216,6 +228,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					// "symbol": "SUSDE",
 					"id": "29471",
 				},
+				MarketId: "USDE-USD",
 			},
 		},
 	},
@@ -231,6 +244,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "tbtc",
 				},
+				MarketId: "TBTC-USD",
 			},
 			{
 				EndpointType: "coinmarketcap",
@@ -239,6 +253,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					// "symbol": "TBTC",
 					"id": "26133",
 				},
+				MarketId: "TBTC-USD",
 			},
 			{
 				EndpointType: "coinbase",
@@ -246,6 +261,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"currency_pair": "TBTC-USD",
 				},
+				MarketId: "TBTC-USD",
 			},
 		},
 	},
@@ -261,6 +277,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "rocket-pool-eth",
 				},
+				MarketId: "RETH-USD",
 			},
 			{
 				EndpointType: "coinmarketcap",
@@ -269,11 +286,13 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					// "symbol": "RETH",
 					"id": "15060",
 				},
+				MarketId: "RETH-USD",
 			},
 			{
 				EndpointType: "contract",
 				Handler:      "reth_handler",
 				Chain:        "ethereum",
+				MarketId:     "RETH-USD",
 			},
 		},
 	},
@@ -289,6 +308,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "wrapped-steth",
 				},
+				MarketId: "WSTETH-USD",
 			},
 			{
 				EndpointType: "coinmarketcap",
@@ -297,11 +317,13 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					// "symbol": "WSTETH",
 					"id": "12409",
 				},
+				MarketId: "WSTETH-USD",
 			},
 			{
 				EndpointType: "contract",
 				Handler:      "wsteth_handler",
 				Chain:        "ethereum",
+				MarketId:     "WSTETH-USD",
 			},
 		},
 	},
@@ -317,6 +339,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "lrt-squared",
 				},
+				MarketId: "KING-USD",
 			},
 			{
 				EndpointType: "coinmarketcap",
@@ -325,6 +348,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					"id": "33695",
 					// "symbol": "KING",
 				},
+				MarketId: "KING-USD",
 			},
 			{
 				EndpointType: "uniswapV4ethereum",
@@ -332,6 +356,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params:       map[string]string{"token_address": "0x8f08b70456eb22f6109f57b8fafe862ed28e6040"},
 				UsdViaID:     exchange_common.ETHUSD_ID,
 				Invert:       false,
+				MarketId:     "KING-USD",
 			},
 			{
 				EndpointType: "uniswapV3ethereum",
@@ -339,6 +364,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params:       map[string]string{"token_address": "0x8f08b70456eb22f6109f57b8fafe862ed28e6040"},
 				UsdViaID:     exchange_common.ETHUSD_ID,
 				Invert:       false,
+				MarketId:     "KING-USD",
 			},
 		},
 	},
@@ -354,6 +380,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "stride-staked-atom",
 				},
+				MarketId: "ATOM-USD",
 			},
 			{
 				EndpointType: "coinmarketcap",
@@ -362,6 +389,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					"id": "21686",
 					// "symbol": "stATOM",
 				},
+				MarketId: "ATOM-USD",
 			},
 			{
 				EndpointType: "osmosis",
@@ -372,6 +400,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				},
 				UsdViaID: exchange_common.ATOMUSD_ID,
 				Invert:   false,
+				MarketId: "ATOM-USD",
 			},
 		},
 	},
@@ -396,6 +425,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 						"coin_id": "yieldfi-ytoken",
 					},
 				},
+				MarketId: "VYUSD-USD",
 			},
 		},
 	},
@@ -411,6 +441,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "staked-usn",
 				},
+				MarketId: "SUSN-USD",
 			},
 		},
 	},
@@ -426,6 +457,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "staked-frax-usd",
 				},
+				MarketId: "SFRXUSD-USD",
 			},
 			{
 				EndpointType: "coinpaprika",
@@ -433,6 +465,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "sfrxusd-staked-frax-usd",
 				},
+				MarketId: "SFRXUSD-USD",
 			},
 			{
 				EndpointType: "coinmarketcap",
@@ -441,6 +474,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					// "symbol": "SFRXUSD",
 					"id": "36038",
 				},
+				MarketId: "SFRXUSD-USD",
 			},
 			{
 				EndpointType: "curve",
@@ -448,6 +482,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"contract_address": "0xcf62F905562626CfcDD2261162a51fd02Fc9c5b6",
 				},
+				MarketId: "SFRXUSD-USD",
 			},
 		},
 	},
