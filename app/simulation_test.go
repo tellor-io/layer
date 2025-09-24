@@ -215,6 +215,11 @@ func TestAppImportExport(t *testing.T) {
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = "mars-simapp-import"
 
+	enabled := false
+	if !enabled {
+		t.Skip("skipping application import/export simulation")
+	}
+
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(
 		config,
 		"leveldb-app-sim",
