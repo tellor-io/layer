@@ -28,7 +28,7 @@ require (
 	github.com/cosmos/ibc-apps/modules/async-icq/v8 v8.0.0
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
 	github.com/cosmos/ibc-go/v8 v8.0.0
-	github.com/ethereum/go-ethereum v1.10.22
+	github.com/ethereum/go-ethereum v1.14.8
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.4
 	github.com/gorilla/mux v1.8.1
@@ -44,7 +44,6 @@ require (
 	github.com/stretchr/testify v1.10.0
 	github.com/vektra/mockery/v2 v2.23.1
 	go.uber.org/mock v0.5.2
-	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394
 	golang.org/x/text v0.25.0
 	golang.org/x/tools v0.31.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20250528174236-200df99c418a
@@ -132,7 +131,7 @@ require (
 	github.com/emicklei/dot v1.6.2 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
-	github.com/fatih/color v1.15.0 // indirect
+	github.com/fatih/color v1.16.0 // indirect
 	github.com/felixge/fgprof v0.9.4 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
@@ -178,6 +177,7 @@ require (
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
 	github.com/hdevalence/ed25519consensus v0.2.0 // indirect
+	github.com/holiman/uint256 v1.3.1 // indirect
 	github.com/huandu/skiplist v1.2.1 // indirect
 	github.com/iancoleman/strcase v0.3.0 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
@@ -262,6 +262,7 @@ require (
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/arch v0.15.0 // indirect
 	golang.org/x/crypto v0.38.0 // indirect
+	golang.org/x/exp v0.0.0-20250305212735-054e65f0b394 // indirect
 	golang.org/x/mod v0.24.0 // indirect
 	golang.org/x/net v0.40.0 // indirect
 	golang.org/x/oauth2 v0.26.0 // indirect
