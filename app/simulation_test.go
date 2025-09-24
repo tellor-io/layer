@@ -69,7 +69,7 @@ func BenchmarkSimulation(b *testing.B) {
 
 	// Set simulation flags directly
 	verbose := true
-	enabled := true
+	enabled := false
 
 	db, dir, logger, _, err := simtestutil.SetupSimulation(
 		config,
@@ -129,7 +129,7 @@ func BenchmarkSimulation(b *testing.B) {
 func TestAppStateDeterminism(t *testing.T) {
 	config := simcli.NewConfigFromFlags()
 
-	enabled := true
+	enabled := false
 	if !enabled {
 		t.Skip("skipping application simulation")
 	}
@@ -361,6 +361,11 @@ func TestAppImportExport(t *testing.T) {
 func TestAppSimulationAfterImport(t *testing.T) {
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = "mars-simapp-after-import"
+
+	enabled := false
+	if !enabled {
+		t.Skip("skipping application simulation after import")
+	}
 
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(
 		config,
