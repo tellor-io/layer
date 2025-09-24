@@ -1,22 +1,28 @@
 
 require("hardhat-gas-reporter");
-// require('hardhat-contract-sizer');
 require("@nomiclabs/hardhat-ethers");
-//require("@nomiclabs/hardhat-etherscan");
-// require("@nomicfoundation/hardhat-verify");
 require("@nomiclabs/hardhat-waffle");
 require("dotenv").config();
 const hre = require("hardhat"); 
-const web3 = require('web3');
+const h = require("../test/helpers/evmHelpers");
 
 //npx hardhat run scripts/deploy.js --network sepolia
 
-var _thegardianaddress = " "
-var _token = " "
-var _tellorFlex = " "
+var _guardian_address = ""
+var _token = ""
+var _tellor_flex = ""
+var _layer_chain_id = "layertest-4"
 
+
+_valset_domain_separator = h.getDomainSeparator(_layer_chain_id)
 
 async function deployForMainnet(_pk, _nodeURL) {
+    console.log("deploying bridge with token bridge")
+    console.log("guardian address", _guardian_address)
+    console.log("token address", _token)
+    console.log("tellor flex address", _tellor_flex)
+    console.log("layer chain id", _layer_chain_id)
+    console.log("valset domain separator", _valset_domain_separator)
   
     var net = hre.network.name
 
@@ -31,19 +37,19 @@ async function deployForMainnet(_pk, _nodeURL) {
     console.log("deploy TellorDataBridge")
     const TellorDataBridge = await ethers.getContractFactory("contracts/bridge/TellorDataBridge.sol:TellorDataBridge", wallet);
     var TellorWithSigner = await TellorDataBridge.connect(wallet);
-    const tellorDataBridge= await TellorWithSigner.deploy(_thegardianaddress);
+    const tellorDataBridge= await TellorWithSigner.deploy(_guardian_address,_valset_domain_separator);
     await tellorDataBridge.deployed();
 
 
-        ////////  Deploy token bridge contract  ////////////////////////
-        console.log("deploy token bridge")
-        const TokenBridge = await ethers.getContractFactory("contracts/TokenBridge.sol:TokenBridge", wallet);
-        var tbWithSigner = await TokenBridge.connect(wallet);
-        /// @param _token address of tellor token for bridging
-        /// @param _dataBridge address of tellor data bridge
-        /// @param _tellorFlex address of oracle(tellorFlex) on chain
-        const tokenBridge= await tbWithSigner.deploy(_token,tellorDataBridge.address,_tellorFlex);
-        await tokenBridge.deployed();
+    ////////  Deploy token bridge contract  ////////////////////////
+    console.log("deploy token bridge")
+    const TokenBridge = await ethers.getContractFactory("contracts/token-bridge/TokenBridge.sol:TokenBridge", wallet);
+    var tbWithSigner = await TokenBridge.connect(wallet);
+    /// @param _token address of tellor token for bridging
+    /// @param _dataBridge address of tellor data bridge
+    /// @param _tellorFlex address of oracle(tellorFlex) on chain
+    const tokenBridge= await tbWithSigner.deploy(_token,tellorDataBridge.address,_tellor_flex);
+    await tokenBridge.deployed();
 
     /////////  Print addresses   ///////////////////////////
 

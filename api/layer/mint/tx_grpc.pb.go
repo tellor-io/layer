@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MsgClient interface {
 	Init(ctx context.Context, in *MsgInit, opts ...grpc.CallOption) (*MsgMsgInitResponse, error)
+	UpdateExtraRewardRate(ctx context.Context, in *MsgUpdateExtraRewardRate, opts ...grpc.CallOption) (*MsgUpdateExtraRewardRateResponse, error)
 }
 
 type msgClient struct {
@@ -38,11 +39,21 @@ func (c *msgClient) Init(ctx context.Context, in *MsgInit, opts ...grpc.CallOpti
 	return out, nil
 }
 
+func (c *msgClient) UpdateExtraRewardRate(ctx context.Context, in *MsgUpdateExtraRewardRate, opts ...grpc.CallOption) (*MsgUpdateExtraRewardRateResponse, error) {
+	out := new(MsgUpdateExtraRewardRateResponse)
+	err := c.cc.Invoke(ctx, "/layer.mint.Msg/UpdateExtraRewardRate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility
 type MsgServer interface {
 	Init(context.Context, *MsgInit) (*MsgMsgInitResponse, error)
+	UpdateExtraRewardRate(context.Context, *MsgUpdateExtraRewardRate) (*MsgUpdateExtraRewardRateResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -52,6 +63,9 @@ type UnimplementedMsgServer struct {
 
 func (UnimplementedMsgServer) Init(context.Context, *MsgInit) (*MsgMsgInitResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Init not implemented")
+}
+func (UnimplementedMsgServer) UpdateExtraRewardRate(context.Context, *MsgUpdateExtraRewardRate) (*MsgUpdateExtraRewardRateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateExtraRewardRate not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 
@@ -84,6 +98,24 @@ func _Msg_Init_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateExtraRewardRate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateExtraRewardRate)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateExtraRewardRate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.mint.Msg/UpdateExtraRewardRate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateExtraRewardRate(ctx, req.(*MsgUpdateExtraRewardRate))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -94,6 +126,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Init",
 			Handler:    _Msg_Init_Handler,
+		},
+		{
+			MethodName: "UpdateExtraRewardRate",
+			Handler:    _Msg_UpdateExtraRewardRate_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -24,6 +24,7 @@ require (
 	github.com/spf13/cast v1.9.2
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
+	github.com/sirupsen/logrus v1.9.3
 	github.com/strangelove-ventures/globalfee v0.50.1
 	github.com/stretchr/testify v1.10.0
 	github.com/tellor-io/layer v0.0.0-00010101000000-000000000000
@@ -234,7 +235,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.34.0 // indirect
 	go.opentelemetry.io/otel/trace v1.34.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.40.0 // indirect
+	golang.org/x/crypto v0.40.0
 	golang.org/x/net v0.41.0 // indirect
 	golang.org/x/oauth2 v0.26.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect

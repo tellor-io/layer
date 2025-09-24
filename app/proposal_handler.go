@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
+	"strconv"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -212,9 +213,38 @@ func (h *ProposalHandler) PreBlocker(ctx sdk.Context, req *abci.RequestFinalizeB
 		}
 
 		if len(injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses) > 0 {
+			h.logger.Info("PreBlocker: setting EVM addresses", "operatorAddresses", injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses, "evmAddresses", injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses)
 			if err := h.SetEVMAddresses(ctx, injectedVoteExtTx.OpAndEVMAddrs.OperatorAddresses, injectedVoteExtTx.OpAndEVMAddrs.EVMAddresses); err != nil {
 				h.logger.Error("PreBlocker: failed to set EVM addresses", "error", err)
 				return nil, err
+			}
+		}
+
+		if len(injectedVoteExtTx.ExtendedCommitInfo.Votes) > 0 {
+			for _, vote := range injectedVoteExtTx.ExtendedCommitInfo.Votes {
+				// Only check if the vote is a commit vote
+				if vote.BlockIdFlag != cmtproto.BlockIDFlagCommit {
+					continue
+				}
+				extension := vote.GetVoteExtension()
+				voteExt := BridgeVoteExtension{}
+				err := json.Unmarshal(extension, &voteExt)
+				if err != nil {
+					h.logger.Error("PreBlocker: failed to unmarshal vote extension", "error", err)
+				} else if len(voteExt.InitialSignature.SignatureA) > 0 {
+					// get operator address from vote
+					operatorAddress, err := h.ValidatorOperatorAddressFromVote(ctx, vote)
+					if err != nil {
+						h.logger.Error("PreBlocker: failed to get operator address from vote", "error", err)
+					} else {
+						// verify initial sig
+						_, err := h.bridgeKeeper.EVMAddressFromSignatures(ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB, operatorAddress)
+						if err != nil {
+							h.logger.Error("PreBlocker: failed to get evm address from valset sig", "error", err)
+							h.jailValidatorWithError(ctx, vote, "failed to get evm address from valset sig", err.Error())
+						}
+					}
+				}
 			}
 		}
 
@@ -286,6 +316,50 @@ func (h *ProposalHandler) CheckInitialSignaturesFromLastCommit(ctx sdk.Context, 
 		return emptyStringArray, emptyStringArray
 	}
 	return operatorAddresses, evmAddresses
+}
+
+func (h *ProposalHandler) jailValidatorWithError(ctx sdk.Context, vote abci.ExtendedVoteInfo, errorType, errorMessage string) {
+	// Convert the validator address to ConsAddress
+	consAddr := sdk.ConsAddress(vote.Validator.Address)
+
+	// Get the validator to find the operator address
+	validator, err := h.stakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	if err != nil {
+		h.logger.Error("jailValidatorWithError: failed to get validator by consensus address", "error", err, "consAddr", consAddr)
+		return
+	}
+
+	// Check if validator is already jailed
+	if validator.Jailed {
+		h.logger.Info("jailValidatorWithError: validator already jailed", "valAddr", validator.OperatorAddress, "errorType", errorType)
+		return
+	}
+
+	// Jail the validator
+	err = h.stakingKeeper.Jail(ctx, consAddr)
+	if err != nil {
+		h.logger.Error("jailValidatorWithError: failed to jail validator", "error", err, "valAddr", validator.OperatorAddress, "errorType", errorType)
+		return
+	}
+
+	// Emit custom event with detailed error information
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"validator_jailed_signature_problem",
+			sdk.NewAttribute("validator_address", validator.OperatorAddress),
+			sdk.NewAttribute("consensus_address", consAddr.String()),
+			sdk.NewAttribute("error_type", errorType),
+			sdk.NewAttribute("error_message", errorMessage),
+			sdk.NewAttribute("block_height", strconv.FormatInt(ctx.BlockHeight(), 10)),
+		),
+	})
+
+	h.logger.Info("jailValidatorWithError: successfully jailed validator for signature problem",
+		"valAddr", validator.OperatorAddress,
+		"errorType", errorType,
+		"errorMessage", errorMessage,
+		"blockHeight", strconv.FormatInt(ctx.BlockHeight(), 10),
+	)
 }
 
 func (h *ProposalHandler) GetMaxValidators(ctx sdk.Context) (uint32, error) {

@@ -172,11 +172,16 @@ func (s *ProposalHandlerTestSuite) TestCheckInitialSignaturesFromLastCommit() {
 	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
 		OperatorAddress: valAddr.String(),
 	}, nil)
-	bk.On("EVMAddressFromSignatures", ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB, valAddr.String()).Return(addrsExpected, nil)
+	bk.On("EVMAddressFromSignatures", ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB, valAddr.String()).Return(addrsExpected, nil).Once()
 	bk.On("GetEVMAddressByOperator", ctx, valAddr.String()).Return(nil, errors.New("error"))
 	res1, res2 = p.CheckInitialSignaturesFromLastCommit(ctx, commit)
 	require.Equal(valAddr.String(), res1[0])
 	require.Equal(addrsExpected.String(), res2[0])
+
+	bk.On("EVMAddressFromSignatures", ctx, voteExt.InitialSignature.SignatureA, voteExt.InitialSignature.SignatureB, valAddr.String()).Return(nil, errors.New("error")).Once()
+	res1, res2 = p.CheckInitialSignaturesFromLastCommit(ctx, commit)
+	require.Empty(res1)
+	require.Empty(res2)
 }
 
 func (s *ProposalHandlerTestSuite) TestCheckValsetSignaturesFromLastCommit() {
@@ -468,14 +473,14 @@ func (s *ProposalHandlerTestSuite) TestPreBlocker() {
 	err = json.Unmarshal(injBz, &veTx)
 	require.NoError(err)
 
-	// bk.On("EVMAddressFromSignatures", ctx, sigA, sigB).Return(evmAddr, nil)
-	// bk.On("GetEVMAddressByOperator", ctx, consAddr.String()).Return(nil, errors.New("error"))
-	// sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
-	// 	OperatorAddress: consAddr.String(),
-	// }, nil)
+	bk.On("EVMAddressFromSignatures", ctx, sigA, sigB, consAddr.String()).Return(evmAddr, nil)
+	sk.On("GetValidatorByConsAddr", ctx, consAddr).Return(stakingtypes.Validator{
+		OperatorAddress: consAddr.String(),
+	}, nil)
 	bk.On("SetEVMAddressByOperator", ctx, consAddr.String(), evmAddr.Bytes()).Return(nil)
 	bk.On("SetBridgeValsetSignature", ctx, consAddr.String(), ve.ValsetSignature.Timestamp, veTx.ValsetSigs.Signatures[0]).Return(nil)
 	bk.On("SetOracleAttestation", ctx, consAddr.String(), ve.OracleAttestations[0].Snapshot, ve.OracleAttestations[0].Attestation).Return(nil)
+
 	res, err := p.PreBlocker(ctx, &req)
 	require.NoError(err)
 	require.NotNil(res)

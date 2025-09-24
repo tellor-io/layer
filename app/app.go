@@ -156,6 +156,7 @@ var (
 		distrtypes.ModuleName:              nil,
 		icatypes.ModuleName:                nil,
 		minttypes.TimeBasedRewards:         nil,
+		minttypes.ExtraRewardsPool:         nil,
 		minttypes.ModuleName:               {authtypes.Minter},
 		stakingtypes.BondedPoolName:        {authtypes.Burner, authtypes.Staking},
 		stakingtypes.NotBondedPoolName:     {authtypes.Burner, authtypes.Staking},
@@ -1124,6 +1125,8 @@ func (app *App) ModuleAccountAddrs() map[string]bool {
 func (app *App) BlockedModuleAccountAddrs() map[string]bool {
 	modAccAddrs := app.ModuleAccountAddrs()
 	delete(modAccAddrs, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	// Allow ExtraRewardsPool to receive transfers
+	delete(modAccAddrs, authtypes.NewModuleAddress(minttypes.ExtraRewardsPool).String())
 
 	return modAccAddrs
 }

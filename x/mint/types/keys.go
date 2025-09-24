@@ -11,4 +11,6 @@ const (
 	RouterKey = StoreKey
 
 	TimeBasedRewards = "time_based_rewards"
+
+	ExtraRewardsPool = "extra_rewards_pool"
 )

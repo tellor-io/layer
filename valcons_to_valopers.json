@@ -1,0 +1,28 @@
+{
+  "validators": [
+    {
+      "address": "tellorvalcons1eqk3wuzl0pzja9x7kvqmyjt4v6mara8tv8hj2k",
+      "validator_address": "tellorvaloper1gkstv3n4cpmdskh4m8mhr2mlljf540sq95j623"
+    },
+    {
+      "address": "tellorvalcons165u7qw4f8rzwae5fg0yect2eelfj5fnu7eshrt", 
+      "validator_address": "tellorvaloper10usyr7v4xe2uhtnvg4kwtgtuzh5e4u23tgwqt4"
+    },
+    {
+      "address": "tellorvalcons14dv7f432j97ku4pvfd9j9hm8vlgxkcmchlcthj",
+      "validator_address": "tellorvaloper1952ghnp9jat6eraqakdjruplrj9c40f07ucqxa"
+    },
+    {
+      "address": "tellorvalcons168lygeza3mu4g8d8qg0vxwn6wgg2mnxdca6js2",
+      "validator_address": "tellorvaloper1vk2f5m4jsezgaq9tlu2fhq7t94xpykjlw05pdx"
+    },
+    {
+      "address": "tellorvalcons1ka9wv8yfp2enf3c273nn3wmg6u5r5hg4at6r6w",
+      "validator_address": "tellorvaloper198dvh9n2d7aqvrxzcsdfz73xtkv9jcjvpv3y62"
+    },
+    {
+      "address": "tellorvalcons1yd5w53ur32sc59j3awrsfzr5uh9wk5g8jxzrq0",
+      "validator_address": "tellorvaloper15ap5jyn02a6s45qsgk5dqc5zu09ma50nkkdjnu"
+    }
+  ]
+}

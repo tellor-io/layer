@@ -2,26 +2,19 @@ package mexc
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	price_function "github.com/tellor-io/layer/daemons/pricefeed/client/sources"
 	"github.com/tellor-io/layer/daemons/pricefeed/types"
 )
 
-// MexcResponseBody defines the overall Mexc response.
-type MexcResponseBody struct {
-	Code    uint32       `json:"code" validate:"required"`
-	Tickers []MexcTicker `json:"data" validate:"required"`
-}
-
 // MexcTicker is our representation of ticker information returned in Mexc response.
 // MexcTicker implements interface `Ticker` in util.go.
 type MexcTicker struct {
 	Pair      string `json:"symbol" validate:"required"`
-	AskPrice  string `json:"ask" validate:"required,positive-float-string"`
-	BidPrice  string `json:"bid" validate:"required,positive-float-string"`
-	LastPrice string `json:"last" validate:"required,positive-float-string"`
+	AskPrice  string `json:"askPrice" validate:"required,positive-float-string"`
+	BidPrice  string `json:"bidPrice" validate:"required,positive-float-string"`
+	LastPrice string `json:"lastPrice" validate:"required,positive-float-string"`
 }
 
 // Ensure that MexcTicker implements the Ticker interface at compile time.
@@ -51,18 +44,15 @@ func MexcPriceFunction(
 	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body.
-	var mexcResponseBody MexcResponseBody
-	err = json.NewDecoder(response.Body).Decode(&mexcResponseBody)
+	// The API now returns a direct array of tickers
+	var tickers []MexcTicker
+	err = json.NewDecoder(response.Body).Decode(&tickers)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	if mexcResponseBody.Code != 200 {
-		return nil, nil, errors.New(`mexc response code is not 200`)
-	}
-
 	return price_function.GetMedianPricesFromTickers(
-		mexcResponseBody.Tickers,
+		tickers,
 		tickerToExponent,
 		resolver,
 	)

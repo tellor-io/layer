@@ -15,8 +15,8 @@ import (
 
 // Test tickers for Mexc.
 const (
-	BTCUSDC_TICKER = "BTC_USDT"
-	ETHUSDC_TICKER = "ETH_USDT"
+	BTCUSDC_TICKER = "BTCUSDT"
+	ETHUSDC_TICKER = "ETHUSDT"
 )
 
 // Test exponent maps.
@@ -40,10 +40,10 @@ func TestMexcPriceFunction_Mixed(t *testing.T) {
 		btcTicker = pricefeed.ReadJsonTestFile(t, "btc_ticker.json")
 		ethTicker = pricefeed.ReadJsonTestFile(t, "eth_ticker.json")
 
-		ResponseStringTemplate  = `{"code":200,"data":[%s]}`
+		ResponseStringTemplate  = `[%s]`
 		BtcResponseString       = fmt.Sprintf(ResponseStringTemplate, btcTicker)
 		EthResponseString       = fmt.Sprintf(ResponseStringTemplate, ethTicker)
-		BtcAndEthResponseString = fmt.Sprintf(`{"code":200,"data":[%s,%s]}`, btcTicker, ethTicker)
+		BtcAndEthResponseString = fmt.Sprintf(`[%s,%s]`, btcTicker, ethTicker)
 	)
 
 	tests := map[string]struct {
@@ -60,21 +60,21 @@ func TestMexcPriceFunction_Mixed(t *testing.T) {
 		"Unavailable - invalid response": {
 			// Invalid due to trailing comma in JSON.
 			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
-				`{"symbol":"ETH_USDT","bid":"1658.73","ask":"1658.74","last":"1658.63",}`),
+				`{"symbol":"ETHUSDT","bidPrice":"1658.73","askPrice":"1658.74","lastPrice":"1658.63",}`),
 			exponentMap:   EthExponentMap,
 			expectedError: errors.New("invalid character '}' looking for beginning of object key string"),
 		},
 		"Unavailable - invalid type in response: number": {
 			// Invalid due to number askPrice when string was expected.
 			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
-				`{"symbol":"ETH_USDT","bid":"1658.73","ask":1658.74,"last":"1658.63"}`),
+				`{"symbol":"ETHUSDT","bidPrice":"1658.73","askPrice":1658.74,"lastPrice":"1658.63"}`),
 			exponentMap: EthExponentMap,
 			expectedError: errors.New("json: cannot unmarshal number into Go struct field " +
-				"MexcTicker.data.ask of type string"),
+				"MexcTicker.askPrice of type string"),
 		},
 		"Unavailable - bid price is 0": {
 			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
-				`{"symbol":"ETH_USDT","bid":"0","ask":"1658.74","last":"1658.63"}`),
+				`{"symbol":"ETHUSDT","bidPrice":"0","askPrice":"1658.74","lastPrice":"1658.63"}`),
 			exponentMap:      EthExponentMap,
 			expectedPriceMap: make(map[string]uint64),
 			expectedUnavailableMap: map[string]error{
@@ -84,7 +84,7 @@ func TestMexcPriceFunction_Mixed(t *testing.T) {
 		},
 		"Unavailable - ask price is negative": {
 			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
-				`{"symbol":"ETH_USDT","bid":"1658.73","ask":"-1658.74","last":"1658.63"}`),
+				`{"symbol":"ETHUSDT","bidPrice":"1658.73","askPrice":"-1658.74","lastPrice":"1658.63"}`),
 			exponentMap:      EthExponentMap,
 			expectedPriceMap: make(map[string]uint64),
 			expectedUnavailableMap: map[string]error{
@@ -94,7 +94,7 @@ func TestMexcPriceFunction_Mixed(t *testing.T) {
 		},
 		"Unavailable - last price is negative": {
 			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
-				`{"symbol":"ETH_USDT","bid":"1658.73","ask":"1658.74","last":"-1658.63"}`),
+				`{"symbol":"ETHUSDT","bidPrice":"1658.73","askPrice":"1658.74","lastPrice":"-1658.63"}`),
 			exponentMap:      EthExponentMap,
 			expectedPriceMap: make(map[string]uint64),
 			expectedUnavailableMap: map[string]error{
@@ -107,7 +107,7 @@ func TestMexcPriceFunction_Mixed(t *testing.T) {
 			exponentMap:        BtcExponentMap,
 			expectedPriceMap:   make(map[string]uint64),
 			expectedUnavailableMap: map[string]error{
-				BTCUSDC_TICKER: errors.New("no listing found for ticker BTC_USDT"),
+				BTCUSDC_TICKER: errors.New("no listing found for ticker BTCUSDT"),
 			},
 		},
 		"Unavailable - empty list response": {
@@ -115,12 +115,12 @@ func TestMexcPriceFunction_Mixed(t *testing.T) {
 			exponentMap:        BtcExponentMap,
 			expectedPriceMap:   make(map[string]uint64),
 			expectedUnavailableMap: map[string]error{
-				BTCUSDC_TICKER: errors.New("no listing found for ticker BTC_USDT"),
+				BTCUSDC_TICKER: errors.New("no listing found for ticker BTCUSDT"),
 			},
 		},
 		"Unavailable - incomplete response": {
 			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
-				`{"symbol":"ETH_USDT","ask":"1658.74","last":"1658.63"}`),
+				`{"symbol":"ETHUSDT","askPrice":"1658.74","lastPrice":"1658.63"}`),
 			exponentMap:      EthExponentMap,
 			expectedPriceMap: make(map[string]uint64),
 			expectedUnavailableMap: map[string]error{
@@ -132,7 +132,7 @@ func TestMexcPriceFunction_Mixed(t *testing.T) {
 		"Failure - response status is not 200": {
 			responseJsonString: `{"code":401,"data":[]}`,
 			exponentMap:        EthExponentMap,
-			expectedError:      errors.New(`mexc response code is not 200`),
+			expectedError:      errors.New(`json: cannot unmarshal object into Go value of type []mexc.MexcTicker`),
 		},
 		"Failure - overflow due to massively negative exponent": {
 			responseJsonString: BtcResponseString,
@@ -158,12 +158,12 @@ func TestMexcPriceFunction_Mixed(t *testing.T) {
 				ETHUSDC_TICKER: uint64(1_658_730_000),
 			},
 			expectedUnavailableMap: map[string]error{
-				BTCUSDC_TICKER: errors.New("no listing found for ticker BTC_USDT"),
+				BTCUSDC_TICKER: errors.New("no listing found for ticker BTCUSDT"),
 			},
 		},
 		"Success - integers": {
 			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
-				`{"symbol":"ETH_USDT","bid":"1658","ask":"1658","last":"1658.63"}`),
+				`{"symbol":"ETHUSDT","bidPrice":"1658","askPrice":"1658","lastPrice":"1658.63"}`),
 			exponentMap: EthExponentMap,
 			expectedPriceMap: map[string]uint64{
 				ETHUSDC_TICKER: uint64(1_658_000_000),
@@ -178,7 +178,7 @@ func TestMexcPriceFunction_Mixed(t *testing.T) {
 		},
 		"Success - decimals beyond supported precision ignored": {
 			responseJsonString: fmt.Sprintf(ResponseStringTemplate,
-				`{"symbol":"ETH_USDT","bid":"1658.732942381293","ask":"1658.74","last":"1658.63"}`),
+				`{"symbol":"ETHUSDT","bidPrice":"1658.732942381293","askPrice":"1658.74","lastPrice":"1658.63"}`),
 			exponentMap: EthExponentMap,
 			expectedPriceMap: map[string]uint64{
 				ETHUSDC_TICKER: uint64(1_658_732_942),

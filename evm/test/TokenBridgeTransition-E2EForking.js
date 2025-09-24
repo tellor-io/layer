@@ -16,6 +16,7 @@ describe("E2E Forking Tests - TokenBridge Transition", function() {
   const TELLOR_PROVIDER_AMPL = "0xf5b7562791114fB1A8838A9E8025de4b7627Aa79"
   const MEDIAN_ORACLE_AMPL = "0x99C9775E076FDF99388C029550155032Ba2d8914"
   const UNBONDING_PERIOD = 86400 * 7 * 3 // 3 weeks layer unbonding period
+  const VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET = "0x636865636b706f696e7400000000000000000000000000000000000000000000";
 
   const abiCoder = new ethers.utils.AbiCoder()
   const ETH_QUERY_DATA_ARGS = abiCoder.encode(["string", "string"], ["eth", "usd"])
@@ -58,7 +59,7 @@ describe("E2E Forking Tests - TokenBridge Transition", function() {
     parachute = await ethers.getContractAt("contracts/tellor360/oldContracts/contracts/interfaces/ITellor.sol:ITellor", PARACHUTE, devWallet)
 
     // Deploy TellorDataBridge
-    blobstream = await ethers.deployContract("TellorDataBridge", [DEV_WALLET])
+    blobstream = await ethers.deployContract("TellorDataBridge", [DEV_WALLET, VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET])
     fakeValCheckpoint = ethers.utils.solidityKeccak256(["string"], ["testy"])
     await blobstream.init(1, 2, UNBONDING_PERIOD, fakeValCheckpoint)
 
@@ -85,6 +86,9 @@ describe("E2E Forking Tests - TokenBridge Transition", function() {
     await tellor.updateOracleAddress()
     await h.advanceTime(86400 * 7)
     await tellor.updateOracleAddress()
+
+    // init tokenbridge (only on testnet)
+    await tbridge.init(0, 0)
   })
 
   it("Liquity reads from TokenBridge after transition", async function() {

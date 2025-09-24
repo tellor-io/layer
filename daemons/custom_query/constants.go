@@ -36,6 +36,21 @@ var StaticEndpointTemplateConfig = map[string]*EndpointTemplate{
 		Method:      "GET",
 		Timeout:     5000,
 	},
+	"osmosis": {
+		URLTemplate: "https://lcd.osmosis.zone/osmosis/gamm/v1beta1/pools/{pool_id}",
+		Method:      "GET",
+		Timeout:     5000,
+	},
+}
+
+var StaticRPCEndpointTemplateConfig = map[string]*RPCEndpointTemplate{
+	"ethereum": {
+		URLs: []string{
+			"https://mainnet.infura.io/v3/${INFURA_API_KEY}",
+			"https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_API_KEY}",
+			"https://rpc.ankr.com/eth",
+		},
+	},
 }
 
 var StaticQueriesConfig = map[string]*QueryConfig{
@@ -101,7 +116,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"e010d752f28dcd2804004d0b57ab1bdc4eca092895d49160204120af11d15f3e": {
 		ID:                "e010d752f28dcd2804004d0b57ab1bdc4eca092895d49160204120af11d15f3e",
 		AggregationMethod: "median",
-		MinResponses:      2,
+		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -154,7 +169,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"03731257e35c49e44b267640126358e5decebdd8f18b5e8f229542ec86e318cf": {
 		ID:                "03731257e35c49e44b267640126358e5decebdd8f18b5e8f229542ec86e318cf",
 		AggregationMethod: "median",
-		MinResponses:      2,
+		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -225,12 +240,17 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					"id": "15060",
 				},
 			},
+			{
+				EndpointType: "contract",
+				Handler:      "reth_handler",
+				Chain:        "ethereum",
+			},
 		},
 	},
 	"1962cde2f19178fe2bb2229e78a6d386e6406979edc7b9a1966d89d83b3ebf2e": {
 		ID:                "1962cde2f19178fe2bb2229e78a6d386e6406979edc7b9a1966d89d83b3ebf2e",
 		AggregationMethod: "median",
-		MinResponses:      2,
+		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -248,12 +268,17 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					"id": "12409",
 				},
 			},
+			{
+				EndpointType: "contract",
+				Handler:      "wsteth_handler",
+				Chain:        "ethereum",
+			},
 		},
 	},
 	"d62f132d9d04dde6e223d4366c48b47cd9f90228acdc6fa755dab93266db5176": {
 		ID:                "d62f132d9d04dde6e223d4366c48b47cd9f90228acdc6fa755dab93266db5176",
 		AggregationMethod: "median",
-		MinResponses:      2,
+		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -270,6 +295,44 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					"id": "33695",
 					// "symbol": "KING",
 				},
+			},
+			{
+				EndpointType: "contract",
+				Handler:      "king_handler",
+				Chain:        "ethereum",
+			},
+		},
+	},
+	"611fd0e88850bf0cc036d96d04d47605c90b993485c2971e022b5751bbb04f23": {
+		ID:                "611fd0e88850bf0cc036d96d04d47605c90b993485c2971e022b5751bbb04f23",
+		AggregationMethod: "median",
+		MinResponses:      1,
+		ResponseType:      "ufixed256x18",
+		Endpoints: []EndpointConfig{
+			{
+				EndpointType: "coingecko",
+				ResponsePath: []string{"stride-staked-atom", "usd"},
+				Params: map[string]string{
+					"coin_id": "stride-staked-atom",
+				},
+			},
+			{
+				EndpointType: "coinmarketcap",
+				ResponsePath: []string{"data", "21686", "quote", "USD", "price"},
+				Params: map[string]string{
+					"id": "21686",
+					// "symbol": "stATOM",
+				},
+			},
+			{
+				EndpointType: "osmosis",
+				Handler:      "osmosis_pool_price_handler",
+				ResponsePath: []string{"pool"},
+				Params: map[string]string{
+					"pool_id": "1136",
+				},
+				UsdViaID: 7,
+				Invert:   false,
 			},
 		},
 	},

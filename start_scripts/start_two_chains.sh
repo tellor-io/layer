@@ -57,6 +57,15 @@ MULTISIG_NAME="team"
 MULTISIG_THRESHOLD="2"
 MULTISIG_MEMBERS="$KEY_NAME,bill"
 ./layerd keys add $MULTISIG_NAME --multisig="$MULTISIG_MEMBERS" --multisig-threshold=$MULTISIG_THRESHOLD --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
+# import bill to alice
+./layerd keys import-hex bill $PRIVATE_KEY_2 --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
+
+# Create team multisig account
+echo "Creating team multisig account..."
+MULTISIG_NAME="team"
+MULTISIG_THRESHOLD="2"
+MULTISIG_MEMBERS="$KEY_NAME,bill"
+./layerd keys add $MULTISIG_NAME --multisig="$MULTISIG_MEMBERS" --multisig-threshold=$MULTISIG_THRESHOLD --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
 
 # Update vote_extensions_enable_height in genesis.json
 echo "Updating vote_extensions_enable_height in genesis.json..."
@@ -146,6 +155,9 @@ echo "Start chain..."
 ./layerd start --home $LAYERD_NODE_HOME_1 --api.enable --api.swagger --keyring-backend $KEYRING_BACKEND --key-name $KEY_NAME
 
 
+# Make alice a reporter
+# ./layerd tx reporter create-reporter 0.1 1000000 alice --from alice --keyring-backend test --chain-id layertest-4 --home ~/.layer/alice --keyring-dir ~/.layer/alice --fees 500loya --yes
+# 
 # ----- Multisig 
 # 1. Create a transaction (unsigned):
 # ./layerd tx bank send team <recipient> 1000000loya --generate-only --from alice --keyring-backend test --chain-id layertest-4 --home ~/.layer/alice > tx.json
@@ -163,12 +175,24 @@ echo "Start chain..."
 
 
 # ----- Gov Proposals
-# Submit the proposal
+# 
 # ./layerd tx gov submit-proposal mint_proposal.json \
 #   --from alice --chain-id layertest-4 \
 #   --keyring-backend test --home ~/.layer/alice \
 #   --fees 500loya --yes
 
-# # Vote on the proposal
+# {
+#   "messages": [
+#     {
+#       "@type": "/layer.mint.MsgInit",
+#       "authority": "tellor10d07y265gmmuvt4z0w9aw880jnsr700j6527vx"
+#     }
+#   ],
+#   "metadata": "mint initialization proposal",
+#   "deposit": "1000000loya",
+#   "title": "Initialize Mint Module",
+#   "summary": "Initialize the mint module to start time-based rewards minting"
+# }
+# 
 # ./layerd tx gov vote 1 yes --from alice --chain-id layertest-4 \
 #   --keyring-backend test --home ~/.layer/alice --fees 500loya --yes

@@ -124,7 +124,7 @@ func (c *Client) sendTx(ctx context.Context, queryMetaId uint64, msg ...sdk.Msg)
 	telemetry.IncrCounter(1, "daemon_sending_txs", "called")
 
 	// Track success status for defer cleanup
-	var txSuccess bool = false
+	txSuccess := false
 
 	// Always reset commitedIds on any error, unless explicitly successful
 	defer func() {

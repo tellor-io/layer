@@ -134,6 +134,7 @@ func (k Keeper) GetOperatorAddressFromSignature(ctx context.Context, msg []byte,
 	msgSha256 := sha256.Sum256(msg)
 	addrs, err := k.TryRecoverAddressWithBothIDs(sigBytes, msgSha256[:])
 	if err != nil {
+		fmt.Println("Error trying to recover address with both IDs", err)
 		return types.OperatorAddress{}, err
 	}
 	var operatorAddr types.OperatorAddress
@@ -142,11 +143,13 @@ func (k Keeper) GetOperatorAddressFromSignature(ctx context.Context, msg []byte,
 		evmAddrString := common.Bytes2Hex(evmAddrBytes)
 		exists, err := k.EVMToOperatorAddressMap.Has(ctx, evmAddrString)
 		if err != nil {
+			fmt.Println("Error checking if EVM address is registered", err)
 			return types.OperatorAddress{}, err
 		}
 		if exists {
 			operatorAddr, err = k.EVMToOperatorAddressMap.Get(ctx, evmAddrString)
 			if err != nil {
+				fmt.Println("Error getting EVM address by operator", err)
 				return types.OperatorAddress{}, err
 			}
 			break
