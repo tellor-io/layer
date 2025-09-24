@@ -30,7 +30,6 @@ import (
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	v043 "github.com/cosmos/cosmos-sdk/x/genutil/migrations/v043"
 	v046 "github.com/cosmos/cosmos-sdk/x/genutil/migrations/v046"
@@ -221,7 +220,7 @@ func txCommand() *cobra.Command {
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
-	crisis.AddModuleInitFlags(startCmd)
+	// crisis.AddModuleInitFlags is deprecated and removed
 	// this line is used by starport scaffolding # root/arguments
 }
 
