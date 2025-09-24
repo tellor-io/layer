@@ -62,7 +62,7 @@ func TestUpdateTeamAddr(t *testing.T) {
 					{
 						Repository: "layer",
 						Version:    "local",
-						UidGid:     "1025:1025",
+						UIDGID:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),

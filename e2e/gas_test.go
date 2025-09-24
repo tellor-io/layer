@@ -60,7 +60,7 @@ func TestGas(t *testing.T) {
 					{
 						Repository: "layer",
 						Version:    "local",
-						UidGid:     "1025:1025",
+						UIDGID:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
@@ -77,10 +77,9 @@ func TestGas(t *testing.T) {
 	ic := interchaintest.NewInterchain().
 		AddChain(layer1)
 	require.NoError(t, ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
-		TestName:  t.Name(),
-		Client:    client,
-		NetworkID: network,
-
+		TestName:         t.Name(),
+		Client:           client,
+		NetworkID:        network,
 		SkipPathCreation: false,
 	}))
 

@@ -72,7 +72,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 					{
 						Repository: "ghcr.io/tellor-io/layer",
 						Version:    "v5.0.0",
-						UidGid:     "1025:1025",
+						UIDGID:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),

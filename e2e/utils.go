@@ -28,6 +28,32 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// Retry executes a function with retry logic to handle Docker container cleanup race conditions
+func Retry(t *testing.T, testName string, operation func() error) error {
+	maxRetries := 3
+	delay := 5 * time.Second
+	var lastErr error
+
+	for i := 0; i < maxRetries; i++ {
+		if i > 0 {
+			t.Logf("[%s] Retry attempt %d/%d due to previous failure: %v",
+				testName, i+1, maxRetries, lastErr)
+			time.Sleep(delay)
+		}
+
+		err := operation()
+		if err == nil {
+			return nil // Success!
+		}
+
+		lastErr = err
+		t.Logf("[%s] Attempt %d failed: %v", testName, i+1, err)
+	}
+
+	return fmt.Errorf("[%s] Operation failed after %d attempts. Last error: %v",
+		testName, maxRetries, lastErr)
+}
+
 // HELPERS FOR BUILDING THE CHAIN
 
 var (
@@ -35,7 +61,7 @@ var (
 		{
 			Repository: "layer",
 			Version:    "local",
-			UidGid:     "1025:1025",
+			UIDGID:     "1025:1025",
 		},
 	}
 	numVals      = 2
@@ -64,18 +90,23 @@ func LayerSpinup(t *testing.T) *cosmos.CosmosChain {
 
 	layer := chains[0].(*cosmos.CosmosChain)
 
-	ic := interchaintest.NewInterchain().
-		AddChain(layer)
+	var ic *interchaintest.Interchain
 
 	ctx := context.Background()
 	client, network := interchaintest.DockerSetup(t)
 
-	require.NoError(t, ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
-		TestName:         t.Name(),
-		Client:           client,
-		NetworkID:        network,
-		SkipPathCreation: true,
-	}))
+	// Use retry logic for the interchain build to handle container cleanup issues
+	err = Retry(t, "LayerSpinup", func() error {
+		ic = interchaintest.NewInterchain().AddChain(layer)
+		return ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
+			TestName:         t.Name(),
+			Client:           client,
+			NetworkID:        network,
+			SkipPathCreation: true,
+		})
+	})
+	require.NoError(t, err)
+
 	t.Cleanup(func() {
 		_ = ic.Close()
 	})
@@ -161,9 +192,9 @@ type Disputes struct {
 type Metadata struct {
 	HashID            string   `json:"hash_id"`
 	DisputeID         string   `json:"dispute_id"`
-	DisputeCategory   int      `json:"dispute_category"`
+	DisputeCategory   string   `json:"dispute_category"`
 	DisputeFee        string   `json:"dispute_fee"`
-	DisputeStatus     int      `json:"dispute_status"`
+	DisputeStatus     string   `json:"dispute_status"`
 	DisputeStartTime  string   `json:"dispute_start_time"`
 	DisputeEndTime    string   `json:"dispute_end_time"`
 	DisputeStartBlock string   `json:"dispute_start_block"`

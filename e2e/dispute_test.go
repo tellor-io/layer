@@ -111,7 +111,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 					{
 						Repository: "layer",
 						Version:    "local",
-						UidGid:     "1025:1025",
+						UIDGID:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
@@ -473,7 +473,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 					{
 						Repository: "layer",
 						Version:    "local",
-						UidGid:     "1025:1025",
+						UIDGID:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
@@ -843,7 +843,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 					{
 						Repository: "layer",
 						Version:    "local",
-						UidGid:     "1025:1025",
+						UIDGID:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
@@ -1359,7 +1359,7 @@ func TestEscalatingDispute(t *testing.T) {
 					{
 						Repository: "layer",
 						Version:    "local",
-						UidGid:     "1025:1025",
+						UIDGID:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
@@ -1727,7 +1727,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 					{
 						Repository: "layer",
 						Version:    "local",
-						UidGid:     "1025:1025",
+						UIDGID:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
@@ -2055,7 +2055,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 					{
 						Repository: "layer",
 						Version:    "local",
-						UidGid:     "1025:1025",
+						UIDGID:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
@@ -2494,7 +2494,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 					{
 						Repository: "layer",
 						Version:    "local",
-						UidGid:     "1025:1025",
+						UIDGID:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
@@ -2808,7 +2808,7 @@ func TestUnderfundedDispute(t *testing.T) {
 					{
 						Repository: "layer",
 						Version:    "local",
-						UidGid:     "1025:1025",
+						UIDGID:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
@@ -3009,7 +3009,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 					{
 						Repository: "layer",
 						Version:    "local",
-						UidGid:     "1025:1025",
+						UIDGID:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
@@ -3203,7 +3203,7 @@ func TestGroupPowers(t *testing.T) {
 					{
 						Repository: "layer",
 						Version:    "local",
-						UidGid:     "1025:1025",
+						UIDGID:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),

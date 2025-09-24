@@ -59,7 +59,7 @@ func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos
 
 func TestLayerFlow(t *testing.T) {
 	ctx := context.Background()
-	layer := e2e.LayerSpinup(t) // *cosmos.CosmosChain type
+	layer := e2e.LayerSpinup(t)
 	validatorI := layer.Validators[0]
 	validatorII := layer.Validators[1]
 
@@ -171,7 +171,7 @@ func TestLayerFlow(t *testing.T) {
 	require.NoError(t, err)
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(t, err)
-	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 1) // voting
+	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // voting
 	fmt.Println("Disputes: ", string(r))
 	res2, _, err = validatorI.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hex.EncodeToString(qidbz))
 	require.NoError(t, err)
@@ -194,7 +194,7 @@ func TestLayerFlow(t *testing.T) {
 
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(t, err)
-	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 2) // 2/3 voted so resolved
+	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_RESOLVED") // 2/3 voted so resolved
 
 	// team votes should error
 	_, err = validatorI.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-support", "--keyring-dir", layer.HomeDir())
@@ -205,7 +205,7 @@ func TestLayerFlow(t *testing.T) {
 
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(t, err)
-	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 2) // resolved
+	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_RESOLVED") // resolved
 }
 
 func TestGetCyclelist(t *testing.T) {
