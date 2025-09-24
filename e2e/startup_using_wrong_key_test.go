@@ -8,15 +8,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/crypto"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/e2e"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/tellor-io/layer/e2e"
 )
 
 func TestStartupUsingWrongKey(t *testing.T) {
@@ -61,7 +61,7 @@ func TestStartupUsingWrongKey(t *testing.T) {
 					{
 						Repository: "layer",
 						Version:    "local",
-						UidGid:     "1025:1025",
+						UIDGID:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
@@ -122,14 +122,15 @@ func TestStartupUsingWrongKey(t *testing.T) {
 	waitErr := testutil.WaitForBlocks(ctx, 7, validators[0].Node)
 	require.NoError(waitErr)
 
-	// Define types for bridge validator queries
-	type QueryBridgeValidator struct {
-		EthereumAddress string `json:"ethereumAddress"`
-		Power           string `json:"power"`
-	}
-	type QueryGetEvmValidatorsResponse struct {
-		BridgeValidatorSet []QueryBridgeValidator `json:"bridge_validator_set"`
-	}
+	// TODO: Unused ?
+	// // Define types for bridge validator queries
+	// type QueryBridgeValidator struct {
+	// 	EthereumAddress string `json:"ethereumAddress"`
+	// 	Power           string `json:"power"`
+	// }
+	// type QueryGetEvmValidatorsResponse struct {
+	// 	BridgeValidatorSet []QueryBridgeValidator `json:"bridge_validator_set"`
+	// }
 
 	// Get the original private keys (these are the "correct" keys that validators were created with)
 	for i, v := range validators {
@@ -257,5 +258,4 @@ func TestStartupUsingWrongKey(t *testing.T) {
 	require.NoError(err)
 
 	require.True(val0Info.Jailed)
-
 }

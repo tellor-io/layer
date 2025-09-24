@@ -30,6 +30,7 @@ import (
 
 // Retry executes a function with retry logic to handle Docker container cleanup race conditions
 func Retry(t *testing.T, testName string, operation func() error) error {
+	t.Helper()
 	maxRetries := 3
 	delay := 5 * time.Second
 	var lastErr error
@@ -50,7 +51,7 @@ func Retry(t *testing.T, testName string, operation func() error) error {
 		t.Logf("[%s] Attempt %d failed: %v", testName, i+1, err)
 	}
 
-	return fmt.Errorf("[%s] Operation failed after %d attempts. Last error: %v",
+	return fmt.Errorf("[%s] Operation failed after %d attempts. Last error: %w",
 		testName, maxRetries, lastErr)
 }
 
