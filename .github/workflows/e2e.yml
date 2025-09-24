@@ -34,7 +34,7 @@ jobs:
           dockerfile: .
           build-target: make build
           binaries: |
-            - /bin/layerd
+            - /layer/build/layerd
 
       - name: Publish Primary Tarball as Artifact
         uses: actions/upload-artifact@v4
@@ -67,7 +67,7 @@ jobs:
           dockerfile: .
           build-target: make build
           binaries: |
-            - /bin/layerd
+            - /layer/build/layerd
 
       - name: Publish IBC Tarball as Artifact
         uses: actions/upload-artifact@v4
