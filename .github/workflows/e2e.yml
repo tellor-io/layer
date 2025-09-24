@@ -33,7 +33,9 @@ jobs:
           chain: layer
           dockerfile: cosmos
           build-target: make install
-          build-env: "GO_VERSION=1.23.2,ALPINE_VERSION=3.20"
+          build-env: |
+            - GO_VERSION=1.23.2
+            - ALPINE_VERSION=3.20
           binaries: |
             - /go/bin/layerd
 
@@ -67,7 +69,9 @@ jobs:
           chain: layer-icq
           dockerfile: cosmos
           build-target: make install
-          build-env: "GO_VERSION=1.23.2,ALPINE_VERSION=3.20"
+          build-env: |
+            - GO_VERSION=1.23.2
+            - ALPINE_VERSION=3.20
           binaries: |
             - /go/bin/layerd
 
