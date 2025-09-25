@@ -54,6 +54,9 @@ const (
         endpoint_type = "{{ $endpoint.EndpointType }}"
         response_path = [{{ range $i, $path := $endpoint.ResponsePath }}{{if $i}}, {{end}}"{{ $path }}"{{ end }}]
         params = { {{ formatParams $endpoint.Params }} }
+		{{- if $endpoint.MarketId }}
+        market_id = "{{ $endpoint.MarketId }}"
+		{{- end }}
 		{{- if $endpoint.Handler }}
         handler = "{{ $endpoint.Handler }}"
 		{{- end }}

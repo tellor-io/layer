@@ -31,8 +31,10 @@ type Config struct {
 }
 
 type ContractHandler struct {
-	Handler string
-	Reader  *contractreader.Reader
+	Handler  string
+	Reader   *contractreader.Reader
+	MarketId string
+	SourceId string
 }
 
 type RpcHandler struct {
@@ -42,6 +44,8 @@ type RpcHandler struct {
 	UsdViaID   uint32
 	Method     string
 	EndpointID string
+	MarketId   string
+	SourceId   string
 }
 
 type CombinedHandler struct {
@@ -65,6 +69,9 @@ type EndpointConfig struct {
 	EndpointType string            `toml:"endpoint_type"`
 	ResponsePath []string          `toml:"response_path"`
 	Params       map[string]string `toml:"params"`
+
+	// telemtry fields
+	MarketId string `toml:"market_id"`
 
 	// Contract-specific fields
 	Handler string `toml:"handler"`
@@ -231,8 +238,10 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 				}
 
 				contractReaders = append(contractReaders, ContractHandler{
-					Handler: endpoint.Handler,
-					Reader:  contractReader,
+					Handler:  endpoint.Handler,
+					Reader:   contractReader,
+					MarketId: endpoint.MarketId,
+					SourceId: endpoint.EndpointType,
 				})
 				continue
 			}
@@ -300,6 +309,8 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 				UsdViaID:   endpoint.UsdViaID,
 				Method:     template.Method,
 				EndpointID: endpoint.EndpointType,
+				MarketId:   endpoint.MarketId,
+				SourceId:   endpoint.EndpointType,
 			})
 		}
 		queryMap[query.ID] = QueryConfig{

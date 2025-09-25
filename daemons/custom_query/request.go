@@ -8,9 +8,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/custom_query/combined/combined_handler"
 	"github.com/tellor-io/layer/daemons/custom_query/contracts/contract_handlers"
 	rpc_handler "github.com/tellor-io/layer/daemons/custom_query/rpc/rpc_handler"
+	"github.com/tellor-io/layer/daemons/lib/metrics"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 )
 
@@ -19,6 +22,8 @@ type Result struct {
 	Value      float64
 	Err        error
 	EndpointID string
+	MarketId   string
+	SourceId   string
 }
 
 // FetchPriceResult holds the result of a price fetch operation
@@ -86,6 +91,12 @@ func FetchPrice(
 		allResults = append(allResults, result)
 		if result.Err == nil {
 			successfulResults = append(successfulResults, result)
+			// Emit metrics for successful results
+			emitPriceForTelemetry(result, query)
+			emitSuccessForTelemetry(result, query)
+		} else {
+			// Emit error metrics for failed results
+			emitErrorForTelemetry(result, query)
 		}
 	}
 	// Check if we have enough successful responses
@@ -109,6 +120,40 @@ func FetchPrice(
 	}, nil
 }
 
+func emitPriceForTelemetry(result Result, query QueryConfig) {
+	telemetry.SetGaugeWithLabels(
+		[]string{metrics.PricefeedDaemon, metrics.PriceEncoderUpdatePrice},
+		float32(result.Value),
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.MarketId, result.MarketId),
+			metrics.GetLabelForStringValue(metrics.ExchangeId, result.SourceId),
+		},
+	)
+}
+
+func emitSuccessForTelemetry(result Result, query QueryConfig) {
+	telemetry.IncrCounterWithLabels(
+		[]string{metrics.PricefeedDaemon, metrics.PriceEncoderPriceConversion, metrics.Success},
+		1.0,
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.MarketId, result.MarketId),
+			metrics.GetLabelForStringValue(metrics.ExchangeId, result.SourceId),
+		},
+	)
+}
+
+func emitErrorForTelemetry(result Result, query QueryConfig) {
+	telemetry.IncrCounterWithLabels(
+		[]string{metrics.PricefeedDaemon, metrics.PriceEncoderPriceConversion, metrics.Error},
+		1.0,
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.MarketId, result.MarketId),
+			metrics.GetLabelForStringValue(metrics.ExchangeId, result.SourceId),
+			metrics.GetLabelForStringValue(metrics.Reason, result.Err.Error()),
+		},
+	)
+}
+
 // fetchFromContractEndpoint fetches data from a smart contract
 func fetchFromContractEndpoint(
 	ctx context.Context,
@@ -120,6 +165,8 @@ func fetchFromContractEndpoint(
 		return Result{
 			Err:        fmt.Errorf("failed to get contract handler: %w", err),
 			EndpointID: contractReader.Handler,
+			MarketId:   contractReader.MarketId,
+			SourceId:   contractReader.SourceId,
 		}
 	}
 	value, err := handler.FetchValue(ctx, contractReader.Reader, priceCache)
@@ -127,6 +174,8 @@ func fetchFromContractEndpoint(
 		return Result{
 			Err:        fmt.Errorf("failed to fetch contract value: %w", err),
 			EndpointID: contractReader.Handler,
+			MarketId:   contractReader.MarketId,
+			SourceId:   contractReader.SourceId,
 		}
 	}
 
@@ -136,6 +185,8 @@ func fetchFromContractEndpoint(
 	return Result{
 		Value:      value,
 		EndpointID: "contract:" + contractReader.Handler,
+		MarketId:   contractReader.MarketId,
+		SourceId:   contractReader.SourceId,
 	}
 }
 
@@ -154,6 +205,8 @@ func fetchFromRpcEndpoint(
 		return Result{
 			Err:        fmt.Errorf("failed to get RPC handler: %w", err),
 			EndpointID: rpchandler.Handler,
+			MarketId:   rpchandler.MarketId,
+			SourceId:   rpchandler.SourceId,
 		}
 	}
 
@@ -162,6 +215,8 @@ func fetchFromRpcEndpoint(
 		return Result{
 			Err:        fmt.Errorf("failed to fetch RPC value: %w", err),
 			EndpointID: rpchandler.Handler,
+			MarketId:   rpchandler.MarketId,
+			SourceId:   rpchandler.SourceId,
 		}
 	}
 
@@ -169,6 +224,8 @@ func fetchFromRpcEndpoint(
 	return Result{
 		Value:      value,
 		EndpointID: rpchandler.Handler,
+		MarketId:   rpchandler.MarketId,
+		SourceId:   rpchandler.SourceId,
 	}
 }
 
