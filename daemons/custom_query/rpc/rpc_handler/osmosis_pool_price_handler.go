@@ -23,7 +23,7 @@ const (
 )
 
 func (h *OsmosisPoolPriceHandler) FetchValue(
-	ctx context.Context, reader *reader.Reader, _ bool, usdViaID int,
+	ctx context.Context, reader *reader.Reader, _ bool, usdViaID uint32,
 	priceCache *pricefeedservertypes.MarketToExchangePrices,
 ) (float64, error) {
 	resp, err := reader.FetchJSON(ctx)

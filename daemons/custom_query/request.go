@@ -8,6 +8,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/tellor-io/layer/daemons/custom_query/combined/combined_handler"
 	"github.com/tellor-io/layer/daemons/custom_query/contracts/contract_handlers"
 	rpc_handler "github.com/tellor-io/layer/daemons/custom_query/rpc/rpc_handler"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
@@ -39,7 +40,7 @@ func FetchPrice(
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	totalEndpoints := len(query.RpcReaders) + len(query.ContractReaders)
+	totalEndpoints := len(query.RpcReaders) + len(query.ContractReaders) + len(query.CombinedReaders)
 	results := make(chan Result, totalEndpoints)
 	var wg sync.WaitGroup
 
@@ -61,6 +62,15 @@ func FetchPrice(
 			results <- result
 		}(rpchandler)
 
+	}
+	// Launch goroutines for combined endpoints
+	for _, combinedHandler := range query.CombinedReaders {
+		wg.Add(1)
+		go func(ep CombinedHandler) {
+			defer wg.Done()
+			result := fetchFromCombinedEndpoint(ctx, ep, priceCache)
+			results <- result
+		}(combinedHandler)
 	}
 	// Close results channel when all goroutines complete
 	go func() {
@@ -181,6 +191,40 @@ func aggregateResults(results []Result, method, responseType string) (string, er
 	// return ModeInHex(values, responseType)
 	default:
 		return "", fmt.Errorf("unsupported aggregation method: %s", method)
+	}
+}
+
+// fetchFromCombinedEndpoint fetches data using both contract and RPC sources
+func fetchFromCombinedEndpoint(
+	ctx context.Context,
+	combinedReader CombinedHandler,
+	priceCache *pricefeedservertypes.MarketToExchangePrices,
+) Result {
+	handler, err := combined_handler.GetHandler(combinedReader.Handler)
+	if err != nil {
+		return Result{
+			Err:        fmt.Errorf("failed to get combined handler: %w", err),
+			EndpointID: combinedReader.Handler,
+		}
+	}
+
+	value, err := handler.FetchValue(ctx, combinedReader.ContractReaders, combinedReader.RpcReaders, priceCache)
+	if err != nil {
+		return Result{
+			Err:        fmt.Errorf("failed to fetch combined value: %w", err),
+			EndpointID: combinedReader.Handler,
+		}
+	}
+
+	// Clean up readers
+	for _, reader := range combinedReader.ContractReaders {
+		defer reader.Close()
+	}
+
+	fmt.Println("Combined value:", value)
+	return Result{
+		Value:      value,
+		EndpointID: "combined:" + combinedReader.Handler,
 	}
 }
 
