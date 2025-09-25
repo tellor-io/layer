@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -94,6 +95,10 @@ func LayerSpinup(t *testing.T) *cosmos.CosmosChain {
 	var ic *interchaintest.Interchain
 
 	ctx := context.Background()
+
+	// Set Docker daemon configuration for better container management
+	os.Setenv("DOCKER_BUILDKIT", "0") // Disable BuildKit for more stable behavior
+
 	client, network := interchaintest.DockerSetup(t)
 
 	// Use retry logic for the interchain build to handle container cleanup issues
@@ -110,6 +115,7 @@ func LayerSpinup(t *testing.T) *cosmos.CosmosChain {
 
 	t.Cleanup(func() {
 		_ = ic.Close()
+		time.Sleep(3 * time.Second)
 	})
 	require.NoError(t, layer.RecoverKey(ctx, "team", teamMnemonic))
 	require.NoError(t, layer.SendFunds(ctx, "faucet", ibc.WalletAmount{
