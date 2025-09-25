@@ -223,7 +223,8 @@ func txCommand() *cobra.Command {
 func addModuleInitFlags(startCmd *cobra.Command) {
 	// TODO: crisis.AddModuleInitFlags is deprecated in SDK v0.53.4
 	// But will break interchaintests if removed
-	crisis.AddModuleInitFlags(startCmd)
+	// either fork or wait for release of https://github.com/strangelove-ventures/interchaintest/issues/1383
+	crisis.AddModuleInitFlags(startCmd) //nolint:staticcheck
 	// this line is used by starport scaffolding # root/arguments
 }
 

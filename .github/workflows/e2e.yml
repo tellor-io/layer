@@ -7,8 +7,8 @@ on:
       - '.github/**'
 
 env:
-  TAR_PATH: heighliner.tar
-  IBC_TAR_PATH: heighliner-ibc.tar
+  TAR_PATH: layer-docker-image.tar
+  IBC_TAR_PATH: layer-icq-docker-image.tar
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -88,7 +88,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.23'
 
       - name: Generate Matrix
         id: set-matrix
@@ -113,7 +113,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.23'
 
       - name: Download Primary Tarball
         uses: actions/download-artifact@v4
