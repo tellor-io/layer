@@ -8,15 +8,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/ethereum/go-ethereum/crypto"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
+	"github.com/tellor-io/layer/e2e"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/tellor-io/layer/e2e"
 )
 
 func TestStartupUsingWrongKey(t *testing.T) {
@@ -257,5 +257,4 @@ func TestStartupUsingWrongKey(t *testing.T) {
 	require.NoError(err)
 
 	require.True(val0Info.Jailed)
-
 }
