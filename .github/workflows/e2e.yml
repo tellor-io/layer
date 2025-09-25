@@ -7,8 +7,8 @@ on:
       - '.github/**'
 
 env:
-  TAR_PATH: layer-docker-image.tar
-  IBC_TAR_PATH: layer-icq-docker-image.tar
+  TAR_PATH: heighliner.tar
+  IBC_TAR_PATH: heighliner-ibc.tar
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -22,9 +22,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Build Primary Docker Image
         uses: strangelove-ventures/heighliner-build-action@v1.0.3
         with:
@@ -34,10 +31,10 @@ jobs:
           platform: linux/amd64
           git-ref: ${{ github.head_ref }}
           chain: layer
-          dockerfile: .
-          build-target: make build
+          dockerfile: cosmos
+          build-target: make install
           binaries: |
-            - /layer/build/layerd
+            - /go/bin/layerd
 
       - name: Publish Primary Tarball as Artifact
         uses: actions/upload-artifact@v4
@@ -58,9 +55,6 @@ jobs:
           git fetch --all
           git checkout ibc
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Build IBC Docker Image
         uses: strangelove-ventures/heighliner-build-action@v1.0.3
         with:
@@ -70,10 +64,10 @@ jobs:
           platform: linux/amd64
           git-ref: ibc
           chain: layer-icq
-          dockerfile: .
-          build-target: make build
+          dockerfile: cosmos
+          build-target: make install
           binaries: |
-            - /layer/build/layerd
+            - /go/bin/layerd
 
       - name: Publish IBC Tarball as Artifact
         uses: actions/upload-artifact@v4
