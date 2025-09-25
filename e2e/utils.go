@@ -319,7 +319,7 @@ type Proposal struct {
 }
 
 type CurrentTipsResponse struct {
-	Tips math.Int `json:"tips"`
+	Tips string `json:"tips"`
 }
 
 type DataSpecResponse struct {
@@ -452,7 +452,7 @@ type Validator struct {
 	// jailed defined whether the validator has been jailed from bonded status or not.
 	Jailed bool `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
 	// status is the validator status (bonded/unbonding/unbonded).
-	Status int `protobuf:"varint,4,opt,name=status,proto3,enum=cosmos.staking.v1beta1.BondStatus" json:"status,omitempty"`
+	Status string `protobuf:"varint,4,opt,name=status,proto3,enum=cosmos.staking.v1beta1.BondStatus" json:"status,omitempty"`
 	// tokens define the delegated tokens (incl. self-delegation).
 	Tokens string `protobuf:"bytes,5,opt,name=tokens,proto3,customtype=cosmossdk.io/math.Int" json:"tokens"`
 	// delegator_shares defines total shares issued to a validator's delegators.
@@ -489,18 +489,18 @@ type Description struct {
 
 type Commission struct {
 	// commission_rates defines the initial commission rates to be used for creating a validator.
-	CommissionRates `protobuf:"bytes,1,opt,name=commission_rates,json=commissionRates,proto3,embedded=commission_rates" json:"commission_rates"`
+	CommissionRates string `protobuf:"bytes,1,opt,name=commission_rates,json=commissionRates,proto3,embedded=commission_rates" json:"commission_rates"`
 	// update_time is the last time the commission rate was changed.
 	UpdateTime time.Time `protobuf:"bytes,2,opt,name=update_time,json=updateTime,proto3,stdtime" json:"update_time"`
 }
 
 type CommissionRates struct {
 	// rate is the commission rate charged to delegators, as a fraction.
-	Rate math.LegacyDec `protobuf:"bytes,1,opt,name=rate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"rate"`
+	Rate string `protobuf:"bytes,1,opt,name=rate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"rate"`
 	// max_rate defines the maximum commission rate which validator can ever charge, as a fraction.
-	MaxRate math.LegacyDec `protobuf:"bytes,2,opt,name=max_rate,json=maxRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_rate"`
+	MaxRate string `protobuf:"bytes,2,opt,name=max_rate,json=maxRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_rate"`
 	// max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
-	MaxChangeRate math.LegacyDec `protobuf:"bytes,3,opt,name=max_change_rate,json=maxChangeRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_change_rate"`
+	MaxChangeRate string `protobuf:"bytes,3,opt,name=max_change_rate,json=maxChangeRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_change_rate"`
 }
 
 type QueryCurrentCyclelistQueryResponse struct {
@@ -517,7 +517,7 @@ type QueryGetCurrentAggregateReportResponse struct {
 
 type Aggregate struct {
 	// query_id is the id of the query
-	QueryId []byte `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	QueryId string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 	// aggregate_value is the value of the aggregate
 	AggregateValue string `protobuf:"bytes,2,opt,name=aggregate_value,json=aggregateValue,proto3" json:"aggregate_value,omitempty"`
 	// aggregate_reporter is the address of the reporter
@@ -578,7 +578,7 @@ type DataSpec struct {
 	// pertinent reports are aggregated together before arriving at a final value. This defaults
 	// to 0s if not specified.
 	// extensions: treat as a golang time.duration, don't allow nil values, don't omit empty values
-	ReportBlockWindow uint64 `protobuf:"varint,6,opt,name=report_block_window,json=reportBlockWindow,proto3" json:"report_block_window,omitempty"`
+	ReportBlockWindow string `protobuf:"varint,6,opt,name=report_block_window,json=reportBlockWindow,proto3" json:"report_block_window,omitempty"`
 	// querytype is the first arg in queryData
 	QueryType string `protobuf:"bytes,7,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
 }
@@ -654,8 +654,8 @@ type QueryGetDataSpecResponse struct {
 
 type Voter struct {
 	Vote          disputetypes.VoteEnum `protobuf:"varint,1,opt,name=vote,proto3,enum=layer.dispute.VoteEnum" json:"vote,omitempty"`
-	VoterPower    math.Int              `protobuf:"bytes,2,opt,name=voter_power,json=voterPower,proto3,customtype=cosmossdk.io/math.Int" json:"voter_power"`
-	ReporterPower math.Int              `protobuf:"bytes,3,opt,name=reporter_power,json=reporterPower,proto3,customtype=cosmossdk.io/math.Int" json:"reporter_power"`
+	VoterPower    string                `protobuf:"bytes,2,opt,name=voter_power,json=voterPower,proto3,customtype=cosmossdk.io/math.Int" json:"voter_power"`
+	ReporterPower string                `protobuf:"bytes,3,opt,name=reporter_power,json=reporterPower,proto3,customtype=cosmossdk.io/math.Int" json:"reporter_power"`
 	RewardClaimed bool                  `protobuf:"varint,5,opt,name=reward_claimed,json=rewardClaimed,proto3" json:"reward_claimed,omitempty"`
 }
 

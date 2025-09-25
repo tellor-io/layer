@@ -7,8 +7,8 @@ on:
       - '.github/**'
 
 env:
-  TAR_PATH: heighliner.tar
-  IBC_TAR_PATH: heighliner-ibc.tar
+  TAR_PATH: layer-docker-image.tar
+  IBC_TAR_PATH: layer-icq-docker-image.tar
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -22,19 +22,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build Primary Docker Image
-        uses: strangelove-ventures/heighliner-build-action@v1.0.3
+        uses: docker/build-push-action@v5
         with:
-          registry: ""
-          tag: local
-          tar-export-path: ${{ env.TAR_PATH }}
-          platform: linux/amd64
-          git-ref: ${{ github.head_ref }}
-          chain: layer
-          dockerfile: cosmos
-          build-target: make install
-          binaries: |
-            - /go/bin/layerd
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: layer:local
+          outputs: type=docker,dest=${{ env.TAR_PATH }}
+          platforms: linux/amd64
 
       - name: Publish Primary Tarball as Artifact
         uses: actions/upload-artifact@v4
@@ -55,19 +54,18 @@ jobs:
           git fetch --all
           git checkout ibc
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build IBC Docker Image
-        uses: strangelove-ventures/heighliner-build-action@v1.0.3
+        uses: docker/build-push-action@v5
         with:
-          registry: ""
-          tag: local
-          tar-export-path: ${{ env.IBC_TAR_PATH }}
-          platform: linux/amd64
-          git-ref: ibc
-          chain: layer-icq
-          dockerfile: cosmos
-          build-target: make install
-          binaries: |
-            - /go/bin/layerd
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: layer-icq:local
+          outputs: type=docker,dest=${{ env.IBC_TAR_PATH }}
+          platforms: linux/amd64
 
       - name: Publish IBC Tarball as Artifact
         uses: actions/upload-artifact@v4

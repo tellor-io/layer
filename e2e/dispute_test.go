@@ -2624,7 +2624,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 		},
 		Registrar:         user0Addr,
 		QueryType:         queryType,
-		ReportBlockWindow: 10,
+		ReportBlockWindow: "10",
 	}
 	specBz, err := json.Marshal(spec)
 	fmt.Println("specBz: ", string(specBz))
@@ -3298,7 +3298,7 @@ func TestGroupPowers(t *testing.T) {
 		},
 		Registrar:         validators[0].Addr,
 		QueryType:         queryType,
-		ReportBlockWindow: 5,
+		ReportBlockWindow: "5",
 	}
 	specBz, err := json.Marshal(spec)
 	require.NoError(err)

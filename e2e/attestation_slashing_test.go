@@ -39,7 +39,7 @@ func TestAttestationSlashing(t *testing.T) {
 
 	t.Parallel()
 	cosmos.SetSDKConfig("tellor")
-
+	time.Sleep(1 * time.Second)
 	// Create modified genesis for test
 	modifyGenesis := []cosmos.GenesisKV{
 		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
@@ -53,7 +53,7 @@ func TestAttestationSlashing(t *testing.T) {
 
 	// Set up validators
 	nv := 2
-	nf := 1
+	nf := 0
 	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
 		{
 			NumValidators: &nv,
@@ -83,13 +83,17 @@ func TestAttestationSlashing(t *testing.T) {
 			},
 		},
 	})
+	time.Sleep(1 * time.Second)
 
 	client, network := interchaintest.DockerSetup(t)
+	time.Sleep(1 * time.Second)
 
 	chain := chains[0].(*cosmos.CosmosChain)
+	time.Sleep(1 * time.Second)
 
 	ic := interchaintest.NewInterchain().
 		AddChain(chain)
+	time.Sleep(1 * time.Second)
 
 	ctx := context.Background()
 
@@ -99,8 +103,10 @@ func TestAttestationSlashing(t *testing.T) {
 		NetworkID:        network,
 		SkipPathCreation: false,
 	}))
+	time.Sleep(1 * time.Second)
 	t.Cleanup(func() {
 		_ = ic.Close()
+		time.Sleep(1 * time.Second)
 	})
 	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
 	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
