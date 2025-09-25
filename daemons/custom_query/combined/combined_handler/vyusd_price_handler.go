@@ -7,8 +7,11 @@ import (
 	"math/big"
 	"sort"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	gometrics "github.com/hashicorp/go-metrics"
 	contractreader "github.com/tellor-io/layer/daemons/custom_query/contracts/contract_reader"
 	rpcreader "github.com/tellor-io/layer/daemons/custom_query/rpc/rpc_reader"
+	"github.com/tellor-io/layer/daemons/lib/metrics"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 )
 
@@ -81,6 +84,15 @@ func (h *VYUSDPriceHandler) FetchValue(
 			fmt.Printf("Warning: failed to extract price from %s: %v\n", name, err)
 			continue
 		}
+
+		telemetry.SetGaugeWithLabels(
+			[]string{metrics.PricefeedDaemon, metrics.PriceEncoderUpdatePrice},
+			float32(price),
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(metrics.MarketId, "VYUSD-USD"),
+				metrics.GetLabelForStringValue(metrics.ExchangeId, name),
+			},
+		)
 
 		prices = append(prices, price)
 	}

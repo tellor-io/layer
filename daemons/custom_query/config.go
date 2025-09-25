@@ -34,6 +34,7 @@ type ContractHandler struct {
 	Handler  string
 	Reader   *contractreader.Reader
 	MarketId string
+	SourceId string
 }
 
 type RpcHandler struct {
@@ -44,6 +45,7 @@ type RpcHandler struct {
 	Method     string
 	EndpointID string
 	MarketId   string
+	SourceId   string
 }
 
 type CombinedHandler struct {
@@ -239,6 +241,7 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 					Handler:  endpoint.Handler,
 					Reader:   contractReader,
 					MarketId: endpoint.MarketId,
+					SourceId: endpoint.EndpointType,
 				})
 				continue
 			}
@@ -307,6 +310,7 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 				Method:     template.Method,
 				EndpointID: endpoint.EndpointType,
 				MarketId:   endpoint.MarketId,
+				SourceId:   endpoint.EndpointType,
 			})
 		}
 		queryMap[query.ID] = QueryConfig{
