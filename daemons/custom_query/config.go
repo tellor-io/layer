@@ -5,6 +5,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/pelletier/go-toml"
 	contractreader "github.com/tellor-io/layer/daemons/custom_query/contracts/contract_reader"
@@ -13,6 +14,7 @@ import (
 
 type EndpointTemplate struct {
 	URLTemplate string            `toml:"url_template"`
+	Query       string            `toml:"query"` // for POST requests
 	Method      string            `toml:"method"`
 	Timeout     int               `toml:"timeout"`
 	ApiKey      string            `toml:"api_key"`
@@ -37,9 +39,16 @@ type RpcHandler struct {
 	Handler    string
 	Reader     *rpcreader.Reader
 	Invert     bool
-	UsdViaID   int
+	UsdViaID   uint32
 	Method     string
 	EndpointID string
+}
+
+type CombinedHandler struct {
+	Handler         string
+	ContractReaders map[string]*contractreader.Reader
+	RpcReaders      map[string]*rpcreader.Reader
+	Config          map[string]any
 }
 type QueryConfig struct {
 	ID                string            `toml:"id"`
@@ -49,6 +58,7 @@ type QueryConfig struct {
 	Endpoints         []EndpointConfig  `toml:"endpoints"`
 	ContractReaders   []ContractHandler `toml:"-"`
 	RpcReaders        []RpcHandler      `toml:"-"`
+	CombinedReaders   []CombinedHandler `toml:"-"`
 }
 
 type EndpointConfig struct {
@@ -60,8 +70,12 @@ type EndpointConfig struct {
 	Handler string `toml:"handler"`
 	Chain   string `toml:"chain"`
 	// cosmosis
-	Invert   bool `toml:"invert"`
-	UsdViaID int  `toml:"usd_via_id"`
+	Invert   bool   `toml:"invert"`
+	UsdViaID uint32 `toml:"usd_via_id"`
+
+	// Combined handler fields
+	CombinedSources map[string]string `toml:"combined_sources"`
+	CombinedConfig  map[string]any    `toml:"combined_config"`
 }
 
 func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig, error) {
@@ -101,12 +115,107 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 		queryMap[query.ID] = query
 	}
 	// process api keys if any
+	fmt.Println("\nProcessing API keys for endpoints...")
 	processApiKeys(&config)
+	time.Sleep(2 * time.Second) // brief pause for readability
+
 	// for each query in the query map, build the endpoints
 	for _, query := range config.Queries {
 		contractReaders := make([]ContractHandler, 0)
 		rpcReaders := make([]RpcHandler, 0)
+		combinedReaders := make([]CombinedHandler, 0)
 		for _, endpoint := range query.Endpoints {
+			// Handle combined endpoints
+			if endpoint.EndpointType == "combined" {
+				if endpoint.Handler == "" {
+					return nil, fmt.Errorf("combined endpoint missing handler for query %s", query.ID)
+				}
+
+				// Build contract readers for combined handler
+				contractReadersMap := make(map[string]*contractreader.Reader)
+				rpcReadersMap := make(map[string]*rpcreader.Reader)
+
+				for sourceName, sourceType := range endpoint.CombinedSources {
+					chain, found := strings.CutPrefix(sourceType, "contract:")
+					if found {
+						urls, exists := processedRPCEndpoints[chain]
+						if !exists {
+							return nil, fmt.Errorf("no RPC endpoints configured for chain %s in combined source %s for query %s",
+								chain, sourceName, query.ID)
+						}
+						reader, err := contractreader.NewReader(urls, 3)
+						if err != nil {
+							return nil, fmt.Errorf("failed to create contract reader for combined source %s in query %s: %w",
+								sourceName, query.ID, err)
+						}
+						contractReadersMap[sourceName] = reader
+					} else {
+						endpointType, found := strings.CutPrefix(sourceType, "rpc:")
+						if found {
+							template, exists := config.Endpoints[endpointType]
+							if !exists {
+								return nil, fmt.Errorf("RPC endpoint template not found: %s for combined source %s in query %s",
+									endpointType, sourceName, query.ID)
+							}
+
+							// Build RPC URL from template
+							url := template.URLTemplate
+
+							// Process source-specific parameters (e.g., "sushiswap_api_params" or "coingecko_api_params")
+							paramsKey := sourceName + "_params"
+							if paramsRaw, exists := endpoint.CombinedConfig[paramsKey]; exists {
+								for key, value := range paramsRaw.(map[string]any) {
+									placeholder := fmt.Sprintf("{%s}", key)
+									url = strings.ReplaceAll(url, placeholder, fmt.Sprintf("%v", value))
+								}
+							}
+
+							// Replace API key if needed
+							url = strings.ReplaceAll(url, "{api_key}", template.ApiKey)
+
+							processedHeaders := make(map[string]string)
+							for key, value := range template.Headers {
+								if strings.EqualFold(value, "api_key") {
+									value = template.ApiKey
+								}
+								processedHeaders[key] = value
+							}
+
+							// Get source-specific response path (e.g., "sushiswap_api_response_path")
+							var responsePath []string
+							respPathKey := sourceName + "_response_path"
+							if respPathRaw, exists := endpoint.CombinedConfig[respPathKey]; exists {
+								if respPath, ok := respPathRaw.([]string); ok {
+									responsePath = respPath
+								} else if respPathInterface, ok := respPathRaw.([]any); ok {
+									for _, p := range respPathInterface {
+										if str, ok := p.(string); ok {
+											responsePath = append(responsePath, str)
+										}
+									}
+								}
+							}
+
+							reader, err := rpcreader.NewReader(url, template.Method, template.Query,
+								processedHeaders, responsePath, template.Timeout)
+							if err != nil {
+								return nil, fmt.Errorf("failed to create RPC reader for combined source %s in query %s: %w",
+									sourceName, query.ID, err)
+							}
+							rpcReadersMap[sourceName] = reader
+						}
+					}
+				}
+
+				combinedReaders = append(combinedReaders, CombinedHandler{
+					Handler:         endpoint.Handler,
+					ContractReaders: contractReadersMap,
+					RpcReaders:      rpcReadersMap,
+					Config:          endpoint.CombinedConfig,
+				})
+				continue
+			}
+
 			if endpoint.EndpointType == "contract" {
 				if endpoint.Handler == "" || endpoint.Chain == "" {
 					return nil, fmt.Errorf("contract endpoint missing required fields (handler, chain) for query %s", query.ID)
@@ -173,7 +282,14 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 				processedHeaders[key] = value
 			}
 
-			rpcReader, err := rpcreader.NewReader(url, processedHeaders, endpoint.ResponsePath, template.Timeout)
+			// Process the query field - replace placeholders with params
+			processedQuery := template.Query
+			for key, value := range endpoint.Params {
+				placeholder := fmt.Sprintf("{%s}", key)
+				processedQuery = strings.ReplaceAll(processedQuery, placeholder, value)
+			}
+
+			rpcReader, err := rpcreader.NewReader(url, template.Method, processedQuery, processedHeaders, endpoint.ResponsePath, template.Timeout)
 			if err != nil {
 				return nil, fmt.Errorf("failed to create RPC reader for endpoint %s in query %s: %w", endpoint.EndpointType, query.ID, err)
 			}
@@ -193,6 +309,7 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 			ResponseType:      query.ResponseType,
 			ContractReaders:   contractReaders,
 			RpcReaders:        rpcReaders,
+			CombinedReaders:   combinedReaders,
 		}
 	}
 

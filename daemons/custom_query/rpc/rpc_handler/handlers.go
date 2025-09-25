@@ -12,6 +12,6 @@ type RpcHandler interface {
 		ctx context.Context,
 		client *reader.Reader,
 		invert bool,
-		usdViaID int,
+		usdViaID uint32,
 		priceCache *pricefeedservertypes.MarketToExchangePrices) (float64, error)
 }
