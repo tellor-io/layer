@@ -224,7 +224,7 @@ func addModuleInitFlags(startCmd *cobra.Command) {
 	// TODO: crisis.AddModuleInitFlags is deprecated in SDK v0.53.4
 	// But will break interchaintests if removed
 	// either fork or wait for release of https://github.com/strangelove-ventures/interchaintest/issues/1383
-	crisis.AddModuleInitFlags(startCmd) //nolint:staticcheck
+	crisis.AddModuleInitFlags(startCmd) //nolint:staticcheck // removing crisis module will break interchaintests
 	// this line is used by starport scaffolding # root/arguments
 }
 
