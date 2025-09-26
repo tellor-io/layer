@@ -273,6 +273,19 @@ mock-gen:
 
 .PHONY: mock-gen mock-gen-bridge mock-gen-dispute mock-gen-mint mock-gen-oracle mock-gen-registry mock-gen-reporter
 
+# Docker image building targets
+docker-image:
+	@echo "Building Docker image using Dockerfile..."
+	docker build -t layer:local -f Dockerfile .
+	@echo "✅ Docker image built: layer:local"
+
+docker-image-ibc:
+	@echo "Building IBC Docker image using Dockerfile..."
+	@echo "Note: This requires checking out the ibc branch first"
+	docker build -t layer-icq:local -f Dockerfile .
+	@echo "✅ IBC Docker image built: layer-icq:local"
+
+# Legacy heighliner support (optional)
 get-heighliner:
 	git clone --depth 1 https://github.com/strangelove-ventures/heighliner.git
 	cd heighliner && go install
@@ -302,4 +315,4 @@ else
 	cd local_devnet && ICTEST_HOME=. local-ic start layer.json
 	
 endif
-.PHONY: get-heighliner local-image get-localic local-devnet
+.PHONY: docker-image docker-image-ibc get-heighliner local-image get-localic local-devnet

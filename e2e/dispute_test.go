@@ -2985,6 +2985,8 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+		// Increase reporting window from 2 blocks to 5 blocks for spot prices
+		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
 	}
 
 	nv := 2
@@ -3106,7 +3108,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	}
 
 	// wait for aggregation
-	require.NoError(testutil.WaitForBlocks(ctx, 5, validators[0].Val))
+	require.NoError(testutil.WaitForBlocks(ctx, 6, validators[0].Val))
 
 	// query microreport for val1
 	reports, _, err := validators[1].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[1].Addr, "--page-limit", "1")
