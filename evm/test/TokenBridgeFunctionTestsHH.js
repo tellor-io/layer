@@ -633,8 +633,7 @@ describe("TokenBridge - Function Tests", async function () {
         bridgeBal = await token.balanceOf(await bridge2.address)
         assert(BigInt(bridgeBal) == BigInt(expectedBal), "bridge bal should be correct")
     })
-
-    it.only("init", async function() {
+    it("init", async function() {
         // deploy fresh bridge contract for testing init
         const freshBridge = await ethers.deployContract("TestTokenBridge", [token.address,blobstream.address, oldOracle.address])
         
