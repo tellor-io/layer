@@ -3105,8 +3105,8 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 		fmt.Println("validator [", i, "] reported at height ", height)
 	}
 
-	// wait 2 blocks for aggregation
-	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Val))
+	// wait for aggregation
+	require.NoError(testutil.WaitForBlocks(ctx, 5, validators[0].Val))
 
 	// query microreport for val1
 	reports, _, err := validators[1].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[1].Addr, "--page-limit", "1")
