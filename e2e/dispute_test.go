@@ -1953,7 +1953,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	require.NoError(err)
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(err)
-	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 2)                          // resolved
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_RESOLVED")  // resolved
 	require.Equal(disputes.Disputes[0].Metadata.DisputeCategory, "DISPUTE_CATEGORY_MAJOR") // major
 	require.Equal(disputes.Disputes[0].Metadata.DisputeID, "1")
 	require.Equal(disputes.Disputes[0].Metadata.DisputeRound, "1")

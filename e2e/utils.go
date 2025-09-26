@@ -16,7 +16,6 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/stretchr/testify/require"
-	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	"go.uber.org/zap/zaptest"
 
@@ -489,7 +488,7 @@ type Description struct {
 
 type Commission struct {
 	// commission_rates defines the initial commission rates to be used for creating a validator.
-	CommissionRates string `protobuf:"bytes,1,opt,name=commission_rates,json=commissionRates,proto3,embedded=commission_rates" json:"commission_rates"`
+	CommissionRates CommissionRates `protobuf:"bytes,1,opt,name=commission_rates,json=commissionRates,proto3,embedded=commission_rates" json:"commission_rates"`
 	// update_time is the last time the commission rate was changed.
 	UpdateTime time.Time `protobuf:"bytes,2,opt,name=update_time,json=updateTime,proto3,stdtime" json:"update_time"`
 }
@@ -653,10 +652,10 @@ type QueryGetDataSpecResponse struct {
 }
 
 type Voter struct {
-	Vote          disputetypes.VoteEnum `protobuf:"varint,1,opt,name=vote,proto3,enum=layer.dispute.VoteEnum" json:"vote,omitempty"`
-	VoterPower    string                `protobuf:"bytes,2,opt,name=voter_power,json=voterPower,proto3,customtype=cosmossdk.io/math.Int" json:"voter_power"`
-	ReporterPower string                `protobuf:"bytes,3,opt,name=reporter_power,json=reporterPower,proto3,customtype=cosmossdk.io/math.Int" json:"reporter_power"`
-	RewardClaimed bool                  `protobuf:"varint,5,opt,name=reward_claimed,json=rewardClaimed,proto3" json:"reward_claimed,omitempty"`
+	Vote          string `protobuf:"varint,1,opt,name=vote,proto3,enum=layer.dispute.VoteEnum" json:"vote,omitempty"`
+	VoterPower    string `protobuf:"bytes,2,opt,name=voter_power,json=voterPower,proto3,customtype=cosmossdk.io/math.Int" json:"voter_power"`
+	ReporterPower string `protobuf:"bytes,3,opt,name=reporter_power,json=reporterPower,proto3,customtype=cosmossdk.io/math.Int" json:"reporter_power"`
+	RewardClaimed bool   `protobuf:"varint,5,opt,name=reward_claimed,json=rewardClaimed,proto3" json:"reward_claimed,omitempty"`
 }
 
 // HELPERS FOR TESTING AGAINST THE CHAIN
