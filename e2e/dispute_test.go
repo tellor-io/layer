@@ -358,7 +358,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		require.NoError(err)
 		var disputes e2e.Disputes
 		require.NoError(json.Unmarshal(res, &disputes))
-		require.Equal(disputes.Disputes[i].Metadata.DisputeStatus, 1) // not resolved yet
+		require.Equal(disputes.Disputes[i].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // not resolved yet
 
 		// vote from team (should be at least 66% voting power after (33% from team, 33% from having one tip from val1))
 		txHash, err = val1.ExecTx(ctx, "team", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
@@ -1544,9 +1544,9 @@ func TestEscalatingDispute(t *testing.T) {
 	var disputes e2e.Disputes
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(err)
-	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1)   // open
-	require.Equal(disputes.Disputes[0].Metadata.DisputeCategory, 1) // warning
-	require.Equal(disputes.Disputes[0].Metadata.DisputeID, "1")     // open
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // open
+	require.Equal(disputes.Disputes[0].Metadata.DisputeCategory, 1)                     // warning
+	require.Equal(disputes.Disputes[0].Metadata.DisputeID, "1")                         // open
 	require.Equal(disputes.Disputes[0].Metadata.DisputeRound, "1")
 	require.Equal(disputes.Disputes[0].Metadata.FeeTotal, "10000000") // 10 * 1e6 is 1% of 1000
 	fmt.Println("open dispute: ", disputes.Disputes[0])
@@ -1572,9 +1572,9 @@ func TestEscalatingDispute(t *testing.T) {
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(err)
 	fmt.Println("disputes: ", disputes)
-	require.Equal(disputes.Disputes[1].Metadata.DisputeStatus, 1)   // open, but now a minor dispute
-	require.Equal(disputes.Disputes[1].Metadata.DisputeCategory, 2) // minor
-	require.Equal(disputes.Disputes[1].Metadata.DisputeID, "2")     // open
+	require.Equal(disputes.Disputes[1].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // open, but now a minor dispute
+	require.Equal(disputes.Disputes[1].Metadata.DisputeCategory, 2)                     // minor
+	require.Equal(disputes.Disputes[1].Metadata.DisputeID, "2")                         // open
 	require.Equal(disputes.Disputes[1].Metadata.DisputeRound, "1")
 	require.Equal(disputes.Disputes[1].Metadata.FeeTotal, "50000000") // 50 * 1e6 is 5% of 1000
 	fmt.Println("open dispute: ", disputes.Disputes[1])
@@ -1620,7 +1620,7 @@ func TestEscalatingDispute(t *testing.T) {
 	fmt.Println("disputes: ", disputes)
 	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 2) // resolved
 	// make sure dispute 2 is still open
-	require.Equal(disputes.Disputes[1].Metadata.DisputeStatus, 1) // open
+	require.Equal(disputes.Disputes[1].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // open
 
 	// check user0 free floating balance before claiming
 	user0BalanceBeforeClaim, err := chain.BankQueryBalance(ctx, user0Addr, "loya")
@@ -1922,9 +1922,9 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	var disputes e2e.Disputes
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(err)
-	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1)   // open
-	require.Equal(disputes.Disputes[0].Metadata.DisputeCategory, 3) // major
-	require.Equal(disputes.Disputes[0].Metadata.DisputeID, "1")     // open
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // open
+	require.Equal(disputes.Disputes[0].Metadata.DisputeCategory, 3)                     // major
+	require.Equal(disputes.Disputes[0].Metadata.DisputeID, "1")                         // open
 	require.Equal(disputes.Disputes[0].Metadata.DisputeRound, "1")
 	require.Equal(disputes.Disputes[0].Metadata.FeeTotal, "1000000000") // 1000 * 1e6 is 100% of 1000 trb
 	fmt.Println("open dispute: ", disputes.Disputes[0])
@@ -2278,8 +2278,8 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	var disputes e2e.Disputes
 	require.NoError(json.Unmarshal(res, &disputes))
 	require.Equal(len(disputes.Disputes), 2)
-	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1) // not resolved yet
-	require.Equal(disputes.Disputes[1].Metadata.DisputeStatus, 1) // not resolved yet
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // not resolved yet
+	require.Equal(disputes.Disputes[1].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // not resolved yet
 
 	for i := range userReports {
 		disputeId := strconv.Itoa(i + 1)
@@ -2298,7 +2298,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 		require.NoError(err)
 		require.NoError(json.Unmarshal(res, &disputes))
 		fmt.Println("dispute 1: ", disputes.Disputes[i])
-		require.Equal(disputes.Disputes[i].Metadata.DisputeStatus, 1) // not resolved yet
+		require.Equal(disputes.Disputes[i].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // not resolved yet
 
 		// vote from team (should be at least 66% voting power after (33% from team, 33% from having one tip from val1))
 		txHash, err = val1.ExecTx(ctx, "team", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
@@ -2404,10 +2404,10 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	require.NoError(err)
 	require.NoError(json.Unmarshal(res, &disputes))
 	require.Equal(len(disputes.Disputes), 6)
-	require.Equal(disputes.Disputes[2].Metadata.DisputeStatus, 1) // not resolved yet
-	require.Equal(disputes.Disputes[3].Metadata.DisputeStatus, 1) // not resolved yet
-	require.Equal(disputes.Disputes[4].Metadata.DisputeStatus, 1) // not resolved yet
-	require.Equal(disputes.Disputes[5].Metadata.DisputeStatus, 1) // not resolved yet
+	require.Equal(disputes.Disputes[2].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // not resolved yet
+	require.Equal(disputes.Disputes[3].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // not resolved yet
+	require.Equal(disputes.Disputes[4].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // not resolved yet
+	require.Equal(disputes.Disputes[5].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // not resolved yet
 
 	for i := range userReports {
 		disputeId := strconv.Itoa(i + 3) // disputes 3, 4, 5, 6
@@ -2426,7 +2426,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 		require.NoError(err)
 		require.NoError(json.Unmarshal(res, &disputes))
 		fmt.Println("dispute ", i+3, ": ", disputes.Disputes[i+2])
-		require.Equal(disputes.Disputes[i+2].Metadata.DisputeStatus, 1) // not resolved yet
+		require.Equal(disputes.Disputes[i+2].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // not resolved yet
 
 		// vote from team (should be at least 66% voting power after (33% from team, 33% from having one tip from val1))
 		txHash, err = val1.ExecTx(ctx, "team", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.HomeDir())
@@ -2439,7 +2439,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 		require.NoError(err)
 		err = json.Unmarshal(r, &disputes)
 		require.NoError(err)
-		require.Equal(disputes.Disputes[i+2].Metadata.DisputeStatus, 2) // resolved now
+		require.Equal(disputes.Disputes[i+2].Metadata.DisputeStatus, "DISPUTE_STATUS_RESOLVED") // resolved now
 		fmt.Println("resolved dispute ", disputes.Disputes[i+2].DisputeID)
 	}
 
@@ -3157,7 +3157,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	fmt.Println("dispute fee paid: ", disputes.Disputes[0].Metadata.InitialEvidence.Power)
 	require.Equal(len(disputes.Disputes), 1)
 	require.Equal(disputes.Disputes[0].Metadata.DisputeId, "1")
-	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, 1) // open
+	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // open
 }
 
 func TestGroupPowers(t *testing.T) {
@@ -3373,7 +3373,7 @@ func TestGroupPowers(t *testing.T) {
 	fmt.Println("dispute fee total: ", openDispute.Metadata.FeeTotal)
 	fmt.Println("dispute fee paid: ", openDispute.Metadata.InitialEvidence.Power)
 	require.Equal(openDispute.Metadata.DisputeId, "1")
-	require.Equal(openDispute.Metadata.DisputeStatus, 1) // open
+	require.Equal(openDispute.Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // open
 
 	// team votes support on the dispute
 	txHash, err = validators[0].Val.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-support", "--keyring-dir", validators[1].Val.HomeDir())
@@ -3465,7 +3465,7 @@ func TestGroupPowers(t *testing.T) {
 	fmt.Println("!!!** openDispute.Metadata.InitialEvidence.Timestamp: ", openDispute.Metadata.InitialEvidence.Timestamp)
 	fmt.Println("!!!** openDispute.Metadata.InitialEvidence.Value: ", openDispute.Metadata.InitialEvidence.Value)
 	fmt.Println("!!!** openDispute.Metadata.InitialEvidence.ValueHash: ", openDispute.Metadata.DisputeEndTime)
-	require.Equal(openDispute.Metadata.DisputeStatus, 1) // open
+	require.Equal(openDispute.Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // open
 
 	// val1 switches vote to support, should have a third of user power and ~ a third of reporting power and team vote (>50% total) for support, dispute should execute
 	txHash, err = validators[1].Val.ExecTx(ctx, validators[1].Addr, "dispute", "vote", "1", "vote-support", "--keyring-dir", validators[1].Val.HomeDir())
