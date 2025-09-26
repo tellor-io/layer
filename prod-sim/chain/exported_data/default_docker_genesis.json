@@ -108,7 +108,14 @@
       "send_enabled": []
     },
     "bridge": {
-      "params": {},
+      "params": {
+        "attest_slash_percentage": "0.010000000000000000",
+        "attest_rate_limit_window": "600000",
+        "valset_slash_percentage": "0.050000000000000000",
+        "valset_rate_limit_window": "600000",
+        "attest_penalty_time_cutoff": "0",
+        "mainnet_chain_id": "tellor-1"
+      },
       "snapshot_limit": "1000",
       "bridge_val_set": null,
       "validator_checkpoint": null,
