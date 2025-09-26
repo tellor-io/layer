@@ -3,6 +3,7 @@ package utils
 import (
 	"encoding/hex"
 	"errors"
+	"math/big"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/crypto"
@@ -57,4 +58,23 @@ func FormatUint256(hexStr string) (string, error) {
 	}
 
 	return hexStr, nil
+}
+
+// FormatBigInt converts a big.Int to float64 with the given number of decimals
+func FormatBigInt(value *big.Int, decimals int) float64 {
+	if value == nil {
+		return 0
+	}
+
+	divisor := big.NewInt(1)
+	for i := 0; i < decimals; i++ {
+		divisor.Mul(divisor, big.NewInt(10))
+	}
+
+	result := new(big.Float).SetInt(value)
+	divisorFloat := new(big.Float).SetInt(divisor)
+	result.Quo(result, divisorFloat)
+
+	f64, _ := result.Float64()
+	return f64
 }

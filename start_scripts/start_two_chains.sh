@@ -57,6 +57,15 @@ MULTISIG_NAME="team"
 MULTISIG_THRESHOLD="2"
 MULTISIG_MEMBERS="$KEY_NAME,bill"
 ./layerd keys add $MULTISIG_NAME --multisig="$MULTISIG_MEMBERS" --multisig-threshold=$MULTISIG_THRESHOLD --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
+# import bill to alice
+./layerd keys import-hex bill $PRIVATE_KEY_2 --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
+
+# Create team multisig account
+echo "Creating team multisig account..."
+MULTISIG_NAME="team"
+MULTISIG_THRESHOLD="2"
+MULTISIG_MEMBERS="$KEY_NAME,bill"
+./layerd keys add $MULTISIG_NAME --multisig="$MULTISIG_MEMBERS" --multisig-threshold=$MULTISIG_THRESHOLD --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
 
 # Update vote_extensions_enable_height in genesis.json
 echo "Updating vote_extensions_enable_height in genesis.json..."

@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -20,12 +19,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-)
-
-const maxConcurrentTxs = 14
-
-const (
-	ErrorMaxConcurrentTxs = "max concurrent transactions reached"
 )
 
 func newFactory(clientCtx client.Context) tx.Factory {
@@ -147,30 +140,14 @@ func (c *Client) sendTx(ctx context.Context, queryMetaId uint64, msg ...sdk.Msg)
 		return nil, fmt.Errorf("error getting block: %w", err)
 	}
 	txf := newFactory(c.cosmosCtx)
-	_, nonce, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, c.cosmosCtx.FromAddress)
-	if err != nil {
-		return nil, fmt.Errorf("error getting account number and sequence: %w", err)
-	}
 
-	// handle sequence conflicts for concurrent transaction submission
-	concurrentTxs := 0
-	mutex.Lock()
-	if nonce <= lastSequenceUsed {
-		concurrentTxs = int(lastSequenceUsed - nonce + 1)
-		// if chain sequence hasn't advanced, increment to avoid conflicts
-		c.logger.Info(fmt.Sprintf("sequence conflict detected, sequence queried: %d, using incremented sequence: %d", nonce, lastSequenceUsed+1))
-		nonce = lastSequenceUsed + 1
-	}
-	if concurrentTxs < maxConcurrentTxs {
-		lastSequenceUsed = nonce
-	}
-	mutex.Unlock()
-	if concurrentTxs >= maxConcurrentTxs {
-		c.logger.Info(fmt.Sprintf("max concurrent transactions reached, skipping transaction with sequence: %d", nonce))
-		return nil, errors.New(ErrorMaxConcurrentTxs)
-	}
-
-	txf = txf.WithSequence(nonce).WithGasPrices(c.minGasFee).WithTimeoutHeight(uint64(block.SdkBlock.Header.Height + 2))
+	// Configure for unordered transactions (Cosmos SDK 0.53.4+)
+	// Set sequence to 0, enable unordered mode, and set timeout timestamp
+	txf = txf.WithSequence(0).
+		WithGasPrices(c.minGasFee).
+		WithTimeoutHeight(uint64(block.SdkBlock.Header.Height + 2)).
+		WithUnordered(true).
+		WithTimeoutTimestamp(time.Now().Add(1 * time.Minute)) // 1 minute timeout for unordered transactions
 	txf, err = txf.Prepare(c.cosmosCtx)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing transaction factory: %w", err)
@@ -190,10 +167,6 @@ func (c *Client) sendTx(ctx context.Context, queryMetaId uint64, msg ...sdk.Msg)
 	}
 	res, err := c.cosmosCtx.BroadcastTx(txBytes)
 	if err := handleBroadcastResult(res, err); err != nil {
-		// check for sequence mismatch error and reset tracking if needed
-		if res != nil && res.Code == 32 {
-			c.handleSequenceError(nonce)
-		}
 		return nil, fmt.Errorf("error broadcasting transaction result: %w", err)
 	}
 
@@ -274,25 +247,3 @@ func gasprice(local, global sdk.DecCoins) sdk.DecCoin {
 // 	}
 // 	return 0, fmt.Errorf("commit_id not found")
 // }
-
-// handleSequenceError resets global sequence tracking by querying current chain state
-func (c *Client) handleSequenceError(failedSequence uint64) {
-	// query current sequence directly from chain instead of parsing error strings
-	_, currentChainSeq, err := c.cosmosCtx.AccountRetriever.GetAccountNumberSequence(c.cosmosCtx, c.cosmosCtx.FromAddress)
-	if err != nil {
-		c.logger.Error(fmt.Sprintf("failed to query chain sequence during error recovery: %v", err))
-		return
-	}
-
-	mutex.Lock()
-	// only reset if our tracking is ahead of chain state (indicating failed transactions)
-	if lastSequenceUsed >= currentChainSeq {
-		lastSequenceUsed = currentChainSeq - 1
-		c.logger.Warn(fmt.Sprintf("sequence error recovery - failed seq: %d, chain seq: %d, reset tracking to: %d",
-			failedSequence, currentChainSeq, currentChainSeq-1))
-	} else {
-		c.logger.Info(fmt.Sprintf("sequence tracking already correct - failed seq: %d, chain seq: %d, tracking: %d",
-			failedSequence, currentChainSeq, lastSequenceUsed))
-	}
-	mutex.Unlock()
-}

@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -15,7 +16,6 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/stretchr/testify/require"
-	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	"go.uber.org/zap/zaptest"
 
@@ -28,6 +28,33 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// Retry executes a function with retry logic to handle Docker container cleanup race conditions
+func Retry(t *testing.T, testName string, operation func() error) error {
+	t.Helper()
+	maxRetries := 3
+	delay := 5 * time.Second
+	var lastErr error
+
+	for i := range maxRetries {
+		if i > 0 {
+			t.Logf("[%s] Retry attempt %d/%d due to previous failure: %v",
+				testName, i+1, maxRetries, lastErr)
+			time.Sleep(delay)
+		}
+
+		err := operation()
+		if err == nil {
+			return nil // Success!
+		}
+
+		lastErr = err
+		t.Logf("[%s] Attempt %d failed: %v", testName, i+1, err)
+	}
+
+	return fmt.Errorf("[%s] Operation failed after %d attempts. Last error: %w",
+		testName, maxRetries, lastErr)
+}
+
 // HELPERS FOR BUILDING THE CHAIN
 
 var (
@@ -35,7 +62,7 @@ var (
 		{
 			Repository: "layer",
 			Version:    "local",
-			UidGid:     "1025:1025",
+			UIDGID:     "1025:1025",
 		},
 	}
 	numVals      = 2
@@ -64,20 +91,30 @@ func LayerSpinup(t *testing.T) *cosmos.CosmosChain {
 
 	layer := chains[0].(*cosmos.CosmosChain)
 
-	ic := interchaintest.NewInterchain().
-		AddChain(layer)
+	var ic *interchaintest.Interchain
 
 	ctx := context.Background()
+
+	// Set Docker daemon configuration for better container management
+	os.Setenv("DOCKER_BUILDKIT", "0") // Disable BuildKit for more stable behavior
+
 	client, network := interchaintest.DockerSetup(t)
 
-	require.NoError(t, ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
-		TestName:         t.Name(),
-		Client:           client,
-		NetworkID:        network,
-		SkipPathCreation: true,
-	}))
+	// Use retry logic for the interchain build to handle container cleanup issues
+	err = Retry(t, "LayerSpinup", func() error {
+		ic = interchaintest.NewInterchain().AddChain(layer)
+		return ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
+			TestName:         t.Name(),
+			Client:           client,
+			NetworkID:        network,
+			SkipPathCreation: true,
+		})
+	})
+	require.NoError(t, err)
+
 	t.Cleanup(func() {
 		_ = ic.Close()
+		time.Sleep(3 * time.Second)
 	})
 	require.NoError(t, layer.RecoverKey(ctx, "team", teamMnemonic))
 	require.NoError(t, layer.SendFunds(ctx, "faucet", ibc.WalletAmount{
@@ -161,9 +198,9 @@ type Disputes struct {
 type Metadata struct {
 	HashID            string   `json:"hash_id"`
 	DisputeID         string   `json:"dispute_id"`
-	DisputeCategory   int      `json:"dispute_category"`
+	DisputeCategory   string   `json:"dispute_category"`
 	DisputeFee        string   `json:"dispute_fee"`
-	DisputeStatus     int      `json:"dispute_status"`
+	DisputeStatus     string   `json:"dispute_status"`
 	DisputeStartTime  string   `json:"dispute_start_time"`
 	DisputeEndTime    string   `json:"dispute_end_time"`
 	DisputeStartBlock string   `json:"dispute_start_block"`
@@ -183,11 +220,11 @@ type MetaData2 struct {
 	// current dispute id
 	DisputeId string `protobuf:"varint,2,opt,name=dispute_id,json=disputeId,proto3" json:"dispute_id,omitempty"`
 	// dispute severity level
-	DisputeCategory int `protobuf:"varint,3,opt,name=dispute_category,json=disputeCategory,proto3,enum=layer.dispute.DisputeCategory" json:"dispute_category,omitempty"`
+	DisputeCategory string `protobuf:"varint,3,opt,name=dispute_category,json=disputeCategory,proto3,enum=layer.dispute.DisputeCategory" json:"dispute_category,omitempty"`
 	// cost to start dispute
 	DisputeFee string `protobuf:"bytes,4,opt,name=dispute_fee,json=disputeFee,proto3,customtype=cosmossdk.io/math.Int" json:"dispute_fee"`
 	// current dispute status
-	DisputeStatus int `protobuf:"varint,5,opt,name=dispute_status,json=disputeStatus,proto3,enum=layer.dispute.DisputeStatus" json:"dispute_status,omitempty"`
+	DisputeStatus string `protobuf:"varint,5,opt,name=dispute_status,json=disputeStatus,proto3,enum=layer.dispute.DisputeStatus" json:"dispute_status,omitempty"`
 	// start time of the dispute that begins after dispute fee is fully paid
 	DisputeStartTime string `protobuf:"bytes,6,opt,name=dispute_start_time,json=disputeStartTime,proto3,stdtime" json:"dispute_start_time"`
 	// end time that the dispute stop taking votes and creating new rounds
@@ -281,7 +318,7 @@ type Proposal struct {
 }
 
 type CurrentTipsResponse struct {
-	Tips math.Int `json:"tips"`
+	Tips string `json:"tips"`
 }
 
 type DataSpecResponse struct {
@@ -414,7 +451,7 @@ type Validator struct {
 	// jailed defined whether the validator has been jailed from bonded status or not.
 	Jailed bool `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
 	// status is the validator status (bonded/unbonding/unbonded).
-	Status int `protobuf:"varint,4,opt,name=status,proto3,enum=cosmos.staking.v1beta1.BondStatus" json:"status,omitempty"`
+	Status string `protobuf:"varint,4,opt,name=status,proto3,enum=cosmos.staking.v1beta1.BondStatus" json:"status,omitempty"`
 	// tokens define the delegated tokens (incl. self-delegation).
 	Tokens string `protobuf:"bytes,5,opt,name=tokens,proto3,customtype=cosmossdk.io/math.Int" json:"tokens"`
 	// delegator_shares defines total shares issued to a validator's delegators.
@@ -451,18 +488,18 @@ type Description struct {
 
 type Commission struct {
 	// commission_rates defines the initial commission rates to be used for creating a validator.
-	CommissionRates `protobuf:"bytes,1,opt,name=commission_rates,json=commissionRates,proto3,embedded=commission_rates" json:"commission_rates"`
+	CommissionRates CommissionRates `protobuf:"bytes,1,opt,name=commission_rates,json=commissionRates,proto3,embedded=commission_rates" json:"commission_rates"`
 	// update_time is the last time the commission rate was changed.
 	UpdateTime time.Time `protobuf:"bytes,2,opt,name=update_time,json=updateTime,proto3,stdtime" json:"update_time"`
 }
 
 type CommissionRates struct {
 	// rate is the commission rate charged to delegators, as a fraction.
-	Rate math.LegacyDec `protobuf:"bytes,1,opt,name=rate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"rate"`
+	Rate string `protobuf:"bytes,1,opt,name=rate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"rate"`
 	// max_rate defines the maximum commission rate which validator can ever charge, as a fraction.
-	MaxRate math.LegacyDec `protobuf:"bytes,2,opt,name=max_rate,json=maxRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_rate"`
+	MaxRate string `protobuf:"bytes,2,opt,name=max_rate,json=maxRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_rate"`
 	// max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
-	MaxChangeRate math.LegacyDec `protobuf:"bytes,3,opt,name=max_change_rate,json=maxChangeRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_change_rate"`
+	MaxChangeRate string `protobuf:"bytes,3,opt,name=max_change_rate,json=maxChangeRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_change_rate"`
 }
 
 type QueryCurrentCyclelistQueryResponse struct {
@@ -479,7 +516,7 @@ type QueryGetCurrentAggregateReportResponse struct {
 
 type Aggregate struct {
 	// query_id is the id of the query
-	QueryId []byte `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	QueryId string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
 	// aggregate_value is the value of the aggregate
 	AggregateValue string `protobuf:"bytes,2,opt,name=aggregate_value,json=aggregateValue,proto3" json:"aggregate_value,omitempty"`
 	// aggregate_reporter is the address of the reporter
@@ -540,7 +577,7 @@ type DataSpec struct {
 	// pertinent reports are aggregated together before arriving at a final value. This defaults
 	// to 0s if not specified.
 	// extensions: treat as a golang time.duration, don't allow nil values, don't omit empty values
-	ReportBlockWindow uint64 `protobuf:"varint,6,opt,name=report_block_window,json=reportBlockWindow,proto3" json:"report_block_window,omitempty"`
+	ReportBlockWindow string `protobuf:"varint,6,opt,name=report_block_window,json=reportBlockWindow,proto3" json:"report_block_window,omitempty"`
 	// querytype is the first arg in queryData
 	QueryType string `protobuf:"bytes,7,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
 }
@@ -615,10 +652,10 @@ type QueryGetDataSpecResponse struct {
 }
 
 type Voter struct {
-	Vote          disputetypes.VoteEnum `protobuf:"varint,1,opt,name=vote,proto3,enum=layer.dispute.VoteEnum" json:"vote,omitempty"`
-	VoterPower    math.Int              `protobuf:"bytes,2,opt,name=voter_power,json=voterPower,proto3,customtype=cosmossdk.io/math.Int" json:"voter_power"`
-	ReporterPower math.Int              `protobuf:"bytes,3,opt,name=reporter_power,json=reporterPower,proto3,customtype=cosmossdk.io/math.Int" json:"reporter_power"`
-	RewardClaimed bool                  `protobuf:"varint,5,opt,name=reward_claimed,json=rewardClaimed,proto3" json:"reward_claimed,omitempty"`
+	Vote          string `protobuf:"varint,1,opt,name=vote,proto3,enum=layer.dispute.VoteEnum" json:"vote,omitempty"`
+	VoterPower    string `protobuf:"bytes,2,opt,name=voter_power,json=voterPower,proto3,customtype=cosmossdk.io/math.Int" json:"voter_power"`
+	ReporterPower string `protobuf:"bytes,3,opt,name=reporter_power,json=reporterPower,proto3,customtype=cosmossdk.io/math.Int" json:"reporter_power"`
+	RewardClaimed bool   `protobuf:"varint,5,opt,name=reward_claimed,json=rewardClaimed,proto3" json:"reward_claimed,omitempty"`
 }
 
 // HELPERS FOR TESTING AGAINST THE CHAIN
@@ -758,7 +795,7 @@ func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *c
 	}
 
 	for _, v := range layer.Validators {
-		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "1000000loya", "--keyring-dir", "/var/cosmos-chain/layer-1")
+		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "1000000loya", "--keyring-dir", layer.HomeDir())
 		if err != nil {
 			return err
 		}
@@ -831,4 +868,81 @@ func CreateReporter(ctx context.Context, accountAddr string, validator *cosmos.C
 		return "", err
 	}
 	return txHash, nil
+}
+
+// SetupTestChain creates a test chain with the specified configuration
+// This is a common setup used by most e2e tests (except TestLayerFlow)
+func SetupTestChain(t *testing.T, numVals, numFullNodes int, modifyGenesis []cosmos.GenesisKV) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
+	t.Helper()
+	require := require.New(t)
+
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
+
+	t.Parallel()
+	time.Sleep(1 * time.Second)
+
+	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
+		{
+			NumValidators: &numVals,
+			NumFullNodes:  &numFullNodes,
+			ChainConfig: ibc.ChainConfig{
+				Type:           "cosmos",
+				Name:           "layer",
+				ChainID:        "layer",
+				Bin:            "layerd",
+				Denom:          "loya",
+				Bech32Prefix:   "tellor",
+				CoinType:       "118",
+				GasPrices:      "0.0loya",
+				GasAdjustment:  1.1,
+				TrustingPeriod: "504h",
+				NoHostMount:    false,
+				Images: []ibc.DockerImage{
+					{
+						Repository: "layer",
+						Version:    "local",
+						UIDGID:     "1025:1025",
+					},
+				},
+				EncodingConfig:      LayerEncoding(),
+				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
+				AdditionalStartArgs: []string{"--key-name", "validator"},
+			},
+		},
+	})
+	time.Sleep(1 * time.Second)
+
+	client, network := interchaintest.DockerSetup(t)
+	time.Sleep(1 * time.Second)
+
+	chain := chains[0].(*cosmos.CosmosChain)
+	time.Sleep(1 * time.Second)
+
+	ic := interchaintest.NewInterchain().
+		AddChain(chain)
+	time.Sleep(1 * time.Second)
+
+	ctx := context.Background()
+
+	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
+		TestName:         t.Name(),
+		Client:           client,
+		NetworkID:        network,
+		SkipPathCreation: false,
+	}))
+	time.Sleep(1 * time.Second)
+	t.Cleanup(func() {
+		_ = ic.Close()
+		time.Sleep(1 * time.Second)
+	})
+	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
+	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
+		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
+		Amount:  math.NewInt(1000000000000),
+		Denom:   "loya",
+	}))
+
+	return chain, ic, ctx
 }

@@ -4,7 +4,7 @@
 #
 # Separating the builder and runtime image allows the runtime image to be
 # considerably smaller because it doesn't need to have Golang installed.
-ARG BUILDER_IMAGE=docker.io/golang:1.22.12-alpine3.20
+ARG BUILDER_IMAGE=docker.io/golang:1.23.2-alpine
 ARG RUNTIME_IMAGE=docker.io/alpine:3.20
 ARG TARGETOS
 ARG TARGETARCH
@@ -35,9 +35,9 @@ RUN uname -a &&\
 # See https://github.com/hadolint/hadolint/issues/339
 # hadolint ignore=DL3006
 FROM ${RUNTIME_IMAGE} AS runtime
-# Use UID 10,001 because UIDs below 10,000 are a security risk.
-# Ref: https://github.com/hexops/dockerfile/blob/main/README.md#do-not-use-a-uid-below-10000
-ARG UID=10001
+# Use UID 1025 to match heighliner standard for Cosmos SDK chains.
+# This ensures compatibility with interchaintest and other Cosmos tooling.
+ARG UID=1025
 ARG USER_NAME=layerdevnet
 ENV LAYER_HOME=/home/${USER_NAME}
 # hadolint ignore=DL3018
@@ -45,6 +45,7 @@ RUN apk update && apk add --no-cache \
     bash \
     curl \
     jq \
+    tini \
     && adduser ${USER_NAME} \
     -D \
     -g ${USER_NAME} \
@@ -67,4 +68,9 @@ WORKDIR ${LAYER_HOME}
 # 26660 is the port used for Prometheus.
 # 26661 is the port used for tracing.
 EXPOSE 1317 9090 26656 26657 26660 26661
-ENTRYPOINT [ "/bin/bash", "/opt/entrypoint.sh" ]
+
+# Add health check to ensure container is ready
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:26657/status || exit 1
+
+ENTRYPOINT [ "/sbin/tini", "--", "/bin/bash", "/opt/entrypoint.sh" ]

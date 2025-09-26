@@ -2,12 +2,14 @@
 
 These are end to end tests using the [interchaintest](https://github.com/strangelove-ventures/interchaintest) framework. These tests spin up a live chain with a given number of nodes/validators in docker that you can run transactions and queries against. To run all e2e tests:
 
-Install heighliner:
+Create image (recommended):
+```sh
+make docker-image
+```
+
+Or using heighliner (legacy):
 ```sh
 make get-heighliner
-```
-Create image:
-```sh
 make local-image
 ```
 Run all e2e tests:
