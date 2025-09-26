@@ -21,7 +21,7 @@ const teamMnemonic = "unit curious maid primary holiday lunch lift melody boil b
 // go test -run TestAttestation --timeout 5m
 
 // check snapshot/attestation data for report1_consensus, report2_not_consensus, request_attestations_report2 (lastConsTs should equal report1 timestamp)
-func TestAttestation(t *testing.T) {
+func TestConsensusAttestation(t *testing.T) {
 	require := require.New(t)
 
 	// Set SDK config before parsing addresses
@@ -35,6 +35,8 @@ func TestAttestation(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+		// Increase tip window from 2 blocks to 5 blocks for easier timing
+		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
 	}
 
 	nv := 2
@@ -95,6 +97,10 @@ func TestAttestation(t *testing.T) {
 	require.Contains(reportersRes.Reporters[1].Metadata.Moniker, "reporter_moniker")
 	require.NotEqual(reportersRes.Reporters[0].Metadata.Moniker, reportersRes.Reporters[1].Metadata.Moniker)
 
+	// wait 1 block
+	err = testutil.WaitForBlocks(ctx, 1, validators[0].Val)
+	require.NoError(err)
+
 	// validator reporters report for the cycle list
 	currentCycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
 	require.NoError(err)
@@ -104,15 +110,15 @@ func TestAttestation(t *testing.T) {
 	fmt.Println("current cycle list: ", currentCycleList)
 	for i, v := range validators {
 		// report for the cycle list
-		_, _, err = v.Val.Exec(ctx, v.Val.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", v.Val.HomeDir()), v.Val.Chain.Config().Env)
+		txHash, err := v.Val.ExecTx(ctx, "validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", v.Val.HomeDir())
 		require.NoError(err)
 		height, err := chain.Height(ctx)
 		require.NoError(err)
-		fmt.Println("validator [", i, "] reported at height ", height)
+		fmt.Println("validator [", i, "] reported at height ", height, " txHash:", txHash)
 	}
 
-	// wait for query to expire
-	err = testutil.WaitForBlocks(ctx, 2, validators[0].Val)
+	// wait 6 blocks (5 block reporting window), wait 6 to be safe
+	err = testutil.WaitForBlocks(ctx, 6, validators[0].Val)
 	require.NoError(err)
 
 	// check on reports
@@ -192,7 +198,7 @@ func TestAttestation(t *testing.T) {
 			success = true
 			cycleListQData = cycleList.QueryData
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(2 * time.Second)
 	}
 
 	// report for the cycle list from 1 val so not a consensus report
@@ -202,8 +208,8 @@ func TestAttestation(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("validator [0] reported at height ", height)
 
-	// wait 2 blocks for query to expire
-	err = testutil.WaitForBlocks(ctx, 2, validators[0].Val)
+	// wait 6 blocks (5 block reporting window), wait 6 to be safe
+	err = testutil.WaitForBlocks(ctx, 6, validators[0].Val)
 	require.NoError(err)
 
 	// get reports by reporter
