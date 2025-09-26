@@ -85,6 +85,8 @@ func TestBatchSubmitValue(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+		// Increase tip window from 2 blocks to 5 blocks for better test reliability
+		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
 	}
 
 	nv := 4
@@ -109,22 +111,20 @@ func TestBatchSubmitValue(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("Reporter creation tx hash:", txHash)
 
-	// Cyclist queries
-	ethQueryDataStr := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	ethQueryData, err := hex.DecodeString(ethQueryDataStr)
+	// Non-cycle list queries (using constants from dispute_test.go)
+	trxQueryData, err := hex.DecodeString(trxQData)
 	require.NoError(err)
-	btcQueryDataStr := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003627463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	btcQueryData, err := hex.DecodeString(btcQueryDataStr)
+	suiQueryData, err := hex.DecodeString(suiQData)
 	require.NoError(err)
-	trbQueryDataStr := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747262000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	trbQueryData, err := hex.DecodeString(trbQueryDataStr)
+	bchQueryData, err := hex.DecodeString(bchQData)
 	require.NoError(err)
-	// convert to base64 for CLI
-	queryData1 := base64.StdEncoding.EncodeToString(ethQueryData)
-	queryData2 := base64.StdEncoding.EncodeToString(btcQueryData)
-	queryData3 := base64.StdEncoding.EncodeToString(trbQueryData)
 
-	fmt.Printf("Cycle list queries:\n1: %s\n2: %s\n3: %s\n", queryData1, queryData2, queryData3)
+	// convert to base64 for CLI
+	queryData1 := base64.StdEncoding.EncodeToString(trxQueryData)
+	queryData2 := base64.StdEncoding.EncodeToString(suiQueryData)
+	queryData3 := base64.StdEncoding.EncodeToString(bchQueryData)
+
+	fmt.Printf("Non-cycle list queries:\n1: TRX/USD\n2: SUI/USD\n3: BCH/USD\n")
 
 	// Random value
 	value := "000000000000000000000000000000000000000000000000000000000000001e" // hex encoded value (30)
@@ -135,8 +135,8 @@ func TestBatchSubmitValue(t *testing.T) {
 	value3 := fmt.Sprintf(`{"query_data":"%s", "value":"%s"}`, queryData3, value)
 
 	// Try to submit values for all three queries initially
-	// Without tips, only one of them should succeed (since without tips only one query can be in the cycle list at a time)
-	fmt.Println("\n=== Testing initial submission (expecting 2 failures, 1 success) ===")
+	// Without tips, ALL should fail since these are not cycle list queries
+	fmt.Println("\n=== Testing initial submission (expecting ALL to fail - no tips) ===")
 	// Execute batch submit
 	txHash1, err := val1.ExecTx(
 		ctx, "validator",
@@ -158,42 +158,72 @@ func TestBatchSubmitValue(t *testing.T) {
 
 	// ======================================================================================
 	// Now tip all three queries to make them submittable
-	fmt.Println("\n=== Tipping all three cycle list queries ===")
+	fmt.Println("\n=== Tipping all three non-cycle list queries ===")
 	tipAmount := sdk.NewCoin("loya", math.NewInt(1000000)) // 1 TRB
 
-	// Tip query 1 - use Exec() to avoid waiting for blocks
+	// wait 1 block
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1))
+
+	// Tip query 1 (TRX/USD)
 	cmd := val2.TxCommand("validator", "oracle", "tip", queryData1, tipAmount.String(), "--keyring-dir", val2.HomeDir())
 	stdout, _, err := val2.Exec(ctx, cmd, val2.Chain.Config().Env)
 	require.NoError(err)
-	fmt.Println("Tipped query 1")
-	output := cosmos.CosmosTx{}
-	err = json.Unmarshal(stdout, &output)
+	fmt.Println("Tipped TRX/USD query")
+	output1 := cosmos.CosmosTx{}
+	err = json.Unmarshal(stdout, &output1)
 	require.NoError(err)
-	fmt.Println("Transaction output for first tip:", output)
+	fmt.Println("Transaction output for TRX tip:", output1)
 
-	// Tip query 2 - use Exec() to avoid waiting for blocks
+	// Tip query 2 (SUI/USD)
 	cmd = val3.TxCommand("validator", "oracle", "tip", queryData2, tipAmount.String(), "--keyring-dir", val3.HomeDir())
 	stdout, _, err = val3.Exec(ctx, cmd, val3.Chain.Config().Env)
 	require.NoError(err)
-	fmt.Println("Tipped query 2")
-	output = cosmos.CosmosTx{}
-	err = json.Unmarshal(stdout, &output)
+	fmt.Println("Tipped SUI/USD query")
+	output2 := cosmos.CosmosTx{}
+	err = json.Unmarshal(stdout, &output2)
 	require.NoError(err)
-	fmt.Println("Transaction output for second tip:", output)
+	fmt.Println("Transaction output for SUI tip:", output2)
 
-	// Tip query 3 - use Exec() to avoid waiting for blocks
+	// Tip query 3 (BCH/USD)
 	cmd = val4.TxCommand("validator", "oracle", "tip", queryData3, tipAmount.String(), "--keyring-dir", val4.HomeDir())
 	stdout, _, err = val4.Exec(ctx, cmd, val4.Chain.Config().Env)
 	require.NoError(err)
-	fmt.Println("Tipped query 3")
-	output = cosmos.CosmosTx{}
-	err = json.Unmarshal(stdout, &output)
+	fmt.Println("Tipped BCH/USD query")
+	output3 := cosmos.CosmosTx{}
+	err = json.Unmarshal(stdout, &output3)
 	require.NoError(err)
-	fmt.Println("Transaction output for third tip:", output)
+	fmt.Println("Transaction output for BCH tip:", output3)
+
+	// wait 1 block
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1))
+
+	// Verify all tip transactions were processed
+	fmt.Println("\n=== Verifying tip transactions were processed ===")
+
+	// Check tip transaction 1
+	txRes1, _, err := val1.ExecQuery(ctx, "tx", output1.TxHash)
+	require.NoError(err)
+	fmt.Println("Tip transaction 1 result:", string(txRes1))
+
+	// Check tip transaction 2
+	txRes2, _, err := val1.ExecQuery(ctx, "tx", output2.TxHash)
+	require.NoError(err)
+	fmt.Println("Tip transaction 2 result:", string(txRes2))
+
+	// Check tip transaction 3
+	txRes3, _, err := val1.ExecQuery(ctx, "tx", output3.TxHash)
+	require.NoError(err)
+	fmt.Println("Tip transaction 3 result:", string(txRes3))
+
+	// Check if all queries are tipped
+	fmt.Println("\n=== Checking tipped queries ===")
+	tippedQueriesRes, _, err := val1.ExecQuery(ctx, "oracle", "get-tipped-queries", "--page-limit", "10")
+	require.NoError(err)
+	fmt.Println("Tipped queries response:", string(tippedQueriesRes))
 	// ======================================================================================
 
 	// Now batch submit all three queries again - this time all should succeed
-	fmt.Println("\n=== Batch submitting all three queries (expecting all to succeed) ===")
+	fmt.Println("\n=== Batch submitting all three queries (expecting all to succeed after tips) ===")
 	// Execute second batch submit
 	txHash, err = val1.ExecTx(ctx, "validator", "oracle", "batch-submit-value",
 		"--values", value1,
@@ -209,9 +239,13 @@ func TestBatchSubmitValue(t *testing.T) {
 	// Verify all three reports were created by querying reports
 	fmt.Println("\n=== Verifying reports were created ===")
 
+	// wait 6 blocks (5 block reporting window), wait 6 to be safe
+	require.NoError(testutil.WaitForBlocks(ctx, 6, val1))
+
 	microReports := make([]e2e.MicroReport, 3)
+	queryNames := []string{"TRX/USD", "SUI/USD", "BCH/USD"}
 	// Query reports for each query ID
-	for i, qDataBytes := range [][]byte{ethQueryData, btcQueryData, trbQueryData} {
+	for i, qDataBytes := range [][]byte{trxQueryData, suiQueryData, bchQueryData} {
 		// Convert query data to query ID
 		queryId := hex.EncodeToString(utils.QueryIDFromData(qDataBytes))
 
@@ -219,48 +253,52 @@ func TestBatchSubmitValue(t *testing.T) {
 		reportsRes, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-qid", queryId, "--page-limit", "10")
 		require.NoError(err)
 
+		// Debug: Print raw response before unmarshalling
+		fmt.Printf("Raw reports response for %s: %s\n", queryNames[i], string(reportsRes))
+
 		var reports e2e.QueryMicroReportsResponse
 		err = json.Unmarshal(reportsRes, &reports)
 		require.NoError(err)
 
-		fmt.Printf("Query %d (ID: %s) has %d reports\n", i+1, queryId, len(reports.MicroReports))
-		require.Greater(len(reports.MicroReports), 0, "Query %d should have at least one report", i+1)
-		microReports[i] = reports.MicroReports[len(reports.MicroReports)-1]
+		fmt.Printf("%s (ID: %s) has %d reports\n", queryNames[i], queryId, len(reports.MicroReports))
+		require.Equal(len(reports.MicroReports), 1, "%s should have exactly 1 report", queryNames[i])
+		microReports[i] = reports.MicroReports[0]
 
-		// Verify the latest report has the expected value
-		if len(reports.MicroReports) > 0 {
-			latestReport := reports.MicroReports[len(reports.MicroReports)-1]
-			fmt.Printf("  Latest report value: %s\n", latestReport.Value)
-
-			// Check if the value matches one of our submitted values
-			expectedValues := value
-			valueFound := false
-			if latestReport.Value == expectedValues {
-				valueFound = true
-			}
-			require.True(valueFound || latestReport.Value == value, "Report value should match one of the submitted values")
-		}
+		// Verify the report has the expected value
+		latestReport := reports.MicroReports[0]
+		fmt.Printf("  Report value: %s\n", latestReport.Value)
+		require.Equal(latestReport.Value, value, "%s report value should match submitted value", queryNames[i])
 	}
 
 	// Query aggregates to verify they were created
 	fmt.Println("\n=== Checking for aggregate reports ===")
 
-	for i, qDataBytes := range [][]byte{ethQueryData, trbQueryData, btcQueryData} {
+	for i, qDataBytes := range [][]byte{trxQueryData, suiQueryData, bchQueryData} {
 		// Convert query data to query ID
 		queryId := hex.EncodeToString(utils.QueryIDFromData(qDataBytes))
 
 		// Try to get current aggregate
 		aggRes, _, err := val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", queryId)
-		if err == nil {
-			var aggregate e2e.QueryGetCurrentAggregateReportResponse
-			err = json.Unmarshal(aggRes, &aggregate)
-			if err == nil && aggregate.Aggregate.QueryId != "" {
-				fmt.Printf("Query %d has aggregate report with height %s\n", i+1, aggregate.Aggregate.Height)
-			}
-		}
+		require.NoError(err, "Failed to query aggregate for %s", queryNames[i])
+
+		var aggregate e2e.QueryGetCurrentAggregateReportResponse
+		err = json.Unmarshal(aggRes, &aggregate)
+		require.NoError(err, "Failed to unmarshal aggregate response for %s", queryNames[i])
+		require.NotEmpty(aggregate.Aggregate.QueryId, "%s should have an aggregate report", queryNames[i])
+
+		fmt.Printf("%s has aggregate report with height %s\n", queryNames[i], aggregate.Aggregate.Height)
 	}
 
 	fmt.Println("\n=== Batch submit test completed successfully ===")
+
+	// Debug: Print microReports values before using them
+	fmt.Printf("Debug: microReports[0] (TRX/USD) values:\n")
+	fmt.Printf("  Reporter: %s\n", microReports[0].Reporter)
+	fmt.Printf("  MetaId: %s\n", microReports[0].MetaId)
+	fmt.Printf("  QueryID: %s\n", microReports[0].QueryID)
+	fmt.Printf("  Power: %s\n", microReports[0].Power)
+	fmt.Printf("  Value: %s\n", microReports[0].Value)
+	fmt.Printf("  Timestamp: %s\n", microReports[0].Timestamp)
 
 	// dispute values submitted in batch by validator 1
 	fmt.Println("\n=== Dispute a report that was submitted via batch ===")
@@ -302,8 +340,19 @@ func TestBatchSubmitValue(t *testing.T) {
 	require.Greater(len(openDisputes.OpenDisputes.Ids), 0)
 	fmt.Println("openDisputes: ", openDisputes.OpenDisputes.Ids)
 
-	res, _, err := val1.ExecQuery(ctx, "oracle", "retrieve-data", microReports[0].QueryID, microReports[0].Timestamp)
-	require.NoError(err)
+	// Test retrieve-data functionality - use the aggregate's timestamp instead of micro report timestamp
+	// First get the aggregate to find the correct timestamp
+	aggRes, _, err := val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", microReports[0].QueryID)
+	require.NoError(err, "Failed to get aggregate for retrieve-data test")
+
+	var aggregate e2e.QueryGetCurrentAggregateReportResponse
+	err = json.Unmarshal(aggRes, &aggregate)
+	require.NoError(err, "Failed to unmarshal aggregate for retrieve-data test")
+	require.NotEmpty(aggregate.Aggregate.QueryId, "Aggregate should exist for retrieve-data test")
+
+	// Use the aggregate's timestamp for retrieve-data
+	res, _, err := val1.ExecQuery(ctx, "oracle", "retrieve-data", microReports[0].QueryID, aggregate.Timestamp)
+	require.NoError(err, "Failed to retrieve data")
 	var data e2e.QueryRetrieveDataResponse
 	require.NoError(json.Unmarshal(res, &data))
 	require.Equal(data.Aggregate.Flagged, true)
