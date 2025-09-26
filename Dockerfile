@@ -45,6 +45,7 @@ RUN apk update && apk add --no-cache \
     bash \
     curl \
     jq \
+    tini \
     && adduser ${USER_NAME} \
     -D \
     -g ${USER_NAME} \
@@ -67,4 +68,9 @@ WORKDIR ${LAYER_HOME}
 # 26660 is the port used for Prometheus.
 # 26661 is the port used for tracing.
 EXPOSE 1317 9090 26656 26657 26660 26661
-ENTRYPOINT [ "/bin/bash", "/opt/entrypoint.sh" ]
+
+# Add health check to ensure container is ready
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:26657/status || exit 1
+
+ENTRYPOINT [ "/sbin/tini", "--", "/bin/bash", "/opt/entrypoint.sh" ]

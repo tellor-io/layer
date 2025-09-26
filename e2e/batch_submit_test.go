@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
@@ -19,8 +21,58 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// cleanupDockerContainers removes any existing Docker containers to prevent conflicts
+func cleanupDockerContainers(t *testing.T) {
+	// This is a best-effort cleanup - we don't fail the test if it doesn't work
+
+	// Stop all running containers first
+	cmd := exec.Command("sh", "-c", "docker stop $(docker ps -q)")
+	cmd.Run() // Ignore errors
+
+	// Remove all stopped containers
+	cmd = exec.Command("docker", "container", "prune", "-f")
+	if err := cmd.Run(); err != nil {
+		t.Logf("Warning: Failed to cleanup Docker containers: %v", err)
+	}
+
+	// Remove all unused networks
+	cmd = exec.Command("docker", "network", "prune", "-f")
+	cmd.Run() // Ignore errors
+
+	// Remove all unused volumes
+	cmd = exec.Command("docker", "volume", "prune", "-f")
+	cmd.Run() // Ignore errors
+
+	// Also try to remove any containers with our test pattern
+	cmd = exec.Command("docker", "ps", "-a", "--filter", "name=TestBatchSubmitValue", "--format", "{{.ID}}")
+	output, err := cmd.Output()
+	if err != nil {
+		return
+	}
+
+	containerIDs := strings.Fields(string(output))
+	for _, id := range containerIDs {
+		cmd = exec.Command("docker", "rm", "-f", id)
+		cmd.Run() // Ignore errors
+	}
+
+	// Clean up any interchaintest containers
+	cmd = exec.Command("docker", "ps", "-a", "--filter", "name=interchaintest", "--format", "{{.ID}}")
+	output, err = cmd.Output()
+	if err == nil {
+		containerIDs = strings.Fields(string(output))
+		for _, id := range containerIDs {
+			cmd = exec.Command("docker", "rm", "-f", id)
+			cmd.Run() // Ignore errors
+		}
+	}
+}
+
 func TestBatchSubmitValue(t *testing.T) {
 	require := require.New(t)
+
+	// Clean up any existing containers before starting
+	cleanupDockerContainers(t)
 
 	// Set SDK config before parsing addresses
 	cosmos.SetSDKConfig("tellor")
@@ -37,6 +89,10 @@ func TestBatchSubmitValue(t *testing.T) {
 
 	nv := 4
 	nf := 0
+
+	// Additional cleanup right before chain setup
+	cleanupDockerContainers(t)
+
 	chain, _, ctx := e2e.SetupTestChain(t, nv, nf, modifyGenesis)
 
 	// Get validators
@@ -105,20 +161,35 @@ func TestBatchSubmitValue(t *testing.T) {
 	fmt.Println("\n=== Tipping all three cycle list queries ===")
 	tipAmount := sdk.NewCoin("loya", math.NewInt(1000000)) // 1 TRB
 
-	// Tip query 1
-	txHash, err = val2.ExecTx(ctx, "validator", "oracle", "tip", queryData1, tipAmount.String(), "--keyring-dir", val2.HomeDir())
+	// Tip query 1 - use Exec() to avoid waiting for blocks
+	cmd := val2.TxCommand("validator", "oracle", "tip", queryData1, tipAmount.String(), "--keyring-dir", val2.HomeDir())
+	stdout, _, err := val2.Exec(ctx, cmd, val2.Chain.Config().Env)
 	require.NoError(err)
-	fmt.Println("Tipped query 1, tx hash:", txHash)
+	fmt.Println("Tipped query 1")
+	output := cosmos.CosmosTx{}
+	err = json.Unmarshal(stdout, &output)
+	require.NoError(err)
+	fmt.Println("Transaction output for first tip:", output)
 
-	// Tip query 2
-	txHash, err = val3.ExecTx(ctx, "validator", "oracle", "tip", queryData2, tipAmount.String(), "--keyring-dir", val3.HomeDir())
+	// Tip query 2 - use Exec() to avoid waiting for blocks
+	cmd = val3.TxCommand("validator", "oracle", "tip", queryData2, tipAmount.String(), "--keyring-dir", val3.HomeDir())
+	stdout, _, err = val3.Exec(ctx, cmd, val3.Chain.Config().Env)
 	require.NoError(err)
-	fmt.Println("Tipped query 2, tx hash:", txHash)
+	fmt.Println("Tipped query 2")
+	output = cosmos.CosmosTx{}
+	err = json.Unmarshal(stdout, &output)
+	require.NoError(err)
+	fmt.Println("Transaction output for second tip:", output)
 
-	// Tip query 3
-	txHash, err = val4.ExecTx(ctx, "validator", "oracle", "tip", queryData3, tipAmount.String(), "--keyring-dir", val4.HomeDir())
+	// Tip query 3 - use Exec() to avoid waiting for blocks
+	cmd = val4.TxCommand("validator", "oracle", "tip", queryData3, tipAmount.String(), "--keyring-dir", val4.HomeDir())
+	stdout, _, err = val4.Exec(ctx, cmd, val4.Chain.Config().Env)
 	require.NoError(err)
-	fmt.Println("Tipped query 3, tx hash:", txHash)
+	fmt.Println("Tipped query 3")
+	output = cosmos.CosmosTx{}
+	err = json.Unmarshal(stdout, &output)
+	require.NoError(err)
+	fmt.Println("Transaction output for third tip:", output)
 	// ======================================================================================
 
 	// Now batch submit all three queries again - this time all should succeed
@@ -155,6 +226,7 @@ func TestBatchSubmitValue(t *testing.T) {
 		fmt.Printf("Query %d (ID: %s) has %d reports\n", i+1, queryId, len(reports.MicroReports))
 		require.Greater(len(reports.MicroReports), 0, "Query %d should have at least one report", i+1)
 		microReports[i] = reports.MicroReports[len(reports.MicroReports)-1]
+
 		// Verify the latest report has the expected value
 		if len(reports.MicroReports) > 0 {
 			latestReport := reports.MicroReports[len(reports.MicroReports)-1]
