@@ -36,7 +36,7 @@ func Retry(t *testing.T, testName string, operation func() error) error {
 	delay := 5 * time.Second
 	var lastErr error
 
-	for i := 0; i < maxRetries; i++ {
+	for i := range maxRetries {
 		if i > 0 {
 			t.Logf("[%s] Retry attempt %d/%d due to previous failure: %v",
 				testName, i+1, maxRetries, lastErr)
@@ -221,11 +221,11 @@ type MetaData2 struct {
 	// current dispute id
 	DisputeId string `protobuf:"varint,2,opt,name=dispute_id,json=disputeId,proto3" json:"dispute_id,omitempty"`
 	// dispute severity level
-	DisputeCategory int `protobuf:"varint,3,opt,name=dispute_category,json=disputeCategory,proto3,enum=layer.dispute.DisputeCategory" json:"dispute_category,omitempty"`
+	DisputeCategory string `protobuf:"varint,3,opt,name=dispute_category,json=disputeCategory,proto3,enum=layer.dispute.DisputeCategory" json:"dispute_category,omitempty"`
 	// cost to start dispute
 	DisputeFee string `protobuf:"bytes,4,opt,name=dispute_fee,json=disputeFee,proto3,customtype=cosmossdk.io/math.Int" json:"dispute_fee"`
 	// current dispute status
-	DisputeStatus int `protobuf:"varint,5,opt,name=dispute_status,json=disputeStatus,proto3,enum=layer.dispute.DisputeStatus" json:"dispute_status,omitempty"`
+	DisputeStatus string `protobuf:"varint,5,opt,name=dispute_status,json=disputeStatus,proto3,enum=layer.dispute.DisputeStatus" json:"dispute_status,omitempty"`
 	// start time of the dispute that begins after dispute fee is fully paid
 	DisputeStartTime string `protobuf:"bytes,6,opt,name=dispute_start_time,json=disputeStartTime,proto3,stdtime" json:"dispute_start_time"`
 	// end time that the dispute stop taking votes and creating new rounds
@@ -796,7 +796,7 @@ func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *c
 	}
 
 	for _, v := range layer.Validators {
-		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "1000000loya", "--keyring-dir", "/var/cosmos-chain/layer-1")
+		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "1000000loya", "--keyring-dir", layer.HomeDir())
 		if err != nil {
 			return err
 		}
@@ -869,4 +869,81 @@ func CreateReporter(ctx context.Context, accountAddr string, validator *cosmos.C
 		return "", err
 	}
 	return txHash, nil
+}
+
+// SetupTestChain creates a test chain with the specified configuration
+// This is a common setup used by most e2e tests (except TestLayerFlow)
+func SetupTestChain(t *testing.T, numVals, numFullNodes int, modifyGenesis []cosmos.GenesisKV) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
+	t.Helper()
+	require := require.New(t)
+
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
+
+	t.Parallel()
+	time.Sleep(1 * time.Second)
+
+	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
+		{
+			NumValidators: &numVals,
+			NumFullNodes:  &numFullNodes,
+			ChainConfig: ibc.ChainConfig{
+				Type:           "cosmos",
+				Name:           "layer",
+				ChainID:        "layer",
+				Bin:            "layerd",
+				Denom:          "loya",
+				Bech32Prefix:   "tellor",
+				CoinType:       "118",
+				GasPrices:      "0.0loya",
+				GasAdjustment:  1.1,
+				TrustingPeriod: "504h",
+				NoHostMount:    false,
+				Images: []ibc.DockerImage{
+					{
+						Repository: "layer",
+						Version:    "local",
+						UIDGID:     "1025:1025",
+					},
+				},
+				EncodingConfig:      LayerEncoding(),
+				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
+				AdditionalStartArgs: []string{"--key-name", "validator"},
+			},
+		},
+	})
+	time.Sleep(1 * time.Second)
+
+	client, network := interchaintest.DockerSetup(t)
+	time.Sleep(1 * time.Second)
+
+	chain := chains[0].(*cosmos.CosmosChain)
+	time.Sleep(1 * time.Second)
+
+	ic := interchaintest.NewInterchain().
+		AddChain(chain)
+	time.Sleep(1 * time.Second)
+
+	ctx := context.Background()
+
+	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
+		TestName:         t.Name(),
+		Client:           client,
+		NetworkID:        network,
+		SkipPathCreation: false,
+	}))
+	time.Sleep(1 * time.Second)
+	t.Cleanup(func() {
+		_ = ic.Close()
+		time.Sleep(1 * time.Second)
+	})
+	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
+	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
+		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
+		Amount:  math.NewInt(1000000000000),
+		Denom:   "loya",
+	}))
+
+	return chain, ic, ctx
 }

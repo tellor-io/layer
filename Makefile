@@ -196,7 +196,7 @@ test:
 	@go test -v ./... -short
 
 e2e:
-	@cd e2e && go test -v -race ./... -timeout 20m
+	@cd e2e && go test -v -race ./... -timeout 30m
 
 benchmark:
 	@echo "Cleaning up benchmark results..."

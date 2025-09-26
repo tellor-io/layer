@@ -8,9 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
@@ -24,11 +22,7 @@ import (
 func TestBatchSubmitValue(t *testing.T) {
 	require := require.New(t)
 
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
+	// Set SDK config before parsing addresses
 	cosmos.SetSDKConfig("tellor")
 
 	modifyGenesis := []cosmos.GenesisKV{
@@ -43,54 +37,7 @@ func TestBatchSubmitValue(t *testing.T) {
 
 	nv := 4
 	nf := 0
-	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
-		{
-			NumValidators: &nv,
-			NumFullNodes:  &nf,
-			ChainConfig: ibc.ChainConfig{
-				Type:           "cosmos",
-				Name:           "layer",
-				ChainID:        "layer",
-				Bin:            "layerd",
-				Denom:          "loya",
-				Bech32Prefix:   "tellor",
-				CoinType:       "118",
-				GasPrices:      "0.0loya",
-				GasAdjustment:  1.1,
-				TrustingPeriod: "504h",
-				NoHostMount:    false,
-				Images: []ibc.DockerImage{
-					{
-						Repository: "layer",
-						Version:    "local",
-						UIDGID:     "1025:1025",
-					},
-				},
-				EncodingConfig:      e2e.LayerEncoding(),
-				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator"},
-			},
-		},
-	})
-
-	client, network := interchaintest.DockerSetup(t)
-
-	chain := chains[0].(*cosmos.CosmosChain)
-
-	ic := interchaintest.NewInterchain().
-		AddChain(chain)
-
-	ctx := context.Background()
-
-	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
-		TestName:         t.Name(),
-		Client:           client,
-		NetworkID:        network,
-		SkipPathCreation: false,
-	}))
-	t.Cleanup(func() {
-		_ = ic.Close()
-	})
+	chain, _, ctx := e2e.SetupTestChain(t, nv, nf, modifyGenesis)
 
 	// Get validators
 	validators := getValidators(t, ctx, chain)
@@ -159,61 +106,33 @@ func TestBatchSubmitValue(t *testing.T) {
 	tipAmount := sdk.NewCoin("loya", math.NewInt(1000000)) // 1 TRB
 
 	// Tip query 1
-	// Use Exec so it doesn't wait 2 Blocks
-	cmd := val2.TxCommand("validator", "oracle", "tip", queryData1, tipAmount.String(), "--keyring-dir", val2.HomeDir())
-	stdout, _, err := val2.Exec(ctx, cmd, val2.Chain.Config().Env)
+	txHash, err = val2.ExecTx(ctx, "validator", "oracle", "tip", queryData1, tipAmount.String(), "--keyring-dir", val2.HomeDir())
 	require.NoError(err)
-
-	fmt.Println("Tipped query 1")
-	output := cosmos.CosmosTx{}
-	err = json.Unmarshal(stdout, &output)
-	require.NoError(err)
-	fmt.Println("Transaction output for first tip:", output)
+	fmt.Println("Tipped query 1, tx hash:", txHash)
 
 	// Tip query 2
-	cmd = val3.TxCommand("validator", "oracle", "tip", queryData2, tipAmount.String(), "--keyring-dir", val3.HomeDir())
-	stdout, _, err = val3.Exec(ctx, cmd, val3.Chain.Config().Env)
+	txHash, err = val3.ExecTx(ctx, "validator", "oracle", "tip", queryData2, tipAmount.String(), "--keyring-dir", val3.HomeDir())
 	require.NoError(err)
-
-	fmt.Println("Tipped query 2")
-
-	output = cosmos.CosmosTx{}
-	err = json.Unmarshal(stdout, &output)
-	require.NoError(err)
-	fmt.Println("Transaction output for second tip:", output)
+	fmt.Println("Tipped query 2, tx hash:", txHash)
 
 	// Tip query 3
-	cmd = val4.TxCommand("validator", "oracle", "tip", queryData3, tipAmount.String(), "--keyring-dir", val4.HomeDir())
-	stdout, _, err = val4.Exec(ctx, cmd, val4.Chain.Config().Env)
+	txHash, err = val4.ExecTx(ctx, "validator", "oracle", "tip", queryData3, tipAmount.String(), "--keyring-dir", val4.HomeDir())
 	require.NoError(err)
-
-	fmt.Println("Tipped query 3")
-
-	output = cosmos.CosmosTx{}
-	err = json.Unmarshal(stdout, &output)
-	require.NoError(err)
-	fmt.Println("Transaction output for third tip:", output)
+	fmt.Println("Tipped query 3, tx hash:", txHash)
 	// ======================================================================================
 
 	// Now batch submit all three queries again - this time all should succeed
 	fmt.Println("\n=== Batch submitting all three queries (expecting all to succeed) ===")
-	// Execute second batch submit with JSON file
-	cmd = val1.TxCommand("validator", "oracle", "batch-submit-value",
+	// Execute second batch submit
+	txHash, err = val1.ExecTx(ctx, "validator", "oracle", "batch-submit-value",
 		"--values", value1,
 		"--values", value2,
 		"--values", value3,
 		"--fees", "25loya",
-		"--gas",
-		"400000",
-		"--keyring-dir",
-		val1.HomeDir())
-
-	stdout, _, err = val1.Exec(ctx, cmd, val1.Chain.Config().Env)
+		"--gas", "400000",
+		"--keyring-dir", val1.HomeDir())
 	require.NoError(err)
-	var output2 cosmos.CosmosTx
-	err = json.Unmarshal(stdout, &output2)
-	require.NoError(err)
-	fmt.Println("Second batch submit tx hash:", output2)
+	fmt.Println("Second batch submit tx hash:", txHash)
 	require.NoError(testutil.WaitForBlocks(ctx, 4, val1))
 
 	// Verify all three reports were created by querying reports
@@ -263,7 +182,7 @@ func TestBatchSubmitValue(t *testing.T) {
 		if err == nil {
 			var aggregate e2e.QueryGetCurrentAggregateReportResponse
 			err = json.Unmarshal(aggRes, &aggregate)
-			if err == nil && string(aggregate.Aggregate.QueryId) != "" {
+			if err == nil && aggregate.Aggregate.QueryId != "" {
 				fmt.Printf("Query %d has aggregate report with height %s\n", i+1, aggregate.Aggregate.Height)
 			}
 		}
