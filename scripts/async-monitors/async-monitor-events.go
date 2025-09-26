@@ -67,10 +67,11 @@ type Params struct {
 }
 
 type ConfigType struct {
-	AlertName  string `yaml:"alert_name"`
-	AlertType  string `yaml:"alert_type"`
-	Query      string `yaml:"query"`
-	WebhookURL string `yaml:"webhook_url"`
+	AlertName   string    `yaml:"alert_name"`
+	AlertType   string    `yaml:"alert_type"`
+	Query       string    `yaml:"query"`
+	WebhookURL  string    `yaml:"webhook_url"`
+	LastAlerted time.Time `yaml:"last_alerted"`
 }
 
 type RPCRequest struct {
@@ -336,6 +337,10 @@ func loadConfig() error {
 	// Initialize the event type map
 	newEventTypeMap := make(map[string]ConfigType)
 	for _, et := range newConfig.EventTypes {
+		// Preserve existing LastAlerted value if it exists
+		if existingConfig, exists := eventTypeMap[et.AlertType]; exists {
+			et.LastAlerted = existingConfig.LastAlerted
+		}
 		newEventTypeMap[et.AlertType] = et
 		log.Printf("Loaded event type: %s (%s)\n", et.AlertName, et.AlertType)
 	}
@@ -457,6 +462,9 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 							log.Printf("Error sending final Discord alert: %v\n", err)
 						} else {
 							log.Printf("Sent final Discord alert and starting cooldown\n")
+							eventConfig := eventTypeMap[eventType.AlertType]
+							eventConfig.LastAlerted = now
+							eventTypeMap[eventConfig.AlertType] = eventConfig
 						}
 
 						// Set cooldown for 2 hours
@@ -480,6 +488,9 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 						// Add timestamp for this alert
 						aggregateAlertTimestamps = append(aggregateAlertTimestamps, now)
 						aggregateAlertCount++
+						eventConfig := eventTypeMap[eventType.AlertType]
+						eventConfig.LastAlerted = now
+						eventTypeMap[eventConfig.AlertType] = eventConfig
 					}
 				}
 			} else {
@@ -806,6 +817,9 @@ func handleEvent(event Event, eventType ConfigType) {
 			log.Printf("Error sending Discord alert for event %s: %v\n", event.Type, err)
 		} else {
 			log.Printf("Sent Discord alert for event: %s\n", event.Type)
+			eventConfig := eventTypeMap[eventType.AlertType]
+			eventConfig.LastAlerted = time.Now()
+			eventTypeMap[eventConfig.AlertType] = eventConfig
 		}
 	}
 
@@ -1128,6 +1142,9 @@ func runAnalysis() {
 		log.Printf("Error sending validator set analysis Discord alert: %v", err)
 	} else {
 		log.Printf("Sent daily validator set analysis Discord alert")
+		eventConfig := eventTypeMap[eventType.AlertType]
+		eventConfig.LastAlerted = time.Now()
+		eventTypeMap[eventConfig.AlertType] = eventConfig
 	}
 }
 
@@ -1147,6 +1164,101 @@ func formatDuration(d time.Duration) string {
 		days := int(d.Hours()) / 24
 		hours := int(d.Hours()) % 24
 		return fmt.Sprintf("%dd %dh", days, hours)
+	}
+}
+
+// Add a helper function to check event type heartbeats
+func checkEventTypeHeartbeats(ctx context.Context) {
+	defer recoverAndAlert("checkEventTypeHeartbeats")
+
+	// Run check once a day at 10 AM
+	ticker := time.NewTicker(24 * time.Hour)
+	defer ticker.Stop()
+
+	// Calculate time until next 10 AM
+	now := time.Now()
+	nextRun := time.Date(now.Year(), now.Month(), now.Day(), 10, 0, 0, 0, now.Location())
+	if now.After(nextRun) {
+		nextRun = nextRun.Add(24 * time.Hour)
+	}
+
+	// Wait until 10 AM
+	time.Sleep(nextRun.Sub(now))
+
+	// Run initial check
+	runHeartbeatCheck()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			runHeartbeatCheck()
+		}
+	}
+}
+
+func runHeartbeatCheck() {
+	configMutex.RLock()
+	eventTypes := make(map[string]ConfigType)
+	for k, v := range eventTypeMap {
+		eventTypes[k] = v
+	}
+	configMutex.RUnlock()
+
+	sevenDaysAgo := time.Now().Add(-7 * 24 * time.Hour)
+	var inactiveEventTypes []string
+
+	// Check each event type
+	for alertType, config := range eventTypes {
+		// Skip if LastAlerted is zero (never alerted) or if it's been more than 7 days
+		if config.LastAlerted.IsZero() || config.LastAlerted.Before(sevenDaysAgo) {
+			inactiveEventTypes = append(inactiveEventTypes, alertType)
+		}
+	}
+
+	// Send individual heartbeat alerts to each inactive event type's channel
+	for _, alertType := range inactiveEventTypes {
+		config := eventTypes[alertType]
+
+		// Skip if no webhook URL is configured
+		if config.WebhookURL == "" {
+			log.Printf("No webhook URL configured for event type %s, skipping heartbeat", alertType)
+			continue
+		}
+
+		lastAlerted := "Never"
+		if !config.LastAlerted.IsZero() {
+			lastAlerted = config.LastAlerted.Format("2006-01-02 15:04:05 UTC")
+		}
+
+		message := fmt.Sprintf("**Heartbeat Alert: %s**\n\n"+
+			"This event type has not been triggered in the last 7 days.\n"+
+			"**Node:** %s\n"+
+			"**Event Type:** %s\n"+
+			"**Last Alerted:** %s\n\n"+
+			"This is a heartbeat alert to confirm that this event type is still being monitored.",
+			config.AlertName, nodeName, alertType, lastAlerted)
+
+		discordNotifier := utils.NewDiscordNotifier(config.WebhookURL)
+		if err := discordNotifier.SendAlert(message); err != nil {
+			log.Printf("Error sending heartbeat Discord alert for %s: %v", alertType, err)
+		} else {
+			log.Printf("Sent heartbeat alert for event type: %s", alertType)
+			// Update the LastAlerted timestamp for this event type
+			configMutex.Lock()
+			if eventConfig, exists := eventTypeMap[alertType]; exists {
+				eventConfig.LastAlerted = time.Now()
+				eventTypeMap[alertType] = eventConfig
+			}
+			configMutex.Unlock()
+		}
+	}
+
+	if len(inactiveEventTypes) > 0 {
+		log.Printf("Sent heartbeat alerts for %d inactive event types", len(inactiveEventTypes))
+	} else {
+		log.Printf("All event types have been alerted within the last 7 days")
 	}
 }
 
@@ -1198,6 +1310,10 @@ func main() {
 		wg.Add(1)
 		go analyzeValidatorSetUpdates(ctx)
 	}
+
+	// Start event type heartbeat checker
+	wg.Add(1)
+	go checkEventTypeHeartbeats(ctx)
 
 	wg.Wait()
 	log.Println("Shutdown complete")

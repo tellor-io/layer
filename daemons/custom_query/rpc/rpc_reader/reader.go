@@ -7,6 +7,7 @@ import (
 	"io"
 	"math"
 	"net/http"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -20,14 +21,16 @@ type Reader struct {
 	retryDelay   time.Duration
 	Headers      map[string]string
 	ResponsePath []string
+	Query        string // For POST request bodies (e.g., GraphQL queries)
 }
 
 type httpClient struct {
 	client  *http.Client
 	baseURL string
+	method  string
 }
 
-func NewReader(url string, headers map[string]string, responsePath []string, timeout int) (*Reader, error) {
+func NewReader(url, method, query string, headers map[string]string, responsePath []string, timeout int) (*Reader, error) {
 	if url == "" {
 		return nil, fmt.Errorf("no RPC endpoint provided")
 	}
@@ -37,6 +40,7 @@ func NewReader(url string, headers map[string]string, responsePath []string, tim
 			Timeout: time.Duration(timeout) * time.Second,
 		},
 		baseURL: url,
+		method:  method,
 	}
 
 	reader := &Reader{
@@ -46,6 +50,7 @@ func NewReader(url string, headers map[string]string, responsePath []string, tim
 		retryDelay:   100 * time.Millisecond,
 		Headers:      headers,
 		ResponsePath: responsePath,
+		Query:        query,
 	}
 
 	return reader, nil
@@ -74,9 +79,8 @@ func (r *Reader) FetchJSON(ctx context.Context) ([]byte, error) {
 			}
 		}
 
-		body, err := r.attemptFetch(ctx)
+		body, err := r.attemptFetch(ctx, r.client.method)
 		if err == nil {
-			log.Infof("RPC call successful: url=%s", r.client.baseURL)
 			metrics.RPCCallSuccess.Inc()
 			return body, nil
 		}
@@ -89,11 +93,16 @@ func (r *Reader) FetchJSON(ctx context.Context) ([]byte, error) {
 	return nil, fmt.Errorf("all RPC endpoints failed: %w", lastErr)
 }
 
-func (r *Reader) attemptFetch(ctx context.Context) ([]byte, error) {
+func (r *Reader) attemptFetch(ctx context.Context, method string) ([]byte, error) {
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, r.timeout)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(ctxWithTimeout, "GET", r.client.baseURL, nil)
+	var requestBody io.Reader
+	if method == "POST" && r.Query != "" {
+		requestBody = strings.NewReader(r.Query)
+	}
+
+	req, err := http.NewRequestWithContext(ctxWithTimeout, method, r.client.baseURL, requestBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -121,7 +130,7 @@ func (r *Reader) attemptFetch(ctx context.Context) ([]byte, error) {
 	return body, nil
 }
 
-func (r *Reader) ExtractValueFromJSON(data []byte, path []string) (interface{}, error) {
+func (r *Reader) ExtractValueFromJSON(data []byte, path []string) (any, error) {
 	var result any
 	if err := json.Unmarshal(data, &result); err != nil {
 		return nil, fmt.Errorf("error unmarshaling JSON: %w", err)
