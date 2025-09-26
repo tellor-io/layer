@@ -23,11 +23,14 @@ import (
 
 // cleanupDockerContainers removes any existing Docker containers to prevent conflicts
 func cleanupDockerContainers(t *testing.T) {
+	t.Helper()
 	// This is a best-effort cleanup - we don't fail the test if it doesn't work
 
 	// Stop all running containers first
 	cmd := exec.Command("sh", "-c", "docker stop $(docker ps -q)")
-	cmd.Run() // Ignore errors
+	if err := cmd.Run(); err != nil {
+		t.Logf("Warning: Failed to stop Docker containers: %v", err)
+	}
 
 	// Remove all stopped containers
 	cmd = exec.Command("docker", "container", "prune", "-f")
@@ -37,11 +40,15 @@ func cleanupDockerContainers(t *testing.T) {
 
 	// Remove all unused networks
 	cmd = exec.Command("docker", "network", "prune", "-f")
-	cmd.Run() // Ignore errors
+	if err := cmd.Run(); err != nil {
+		t.Logf("Warning: Failed to cleanup Docker networks: %v", err)
+	}
 
 	// Remove all unused volumes
 	cmd = exec.Command("docker", "volume", "prune", "-f")
-	cmd.Run() // Ignore errors
+	if err := cmd.Run(); err != nil {
+		t.Logf("Warning: Failed to cleanup Docker volumes: %v", err)
+	}
 
 	// Also try to remove any containers with our test pattern
 	cmd = exec.Command("docker", "ps", "-a", "--filter", "name=TestBatchSubmitValue", "--format", "{{.ID}}")
@@ -53,7 +60,9 @@ func cleanupDockerContainers(t *testing.T) {
 	containerIDs := strings.Fields(string(output))
 	for _, id := range containerIDs {
 		cmd = exec.Command("docker", "rm", "-f", id)
-		cmd.Run() // Ignore errors
+		if err := cmd.Run(); err != nil {
+			t.Logf("Warning: Failed to remove container %s: %v", id, err)
+		}
 	}
 
 	// Clean up any interchaintest containers
@@ -63,7 +72,9 @@ func cleanupDockerContainers(t *testing.T) {
 		containerIDs = strings.Fields(string(output))
 		for _, id := range containerIDs {
 			cmd = exec.Command("docker", "rm", "-f", id)
-			cmd.Run() // Ignore errors
+			if err := cmd.Run(); err != nil {
+				t.Logf("Warning: Failed to remove interchaintest container %s: %v", id, err)
+			}
 		}
 	}
 }
