@@ -123,7 +123,7 @@ func TestAttestationSlashing(t *testing.T) {
 	}
 
 	// Now query the actual registered EVM addresses
-	evmValidatorsRes, _, queryErr := validators[0].Node.ExecQuery(ctx, "bridge", "get-evm-validators")
+	evmValidatorsRes, _, queryErr := e2e.QueryWithTimeout(ctx, validators[0].Node, "bridge", "get-evm-validators")
 	require.NoError(queryErr)
 	var evmValidators QueryGetEvmValidatorsResponse
 	unmarshalErr := json.Unmarshal(evmValidatorsRes, &evmValidators)
@@ -156,7 +156,7 @@ func TestAttestationSlashing(t *testing.T) {
 	}
 
 	// Query and compare EVM validators
-	evmValidatorsRes2, _, err := validators[0].Node.ExecQuery(ctx, "bridge", "get-evm-validators")
+	evmValidatorsRes2, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "bridge", "get-evm-validators")
 	require.NoError(err)
 	var evmValidators2 QueryGetEvmValidatorsResponse
 	err = json.Unmarshal(evmValidatorsRes2, &evmValidators2)
@@ -173,7 +173,7 @@ func TestAttestationSlashing(t *testing.T) {
 	}
 
 	// Validator reporters report for the cycle list to create oracle data
-	currentCycleListRes, _, err := validators[0].Node.ExecQuery(ctx, "oracle", "current-cyclelist-query")
+	currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
 	require.NoError(err)
 	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
 	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
@@ -196,7 +196,7 @@ func TestAttestationSlashing(t *testing.T) {
 	timestamp := uint64(time.Now().UnixMilli())
 
 	// Get the current checkpoint for use in malicious attestation
-	checkpointRes, _, err := validators[0].Node.ExecQuery(ctx, "bridge", "get-validator-checkpoint")
+	checkpointRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "bridge", "get-validator-checkpoint")
 	require.NoError(err)
 	var checkpointData struct {
 		Checkpoint string `json:"validator_checkpoint"`

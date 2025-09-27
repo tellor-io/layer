@@ -143,7 +143,7 @@ func TestInactivitySlash(t *testing.T) {
 
 	// 4 validators, 1 jailed
 	fmt.Println("querying validators...")
-	valsQueryRes, _, err := val2.ExecQuery(ctx, "staking", "validators")
+	valsQueryRes, _, err := e2e.QueryWithTimeout(ctx, val2, "staking", "validators")
 	require.NoError(err)
 	var validatorsRes e2e.QueryValidatorsResponse
 	err = json.Unmarshal(valsQueryRes, &validatorsRes)
@@ -176,7 +176,7 @@ func TestInactivitySlash(t *testing.T) {
 	fmt.Println("unjailed val4 with tx hash: ", txHash)
 
 	// make sure val4 is unjailed
-	valsQueryRes, _, err = val2.ExecQuery(ctx, "staking", "validators")
+	valsQueryRes, _, err = e2e.QueryWithTimeout(ctx, val2, "staking", "validators")
 	require.NoError(err)
 	var validatorsRes2 e2e.QueryValidatorsResponse
 	err = json.Unmarshal(valsQueryRes, &validatorsRes2)

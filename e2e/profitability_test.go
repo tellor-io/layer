@@ -187,7 +187,7 @@ func TestProfitability(t *testing.T) {
 	fmt.Println("validator [0] becomes a reporter")
 
 	// report for the cycle list
-	currentCycleListRes, _, err := val1.ExecQuery(ctx, "oracle", "current-cyclelist-query")
+	currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "current-cyclelist-query")
 	require.NoError(err)
 	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
 	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
@@ -213,7 +213,7 @@ func TestProfitability(t *testing.T) {
 
 	// everybody reports for the cycle list
 	for i, v := range validators {
-		currentCycleListRes, _, err := v.Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
+		currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, v.Val, "oracle", "current-cyclelist-query")
 		require.NoError(err)
 		var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
 		err = json.Unmarshal(currentCycleListRes, &currentCycleList)
@@ -277,7 +277,7 @@ func TestProfitability(t *testing.T) {
 
 	// check on reports per reporter
 	for _, v := range validators {
-		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", v.Addr, "--page-limit", "1")
+		reports, _, err := e2e.QueryWithTimeout(ctx, v.Val, "oracle", "get-reportsby-reporter", v.Addr, "--page-limit", "1")
 		require.NoError(err)
 		var reportsRes e2e.QueryMicroReportsResponse
 		err = json.Unmarshal(reports, &reportsRes)

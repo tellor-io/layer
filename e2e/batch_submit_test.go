@@ -163,7 +163,7 @@ func TestBatchSubmitValue(t *testing.T) {
 	require.NoError(err)
 
 	// Query the transaction result to see which ones failed
-	txRes, _, err := val1.ExecQuery(ctx, "tx", txHash1)
+	txRes, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", txHash1)
 	require.NoError(err)
 	fmt.Println("Transaction result for first submission:", string(txRes))
 
@@ -212,23 +212,23 @@ func TestBatchSubmitValue(t *testing.T) {
 	fmt.Println("\n=== Verifying tip transactions were processed ===")
 
 	// Check tip transaction 1
-	txRes1, _, err := val1.ExecQuery(ctx, "tx", output1.TxHash)
+	txRes1, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", output1.TxHash)
 	require.NoError(err)
 	fmt.Println("Tip transaction 1 result:", string(txRes1))
 
 	// Check tip transaction 2
-	txRes2, _, err := val1.ExecQuery(ctx, "tx", output2.TxHash)
+	txRes2, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", output2.TxHash)
 	require.NoError(err)
 	fmt.Println("Tip transaction 2 result:", string(txRes2))
 
 	// Check tip transaction 3
-	txRes3, _, err := val1.ExecQuery(ctx, "tx", output3.TxHash)
+	txRes3, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", output3.TxHash)
 	require.NoError(err)
 	fmt.Println("Tip transaction 3 result:", string(txRes3))
 
 	// Check if all queries are tipped
 	fmt.Println("\n=== Checking tipped queries ===")
-	tippedQueriesRes, _, err := val1.ExecQuery(ctx, "oracle", "get-tipped-queries", "--page-limit", "10")
+	tippedQueriesRes, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "get-tipped-queries", "--page-limit", "10")
 	require.NoError(err)
 	fmt.Println("Tipped queries response:", string(tippedQueriesRes))
 	// ======================================================================================
@@ -261,7 +261,7 @@ func TestBatchSubmitValue(t *testing.T) {
 		queryId := hex.EncodeToString(utils.QueryIDFromData(qDataBytes))
 
 		// Query reports by query ID
-		reportsRes, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-qid", queryId, "--page-limit", "10")
+		reportsRes, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "get-reportsby-qid", queryId, "--page-limit", "10")
 		require.NoError(err)
 
 		// Debug: Print raw response before unmarshalling
@@ -289,7 +289,7 @@ func TestBatchSubmitValue(t *testing.T) {
 		queryId := hex.EncodeToString(utils.QueryIDFromData(qDataBytes))
 
 		// Try to get current aggregate
-		aggRes, _, err := val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", queryId)
+		aggRes, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "get-current-aggregate-report", queryId)
 		require.NoError(err, "Failed to query aggregate for %s", queryNames[i])
 
 		var aggregate e2e.QueryGetCurrentAggregateReportResponse
@@ -335,7 +335,7 @@ func TestBatchSubmitValue(t *testing.T) {
 	)
 	require.NoError(err)
 	fmt.Println("TX HASH (dispute on ", microReports[0].Reporter, "): ", txHash)
-	txRes, _, err = val2.ExecQuery(ctx, "tx", txHash)
+	txRes, _, err = e2e.QueryWithTimeout(ctx, val2, "tx", txHash)
 	require.NoError(err)
 	fmt.Println("Transaction result for first submission:", string(txRes))
 
@@ -344,7 +344,7 @@ func TestBatchSubmitValue(t *testing.T) {
 	fmt.Println("val1 staking power after dispute: ", val1StakingAfter.Tokens)
 	require.Equal(val1StakingAfter.Tokens, val1StakingBefore.Tokens.Sub(math.NewInt(50000*1e6)))
 
-	openDisputesRes, _, err := val1.ExecQuery(ctx, "dispute", "open-disputes")
+	openDisputesRes, _, err := e2e.QueryWithTimeout(ctx, val1, "dispute", "open-disputes")
 	require.NoError(err)
 	var openDisputes e2e.QueryOpenDisputesResponse
 	require.NoError(json.Unmarshal(openDisputesRes, &openDisputes))
@@ -353,7 +353,7 @@ func TestBatchSubmitValue(t *testing.T) {
 
 	// Test retrieve-data functionality - use the aggregate's timestamp instead of micro report timestamp
 	// First get the aggregate to find the correct timestamp
-	aggRes, _, err := val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", microReports[0].QueryID)
+	aggRes, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "get-current-aggregate-report", microReports[0].QueryID)
 	require.NoError(err, "Failed to get aggregate for retrieve-data test")
 
 	var aggregate e2e.QueryGetCurrentAggregateReportResponse
@@ -362,7 +362,7 @@ func TestBatchSubmitValue(t *testing.T) {
 	require.NotEmpty(aggregate.Aggregate.QueryId, "Aggregate should exist for retrieve-data test")
 
 	// Use the aggregate's timestamp for retrieve-data
-	res, _, err := val1.ExecQuery(ctx, "oracle", "retrieve-data", microReports[0].QueryID, aggregate.Timestamp)
+	res, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "retrieve-data", microReports[0].QueryID, aggregate.Timestamp)
 	require.NoError(err, "Failed to retrieve data")
 	var data e2e.QueryRetrieveDataResponse
 	require.NoError(json.Unmarshal(res, &data))

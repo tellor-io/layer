@@ -87,7 +87,7 @@ func TestConsensusAttestation(t *testing.T) {
 	}
 
 	// query reporters
-	res, _, err := validators[0].Val.ExecQuery(ctx, "reporter", "reporters")
+	res, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "reporter", "reporters")
 	require.NoError(err)
 	var reportersRes e2e.QueryReportersResponse
 	err = json.Unmarshal(res, &reportersRes)
@@ -102,7 +102,7 @@ func TestConsensusAttestation(t *testing.T) {
 	require.NoError(err)
 
 	// validator reporters report for the cycle list
-	currentCycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
+	currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "current-cyclelist-query")
 	require.NoError(err)
 	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
 	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
@@ -124,7 +124,7 @@ func TestConsensusAttestation(t *testing.T) {
 	// check on reports
 	var queryId1, queryId2 string
 	for i, v := range validators {
-		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", v.Addr, "--page-limit", "1")
+		reports, _, err := e2e.QueryWithTimeout(ctx, v.Val, "oracle", "get-reportsby-reporter", v.Addr, "--page-limit", "1")
 		require.NoError(err)
 		var reportsRes e2e.QueryMicroReportsResponse
 		err = json.Unmarshal(reports, &reportsRes)
@@ -142,7 +142,7 @@ func TestConsensusAttestation(t *testing.T) {
 	fmt.Println("queryId2: ", queryId2)
 
 	// query GetCurrentAggregateReport to get aggregate timestamp
-	res, _, err = validators[0].Val.ExecQuery(ctx, "oracle", "get-current-aggregate-report", queryId1)
+	res, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "get-current-aggregate-report", queryId1)
 	require.NoError(err)
 	var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
 	err = json.Unmarshal(res, &currentAggRes)
@@ -150,7 +150,7 @@ func TestConsensusAttestation(t *testing.T) {
 	timestamp := currentAggRes.Timestamp
 
 	// get snapshots
-	snapshots, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", queryId1, timestamp)
+	snapshots, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "bridge", "get-snapshots-by-report", queryId1, timestamp)
 	require.NoError(err)
 	var snapshotsRes e2e.QueryGetSnapshotsByReportResponse
 	err = json.Unmarshal(snapshots, &snapshotsRes)
@@ -159,7 +159,7 @@ func TestConsensusAttestation(t *testing.T) {
 
 	// get attestations by snapshot
 	for _, snapshot := range snapshotsRes.Snapshots {
-		attestations, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-by-snapshot", snapshot)
+		attestations, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "bridge", "get-attestation-by-snapshot", snapshot)
 		require.NoError(err)
 		fmt.Println("attestations bz: ", attestations)
 		var attestationsRes e2e.QueryGetAttestationDataBySnapshotResponse
@@ -169,7 +169,7 @@ func TestConsensusAttestation(t *testing.T) {
 
 		// get attestation data by snapshot
 		fmt.Println("snapshot: ", snapshot)
-		attestationData, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-data-by-snapshot", snapshot)
+		attestationData, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "bridge", "get-attestation-data-by-snapshot", snapshot)
 		require.NoError(err)
 		var attestationDataRes e2e.QueryGetAttestationDataBySnapshotResponse
 		err = json.Unmarshal(attestationData, &attestationDataRes)
@@ -189,7 +189,7 @@ func TestConsensusAttestation(t *testing.T) {
 	var success bool
 	var cycleListQData string
 	for !success {
-		cycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
+		cycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "current-cyclelist-query")
 		require.NoError(err)
 		var cycleList e2e.QueryCurrentCyclelistQueryResponse
 		err = json.Unmarshal(cycleListRes, &cycleList)
@@ -214,7 +214,7 @@ func TestConsensusAttestation(t *testing.T) {
 
 	// get reports by reporter
 	var queryId3 string
-	reports, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[0].Addr, "--page-limit", "2")
+	reports, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "get-reportsby-reporter", validators[0].Addr, "--page-limit", "2")
 	require.NoError(err)
 	var reportsRes e2e.QueryMicroReportsResponse
 	err = json.Unmarshal(reports, &reportsRes)
@@ -225,7 +225,7 @@ func TestConsensusAttestation(t *testing.T) {
 	require.Equal(queryId1, queryId3) // make sure query is same as first report, then we can reuse the decoded queryId from earlier
 
 	// query GetCurrentAggregateReport to get aggregate timestamp
-	res, _, err = validators[0].Val.ExecQuery(ctx, "oracle", "get-current-aggregate-report", queryId1)
+	res, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "get-current-aggregate-report", queryId1)
 	require.NoError(err)
 	err = json.Unmarshal(res, &currentAggRes)
 	require.NoError(err)
@@ -235,7 +235,7 @@ func TestConsensusAttestation(t *testing.T) {
 	fmt.Println("currentAggRes: ", currentAggRes)
 
 	// get snapshots
-	snapshots, _, err = validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", queryId1, timestamp)
+	snapshots, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "bridge", "get-snapshots-by-report", queryId1, timestamp)
 	require.NoError(err)
 	err = json.Unmarshal(snapshots, &snapshotsRes)
 	require.NoError(err)
@@ -243,7 +243,7 @@ func TestConsensusAttestation(t *testing.T) {
 
 	// get attestations by snapshot
 	for _, snapshot := range snapshotsRes.Snapshots {
-		attestations, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-by-snapshot", snapshot)
+		attestations, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "bridge", "get-attestation-by-snapshot", snapshot)
 		require.NoError(err)
 		fmt.Println("attestations bz: ", attestations)
 		var attestationsRes e2e.QueryGetAttestationDataBySnapshotResponse
@@ -253,7 +253,7 @@ func TestConsensusAttestation(t *testing.T) {
 
 		// get attestation data by snapshot
 		fmt.Println("snapshot: ", snapshot)
-		attestationData, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-data-by-snapshot", snapshot)
+		attestationData, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "bridge", "get-attestation-data-by-snapshot", snapshot)
 		require.NoError(err)
 		var attestationDataRes e2e.QueryGetAttestationDataBySnapshotResponse
 		err = json.Unmarshal(attestationData, &attestationDataRes)
@@ -277,7 +277,7 @@ func TestConsensusAttestation(t *testing.T) {
 	fmt.Println("TX HASH (val0 requests attestation for report2): ", txHash)
 
 	// get snapshots by report
-	snapshots, _, err = validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", queryId1, timestamp)
+	snapshots, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "bridge", "get-snapshots-by-report", queryId1, timestamp)
 	require.NoError(err)
 	err = json.Unmarshal(snapshots, &snapshotsRes)
 	require.NoError(err)
@@ -285,7 +285,7 @@ func TestConsensusAttestation(t *testing.T) {
 	require.Equal(len(snapshotsRes.Snapshots), 2) // should be auto generated plus additional requested snapshot
 
 	// get attestation data for new attestation request
-	attestationData, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-data-by-snapshot", snapshotsRes.Snapshots[1])
+	attestationData, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "bridge", "get-attestation-data-by-snapshot", snapshotsRes.Snapshots[1])
 	require.NoError(err)
 	var attestationDataRes e2e.QueryGetAttestationDataBySnapshotResponse
 	err = json.Unmarshal(attestationData, &attestationDataRes)
@@ -371,7 +371,7 @@ func TestNoStakeAttestation(t *testing.T) {
 
 	// query no stake reports for each validator
 	for _, v := range validators {
-		reports, _, err := v.Val.ExecQuery(ctx, "oracle", "get-reporters-no-stake-reports", v.Addr, "--page-limit", "1", "--page-reverse")
+		reports, _, err := e2e.QueryWithTimeout(ctx, v.Val, "oracle", "get-reporters-no-stake-reports", v.Addr, "--page-limit", "1", "--page-reverse")
 		require.NoError(err)
 		var nsReportsRes e2e.QueryGetReportersNoStakeReportsResponse
 		err = json.Unmarshal(reports, &nsReportsRes)
@@ -384,7 +384,7 @@ func TestNoStakeAttestation(t *testing.T) {
 	}
 
 	// query no stake reports per queryId
-	reports, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "get-no-stake-reports-by-query-id", ltcQId, "--page-limit", "2")
+	reports, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "get-no-stake-reports-by-query-id", ltcQId, "--page-limit", "2")
 	require.NoError(err)
 	var nsReportsByQIdRes e2e.QueryGetNoStakeReportsByQueryIdResponse
 	err = json.Unmarshal(reports, &nsReportsByQIdRes)
@@ -401,7 +401,7 @@ func TestNoStakeAttestation(t *testing.T) {
 	fmt.Println("TX HASH (val0 requests attestation for report1): ", txHash)
 
 	// get snapshot by report
-	res, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-snapshots-by-report", ltcQId, timestamp)
+	res, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "bridge", "get-snapshots-by-report", ltcQId, timestamp)
 	require.NoError(err)
 	var snapshotsRes e2e.QueryGetSnapshotsByReportResponse
 	err = json.Unmarshal(res, &snapshotsRes)
@@ -410,7 +410,7 @@ func TestNoStakeAttestation(t *testing.T) {
 	require.Equal(len(snapshotsRes.Snapshots), 1)
 
 	// get attestation data by snapshot
-	attestationData, _, err := validators[0].Val.ExecQuery(ctx, "bridge", "get-attestation-data-by-snapshot", snapshotsRes.Snapshots[0])
+	attestationData, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "bridge", "get-attestation-data-by-snapshot", snapshotsRes.Snapshots[0])
 	require.NoError(err)
 	var attestationDataRes e2e.QueryGetAttestationDataBySnapshotResponse
 	err = json.Unmarshal(attestationData, &attestationDataRes)

@@ -169,7 +169,7 @@ func TestDepositReport(t *testing.T) {
 	}
 
 	// make sure trbrbdige query is 10 blocks
-	res, _, err := validators[0].Val.ExecQuery(ctx, "registry", "data-spec", "TRBBridge")
+	res, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "registry", "data-spec", "TRBBridge")
 	require.NoError(err)
 	var specRes e2e.QueryGetDataSpecResponse
 	err = json.Unmarshal(res, &specRes)
@@ -185,7 +185,7 @@ func TestDepositReport(t *testing.T) {
 	require.NoError(err)
 	queryIdBz := utils.QueryIDFromData(queryDataBz)
 	queryIdString := hex.EncodeToString(queryIdBz)
-	res, _, err = validators[0].Val.ExecQuery(ctx, "oracle", "get-current-aggregate-report", queryIdString)
+	res, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "get-current-aggregate-report", queryIdString)
 	require.NoError(err)
 	var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
 	err = json.Unmarshal(res, &currentAggRes)
@@ -193,7 +193,7 @@ func TestDepositReport(t *testing.T) {
 	require.NotNil(currentAggRes)
 
 	// check if deposit claimed
-	res, _, err = validators[0].Val.ExecQuery(ctx, "bridge", "get-deposit-claimed", "1")
+	res, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "bridge", "get-deposit-claimed", "1")
 	require.NoError(err)
 	var claimedRes e2e.QueryGetDepositClaimedResponse
 	err = json.Unmarshal(res, &claimedRes)
@@ -210,7 +210,7 @@ func TestDepositReport(t *testing.T) {
 	time.Sleep(120 * time.Second)
 
 	// check if deposit claimed
-	res, _, err = validators[0].Val.ExecQuery(ctx, "bridge", "get-deposit-claimed", "1")
+	res, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "bridge", "get-deposit-claimed", "1")
 	require.NoError(err)
 	err = json.Unmarshal(res, &claimedRes)
 	require.NoError(err)

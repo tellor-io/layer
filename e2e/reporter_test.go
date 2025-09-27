@@ -165,7 +165,7 @@ func TestSelectorCreateReporter(t *testing.T) {
 	fmt.Println("TX HASH (user selects val1 as their reporter): ", txHash)
 
 	//  both reporters submit for cyclelist
-	currentCycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
+	currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "current-cyclelist-query")
 	require.NoError(err)
 	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
 	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
@@ -188,7 +188,7 @@ func TestSelectorCreateReporter(t *testing.T) {
 	require.NoError(err)
 	qIdBz := utils.QueryIDFromData(qDataBz)
 	qId := hex.EncodeToString(qIdBz)
-	res, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "get-current-aggregate-report", qId)
+	res, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "get-current-aggregate-report", qId)
 	require.NoError(err)
 	var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
 	err = json.Unmarshal(res, &currentAggRes)
@@ -204,7 +204,7 @@ func TestSelectorCreateReporter(t *testing.T) {
 	fmt.Println("TX HASH (user creates a reporter): ", txHash)
 
 	// all 3 reporters report
-	currentCycleListRes, _, err = validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
+	currentCycleListRes, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "current-cyclelist-query")
 	require.NoError(err)
 	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
 	require.NoError(err)
@@ -226,7 +226,7 @@ func TestSelectorCreateReporter(t *testing.T) {
 	require.NoError(err)
 	qIdBz = utils.QueryIDFromData(qDataBz)
 	qId = hex.EncodeToString(qIdBz)
-	res, _, err = validators[0].Val.ExecQuery(ctx, "oracle", "get-current-aggregate-report", qId)
+	res, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "get-current-aggregate-report", qId)
 	require.NoError(err)
 	err = json.Unmarshal(res, &currentAggRes)
 	require.NoError(err)

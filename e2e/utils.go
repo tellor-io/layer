@@ -838,8 +838,15 @@ func GetTxHashFromExec(stdout []byte) (string, error) {
 	return output.TxHash, nil
 }
 
+// QueryWithTimeout executes a query with a 15-second timeout
+func QueryWithTimeout(ctx context.Context, validatorI *cosmos.ChainNode, args ...string) ([]byte, []byte, error) {
+	queryCtx, cancel := context.WithTimeout(ctx, time.Second*15)
+	defer cancel()
+	return validatorI.ExecQuery(queryCtx, args...)
+}
+
 func QueryTips(queryData string, ctx context.Context, validatorI *cosmos.ChainNode) (CurrentTipsResponse, error) {
-	availableTips, _, err := validatorI.ExecQuery(ctx, "oracle", "get-current-tip", queryData)
+	availableTips, _, err := QueryWithTimeout(ctx, validatorI, "oracle", "get-current-tip", queryData)
 	if err != nil {
 		return CurrentTipsResponse{}, err
 	}

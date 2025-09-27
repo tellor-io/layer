@@ -184,7 +184,7 @@ func TestValsetSignatureSlashing(t *testing.T) {
 	}
 
 	// now query the actual registered EVM addresses
-	evmValidatorsRes, _, queryErr := validators[0].Node.ExecQuery(ctx, "bridge", "get-evm-validators")
+	evmValidatorsRes, _, queryErr := e2e.QueryWithTimeout(ctx, validators[0].Node, "bridge", "get-evm-validators")
 	require.NoError(queryErr)
 	var evmValidators QueryGetEvmValidatorsResponse
 	unmarshalErr := json.Unmarshal(evmValidatorsRes, &evmValidators)
@@ -435,7 +435,7 @@ func TestValsetSignatureSlashingWithDifferentChainId(t *testing.T) {
 	}
 
 	// now query the actual registered EVM addresses
-	evmValidatorsRes, _, queryErr := validators[0].Node.ExecQuery(ctx, "bridge", "get-evm-validators")
+	evmValidatorsRes, _, queryErr := e2e.QueryWithTimeout(ctx, validators[0].Node, "bridge", "get-evm-validators")
 	require.NoError(queryErr)
 	var evmValidators QueryGetEvmValidatorsResponse
 	unmarshalErr := json.Unmarshal(evmValidatorsRes, &evmValidators)

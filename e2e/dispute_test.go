@@ -241,7 +241,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 	fmt.Println("TX HASH (val2 becomes a reporter): ", txHash)
 
 	// query reporter module
-	res, _, err := val1.ExecQuery(ctx, "reporter", "reporters")
+	res, _, err := e2e.QueryWithTimeout(ctx, val1, "reporter", "reporters")
 	require.NoError(err)
 	var reportersRes e2e.QueryReportersResponse
 	err = json.Unmarshal(res, &reportersRes)
@@ -286,7 +286,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		// wait for query to expire and dispute
 		err = testutil.WaitForBlocks(ctx, 2, val1)
 		require.NoError(err)
-		microreport, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr, "--page-limit", "1")
+		microreport, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "get-reportsby-reporter", reporters[i].Addr, "--page-limit", "1")
 		require.NoError(err)
 		var microReports e2e.ReportsResponse
 		err = json.Unmarshal(microreport, &microReports)
@@ -333,7 +333,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 	}
 
 	// check open disputes
-	res, _, err = val1.ExecQuery(ctx, "dispute", "open-disputes")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "open-disputes")
 	require.NoError(err)
 	var openDisputes e2e.QueryOpenDisputesResponse
 	require.NoError(json.Unmarshal(res, &openDisputes))
@@ -354,7 +354,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 
 		// check dispute status
 		// should still be open bc only 33% of power has voted
-		res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+		res, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 		require.NoError(err)
 		var disputes e2e.Disputes
 		require.NoError(json.Unmarshal(res, &disputes))
@@ -367,7 +367,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 
 		// check on dispute status
 		// should be resolved and executed
-		r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
+		r, _, err := e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 		require.NoError(err)
 		err = json.Unmarshal(r, &disputes)
 		require.NoError(err)
@@ -604,7 +604,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
 	// query reporter module
-	res, _, err := val1.ExecQuery(ctx, "reporter", "reporters")
+	res, _, err := e2e.QueryWithTimeout(ctx, val1, "reporter", "reporters")
 	require.NoError(err)
 	var reportersRes e2e.QueryReportersResponse
 	err = json.Unmarshal(res, &reportersRes)
@@ -655,7 +655,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	fmt.Println("unbonding before dispute: ", unbondingBeforeDispute)
 
 	// query reporter module
-	res, _, err = val1.ExecQuery(ctx, "reporter", "reporters")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "reporter", "reporters")
 	require.NoError(err)
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
@@ -664,7 +664,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	// wait for query to expire and dispute from user0
 	err = testutil.WaitForBlocks(ctx, 2, val1)
 	require.NoError(err)
-	microreport, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
+	microreport, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
 	require.NoError(err)
 	var microReports e2e.ReportsResponse
 	require.NoError(json.Unmarshal(microreport, &microReports))
@@ -688,7 +688,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	fmt.Println("TX HASH (user0 opens a major dispute on user1): ", txHash)
 
 	// query reporter module
-	res, _, err = val1.ExecQuery(ctx, "reporter", "reporters")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "reporter", "reporters")
 	require.NoError(err)
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
@@ -706,7 +706,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	require.Greater(disputedReporter.Metadata.JailedUntil, time.Now().Add(1000000*time.Hour)) // jailed over 100 years mua ha ha
 
 	// check dispute status
-	res, _, err = val1.ExecQuery(ctx, "dispute", "open-disputes")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "open-disputes")
 	require.NoError(err)
 	var openDisputes e2e.QueryOpenDisputesResponse
 	require.NoError(json.Unmarshal(res, &openDisputes))
@@ -723,7 +723,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	fmt.Println("TX HASH (team votes support for dispute 1): ", txHash)
 
 	// check dispute status
-	res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 	require.NoError(err)
 	var disputes e2e.Disputes
 	require.NoError(json.Unmarshal(res, &disputes))
@@ -981,7 +981,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
 	// query reporter module
-	res, _, err := val1.ExecQuery(ctx, "reporter", "reporters")
+	res, _, err := e2e.QueryWithTimeout(ctx, val1, "reporter", "reporters")
 	require.NoError(err)
 	var reportersRes e2e.QueryReportersResponse
 	err = json.Unmarshal(res, &reportersRes)
@@ -1015,7 +1015,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.NoError(err)
 
 	// get report to check reporter power
-	res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
 	require.NoError(err)
 	var reports e2e.QueryMicroReportsResponse
 	require.NoError(json.Unmarshal(res, &reports))
@@ -1048,7 +1048,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.NoError(err)
 
 	// get report to check reporter power for second report
-	res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "2")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "2")
 	require.NoError(err)
 	require.NoError(json.Unmarshal(res, &reports))
 	fmt.Println("reports: ", reports)
@@ -1070,14 +1070,14 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Equal(val1Staking.Tokens, val1power.Add(math.NewInt(1000*1e6))) // val1 power after initial delegations plus user1 addtl 1000 trb
 
 	// query reporter module
-	res, _, err = val1.ExecQuery(ctx, "reporter", "reporters")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "reporter", "reporters")
 	require.NoError(err)
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
 	require.Equal(len(reportersRes.Reporters), numReporters+1) // 2 reporters + 1 validator reporter
 
 	// major dispute from user0
-	microreport, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
+	microreport, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
 	require.NoError(err)
 	var microReports e2e.ReportsResponse
 	require.NoError(json.Unmarshal(microreport, &microReports))
@@ -1106,7 +1106,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	fmt.Println("TX HASH (user0 opens a major dispute on user1): ", txHash)
 
 	// query reporter module
-	res, _, err = val1.ExecQuery(ctx, "reporter", "reporters")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "reporter", "reporters")
 	require.NoError(err)
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
@@ -1124,7 +1124,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Greater(disputedReporter.Metadata.JailedUntil, time.Now().Add(1000000*time.Hour)) // jailed over 100 years mua ha ha
 
 	// check dispute status
-	res, _, err = val1.ExecQuery(ctx, "dispute", "open-disputes")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "open-disputes")
 	require.NoError(err)
 	var openDisputes e2e.QueryOpenDisputesResponse
 	require.NoError(json.Unmarshal(res, &openDisputes))
@@ -1141,7 +1141,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	fmt.Println("TX HASH (team votes support for dispute 1): ", txHash)
 
 	// check dispute status
-	res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 	require.NoError(err)
 	var disputes e2e.Disputes
 	require.NoError(json.Unmarshal(res, &disputes))
@@ -1157,7 +1157,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Equal(disputes.Disputes[0].Metadata.InitialEvidence.Value, value)
 
 	// check on disputed reporter again
-	res, _, err = val1.ExecQuery(ctx, "reporter", "reporters")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "reporter", "reporters")
 	require.NoError(err)
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
@@ -1248,7 +1248,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	fmt.Println("TX HASH (user1 tries to create reporter again): ", txHash)
 
 	// check reporter module
-	res, _, err = val1.ExecQuery(ctx, "reporter", "reporters")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "reporter", "reporters")
 	require.NoError(err)
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
@@ -1270,7 +1270,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	fmt.Println("TX HASH (user1 tries to become a selector): ", txHash)
 
 	// check reporter module
-	res, _, err = val1.ExecQuery(ctx, "reporter", "reporters")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "reporter", "reporters")
 	require.NoError(err)
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
@@ -1490,7 +1490,7 @@ func TestEscalatingDispute(t *testing.T) {
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
 	// query reporter module
-	res, _, err := val1.ExecQuery(ctx, "reporter", "reporters")
+	res, _, err := e2e.QueryWithTimeout(ctx, val1, "reporter", "reporters")
 	require.NoError(err)
 	var reportersRes e2e.QueryReportersResponse
 	err = json.Unmarshal(res, &reportersRes)
@@ -1524,7 +1524,7 @@ func TestEscalatingDispute(t *testing.T) {
 	require.NoError(err)
 
 	// get report to check reporter power
-	res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
 	require.NoError(err)
 	var reports e2e.QueryMicroReportsResponse
 	require.NoError(json.Unmarshal(res, &reports))
@@ -1539,7 +1539,7 @@ func TestEscalatingDispute(t *testing.T) {
 	fmt.Println("TX HASH (user0 opens warning dispute): ", txHash)
 
 	// check on dispute
-	r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
+	r, _, err := e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 	require.NoError(err)
 	var disputes e2e.Disputes
 	err = json.Unmarshal(r, &disputes)
@@ -1567,7 +1567,7 @@ func TestEscalatingDispute(t *testing.T) {
 	fmt.Println("TX HASH (user0 opens minor dispute): ", txHash)
 
 	// check on dispute
-	r, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+	r, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 	require.NoError(err)
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(err)
@@ -1613,7 +1613,7 @@ func TestEscalatingDispute(t *testing.T) {
 	require.NoError(err)
 
 	// make sure dispute 1 is resolved
-	r, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+	r, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 	require.NoError(err)
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(err)
@@ -1858,7 +1858,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
 	// query reporter module
-	res, _, err := val1.ExecQuery(ctx, "reporter", "reporters")
+	res, _, err := e2e.QueryWithTimeout(ctx, val1, "reporter", "reporters")
 	require.NoError(err)
 	var reportersRes e2e.QueryReportersResponse
 	err = json.Unmarshal(res, &reportersRes)
@@ -1892,7 +1892,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	require.NoError(err)
 
 	// get report to check reporter power
-	res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
 	require.NoError(err)
 	var reports e2e.QueryMicroReportsResponse
 	require.NoError(json.Unmarshal(res, &reports))
@@ -1917,7 +1917,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	fmt.Println("TX HASH (user0 opens warning dispute): ", txHash)
 
 	// check on dispute
-	r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
+	r, _, err := e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 	require.NoError(err)
 	var disputes e2e.Disputes
 	err = json.Unmarshal(r, &disputes)
@@ -1949,7 +1949,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	require.NoError(err)
 
 	// check on dispute
-	r, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+	r, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 	require.NoError(err)
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(err)
@@ -2201,7 +2201,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	fmt.Println("TX HASH (val1 becomes a reporter): ", txHash)
 
 	// query reporter module
-	res, _, err := val1.ExecQuery(ctx, "reporter", "reporters")
+	res, _, err := e2e.QueryWithTimeout(ctx, val1, "reporter", "reporters")
 	require.NoError(err)
 	var reportersRes e2e.QueryReportersResponse
 	err = json.Unmarshal(res, &reportersRes)
@@ -2240,7 +2240,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	}
 	userReports := make([]UserReports, 2)
 	for i := range reporters[:2] {
-		res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr, "--page-limit", "1")
+		res, _, err = e2e.QueryWithTimeout(ctx, val1, "oracle", "get-reportsby-reporter", reporters[i].Addr, "--page-limit", "1")
 		require.NoError(err)
 		var userReport e2e.QueryMicroReportsResponse
 		require.NoError(json.Unmarshal(res, &userReport))
@@ -2255,7 +2255,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 		}
 		// get aggregate timestamp
 		fmt.Println("getting aggregate timestamp for", userReport.MicroReports[0].QueryID, "...")
-		res, _, err = val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", userReport.MicroReports[0].QueryID)
+		res, _, err = e2e.QueryWithTimeout(ctx, val1, "oracle", "get-current-aggregate-report", userReport.MicroReports[0].QueryID)
 		require.NoError(err)
 		var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
 		err = json.Unmarshal(res, &currentAggRes)
@@ -2273,7 +2273,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	fmt.Println("TX HASH (val1 proposed dispute on user1): ", txHash)
 
 	// assert there are 2 disputes open
-	res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 	require.NoError(err)
 	var disputes e2e.Disputes
 	require.NoError(json.Unmarshal(res, &disputes))
@@ -2294,7 +2294,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 
 		// check disputes status
 		// should still be open bc only 33% of power has voted
-		res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+		res, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 		require.NoError(err)
 		require.NoError(json.Unmarshal(res, &disputes))
 		fmt.Println("dispute 1: ", disputes.Disputes[i])
@@ -2307,7 +2307,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 
 		// check on dispute status
 		// should be resolved and executed
-		r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
+		r, _, err := e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 		require.NoError(err)
 		err = json.Unmarshal(r, &disputes)
 		require.NoError(err)
@@ -2316,12 +2316,12 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	}
 
 	// make sure aggregate is flagged
-	res, _, err = val1.ExecQuery(ctx, "oracle", "retrieve-data", userReports[0].qId, userReports[0].Timestamp)
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "oracle", "retrieve-data", userReports[0].qId, userReports[0].Timestamp)
 	require.NoError(err)
 	var data e2e.QueryRetrieveDataResponse
 	require.NoError(json.Unmarshal(res, &data))
 	require.Equal(data.Aggregate.Flagged, true)
-	res, _, err = val1.ExecQuery(ctx, "oracle", "retrieve-data", userReports[1].qId, userReports[1].Timestamp)
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "oracle", "retrieve-data", userReports[1].qId, userReports[1].Timestamp)
 	require.NoError(err)
 	var data2 e2e.QueryRetrieveDataResponse
 	require.NoError(json.Unmarshal(res, &data2))
@@ -2356,7 +2356,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	// verify reports
 	userReports = make([]UserReports, 4)
 	for i := range reporters {
-		res, _, err = val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr, "--page-limit", "2")
+		res, _, err = e2e.QueryWithTimeout(ctx, val1, "oracle", "get-reportsby-reporter", reporters[i].Addr, "--page-limit", "2")
 		require.NoError(err)
 		var userReport2 e2e.QueryMicroReportsResponse
 		require.NoError(json.Unmarshal(res, &userReport2))
@@ -2379,7 +2379,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 		}
 		// get aggregate timestamp
 		fmt.Println("getting aggregate timestamp for", userReport2.MicroReports[0].QueryID, "...")
-		res, _, err = val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", userReport2.MicroReports[0].QueryID)
+		res, _, err = e2e.QueryWithTimeout(ctx, val1, "oracle", "get-current-aggregate-report", userReport2.MicroReports[0].QueryID)
 		require.NoError(err)
 		var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
 		err = json.Unmarshal(res, &currentAggRes)
@@ -2400,7 +2400,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	}
 
 	// assert there are 4 disputes open
-	res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 	require.NoError(err)
 	require.NoError(json.Unmarshal(res, &disputes))
 	require.Equal(len(disputes.Disputes), 6)
@@ -2422,7 +2422,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 
 		// check disputes status
 		// should still be open bc only 33% of power has voted
-		res, _, err = val1.ExecQuery(ctx, "dispute", "disputes")
+		res, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 		require.NoError(err)
 		require.NoError(json.Unmarshal(res, &disputes))
 		fmt.Println("dispute ", i+3, ": ", disputes.Disputes[i+2])
@@ -2435,7 +2435,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 
 		// check on dispute status
 		// should be resolved and executed
-		r, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
+		r, _, err := e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 		require.NoError(err)
 		err = json.Unmarshal(r, &disputes)
 		require.NoError(err)
@@ -2444,7 +2444,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	}
 
 	// make sure aggregate is flagged
-	res, _, err = val1.ExecQuery(ctx, "oracle", "retrieve-data", userReports[3].qId, userReports[3].Timestamp)
+	res, _, err = e2e.QueryWithTimeout(ctx, val1, "oracle", "retrieve-data", userReports[3].qId, userReports[3].Timestamp)
 	require.NoError(err)
 	require.NoError(json.Unmarshal(res, &data))
 	require.Equal(data.Aggregate.Flagged, true)
@@ -2634,7 +2634,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	fmt.Println("TX HASH (user0 registers a new query): ", txHash)
 
 	// generate querydata
-	queryBz, _, err := val1.ExecQuery(ctx, "registry", "generate-querydata", queryType, "[\"2025\"]")
+	queryBz, _, err := e2e.QueryWithTimeout(ctx, val1, "registry", "generate-querydata", queryType, "[\"2025\"]")
 	require.NoError(err)
 	var queryData e2e.QueryGenerateQuerydataResponse
 	require.NoError(json.Unmarshal(queryBz, &queryData))
@@ -2672,7 +2672,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	userReports := make([]UserReports, numReporters)
 	for i := range numReporters {
 		var userReport e2e.QueryMicroReportsResponse
-		res, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-reporter", reporters[i].Addr, "--page-limit", "1")
+		res, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "get-reportsby-reporter", reporters[i].Addr, "--page-limit", "1")
 		require.NoError(err)
 		require.NoError(json.Unmarshal(res, &userReport))
 		fmt.Println("userReport: ", userReport)
@@ -2689,7 +2689,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 		}
 
 		// verify aggregate
-		aggRes, _, err := val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", userReports[i].qId)
+		aggRes, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "get-current-aggregate-report", userReports[i].qId)
 		require.NoError(err)
 		var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
 		require.NoError(json.Unmarshal(aggRes, &currentAggRes))
@@ -2704,7 +2704,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	}
 
 	// make sure 2 disputes are open
-	disRes, _, err := val1.ExecQuery(ctx, "dispute", "disputes")
+	disRes, _, err := e2e.QueryWithTimeout(ctx, val1, "dispute", "disputes")
 	require.NoError(err)
 	var disputes e2e.Disputes
 	require.NoError(json.Unmarshal(disRes, &disputes))
@@ -2718,14 +2718,14 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	fmt.Println("TX HASH (team votes on dispute 1): ", txHash)
 
 	// query team vote for dispute 1
-	voteRes, _, err := val1.ExecQuery(ctx, "dispute", "team-vote", "1")
+	voteRes, _, err := e2e.QueryWithTimeout(ctx, val1, "dispute", "team-vote", "1")
 	require.NoError(err)
 	var teamVote e2e.QueryTeamVoteResponse
 	require.NoError(json.Unmarshal(voteRes, &teamVote))
 	fmt.Println("teamVote on dispute 1: ", teamVote)
 
 	// query team vote for dispute 2, should get collections error
-	voteRes, _, err = val1.ExecQuery(ctx, "dispute", "team-vote", "2")
+	voteRes, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "team-vote", "2")
 	require.Error(err)
 	fmt.Println("voteRes: ", voteRes)
 
@@ -2735,14 +2735,14 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	fmt.Println("TX HASH (update team address): ", txHash)
 
 	// query team vote for dispute 1
-	voteRes, _, err = val1.ExecQuery(ctx, "dispute", "team-vote", "1")
+	voteRes, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "team-vote", "1")
 	require.NoError(err)
 	var teamVote2 e2e.QueryTeamVoteResponse
 	require.NoError(json.Unmarshal(voteRes, &teamVote2))
 	fmt.Println("teamVote after update on dispute 1: ", teamVote2)
 
 	// query team vote for dispute 2, should get collections error
-	voteRes, _, err = val1.ExecQuery(ctx, "dispute", "team-vote", "2")
+	voteRes, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "team-vote", "2")
 	require.Error(err)
 	fmt.Println("voteRes: ", voteRes)
 	// change team addr back
@@ -2751,14 +2751,14 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	fmt.Println("TX HASH (update team address back): ", txHash)
 
 	// query team vote for dispute 1
-	voteRes, _, err = val1.ExecQuery(ctx, "dispute", "team-vote", "1")
+	voteRes, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "team-vote", "1")
 	require.NoError(err)
 	var teamVote3 e2e.QueryTeamVoteResponse
 	require.NoError(json.Unmarshal(voteRes, &teamVote3))
 	fmt.Println("teamVote after update back on dispute 1: ", teamVote3)
 
 	// query team vote for dispute 2, should get collections error
-	voteRes, _, err = val1.ExecQuery(ctx, "dispute", "team-vote", "2")
+	voteRes, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "team-vote", "2")
 	require.Error(err)
 	fmt.Println("voteRes: ", voteRes)
 }
@@ -2889,7 +2889,7 @@ func TestUnderfundedDispute(t *testing.T) {
 	}
 
 	//  both reporters submit for cyclelist
-	currentCycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
+	currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "current-cyclelist-query")
 	require.NoError(err)
 	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
 	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
@@ -2908,7 +2908,7 @@ func TestUnderfundedDispute(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Val))
 
 	// query microreport for val1
-	reports, _, err := validators[1].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[1].Addr, "--page-limit", "1")
+	reports, _, err := e2e.QueryWithTimeout(ctx, validators[1].Val, "oracle", "get-reportsby-reporter", validators[1].Addr, "--page-limit", "1")
 	require.NoError(err)
 	var reportsRes e2e.QueryMicroReportsResponse
 	err = json.Unmarshal(reports, &reportsRes)
@@ -2924,7 +2924,7 @@ func TestUnderfundedDispute(t *testing.T) {
 	fmt.Println("TX HASH (val0 disputes val1): ", txHash)
 
 	// query dispute info before funding period ends
-	disRes, _, err := validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	disRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "dispute", "disputes")
 	require.NoError(err)
 	var disputes e2e.Disputes2
 	err = json.Unmarshal(disRes, &disputes)
@@ -2938,7 +2938,7 @@ func TestUnderfundedDispute(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 6, validators[0].Val))
 
 	// query dispute info before funding period ends
-	disRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	disRes, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "dispute", "disputes")
 	require.NoError(err)
 	var disputes2 e2e.Disputes2
 	err = json.Unmarshal(disRes, &disputes2)
@@ -3092,7 +3092,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	}
 
 	//  both reporters submit for cyclelist
-	currentCycleListRes, _, err := validators[0].Val.ExecQuery(ctx, "oracle", "current-cyclelist-query")
+	currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "current-cyclelist-query")
 	require.NoError(err)
 	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
 	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
@@ -3111,7 +3111,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 6, validators[0].Val))
 
 	// query microreport for val1
-	reports, _, err := validators[1].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[1].Addr, "--page-limit", "1")
+	reports, _, err := e2e.QueryWithTimeout(ctx, validators[1].Val, "oracle", "get-reportsby-reporter", validators[1].Addr, "--page-limit", "1")
 	require.NoError(err)
 	var reportsRes e2e.QueryMicroReportsResponse
 	err = json.Unmarshal(reports, &reportsRes)
@@ -3124,7 +3124,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	fmt.Println("TX HASH (val1 fails to become a selector): ", txHash)
 
 	// verify val1 is a selector for val0
-	res, _, err := validators[0].Val.ExecQuery(ctx, "reporter", "selector-reporter", validators[1].Addr)
+	res, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "reporter", "selector-reporter", validators[1].Addr)
 	require.NoError(err)
 	var selectorRes e2e.QuerySelectorReporterResponse
 	err = json.Unmarshal(res, &selectorRes)
@@ -3148,7 +3148,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	fmt.Println("TX HASH (user1 disputes val1): ", txHash)
 
 	// query dispute info, should be paid and in voting state
-	disRes, _, err := validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	disRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "dispute", "disputes")
 	require.NoError(err)
 	var disputes e2e.Disputes2
 	err = json.Unmarshal(disRes, &disputes)
@@ -3309,7 +3309,7 @@ func TestGroupPowers(t *testing.T) {
 	fmt.Println("TX HASH (val0 registers NFLSuperBowlChampion query): ", txHash)
 
 	// Generate query data for NFLSuperBowlChampion
-	queryBz, _, err := validators[0].Val.ExecQuery(ctx, "registry", "generate-querydata", queryType, "[\"2025\"]")
+	queryBz, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "registry", "generate-querydata", queryType, "[\"2025\"]")
 	require.NoError(err)
 	var queryData e2e.QueryGenerateQuerydataResponse
 	err = json.Unmarshal(queryBz, &queryData)
@@ -3342,7 +3342,7 @@ func TestGroupPowers(t *testing.T) {
 	// all val/reporters should have 1 report
 	var disputedReport e2e.MicroReport
 	for i := range validators {
-		reports, _, err := validators[i].Val.ExecQuery(ctx, "oracle", "get-reportsby-reporter", validators[i].Addr, "--page-limit", "5")
+		reports, _, err := e2e.QueryWithTimeout(ctx, validators[i].Val, "oracle", "get-reportsby-reporter", validators[i].Addr, "--page-limit", "5")
 		require.NoError(err)
 		var reportsRes e2e.QueryMicroReportsResponse
 		err = json.Unmarshal(reports, &reportsRes)
@@ -3364,7 +3364,7 @@ func TestGroupPowers(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[0].Val))
 
 	// verify dispute exists and is in voting state
-	disRes, _, err := validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	disRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "dispute", "disputes")
 	require.NoError(err)
 	var disputes e2e.Disputes2
 	err = json.Unmarshal(disRes, &disputes)
@@ -3386,14 +3386,14 @@ func TestGroupPowers(t *testing.T) {
 
 	// query voting info
 	// layerd dispute team-vote
-	teamVoteRes, _, err := validators[1].Val.ExecQuery(ctx, "dispute", "team-vote", "1")
+	teamVoteRes, _, err := e2e.QueryWithTimeout(ctx, validators[1].Val, "dispute", "team-vote", "1")
 	require.NoError(err)
 	var teamVote e2e.QueryTeamVoteResponse
 	err = json.Unmarshal(teamVoteRes, &teamVote)
 	require.NoError(err)
 	fmt.Println("teamVote: ", teamVote)
 	// layerd dispute tally
-	tallyRes, _, err := validators[0].Val.ExecQuery(ctx, "dispute", "tally", "1")
+	tallyRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "dispute", "tally", "1")
 	require.NoError(err)
 	fmt.Println("Raw tally response:", string(tallyRes))
 	var tally e2e.QueryDisputesTallyResponse
@@ -3419,7 +3419,7 @@ func TestGroupPowers(t *testing.T) {
 	require.Equal(tally.Team.Support, "33.33%")
 
 	// query dispute info
-	disRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	disRes, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "dispute", "disputes")
 	require.NoError(err)
 	err = json.Unmarshal(disRes, &disputes)
 	require.NoError(err)
@@ -3445,12 +3445,12 @@ func TestGroupPowers(t *testing.T) {
 
 	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[1].Val))
 	// check tally
-	tallyRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "tally", "1")
+	tallyRes, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "dispute", "tally", "1")
 	require.NoError(err)
 	fmt.Println("!!!!Raw tally response:", string(tallyRes))
 
 	// query dispute, should still be open
-	disRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	disRes, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "dispute", "disputes")
 	require.NoError(err)
 	err = json.Unmarshal(disRes, &disputes)
 	require.NoError(err)
@@ -3476,7 +3476,7 @@ func TestGroupPowers(t *testing.T) {
 
 	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[1].Val))
 	// query tally, should not be open
-	disRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	disRes, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "dispute", "disputes")
 	require.NoError(err)
 	err = json.Unmarshal(disRes, &disputes)
 	require.NoError(err)
@@ -3486,7 +3486,7 @@ func TestGroupPowers(t *testing.T) {
 	require.Equal(openDispute.Metadata.DisputeStatus, "DISPUTE_STATUS_RESOLVED") // executed
 
 	// query tally, should be executed
-	tallyRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "tally", "1")
+	tallyRes, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "dispute", "tally", "1")
 	require.NoError(err)
 	fmt.Println("--------------------------------")
 	fmt.Println("Raw tally response:", string(tallyRes))
@@ -3543,7 +3543,7 @@ func TestGroupPowers(t *testing.T) {
 	require.Less(totalPowerVoted, 56.0)
 
 	// check that dispute is executed
-	disRes, _, err = validators[0].Val.ExecQuery(ctx, "dispute", "disputes")
+	disRes, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "dispute", "disputes")
 	require.NoError(err)
 	err = json.Unmarshal(disRes, &disputes)
 	require.NoError(err)

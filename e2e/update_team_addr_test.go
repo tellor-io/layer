@@ -152,7 +152,7 @@ func TestUpdateTeamAddr(t *testing.T) {
 	fmt.Println("TX HASH(Update Team Addr called (success)): ", txHash)
 
 	// query team addr to confirm update
-	teamAddrBz, _, err := validators[0].Val.ExecQuery(ctx, "dispute", "team-address")
+	teamAddrBz, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "dispute", "team-address")
 	require.NoError(err)
 	var teamAddr e2e.QueryTeamAddressResponse
 	require.NoError(json.Unmarshal(teamAddrBz, &teamAddr))
