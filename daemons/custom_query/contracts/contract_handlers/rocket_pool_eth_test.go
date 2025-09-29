@@ -31,15 +31,15 @@ func TestRocketPoolETHHandler_FetchValue(t *testing.T) {
 		{
 			name:           "successful fetch",
 			contractResult: "0x" + hex.EncodeToString(padLeft(big.NewInt(1080000000000000000).Bytes(), 32)), // 1.08 ETH per rETH
-			ethPrice:       4500000000,                                                                       // $4500 with 6 decimals
-			expectedValue:  4860000000,                                                                       // 1.08 * 4500 * 1e6
+			ethPrice:       4500000000,                                                                      // $4500 with 6 decimals
+			expectedValue:  4860.0,                                                                          // 1.08 * 4500 = $4860
 			expectError:    false,
 		},
 		{
 			name:           "higher exchange rate",
 			contractResult: "0x" + hex.EncodeToString(padLeft(big.NewInt(1150000000000000000).Bytes(), 32)), // 1.15 ETH per rETH
-			ethPrice:       3800000000,                                                                       // $3800 with 6 decimals
-			expectedValue:  4370000000,                                                                       // 1.15 * 3800 * 1e6
+			ethPrice:       3800000000,                                                                      // $3800 with 6 decimals
+			expectedValue:  4370.0,                                                                          // 1.15 * 3800 = $4370
 			expectError:    false,
 		},
 		{
@@ -130,25 +130,25 @@ func TestRocketPoolETHHandler_CalculationPrecision(t *testing.T) {
 		name             string
 		exchangeRate     *big.Int
 		ethPrice         uint64
-		expectedRawValue *big.Int
+		expectedRawValue float64
 	}{
 		{
 			name:             "standard calculation",
 			exchangeRate:     big.NewInt(1080000000000000000), // 1.08
-			ethPrice:         4500000000,                      // $4500
-			expectedRawValue: big.NewInt(4860000000),          // 4860 with 6 decimals
+			ethPrice:         4500000000,                      // $4500 with 6 decimals
+			expectedRawValue: 4860.0,                          // 1.08 * 4500 = $4860
 		},
 		{
 			name:             "small exchange rate",
 			exchangeRate:     big.NewInt(1010000000000000000), // 1.01
-			ethPrice:         5000000000,                      // $5000
-			expectedRawValue: big.NewInt(5050000000),          // 5050 with 6 decimals
+			ethPrice:         5000000000,                      // $5000 with 6 decimals
+			expectedRawValue: 5050.0,                          // 1.01 * 5000 = $5050
 		},
 		{
 			name:             "large exchange rate",
 			exchangeRate:     big.NewInt(1250000000000000000), // 1.25
-			ethPrice:         4000000000,                      // $4000
-			expectedRawValue: big.NewInt(5000000000),          // 5000 with 6 decimals
+			ethPrice:         4000000000,                      // $4000 with 6 decimals
+			expectedRawValue: 5000.0,                          // 1.25 * 4000 = $5000
 		},
 	}
 
@@ -157,10 +157,18 @@ func TestRocketPoolETHHandler_CalculationPrecision(t *testing.T) {
 			// Replicate the calculation from the handler
 			ethPriceBig := new(big.Int).SetUint64(tt.ethPrice)
 			value := new(big.Int).Mul(tt.exchangeRate, ethPriceBig)
-			divisor := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
-			value.Div(value, divisor)
 
-			assert.Equal(t, tt.expectedRawValue.String(), value.String())
+			// Calculate total decimals: 18 (rETH) + 6 (ETH price) = 24
+			totalDecimals := int64(24)
+			divisor := new(big.Int).Exp(big.NewInt(10), big.NewInt(totalDecimals), nil)
+
+			// Convert to big.Float for final division
+			valueFloat := new(big.Float).SetInt(value)
+			divisorFloat := new(big.Float).SetInt(divisor)
+			result := new(big.Float).Quo(valueFloat, divisorFloat)
+
+			finalValue, _ := result.Float64()
+			assert.InDelta(t, tt.expectedRawValue, finalValue, 0.01)
 		})
 	}
 }
@@ -192,7 +200,7 @@ func TestRocketPoolETHHandler_ContractRead_Integration(t *testing.T) {
 
 	// Parse the result
 	rethExchangeRate := new(big.Int).SetBytes(result)
-	
+
 	// Convert to float for validation
 	divisor := new(big.Float).SetInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
 	rateFloat := new(big.Float).SetInt(rethExchangeRate)
