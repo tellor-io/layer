@@ -353,8 +353,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	require.Equal(t, 1, len(reportsResNoStake.NoStakeReports))
 
 	// send unordered transfer from user to user2
-	timeoutTimestamp := time.Now().Add(1 * time.Minute).Format(time.RFC3339Nano)
-	txHash, err := validatorI.ExecTx(ctx, user.KeyName(), "bank", "send", user.FormattedAddress(), user2.FormattedAddress(), "222222loya", "--unordered", "--timeout-timestamp", timeoutTimestamp, "--keyring-dir", chain.HomeDir())
+	txHash, err := validatorI.ExecTx(ctx, user.KeyName(), "bank", "send", user.FormattedAddress(), user2.FormattedAddress(), "222222loya", "--unordered", "--timeout-duration", "1m", "--keyring-dir", chain.HomeDir())
 	require.NoError(t, err, "error sending unordered bank transfer")
 
 	// query the transaction hash and print results

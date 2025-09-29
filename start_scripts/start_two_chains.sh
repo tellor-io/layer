@@ -37,27 +37,15 @@ echo "$KEY_NAME..."
 echo "bill..."
 ./layerd init billmoniker --chain-id $CHAIN_ID --home ~/.layer/bill
 
-# Add a validator account alice
+# Add validator accounts
 echo "Adding validator accounts..."
 echo "$KEY_NAME..."
-# ./layerd keys add $KEY_NAME --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
 ./layerd keys import-hex $KEY_NAME $PRIVATE_KEY_1 --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
 echo "bill..."
-# ./layerd keys add bill --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
 ./layerd keys import-hex bill $PRIVATE_KEY_2 --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
 echo "charlie..."
-# ./layerd keys add charlie --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME 
 ./layerd keys import-hex charlie $PRIVATE_KEY_3 --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME 
-# import bill to alice
-./layerd keys import-hex bill $PRIVATE_KEY_2 --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
-
-# Create team multisig account
-echo "Creating team multisig account..."
-MULTISIG_NAME="team"
-MULTISIG_THRESHOLD="2"
-MULTISIG_MEMBERS="$KEY_NAME,bill"
-./layerd keys add $MULTISIG_NAME --multisig="$MULTISIG_MEMBERS" --multisig-threshold=$MULTISIG_THRESHOLD --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
-# import bill to alice
+# import bill to alice's keyring for multisig
 ./layerd keys import-hex bill $PRIVATE_KEY_2 --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
 
 # Create team multisig account
@@ -113,7 +101,6 @@ echo "$KEY_NAME..."
 ./layerd genesis add-genesis-account $(./layerd keys show $KEY_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1)  10000000000000loya --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
 echo "bill..."
 ./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
-./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
 echo "team multisig..."
 # ./layerd genesis add-genesis-account $(./layerd keys show $MULTISIG_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1) 5000000000000loya --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
