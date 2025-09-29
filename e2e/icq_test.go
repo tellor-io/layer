@@ -45,7 +45,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
-		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
 	}
 	nv := 1
 	nf := 0
@@ -61,7 +61,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 				Denom:          "loya",
 				Bech32Prefix:   "tellor",
 				CoinType:       "118",
-				GasPrices:      "0.0loya",
+				GasPrices:      "0.000025000000000000loya",
 				GasAdjustment:  1.1,
 				TrustingPeriod: "504h",
 				NoHostMount:    false,
@@ -88,7 +88,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 				Denom:          "loya",
 				Bech32Prefix:   "tellor",
 				CoinType:       "118",
-				GasPrices:      "0.0loya",
+				GasPrices:      "0.000025000000000000loya",
 				GasAdjustment:  1.1,
 				TrustingPeriod: "504h",
 				NoHostMount:    false,
@@ -198,7 +198,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 		"--chain-id", layer1.Config().ChainID,
 		"--from", "validator",
 		"--gas", "1000000",
-		"--fees", "1000000loya",
+		"--fees", "10loya",
 		"--keyring-dir", layer1.HomeDir(),
 		"--keyring-backend", keyring.BackendTest,
 		"-y",

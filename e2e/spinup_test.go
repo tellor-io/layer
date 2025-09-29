@@ -126,7 +126,7 @@ func TestLayerFlow(t *testing.T) {
 	require.NoError(t, err)
 	// all validators vote yes on minting proposal
 	for _, v := range layer.Validators {
-		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "1000000loya", "--keyring-dir", layer.HomeDir())
+		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "10loya", "--keyring-dir", layer.HomeDir())
 		require.NoError(t, err)
 	}
 	err = testutil.WaitForBlocks(ctx, 3, validatorI)
@@ -197,7 +197,7 @@ func TestLayerFlow(t *testing.T) {
 	require.Equal(t, aggReport.Aggregate.AggregateReporter, valIIAddress)
 
 	// second party disputes report
-	txHash, err = validatorI.ExecTx(ctx, disputerFA, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, microReports.MicroReports[0].QueryID, "warning", "500000000000loya", "false", "--keyring-dir", layer.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err = validatorI.ExecTx(ctx, disputerFA, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, microReports.MicroReports[0].QueryID, "warning", "500000000000loya", "false", "--keyring-dir", layer.HomeDir(), "--gas", "1000000", "--fees", "10loya")
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 	var disputes e2e.Disputes

@@ -163,7 +163,7 @@ func TestProfitability(t *testing.T) {
 	fmt.Println("time taken: ", time2.Sub(time1))
 
 	for _, v := range chain.Validators {
-		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "25loya", "--keyring-dir", "/var/cosmos-chain/layer-1")
+		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "5loya", "--keyring-dir", "/var/cosmos-chain/layer-1")
 		if err != nil {
 			fmt.Println("error voting on proposal: ", err)
 		} else {
@@ -182,7 +182,7 @@ func TestProfitability(t *testing.T) {
 	fmt.Println("minting is now on at height ", height)
 
 	// turn one validator into a reporter
-	_, err = val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--fees", "25loya", "--keyring-dir", val1.HomeDir())
+	_, err = val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "val1_moniker", "--fees", "5loya", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
 	fmt.Println("validator [0] becomes a reporter")
 
@@ -194,7 +194,7 @@ func TestProfitability(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("current cycle list: ", currentCycleList)
 	value := layerutil.EncodeValue(123456789.99)
-	_, _, err = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	_, _, err = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
 	require.NoError(err)
 	height, err = chain.Height(ctx)
 	require.NoError(err)
@@ -206,7 +206,7 @@ func TestProfitability(t *testing.T) {
 			continue
 		}
 		moniker := fmt.Sprintf("val%d_moniker", i)
-		_, err = v.Val.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", moniker, "--fees", "25loya", "--keyring-dir", v.Val.HomeDir())
+		_, err = v.Val.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", moniker, "--fees", "5loya", "--keyring-dir", v.Val.HomeDir())
 		require.NoError(err)
 		fmt.Println("validator [", i, "] becomes a reporter")
 	}
@@ -221,7 +221,7 @@ func TestProfitability(t *testing.T) {
 		fmt.Println("current cycle list: ", currentCycleList)
 
 		// report for the cycle list
-		_, _, err = v.Val.Exec(ctx, v.Val.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", v.Val.HomeDir()), v.Val.Chain.Config().Env)
+		_, _, err = v.Val.Exec(ctx, v.Val.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", v.Val.HomeDir()), v.Val.Chain.Config().Env)
 		require.NoError(err)
 		height, err = chain.Height(ctx)
 		require.NoError(err)
@@ -297,7 +297,7 @@ func TestProfitability(t *testing.T) {
 
 	// claim reporting rewards for each val/reporter
 	for _, v := range validators {
-		_, err = v.Val.ExecTx(ctx, "validator", "reporter", "withdraw-tip", v.Addr, v.ValAddr, "--fees", "25loya", "--keyring-dir", v.Val.HomeDir())
+		_, err = v.Val.ExecTx(ctx, "validator", "reporter", "withdraw-tip", v.Addr, v.ValAddr, "--fees", "5loya", "--keyring-dir", v.Val.HomeDir())
 		fmt.Println("error from claiming (some ppl didnt get their report in): ", err)
 		fmt.Println("validator [", v.Addr, "] claimed rewards")
 	}

@@ -40,7 +40,7 @@ func TestAttestationSlashing(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
-		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
 	}
 
 	// Set up validators
@@ -181,7 +181,7 @@ func TestAttestationSlashing(t *testing.T) {
 
 	for i, v := range validators {
 		// Report for the cycle list
-		txHash, _, err := v.Node.Exec(ctx, v.Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", v.Node.HomeDir()), v.Node.Chain.Config().Env)
+		txHash, _, err := v.Node.Exec(ctx, v.Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", v.Node.HomeDir()), v.Node.Chain.Config().Env)
 		require.NoError(err)
 		height, err := chain.Height(ctx)
 		require.NoError(err)

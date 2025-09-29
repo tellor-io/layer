@@ -146,7 +146,7 @@ func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
 			Denom:               "loya",
 			Bech32Prefix:        "tellor",
 			CoinType:            "118",
-			GasPrices:           "0.0025loya",
+			GasPrices:           "0.000025000000000000loya",
 			GasAdjustment:       1.1,
 			TrustingPeriod:      "504h",
 			NoHostMount:         false,
@@ -795,7 +795,7 @@ func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *c
 	}
 
 	for _, v := range layer.Validators {
-		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "1000000loya", "--keyring-dir", layer.HomeDir())
+		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "10loya", "--keyring-dir", layer.HomeDir())
 		if err != nil {
 			return err
 		}
@@ -860,7 +860,7 @@ func QueryTips(queryData string, ctx context.Context, validatorI *cosmos.ChainNo
 
 func DelegateToValidator(ctx context.Context, userKey string, validator *cosmos.ChainNode, valAddr string, amount math.Int) (string, error) {
 	delegateAmt := sdk.NewCoin("loya", amount)
-	txHash, err := validator.ExecTx(ctx, userKey, "staking", "delegate", valAddr, delegateAmt.String(), "--keyring-dir", validator.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err := validator.ExecTx(ctx, userKey, "staking", "delegate", valAddr, delegateAmt.String(), "--keyring-dir", validator.HomeDir(), "--gas", "1000000", "--fees", "10loya")
 	if err != nil {
 		return "", err
 	}
@@ -902,7 +902,7 @@ func SetupTestChain(t *testing.T, numVals, numFullNodes int, modifyGenesis []cos
 				Denom:          "loya",
 				Bech32Prefix:   "tellor",
 				CoinType:       "118",
-				GasPrices:      "0.0loya",
+				GasPrices:      "0.000025000000000000loya",
 				GasAdjustment:  1.1,
 				TrustingPeriod: "504h",
 				NoHostMount:    false,

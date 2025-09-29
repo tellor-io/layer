@@ -1,7 +1,6 @@
 package e2e_test
 
 import (
-	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -9,7 +8,6 @@ import (
 
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
@@ -31,75 +29,12 @@ func TestSelectorCreateReporter(t *testing.T) {
 	}
 
 	t.Parallel()
-	cosmos.SetSDKConfig("tellor")
 
-	modifyGenesis := []cosmos.GenesisKV{
-		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
-		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
-		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "20s"),
-		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
-		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
-		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
-		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
-	}
+	// Use standard configuration
+	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	defer ic.Close()
 
-	nv := 2
-	nf := 0
-	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
-		{
-			NumValidators: &nv,
-			NumFullNodes:  &nf,
-			ChainConfig: ibc.ChainConfig{
-				Type:           "cosmos",
-				Name:           "layer",
-				ChainID:        "layer",
-				Bin:            "layerd",
-				Denom:          "loya",
-				Bech32Prefix:   "tellor",
-				CoinType:       "118",
-				GasPrices:      "0.0loya",
-				GasAdjustment:  1.1,
-				TrustingPeriod: "504h",
-				NoHostMount:    false,
-				Images: []ibc.DockerImage{
-					{
-						Repository: "layer",
-						Version:    "local",
-						UIDGID:     "1025:1025",
-					},
-				},
-				EncodingConfig:      e2e.LayerEncoding(),
-				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator"},
-			},
-		},
-	})
-
-	client, network := interchaintest.DockerSetup(t)
-
-	chain := chains[0].(*cosmos.CosmosChain)
-
-	ic := interchaintest.NewInterchain().
-		AddChain(chain)
-
-	ctx := context.Background()
-
-	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
-		TestName:  t.Name(),
-		Client:    client,
-		NetworkID: network,
-		// BlockDatabaseFile: interchaintest.DefaultBlockDatabaseFilepath(),
-		SkipPathCreation: false,
-	}))
-	t.Cleanup(func() {
-		_ = ic.Close()
-	})
-	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
-	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
-		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-		Amount:  math.NewInt(1000000000000),
-		Denom:   "loya",
-	}))
+	// Note: The standard setup already handles team key recovery and funding
 
 	type Validators struct {
 		Addr    string
@@ -127,7 +62,7 @@ func TestSelectorCreateReporter(t *testing.T) {
 	fundAmt := math.NewInt(1_100 * 1e6)
 	delegateAmt := sdk.NewCoin("loya", math.NewInt(1000*1e6)) // all tokens after paying fee
 	user := interchaintest.GetAndFundTestUsers(t, ctx, "user", fundAmt, chain)[0]
-	txHash, err := validators[0].Val.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[1].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err := validators[0].Val.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[1].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "10loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user delegates to val1): ", txHash)
 
@@ -160,7 +95,7 @@ func TestSelectorCreateReporter(t *testing.T) {
 	}
 
 	// user selects val 1 as their reporter
-	txHash, err = validators[0].Val.ExecTx(ctx, user.FormattedAddress(), "reporter", "select-reporter", validators[1].Addr, "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "10loya")
+	txHash, err = validators[0].Val.ExecTx(ctx, user.FormattedAddress(), "reporter", "select-reporter", validators[1].Addr, "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "5loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user selects val1 as their reporter): ", txHash)
 
@@ -173,7 +108,7 @@ func TestSelectorCreateReporter(t *testing.T) {
 	fmt.Println("current cycle list: ", currentCycleList)
 	value := layerutil.EncodeValue(123456789.99)
 	for i := range validators {
-		_, _, err = validators[i].Val.Exec(ctx, validators[i].Val.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", validators[i].Val.HomeDir()), validators[i].Val.Chain.Config().Env)
+		_, _, err = validators[i].Val.Exec(ctx, validators[i].Val.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[i].Val.HomeDir()), validators[i].Val.Chain.Config().Env)
 		require.NoError(err)
 		height, err := validators[i].Val.Height(ctx)
 		require.NoError(err)
@@ -209,13 +144,13 @@ func TestSelectorCreateReporter(t *testing.T) {
 	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
 	require.NoError(err)
 	for i := range validators {
-		_, _, err = validators[i].Val.Exec(ctx, validators[i].Val.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", validators[i].Val.HomeDir()), validators[i].Val.Chain.Config().Env)
+		_, _, err = validators[i].Val.Exec(ctx, validators[i].Val.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[i].Val.HomeDir()), validators[i].Val.Chain.Config().Env)
 		require.NoError(err)
 		height, err := validators[i].Val.Height(ctx)
 		require.NoError(err)
 		fmt.Println("validator [", i, "] reported at height ", height)
 	}
-	_, _, err = validators[0].Val.Exec(ctx, validators[0].Val.TxCommand(user.FormattedAddress(), "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", validators[0].Val.HomeDir()), validators[0].Val.Chain.Config().Env)
+	_, _, err = validators[0].Val.Exec(ctx, validators[0].Val.TxCommand(user.FormattedAddress(), "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[0].Val.HomeDir()), validators[0].Val.Chain.Config().Env)
 	require.NoError(err)
 
 	// wait for aggregation to complete

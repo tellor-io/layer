@@ -18,6 +18,13 @@ import (
 func TestBatchSubmitValue(t *testing.T) {
 	require := require.New(t)
 
+	t.Helper()
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
+
+	t.Parallel()
+
 	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 4, 0)
 	defer ic.Close()
@@ -221,7 +228,7 @@ func TestBatchSubmitValue(t *testing.T) {
 	txHash, err = val2.ExecTx(
 		ctx, "validator", "dispute", "propose-dispute",
 		microReports[0].Reporter, microReports[0].MetaId,
-		microReports[0].QueryID, warning, "500000000000loya", "false", "--keyring-dir", val2.HomeDir(), "--gas", "1000000", "--fees", "1000000loya",
+		microReports[0].QueryID, warning, "500000000000loya", "false", "--keyring-dir", val2.HomeDir(), "--gas", "1000000", "--fees", "10loya",
 	)
 	require.NoError(err)
 	fmt.Println("TX HASH (dispute on ", microReports[0].Reporter, "): ", txHash)

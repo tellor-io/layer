@@ -34,8 +34,8 @@ func DefaultTestSetupConfig() TestSetupConfig {
 		VotingPeriod:    "15s",
 		DepositPeriod:   "10s",
 		ReportWindow:    "5",
-		GasPrices:       "0.0025loya",
-		GlobalFeeMinGas: "0.0",
+		GasPrices:       "0.000025000000000000loya",
+		GlobalFeeMinGas: "0.000025000000000000",
 	}
 }
 
@@ -115,7 +115,7 @@ func GetValidators(ctx context.Context, chain *cosmos.CosmosChain) ([]ValidatorI
 }
 
 // SetupTestChainWithConfig creates a test chain with the given configuration
-func SetupChainWithConfig(t *testing.T, config TestSetupConfig) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
+func SetupChainWithCustomConfig(t *testing.T, config TestSetupConfig) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
 	t.Helper()
 	require := require.New(t)
 
@@ -203,7 +203,7 @@ func SetupChain(t *testing.T, numVals, numFullNodes int) (*cosmos.CosmosChain, *
 	config := DefaultTestSetupConfig()
 	config.NumValidators = numVals
 	config.NumFullNodes = numFullNodes
-	return SetupChainWithConfig(t, config)
+	return SetupChainWithCustomConfig(t, config)
 }
 
 // PrintValidatorInfo prints validator information for debugging

@@ -24,6 +24,13 @@ const teamMnemonic = "unit curious maid primary holiday lunch lift melody boil b
 func TestConsensusAttestation(t *testing.T) {
 	require := require.New(t)
 
+	t.Helper()
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
+
+	t.Parallel()
+
 	// Set SDK config before parsing addresses
 	cosmos.SetSDKConfig("tellor")
 
@@ -34,7 +41,7 @@ func TestConsensusAttestation(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
-		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
 		// Increase tip window from 2 blocks to 5 blocks for easier timing
 		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
 	}
@@ -110,7 +117,7 @@ func TestConsensusAttestation(t *testing.T) {
 	fmt.Println("current cycle list: ", currentCycleList)
 	for i, v := range validators {
 		// report for the cycle list
-		txHash, err := v.Val.ExecTx(ctx, "validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", v.Val.HomeDir())
+		txHash, err := v.Val.ExecTx(ctx, "validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", v.Val.HomeDir())
 		require.NoError(err)
 		height, err := chain.Height(ctx)
 		require.NoError(err)
@@ -202,7 +209,7 @@ func TestConsensusAttestation(t *testing.T) {
 	}
 
 	// report for the cycle list from 1 val so not a consensus report
-	_, _, err = validators[0].Val.Exec(ctx, validators[0].Val.TxCommand("validator", "oracle", "submit-value", cycleListQData, value, "--fees", "25loya", "--keyring-dir", validators[0].Val.HomeDir()), validators[0].Val.Chain.Config().Env)
+	_, _, err = validators[0].Val.Exec(ctx, validators[0].Val.TxCommand("validator", "oracle", "submit-value", cycleListQData, value, "--fees", "5loya", "--keyring-dir", validators[0].Val.HomeDir()), validators[0].Val.Chain.Config().Env)
 	require.NoError(err)
 	height, err := chain.Height(ctx)
 	require.NoError(err)
@@ -320,7 +327,7 @@ func TestNoStakeAttestation(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
-		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
 	}
 
 	nv := 2
@@ -364,7 +371,7 @@ func TestNoStakeAttestation(t *testing.T) {
 
 	// both validators submit no stake reports
 	for i, v := range validators {
-		txHash, err := v.Val.ExecTx(ctx, "validator", "oracle", "no-stake-report", ltcQData, value, "--fees", "25loya", "--keyring-dir", v.Val.HomeDir())
+		txHash, err := v.Val.ExecTx(ctx, "validator", "oracle", "no-stake-report", ltcQData, value, "--fees", "5loya", "--keyring-dir", v.Val.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (val", i, " reports no stake): ", txHash)
 	}
