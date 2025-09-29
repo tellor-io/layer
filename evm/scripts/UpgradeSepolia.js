@@ -72,57 +72,93 @@ async function main(pk, rpcUrl) {
   console.log("Tellor360 (impl):", TELLOR_360_CONTRACT);
   console.log("UpdateOracleTestnet (impl):", UPDATE_ORACLE_TESTNET_IMPL);
 
-  const beforeImpl = await tellorAsITellor.callStatic.addresses(HASH_TELLOR_CONTRACT);
-  const beforeOracle = await tellorAsITellor.callStatic.addresses(HASH_ORACLE_CONTRACT);
-  console.log("Before - _TELLOR_CONTRACT:", beforeImpl);
-  console.log("Before - _ORACLE_CONTRACT:", beforeOracle);
+  console.log("\n\n----------------------------------------------------------------------------\n")
 
   // sanity checks
-  console.log("\nSanity checks...");
+  console.log("\n🔍 Pre-checks...");
+  const beforeImpl = await tellorAsITellor.callStatic.addresses(HASH_TELLOR_CONTRACT);
+  const beforeOracle = await tellorAsITellor.callStatic.addresses(HASH_ORACLE_CONTRACT);
   if (beforeImpl.toLowerCase() !== TELLOR_360_CONTRACT.toLowerCase()) {
-    throw new Error("Pre-check failed: _TELLOR_CONTRACT not pointing to Tellor360");
+    throw new Error(`❌ Pre-check failed: _TELLOR_CONTRACT not pointing to Tellor360: ${beforeImpl}`);
+  } else {
+    console.log(`✅ Pre-check passed: _TELLOR_CONTRACT pointing to Tellor360: ${beforeImpl}`);
   }
   if (beforeOracle.toLowerCase() !== TELLOR_TOKEN_BRIDGE_OLD.toLowerCase()) {
-    throw new Error("Pre-check failed: _ORACLE_CONTRACT not pointing to TellorTokenBridge");
+    throw new Error(`❌ Pre-check failed: _ORACLE_CONTRACT not pointing to original TokenBridge: ${beforeOracle}`);
+  } else {
+    console.log(`✅ Pre-check passed: _ORACLE_CONTRACT pointing to original TokenBridge: ${beforeOracle}`);
   }
 
+  // upgrade contracts
+  console.log("\nUpgrading contracts...");
+
   // 1) Point implementation to UpdateOracleTestnet
-  console.log("\n1) changeTellorContract -> UpdateOracleTestnet...");
+  console.log("\n📝 Step 1: changeTellorContract -> UpdateOracleTestnet...");
   let tx = await masterDEITY.changeTellorContract(UPDATE_ORACLE_TESTNET_IMPL);
   await tx.wait();
-  console.log("   tx:", tx.hash);
-  _newTellorContract = await tellorAsITellor.callStatic.addresses(HASH_TELLOR_CONTRACT);
-  console.log("   newTellorContract:", _newTellorContract);
+  console.log("✅ Transaction:", tx.hash);
+  const _newTellorContract = await tellorAsITellor.callStatic.addresses(HASH_TELLOR_CONTRACT);
   if (_newTellorContract.toLowerCase() !== UPDATE_ORACLE_TESTNET_IMPL.toLowerCase()) {
-    throw new Error("Post-check failed: _TELLOR_CONTRACT not updated to UpdateOracleTestnet");
+    throw new Error(`❌ Post-check failed: _TELLOR_CONTRACT not updated to UpdateOracleTestnet: ${_newTellorContract}`);
+  } else {
+    console.log(`✅ Verification: _TELLOR_CONTRACT updated successfully: ${_newTellorContract}`);
   }
 
   // 2) Call init() via proxy (writes _ORACLE_CONTRACT to TellorMaster storage)
-  console.log("2) Calling init() on proxy (UpdateOracleTestnet)...");
+  console.log("\n📝 Step 2: Calling init() on proxy (UpdateOracleTestnet)...");
   tx = await updateOracleViaProxy.init();
   await tx.wait();
-  console.log("   tx:", tx.hash);
-  _newOracleContract = await tellorAsITellor.callStatic.addresses(HASH_ORACLE_CONTRACT);
-  console.log("   newOracleContract:", _newOracleContract);
+  console.log("✅ Transaction:", tx.hash);
+  const _newOracleContract = await tellorAsITellor.callStatic.addresses(HASH_ORACLE_CONTRACT);
   if (_newOracleContract.toLowerCase() !== TELLOR_TOKEN_BRIDGE_NEW.toLowerCase()) {
-    throw new Error("Post-check failed: _ORACLE_CONTRACT not updated to UpdateOracleTestnet");
+    throw new Error(`❌ Post-check failed: _ORACLE_CONTRACT not updated to UpdateOracleTestnet: ${_newOracleContract}`);
+  } else {
+    console.log(`✅ Verification: _ORACLE_CONTRACT updated successfully: ${_newOracleContract}`);
   }
 
   // 3) Point implementation back to Tellor360
-  console.log("3) changeTellorContract -> Tellor360...");
+  console.log("\n📝 Step 3: changeTellorContract -> Tellor360...");
   tx = await masterDEITY.changeTellorContract(TELLOR_360_CONTRACT);
   await tx.wait();
-  console.log("   tx:", tx.hash);
+  console.log("✅ Transaction:", tx.hash);
 
   const afterImpl = await tellorAsITellor.callStatic.addresses(HASH_TELLOR_CONTRACT);
   const afterOracle = await tellorAsITellor.callStatic.addresses(HASH_ORACLE_CONTRACT);
-  console.log("\nAfter - _TELLOR_CONTRACT:", afterImpl);
-  console.log("After - _ORACLE_CONTRACT:", afterOracle);
-
   if (afterImpl.toLowerCase() !== TELLOR_360_CONTRACT.toLowerCase()) {
-    throw new Error("Post-check failed: _TELLOR_CONTRACT not restored to Tellor360");
+    throw new Error(`❌ Post-check failed: _TELLOR_CONTRACT not restored to Tellor360: ${afterImpl}`);
+  } else {
+    console.log(`✅ Verification: _TELLOR_CONTRACT restored successfully: ${afterImpl}`);
   }
-  console.log("\nSuccess: Implementation restored and _ORACLE_CONTRACT updated.");
+  if (afterOracle.toLowerCase() !== TELLOR_TOKEN_BRIDGE_NEW.toLowerCase()) {
+    throw new Error(`❌ Post-check failed: _ORACLE_CONTRACT not updated to new TokenBridge: ${afterOracle}`);
+  } else {
+    console.log(`✅ Verification: _ORACLE_CONTRACT updated successfully: ${afterOracle}`);
+  }
+
+  // Final verification: Transfer 1 TRB to random address
+  console.log("\n🔍 Final verification: Testing TRB transfer...");
+  const randomWallet = ethers.Wallet.createRandom();
+  const recipientAddress = randomWallet.address;
+  console.log("Random recipient address:", recipientAddress);
+  
+  const balanceBefore = await tellorAsITellor.balanceOf(recipientAddress);
+  console.log("Balance before transfer:", balanceBefore.toString());
+  
+  const transferAmount = h.toWei("1");
+  const transferTx = await tellorAsITellor.transfer(recipientAddress, transferAmount);
+  await transferTx.wait();
+  console.log("✅ Transfer transaction:", transferTx.hash);
+  
+  const balanceAfter = await tellorAsITellor.balanceOf(recipientAddress);
+  console.log("Balance after transfer:", balanceAfter.toString());
+  
+  if (balanceAfter.sub(balanceBefore).eq(transferAmount)) {
+    console.log("✅ Verification: TRB transfer successful - balance increased by 1 TRB");
+  } else {
+    throw new Error(`❌ Transfer verification failed: balance did not increase by 1 TRB. Expected: ${transferAmount.toString()}, Actual: ${balanceAfter.sub(balanceBefore).toString()}`);
+  }
+
+  console.log("\n🎉 SUCCESS: Implementation restored and _ORACLE_CONTRACT updated.");
 }
 
 main(process.env.TESTNET_PK, process.env.NODE_URL_SEPOLIA_TESTNET)
