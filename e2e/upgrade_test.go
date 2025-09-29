@@ -120,11 +120,11 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	_, err = validatorI.ExecTx(ctx, "validator", "oracle", "no-stake-report", qData, value, "--keyring-dir", chain.HomeDir())
 	require.NoError(t, err)
 
-	// create user to send upgrade tx
+	// create users to send upgrade tx
 	userFunds := math.NewInt(10_000_000_000)
 	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, chain)
 	user := users[0]
-	// user2 := users[1]
+	user2 := interchaintest.GetAndFundTestUsers(t, ctx, "user2", userFunds, chain)[0]
 
 	height, err := chain.Height(ctx)
 	require.NoError(t, err, "error fetching height before submit upgrade proposal")
@@ -352,11 +352,15 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	require.Equal(t, valAddr, reportsResNoStake.NoStakeReports[0].Reporter)
 	require.Equal(t, 1, len(reportsResNoStake.NoStakeReports))
 
-	// send unordered transfer from user to user2 using .cmd
-	// _, err = user.ExecTx(ctx, user.KeyName(), "transfer", user2.Address, "1000000loya", "--keyring-dir", chain.HomeDir())
-	// require.NoError(t, err, "error sending unordered transfer")
-	// err = testutil.WaitForBlocks(ctx, 1, user)
-	// require.NoError(t, err)
+	// send unordered transfer from user to user2
+	timeoutTimestamp := time.Now().Add(1 * time.Minute).Format(time.RFC3339Nano)
+	txHash, err := validatorI.ExecTx(ctx, user.KeyName(), "bank", "send", user.FormattedAddress(), user2.FormattedAddress(), "222222loya", "--unordered", "--timeout-timestamp", timeoutTimestamp, "--keyring-dir", chain.HomeDir())
+	require.NoError(t, err, "error sending unordered bank transfer")
+
+	// query the transaction hash and print results
+	txResult, _, err := validatorI.Exec(ctx, validatorI.QueryCommand("tx", txHash), validatorI.Chain.Config().Env)
+	require.NoError(t, err, "error querying transaction")
+	fmt.Printf("Transaction query result for hash %s:\n%s\n", txHash, string(txResult))
 
 	fmt.Println("=== All tests completed successfully! ===")
 }

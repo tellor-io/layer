@@ -1,124 +1,40 @@
 package e2e_test
 
 import (
-	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"os/exec"
-	"strings"
 	"testing"
 
-	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
 	"github.com/tellor-io/layer/utils"
 
 	"cosmossdk.io/math"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
-
-// cleanupDockerContainers removes any existing Docker containers to prevent conflicts
-func cleanupDockerContainers(t *testing.T) {
-	t.Helper()
-	// This is a best-effort cleanup - we don't fail the test if it doesn't work
-
-	// Stop all running containers first
-	cmd := exec.Command("sh", "-c", "docker stop $(docker ps -q)")
-	if err := cmd.Run(); err != nil {
-		t.Logf("Warning: Failed to stop Docker containers: %v", err)
-	}
-
-	// Remove all stopped containers
-	cmd = exec.Command("docker", "container", "prune", "-f")
-	if err := cmd.Run(); err != nil {
-		t.Logf("Warning: Failed to cleanup Docker containers: %v", err)
-	}
-
-	// Remove all unused networks
-	cmd = exec.Command("docker", "network", "prune", "-f")
-	if err := cmd.Run(); err != nil {
-		t.Logf("Warning: Failed to cleanup Docker networks: %v", err)
-	}
-
-	// Remove all unused volumes
-	cmd = exec.Command("docker", "volume", "prune", "-f")
-	if err := cmd.Run(); err != nil {
-		t.Logf("Warning: Failed to cleanup Docker volumes: %v", err)
-	}
-
-	// Also try to remove any containers with our test pattern
-	cmd = exec.Command("docker", "ps", "-a", "--filter", "name=TestBatchSubmitValue", "--format", "{{.ID}}")
-	output, err := cmd.Output()
-	if err != nil {
-		return
-	}
-
-	containerIDs := strings.Fields(string(output))
-	for _, id := range containerIDs {
-		cmd = exec.Command("docker", "rm", "-f", id)
-		if err := cmd.Run(); err != nil {
-			t.Logf("Warning: Failed to remove container %s: %v", id, err)
-		}
-	}
-
-	// Clean up any interchaintest containers
-	cmd = exec.Command("docker", "ps", "-a", "--filter", "name=interchaintest", "--format", "{{.ID}}")
-	output, err = cmd.Output()
-	if err == nil {
-		containerIDs = strings.Fields(string(output))
-		for _, id := range containerIDs {
-			cmd = exec.Command("docker", "rm", "-f", id)
-			if err := cmd.Run(); err != nil {
-				t.Logf("Warning: Failed to remove interchaintest container %s: %v", id, err)
-			}
-		}
-	}
-}
 
 func TestBatchSubmitValue(t *testing.T) {
 	require := require.New(t)
 
-	// Clean up any existing containers before starting
-	cleanupDockerContainers(t)
+	// Use standard configuration
+	chain, ic, ctx := e2e.SetupChain(t, 4, 0)
+	defer ic.Close()
 
-	// Set SDK config before parsing addresses
-	cosmos.SetSDKConfig("tellor")
+	// Get validators using new helper
+	validators, err := e2e.GetValidators(ctx, chain)
+	require.NoError(err)
+	require.Len(validators, 4, "Expected 4 validators")
 
-	modifyGenesis := []cosmos.GenesisKV{
-		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
-		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
-		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "20s"),
-		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
-		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
-		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
-		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
-		// Increase tip window from 2 blocks to 5 blocks for better test reliability
-		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
-	}
+	val1 := validators[0].Node
+	val2 := validators[1].Node
+	val3 := validators[2].Node
+	val4 := validators[3].Node
 
-	nv := 4
-	nf := 0
-
-	// Additional cleanup right before chain setup
-	cleanupDockerContainers(t)
-
-	chain, _, ctx := e2e.SetupTestChain(t, nv, nf, modifyGenesis)
-
-	// Get validators
-	validators := getValidators(t, ctx, chain)
-	val1 := validators[0].Val
-	val2 := validators[1].Val
-	val3 := validators[2].Val
-	val4 := validators[3].Val
-	// val1Addr := validators[0].Addr
-
-	// Create a reporter from validator 1
+	// Create a reporter from validator 1 using new helper
 	fmt.Println("Creating reporter from validator 1...")
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "reporter1", "--keyring-dir", val1.HomeDir())
+	txHash, err := e2e.CreateReporterFromValidator(ctx, validators[0], "reporter1", math.NewInt(1000000))
 	require.NoError(err)
 	fmt.Println("Reporter creation tx hash:", txHash)
 
@@ -148,18 +64,12 @@ func TestBatchSubmitValue(t *testing.T) {
 	// Try to submit values for all three queries initially
 	// Without tips, ALL should fail since these are not cycle list queries
 	fmt.Println("\n=== Testing initial submission (expecting ALL to fail - no tips) ===")
-	// Execute batch submit
-	txHash1, err := val1.ExecTx(
-		ctx, "validator",
-		"oracle",
-		"batch-submit-value",
-		"--values", value1,
-		"--values", value2,
-		"--values", value3,
-		"--fees", "25loya",
-		"--keyring-dir",
-		val1.HomeDir(),
-	)
+
+	// Create report data
+	reports := []string{value1, value2, value3}
+
+	// Execute batch submit using new helper
+	txHash1, err := e2e.SubmitBatchReport(ctx, val1, reports, "25loya")
 	require.NoError(err)
 
 	// Query the transaction result to see which ones failed
@@ -170,40 +80,25 @@ func TestBatchSubmitValue(t *testing.T) {
 	// ======================================================================================
 	// Now tip all three queries to make them submittable
 	fmt.Println("\n=== Tipping all three non-cycle list queries ===")
-	tipAmount := sdk.NewCoin("loya", math.NewInt(1000000)) // 1 TRB
+	tipAmount := math.NewInt(1000000) // 1 TRB
 
 	// wait 1 block
 	require.NoError(testutil.WaitForBlocks(ctx, 1, val1))
 
-	// Tip query 1 (TRX/USD)
-	cmd := val2.TxCommand("validator", "oracle", "tip", queryData1, tipAmount.String(), "--keyring-dir", val2.HomeDir())
-	stdout, _, err := val2.Exec(ctx, cmd, val2.Chain.Config().Env)
+	// Tip query 1 (TRX/USD) using new helper
+	tipTxHash1, err := e2e.TipQuery(ctx, val2, queryData1, tipAmount)
 	require.NoError(err)
-	fmt.Println("Tipped TRX/USD query")
-	output1 := cosmos.CosmosTx{}
-	err = json.Unmarshal(stdout, &output1)
-	require.NoError(err)
-	fmt.Println("Transaction output for TRX tip:", output1)
+	fmt.Println("Tipped TRX/USD query, tx hash:", tipTxHash1)
 
-	// Tip query 2 (SUI/USD)
-	cmd = val3.TxCommand("validator", "oracle", "tip", queryData2, tipAmount.String(), "--keyring-dir", val3.HomeDir())
-	stdout, _, err = val3.Exec(ctx, cmd, val3.Chain.Config().Env)
+	// Tip query 2 (SUI/USD) using new helper
+	tipTxHash2, err := e2e.TipQuery(ctx, val3, queryData2, tipAmount)
 	require.NoError(err)
-	fmt.Println("Tipped SUI/USD query")
-	output2 := cosmos.CosmosTx{}
-	err = json.Unmarshal(stdout, &output2)
-	require.NoError(err)
-	fmt.Println("Transaction output for SUI tip:", output2)
+	fmt.Println("Tipped SUI/USD query, tx hash:", tipTxHash2)
 
-	// Tip query 3 (BCH/USD)
-	cmd = val4.TxCommand("validator", "oracle", "tip", queryData3, tipAmount.String(), "--keyring-dir", val4.HomeDir())
-	stdout, _, err = val4.Exec(ctx, cmd, val4.Chain.Config().Env)
+	// Tip query 3 (BCH/USD) using new helper
+	tipTxHash3, err := e2e.TipQuery(ctx, val4, queryData3, tipAmount)
 	require.NoError(err)
-	fmt.Println("Tipped BCH/USD query")
-	output3 := cosmos.CosmosTx{}
-	err = json.Unmarshal(stdout, &output3)
-	require.NoError(err)
-	fmt.Println("Transaction output for BCH tip:", output3)
+	fmt.Println("Tipped BCH/USD query, tx hash:", tipTxHash3)
 
 	// wait 1 block
 	require.NoError(testutil.WaitForBlocks(ctx, 1, val1))
@@ -212,17 +107,17 @@ func TestBatchSubmitValue(t *testing.T) {
 	fmt.Println("\n=== Verifying tip transactions were processed ===")
 
 	// Check tip transaction 1
-	txRes1, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", output1.TxHash)
+	txRes1, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", tipTxHash1)
 	require.NoError(err)
 	fmt.Println("Tip transaction 1 result:", string(txRes1))
 
 	// Check tip transaction 2
-	txRes2, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", output2.TxHash)
+	txRes2, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", tipTxHash2)
 	require.NoError(err)
 	fmt.Println("Tip transaction 2 result:", string(txRes2))
 
 	// Check tip transaction 3
-	txRes3, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", output3.TxHash)
+	txRes3, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", tipTxHash3)
 	require.NoError(err)
 	fmt.Println("Tip transaction 3 result:", string(txRes3))
 
@@ -235,14 +130,9 @@ func TestBatchSubmitValue(t *testing.T) {
 
 	// Now batch submit all three queries again - this time all should succeed
 	fmt.Println("\n=== Batch submitting all three queries (expecting all to succeed after tips) ===")
-	// Execute second batch submit
-	txHash, err = val1.ExecTx(ctx, "validator", "oracle", "batch-submit-value",
-		"--values", value1,
-		"--values", value2,
-		"--values", value3,
-		"--fees", "25loya",
-		"--gas", "400000",
-		"--keyring-dir", val1.HomeDir())
+
+	// Execute second batch submit using new helper
+	txHash, err = e2e.SubmitBatchReport(ctx, val1, reports, "25loya")
 	require.NoError(err)
 	fmt.Println("Second batch submit tx hash:", txHash)
 	require.NoError(testutil.WaitForBlocks(ctx, 4, val1))
@@ -367,31 +257,4 @@ func TestBatchSubmitValue(t *testing.T) {
 	var data e2e.QueryRetrieveDataResponse
 	require.NoError(json.Unmarshal(res, &data))
 	require.Equal(data.Aggregate.Flagged, true)
-}
-
-// Helper function to get validators
-func getValidators(t *testing.T, ctx context.Context, chain *cosmos.CosmosChain) []struct {
-	Val  *cosmos.ChainNode
-	Addr string
-} {
-	t.Helper()
-	validators := make([]struct {
-		Val  *cosmos.ChainNode
-		Addr string
-	}, 0)
-
-	for i, val := range chain.Validators {
-		addr, err := val.AccountKeyBech32(ctx, "validator")
-		require.NoError(t, err)
-		validators = append(validators, struct {
-			Val  *cosmos.ChainNode
-			Addr string
-		}{
-			Val:  val,
-			Addr: addr,
-		})
-		fmt.Printf("Validator %d address: %s\n", i+1, addr)
-	}
-
-	return validators
 }

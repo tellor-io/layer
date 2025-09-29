@@ -1,0 +1,253 @@
+package e2e
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"testing"
+	"time"
+
+	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
+	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
+	"github.com/strangelove-ventures/interchaintest/v8/ibc"
+	"github.com/stretchr/testify/require"
+)
+
+// TestSetupConfig holds configuration for test setup
+type TestSetupConfig struct {
+	NumValidators   int
+	NumFullNodes    int
+	VotingPeriod    string
+	DepositPeriod   string
+	ReportWindow    string
+	GasPrices       string
+	GlobalFeeMinGas string
+}
+
+// DefaultTestSetupConfig returns standard test configuration
+func DefaultTestSetupConfig() TestSetupConfig {
+	return TestSetupConfig{
+		NumValidators:   2,
+		NumFullNodes:    0,
+		VotingPeriod:    "15s",
+		DepositPeriod:   "10s",
+		ReportWindow:    "5",
+		GasPrices:       "0.0025loya",
+		GlobalFeeMinGas: "0.0",
+	}
+}
+
+// SetupTellorConfig sets up the Tellor SDK configuration
+func SetupTellorConfig() {
+	cosmos.SetSDKConfig("tellor")
+}
+
+// CreateStandardGenesis creates a standard genesis configuration with optional overrides
+func CreateStandardGenesis(overrides ...TestSetupConfig) []cosmos.GenesisKV {
+	config := DefaultTestSetupConfig()
+
+	// Apply overrides if provided
+	if len(overrides) > 0 {
+		override := overrides[0]
+		if override.VotingPeriod != "" {
+			config.VotingPeriod = override.VotingPeriod
+		}
+		if override.DepositPeriod != "" {
+			config.DepositPeriod = override.DepositPeriod
+		}
+		if override.ReportWindow != "" {
+			config.ReportWindow = override.ReportWindow
+		}
+		if override.GasPrices != "" {
+			config.GasPrices = override.GasPrices
+		}
+		if override.GlobalFeeMinGas != "" {
+			config.GlobalFeeMinGas = override.GlobalFeeMinGas
+		}
+	}
+
+	teamAddressBytes := sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()
+
+	return []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.dispute.params.team_address", teamAddressBytes),
+		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", config.VotingPeriod),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", config.DepositPeriod),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", config.GlobalFeeMinGas),
+		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", config.ReportWindow),
+	}
+}
+
+// ValidatorInfo contains validator node and address information
+type ValidatorInfo struct {
+	Node    *cosmos.ChainNode
+	AccAddr string
+	ValAddr string
+}
+
+// GetValidators retrieves all validators with their addresses
+func GetValidators(ctx context.Context, chain *cosmos.CosmosChain) ([]ValidatorInfo, error) {
+	var validators []ValidatorInfo
+
+	for _, validator := range chain.Validators {
+		accAddr, err := validator.AccountKeyBech32(ctx, "validator")
+		if err != nil {
+			return nil, fmt.Errorf("error getting validator account address: %w", err)
+		}
+
+		valAddr, err := validator.KeyBech32(ctx, "validator", "val")
+		if err != nil {
+			return nil, fmt.Errorf("error getting validator address: %w", err)
+		}
+
+		validators = append(validators, ValidatorInfo{
+			Node:    validator,
+			AccAddr: accAddr,
+			ValAddr: valAddr,
+		})
+	}
+
+	return validators, nil
+}
+
+// SetupTestChainWithConfig creates a test chain with the given configuration
+func SetupChainWithConfig(t *testing.T, config TestSetupConfig) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
+	t.Helper()
+	require := require.New(t)
+
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
+
+	t.Parallel()
+	time.Sleep(1 * time.Second)
+
+	// Set up Tellor config
+	SetupTellorConfig()
+
+	// Create genesis configuration
+	modifyGenesis := CreateStandardGenesis(config)
+
+	// Create chain spec
+	chainSpec := &interchaintest.ChainSpec{
+		NumValidators: &config.NumValidators,
+		NumFullNodes:  &config.NumFullNodes,
+		ChainConfig: ibc.ChainConfig{
+			Type:           "cosmos",
+			Name:           "layer",
+			ChainID:        "layer",
+			Bin:            "layerd",
+			Denom:          "loya",
+			Bech32Prefix:   "tellor",
+			CoinType:       "118",
+			GasPrices:      config.GasPrices,
+			GasAdjustment:  1.1,
+			TrustingPeriod: "504h",
+			NoHostMount:    false,
+			Images: []ibc.DockerImage{
+				{
+					Repository: "layer",
+					Version:    "local",
+					UIDGID:     "1025:1025",
+				},
+			},
+			EncodingConfig:      LayerEncoding(),
+			ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
+			AdditionalStartArgs: []string{"--key-name", "validator"},
+		},
+	}
+
+	// Create chains
+	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{chainSpec})
+	time.Sleep(1 * time.Second)
+
+	client, network := interchaintest.DockerSetup(t)
+	time.Sleep(1 * time.Second)
+
+	layer := chains[0].(*cosmos.CosmosChain)
+	time.Sleep(1 * time.Second)
+
+	ic := interchaintest.NewInterchain().AddChain(layer)
+	time.Sleep(1 * time.Second)
+
+	ctx := context.Background()
+	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
+		TestName:         t.Name(),
+		Client:           client,
+		NetworkID:        network,
+		SkipPathCreation: false,
+	}))
+	time.Sleep(1 * time.Second)
+
+	t.Cleanup(func() {
+		_ = ic.Close()
+		time.Sleep(1 * time.Second)
+	})
+
+	require.NoError(layer.RecoverKey(ctx, "team", teamMnemonic))
+	require.NoError(layer.SendFunds(ctx, "faucet", ibc.WalletAmount{
+		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
+		Amount:  math.NewInt(1000000000000),
+		Denom:   "loya",
+	}))
+
+	return layer, ic, ctx
+}
+
+// SetupStandardTestChain creates a test chain with standard configuration
+func SetupChain(t *testing.T, numVals, numFullNodes int) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
+	config := DefaultTestSetupConfig()
+	config.NumValidators = numVals
+	config.NumFullNodes = numFullNodes
+	return SetupChainWithConfig(t, config)
+}
+
+// PrintValidatorInfo prints validator information for debugging
+func PrintValidatorInfo(ctx context.Context, validators []ValidatorInfo) {
+	for i, validator := range validators {
+		fmt.Printf("Validator %d:\n", i+1)
+		fmt.Printf("  Account Address: %s\n", validator.AccAddr)
+		fmt.Printf("  Validator Address: %s\n", validator.ValAddr)
+		fmt.Printf("  Node: %s\n", validator.Node.Name())
+	}
+}
+
+// CreateReporterFromValidator creates a reporter from a validator with stake
+func CreateReporterFromValidator(ctx context.Context, validator ValidatorInfo, reporterName string, stakeAmount math.Int) (string, error) {
+	txHash, err := validator.Node.ExecTx(ctx, "validator", "reporter", "create-reporter",
+		"0.1", stakeAmount.String(), reporterName, "--keyring-dir", validator.Node.HomeDir())
+	return txHash, err
+}
+
+// TipQuery tips a query with the specified amount
+func TipQuery(ctx context.Context, validator *cosmos.ChainNode, queryData string, tipAmount math.Int) (string, error) {
+	cmd := validator.TxCommand("validator", "oracle", "tip", queryData, tipAmount.String(), "--keyring-dir", validator.HomeDir())
+	stdout, _, err := validator.Exec(ctx, cmd, validator.Chain.Config().Env)
+	if err != nil {
+		return "", err
+	}
+
+	// Parse the transaction output to get the tx hash
+	var output cosmos.CosmosTx
+	err = json.Unmarshal(stdout, &output)
+	if err != nil {
+		return "", err
+	}
+
+	return output.TxHash, nil
+}
+
+// SubmitBatchReport submits a batch of reports
+func SubmitBatchReport(ctx context.Context, validator *cosmos.ChainNode, reports []string, fees string) (string, error) {
+	args := []string{"oracle", "batch-submit-value"}
+	for _, report := range reports {
+		args = append(args, "--values", report)
+	}
+	args = append(args, "--fees", fees, "--keyring-dir", validator.HomeDir())
+
+	return validator.ExecTx(ctx, "validator", args...)
+}
