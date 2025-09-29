@@ -61,8 +61,8 @@ module.exports = {
       forking: {
         // url: process.env.NODE_URL_MAINNET,
         // blockNumber: 23390712
-        url: process.env.NODE_URL_SEPOLIA_TESTNET,
-        blockNumber: 9307000
+        url: process.env.NODE_URL_SEPOLIA_TESTNET
+        // blockNumber: 9307000
       },
       allowUnlimitedContractSize: true
     } ,
