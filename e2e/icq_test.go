@@ -45,8 +45,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
-		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
-		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
 	}
 	nv := 1
 	nf := 0
@@ -62,7 +61,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 				Denom:          "loya",
 				Bech32Prefix:   "tellor",
 				CoinType:       "118",
-				GasPrices:      "0.000025000000000000loya",
+				GasPrices:      "0.0loya",
 				GasAdjustment:  1.1,
 				TrustingPeriod: "504h",
 				NoHostMount:    false,
@@ -89,7 +88,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 				Denom:          "loya",
 				Bech32Prefix:   "tellor",
 				CoinType:       "118",
-				GasPrices:      "0.000025000000000000loya",
+				GasPrices:      "0.0loya",
 				GasAdjustment:  1.1,
 				TrustingPeriod: "504h",
 				NoHostMount:    false,
@@ -140,9 +139,10 @@ func TestIbcInterchainQuery(t *testing.T) {
 		})
 
 	require.NoError(t, ic.Build(ctx, eRep, interchaintest.InterchainBuildOptions{
-		TestName:         t.Name(),
-		Client:           client,
-		NetworkID:        network,
+		TestName:  t.Name(),
+		Client:    client,
+		NetworkID: network,
+
 		SkipPathCreation: false,
 	}))
 
@@ -199,7 +199,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 		"--chain-id", layer1.Config().ChainID,
 		"--from", "validator",
 		"--gas", "1000000",
-		"--fees", "10loya",
+		"--fees", "1000000loya",
 		"--keyring-dir", layer1.HomeDir(),
 		"--keyring-backend", keyring.BackendTest,
 		"-y",
