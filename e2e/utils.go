@@ -16,6 +16,7 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/stretchr/testify/require"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	"go.uber.org/zap/zaptest"
 
 	"cosmossdk.io/math"
@@ -25,7 +26,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	registrytypes "github.com/tellor-io/layer/x/registry/types"
 )
 
 // ============================================================================
