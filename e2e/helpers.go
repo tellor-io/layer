@@ -7,12 +7,14 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/stretchr/testify/require"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // SetupConfig holds configuration for test setup
@@ -86,8 +88,8 @@ func GetValidators(ctx context.Context, chain *cosmos.CosmosChain) ([]ValidatorI
 
 // SetupTestChainWithConfig creates a test chain with the given configuration
 func SetupChainWithCustomConfig(t *testing.T, config SetupConfig) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
-	fmt.Println("Setting up chain with custom config...")
 	t.Helper()
+	fmt.Println("Setting up chain with custom config...")
 	require := require.New(t)
 
 	if testing.Short() {
@@ -171,6 +173,7 @@ func SetupChainWithCustomConfig(t *testing.T, config SetupConfig) (*cosmos.Cosmo
 
 // SetupStandardTestChain creates a test chain with standard configuration
 func SetupChain(t *testing.T, numVals, numFullNodes int) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
+	t.Helper()
 	fmt.Println("Setting up chain with standard configuration...")
 	config := DefaultSetupConfig()
 	config.NumValidators = numVals
