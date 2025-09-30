@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
@@ -14,10 +13,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// cd e2e
-// go test -run TestInactivitySlash --timeout 5m
-
-// start with 4 validators, one of them goes offline
+// TestInactivitySlash tests the inactivity slashing mechanism
 func TestInactivitySlash(t *testing.T) {
 	require := require.New(t)
 
@@ -26,43 +22,21 @@ func TestInactivitySlash(t *testing.T) {
 		t.Skip("skipping in short mode")
 	}
 
-	t.Parallel()
-
-	// Use standard configuration with custom slashing parameter
-	config := e2e.DefaultTestSetupConfig()
-	config.NumValidators = 4
-	config.NumFullNodes = 0
-
-	// Add custom slashing parameter
-	modifyGenesis := e2e.CreateStandardGenesis(config)
-	modifyGenesis = append(modifyGenesis, cosmos.NewGenesisKV("app_state.slashing.params.signed_blocks_window", "4"))
-
-	chain, ic, ctx := e2e.SetupChainWithCustomConfig(t, config)
+	// Use standard configuration
+	chain, ic, ctx := e2e.SetupChain(t, 4, 0)
 	defer ic.Close()
 
-	// Note: The standard setup already handles team key recovery and funding
+	// Get validators using the helper
+	validators, err := e2e.GetValidators(ctx, chain)
+	require.NoError(err)
 
-	val1 := chain.Validators[0]
-	val1Addr, err := val1.AccountKeyBech32(ctx, "validator")
-	require.NoError(err)
-	val1valAddr, err := val1.KeyBech32(ctx, "validator", "val")
-	require.NoError(err)
-	fmt.Println("val1 Account Address: ", val1Addr)
-	fmt.Println("val1 Validator Address: ", val1valAddr)
-	val2 := chain.Validators[1]
-	val2Addr, err := val2.AccountKeyBech32(ctx, "validator")
-	require.NoError(err)
-	val2valAddr, err := val2.KeyBech32(ctx, "validator", "val")
-	require.NoError(err)
-	fmt.Println("val2 Account Address: ", val2Addr)
-	fmt.Println("val2 Validator Address: ", val2valAddr)
-	val4 := chain.Validators[3]
-	val4Addr, err := val4.AccountKeyBech32(ctx, "validator")
-	require.NoError(err)
-	val4valAddr, err := val4.KeyBech32(ctx, "validator", "val")
-	require.NoError(err)
-	fmt.Println("val4 Account Address: ", val4Addr)
-	fmt.Println("val4 Validator Address: ", val4valAddr)
+	// Print validator info for debugging
+	e2e.PrintValidatorInfo(ctx, validators)
+
+	// Access specific validators that are used in the test
+	val2 := validators[1].Node
+	val4 := validators[3].Node
+	val4valAddr := validators[3].ValAddr
 
 	// queryValidators to confirm that 4 validators are bonded
 	vals, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)

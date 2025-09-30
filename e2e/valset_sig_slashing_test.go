@@ -1,7 +1,6 @@
 package e2e_test
 
 import (
-	"context"
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/hex"
@@ -14,7 +13,6 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/crypto"
-	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
@@ -27,8 +25,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// cd e2e
-// go test -run TestValsetSignatureSlashing -v --timeout 5m
+// TestValsetSignatureSlashing tests the valset signature slashing mechanism
 func TestValsetSignatureSlashing(t *testing.T) {
 	require := require.New(t)
 
@@ -40,8 +37,9 @@ func TestValsetSignatureSlashing(t *testing.T) {
 	t.Parallel()
 	cosmos.SetSDKConfig("tellor")
 
-	// create modified genesis for test
-	modifyGenesis := []cosmos.GenesisKV{
+	// Use standard configuration with custom genesis modifications
+	config := e2e.DefaultSetupConfig()
+	config.ModifyGenesis = []cosmos.GenesisKV{
 		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
 		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
 		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "15s"),
@@ -51,57 +49,8 @@ func TestValsetSignatureSlashing(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
 	}
 
-	// set up validators
-	nv := 2
-	nf := 1
-	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
-		{
-			NumValidators: &nv,
-			NumFullNodes:  &nf,
-			ChainConfig: ibc.ChainConfig{
-				Type:           "cosmos",
-				Name:           "layer",
-				ChainID:        "layer",
-				Bin:            "layerd",
-				Denom:          "loya",
-				Bech32Prefix:   "tellor",
-				CoinType:       "118",
-				GasPrices:      "0.000025000000000000loya",
-				GasAdjustment:  1.1,
-				TrustingPeriod: "504h",
-				NoHostMount:    false,
-				Images: []ibc.DockerImage{
-					{
-						Repository: "layer",
-						Version:    "local",
-						UIDGID:     "1025:1025",
-					},
-				},
-				EncodingConfig:      e2e.LayerEncoding(),
-				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator"},
-			},
-		},
-	})
+	chain, _, ctx := e2e.SetupChainWithCustomConfig(t, config)
 
-	client, network := interchaintest.DockerSetup(t)
-
-	chain := chains[0].(*cosmos.CosmosChain)
-
-	ic := interchaintest.NewInterchain().
-		AddChain(chain)
-
-	ctx := context.Background()
-
-	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
-		TestName:         t.Name(),
-		Client:           client,
-		NetworkID:        network,
-		SkipPathCreation: false,
-	}))
-	t.Cleanup(func() {
-		_ = ic.Close()
-	})
 	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
 	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
 		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
@@ -109,29 +58,24 @@ func TestValsetSignatureSlashing(t *testing.T) {
 		Denom:   "loya",
 	}))
 
-	// setup validator info
+	// Get validators using the helper
+	validatorsInfo, err := e2e.GetValidators(ctx, chain)
+	require.NoError(err)
+
+	// Setup validator info with EVM-specific fields
 	type Validators struct {
-		AccAddr string
-		ValAddr string
-		Node    *cosmos.ChainNode
+		e2e.ValidatorInfo
 		EVMPriv *ecdsa.PrivateKey
 		EVMAddr string
 	}
 
-	validators := make([]Validators, len(chain.Validators))
-	for i := range chain.Validators {
-		val := chain.Validators[i]
-		valAddr, err := val.AccountKeyBech32(ctx, "validator")
-		require.NoError(err)
-		valvalAddr, err := val.KeyBech32(ctx, "validator", "val")
-		require.NoError(err)
-		fmt.Println("val", i, " Account Address: ", valAddr)
-		fmt.Println("val", i, " Validator Address: ", valvalAddr)
+	validators := make([]Validators, len(validatorsInfo))
+	for i, v := range validatorsInfo {
+		fmt.Println("val", i, " Account Address: ", v.AccAddr)
+		fmt.Println("val", i, " Validator Address: ", v.ValAddr)
 
 		validators[i] = Validators{
-			AccAddr: valAddr,
-			ValAddr: valvalAddr,
-			Node:    val,
+			ValidatorInfo: v,
 		}
 	}
 
@@ -279,7 +223,7 @@ func TestValsetSignatureSlashing(t *testing.T) {
 	require.True(slashedValInfo.Jailed, "Validator should have been jailed")
 }
 
-// test that a validator cannot be slashed if the chain id is different
+// TestValsetSignatureSlashingWithDifferentChainId tests that a validator cannot be slashed if the chain id is different
 func TestValsetSignatureSlashingWithDifferentChainId(t *testing.T) {
 	require := require.New(t)
 
@@ -291,8 +235,10 @@ func TestValsetSignatureSlashingWithDifferentChainId(t *testing.T) {
 	t.Parallel()
 	cosmos.SetSDKConfig("tellor")
 
-	// create modified genesis for test
-	modifyGenesis := []cosmos.GenesisKV{
+	// Use standard configuration with custom genesis modifications
+	config := e2e.DefaultSetupConfig()
+	config.NumFullNodes = 1
+	config.ModifyGenesis = []cosmos.GenesisKV{
 		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
 		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
 		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "15s"),
@@ -302,57 +248,8 @@ func TestValsetSignatureSlashingWithDifferentChainId(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
 	}
 
-	// set up validators
-	nv := 2
-	nf := 1
-	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
-		{
-			NumValidators: &nv,
-			NumFullNodes:  &nf,
-			ChainConfig: ibc.ChainConfig{
-				Type:           "cosmos",
-				Name:           "layer",
-				ChainID:        "layer",
-				Bin:            "layerd",
-				Denom:          "loya",
-				Bech32Prefix:   "tellor",
-				CoinType:       "118",
-				GasPrices:      "0.000025000000000000loya",
-				GasAdjustment:  1.1,
-				TrustingPeriod: "504h",
-				NoHostMount:    false,
-				Images: []ibc.DockerImage{
-					{
-						Repository: "layer",
-						Version:    "local",
-						UIDGID:     "1025:1025",
-					},
-				},
-				EncodingConfig:      e2e.LayerEncoding(),
-				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator"},
-			},
-		},
-	})
+	chain, _, ctx := e2e.SetupChainWithCustomConfig(t, config)
 
-	client, network := interchaintest.DockerSetup(t)
-
-	chain := chains[0].(*cosmos.CosmosChain)
-
-	ic := interchaintest.NewInterchain().
-		AddChain(chain)
-
-	ctx := context.Background()
-
-	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
-		TestName:         t.Name(),
-		Client:           client,
-		NetworkID:        network,
-		SkipPathCreation: false,
-	}))
-	t.Cleanup(func() {
-		_ = ic.Close()
-	})
 	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
 	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
 		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
@@ -360,29 +257,24 @@ func TestValsetSignatureSlashingWithDifferentChainId(t *testing.T) {
 		Denom:   "loya",
 	}))
 
-	// setup validator info
+	// Get validators using the helper
+	validatorsInfo, err := e2e.GetValidators(ctx, chain)
+	require.NoError(err)
+
+	// Setup validator info with EVM-specific fields
 	type Validators struct {
-		AccAddr string
-		ValAddr string
-		Node    *cosmos.ChainNode
+		e2e.ValidatorInfo
 		EVMPriv *ecdsa.PrivateKey
 		EVMAddr string
 	}
 
-	validators := make([]Validators, len(chain.Validators))
-	for i := range chain.Validators {
-		val := chain.Validators[i]
-		valAddr, err := val.AccountKeyBech32(ctx, "validator")
-		require.NoError(err)
-		valvalAddr, err := val.KeyBech32(ctx, "validator", "val")
-		require.NoError(err)
-		fmt.Println("val", i, " Account Address: ", valAddr)
-		fmt.Println("val", i, " Validator Address: ", valvalAddr)
+	validators := make([]Validators, len(validatorsInfo))
+	for i, v := range validatorsInfo {
+		fmt.Println("val", i, " Account Address: ", v.AccAddr)
+		fmt.Println("val", i, " Validator Address: ", v.ValAddr)
 
 		validators[i] = Validators{
-			AccAddr: valAddr,
-			ValAddr: valvalAddr,
-			Node:    val,
+			ValidatorInfo: v,
 		}
 	}
 

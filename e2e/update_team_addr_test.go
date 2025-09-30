@@ -1,12 +1,10 @@
 package e2e_test
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"testing"
 
-	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
@@ -15,7 +13,6 @@ import (
 
 	"cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -30,68 +27,9 @@ func TestUpdateTeamAddr(t *testing.T) {
 	t.Parallel()
 	cosmos.SetSDKConfig("tellor")
 
-	modifyGenesis := []cosmos.GenesisKV{
-		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
-		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
-		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "15s"),
-		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
-		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
-		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
-		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
-	}
+	// Use standard configuration
+	chain, _, ctx := e2e.SetupChain(t, 2, 0)
 
-	nv := 2
-	nf := 1
-	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
-		{
-			NumValidators: &nv,
-			NumFullNodes:  &nf,
-			ChainConfig: ibc.ChainConfig{
-				Type:           "cosmos",
-				Name:           "layer",
-				ChainID:        "layer",
-				Bin:            "layerd",
-				Denom:          "loya",
-				Bech32Prefix:   "tellor",
-				CoinType:       "118",
-				GasPrices:      "0.000025000000000000loya",
-				GasAdjustment:  1.1,
-				TrustingPeriod: "504h",
-				NoHostMount:    false,
-				Images: []ibc.DockerImage{
-					{
-						Repository: "layer",
-						Version:    "local",
-						UIDGID:     "1025:1025",
-					},
-				},
-				EncodingConfig:      e2e.LayerEncoding(),
-				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator"},
-			},
-		},
-	})
-
-	client, network := interchaintest.DockerSetup(t)
-
-	chain := chains[0].(*cosmos.CosmosChain)
-
-	ic := interchaintest.NewInterchain().
-		AddChain(chain)
-
-	ctx := context.Background()
-
-	fileName := fmt.Sprintf("./dbfile/%s.db", t.Name())
-	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
-		TestName:          t.Name(),
-		Client:            client,
-		NetworkID:         network,
-		SkipPathCreation:  false,
-		BlockDatabaseFile: fileName,
-	}))
-	t.Cleanup(func() {
-		_ = ic.Close()
-	})
 	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
 	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
 		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
@@ -99,25 +37,25 @@ func TestUpdateTeamAddr(t *testing.T) {
 		Denom:   "loya",
 	}))
 
+	// Get validators using the helper
+	validatorsInfo, err := e2e.GetValidators(ctx, chain)
+	require.NoError(err)
+
+	// Convert to the expected format for this test
 	type Validators struct {
 		Addr    string
 		ValAddr string
 		Val     *cosmos.ChainNode
 	}
 
-	validators := make([]Validators, len(chain.Validators))
-	for i := range chain.Validators {
-		val := chain.Validators[i]
-		valAddr, err := val.AccountKeyBech32(ctx, "validator")
-		require.NoError(err)
-		valvalAddr, err := val.KeyBech32(ctx, "validator", "val")
-		require.NoError(err)
-		fmt.Println("val", i, " Account Address: ", valAddr)
-		fmt.Println("val", i, " Validator Address: ", valvalAddr)
+	validators := make([]Validators, len(validatorsInfo))
+	for i, v := range validatorsInfo {
+		fmt.Println("val", i, " Account Address: ", v.AccAddr)
+		fmt.Println("val", i, " Validator Address: ", v.ValAddr)
 		validators[i] = Validators{
-			Addr:    valAddr,
-			ValAddr: valvalAddr,
-			Val:     val,
+			Addr:    v.AccAddr,
+			ValAddr: v.ValAddr,
+			Val:     v.Node,
 		}
 	}
 

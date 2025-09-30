@@ -24,8 +24,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// cd e2e
-// go test -run TestAttestationSlashing -v --timeout 5m
+// TestAttestationSlashing tests the attestation slashing mechanism
 func TestAttestationSlashing(t *testing.T) {
 	require := require.New(t)
 
@@ -43,13 +42,20 @@ func TestAttestationSlashing(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
 	}
 
-	// Set up validators
-	nv := 2
-	nf := 0
-	chain, _, ctx := e2e.SetupTestChain(t, nv, nf, modifyGenesis)
+	// Custom genesis modifications
+	config := e2e.DefaultSetupConfig()
+	config.ModifyGenesis = modifyGenesis
+	chain, _, ctx := e2e.SetupChainWithCustomConfig(t, config)
 
-	// Setup validator info
-	type Validators struct {
+	// Get validators using the helper
+	validators, err := e2e.GetValidators(ctx, chain)
+	require.NoError(err)
+
+	// Print validator info for debugging
+	e2e.PrintValidatorInfo(ctx, validators)
+
+	// Setup additional validator info for this test
+	type ValidatorsWithEVM struct {
 		AccAddr string
 		ValAddr string
 		Node    *cosmos.ChainNode
@@ -57,20 +63,12 @@ func TestAttestationSlashing(t *testing.T) {
 		EVMAddr string
 	}
 
-	validators := make([]Validators, len(chain.Validators))
-	for i := range chain.Validators {
-		val := chain.Validators[i]
-		valAddr, err := val.AccountKeyBech32(ctx, "validator")
-		require.NoError(err)
-		valvalAddr, err := val.KeyBech32(ctx, "validator", "val")
-		require.NoError(err)
-		fmt.Println("val", i, " Account Address: ", valAddr)
-		fmt.Println("val", i, " Validator Address: ", valvalAddr)
-
-		validators[i] = Validators{
-			AccAddr: valAddr,
-			ValAddr: valvalAddr,
-			Node:    val,
+	validatorsWithEVM := make([]ValidatorsWithEVM, len(validators))
+	for i, v := range validators {
+		validatorsWithEVM[i] = ValidatorsWithEVM{
+			AccAddr: v.AccAddr,
+			ValAddr: v.ValAddr,
+			Node:    v.Node,
 		}
 	}
 
@@ -117,7 +115,7 @@ func TestAttestationSlashing(t *testing.T) {
 		require.NoError(privErr)
 
 		// Store the private key for later use in signing malicious attestations
-		validators[i].EVMPriv = exportedPrivKey
+		validatorsWithEVM[i].EVMPriv = exportedPrivKey
 
 		fmt.Printf("Validator %d - Private key loaded for signing\n", i)
 	}
@@ -134,7 +132,7 @@ func TestAttestationSlashing(t *testing.T) {
 		fmt.Printf("  Validator %d: Address %s, Power %s\n", i, val.EthereumAddress, val.Power)
 		// Assign the registered EVM addresses to our validator structs
 		if i < len(validators) {
-			validators[i].EVMAddr = "0x" + val.EthereumAddress
+			validatorsWithEVM[i].EVMAddr = "0x" + val.EthereumAddress
 		}
 	}
 
@@ -168,7 +166,7 @@ func TestAttestationSlashing(t *testing.T) {
 	}
 
 	fmt.Println("Our assigned EVM addresses:")
-	for i, v := range validators {
+	for i, v := range validatorsWithEVM {
 		fmt.Printf("  Validator %d: Address %s\n", i, v.EVMAddr)
 	}
 
@@ -219,7 +217,7 @@ func TestAttestationSlashing(t *testing.T) {
 	attestTimestamp := uint64(time.Now().UnixMilli())
 
 	// Generate signature from validator[1]
-	targetValidator := validators[1]
+	targetValidator := validatorsWithEVM[1]
 	fmt.Printf("Target validator for slashing: %s (EVM: %s)\n", targetValidator.AccAddr, targetValidator.EVMAddr)
 
 	type SnapshotData struct {

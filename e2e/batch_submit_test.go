@@ -23,8 +23,6 @@ func TestBatchSubmitValue(t *testing.T) {
 		t.Skip("skipping in short mode")
 	}
 
-	t.Parallel()
-
 	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 4, 0)
 	defer ic.Close()

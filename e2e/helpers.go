@@ -15,70 +15,39 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// TestSetupConfig holds configuration for test setup
-type TestSetupConfig struct {
+// SetupConfig holds configuration for test setup
+type SetupConfig struct {
 	NumValidators   int
 	NumFullNodes    int
-	VotingPeriod    string
-	DepositPeriod   string
-	ReportWindow    string
+	ModifyGenesis   []cosmos.GenesisKV
 	GasPrices       string
 	GlobalFeeMinGas string
 }
 
-// DefaultTestSetupConfig returns standard test configuration
-func DefaultTestSetupConfig() TestSetupConfig {
-	return TestSetupConfig{
+// DefaultSetupConfig returns standard test configuration
+func DefaultSetupConfig() SetupConfig {
+	return SetupConfig{
 		NumValidators:   2,
 		NumFullNodes:    0,
-		VotingPeriod:    "15s",
-		DepositPeriod:   "10s",
-		ReportWindow:    "5",
+		ModifyGenesis:   CreateStandardGenesis(),
 		GasPrices:       "0.000025000000000000loya",
 		GlobalFeeMinGas: "0.000025000000000000",
 	}
 }
 
-// SetupTellorConfig sets up the Tellor SDK configuration
-func SetupTellorConfig() {
-	cosmos.SetSDKConfig("tellor")
-}
-
-// CreateStandardGenesis creates a standard genesis configuration with optional overrides
-func CreateStandardGenesis(overrides ...TestSetupConfig) []cosmos.GenesisKV {
-	config := DefaultTestSetupConfig()
-
-	// Apply overrides if provided
-	if len(overrides) > 0 {
-		override := overrides[0]
-		if override.VotingPeriod != "" {
-			config.VotingPeriod = override.VotingPeriod
-		}
-		if override.DepositPeriod != "" {
-			config.DepositPeriod = override.DepositPeriod
-		}
-		if override.ReportWindow != "" {
-			config.ReportWindow = override.ReportWindow
-		}
-		if override.GasPrices != "" {
-			config.GasPrices = override.GasPrices
-		}
-		if override.GlobalFeeMinGas != "" {
-			config.GlobalFeeMinGas = override.GlobalFeeMinGas
-		}
-	}
-
+// CreateStandardGenesis creates a standard genesis configuration
+func CreateStandardGenesis() []cosmos.GenesisKV {
 	teamAddressBytes := sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()
 
 	return []cosmos.GenesisKV{
 		cosmos.NewGenesisKV("app_state.dispute.params.team_address", teamAddressBytes),
 		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
-		cosmos.NewGenesisKV("app_state.gov.params.voting_period", config.VotingPeriod),
-		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", config.DepositPeriod),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "15s"),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
-		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", config.GlobalFeeMinGas),
-		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", config.ReportWindow),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
+		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
 	}
 }
 
@@ -115,7 +84,7 @@ func GetValidators(ctx context.Context, chain *cosmos.CosmosChain) ([]ValidatorI
 }
 
 // SetupTestChainWithConfig creates a test chain with the given configuration
-func SetupChainWithCustomConfig(t *testing.T, config TestSetupConfig) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
+func SetupChainWithCustomConfig(t *testing.T, config SetupConfig) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
 	t.Helper()
 	require := require.New(t)
 
@@ -126,11 +95,11 @@ func SetupChainWithCustomConfig(t *testing.T, config TestSetupConfig) (*cosmos.C
 	t.Parallel()
 	time.Sleep(1 * time.Second)
 
-	// Set up Tellor config
-	SetupTellorConfig()
-
-	// Create genesis configuration
-	modifyGenesis := CreateStandardGenesis(config)
+	// Use the genesis configuration from config, or default if empty
+	modifyGenesis := config.ModifyGenesis
+	if modifyGenesis == nil {
+		modifyGenesis = CreateStandardGenesis()
+	}
 
 	// Create chain spec
 	chainSpec := &interchaintest.ChainSpec{
@@ -163,16 +132,12 @@ func SetupChainWithCustomConfig(t *testing.T, config TestSetupConfig) (*cosmos.C
 
 	// Create chains
 	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{chainSpec})
-	time.Sleep(1 * time.Second)
 
 	client, network := interchaintest.DockerSetup(t)
 	time.Sleep(1 * time.Second)
 
 	layer := chains[0].(*cosmos.CosmosChain)
-	time.Sleep(1 * time.Second)
-
 	ic := interchaintest.NewInterchain().AddChain(layer)
-	time.Sleep(1 * time.Second)
 
 	ctx := context.Background()
 	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
@@ -200,7 +165,7 @@ func SetupChainWithCustomConfig(t *testing.T, config TestSetupConfig) (*cosmos.C
 
 // SetupStandardTestChain creates a test chain with standard configuration
 func SetupChain(t *testing.T, numVals, numFullNodes int) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
-	config := DefaultTestSetupConfig()
+	config := DefaultSetupConfig()
 	config.NumValidators = numVals
 	config.NumFullNodes = numFullNodes
 	return SetupChainWithCustomConfig(t, config)

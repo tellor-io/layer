@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
-	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
@@ -28,41 +27,22 @@ func TestSelectorCreateReporter(t *testing.T) {
 		t.Skip("skipping in short mode")
 	}
 
-	t.Parallel()
-
 	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
 	defer ic.Close()
 
-	// Note: The standard setup already handles team key recovery and funding
+	// Get validators using the helper
+	validators, err := e2e.GetValidators(ctx, chain)
+	require.NoError(err)
 
-	type Validators struct {
-		Addr    string
-		ValAddr string
-		Val     *cosmos.ChainNode
-	}
-
-	validators := make([]Validators, len(chain.Validators))
-	for i := range chain.Validators {
-		val := chain.Validators[i]
-		valAddr, err := val.AccountKeyBech32(ctx, "validator")
-		require.NoError(err)
-		valvalAddr, err := val.KeyBech32(ctx, "validator", "val")
-		require.NoError(err)
-		fmt.Println("val", i, " Account Address: ", valAddr)
-		fmt.Println("val", i, " Validator Address: ", valvalAddr)
-		validators[i] = Validators{
-			Addr:    valAddr,
-			ValAddr: valvalAddr,
-			Val:     val,
-		}
-	}
+	// Print validator info for debugging
+	e2e.PrintValidatorInfo(ctx, validators)
 
 	// create user selector
 	fundAmt := math.NewInt(1_100 * 1e6)
 	delegateAmt := sdk.NewCoin("loya", math.NewInt(1000*1e6)) // all tokens after paying fee
 	user := interchaintest.GetAndFundTestUsers(t, ctx, "user", fundAmt, chain)[0]
-	txHash, err := validators[0].Val.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[1].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "10loya")
+	txHash, err := validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[1].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "1000000", "--fees", "10loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user delegates to val1): ", txHash)
 
@@ -78,8 +58,8 @@ func TestSelectorCreateReporter(t *testing.T) {
 	require.Equal(len(delegators), 2) // self delegation and user delegation
 
 	// submit minting proposal and vote yes on it from all validators
-	require.NoError(e2e.TurnOnMinting(ctx, chain, validators[0].Val))
-	require.NoError(testutil.WaitForBlocks(ctx, 7, validators[0].Val))
+	require.NoError(e2e.TurnOnMinting(ctx, chain, validators[0].Node))
+	require.NoError(testutil.WaitForBlocks(ctx, 7, validators[0].Node))
 	result, err := chain.GovQueryProposal(ctx, 1)
 	require.NoError(err)
 	fmt.Println("Proposal status: ", result.Status.String())
@@ -89,18 +69,18 @@ func TestSelectorCreateReporter(t *testing.T) {
 	for i := range validators {
 		minStakeAmt := "1000000"
 		moniker := fmt.Sprintf("reporter_moniker%d", i)
-		txHash, err := validators[i].Val.ExecTx(ctx, validators[i].Addr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", validators[i].Val.HomeDir())
+		txHash, err := validators[i].Node.ExecTx(ctx, validators[i].AccAddr, "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", validators[i].Node.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (validator", i, " becomes a reporter): ", txHash)
 	}
 
 	// user selects val 1 as their reporter
-	txHash, err = validators[0].Val.ExecTx(ctx, user.FormattedAddress(), "reporter", "select-reporter", validators[1].Addr, "--keyring-dir", validators[0].Val.HomeDir(), "--gas", "1000000", "--fees", "5loya")
+	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "reporter", "select-reporter", validators[1].AccAddr, "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "1000000", "--fees", "5loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user selects val1 as their reporter): ", txHash)
 
 	//  both reporters submit for cyclelist
-	currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "current-cyclelist-query")
+	currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
 	require.NoError(err)
 	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
 	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
@@ -108,22 +88,22 @@ func TestSelectorCreateReporter(t *testing.T) {
 	fmt.Println("current cycle list: ", currentCycleList)
 	value := layerutil.EncodeValue(123456789.99)
 	for i := range validators {
-		_, _, err = validators[i].Val.Exec(ctx, validators[i].Val.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[i].Val.HomeDir()), validators[i].Val.Chain.Config().Env)
+		_, _, err = validators[i].Node.Exec(ctx, validators[i].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[i].Node.HomeDir()), validators[i].Node.Chain.Config().Env)
 		require.NoError(err)
-		height, err := validators[i].Val.Height(ctx)
+		height, err := validators[i].Node.Height(ctx)
 		require.NoError(err)
 		fmt.Println("validator [", i, "] reported at height ", height)
 	}
 
 	// wait for aggregation to complete
-	require.NoError(testutil.WaitForBlocks(ctx, 3, validators[0].Val))
+	require.NoError(testutil.WaitForBlocks(ctx, 3, validators[0].Node))
 
 	// query report info
 	qDataBz, err := hex.DecodeString(currentCycleList.QueryData)
 	require.NoError(err)
 	qIdBz := utils.QueryIDFromData(qDataBz)
 	qId := hex.EncodeToString(qIdBz)
-	res, _, err := e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "get-current-aggregate-report", qId)
+	res, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "get-current-aggregate-report", qId)
 	require.NoError(err)
 	var currentAggRes e2e.QueryGetCurrentAggregateReportResponse
 	err = json.Unmarshal(res, &currentAggRes)
@@ -134,34 +114,34 @@ func TestSelectorCreateReporter(t *testing.T) {
 	// user creates a reporter
 	minStakeAmt := "1000000"
 	moniker := "reporter_moniker"
-	txHash, err = validators[0].Val.ExecTx(ctx, user.FormattedAddress(), "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", validators[0].Val.HomeDir())
+	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "reporter", "create-reporter", commissRate, minStakeAmt, moniker, "--keyring-dir", validators[0].Node.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (user creates a reporter): ", txHash)
 
 	// all 3 reporters report
-	currentCycleListRes, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "current-cyclelist-query")
+	currentCycleListRes, _, err = e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
 	require.NoError(err)
 	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
 	require.NoError(err)
 	for i := range validators {
-		_, _, err = validators[i].Val.Exec(ctx, validators[i].Val.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[i].Val.HomeDir()), validators[i].Val.Chain.Config().Env)
+		_, _, err = validators[i].Node.Exec(ctx, validators[i].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[i].Node.HomeDir()), validators[i].Node.Chain.Config().Env)
 		require.NoError(err)
-		height, err := validators[i].Val.Height(ctx)
+		height, err := validators[i].Node.Height(ctx)
 		require.NoError(err)
 		fmt.Println("validator [", i, "] reported at height ", height)
 	}
-	_, _, err = validators[0].Val.Exec(ctx, validators[0].Val.TxCommand(user.FormattedAddress(), "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[0].Val.HomeDir()), validators[0].Val.Chain.Config().Env)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand(user.FormattedAddress(), "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
 	require.NoError(err)
 
 	// wait for aggregation to complete
-	require.NoError(testutil.WaitForBlocks(ctx, 3, validators[0].Val))
+	require.NoError(testutil.WaitForBlocks(ctx, 3, validators[0].Node))
 
 	// query report info
 	qDataBz, err = hex.DecodeString(currentCycleList.QueryData)
 	require.NoError(err)
 	qIdBz = utils.QueryIDFromData(qDataBz)
 	qId = hex.EncodeToString(qIdBz)
-	res, _, err = e2e.QueryWithTimeout(ctx, validators[0].Val, "oracle", "get-current-aggregate-report", qId)
+	res, _, err = e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "get-current-aggregate-report", qId)
 	require.NoError(err)
 	err = json.Unmarshal(res, &currentAggRes)
 	require.NoError(err)

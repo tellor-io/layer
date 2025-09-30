@@ -114,7 +114,6 @@ func LayerSpinup(t *testing.T) *cosmos.CosmosChain {
 
 	t.Cleanup(func() {
 		_ = ic.Close()
-		time.Sleep(3 * time.Second)
 	})
 	require.NoError(t, layer.RecoverKey(ctx, "team", teamMnemonic))
 	require.NoError(t, layer.SendFunds(ctx, "faucet", ibc.WalletAmount{
