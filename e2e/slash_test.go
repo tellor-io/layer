@@ -22,6 +22,7 @@ func TestInactivitySlash(t *testing.T) {
 
 	// Use custom config with short inactivity slash period
 	config := e2e.DefaultSetupConfig()
+	config.NumValidators = 4 // Need 4 validators for this test
 	config.ModifyGenesis = []cosmos.GenesisKV{
 		cosmos.NewGenesisKV("app_state.slashing.params.signed_blocks_window", "2"),
 	}
@@ -79,8 +80,7 @@ func TestInactivitySlash(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("unpaused val4 at height: ", height)
 
-	// wait 10 minutes
-	time.Sleep(10 * time.Minute)
+	time.Sleep(30 * time.Second)
 
 	// unjail val4
 	txHash, err := val4.ExecTx(ctx, "validator", "slashing", "unjail", "--from", val4valAddr, "--keyring-dir", val4.HomeDir(), "--chain-id", val4.Chain.Config().ChainID)

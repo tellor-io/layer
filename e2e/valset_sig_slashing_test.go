@@ -14,7 +14,6 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
@@ -213,14 +212,6 @@ func TestValsetSignatureSlashing(t *testing.T) {
 func TestValsetSignatureSlashingWithDifferentChainId(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
-	cosmos.SetSDKConfig("tellor")
-
 	// Use standard configuration with custom genesis modifications
 	config := e2e.DefaultSetupConfig()
 	config.NumFullNodes = 1
@@ -236,13 +227,6 @@ func TestValsetSignatureSlashingWithDifferentChainId(t *testing.T) {
 	}
 
 	chain, _, ctx := e2e.SetupChainWithCustomConfig(t, config)
-
-	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
-	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
-		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-		Amount:  math.NewInt(1000000000000),
-		Denom:   "loya",
-	}))
 
 	// Get validators using the helper
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)

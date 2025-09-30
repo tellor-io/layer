@@ -1345,7 +1345,7 @@ func TestEscalatingDispute(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("user0 free floating balance after claiming dispute 1 rewards: ", user0BalanceAfterClaim)
 	require.Greater(user0BalanceAfterClaim.Int64(), user0BalanceBeforeClaim.Int64())
-	require.Equal(user0BalanceAfterClaim.String(), user0BalanceBeforeClaim.Add(math.NewInt(250000)).String())
+	require.Equal(user0BalanceAfterClaim.String(), user0BalanceBeforeClaim.Add(math.NewInt(250000)).Sub(math.NewInt(5)).String()) // minus 5 loya for gas
 
 	// withdraw fee refund from user0 from dispute 1
 	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "withdraw-fee-refund", user0Addr, "1", "--gas", "500000", "--fees", "50loya", "--keyring-dir", val1.Node.HomeDir())
@@ -1388,9 +1388,9 @@ func TestEscalatingDispute(t *testing.T) {
 	user0BalanceAfterClaim2, err := chain.BankQueryBalance(ctx, user0Addr, "loya")
 	require.NoError(err)
 	fmt.Println("user0 free floating balance after claiming dispute 2 rewards: ", user0BalanceAfterClaim2)
-	require.Greater(user0BalanceAfterClaim2.Int64(), user0BalanceAfterClaim.Int64())
-	require.Greater(user0BalanceAfterClaim2.Int64(), user0BalanceAfterClaim.Add(math.NewInt(1250000)).Int64()) // all of 2.5% of 50 trb, plus some dust from last claim
-	require.Less(user0BalanceAfterClaim2.Int64(), user0BalanceAfterClaim.Add(math.NewInt(1251000)).Int64())    // less than 1000 loya in dust
+	require.GreaterOrEqual(user0BalanceAfterClaim2.Int64(), user0BalanceAfterClaim.Int64())
+	require.GreaterOrEqual(user0BalanceAfterClaim2.Int64(), user0BalanceAfterClaim.Add(math.NewInt(1250000)).Sub(math.NewInt(150)).Int64()) // all of 2.5% of 50 trb, plus some dust from last claim, minus gas fees
+	require.Less(user0BalanceAfterClaim2.Int64(), user0BalanceAfterClaim.Add(math.NewInt(1251000)).Sub(math.NewInt(150)).Int64())           // less than 1000 loya in dust
 }
 
 // major dispute opened maliciously, disputer loses
@@ -1646,7 +1646,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("user0 free floating balance after claiming dispute 1 rewards: ", user0BalanceAfterClaim)
 	require.Greater(user0BalanceAfterClaim.Int64(), user0BalanceBeforeClaim.Int64())
-	expectedBalance := user0BalanceBeforeClaim.Add(math.NewInt(25 * 1e6)) // 2.5% of 1000 trb
+	expectedBalance := user0BalanceBeforeClaim.Add(math.NewInt(25 * 1e6)).Sub(math.NewInt(5)) // 2.5% of 1000 trb, minus gas fees
 	require.Equal(expectedBalance.String(), user0BalanceAfterClaim.String())
 }
 
@@ -1702,13 +1702,14 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 		val1Staking, err = chain.StakingQueryValidator(ctx, val1.ValAddr)
 		require.NoError(err)
 		fmt.Println("val1 staking power: ", val1Staking.Tokens)
-		if i == 0 {
+		switch i {
+		case 0:
 			user0Addr = user.FormattedAddress()
-		} else if i == 1 {
+		case 1:
 			user1Addr = user.FormattedAddress()
-		} else if i == 2 {
+		case 2:
 			user2Addr = user.FormattedAddress()
-		} else if i == 3 {
+		case 3:
 			user3Addr = user.FormattedAddress()
 		}
 	}
