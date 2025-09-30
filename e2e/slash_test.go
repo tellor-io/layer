@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -24,7 +25,16 @@ func TestInactivitySlash(t *testing.T) {
 	config := e2e.DefaultSetupConfig()
 	config.NumValidators = 4
 	config.ModifyGenesis = []cosmos.GenesisKV{
-		cosmos.NewGenesisKV("app_state.slashing.params.signed_blocks_window", "2"),
+		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
+		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "15s"),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
+		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
+		cosmos.NewGenesisKV("app_state.slashing.params.signed_blocks_window", "25"),
+		cosmos.NewGenesisKV("app_state.slashing.params.downtime_jail_duration", "10s"),
 	}
 	chain, ic, ctx := e2e.SetupChainWithCustomConfig(t, config)
 	defer ic.Close()
@@ -51,8 +61,9 @@ func TestInactivitySlash(t *testing.T) {
 	fmt.Println("paused val4 at height: ", height)
 	require.NoError(err)
 
-	// wait 5 blocks
-	require.NoError(testutil.WaitForBlocks(ctx, 5, val2))
+	// wait 25 blocks
+	fmt.Println("waiting 25 blocks...")
+	require.NoError(testutil.WaitForBlocks(ctx, 25, val2))
 
 	// 4 validators, 1 jailed
 	fmt.Println("querying validators...")
@@ -80,7 +91,8 @@ func TestInactivitySlash(t *testing.T) {
 	require.NoError(err)
 	fmt.Println("unpaused val4 at height: ", height)
 
-	time.Sleep(30 * time.Second)
+	// wait for jail duration to expire (30s + buffer)
+	time.Sleep(20 * time.Second)
 
 	// unjail val4
 	txHash, err := val4.ExecTx(ctx, "validator", "slashing", "unjail", "--from", val4valAddr, "--keyring-dir", val4.HomeDir(), "--chain-id", val4.Chain.Config().ChainID)
