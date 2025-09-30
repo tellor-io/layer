@@ -136,7 +136,7 @@ func TestBatchSubmitValue(t *testing.T) {
 	fmt.Println("\n=== Batch submitting all three queries (expecting all to succeed after tips) ===")
 
 	// Execute second batch submit using new helper
-	txHash, err = e2e.SubmitBatchReport(ctx, val1, reports, "25loya")
+	txHash, err = e2e.SubmitBatchReport(ctx, val1, reports, "50loya")
 	require.NoError(err)
 	fmt.Println("Second batch submit tx hash:", txHash)
 	require.NoError(testutil.WaitForBlocks(ctx, 4, val1))

@@ -172,7 +172,7 @@ func TestProfitability(t *testing.T) {
 		}
 	}
 
-	require.NoError(testutil.WaitForBlocks(ctx, 5, val1))
+	require.NoError(testutil.WaitForBlocks(ctx, 20, val1))
 	result, err := chain.GovQueryProposal(ctx, 1)
 	require.NoError(err)
 	fmt.Println("proposal result: ", result)

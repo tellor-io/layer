@@ -20,8 +20,12 @@ func TestInactivitySlash(t *testing.T) {
 
 	cosmos.SetSDKConfig("tellor")
 
-	// Use standard configuration
-	chain, ic, ctx := e2e.SetupChain(t, 4, 0)
+	// Use custom config with short inactivity slash period
+	config := e2e.DefaultSetupConfig()
+	config.ModifyGenesis = []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.slashing.params.signed_blocks_window", "2"),
+	}
+	chain, ic, ctx := e2e.SetupChainWithCustomConfig(t, config)
 	defer ic.Close()
 
 	// Get validators

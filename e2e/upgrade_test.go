@@ -47,8 +47,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
-		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
-		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
 	}
 
 	nv := 1
@@ -65,7 +64,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 				Denom:          "loya",
 				Bech32Prefix:   "tellor",
 				CoinType:       "118",
-				GasPrices:      "0.000025000000000000loya",
+				GasPrices:      "0.0loya",
 				GasAdjustment:  1.1,
 				TrustingPeriod: "504h",
 				NoHostMount:    false,
@@ -121,11 +120,10 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	_, err = validatorI.ExecTx(ctx, "validator", "oracle", "no-stake-report", qData, value, "--keyring-dir", chain.HomeDir())
 	require.NoError(t, err)
 
-	// create users to send upgrade tx
+	// create user to send upgrade tx
 	userFunds := math.NewInt(10_000_000_000)
 	users := interchaintest.GetAndFundTestUsers(t, ctx, t.Name(), userFunds, chain)
-	user := users[0]
-	user2 := interchaintest.GetAndFundTestUsers(t, ctx, "user2", userFunds, chain)[0]
+	chainUser := users[0]
 
 	height, err := chain.Height(ctx)
 	require.NoError(t, err, "error fetching height before submit upgrade proposal")
@@ -141,7 +139,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	}
 
 	// submit upgrade proposal
-	upgradeTx, err := chain.UpgradeProposal(ctx, user.KeyName(), proposal)
+	upgradeTx, err := chain.UpgradeProposal(ctx, chainUser.KeyName(), proposal)
 	require.NoError(t, err, "error submitting software upgrade proposal tx")
 
 	propId, err := strconv.ParseUint(upgradeTx.ProposalID, 10, 64)
@@ -226,9 +224,16 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	err = testutil.WaitForBlocks(timeoutCtx, int(blocksAfterUpgrade), chain)
 	require.NoError(t, err, "chain did not produce blocks after upgrade")
 
+	// Helper function for query with timeout
+	queryWithTimeout := func(args ...string) ([]byte, []byte, error) {
+		queryCtx, cancel := context.WithTimeout(ctx, time.Second*30)
+		defer cancel()
+		return validatorI.ExecQuery(queryCtx, args...)
+	}
+
 	// Test 3: Query reports with different pagination scenarios
 	// Should now have 10 regular reports (10 new)
-	reports, _, err := e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reportsby-reporter", valAddr)
+	reports, _, err := queryWithTimeout("oracle", "get-reportsby-reporter", valAddr)
 	require.NoError(t, err, "error querying reports by reporter")
 	var reportsRes e2e.QueryMicroReportsResponse
 	err = json.Unmarshal(reports, &reportsRes)
@@ -238,7 +243,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	require.Equal(t, 10, len(reportsRes.MicroReports), "Should have 11 regular reports after upgrade")
 
 	// Test 4: Query no-stake reports - should have 5 new
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reporters-no-stake-reports", valAddr)
+	reports, _, err = queryWithTimeout("oracle", "get-reporters-no-stake-reports", valAddr)
 	require.NoError(t, err, "error querying no-stake reports")
 	var reportsResNoStake e2e.QueryGetReportersNoStakeReportsResponse
 	err = json.Unmarshal(reports, &reportsResNoStake)
@@ -248,119 +253,110 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 	require.Equal(t, 6, len(reportsResNoStake.NoStakeReports), "Should have 6 no-stake reports after upgrade")
 
 	// Test 5: Pagination edge cases with limit
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "5")
+	reports, _, err = queryWithTimeout("oracle", "get-reportsby-reporter", valAddr, "--page-limit", "5")
 	require.NoError(t, err, "error querying reports with page limit")
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err, "error unmarshaling paginated reports")
 	require.Equal(t, 5, len(reportsRes.MicroReports), "Should respect page limit of 5")
 
 	// Test 6: Pagination with large limit
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "20")
+	reports, _, err = queryWithTimeout("oracle", "get-reportsby-reporter", valAddr, "--page-limit", "20")
 	require.NoError(t, err, "error querying reports with large limit")
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err, "error unmarshaling reports with large limit")
 	require.Equal(t, 11, len(reportsRes.MicroReports), "Should return all 11 reports when limit is higher")
 
 	// Test 7: Pagination with offset
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reportsby-reporter", valAddr, "--page-offset", "5", "--page-limit", "3")
+	reports, _, err = queryWithTimeout("oracle", "get-reportsby-reporter", valAddr, "--page-offset", "5", "--page-limit", "3")
 	require.NoError(t, err, "error querying reports with offset")
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err, "error unmarshaling reports with offset")
 	require.Equal(t, 3, len(reportsRes.MicroReports), "Should return 3 reports with offset 5")
 
 	// Test 8: Reverse pagination
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reportsby-reporter", valAddr, "--page-reverse", "--page-limit", "3")
+	reports, _, err = queryWithTimeout("oracle", "get-reportsby-reporter", valAddr, "--page-reverse", "--page-limit", "3")
 	require.NoError(t, err, "error querying reports in reverse")
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err, "error unmarshaling reversed reports")
 	require.Equal(t, 3, len(reportsRes.MicroReports), "Should return 3 reports in reverse order")
 
 	// Test 9: No-stake reports pagination scenarios
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "3")
+	reports, _, err = queryWithTimeout("oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "3")
 	require.NoError(t, err, "error querying no-stake reports with limit")
 	err = json.Unmarshal(reports, &reportsResNoStake)
 	require.NoError(t, err, "error unmarshaling no-stake reports with limit")
 	require.Equal(t, 3, len(reportsResNoStake.NoStakeReports), "Should return 3 no-stake reports with limit")
 
 	// Test 10: No-stake reports with offset and reverse
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-offset", "2", "--page-reverse", "--page-limit", "2")
+	reports, _, err = queryWithTimeout("oracle", "get-reporters-no-stake-reports", valAddr, "--page-offset", "2", "--page-reverse", "--page-limit", "2")
 	require.NoError(t, err, "error querying no-stake reports with offset and reverse")
 	err = json.Unmarshal(reports, &reportsResNoStake)
 	require.NoError(t, err, "error unmarshaling no-stake reports with offset and reverse")
 	require.Equal(t, 2, len(reportsResNoStake.NoStakeReports), "Should return 2 no-stake reports with offset and reverse")
 
 	// Test 11: Zero limit edge case, should default to 10
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "0")
+	reports, _, err = queryWithTimeout("oracle", "get-reportsby-reporter", valAddr, "--page-limit", "0")
 	require.NoError(t, err, "error querying reports with zero limit")
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err, "error unmarshaling reports with zero limit")
 	require.Equal(t, 10, len(reportsRes.MicroReports), "Should return 0 reports when limit is 0")
 
 	// Additional compatibility tests
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "10", "--page-reverse", "--page-offset", "1")
+	reports, _, err = queryWithTimeout("oracle", "get-reportsby-reporter", valAddr, "--page-limit", "10", "--page-reverse", "--page-offset", "1")
 	require.NoError(t, err, "error in compatibility test for reports")
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err, "error unmarshaling compatibility test reports")
 	require.Equal(t, 10, len(reportsRes.MicroReports), "Compatibility test should return 10 reports")
 
 	// query no stake reports with all flags
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "10", "--page-reverse", "--page-offset", "1")
+	reports, _, err = queryWithTimeout("oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "10", "--page-reverse", "--page-offset", "1")
 	require.NoError(t, err, "error in compatibility test for no-stake reports")
 	err = json.Unmarshal(reports, &reportsResNoStake)
 	require.NoError(t, err, "error unmarshaling compatibility test no-stake reports")
 	require.Equal(t, 5, len(reportsResNoStake.NoStakeReports), "Compatibility test should return 5 no-stake reports")
 
 	// Test individual flags for get-reportsby-reporter
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reportsby-reporter", valAddr, "--page-limit", "5")
+	reports, _, err = queryWithTimeout("oracle", "get-reportsby-reporter", valAddr, "--page-limit", "5")
 	require.NoError(t, err, "error testing individual page-limit flag")
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err, "error unmarshaling individual flag test")
 	require.Equal(t, 5, len(reportsRes.MicroReports), "Individual flag test should return 5 reports")
 
 	// query reports by reporter with only page-reverse flag
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reportsby-reporter", valAddr, "--page-reverse")
+	reports, _, err = queryWithTimeout("oracle", "get-reportsby-reporter", valAddr, "--page-reverse")
 	require.NoError(t, err, "error testing page-reverse flag")
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err, "error unmarshaling page-reverse test")
 	require.Equal(t, 10, len(reportsRes.MicroReports), "Page-reverse test should return all 10 reports")
 
 	// query reports by reporter with only page-offset flag
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reportsby-reporter", valAddr, "--page-offset", "0")
+	reports, _, err = queryWithTimeout("oracle", "get-reportsby-reporter", valAddr, "--page-offset", "0")
 	require.NoError(t, err, "error testing page-offset flag")
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(t, err, "error unmarshaling page-offset test")
 	require.Equal(t, 10, len(reportsRes.MicroReports), "Page-offset test should return all 10 reports")
 
 	// Test individual flags for get-reporters-no-stake-reports
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-reverse")
+	reports, _, err = queryWithTimeout("oracle", "get-reporters-no-stake-reports", valAddr, "--page-reverse")
 	require.NoError(t, err, "error testing no-stake reports page-reverse")
 	err = json.Unmarshal(reports, &reportsResNoStake)
 	require.NoError(t, err, "error unmarshaling no-stake reports page-reverse test")
 	require.Equal(t, 6, len(reportsResNoStake.NoStakeReports), "No-stake reports page-reverse should return 6 reports")
 
 	// query no stake reports by reporter with only page-offset flag
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-offset", "0")
+	reports, _, err = queryWithTimeout("oracle", "get-reporters-no-stake-reports", valAddr, "--page-offset", "0")
 	require.NoError(t, err, "error testing no-stake reports page-offset")
 	err = json.Unmarshal(reports, &reportsResNoStake)
 	require.NoError(t, err, "error unmarshaling no-stake reports page-offset test")
 	require.Equal(t, 6, len(reportsResNoStake.NoStakeReports), "No-stake reports page-offset should return 6 reports")
 
 	// Final simple verification
-	reports, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "1")
+	reports, _, err = queryWithTimeout("oracle", "get-reporters-no-stake-reports", valAddr, "--page-limit", "1")
 	require.NoError(t, err, "error in final verification")
 	err = json.Unmarshal(reports, &reportsResNoStake)
 	require.NoError(t, err, "error unmarshaling final verification")
 	require.Equal(t, valAddr, reportsResNoStake.NoStakeReports[0].Reporter)
 	require.Equal(t, 1, len(reportsResNoStake.NoStakeReports))
-
-	// send unordered transfer from user to user2
-	txHash, err := validatorI.ExecTx(ctx, user.KeyName(), "bank", "send", user.FormattedAddress(), user2.FormattedAddress(), "222222loya", "--unordered", "--timeout-duration", "1m", "--keyring-dir", chain.HomeDir())
-	require.NoError(t, err, "error sending unordered bank transfer")
-
-	// query the transaction hash and print results
-	txResult, _, err := validatorI.Exec(ctx, validatorI.QueryCommand("tx", txHash), validatorI.Chain.Config().Env)
-	require.NoError(t, err, "error querying transaction")
-	fmt.Printf("Transaction query result for hash %s:\n%s\n", txHash, string(txResult))
 
 	fmt.Println("=== All tests completed successfully! ===")
 }

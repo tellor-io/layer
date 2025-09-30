@@ -38,7 +38,7 @@ func TestSelectorCreateReporter(t *testing.T) {
 	fundAmt := math.NewInt(1_100 * 1e6)
 	delegateAmt := sdk.NewCoin("loya", math.NewInt(1000*1e6)) // all tokens after paying fee
 	user := interchaintest.GetAndFundTestUsers(t, ctx, "user", fundAmt, chain)[0]
-	txHash, err := validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[1].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "1000000", "--fees", "10loya")
+	txHash, err := validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[1].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "10loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user delegates to val1): ", txHash)
 
@@ -71,7 +71,7 @@ func TestSelectorCreateReporter(t *testing.T) {
 	}
 
 	// user selects val 1 as their reporter
-	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "reporter", "select-reporter", validators[1].AccAddr, "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "1000000", "--fees", "5loya")
+	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "reporter", "select-reporter", validators[1].AccAddr, "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "5loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user selects val1 as their reporter): ", txHash)
 
