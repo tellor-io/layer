@@ -14,6 +14,7 @@ import (
 	"github.com/tellor-io/layer/utils"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
