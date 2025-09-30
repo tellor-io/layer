@@ -136,7 +136,7 @@ func TestBatchSubmitValue(t *testing.T) {
 	fmt.Println("\n=== Batch submitting all three queries (expecting all to succeed after tips) ===")
 
 	// Execute second batch submit using new helper
-	txHash, err = e2e.SubmitBatchReport(ctx, val1, reports, "50loya")
+	txHash, err = e2e.SubmitBatchReport(ctx, val1, reports, "500loya")
 	require.NoError(err)
 	fmt.Println("Second batch submit tx hash:", txHash)
 	require.NoError(testutil.WaitForBlocks(ctx, 4, val1))
@@ -225,7 +225,7 @@ func TestBatchSubmitValue(t *testing.T) {
 	txHash, err = val2.ExecTx(
 		ctx, "validator", "dispute", "propose-dispute",
 		microReports[0].Reporter, microReports[0].MetaId,
-		microReports[0].QueryID, warning, "500000000000loya", "false", "--keyring-dir", val2.HomeDir(), "--fees", "10loya",
+		microReports[0].QueryID, warning, "500000000000loya", "false", "--keyring-dir", val2.HomeDir(), "--gas", "300000", "--fees", "15loya",
 	)
 	require.NoError(err)
 	fmt.Println("TX HASH (dispute on ", microReports[0].Reporter, "): ", txHash)

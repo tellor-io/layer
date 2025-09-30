@@ -222,7 +222,7 @@ func SubmitBatchReport(ctx context.Context, validator *cosmos.ChainNode, reports
 	for _, report := range reports {
 		args = append(args, "--values", report)
 	}
-	args = append(args, "--gas", "300000", "--fees", fees, "--keyring-dir", validator.HomeDir())
+	args = append(args, "--gas", "1000000", "--fees", fees, "--keyring-dir", validator.HomeDir())
 
 	return validator.ExecTx(ctx, "validator", args...)
 }

@@ -100,7 +100,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		fundAmt := math.NewInt(100_000 * 1e6)
 		delegateAmt := sdk.NewCoin("loya", math.NewInt(1_000*1e6))
 		user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
-		txHash, err := val1.Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val2.ValAddr, delegateAmt.String(), "--keyring-dir", val2.Node.HomeDir(), "--fees", "10loya")
+		txHash, err := val1.Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val2.ValAddr, delegateAmt.String(), "--keyring-dir", val2.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (", keyname, " delegates to val2): ", txHash)
 		reporters[i] = ReporterAccs{
@@ -231,7 +231,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		// since reporting power is 1000, first rd fee fee is 10 trb
 		// paying from bond, so val1 stake should decrease by 10 trb
 		// val2 stake should also decrease by 10 trb bc of slash on reporter delgated to them
-		txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, queryId, warning, "500000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+		txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, queryId, warning, "500000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (dispute on ", microReports.MicroReports[0].Reporter, "): ", txHash)
 
@@ -301,7 +301,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		require.NoError(err)
 		fmt.Println("val2 staked tokens before fee claim: ", val2StakedBeforeFeeClaim.Tokens)
 		// withdraw fee refund from disputer (fee paid to start dispute, and 1% of naughty reporters' stake since vote settled to support)
-		txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "withdraw-fee-refund", val1.AccAddr, disputeId, "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+		txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "withdraw-fee-refund", val1.AccAddr, disputeId, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (disputer claims fee refund on dispute ", disputeId, "): ", txHash)
 		// check feepayer balance after fee refund
@@ -324,7 +324,7 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		disputerBalBeforeRewardClaim, err := chain.BankQueryBalance(ctx, val1.AccAddr, "loya")
 		require.NoError(err)
 		fmt.Println("disputer balance before reward claim: ", disputerBalBeforeRewardClaim)
-		txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "claim-reward", disputeId, "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+		txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "claim-reward", disputeId, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (disputer claims reward on dispute ", disputeId, "): ", txHash)
 		// check disputer balance after reward claim
@@ -339,10 +339,10 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		fmt.Println("disputer balance after reward claim: ", disputerBalAfterRewardClaim)
 
 		// try to claim reward again - should fail
-		_, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "claim-reward", disputeId, "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+		_, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "claim-reward", disputeId, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.Error(err)
 		// try to claim fee refund again - should fail
-		_, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "withdraw-fee-refund", val1.AccAddr, disputeId, "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+		_, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "withdraw-fee-refund", val1.AccAddr, disputeId, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.Error(err)
 	}
 }
@@ -386,7 +386,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 		fundAmt := math.NewInt(10_000 * 1e6)
 		delegateAmt := sdk.NewCoin("loya", math.NewInt(1_000*1e6))
 		user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
-		txHash, err := val1.Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1.ValAddr, delegateAmt.String(), "--keyring-dir", val1.Node.HomeDir(), "--fees", "10loya")
+		txHash, err := val1.Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1.ValAddr, delegateAmt.String(), "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (", keyname, " delegates to val1): ", txHash)
 		reporters[i] = ReporterAccs{
@@ -530,7 +530,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	fmt.Println("user0 staking before resolving dispute: ", user0StakingBeforeDispute)
 
 	// dispute from user0
-	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, microReports.MicroReports[0].QueryID, "major", "1000000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, microReports.MicroReports[0].QueryID, "major", "1000000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens a major dispute on user1): ", txHash)
 
@@ -597,7 +597,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	fmt.Println("unbonding delegations for user0: ", unbonding)
 
 	// withdraw feerefund for user0
-	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "withdraw-fee-refund", user0Addr, "1", "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "withdraw-fee-refund", user0Addr, "1", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 withdraws fee refund): ", txHash)
 
@@ -613,7 +613,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	fmt.Println("user0 free floating before claiming reward: ", user0FreeFloatingBeforeClaim)
 
 	// claim reward for user0
-	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "claim-reward", "1", "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "claim-reward", "1", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 claims reward): ", txHash)
 
@@ -698,7 +698,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 		fundAmt := math.NewInt(10_000 * 1e6)
 		delegateAmt = sdk.NewCoin("loya", math.NewInt(1_000*1e6))
 		user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
-		txHash, err := val1.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1valAddr, delegateAmt.String(), "--keyring-dir", val1.HomeDir(), "--fees", "10loya")
+		txHash, err := val1.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1valAddr, delegateAmt.String(), "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (", keyname, " delegates to val1): ", txHash)
 		reporters[i] = ReporterAccs{
@@ -807,7 +807,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Equal(reports.MicroReports[0].Power, "1000")
 
 	// user1 doubles their delegation
-	txHash, err = val1.ExecTx(ctx, user1Addr, "staking", "delegate", val1valAddr, delegateAmt.String(), "--keyring-dir", val1.HomeDir(), "--fees", "10loya")
+	txHash, err = val1.ExecTx(ctx, user1Addr, "staking", "delegate", val1valAddr, delegateAmt.String(), "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user1 delegates more): ", txHash)
 
@@ -883,7 +883,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	fmt.Println("user1 staking before resolving dispute: ", user1StakingBeforeDispute)
 
 	// dispute from user0
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, microReports.MicroReports[0].QueryID, "major", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "300000", "--fees", "15loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, microReports.MicroReports[0].QueryID, "major", "1000000000loya", "true", "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens a major dispute on user1): ", txHash)
 
@@ -963,7 +963,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Equal(user1StakingAfterDispute.Balance.Amount.String(), user1StakingBeforeDispute.Balance.Amount.Sub(expectedFeeTotal).String()) // only slashed power at time of report (1000 trb)
 
 	// withdraw feerefund for user0
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "withdraw-fee-refund", user0Addr, "1", "--keyring-dir", val1.HomeDir(), "--gas", "300000", "--fees", "15loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "withdraw-fee-refund", user0Addr, "1", "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 withdraws fee refund): ", txHash)
 
@@ -986,7 +986,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Equal(len(delegations), 3) // val1, user0, and user1
 
 	// claim reward for user0
-	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "claim-reward", "1", "--keyring-dir", val1.HomeDir(), "--gas", "300000", "--fees", "15loya")
+	txHash, err = val1.ExecTx(ctx, user0Addr, "dispute", "claim-reward", "1", "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 claims reward): ", txHash)
 
@@ -1060,7 +1060,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	fmt.Println("reportersRes: ", reportersRes)
 
 	// user1 redelegates to val2
-	txHash, err = val1.ExecTx(ctx, user1Addr, "staking", "redelegate", val1valAddr, val2valAddr, "1000000000loya", "--from", user1Addr, "--keyring-dir", val1.HomeDir(), "--fees", "10loya")
+	txHash, err = val1.ExecTx(ctx, user1Addr, "staking", "redelegate", val1valAddr, val2valAddr, "1000000000loya", "--from", user1Addr, "--keyring-dir", val1.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user1 redelegates to val2): ", txHash)
 
@@ -1143,7 +1143,7 @@ func TestEscalatingDispute(t *testing.T) {
 		fundAmt := math.NewInt(10_000 * 1e6)
 		delegateAmt = sdk.NewCoin("loya", math.NewInt(1_000*1e6))
 		user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
-		txHash, err := val1.Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1.ValAddr, delegateAmt.String(), "--keyring-dir", val1.Node.HomeDir(), "--fees", "10loya")
+		txHash, err := val1.Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1.ValAddr, delegateAmt.String(), "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (", keyname, " delegates to val1): ", txHash)
 		reporters[i] = ReporterAccs{
@@ -1252,7 +1252,7 @@ func TestEscalatingDispute(t *testing.T) {
 	require.Equal(reports.MicroReports[0].Power, "1000")
 
 	// open warning dispute
-	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, warning, "1000000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, warning, "1000000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens warning dispute): ", txHash)
 
@@ -1270,7 +1270,7 @@ func TestEscalatingDispute(t *testing.T) {
 	fmt.Println("open dispute: ", disputes.Disputes[0])
 
 	// try to open minor dispute on same report, errors with cannot jail already jailed reporter
-	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "minor", "1000000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "minor", "1000000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.Error(err)
 	fmt.Println("TX HASH (user0 opens minor dispute): ", txHash)
 
@@ -1280,7 +1280,7 @@ func TestEscalatingDispute(t *testing.T) {
 	fmt.Println("TX HASH (user1 unjails reporter): ", txHash)
 
 	// user0 opens minor dispute on same report
-	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "minor", "1000000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "minor", "1000000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens minor dispute): ", txHash)
 
@@ -1356,7 +1356,7 @@ func TestEscalatingDispute(t *testing.T) {
 	require.Equal(user0BalanceAfterClaim.String(), user0BalanceBeforeClaim.Add(math.NewInt(250000)).String())
 
 	// withdraw fee refund from user0 from dispute 1
-	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "withdraw-fee-refund", user0Addr, "1", "--gas", "300000", "--fee", "5loya", "--fees", "15loya", "--keyring-dir", val1.Node.HomeDir())
+	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "withdraw-fee-refund", user0Addr, "1", "--gas", "500000", "--fees", "50loya", "--keyring-dir", val1.Node.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 withdraws fee refund from dispute 1): ", txHash)
 	// check user0 stake, should get fee refund plus user1's dispute 1 slash amount
@@ -1376,7 +1376,7 @@ func TestEscalatingDispute(t *testing.T) {
 	require.NoError(err)
 
 	// withdraw fee refund from user0 from dispute 2
-	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "withdraw-fee-refund", user0Addr, "2", "--gas", "300000", "--fee", "5loya", "--fees", "15loya", "--keyring-dir", val1.Node.HomeDir())
+	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "withdraw-fee-refund", user0Addr, "2", "--gas", "500000", "--fees", "50loya", "--keyring-dir", val1.Node.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 withdraws fee refund from dispute 2): ", txHash)
 
@@ -1440,7 +1440,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 		fundAmt := math.NewInt(10_000 * 1e6)
 		delegateAmt = sdk.NewCoin("loya", math.NewInt(1_000*1e6))
 		user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
-		txHash, err := val1.Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1.ValAddr, delegateAmt.String(), "--keyring-dir", val1.Node.HomeDir(), "--fees", "10loya")
+		txHash, err := val1.Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1.ValAddr, delegateAmt.String(), "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (", keyname, " delegates to val1): ", txHash)
 		reporters[i] = ReporterAccs{
@@ -1559,7 +1559,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	fmt.Println("user1 stake before dispute: ", user1StakingBeforeDispute.Balance.Amount.String())
 
 	// open major dispute from user0
-	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "major", "1000000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fee", "5loya", "--fees", "15loya")
+	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "major", "1000000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens warning dispute): ", txHash)
 
@@ -1620,7 +1620,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	require.Equal(user1StakingAfterDispute.Balance.Amount.String(), expectedStake.String())
 
 	// attempted withdraw fee refund from user0, fails
-	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "withdraw-fee-refund", user0Addr, "1", "--gas", "300000", "--fee", "5loya", "--fees", "15loya", "--keyring-dir", val1.Node.HomeDir())
+	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "withdraw-fee-refund", user0Addr, "1", "--gas", "500000", "--fees", "50loya", "--keyring-dir", val1.Node.HomeDir())
 	require.Error(err)
 	fmt.Println("TX HASH (user0 withdraws fee refund): ", txHash)
 
@@ -1629,7 +1629,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	require.Error(err)
 
 	// attempted withdraw fee refund from user1,  fails bc money was already sent
-	txHash, err = val1.Node.ExecTx(ctx, user1Addr, "dispute", "withdraw-fee-refund", user1Addr, "1", "--gas", "300000", "--fees", "15loya", "--keyring-dir", val1.Node.HomeDir())
+	txHash, err = val1.Node.ExecTx(ctx, user1Addr, "dispute", "withdraw-fee-refund", user1Addr, "1", "--gas", "500000", "--fees", "50loya", "--keyring-dir", val1.Node.HomeDir())
 	require.Error(err)
 	fmt.Println("TX HASH (user1 withdraws fee refund): ", txHash)
 
@@ -1709,7 +1709,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 		fundAmt := math.NewInt(10_000 * 1e6)
 		delegateAmt = sdk.NewCoin("loya", math.NewInt(1_000*1e6))
 		user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
-		txHash, err := val1.Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1.ValAddr, delegateAmt.String(), "--keyring-dir", val1.Node.HomeDir(), "--fees", "10loya")
+		txHash, err := val1.Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1.ValAddr, delegateAmt.String(), "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (", keyname, " delegates to val1): ", txHash)
 		reporters[i] = ReporterAccs{
@@ -1846,10 +1846,10 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	}
 
 	// open dispute on both reports from user3
-	txHash, err = val1.Node.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", userReports[0].UserReport.MicroReports[0].Reporter, userReports[0].UserReport.MicroReports[0].MetaId, userReports[0].qId, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+	txHash, err = val1.Node.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", userReports[0].UserReport.MicroReports[0].Reporter, userReports[0].UserReport.MicroReports[0].MetaId, userReports[0].qId, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 proposed dispute on user0): ", txHash)
-	txHash, err = val1.Node.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", userReports[1].UserReport.MicroReports[0].Reporter, userReports[1].UserReport.MicroReports[0].MetaId, userReports[1].qId, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+	txHash, err = val1.Node.ExecTx(ctx, user3Addr, "dispute", "propose-dispute", userReports[1].UserReport.MicroReports[0].Reporter, userReports[1].UserReport.MicroReports[0].MetaId, userReports[1].qId, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (val1 proposed dispute on user1): ", txHash)
 
@@ -1972,9 +1972,9 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	// open dispute on all reports from user3
 	for i := range userReports {
 		if i < 2 {
-			txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "propose-dispute", userReports[i].UserReport.MicroReports[1].Reporter, userReports[i].UserReport.MicroReports[1].MetaId, userReports[i].qId, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+			txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "propose-dispute", userReports[i].UserReport.MicroReports[1].Reporter, userReports[i].UserReport.MicroReports[1].MetaId, userReports[i].qId, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		} else {
-			txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "propose-dispute", userReports[i].UserReport.MicroReports[0].Reporter, userReports[i].UserReport.MicroReports[0].MetaId, userReports[i].qId, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+			txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "propose-dispute", userReports[i].UserReport.MicroReports[0].Reporter, userReports[i].UserReport.MicroReports[0].MetaId, userReports[i].qId, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		}
 		require.NoError(err)
 		fmt.Println("TX HASH (val1 proposed dispute on user", i, "): ", txHash)
@@ -2070,7 +2070,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 		fundAmt := math.NewInt(10_000 * 1e6)
 		delegateAmt = sdk.NewCoin("loya", math.NewInt(1_000*1e6))
 		user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
-		txHash, err := val1.Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1.ValAddr, delegateAmt.String(), "--keyring-dir", val1.Node.HomeDir(), "--fees", "10loya")
+		txHash, err := val1.Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", val1.ValAddr, delegateAmt.String(), "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (", keyname, " delegates to val1): ", txHash)
 		reporters[i] = ReporterAccs{
@@ -2132,7 +2132,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	specBz, err := json.Marshal(spec)
 	fmt.Println("specBz: ", string(specBz))
 	require.NoError(err)
-	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "registry", "register-spec", queryType, string(specBz), "--keyring-dir", val1.Node.HomeDir(), "--fees", "10loya")
+	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "registry", "register-spec", queryType, string(specBz), "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 registers a new query): ", txHash)
 
@@ -2158,7 +2158,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	value := e2e.EncodeStringValue("Pittsburgh Steelers")
 	fmt.Println("value: ", value)
 	for i := range numReporters {
-		txHash, err = val1.Node.ExecTx(ctx, reporters[i].Addr, "oracle", "submit-value", queryDataStr, value, "--keyring-dir", val1.Node.HomeDir(), "--fees", "10loya")
+		txHash, err = val1.Node.ExecTx(ctx, reporters[i].Addr, "oracle", "submit-value", queryDataStr, value, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " reports the query): ", txHash)
 	}
@@ -2201,7 +2201,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 		require.Equal(currentAggRes.Aggregate.AggregateValue, value)
 		require.Equal(currentAggRes.Aggregate.Flagged, false)
 
-		txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "propose-dispute", userReport.MicroReports[0].Reporter, userReport.MicroReports[0].MetaId, userReport.MicroReports[0].QueryID, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+		txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "propose-dispute", userReport.MicroReports[0].Reporter, userReport.MicroReports[0].MetaId, userReport.MicroReports[0].QueryID, warning, "1000000000loya", notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (val1 disputes report ", i, "): ", txHash)
 	}
@@ -2233,7 +2233,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	fmt.Println("voteRes: ", voteRes)
 
 	// update team address
-	txHash, err = val1.Node.ExecTx(ctx, "team", "dispute", "update-team", team2Addr, "--gas", "300000", "--fees", "25loya", "--keyring-dir", val1.Node.HomeDir(), "--chain-id", chain.Config().ChainID)
+	txHash, err = val1.Node.ExecTx(ctx, "team", "dispute", "update-team", team2Addr, "--gas", "500000", "--fees", "50loya", "--keyring-dir", val1.Node.HomeDir(), "--chain-id", chain.Config().ChainID)
 	require.NoError(err)
 	fmt.Println("TX HASH (update team address): ", txHash)
 
@@ -2249,7 +2249,7 @@ func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	require.Error(err)
 	fmt.Println("voteRes: ", voteRes)
 	// change team addr back
-	txHash, err = val1.Node.ExecTx(ctx, team2Addr, "dispute", "update-team", "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf", "--gas", "300000", "--fees", "25loya", "--keyring-dir", val1.Node.HomeDir(), "--chain-id", chain.Config().ChainID)
+	txHash, err = val1.Node.ExecTx(ctx, team2Addr, "dispute", "update-team", "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf", "--gas", "500000", "--fees", "50loya", "--keyring-dir", val1.Node.HomeDir(), "--chain-id", chain.Config().ChainID)
 	require.NoError(err)
 	fmt.Println("TX HASH (update team address back): ", txHash)
 
@@ -2337,7 +2337,7 @@ func TestUnderfundedDispute(t *testing.T) {
 	metaId := reportsRes.MicroReports[0].MetaId
 	queryId := reportsRes.MicroReports[0].QueryID
 	fee := "1000000loya"
-	txHash, err := val1.Node.ExecTx(ctx, "validator", "dispute", "propose-dispute", val1.AccAddr, metaId, queryId, warning, fee, notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+	txHash, err := val1.Node.ExecTx(ctx, "validator", "dispute", "propose-dispute", val1.AccAddr, metaId, queryId, warning, fee, notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (val0 disputes val1): ", txHash)
 
@@ -2373,7 +2373,7 @@ func TestUnderfundedDispute(t *testing.T) {
 	fmt.Println("free floating tokens before withdraw fee: ", ffTokensBefore)
 
 	// claim fee refund
-	txHash, err = val1.Node.ExecTx(ctx, "validator", "dispute", "withdraw-fee-refund", val1.AccAddr, "1", "--gas", "300000", "--fee", "5loya", "--fees", "15loya", "--keyring-dir", val1.Node.HomeDir())
+	txHash, err = val1.Node.ExecTx(ctx, "validator", "dispute", "withdraw-fee-refund", val1.AccAddr, "1", "--gas", "500000", "--fees", "50loya", "--keyring-dir", val1.Node.HomeDir())
 	require.NoError(err)
 	fmt.Println("TX HASH (claim fee refund): ", txHash)
 
@@ -2476,7 +2476,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	metaId := reportsRes.MicroReports[0].MetaId
 	queryId := reportsRes.MicroReports[0].QueryID
 	fee := "50000000000loya"
-	txHash, err = val1.Node.ExecTx(ctx, userAddr, "dispute", "propose-dispute", val2.AccAddr, metaId, queryId, warning, fee, notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+	txHash, err = val1.Node.ExecTx(ctx, userAddr, "dispute", "propose-dispute", val2.AccAddr, metaId, queryId, warning, fee, notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user1 disputes val1): ", txHash)
 
@@ -2555,7 +2555,7 @@ func TestGroupPowers(t *testing.T) {
 	}
 	specBz, err := json.Marshal(spec)
 	require.NoError(err)
-	txHash, err := val1.Node.ExecTx(ctx, val1.AccAddr, "registry", "register-spec", queryType, string(specBz), "--keyring-dir", val1.Node.HomeDir(), "--fees", "10loya")
+	txHash, err := val1.Node.ExecTx(ctx, val1.AccAddr, "registry", "register-spec", queryType, string(specBz), "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (val0 registers NFLSuperBowlChampion query): ", txHash)
 
@@ -2607,7 +2607,7 @@ func TestGroupPowers(t *testing.T) {
 	disputeQueryId := disputedReport.QueryID
 	disputeMetaId := disputedReport.MetaId
 	disputeFee := "500000000000loya"
-	txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "propose-dispute", val3.AccAddr, disputeMetaId, disputeQueryId, warning, disputeFee, notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "300000", "--fees", "15loya")
+	txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "propose-dispute", val3.AccAddr, disputeMetaId, disputeQueryId, warning, disputeFee, notFromBond, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (val0 disputes val2's first report): ", txHash)
 
