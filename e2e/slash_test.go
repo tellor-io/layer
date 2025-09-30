@@ -22,7 +22,7 @@ func TestInactivitySlash(t *testing.T) {
 
 	// Use custom config with short inactivity slash period
 	config := e2e.DefaultSetupConfig()
-	config.NumValidators = 4 // Need 4 validators for this test
+	config.NumValidators = 4
 	config.ModifyGenesis = []cosmos.GenesisKV{
 		cosmos.NewGenesisKV("app_state.slashing.params.signed_blocks_window", "2"),
 	}

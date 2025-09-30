@@ -212,6 +212,8 @@ func TestValsetSignatureSlashing(t *testing.T) {
 func TestValsetSignatureSlashingWithDifferentChainId(t *testing.T) {
 	require := require.New(t)
 
+	cosmos.SetSDKConfig("tellor")
+
 	// Use standard configuration with custom genesis modifications
 	config := e2e.DefaultSetupConfig()
 	config.NumFullNodes = 1
