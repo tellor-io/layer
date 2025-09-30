@@ -795,7 +795,7 @@ func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *c
 	}
 
 	for _, v := range layer.Validators {
-		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "25loya", "--keyring-dir", layer.HomeDir())
+		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "500loya", "--keyring-dir", layer.HomeDir())
 		if err != nil {
 			return err
 		}
@@ -860,7 +860,7 @@ func QueryTips(queryData string, ctx context.Context, validatorI *cosmos.ChainNo
 
 func DelegateToValidator(ctx context.Context, userKey string, validator *cosmos.ChainNode, valAddr string, amount math.Int) (string, error) {
 	delegateAmt := sdk.NewCoin("loya", amount)
-	txHash, err := validator.ExecTx(ctx, userKey, "staking", "delegate", valAddr, delegateAmt.String(), "--keyring-dir", validator.HomeDir(), "--gas", "1000000", "--fees", "10loya")
+	txHash, err := validator.ExecTx(ctx, userKey, "staking", "delegate", valAddr, delegateAmt.String(), "--keyring-dir", validator.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	if err != nil {
 		return "", err
 	}

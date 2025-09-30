@@ -164,7 +164,7 @@ func TestProfitability(t *testing.T) {
 	fmt.Println("time taken: ", time2.Sub(time1))
 
 	for _, v := range chain.Validators {
-		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "5loya", "--keyring-dir", "/var/cosmos-chain/layer-1")
+		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "500loya", "--keyring-dir", "/var/cosmos-chain/layer-1")
 		if err != nil {
 			fmt.Println("error voting on proposal: ", err)
 		} else {

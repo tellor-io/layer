@@ -11,7 +11,6 @@ import (
 
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
@@ -1107,13 +1106,6 @@ func TestEscalatingDispute(t *testing.T) {
 	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
 	defer ic.Close()
 
-	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
-	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
-		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-		Amount:  math.NewInt(1000000000000),
-		Denom:   "loya",
-	}))
-
 	// Get validators
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
@@ -1655,34 +1647,23 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	fmt.Println("user0 free floating balance after claiming dispute 1 rewards: ", user0BalanceAfterClaim)
 	require.Greater(user0BalanceAfterClaim.Int64(), user0BalanceBeforeClaim.Int64())
 	expectedBalance := user0BalanceBeforeClaim.Add(math.NewInt(25 * 1e6)) // 2.5% of 1000 trb
-	require.Equal(user0BalanceAfterClaim.String(), expectedBalance.String())
+	require.Equal(expectedBalance.String(), user0BalanceAfterClaim.String())
 }
 
 // 2 out of 4 reporters submit, both are bad prices, dispute and unjail, then 4/4 submit bad prices, dispute and unjail
 func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
 
 	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
 	defer ic.Close()
 
-	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
-	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
-		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-		Amount:  math.NewInt(1000000000000),
-		Denom:   "loya",
-	}))
-
 	// Get validators using the helper
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
+	e2e.PrintValidatorInfo(ctx, validatorsInfo)
 
 	val1 := validatorsInfo[0]
 	val2 := validatorsInfo[1]
