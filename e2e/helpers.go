@@ -26,6 +26,7 @@ type SetupConfig struct {
 
 // DefaultSetupConfig returns standard test configuration
 func DefaultSetupConfig() SetupConfig {
+	fmt.Println("Using DefaultSetupConfig...")
 	return SetupConfig{
 		NumValidators:   2,
 		NumFullNodes:    0,
@@ -85,6 +86,7 @@ func GetValidators(ctx context.Context, chain *cosmos.CosmosChain) ([]ValidatorI
 
 // SetupTestChainWithConfig creates a test chain with the given configuration
 func SetupChainWithCustomConfig(t *testing.T, config SetupConfig) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
+	fmt.Println("Setting up chain with custom config...")
 	t.Helper()
 	require := require.New(t)
 
@@ -165,6 +167,7 @@ func SetupChainWithCustomConfig(t *testing.T, config SetupConfig) (*cosmos.Cosmo
 
 // SetupStandardTestChain creates a test chain with standard configuration
 func SetupChain(t *testing.T, numVals, numFullNodes int) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
+	fmt.Println("Setting up chain with standard configuration...")
 	config := DefaultSetupConfig()
 	config.NumValidators = numVals
 	config.NumFullNodes = numFullNodes

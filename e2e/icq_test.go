@@ -46,6 +46,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
+		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
 	}
 	nv := 1
 	nf := 0

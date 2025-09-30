@@ -775,6 +775,7 @@ func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos
 }
 
 func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *cosmos.ChainNode) error {
+	fmt.Println("Turning on minting...")
 	prop := Proposal{
 		Messages: []map[string]interface{}{
 			{
@@ -794,7 +795,7 @@ func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *c
 	}
 
 	for _, v := range layer.Validators {
-		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "10loya", "--keyring-dir", layer.HomeDir())
+		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "25loya", "--keyring-dir", layer.HomeDir())
 		if err != nil {
 			return err
 		}

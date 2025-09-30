@@ -26,8 +26,22 @@ func TestConsensusAttestation(t *testing.T) {
 		t.Skip("skipping in short mode")
 	}
 
-	// Use standard configuration
-	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	cosmos.SetSDKConfig("tellor")
+
+	// Use custom config with 5 block reporting window for spot prices
+	modifyGenesis := []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
+		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "15s"),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
+		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
+	}
+	config := e2e.DefaultSetupConfig()
+	config.ModifyGenesis = modifyGenesis
+	chain, ic, ctx := e2e.SetupChainWithCustomConfig(t, config)
 	defer ic.Close()
 
 	// Get validators using the helper
@@ -68,10 +82,6 @@ func TestConsensusAttestation(t *testing.T) {
 	require.Contains(reportersRes.Reporters[0].Metadata.Moniker, "reporter_moniker")
 	require.Contains(reportersRes.Reporters[1].Metadata.Moniker, "reporter_moniker")
 	require.NotEqual(reportersRes.Reporters[0].Metadata.Moniker, reportersRes.Reporters[1].Metadata.Moniker)
-
-	// wait 1 block
-	err = testutil.WaitForBlocks(ctx, 1, validators[0].Node)
-	require.NoError(err)
 
 	// validator reporters report for the cycle list
 	currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
@@ -291,6 +301,7 @@ func TestNoStakeAttestation(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
+		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
 	}
 
 	// Custom genesis modifications
