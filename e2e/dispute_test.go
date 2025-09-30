@@ -10,6 +10,7 @@ import (
 	"time"
 
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
+	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
@@ -65,27 +66,16 @@ type ReporterAccs struct {
 func TestTenDisputesTenPeople(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
 
 	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
 	defer ic.Close()
 
-	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
-	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
-		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-		Amount:  math.NewInt(1000000000000),
-		Denom:   "loya",
-	}))
-
 	// Get validators using the helper
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
+	e2e.PrintValidatorInfo(ctx, validatorsInfo)
 
 	val1 := validatorsInfo[0]
 	val2 := validatorsInfo[1]
@@ -361,31 +351,18 @@ func TestTenDisputesTenPeople(t *testing.T) {
 func TestReportUnbondMajorDispute(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
 
 	// Use standard configuration
-	chain, _, ctx := e2e.SetupChain(t, 2, 0)
+	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	defer ic.Close()
 
-	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
-	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
-		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-		Amount:  math.NewInt(1000000000000),
-		Denom:   "loya",
-	}))
-
-	// Get validators using the helper
+	// Get validators
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
+	e2e.PrintValidatorInfo(ctx, validatorsInfo)
 
 	val1 := validatorsInfo[0]
-
-	fmt.Println("val1 Account Address: ", val1.AccAddr)
-	fmt.Println("val1 Validator Address: ", val1.ValAddr)
 
 	// queryValidators to confirm that 2 validators are bonded
 	vals, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
@@ -673,23 +650,16 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
 
 	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
 	defer ic.Close()
 
-	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
-	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
-		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-		Amount:  math.NewInt(1000000000000),
-		Denom:   "loya",
-	}))
+	// Get validators
+	validatorsInfo, err := e2e.GetValidators(ctx, chain)
+	require.NoError(err)
+	e2e.PrintValidatorInfo(ctx, validatorsInfo)
 
 	val1 := chain.Validators[0]
 	val1Addr, err := val1.AccountKeyBech32(ctx, "validator")
@@ -1131,12 +1101,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 func TestEscalatingDispute(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
 
 	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
@@ -1149,9 +1114,10 @@ func TestEscalatingDispute(t *testing.T) {
 		Denom:   "loya",
 	}))
 
-	// Get validators using the helper
+	// Get validators
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
+	e2e.PrintValidatorInfo(ctx, validatorsInfo)
 
 	val1 := validatorsInfo[0]
 
@@ -1439,27 +1405,16 @@ func TestEscalatingDispute(t *testing.T) {
 func TestMajorDisputeAgainst(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
 
 	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
 	defer ic.Close()
 
-	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
-	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
-		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-		Amount:  math.NewInt(1000000000000),
-		Denom:   "loya",
-	}))
-
 	// Get validators using the helper
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
+	e2e.PrintValidatorInfo(ctx, validatorsInfo)
 
 	val1 := validatorsInfo[0]
 
@@ -2080,27 +2035,16 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 func TestNewQueryTipReportDisputeUpdateTeamVote(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
 
 	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
 	defer ic.Close()
 
-	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
-	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
-		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-		Amount:  math.NewInt(1000000000000),
-		Denom:   "loya",
-	}))
-
 	// Get validators using the helper
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
+	e2e.PrintValidatorInfo(ctx, validatorsInfo)
 
 	val1 := validatorsInfo[0]
 
@@ -2327,27 +2271,16 @@ func TestUnderfundedDispute(t *testing.T) {
 	t.Skip("x.dispute/keeper/dispute.go/SetNewDispute DisputeEndTime needs changed to 10 sec for this test to work.. :/ ")
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
 
 	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
 	defer ic.Close()
 
-	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
-	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
-		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-		Amount:  math.NewInt(1000000000000),
-		Denom:   "loya",
-	}))
-
 	// Get validators using the helper
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
+	e2e.PrintValidatorInfo(ctx, validatorsInfo)
 
 	val1 := validatorsInfo[0]
 
@@ -2454,27 +2387,16 @@ func TestUnderfundedDispute(t *testing.T) {
 func TestReporterShuffleAndDispute(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
 
 	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
 	defer ic.Close()
 
-	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
-	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
-		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-		Amount:  math.NewInt(1000000000000),
-		Denom:   "loya",
-	}))
-
 	// Get validators using the helper
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
+	e2e.PrintValidatorInfo(ctx, validatorsInfo)
 
 	val1 := validatorsInfo[0]
 	val2 := validatorsInfo[1]
@@ -2576,27 +2498,16 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 func TestGroupPowers(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
+	cosmos.SetSDKConfig("tellor")
 
 	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 3, 0)
 	defer ic.Close()
 
-	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
-	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
-		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-		Amount:  math.NewInt(1000000000000),
-		Denom:   "loya",
-	}))
-
 	// Get validators using the helper
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
+	e2e.PrintValidatorInfo(ctx, validatorsInfo)
 
 	val1 := validatorsInfo[0]
 	val2 := validatorsInfo[1]

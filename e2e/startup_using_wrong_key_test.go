@@ -19,11 +19,6 @@ import (
 func TestStartupUsingWrongKey(t *testing.T) {
 	require := require.New(t)
 
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
 	cosmos.SetSDKConfig("tellor")
 
 	// Use standard configuration with custom genesis modifications
@@ -44,6 +39,7 @@ func TestStartupUsingWrongKey(t *testing.T) {
 	// Get validators using the helper
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
+	e2e.PrintValidatorInfo(ctx, validatorsInfo)
 
 	// Setup validator info with EVM-specific fields
 	type Validators struct {
@@ -56,9 +52,6 @@ func TestStartupUsingWrongKey(t *testing.T) {
 
 	validators := make([]Validators, len(validatorsInfo))
 	for i, v := range validatorsInfo {
-		fmt.Println("val", i, " Account Address: ", v.AccAddr)
-		fmt.Println("val", i, " Validator Address: ", v.ValAddr)
-
 		validators[i] = Validators{
 			ValidatorInfo: v,
 		}

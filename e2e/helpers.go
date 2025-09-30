@@ -103,6 +103,7 @@ func SetupChainWithCustomConfig(t *testing.T, config SetupConfig) (*cosmos.Cosmo
 		modifyGenesis = CreateStandardGenesis()
 	}
 
+	fmt.Println("Creating chain spec...")
 	// Create chain spec
 	chainSpec := &interchaintest.ChainSpec{
 		NumValidators: &config.NumValidators,
@@ -133,8 +134,10 @@ func SetupChainWithCustomConfig(t *testing.T, config SetupConfig) (*cosmos.Cosmo
 	}
 
 	// Create chains
+	fmt.Println("Creating chains...")
 	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{chainSpec})
 
+	fmt.Println("Creating client and network...")
 	client, network := interchaintest.DockerSetup(t)
 	time.Sleep(1 * time.Second)
 
@@ -142,6 +145,7 @@ func SetupChainWithCustomConfig(t *testing.T, config SetupConfig) (*cosmos.Cosmo
 	ic := interchaintest.NewInterchain().AddChain(layer)
 
 	ctx := context.Background()
+	fmt.Println("Building chain...")
 	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
 		TestName:         t.Name(),
 		Client:           client,

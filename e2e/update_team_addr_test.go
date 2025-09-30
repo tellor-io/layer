@@ -6,12 +6,9 @@ import (
 	"testing"
 
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
-
-	"cosmossdk.io/math"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -19,27 +16,15 @@ import (
 func TestUpdateTeamAddr(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
 	cosmos.SetSDKConfig("tellor")
 
 	// Use standard configuration
 	chain, _, ctx := e2e.SetupChain(t, 2, 0)
 
-	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
-	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
-		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-		Amount:  math.NewInt(1000000000000),
-		Denom:   "loya",
-	}))
-
-	// Get validators using the helper
+	// Get validators
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
+	e2e.PrintValidatorInfo(ctx, validatorsInfo)
 
 	// Convert to the expected format for this test
 	type Validators struct {

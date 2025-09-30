@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
@@ -26,11 +27,9 @@ import (
 func TestDepositReport(t *testing.T) {
 	t.Skip("change checks and run manually")
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
 	require := require.New(t)
+
+	cosmos.SetSDKConfig("tellor")
 
 	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 2, 0)

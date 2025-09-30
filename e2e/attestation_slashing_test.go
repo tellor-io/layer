@@ -28,12 +28,6 @@ import (
 func TestAttestationSlashing(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	// Set SDK config before parsing addresses
 	cosmos.SetSDKConfig("tellor")
 
 	// Create modified genesis for test
@@ -53,14 +47,11 @@ func TestAttestationSlashing(t *testing.T) {
 	config.ModifyGenesis = modifyGenesis
 	chain, _, ctx := e2e.SetupChainWithCustomConfig(t, config)
 
-	// Get validators using the helper
+	// Get validators
 	validators, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
-
-	// Print validator info for debugging
 	e2e.PrintValidatorInfo(ctx, validators)
 
-	// Setup additional validator info for this test
 	type ValidatorsWithEVM struct {
 		AccAddr string
 		ValAddr string

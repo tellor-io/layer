@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
@@ -17,20 +18,15 @@ import (
 func TestInactivitySlash(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
+	cosmos.SetSDKConfig("tellor")
 
 	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 4, 0)
 	defer ic.Close()
 
-	// Get validators using the helper
+	// Get validators
 	validators, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
-
-	// Print validator info for debugging
 	e2e.PrintValidatorInfo(ctx, validators)
 
 	// Access specific validators that are used in the test

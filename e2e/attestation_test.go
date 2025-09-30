@@ -21,11 +21,6 @@ const teamMnemonic = "unit curious maid primary holiday lunch lift melody boil b
 func TestConsensusAttestation(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
 	cosmos.SetSDKConfig("tellor")
 
 	// Use custom config with 5 block reporting window for spot prices
@@ -44,11 +39,9 @@ func TestConsensusAttestation(t *testing.T) {
 	chain, ic, ctx := e2e.SetupChainWithCustomConfig(t, config)
 	defer ic.Close()
 
-	// Get validators using the helper
+	// Get validators
 	validators, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
-
-	// Print validator info for debugging
 	e2e.PrintValidatorInfo(ctx, validators)
 
 	// queryValidators to confirm that 2 validators are bonded
@@ -309,11 +302,9 @@ func TestNoStakeAttestation(t *testing.T) {
 	config.ModifyGenesis = modifyGenesis
 	chain, _, ctx := e2e.SetupChainWithCustomConfig(t, config)
 
-	// Get validators using the helper
+	// Get validators
 	validators, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
-
-	// Print validator info for debugging
 	e2e.PrintValidatorInfo(ctx, validators)
 
 	// queryValidators to confirm that 2 validators are bonded

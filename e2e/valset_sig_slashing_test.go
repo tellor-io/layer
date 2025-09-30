@@ -29,12 +29,6 @@ import (
 func TestValsetSignatureSlashing(t *testing.T) {
 	require := require.New(t)
 
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
 	cosmos.SetSDKConfig("tellor")
 
 	// Use standard configuration with custom genesis modifications
@@ -52,16 +46,10 @@ func TestValsetSignatureSlashing(t *testing.T) {
 
 	chain, _, ctx := e2e.SetupChainWithCustomConfig(t, config)
 
-	require.NoError(chain.RecoverKey(ctx, "team", teamMnemonic))
-	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
-		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-		Amount:  math.NewInt(1000000000000),
-		Denom:   "loya",
-	}))
-
 	// Get validators using the helper
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
+	e2e.PrintValidatorInfo(ctx, validatorsInfo)
 
 	// Setup validator info with EVM-specific fields
 	type Validators struct {
@@ -72,9 +60,6 @@ func TestValsetSignatureSlashing(t *testing.T) {
 
 	validators := make([]Validators, len(validatorsInfo))
 	for i, v := range validatorsInfo {
-		fmt.Println("val", i, " Account Address: ", v.AccAddr)
-		fmt.Println("val", i, " Validator Address: ", v.ValAddr)
-
 		validators[i] = Validators{
 			ValidatorInfo: v,
 		}
