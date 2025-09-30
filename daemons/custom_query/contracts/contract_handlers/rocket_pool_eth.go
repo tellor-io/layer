@@ -39,14 +39,23 @@ func (r *RocketPoolETHHandler) FetchValue(
 		return 0, errors.New("no valid ETH-USD price found")
 	}
 
+	// Multiply: rETH exchange rate (18 decimals) * ETH price (with market param decimals)
 	ethPriceBig := new(big.Int).SetUint64(ethusdPrice)
-
 	value := new(big.Int).Mul(rethExchangeRate, ethPriceBig)
 
-	divisor := new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil)
-	value.Div(value, divisor)
-	fmt.Println("Rocket Pool ETH Price (USD):", value.String())
+	// Calculate total decimals to remove:
+	// - 18 from rETH exchange rate
+	// - Plus the market param decimals (negative exponent means positive decimals)
+	totalDecimals := 18 + (-ethUsdMarketParam.Exponent)
+	divisor := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(totalDecimals)), nil)
 
-	valueFloat, _ := value.Float64()
-	return valueFloat, nil
+	// Convert to big.Float for final division to get USD value
+	valueFloat := new(big.Float).SetInt(value)
+	divisorFloat := new(big.Float).SetInt(divisor)
+	finalResult := new(big.Float).Quo(valueFloat, divisorFloat)
+
+	finalValue, _ := finalResult.Float64()
+	fmt.Printf("Rocket Pool ETH Price (USD): $%.2f\n", finalValue)
+
+	return finalValue, nil
 }
