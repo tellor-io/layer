@@ -38,6 +38,10 @@ import (
 )
 
 func TestSomething(t *testing.T) {
+	require := require.New(t)
+
+	cosmos.SetSDKConfig("tellor")
+
 	// Basic usage - uses default configuration
 	chain, ic, ctx := SetupChain(t, 2, 0)
 	defer ic.Close()
@@ -64,30 +68,17 @@ func TestSomething(t *testing.T) {
 }
 
 func TestCustomConfiguration(t *testing.T) {
-	// Custom gas prices only
+	// Custom gas prices
 	config := DefaultTestSetupConfig()
 	config.GasPrices = "0.001loya"
-	chain, ic, ctx := SetupChainWithCustomConfig(t, config)
-	defer ic.Close()
+	config.GlobalFeeMinGas = "0.00005"
 
 	// Custom genesis modifications
 	customGenesis := []cosmos.GenesisKV{
 		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "30s"),
 		cosmos.NewGenesisKV("app_state.dispute.params.team_address", customTeamAddress),
 	}
-	config = DefaultTestSetupConfig()
 	config.ModifyGenesis = customGenesis
-	chain, ic, ctx = SetupChainWithCustomConfig(t, config)
-	defer ic.Close()
-
-	// Completely custom configuration
-	config = TestSetupConfig{
-		NumValidators:   4,
-		NumFullNodes:    1,
-		ModifyGenesis:   customGenesis,
-		GasPrices:       "0.002loya",
-		GlobalFeeMinGas: "0.001",
-	}
 	chain, ic, ctx = SetupChainWithCustomConfig(t, config)
 	defer ic.Close()
 

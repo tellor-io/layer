@@ -14,6 +14,7 @@ import (
 	"github.com/tellor-io/layer/utils"
 
 	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestBatchSubmitValue(t *testing.T) {
@@ -83,23 +84,23 @@ func TestBatchSubmitValue(t *testing.T) {
 	// ======================================================================================
 	// Now tip all three queries to make them submittable
 	fmt.Println("\n=== Tipping all three non-cycle list queries ===")
-	tipAmount := math.NewInt(1000000) // 1 TRB
+	tip := sdk.NewCoin("loya", math.NewInt(1000000)) // 1 TRB
 
 	// wait 1 block
 	require.NoError(testutil.WaitForBlocks(ctx, 1, val1))
 
 	// Tip query 1 (TRX/USD) using new helper
-	tipTxHash1, err := e2e.TipQuery(ctx, val2, queryData1, tipAmount)
+	tipTxHash1, err := e2e.TipQuery(ctx, val2, queryData1, tip)
 	require.NoError(err)
 	fmt.Println("Tipped TRX/USD query, tx hash:", tipTxHash1)
 
 	// Tip query 2 (SUI/USD) using new helper
-	tipTxHash2, err := e2e.TipQuery(ctx, val3, queryData2, tipAmount)
+	tipTxHash2, err := e2e.TipQuery(ctx, val3, queryData2, tip)
 	require.NoError(err)
 	fmt.Println("Tipped SUI/USD query, tx hash:", tipTxHash2)
 
 	// Tip query 3 (BCH/USD) using new helper
-	tipTxHash3, err := e2e.TipQuery(ctx, val4, queryData3, tipAmount)
+	tipTxHash3, err := e2e.TipQuery(ctx, val4, queryData3, tip)
 	require.NoError(err)
 	fmt.Println("Tipped BCH/USD query, tx hash:", tipTxHash3)
 
@@ -224,7 +225,7 @@ func TestBatchSubmitValue(t *testing.T) {
 	txHash, err = val2.ExecTx(
 		ctx, "validator", "dispute", "propose-dispute",
 		microReports[0].Reporter, microReports[0].MetaId,
-		microReports[0].QueryID, warning, "500000000000loya", "false", "--keyring-dir", val2.HomeDir(), "--gas", "1000000", "--fees", "10loya",
+		microReports[0].QueryID, warning, "500000000000loya", "false", "--keyring-dir", val2.HomeDir(), "--fees", "10loya",
 	)
 	require.NoError(err)
 	fmt.Println("TX HASH (dispute on ", microReports[0].Reporter, "): ", txHash)

@@ -199,8 +199,8 @@ func CreateReporterFromValidator(ctx context.Context, validator ValidatorInfo, r
 }
 
 // TipQuery tips a query with the specified amount
-func TipQuery(ctx context.Context, validator *cosmos.ChainNode, queryData string, tipAmount math.Int) (string, error) {
-	cmd := validator.TxCommand("validator", "oracle", "tip", queryData, tipAmount.String(), "--keyring-dir", validator.HomeDir())
+func TipQuery(ctx context.Context, validator *cosmos.ChainNode, queryData string, tipCoin sdk.Coin) (string, error) {
+	cmd := validator.TxCommand("validator", "oracle", "tip", queryData, tipCoin.String(), "--keyring-dir", validator.HomeDir())
 	stdout, _, err := validator.Exec(ctx, cmd, validator.Chain.Config().Env)
 	if err != nil {
 		return "", err
