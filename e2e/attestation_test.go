@@ -268,7 +268,9 @@ func TestConsensusAttestation(t *testing.T) {
 	require.NotNil(attestationDataRes.Checkpoint)               // validator checkpoint not nil
 	attestationTimestamp, err := strconv.ParseUint(attestationDataRes.AttestationTimestamp, 10, 64)
 	require.NoError(err)
-	require.Greater(attestationTimestamp, timestamp) // attestation was after report2 timestamp
+	timestampInt, err := strconv.ParseUint(attestationDataRes.Timestamp, 10, 64)
+	require.NoError(err)
+	require.Greater(attestationTimestamp, timestampInt) // attestation was after report2 timestamp
 	require.Equal(attestationDataRes.PreviousReportTimestamp, prevTimestamp)
 	require.Equal(attestationDataRes.NextReportTimestamp, "0")
 	require.Equal(attestationDataRes.LastConsensusTimestamp, prevTimestamp) // lastConsTs should equal report1 timestamp
@@ -381,7 +383,9 @@ func TestNoStakeAttestation(t *testing.T) {
 	require.NotNil(attestationDataRes.Checkpoint) // validator checkpoint not nil
 	attestationTimestamp, err := strconv.ParseUint(attestationDataRes.AttestationTimestamp, 10, 64)
 	require.NoError(err)
-	require.Greater(attestationTimestamp, timestamp) // attestation was after report timestamp
+	timestampInt, err := strconv.ParseUint(attestationDataRes.Timestamp, 10, 64)
+	require.NoError(err)
+	require.Greater(attestationTimestamp, timestampInt) // attestation was after report timestamp
 	require.Equal(attestationDataRes.PreviousReportTimestamp, "0")
 	require.Equal(attestationDataRes.NextReportTimestamp, "0")
 	require.Equal(attestationDataRes.LastConsensusTimestamp, "0")
