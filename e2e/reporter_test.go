@@ -21,7 +21,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestSelectorCreateReporter(t *testing.T) {
+func TestSelectorCreatesReporter(t *testing.T) {
 	require := require.New(t)
 
 	cosmos.SetSDKConfig("tellor")
@@ -146,5 +146,5 @@ func TestSelectorCreateReporter(t *testing.T) {
 	fmt.Println("current aggregate report power: ", currentAggRes.Aggregate.AggregatePower)
 	report2Power, err := strconv.ParseUint(currentAggRes.Aggregate.AggregatePower, 10, 64)
 	require.NoError(err)
-	require.Less(report2Power, report1Power) // report 1 should have more than 2
+	require.Greater(report2Power, report1Power) // report 2 should have more power than report 1 since we added a third reporter
 }
