@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -263,9 +264,11 @@ func TestConsensusAttestation(t *testing.T) {
 	require.Equal(attestationDataRes.QueryId, queryId1)
 	require.Equal(attestationDataRes.Timestamp, timestamp)
 	require.Equal(attestationDataRes.AggregateValue, value)
-	require.Equal(attestationDataRes.AggregatePower, "5000000")         // 50% power
-	require.NotNil(attestationDataRes.Checkpoint)                       // validator checkpoint not nil
-	require.Greater(attestationDataRes.AttestationTimestamp, timestamp) // attestation was after report2 timestamp
+	require.Equal(attestationDataRes.AggregatePower, "5000000") // 50% power
+	require.NotNil(attestationDataRes.Checkpoint)               // validator checkpoint not nil
+	attestationTimestamp, err := strconv.ParseUint(attestationDataRes.AttestationTimestamp, 10, 64)
+	require.NoError(err)
+	require.Greater(attestationTimestamp, timestamp) // attestation was after report2 timestamp
 	require.Equal(attestationDataRes.PreviousReportTimestamp, prevTimestamp)
 	require.Equal(attestationDataRes.NextReportTimestamp, "0")
 	require.Equal(attestationDataRes.LastConsensusTimestamp, prevTimestamp) // lastConsTs should equal report1 timestamp
@@ -375,8 +378,10 @@ func TestNoStakeAttestation(t *testing.T) {
 	require.Equal(attestationDataRes.Timestamp, timestamp)
 	require.NotNil(attestationDataRes.AggregateValue)
 	require.Equal(attestationDataRes.AggregatePower, "0")
-	require.NotNil(attestationDataRes.Checkpoint)                       // validator checkpoint not nil
-	require.Greater(attestationDataRes.AttestationTimestamp, timestamp) // attestation was after report timestamp
+	require.NotNil(attestationDataRes.Checkpoint) // validator checkpoint not nil
+	attestationTimestamp, err := strconv.ParseUint(attestationDataRes.AttestationTimestamp, 10, 64)
+	require.NoError(err)
+	require.Greater(attestationTimestamp, timestamp) // attestation was after report timestamp
 	require.Equal(attestationDataRes.PreviousReportTimestamp, "0")
 	require.Equal(attestationDataRes.NextReportTimestamp, "0")
 	require.Equal(attestationDataRes.LastConsensusTimestamp, "0")

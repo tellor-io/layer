@@ -334,8 +334,8 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		expectedVoterReward := math.NewInt(250000)
 		ninetyNinePercentOfVotingReward := expectedVoterReward.Mul(math.NewInt(99)).Quo(math.NewInt(100))
 		// make sure reward is less than 100% but greater than 99%
-		require.Greater(disputerBalAfterRewardClaim.String(), disputerBalBeforeRewardClaim.Add(ninetyNinePercentOfVotingReward).String())
-		require.Less(disputerBalAfterRewardClaim.String(), disputerBalBeforeRewardClaim.Add(expectedVoterReward).String())
+		require.Greater(disputerBalAfterRewardClaim.Int64(), disputerBalBeforeRewardClaim.Add(ninetyNinePercentOfVotingReward).Int64())
+		require.Less(disputerBalAfterRewardClaim.Int64(), disputerBalBeforeRewardClaim.Add(expectedVoterReward).Int64())
 		fmt.Println("disputer balance after reward claim: ", disputerBalAfterRewardClaim)
 
 		// try to claim reward again - should fail
@@ -550,7 +550,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	}
 	require.NotNil(disputedReporter, "Disputed reporter not found")
 	require.True(disputedReporter.Metadata.Jailed, "Disputed reporter should be jailed")
-	require.Greater(disputedReporter.Metadata.JailedUntil, time.Now().Add(1000000*time.Hour)) // jailed over 100 years mua ha ha
+	require.True(disputedReporter.Metadata.JailedUntil.After(time.Now().Add(1000000 * time.Hour))) // jailed over 100 years mua ha ha
 
 	// check dispute status
 	res, _, err = e2e.QueryWithTimeout(ctx, val1.Node, "dispute", "open-disputes")
@@ -903,7 +903,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	}
 	require.NotNil(disputedReporter, "Disputed reporter not found")
 	require.True(disputedReporter.Metadata.Jailed, "Disputed reporter should be jailed")
-	require.Greater(disputedReporter.Metadata.JailedUntil, time.Now().Add(1000000*time.Hour)) // jailed over 100 years mua ha ha
+	require.True(disputedReporter.Metadata.JailedUntil.After(time.Now().Add(1000000 * time.Hour))) // jailed over 100 years mua ha ha
 
 	// check dispute status
 	res, _, err = e2e.QueryWithTimeout(ctx, val1, "dispute", "open-disputes")
@@ -954,7 +954,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	}
 	require.NotNil(disputedReporter, "Disputed reporter not found")
 	require.True(disputedReporter.Metadata.Jailed, "Disputed reporter should be jailed")
-	require.Greater(disputedReporter.Metadata.JailedUntil, time.Now().Add(1000000*time.Hour)) // jailed over 100 years mua ha ha
+	require.True(disputedReporter.Metadata.JailedUntil.After(time.Now().Add(1000000 * time.Hour))) // jailed over 100 years mua ha ha
 
 	// get user1 stake after resolving dispute
 	user1StakingAfterDispute, err := chain.StakingQueryDelegation(ctx, val1valAddr, user1Addr)
@@ -1356,7 +1356,7 @@ func TestEscalatingDispute(t *testing.T) {
 	user0StakingAfterRefund, err := chain.StakingQueryDelegation(ctx, val1.ValAddr, user0Addr)
 	require.NoError(err)
 	fmt.Println("user0 stake after withdrawing fee refund from dispute 1: ", user0StakingAfterRefund.Balance.Amount.String())
-	require.Greater(user0StakingAfterRefund.Balance.Amount.String(), user0Staking.Balance.Amount.String())
+	require.Greater(user0StakingAfterRefund.Balance.Amount.Int64(), user0Staking.Balance.Amount.Int64())
 	require.Equal(user0StakingAfterRefund.Balance.Amount.String(), user0Staking.Balance.Amount.Add(math.NewInt(10*1e6)).Add(math.NewInt(95*1e5)).String())
 
 	// vote from team and resolve dispute 2
