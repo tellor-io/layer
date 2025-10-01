@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"testing"
 
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
@@ -105,7 +106,8 @@ func TestSelectorCreateReporter(t *testing.T) {
 	err = json.Unmarshal(res, &currentAggRes)
 	require.NoError(err)
 	fmt.Println("current aggregate report power: ", currentAggRes.Aggregate.AggregatePower)
-	report1Power := currentAggRes.Aggregate.AggregatePower
+	report1Power, err := strconv.ParseUint(currentAggRes.Aggregate.AggregatePower, 10, 64)
+	require.NoError(err)
 
 	// user creates a reporter
 	minStakeAmt := "1000000"
@@ -142,6 +144,7 @@ func TestSelectorCreateReporter(t *testing.T) {
 	err = json.Unmarshal(res, &currentAggRes)
 	require.NoError(err)
 	fmt.Println("current aggregate report power: ", currentAggRes.Aggregate.AggregatePower)
-	report2Power := currentAggRes.Aggregate.AggregatePower
+	report2Power, err := strconv.ParseUint(currentAggRes.Aggregate.AggregatePower, 10, 64)
+	require.NoError(err)
 	require.Less(report2Power, report1Power) // report 1 should have more than 2
 }
