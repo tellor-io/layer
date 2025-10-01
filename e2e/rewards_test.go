@@ -184,7 +184,7 @@ func TestRewards(t *testing.T) {
 	fmt.Printf("VAL0 free floating balance before claim: %s\n", val0BalanceBefore)
 
 	// Claim validator rewards (val1 pays for val0 to claim val0 rewards)
-	txHash, err := validators[0].Val.ExecTx(ctx, "validator", "distribution", "withdraw-all-rewards", "--keyring-dir", validators[0].Val.HomeDir(), "--from", validators[1].Addr, "--fees", "2222loya")
+	txHash, err := validators[1].Val.ExecTx(ctx, "validator", "distribution", "withdraw-all-rewards", "--keyring-dir", validators[1].Val.HomeDir(), "--from", validators[0].Addr, "--fees", "2222loya")
 	require.NoError(err, "Failed to claim validator rewards")
 	fmt.Printf("TX HASH (val1 pays for val0 to claim val0 rewards): %s\n", txHash)
 
