@@ -12,6 +12,7 @@ import (
 	layerutil "github.com/tellor-io/layer/testutil"
 
 	"cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
