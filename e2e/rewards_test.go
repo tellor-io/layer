@@ -197,9 +197,7 @@ func TestRewards(t *testing.T) {
 	require.NoError(err, "Failed to query balance for validator 1 after claim")
 	fmt.Printf("VAL1 free floating balance after claim: %s\n", val1BalanceAfter)
 
-	// Verify val1 balance decreased due to paying fees for val0's reward claim
 	// (val1 paid 2222 loya in fees)
-	require.True(val1BalanceAfter.LT(val1BalanceBefore), "Val1 balance should decrease after paying fees for val0's reward claim")
 	feePaid := val1BalanceBefore.Sub(val1BalanceAfter)
 	require.True(feePaid.GTE(math.NewInt(2222)), "Val1 should have paid at least 2222 loya in fees")
 
