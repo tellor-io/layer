@@ -17,41 +17,31 @@ func TestGas(t *testing.T) {
 
 	cosmos.SetSDKConfig("tellor")
 
-	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 4, 0)
 	defer ic.Close()
 
-	layer1validator := chain.Validators[0]
-	layer2validator := chain.Validators[1]
-	layer3validator := chain.Validators[2]
-	layer4validator := chain.Validators[3]
+	val1 := chain.Validators[0]
+	val2 := chain.Validators[1]
+	val3 := chain.Validators[2]
+	val4 := chain.Validators[3]
 
-	_, err := layer1validator.AccountKeyBech32(ctx, "validator")
+	// all 4 vals become reporters
+	_, err := chain.GetNode().ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val1_moniker", "--keyring-dir", val1.HomeDir())
 	require.NoError(err)
-	_, err = layer2validator.AccountKeyBech32(ctx, "validator")
+	_, err = val2.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val2_moniker", "--keyring-dir", val2.HomeDir())
 	require.NoError(err)
-	// valAddress3, err := layer3validator.AccountKeyBech32(ctx, "validator")
-	// require.NoError(err)
-	// valAddress4, err := layer4validator.AccountKeyBech32(ctx, "validator")
-	// require.NoError(t, err)
-
-	// create reporter
-	_, err = chain.GetNode().ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val1_moniker", "--keyring-dir", layer1validator.HomeDir())
+	_, err = val3.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val3_moniker", "--keyring-dir", val3.HomeDir())
 	require.NoError(err)
-	_, err = layer2validator.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val2_moniker", "--keyring-dir", layer2validator.HomeDir())
-	require.NoError(err)
-	_, err = layer3validator.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val3_moniker", "--keyring-dir", layer3validator.HomeDir())
-	require.NoError(err)
-	_, err = layer4validator.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val4_moniker", "--keyring-dir", layer4validator.HomeDir())
+	_, err = val4.ExecTx(ctx, "validator", "reporter", "create-reporter", math.NewUint(0).String(), math.NewUint(1_000_000).String(), "val4_moniker", "--keyring-dir", val4.HomeDir())
 	require.NoError(err)
 
 	// tip query
-	_, err = layer1validator.ExecTx(ctx, "validator", "oracle", "tip", qData, "1000000loya", "--keyring-dir", chain.HomeDir())
+	_, err = val1.ExecTx(ctx, "validator", "oracle", "tip", qData, "1000000loya", "--keyring-dir", chain.HomeDir())
 	require.NoError(err)
 
 	t.Run("val1", func(t *testing.T) {
 		t.Parallel()
-		txHash, err := layer1validator.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", layer1validator.HomeDir())
+		txHash, err := val1.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", val1.HomeDir())
 		require.NoError(err)
 		err = testutil.WaitForBlocks(ctx, 5, chain)
 		require.NoError(err)
@@ -62,7 +52,7 @@ func TestGas(t *testing.T) {
 	})
 	t.Run("val2", func(t *testing.T) {
 		t.Parallel()
-		txHash, err := layer2validator.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", layer2validator.HomeDir())
+		txHash, err := val2.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", val2.HomeDir())
 		require.NoError(err)
 		err = testutil.WaitForBlocks(ctx, 5, chain)
 		require.NoError(err)

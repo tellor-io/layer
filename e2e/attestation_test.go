@@ -37,7 +37,6 @@ func TestConsensusAttestation(t *testing.T) {
 	chain, ic, ctx := e2e.SetupChainWithCustomConfig(t, config)
 	defer ic.Close()
 
-	// Get validators
 	validators, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
 	e2e.PrintValidatorInfo(ctx, validators)

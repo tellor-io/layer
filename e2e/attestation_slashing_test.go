@@ -6,12 +6,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"math/big"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
@@ -30,7 +28,6 @@ func TestAttestationSlashing(t *testing.T) {
 
 	cosmos.SetSDKConfig("tellor")
 
-	// Create modified genesis for test
 	modifyGenesis := []cosmos.GenesisKV{
 		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
 		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
@@ -42,12 +39,10 @@ func TestAttestationSlashing(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
 	}
 
-	// Custom genesis modifications
 	config := e2e.DefaultSetupConfig()
 	config.ModifyGenesis = modifyGenesis
 	chain, _, ctx := e2e.SetupChainWithCustomConfig(t, config)
 
-	// Get validators
 	validators, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
 	e2e.PrintValidatorInfo(ctx, validators)
@@ -242,7 +237,7 @@ func TestAttestationSlashing(t *testing.T) {
 	}
 
 	// Create snapshot data for malicious attestation
-	snapshotBytes, err := encodeOracleAttestationData(
+	snapshotBytes, err := e2e.EncodeOracleAttestationData(
 		queryIdBytes,
 		malSnapshotData.Value,
 		malSnapshotData.Timestamp,
@@ -302,91 +297,4 @@ func TestAttestationSlashing(t *testing.T) {
 
 	// Check if the validator was jailed
 	require.True(slashedValInfo.Jailed, "Validator should have been jailed")
-}
-
-func encodeOracleAttestationData(
-	queryId []byte,
-	value string,
-	timestamp uint64,
-	aggregatePower uint64,
-	previousTimestamp uint64,
-	nextTimestamp uint64,
-	checkpoint []byte,
-	attestationTimestamp uint64,
-	lastConsensusTimestamp uint64,
-) ([]byte, error) {
-	// This must match keeper.EncodeOracleAttestationData exactly
-
-	// domainSeparator is bytes "tellorCurrentAttestation"
-	NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR := []byte("tellorCurrentAttestation")
-	// convert domain separator to bytes32
-	var domainSepBytes32 [32]byte
-	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR)
-
-	// convert queryId to bytes32
-	var queryIdBytes32 [32]byte
-	copy(queryIdBytes32[:], queryId)
-
-	// convert value to bytes
-	valueBytes, err := hex.DecodeString(value)
-	if err != nil {
-		return nil, err
-	}
-
-	// convert timestamps and power to big.Int
-	timestampBig := new(big.Int).SetUint64(timestamp)
-	aggregatePowerBig := new(big.Int).SetUint64(aggregatePower)
-	previousTimestampBig := new(big.Int).SetUint64(previousTimestamp)
-	nextTimestampBig := new(big.Int).SetUint64(nextTimestamp)
-	attestationTimestampBig := new(big.Int).SetUint64(attestationTimestamp)
-	lastConsensusTimestampBig := new(big.Int).SetUint64(lastConsensusTimestamp)
-
-	// convert checkpoint to bytes32
-	var checkpointBytes32 [32]byte
-	copy(checkpointBytes32[:], checkpoint)
-
-	// prepare ABI encoding types
-	bytes32Type, err := abi.NewType("bytes32", "", nil)
-	if err != nil {
-		return nil, err
-	}
-	uint256Type, err := abi.NewType("uint256", "", nil)
-	if err != nil {
-		return nil, err
-	}
-	bytesType, err := abi.NewType("bytes", "", nil)
-	if err != nil {
-		return nil, err
-	}
-
-	arguments := abi.Arguments{
-		{Type: bytes32Type}, // domain separator
-		{Type: bytes32Type}, // queryId
-		{Type: bytesType},   // value
-		{Type: uint256Type}, // timestamp
-		{Type: uint256Type}, // aggregatePower
-		{Type: uint256Type}, // previousTimestamp
-		{Type: uint256Type}, // nextTimestamp
-		{Type: bytes32Type}, // checkpoint
-		{Type: uint256Type}, // attestationTimestamp
-		{Type: uint256Type}, // lastConsensusTimestamp
-	}
-
-	encodedData, err := arguments.Pack(
-		domainSepBytes32,
-		queryIdBytes32,
-		valueBytes,
-		timestampBig,
-		aggregatePowerBig,
-		previousTimestampBig,
-		nextTimestampBig,
-		checkpointBytes32,
-		attestationTimestampBig,
-		lastConsensusTimestampBig,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return crypto.Keccak256(encodedData), nil
 }

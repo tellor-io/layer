@@ -62,6 +62,7 @@ type ReporterAccs struct {
 }
 
 // TestTenDisputesTenPeople tests opening 10 disputes simultaneously, voting and resolving all of them
+// TODO: make more efficient, takes ~13 minutes to run
 func TestTenDisputesTenPeople(t *testing.T) {
 	require := require.New(t)
 

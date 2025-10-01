@@ -23,11 +23,9 @@ func TestBatchSubmitValue(t *testing.T) {
 
 	cosmos.SetSDKConfig("tellor")
 
-	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 4, 0)
 	defer ic.Close()
 
-	// Get validators
 	validators, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
 	require.Len(validators, 4, "Expected 4 validators")

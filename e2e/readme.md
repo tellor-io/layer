@@ -75,13 +75,19 @@ func TestCustomConfiguration(t *testing.T) {
 
 	// Custom genesis modifications
 	customGenesis := []cosmos.GenesisKV{
-		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "30s"),
-		cosmos.NewGenesisKV("app_state.dispute.params.team_address", customTeamAddress),
+		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
+		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "15s"),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
+		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
 	}
 	config.ModifyGenesis = customGenesis
 	chain, ic, ctx = SetupChainWithCustomConfig(t, config)
 	defer ic.Close()
 
-	// Your test logic here...
+	// test logic here...
 }
 ```

@@ -25,7 +25,7 @@ import (
 // cd e2e
 // go test -run TestDepositReport -timeout 10m
 func TestDepositReport(t *testing.T) {
-	t.Skip("change checks and run manually")
+	t.Skip("change checks in comments and run manually")
 
 	require := require.New(t)
 
