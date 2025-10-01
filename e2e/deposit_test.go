@@ -31,15 +31,11 @@ func TestDepositReport(t *testing.T) {
 
 	cosmos.SetSDKConfig("tellor")
 
-	// Use standard configuration
 	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
 	defer ic.Close()
 
-	// Get validators using the helper
 	validators, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
-
-	// Print validator info for debugging
 	e2e.PrintValidatorInfo(ctx, validators)
 
 	// queryValidators to confirm that 2 validators are bonded

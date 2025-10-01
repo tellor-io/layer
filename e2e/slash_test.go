@@ -21,7 +21,6 @@ func TestInactivitySlash(t *testing.T) {
 
 	cosmos.SetSDKConfig("tellor")
 
-	// Use custom config with short inactivity slash period
 	config := e2e.DefaultSetupConfig()
 	config.NumValidators = 4
 	config.ModifyGenesis = []cosmos.GenesisKV{
@@ -39,17 +38,14 @@ func TestInactivitySlash(t *testing.T) {
 	chain, ic, ctx := e2e.SetupChainWithCustomConfig(t, config)
 	defer ic.Close()
 
-	// Get validators
 	validators, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
 	e2e.PrintValidatorInfo(ctx, validators)
 
-	// Access specific validators that are used in the test
 	val2 := validators[1].Node
 	val4 := validators[3].Node
 	val4valAddr := validators[3].ValAddr
 
-	// queryValidators to confirm that 4 validators are bonded
 	vals, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
 	require.NoError(err)
 	require.Equal(len(vals), 4)
@@ -61,7 +57,6 @@ func TestInactivitySlash(t *testing.T) {
 	fmt.Println("paused val4 at height: ", height)
 	require.NoError(err)
 
-	// wait 25 blocks
 	fmt.Println("waiting 25 blocks...")
 	require.NoError(testutil.WaitForBlocks(ctx, 25, val2))
 

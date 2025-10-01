@@ -21,7 +21,6 @@ func TestStartupUsingWrongKey(t *testing.T) {
 
 	cosmos.SetSDKConfig("tellor")
 
-	// Use standard configuration with custom genesis modifications
 	config := e2e.DefaultSetupConfig()
 	config.ModifyGenesis = []cosmos.GenesisKV{
 		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
@@ -36,7 +35,6 @@ func TestStartupUsingWrongKey(t *testing.T) {
 
 	chain, _, ctx := e2e.SetupChainWithCustomConfig(t, config)
 
-	// Get validators using the helper
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
 	e2e.PrintValidatorInfo(ctx, validatorsInfo)

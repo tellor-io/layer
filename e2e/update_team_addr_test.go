@@ -18,15 +18,12 @@ func TestUpdateTeamAddr(t *testing.T) {
 
 	cosmos.SetSDKConfig("tellor")
 
-	// Use standard configuration
 	chain, _, ctx := e2e.SetupChain(t, 2, 0)
 
-	// Get validators
 	validatorsInfo, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
 	e2e.PrintValidatorInfo(ctx, validatorsInfo)
 
-	// Convert to the expected format for this test
 	type Validators struct {
 		Addr    string
 		ValAddr string
