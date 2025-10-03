@@ -67,6 +67,9 @@ func main() {
 	if getEnv("API_MODE", "false") == "true" {
 		log.Println("Starting API server mode")
 		runAPIServer()
+	} else if getEnv("COMBINED_MODE", "false") == "true" {
+		log.Println("Starting in combined mode - API server + data collection")
+		runCombinedMode()
 	} else if getEnv("SCHEDULER_MODE", "false") == "true" {
 		log.Println("Starting in scheduler mode - will run daily at midnight")
 		runScheduler()
@@ -259,6 +262,69 @@ func runAPIServer() {
 	http.HandleFunc("/api/prices/range", authMiddleware(getPricesByRangeHandler(db)))
 
 	log.Printf("API server starting on port %s", config.APIPort)
+	log.Fatal(http.ListenAndServe(":"+config.APIPort, nil))
+}
+
+// runCombinedMode starts both API server and data collection
+func runCombinedMode() {
+	config := Config{
+		PrometheusURL: getEnv("PROMETHEUS_URL", "http://54.160.217.166:9090"),
+		DBHost:        getEnv("DB_HOST", "localhost"),
+		DBPort:        getEnv("DB_PORT", "5432"),
+		DBUser:        getEnv("DB_USER", "postgres"),
+		DBPassword:    getEnv("DB_PASSWORD", "password"),
+		DBName:        getEnv("DB_NAME", "pricefeed"),
+		APIPassword:   getEnv("API_PASSWORD", "admin123"),
+		APIPort:       getEnv("API_PORT", "8080"),
+	}
+
+	// Initialize database connection
+	db, err := initDB(config)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	// Create table if it doesn't exist
+	if err := createTable(db); err != nil {
+		log.Fatalf("Failed to create table: %v", err)
+	}
+
+	// Run initial data collection
+	log.Println("Running initial data collection...")
+	if err := collectAndStoreData(config, db); err != nil {
+		log.Printf("Initial data collection failed: %v", err)
+	} else {
+		log.Println("Initial data collection completed successfully")
+	}
+
+	// Setup API routes
+	http.HandleFunc("/api/health", healthHandler)
+	http.HandleFunc("/api/prices", authMiddleware(getPricesHandler(db)))
+	http.HandleFunc("/api/prices/latest", authMiddleware(getLatestPricesHandler(db)))
+	http.HandleFunc("/api/prices/market/", authMiddleware(getPricesByMarketHandler(db)))
+	http.HandleFunc("/api/prices/exchange/", authMiddleware(getPricesByExchangeHandler(db)))
+	http.HandleFunc("/api/prices/range", authMiddleware(getPricesByRangeHandler(db)))
+
+	// Start data collection in a goroutine
+	go func() {
+		ticker := time.NewTicker(24 * time.Hour) // Run daily
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-ticker.C:
+				log.Println("Running scheduled data collection...")
+				if err := collectAndStoreData(config, db); err != nil {
+					log.Printf("Scheduled data collection failed: %v", err)
+				} else {
+					log.Println("Scheduled data collection completed successfully")
+				}
+			}
+		}
+	}()
+
+	log.Printf("Combined mode: API server starting on port %s with daily data collection", config.APIPort)
 	log.Fatal(http.ListenAndServe(":"+config.APIPort, nil))
 }
 

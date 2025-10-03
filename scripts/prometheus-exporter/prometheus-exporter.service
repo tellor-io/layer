@@ -1,0 +1,31 @@
+[Unit]
+Description=Prometheus Price Data Exporter
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+Type=simple
+User=prometheus-exporter
+Group=prometheus-exporter
+WorkingDirectory=/opt/prometheus-exporter
+ExecStart=/opt/prometheus-exporter/prometheus-exporter
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# Load environment from config file
+EnvironmentFile=/opt/prometheus-exporter/config.env
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/prometheus-exporter
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target

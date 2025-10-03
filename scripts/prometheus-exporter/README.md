@@ -40,6 +40,7 @@ The application uses environment variables for configuration:
 | `DB_NAME` | `pricefeed` | Database name |
 | `SCHEDULER_MODE` | `false` | Run in daily scheduler mode |
 | `API_MODE` | `false` | Run as HTTP API server |
+| `COMBINED_MODE` | `false` | Run API server + daily data collection |
 | `API_PASSWORD` | `admin123` | Password for API authentication |
 | `API_PORT` | `8080` | Port for API server |
 
@@ -64,6 +65,18 @@ API_MODE=true go run .
 ```
 
 The API server will start on port 8080 (configurable via `API_PORT` environment variable).
+
+### Combined mode (Recommended for production)
+
+```bash
+COMBINED_MODE=true go run .
+```
+
+This mode:
+- Starts the API server immediately
+- Runs initial data collection on startup
+- Automatically collects data daily in the background
+- Provides continuous API access to your team
 
 ## API Endpoints
 
