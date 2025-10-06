@@ -332,8 +332,6 @@ func storePriceData(db *sql.DB, data *PrometheusResponse) error {
 				totalSkipped++
 				continue
 			}
-			log.Printf("Value[0]: %v", value[0])
-			log.Printf("Value[1]: %v", value[1])
 
 			// Parse timestamp from JSON
 			var timestampInt int64
@@ -347,6 +345,7 @@ func storePriceData(db *sql.DB, data *PrometheusResponse) error {
 				}
 				timestampInt = int64(timestampFloat)
 			}
+			log.Printf("Timestamp: %v", timestampInt)
 			timestamp := time.Unix(timestampInt, 0)
 
 			// Parse price from JSON
@@ -367,6 +366,7 @@ func storePriceData(db *sql.DB, data *PrometheusResponse) error {
 					continue
 				}
 			}
+			log.Printf("Price: %v", price)
 
 			// Insert into database
 			_, err = stmt.Exec(timestamp, marketID, exchangeID, price)
