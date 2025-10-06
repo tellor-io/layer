@@ -318,6 +318,8 @@ func storePriceData(db *sql.DB, data *PrometheusResponse) error {
 				totalSkipped++
 				continue
 			}
+			log.Printf("Value[0]: %v", value[0])
+			log.Printf("Value[1]: %v", value[1])
 
 			// Parse timestamp (Unix timestamp)
 			timestampInt, ok := value[0].(int64)
