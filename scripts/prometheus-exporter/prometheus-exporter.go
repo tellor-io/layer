@@ -29,7 +29,7 @@ type PrometheusResponse struct {
 				Job        string `json:"job"`
 				MarketID   string `json:"market_id"`
 			} `json:"metric"`
-			Values [][]interface{} `json:"values"`
+			Values [][]json.RawMessage `json:"values"`
 		} `json:"result"`
 	} `json:"data"`
 }
@@ -201,15 +201,12 @@ func runScheduler() {
 	defer ticker.Stop()
 
 	log.Println("Scheduler started - will run daily at midnight")
-	for {
-		select {
-		case <-ticker.C:
-			log.Println("Running scheduled data collection...")
-			if err := collectAndStoreData(config, db); err != nil {
-				log.Printf("Scheduled data collection failed: %v", err)
-			} else {
-				log.Println("Scheduled data collection completed successfully")
-			}
+	for range ticker.C {
+		log.Println("Running scheduled data collection...")
+		if err := collectAndStoreData(config, db); err != nil {
+			log.Printf("Scheduled data collection failed: %v", err)
+		} else {
+			log.Println("Scheduled data collection completed successfully")
 		}
 	}
 }
@@ -278,9 +275,26 @@ func queryPrometheus(url string, start, end time.Time) (*PrometheusResponse, err
 		for j, value := range result.Values {
 			if j < 3 { // Only log first 3 values to avoid spam
 				if len(value) == 2 {
-					timestamp, _ := value[0].(int64)
-					price, _ := value[1].(string)
-					log.Printf("  Value %d: timestamp=%d (%s), price=%s", j+1, timestamp, time.Unix(timestamp, 0).Format("2006-01-02 15:04:05"), price)
+					// Parse timestamp from JSON
+					var timestampInt int64
+					if err := json.Unmarshal(value[0], &timestampInt); err != nil {
+						// Try as float64 if int64 fails
+						var timestampFloat float64
+						if err := json.Unmarshal(value[0], &timestampFloat); err != nil {
+							log.Printf("  Value %d: Failed to parse timestamp: %s", j+1, string(value[0]))
+							continue
+						}
+						timestampInt = int64(timestampFloat)
+					}
+
+					// Parse price from JSON
+					var priceStr string
+					if err := json.Unmarshal(value[1], &priceStr); err != nil {
+						log.Printf("  Value %d: Failed to parse price: %s", j+1, string(value[1]))
+						continue
+					}
+
+					log.Printf("  Value %d: timestamp=%d (%s), price=%s", j+1, timestampInt, time.Unix(timestampInt, 0).Format("2006-01-02 15:04:05"), priceStr)
 				}
 			}
 		}
@@ -321,27 +335,37 @@ func storePriceData(db *sql.DB, data *PrometheusResponse) error {
 			log.Printf("Value[0]: %v", value[0])
 			log.Printf("Value[1]: %v", value[1])
 
-			// Parse timestamp (Unix timestamp)
-			timestampInt, ok := value[0].(int64)
-			if !ok {
-				log.Printf("Failed to parse timestamp: %v", value[0])
-				totalSkipped++
-				continue
+			// Parse timestamp from JSON
+			var timestampInt int64
+			if err := json.Unmarshal(value[0], &timestampInt); err != nil {
+				// Try as float64 if int64 fails
+				var timestampFloat float64
+				if err := json.Unmarshal(value[0], &timestampFloat); err != nil {
+					log.Printf("Failed to parse timestamp: %s, error: %v", string(value[0]), err)
+					totalSkipped++
+					continue
+				}
+				timestampInt = int64(timestampFloat)
 			}
 			timestamp := time.Unix(timestampInt, 0)
 
-			// Parse price
-			priceStr, ok := value[1].(string)
-			if !ok {
-				log.Printf("Failed to parse price string: %v", value[1])
-				totalSkipped++
-				continue
-			}
-			price, err := strconv.ParseFloat(priceStr, 64)
-			if err != nil {
-				log.Printf("Failed to parse price %s: %v", priceStr, err)
-				totalSkipped++
-				continue
+			// Parse price from JSON
+			var price float64
+			if err := json.Unmarshal(value[1], &price); err != nil {
+				// Try as string if float64 fails
+				var priceStr string
+				if err := json.Unmarshal(value[1], &priceStr); err != nil {
+					log.Printf("Failed to parse price: %s, error: %v", string(value[1]), err)
+					totalSkipped++
+					continue
+				}
+				var err2 error
+				price, err2 = strconv.ParseFloat(priceStr, 64)
+				if err2 != nil {
+					log.Printf("Failed to parse price string %s: %v", priceStr, err2)
+					totalSkipped++
+					continue
+				}
 			}
 
 			// Insert into database
@@ -443,15 +467,12 @@ func runCombinedMode() {
 		ticker := time.NewTicker(24 * time.Hour) // Run daily
 		defer ticker.Stop()
 
-		for {
-			select {
-			case <-ticker.C:
-				log.Println("Running scheduled data collection...")
-				if err := collectAndStoreData(config, db); err != nil {
-					log.Printf("Scheduled data collection failed: %v", err)
-				} else {
-					log.Println("Scheduled data collection completed successfully")
-				}
+		for range ticker.C {
+			log.Println("Running scheduled data collection...")
+			if err := collectAndStoreData(config, db); err != nil {
+				log.Printf("Scheduled data collection failed: %v", err)
+			} else {
+				log.Println("Scheduled data collection completed successfully")
 			}
 		}
 	}()
