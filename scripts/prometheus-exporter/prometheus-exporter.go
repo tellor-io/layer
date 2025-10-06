@@ -90,6 +90,9 @@ func initDB(config Config) (*sql.DB, error) {
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		config.DBHost, config.DBPort, config.DBUser, config.DBPassword, config.DBName)
 
+	log.Printf("Connecting to database: host=%s port=%s user=%s dbname=%s",
+		config.DBHost, config.DBPort, config.DBUser, config.DBName)
+
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, err
@@ -99,6 +102,7 @@ func initDB(config Config) (*sql.DB, error) {
 		return nil, err
 	}
 
+	log.Println("Database connection successful")
 	return db, nil
 }
 
@@ -118,8 +122,96 @@ func createTable(db *sql.DB) error {
 	CREATE INDEX IF NOT EXISTS idx_price_data_exchange_id ON price_data(exchange_id);
 	`
 
+	log.Println("Creating table and indexes...")
 	_, err := db.Exec(query)
-	return err
+	if err != nil {
+		return err
+	}
+	log.Println("Table and indexes created successfully")
+	return nil
+}
+
+// runDataCollection runs a one-time data collection
+func runDataCollection() {
+	config := Config{
+		PrometheusURL: getEnv("PROMETHEUS_URL", "http://54.160.217.166:9090"),
+		DBHost:        getEnv("DB_HOST", "localhost"),
+		DBPort:        getEnv("DB_PORT", "5432"),
+		DBUser:        getEnv("DB_USER", "postgres"),
+		DBPassword:    getEnv("DB_PASSWORD", "password"),
+		DBName:        getEnv("DB_NAME", "pricefeed"),
+	}
+
+	log.Printf("Configuration: PrometheusURL=%s, DBHost=%s, DBPort=%s, DBUser=%s, DBName=%s",
+		config.PrometheusURL, config.DBHost, config.DBPort, config.DBUser, config.DBName)
+
+	// Initialize database connection
+	db, err := initDB(config)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	// Create table if it doesn't exist
+	if err := createTable(db); err != nil {
+		log.Fatalf("Failed to create table: %v", err)
+	}
+
+	// Run data collection
+	log.Println("Starting data collection...")
+	if err := collectAndStoreData(config, db); err != nil {
+		log.Fatalf("Data collection failed: %v", err)
+	}
+	log.Println("Data collection completed successfully")
+}
+
+// runScheduler runs the data collection on a schedule
+func runScheduler() {
+	config := Config{
+		PrometheusURL: getEnv("PROMETHEUS_URL", "http://54.160.217.166:9090"),
+		DBHost:        getEnv("DB_HOST", "localhost"),
+		DBPort:        getEnv("DB_PORT", "5432"),
+		DBUser:        getEnv("DB_USER", "postgres"),
+		DBPassword:    getEnv("DB_PASSWORD", "password"),
+		DBName:        getEnv("DB_NAME", "pricefeed"),
+	}
+
+	// Initialize database connection
+	db, err := initDB(config)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Close()
+
+	// Create table if it doesn't exist
+	if err := createTable(db); err != nil {
+		log.Fatalf("Failed to create table: %v", err)
+	}
+
+	// Run initial data collection
+	log.Println("Running initial data collection...")
+	if err := collectAndStoreData(config, db); err != nil {
+		log.Printf("Initial data collection failed: %v", err)
+	} else {
+		log.Println("Initial data collection completed successfully")
+	}
+
+	// Start scheduler
+	ticker := time.NewTicker(24 * time.Hour) // Run daily
+	defer ticker.Stop()
+
+	log.Println("Scheduler started - will run daily at midnight")
+	for {
+		select {
+		case <-ticker.C:
+			log.Println("Running scheduled data collection...")
+			if err := collectAndStoreData(config, db); err != nil {
+				log.Printf("Scheduled data collection failed: %v", err)
+			} else {
+				log.Println("Scheduled data collection completed successfully")
+			}
+		}
+	}
 }
 
 func collectAndStoreData(config Config, db *sql.DB) error {
@@ -128,6 +220,8 @@ func collectAndStoreData(config Config, db *sql.DB) error {
 	yesterday := now.AddDate(0, 0, -1)
 	start := time.Date(yesterday.Year(), yesterday.Month(), yesterday.Day(), 0, 0, 0, 0, time.UTC)
 	end := start.Add(24 * time.Hour)
+
+	log.Printf("Collecting data for date range: %s to %s", start.Format("2006-01-02 15:04:05"), end.Format("2006-01-02 15:04:05"))
 
 	// Query Prometheus API
 	data, err := queryPrometheus(config.PrometheusURL, start, end)
@@ -172,10 +266,32 @@ func queryPrometheus(url string, start, end time.Time) (*PrometheusResponse, err
 		return nil, err
 	}
 
+	log.Printf("Prometheus API response status: %s", prometheusResp.Status)
+	log.Printf("Number of result series: %d", len(prometheusResp.Data.Result))
+
+	// Log detailed information about the response
+	for i, result := range prometheusResp.Data.Result {
+		log.Printf("Result %d: MarketID=%s, ExchangeID=%s, ChainID=%s, Job=%s, Values count=%d",
+			i+1, result.Metric.MarketID, result.Metric.ExchangeID, result.Metric.ChainID, result.Metric.Job, len(result.Values))
+
+		// Log first few values for debugging
+		for j, value := range result.Values {
+			if j < 3 { // Only log first 3 values to avoid spam
+				if len(value) == 2 {
+					timestamp, _ := value[0].(int64)
+					price, _ := value[1].(string)
+					log.Printf("  Value %d: timestamp=%d (%s), price=%s", j+1, timestamp, time.Unix(timestamp, 0).Format("2006-01-02 15:04:05"), price)
+				}
+			}
+		}
+	}
+
 	return &prometheusResp, nil
 }
 
 func storePriceData(db *sql.DB, data *PrometheusResponse) error {
+	log.Printf("Starting to store price data...")
+
 	// Prepare insert statement
 	stmt, err := db.Prepare(`
 		INSERT INTO price_data (timestamp, market_id, exchange_id, price) 
@@ -186,20 +302,28 @@ func storePriceData(db *sql.DB, data *PrometheusResponse) error {
 	}
 	defer stmt.Close()
 
+	totalInserted := 0
+	totalSkipped := 0
+
 	// Process each result
 	for _, result := range data.Data.Result {
 		marketID := result.Metric.MarketID
 		exchangeID := result.Metric.ExchangeID
 
+		log.Printf("Processing series: MarketID=%s, ExchangeID=%s, Values=%d", marketID, exchangeID, len(result.Values))
+
 		// Process each value in the time series
 		for _, value := range result.Values {
 			if len(value) != 2 {
+				totalSkipped++
 				continue
 			}
 
 			// Parse timestamp (Unix timestamp)
 			timestampInt, ok := value[0].(int64)
 			if !ok {
+				log.Printf("Failed to parse timestamp: %v", value[0])
+				totalSkipped++
 				continue
 			}
 			timestamp := time.Unix(timestampInt, 0)
@@ -207,24 +331,30 @@ func storePriceData(db *sql.DB, data *PrometheusResponse) error {
 			// Parse price
 			priceStr, ok := value[1].(string)
 			if !ok {
+				log.Printf("Failed to parse price string: %v", value[1])
+				totalSkipped++
 				continue
 			}
 			price, err := strconv.ParseFloat(priceStr, 64)
 			if err != nil {
 				log.Printf("Failed to parse price %s: %v", priceStr, err)
+				totalSkipped++
 				continue
 			}
 
 			// Insert into database
 			_, err = stmt.Exec(timestamp, marketID, exchangeID, price)
 			if err != nil {
-				log.Printf("Failed to insert data: %v", err)
+				log.Printf("Failed to insert data: timestamp=%s, market=%s, exchange=%s, price=%f, error=%v",
+					timestamp.Format("2006-01-02 15:04:05"), marketID, exchangeID, price, err)
+				totalSkipped++
 				continue
 			}
+			totalInserted++
 		}
 	}
 
-	log.Printf("Successfully stored price data")
+	log.Printf("Data storage completed: %d records inserted, %d records skipped", totalInserted, totalSkipped)
 	return nil
 }
 
