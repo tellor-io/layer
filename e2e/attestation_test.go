@@ -22,7 +22,6 @@ func TestConsensusAttestation(t *testing.T) {
 
 	cosmos.SetSDKConfig("tellor")
 
-	// Use custom config with 5 block reporting window for spot prices
 	modifyGenesis := []cosmos.GenesisKV{
 		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
 		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
@@ -31,7 +30,6 @@ func TestConsensusAttestation(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
-		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
 	}
 	config := e2e.DefaultSetupConfig()
 	config.ModifyGenesis = modifyGenesis
@@ -74,24 +72,23 @@ func TestConsensusAttestation(t *testing.T) {
 	require.Contains(reportersRes.Reporters[1].Metadata.Moniker, "reporter_moniker")
 	require.NotEqual(reportersRes.Reporters[0].Metadata.Moniker, reportersRes.Reporters[1].Metadata.Moniker)
 
-	// validator reporters report for the cycle list
 	currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
 	require.NoError(err)
 	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
 	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
 	require.NoError(err)
 	fmt.Println("current cycle list: ", currentCycleList)
+
+	// validators' reporters report for the cycle list
 	for i, v := range validators {
-		// report for the cycle list
-		txHash, err := v.Node.ExecTx(ctx, "validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", v.Node.HomeDir())
+		// Report for the cycle list
+		txHash, err := e2e.SubmitCycleList(ctx, v.Node, v.AccAddr, value, "5loya")
 		require.NoError(err)
-		height, err := chain.Height(ctx)
-		require.NoError(err)
-		fmt.Println("validator [", i, "] reported at height ", height, " txHash:", txHash)
+		fmt.Println("validator [", i, "] reported at tx:", txHash)
 	}
 
-	// wait 6 blocks (5 block reporting window), wait 6 to be safe
-	err = testutil.WaitForBlocks(ctx, 6, validators[0].Node)
+	// wait 2 blocks for aggregation
+	err = testutil.WaitForBlocks(ctx, 2, validators[0].Node)
 	require.NoError(err)
 
 	// check on reports
@@ -159,7 +156,6 @@ func TestConsensusAttestation(t *testing.T) {
 
 	// sleep until cycle list query data is the same as the previous report
 	var success bool
-	var cycleListQData string
 	for !success {
 		cycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
 		require.NoError(err)
@@ -168,20 +164,16 @@ func TestConsensusAttestation(t *testing.T) {
 		require.NoError(err)
 		if cycleList.QueryData == currentCycleList.QueryData {
 			success = true
-			cycleListQData = cycleList.QueryData
+			// Report for the cycle list from 1 val so not a consensus report
+			txHash, err := e2e.SubmitCycleList(ctx, validators[0].Node, validators[0].AccAddr, value, "5loya")
+			require.NoError(err)
+			fmt.Println("validator [", 0, "] reported at tx:", txHash)
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 	}
 
-	// report for the cycle list from 1 val so not a consensus report
-	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", cycleListQData, value, "--fees", "5loya", "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
-	require.NoError(err)
-	height, err := chain.Height(ctx)
-	require.NoError(err)
-	fmt.Println("validator [0] reported at height ", height)
-
-	// wait 6 blocks (5 block reporting window), wait 6 to be safe
-	err = testutil.WaitForBlocks(ctx, 6, validators[0].Node)
+	// wait 3 blocks for aggregation
+	err = testutil.WaitForBlocks(ctx, 3, validators[0].Node)
 	require.NoError(err)
 
 	// get reports by reporter

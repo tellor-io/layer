@@ -141,10 +141,13 @@ echo "Start chain..."
 # echo "password" |./layerd start --home $LAYERD_NODE_HOME_1 --api.enable --api.swagger --keyring-backend $KEYRING_BACKEND --key-name $KEY_NAME
 ./layerd start --home $LAYERD_NODE_HOME_1 --api.enable --api.swagger --keyring-backend $KEYRING_BACKEND --key-name $KEY_NAME
 
+# ./layerd start --home ~/.layer/alice --api.enable --api.swagger --keyring-backend test --key-name alice
 
 # Make alice a reporter
 # ./layerd tx reporter create-reporter 0.1 1000000 alice --from alice --keyring-backend test --chain-id layertest-4 --home ~/.layer/alice --keyring-dir ~/.layer/alice --fees 500loya --yes
-# 
+# Bad Report
+# ./layerd tx oracle submit-value 00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000 000000000000000000000000000000000000000000000084bd26b6c2dd7c0000 --from alice --keyring-backend test --chain-id layertest-4 --home ~/.layer/alice --keyring-dir ~/.layer/alice --fees 500loya --yes
+
 # ----- Multisig 
 # 1. Create a transaction (unsigned):
 # ./layerd tx bank send team <recipient> 1000000loya --generate-only --from alice --keyring-backend test --chain-id layertest-4 --home ~/.layer/alice > tx.json

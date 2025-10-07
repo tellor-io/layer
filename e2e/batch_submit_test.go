@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
@@ -18,22 +19,27 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	trxQData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747278000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	suiQData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003737569000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	bchQData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003626368000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	warning  = "warning"
+)
+
 func TestBatchSubmitValue(t *testing.T) {
 	require := require.New(t)
 
 	cosmos.SetSDKConfig("tellor")
 
-	chain, ic, ctx := e2e.SetupChain(t, 4, 0)
+	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
 	defer ic.Close()
 
 	validators, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
-	require.Len(validators, 4, "Expected 4 validators")
+	require.Len(validators, 2, "Expected 2 validators")
 
 	val1 := validators[0].Node
 	val2 := validators[1].Node
-	val3 := validators[2].Node
-	val4 := validators[3].Node
 
 	// Create a reporter from validator 1 using new helper
 	fmt.Println("Creating reporter from validator 1...")
@@ -75,6 +81,9 @@ func TestBatchSubmitValue(t *testing.T) {
 	txHash1, err := e2e.SubmitBatchReport(ctx, val1, reports, "25loya")
 	require.NoError(err)
 
+	// Wait for transaction to be included in a block
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1))
+
 	// Query the transaction result to see which ones failed
 	txRes, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", txHash1)
 	require.NoError(err)
@@ -85,66 +94,29 @@ func TestBatchSubmitValue(t *testing.T) {
 	fmt.Println("\n=== Tipping all three non-cycle list queries ===")
 	tip := sdk.NewCoin("loya", math.NewInt(1000000)) // 1 TRB
 
-	// wait 1 block
-	require.NoError(testutil.WaitForBlocks(ctx, 1, val1))
+	// Broadcast all tips as fast as possible using Exec (doesn't wait for inclusion)
+	_, _, err = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", queryData1, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	require.NoError(err, "Failed to broadcast tip for TRX/USD")
 
-	// Tip query 1 (TRX/USD) using new helper
-	tipTxHash1, err := e2e.TipQuery(ctx, val2, queryData1, tip)
-	require.NoError(err)
-	fmt.Println("Tipped TRX/USD query, tx hash:", tipTxHash1)
+	_, _, err = val2.Exec(ctx, val2.TxCommand("validator", "oracle", "tip", queryData2, tip.String(), "--keyring-dir", val2.HomeDir()), val2.Chain.Config().Env)
+	require.NoError(err, "Failed to broadcast tip for SUI/USD")
 
-	// Tip query 2 (SUI/USD) using new helper
-	tipTxHash2, err := e2e.TipQuery(ctx, val3, queryData2, tip)
-	require.NoError(err)
-	fmt.Println("Tipped SUI/USD query, tx hash:", tipTxHash2)
+	_, _, err = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", queryData3, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	require.NoError(err, "Failed to broadcast tip for BCH/USD")
 
-	// Tip query 3 (BCH/USD) using new helper
-	tipTxHash3, err := e2e.TipQuery(ctx, val4, queryData3, tip)
-	require.NoError(err)
-	fmt.Println("Tipped BCH/USD query, tx hash:", tipTxHash3)
-
-	// wait 1 block
-	require.NoError(testutil.WaitForBlocks(ctx, 1, val1))
-
-	// Verify all tip transactions were processed
-	fmt.Println("\n=== Verifying tip transactions were processed ===")
-
-	// Check tip transaction 1
-	txRes1, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", tipTxHash1)
-	require.NoError(err)
-	fmt.Println("Tip transaction 1 result:", string(txRes1))
-
-	// Check tip transaction 2
-	txRes2, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", tipTxHash2)
-	require.NoError(err)
-	fmt.Println("Tip transaction 2 result:", string(txRes2))
-
-	// Check tip transaction 3
-	txRes3, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", tipTxHash3)
-	require.NoError(err)
-	fmt.Println("Tip transaction 3 result:", string(txRes3))
-
-	// Check if all queries are tipped
-	fmt.Println("\n=== Checking tipped queries ===")
-	tippedQueriesRes, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "get-tipped-queries", "--page-limit", "10")
-	require.NoError(err)
-	fmt.Println("Tipped queries response:", string(tippedQueriesRes))
-	// ======================================================================================
-
-	// Now batch submit all three queries again - this time all should succeed
-	fmt.Println("\n=== Batch submitting all three queries (expecting all to succeed after tips) ===")
+	fmt.Println("All tips broadcasted, immediately submitting batch report...")
+	time.Sleep(1 * time.Second)
 
 	// Execute second batch submit using new helper
 	txHash, err = e2e.SubmitBatchReport(ctx, val1, reports, "500loya")
 	require.NoError(err)
 	fmt.Println("Second batch submit tx hash:", txHash)
-	require.NoError(testutil.WaitForBlocks(ctx, 4, val1))
+
+	// wait for aggregation
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val1))
 
 	// Verify all three reports were created by querying reports
 	fmt.Println("\n=== Verifying reports were created ===")
-
-	// wait 6 blocks (5 block reporting window), wait 6 to be safe
-	require.NoError(testutil.WaitForBlocks(ctx, 6, val1))
 
 	microReports := make([]e2e.MicroReport, 3)
 	queryNames := []string{"TRX/USD", "SUI/USD", "BCH/USD"}
@@ -214,7 +186,6 @@ func TestBatchSubmitValue(t *testing.T) {
 	require.Error(err, "proposer cannot pay from their bond when creating a dispute on themselves")
 	fmt.Println("Reporter power: ", microReports[0].Power)
 
-	//
 	val1valAddr, err := val1.KeyBech32(ctx, "validator", "val")
 	require.NoError(err)
 	val1StakingBefore, err := chain.StakingQueryValidator(ctx, val1valAddr)

@@ -36,7 +36,6 @@ func TestAttestationSlashing(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
-		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
 	}
 
 	config := e2e.DefaultSetupConfig()
@@ -171,16 +170,10 @@ func TestAttestationSlashing(t *testing.T) {
 
 	for i, v := range validators {
 		// Report for the cycle list
-		txHash, _, err := v.Node.Exec(ctx, v.Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", v.Node.HomeDir()), v.Node.Chain.Config().Env)
+		txHash, err := e2e.SubmitCycleListSafe(ctx, v.Node, v.AccAddr, value, "5loya")
 		require.NoError(err)
-		height, err := chain.Height(ctx)
-		require.NoError(err)
-		fmt.Println("validator [", i, "] reported at height ", height, "tx:", txHash)
+		fmt.Println("validator [", i, "] reported at tx:", txHash)
 	}
-
-	// Wait for query to expire and be included in consensus
-	err = testutil.WaitForBlocks(ctx, 3, validators[0].Node)
-	require.NoError(err)
 
 	queryId := "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
 	timestamp := uint64(time.Now().UnixMilli())

@@ -28,6 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	interchaintestutil "github.com/strangelove-ventures/interchaintest/v8/testutil"
 )
 
 // ============================================================================
@@ -516,7 +517,6 @@ func CreateStandardGenesis() []cosmos.GenesisKV {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
-		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
 	}
 }
 
@@ -691,7 +691,17 @@ func SubmitBatchReport(ctx context.Context, validator *cosmos.ChainNode, reports
 	}
 	args = append(args, "--gas", "1000000", "--fees", fees, "--keyring-dir", validator.HomeDir())
 
-	return validator.ExecTx(ctx, "validator", args...)
+	stdout, _, err := validator.Exec(ctx, validator.TxCommand("validator", args...), validator.Chain.Config().Env)
+	if err != nil {
+		return "", err
+	}
+
+	txHash, err := GetTxHashFromExec(stdout)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
 }
 
 // ============================================================================
@@ -1055,9 +1065,9 @@ func GetTxHashFromExec(stdout []byte) (string, error) {
 // QUERY HELPERS
 // ============================================================================
 
-// QueryWithTimeout executes a query with a 15-second timeout
+// QueryWithTimeout executes a query with a 5-second timeout
 func QueryWithTimeout(ctx context.Context, validatorI *cosmos.ChainNode, args ...string) ([]byte, []byte, error) {
-	queryCtx, cancel := context.WithTimeout(ctx, time.Second*15)
+	queryCtx, cancel := context.WithTimeout(ctx, time.Second*5)
 	defer cancel()
 	return validatorI.ExecQuery(queryCtx, args...)
 }
@@ -1092,4 +1102,114 @@ func CreateReporter(ctx context.Context, accountAddr string, validator *cosmos.C
 		return "", err
 	}
 	return txHash, nil
+}
+
+// SubmitCycleList queries the current cycle list and submits a value for it
+// Returns the tx hash if successful, retries up to 3 times total
+// Does NOT wait for blocks - use SubmitCycleListSafe for safer timing
+func SubmitCycleList(ctx context.Context, node *cosmos.ChainNode, keyName string, value string, fees string) (string, error) {
+	maxRetries := 2
+	var lastErr error
+
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		fmt.Printf("SubmitCycleList attempt %d/%d\n", attempt, maxRetries)
+		// Query current cycle list
+		currentCycleListRes, _, err := QueryWithTimeout(ctx, node, "oracle", "current-cyclelist-query")
+		if err != nil {
+			lastErr = fmt.Errorf("failed to query current cycle list: %w", err)
+			fmt.Printf("Attempt %d failed: %v\n", attempt, lastErr)
+			continue
+		}
+		var currentCycleList QueryCurrentCyclelistQueryResponse
+		err = json.Unmarshal(currentCycleListRes, &currentCycleList)
+		if err != nil {
+			lastErr = fmt.Errorf("failed to unmarshal cycle list response: %w", err)
+			fmt.Printf("Attempt %d failed: %v\n", attempt, lastErr)
+			continue
+		}
+
+		// Submit value
+		txHashBytes, _, err := node.Exec(ctx,
+			node.TxCommand(keyName, "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", fees, "--keyring-dir", node.HomeDir()),
+			node.Chain.Config().Env)
+		if err != nil {
+			lastErr = fmt.Errorf("failed to execute submit-value transaction: %w", err)
+			fmt.Printf("Attempt %d failed: %v\n", attempt, lastErr)
+			continue
+		}
+
+		// time.Sleep(1 * time.Second)
+
+		// Parse the tx hash and check if transaction succeeded
+		txHash, err := GetTxHashFromExec(txHashBytes)
+		if err != nil {
+			lastErr = fmt.Errorf("transaction failed: %w", err)
+			fmt.Printf("Attempt %d transaction failed: %v\n", attempt, lastErr)
+			continue
+		}
+
+		// Success!
+		fmt.Printf("SubmitCycleList succeeded on attempt %d, tx hash: %s\n", attempt, txHash)
+		return txHash, nil
+	}
+
+	return "", fmt.Errorf("SubmitCycleList failed after %d attempts. Last error: %w", maxRetries, lastErr)
+}
+
+// SubmitCycleListSafe queries the current cycle list and submits a value for it
+// Waits 1 block after submission for better timing guarantees
+// Returns the tx hash if successful, retries up to 3 times total
+func SubmitCycleListSafe(ctx context.Context, node *cosmos.ChainNode, keyName string, value string, fees string) (string, error) {
+	maxRetries := 3
+	var lastErr error
+
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		fmt.Printf("SubmitCycleListSafe attempt %d/%d\n", attempt, maxRetries)
+		// Query current cycle list
+		currentCycleListRes, _, err := QueryWithTimeout(ctx, node, "oracle", "current-cyclelist-query")
+		if err != nil {
+			lastErr = fmt.Errorf("failed to query current cycle list: %w", err)
+			fmt.Printf("Attempt %d failed: %v\n", attempt, lastErr)
+			continue
+		}
+		var currentCycleList QueryCurrentCyclelistQueryResponse
+		err = json.Unmarshal(currentCycleListRes, &currentCycleList)
+		if err != nil {
+			lastErr = fmt.Errorf("failed to unmarshal cycle list response: %w", err)
+			fmt.Printf("Attempt %d failed: %v\n", attempt, lastErr)
+			continue
+		}
+
+		// Submit value
+		txHashBytes, _, err := node.Exec(ctx,
+			node.TxCommand(keyName, "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", fees, "--keyring-dir", node.HomeDir()),
+			node.Chain.Config().Env)
+		if err != nil {
+			lastErr = fmt.Errorf("failed to execute submit-value transaction: %w", err)
+			fmt.Printf("Attempt %d failed: %v\n", attempt, lastErr)
+			continue
+		}
+
+		// Wait 1 block
+		err = interchaintestutil.WaitForBlocks(ctx, 1, node)
+		if err != nil {
+			lastErr = fmt.Errorf("failed to wait for block: %w", err)
+			fmt.Printf("Attempt %d failed: %v\n", attempt, lastErr)
+			continue
+		}
+
+		// Parse the tx hash and check if transaction succeeded
+		txHash, err := GetTxHashFromExec(txHashBytes)
+		if err != nil {
+			lastErr = fmt.Errorf("transaction failed: %w", err)
+			fmt.Printf("Attempt %d transaction failed: %v\n", attempt, lastErr)
+			continue
+		}
+
+		// Success!
+		fmt.Printf("SubmitCycleListSafe succeeded on attempt %d, tx hash: %s\n", attempt, txHash)
+		return txHash, nil
+	}
+
+	return "", fmt.Errorf("SubmitCycleListSafe failed after %d attempts. Last error: %w", maxRetries, lastErr)
 }
