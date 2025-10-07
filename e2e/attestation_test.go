@@ -80,15 +80,24 @@ func TestConsensusAttestation(t *testing.T) {
 	fmt.Println("current cycle list: ", currentCycleList)
 
 	// validators' reporters report for the cycle list
-	for i, v := range validators {
-		// Report for the cycle list
-		txHash, err := e2e.SubmitCycleList(ctx, v.Node, v.AccAddr, value, "5loya")
-		require.NoError(err)
-		fmt.Println("validator [", i, "] reported at tx:", txHash)
-	}
+	var txHash1, txHash2 string
+	var err1, err2 error
 
-	// wait 2 blocks for aggregation
-	err = testutil.WaitForBlocks(ctx, 2, validators[0].Node)
+	txHash1, err1 = e2e.SubmitCycleList(ctx, validators[0].Node, validators[0].AccAddr, value, "5loya")
+	txHash2, err2 = e2e.SubmitCycleList(ctx, validators[1].Node, validators[1].AccAddr, value, "5loya")
+
+	require.NoError(err1, "validator[0] report failed")
+	require.NoError(err2, "validator[1] report failed")
+
+	fmt.Println("validator [ 0 ] reported at tx:", txHash1)
+	fmt.Println("validator [ 1 ] reported at tx:", txHash2)
+
+	// Wait 1 block for both reports to be included
+	err = testutil.WaitForBlocks(ctx, 1, validators[0].Node)
+	require.NoError(err)
+
+	// Wait 1 more block for aggregation
+	err = testutil.WaitForBlocks(ctx, 1, validators[0].Node)
 	require.NoError(err)
 
 	// check on reports
@@ -167,13 +176,18 @@ func TestConsensusAttestation(t *testing.T) {
 			// Report for the cycle list from 1 val so not a consensus report
 			txHash, err := e2e.SubmitCycleList(ctx, validators[0].Node, validators[0].AccAddr, value, "5loya")
 			require.NoError(err)
-			fmt.Println("validator [", 0, "] reported at tx:", txHash)
+			fmt.Println("validator [ 0 ] reported at tx:", txHash)
+
+			// Wait 1 block for report to be included, then 1 for aggregation
+			err = testutil.WaitForBlocks(ctx, 2, validators[0].Node)
+			require.NoError(err)
+		} else {
+			time.Sleep(500 * time.Millisecond)
 		}
-		time.Sleep(500 * time.Millisecond)
 	}
 
-	// wait 3 blocks for aggregation
-	err = testutil.WaitForBlocks(ctx, 3, validators[0].Node)
+	// wait 1 more block
+	err = testutil.WaitForBlocks(ctx, 1, validators[0].Node)
 	require.NoError(err)
 
 	// get reports by reporter

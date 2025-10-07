@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
@@ -31,15 +30,16 @@ func TestBatchSubmitValue(t *testing.T) {
 
 	cosmos.SetSDKConfig("tellor")
 
-	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	chain, ic, ctx := e2e.SetupChain(t, 3, 0) // Use 3 validators
 	defer ic.Close()
 
 	validators, err := e2e.GetValidators(ctx, chain)
 	require.NoError(err)
-	require.Len(validators, 2, "Expected 2 validators")
+	require.Len(validators, 3, "Expected 3 validators")
 
 	val1 := validators[0].Node
 	val2 := validators[1].Node
+	val3 := validators[2].Node
 
 	// Create a reporter from validator 1 using new helper
 	fmt.Println("Creating reporter from validator 1...")
@@ -94,20 +94,24 @@ func TestBatchSubmitValue(t *testing.T) {
 	fmt.Println("\n=== Tipping all three non-cycle list queries ===")
 	tip := sdk.NewCoin("loya", math.NewInt(1000000)) // 1 TRB
 
-	// Broadcast all tips as fast as possible using Exec (doesn't wait for inclusion)
-	_, _, err = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", queryData1, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
-	require.NoError(err, "Failed to broadcast tip for TRX/USD")
+	// Use 3 different validators to tip in parallel
+	var err1, err2, err3 error
 
-	_, _, err = val2.Exec(ctx, val2.TxCommand("validator", "oracle", "tip", queryData2, tip.String(), "--keyring-dir", val2.HomeDir()), val2.Chain.Config().Env)
-	require.NoError(err, "Failed to broadcast tip for SUI/USD")
+	_, _, err1 = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", queryData1, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	_, _, err2 = val2.Exec(ctx, val2.TxCommand("validator", "oracle", "tip", queryData2, tip.String(), "--keyring-dir", val2.HomeDir()), val2.Chain.Config().Env)
+	_, _, err3 = val3.Exec(ctx, val3.TxCommand("validator", "oracle", "tip", queryData3, tip.String(), "--keyring-dir", val3.HomeDir()), val3.Chain.Config().Env)
 
-	_, _, err = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", queryData3, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
-	require.NoError(err, "Failed to broadcast tip for BCH/USD")
+	require.NoError(err1, "Val1 failed to tip TRX/USD")
+	require.NoError(err2, "Val2 failed to tip SUI/USD")
+	require.NoError(err3, "Val3 failed to tip BCH/USD")
 
-	fmt.Println("All tips broadcasted, immediately submitting batch report...")
-	time.Sleep(1 * time.Second)
+	fmt.Println("All 3 tips broadcasted from different accounts")
 
-	// Execute second batch submit using new helper
+	// Wait 1 block for tips to be included
+	// Tips in block N, expiration = N + 2, can submit in blocks N and N+1
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1))
+
+	// Execute second batch submit - val1 is the reporter
 	txHash, err = e2e.SubmitBatchReport(ctx, val1, reports, "500loya")
 	require.NoError(err)
 	fmt.Println("Second batch submit tx hash:", txHash)
