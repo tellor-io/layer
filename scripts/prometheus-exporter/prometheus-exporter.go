@@ -93,6 +93,9 @@ func main() {
 	} else if getEnv("COMBINED_MODE", "false") == "true" {
 		log.Println("Starting in combined mode - API server + data collection")
 		runCombinedMode()
+	} else if getEnv("RESTART_MODE", "false") == "true" {
+		log.Println("Starting in restart mode - API server + data collection (skipping initial collection)")
+		runCombinedMode()
 	} else if getEnv("SCHEDULER_MODE", "false") == "true" {
 		log.Println("Starting in scheduler mode - will run daily at midnight")
 		runScheduler()
@@ -467,12 +470,16 @@ func runCombinedMode() {
 		log.Fatalf("Failed to create table: %v", err)
 	}
 
-	// Run initial data collection
-	log.Println("Running initial data collection...")
-	if err := collectAndStoreData(config, db); err != nil {
-		log.Printf("Initial data collection failed: %v", err)
+	// Run initial data collection (skip if RESTART_MODE is enabled)
+	if getEnv("RESTART_MODE", "false") == "true" {
+		log.Println("Skipping initial data collection (restart mode)")
 	} else {
-		log.Println("Initial data collection completed successfully")
+		log.Println("Running initial data collection...")
+		if err := collectAndStoreData(config, db); err != nil {
+			log.Printf("Initial data collection failed: %v", err)
+		} else {
+			log.Println("Initial data collection completed successfully")
+		}
 	}
 
 	// Setup API routes
