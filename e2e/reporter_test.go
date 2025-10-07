@@ -93,7 +93,7 @@ func TestSelectorCreatesReporter(t *testing.T) {
 	}
 
 	// wait for aggregation to complete
-	require.NoError(testutil.WaitForBlocks(ctx, 6, validators[0].Node))
+	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
 	// query report info
 	qDataBz, err := hex.DecodeString(currentCycleList.QueryData)
@@ -131,8 +131,8 @@ func TestSelectorCreatesReporter(t *testing.T) {
 	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand(user.FormattedAddress(), "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
 	require.NoError(err)
 
-	// wait for aggregation to complete (need to wait for report_block_window)
-	require.NoError(testutil.WaitForBlocks(ctx, 6, validators[0].Node))
+	// wait for aggregation
+	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
 	// query report info
 	qDataBz, err = hex.DecodeString(currentCycleList.QueryData)

@@ -508,7 +508,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	require.Equal(len(reportersRes.Reporters), numReporters+1) // 2 reporters + 1 validator reporter
 
 	// wait for query to expire and dispute from user0
-	err = testutil.WaitForBlocks(ctx, 6, val1.Node)
+	err = testutil.WaitForBlocks(ctx, 2, val1.Node)
 	require.NoError(err)
 	microreport, _, err := e2e.QueryWithTimeout(ctx, val1.Node, "oracle", "get-reportsby-reporter", user1Addr, "--page-limit", "1")
 	require.NoError(err)
@@ -792,7 +792,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.NoError(err)
 
 	// wait for query to expire
-	err = testutil.WaitForBlocks(ctx, 6, val1)
+	err = testutil.WaitForBlocks(ctx, 2, val1)
 	require.NoError(err)
 
 	// get report to check reporter power
@@ -825,7 +825,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.NoError(err)
 
 	// wait for query to expire
-	err = testutil.WaitForBlocks(ctx, 6, val1)
+	err = testutil.WaitForBlocks(ctx, 2, val1)
 	require.NoError(err)
 
 	// get report to check reporter power for second report
@@ -1230,7 +1230,7 @@ func TestEscalatingDispute(t *testing.T) {
 	require.NoError(err)
 
 	// wait for query to expire
-	err = testutil.WaitForBlocks(ctx, 6, val1.Node)
+	err = testutil.WaitForBlocks(ctx, 2, val1.Node)
 	require.NoError(err)
 
 	// get report to check reporter power
@@ -1527,7 +1527,7 @@ func TestMajorDisputeAgainst(t *testing.T) {
 	require.NoError(err)
 
 	// wait for query to expire
-	err = testutil.WaitForBlocks(ctx, 6, val1.Node)
+	err = testutil.WaitForBlocks(ctx, 2, val1.Node)
 	require.NoError(err)
 
 	// get report to check reporter power
@@ -1793,7 +1793,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	}
 
 	// wait for query to expire and aggregation to complete
-	require.NoError(testutil.WaitForBlocks(ctx, 6, val1.Node))
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val1.Node))
 
 	// verify reports
 	type UserReports struct {
@@ -1914,7 +1914,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	}
 
 	// wait for query to expire and aggregation to complete
-	require.NoError(testutil.WaitForBlocks(ctx, 6, val1.Node))
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val1.Node))
 
 	// verify reports
 	userReports = make([]UserReports, 4)
@@ -2304,8 +2304,8 @@ func TestUnderfundedDispute(t *testing.T) {
 		fmt.Println("validator [", i, "] reported at height ", height)
 	}
 
-	// wait 6 blocks for aggregation
-	require.NoError(testutil.WaitForBlocks(ctx, 6, val1.Node))
+	// wait for aggregation
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val1.Node))
 
 	// query microreport for val1
 	reports, _, err := e2e.QueryWithTimeout(ctx, val1.Node, "oracle", "get-reportsby-reporter", val1.AccAddr, "--page-limit", "1")
@@ -2423,7 +2423,7 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	}
 
 	// wait for aggregation
-	require.NoError(testutil.WaitForBlocks(ctx, 6, val1.Node))
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val1.Node))
 
 	// query microreport for val1
 	reports, _, err := e2e.QueryWithTimeout(ctx, val2.Node, "oracle", "get-reportsby-reporter", val2.AccAddr, "--page-limit", "1")
