@@ -83,6 +83,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6": {
 		ID:                "05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6",
 		AggregationMethod: "median",
+		MaxSpreadPercent:  1.0,
 		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -115,6 +116,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"c444759b83c7bb0f6694306e1f719e65679d48ad754a31d3a366856becf1e71e": {
 		ID:                "c444759b83c7bb0f6694306e1f719e65679d48ad754a31d3a366856becf1e71e",
 		AggregationMethod: "median",
+		MaxSpreadPercent:  1.0,
 		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -149,6 +151,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 		ID:                "e010d752f28dcd2804004d0b57ab1bdc4eca092895d49160204120af11d15f3e",
 		AggregationMethod: "median",
 		MinResponses:      1,
+		MaxSpreadPercent:  0.0,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -173,6 +176,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"59ae85cec665c779f18255dd4f3d97821e6a122691ee070b9a26888bc2a0e45a": {
 		ID:                "59ae85cec665c779f18255dd4f3d97821e6a122691ee070b9a26888bc2a0e45a",
 		AggregationMethod: "median",
+		MaxSpreadPercent:  0.0,
 		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -189,6 +193,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"35155b44678db9e9e021c2cf49dd20c31b49e03415325c2beffb5221cf63882d": {
 		ID:                "35155b44678db9e9e021c2cf49dd20c31b49e03415325c2beffb5221cf63882d",
 		AggregationMethod: "median",
+		MaxSpreadPercent:  0.0,
 		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -210,6 +215,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"03731257e35c49e44b267640126358e5decebdd8f18b5e8f229542ec86e318cf": {
 		ID:                "03731257e35c49e44b267640126358e5decebdd8f18b5e8f229542ec86e318cf",
 		AggregationMethod: "median",
+		MaxSpreadPercent:  0.0,
 		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -235,6 +241,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"76b504e33305a63a3b80686c0b7bb99e7697466927ba78e224728e80bfaaa0be": {
 		ID:                "76b504e33305a63a3b80686c0b7bb99e7697466927ba78e224728e80bfaaa0be",
 		AggregationMethod: "median",
+		MaxSpreadPercent:  1.0,
 		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -268,6 +275,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"0bc2d41117ae8779da7623ee76a109c88b84b9bf4d9b404524df04f7d0ca4ca7": {
 		ID:                "0bc2d41117ae8779da7623ee76a109c88b84b9bf4d9b404524df04f7d0ca4ca7",
 		AggregationMethod: "median",
+		MaxSpreadPercent:  1.0,
 		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -299,7 +307,8 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"1962cde2f19178fe2bb2229e78a6d386e6406979edc7b9a1966d89d83b3ebf2e": {
 		ID:                "1962cde2f19178fe2bb2229e78a6d386e6406979edc7b9a1966d89d83b3ebf2e",
 		AggregationMethod: "median",
-		MinResponses:      1,
+		MaxSpreadPercent:  1.0,
+		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -330,6 +339,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"d62f132d9d04dde6e223d4366c48b47cd9f90228acdc6fa755dab93266db5176": {
 		ID:                "d62f132d9d04dde6e223d4366c48b47cd9f90228acdc6fa755dab93266db5176",
 		AggregationMethod: "median",
+		MaxSpreadPercent:  1.0,
 		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -371,6 +381,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"611fd0e88850bf0cc036d96d04d47605c90b993485c2971e022b5751bbb04f23": {
 		ID:                "611fd0e88850bf0cc036d96d04d47605c90b993485c2971e022b5751bbb04f23",
 		AggregationMethod: "median",
+		MaxSpreadPercent:  0.0,
 		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -407,6 +418,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"91513b15db3cef441d52058b24412957f9cc8645c53aecf39446ac9b0d2dcca4": {
 		ID:                "91513b15db3cef441d52058b24412957f9cc8645c53aecf39446ac9b0d2dcca4",
 		AggregationMethod: "median",
+		MaxSpreadPercent:  0.0,
 		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -432,6 +444,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"187f74d310dc494e6efd928107713d4229cd319c2cf300224de02776090809f1": {
 		ID:                "187f74d310dc494e6efd928107713d4229cd319c2cf300224de02776090809f1",
 		AggregationMethod: "median",
+		MaxSpreadPercent:  0.0,
 		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -448,6 +461,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"ab30caa3e7827a27c153063bce02c0b260b29c0c164040c003f0f9ec66002510": {
 		ID:                "ab30caa3e7827a27c153063bce02c0b260b29c0c164040c003f0f9ec66002510",
 		AggregationMethod: "median",
+		MaxSpreadPercent:  1.0,
 		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{

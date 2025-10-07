@@ -106,7 +106,7 @@ func FetchPrice(
 	}
 	fmt.Println("Successful results:", successfulResults)
 	// Aggregate results
-	aggregatedValue, err := aggregateResults(successfulResults, query.AggregationMethod, query.ResponseType)
+	aggregatedValue, err := aggregateResults(successfulResults, query.AggregationMethod, query.ResponseType, query.MaxSpreadPercent)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +230,7 @@ func fetchFromRpcEndpoint(
 }
 
 // aggregateResults aggregates results using the specified method
-func aggregateResults(results []Result, method, responseType string) (string, error) {
+func aggregateResults(results []Result, method, responseType string, maxSpreadPercent float64) (string, error) {
 	if len(results) == 0 {
 		return "", fmt.Errorf("no results to aggregate")
 	}
@@ -243,7 +243,7 @@ func aggregateResults(results []Result, method, responseType string) (string, er
 
 	switch strings.ToLower(method) {
 	case "median":
-		return MedianInHex(values, responseType)
+		return MedianInHex(values, responseType, maxSpreadPercent)
 	// case "mode":
 	// return ModeInHex(values, responseType)
 	default:
