@@ -8,13 +8,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/tellor-io/layer/daemons/custom_query/combined/combined_handler"
 	"github.com/tellor-io/layer/daemons/custom_query/contracts/contract_handlers"
 	rpc_handler "github.com/tellor-io/layer/daemons/custom_query/rpc/rpc_handler"
 	"github.com/tellor-io/layer/daemons/lib/metrics"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 // Result holds the value returned from an endpoint

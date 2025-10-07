@@ -7,12 +7,13 @@ import (
 	"math/big"
 	"sort"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	gometrics "github.com/hashicorp/go-metrics"
 	contractreader "github.com/tellor-io/layer/daemons/custom_query/contracts/contract_reader"
 	rpcreader "github.com/tellor-io/layer/daemons/custom_query/rpc/rpc_reader"
 	"github.com/tellor-io/layer/daemons/lib/metrics"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
+
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 const VYUSD_CONTRACT = "0x2e3c5e514eef46727de1fe44618027a9b70d92fc"
