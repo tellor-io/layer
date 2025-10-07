@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -60,6 +61,28 @@ type APIResponse struct {
 	Data    interface{} `json:"data,omitempty"`
 	Error   string      `json:"error,omitempty"`
 	Count   int         `json:"count,omitempty"`
+}
+
+// writeCSVResponse writes price data as CSV to the response writer
+func writeCSVResponse(w http.ResponseWriter, prices []PriceData) {
+	w.Header().Set("Content-Type", "text/csv")
+	w.Header().Set("Content-Disposition", "attachment; filename=price_data.csv")
+
+	writer := csv.NewWriter(w)
+	defer writer.Flush()
+
+	// Write header
+	writer.Write([]string{"timestamp", "market_id", "exchange_id", "price"})
+
+	// Write data rows
+	for _, price := range prices {
+		writer.Write([]string{
+			price.Timestamp.Format("2006-01-02 15:04:05"),
+			price.MarketID,
+			price.ExchangeID,
+			fmt.Sprintf("%.8f", price.Price),
+		})
+	}
 }
 
 func main() {
@@ -511,13 +534,12 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 // getPricesHandler returns all price data with optional filtering
 func getPricesHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-
 		// Parse query parameters
 		limit := r.URL.Query().Get("limit")
 		offset := r.URL.Query().Get("offset")
 		marketID := r.URL.Query().Get("market_id")
 		exchangeID := r.URL.Query().Get("exchange_id")
+		format := r.URL.Query().Get("format")
 
 		// Build query
 		query := "SELECT timestamp, market_id, exchange_id, price FROM price_data WHERE 1=1"
@@ -551,10 +573,17 @@ func getPricesHandler(db *sql.DB) http.HandlerFunc {
 
 		rows, err := db.Query(query, args...)
 		if err != nil {
-			json.NewEncoder(w).Encode(APIResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Database error: %v", err),
-			})
+			if format == "csv" {
+				w.Header().Set("Content-Type", "text/csv")
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
+			} else {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(APIResponse{
+					Success: false,
+					Error:   fmt.Sprintf("Database error: %v", err),
+				})
+			}
 			return
 		}
 		defer rows.Close()
@@ -570,18 +599,24 @@ func getPricesHandler(db *sql.DB) http.HandlerFunc {
 			prices = append(prices, p)
 		}
 
-		json.NewEncoder(w).Encode(APIResponse{
-			Success: true,
-			Data:    prices,
-			Count:   len(prices),
-		})
+		if format == "csv" {
+			writeCSVResponse(w, prices)
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(APIResponse{
+				Success: true,
+				Data:    prices,
+				Count:   len(prices),
+			})
+		}
 	}
 }
 
 // getLatestPricesHandler returns the latest price for each market/exchange combination
 func getLatestPricesHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
+		format := r.URL.Query().Get("format")
+		log.Printf("DEBUG: format parameter = '%s'", format)
 
 		query := `
 			SELECT DISTINCT ON (market_id, exchange_id) 
@@ -592,10 +627,17 @@ func getLatestPricesHandler(db *sql.DB) http.HandlerFunc {
 
 		rows, err := db.Query(query)
 		if err != nil {
-			json.NewEncoder(w).Encode(APIResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Database error: %v", err),
-			})
+			if format == "csv" {
+				w.Header().Set("Content-Type", "text/csv")
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
+			} else {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(APIResponse{
+					Success: false,
+					Error:   fmt.Sprintf("Database error: %v", err),
+				})
+			}
 			return
 		}
 		defer rows.Close()
@@ -611,26 +653,40 @@ func getLatestPricesHandler(db *sql.DB) http.HandlerFunc {
 			prices = append(prices, p)
 		}
 
-		json.NewEncoder(w).Encode(APIResponse{
-			Success: true,
-			Data:    prices,
-			Count:   len(prices),
-		})
+		if format == "csv" {
+			log.Printf("DEBUG: Writing CSV response for %d prices", len(prices))
+			writeCSVResponse(w, prices)
+		} else {
+			log.Printf("DEBUG: Writing JSON response for %d prices", len(prices))
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(APIResponse{
+				Success: true,
+				Data:    prices,
+				Count:   len(prices),
+			})
+		}
 	}
 }
 
 // getPricesByMarketHandler returns prices for a specific market
 func getPricesByMarketHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
+		format := r.URL.Query().Get("format")
 
 		// Extract market ID from URL path
 		path := strings.TrimPrefix(r.URL.Path, "/api/prices/market/")
 		if path == "" {
-			json.NewEncoder(w).Encode(APIResponse{
-				Success: false,
-				Error:   "Market ID is required",
-			})
+			if format == "csv" {
+				w.Header().Set("Content-Type", "text/csv")
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte("error,Market ID is required\n"))
+			} else {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(APIResponse{
+					Success: false,
+					Error:   "Market ID is required",
+				})
+			}
 			return
 		}
 
@@ -654,10 +710,17 @@ func getPricesByMarketHandler(db *sql.DB) http.HandlerFunc {
 
 		rows, err := db.Query(query, args...)
 		if err != nil {
-			json.NewEncoder(w).Encode(APIResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Database error: %v", err),
-			})
+			if format == "csv" {
+				w.Header().Set("Content-Type", "text/csv")
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
+			} else {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(APIResponse{
+					Success: false,
+					Error:   fmt.Sprintf("Database error: %v", err),
+				})
+			}
 			return
 		}
 		defer rows.Close()
@@ -673,26 +736,38 @@ func getPricesByMarketHandler(db *sql.DB) http.HandlerFunc {
 			prices = append(prices, p)
 		}
 
-		json.NewEncoder(w).Encode(APIResponse{
-			Success: true,
-			Data:    prices,
-			Count:   len(prices),
-		})
+		if format == "csv" {
+			writeCSVResponse(w, prices)
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(APIResponse{
+				Success: true,
+				Data:    prices,
+				Count:   len(prices),
+			})
+		}
 	}
 }
 
 // getPricesByExchangeHandler returns prices for a specific exchange
 func getPricesByExchangeHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
+		format := r.URL.Query().Get("format")
 
 		// Extract exchange ID from URL path
 		path := strings.TrimPrefix(r.URL.Path, "/api/prices/exchange/")
 		if path == "" {
-			json.NewEncoder(w).Encode(APIResponse{
-				Success: false,
-				Error:   "Exchange ID is required",
-			})
+			if format == "csv" {
+				w.Header().Set("Content-Type", "text/csv")
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte("error,Exchange ID is required\n"))
+			} else {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(APIResponse{
+					Success: false,
+					Error:   "Exchange ID is required",
+				})
+			}
 			return
 		}
 
@@ -716,10 +791,17 @@ func getPricesByExchangeHandler(db *sql.DB) http.HandlerFunc {
 
 		rows, err := db.Query(query, args...)
 		if err != nil {
-			json.NewEncoder(w).Encode(APIResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Database error: %v", err),
-			})
+			if format == "csv" {
+				w.Header().Set("Content-Type", "text/csv")
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
+			} else {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(APIResponse{
+					Success: false,
+					Error:   fmt.Sprintf("Database error: %v", err),
+				})
+			}
 			return
 		}
 		defer rows.Close()
@@ -735,18 +817,23 @@ func getPricesByExchangeHandler(db *sql.DB) http.HandlerFunc {
 			prices = append(prices, p)
 		}
 
-		json.NewEncoder(w).Encode(APIResponse{
-			Success: true,
-			Data:    prices,
-			Count:   len(prices),
-		})
+		if format == "csv" {
+			writeCSVResponse(w, prices)
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(APIResponse{
+				Success: true,
+				Data:    prices,
+				Count:   len(prices),
+			})
+		}
 	}
 }
 
 // getPricesByRangeHandler returns prices within a date range
 func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
+		format := r.URL.Query().Get("format")
 
 		startDate := r.URL.Query().Get("start")
 		endDate := r.URL.Query().Get("end")
@@ -756,29 +843,50 @@ func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 		offset := r.URL.Query().Get("offset")
 
 		if startDate == "" || endDate == "" {
-			json.NewEncoder(w).Encode(APIResponse{
-				Success: false,
-				Error:   "start and end date parameters are required (format: YYYY-MM-DD)",
-			})
+			if format == "csv" {
+				w.Header().Set("Content-Type", "text/csv")
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte("error,start and end date parameters are required (format: YYYY-MM-DD)\n"))
+			} else {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(APIResponse{
+					Success: false,
+					Error:   "start and end date parameters are required (format: YYYY-MM-DD)",
+				})
+			}
 			return
 		}
 
 		// Parse dates
 		start, err := time.Parse("2006-01-02", startDate)
 		if err != nil {
-			json.NewEncoder(w).Encode(APIResponse{
-				Success: false,
-				Error:   "Invalid start date format. Use YYYY-MM-DD",
-			})
+			if format == "csv" {
+				w.Header().Set("Content-Type", "text/csv")
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte("error,Invalid start date format. Use YYYY-MM-DD\n"))
+			} else {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(APIResponse{
+					Success: false,
+					Error:   "Invalid start date format. Use YYYY-MM-DD",
+				})
+			}
 			return
 		}
 
 		end, err := time.Parse("2006-01-02", endDate)
 		if err != nil {
-			json.NewEncoder(w).Encode(APIResponse{
-				Success: false,
-				Error:   "Invalid end date format. Use YYYY-MM-DD",
-			})
+			if format == "csv" {
+				w.Header().Set("Content-Type", "text/csv")
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte("error,Invalid end date format. Use YYYY-MM-DD\n"))
+			} else {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(APIResponse{
+					Success: false,
+					Error:   "Invalid end date format. Use YYYY-MM-DD",
+				})
+			}
 			return
 		}
 
@@ -814,10 +922,17 @@ func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 
 		rows, err := db.Query(query, args...)
 		if err != nil {
-			json.NewEncoder(w).Encode(APIResponse{
-				Success: false,
-				Error:   fmt.Sprintf("Database error: %v", err),
-			})
+			if format == "csv" {
+				w.Header().Set("Content-Type", "text/csv")
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
+			} else {
+				w.Header().Set("Content-Type", "application/json")
+				json.NewEncoder(w).Encode(APIResponse{
+					Success: false,
+					Error:   fmt.Sprintf("Database error: %v", err),
+				})
+			}
 			return
 		}
 		defer rows.Close()
@@ -833,10 +948,15 @@ func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 			prices = append(prices, p)
 		}
 
-		json.NewEncoder(w).Encode(APIResponse{
-			Success: true,
-			Data:    prices,
-			Count:   len(prices),
-		})
+		if format == "csv" {
+			writeCSVResponse(w, prices)
+		} else {
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(APIResponse{
+				Success: true,
+				Data:    prices,
+				Count:   len(prices),
+			})
+		}
 	}
 }
