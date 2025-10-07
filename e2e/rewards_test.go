@@ -44,7 +44,6 @@ func TestRewards(t *testing.T) {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
-		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
 	}
 
 	chain, ic, ctx := e2e.SetupChainWithCustomConfig(t, config)
@@ -67,9 +66,6 @@ func TestRewards(t *testing.T) {
 	require.NoError(err)
 	fmt.Printf("Current height: %d\n", height)
 
-	// ========================================================================
-	// PART 1: CREATE USER REPORTER (non-validator)
-	// ========================================================================
 	fmt.Println("\n========== Creating User Reporter ==========")
 
 	// Create and fund a regular user account with sufficient tokens
@@ -82,7 +78,7 @@ func TestRewards(t *testing.T) {
 	require.NoError(err)
 	fmt.Printf("User reporter initial balance: %s loya\n", userInitialBalance)
 
-	// User delegates to validator 0 to get stake (minimum requirement for reporter)
+	// User delegates to validator 0
 	delegateAmount := sdk.NewCoin("loya", math.NewInt(2_000*1e6))
 	txHash, err := validatorsInfo[0].Node.ExecTx(ctx, userReporterAddr, "staking", "delegate",
 		validatorsInfo[0].ValAddr, delegateAmount.String(),
@@ -108,9 +104,6 @@ func TestRewards(t *testing.T) {
 	require.NoError(err)
 	fmt.Printf("User becomes a reporter, txHash: %s\n", txHash)
 
-	// ========================================================================
-	// PART 2: TRACK INITIAL BALANCES AND STAKES
-	// ========================================================================
 	fmt.Println("\n========== Initial Balances and Stakes ==========")
 
 	type Account struct {

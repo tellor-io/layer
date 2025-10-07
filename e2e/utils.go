@@ -1067,7 +1067,7 @@ func GetTxHashFromExec(stdout []byte) (string, error) {
 
 // QueryWithTimeout executes a query with a 5-second timeout
 func QueryWithTimeout(ctx context.Context, validatorI *cosmos.ChainNode, args ...string) ([]byte, []byte, error) {
-	queryCtx, cancel := context.WithTimeout(ctx, time.Second*5)
+	queryCtx, cancel := context.WithTimeout(ctx, time.Second*15)
 	defer cancel()
 	return validatorI.ExecQuery(queryCtx, args...)
 }

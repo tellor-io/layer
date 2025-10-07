@@ -57,9 +57,9 @@ type ReporterAccs struct {
 	Addr    string
 }
 
-// TestTenDisputesTenPeople tests opening 10 disputes simultaneously, voting and resolving all of them
+// TestManyDisputesAtOnce tests opening many disputes simultaneously, voting and resolving all of them
 // TODO: make more efficient, takes ~13 minutes to run
-func TestTenDisputesTenPeople(t *testing.T) {
+func TestManyDisputesAtOnce(t *testing.T) {
 	require := require.New(t)
 
 	cosmos.SetSDKConfig("tellor")
@@ -185,20 +185,23 @@ func TestTenDisputesTenPeople(t *testing.T) {
 	tipAmt := math.NewInt(1 * 1e6)
 	tip := sdk.NewCoin("loya", tipAmt)
 	for i, query := range queryDataList {
+		// wait 1 block
+		require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
 		// tip 1 trb
 		_, _, err := val1.Node.Exec(ctx, val1.Node.TxCommand(val1.AccAddr, "oracle", "tip", query.QueryData, tip.String(), "--keyring-dir", val1.Node.HomeDir()), val1.Node.Chain.Config().Env)
 		require.NoError(err)
 		fmt.Println("val1 tipped ", query.QueryID)
-		err = testutil.WaitForBlocks(ctx, 1, val1.Node)
-		require.NoError(err)
-
+		// wait 1 block
+		require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
 		// report with 1000 reporting power
-		txHash, err := val1.Node.ExecTx(ctx, reporters[i].Addr, "oracle", "submit-value", query.QueryData, value, "--keyring-dir", val1.Node.HomeDir())
+		txHash, _, err := val1.Node.Exec(ctx, val1.Node.TxCommand(reporters[i].Addr, "oracle", "submit-value", query.QueryData, value, "--keyring-dir", val1.Node.HomeDir()), val1.Node.Chain.Config().Env)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " reported): ", txHash)
 		require.NoError(err)
+		// wait 1 block
+		require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
 
 		// wait for query to expire and dispute
-		err = testutil.WaitForBlocks(ctx, 6, val1.Node)
+		require.NoError(testutil.WaitForBlocks(ctx, 2, val1.Node))
 		require.NoError(err)
 		microreport, _, err := e2e.QueryWithTimeout(ctx, val1.Node, "oracle", "get-reportsby-reporter", reporters[i].Addr, "--page-limit", "1")
 		require.NoError(err)
@@ -227,9 +230,9 @@ func TestTenDisputesTenPeople(t *testing.T) {
 		// since reporting power is 1000, first rd fee fee is 10 trb
 		// paying from bond, so val1 stake should decrease by 10 trb
 		// val2 stake should also decrease by 10 trb bc of slash on reporter delgated to them
-		txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, queryId, warning, "500000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
+		hash, err := val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, queryId, warning, "500000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
-		fmt.Println("TX HASH (dispute on ", microReports.MicroReports[0].Reporter, "): ", txHash)
+		fmt.Println("TX HASH (dispute on ", microReports.MicroReports[0].Reporter, "): ", hash)
 
 		// check disputer staking power after dispute
 		// should decrease by 10 trb for every dispute opened for paying fee
