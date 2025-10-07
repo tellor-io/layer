@@ -17,6 +17,7 @@ import (
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
+	interchaintestutil "github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	"go.uber.org/zap/zaptest"
@@ -28,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	interchaintestutil "github.com/strangelove-ventures/interchaintest/v8/testutil"
 )
 
 // ============================================================================
@@ -1107,7 +1107,7 @@ func CreateReporter(ctx context.Context, accountAddr string, validator *cosmos.C
 // SubmitCycleList queries the current cycle list and submits a value for it
 // Returns the tx hash if successful, retries up to 3 times total
 // Does NOT wait for blocks - use SubmitCycleListSafe for safer timing
-func SubmitCycleList(ctx context.Context, node *cosmos.ChainNode, keyName string, value string, fees string) (string, error) {
+func SubmitCycleList(ctx context.Context, node *cosmos.ChainNode, keyName, value, fees string) (string, error) {
 	maxRetries := 2
 	var lastErr error
 
@@ -1159,7 +1159,7 @@ func SubmitCycleList(ctx context.Context, node *cosmos.ChainNode, keyName string
 // SubmitCycleListSafe queries the current cycle list and submits a value for it
 // Waits 1 block after submission for better timing guarantees
 // Returns the tx hash if successful, retries up to 3 times total
-func SubmitCycleListSafe(ctx context.Context, node *cosmos.ChainNode, keyName string, value string, fees string) (string, error) {
+func SubmitCycleListSafe(ctx context.Context, node *cosmos.ChainNode, keyName, value, fees string) (string, error) {
 	maxRetries := 3
 	var lastErr error
 
