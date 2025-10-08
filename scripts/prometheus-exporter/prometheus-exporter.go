@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	neturl "net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -55,6 +56,13 @@ type Config struct {
 	APIPort       string
 }
 
+// Constants for repeated string literals
+const (
+	TrueString  = "true"
+	CSVFormat   = "csv"
+	DefaultPort = "8080"
+)
+
 // APIResponse represents a standard API response
 type APIResponse struct {
 	Success bool        `json:"success"`
@@ -93,16 +101,16 @@ func writeCSVResponse(w http.ResponseWriter, prices []PriceData) {
 
 func main() {
 	// Check if we should run in API server mode
-	if getEnv("API_MODE", "false") == "true" {
+	if getEnv("API_MODE", "false") == TrueString {
 		log.Println("Starting API server mode")
 		runAPIServer()
-	} else if getEnv("COMBINED_MODE", "false") == "true" {
+	} else if getEnv("COMBINED_MODE", "false") == TrueString {
 		log.Println("Starting in combined mode - API server + data collection")
 		runCombinedMode()
-	} else if getEnv("RESTART_MODE", "false") == "true" {
+	} else if getEnv("RESTART_MODE", "false") == TrueString {
 		log.Println("Starting in restart mode - API server + data collection (skipping initial collection)")
 		runCombinedMode()
-	} else if getEnv("SCHEDULER_MODE", "false") == "true" {
+	} else if getEnv("SCHEDULER_MODE", "false") == TrueString {
 		log.Println("Starting in scheduler mode - will run daily at midnight")
 		runScheduler()
 	} else {
@@ -277,8 +285,19 @@ func queryPrometheus(url string, start, end time.Time) (*PrometheusResponse, err
 
 	log.Printf("Querying Prometheus: %s", queryURL)
 
+	// Validate URL before making request
+	parsedURL, err := neturl.Parse(queryURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid URL: %w", err)
+	}
+
+	// Create HTTP client with timeout
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
 	// Make HTTP request
-	resp, err := http.Get(queryURL)
+	resp, err := client.Get(parsedURL.String())
 	if err != nil {
 		return nil, err
 	}
@@ -453,8 +472,17 @@ func runAPIServer() {
 	http.HandleFunc("/api/prices/exchange/", authMiddleware(getPricesByExchangeHandler(db)))
 	http.HandleFunc("/api/prices/range", authMiddleware(getPricesByRangeHandler(db)))
 
+	// Create HTTP server with timeouts
+	server := &http.Server{
+		Addr:         ":" + config.APIPort,
+		Handler:      nil,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
 	log.Printf("API server starting on port %s", config.APIPort)
-	log.Fatal(http.ListenAndServe(":"+config.APIPort, nil))
+	log.Fatal(server.ListenAndServe())
 }
 
 // runCombinedMode starts both API server and data collection
@@ -483,7 +511,7 @@ func runCombinedMode() {
 	}
 
 	// Run initial data collection (skip if RESTART_MODE is enabled)
-	if getEnv("RESTART_MODE", "false") == "true" {
+	if getEnv("RESTART_MODE", "false") == TrueString {
 		log.Println("Skipping initial data collection (restart mode)")
 	} else {
 		log.Println("Running initial data collection...")
@@ -517,8 +545,17 @@ func runCombinedMode() {
 		}
 	}()
 
+	// Create HTTP server with timeouts
+	server := &http.Server{
+		Addr:         ":" + config.APIPort,
+		Handler:      nil,
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
+
 	log.Printf("Combined mode: API server starting on port %s with daily data collection", config.APIPort)
-	log.Fatal(http.ListenAndServe(":"+config.APIPort, nil))
+	log.Fatal(server.ListenAndServe())
 }
 
 // authMiddleware provides password-based authentication
@@ -598,7 +635,7 @@ func getPricesHandler(db *sql.DB) http.HandlerFunc {
 
 		rows, err := db.Query(query, args...)
 		if err != nil {
-			if format == "csv" {
+			if format == CSVFormat {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusInternalServerError)
 				_, err := w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
@@ -634,7 +671,7 @@ func getPricesHandler(db *sql.DB) http.HandlerFunc {
 			prices = append(prices, p)
 		}
 
-		if format == "csv" {
+		if format == CSVFormat {
 			writeCSVResponse(w, prices)
 		} else {
 			w.Header().Set("Content-Type", "application/json")
@@ -665,7 +702,7 @@ func getLatestPricesHandler(db *sql.DB) http.HandlerFunc {
 
 		rows, err := db.Query(query)
 		if err != nil {
-			if format == "csv" {
+			if format == CSVFormat {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusInternalServerError)
 				_, err := w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
@@ -701,7 +738,7 @@ func getLatestPricesHandler(db *sql.DB) http.HandlerFunc {
 			prices = append(prices, p)
 		}
 
-		if format == "csv" {
+		if format == CSVFormat {
 			log.Printf("DEBUG: Writing CSV response for %d prices", len(prices))
 			writeCSVResponse(w, prices)
 		} else {
@@ -727,7 +764,7 @@ func getPricesByMarketHandler(db *sql.DB) http.HandlerFunc {
 		// Extract market ID from URL path
 		path := strings.TrimPrefix(r.URL.Path, "/api/prices/market/")
 		if path == "" {
-			if format == "csv" {
+			if format == CSVFormat {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusBadRequest)
 				_, err := w.Write([]byte("error,Market ID is required\n"))
@@ -767,7 +804,7 @@ func getPricesByMarketHandler(db *sql.DB) http.HandlerFunc {
 
 		rows, err := db.Query(query, args...)
 		if err != nil {
-			if format == "csv" {
+			if format == CSVFormat {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusInternalServerError)
 				_, err := w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
@@ -803,7 +840,7 @@ func getPricesByMarketHandler(db *sql.DB) http.HandlerFunc {
 			prices = append(prices, p)
 		}
 
-		if format == "csv" {
+		if format == CSVFormat {
 			writeCSVResponse(w, prices)
 		} else {
 			w.Header().Set("Content-Type", "application/json")
@@ -827,7 +864,7 @@ func getPricesByExchangeHandler(db *sql.DB) http.HandlerFunc {
 		// Extract exchange ID from URL path
 		path := strings.TrimPrefix(r.URL.Path, "/api/prices/exchange/")
 		if path == "" {
-			if format == "csv" {
+			if format == CSVFormat {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusBadRequest)
 				_, err := w.Write([]byte("error,Exchange ID is required\n"))
@@ -867,7 +904,7 @@ func getPricesByExchangeHandler(db *sql.DB) http.HandlerFunc {
 
 		rows, err := db.Query(query, args...)
 		if err != nil {
-			if format == "csv" {
+			if format == CSVFormat {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusInternalServerError)
 				_, err := w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
@@ -903,7 +940,7 @@ func getPricesByExchangeHandler(db *sql.DB) http.HandlerFunc {
 			prices = append(prices, p)
 		}
 
-		if format == "csv" {
+		if format == CSVFormat {
 			writeCSVResponse(w, prices)
 		} else {
 			w.Header().Set("Content-Type", "application/json")
@@ -932,7 +969,7 @@ func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 		offset := r.URL.Query().Get("offset")
 
 		if startDate == "" || endDate == "" {
-			if format == "csv" {
+			if format == CSVFormat {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusBadRequest)
 				_, err := w.Write([]byte("error,start and end date parameters are required (format: YYYY-MM-DD)\n"))
@@ -955,7 +992,7 @@ func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 		// Parse dates
 		start, err := time.Parse("2006-01-02", startDate)
 		if err != nil {
-			if format == "csv" {
+			if format == CSVFormat {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusBadRequest)
 				_, err := w.Write([]byte("error,Invalid start date format. Use YYYY-MM-DD\n"))
@@ -977,7 +1014,7 @@ func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 
 		end, err := time.Parse("2006-01-02", endDate)
 		if err != nil {
-			if format == "csv" {
+			if format == CSVFormat {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusBadRequest)
 				_, err := w.Write([]byte("error,Invalid end date format. Use YYYY-MM-DD\n"))
@@ -1029,7 +1066,7 @@ func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 
 		rows, err := db.Query(query, args...)
 		if err != nil {
-			if format == "csv" {
+			if format == CSVFormat {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusInternalServerError)
 				_, err := w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
@@ -1065,7 +1102,7 @@ func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 			prices = append(prices, p)
 		}
 
-		if format == "csv" {
+		if format == CSVFormat {
 			writeCSVResponse(w, prices)
 		} else {
 			w.Header().Set("Content-Type", "application/json")
