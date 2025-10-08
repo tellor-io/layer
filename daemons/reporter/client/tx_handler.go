@@ -142,12 +142,13 @@ func (c *Client) sendTx(ctx context.Context, queryMetaId uint64, msg ...sdk.Msg)
 	txf := newFactory(c.cosmosCtx)
 
 	// Configure for unordered transactions (Cosmos SDK 0.53.4+)
-	// Set sequence to 0, enable unordered mode, and set timeout timestamp
+	// Set sequence to 0, enable unordered mode, and set unique timeout timestamp
+	// https://docs.cosmos.network/v0.53/build/architecture/adr-070-unordered-account
 	txf = txf.WithSequence(0).
 		WithGasPrices(c.minGasFee).
 		WithTimeoutHeight(uint64(block.SdkBlock.Header.Height + 2)).
 		WithUnordered(true).
-		WithTimeoutTimestamp(time.Now().Add(1 * time.Minute)) // 1 minute timeout for unordered transactions
+		WithTimeoutTimestamp(c.GetUniqueUnorderedTimeout())
 	txf, err = txf.Prepare(c.cosmosCtx)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing transaction factory: %w", err)
