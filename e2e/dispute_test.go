@@ -2407,38 +2407,31 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	}
 
 	//  both reporters submit for cyclelist
-	currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, val1.Node, "oracle", "current-cyclelist-query")
-	require.NoError(err)
-	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
-	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
-	require.NoError(err)
-	fmt.Println("current cycle list: ", currentCycleList)
 	value := layerutil.EncodeValue(123456789.99)
 	for i, val := range validatorsInfo {
-		_, _, err = val.Node.Exec(ctx, val.Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "25loya", "--keyring-dir", val.Node.HomeDir()), val.Node.Chain.Config().Env)
+		txHash, err := e2e.SubmitCycleListSafe(ctx, val.Node, val.AccAddr, value, "25loya")
 		require.NoError(err)
-		height, err := val.Node.Height(ctx)
-		require.NoError(err)
-		fmt.Println("validator [", i, "] reported at height ", height)
+		fmt.Println("TX HASH (validator", i, " submitted cycle list): ", txHash)
 	}
 
-	// wait for aggregation
-	require.NoError(testutil.WaitForBlocks(ctx, 2, val1.Node))
+	// wait for report to be included in a  block
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
 
-	// query microreport for val1
+	// query microreport for val2
 	reports, _, err := e2e.QueryWithTimeout(ctx, val2.Node, "oracle", "get-reportsby-reporter", val2.AccAddr, "--page-limit", "1")
 	require.NoError(err)
 	var reportsRes e2e.QueryMicroReportsResponse
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(err)
-	fmt.Println("reports from val1: ", reportsRes)
+	fmt.Println("reports from val2: ", reportsRes)
+	require.NotEmpty(reportsRes.MicroReports, "val2 should have reports after aggregation")
 
-	// val1 tries to become a selector for val0 instead of a reporter, shouldnt be allowed because of reporting in the last 21 days
+	// val2 tries to become a selector for val1 instead of a reporter, shouldnt be allowed because of reporting in the last 21 days
 	txHash, err := val2.Node.ExecTx(ctx, val2.AccAddr, "reporter", "switch-reporter", val1.AccAddr, "--keyring-dir", val2.Node.HomeDir())
 	require.Error(err)
-	fmt.Println("TX HASH (val1 fails to become a selector): ", txHash)
+	fmt.Println("TX HASH (val2 fails to become a selector): ", txHash)
 
-	// verify val1 is a selector for val0
+	// verify val2 is still a selector for themselves (default reporter state)
 	res, _, err := e2e.QueryWithTimeout(ctx, val1.Node, "reporter", "selector-reporter", val2.AccAddr)
 	require.NoError(err)
 	var selectorRes e2e.QuerySelectorReporterResponse
