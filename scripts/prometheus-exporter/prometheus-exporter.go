@@ -72,16 +72,22 @@ func writeCSVResponse(w http.ResponseWriter, prices []PriceData) {
 	defer writer.Flush()
 
 	// Write header
-	writer.Write([]string{"timestamp", "market_id", "exchange_id", "price"})
+	err := writer.Write([]string{"timestamp", "market_id", "exchange_id", "price"})
+	if err != nil {
+		log.Printf("Error writing CSV header: %v", err)
+	}
 
 	// Write data rows
 	for _, price := range prices {
-		writer.Write([]string{
+		err := writer.Write([]string{
 			price.Timestamp.Format("2006-01-02 15:04:05"),
 			price.MarketID,
 			price.ExchangeID,
 			fmt.Sprintf("%.8f", price.Price),
 		})
+		if err != nil {
+			log.Printf("Error writing CSV row: %v", err)
+		}
 	}
 }
 
@@ -174,19 +180,19 @@ func runDataCollection() {
 	// Initialize database connection
 	db, err := initDB(config)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		panic(fmt.Sprintf("Failed to connect to database: %v", err))
 	}
 	defer db.Close()
 
 	// Create table if it doesn't exist
 	if err := createTable(db); err != nil {
-		log.Fatalf("Failed to create table: %v", err)
+		panic(fmt.Sprintf("Failed to create table: %v", err))
 	}
 
 	// Run data collection
 	log.Println("Starting data collection...")
 	if err := collectAndStoreData(config, db); err != nil {
-		log.Fatalf("Data collection failed: %v", err)
+		panic(fmt.Sprintf("Data collection failed: %v", err))
 	}
 	log.Println("Data collection completed successfully")
 }
@@ -205,13 +211,13 @@ func runScheduler() {
 	// Initialize database connection
 	db, err := initDB(config)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		panic(fmt.Sprintf("Failed to connect to database: %v", err))
 	}
 	defer db.Close()
 
 	// Create table if it doesn't exist
 	if err := createTable(db); err != nil {
-		log.Fatalf("Failed to create table: %v", err)
+		panic(fmt.Sprintf("Failed to create table: %v", err))
 	}
 
 	// Run initial data collection
@@ -249,12 +255,12 @@ func collectAndStoreData(config Config, db *sql.DB) error {
 	// Query Prometheus API
 	data, err := queryPrometheus(config.PrometheusURL, start, end)
 	if err != nil {
-		return fmt.Errorf("failed to query Prometheus: %v", err)
+		return fmt.Errorf("failed to query Prometheus: %w", err)
 	}
 
 	// Parse and store data
 	if err := storePriceData(db, data); err != nil {
-		return fmt.Errorf("failed to store price data: %v", err)
+		return fmt.Errorf("failed to store price data: %w", err)
 	}
 
 	return nil
@@ -430,13 +436,13 @@ func runAPIServer() {
 	// Initialize database connection
 	db, err := initDB(config)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		panic(fmt.Sprintf("Failed to connect to database: %v", err))
 	}
 	defer db.Close()
 
 	// Create table if it doesn't exist
 	if err := createTable(db); err != nil {
-		log.Fatalf("Failed to create table: %v", err)
+		panic(fmt.Sprintf("Failed to create table: %v", err))
 	}
 
 	// Setup routes
@@ -467,13 +473,13 @@ func runCombinedMode() {
 	// Initialize database connection
 	db, err := initDB(config)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		panic(fmt.Sprintf("Failed to connect to database: %v", err))
 	}
 	defer db.Close()
 
 	// Create table if it doesn't exist
 	if err := createTable(db); err != nil {
-		log.Fatalf("Failed to create table: %v", err)
+		panic(fmt.Sprintf("Failed to create table: %v", err))
 	}
 
 	// Run initial data collection (skip if RESTART_MODE is enabled)
@@ -524,10 +530,13 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		if password != expectedPassword {
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(APIResponse{
+			err := json.NewEncoder(w).Encode(APIResponse{
 				Success: false,
 				Error:   "Invalid API key",
 			})
+			if err != nil {
+				log.Printf("Error encoding API response: %v", err)
+			}
 			return
 		}
 
@@ -538,10 +547,13 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 // healthHandler provides a simple health check endpoint
 func healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(APIResponse{
+	err := json.NewEncoder(w).Encode(APIResponse{
 		Success: true,
 		Data:    map[string]string{"status": "healthy"},
 	})
+	if err != nil {
+		log.Printf("Error encoding API response: %v", err)
+	}
 }
 
 // getPricesHandler returns all price data with optional filtering
@@ -589,13 +601,19 @@ func getPricesHandler(db *sql.DB) http.HandlerFunc {
 			if format == "csv" {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
+				_, err := w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
+				if err != nil {
+					log.Printf("Error writing CSV response: %v", err)
+				}
 			} else {
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(APIResponse{
+				err := json.NewEncoder(w).Encode(APIResponse{
 					Success: false,
 					Error:   fmt.Sprintf("Database error: %v", err),
 				})
+				if err != nil {
+					log.Printf("Error encoding API response: %v", err)
+				}
 			}
 			return
 		}
@@ -620,11 +638,14 @@ func getPricesHandler(db *sql.DB) http.HandlerFunc {
 			writeCSVResponse(w, prices)
 		} else {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(APIResponse{
+			err := json.NewEncoder(w).Encode(APIResponse{
 				Success: true,
 				Data:    prices,
 				Count:   len(prices),
 			})
+			if err != nil {
+				log.Printf("Error encoding API response: %v", err)
+			}
 		}
 	}
 }
@@ -647,13 +668,19 @@ func getLatestPricesHandler(db *sql.DB) http.HandlerFunc {
 			if format == "csv" {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
+				_, err := w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
+				if err != nil {
+					log.Printf("Error writing CSV response: %v", err)
+				}
 			} else {
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(APIResponse{
+				err := json.NewEncoder(w).Encode(APIResponse{
 					Success: false,
 					Error:   fmt.Sprintf("Database error: %v", err),
 				})
+				if err != nil {
+					log.Printf("Error encoding API response: %v", err)
+				}
 			}
 			return
 		}
@@ -680,11 +707,14 @@ func getLatestPricesHandler(db *sql.DB) http.HandlerFunc {
 		} else {
 			log.Printf("DEBUG: Writing JSON response for %d prices", len(prices))
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(APIResponse{
+			err := json.NewEncoder(w).Encode(APIResponse{
 				Success: true,
 				Data:    prices,
 				Count:   len(prices),
 			})
+			if err != nil {
+				log.Printf("Error encoding API response: %v", err)
+			}
 		}
 	}
 }
@@ -700,13 +730,19 @@ func getPricesByMarketHandler(db *sql.DB) http.HandlerFunc {
 			if format == "csv" {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte("error,Market ID is required\n"))
+				_, err := w.Write([]byte("error,Market ID is required\n"))
+				if err != nil {
+					log.Printf("Error writing CSV response: %v", err)
+				}
 			} else {
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(APIResponse{
+				err := json.NewEncoder(w).Encode(APIResponse{
 					Success: false,
 					Error:   "Market ID is required",
 				})
+				if err != nil {
+					log.Printf("Error encoding API response: %v", err)
+				}
 			}
 			return
 		}
@@ -734,13 +770,19 @@ func getPricesByMarketHandler(db *sql.DB) http.HandlerFunc {
 			if format == "csv" {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
+				_, err := w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
+				if err != nil {
+					log.Printf("Error writing CSV response: %v", err)
+				}
 			} else {
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(APIResponse{
+				err := json.NewEncoder(w).Encode(APIResponse{
 					Success: false,
 					Error:   fmt.Sprintf("Database error: %v", err),
 				})
+				if err != nil {
+					log.Printf("Error encoding API response: %v", err)
+				}
 			}
 			return
 		}
@@ -765,11 +807,14 @@ func getPricesByMarketHandler(db *sql.DB) http.HandlerFunc {
 			writeCSVResponse(w, prices)
 		} else {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(APIResponse{
+			err := json.NewEncoder(w).Encode(APIResponse{
 				Success: true,
 				Data:    prices,
 				Count:   len(prices),
 			})
+			if err != nil {
+				log.Printf("Error encoding API response: %v", err)
+			}
 		}
 	}
 }
@@ -785,13 +830,19 @@ func getPricesByExchangeHandler(db *sql.DB) http.HandlerFunc {
 			if format == "csv" {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte("error,Exchange ID is required\n"))
+				_, err := w.Write([]byte("error,Exchange ID is required\n"))
+				if err != nil {
+					log.Printf("Error writing CSV response: %v", err)
+				}
 			} else {
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(APIResponse{
+				err := json.NewEncoder(w).Encode(APIResponse{
 					Success: false,
 					Error:   "Exchange ID is required",
 				})
+				if err != nil {
+					log.Printf("Error encoding API response: %v", err)
+				}
 			}
 			return
 		}
@@ -819,13 +870,19 @@ func getPricesByExchangeHandler(db *sql.DB) http.HandlerFunc {
 			if format == "csv" {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
+				_, err := w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
+				if err != nil {
+					log.Printf("Error writing CSV response: %v", err)
+				}
 			} else {
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(APIResponse{
+				err := json.NewEncoder(w).Encode(APIResponse{
 					Success: false,
 					Error:   fmt.Sprintf("Database error: %v", err),
 				})
+				if err != nil {
+					log.Printf("Error encoding API response: %v", err)
+				}
 			}
 			return
 		}
@@ -850,11 +907,14 @@ func getPricesByExchangeHandler(db *sql.DB) http.HandlerFunc {
 			writeCSVResponse(w, prices)
 		} else {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(APIResponse{
+			err := json.NewEncoder(w).Encode(APIResponse{
 				Success: true,
 				Data:    prices,
 				Count:   len(prices),
 			})
+			if err != nil {
+				log.Printf("Error encoding API response: %v", err)
+			}
 		}
 	}
 }
@@ -875,13 +935,19 @@ func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 			if format == "csv" {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte("error,start and end date parameters are required (format: YYYY-MM-DD)\n"))
+				_, err := w.Write([]byte("error,start and end date parameters are required (format: YYYY-MM-DD)\n"))
+				if err != nil {
+					log.Printf("Error writing CSV response: %v", err)
+				}
 			} else {
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(APIResponse{
+				err := json.NewEncoder(w).Encode(APIResponse{
 					Success: false,
 					Error:   "start and end date parameters are required (format: YYYY-MM-DD)",
 				})
+				if err != nil {
+					log.Printf("Error encoding API response: %v", err)
+				}
 			}
 			return
 		}
@@ -892,13 +958,19 @@ func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 			if format == "csv" {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte("error,Invalid start date format. Use YYYY-MM-DD\n"))
+				_, err := w.Write([]byte("error,Invalid start date format. Use YYYY-MM-DD\n"))
+				if err != nil {
+					log.Printf("Error writing CSV response: %v", err)
+				}
 			} else {
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(APIResponse{
+				err := json.NewEncoder(w).Encode(APIResponse{
 					Success: false,
 					Error:   "Invalid start date format. Use YYYY-MM-DD",
 				})
+				if err != nil {
+					log.Printf("Error encoding API response: %v", err)
+				}
 			}
 			return
 		}
@@ -908,13 +980,19 @@ func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 			if format == "csv" {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte("error,Invalid end date format. Use YYYY-MM-DD\n"))
+				_, err := w.Write([]byte("error,Invalid end date format. Use YYYY-MM-DD\n"))
+				if err != nil {
+					log.Printf("Error writing CSV response: %v", err)
+				}
 			} else {
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(APIResponse{
+				err := json.NewEncoder(w).Encode(APIResponse{
 					Success: false,
 					Error:   "Invalid end date format. Use YYYY-MM-DD",
 				})
+				if err != nil {
+					log.Printf("Error encoding API response: %v", err)
+				}
 			}
 			return
 		}
@@ -954,13 +1032,19 @@ func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 			if format == "csv" {
 				w.Header().Set("Content-Type", "text/csv")
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
+				_, err := w.Write([]byte("error," + fmt.Sprintf("Database error: %v", err) + "\n"))
+				if err != nil {
+					log.Printf("Error writing CSV response: %v", err)
+				}
 			} else {
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(APIResponse{
+				err := json.NewEncoder(w).Encode(APIResponse{
 					Success: false,
 					Error:   fmt.Sprintf("Database error: %v", err),
 				})
+				if err != nil {
+					log.Printf("Error encoding API response: %v", err)
+				}
 			}
 			return
 		}
@@ -985,11 +1069,14 @@ func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 			writeCSVResponse(w, prices)
 		} else {
 			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(APIResponse{
+			err := json.NewEncoder(w).Encode(APIResponse{
 				Success: true,
 				Data:    prices,
 				Count:   len(prices),
 			})
+			if err != nil {
+				log.Printf("Error encoding API response: %v", err)
+			}
 		}
 	}
 }
