@@ -350,6 +350,12 @@ func storePriceData(db *sql.DB, data *PrometheusResponse) error {
 		marketID := result.Metric.MarketID
 		exchangeID := result.Metric.ExchangeID
 
+		// Skip entries with empty market_id or exchange_id
+		if marketID == "" || exchangeID == "" {
+			log.Printf("Skipping series with empty market_id or exchange_id: MarketID='%s', ExchangeID='%s'", marketID, exchangeID)
+			continue
+		}
+
 		log.Printf("Processing series: MarketID=%s, ExchangeID=%s, Values=%d", marketID, exchangeID, len(result.Values))
 
 		// Process each value in the time series
@@ -603,6 +609,10 @@ func getPricesHandler(db *sql.DB) http.HandlerFunc {
 				log.Printf("Error scanning row: %v", err)
 				continue
 			}
+			// Filter out entries with empty market_id or exchange_id
+			if p.MarketID == "" || p.ExchangeID == "" {
+				continue
+			}
 			prices = append(prices, p)
 		}
 
@@ -655,6 +665,10 @@ func getLatestPricesHandler(db *sql.DB) http.HandlerFunc {
 			err := rows.Scan(&p.Timestamp, &p.MarketID, &p.ExchangeID, &p.Price)
 			if err != nil {
 				log.Printf("Error scanning row: %v", err)
+				continue
+			}
+			// Filter out entries with empty market_id or exchange_id
+			if p.MarketID == "" || p.ExchangeID == "" {
 				continue
 			}
 			prices = append(prices, p)
@@ -740,6 +754,10 @@ func getPricesByMarketHandler(db *sql.DB) http.HandlerFunc {
 				log.Printf("Error scanning row: %v", err)
 				continue
 			}
+			// Filter out entries with empty market_id or exchange_id
+			if p.MarketID == "" || p.ExchangeID == "" {
+				continue
+			}
 			prices = append(prices, p)
 		}
 
@@ -819,6 +837,10 @@ func getPricesByExchangeHandler(db *sql.DB) http.HandlerFunc {
 			err := rows.Scan(&p.Timestamp, &p.MarketID, &p.ExchangeID, &p.Price)
 			if err != nil {
 				log.Printf("Error scanning row: %v", err)
+				continue
+			}
+			// Filter out entries with empty market_id or exchange_id
+			if p.MarketID == "" || p.ExchangeID == "" {
 				continue
 			}
 			prices = append(prices, p)
@@ -950,6 +972,10 @@ func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 			err := rows.Scan(&p.Timestamp, &p.MarketID, &p.ExchangeID, &p.Price)
 			if err != nil {
 				log.Printf("Error scanning row: %v", err)
+				continue
+			}
+			// Filter out entries with empty market_id or exchange_id
+			if p.MarketID == "" || p.ExchangeID == "" {
 				continue
 			}
 			prices = append(prices, p)
