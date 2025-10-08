@@ -3,7 +3,7 @@
 # Test script for CSV export functionality
 # Make sure the API server is running before executing this script
 
-API_BASE_URL="http://18.208.245.152:8080"
+API_BASE_URL=""
 API_KEY="admin123"  # Default API key, change if different
 
 echo "Testing CSV Export Functionality"
