@@ -83,7 +83,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6": {
 		ID:                "05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  1.0,
+		MaxSpreadPercent:  50.0,
 		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -116,7 +116,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"c444759b83c7bb0f6694306e1f719e65679d48ad754a31d3a366856becf1e71e": {
 		ID:                "c444759b83c7bb0f6694306e1f719e65679d48ad754a31d3a366856becf1e71e",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  1.0,
+		MaxSpreadPercent:  100.0,
 		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -241,7 +241,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"76b504e33305a63a3b80686c0b7bb99e7697466927ba78e224728e80bfaaa0be": {
 		ID:                "76b504e33305a63a3b80686c0b7bb99e7697466927ba78e224728e80bfaaa0be",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  1.0,
+		MaxSpreadPercent:  100.0,
 		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -275,7 +275,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"0bc2d41117ae8779da7623ee76a109c88b84b9bf4d9b404524df04f7d0ca4ca7": {
 		ID:                "0bc2d41117ae8779da7623ee76a109c88b84b9bf4d9b404524df04f7d0ca4ca7",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  1.0,
+		MaxSpreadPercent:  100.0,
 		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -307,7 +307,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"1962cde2f19178fe2bb2229e78a6d386e6406979edc7b9a1966d89d83b3ebf2e": {
 		ID:                "1962cde2f19178fe2bb2229e78a6d386e6406979edc7b9a1966d89d83b3ebf2e",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  1.0,
+		MaxSpreadPercent:  100.0,
 		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -339,7 +339,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"d62f132d9d04dde6e223d4366c48b47cd9f90228acdc6fa755dab93266db5176": {
 		ID:                "d62f132d9d04dde6e223d4366c48b47cd9f90228acdc6fa755dab93266db5176",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  1.0,
+		MaxSpreadPercent:  100.0,
 		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -381,8 +381,8 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"611fd0e88850bf0cc036d96d04d47605c90b993485c2971e022b5751bbb04f23": {
 		ID:                "611fd0e88850bf0cc036d96d04d47605c90b993485c2971e022b5751bbb04f23",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  0.0,
-		MinResponses:      1,
+		MaxSpreadPercent:  100.0,
+		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -391,7 +391,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Params: map[string]string{
 					"coin_id": "stride-staked-atom",
 				},
-				MarketId: "ATOM-USD",
+				MarketId: "stATOM-USD",
 			},
 			{
 				EndpointType: "coinmarketcap",
@@ -400,7 +400,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					"id": "21686",
 					// "symbol": "stATOM",
 				},
-				MarketId: "ATOM-USD",
+				MarketId: "stATOM-USD",
 			},
 			{
 				EndpointType: "osmosis",
@@ -411,7 +411,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				},
 				UsdViaID: exchange_common.ATOMUSD_ID,
 				Invert:   false,
-				MarketId: "ATOM-USD",
+				MarketId: "stATOM-USD",
 			},
 		},
 	},
@@ -461,7 +461,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"ab30caa3e7827a27c153063bce02c0b260b29c0c164040c003f0f9ec66002510": {
 		ID:                "ab30caa3e7827a27c153063bce02c0b260b29c0c164040c003f0f9ec66002510",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  1.0,
+		MaxSpreadPercent:  50.0,
 		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
