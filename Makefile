@@ -285,7 +285,6 @@ docker-image-ibc:
 	docker build -t layer-icq:local -f Dockerfile .
 	@echo "✅ IBC Docker image built: layer-icq:local"
 
-# Legacy heighliner support (optional)
 get-heighliner:
 	git clone --depth 1 https://github.com/strangelove-ventures/heighliner.git
 	cd heighliner && go install
@@ -296,7 +295,7 @@ local-image:
 ifeq (,$(shell which heighliner))
 	echo 'heighliner' binary not found. Consider running `make get-heighliner`
 else
-	heighliner build -c layer --local --dockerfile cosmos --build-target "make install" --binaries "/go/bin/layerd"
+	heighliner build -c layer --local --dockerfile cosmos --go-version "1.23.2-alpine3.20" --build-target "make install" --binaries "/go/bin/layerd"
 endif
 
 get-localic:
