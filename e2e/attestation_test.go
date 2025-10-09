@@ -77,7 +77,9 @@ func TestConsensusAttestation(t *testing.T) {
 	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
 	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
 	require.NoError(err)
-	fmt.Println("current cycle list: ", currentCycleList)
+
+	// wait 1 block
+	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[0].Node))
 
 	// validators' reporters report for the cycle list
 	var txHash1, txHash2 string

@@ -1138,8 +1138,6 @@ func SubmitCycleList(ctx context.Context, node *cosmos.ChainNode, keyName, value
 			continue
 		}
 
-		// time.Sleep(1 * time.Second)
-
 		// Parse the tx hash and check if transaction succeeded
 		txHash, err := GetTxHashFromExec(txHashBytes)
 		if err != nil {
