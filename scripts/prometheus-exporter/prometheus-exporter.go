@@ -482,7 +482,7 @@ func runAPIServer() {
 	}
 
 	log.Printf("API server starting on port %s", config.APIPort)
-	log.Fatal(server.ListenAndServe())
+	panic(server.ListenAndServe())
 }
 
 // runCombinedMode starts both API server and data collection
@@ -555,7 +555,7 @@ func runCombinedMode() {
 	}
 
 	log.Printf("Combined mode: API server starting on port %s with daily data collection", config.APIPort)
-	log.Fatal(server.ListenAndServe())
+	panic(server.ListenAndServe())
 }
 
 // authMiddleware provides password-based authentication
