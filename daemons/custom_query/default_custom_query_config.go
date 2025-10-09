@@ -46,6 +46,7 @@ const (
     [queries.{{ $key }}]
     id = "{{ $query.ID }}"
     aggregation_method = "{{ $query.AggregationMethod }}"
+	max_spread_percent = {{ $query.MaxSpreadPercent }}
     min_responses = {{ $query.MinResponses }}
     response_type = "{{ $query.ResponseType }}"
 
