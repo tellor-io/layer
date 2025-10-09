@@ -8,8 +8,20 @@ A Go application that queries a Prometheus endpoint daily to collect price feed 
 - Extracts price data with timestamps, market IDs, and exchange IDs
 - Stores data in PostgreSQL with proper indexing
 - Supports both one-time execution and daily scheduling
-- **NEW**: Password-protected REST API for data access
-- **NEW**: Multiple API endpoints for flexible data querying
+- Password-protected REST API for data access
+- Multiple API endpoints for flexible data querying
+- **NEW**: CSV and JSON export formats
+- **NEW**: Comprehensive documentation for database access and API usage
+
+## Documentation
+
+- **[Quick Reference Guide](./QUICK_REFERENCE.md)** - Fast reference for common operations
+- **[Complete Database & API Guide](./DATABASE_AND_API_GUIDE.md)** - Comprehensive guide for:
+  - Connecting to database from Terminal (psql), Python, and Golang
+  - Using the API to download JSON and CSV data
+  - Complete code examples and best practices
+- **[CSV Export Guide](./CSV_EXPORT_GUIDE.md)** - Detailed CSV export functionality
+- **[Ubuntu Setup Guide](./UBUNTU_SETUP.md)** - Production deployment instructions
 
 ## Database Schema
 
@@ -119,6 +131,7 @@ curl -H "X-API-Key: admin123" http://localhost:8080/api/health
 
 ### Example API Calls
 
+#### JSON Format (Default)
 ```bash
 # Get all prices (latest 10)
 curl -H "X-API-Key: admin123" "http://localhost:8080/api/prices?limit=10"
@@ -137,6 +150,20 @@ curl -H "X-API-Key: admin123" "http://localhost:8080/api/prices/range?start=2024
 
 # Get prices for BTC-USD in a date range
 curl -H "X-API-Key: admin123" "http://localhost:8080/api/prices/range?start=2024-01-01&end=2024-01-31&market_id=BTC-USD"
+```
+
+#### CSV Format
+Add `format=csv` to any endpoint to download data as CSV:
+
+```bash
+# Download latest prices as CSV
+curl -H "X-API-Key: admin123" "http://localhost:8080/api/prices/latest?format=csv" -o latest.csv
+
+# Download BTC-USD prices as CSV
+curl -H "X-API-Key: admin123" "http://localhost:8080/api/prices/market/BTC-USD?format=csv&limit=1000" -o btc.csv
+
+# Download date range as CSV
+curl -H "X-API-Key: admin123" "http://localhost:8080/api/prices/range?start=2024-01-01&end=2024-01-31&format=csv" -o january.csv
 ```
 
 ### Response Format
