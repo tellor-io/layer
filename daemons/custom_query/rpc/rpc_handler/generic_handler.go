@@ -3,7 +3,6 @@ package rpchandler
 import (
 	"context"
 	"fmt"
-
 	"math"
 	"time"
 
@@ -71,7 +70,7 @@ func (h *GenericHandler) FetchValue(
 		usdPrice := float64(usdPriceRaw) * math.Pow10(int(usdViaParam.Exponent))
 
 		// Multiply the value by the USD price
-		value = value * usdPrice
+		value *= usdPrice
 	}
 
 	return value, nil

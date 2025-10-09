@@ -159,7 +159,7 @@ func TestSUSDSHandler_ContractRead_Integration(t *testing.T) {
 
 	// Parse the result
 	usdsAmount := new(big.Int).SetBytes(result)
-	
+
 	// Convert to float for validation
 	divisor := new(big.Float).SetInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
 	amountFloat := new(big.Float).SetInt(usdsAmount)
