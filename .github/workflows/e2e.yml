@@ -35,7 +35,8 @@ jobs:
           build-target: make install
           binaries: |
             - /go/bin/layerd
-          go-version: '1.23.2-alpine3.20'
+          additional-args: |
+            --go-version "1.23.2-alpine3.20"
 
       - name: Publish Primary Tarball as Artifact
         uses: actions/upload-artifact@v4
@@ -69,7 +70,8 @@ jobs:
           build-target: make install
           binaries: |
             - /go/bin/layerd
-          go-version: '1.23.2-alpine3.20'
+          additional-args: |
+            --go-version "1.23.2-alpine3.20"
 
       - name: Publish IBC Tarball as Artifact
         uses: actions/upload-artifact@v4
