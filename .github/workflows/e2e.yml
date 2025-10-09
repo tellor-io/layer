@@ -35,6 +35,7 @@ jobs:
           build-target: make install
           binaries: |
             - /go/bin/layerd
+            --go-version "1.23.2-alpine3.20"
 
       - name: Publish Primary Tarball as Artifact
         uses: actions/upload-artifact@v4
@@ -68,6 +69,7 @@ jobs:
           build-target: make install
           binaries: |
             - /go/bin/layerd
+            --go-version "1.23.2-alpine3.20"
 
       - name: Publish IBC Tarball as Artifact
         uses: actions/upload-artifact@v4
@@ -90,7 +92,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23.2'
+          go-version: '1.23'
 
       - name: Generate Matrix
         id: set-matrix
@@ -115,7 +117,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23.2'
+          go-version: '1.23'
 
       - name: Download Primary Tarball
         uses: actions/download-artifact@v4
