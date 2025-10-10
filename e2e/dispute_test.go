@@ -1776,24 +1776,24 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 		require.NotNil(reporter.Metadata.Moniker, "moniker should not be nil")
 	}
 
-	// val 1 tips , 2/4 reporters submit, both are bad prices
+	// val 1 tips , 2/4 reporters submit, both are bad prices, not consensus
 	tipAmt := math.NewInt(1_000_000)
 	tip := sdk.NewCoin("loya", tipAmt)
 	_, _, err = val1.Node.Exec(ctx, val1.Node.TxCommand(val1.AccAddr, "oracle", "tip", bchQData, tip.String(), "--keyring-dir", val1.Node.HomeDir()), val1.Node.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 tipped bch-usd): ", txHash)
-	require.NoError(err)
 
 	// 2/4 ppl submit, both are bad
 	value := layerutil.EncodeValue(10000000.99)
 	for i := range reporters[:2] {
-		_, _, err = val1.Node.Exec(ctx, val1.Node.TxCommand(reporters[i].Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.Node.HomeDir()), val1.Node.Chain.Config().Env)
+		val := validatorsInfo[i]
+		_, _, err = val.Node.Exec(ctx, val.Node.TxCommand(reporters[i].Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val.Node.HomeDir()), val.Node.Chain.Config().Env)
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " submitted bch-usd): ", txHash)
 	}
 
 	// wait for query to expire and aggregation to complete
-	require.NoError(testutil.WaitForBlocks(ctx, 2, val1.Node))
+	require.NoError(testutil.WaitForBlocks(ctx, 3, val1.Node))
 
 	// verify reports
 	type UserReports struct {
