@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/tellor-io/layer/daemons/lib/metrics"
@@ -123,22 +122,7 @@ func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChan
 
 		data.NumRetries--
 
-		// Check if failure was due to concurrent transaction limit
-		if strings.Contains(err.Error(), ErrorMaxConcurrentTxs) {
-			// Bridge deposits have ~1 hour window, so we can afford to wait
-			// Sleep to allow pending SpotPrice transactions to clear
-			sleepDuration := time.Second * 10   // 10 second delay default
-			maxSleepDuration := time.Minute * 5 // 5 minute delay max
-			if data.NumRetries < bridgeDepositMaxRetries {
-				sleepDuration = min(time.Duration(bridgeDepositMaxRetries-data.NumRetries)*sleepDuration, maxSleepDuration)
-			}
-
-			c.logger.Info(fmt.Sprintf("bridge deposit failed due to tx limit, sleeping %v before retry (retries left: %d)", sleepDuration, data.NumRetries))
-
-			// Sleep directly - we're already in an isolated goroutine from BroadcastTxMsgToChain
-			time.Sleep(sleepDuration)
-			c.logger.Info(fmt.Sprintf("re-queued bridge deposit after delay (retries left: %d)", data.NumRetries))
-		}
+		// For unordered transactions, we don't need to handle concurrent transaction limits
 
 		c.txChan <- data
 

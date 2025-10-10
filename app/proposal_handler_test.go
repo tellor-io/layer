@@ -11,7 +11,6 @@ import (
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/golang/mock/gomock"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
@@ -19,6 +18,7 @@ import (
 	"github.com/tellor-io/layer/app/mocks"
 	"github.com/tellor-io/layer/app/testutils"
 	"github.com/tellor-io/layer/testutil/sample"
+	"go.uber.org/mock/gomock"
 
 	coreheader "cosmossdk.io/core/header"
 	"cosmossdk.io/log"

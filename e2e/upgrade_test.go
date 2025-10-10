@@ -72,7 +72,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 					{
 						Repository: "ghcr.io/tellor-io/layer",
 						Version:    "latest",
-						UidGid:     "1025:1025",
+						UIDGID:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
@@ -192,12 +192,14 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 		// Generate different values for each report
 		testValue := util.EncodeValue(float64(1000000 + i*100000))
 
+		// wait 1 block
+		require.NoError(t, testutil.WaitForBlocks(ctx, 1, validatorI))
+
 		// tip
 		_, _, err = validatorI.Exec(ctx, validatorI.TxCommand("validator", "oracle", "tip", qData, "1000000loya", "--keyring-dir", chain.HomeDir()), validatorI.Chain.Config().Env)
 		require.NoError(t, err, fmt.Sprintf("error tipping for report %d", i+1))
 
-		err = testutil.WaitForBlocks(ctx, 1, validatorI)
-		require.NoError(t, err)
+		require.NoError(t, testutil.WaitForBlocks(ctx, 1, validatorI))
 
 		// submit-value
 		_, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", qData, testValue, "--keyring-dir", chain.HomeDir())
