@@ -1776,6 +1776,9 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 		require.NotNil(reporter.Metadata.Moniker, "moniker should not be nil")
 	}
 
+	// wait 1 block
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
+
 	// val 1 tips , 2/4 reporters submit, both are bad prices, not consensus
 	tipAmt := math.NewInt(1_000_000)
 	tip := sdk.NewCoin("loya", tipAmt)
@@ -1786,8 +1789,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 	// 2/4 ppl submit, both are bad
 	value := layerutil.EncodeValue(10000000.99)
 	for i := range reporters[:2] {
-		val := validatorsInfo[i]
-		_, _, err = val.Node.Exec(ctx, val.Node.TxCommand(reporters[i].Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val.Node.HomeDir()), val.Node.Chain.Config().Env)
+		_, _, err = val1.Node.Exec(ctx, val1.Node.TxCommand(reporters[i].Addr, "oracle", "submit-value", bchQData, value, "--keyring-dir", val1.Node.HomeDir()), val1.Node.Chain.Config().Env)
 		require.NoError(err)
 		fmt.Println("TX HASH (", reporters[i].Keyname, " submitted bch-usd): ", txHash)
 	}
@@ -1896,6 +1898,9 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 		require.NoError(err)
 		fmt.Println("TX HASH (user", i, "unjails reporter): ", txHash)
 	}
+
+	// wait 1 block
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
 
 	// tip again, all 4 reporters submit bad prices
 	tipAmt = math.NewInt(1_000_000)
