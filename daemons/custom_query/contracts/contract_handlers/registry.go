@@ -3,10 +3,11 @@ package contract_handlers
 import "fmt"
 
 var HandlerRegistry = map[string]ContractHandler{
-	"wsteth_handler": &WSTETHHandler{},
-	"susds_handler":  &SUSDSHandler{},
-	"reth_handler":   &RocketPoolETHHandler{},
-	"king_handler":   &KingHandler{},
+	"wsteth_handler":       &WSTETHHandler{},
+	"susds_handler":        &SUSDSHandler{},
+	"reth_handler":         &RocketPoolETHHandler{},
+	"king_handler":         &KingHandler{},
+	"yieldfi_yeth_handler": &YieldFiYeth{},
 }
 
 func GetHandler(name string) (ContractHandler, error) {
