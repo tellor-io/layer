@@ -1,7 +1,6 @@
 package e2e_test
 
 import (
-	"context"
 	"crypto/ecdsa"
 	"encoding/hex"
 	"fmt"
@@ -9,9 +8,7 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/crypto"
-	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
@@ -22,99 +19,38 @@ import (
 func TestStartupUsingWrongKey(t *testing.T) {
 	require := require.New(t)
 
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
 	cosmos.SetSDKConfig("tellor")
 
-	modifyGenesis := []cosmos.GenesisKV{
+	config := e2e.DefaultSetupConfig()
+	config.ModifyGenesis = []cosmos.GenesisKV{
 		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
 		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
 		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "20s"),
 		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
-		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
 	}
 
-	nv := 2
-	nf := 0
-	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
-		{
-			NumValidators: &nv,
-			NumFullNodes:  &nf,
-			ChainConfig: ibc.ChainConfig{
-				Type:           "cosmos",
-				Name:           "layer",
-				ChainID:        "layer",
-				Bin:            "layerd",
-				Denom:          "loya",
-				Bech32Prefix:   "tellor",
-				CoinType:       "118",
-				GasPrices:      "0.0loya",
-				GasAdjustment:  1.1,
-				TrustingPeriod: "504h",
-				NoHostMount:    false,
-				Images: []ibc.DockerImage{
-					{
-						Repository: "layer",
-						Version:    "local",
-						UidGid:     "1025:1025",
-					},
-				},
-				EncodingConfig:      e2e.LayerEncoding(),
-				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator"},
-			},
-		},
-	})
+	chain, _, ctx := e2e.SetupChainWithCustomConfig(t, config)
 
-	client, network := interchaintest.DockerSetup(t)
+	validatorsInfo, err := e2e.GetValidators(ctx, chain)
+	require.NoError(err)
+	e2e.PrintValidatorInfo(ctx, validatorsInfo)
 
-	chain := chains[0].(*cosmos.CosmosChain)
-
-	ic := interchaintest.NewInterchain().
-		AddChain(chain)
-
-	ctx := context.Background()
-
-	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
-		TestName:         t.Name(),
-		Client:           client,
-		NetworkID:        network,
-		SkipPathCreation: false,
-	}))
-	t.Cleanup(func() {
-		_ = ic.Close()
-	})
-
-	// Setup validator info
+	// Setup validator info with EVM-specific fields
 	type Validators struct {
-		AccAddr      string
-		ValAddr      string
-		Node         *cosmos.ChainNode
+		e2e.ValidatorInfo
 		EVMPriv      *ecdsa.PrivateKey
 		EVMAddr      string
 		WrongKeyPriv *ecdsa.PrivateKey
 		WrongKeyAddr string
 	}
 
-	validators := make([]Validators, len(chain.Validators))
-	for i := range chain.Validators {
-		val := chain.Validators[i]
-		valAddr, err := val.AccountKeyBech32(ctx, "validator")
-		require.NoError(err)
-		valvalAddr, err := val.KeyBech32(ctx, "validator", "val")
-		require.NoError(err)
-		fmt.Println("val", i, " Account Address: ", valAddr)
-		fmt.Println("val", i, " Validator Address: ", valvalAddr)
-
+	validators := make([]Validators, len(validatorsInfo))
+	for i, v := range validatorsInfo {
 		validators[i] = Validators{
-			AccAddr: valAddr,
-			ValAddr: valvalAddr,
-			Node:    val,
+			ValidatorInfo: v,
 		}
 	}
 
