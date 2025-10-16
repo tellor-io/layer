@@ -94,14 +94,14 @@ func (h *OsmosisPoolPriceHandler) FetchValue(
 	currentPrice := sqrtPrice * sqrtPrice
 
 	// Get parameter for usdViaID
-	usdViaParam, found := constants.StaticMarketParamsConfig[uint32(usdViaID)]
+	usdViaParam, found := constants.StaticMarketParamsConfig[usdViaID]
 	if !found {
 		return 0, fmt.Errorf("market param not found for ID %d", usdViaID)
 	}
 
 	// Get usdVia price from cache
 	usdPriceMap := priceCache.GetValidMedianPrices([]marketParam.MarketParam{*usdViaParam}, time.Now())
-	usdPriceRaw, found := usdPriceMap[uint32(usdViaID)]
+	usdPriceRaw, found := usdPriceMap[usdViaID]
 	if !found {
 		return 0, errors.New("no valid USD via price found in cache")
 	}

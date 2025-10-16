@@ -59,6 +59,7 @@ type QueryConfig struct {
 	AggregationMethod string            `toml:"aggregation_method"`
 	MinResponses      int               `toml:"min_responses"`
 	ResponseType      string            `toml:"response_type"`
+	MaxSpreadPercent  float64           `toml:"max_spread_percent"`
 	Endpoints         []EndpointConfig  `toml:"endpoints"`
 	ContractReaders   []ContractHandler `toml:"-"`
 	RpcReaders        []RpcHandler      `toml:"-"`
@@ -316,6 +317,7 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 		queryMap[query.ID] = QueryConfig{
 			ID:                query.ID,
 			AggregationMethod: query.AggregationMethod,
+			MaxSpreadPercent:  query.MaxSpreadPercent,
 			MinResponses:      query.MinResponses,
 			ResponseType:      query.ResponseType,
 			ContractReaders:   contractReaders,

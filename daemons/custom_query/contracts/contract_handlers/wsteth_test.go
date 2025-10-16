@@ -24,6 +24,7 @@ import (
 
 // Helper function to create a test RPC server
 func createTestRPCServer(t *testing.T, expectedResult string) *httptest.Server {
+	t.Helper()
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var req map[string]interface{}
 		err := json.NewDecoder(r.Body).Decode(&req)

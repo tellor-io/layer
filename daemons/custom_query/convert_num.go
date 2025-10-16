@@ -175,13 +175,27 @@ func intToHex(value *big.Int, byteSize int) string {
 	return hex.EncodeToString(paddedBytes)
 }
 
-func MedianInHex(values []float64, responseType string) (string, error) {
+func MedianInHex(values []float64, responseType string, maxSpreadPercent float64) (string, error) {
 	if len(values) == 0 {
 		return "", fmt.Errorf("cannot calculate median of empty slice")
 	}
 
+	if len(values) == 1 {
+		// If only one value, return it directly
+		return AbiNumberEncoder(values[0], responseType)
+	}
 	// Sort the float values
 	sort.Float64s(values)
+
+	minValue := values[0]
+	maxValue := values[len(values)-1]
+	difference := maxValue - minValue
+
+	spreadPercent := (difference / minValue) * 100
+
+	if spreadPercent > maxSpreadPercent {
+		return "", fmt.Errorf("values differ by %.2f, which exceeds maximum allowed difference of %.2f", spreadPercent, maxSpreadPercent)
+	}
 
 	// Calculate median
 	middle := len(values) / 2
