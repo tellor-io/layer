@@ -12,16 +12,19 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - uses: mheap/github-action-required-labels@v5
+      - name: Check State Change Labels
+        uses: mheap/github-action-required-labels@v5
         with:
           mode: exactly
           count: 1
           labels: |
             stateChange
             noStateChange
-      - uses: mheap/github-action-required-labels@v5
+      
+      - name: Check Backport Labels
+        uses: mheap/github-action-required-labels@v5
         with:
           mode: exactly
           count: 1
           labels: |
-            backport release/
+            backport release/*
