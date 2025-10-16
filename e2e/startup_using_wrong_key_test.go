@@ -122,15 +122,6 @@ func TestStartupUsingWrongKey(t *testing.T) {
 	waitErr := testutil.WaitForBlocks(ctx, 7, validators[0].Node)
 	require.NoError(waitErr)
 
-	// Define types for bridge validator queries
-	type QueryBridgeValidator struct {
-		EthereumAddress string `json:"ethereumAddress"`
-		Power           string `json:"power"`
-	}
-	type QueryGetEvmValidatorsResponse struct {
-		BridgeValidatorSet []QueryBridgeValidator `json:"bridge_validator_set"`
-	}
-
 	// Get the original private keys (these are the "correct" keys that validators were created with)
 	for i, v := range validators {
 		exportCmd := []string{
