@@ -500,4 +500,19 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 			},
 		},
 	},
+	"9874c1c7b7e76b78afdfdda6dcecef56edf6bf3d49d6d6ef2a98404ea2e04a59": {
+		ID:                "9874c1c7b7e76b78afdfdda6dcecef56edf6bf3d49d6d6ef2a98404ea2e04a59",
+		AggregationMethod: "median",
+		MaxSpreadPercent:  0.0,
+		MinResponses:      1,
+		ResponseType:      "ufixed256x18",
+		Endpoints: []EndpointConfig{
+			{
+				EndpointType: "contract",
+				Handler:      "yieldfi_yeth_handler",
+				Chain:        "ethereum",
+				MarketId:     "YIELDFI-YETH-USD",
+			},
+		},
+	},
 }
