@@ -18,7 +18,7 @@ import (
 
 const VYUSD_CONTRACT = "0x2e3c5e514eef46727de1fe44618027a9b70d92fc"
 
-// VYUSDPriceHandler calculates vYUSD price by multiplying the contract conversion rate with an RPC price
+// VYUSDPriceHandler calculates vYUSD price by dividing the contract conversion rate by the USDC spot price
 type VYUSDPriceHandler struct{}
 
 func init() {
@@ -102,13 +102,13 @@ func (h *VYUSDPriceHandler) FetchValue(
 		return 0, fmt.Errorf("failed to get any prices from RPC endpoints")
 	}
 
-	// Calculate median price
+	// Calculate median USDC price
 	medianPrice := h.calculateMedian(prices)
 
-	// Multiply conversion rate by median price
-	result := conversionRateFloat * medianPrice
+	// Divide exchange rate by USDC price per requested formula
+	result := conversionRateFloat / medianPrice
 
-	fmt.Printf("vYUSD Price: conversion_rate=%f, median_price=%f, final=%f\n", conversionRateFloat, medianPrice, result)
+	fmt.Printf("vYUSD Price: exchange_rate=%f, usdc_price=%f, final=%f\n", conversionRateFloat, medianPrice, result)
 
 	return result, nil
 }
