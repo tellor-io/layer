@@ -24,4 +24,4 @@ jobs:
           mode: exactly
           count: 1
           labels: |
-            backport release/v5.x
+            backport release/
