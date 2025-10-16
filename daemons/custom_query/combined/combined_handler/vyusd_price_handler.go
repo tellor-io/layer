@@ -105,7 +105,7 @@ func (h *VYUSDPriceHandler) FetchValue(
 	// Calculate median USDC price
 	medianPrice := h.calculateMedian(prices)
 
-	// Divide exchange rate by USDC price per requested formula
+	// Divide exchange rate by USDC price
 	result := conversionRateFloat / medianPrice
 
 	fmt.Printf("vYUSD Price: exchange_rate=%f, usdc_price=%f, final=%f\n", conversionRateFloat, medianPrice, result)
