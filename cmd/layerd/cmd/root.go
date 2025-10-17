@@ -22,6 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/client/snapshot"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -98,7 +99,7 @@ func NewRootCmd(
 	})
 	autoCliOpts := tempApp.AutoCliOpts()
 	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
-	// autoCliOpts.Keyring, _ = keyring.NewAutoCLIKeyring(initClientCtx.Keyring)
+	autoCliOpts.Keyring, _ = keyring.NewAutoCLIKeyring(initClientCtx.Keyring)
 	autoCliOpts.ClientCtx = initClientCtx
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
@@ -221,10 +222,7 @@ func txCommand() *cobra.Command {
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
-	// TODO: crisis.AddModuleInitFlags is deprecated in SDK v0.53.4
-	// But will break interchaintests if removed
-	// either fork or wait for release of https://github.com/strangelove-ventures/interchaintest/issues/1383
-	crisis.AddModuleInitFlags(startCmd) //nolint:staticcheck // removing crisis module will break interchaintests
+	crisis.AddModuleInitFlags(startCmd)
 	// this line is used by starport scaffolding # root/arguments
 }
 
