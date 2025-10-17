@@ -2,23 +2,22 @@ package combined_handler
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
-	"sort"
+	"time"
 
-	gometrics "github.com/hashicorp/go-metrics"
+	daemonconstants "github.com/tellor-io/layer/daemons/constants"
 	contractreader "github.com/tellor-io/layer/daemons/custom_query/contracts/contract_reader"
 	rpcreader "github.com/tellor-io/layer/daemons/custom_query/rpc/rpc_reader"
-	"github.com/tellor-io/layer/daemons/lib/metrics"
+	exchange_common "github.com/tellor-io/layer/daemons/exchange_common"
+	marketParam "github.com/tellor-io/layer/daemons/pricefeed/client/types"
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
-
-	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 const VYUSD_CONTRACT = "0x2e3c5e514eef46727de1fe44618027a9b70d92fc"
 
-// VYUSDPriceHandler calculates vYUSD price by multiplying the contract conversion rate with an RPC price
+// VYUSDPriceHandler calculates vYUSD price by dividing the contract conversion rate by the USDC spot price
 type VYUSDPriceHandler struct{}
 
 func init() {
@@ -37,10 +36,6 @@ func (h *VYUSDPriceHandler) FetchValue(
 		return 0, fmt.Errorf("ethereum contract reader not found")
 	}
 
-	if len(rpcReaders) == 0 {
-		return 0, fmt.Errorf("no RPC readers found")
-	}
-
 	fetcher := NewParallelFetcher()
 
 	fetcher.FetchContract(
@@ -51,11 +46,6 @@ func (h *VYUSDPriceHandler) FetchValue(
 		"exchangeRateScaled() returns (uint256)",
 		nil,
 	)
-
-	// Fetch prices from all RPC endpoints
-	for name, reader := range rpcReaders {
-		fetcher.FetchRPC(ctx, "price_"+name, reader)
-	}
 
 	// Wait for all fetches to complete
 	fetcher.Wait()
@@ -72,102 +62,29 @@ func (h *VYUSDPriceHandler) FetchValue(
 	conversionRate := new(big.Float).Quo(valueInUsdFloat, divisorFloat)
 	conversionRateFloat, _ := conversionRate.Float64()
 
-	var prices []float64
-	for name, reader := range rpcReaders {
-		priceBytes, err := fetcher.GetRPCBytes("price_" + name)
-		if err != nil {
-			fmt.Printf("Warning: failed to get price from %s: %v\n", name, err)
-			continue
-		}
-
-		price, err := h.extractPrice(priceBytes, reader.ResponsePath)
-		if err != nil {
-			fmt.Printf("Warning: failed to extract price from %s: %v\n", name, err)
-			continue
-		}
-
-		telemetry.SetGaugeWithLabels(
-			[]string{metrics.PricefeedDaemon, metrics.PriceEncoderUpdatePrice},
-			float32(price),
-			[]gometrics.Label{
-				metrics.GetLabelForStringValue(metrics.MarketId, "VYUSD-USD"),
-				metrics.GetLabelForStringValue(metrics.ExchangeId, name),
-			},
-		)
-
-		prices = append(prices, price)
+	// Get USDC/USD price from in-memory cache (median across exchanges)
+	if priceCache == nil {
+		return 0, fmt.Errorf("price cache is not available")
 	}
 
-	if len(prices) == 0 {
-		return 0, fmt.Errorf("failed to get any prices from RPC endpoints")
+	usdcParam, found := daemonconstants.StaticMarketParamsConfig[exchange_common.USDCUSD_ID]
+	if !found {
+		return 0, fmt.Errorf("no valid USDC-USD market param found")
+	}
+	usdcPriceMap := priceCache.GetValidMedianPrices([]marketParam.MarketParam{*usdcParam}, time.Now())
+	usdcRaw, ok := usdcPriceMap[exchange_common.USDCUSD_ID]
+	if !ok {
+		return 0, fmt.Errorf("no valid USDC-USD price found in cache")
+	}
+	usdcPrice := float64(usdcRaw) * math.Pow10(int(usdcParam.Exponent))
+	if usdcPrice == 0 {
+		return 0, fmt.Errorf("invalid USDC-USD price (zero)")
 	}
 
-	// Calculate median price
-	medianPrice := h.calculateMedian(prices)
+	// Divide exchange rate by USDC price
+	result := conversionRateFloat / usdcPrice
 
-	// Multiply conversion rate by median price
-	result := conversionRateFloat * medianPrice
-
-	fmt.Printf("vYUSD Price: conversion_rate=%f, median_price=%f, final=%f\n", conversionRateFloat, medianPrice, result)
+	fmt.Printf("vYUSD Price: exchange_rate=%f, usdc_price=%f, final=%f\n", conversionRateFloat, usdcPrice, result)
 
 	return result, nil
-}
-
-func (h *VYUSDPriceHandler) calculateMedian(prices []float64) float64 {
-	if len(prices) == 0 {
-		return 0
-	}
-	if len(prices) == 1 {
-		return prices[0]
-	}
-
-	// Sort the prices
-	sort.Float64s(prices)
-
-	// Calculate median
-	n := len(prices)
-	if n%2 == 0 {
-		return (prices[n/2-1] + prices[n/2]) / 2.0
-	}
-	// Odd number of elements: middle value
-	return prices[n/2]
-}
-
-func (h *VYUSDPriceHandler) extractPrice(data []byte, path []string) (float64, error) {
-	var result any
-	if err := json.Unmarshal(data, &result); err != nil {
-		return 0, fmt.Errorf("failed to unmarshal JSON: %w", err)
-	}
-
-	current := result
-	for i, key := range path {
-		switch v := current.(type) {
-		case map[string]any:
-			var ok bool
-			current, ok = v[key]
-			if !ok {
-				return 0, fmt.Errorf("key not found at path segment %d: %s", i, key)
-			}
-		default:
-			return 0, fmt.Errorf("unexpected type at key %s: %T", key, current)
-		}
-	}
-
-	// Convert to float64
-	switch v := current.(type) {
-	case float64:
-		return v, nil
-	case float32:
-		return float64(v), nil
-	case int:
-		return float64(v), nil
-	case string:
-		var f float64
-		if _, err := fmt.Sscanf(v, "%f", &f); err != nil {
-			return 0, fmt.Errorf("failed to parse price string: %w", err)
-		}
-		return f, nil
-	default:
-		return 0, fmt.Errorf("unexpected price type: %T", current)
-	}
 }

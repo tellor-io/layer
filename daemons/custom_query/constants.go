@@ -426,18 +426,10 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				EndpointType: "combined",
 				Handler:      "vyusd_price",
 				CombinedSources: map[string]string{
-					"ethereum":      "contract:ethereum",
-					"sushiswap_api": "rpc:sushiswapKatana",
-					"coingecko_api": "rpc:coingecko",
+					"ethereum": "contract:ethereum",
 				},
-				CombinedConfig: map[string]any{
-					"sushiswap_api_response_path": []string{"0x4772d2e014f9fc3a820c444e3313968e9a5c8121"},
-					"coingecko_api_response_path": []string{"yieldfi-ytoken", "usd"},
-					"coingecko_api_params": map[string]string{
-						"coin_id": "yieldfi-ytoken",
-					},
-				},
-				MarketId: "VYUSD-USD",
+				CombinedConfig: map[string]any{},
+				MarketId:       "VYUSD-USD",
 			},
 		},
 	},
