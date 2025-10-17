@@ -61,7 +61,7 @@ func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos
 
 func TestLayerFlow(t *testing.T) {
 	ctx := context.Background()
-	layer := e2e.LayerSpinup(t)
+	layer := e2e.LayerSpinup(t) // *cosmos.CosmosChain type
 	validatorI := layer.Validators[0]
 	validatorII := layer.Validators[1]
 
@@ -88,7 +88,7 @@ func TestLayerFlow(t *testing.T) {
 	// Test the module account can receive funds from an external account
 	extraRewardsAddr := authtypes.NewModuleAddress("extra_rewards_pool").String()
 	// check initial balance is zero
-	balanceRes, _, err := e2e.QueryWithTimeout(ctx, validatorI, "bank", "balance", extraRewardsAddr, "loya")
+	balanceRes, _, err := validatorI.ExecQuery(ctx, "bank", "balance", extraRewardsAddr, "loya")
 	require.NoError(t, err)
 	var balance Response
 	err = json.Unmarshal(balanceRes, &balance)
@@ -99,7 +99,7 @@ func TestLayerFlow(t *testing.T) {
 	require.NoError(t, err)
 
 	// Verify the funds were received
-	balanceRes, _, err = e2e.QueryWithTimeout(ctx, validatorI, "bank", "balance", extraRewardsAddr, "loya")
+	balanceRes, _, err = validatorI.ExecQuery(ctx, "bank", "balance", extraRewardsAddr, "loya")
 	require.NoError(t, err)
 	err = json.Unmarshal(balanceRes, &balance)
 	require.NoError(t, err)
@@ -126,7 +126,7 @@ func TestLayerFlow(t *testing.T) {
 	require.NoError(t, err)
 	// all validators vote yes on minting proposal
 	for _, v := range layer.Validators {
-		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "500loya", "--keyring-dir", layer.HomeDir())
+		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "1000000loya", "--keyring-dir", layer.HomeDir())
 		require.NoError(t, err)
 	}
 	err = testutil.WaitForBlocks(ctx, 3, validatorI)
@@ -150,7 +150,7 @@ func TestLayerFlow(t *testing.T) {
 	err = testutil.WaitForBlocks(ctx, 1, validatorI)
 	require.NoError(t, err)
 	// query tippped queries
-	res, _, err := e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-tipped-queries")
+	res, _, err := validatorI.ExecQuery(ctx, "oracle", "get-tipped-queries")
 	require.NoError(t, err)
 	var tippedQueries e2e.QueryGetTippedQueriesResponse
 	err = json.Unmarshal(res, &tippedQueries)
@@ -171,7 +171,7 @@ func TestLayerFlow(t *testing.T) {
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 
-	res1, _, err := e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-reportsby-reporter", valAddress, "--page-limit", "1")
+	res1, _, err := validatorI.ExecQuery(ctx, "oracle", "get-reportsby-reporter", valAddress, "--page-limit", "1")
 	require.NoError(t, err)
 
 	var microReports e2e.ReportsResponse
@@ -184,7 +184,7 @@ func TestLayerFlow(t *testing.T) {
 	qidbz, err := utils.QueryIDFromDataString(qData)
 	require.NoError(t, err)
 
-	res2, _, err := e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-current-aggregate-report", hex.EncodeToString(qidbz))
+	res2, _, err := validatorI.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hex.EncodeToString(qidbz))
 	require.NoError(t, err)
 
 	var aggReport e2e.AggregateReport
@@ -197,22 +197,22 @@ func TestLayerFlow(t *testing.T) {
 	require.Equal(t, aggReport.Aggregate.AggregateReporter, valIIAddress)
 
 	// second party disputes report
-	txHash, err = validatorI.ExecTx(ctx, disputerFA, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, microReports.MicroReports[0].QueryID, "warning", "500000000000loya", "false", "--keyring-dir", layer.HomeDir(), "--gas", "1000000", "--fees", "500loya")
+	txHash, err = validatorI.ExecTx(ctx, disputerFA, "dispute", "propose-dispute", microReports.MicroReports[0].Reporter, microReports.MicroReports[0].MetaId, microReports.MicroReports[0].QueryID, "warning", "500000000000loya", "false", "--keyring-dir", layer.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
 	require.NoError(t, err)
 	fmt.Println("Tx hash: ", txHash)
 	var disputes e2e.Disputes
-	r, _, err := e2e.QueryWithTimeout(ctx, validatorI, "dispute", "disputes")
+	r, _, err := validatorI.ExecQuery(ctx, "dispute", "disputes")
 	require.NoError(t, err)
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(t, err)
-	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // voting
+	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 1) // voting
 	fmt.Println("Disputes: ", string(r))
-	res2, _, err = e2e.QueryWithTimeout(ctx, validatorI, "oracle", "get-current-aggregate-report", hex.EncodeToString(qidbz))
+	res2, _, err = validatorI.ExecQuery(ctx, "oracle", "get-current-aggregate-report", hex.EncodeToString(qidbz))
 	require.NoError(t, err)
 
 	fmt.Println("Aggregate report: ", string(res2))
 	// reporter should be jailed
-	res3, _, err := e2e.QueryWithTimeout(ctx, validatorI, "reporter", "reporters")
+	res3, _, err := validatorI.ExecQuery(ctx, "reporter", "reporters")
 	require.NoError(t, err)
 	fmt.Println("Reporter: ", string(res3))
 
@@ -223,23 +223,23 @@ func TestLayerFlow(t *testing.T) {
 	}
 
 	// check dispute status
-	r, _, err = e2e.QueryWithTimeout(ctx, validatorI, "dispute", "disputes")
+	r, _, err = validatorI.ExecQuery(ctx, "dispute", "disputes")
 	require.NoError(t, err)
 
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(t, err)
-	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_RESOLVED") // 2/3 voted so resolved
+	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 2) // 2/3 voted so resolved
 
 	// team votes should error
 	_, err = validatorI.ExecTx(ctx, "team", "dispute", "vote", "1", "vote-support", "--keyring-dir", layer.HomeDir())
 	require.Error(t, err) // vote already tallied
 
-	r, _, err = e2e.QueryWithTimeout(ctx, validatorI, "dispute", "disputes")
+	r, _, err = validatorI.ExecQuery(ctx, "dispute", "disputes")
 	require.NoError(t, err)
 
 	err = json.Unmarshal(r, &disputes)
 	require.NoError(t, err)
-	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_RESOLVED") // resolved
+	require.Equal(t, disputes.Disputes[0].Metadata.DisputeStatus, 2) // resolved
 }
 
 func TestGetCyclelist(t *testing.T) {
