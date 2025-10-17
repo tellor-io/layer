@@ -83,15 +83,6 @@ func (k Keeper) MintCoins(ctx context.Context, newCoins sdk.Coins) error {
 		return nil
 	}
 	k.Logger(ctx).Info("minting tbr", "coins", newCoins)
-	// emit event with amount and destination
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			"mint_coins",
-			sdk.NewAttribute("amount", newCoins.String()),
-			sdk.NewAttribute("destination", types.ModuleName),
-		),
-	})
 	return k.bankKeeper.MintCoins(ctx, types.ModuleName, newCoins)
 }
 
@@ -107,6 +98,18 @@ func (k Keeper) SendInflationaryRewards(ctx context.Context, coins sdk.Coins) er
 	}
 	quarter := coinsAmt.QuoRaw(4)
 	threequarters := coinsAmt.Sub(quarter)
+
+	// Emit event for normal inflationary rewards distribution
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	totalRewardCoins := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters.Add(quarter)))
+	// log "sending inflationary rewards event"
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"inflationary_rewards_distributed",
+			sdk.NewAttribute("total_amount", totalRewardCoins.String()),
+		),
+	})
+
 	outputs := []banktypes.Output{
 		{
 			Address: authtypes.NewModuleAddressOrBech32Address(types.TimeBasedRewards).String(),
@@ -173,6 +176,18 @@ func (k Keeper) SendExtraRewards(ctx context.Context) error {
 
 	quarter := rewardAmountInt.QuoRaw(4)
 	threequarters := rewardAmountInt.Sub(quarter)
+
+	// Emit event for extra rewards distribution
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	totalRewardCoins := sdk.NewCoins(sdk.NewCoin(rewardParams.BondDenom, threequarters.Add(quarter)))
+	k.Logger(ctx).Info("minting extra rewards", "coins", totalRewardCoins)
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"extra_rewards_distributed",
+			sdk.NewAttribute("total_amount", totalRewardCoins.String()),
+		),
+	})
+
 	outputs := []banktypes.Output{
 		{
 			Address: authtypes.NewModuleAddressOrBech32Address(types.TimeBasedRewards).String(),
