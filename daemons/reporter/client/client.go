@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	rpchttp "github.com/cometbft/cometbft/rpc/client/http"
@@ -32,11 +31,9 @@ import (
 const defaultGas = uint64(300000)
 
 var (
-	commitedIds   = make(map[uint64]bool)
-	depositTipMap = make(map[uint64]bool) // map of deposit tips already sent to bridge daemon
-
-	// Atomic counter for unordered tx timeout uniqueness (nanosecond increment)
-	txTimeoutNonce uint64
+	commitedIds             = make(map[uint64]bool)
+	depositTipMap           = make(map[uint64]bool) // map of deposit tips already sent to bridge daemon
+	lastSequenceUsed uint64 = 0                     // tracks the last sequence number used to prevent conflicts
 )
 
 var mutex = &sync.RWMutex{}
@@ -71,15 +68,6 @@ type Client struct {
 	// logger is the logger for the daemon.
 	logger log.Logger
 	txChan chan TxChannelInfo
-}
-
-// GetUniqueUnorderedTimeout generates a unique timeout timestamp for unordered transactions.
-// Returns current time + 30 seconds + atomic nanosecond increment for uniqueness.
-// https://docs.cosmos.network/v0.53/build/architecture/adr-070-unordered-account
-func (c *Client) GetUniqueUnorderedTimeout() time.Time {
-	// Atomically increment nonce and add to base timeout (30 seconds from now)
-	nonce := atomic.AddUint64(&txTimeoutNonce, 1)
-	return time.Now().Add(30 * time.Second).Add(time.Duration(nonce) * time.Nanosecond)
 }
 
 func NewClient(logger log.Logger, valGasMin string) *Client {
