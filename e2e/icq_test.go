@@ -69,7 +69,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 					{
 						Repository: "layer-icq", // source code ibc branch
 						Version:    "local",
-						UIDGID:     "1025:1025",
+						UidGid:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
@@ -96,7 +96,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 					{
 						Repository: "layer",
 						Version:    "local",
-						UIDGID:     "1025:1025",
+						UidGid:     "1025:1025",
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
