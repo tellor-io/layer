@@ -184,6 +184,7 @@ func (k Keeper) SendExtraRewards(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	totalRewardCoins := sdk.NewCoins(sdk.NewCoin(rewardParams.BondDenom, threequarters.Add(quarter)))
 
+
 	outputs := []banktypes.Output{
 		{
 			Address: authtypes.NewModuleAddressOrBech32Address(types.TimeBasedRewards).String(),
