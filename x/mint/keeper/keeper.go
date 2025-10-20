@@ -102,13 +102,6 @@ func (k Keeper) SendInflationaryRewards(ctx context.Context, coins sdk.Coins) er
 	// Emit event for normal inflationary rewards distribution
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	totalRewardCoins := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters.Add(quarter)))
-	// log "sending inflationary rewards event"
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			"inflationary_rewards_distributed",
-			sdk.NewAttribute("total_amount", totalRewardCoins.String()),
-		),
-	})
 
 	outputs := []banktypes.Output{
 		{
@@ -122,7 +115,17 @@ func (k Keeper) SendInflationaryRewards(ctx context.Context, coins sdk.Coins) er
 	}
 	moduleAddress := authtypes.NewModuleAddressOrBech32Address(types.ModuleName)
 	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters.Add(quarter))))
-	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	err := k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	if err != nil {
+		return err
+	}
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"inflationary_rewards_distributed",
+			sdk.NewAttribute("total_amount", totalRewardCoins.String()),
+		),
+	})
+	return nil
 }
 
 // GetAuthority returns the module's authority.
@@ -180,13 +183,6 @@ func (k Keeper) SendExtraRewards(ctx context.Context) error {
 	// Emit event for extra rewards distribution
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	totalRewardCoins := sdk.NewCoins(sdk.NewCoin(rewardParams.BondDenom, threequarters.Add(quarter)))
-	k.Logger(ctx).Info("minting extra rewards", "coins", totalRewardCoins)
-	sdkCtx.EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			"extra_rewards_distributed",
-			sdk.NewAttribute("total_amount", totalRewardCoins.String()),
-		),
-	})
 
 	outputs := []banktypes.Output{
 		{
@@ -200,5 +196,16 @@ func (k Keeper) SendExtraRewards(ctx context.Context) error {
 	}
 	moduleAddress := authtypes.NewModuleAddressOrBech32Address(types.ExtraRewardsPool)
 	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(rewardParams.BondDenom, threequarters.Add(quarter))))
-	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	err := k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	if err != nil {
+		return err
+	}
+	k.Logger(ctx).Info("minting extra rewards", "coins", totalRewardCoins)
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"extra_rewards_distributed",
+			sdk.NewAttribute("total_amount", totalRewardCoins.String()),
+		),
+	})
+	return nil
 }
