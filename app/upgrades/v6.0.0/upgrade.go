@@ -8,20 +8,19 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 )
 
 /*
 	Upgrade to v6.0.0 will include:
-		- adding ExtraRewardsPool module account to the mint module
-		- adding SendExtraRewards function to the mint keeper to send any balance in the ExtraRewardsPool to the TimeBasedRewards account on each BeginBlock
+		- upgrade to new cosmos sdk version
+		- now support unorder transactions to make reporting for multiple things easier as well as being to make multiple transactions in one block easier
+
 
 */
 
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
-	ak keeper.AccountKeeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, _ upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)

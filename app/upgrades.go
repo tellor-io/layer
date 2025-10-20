@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/tellor-io/layer/app/upgrades"
-	v_5_1_2 "github.com/tellor-io/layer/app/upgrades/v5.1.2"
 	v_6_0_0 "github.com/tellor-io/layer/app/upgrades/v6.0.0"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -14,7 +13,7 @@ var (
 	// `Upgrades` defines the upgrade handlers and store loaders for the application.
 	// New upgrades should be added to this slice after they are implemented.
 	Upgrades = []*upgrades.Upgrade{
-		&v_5_1_2.Upgrade,
+		&v_6_0_0.Upgrade,
 	}
 	Forks = []upgrades.Fork{}
 )
@@ -30,7 +29,6 @@ func (app *App) setupUpgradeHandlers() {
 		v_6_0_0.CreateUpgradeHandler(
 			app.ModuleManager(),
 			app.configurator,
-			app.AccountKeeper,
 		),
 	)
 }
