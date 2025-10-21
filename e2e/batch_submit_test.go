@@ -1,16 +1,13 @@
 package e2e_test
 
 import (
-	"context"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"testing"
 
-	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
-	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
@@ -21,107 +18,49 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	trxQData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747278000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	suiQData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003737569000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	bchQData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003626368000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	warning  = "warning"
+)
+
 func TestBatchSubmitValue(t *testing.T) {
 	require := require.New(t)
 
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-
-	t.Parallel()
 	cosmos.SetSDKConfig("tellor")
 
-	modifyGenesis := []cosmos.GenesisKV{
-		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
-		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
-		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "20s"),
-		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
-		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
-		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
-		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
-	}
+	chain, ic, ctx := e2e.SetupChain(t, 3, 0) // Use 3 validators
+	defer ic.Close()
 
-	nv := 4
-	nf := 0
-	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{
-		{
-			NumValidators: &nv,
-			NumFullNodes:  &nf,
-			ChainConfig: ibc.ChainConfig{
-				Type:           "cosmos",
-				Name:           "layer",
-				ChainID:        "layer",
-				Bin:            "layerd",
-				Denom:          "loya",
-				Bech32Prefix:   "tellor",
-				CoinType:       "118",
-				GasPrices:      "0.0loya",
-				GasAdjustment:  1.1,
-				TrustingPeriod: "504h",
-				NoHostMount:    false,
-				Images: []ibc.DockerImage{
-					{
-						Repository: "layer",
-						Version:    "local",
-						UidGid:     "1025:1025",
-					},
-				},
-				EncodingConfig:      e2e.LayerEncoding(),
-				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-				AdditionalStartArgs: []string{"--key-name", "validator"},
-			},
-		},
-	})
+	validators, err := e2e.GetValidators(ctx, chain)
+	require.NoError(err)
+	require.Len(validators, 3, "Expected 3 validators")
 
-	client, network := interchaintest.DockerSetup(t)
+	val1 := validators[0].Node
+	val2 := validators[1].Node
+	val3 := validators[2].Node
 
-	chain := chains[0].(*cosmos.CosmosChain)
-
-	ic := interchaintest.NewInterchain().
-		AddChain(chain)
-
-	ctx := context.Background()
-
-	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
-		TestName:         t.Name(),
-		Client:           client,
-		NetworkID:        network,
-		SkipPathCreation: false,
-	}))
-	t.Cleanup(func() {
-		_ = ic.Close()
-	})
-
-	// Get validators
-	validators := getValidators(t, ctx, chain)
-	val1 := validators[0].Val
-	val2 := validators[1].Val
-	val3 := validators[2].Val
-	val4 := validators[3].Val
-	// val1Addr := validators[0].Addr
-
-	// Create a reporter from validator 1
+	// Create a reporter from validator 1 using new helper
 	fmt.Println("Creating reporter from validator 1...")
-	txHash, err := val1.ExecTx(ctx, "validator", "reporter", "create-reporter", "0.1", "1000000", "reporter1", "--keyring-dir", val1.HomeDir())
+	txHash, err := e2e.CreateReporterFromValidator(ctx, validators[0], "reporter1", math.NewInt(1000000))
 	require.NoError(err)
 	fmt.Println("Reporter creation tx hash:", txHash)
 
-	// Cyclist queries
-	ethQueryDataStr := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	ethQueryData, err := hex.DecodeString(ethQueryDataStr)
+	// Non-cycle list queries (using constants from dispute_test.go)
+	trxQueryData, err := hex.DecodeString(trxQData)
 	require.NoError(err)
-	btcQueryDataStr := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003627463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	btcQueryData, err := hex.DecodeString(btcQueryDataStr)
+	suiQueryData, err := hex.DecodeString(suiQData)
 	require.NoError(err)
-	trbQueryDataStr := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747262000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	trbQueryData, err := hex.DecodeString(trbQueryDataStr)
+	bchQueryData, err := hex.DecodeString(bchQData)
 	require.NoError(err)
-	// convert to base64 for CLI
-	queryData1 := base64.StdEncoding.EncodeToString(ethQueryData)
-	queryData2 := base64.StdEncoding.EncodeToString(btcQueryData)
-	queryData3 := base64.StdEncoding.EncodeToString(trbQueryData)
 
-	fmt.Printf("Cycle list queries:\n1: %s\n2: %s\n3: %s\n", queryData1, queryData2, queryData3)
+	// convert to base64 for CLI
+	queryData1 := base64.StdEncoding.EncodeToString(trxQueryData)
+	queryData2 := base64.StdEncoding.EncodeToString(suiQueryData)
+	queryData3 := base64.StdEncoding.EncodeToString(bchQueryData)
+
+	fmt.Printf("Non-cycle list queries:\n1: TRX/USD\n2: SUI/USD\n3: BCH/USD\n")
 
 	// Random value
 	value := "000000000000000000000000000000000000000000000000000000000000001e" // hex encoded value (30)
@@ -132,144 +71,114 @@ func TestBatchSubmitValue(t *testing.T) {
 	value3 := fmt.Sprintf(`{"query_data":"%s", "value":"%s"}`, queryData3, value)
 
 	// Try to submit values for all three queries initially
-	// Without tips, only one of them should succeed (since without tips only one query can be in the cycle list at a time)
-	fmt.Println("\n=== Testing initial submission (expecting 2 failures, 1 success) ===")
-	// Execute batch submit
-	txHash1, err := val1.ExecTx(
-		ctx, "validator",
-		"oracle",
-		"batch-submit-value",
-		"--values", value1,
-		"--values", value2,
-		"--values", value3,
-		"--fees", "25loya",
-		"--keyring-dir",
-		val1.HomeDir(),
-	)
+	// Without tips, ALL should fail since these are not cycle list queries
+	fmt.Println("\n=== Testing initial submission (expecting ALL to fail - no tips) ===")
+
+	// Create report data
+	reports := []string{value1, value2, value3}
+
+	// Execute batch submit using new helper
+	txHash1, err := e2e.SubmitBatchReport(ctx, val1, reports, "25loya")
 	require.NoError(err)
 
+	// Wait for transaction to be included in a block
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1))
+
 	// Query the transaction result to see which ones failed
-	txRes, _, err := val1.ExecQuery(ctx, "tx", txHash1)
+	txRes, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", txHash1)
 	require.NoError(err)
 	fmt.Println("Transaction result for first submission:", string(txRes))
 
 	// ======================================================================================
 	// Now tip all three queries to make them submittable
-	fmt.Println("\n=== Tipping all three cycle list queries ===")
-	tipAmount := sdk.NewCoin("loya", math.NewInt(1000000)) // 1 TRB
+	fmt.Println("\n=== Tipping all three non-cycle list queries ===")
+	tip := sdk.NewCoin("loya", math.NewInt(1000000)) // 1 TRB
 
-	// Tip query 1
-	// Use Exec so it doesn't wait 2 Blocks
-	cmd := val2.TxCommand("validator", "oracle", "tip", queryData1, tipAmount.String(), "--keyring-dir", val2.HomeDir())
-	stdout, _, err := val2.Exec(ctx, cmd, val2.Chain.Config().Env)
+	// Use 3 different validators to tip in parallel
+	var err1, err2, err3 error
+
+	_, _, err1 = val1.Exec(ctx, val1.TxCommand("validator", "oracle", "tip", queryData1, tip.String(), "--keyring-dir", val1.HomeDir()), val1.Chain.Config().Env)
+	_, _, err2 = val2.Exec(ctx, val2.TxCommand("validator", "oracle", "tip", queryData2, tip.String(), "--keyring-dir", val2.HomeDir()), val2.Chain.Config().Env)
+	_, _, err3 = val3.Exec(ctx, val3.TxCommand("validator", "oracle", "tip", queryData3, tip.String(), "--keyring-dir", val3.HomeDir()), val3.Chain.Config().Env)
+
+	require.NoError(err1, "Val1 failed to tip TRX/USD")
+	require.NoError(err2, "Val2 failed to tip SUI/USD")
+	require.NoError(err3, "Val3 failed to tip BCH/USD")
+
+	fmt.Println("All 3 tips broadcasted from different accounts")
+
+	// Wait 1 block for tips to be included
+	// Tips in block N, expiration = N + 2, can submit in blocks N and N+1
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1))
+
+	// Execute second batch submit - val1 is the reporter
+	txHash, err = e2e.SubmitBatchReport(ctx, val1, reports, "500loya")
 	require.NoError(err)
+	fmt.Println("Second batch submit tx hash:", txHash)
 
-	fmt.Println("Tipped query 1")
-	output := cosmos.CosmosTx{}
-	err = json.Unmarshal(stdout, &output)
-	require.NoError(err)
-	fmt.Println("Transaction output for first tip:", output)
-
-	// Tip query 2
-	cmd = val3.TxCommand("validator", "oracle", "tip", queryData2, tipAmount.String(), "--keyring-dir", val3.HomeDir())
-	stdout, _, err = val3.Exec(ctx, cmd, val3.Chain.Config().Env)
-	require.NoError(err)
-
-	fmt.Println("Tipped query 2")
-
-	output = cosmos.CosmosTx{}
-	err = json.Unmarshal(stdout, &output)
-	require.NoError(err)
-	fmt.Println("Transaction output for second tip:", output)
-
-	// Tip query 3
-	cmd = val4.TxCommand("validator", "oracle", "tip", queryData3, tipAmount.String(), "--keyring-dir", val4.HomeDir())
-	stdout, _, err = val4.Exec(ctx, cmd, val4.Chain.Config().Env)
-	require.NoError(err)
-
-	fmt.Println("Tipped query 3")
-
-	output = cosmos.CosmosTx{}
-	err = json.Unmarshal(stdout, &output)
-	require.NoError(err)
-	fmt.Println("Transaction output for third tip:", output)
-	// ======================================================================================
-
-	// Now batch submit all three queries again - this time all should succeed
-	fmt.Println("\n=== Batch submitting all three queries (expecting all to succeed) ===")
-	// Execute second batch submit with JSON file
-	cmd = val1.TxCommand("validator", "oracle", "batch-submit-value",
-		"--values", value1,
-		"--values", value2,
-		"--values", value3,
-		"--fees", "25loya",
-		"--gas",
-		"400000",
-		"--keyring-dir",
-		val1.HomeDir())
-
-	stdout, _, err = val1.Exec(ctx, cmd, val1.Chain.Config().Env)
-	require.NoError(err)
-	var output2 cosmos.CosmosTx
-	err = json.Unmarshal(stdout, &output2)
-	require.NoError(err)
-	fmt.Println("Second batch submit tx hash:", output2)
-	require.NoError(testutil.WaitForBlocks(ctx, 4, val1))
+	// wait for aggregation
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val1))
 
 	// Verify all three reports were created by querying reports
 	fmt.Println("\n=== Verifying reports were created ===")
 
 	microReports := make([]e2e.MicroReport, 3)
+	queryNames := []string{"TRX/USD", "SUI/USD", "BCH/USD"}
 	// Query reports for each query ID
-	for i, qDataBytes := range [][]byte{ethQueryData, btcQueryData, trbQueryData} {
+	for i, qDataBytes := range [][]byte{trxQueryData, suiQueryData, bchQueryData} {
 		// Convert query data to query ID
 		queryId := hex.EncodeToString(utils.QueryIDFromData(qDataBytes))
 
 		// Query reports by query ID
-		reportsRes, _, err := val1.ExecQuery(ctx, "oracle", "get-reportsby-qid", queryId, "--page-limit", "10")
+		reportsRes, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "get-reportsby-qid", queryId, "--page-limit", "10")
 		require.NoError(err)
+
+		// Debug: Print raw response before unmarshalling
+		fmt.Printf("Raw reports response for %s: %s\n", queryNames[i], string(reportsRes))
 
 		var reports e2e.QueryMicroReportsResponse
 		err = json.Unmarshal(reportsRes, &reports)
 		require.NoError(err)
 
-		fmt.Printf("Query %d (ID: %s) has %d reports\n", i+1, queryId, len(reports.MicroReports))
-		require.Greater(len(reports.MicroReports), 0, "Query %d should have at least one report", i+1)
-		microReports[i] = reports.MicroReports[len(reports.MicroReports)-1]
-		// Verify the latest report has the expected value
-		if len(reports.MicroReports) > 0 {
-			latestReport := reports.MicroReports[len(reports.MicroReports)-1]
-			fmt.Printf("  Latest report value: %s\n", latestReport.Value)
+		fmt.Printf("%s (ID: %s) has %d reports\n", queryNames[i], queryId, len(reports.MicroReports))
+		require.Equal(len(reports.MicroReports), 1, "%s should have exactly 1 report", queryNames[i])
+		microReports[i] = reports.MicroReports[0]
 
-			// Check if the value matches one of our submitted values
-			expectedValues := value
-			valueFound := false
-			if latestReport.Value == expectedValues {
-				valueFound = true
-			}
-			require.True(valueFound || latestReport.Value == value, "Report value should match one of the submitted values")
-		}
+		// Verify the report has the expected value
+		latestReport := reports.MicroReports[0]
+		fmt.Printf("  Report value: %s\n", latestReport.Value)
+		require.Equal(latestReport.Value, value, "%s report value should match submitted value", queryNames[i])
 	}
 
 	// Query aggregates to verify they were created
 	fmt.Println("\n=== Checking for aggregate reports ===")
 
-	for i, qDataBytes := range [][]byte{ethQueryData, trbQueryData, btcQueryData} {
+	for i, qDataBytes := range [][]byte{trxQueryData, suiQueryData, bchQueryData} {
 		// Convert query data to query ID
 		queryId := hex.EncodeToString(utils.QueryIDFromData(qDataBytes))
 
 		// Try to get current aggregate
-		aggRes, _, err := val1.ExecQuery(ctx, "oracle", "get-current-aggregate-report", queryId)
-		if err == nil {
-			var aggregate e2e.QueryGetCurrentAggregateReportResponse
-			err = json.Unmarshal(aggRes, &aggregate)
-			if err == nil && string(aggregate.Aggregate.QueryId) != "" {
-				fmt.Printf("Query %d has aggregate report with height %s\n", i+1, aggregate.Aggregate.Height)
-			}
-		}
+		aggRes, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "get-current-aggregate-report", queryId)
+		require.NoError(err, "Failed to query aggregate for %s", queryNames[i])
+
+		var aggregate e2e.QueryGetCurrentAggregateReportResponse
+		err = json.Unmarshal(aggRes, &aggregate)
+		require.NoError(err, "Failed to unmarshal aggregate response for %s", queryNames[i])
+		require.NotEmpty(aggregate.Aggregate.QueryId, "%s should have an aggregate report", queryNames[i])
+
+		fmt.Printf("%s has aggregate report with height %s\n", queryNames[i], aggregate.Aggregate.Height)
 	}
 
 	fmt.Println("\n=== Batch submit test completed successfully ===")
+
+	// Debug: Print microReports values before using them
+	fmt.Printf("Debug: microReports[0] (TRX/USD) values:\n")
+	fmt.Printf("  Reporter: %s\n", microReports[0].Reporter)
+	fmt.Printf("  MetaId: %s\n", microReports[0].MetaId)
+	fmt.Printf("  QueryID: %s\n", microReports[0].QueryID)
+	fmt.Printf("  Power: %s\n", microReports[0].Power)
+	fmt.Printf("  Value: %s\n", microReports[0].Value)
+	fmt.Printf("  Timestamp: %s\n", microReports[0].Timestamp)
 
 	// dispute values submitted in batch by validator 1
 	fmt.Println("\n=== Dispute a report that was submitted via batch ===")
@@ -281,7 +190,6 @@ func TestBatchSubmitValue(t *testing.T) {
 	require.Error(err, "proposer cannot pay from their bond when creating a dispute on themselves")
 	fmt.Println("Reporter power: ", microReports[0].Power)
 
-	//
 	val1valAddr, err := val1.KeyBech32(ctx, "validator", "val")
 	require.NoError(err)
 	val1StakingBefore, err := chain.StakingQueryValidator(ctx, val1valAddr)
@@ -291,11 +199,11 @@ func TestBatchSubmitValue(t *testing.T) {
 	txHash, err = val2.ExecTx(
 		ctx, "validator", "dispute", "propose-dispute",
 		microReports[0].Reporter, microReports[0].MetaId,
-		microReports[0].QueryID, warning, "500000000000loya", "false", "--keyring-dir", val2.HomeDir(), "--gas", "1000000", "--fees", "1000000loya",
+		microReports[0].QueryID, warning, "500000000000loya", "false", "--keyring-dir", val2.HomeDir(), "--gas", "300000", "--fees", "15loya",
 	)
 	require.NoError(err)
 	fmt.Println("TX HASH (dispute on ", microReports[0].Reporter, "): ", txHash)
-	txRes, _, err = val2.ExecQuery(ctx, "tx", txHash)
+	txRes, _, err = e2e.QueryWithTimeout(ctx, val2, "tx", txHash)
 	require.NoError(err)
 	fmt.Println("Transaction result for first submission:", string(txRes))
 
@@ -304,43 +212,27 @@ func TestBatchSubmitValue(t *testing.T) {
 	fmt.Println("val1 staking power after dispute: ", val1StakingAfter.Tokens)
 	require.Equal(val1StakingAfter.Tokens, val1StakingBefore.Tokens.Sub(math.NewInt(50000*1e6)))
 
-	openDisputesRes, _, err := val1.ExecQuery(ctx, "dispute", "open-disputes")
+	openDisputesRes, _, err := e2e.QueryWithTimeout(ctx, val1, "dispute", "open-disputes")
 	require.NoError(err)
 	var openDisputes e2e.QueryOpenDisputesResponse
 	require.NoError(json.Unmarshal(openDisputesRes, &openDisputes))
 	require.Greater(len(openDisputes.OpenDisputes.Ids), 0)
 	fmt.Println("openDisputes: ", openDisputes.OpenDisputes.Ids)
 
-	res, _, err := val1.ExecQuery(ctx, "oracle", "retrieve-data", microReports[0].QueryID, microReports[0].Timestamp)
-	require.NoError(err)
+	// Test retrieve-data functionality - use the aggregate's timestamp instead of micro report timestamp
+	// First get the aggregate to find the correct timestamp
+	aggRes, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "get-current-aggregate-report", microReports[0].QueryID)
+	require.NoError(err, "Failed to get aggregate for retrieve-data test")
+
+	var aggregate e2e.QueryGetCurrentAggregateReportResponse
+	err = json.Unmarshal(aggRes, &aggregate)
+	require.NoError(err, "Failed to unmarshal aggregate for retrieve-data test")
+	require.NotEmpty(aggregate.Aggregate.QueryId, "Aggregate should exist for retrieve-data test")
+
+	// Use the aggregate's timestamp for retrieve-data
+	res, _, err := e2e.QueryWithTimeout(ctx, val1, "oracle", "retrieve-data", microReports[0].QueryID, aggregate.Timestamp)
+	require.NoError(err, "Failed to retrieve data")
 	var data e2e.QueryRetrieveDataResponse
 	require.NoError(json.Unmarshal(res, &data))
 	require.Equal(data.Aggregate.Flagged, true)
-}
-
-// Helper function to get validators
-func getValidators(t *testing.T, ctx context.Context, chain *cosmos.CosmosChain) []struct {
-	Val  *cosmos.ChainNode
-	Addr string
-} {
-	t.Helper()
-	validators := make([]struct {
-		Val  *cosmos.ChainNode
-		Addr string
-	}, 0)
-
-	for i, val := range chain.Validators {
-		addr, err := val.AccountKeyBech32(ctx, "validator")
-		require.NoError(t, err)
-		validators = append(validators, struct {
-			Val  *cosmos.ChainNode
-			Addr string
-		}{
-			Val:  val,
-			Addr: addr,
-		})
-		fmt.Printf("Validator %d address: %s\n", i+1, addr)
-	}
-
-	return validators
 }
