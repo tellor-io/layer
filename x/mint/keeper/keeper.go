@@ -173,6 +173,10 @@ func (k Keeper) SendExtraRewards(ctx context.Context) error {
 	}
 
 	timeElapsed := currentTime.Sub(*previousBlockTime).Milliseconds()
+	if timeElapsed < 0 {
+		k.Logger(ctx).Error("extra rewards time elapsed is negative", "time_elapsed", timeElapsed)
+		return nil
+	}
 	rewardAmount := dailyExtraRewardRate * timeElapsed / types.MillisecondsInDay
 	rewardAmountInt := math.NewInt(rewardAmount)
 	// only send if we have enough balance so the minimum/rate is the the TBR mint rate
