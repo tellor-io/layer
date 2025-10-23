@@ -38,10 +38,11 @@ func MintKeeper(tb testing.TB) (keeper.Keeper, *mocks.AccountKeeper, *mocks.Bank
 	accountKeeper := new(mocks.AccountKeeper)
 	bankKeeper := new(mocks.BankKeeper)
 	moduleAddr := authtypes.NewModuleAddress(types.ModuleName)
+	extraRewardsPoolAddr := authtypes.NewModuleAddress(types.ExtraRewardsPool)
 	timeBasedRewardsAddr := authtypes.NewModuleAddress(types.TimeBasedRewards)
 	accountKeeper.On("GetModuleAddress", types.ModuleName).Return(moduleAddr)
 	accountKeeper.On("GetModuleAddress", types.TimeBasedRewards).Return(timeBasedRewardsAddr)
-
+	accountKeeper.On("GetModuleAddress", types.ExtraRewardsPool).Return(extraRewardsPoolAddr)
 	k := keeper.NewKeeper(
 		cdc,
 		runtime.NewKVStoreService(storeKey),

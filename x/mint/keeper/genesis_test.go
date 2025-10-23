@@ -17,6 +17,7 @@ func TestGenesis(t *testing.T) {
 	genesisState := types.NewGenesisState("loya", true, &time)
 	require.NotNil(genesisState)
 	ak.On("GetModuleAccount", ctx, types.TimeBasedRewards).Return(nil)
+	ak.On("GetModuleAccount", ctx, types.ExtraRewardsPool).Return(nil)
 	k.InitGenesis(ctx, ak, genesisState)
 	got := k.ExportGenesis(ctx)
 	require.NotNil(got)
