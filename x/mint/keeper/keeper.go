@@ -119,7 +119,20 @@ func (k Keeper) SendInflationaryRewards(ctx context.Context, coins sdk.Coins) er
 	}
 	moduleAddress := authtypes.NewModuleAddressOrBech32Address(types.ModuleName)
 	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, threequarters.Add(quarter))))
-	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	err := k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	if err != nil {
+		return err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	totalRewardCoins := sdk.NewCoins(sdk.NewCoin(layer.BondDenom, coinsAmt))
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"inflationary_rewards_distributed",
+			sdk.NewAttribute("total_amount", totalRewardCoins.String()),
+		),
+	})
+	return nil
 }
 
 // GetAuthority returns the module's authority.
@@ -173,6 +186,10 @@ func (k Keeper) SendExtraRewards(ctx context.Context) error {
 
 	quarter := rewardAmountInt.QuoRaw(4)
 	threequarters := rewardAmountInt.Sub(quarter)
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	totalRewardCoins := sdk.NewCoins(sdk.NewCoin(rewardParams.BondDenom, rewardAmountInt))
+
 	outputs := []banktypes.Output{
 		{
 			Address: authtypes.NewModuleAddressOrBech32Address(types.TimeBasedRewards).String(),
@@ -185,5 +202,16 @@ func (k Keeper) SendExtraRewards(ctx context.Context) error {
 	}
 	moduleAddress := authtypes.NewModuleAddressOrBech32Address(types.ExtraRewardsPool)
 	inputs := banktypes.NewInput(moduleAddress, sdk.NewCoins(sdk.NewCoin(rewardParams.BondDenom, threequarters.Add(quarter))))
-	return k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	err := k.bankKeeper.InputOutputCoins(ctx, inputs, outputs)
+	if err != nil {
+		return err
+	}
+	k.Logger(ctx).Info("minting extra rewards", "coins", totalRewardCoins)
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"extra_rewards_distributed",
+			sdk.NewAttribute("total_amount", totalRewardCoins.String()),
+		),
+	})
+	return nil
 }
