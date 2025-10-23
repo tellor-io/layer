@@ -51,7 +51,10 @@ func NewKeeper(
 	if addr := accountKeeper.GetModuleAddress(types.TimeBasedRewards); addr == nil {
 		panic("the mintToOracle account has not been set")
 	}
-
+	// Ensure the extra rewards pool account has been set
+	if addr := accountKeeper.GetModuleAddress(types.ExtraRewardsPool); addr == nil {
+		panic("the extra rewards pool account has not been set")
+	}
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
 		cdc:           cdc,
