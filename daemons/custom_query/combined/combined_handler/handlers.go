@@ -98,7 +98,7 @@ func (p *ParallelFetcher) GetResult(key string) (any, error) {
 	return result, nil
 }
 
-func (p *ParallelFetcher) GetContractBytes(key string) ([]byte, error) {
+func (p *ParallelFetcher) GetBytes(key string) ([]byte, error) {
 	result, err := p.GetResult(key)
 	if err != nil {
 		return nil, err
@@ -112,16 +112,6 @@ func (p *ParallelFetcher) GetContractBytes(key string) ([]byte, error) {
 	return bytes, nil
 }
 
-func (p *ParallelFetcher) GetRPCBytes(key string) ([]byte, error) {
-	result, err := p.GetResult(key)
-	if err != nil {
-		return nil, err
-	}
-
-	bytes, ok := result.([]byte)
-	if !ok {
-		return nil, fmt.Errorf("result for key %s is not []byte", key)
-	}
-
-	return bytes, nil
+func (p *ParallelFetcher) GetContractBytes(key string) ([]byte, error) {
+	return p.GetBytes(key)
 }
