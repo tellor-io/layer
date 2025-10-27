@@ -10,7 +10,7 @@
     timeout = 5000
 
     [endpoints.curve]
-    url_template = "https://prices.curve.fi/v1/usd_price/ethereum/{contract_address}"
+    url_template = "https://prices.curve.finance/v1/usd_price/ethereum/{contract_address}"
     method = "GET"
     timeout = 5000
 
