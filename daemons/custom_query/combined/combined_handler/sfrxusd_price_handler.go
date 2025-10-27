@@ -14,7 +14,10 @@ import (
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 )
 
-const MIN_FRX_SOURCES = 2
+const (
+	MIN_FRX_SOURCES    = 2
+	MAX_FRX_SPREAD_PCT = 50.0 // Maximum allowed spread between FRX/USD prices
+)
 
 // SFRXUSDPriceHandler calculates sFRXUSD price by multiplying the fundamental rate by FRX/USD spot price
 // Note: Uses RPC sources (CoinGecko, CoinPaprika, Curve) because FRX is not available on standard CEX exchanges
@@ -173,8 +176,23 @@ func (h *SFRXUSDPriceHandler) FetchValue(
 
 	// calculate median frx/usd spot price
 	sort.Float64s(frxPrices)
-	var frxUsdPrice float64
+
+	// validate spread between min and max prices
+	minPrice := frxPrices[0]
+	maxPrice := frxPrices[len(frxPrices)-1]
+	spreadPercent := ((maxPrice - minPrice) / minPrice) * 100
+
+	if spreadPercent > MAX_FRX_SPREAD_PCT {
+		log.Warnf("[sFRXUSD] FRX/USD prices show excessive spread: %.2f%% (max: %.2f%%), prices: %v",
+			spreadPercent, MAX_FRX_SPREAD_PCT, frxPrices)
+		return 0, fmt.Errorf("FRX/USD price spread of %.2f%% exceeds maximum allowed %.2f%%",
+			spreadPercent, MAX_FRX_SPREAD_PCT)
+	}
+
+	log.Infof("[sFRXUSD] FRX/USD price spread: %.2f%%, prices: %v", spreadPercent, frxPrices)
+
 	n := len(frxPrices)
+	var frxUsdPrice float64
 	if n%2 == 0 {
 		frxUsdPrice = (frxPrices[n/2-1] + frxPrices[n/2]) / 2
 	} else {
@@ -184,6 +202,8 @@ func (h *SFRXUSDPriceHandler) FetchValue(
 	if frxUsdPrice <= 0 {
 		return 0, fmt.Errorf("invalid median FRX/USD price: %.6f", frxUsdPrice)
 	}
+
+	log.Infof("[sFRXUSD] Median FRX/USD price: $%.6f", frxUsdPrice)
 
 	// final result = fundamental rate * frx/usd spot price
 	result := fundamentalRateFloat * frxUsdPrice
