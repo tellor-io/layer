@@ -14,7 +14,7 @@ var StaticEndpointTemplateConfig = map[string]*EndpointTemplate{
 		Timeout:     5000,
 	},
 	"curve": {
-		URLTemplate: "https://prices.curve.fi/v1/usd_price/ethereum/{contract_address}",
+		URLTemplate: "https://prices.curve.finance/v1/usd_price/ethereum/{contract_address}",
 		Method:      "GET",
 		Timeout:     5000,
 	},
@@ -453,40 +453,32 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"ab30caa3e7827a27c153063bce02c0b260b29c0c164040c003f0f9ec66002510": {
 		ID:                "ab30caa3e7827a27c153063bce02c0b260b29c0c164040c003f0f9ec66002510",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  50.0,
-		MinResponses:      2,
+		MaxSpreadPercent:  0.0,
+		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
-				EndpointType: "coingecko",
-				ResponsePath: []string{"staked-frax-usd", "usd"},
-				Params: map[string]string{
-					"coin_id": "staked-frax-usd",
+				EndpointType: "combined",
+				Handler:      "sfrxusd_price",
+				CombinedSources: map[string]string{
+					"ethereum":    "contract:ethereum",
+					"coingecko":   "rpc:coingecko",
+					"curve":       "rpc:curve",
+					"coinpaprika": "rpc:coinpaprika",
 				},
-				MarketId: "SFRXUSD-USD",
-			},
-			{
-				EndpointType: "coinpaprika",
-				ResponsePath: []string{"quotes", "USD", "price"},
-				Params: map[string]string{
-					"coin_id": "sfrxusd-staked-frax-usd",
-				},
-				MarketId: "SFRXUSD-USD",
-			},
-			{
-				EndpointType: "coinmarketcap",
-				ResponsePath: []string{"data", "36038", "quote", "USD", "price"},
-				Params: map[string]string{
-					// "symbol": "SFRXUSD",
-					"id": "36038",
-				},
-				MarketId: "SFRXUSD-USD",
-			},
-			{
-				EndpointType: "curve",
-				ResponsePath: []string{"data", "usd_price"},
-				Params: map[string]string{
-					"contract_address": "0xcf62F905562626CfcDD2261162a51fd02Fc9c5b6",
+				CombinedConfig: map[string]any{
+					"coingecko_params": map[string]any{
+						"coin_id": "frax",
+					},
+					"coingecko_response_path": []string{"frax", "usd"},
+					"curve_params": map[string]any{
+						"contract_address": "0x853d955aCEf822Db058eb8505911ED77F175b99e",
+					},
+					"curve_response_path": []string{"data", "usd_price"},
+					"coinpaprika_params": map[string]any{
+						"coin_id": "frax-frax",
+					},
+					"coinpaprika_response_path": []string{"quotes", "USD", "price"},
 				},
 				MarketId: "SFRXUSD-USD",
 			},
