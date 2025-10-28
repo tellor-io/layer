@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/big"
-	"sort"
 
 	log "github.com/sirupsen/logrus"
 	contract_handlers "github.com/tellor-io/layer/daemons/custom_query/contracts/contract_handlers"
@@ -174,9 +173,6 @@ func (h *SFRXUSDPriceHandler) FetchValue(
 		return 0, fmt.Errorf("insufficient FRX/USD prices: got %d, need at least %d", len(frxPrices), MIN_FRX_SOURCES)
 	}
 
-	// calculate median frx/usd spot price
-	sort.Float64s(frxPrices)
-
 	// validate spread between min and max prices
 	minPrice := frxPrices[0]
 	maxPrice := frxPrices[len(frxPrices)-1]
@@ -191,22 +187,16 @@ func (h *SFRXUSDPriceHandler) FetchValue(
 
 	log.Infof("[sFRXUSD] FRX/USD price spread: %.2f%%, prices: %v", spreadPercent, frxPrices)
 
-	n := len(frxPrices)
-	var frxUsdPrice float64
-	if n%2 == 0 {
-		frxUsdPrice = (frxPrices[n/2-1] + frxPrices[n/2]) / 2
-	} else {
-		frxUsdPrice = frxPrices[n/2]
+	medianFrxUsdPrice := fetcher.CalculateMedian(frxPrices)
+
+	if medianFrxUsdPrice <= 0 {
+		return 0, fmt.Errorf("invalid median FRX/USD price: %.6f", medianFrxUsdPrice)
 	}
 
-	if frxUsdPrice <= 0 {
-		return 0, fmt.Errorf("invalid median FRX/USD price: %.6f", frxUsdPrice)
-	}
-
-	log.Infof("[sFRXUSD] Median FRX/USD price: $%.6f", frxUsdPrice)
+	log.Infof("[sFRXUSD] Median FRX/USD price: $%.6f", medianFrxUsdPrice)
 
 	// final result = fundamental rate * frx/usd spot price
-	result := fundamentalRateFloat * frxUsdPrice
+	result := fundamentalRateFloat * medianFrxUsdPrice
 
 	return result, nil
 }

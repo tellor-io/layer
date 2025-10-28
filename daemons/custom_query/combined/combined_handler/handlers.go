@@ -3,6 +3,7 @@ package combined_handler
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 
 	contractreader "github.com/tellor-io/layer/daemons/custom_query/contracts/contract_reader"
@@ -114,4 +115,25 @@ func (p *ParallelFetcher) GetBytes(key string) ([]byte, error) {
 
 func (p *ParallelFetcher) GetContractBytes(key string) ([]byte, error) {
 	return p.GetBytes(key)
+}
+
+// calculate median of a list of floats
+func (p *ParallelFetcher) CalculateMedian(prices []float64) float64 {
+	if len(prices) == 0 {
+		return 0
+	}
+	if len(prices) == 1 {
+		return prices[0]
+	}
+
+	// Sort the prices
+	sort.Float64s(prices)
+
+	// Calculate median
+	n := len(prices)
+	if n%2 == 0 {
+		return (prices[n/2-1] + prices[n/2]) / 2.0
+	}
+	// Odd number of elements: middle value
+	return prices[n/2]
 }
