@@ -161,9 +161,9 @@ type Disputes struct {
 type Metadata struct {
 	HashID            string   `json:"hash_id"`
 	DisputeID         string   `json:"dispute_id"`
-	DisputeCategory   int      `json:"dispute_category"`
+	DisputeCategory   string   `json:"dispute_category"`
 	DisputeFee        string   `json:"dispute_fee"`
-	DisputeStatus     int      `json:"dispute_status"`
+	DisputeStatus     string   `json:"dispute_status"`
 	DisputeStartTime  string   `json:"dispute_start_time"`
 	DisputeEndTime    string   `json:"dispute_end_time"`
 	DisputeStartBlock string   `json:"dispute_start_block"`
@@ -183,11 +183,11 @@ type MetaData2 struct {
 	// current dispute id
 	DisputeId string `protobuf:"varint,2,opt,name=dispute_id,json=disputeId,proto3" json:"dispute_id,omitempty"`
 	// dispute severity level
-	DisputeCategory int `protobuf:"varint,3,opt,name=dispute_category,json=disputeCategory,proto3,enum=layer.dispute.DisputeCategory" json:"dispute_category,omitempty"`
+	DisputeCategory string `protobuf:"varint,3,opt,name=dispute_category,json=disputeCategory,proto3,enum=layer.dispute.DisputeCategory" json:"dispute_category,omitempty"`
 	// cost to start dispute
 	DisputeFee string `protobuf:"bytes,4,opt,name=dispute_fee,json=disputeFee,proto3,customtype=cosmossdk.io/math.Int" json:"dispute_fee"`
 	// current dispute status
-	DisputeStatus int `protobuf:"varint,5,opt,name=dispute_status,json=disputeStatus,proto3,enum=layer.dispute.DisputeStatus" json:"dispute_status,omitempty"`
+	DisputeStatus string `protobuf:"varint,5,opt,name=dispute_status,json=disputeStatus,proto3,enum=layer.dispute.DisputeStatus" json:"dispute_status,omitempty"`
 	// start time of the dispute that begins after dispute fee is fully paid
 	DisputeStartTime string `protobuf:"bytes,6,opt,name=dispute_start_time,json=disputeStartTime,proto3,stdtime" json:"dispute_start_time"`
 	// end time that the dispute stop taking votes and creating new rounds
@@ -414,7 +414,7 @@ type Validator struct {
 	// jailed defined whether the validator has been jailed from bonded status or not.
 	Jailed bool `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
 	// status is the validator status (bonded/unbonding/unbonded).
-	Status int `protobuf:"varint,4,opt,name=status,proto3,enum=cosmos.staking.v1beta1.BondStatus" json:"status,omitempty"`
+	Status string `protobuf:"varint,4,opt,name=status,proto3,enum=cosmos.staking.v1beta1.BondStatus" json:"status,omitempty"`
 	// tokens define the delegated tokens (incl. self-delegation).
 	Tokens string `protobuf:"bytes,5,opt,name=tokens,proto3,customtype=cosmossdk.io/math.Int" json:"tokens"`
 	// delegator_shares defines total shares issued to a validator's delegators.
