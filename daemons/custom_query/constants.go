@@ -179,21 +179,10 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
-				EndpointType: "coingecko",
-				ResponsePath: []string{"ethena-staked-usde", "usd"},
-				Params: map[string]string{
-					"coin_id": "ethena-staked-usde",
-				},
-				MarketId: "USDE-USD",
-			},
-			{
-				EndpointType: "coinmarketcap",
-				ResponsePath: []string{"data", "29471", "quote", "USD", "price"},
-				Params: map[string]string{
-					// "symbol": "SUSDE",
-					"id": "29471",
-				},
-				MarketId: "USDE-USD",
+				EndpointType: "contract",
+				Handler:      "susdeusd_handler",
+				Chain:        "ethereum",
+				MarketId:     "SUSDE-USD",
 			},
 		},
 	},
