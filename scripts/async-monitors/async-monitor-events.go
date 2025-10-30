@@ -38,11 +38,12 @@ var (
 	Current_Total_Reporter_Power uint64
 	reporterPowerMutex           sync.RWMutex
 	// Rate limiting variables
-	AGGREGATE_REPORT_NAME    = "aggregate_report"
-	aggregateAlertCount      int
-	aggregateAlertTimestamps []time.Time
-	aggregateAlertMutex      sync.RWMutex
-	aggregateAlertCooldown   time.Time
+	AGGREGATE_REPORT_EVENT_TYPE = "aggregate_report"
+	AGGREGATE_POWER_ATTR_KEY    = "aggregate_power"
+	aggregateAlertCount         int
+	aggregateAlertTimestamps    []time.Time
+	aggregateAlertMutex         sync.RWMutex
+	aggregateAlertCooldown      time.Time
 	// Map to store event types we're interested in
 	eventTypeMap map[string]ConfigType
 	// Supported query IDs map for asset pair lookups
@@ -192,6 +193,7 @@ type BlockResultsResponse struct {
 				VoteExtensionsEnableHeight string `json:"vote_extensions_enable_height"`
 			} `json:"abci"`
 		} `json:"consensus_param_updates"`
+		AppHash string `json:"app_hash"`
 	} `json:"result"`
 }
 
@@ -439,7 +441,7 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 	reporterPowerMutex.RUnlock()
 
 	for j := 0; j < len(event.Attributes); j++ {
-		if event.Attributes[j].Key == AGGREGATE_REPORT_NAME {
+		if event.Attributes[j].Key == AGGREGATE_POWER_ATTR_KEY {
 			if aggregatePower, err := strconv.ParseUint(event.Attributes[j].Value, 10, 64); err == nil {
 				if float64(aggregatePower) < float64(currentPower)*2/3 {
 					log.Printf("Aggregate power is less than 2/3 of current power: %d\n", currentPower)
@@ -705,7 +707,7 @@ func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsRes
 			if _, exists := eventTypeMap[event.Type]; exists {
 				configuredEventCount++
 				// Skip logging aggregate_report events
-				if event.Type != AGGREGATE_REPORT_NAME {
+				if event.Type != AGGREGATE_REPORT_EVENT_TYPE {
 					log.Printf("Found configured event: %s\n", event.Type)
 				}
 			}
@@ -727,7 +729,7 @@ func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsRes
 				if _, exists := eventTypeMap[event.Type]; exists {
 					txConfiguredEventCount++
 					// Skip logging aggregate_report events
-					if event.Type != AGGREGATE_REPORT_NAME {
+					if event.Type != AGGREGATE_REPORT_EVENT_TYPE {
 						log.Printf("Found configured event in tx %d: %s\n", i, event.Type)
 					}
 				}
@@ -794,7 +796,7 @@ func writeTimestampToCSV(timestamp string) error {
 
 // Add a helper function to handle events
 func handleEvent(event Event, eventType ConfigType) {
-	if event.Type == AGGREGATE_REPORT_NAME {
+	if event.Type == AGGREGATE_REPORT_EVENT_TYPE {
 		handleAggregateReport(event, eventType)
 	} else {
 		message := fmt.Sprintf("**Event Alert: %s**\n", eventType.AlertName)
