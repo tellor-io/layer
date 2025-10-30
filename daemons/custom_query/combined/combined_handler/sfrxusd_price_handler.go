@@ -13,11 +13,6 @@ import (
 	pricefeedservertypes "github.com/tellor-io/layer/daemons/server/types/pricefeed"
 )
 
-const (
-	MIN_FRX_SOURCES    = 2
-	MAX_FRX_SPREAD_PCT = 50.0 // Maximum allowed spread between FRX/USD prices
-)
-
 // SFRXUSDPriceHandler calculates sFRXUSD price by multiplying the fundamental rate by FRX/USD spot price
 // Note: Uses RPC sources (CoinGecko, CoinPaprika, Curve) because FRX is not available on standard CEX exchanges
 type SFRXUSDPriceHandler struct{}
@@ -31,6 +26,8 @@ func (h *SFRXUSDPriceHandler) FetchValue(
 	contractReaders map[string]*contractreader.Reader,
 	rpcReaders map[string]*rpcreader.Reader,
 	priceCache *pricefeedservertypes.MarketToExchangePrices,
+	minResponses int,
+	maxSpreadPercent float64,
 ) (float64, error) {
 	// validate eth contract reader
 	contractReader, exists := contractReaders["ethereum"]
@@ -169,20 +166,28 @@ func (h *SFRXUSDPriceHandler) FetchValue(
 		log.Warnf("[sFRXUSD] Failed to fetch CoinPaprika data: %v", err)
 	}
 
-	if len(frxPrices) < MIN_FRX_SOURCES {
-		return 0, fmt.Errorf("insufficient FRX/USD prices: got %d, need at least %d", len(frxPrices), MIN_FRX_SOURCES)
+	if len(frxPrices) < minResponses {
+		return 0, fmt.Errorf("insufficient FRX/USD prices: got %d, need at least %d", len(frxPrices), minResponses)
 	}
 
-	// validate spread between min and max prices
+	// pick out the min and max to calculate spread
 	minPrice := frxPrices[0]
-	maxPrice := frxPrices[len(frxPrices)-1]
+	maxPrice := frxPrices[0]
+	for _, p := range frxPrices {
+		if p < minPrice {
+			minPrice = p
+		}
+		if p > maxPrice {
+			maxPrice = p
+		}
+	}
 	spreadPercent := ((maxPrice - minPrice) / minPrice) * 100
 
-	if spreadPercent > MAX_FRX_SPREAD_PCT {
+	if spreadPercent > maxSpreadPercent {
 		log.Warnf("[sFRXUSD] FRX/USD prices show excessive spread: %.2f%% (max: %.2f%%), prices: %v",
-			spreadPercent, MAX_FRX_SPREAD_PCT, frxPrices)
+			spreadPercent, maxSpreadPercent, frxPrices)
 		return 0, fmt.Errorf("FRX/USD price spread of %.2f%% exceeds maximum allowed %.2f%%",
-			spreadPercent, MAX_FRX_SPREAD_PCT)
+			spreadPercent, maxSpreadPercent)
 	}
 
 	log.Infof("[sFRXUSD] FRX/USD price spread: %.2f%%, prices: %v", spreadPercent, frxPrices)
