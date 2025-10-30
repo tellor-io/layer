@@ -117,7 +117,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 		ID:                "e010d752f28dcd2804004d0b57ab1bdc4eca092895d49160204120af11d15f3e",
 		AggregationMethod: "median",
 		MinResponses:      1,
-		MaxSpreadPercent:  0.0,
+		MaxSpreadPercent:  100.0,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -342,7 +342,10 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				CombinedSources: map[string]string{
 					"ethereum": "contract:ethereum",
 				},
-				CombinedConfig: map[string]any{},
+				CombinedConfig: map[string]any{
+					"min_responses":     1,
+					"max_spread_percent": 100.0,
+				},
 				MarketId:       "VYUSD-USD",
 			},
 		},
@@ -350,17 +353,30 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"187f74d310dc494e6efd928107713d4229cd319c2cf300224de02776090809f1": {
 		ID:                "187f74d310dc494e6efd928107713d4229cd319c2cf300224de02776090809f1",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  0.0,
+		MaxSpreadPercent:  100.0,
 		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
-				EndpointType: "coingecko",
-				ResponsePath: []string{"staked-usn", "usd"},
-				Params: map[string]string{
-					"coin_id": "staked-usn",
+				EndpointType: "combined",
+				Handler:      "susn_price",
+				CombinedSources: map[string]string{
+					"ethereum":    "contract:ethereum",
+					"coinpaprika": "rpc:coinpaprika",
+					"coingecko":   "rpc:coingecko",
 				},
-				MarketId: "SUSN-USD",
+				CombinedConfig: map[string]any{
+					"min_responses":     1,
+					"max_spread_percent": 100.0,
+					"coinpaprika_response_path": []string{"quotes", "USD", "price"},
+					"coingecko_response_path":   []string{"noon-usn", "usd"},
+					"coingecko_params": map[string]string{
+						"coin_id": "noon-usn",
+					},
+					"coinpaprika_params": map[string]string{
+						"coin_id": "usn1-noon-usn",
+					},
+				},
 			},
 		},
 	},
@@ -381,6 +397,8 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 					"coinpaprika": "rpc:coinpaprika",
 				},
 				CombinedConfig: map[string]any{
+					"min_responses":     2,
+					"max_spread_percent": 50.0,
 					"coingecko_params": map[string]any{
 						"coin_id": "frax",
 					},
