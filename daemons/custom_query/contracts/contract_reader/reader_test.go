@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tellor-io/layer/daemons/utils"
+	"github.com/tellor-io/layer/utils"
 )
 
 func TestEncodeFunctionCall(t *testing.T) {

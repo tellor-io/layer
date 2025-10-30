@@ -29,7 +29,6 @@ const (
 	Received         = "received"
 	Rejected         = "rejected"
 	SampleRate       = "sample_rate"
-	SequenceNumber   = "sequence_number"
 	Success          = "success"
 	Valid            = "valid"
 	ValidateBasic    = "validate_basic"

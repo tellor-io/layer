@@ -6,16 +6,19 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/big"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/strangelove-ventures/interchaintest/v8"
+	"github.com/ethereum/go-ethereum/crypto"
+	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
+	interchaintestutil "github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
-	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	"go.uber.org/zap/zaptest"
 
@@ -28,14 +31,16 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// HELPERS FOR BUILDING THE CHAIN
+// ============================================================================
+// CONSTANTS AND GLOBAL VARIABLES
+// ============================================================================
 
 var (
 	layerImageInfo = []ibc.DockerImage{
 		{
 			Repository: "layer",
 			Version:    "local",
-			UidGid:     "1025:1025",
+			UIDGID:     "1025:1025",
 		},
 	}
 	numVals      = 2
@@ -46,111 +51,37 @@ var (
 	teamMnemonic = "unit curious maid primary holiday lunch lift melody boil blossom three boat work deliver alpha intact tornado october process dignity gravity giggle enrich output"
 )
 
-func LayerSpinup(t *testing.T) *cosmos.CosmosChain {
-	t.Helper()
-	if testing.Short() {
-		t.Skip("skipping in short mode")
-	}
-	t.Parallel()
+// ============================================================================
+// CUSTOM TYPES FOR TESTS
+// ============================================================================
 
-	cosmos.SetSDKConfig(baseBech32)
-
-	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
-		LayerChainSpec(numVals, numFullNodes, "layer-1"),
-	})
-
-	chains, err := cf.Chains(t.Name())
-	require.NoError(t, err)
-
-	layer := chains[0].(*cosmos.CosmosChain)
-
-	ic := interchaintest.NewInterchain().
-		AddChain(layer)
-
-	ctx := context.Background()
-	client, network := interchaintest.DockerSetup(t)
-
-	require.NoError(t, ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
-		TestName:         t.Name(),
-		Client:           client,
-		NetworkID:        network,
-		SkipPathCreation: true,
-	}))
-	t.Cleanup(func() {
-		_ = ic.Close()
-	})
-	require.NoError(t, layer.RecoverKey(ctx, "team", teamMnemonic))
-	require.NoError(t, layer.SendFunds(ctx, "faucet", ibc.WalletAmount{
-		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
-		Amount:  math.NewInt(1000000000000),
-		Denom:   "loya",
-	}))
-
-	return layer
+// SetupConfig holds configuration for test setup
+type SetupConfig struct {
+	NumValidators   int
+	NumFullNodes    int
+	ModifyGenesis   []cosmos.GenesisKV
+	GasPrices       string
+	GlobalFeeMinGas string
 }
 
-func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
-	modifyGenesis := []cosmos.GenesisKV{
-		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
-		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
-		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "15s"),
-		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
-		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
-		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
-	}
-	return &interchaintest.ChainSpec{
-		NumValidators: &nv,
-		NumFullNodes:  &nf,
-		ChainConfig: ibc.ChainConfig{
-			Type:                "cosmos",
-			Name:                "layer",
-			ChainID:             chainId,
-			Bin:                 "layerd",
-			Denom:               "loya",
-			Bech32Prefix:        "tellor",
-			CoinType:            "118",
-			GasPrices:           "0.0025loya",
-			GasAdjustment:       1.1,
-			TrustingPeriod:      "504h",
-			NoHostMount:         false,
-			Images:              layerImageInfo,
-			EncodingConfig:      LayerEncoding(),
-			ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
-			AdditionalStartArgs: []string{"--key-name", "validator"},
-			PreGenesis:          pregenesis(),
-		},
-	}
+// ValidatorInfo contains validator node and address information
+type ValidatorInfo struct {
+	Node    *cosmos.ChainNode
+	AccAddr string
+	ValAddr string
 }
 
-func LayerEncoding() *testutil.TestEncodingConfig {
-	cfg := cosmos.DefaultEncoding()
-	return &cfg
+// Validators contains validator information for chain operations
+type Validators struct {
+	Addr    string
+	ValAddr string
+	Val     *cosmos.ChainNode
 }
 
-// for adding the secrets file required for bridging
-func WriteSecretsFile(ctx context.Context, rpc, bridge string, tn *cosmos.ChainNode) error {
-	secrets := []byte(`{
-		"eth_rpc_url": "` + rpc + `",
-		"token_bridge_contract": "` + bridge + `",
-	}`)
-	fmt.Println("Writing secrets file")
-	return tn.WriteFile(ctx, secrets, "secrets.yaml")
-}
+// ============================================================================
+// DISPUTE AND VOTING TYPES
+// ============================================================================
 
-func pregenesis() func(ibc.Chain) error {
-	return func(chain ibc.Chain) error {
-		layer := chain.(*cosmos.CosmosChain)
-		for _, node := range layer.Validators {
-			if err := WriteSecretsFile(context.Background(), "", "", node); err != nil {
-				return err
-			}
-		}
-
-		return nil
-	}
-}
-
-// for unmarshalling the disputes response
 type Disputes struct {
 	Disputes []struct {
 		DisputeID string   `json:"disputeId"`
@@ -161,9 +92,9 @@ type Disputes struct {
 type Metadata struct {
 	HashID            string   `json:"hash_id"`
 	DisputeID         string   `json:"dispute_id"`
-	DisputeCategory   int      `json:"dispute_category"`
+	DisputeCategory   string   `json:"dispute_category"`
 	DisputeFee        string   `json:"dispute_fee"`
-	DisputeStatus     int      `json:"dispute_status"`
+	DisputeStatus     string   `json:"dispute_status"`
 	DisputeStartTime  string   `json:"dispute_start_time"`
 	DisputeEndTime    string   `json:"dispute_end_time"`
 	DisputeStartBlock string   `json:"dispute_start_block"`
@@ -178,44 +109,25 @@ type Metadata struct {
 }
 
 type MetaData2 struct {
-	// unique dispute hash identifier
-	HashId string `protobuf:"bytes,1,opt,name=hash_id,json=hashId,proto3" json:"hash_id,omitempty"`
-	// current dispute id
-	DisputeId string `protobuf:"varint,2,opt,name=dispute_id,json=disputeId,proto3" json:"dispute_id,omitempty"`
-	// dispute severity level
-	DisputeCategory int `protobuf:"varint,3,opt,name=dispute_category,json=disputeCategory,proto3,enum=layer.dispute.DisputeCategory" json:"dispute_category,omitempty"`
-	// cost to start dispute
-	DisputeFee string `protobuf:"bytes,4,opt,name=dispute_fee,json=disputeFee,proto3,customtype=cosmossdk.io/math.Int" json:"dispute_fee"`
-	// current dispute status
-	DisputeStatus int `protobuf:"varint,5,opt,name=dispute_status,json=disputeStatus,proto3,enum=layer.dispute.DisputeStatus" json:"dispute_status,omitempty"`
-	// start time of the dispute that begins after dispute fee is fully paid
-	DisputeStartTime string `protobuf:"bytes,6,opt,name=dispute_start_time,json=disputeStartTime,proto3,stdtime" json:"dispute_start_time"`
-	// end time that the dispute stop taking votes and creating new rounds
-	DisputeEndTime string `protobuf:"bytes,7,opt,name=dispute_end_time,json=disputeEndTime,proto3,stdtime" json:"dispute_end_time"`
-	// height of the block that started the dispute
-	DisputeStartBlock string `protobuf:"varint,8,opt,name=dispute_start_block,json=disputeStartBlock,proto3" json:"dispute_start_block,omitempty"`
-	// current dispute round
-	DisputeRound string `protobuf:"varint,9,opt,name=dispute_round,json=disputeRound,proto3" json:"dispute_round,omitempty"`
-	// reporter's slashed amount
-	SlashAmount string `protobuf:"bytes,10,opt,name=slash_amount,json=slashAmount,proto3,customtype=cosmossdk.io/math.Int" json:"slash_amount"`
-	// burn amount that will be divided in half and paid to voters and the other half burned
-	BurnAmount string `protobuf:"bytes,11,opt,name=burn_amount,json=burnAmount,proto3,customtype=cosmossdk.io/math.Int" json:"burn_amount"`
-	// initial single report evidence to be disputed
-	InitialEvidence Evidence `protobuf:"bytes,12,opt,name=initial_evidence,json=initialEvidence,proto3" json:"initial_evidence"`
-	// fee payers that were involved in paying the dispute fee in order to start the dispute
-	// total fee paid tracked to know if dispute fee is fully paid to start dispute
-	FeeTotal string `protobuf:"bytes,13,opt,name=fee_total,json=feeTotal,proto3,customtype=cosmossdk.io/math.Int" json:"fee_total"`
-	// list of dispute ids that preceded before this current round began
-	PrevDisputeIds []string `protobuf:"varint,14,rep,packed,name=prev_dispute_ids,json=prevDisputeIds,proto3" json:"prev_dispute_ids,omitempty"`
-	// block number when this specific dispute was created
+	HashId             string     `protobuf:"bytes,1,opt,name=hash_id,json=hashId,proto3" json:"hash_id,omitempty"`
+	DisputeId          string     `protobuf:"varint,2,opt,name=dispute_id,json=disputeId,proto3" json:"dispute_id,omitempty"`
+	DisputeCategory    string     `protobuf:"varint,3,opt,name=dispute_category,json=disputeCategory,proto3,enum=layer.dispute.DisputeCategory" json:"dispute_category,omitempty"`
+	DisputeFee         string     `protobuf:"bytes,4,opt,name=dispute_fee,json=disputeFee,proto3,customtype=cosmossdk.io/math.Int" json:"dispute_fee"`
+	DisputeStatus      string     `protobuf:"varint,5,opt,name=dispute_status,json=disputeStatus,proto3,enum=layer.dispute.DisputeStatus" json:"dispute_status,omitempty"`
+	DisputeStartTime   string     `protobuf:"bytes,6,opt,name=dispute_start_time,json=disputeStartTime,proto3,stdtime" json:"dispute_start_time"`
+	DisputeEndTime     string     `protobuf:"bytes,7,opt,name=dispute_end_time,json=disputeEndTime,proto3,stdtime" json:"dispute_end_time"`
+	DisputeStartBlock  string     `protobuf:"varint,8,opt,name=dispute_start_block,json=disputeStartBlock,proto3" json:"dispute_start_block,omitempty"`
+	DisputeRound       string     `protobuf:"varint,9,opt,name=dispute_round,json=disputeRound,proto3" json:"dispute_round,omitempty"`
+	SlashAmount        string     `protobuf:"bytes,10,opt,name=slash_amount,json=slashAmount,proto3,customtype=cosmossdk.io/math.Int" json:"slash_amount"`
+	BurnAmount         string     `protobuf:"bytes,11,opt,name=burn_amount,json=burnAmount,proto3,customtype=cosmossdk.io/math.Int" json:"burn_amount"`
+	InitialEvidence    Evidence   `protobuf:"bytes,12,opt,name=initial_evidence,json=initialEvidence,proto3" json:"initial_evidence"`
+	FeeTotal           string     `protobuf:"bytes,13,opt,name=fee_total,json=feeTotal,proto3,customtype=cosmossdk.io/math.Int" json:"fee_total"`
+	PrevDisputeIds     []string   `protobuf:"varint,14,rep,packed,name=prev_dispute_ids,json=prevDisputeIds,proto3" json:"prev_dispute_ids,omitempty"`
 	BlockNumber        string     `protobuf:"varint,15,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
 	Open               bool       `protobuf:"varint,16,opt,name=open,proto3" json:"open,omitempty"`
 	AdditionalEvidence []Evidence `protobuf:"bytes,17,rep,name=additional_evidence,json=additionalEvidence,proto3" json:"additional_evidence,omitempty"`
-	// total tokens allocated to voters
-	VoterReward string `protobuf:"bytes,18,opt,name=voter_reward,json=voterReward,proto3,customtype=cosmossdk.io/math.Int" json:"voter_reward"`
-	// pending execution is true if the dispute has reached quorum and is pending execution.
-	// however, if a new dispute round begins, this is set to false again
-	PendingExecution bool `protobuf:"varint,19,opt,name=pending_execution,json=pendingExecution,proto3" json:"pending_execution,omitempty"`
+	VoterReward        string     `protobuf:"bytes,18,opt,name=voter_reward,json=voterReward,proto3,customtype=cosmossdk.io/math.Int" json:"voter_reward"`
+	PendingExecution   bool       `protobuf:"varint,19,opt,name=pending_execution,json=pendingExecution,proto3" json:"pending_execution,omitempty"`
 }
 
 type Disputes2 struct {
@@ -235,6 +147,50 @@ type Evidence struct {
 	Timestamp       string `json:"timestamp"`
 	BlockNumber     string `json:"block_number"`
 }
+
+type Voter struct {
+	Vote          string `protobuf:"varint,1,opt,name=vote,proto3,enum=layer.dispute.VoteEnum" json:"vote,omitempty"`
+	VoterPower    string `protobuf:"bytes,2,opt,name=voter_power,json=voterPower,proto3,customtype=cosmossdk.io/math.Int" json:"voter_power"`
+	ReporterPower string `protobuf:"bytes,3,opt,name=reporter_power,json=reporterPower,proto3,customtype=cosmossdk.io/math.Int" json:"reporter_power"`
+	RewardClaimed bool   `protobuf:"varint,5,opt,name=reward_claimed,json=rewardClaimed,proto3" json:"reward_claimed,omitempty"`
+}
+
+type QueryDisputesTallyResponse struct {
+	Users       *GroupTally          `protobuf:"bytes,1,opt,name=users,proto3" json:"users,omitempty"`
+	Reporters   *GroupTally          `protobuf:"bytes,2,opt,name=reporters,proto3" json:"reporters,omitempty"`
+	Team        *FormattedVoteCounts `protobuf:"bytes,3,opt,name=team,proto3" json:"team,omitempty"`
+	ChoiceTotal *ChoiceTotal         `protobuf:"bytes,4,opt,name=choiceTotal,proto3" json:"choiceTotal,omitempty"`
+}
+
+type ChoiceTotal struct {
+	Support string `protobuf:"varint,1,opt,name=support,proto3" json:"support,omitempty"`
+	Against string `protobuf:"varint,2,opt,name=against,proto3" json:"against,omitempty"`
+	Invalid string `protobuf:"varint,3,opt,name=invalid,proto3" json:"invalid,omitempty"`
+}
+
+type GroupTally struct {
+	VoteCount       *FormattedVoteCounts `protobuf:"bytes,1,opt,name=voteCount,proto3" json:"voteCount,omitempty"`
+	TotalPowerVoted string               `protobuf:"varint,2,opt,name=totalPowerVoted,proto3" json:"totalPowerVoted,omitempty"`
+	TotalGroupPower string               `protobuf:"varint,3,opt,name=totalGroupPower,proto3" json:"totalGroupPower,omitempty"`
+}
+
+type FormattedVoteCounts struct {
+	Support string `protobuf:"varint,1,opt,name=support,proto3" json:"support,omitempty"`
+	Against string `protobuf:"varint,2,opt,name=against,proto3" json:"against,omitempty"`
+	Invalid string `protobuf:"varint,3,opt,name=invalid,proto3" json:"invalid,omitempty"`
+}
+
+type QueryOpenDisputesResponse struct {
+	OpenDisputes *OpenDisputes `protobuf:"bytes,1,opt,name=openDisputes,proto3" json:"openDisputes,omitempty"`
+}
+
+type OpenDisputes struct {
+	Ids []string `protobuf:"varint,1,rep,packed,name=ids,proto3" json:"ids,omitempty"`
+}
+
+// ============================================================================
+// ORACLE AND REPORTING TYPES
+// ============================================================================
 
 type MicroReport struct {
 	Reporter        string `json:"reporter"`
@@ -271,17 +227,83 @@ type AggregateReport struct {
 	Timestamp string `json:"timestamp"`
 }
 
-type Proposal struct {
-	Messages  []map[string]interface{} `json:"messages"`
-	Metadata  string                   `json:"metadata"`
-	Deposit   string                   `json:"deposit"`
-	Title     string                   `json:"title"`
-	Summary   string                   `json:"summary"`
-	Expedited bool                     `json:"expedited"`
+type Aggregate struct {
+	QueryId           string `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
+	AggregateValue    string `protobuf:"bytes,2,opt,name=aggregate_value,json=aggregateValue,proto3" json:"aggregate_value,omitempty"`
+	AggregateReporter string `protobuf:"bytes,3,opt,name=aggregate_reporter,json=aggregateReporter,proto3" json:"aggregate_reporter,omitempty"`
+	AggregatePower    string `protobuf:"varint,4,opt,name=aggregate_power,json=aggregatePower,proto3" json:"aggregate_power,omitempty"`
+	Flagged           bool   `protobuf:"varint,5,opt,name=flagged,proto3" json:"flagged,omitempty"`
+	Index             string `protobuf:"varint,6,opt,name=index,proto3" json:"index,omitempty"`
+	Height            string `protobuf:"varint,7,opt,name=height,proto3" json:"height,omitempty"`
+	MicroHeight       string `protobuf:"varint,8,opt,name=micro_height,json=microHeight,proto3" json:"micro_height,omitempty"`
+	MetaId            string `protobuf:"varint,9,opt,name=meta_id,json=metaId,proto3" json:"meta_id,omitempty"`
 }
 
-type CurrentTipsResponse struct {
-	Tips math.Int `json:"tips"`
+type Reporter struct {
+	Address  string          `json:"address"`
+	Metadata *OracleReporter `json:"metadata"`
+	Power    string          `json:"power"`
+}
+
+type OracleReporter struct {
+	CommissionRate string    `json:"commission_rate"`
+	MinTokens      string    `json:"min_tokens_required"`
+	Jailed         bool      `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
+	JailedUntil    time.Time `protobuf:"bytes,4,opt,name=jailed_until,json=jailedUntil,proto3,stdtime" json:"jailed_until"`
+	Moniker        string    `json:"moniker"`
+}
+
+type NoStakeMicroReportStrings struct {
+	Reporter    string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
+	Value       string `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
+	Timestamp   string `protobuf:"varint,4,opt,name=timestamp,json=timestamp,proto3" json:"timestamp,omitempty"`
+	BlockNumber string `protobuf:"varint,5,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
+}
+
+// ============================================================================
+// REGISTRY TYPES
+// ============================================================================
+
+type QueryMeta struct {
+	Id                      string `json:"id,omitempty"`
+	Amount                  string `json:"amount"`
+	Expiration              string `json:"expiration,omitempty"`
+	RegistrySpecBlockWindow string `json:"registry_spec_block_window,omitempty"`
+	HasRevealedReports      bool   `json:"has_revealed_reports,omitempty"`
+	QueryData               string `json:"query_data,omitempty"`
+	QueryType               string `json:"query_type,omitempty"`
+	CycleList               bool   `json:"cycle_list,omitempty"`
+}
+
+type QueryMetaButString struct {
+	Id                      string `json:"id,omitempty"`
+	Amount                  string `json:"amount"`
+	Expiration              string `json:"expiration,omitempty"`
+	RegistrySpecBlockWindow string `json:"registry_spec_block_window,omitempty"`
+	HasRevealedReports      bool   `json:"has_revealed_reports,omitempty"`
+	QueryData               string `json:"query_data,omitempty"`
+	QueryType               string `json:"query_type,omitempty"`
+	CycleList               bool   `json:"cycle_list,omitempty"`
+}
+
+type DataSpec struct {
+	DocumentHash      string                        `protobuf:"bytes,1,opt,name=document_hash,json=documentHash,proto3" json:"document_hash,omitempty"`
+	ResponseValueType string                        `protobuf:"bytes,2,opt,name=response_value_type,json=responseValueType,proto3" json:"response_value_type,omitempty"`
+	AbiComponents     []*registrytypes.ABIComponent `protobuf:"bytes,3,rep,name=abi_components,json=abiComponents,proto3" json:"abi_components,omitempty"`
+	AggregationMethod string                        `protobuf:"bytes,4,opt,name=aggregation_method,json=aggregationMethod,proto3" json:"aggregation_method,omitempty"`
+	Registrar         string                        `protobuf:"bytes,5,opt,name=registrar,proto3" json:"registrar,omitempty"`
+	ReportBlockWindow string                        `protobuf:"varint,6,opt,name=report_block_window,json=reportBlockWindow,proto3" json:"report_block_window,omitempty"`
+	QueryType         string                        `protobuf:"bytes,7,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
+}
+
+type DataSpec2 struct {
+	DocumentHash      string                        `protobuf:"bytes,1,opt,name=document_hash,json=documentHash,proto3" json:"document_hash,omitempty"`
+	ResponseValueType string                        `protobuf:"bytes,2,opt,name=response_value_type,json=responseValueType,proto3" json:"response_value_type,omitempty"`
+	AbiComponents     []*registrytypes.ABIComponent `protobuf:"bytes,3,rep,name=abi_components,json=abiComponents,proto3" json:"abi_components,omitempty"`
+	AggregationMethod string                        `protobuf:"bytes,4,opt,name=aggregation_method,json=aggregationMethod,proto3" json:"aggregation_method,omitempty"`
+	Registrar         string                        `protobuf:"bytes,5,opt,name=registrar,proto3" json:"registrar,omitempty"`
+	ReportBlockWindow string                        `protobuf:"varint,6,opt,name=report_block_window,json=reportBlockWindow,proto3" json:"report_block_window,omitempty"`
+	QueryType         string                        `protobuf:"bytes,7,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
 }
 
 type DataSpecResponse struct {
@@ -291,6 +313,27 @@ type DataSpecResponse struct {
 	AggregationMethod string                        `json:"aggregation_method,omitempty"`
 	Registrar         string                        `json:"registrar,omitempty"`
 	ReportBlockWindow string                        `json:"report_block_window,omitempty"`
+}
+
+// ============================================================================
+// GOVERNANCE AND PROPOSAL TYPES
+// ============================================================================
+
+type Proposal struct {
+	Messages  []map[string]interface{} `json:"messages"`
+	Metadata  string                   `json:"metadata"`
+	Deposit   string                   `json:"deposit"`
+	Title     string                   `json:"title"`
+	Summary   string                   `json:"summary"`
+	Expedited bool                     `json:"expedited"`
+}
+
+// ============================================================================
+// QUERY RESPONSES
+// ============================================================================
+
+type CurrentTipsResponse struct {
+	Tips string `json:"tips"`
 }
 
 type GetDataSpecResponse struct {
@@ -310,92 +353,23 @@ type TippedQueriesResponse struct {
 type QueryDelegatorDelegationsResponse struct {
 	DelegationResponses []stakingtypes.DelegationResponse `json:"delegation_responses"`
 	Pagination          struct {
-		Total string `json:"total"` // Change from uint64 to string
-	} `json:"pagination"`
-}
-
-type QueryReportersResponse struct {
-	// all the reporters.
-	Reporters []*Reporter `protobuf:"bytes,1,rep,name=reporters,proto3" json:"reporters,omitempty"`
-	// pagination defines the pagination in the response.
-	Pagination struct {
 		Total string `json:"total"`
 	} `json:"pagination"`
 }
 
-type QueryMeta struct {
-	// unique id of the query that changes after query's lifecycle ends
-	Id string `json:"id,omitempty"`
-	// amount of tokens that was tipped
-	Amount string `json:"amount"`
-	// expiration time of the query
-	Expiration string `json:"expiration,omitempty"`
-	// timeframe of the query according to the data spec
-	RegistrySpecBlockWindow string `json:"registry_spec_block_window,omitempty"`
-	// indicates whether query has revealed reports
-	HasRevealedReports bool `json:"has_revealed_reports,omitempty"`
-	// query_data: decodable bytes to field of the data spec
-	QueryData string `json:"query_data,omitempty"`
-	// string identifier of the data spec
-	QueryType string `json:"query_type,omitempty"`
-	// bool cycle list query
-	CycleList bool `json:"cycle_list,omitempty"`
+type QueryReportersResponse struct {
+	Reporters  []*Reporter `protobuf:"bytes,1,rep,name=reporters,proto3" json:"reporters,omitempty"`
+	Pagination struct {
+		Total string `json:"total"`
+	} `json:"pagination"`
 }
 
 type ReportersResponse struct {
 	Reporters []*Reporter `json:"reporters"`
 }
 
-type Reporter struct {
-	Address  string          `json:"address"`
-	Metadata *OracleReporter `json:"metadata"`
-	Power    string          `json:"power"`
-}
-
-type OracleReporter struct {
-	CommissionRate string `json:"commission_rate"`
-	MinTokens      string `json:"min_tokens_required"`
-	Jailed         bool   `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
-	// jailed_until is the time the reporter is jailed until
-	JailedUntil time.Time `protobuf:"bytes,4,opt,name=jailed_until,json=jailedUntil,proto3,stdtime" json:"jailed_until"`
-	Moniker     string    `json:"moniker"`
-}
-
 type QuerySelectorReporterResponse struct {
 	Reporter string `json:"reporter"`
-}
-
-type QueryDisputesTallyResponse struct {
-	Users       *GroupTally          `protobuf:"bytes,1,opt,name=users,proto3" json:"users,omitempty"`
-	Reporters   *GroupTally          `protobuf:"bytes,2,opt,name=reporters,proto3" json:"reporters,omitempty"`
-	Team        *FormattedVoteCounts `protobuf:"bytes,3,opt,name=team,proto3" json:"team,omitempty"`
-	ChoiceTotal *ChoiceTotal         `protobuf:"bytes,4,opt,name=choiceTotal,proto3" json:"choiceTotal,omitempty"`
-}
-
-type ChoiceTotal struct {
-	Support string `protobuf:"varint,1,opt,name=support,proto3" json:"support,omitempty"`
-	Against string `protobuf:"varint,2,opt,name=against,proto3" json:"against,omitempty"`
-	Invalid string `protobuf:"varint,3,opt,name=invalid,proto3" json:"invalid,omitempty"`
-}
-
-type GroupTally struct {
-	VoteCount       *FormattedVoteCounts `protobuf:"bytes,1,opt,name=voteCount,proto3" json:"voteCount,omitempty"`
-	TotalPowerVoted string               `protobuf:"varint,2,opt,name=totalPowerVoted,proto3" json:"totalPowerVoted,omitempty"`
-	TotalGroupPower string               `protobuf:"varint,3,opt,name=totalGroupPower,proto3" json:"totalGroupPower,omitempty"`
-}
-
-type FormattedVoteCounts struct {
-	Support string `protobuf:"varint,1,opt,name=support,proto3" json:"support,omitempty"`
-	Against string `protobuf:"varint,2,opt,name=against,proto3" json:"against,omitempty"`
-	Invalid string `protobuf:"varint,3,opt,name=invalid,proto3" json:"invalid,omitempty"`
-}
-
-type QueryOpenDisputesResponse struct {
-	OpenDisputes *OpenDisputes `protobuf:"bytes,1,opt,name=openDisputes,proto3" json:"openDisputes,omitempty"`
-}
-
-type OpenDisputes struct {
-	Ids []string `protobuf:"varint,1,rep,packed,name=ids,proto3" json:"ids,omitempty"`
 }
 
 type QueryValidatorsResponse struct {
@@ -407,62 +381,38 @@ type QueryMicroReportsResponse struct {
 }
 
 type Validator struct {
-	// operator_address defines the address of the validator's operator; bech encoded in JSON.
-	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
-	// consensus_pubkey is the consensus public key of the validator, as a Protobuf Any.
-	ConsensusPubkey *types1.Any `protobuf:"bytes,2,opt,name=consensus_pubkey,json=consensusPubkey,proto3" json:"consensus_pubkey,omitempty"`
-	// jailed defined whether the validator has been jailed from bonded status or not.
-	Jailed bool `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
-	// status is the validator status (bonded/unbonding/unbonded).
-	Status int `protobuf:"varint,4,opt,name=status,proto3,enum=cosmos.staking.v1beta1.BondStatus" json:"status,omitempty"`
-	// tokens define the delegated tokens (incl. self-delegation).
-	Tokens string `protobuf:"bytes,5,opt,name=tokens,proto3,customtype=cosmossdk.io/math.Int" json:"tokens"`
-	// delegator_shares defines total shares issued to a validator's delegators.
-	DelegatorShares string `protobuf:"bytes,6,opt,name=delegator_shares,json=delegatorShares,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"delegator_shares"`
-	// description defines the description terms for the validator.
-	Description Description `protobuf:"bytes,7,opt,name=description,proto3" json:"description"`
-	// unbonding_height defines, if unbonding, the height at which this validator has begun unbonding.
-	UnbondingHeight string `protobuf:"varint,8,opt,name=unbonding_height,json=unbondingHeight,proto3" json:"unbonding_height,omitempty"`
-	// unbonding_time defines, if unbonding, the min time for the validator to complete unbonding.
-	UnbondingTime string `protobuf:"bytes,9,opt,name=unbonding_time,json=unbondingTime,proto3,stdtime" json:"unbonding_time"`
-	// commission defines the commission parameters.
-	Commission Commission `protobuf:"bytes,10,opt,name=commission,proto3" json:"commission"`
-	// min_self_delegation is the validator's self declared minimum self delegation.
-	// Since: cosmos-sdk 0.46
-	MinSelfDelegation string `protobuf:"bytes,11,opt,name=min_self_delegation,json=minSelfDelegation,proto3" json:"min_self_delegation"`
-	// strictly positive if this validator's unbonding has been stopped by external modules
-	UnbondingOnHoldRefCount string `protobuf:"varint,12,opt,name=unbonding_on_hold_ref_count,json=unbondingOnHoldRefCount,proto3" json:"unbonding_on_hold_ref_count,omitempty"`
-	// list of unbonding ids, each uniquely identifing an unbonding of this validator
-	UnbondingIds []string `protobuf:"varint,13,rep,packed,name=unbonding_ids,json=unbondingIds,proto3" json:"unbonding_ids,omitempty"`
+	OperatorAddress         string      `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
+	ConsensusPubkey         *types1.Any `protobuf:"bytes,2,opt,name=consensus_pubkey,json=consensusPubkey,proto3" json:"consensus_pubkey,omitempty"`
+	Jailed                  bool        `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
+	Status                  string      `protobuf:"varint,4,opt,name=status,proto3,enum=cosmos.staking.v1beta1.BondStatus" json:"status,omitempty"`
+	Tokens                  string      `protobuf:"bytes,5,opt,name=tokens,proto3,customtype=cosmossdk.io/math.Int" json:"tokens"`
+	DelegatorShares         string      `protobuf:"bytes,6,opt,name=delegator_shares,json=delegatorShares,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"delegator_shares"`
+	Description             Description `protobuf:"bytes,7,opt,name=description,proto3" json:"description"`
+	UnbondingHeight         string      `protobuf:"varint,8,opt,name=unbonding_height,json=unbondingHeight,proto3" json:"unbonding_height,omitempty"`
+	UnbondingTime           string      `protobuf:"bytes,9,opt,name=unbonding_time,json=unbondingTime,proto3,stdtime" json:"unbonding_time"`
+	Commission              Commission  `protobuf:"bytes,10,opt,name=commission,proto3" json:"commission"`
+	MinSelfDelegation       string      `protobuf:"bytes,11,opt,name=min_self_delegation,json=minSelfDelegation,proto3" json:"min_self_delegation"`
+	UnbondingOnHoldRefCount string      `protobuf:"varint,12,opt,name=unbonding_on_hold_ref_count,json=unbondingOnHoldRefCount,proto3" json:"unbonding_on_hold_ref_count,omitempty"`
+	UnbondingIds            []string    `protobuf:"varint,13,rep,packed,name=unbonding_ids,json=unbondingIds,proto3" json:"unbonding_ids,omitempty"`
 }
 
 type Description struct {
-	// moniker defines a human-readable name for the validator.
-	Moniker string `protobuf:"bytes,1,opt,name=moniker,proto3" json:"moniker,omitempty"`
-	// identity defines an optional identity signature (ex. UPort or Keybase).
-	Identity string `protobuf:"bytes,2,opt,name=identity,proto3" json:"identity,omitempty"`
-	// website defines an optional website link.
-	Website string `protobuf:"bytes,3,opt,name=website,proto3" json:"website,omitempty"`
-	// security_contact defines an optional email for security contact.
+	Moniker         string `protobuf:"bytes,1,opt,name=moniker,proto3" json:"moniker,omitempty"`
+	Identity        string `protobuf:"bytes,2,opt,name=identity,proto3" json:"identity,omitempty"`
+	Website         string `protobuf:"bytes,3,opt,name=website,proto3" json:"website,omitempty"`
 	SecurityContact string `protobuf:"bytes,4,opt,name=security_contact,json=securityContact,proto3" json:"security_contact,omitempty"`
-	// details define other optional details.
-	Details string `protobuf:"bytes,5,opt,name=details,proto3" json:"details,omitempty"`
+	Details         string `protobuf:"bytes,5,opt,name=details,proto3" json:"details,omitempty"`
 }
 
 type Commission struct {
-	// commission_rates defines the initial commission rates to be used for creating a validator.
-	CommissionRates `protobuf:"bytes,1,opt,name=commission_rates,json=commissionRates,proto3,embedded=commission_rates" json:"commission_rates"`
-	// update_time is the last time the commission rate was changed.
-	UpdateTime time.Time `protobuf:"bytes,2,opt,name=update_time,json=updateTime,proto3,stdtime" json:"update_time"`
+	CommissionRates CommissionRates `protobuf:"bytes,1,opt,name=commission_rates,json=commissionRates,proto3,embedded=commission_rates" json:"commission_rates"`
+	UpdateTime      time.Time       `protobuf:"bytes,2,opt,name=update_time,json=updateTime,proto3,stdtime" json:"update_time"`
 }
 
 type CommissionRates struct {
-	// rate is the commission rate charged to delegators, as a fraction.
-	Rate math.LegacyDec `protobuf:"bytes,1,opt,name=rate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"rate"`
-	// max_rate defines the maximum commission rate which validator can ever charge, as a fraction.
-	MaxRate math.LegacyDec `protobuf:"bytes,2,opt,name=max_rate,json=maxRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_rate"`
-	// max_change_rate defines the maximum daily increase of the validator commission, as a fraction.
-	MaxChangeRate math.LegacyDec `protobuf:"bytes,3,opt,name=max_change_rate,json=maxChangeRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_change_rate"`
+	Rate          string `protobuf:"bytes,1,opt,name=rate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"rate"`
+	MaxRate       string `protobuf:"bytes,2,opt,name=max_rate,json=maxRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_rate"`
+	MaxChangeRate string `protobuf:"bytes,3,opt,name=max_change_rate,json=maxChangeRate,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"max_change_rate"`
 }
 
 type QueryCurrentCyclelistQueryResponse struct {
@@ -471,32 +421,8 @@ type QueryCurrentCyclelistQueryResponse struct {
 }
 
 type QueryGetCurrentAggregateReportResponse struct {
-	// aggregate defines the current aggregate report.
 	Aggregate *Aggregate `protobuf:"bytes,1,opt,name=aggregate,proto3" json:"aggregate,omitempty"`
-	// timestamp defines the timestamp of the aggregate report.
-	Timestamp string `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-}
-
-type Aggregate struct {
-	// query_id is the id of the query
-	QueryId []byte `protobuf:"bytes,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-	// aggregate_value is the value of the aggregate
-	AggregateValue string `protobuf:"bytes,2,opt,name=aggregate_value,json=aggregateValue,proto3" json:"aggregate_value,omitempty"`
-	// aggregate_reporter is the address of the reporter
-	AggregateReporter string `protobuf:"bytes,3,opt,name=aggregate_reporter,json=aggregateReporter,proto3" json:"aggregate_reporter,omitempty"`
-	// aggregate_power is the power of all the reporters
-	// that reported for the aggregate
-	AggregatePower string `protobuf:"varint,4,opt,name=aggregate_power,json=aggregatePower,proto3" json:"aggregate_power,omitempty"`
-	// flagged is true if the aggregate was flagged by a dispute
-	Flagged bool `protobuf:"varint,5,opt,name=flagged,proto3" json:"flagged,omitempty"`
-	// index is the index of the aggregate
-	Index string `protobuf:"varint,6,opt,name=index,proto3" json:"index,omitempty"`
-	// height of the aggregate report
-	Height string `protobuf:"varint,7,opt,name=height,proto3" json:"height,omitempty"`
-	// height of the micro report
-	MicroHeight string `protobuf:"varint,8,opt,name=micro_height,json=microHeight,proto3" json:"micro_height,omitempty"`
-	// meta_id is the id of the querymeta iterator
-	MetaId string `protobuf:"varint,9,opt,name=meta_id,json=metaId,proto3" json:"meta_id,omitempty"`
+	Timestamp string     `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 }
 
 type QueryGetSnapshotsByReportResponse struct {
@@ -523,105 +449,415 @@ type QueryRetrieveDataResponse struct {
 	Aggregate *Aggregate `protobuf:"bytes,1,opt,name=aggregate,proto3" json:"aggregate,omitempty"`
 }
 
-type DataSpec struct {
-	// ipfs hash of the data spec
-	DocumentHash string `protobuf:"bytes,1,opt,name=document_hash,json=documentHash,proto3" json:"document_hash,omitempty"`
-	// the value's datatype for decoding the value
-	ResponseValueType string `protobuf:"bytes,2,opt,name=response_value_type,json=responseValueType,proto3" json:"response_value_type,omitempty"`
-	// the abi components for decoding
-	AbiComponents []*registrytypes.ABIComponent `protobuf:"bytes,3,rep,name=abi_components,json=abiComponents,proto3" json:"abi_components,omitempty"`
-	// how to aggregate the data (ie. average, median, mode, etc) for aggregating reports and arriving at final value
-	AggregationMethod string `protobuf:"bytes,4,opt,name=aggregation_method,json=aggregationMethod,proto3" json:"aggregation_method,omitempty"`
-	// address that originally registered the data spec
-	Registrar string `protobuf:"bytes,5,opt,name=registrar,proto3" json:"registrar,omitempty"`
-	// report_buffer_window specifies the duration of the time window following an initial report
-	// during which additional reports can be submitted. This duration acts as a buffer, allowing
-	// a collection of related reports in a defined time frame. The window ensures that all
-	// pertinent reports are aggregated together before arriving at a final value. This defaults
-	// to 0s if not specified.
-	// extensions: treat as a golang time.duration, don't allow nil values, don't omit empty values
-	ReportBlockWindow uint64 `protobuf:"varint,6,opt,name=report_block_window,json=reportBlockWindow,proto3" json:"report_block_window,omitempty"`
-	// querytype is the first arg in queryData
-	QueryType string `protobuf:"bytes,7,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
-}
-
-type DataSpec2 struct {
-	// ipfs hash of the data spec
-	DocumentHash string `protobuf:"bytes,1,opt,name=document_hash,json=documentHash,proto3" json:"document_hash,omitempty"`
-	// the value's datatype for decoding the value
-	ResponseValueType string `protobuf:"bytes,2,opt,name=response_value_type,json=responseValueType,proto3" json:"response_value_type,omitempty"`
-	// the abi components for decoding
-	AbiComponents []*registrytypes.ABIComponent `protobuf:"bytes,3,rep,name=abi_components,json=abiComponents,proto3" json:"abi_components,omitempty"`
-	// how to aggregate the data (ie. average, median, mode, etc) for aggregating reports and arriving at final value
-	AggregationMethod string `protobuf:"bytes,4,opt,name=aggregation_method,json=aggregationMethod,proto3" json:"aggregation_method,omitempty"`
-	// address that originally registered the data spec
-	Registrar string `protobuf:"bytes,5,opt,name=registrar,proto3" json:"registrar,omitempty"`
-	// report_buffer_window specifies the duration of the time window following an initial report
-	// during which additional reports can be submitted. This duration acts as a buffer, allowing
-	// a collection of related reports in a defined time frame. The window ensures that all
-	// pertinent reports are aggregated together before arriving at a final value. This defaults
-	// to 0s if not specified.
-	// extensions: treat as a golang time.duration, don't allow nil values, don't omit empty values
-	ReportBlockWindow string `protobuf:"varint,6,opt,name=report_block_window,json=reportBlockWindow,proto3" json:"report_block_window,omitempty"`
-	// querytype is the first arg in queryData
-	QueryType string `protobuf:"bytes,7,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
-}
 type QueryGenerateQuerydataResponse struct {
-	// query_data is the generated query_data hex string.
 	QueryData string `protobuf:"bytes,1,opt,name=query_data,json=queryData,proto3" json:"query_data,omitempty"`
 }
 
-// QueryTeamAddressResponse is response type for the Query/TeamAddress RPC method.
 type QueryTeamAddressResponse struct {
-	// teamAddress holds the team address.
 	TeamAddress string `protobuf:"bytes,1,opt,name=team_address,json=teamAddress,proto3" json:"team_address,omitempty"`
 }
 
 type QueryTeamVoteResponse struct {
-	// teamVote holds the team voter info for a dispute.
 	TeamVote Voter `protobuf:"bytes,1,opt,name=team_vote,json=teamVote,proto3" json:"team_vote"`
 }
 
 type QueryGetTippedQueriesResponse struct {
-	// querymeta but string query data
-	Queries []*QueryMetaButString `protobuf:"bytes,1,rep,name=queries,proto3" json:"queries,omitempty"`
-	// pagination defines the pagination in the response.
-	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-// QueryMetaButString is QueryMeta but with the query_data as a string for query display purposes
-type QueryMetaButString struct {
-	// unique id of the query that changes after query's lifecycle ends
-	Id string `json:"id,omitempty"`
-	// amount of tokens that was tipped
-	Amount string `json:"amount"`
-	// expiration time of the query
-	Expiration string `json:"expiration,omitempty"`
-	// timeframe of the query according to the data spec
-	RegistrySpecBlockWindow string `json:"registry_spec_block_window,omitempty"`
-	// indicates whether query has revealed reports
-	HasRevealedReports bool `json:"has_revealed_reports,omitempty"`
-	// query_data: decodable bytes to field of the data spec
-	QueryData string `json:"query_data,omitempty"`
-	// string identifier of the data spec
-	QueryType string `json:"query_type,omitempty"`
-	// bool cycle list query
-	CycleList bool `json:"cycle_list,omitempty"`
+	Queries    []*QueryMetaButString `protobuf:"bytes,1,rep,name=queries,proto3" json:"queries,omitempty"`
+	Pagination *query.PageResponse   `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 type QueryGetDataSpecResponse struct {
-	// spec is the data spec corresponding to the query type.
 	Spec *DataSpec2 `protobuf:"bytes,1,opt,name=spec,proto3" json:"spec,omitempty"`
 }
 
-type Voter struct {
-	Vote          disputetypes.VoteEnum `protobuf:"varint,1,opt,name=vote,proto3,enum=layer.dispute.VoteEnum" json:"vote,omitempty"`
-	VoterPower    math.Int              `protobuf:"bytes,2,opt,name=voter_power,json=voterPower,proto3,customtype=cosmossdk.io/math.Int" json:"voter_power"`
-	ReporterPower math.Int              `protobuf:"bytes,3,opt,name=reporter_power,json=reporterPower,proto3,customtype=cosmossdk.io/math.Int" json:"reporter_power"`
-	RewardClaimed bool                  `protobuf:"varint,5,opt,name=reward_claimed,json=rewardClaimed,proto3" json:"reward_claimed,omitempty"`
+type QueryGetDepositClaimedResponse struct {
+	Claimed bool `protobuf:"varint,1,opt,name=claimed,proto3" json:"claimed,omitempty"`
+}
+
+type QueryGetNoStakeReportsByQueryIdResponse struct {
+	NoStakeReports []*NoStakeMicroReportStrings `protobuf:"bytes,1,rep,name=no_stake_reports,json=noStakeReports,proto3" json:"no_stake_reports,omitempty"`
+	Pagination     *PageResponse                `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+type QueryGetReportersNoStakeReportsResponse struct {
+	NoStakeReports []*NoStakeMicroReportStrings `protobuf:"bytes,1,rep,name=no_stake_reports,json=noStakeReports,proto3" json:"no_stake_reports,omitempty"`
+	Pagination     *PageResponse                `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+type PageResponse struct {
+	NextKey string `protobuf:"bytes,1,opt,name=next_key,json=nextKey,proto3" json:"next_key,omitempty"`
+	Total   string `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+}
+
+// ============================================================================
+// CHAIN SETUP AND CONFIGURATION
+// ============================================================================
+
+// DefaultSetupConfig returns standard test configuration
+func DefaultSetupConfig() SetupConfig {
+	fmt.Println("Using DefaultSetupConfig...")
+	return SetupConfig{
+		NumValidators:   2,
+		NumFullNodes:    0,
+		ModifyGenesis:   CreateStandardGenesis(),
+		GasPrices:       "0.000025000000000000loya",
+		GlobalFeeMinGas: "0.000025000000000000",
+	}
+}
+
+// CreateStandardGenesis creates a standard genesis configuration
+func CreateStandardGenesis() []cosmos.GenesisKV {
+	teamAddressBytes := sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()
+
+	return []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.dispute.params.team_address", teamAddressBytes),
+		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "15s"),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
+	}
+}
+
+// ============================================================================
+// VALIDATOR AND ACCOUNT OPERATIONS
+// ============================================================================
+
+// GetValidators retrieves all validators with their addresses
+func GetValidators(ctx context.Context, chain *cosmos.CosmosChain) ([]ValidatorInfo, error) {
+	var validators []ValidatorInfo
+
+	for _, validator := range chain.Validators {
+		accAddr, err := validator.AccountKeyBech32(ctx, "validator")
+		if err != nil {
+			return nil, fmt.Errorf("error getting validator account address: %w", err)
+		}
+
+		valAddr, err := validator.KeyBech32(ctx, "validator", "val")
+		if err != nil {
+			return nil, fmt.Errorf("error getting validator address: %w", err)
+		}
+
+		validators = append(validators, ValidatorInfo{
+			Node:    validator,
+			AccAddr: accAddr,
+			ValAddr: valAddr,
+		})
+	}
+
+	return validators, nil
+}
+
+// SetupTestChainWithConfig creates a test chain with the given configuration
+func SetupChainWithCustomConfig(t *testing.T, config SetupConfig) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
+	t.Helper()
+	fmt.Println("Setting up chain with custom config...")
+	require := require.New(t)
+
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
+
+	t.Parallel()
+	time.Sleep(1 * time.Second)
+
+	// Use the genesis configuration from config, or default if empty
+	modifyGenesis := config.ModifyGenesis
+	if modifyGenesis == nil {
+		modifyGenesis = CreateStandardGenesis()
+	}
+
+	fmt.Println("Creating chain spec...")
+	// Create chain spec
+	chainSpec := &interchaintest.ChainSpec{
+		NumValidators: &config.NumValidators,
+		NumFullNodes:  &config.NumFullNodes,
+		ChainConfig: ibc.ChainConfig{
+			Type:           "cosmos",
+			Name:           "layer",
+			ChainID:        "layer",
+			Bin:            "layerd",
+			Denom:          "loya",
+			Bech32Prefix:   "tellor",
+			CoinType:       "118",
+			GasPrices:      config.GasPrices,
+			GasAdjustment:  1.1,
+			TrustingPeriod: "504h",
+			NoHostMount:    false,
+			Images: []ibc.DockerImage{
+				{
+					Repository: "layer",
+					Version:    "local",
+					UIDGID:     "1025:1025",
+				},
+			},
+			EncodingConfig:      LayerEncoding(),
+			ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
+			AdditionalStartArgs: []string{"--key-name", "validator"},
+		},
+	}
+
+	// Create chains
+	fmt.Println("Creating chains...")
+	chains := interchaintest.CreateChainsWithChainSpecs(t, []*interchaintest.ChainSpec{chainSpec})
+
+	fmt.Println("Creating client and network...")
+	client, network := interchaintest.DockerSetup(t)
+	time.Sleep(1 * time.Second)
+
+	layer := chains[0].(*cosmos.CosmosChain)
+	ic := interchaintest.NewInterchain().AddChain(layer)
+
+	ctx := context.Background()
+	fmt.Println("Building chain...")
+	require.NoError(ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
+		TestName:         t.Name(),
+		Client:           client,
+		NetworkID:        network,
+		SkipPathCreation: false,
+	}))
+	time.Sleep(1 * time.Second)
+
+	t.Cleanup(func() {
+		_ = ic.Close()
+		time.Sleep(1 * time.Second)
+	})
+
+	require.NoError(layer.RecoverKey(ctx, "team", teamMnemonic))
+	require.NoError(layer.SendFunds(ctx, "faucet", ibc.WalletAmount{
+		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
+		Amount:  math.NewInt(1000000000000),
+		Denom:   "loya",
+	}))
+
+	return layer, ic, ctx
+}
+
+// SetupStandardTestChain creates a test chain with standard configuration
+func SetupChain(t *testing.T, numVals, numFullNodes int) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
+	t.Helper()
+	fmt.Println("Setting up chain with standard configuration...")
+	config := DefaultSetupConfig()
+	config.NumValidators = numVals
+	config.NumFullNodes = numFullNodes
+	return SetupChainWithCustomConfig(t, config)
+}
+
+// PrintValidatorInfo prints validator information for debugging
+func PrintValidatorInfo(ctx context.Context, validators []ValidatorInfo) {
+	for i, validator := range validators {
+		fmt.Printf("Validator %d:\n", i+1)
+		fmt.Printf("  Account Address: %s\n", validator.AccAddr)
+		fmt.Printf("  Validator Address: %s\n", validator.ValAddr)
+		fmt.Printf("  Node: %s\n", validator.Node.Name())
+	}
+}
+
+// CreateReporterFromValidator creates a reporter from a validator with stake
+func CreateReporterFromValidator(ctx context.Context, validator ValidatorInfo, reporterName string, stakeAmount math.Int) (string, error) {
+	txHash, err := validator.Node.ExecTx(ctx, "validator", "reporter", "create-reporter",
+		"0.1", stakeAmount.String(), reporterName, "--keyring-dir", validator.Node.HomeDir())
+	return txHash, err
+}
+
+// ============================================================================
+// ORACLE AND REPORTER OPERATIONS
+// ============================================================================
+
+// TipQuery tips a query with the specified amount
+func TipQuery(ctx context.Context, validator *cosmos.ChainNode, queryData string, tipCoin sdk.Coin) (string, error) {
+	cmd := validator.TxCommand("validator", "oracle", "tip", queryData, tipCoin.String(), "--keyring-dir", validator.HomeDir())
+	stdout, _, err := validator.Exec(ctx, cmd, validator.Chain.Config().Env)
+	if err != nil {
+		return "", err
+	}
+
+	// Parse the transaction output to get the tx hash
+	var output cosmos.CosmosTx
+	err = json.Unmarshal(stdout, &output)
+	if err != nil {
+		return "", err
+	}
+
+	return output.TxHash, nil
+}
+
+// SubmitBatchReport submits a batch of reports
+func SubmitBatchReport(ctx context.Context, validator *cosmos.ChainNode, reports []string, fees string) (string, error) {
+	args := []string{"oracle", "batch-submit-value"}
+	for _, report := range reports {
+		args = append(args, "--values", report)
+	}
+	args = append(args, "--gas", "1000000", "--fees", fees, "--keyring-dir", validator.HomeDir())
+
+	stdout, _, err := validator.Exec(ctx, validator.TxCommand("validator", args...), validator.Chain.Config().Env)
+	if err != nil {
+		return "", err
+	}
+
+	txHash, err := GetTxHashFromExec(stdout)
+	if err != nil {
+		return "", err
+	}
+
+	return txHash, nil
+}
+
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
+
+// Retry executes a function with retry logic to handle Docker container cleanup race conditions
+func Retry(t *testing.T, testName string, operation func() error) error {
+	t.Helper()
+	maxRetries := 3
+	delay := 5 * time.Second
+	var lastErr error
+
+	for i := range maxRetries {
+		if i > 0 {
+			t.Logf("[%s] Retry attempt %d/%d due to previous failure: %v",
+				testName, i+1, maxRetries, lastErr)
+			time.Sleep(delay)
+		}
+
+		err := operation()
+		if err == nil {
+			return nil // Success!
+		}
+
+		lastErr = err
+		t.Logf("[%s] Attempt %d failed: %v", testName, i+1, err)
+	}
+
+	return fmt.Errorf("[%s] Operation failed after %d attempts. Last error: %w",
+		testName, maxRetries, lastErr)
+}
+
+func LayerSpinup(t *testing.T) *cosmos.CosmosChain {
+	t.Helper()
+	if testing.Short() {
+		t.Skip("skipping in short mode")
+	}
+	t.Parallel()
+
+	cosmos.SetSDKConfig(baseBech32)
+
+	cf := interchaintest.NewBuiltinChainFactory(zaptest.NewLogger(t), []*interchaintest.ChainSpec{
+		LayerChainSpec(numVals, numFullNodes, "layer-1"),
+	})
+
+	chains, err := cf.Chains(t.Name())
+	require.NoError(t, err)
+
+	layer := chains[0].(*cosmos.CosmosChain)
+
+	var ic *interchaintest.Interchain
+
+	ctx := context.Background()
+
+	// Set Docker daemon configuration for better container management
+	os.Setenv("DOCKER_BUILDKIT", "0") // Disable BuildKit for more stable behavior
+
+	client, network := interchaintest.DockerSetup(t)
+
+	// Use retry logic for the interchain build to handle container cleanup issues
+	err = Retry(t, "LayerSpinup", func() error {
+		ic = interchaintest.NewInterchain().AddChain(layer)
+		return ic.Build(ctx, nil, interchaintest.InterchainBuildOptions{
+			TestName:         t.Name(),
+			Client:           client,
+			NetworkID:        network,
+			SkipPathCreation: true,
+		})
+	})
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		_ = ic.Close()
+	})
+	require.NoError(t, layer.RecoverKey(ctx, "team", teamMnemonic))
+	require.NoError(t, layer.SendFunds(ctx, "faucet", ibc.WalletAmount{
+		Address: "tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf",
+		Amount:  math.NewInt(1000000000000),
+		Denom:   "loya",
+	}))
+
+	return layer
+}
+
+func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
+	modifyGenesis := []cosmos.GenesisKV{
+		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
+		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "15s"),
+		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
+		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+	}
+	return &interchaintest.ChainSpec{
+		NumValidators: &nv,
+		NumFullNodes:  &nf,
+		ChainConfig: ibc.ChainConfig{
+			Type:                "cosmos",
+			Name:                "layer",
+			ChainID:             chainId,
+			Bin:                 "layerd",
+			Denom:               "loya",
+			Bech32Prefix:        "tellor",
+			CoinType:            "118",
+			GasPrices:           "0.000025000000000000loya",
+			GasAdjustment:       1.1,
+			TrustingPeriod:      "504h",
+			NoHostMount:         false,
+			Images:              layerImageInfo,
+			EncodingConfig:      LayerEncoding(),
+			ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
+			AdditionalStartArgs: []string{"--key-name", "validator"},
+			PreGenesis:          pregenesis(),
+		},
+	}
+}
+
+func LayerEncoding() *testutil.TestEncodingConfig {
+	cfg := cosmos.DefaultEncoding()
+	return &cfg
+}
+
+// ============================================================================
+// BRIDGE AND SECRETS OPERATIONS
+// ============================================================================
+
+// WriteSecretsFile adds the secrets file required for bridging
+func WriteSecretsFile(ctx context.Context, rpc, bridge string, tn *cosmos.ChainNode) error {
+	secrets := []byte(`{
+		"eth_rpc_url": "` + rpc + `",
+		"token_bridge_contract": "` + bridge + `",
+	}`)
+	fmt.Println("Writing secrets file")
+	return tn.WriteFile(ctx, secrets, "secrets.yaml")
+}
+
+func pregenesis() func(ibc.Chain) error {
+	return func(chain ibc.Chain) error {
+		layer := chain.(*cosmos.CosmosChain)
+		for _, node := range layer.Validators {
+			if err := WriteSecretsFile(context.Background(), "", "", node); err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
 }
 
 // HELPERS FOR TESTING AGAINST THE CHAIN
+
+// ============================================================================
+// TRANSACTION AND ENCODING UTILITIES
+// ============================================================================
 
 func EncodeStringValue(value string) string {
 	// Create a string ABI type
@@ -636,72 +872,91 @@ func EncodeStringValue(value string) string {
 	return encodedString
 }
 
-type QueryGetDepositClaimedResponse struct {
-	Claimed bool `protobuf:"varint,1,opt,name=claimed,proto3" json:"claimed,omitempty"`
-}
+// EncodeOracleAttestationData encodes oracle attestation data for bridge operations
+// This must match keeper.EncodeOracleAttestationData exactly
+func EncodeOracleAttestationData(
+	queryId []byte,
+	value string,
+	timestamp uint64,
+	aggregatePower uint64,
+	previousTimestamp uint64,
+	nextTimestamp uint64,
+	checkpoint []byte,
+	attestationTimestamp uint64,
+	lastConsensusTimestamp uint64,
+) ([]byte, error) {
+	// domainSeparator is bytes "tellorCurrentAttestation"
+	NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR := []byte("tellorCurrentAttestation")
+	// convert domain separator to bytes32
+	var domainSepBytes32 [32]byte
+	copy(domainSepBytes32[:], NEW_REPORT_ATTESTATION_DOMAIN_SEPARATOR)
 
-type Validators struct {
-	Addr    string
-	ValAddr string
-	Val     *cosmos.ChainNode
-}
+	// convert queryId to bytes32
+	var queryIdBytes32 [32]byte
+	copy(queryIdBytes32[:], queryId)
 
-type QueryGetNoStakeReportsByQueryIdResponse struct {
-	// no_stake_reports defines the no stake reports.
-	NoStakeReports []*NoStakeMicroReportStrings `protobuf:"bytes,1,rep,name=no_stake_reports,json=noStakeReports,proto3" json:"no_stake_reports,omitempty"`
-	// pagination defines the pagination in the response.
-	Pagination *PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-type QueryGetReportersNoStakeReportsResponse struct {
-	// no_stake_reports defines the no stake reports.
-	NoStakeReports []*NoStakeMicroReportStrings `protobuf:"bytes,1,rep,name=no_stake_reports,json=noStakeReports,proto3" json:"no_stake_reports,omitempty"`
-	// pagination defines the pagination in the response.
-	Pagination *PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-type PageResponse struct {
-	// next_key is the key to be passed to PageRequest.key to
-	// query the next page most efficiently. It will be empty if
-	// there are no more results.
-	NextKey string `protobuf:"bytes,1,opt,name=next_key,json=nextKey,proto3" json:"next_key,omitempty"`
-	// total is total number of results available if PageRequest.count_total
-	// was set, its value is undefined otherwise
-	Total string `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
-}
-
-type NoStakeMicroReportStrings struct {
-	// reporter is the address of the reporter
-	Reporter string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
-	// hex string of the response value
-	Value string `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
-	// timestamp of when the report was created
-	Timestamp string `protobuf:"varint,4,opt,name=timestamp,json=timestamp,proto3" json:"timestamp,omitempty"`
-	// block number of when the report was created
-	BlockNumber string `protobuf:"varint,5,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
-}
-
-func GetChainVals(ctx context.Context, chain *cosmos.CosmosChain) ([]Validators, error) {
-	validators := make([]Validators, len(chain.Validators))
-	for i := range chain.Validators {
-		val := chain.Validators[i]
-		valAddr, err := val.AccountKeyBech32(ctx, "validator")
-		if err != nil {
-			return nil, err
-		}
-		valvalAddr, err := val.KeyBech32(ctx, "validator", "val")
-		if err != nil {
-			return nil, err
-		}
-		fmt.Println("val", i, " Account Address: ", valAddr)
-		fmt.Println("val", i, " Validator Address: ", valvalAddr)
-		validators[i] = Validators{
-			Addr:    valAddr,
-			ValAddr: valvalAddr,
-			Val:     val,
-		}
+	// convert value to bytes
+	valueBytes, err := hex.DecodeString(value)
+	if err != nil {
+		return nil, err
 	}
-	return validators, nil
+
+	// convert timestamps and power to big.Int
+	timestampBig := new(big.Int).SetUint64(timestamp)
+	aggregatePowerBig := new(big.Int).SetUint64(aggregatePower)
+	previousTimestampBig := new(big.Int).SetUint64(previousTimestamp)
+	nextTimestampBig := new(big.Int).SetUint64(nextTimestamp)
+	attestationTimestampBig := new(big.Int).SetUint64(attestationTimestamp)
+	lastConsensusTimestampBig := new(big.Int).SetUint64(lastConsensusTimestamp)
+
+	// convert checkpoint to bytes32
+	var checkpointBytes32 [32]byte
+	copy(checkpointBytes32[:], checkpoint)
+
+	// prepare ABI encoding types
+	bytes32Type, err := abi.NewType("bytes32", "", nil)
+	if err != nil {
+		return nil, err
+	}
+	uint256Type, err := abi.NewType("uint256", "", nil)
+	if err != nil {
+		return nil, err
+	}
+	bytesType, err := abi.NewType("bytes", "", nil)
+	if err != nil {
+		return nil, err
+	}
+
+	arguments := abi.Arguments{
+		{Type: bytes32Type}, // domain separator
+		{Type: bytes32Type}, // queryId
+		{Type: bytesType},   // value
+		{Type: uint256Type}, // timestamp
+		{Type: uint256Type}, // aggregatePower
+		{Type: uint256Type}, // previousTimestamp
+		{Type: uint256Type}, // nextTimestamp
+		{Type: bytes32Type}, // checkpoint
+		{Type: uint256Type}, // attestationTimestamp
+		{Type: uint256Type}, // lastConsensusTimestamp
+	}
+
+	encodedData, err := arguments.Pack(
+		domainSepBytes32,
+		queryIdBytes32,
+		valueBytes,
+		timestampBig,
+		aggregatePowerBig,
+		previousTimestampBig,
+		nextTimestampBig,
+		checkpointBytes32,
+		attestationTimestampBig,
+		lastConsensusTimestampBig,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return crypto.Keccak256(encodedData), nil
 }
 
 func CreateTestAccounts(ctx context.Context, t *testing.T, chain *cosmos.CosmosChain, numAccounts int, fundAmt math.Int) ([]string, error) {
@@ -714,6 +969,10 @@ func CreateTestAccounts(ctx context.Context, t *testing.T, chain *cosmos.CosmosC
 	}
 	return users, nil
 }
+
+// ============================================================================
+// GOVERNANCE OPERATIONS
+// ============================================================================
 
 func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos.ChainNode) (string, error) {
 	content, err := json.Marshal(prop)
@@ -739,6 +998,7 @@ func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos
 }
 
 func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *cosmos.ChainNode) error {
+	fmt.Println("Turning on minting...")
 	prop := Proposal{
 		Messages: []map[string]interface{}{
 			{
@@ -758,7 +1018,7 @@ func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *c
 	}
 
 	for _, v := range layer.Validators {
-		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "1000000loya", "--keyring-dir", "/var/cosmos-chain/layer-1")
+		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "500loya", "--keyring-dir", layer.HomeDir())
 		if err != nil {
 			return err
 		}
@@ -801,8 +1061,19 @@ func GetTxHashFromExec(stdout []byte) (string, error) {
 	return output.TxHash, nil
 }
 
+// ============================================================================
+// QUERY HELPERS
+// ============================================================================
+
+// QueryWithTimeout executes a query with a 5-second timeout
+func QueryWithTimeout(ctx context.Context, validatorI *cosmos.ChainNode, args ...string) ([]byte, []byte, error) {
+	queryCtx, cancel := context.WithTimeout(ctx, time.Second*15)
+	defer cancel()
+	return validatorI.ExecQuery(queryCtx, args...)
+}
+
 func QueryTips(queryData string, ctx context.Context, validatorI *cosmos.ChainNode) (CurrentTipsResponse, error) {
-	availableTips, _, err := validatorI.ExecQuery(ctx, "oracle", "get-current-tip", queryData)
+	availableTips, _, err := QueryWithTimeout(ctx, validatorI, "oracle", "get-current-tip", queryData)
 	if err != nil {
 		return CurrentTipsResponse{}, err
 	}
@@ -816,7 +1087,7 @@ func QueryTips(queryData string, ctx context.Context, validatorI *cosmos.ChainNo
 
 func DelegateToValidator(ctx context.Context, userKey string, validator *cosmos.ChainNode, valAddr string, amount math.Int) (string, error) {
 	delegateAmt := sdk.NewCoin("loya", amount)
-	txHash, err := validator.ExecTx(ctx, userKey, "staking", "delegate", valAddr, delegateAmt.String(), "--keyring-dir", validator.HomeDir(), "--gas", "1000000", "--fees", "1000000loya")
+	txHash, err := validator.ExecTx(ctx, userKey, "staking", "delegate", valAddr, delegateAmt.String(), "--keyring-dir", validator.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	if err != nil {
 		return "", err
 	}
@@ -831,4 +1102,112 @@ func CreateReporter(ctx context.Context, accountAddr string, validator *cosmos.C
 		return "", err
 	}
 	return txHash, nil
+}
+
+// SubmitCycleList queries the current cycle list and submits a value for it
+// Returns the tx hash if successful, retries up to 3 times total
+// Does NOT wait for blocks - use SubmitCycleListSafe for safer timing
+func SubmitCycleList(ctx context.Context, node *cosmos.ChainNode, keyName, value, fees string) (string, error) {
+	maxRetries := 2
+	var lastErr error
+
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		fmt.Printf("SubmitCycleList attempt %d/%d\n", attempt, maxRetries)
+		// Query current cycle list
+		currentCycleListRes, _, err := QueryWithTimeout(ctx, node, "oracle", "current-cyclelist-query")
+		if err != nil {
+			lastErr = fmt.Errorf("failed to query current cycle list: %w", err)
+			fmt.Printf("Attempt %d failed: %v\n", attempt, lastErr)
+			continue
+		}
+		var currentCycleList QueryCurrentCyclelistQueryResponse
+		err = json.Unmarshal(currentCycleListRes, &currentCycleList)
+		if err != nil {
+			lastErr = fmt.Errorf("failed to unmarshal cycle list response: %w", err)
+			fmt.Printf("Attempt %d failed: %v\n", attempt, lastErr)
+			continue
+		}
+
+		// Submit value
+		txHashBytes, _, err := node.Exec(ctx,
+			node.TxCommand(keyName, "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", fees, "--keyring-dir", node.HomeDir()),
+			node.Chain.Config().Env)
+		if err != nil {
+			lastErr = fmt.Errorf("failed to execute submit-value transaction: %w", err)
+			fmt.Printf("Attempt %d failed: %v\n", attempt, lastErr)
+			continue
+		}
+
+		// Parse the tx hash and check if transaction succeeded
+		txHash, err := GetTxHashFromExec(txHashBytes)
+		if err != nil {
+			lastErr = fmt.Errorf("transaction failed: %w", err)
+			fmt.Printf("Attempt %d transaction failed: %v\n", attempt, lastErr)
+			continue
+		}
+
+		// Success!
+		fmt.Printf("SubmitCycleList succeeded on attempt %d, tx hash: %s\n", attempt, txHash)
+		return txHash, nil
+	}
+
+	return "", fmt.Errorf("SubmitCycleList failed after %d attempts. Last error: %w", maxRetries, lastErr)
+}
+
+// SubmitCycleListSafe queries the current cycle list and submits a value for it
+// Waits 1 block after submission for better timing guarantees
+// Returns the tx hash if successful, retries up to 3 times total
+func SubmitCycleListSafe(ctx context.Context, node *cosmos.ChainNode, keyName, value, fees string) (string, error) {
+	maxRetries := 3
+	var lastErr error
+
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		fmt.Printf("SubmitCycleListSafe attempt %d/%d\n", attempt, maxRetries)
+		// Query current cycle list
+		currentCycleListRes, _, err := QueryWithTimeout(ctx, node, "oracle", "current-cyclelist-query")
+		if err != nil {
+			lastErr = fmt.Errorf("failed to query current cycle list: %w", err)
+			fmt.Printf("Attempt %d failed: %v\n", attempt, lastErr)
+			continue
+		}
+		var currentCycleList QueryCurrentCyclelistQueryResponse
+		err = json.Unmarshal(currentCycleListRes, &currentCycleList)
+		if err != nil {
+			lastErr = fmt.Errorf("failed to unmarshal cycle list response: %w", err)
+			fmt.Printf("Attempt %d failed: %v\n", attempt, lastErr)
+			continue
+		}
+
+		// Submit value
+		txHashBytes, _, err := node.Exec(ctx,
+			node.TxCommand(keyName, "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", fees, "--keyring-dir", node.HomeDir()),
+			node.Chain.Config().Env)
+		if err != nil {
+			lastErr = fmt.Errorf("failed to execute submit-value transaction: %w", err)
+			fmt.Printf("Attempt %d failed: %v\n", attempt, lastErr)
+			continue
+		}
+
+		// Wait 1 block
+		err = interchaintestutil.WaitForBlocks(ctx, 1, node)
+		if err != nil {
+			lastErr = fmt.Errorf("failed to wait for block: %w", err)
+			fmt.Printf("Attempt %d failed: %v\n", attempt, lastErr)
+			continue
+		}
+
+		// Parse the tx hash and check if transaction succeeded
+		txHash, err := GetTxHashFromExec(txHashBytes)
+		if err != nil {
+			lastErr = fmt.Errorf("transaction failed: %w", err)
+			fmt.Printf("Attempt %d transaction failed: %v\n", attempt, lastErr)
+			continue
+		}
+
+		// Success!
+		fmt.Printf("SubmitCycleListSafe succeeded on attempt %d, tx hash: %s\n", attempt, txHash)
+		return txHash, nil
+	}
+
+	return "", fmt.Errorf("SubmitCycleListSafe failed after %d attempts. Last error: %w", maxRetries, lastErr)
 }
