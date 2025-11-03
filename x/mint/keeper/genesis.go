@@ -17,6 +17,7 @@ func (k Keeper) InitGenesis(ctx context.Context, ak types.AccountKeeper, gen *ty
 		panic(err)
 	}
 	k.accountKeeper.GetModuleAccount(ctx, types.TimeBasedRewards)
+	k.accountKeeper.GetModuleAccount(ctx, types.ExtraRewardsPool)
 }
 
 // ExportGenesis returns a x/mint GenesisState for the given context.

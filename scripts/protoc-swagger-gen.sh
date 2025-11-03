@@ -7,37 +7,37 @@ mkdir -p ./tmp-swagger-gen
 cd proto
 
 mkdir -p ./layer/tmp/bank
-wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/bank/v1beta1/query.proto -O ./layer/tmp/bank/query.proto
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/bank/v1beta1/query.proto -O ./layer/tmp/bank/query.proto
 
 mkdir ./layer/tmp/evidence
-wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/evidence/v1beta1/query.proto -O ./layer/tmp/evidence/query.proto
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/evidence/v1beta1/query.proto -O ./layer/tmp/evidence/query.proto
 
 mkdir ./layer/tmp/staking
-wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/staking/v1beta1/query.proto -O ./layer/tmp/staking/query.proto
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/staking/v1beta1/query.proto -O ./layer/tmp/staking/query.proto
 
 mkdir ./layer/tmp/distribution
-wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/distribution/v1beta1/query.proto -O ./layer/tmp/distribution/query.proto
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/distribution/v1beta1/query.proto -O ./layer/tmp/distribution/query.proto
 
 mkdir ./layer/tmp/auth
-wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/auth/v1beta1/query.proto -O ./layer/tmp/auth/query.proto
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/auth/v1beta1/query.proto -O ./layer/tmp/auth/query.proto
 
 mkdir ./layer/tmp/upgrade
-wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/upgrade/v1beta1/query.proto -O ./layer/tmp/upgrade/query.proto
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/upgrade/v1beta1/query.proto -O ./layer/tmp/upgrade/query.proto
 
 mkdir ./layer/tmp/slashing
-wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/slashing/v1beta1/query.proto -O ./layer/tmp/slashing/query.proto
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/slashing/v1beta1/query.proto -O ./layer/tmp/slashing/query.proto
 
 mkdir ./layer/tmp/gov
-wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/gov/v1/query.proto -O ./layer/tmp/gov/query.proto
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/gov/v1/query.proto -O ./layer/tmp/gov/query.proto
 
 mkdir ./layer/tmp/feegrant
-wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/feegrant/v1beta1/query.proto -O ./layer/tmp/feegrant/query.proto
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/feegrant/v1beta1/query.proto -O ./layer/tmp/feegrant/query.proto
 
 mkdir ./layer/tmp/group
-wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/group/v1/query.proto -O ./layer/tmp/group/query.proto
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/group/v1/query.proto -O ./layer/tmp/group/query.proto
 
 mkdir ./layer/tmp/consensus
-wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.50.9/proto/cosmos/consensus/v1/query.proto -O ./layer/tmp/consensus/query.proto
+wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/consensus/v1/query.proto -O ./layer/tmp/consensus/query.proto
 
 mkdir ./layer/tmp/ibc
 wget https://raw.githubusercontent.com/cosmos/ibc-go/refs/tags/v8.0.0/proto/ibc/applications/transfer/v1/query.proto -O ./layer/tmp/ibc/query.proto

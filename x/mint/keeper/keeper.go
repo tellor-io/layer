@@ -51,7 +51,10 @@ func NewKeeper(
 	if addr := accountKeeper.GetModuleAddress(types.TimeBasedRewards); addr == nil {
 		panic("the mintToOracle account has not been set")
 	}
-
+	// Ensure the extra rewards pool account has been set
+	if addr := accountKeeper.GetModuleAddress(types.ExtraRewardsPool); addr == nil {
+		panic("the extra rewards pool account has not been set")
+	}
 	sb := collections.NewSchemaBuilder(storeService)
 	k := Keeper{
 		cdc:           cdc,
@@ -170,6 +173,10 @@ func (k Keeper) SendExtraRewards(ctx context.Context) error {
 	}
 
 	timeElapsed := currentTime.Sub(*previousBlockTime).Milliseconds()
+	if timeElapsed < 0 {
+		k.Logger(ctx).Error("extra rewards time elapsed is negative", "time_elapsed", timeElapsed)
+		return nil
+	}
 	rewardAmount := dailyExtraRewardRate * timeElapsed / types.MillisecondsInDay
 	rewardAmountInt := math.NewInt(rewardAmount)
 	// only send if we have enough balance so the minimum/rate is the the TBR mint rate
