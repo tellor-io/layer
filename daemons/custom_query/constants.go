@@ -151,7 +151,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 		ID:                "e010d752f28dcd2804004d0b57ab1bdc4eca092895d49160204120af11d15f3e",
 		AggregationMethod: "median",
 		MinResponses:      1,
-		MaxSpreadPercent:  0.0,
+		MaxSpreadPercent:  10.0,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -176,7 +176,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"59ae85cec665c779f18255dd4f3d97821e6a122691ee070b9a26888bc2a0e45a": {
 		ID:                "59ae85cec665c779f18255dd4f3d97821e6a122691ee070b9a26888bc2a0e45a",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  0.0,
+		MaxSpreadPercent:  10.0,
 		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -193,7 +193,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"35155b44678db9e9e021c2cf49dd20c31b49e03415325c2beffb5221cf63882d": {
 		ID:                "35155b44678db9e9e021c2cf49dd20c31b49e03415325c2beffb5221cf63882d",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  0.0,
+		MaxSpreadPercent:  10.0,
 		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -215,7 +215,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"03731257e35c49e44b267640126358e5decebdd8f18b5e8f229542ec86e318cf": {
 		ID:                "03731257e35c49e44b267640126358e5decebdd8f18b5e8f229542ec86e318cf",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  0.0,
+		MaxSpreadPercent:  10.0,
 		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -368,14 +368,6 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				Invert:       false,
 				MarketId:     "KING-USD",
 			},
-			{
-				EndpointType: "uniswapV3ethereum",
-				ResponsePath: []string{"data", "token", "derivedETH"},
-				Params:       map[string]string{"token_address": "0x8f08b70456eb22f6109f57b8fafe862ed28e6040"},
-				UsdViaID:     exchange_common.ETHUSD_ID,
-				Invert:       false,
-				MarketId:     "KING-USD",
-			},
 		},
 	},
 	"611fd0e88850bf0cc036d96d04d47605c90b993485c2971e022b5751bbb04f23": {
@@ -418,7 +410,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"91513b15db3cef441d52058b24412957f9cc8645c53aecf39446ac9b0d2dcca4": {
 		ID:                "91513b15db3cef441d52058b24412957f9cc8645c53aecf39446ac9b0d2dcca4",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  0.0,
+		MaxSpreadPercent:  10.0,
 		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -436,7 +428,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"187f74d310dc494e6efd928107713d4229cd319c2cf300224de02776090809f1": {
 		ID:                "187f74d310dc494e6efd928107713d4229cd319c2cf300224de02776090809f1",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  0.0,
+		MaxSpreadPercent:  10.0,
 		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
@@ -495,7 +487,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"9874c1c7b7e76b78afdfdda6dcecef56edf6bf3d49d6d6ef2a98404ea2e04a59": {
 		ID:                "9874c1c7b7e76b78afdfdda6dcecef56edf6bf3d49d6d6ef2a98404ea2e04a59",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  0.0,
+		MaxSpreadPercent:  10.0,
 		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
