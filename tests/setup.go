@@ -94,6 +94,7 @@ func AuthModule() configurator.ModuleOption {
 					{Account: "registry"},
 					{Account: "mint", Permissions: []string{"minter"}},
 					{Account: "time_based_rewards"},
+					{Account: "extra_rewards_pool"},
 					{Account: "mint_to_team"},
 					{Account: "bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
