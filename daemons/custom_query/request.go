@@ -266,7 +266,7 @@ func fetchFromCombinedEndpoint(
 		}
 	}
 
-	value, err := handler.FetchValue(ctx, combinedReader.ContractReaders, combinedReader.RpcReaders, priceCache)
+	value, err := handler.FetchValue(ctx, combinedReader.ContractReaders, combinedReader.RpcReaders, priceCache, combinedReader.MinResponses, combinedReader.MaxSpreadPercent)
 	if err != nil {
 		return Result{
 			Err:        fmt.Errorf("failed to fetch combined value: %w", err),
