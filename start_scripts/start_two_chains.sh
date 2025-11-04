@@ -37,18 +37,15 @@ echo "$KEY_NAME..."
 echo "bill..."
 ./layerd init billmoniker --chain-id $CHAIN_ID --home ~/.layer/bill
 
-# Add a validator account alice
+# Add validator accounts
 echo "Adding validator accounts..."
 echo "$KEY_NAME..."
-# ./layerd keys add $KEY_NAME --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
 ./layerd keys import-hex $KEY_NAME $PRIVATE_KEY_1 --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
 echo "bill..."
-# ./layerd keys add bill --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
 ./layerd keys import-hex bill $PRIVATE_KEY_2 --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
 echo "charlie..."
-# ./layerd keys add charlie --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME 
 ./layerd keys import-hex charlie $PRIVATE_KEY_3 --keyring-backend $KEYRING_BACKEND --home ~/.layer/$KEY_NAME 
-# import bill to alice
+# import bill to alice's keyring for multisig
 ./layerd keys import-hex bill $PRIVATE_KEY_2 --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
 
 # Create team multisig account
@@ -104,7 +101,6 @@ echo "$KEY_NAME..."
 ./layerd genesis add-genesis-account $(./layerd keys show $KEY_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1)  10000000000000loya --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
 echo "bill..."
 ./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill
-./layerd genesis add-genesis-account $(./layerd keys show bill -a --keyring-backend $KEYRING_BACKEND --home ~/.layer/bill) 10000000000000loya --keyring-backend $KEYRING_BACKEND --home ~/.layer/alice
 
 echo "team multisig..."
 # ./layerd genesis add-genesis-account $(./layerd keys show $MULTISIG_NAME -a --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1) 5000000000000loya --keyring-backend $KEYRING_BACKEND --home $LAYERD_NODE_HOME_1
@@ -145,10 +141,16 @@ echo "Start chain..."
 # echo "password" |./layerd start --home $LAYERD_NODE_HOME_1 --api.enable --api.swagger --keyring-backend $KEYRING_BACKEND --key-name $KEY_NAME
 ./layerd start --home $LAYERD_NODE_HOME_1 --api.enable --api.swagger --keyring-backend $KEYRING_BACKEND --key-name $KEY_NAME
 
+# ./layerd start --home ~/.layer/alice --api.enable --api.swagger --keyring-backend test --key-name alice
 
+# ----- Reporting
 # Make alice a reporter
 # ./layerd tx reporter create-reporter 0.1 1000000 alice --from alice --keyring-backend test --chain-id layertest-4 --home ~/.layer/alice --keyring-dir ~/.layer/alice --fees 500loya --yes
-# 
+# Bad Report
+# ./layerd tx oracle submit-value 00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000 000000000000000000000000000000000000000000000084bd26b6c2dd7c0000 --from alice --keyring-backend test --chain-id layertest-4 --home ~/.layer/alice --keyring-dir ~/.layer/alice --fees 500loya --yes
+# reporter daemon
+# ./reporterd --chain-id layertest-4 --grpc-addr 0.0.0.0:9090 --from alice --home ~/.layer/alice --keyring-backend test --node tcp://0.0.0.0:26657
+
 # ----- Multisig 
 # 1. Create a transaction (unsigned):
 # ./layerd tx bank send team <recipient> 1000000loya --generate-only --from alice --keyring-backend test --chain-id layertest-4 --home ~/.layer/alice > tx.json
@@ -166,7 +168,6 @@ echo "Start chain..."
 
 
 # ----- Gov Proposals
-# 
 # ./layerd tx gov submit-proposal mint_proposal.json \
 #   --from alice --chain-id layertest-4 \
 #   --keyring-backend test --home ~/.layer/alice \
@@ -187,3 +188,61 @@ echo "Start chain..."
 # 
 # ./layerd tx gov vote 1 yes --from alice --chain-id layertest-4 \
 #   --keyring-backend test --home ~/.layer/alice --fees 500loya --yes
+
+# ----- EVMCall
+# {
+#     "document_hash": "EVMCall",
+#     "query_type": "EVMCall",
+#     "response_value_type": "bytes",
+#     "abi_components": [
+#         {
+#             "name": "chainId",
+#             "field_type": "uint256"
+#         },
+#         {
+#             "name": "contractAddress",
+#             "field_type": "address"
+#         },
+#         {
+#             "name": "calldata",
+#             "field_type": "bytes"
+#         }
+#     ],
+#     "aggregation_method": "weighted-mode",
+#     "registrar": "tellor1alcefjzkk37qmfrnel8q4eruyll0pc8arxhxxw",
+#     "report_block_window": 10
+# }
+# ./layerd tx registry register-spec EVMCall evmcall_dataspec.json \
+#   --from alice \
+#   --chain-id layertest-4 \
+#   --keyring-backend test \
+#   --home ~/.layer/alice \
+#   --keyring-dir ~/.layer/alice \
+#   --fees 500loya \
+#   --yes
+
+# Generate evm call query data for mainnet tokenbridge depositId read
+# ./layerd query registry generate-querydata EVMCall '["1", "0x5589e306b1920f009979a50b88cae32aecd471e4", "0x9852099c"]'
+#  00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000745564d43616c6c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000010000000000000000000000005589e306b1920f009979a50b88cae32aecd471e4000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000049852099c00000000000000000000000000000000000000000000000000000000
+
+# Tip 
+#  ./layerd tx oracle tip 00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000745564d43616c6c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000010000000000000000000000005589e306b1920f009979a50b88cae32aecd471e4000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000049852099c00000000000000000000000000000000000000000000000000000000 \
+#   1000000loya \
+#   --from alice \
+#   --chain-id layertest-4 \
+#   --keyring-backend test \
+#   --home ~/.layer/alice \
+#   --keyring-dir ~/.layer/alice \
+#   --fees 500loya \
+#   --yes
+
+# Submit
+# ./layerd tx oracle submit-value 00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000745564d43616c6c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a000000000000000000000000000000000000000000000000000000000000000010000000000000000000000005589e306b1920f009979a50b88cae32aecd471e4000000000000000000000000000000000000000000000000000000000000006000000000000000000000000000000000000000000000000000000000000000049852099c00000000000000000000000000000000000000000000000000000000 \
+#   00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000068e71aa20000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000004d \
+#   --from alice \
+#   --chain-id layertest-4 \
+#   --keyring-backend test \
+#   --home ~/.layer/alice \
+#   --keyring-dir ~/.layer/alice \
+#   --fees 500loya \
+#   --yes

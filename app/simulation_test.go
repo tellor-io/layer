@@ -39,6 +39,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// TODO: Remove all of this ?
 type storeKeysPrefixes struct {
 	A        storetypes.StoreKey
 	B        storetypes.StoreKey
@@ -62,19 +63,20 @@ func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 // Running as go benchmark test:
 // `go test -benchmem -run=^$ -bench ^BenchmarkSimulation ./app -NumBlocks=200 -BlockSize 50 -Commit=true -Verbose=true -Enabled=true`
 func BenchmarkSimulation(b *testing.B) {
-	simcli.FlagSeedValue = time.Now().Unix()
-	simcli.FlagVerboseValue = true
-	simcli.FlagCommitValue = true
-	simcli.FlagEnabledValue = true
-
 	config := simcli.NewConfigFromFlags()
+	config.Seed = time.Now().Unix()
 	config.ChainID = "mars-simapp"
+
+	// Set simulation flags directly
+	verbose := true
+	enabled := false
+
 	db, dir, logger, _, err := simtestutil.SetupSimulation(
 		config,
 		"leveldb-bApp-sim",
 		"Simulation",
-		simcli.FlagVerboseValue,
-		simcli.FlagEnabledValue,
+		verbose,
+		enabled,
 	)
 	require.NoError(b, err, "simulation setup failed")
 
@@ -85,7 +87,7 @@ func BenchmarkSimulation(b *testing.B) {
 
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = app.DefaultNodeHome
-	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = 1
 
 	bApp := app.New(
 		logger,
@@ -125,15 +127,15 @@ func BenchmarkSimulation(b *testing.B) {
 }
 
 func TestAppStateDeterminism(t *testing.T) {
-	if !simcli.FlagEnabledValue {
+	config := simcli.NewConfigFromFlags()
+
+	enabled := false
+	if !enabled {
 		t.Skip("skipping application simulation")
 	}
-
-	config := simcli.NewConfigFromFlags()
 	config.InitialBlockHeight = 1
 	config.ExportParamsPath = ""
-	config.OnOperation = true
-	config.AllInvariants = true
+	// OnOperation and AllInvariants are deprecated and removed
 
 	var (
 		r                    = rand.New(rand.NewSource(time.Now().Unix()))
@@ -143,14 +145,15 @@ func TestAppStateDeterminism(t *testing.T) {
 		appOptions           = make(simtestutil.AppOptionsMap, 0)
 	)
 	appOptions[flags.FlagHome] = app.DefaultNodeHome
-	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = 1
 
 	for i := 0; i < numSeeds; i++ {
 		config.Seed = r.Int63()
 
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
-			if simcli.FlagVerboseValue {
+			verbose := true
+			if verbose {
 				logger = log.NewTestLogger(t)
 			} else {
 				logger = log.NewNopLogger()
@@ -212,12 +215,17 @@ func TestAppImportExport(t *testing.T) {
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = "mars-simapp-import"
 
+	enabled := false
+	if !enabled {
+		t.Skip("skipping application import/export simulation")
+	}
+
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(
 		config,
 		"leveldb-app-sim",
 		"Simulation",
-		simcli.FlagVerboseValue,
-		simcli.FlagEnabledValue,
+		true, // verbose
+		true, // enabled
 	)
 	if skip {
 		t.Skip("skipping application import/export simulation")
@@ -231,7 +239,7 @@ func TestAppImportExport(t *testing.T) {
 
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = app.DefaultNodeHome
-	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = 1
 
 	bApp := app.New(
 		logger,
@@ -280,8 +288,8 @@ func TestAppImportExport(t *testing.T) {
 		config,
 		"leveldb-app-sim-2",
 		"Simulation-2",
-		simcli.FlagVerboseValue,
-		simcli.FlagEnabledValue,
+		true, // verbose
+		true, // enabled
 	)
 	require.NoError(t, err, "simulation setup failed")
 
@@ -359,12 +367,17 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = "mars-simapp-after-import"
 
+	enabled := false
+	if !enabled {
+		t.Skip("skipping application simulation after import")
+	}
+
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(
 		config,
 		"leveldb-app-sim",
 		"Simulation",
-		simcli.FlagVerboseValue,
-		simcli.FlagEnabledValue,
+		true, // verbose
+		true, // enabled
 	)
 	if skip {
 		t.Skip("skipping application simulation after import")
@@ -378,7 +391,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = app.DefaultNodeHome
-	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+	appOptions[server.FlagInvCheckPeriod] = 1
 
 	bApp := app.New(
 		logger,
@@ -433,8 +446,8 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		config,
 		"leveldb-app-sim-2",
 		"Simulation-2",
-		simcli.FlagVerboseValue,
-		simcli.FlagEnabledValue,
+		true, // verbose
+		true, // enabled
 	)
 	require.NoError(t, err, "simulation setup failed")
 

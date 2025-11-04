@@ -3,6 +3,7 @@ package setup
 import (
 	"encoding/hex"
 	"fmt"
+	"math/rand/v2"
 	"strconv"
 	"testing"
 	"time"
@@ -38,7 +39,6 @@ import (
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	_ "github.com/tellor-io/layer/x/reporter/module"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
-	"golang.org/x/exp/rand"
 
 	appv1alpha1 "cosmossdk.io/api/cosmos/app/v1alpha1"
 	authmodulev1 "cosmossdk.io/api/cosmos/auth/module/v1"
@@ -94,6 +94,7 @@ func AuthModule() configurator.ModuleOption {
 					{Account: "registry"},
 					{Account: "mint", Permissions: []string{"minter"}},
 					{Account: "time_based_rewards"},
+					{Account: "extra_rewards_pool"},
 					{Account: "mint_to_team"},
 					{Account: "bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
 					{Account: "not_bonded_tokens_pool", Permissions: []string{"burner", "staking"}},
@@ -442,8 +443,8 @@ func (s *SharedSetup) CreateValidatorsRandomStake(numValidators int) ([]sdk.AccA
 	for i, pubKey := range pubKeys {
 		s.Accountkeeper.NewAccountWithAddress(s.Ctx, accountsAddrs[i])
 		// pick random amount of trb between 1 and 200,000 to stake
-		rand := rand.New(rand.NewSource(uint64(time.Now().UnixNano())))
-		randAmt := (rand.Int63n(200_000 * 1e6))
+		rng := rand.New(rand.NewPCG(uint64(time.Now().UnixNano()), uint64(time.Now().UnixNano())))
+		randAmt := rng.Int64N(200_000 * 1e6)
 		stakes[i] = randAmt
 		randCoins := sdk.NewCoin(s.Denom, math.NewInt(randAmt))
 		// create msg for validator creation
