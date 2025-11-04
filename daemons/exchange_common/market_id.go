@@ -9,4 +9,5 @@ const (
 	SAGAUSD_ID  uint32 = 6
 	ATOMUSD_ID  uint32 = 7
 	STETHUSD_ID uint32 = 8
+	USDEUSD_ID  uint32 = 9
 )

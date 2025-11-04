@@ -3,6 +3,7 @@ package combined_handler
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 
 	contractreader "github.com/tellor-io/layer/daemons/custom_query/contracts/contract_reader"
@@ -16,6 +17,8 @@ type CombinedHandler interface {
 		contractReaders map[string]*contractreader.Reader,
 		rpcReaders map[string]*rpcreader.Reader,
 		priceCache *pricefeedservertypes.MarketToExchangePrices,
+		minResponses int,
+		maxSpreadPercent float64,
 	) (float64, error)
 }
 
@@ -98,7 +101,7 @@ func (p *ParallelFetcher) GetResult(key string) (any, error) {
 	return result, nil
 }
 
-func (p *ParallelFetcher) GetContractBytes(key string) ([]byte, error) {
+func (p *ParallelFetcher) GetBytes(key string) ([]byte, error) {
 	result, err := p.GetResult(key)
 	if err != nil {
 		return nil, err
@@ -112,16 +115,27 @@ func (p *ParallelFetcher) GetContractBytes(key string) ([]byte, error) {
 	return bytes, nil
 }
 
-func (p *ParallelFetcher) GetRPCBytes(key string) ([]byte, error) {
-	result, err := p.GetResult(key)
-	if err != nil {
-		return nil, err
+func (p *ParallelFetcher) GetContractBytes(key string) ([]byte, error) {
+	return p.GetBytes(key)
+}
+
+// calculate median of a list of floats
+func (p *ParallelFetcher) CalculateMedian(prices []float64) float64 {
+	if len(prices) == 0 {
+		return 0
+	}
+	if len(prices) == 1 {
+		return prices[0]
 	}
 
-	bytes, ok := result.([]byte)
-	if !ok {
-		return nil, fmt.Errorf("result for key %s is not []byte", key)
-	}
+	// Sort the prices
+	sort.Float64s(prices)
 
-	return bytes, nil
+	// Calculate median
+	n := len(prices)
+	if n%2 == 0 {
+		return (prices[n/2-1] + prices[n/2]) / 2.0
+	}
+	// Odd number of elements: middle value
+	return prices[n/2]
 }

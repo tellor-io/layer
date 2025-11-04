@@ -14,7 +14,7 @@ var StaticEndpointTemplateConfig = map[string]*EndpointTemplate{
 		Timeout:     5000,
 	},
 	"curve": {
-		URLTemplate: "https://prices.curve.fi/v1/usd_price/ethereum/{contract_address}",
+		URLTemplate: "https://prices.curve.finance/v1/usd_price/ethereum/{contract_address}",
 		Method:      "GET",
 		Timeout:     5000,
 	},
@@ -113,45 +113,11 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 			},
 		},
 	},
-	"c444759b83c7bb0f6694306e1f719e65679d48ad754a31d3a366856becf1e71e": {
-		ID:                "c444759b83c7bb0f6694306e1f719e65679d48ad754a31d3a366856becf1e71e",
-		AggregationMethod: "median",
-		MaxSpreadPercent:  100.0,
-		MinResponses:      2,
-		ResponseType:      "ufixed256x18",
-		Endpoints: []EndpointConfig{
-			{
-				EndpointType: "coingecko",
-				ResponsePath: []string{"ignition-fbtc", "usd"},
-				Params: map[string]string{
-					"coin_id": "ignition-fbtc",
-				},
-				MarketId: "FBTC-USD",
-			},
-			{
-				EndpointType: "coinpaprika",
-				ResponsePath: []string{"quotes", "USD", "price"},
-				Params: map[string]string{
-					"coin_id": "fbtc-ignition-fbtc",
-				},
-				MarketId: "FBTC-USD",
-			},
-			{
-				EndpointType: "coinmarketcap",
-				ResponsePath: []string{"data", "32306", "quote", "USD", "price"},
-				Params: map[string]string{
-					// "symbol": "FBTC",
-					"id": "32306",
-				},
-				MarketId: "FBTC-USD",
-			},
-		},
-	},
 	"e010d752f28dcd2804004d0b57ab1bdc4eca092895d49160204120af11d15f3e": {
 		ID:                "e010d752f28dcd2804004d0b57ab1bdc4eca092895d49160204120af11d15f3e",
 		AggregationMethod: "median",
 		MinResponses:      1,
-		MaxSpreadPercent:  10.0,
+		MaxSpreadPercent:  100.0,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -198,16 +164,9 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
-				EndpointType: "coingecko",
-				ResponsePath: []string{"yieldfi-ytoken", "usd"},
-				Params: map[string]string{
-					"coin_id": "yieldfi-ytoken",
-				},
-				MarketId: "YTOKEN-USD",
-			},
-			{
-				EndpointType: "sushiswapKatana",
-				ResponsePath: []string{"0x4772d2e014f9fc3a820c444e3313968e9a5c8121"},
+				EndpointType: "contract",
+				Handler:      "yieldfi_yusd_handler",
+				Chain:        "ethereum",
 				MarketId:     "YTOKEN-USD",
 			},
 		},
@@ -220,21 +179,10 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
-				EndpointType: "coingecko",
-				ResponsePath: []string{"ethena-staked-usde", "usd"},
-				Params: map[string]string{
-					"coin_id": "ethena-staked-usde",
-				},
-				MarketId: "USDE-USD",
-			},
-			{
-				EndpointType: "coinmarketcap",
-				ResponsePath: []string{"data", "29471", "quote", "USD", "price"},
-				Params: map[string]string{
-					// "symbol": "SUSDE",
-					"id": "29471",
-				},
-				MarketId: "USDE-USD",
+				EndpointType: "contract",
+				Handler:      "susdeusd_handler",
+				Chain:        "ethereum",
+				MarketId:     "SUSDE-USD",
 			},
 		},
 	},
@@ -280,23 +228,6 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
-				EndpointType: "coingecko",
-				ResponsePath: []string{"rocket-pool-eth", "usd"},
-				Params: map[string]string{
-					"coin_id": "rocket-pool-eth",
-				},
-				MarketId: "RETH-USD",
-			},
-			{
-				EndpointType: "coinmarketcap",
-				ResponsePath: []string{"data", "15060", "quote", "USD", "price"},
-				Params: map[string]string{
-					// "symbol": "RETH",
-					"id": "15060",
-				},
-				MarketId: "RETH-USD",
-			},
-			{
 				EndpointType: "contract",
 				Handler:      "reth_handler",
 				Chain:        "ethereum",
@@ -311,23 +242,6 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 		MinResponses:      2,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
-			{
-				EndpointType: "coingecko",
-				ResponsePath: []string{"wrapped-steth", "usd"},
-				Params: map[string]string{
-					"coin_id": "wrapped-steth",
-				},
-				MarketId: "WSTETH-USD",
-			},
-			{
-				EndpointType: "coinmarketcap",
-				ResponsePath: []string{"data", "12409", "quote", "USD", "price"},
-				Params: map[string]string{
-					// "symbol": "WSTETH",
-					"id": "12409",
-				},
-				MarketId: "WSTETH-USD",
-			},
 			{
 				EndpointType: "contract",
 				Handler:      "wsteth_handler",
@@ -420,65 +334,75 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 				CombinedSources: map[string]string{
 					"ethereum": "contract:ethereum",
 				},
-				CombinedConfig: map[string]any{},
-				MarketId:       "VYUSD-USD",
+				CombinedConfig: map[string]any{
+					"min_responses":      1,
+					"max_spread_percent": 100.0,
+				},
+				MarketId: "VYUSD-USD",
 			},
 		},
 	},
 	"187f74d310dc494e6efd928107713d4229cd319c2cf300224de02776090809f1": {
 		ID:                "187f74d310dc494e6efd928107713d4229cd319c2cf300224de02776090809f1",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  10.0,
+		MaxSpreadPercent:  100.0,
 		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
-				EndpointType: "coingecko",
-				ResponsePath: []string{"staked-usn", "usd"},
-				Params: map[string]string{
-					"coin_id": "staked-usn",
+				EndpointType: "combined",
+				Handler:      "susn_price",
+				CombinedSources: map[string]string{
+					"ethereum":    "contract:ethereum",
+					"coinpaprika": "rpc:coinpaprika",
+					"coingecko":   "rpc:coingecko",
 				},
-				MarketId: "SUSN-USD",
+				CombinedConfig: map[string]any{
+					"min_responses":             1,
+					"max_spread_percent":        100.0,
+					"coinpaprika_response_path": []string{"quotes", "USD", "price"},
+					"coingecko_response_path":   []string{"noon-usn", "usd"},
+					"coingecko_params": map[string]string{
+						"coin_id": "noon-usn",
+					},
+					"coinpaprika_params": map[string]string{
+						"coin_id": "usn1-noon-usn",
+					},
+				},
 			},
 		},
 	},
 	"ab30caa3e7827a27c153063bce02c0b260b29c0c164040c003f0f9ec66002510": {
 		ID:                "ab30caa3e7827a27c153063bce02c0b260b29c0c164040c003f0f9ec66002510",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  50.0,
-		MinResponses:      2,
+		MaxSpreadPercent:  0.0,
+		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
-				EndpointType: "coingecko",
-				ResponsePath: []string{"staked-frax-usd", "usd"},
-				Params: map[string]string{
-					"coin_id": "staked-frax-usd",
+				EndpointType: "combined",
+				Handler:      "sfrxusd_price",
+				CombinedSources: map[string]string{
+					"ethereum":    "contract:ethereum",
+					"coingecko":   "rpc:coingecko",
+					"curve":       "rpc:curve",
+					"coinpaprika": "rpc:coinpaprika",
 				},
-				MarketId: "SFRXUSD-USD",
-			},
-			{
-				EndpointType: "coinpaprika",
-				ResponsePath: []string{"quotes", "USD", "price"},
-				Params: map[string]string{
-					"coin_id": "sfrxusd-staked-frax-usd",
-				},
-				MarketId: "SFRXUSD-USD",
-			},
-			{
-				EndpointType: "coinmarketcap",
-				ResponsePath: []string{"data", "36038", "quote", "USD", "price"},
-				Params: map[string]string{
-					// "symbol": "SFRXUSD",
-					"id": "36038",
-				},
-				MarketId: "SFRXUSD-USD",
-			},
-			{
-				EndpointType: "curve",
-				ResponsePath: []string{"data", "usd_price"},
-				Params: map[string]string{
-					"contract_address": "0xcf62F905562626CfcDD2261162a51fd02Fc9c5b6",
+				CombinedConfig: map[string]any{
+					"min_responses":      2,
+					"max_spread_percent": 50.0,
+					"coingecko_params": map[string]any{
+						"coin_id": "frax",
+					},
+					"coingecko_response_path": []string{"frax", "usd"},
+					"curve_params": map[string]any{
+						"contract_address": "0x853d955aCEf822Db058eb8505911ED77F175b99e",
+					},
+					"curve_response_path": []string{"data", "usd_price"},
+					"coinpaprika_params": map[string]any{
+						"coin_id": "frax-frax",
+					},
+					"coinpaprika_response_path": []string{"quotes", "USD", "price"},
 				},
 				MarketId: "SFRXUSD-USD",
 			},

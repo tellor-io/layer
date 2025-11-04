@@ -18,6 +18,11 @@ var _ ContractHandler = (*YieldFiYeth)(nil)
 
 type YieldFiYeth struct{}
 
+// FetchValue calculates yieldFi-yETH price in USD by:
+// 1. Getting yieldFi-yETH/ETH exchange rate from contract (18 decimals)
+// 2. Getting ETH/USD price from cache
+// 3. Multiplying: (yieldFi-yETH/ETH rate) * (ETH/USD price) = yieldFi-yETH/USD price
+// 4. Adjusting for decimals: 18 from exchange rate + market param decimals
 func (r *YieldFiYeth) FetchValue(
 	ctx context.Context, reader *reader.Reader,
 	priceCache *pricefeedservertypes.MarketToExchangePrices,

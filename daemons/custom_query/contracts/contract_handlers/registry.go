@@ -8,6 +8,8 @@ var HandlerRegistry = map[string]ContractHandler{
 	"reth_handler":         &RocketPoolETHHandler{},
 	"king_handler":         &KingHandler{},
 	"yieldfi_yeth_handler": &YieldFiYeth{},
+	"yieldfi_yusd_handler": &YieldFiYusd{},
+	"susdeusd_handler":     &SUSDEUSD{},
 }
 
 func GetHandler(name string) (ContractHandler, error) {
