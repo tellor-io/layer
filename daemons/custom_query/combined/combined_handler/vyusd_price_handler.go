@@ -29,6 +29,8 @@ func (h *VYUSDPriceHandler) FetchValue(
 	contractReaders map[string]*contractreader.Reader,
 	rpcReaders map[string]*rpcreader.Reader,
 	priceCache *pricefeedservertypes.MarketToExchangePrices,
+	_ int,
+	_ float64,
 ) (float64, error) {
 	// Validate we have the required readers
 	contractReader, exists := contractReaders["ethereum"]

@@ -49,10 +49,12 @@ type RpcHandler struct {
 }
 
 type CombinedHandler struct {
-	Handler         string
-	ContractReaders map[string]*contractreader.Reader
-	RpcReaders      map[string]*rpcreader.Reader
-	Config          map[string]any
+	Handler          string
+	ContractReaders  map[string]*contractreader.Reader
+	RpcReaders       map[string]*rpcreader.Reader
+	Config           map[string]any
+	MinResponses     int
+	MaxSpreadPercent float64
 }
 type QueryConfig struct {
 	ID                string            `toml:"id"`
@@ -215,11 +217,37 @@ func BuildQueryEndpoints(homeDir, localDir, file string) (map[string]QueryConfig
 					}
 				}
 
+				minResponses := 1
+				if minRespRaw, exists := endpoint.CombinedConfig["min_responses"]; exists {
+					switch v := minRespRaw.(type) {
+					case int:
+						minResponses = v
+					case int64:
+						minResponses = int(v)
+					case float64:
+						minResponses = int(v)
+					}
+				}
+
+				maxSpreadPercent := 100.0
+				if maxSpreadRaw, exists := endpoint.CombinedConfig["max_spread_percent"]; exists {
+					switch v := maxSpreadRaw.(type) {
+					case float64:
+						maxSpreadPercent = v
+					case int:
+						maxSpreadPercent = float64(v)
+					case int64:
+						maxSpreadPercent = float64(v)
+					}
+				}
+
 				combinedReaders = append(combinedReaders, CombinedHandler{
-					Handler:         endpoint.Handler,
-					ContractReaders: contractReadersMap,
-					RpcReaders:      rpcReadersMap,
-					Config:          endpoint.CombinedConfig,
+					Handler:          endpoint.Handler,
+					ContractReaders:  contractReadersMap,
+					RpcReaders:       rpcReadersMap,
+					Config:           endpoint.CombinedConfig,
+					MinResponses:     minResponses,
+					MaxSpreadPercent: maxSpreadPercent,
 				})
 				continue
 			}
