@@ -80,6 +80,18 @@ class BlockTimingAnalyzer:
                 'total_consensus_mean_ms': round(statistics.mean([c['total_consensus_ms'] for c in consensus_data if 'total_consensus_ms' in c]), 1) if consensus_data else 0
             }
         
+        # Block size statistics
+        block_sizes = [b.get('block_size_bytes', 0) for b in self.blocks if b.get('block_size_bytes', 0) > 0]
+        if block_sizes:
+            stats['block_size_stats'] = {
+                'mean_bytes': round(statistics.mean(block_sizes), 0),
+                'mean_kb': round(statistics.mean(block_sizes) / 1024, 2),
+                'min_bytes': min(block_sizes),
+                'max_bytes': max(block_sizes),
+                'max_kb': round(max(block_sizes) / 1024, 2),
+                'std_dev_bytes': round(statistics.stdev(block_sizes), 0) if len(block_sizes) > 1 else 0
+            }
+        
         # Module execution statistics
         stats['module_stats'] = self._calculate_module_stats()
         
@@ -234,6 +246,15 @@ class BlockTimingAnalyzer:
             print(f"  Mean Precommit:  {consensus_stats.get('mean_precommit_ms', 0):.1f}ms")
             print(f"  Total Consensus: {consensus_stats.get('total_consensus_mean_ms', 0):.1f}ms")
             print(f"  Blocks with Multiple Rounds: {consensus_stats.get('rounds_gt_0_count', 0)}")
+        
+        # Block size stats
+        block_size_stats = stats.get('block_size_stats', {})
+        if block_size_stats:
+            print(f"\nBlock Size Statistics:")
+            print(f"  Mean:     {block_size_stats.get('mean_kb', 0):.2f} KB ({block_size_stats.get('mean_bytes', 0):,.0f} bytes)")
+            print(f"  Min:      {block_size_stats.get('min_bytes', 0):,} bytes")
+            print(f"  Max:      {block_size_stats.get('max_kb', 0):.2f} KB ({block_size_stats.get('max_bytes', 0):,} bytes)")
+            print(f"  Std Dev:  {block_size_stats.get('std_dev_bytes', 0):,.0f} bytes")
         
         # Module stats - BeginBlocker
         module_stats = stats.get('module_stats', {})

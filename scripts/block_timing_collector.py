@@ -404,6 +404,25 @@ class BlockTimingCollector:
         block_data['timestamp'] = block_header.get('time', '')
         block_data['proposer'] = block_header.get('proposer_address', '')
         
+        # Calculate block size
+        block_body = block.get('result', {}).get('block', {})
+        txs = block_body.get('data', {}).get('txs', [])
+        
+        # Calculate total size of all transactions in bytes
+        total_tx_bytes = 0
+        for tx in txs:
+            # Transactions are base64 encoded, decode to get actual size
+            try:
+                import base64
+                tx_bytes = base64.b64decode(tx)
+                total_tx_bytes += len(tx_bytes)
+            except:
+                # If decode fails, use encoded length as approximation
+                total_tx_bytes += len(tx)
+        
+        block_data['block_size_bytes'] = total_tx_bytes
+        block_data['num_txs'] = len(txs)
+        
         # Calculate block time
         if self.last_block_time:
             try:
@@ -578,6 +597,7 @@ class BlockTimingCollector:
         height = block_data.get('height', '?')
         block_time = block_data.get('total_block_time_seconds', 0)
         num_txs = block_data.get('transactions', {}).get('count', 0)
+        block_size = block_data.get('block_size_bytes', 0)
         has_tips = block_data.get('analysis', {}).get('has_tips', False)
         
         execution = block_data.get('execution', {})
@@ -594,8 +614,14 @@ class BlockTimingCollector:
                 slowest = max(modules.items(), key=lambda x: x[1])
                 slowest_module = f" | Slowest: {slowest[0]}({slowest[1]:.1f}ms)"
         
+        # Format block size in KB if > 1024 bytes
+        if block_size >= 1024:
+            size_str = f"{block_size/1024:.1f}KB"
+        else:
+            size_str = f"{block_size}B"
+        
         print(f"Block {height}: {block_time:.3f}s | "
-              f"Txs: {num_txs} | "
+              f"Txs: {num_txs} ({size_str}) | "
               f"Exec: {exec_time:.1f}ms | "
               f"Consensus: {consensus_time:.1f}ms{slowest_module} | "
               f"Tips: {'YES' if has_tips else 'no'}")
