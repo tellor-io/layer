@@ -29,6 +29,39 @@ func TestReportersQuery(t *testing.T) {
 	require.Len(t, res.Reporters, 10)
 }
 
+func TestJailedReportersQuery(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	querier := keeper.NewQuerier(k)
+
+	// Create 5 jailed reporters
+	jailedReporters := make([]sdk.AccAddress, 5)
+	for i := 0; i < 5; i++ {
+		jailedReporters[i] = sample.AccAddressBytes()
+		reporter := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, fmt.Sprintf("jailed_reporter_%d", i))
+		reporter.Jailed = true
+		err := k.Reporters.Set(ctx, jailedReporters[i], reporter)
+		require.NoError(t, err)
+	}
+
+	// Create 5 non-jailed reporters
+	for i := 0; i < 5; i++ {
+		reporter := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, fmt.Sprintf("active_reporter_%d", i))
+		reporter.Jailed = false
+		err := k.Reporters.Set(ctx, sample.AccAddressBytes(), reporter)
+		require.NoError(t, err)
+	}
+
+	// Query jailed reporters
+	res, err := querier.JailedReporters(ctx, &types.QueryJailedReportersRequest{})
+	require.NoError(t, err)
+	require.Len(t, res.Reporters, 5)
+
+	// Verify all returned reporters are jailed
+	for _, reporter := range res.Reporters {
+		require.True(t, reporter.Metadata.Jailed)
+	}
+}
+
 func TestSelectorReporterQuery(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	querier := keeper.NewQuerier(k)
