@@ -243,3 +243,33 @@ func (k Querier) getIndividualDelegations(ctx context.Context, selectorAddr sdk.
 	}
 	return individualDelegations, totalTokens, uint64(len(individualDelegations)), nil
 }
+
+// JailedReporters queries all jailed reporters
+func (k Querier) JailedReporters(ctx context.Context, req *types.QueryJailedReportersRequest) (*types.QueryJailedReportersResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	reporters := make([]*types.Reporter, 0)
+	err := k.Keeper.Reporters.Walk(ctx, nil, func(repAddr []byte, reporterMeta types.OracleReporter) (stop bool, err error) {
+		if !reporterMeta.Jailed {
+			return false, nil
+		}
+		stake, _, err := k.GetReporterStake(ctx, sdk.AccAddress(repAddr))
+		if err != nil {
+			stake = math.ZeroInt()
+		}
+		reportingPower := stake.Quo(layertypes.PowerReduction).Uint64()
+		reporters = append(reporters, &types.Reporter{
+			Address:  sdk.AccAddress(repAddr).String(),
+			Metadata: &reporterMeta,
+			Power:    reportingPower,
+		})
+		return false, nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryJailedReportersResponse{Reporters: reporters}, nil
+}
