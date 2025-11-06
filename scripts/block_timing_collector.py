@@ -36,7 +36,12 @@ class ConsensusStateTracker:
             return None
         
         result = consensus_data['result']
-        height_round_step = result.get('height/round/step', '')
+        # Handle both direct and nested round_state structures
+        if 'round_state' in result:
+            round_state = result['round_state']
+            height_round_step = round_state.get('height/round/step', '')
+        else:
+            height_round_step = result.get('height/round/step', '')
         
         # Parse height/round/step format: "12345/0/1"
         parts = height_round_step.split('/')
@@ -363,18 +368,27 @@ class BlockTimingCollector:
         # Calculate block time
         if self.last_block_time:
             try:
-                current_time = datetime.fromisoformat(block_data['timestamp'].replace('Z', '+00:00'))
+                # Handle both Z and +00:00 timezone formats
+                timestamp_str = block_data['timestamp']
+                if timestamp_str.endswith('Z'):
+                    timestamp_str = timestamp_str[:-1] + '+00:00'
+                current_time = datetime.fromisoformat(timestamp_str)
                 block_time = (current_time - self.last_block_time).total_seconds()
                 block_data['total_block_time_seconds'] = round(block_time, 3)
-            except:
+            except Exception as e:
+                print(f"  Warning: Could not calculate block time: {e}")
                 block_data['total_block_time_seconds'] = 0
         else:
             block_data['total_block_time_seconds'] = 0
         
+        # Update last block time for next iteration
         try:
-            self.last_block_time = datetime.fromisoformat(block_data['timestamp'].replace('Z', '+00:00'))
-        except:
-            pass
+            timestamp_str = block_data['timestamp']
+            if timestamp_str.endswith('Z'):
+                timestamp_str = timestamp_str[:-1] + '+00:00'
+            self.last_block_time = datetime.fromisoformat(timestamp_str)
+        except Exception as e:
+            print(f"  Warning: Could not parse timestamp: {e}")
         
         # 2. Scrape metrics and calculate deltas
         metrics_text = self.fetch_text(self.metrics_url)
@@ -430,9 +444,11 @@ class BlockTimingCollector:
     
     def monitor_consensus_state(self):
         """Continuously monitor consensus state."""
+        poll_interval = 0.05  # 50ms - faster polling for better consensus tracking
+        
         while True:
             try:
-                consensus_state = self.fetch_json(f"{self.rpc_url}/consensus_state")
+                consensus_state = self.fetch_json(f"{self.rpc_url}/consensus_state", timeout=2)
                 if consensus_state:
                     completed_block = self.consensus_tracker.parse_consensus_state(consensus_state)
                     if completed_block:
@@ -440,9 +456,10 @@ class BlockTimingCollector:
                         height = completed_block['height']
                         self.block_data_buffer[height] = completed_block
             except Exception as e:
-                print(f"Error monitoring consensus: {e}")
+                # Don't spam errors - consensus tracking is best effort
+                pass
             
-            time.sleep(self.config['monitoring']['poll_interval_ms'] / 1000.0)
+            time.sleep(poll_interval)
     
     def monitor_blocks(self, duration: Optional[int] = None):
         """Monitor new blocks and collect timing data."""
@@ -511,10 +528,18 @@ class BlockTimingCollector:
         consensus = block_data.get('consensus', {})
         consensus_time = consensus.get('total_consensus_ms', 0)
         
+        # Show which module is slowest
+        slowest_module = ""
+        if execution.get('end_block_modules'):
+            modules = {k: v for k, v in execution['end_block_modules'].items() if k != 'total'}
+            if modules:
+                slowest = max(modules.items(), key=lambda x: x[1])
+                slowest_module = f" | Slowest: {slowest[0]}({slowest[1]:.1f}ms)"
+        
         print(f"Block {height}: {block_time:.3f}s | "
               f"Txs: {num_txs} | "
               f"Exec: {exec_time:.1f}ms | "
-              f"Consensus: {consensus_time:.1f}ms | "
+              f"Consensus: {consensus_time:.1f}ms{slowest_module} | "
               f"Tips: {'YES' if has_tips else 'no'}")
 
 
