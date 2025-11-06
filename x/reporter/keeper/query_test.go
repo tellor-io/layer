@@ -56,10 +56,40 @@ func TestJailedReportersQuery(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, res.Reporters, 5)
 
+	// Query total reporters
+	reportersRes, err := querier.Reporters(ctx, &types.QueryReportersRequest{})
+	require.NoError(t, err)
+	require.Len(t, reportersRes.Reporters, 10)
+
 	// Verify all returned reporters are jailed
 	for _, reporter := range res.Reporters {
 		require.True(t, reporter.Metadata.Jailed)
 	}
+}
+
+func TestReporterQuery(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	querier := keeper.NewQuerier(k)
+
+	// Create a reporter
+	reporterAddr := sample.AccAddressBytes()
+	reporter := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "test_reporter")
+	reporter.Jailed = false
+	err := k.Reporters.Set(ctx, reporterAddr, reporter)
+	require.NoError(t, err)
+
+	// Query the specific reporter
+	res, err := querier.Reporter(ctx, &types.QueryReporterRequest{ReporterAddress: reporterAddr.String()})
+	require.NoError(t, err)
+	require.NotNil(t, res.Reporter)
+	require.Equal(t, reporterAddr.String(), res.Reporter.Address)
+	require.Equal(t, "test_reporter", res.Reporter.Metadata.Moniker)
+	require.False(t, res.Reporter.Metadata.Jailed)
+
+	// Query non-existent reporter
+	nonExistentAddr := sample.AccAddressBytes()
+	_, err = querier.Reporter(ctx, &types.QueryReporterRequest{ReporterAddress: nonExistentAddr.String()})
+	require.Error(t, err)
 }
 
 func TestSelectorReporterQuery(t *testing.T) {
