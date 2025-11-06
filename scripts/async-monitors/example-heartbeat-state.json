@@ -1,0 +1,18 @@
+{
+  "event_states": {
+    "aggregate_report": {
+      "last_alerted": "2025-10-30T14:23:45Z",
+      "last_heartbeat": "2025-10-25T10:00:00Z"
+    },
+    "new_dispute": {
+      "last_alerted": "2025-10-29T08:15:30Z",
+      "last_heartbeat": "2025-10-22T10:00:00Z"
+    },
+    "slash": {
+      "last_alerted": "0001-01-01T00:00:00Z",
+      "last_heartbeat": "2025-10-31T10:00:00Z"
+    }
+  },
+  "last_updated": "2025-10-31T10:05:12Z"
+}
+
