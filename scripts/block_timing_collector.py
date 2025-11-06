@@ -369,9 +369,19 @@ class BlockTimingCollector:
         if self.last_block_time:
             try:
                 # Handle both Z and +00:00 timezone formats
+                # CometBFT uses nanoseconds (9 digits), Python only supports microseconds (6 digits)
                 timestamp_str = block_data['timestamp']
                 if timestamp_str.endswith('Z'):
                     timestamp_str = timestamp_str[:-1] + '+00:00'
+                
+                # Truncate nanoseconds to microseconds (keep only 6 decimal places)
+                if '.' in timestamp_str and '+' in timestamp_str:
+                    before_decimal, after_decimal = timestamp_str.split('.')
+                    fractional_and_tz = after_decimal.split('+')
+                    fractional = fractional_and_tz[0][:6]  # Keep only 6 digits
+                    tz = fractional_and_tz[1]
+                    timestamp_str = f"{before_decimal}.{fractional}+{tz}"
+                
                 current_time = datetime.fromisoformat(timestamp_str)
                 block_time = (current_time - self.last_block_time).total_seconds()
                 block_data['total_block_time_seconds'] = round(block_time, 3)
@@ -386,6 +396,15 @@ class BlockTimingCollector:
             timestamp_str = block_data['timestamp']
             if timestamp_str.endswith('Z'):
                 timestamp_str = timestamp_str[:-1] + '+00:00'
+            
+            # Truncate nanoseconds to microseconds
+            if '.' in timestamp_str and '+' in timestamp_str:
+                before_decimal, after_decimal = timestamp_str.split('.')
+                fractional_and_tz = after_decimal.split('+')
+                fractional = fractional_and_tz[0][:6]  # Keep only 6 digits
+                tz = fractional_and_tz[1]
+                timestamp_str = f"{before_decimal}.{fractional}+{tz}"
+            
             self.last_block_time = datetime.fromisoformat(timestamp_str)
         except Exception as e:
             print(f"  Warning: Could not parse timestamp: {e}")
