@@ -273,3 +273,30 @@ func (k Querier) JailedReporters(ctx context.Context, req *types.QueryJailedRepo
 
 	return &types.QueryJailedReportersResponse{Reporters: reporters}, nil
 }
+
+// Reporter queries a specific reporter by address
+func (k Querier) Reporter(ctx context.Context, req *types.QueryReporterRequest) (*types.QueryReporterResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	repAddr := sdk.MustAccAddressFromBech32(req.ReporterAddress)
+	reporterMeta, err := k.Keeper.Reporters.Get(ctx, repAddr)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "reporter not found")
+	}
+
+	stake, _, err := k.GetReporterStake(ctx, repAddr)
+	if err != nil {
+		stake = math.ZeroInt()
+	}
+	reportingPower := stake.Quo(layertypes.PowerReduction).Uint64()
+
+	return &types.QueryReporterResponse{
+		Reporter: &types.Reporter{
+			Address:  repAddr.String(),
+			Metadata: &reporterMeta,
+			Power:    reportingPower,
+		},
+	}, nil
+}
