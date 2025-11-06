@@ -178,7 +178,24 @@ class TransactionAnalyzer:
     """Analyzes transactions to identify message types and extract details."""
     
     @staticmethod
-    def analyze_block_txs(block_data: Dict, block_results: Dict) -> Dict:
+    def debug_gas_location(block_results: Dict, height: int):
+        """Debug helper to find where gas data is located."""
+        if not block_results or 'result' not in block_results:
+            print(f"  [DEBUG {height}] No block_results")
+            return
+        
+        result = block_results['result']
+        print(f"  [DEBUG {height}] Top-level keys: {list(result.keys())}")
+        print(f"  [DEBUG {height}] gas_used: {result.get('gas_used')}")
+        print(f"  [DEBUG {height}] gas_wanted: {result.get('gas_wanted')}")
+        
+        if 'txs_results' in result and result['txs_results']:
+            first_tx = result['txs_results'][0]
+            print(f"  [DEBUG {height}] First tx keys: {list(first_tx.keys())}")
+            print(f"  [DEBUG {height}] First tx gas_used: {first_tx.get('gas_used')}")
+    
+    @staticmethod
+    def analyze_block_txs(block_data: Dict, block_results: Dict, debug: bool = False) -> Dict:
         """Analyze transactions in a block."""
         tx_analysis = {
             'count': 0,
@@ -199,9 +216,31 @@ class TransactionAnalyzer:
         if block_results and 'result' in block_results:
             result = block_results['result']
             
-            # Gas used/wanted (might be string or int)
-            gas_used = result.get('gas_used', 0)
-            gas_wanted = result.get('gas_wanted', 0)
+            # Try different possible locations for gas data
+            # SDK v0.50.9 and earlier: result.gas_used, result.gas_wanted
+            # SDK v0.53.4: might be in different location
+            
+            # Try top-level first
+            gas_used = result.get('gas_used')
+            gas_wanted = result.get('gas_wanted')
+            
+            # If not found, try summing from individual tx results
+            if not gas_used or gas_used == "0":
+                tx_results = result.get('txs_results', [])
+                if tx_results:
+                    total_gas_used = 0
+                    total_gas_wanted = 0
+                    for tx_result in tx_results:
+                        try:
+                            tx_gas_used = tx_result.get('gas_used', 0)
+                            tx_gas_wanted = tx_result.get('gas_wanted', 0)
+                            total_gas_used += int(tx_gas_used) if tx_gas_used else 0
+                            total_gas_wanted += int(tx_gas_wanted) if tx_gas_wanted else 0
+                        except:
+                            pass
+                    if total_gas_used > 0:
+                        gas_used = total_gas_used
+                        gas_wanted = total_gas_wanted
             
             try:
                 tx_analysis['gas_used'] = int(gas_used) if gas_used else 0
