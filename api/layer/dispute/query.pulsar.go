@@ -2298,6 +2298,845 @@ func (x *fastReflection_QueryDisputesResponse) ProtoMethods() *protoiface.Method
 }
 
 var (
+	md_QueryDisputeRequest            protoreflect.MessageDescriptor
+	fd_QueryDisputeRequest_dispute_id protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_dispute_query_proto_init()
+	md_QueryDisputeRequest = File_layer_dispute_query_proto.Messages().ByName("QueryDisputeRequest")
+	fd_QueryDisputeRequest_dispute_id = md_QueryDisputeRequest.Fields().ByName("dispute_id")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryDisputeRequest)(nil)
+
+type fastReflection_QueryDisputeRequest QueryDisputeRequest
+
+func (x *QueryDisputeRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryDisputeRequest)(x)
+}
+
+func (x *QueryDisputeRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_dispute_query_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryDisputeRequest_messageType fastReflection_QueryDisputeRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryDisputeRequest_messageType{}
+
+type fastReflection_QueryDisputeRequest_messageType struct{}
+
+func (x fastReflection_QueryDisputeRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryDisputeRequest)(nil)
+}
+func (x fastReflection_QueryDisputeRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryDisputeRequest)
+}
+func (x fastReflection_QueryDisputeRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDisputeRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryDisputeRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDisputeRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryDisputeRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryDisputeRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryDisputeRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryDisputeRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryDisputeRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryDisputeRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryDisputeRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.DisputeId != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.DisputeId)
+		if !f(fd_QueryDisputeRequest_dispute_id, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryDisputeRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.dispute.QueryDisputeRequest.dispute_id":
+		return x.DisputeId != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.QueryDisputeRequest"))
+		}
+		panic(fmt.Errorf("message layer.dispute.QueryDisputeRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDisputeRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.dispute.QueryDisputeRequest.dispute_id":
+		x.DisputeId = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.QueryDisputeRequest"))
+		}
+		panic(fmt.Errorf("message layer.dispute.QueryDisputeRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryDisputeRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.dispute.QueryDisputeRequest.dispute_id":
+		value := x.DisputeId
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.QueryDisputeRequest"))
+		}
+		panic(fmt.Errorf("message layer.dispute.QueryDisputeRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDisputeRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.dispute.QueryDisputeRequest.dispute_id":
+		x.DisputeId = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.QueryDisputeRequest"))
+		}
+		panic(fmt.Errorf("message layer.dispute.QueryDisputeRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDisputeRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.dispute.QueryDisputeRequest.dispute_id":
+		panic(fmt.Errorf("field dispute_id of message layer.dispute.QueryDisputeRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.QueryDisputeRequest"))
+		}
+		panic(fmt.Errorf("message layer.dispute.QueryDisputeRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryDisputeRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.dispute.QueryDisputeRequest.dispute_id":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.QueryDisputeRequest"))
+		}
+		panic(fmt.Errorf("message layer.dispute.QueryDisputeRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryDisputeRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.dispute.QueryDisputeRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryDisputeRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDisputeRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryDisputeRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryDisputeRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryDisputeRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.DisputeId != 0 {
+			n += 1 + runtime.Sov(uint64(x.DisputeId))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryDisputeRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.DisputeId != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.DisputeId))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryDisputeRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDisputeRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDisputeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DisputeId", wireType)
+				}
+				x.DisputeId = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.DisputeId |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_QueryDisputeResponse         protoreflect.MessageDescriptor
+	fd_QueryDisputeResponse_dispute protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_dispute_query_proto_init()
+	md_QueryDisputeResponse = File_layer_dispute_query_proto.Messages().ByName("QueryDisputeResponse")
+	fd_QueryDisputeResponse_dispute = md_QueryDisputeResponse.Fields().ByName("dispute")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryDisputeResponse)(nil)
+
+type fastReflection_QueryDisputeResponse QueryDisputeResponse
+
+func (x *QueryDisputeResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryDisputeResponse)(x)
+}
+
+func (x *QueryDisputeResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_dispute_query_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryDisputeResponse_messageType fastReflection_QueryDisputeResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryDisputeResponse_messageType{}
+
+type fastReflection_QueryDisputeResponse_messageType struct{}
+
+func (x fastReflection_QueryDisputeResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryDisputeResponse)(nil)
+}
+func (x fastReflection_QueryDisputeResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryDisputeResponse)
+}
+func (x fastReflection_QueryDisputeResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDisputeResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryDisputeResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryDisputeResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryDisputeResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryDisputeResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryDisputeResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryDisputeResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryDisputeResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryDisputeResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryDisputeResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Dispute != nil {
+		value := protoreflect.ValueOfMessage(x.Dispute.ProtoReflect())
+		if !f(fd_QueryDisputeResponse_dispute, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryDisputeResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.dispute.QueryDisputeResponse.dispute":
+		return x.Dispute != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.QueryDisputeResponse"))
+		}
+		panic(fmt.Errorf("message layer.dispute.QueryDisputeResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDisputeResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.dispute.QueryDisputeResponse.dispute":
+		x.Dispute = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.QueryDisputeResponse"))
+		}
+		panic(fmt.Errorf("message layer.dispute.QueryDisputeResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryDisputeResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.dispute.QueryDisputeResponse.dispute":
+		value := x.Dispute
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.QueryDisputeResponse"))
+		}
+		panic(fmt.Errorf("message layer.dispute.QueryDisputeResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDisputeResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.dispute.QueryDisputeResponse.dispute":
+		x.Dispute = value.Message().Interface().(*Disputes)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.QueryDisputeResponse"))
+		}
+		panic(fmt.Errorf("message layer.dispute.QueryDisputeResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDisputeResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.dispute.QueryDisputeResponse.dispute":
+		if x.Dispute == nil {
+			x.Dispute = new(Disputes)
+		}
+		return protoreflect.ValueOfMessage(x.Dispute.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.QueryDisputeResponse"))
+		}
+		panic(fmt.Errorf("message layer.dispute.QueryDisputeResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryDisputeResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.dispute.QueryDisputeResponse.dispute":
+		m := new(Disputes)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.dispute.QueryDisputeResponse"))
+		}
+		panic(fmt.Errorf("message layer.dispute.QueryDisputeResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryDisputeResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.dispute.QueryDisputeResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryDisputeResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryDisputeResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryDisputeResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryDisputeResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryDisputeResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Dispute != nil {
+			l = options.Size(x.Dispute)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryDisputeResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Dispute != nil {
+			encoded, err := options.Marshal(x.Dispute)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryDisputeResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDisputeResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryDisputeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Dispute", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Dispute == nil {
+					x.Dispute = &Disputes{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Dispute); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
 	md_QueryOpenDisputesRequest protoreflect.MessageDescriptor
 )
 
@@ -2315,7 +3154,7 @@ func (x *QueryOpenDisputesRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryOpenDisputesRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_query_proto_msgTypes[5]
+	mi := &file_layer_dispute_query_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2673,7 +3512,7 @@ func (x *QueryOpenDisputesResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryOpenDisputesResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_query_proto_msgTypes[6]
+	mi := &file_layer_dispute_query_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3108,7 +3947,7 @@ func (x *QueryTeamVoteRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryTeamVoteRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_query_proto_msgTypes[7]
+	mi := &file_layer_dispute_query_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3512,7 +4351,7 @@ func (x *QueryTeamVoteResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryTeamVoteResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_query_proto_msgTypes[8]
+	mi := &file_layer_dispute_query_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3945,7 +4784,7 @@ func (x *QueryTeamAddressRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryTeamAddressRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_query_proto_msgTypes[9]
+	mi := &file_layer_dispute_query_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4303,7 +5142,7 @@ func (x *QueryTeamAddressResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryTeamAddressResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_query_proto_msgTypes[10]
+	mi := &file_layer_dispute_query_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4723,7 +5562,7 @@ func (x *QueryDisputesTallyRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryDisputesTallyRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_query_proto_msgTypes[11]
+	mi := &file_layer_dispute_query_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5133,7 +5972,7 @@ func (x *QueryDisputesTallyResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryDisputesTallyResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_query_proto_msgTypes[12]
+	mi := &file_layer_dispute_query_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5799,7 +6638,7 @@ func (x *QueryDisputeVoteResultRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryDisputeVoteResultRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_query_proto_msgTypes[13]
+	mi := &file_layer_dispute_query_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6203,7 +7042,7 @@ func (x *QueryDisputeVoteResultResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryDisputeVoteResultResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_dispute_query_proto_msgTypes[14]
+	mi := &file_layer_dispute_query_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6787,6 +7626,80 @@ func (x *QueryDisputesResponse) GetDisputes() []*Disputes {
 	return nil
 }
 
+// QueryDisputeRequest is the request type for the Query/Dispute RPC method.
+type QueryDisputeRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// dispute_id defines the dispute id to query for.
+	DisputeId uint64 `protobuf:"varint,1,opt,name=dispute_id,json=disputeId,proto3" json:"dispute_id,omitempty"`
+}
+
+func (x *QueryDisputeRequest) Reset() {
+	*x = QueryDisputeRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_dispute_query_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryDisputeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryDisputeRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryDisputeRequest.ProtoReflect.Descriptor instead.
+func (*QueryDisputeRequest) Descriptor() ([]byte, []int) {
+	return file_layer_dispute_query_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *QueryDisputeRequest) GetDisputeId() uint64 {
+	if x != nil {
+		return x.DisputeId
+	}
+	return 0
+}
+
+// QueryDisputeResponse is the response type for the Query/Dispute RPC method.
+type QueryDisputeResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// dispute is the dispute details.
+	Dispute *Disputes `protobuf:"bytes,1,opt,name=dispute,proto3" json:"dispute,omitempty"`
+}
+
+func (x *QueryDisputeResponse) Reset() {
+	*x = QueryDisputeResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_dispute_query_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryDisputeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryDisputeResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryDisputeResponse.ProtoReflect.Descriptor instead.
+func (*QueryDisputeResponse) Descriptor() ([]byte, []int) {
+	return file_layer_dispute_query_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *QueryDisputeResponse) GetDispute() *Disputes {
+	if x != nil {
+		return x.Dispute
+	}
+	return nil
+}
+
 type QueryOpenDisputesRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -6796,7 +7709,7 @@ type QueryOpenDisputesRequest struct {
 func (x *QueryOpenDisputesRequest) Reset() {
 	*x = QueryOpenDisputesRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_query_proto_msgTypes[5]
+		mi := &file_layer_dispute_query_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6810,7 +7723,7 @@ func (*QueryOpenDisputesRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryOpenDisputesRequest.ProtoReflect.Descriptor instead.
 func (*QueryOpenDisputesRequest) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_query_proto_rawDescGZIP(), []int{5}
+	return file_layer_dispute_query_proto_rawDescGZIP(), []int{7}
 }
 
 type QueryOpenDisputesResponse struct {
@@ -6824,7 +7737,7 @@ type QueryOpenDisputesResponse struct {
 func (x *QueryOpenDisputesResponse) Reset() {
 	*x = QueryOpenDisputesResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_query_proto_msgTypes[6]
+		mi := &file_layer_dispute_query_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6838,7 +7751,7 @@ func (*QueryOpenDisputesResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryOpenDisputesResponse.ProtoReflect.Descriptor instead.
 func (*QueryOpenDisputesResponse) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_query_proto_rawDescGZIP(), []int{6}
+	return file_layer_dispute_query_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *QueryOpenDisputesResponse) GetOpenDisputes() *OpenDisputes {
@@ -6861,7 +7774,7 @@ type QueryTeamVoteRequest struct {
 func (x *QueryTeamVoteRequest) Reset() {
 	*x = QueryTeamVoteRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_query_proto_msgTypes[7]
+		mi := &file_layer_dispute_query_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6875,7 +7788,7 @@ func (*QueryTeamVoteRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryTeamVoteRequest.ProtoReflect.Descriptor instead.
 func (*QueryTeamVoteRequest) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_query_proto_rawDescGZIP(), []int{7}
+	return file_layer_dispute_query_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *QueryTeamVoteRequest) GetDisputeId() uint64 {
@@ -6898,7 +7811,7 @@ type QueryTeamVoteResponse struct {
 func (x *QueryTeamVoteResponse) Reset() {
 	*x = QueryTeamVoteResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_query_proto_msgTypes[8]
+		mi := &file_layer_dispute_query_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6912,7 +7825,7 @@ func (*QueryTeamVoteResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryTeamVoteResponse.ProtoReflect.Descriptor instead.
 func (*QueryTeamVoteResponse) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_query_proto_rawDescGZIP(), []int{8}
+	return file_layer_dispute_query_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *QueryTeamVoteResponse) GetTeamVote() *Voter {
@@ -6932,7 +7845,7 @@ type QueryTeamAddressRequest struct {
 func (x *QueryTeamAddressRequest) Reset() {
 	*x = QueryTeamAddressRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_query_proto_msgTypes[9]
+		mi := &file_layer_dispute_query_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6946,7 +7859,7 @@ func (*QueryTeamAddressRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryTeamAddressRequest.ProtoReflect.Descriptor instead.
 func (*QueryTeamAddressRequest) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_query_proto_rawDescGZIP(), []int{9}
+	return file_layer_dispute_query_proto_rawDescGZIP(), []int{11}
 }
 
 // QueryTeamAddressResponse is response type for the Query/TeamAddress RPC method.
@@ -6962,7 +7875,7 @@ type QueryTeamAddressResponse struct {
 func (x *QueryTeamAddressResponse) Reset() {
 	*x = QueryTeamAddressResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_query_proto_msgTypes[10]
+		mi := &file_layer_dispute_query_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6976,7 +7889,7 @@ func (*QueryTeamAddressResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryTeamAddressResponse.ProtoReflect.Descriptor instead.
 func (*QueryTeamAddressResponse) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_query_proto_rawDescGZIP(), []int{10}
+	return file_layer_dispute_query_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *QueryTeamAddressResponse) GetTeamAddress() string {
@@ -6998,7 +7911,7 @@ type QueryDisputesTallyRequest struct {
 func (x *QueryDisputesTallyRequest) Reset() {
 	*x = QueryDisputesTallyRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_query_proto_msgTypes[11]
+		mi := &file_layer_dispute_query_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7012,7 +7925,7 @@ func (*QueryDisputesTallyRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryDisputesTallyRequest.ProtoReflect.Descriptor instead.
 func (*QueryDisputesTallyRequest) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_query_proto_rawDescGZIP(), []int{11}
+	return file_layer_dispute_query_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *QueryDisputesTallyRequest) GetDisputeId() uint64 {
@@ -7036,7 +7949,7 @@ type QueryDisputesTallyResponse struct {
 func (x *QueryDisputesTallyResponse) Reset() {
 	*x = QueryDisputesTallyResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_query_proto_msgTypes[12]
+		mi := &file_layer_dispute_query_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7050,7 +7963,7 @@ func (*QueryDisputesTallyResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryDisputesTallyResponse.ProtoReflect.Descriptor instead.
 func (*QueryDisputesTallyResponse) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_query_proto_rawDescGZIP(), []int{12}
+	return file_layer_dispute_query_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *QueryDisputesTallyResponse) GetUsers() *GroupTally {
@@ -7092,7 +8005,7 @@ type QueryDisputeVoteResultRequest struct {
 func (x *QueryDisputeVoteResultRequest) Reset() {
 	*x = QueryDisputeVoteResultRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_query_proto_msgTypes[13]
+		mi := &file_layer_dispute_query_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7106,7 +8019,7 @@ func (*QueryDisputeVoteResultRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryDisputeVoteResultRequest.ProtoReflect.Descriptor instead.
 func (*QueryDisputeVoteResultRequest) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_query_proto_rawDescGZIP(), []int{13}
+	return file_layer_dispute_query_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *QueryDisputeVoteResultRequest) GetDisputeId() uint64 {
@@ -7127,7 +8040,7 @@ type QueryDisputeVoteResultResponse struct {
 func (x *QueryDisputeVoteResultResponse) Reset() {
 	*x = QueryDisputeVoteResultResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_dispute_query_proto_msgTypes[14]
+		mi := &file_layer_dispute_query_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -7141,7 +8054,7 @@ func (*QueryDisputeVoteResultResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryDisputeVoteResultResponse.ProtoReflect.Descriptor instead.
 func (*QueryDisputeVoteResultResponse) Descriptor() ([]byte, []int) {
-	return file_layer_dispute_query_proto_rawDescGZIP(), []int{14}
+	return file_layer_dispute_query_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *QueryDisputeVoteResultResponse) GetVoteResult() VoteResult {
@@ -7199,133 +8112,149 @@ var file_layer_dispute_query_proto_rawDesc = []byte{
 	0x0a, 0x08, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b,
 	0x32, 0x17, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
 	0x2e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x52, 0x08, 0x64, 0x69, 0x73, 0x70, 0x75,
-	0x74, 0x65, 0x73, 0x22, 0x1a, 0x0a, 0x18, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x70, 0x65, 0x6e,
-	0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22,
-	0x5c, 0x0a, 0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x70, 0x65, 0x6e, 0x44, 0x69, 0x73, 0x70,
-	0x75, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a, 0x0c,
-	0x6f, 0x70, 0x65, 0x6e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75,
-	0x74, 0x65, 0x2e, 0x4f, 0x70, 0x65, 0x6e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x52,
-	0x0c, 0x6f, 0x70, 0x65, 0x6e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x22, 0x35, 0x0a,
-	0x14, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x65, 0x61, 0x6d, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
-	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x64, 0x69, 0x73, 0x70, 0x75,
-	0x74, 0x65, 0x49, 0x64, 0x22, 0x50, 0x0a, 0x15, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x65, 0x61,
-	0x6d, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x37, 0x0a,
-	0x09, 0x74, 0x65, 0x61, 0x6d, 0x5f, 0x76, 0x6f, 0x74, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x14, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
-	0x2e, 0x56, 0x6f, 0x74, 0x65, 0x72, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x08, 0x74, 0x65,
-	0x61, 0x6d, 0x56, 0x6f, 0x74, 0x65, 0x22, 0x19, 0x0a, 0x17, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54,
-	0x65, 0x61, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x22, 0x3d, 0x0a, 0x18, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x65, 0x61, 0x6d, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x21, 0x0a,
-	0x0c, 0x74, 0x65, 0x61, 0x6d, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x0b, 0x74, 0x65, 0x61, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x22, 0x3a, 0x0a, 0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
-	0x73, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a,
-	0x0a, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x04, 0x52, 0x09, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x49, 0x64, 0x22, 0x82, 0x02, 0x0a,
-	0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x54, 0x61,
-	0x6c, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2f, 0x0a, 0x05, 0x75,
-	0x73, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x47, 0x72, 0x6f, 0x75, 0x70,
-	0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x05, 0x75, 0x73, 0x65, 0x72, 0x73, 0x12, 0x37, 0x0a, 0x09,
-	0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x19, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e,
-	0x47, 0x72, 0x6f, 0x75, 0x70, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x09, 0x72, 0x65, 0x70, 0x6f,
-	0x72, 0x74, 0x65, 0x72, 0x73, 0x12, 0x36, 0x0a, 0x04, 0x74, 0x65, 0x61, 0x6d, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70,
-	0x75, 0x74, 0x65, 0x2e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x74, 0x65, 0x64, 0x56, 0x6f, 0x74,
-	0x65, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x52, 0x04, 0x74, 0x65, 0x61, 0x6d, 0x12, 0x42, 0x0a,
-	0x0d, 0x63, 0x6f, 0x6d, 0x62, 0x69, 0x6e, 0x65, 0x64, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x18, 0x04,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73,
-	0x70, 0x75, 0x74, 0x65, 0x2e, 0x43, 0x6f, 0x6d, 0x62, 0x69, 0x6e, 0x65, 0x64, 0x54, 0x6f, 0x74,
-	0x61, 0x6c, 0x52, 0x0d, 0x63, 0x6f, 0x6d, 0x62, 0x69, 0x6e, 0x65, 0x64, 0x54, 0x6f, 0x74, 0x61,
-	0x6c, 0x22, 0x3e, 0x0a, 0x1d, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74,
-	0x65, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f, 0x69, 0x64,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x49,
-	0x64, 0x22, 0x5c, 0x0a, 0x1e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74,
-	0x65, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x3a, 0x0a, 0x0b, 0x76, 0x6f, 0x74, 0x65, 0x5f, 0x72, 0x65, 0x73, 0x75,
-	0x6c, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x19, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73,
-	0x75, 0x6c, 0x74, 0x52, 0x0a, 0x76, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x32,
-	0xf4, 0x07, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x78, 0x0a, 0x06, 0x50, 0x61, 0x72,
-	0x61, 0x6d, 0x73, 0x12, 0x21, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70,
-	0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x22, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64,
-	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x27, 0x82, 0xd3, 0xe4, 0x93,
-	0x02, 0x21, 0x12, 0x1f, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2f, 0x70, 0x61, 0x72,
-	0x61, 0x6d, 0x73, 0x12, 0x80, 0x01, 0x0a, 0x08, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73,
-	0x12, 0x23, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x24, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69,
-	0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75,
-	0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x29, 0x82, 0xd3, 0xe4,
-	0x93, 0x02, 0x23, 0x12, 0x21, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f,
-	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2f, 0x64, 0x69,
-	0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x12, 0x91, 0x01, 0x0a, 0x0c, 0x4f, 0x70, 0x65, 0x6e, 0x44,
-	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x12, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
-	0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x70, 0x65,
+	0x74, 0x65, 0x73, 0x22, 0x34, 0x0a, 0x13, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70,
+	0x75, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x64, 0x69,
+	0x73, 0x70, 0x75, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09,
+	0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x49, 0x64, 0x22, 0x49, 0x0a, 0x14, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x31, 0x0a, 0x07, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x17, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75,
+	0x74, 0x65, 0x2e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x52, 0x07, 0x64, 0x69, 0x73,
+	0x70, 0x75, 0x74, 0x65, 0x22, 0x1a, 0x0a, 0x18, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x70, 0x65,
 	0x6e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x28, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
-	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x70, 0x65, 0x6e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74,
-	0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2e, 0x82, 0xd3, 0xe4, 0x93,
-	0x02, 0x28, 0x12, 0x26, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2f, 0x6f, 0x70, 0x65,
-	0x6e, 0x2d, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x12, 0x8e, 0x01, 0x0a, 0x08, 0x54,
-	0x65, 0x61, 0x6d, 0x56, 0x6f, 0x74, 0x65, 0x12, 0x23, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
-	0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x65, 0x61,
-	0x6d, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x24, 0x2e, 0x6c,
+	0x22, 0x5c, 0x0a, 0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x70, 0x65, 0x6e, 0x44, 0x69, 0x73,
+	0x70, 0x75, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3f, 0x0a,
+	0x0c, 0x6f, 0x70, 0x65, 0x6e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70,
+	0x75, 0x74, 0x65, 0x2e, 0x4f, 0x70, 0x65, 0x6e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73,
+	0x52, 0x0c, 0x6f, 0x70, 0x65, 0x6e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x22, 0x35,
+	0x0a, 0x14, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x65, 0x61, 0x6d, 0x56, 0x6f, 0x74, 0x65, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74,
+	0x65, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x64, 0x69, 0x73, 0x70,
+	0x75, 0x74, 0x65, 0x49, 0x64, 0x22, 0x50, 0x0a, 0x15, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x65,
+	0x61, 0x6d, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x37,
+	0x0a, 0x09, 0x74, 0x65, 0x61, 0x6d, 0x5f, 0x76, 0x6f, 0x74, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x14, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74,
+	0x65, 0x2e, 0x56, 0x6f, 0x74, 0x65, 0x72, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x08, 0x74,
+	0x65, 0x61, 0x6d, 0x56, 0x6f, 0x74, 0x65, 0x22, 0x19, 0x0a, 0x17, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x54, 0x65, 0x61, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x22, 0x3d, 0x0a, 0x18, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x65, 0x61, 0x6d, 0x41,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x21,
+	0x0a, 0x0c, 0x74, 0x65, 0x61, 0x6d, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x74, 0x65, 0x61, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x22, 0x3a, 0x0a, 0x19, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74,
+	0x65, 0x73, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1d,
+	0x0a, 0x0a, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x04, 0x52, 0x09, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x49, 0x64, 0x22, 0x82, 0x02,
+	0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x54,
+	0x61, 0x6c, 0x6c, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2f, 0x0a, 0x05,
+	0x75, 0x73, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x47, 0x72, 0x6f, 0x75,
+	0x70, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x05, 0x75, 0x73, 0x65, 0x72, 0x73, 0x12, 0x37, 0x0a,
+	0x09, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x19, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
+	0x2e, 0x47, 0x72, 0x6f, 0x75, 0x70, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x09, 0x72, 0x65, 0x70,
+	0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x12, 0x36, 0x0a, 0x04, 0x74, 0x65, 0x61, 0x6d, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73,
+	0x70, 0x75, 0x74, 0x65, 0x2e, 0x46, 0x6f, 0x72, 0x6d, 0x61, 0x74, 0x74, 0x65, 0x64, 0x56, 0x6f,
+	0x74, 0x65, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x52, 0x04, 0x74, 0x65, 0x61, 0x6d, 0x12, 0x42,
+	0x0a, 0x0d, 0x63, 0x6f, 0x6d, 0x62, 0x69, 0x6e, 0x65, 0x64, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1c, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69,
+	0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x43, 0x6f, 0x6d, 0x62, 0x69, 0x6e, 0x65, 0x64, 0x54, 0x6f,
+	0x74, 0x61, 0x6c, 0x52, 0x0d, 0x63, 0x6f, 0x6d, 0x62, 0x69, 0x6e, 0x65, 0x64, 0x54, 0x6f, 0x74,
+	0x61, 0x6c, 0x22, 0x3e, 0x0a, 0x1d, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75,
+	0x74, 0x65, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f, 0x69,
+	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
+	0x49, 0x64, 0x22, 0x5c, 0x0a, 0x1e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75,
+	0x74, 0x65, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3a, 0x0a, 0x0b, 0x76, 0x6f, 0x74, 0x65, 0x5f, 0x72, 0x65, 0x73,
+	0x75, 0x6c, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x19, 0x2e, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65,
+	0x73, 0x75, 0x6c, 0x74, 0x52, 0x0a, 0x76, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74,
+	0x32, 0x80, 0x09, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x78, 0x0a, 0x06, 0x50, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x12, 0x21, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73,
+	0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x22, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x27, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x21, 0x12, 0x1f, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2f, 0x70, 0x61,
+	0x72, 0x61, 0x6d, 0x73, 0x12, 0x80, 0x01, 0x0a, 0x08, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
+	0x73, 0x12, 0x23, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74,
+	0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x24, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64,
+	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70,
+	0x75, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x29, 0x82, 0xd3,
+	0xe4, 0x93, 0x02, 0x23, 0x12, 0x21, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f,
+	0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2f, 0x64,
+	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x12, 0x89, 0x01, 0x0a, 0x07, 0x44, 0x69, 0x73, 0x70,
+	0x75, 0x74, 0x65, 0x12, 0x22, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70,
+	0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x23, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73,
+	0x70, 0x75, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x35, 0x82, 0xd3,
+	0xe4, 0x93, 0x02, 0x2f, 0x12, 0x2d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f,
+	0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2f, 0x64,
+	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2f, 0x7b, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f,
+	0x69, 0x64, 0x7d, 0x12, 0x91, 0x01, 0x0a, 0x0c, 0x4f, 0x70, 0x65, 0x6e, 0x44, 0x69, 0x73, 0x70,
+	0x75, 0x74, 0x65, 0x73, 0x12, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73,
+	0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4f, 0x70, 0x65, 0x6e, 0x44, 0x69,
+	0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x4f, 0x70, 0x65, 0x6e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2e, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x28, 0x12,
+	0x26, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2f, 0x6f, 0x70, 0x65, 0x6e, 0x2d, 0x64,
+	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x12, 0x8e, 0x01, 0x0a, 0x08, 0x54, 0x65, 0x61, 0x6d,
+	0x56, 0x6f, 0x74, 0x65, 0x12, 0x23, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73,
+	0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x65, 0x61, 0x6d, 0x56, 0x6f,
+	0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x24, 0x2e, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54,
+	0x65, 0x61, 0x6d, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x37, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x31, 0x12, 0x2f, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72,
+	0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74,
+	0x65, 0x2f, 0x74, 0x65, 0x61, 0x6d, 0x2d, 0x76, 0x6f, 0x74, 0x65, 0x2f, 0x7b, 0x64, 0x69, 0x73,
+	0x70, 0x75, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0x8d, 0x01, 0x0a, 0x0b, 0x54, 0x65, 0x61,
+	0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x26, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x65,
+	0x61, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65,
+	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x65, 0x61, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2d, 0x82, 0xd3, 0xe4, 0x93, 0x02,
+	0x27, 0x12, 0x25, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2f, 0x74, 0x65, 0x61, 0x6d,
+	0x2d, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x91, 0x01, 0x0a, 0x05, 0x54, 0x61, 0x6c,
+	0x6c, 0x79, 0x12, 0x28, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75,
+	0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73,
+	0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x6c,
 	0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x54, 0x65, 0x61, 0x6d, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x37, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x31, 0x12, 0x2f, 0x2f, 0x74, 0x65, 0x6c,
-	0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73,
-	0x70, 0x75, 0x74, 0x65, 0x2f, 0x74, 0x65, 0x61, 0x6d, 0x2d, 0x76, 0x6f, 0x74, 0x65, 0x2f, 0x7b,
-	0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0x8d, 0x01, 0x0a, 0x0b,
-	0x54, 0x65, 0x61, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x26, 0x2e, 0x6c, 0x61,
+	0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x33, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x2d, 0x12,
+	0x2b, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2f, 0x74, 0x61, 0x6c, 0x6c, 0x79, 0x2f,
+	0x7b, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x12, 0xa4, 0x01, 0x0a,
+	0x0a, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x2c, 0x2e, 0x6c, 0x61,
 	0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x54, 0x65, 0x61, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70,
-	0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x54, 0x65, 0x61, 0x6d, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x2d, 0x82, 0xd3,
-	0xe4, 0x93, 0x02, 0x27, 0x12, 0x25, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f,
-	0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2f, 0x74,
-	0x65, 0x61, 0x6d, 0x2d, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x91, 0x01, 0x0a, 0x05,
-	0x54, 0x61, 0x6c, 0x6c, 0x79, 0x12, 0x28, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69,
-	0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75,
-	0x74, 0x65, 0x73, 0x54, 0x61, 0x6c, 0x6c, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x29, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x73, 0x54, 0x61, 0x6c,
-	0x6c, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x33, 0x82, 0xd3, 0xe4, 0x93,
-	0x02, 0x2d, 0x12, 0x2b, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2f, 0x74, 0x61, 0x6c,
-	0x6c, 0x79, 0x2f, 0x7b, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x12,
-	0xa4, 0x01, 0x0a, 0x0a, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x12, 0x2c,
-	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x56, 0x6f, 0x74, 0x65, 0x52,
-	0x65, 0x73, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2d, 0x2e, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73,
-	0x75, 0x6c, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x39, 0x82, 0xd3, 0xe4,
-	0x93, 0x02, 0x33, 0x12, 0x31, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f,
-	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2f, 0x76, 0x6f,
-	0x74, 0x65, 0x2d, 0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x2f, 0x7b, 0x64, 0x69, 0x73, 0x70, 0x75,
-	0x74, 0x65, 0x5f, 0x69, 0x64, 0x7d, 0x42, 0xa2, 0x01, 0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x2e, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x42, 0x0a, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68,
-	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f,
-	0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x44, 0x58, 0xaa, 0x02,
-	0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xca, 0x02,
-	0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xe2, 0x02,
-	0x19, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5c, 0x47,
-	0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0e, 0x4c, 0x61, 0x79,
-	0x65, 0x72, 0x3a, 0x3a, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x79, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x75,
+	0x6c, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2d, 0x2e, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x44,
+	0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x56, 0x6f, 0x74, 0x65, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x39, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x33,
+	0x12, 0x31, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2f, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x2f, 0x76, 0x6f, 0x74, 0x65, 0x2d,
+	0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x2f, 0x7b, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5f,
+	0x69, 0x64, 0x7d, 0x42, 0xa2, 0x01, 0x0a, 0x11, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x2e, 0x64, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2c, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
+	0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x64, 0x69,
+	0x73, 0x70, 0x75, 0x74, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x44, 0x58, 0xaa, 0x02, 0x0d, 0x4c, 0x61,
+	0x79, 0x65, 0x72, 0x2e, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xca, 0x02, 0x0d, 0x4c, 0x61,
+	0x79, 0x65, 0x72, 0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0xe2, 0x02, 0x19, 0x4c, 0x61,
+	0x79, 0x65, 0x72, 0x5c, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d,
+	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a,
+	0x3a, 0x44, 0x69, 0x73, 0x70, 0x75, 0x74, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -7340,66 +8269,71 @@ func file_layer_dispute_query_proto_rawDescGZIP() []byte {
 	return file_layer_dispute_query_proto_rawDescData
 }
 
-var file_layer_dispute_query_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
+var file_layer_dispute_query_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_layer_dispute_query_proto_goTypes = []interface{}{
 	(*QueryParamsRequest)(nil),             // 0: layer.dispute.QueryParamsRequest
 	(*QueryParamsResponse)(nil),            // 1: layer.dispute.QueryParamsResponse
 	(*QueryDisputesRequest)(nil),           // 2: layer.dispute.QueryDisputesRequest
 	(*Disputes)(nil),                       // 3: layer.dispute.Disputes
 	(*QueryDisputesResponse)(nil),          // 4: layer.dispute.QueryDisputesResponse
-	(*QueryOpenDisputesRequest)(nil),       // 5: layer.dispute.QueryOpenDisputesRequest
-	(*QueryOpenDisputesResponse)(nil),      // 6: layer.dispute.QueryOpenDisputesResponse
-	(*QueryTeamVoteRequest)(nil),           // 7: layer.dispute.QueryTeamVoteRequest
-	(*QueryTeamVoteResponse)(nil),          // 8: layer.dispute.QueryTeamVoteResponse
-	(*QueryTeamAddressRequest)(nil),        // 9: layer.dispute.QueryTeamAddressRequest
-	(*QueryTeamAddressResponse)(nil),       // 10: layer.dispute.QueryTeamAddressResponse
-	(*QueryDisputesTallyRequest)(nil),      // 11: layer.dispute.QueryDisputesTallyRequest
-	(*QueryDisputesTallyResponse)(nil),     // 12: layer.dispute.QueryDisputesTallyResponse
-	(*QueryDisputeVoteResultRequest)(nil),  // 13: layer.dispute.QueryDisputeVoteResultRequest
-	(*QueryDisputeVoteResultResponse)(nil), // 14: layer.dispute.QueryDisputeVoteResultResponse
-	(*Params)(nil),                         // 15: layer.dispute.Params
-	(*v1beta1.PageRequest)(nil),            // 16: cosmos.base.query.v1beta1.PageRequest
-	(*Dispute)(nil),                        // 17: layer.dispute.Dispute
-	(*v1beta1.PageResponse)(nil),           // 18: cosmos.base.query.v1beta1.PageResponse
-	(*OpenDisputes)(nil),                   // 19: layer.dispute.OpenDisputes
-	(*Voter)(nil),                          // 20: layer.dispute.Voter
-	(*GroupTally)(nil),                     // 21: layer.dispute.GroupTally
-	(*FormattedVoteCounts)(nil),            // 22: layer.dispute.FormattedVoteCounts
-	(*CombinedTotal)(nil),                  // 23: layer.dispute.CombinedTotal
-	(VoteResult)(0),                        // 24: layer.dispute.VoteResult
+	(*QueryDisputeRequest)(nil),            // 5: layer.dispute.QueryDisputeRequest
+	(*QueryDisputeResponse)(nil),           // 6: layer.dispute.QueryDisputeResponse
+	(*QueryOpenDisputesRequest)(nil),       // 7: layer.dispute.QueryOpenDisputesRequest
+	(*QueryOpenDisputesResponse)(nil),      // 8: layer.dispute.QueryOpenDisputesResponse
+	(*QueryTeamVoteRequest)(nil),           // 9: layer.dispute.QueryTeamVoteRequest
+	(*QueryTeamVoteResponse)(nil),          // 10: layer.dispute.QueryTeamVoteResponse
+	(*QueryTeamAddressRequest)(nil),        // 11: layer.dispute.QueryTeamAddressRequest
+	(*QueryTeamAddressResponse)(nil),       // 12: layer.dispute.QueryTeamAddressResponse
+	(*QueryDisputesTallyRequest)(nil),      // 13: layer.dispute.QueryDisputesTallyRequest
+	(*QueryDisputesTallyResponse)(nil),     // 14: layer.dispute.QueryDisputesTallyResponse
+	(*QueryDisputeVoteResultRequest)(nil),  // 15: layer.dispute.QueryDisputeVoteResultRequest
+	(*QueryDisputeVoteResultResponse)(nil), // 16: layer.dispute.QueryDisputeVoteResultResponse
+	(*Params)(nil),                         // 17: layer.dispute.Params
+	(*v1beta1.PageRequest)(nil),            // 18: cosmos.base.query.v1beta1.PageRequest
+	(*Dispute)(nil),                        // 19: layer.dispute.Dispute
+	(*v1beta1.PageResponse)(nil),           // 20: cosmos.base.query.v1beta1.PageResponse
+	(*OpenDisputes)(nil),                   // 21: layer.dispute.OpenDisputes
+	(*Voter)(nil),                          // 22: layer.dispute.Voter
+	(*GroupTally)(nil),                     // 23: layer.dispute.GroupTally
+	(*FormattedVoteCounts)(nil),            // 24: layer.dispute.FormattedVoteCounts
+	(*CombinedTotal)(nil),                  // 25: layer.dispute.CombinedTotal
+	(VoteResult)(0),                        // 26: layer.dispute.VoteResult
 }
 var file_layer_dispute_query_proto_depIdxs = []int32{
-	15, // 0: layer.dispute.QueryParamsResponse.params:type_name -> layer.dispute.Params
-	16, // 1: layer.dispute.QueryDisputesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	17, // 2: layer.dispute.Disputes.metadata:type_name -> layer.dispute.Dispute
-	18, // 3: layer.dispute.QueryDisputesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	17, // 0: layer.dispute.QueryParamsResponse.params:type_name -> layer.dispute.Params
+	18, // 1: layer.dispute.QueryDisputesRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	19, // 2: layer.dispute.Disputes.metadata:type_name -> layer.dispute.Dispute
+	20, // 3: layer.dispute.QueryDisputesResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
 	3,  // 4: layer.dispute.QueryDisputesResponse.disputes:type_name -> layer.dispute.Disputes
-	19, // 5: layer.dispute.QueryOpenDisputesResponse.openDisputes:type_name -> layer.dispute.OpenDisputes
-	20, // 6: layer.dispute.QueryTeamVoteResponse.team_vote:type_name -> layer.dispute.Voter
-	21, // 7: layer.dispute.QueryDisputesTallyResponse.users:type_name -> layer.dispute.GroupTally
-	21, // 8: layer.dispute.QueryDisputesTallyResponse.reporters:type_name -> layer.dispute.GroupTally
-	22, // 9: layer.dispute.QueryDisputesTallyResponse.team:type_name -> layer.dispute.FormattedVoteCounts
-	23, // 10: layer.dispute.QueryDisputesTallyResponse.combinedTotal:type_name -> layer.dispute.CombinedTotal
-	24, // 11: layer.dispute.QueryDisputeVoteResultResponse.vote_result:type_name -> layer.dispute.VoteResult
-	0,  // 12: layer.dispute.Query.Params:input_type -> layer.dispute.QueryParamsRequest
-	2,  // 13: layer.dispute.Query.Disputes:input_type -> layer.dispute.QueryDisputesRequest
-	5,  // 14: layer.dispute.Query.OpenDisputes:input_type -> layer.dispute.QueryOpenDisputesRequest
-	7,  // 15: layer.dispute.Query.TeamVote:input_type -> layer.dispute.QueryTeamVoteRequest
-	9,  // 16: layer.dispute.Query.TeamAddress:input_type -> layer.dispute.QueryTeamAddressRequest
-	11, // 17: layer.dispute.Query.Tally:input_type -> layer.dispute.QueryDisputesTallyRequest
-	13, // 18: layer.dispute.Query.VoteResult:input_type -> layer.dispute.QueryDisputeVoteResultRequest
-	1,  // 19: layer.dispute.Query.Params:output_type -> layer.dispute.QueryParamsResponse
-	4,  // 20: layer.dispute.Query.Disputes:output_type -> layer.dispute.QueryDisputesResponse
-	6,  // 21: layer.dispute.Query.OpenDisputes:output_type -> layer.dispute.QueryOpenDisputesResponse
-	8,  // 22: layer.dispute.Query.TeamVote:output_type -> layer.dispute.QueryTeamVoteResponse
-	10, // 23: layer.dispute.Query.TeamAddress:output_type -> layer.dispute.QueryTeamAddressResponse
-	12, // 24: layer.dispute.Query.Tally:output_type -> layer.dispute.QueryDisputesTallyResponse
-	14, // 25: layer.dispute.Query.VoteResult:output_type -> layer.dispute.QueryDisputeVoteResultResponse
-	19, // [19:26] is the sub-list for method output_type
-	12, // [12:19] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	3,  // 5: layer.dispute.QueryDisputeResponse.dispute:type_name -> layer.dispute.Disputes
+	21, // 6: layer.dispute.QueryOpenDisputesResponse.openDisputes:type_name -> layer.dispute.OpenDisputes
+	22, // 7: layer.dispute.QueryTeamVoteResponse.team_vote:type_name -> layer.dispute.Voter
+	23, // 8: layer.dispute.QueryDisputesTallyResponse.users:type_name -> layer.dispute.GroupTally
+	23, // 9: layer.dispute.QueryDisputesTallyResponse.reporters:type_name -> layer.dispute.GroupTally
+	24, // 10: layer.dispute.QueryDisputesTallyResponse.team:type_name -> layer.dispute.FormattedVoteCounts
+	25, // 11: layer.dispute.QueryDisputesTallyResponse.combinedTotal:type_name -> layer.dispute.CombinedTotal
+	26, // 12: layer.dispute.QueryDisputeVoteResultResponse.vote_result:type_name -> layer.dispute.VoteResult
+	0,  // 13: layer.dispute.Query.Params:input_type -> layer.dispute.QueryParamsRequest
+	2,  // 14: layer.dispute.Query.Disputes:input_type -> layer.dispute.QueryDisputesRequest
+	5,  // 15: layer.dispute.Query.Dispute:input_type -> layer.dispute.QueryDisputeRequest
+	7,  // 16: layer.dispute.Query.OpenDisputes:input_type -> layer.dispute.QueryOpenDisputesRequest
+	9,  // 17: layer.dispute.Query.TeamVote:input_type -> layer.dispute.QueryTeamVoteRequest
+	11, // 18: layer.dispute.Query.TeamAddress:input_type -> layer.dispute.QueryTeamAddressRequest
+	13, // 19: layer.dispute.Query.Tally:input_type -> layer.dispute.QueryDisputesTallyRequest
+	15, // 20: layer.dispute.Query.VoteResult:input_type -> layer.dispute.QueryDisputeVoteResultRequest
+	1,  // 21: layer.dispute.Query.Params:output_type -> layer.dispute.QueryParamsResponse
+	4,  // 22: layer.dispute.Query.Disputes:output_type -> layer.dispute.QueryDisputesResponse
+	6,  // 23: layer.dispute.Query.Dispute:output_type -> layer.dispute.QueryDisputeResponse
+	8,  // 24: layer.dispute.Query.OpenDisputes:output_type -> layer.dispute.QueryOpenDisputesResponse
+	10, // 25: layer.dispute.Query.TeamVote:output_type -> layer.dispute.QueryTeamVoteResponse
+	12, // 26: layer.dispute.Query.TeamAddress:output_type -> layer.dispute.QueryTeamAddressResponse
+	14, // 27: layer.dispute.Query.Tally:output_type -> layer.dispute.QueryDisputesTallyResponse
+	16, // 28: layer.dispute.Query.VoteResult:output_type -> layer.dispute.QueryDisputeVoteResultResponse
+	21, // [21:29] is the sub-list for method output_type
+	13, // [13:21] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_layer_dispute_query_proto_init() }
@@ -7474,7 +8408,7 @@ func file_layer_dispute_query_proto_init() {
 			}
 		}
 		file_layer_dispute_query_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryOpenDisputesRequest); i {
+			switch v := v.(*QueryDisputeRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -7486,7 +8420,7 @@ func file_layer_dispute_query_proto_init() {
 			}
 		}
 		file_layer_dispute_query_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryOpenDisputesResponse); i {
+			switch v := v.(*QueryDisputeResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -7498,7 +8432,7 @@ func file_layer_dispute_query_proto_init() {
 			}
 		}
 		file_layer_dispute_query_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryTeamVoteRequest); i {
+			switch v := v.(*QueryOpenDisputesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -7510,7 +8444,7 @@ func file_layer_dispute_query_proto_init() {
 			}
 		}
 		file_layer_dispute_query_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryTeamVoteResponse); i {
+			switch v := v.(*QueryOpenDisputesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -7522,7 +8456,7 @@ func file_layer_dispute_query_proto_init() {
 			}
 		}
 		file_layer_dispute_query_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryTeamAddressRequest); i {
+			switch v := v.(*QueryTeamVoteRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -7534,7 +8468,7 @@ func file_layer_dispute_query_proto_init() {
 			}
 		}
 		file_layer_dispute_query_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryTeamAddressResponse); i {
+			switch v := v.(*QueryTeamVoteResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -7546,7 +8480,7 @@ func file_layer_dispute_query_proto_init() {
 			}
 		}
 		file_layer_dispute_query_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryDisputesTallyRequest); i {
+			switch v := v.(*QueryTeamAddressRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -7558,7 +8492,7 @@ func file_layer_dispute_query_proto_init() {
 			}
 		}
 		file_layer_dispute_query_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryDisputesTallyResponse); i {
+			switch v := v.(*QueryTeamAddressResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -7570,7 +8504,7 @@ func file_layer_dispute_query_proto_init() {
 			}
 		}
 		file_layer_dispute_query_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryDisputeVoteResultRequest); i {
+			switch v := v.(*QueryDisputesTallyRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -7582,6 +8516,30 @@ func file_layer_dispute_query_proto_init() {
 			}
 		}
 		file_layer_dispute_query_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryDisputesTallyResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_dispute_query_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryDisputeVoteResultRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_dispute_query_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryDisputeVoteResultResponse); i {
 			case 0:
 				return &v.state
@@ -7600,7 +8558,7 @@ func file_layer_dispute_query_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_dispute_query_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   15,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

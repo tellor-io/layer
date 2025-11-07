@@ -18,9 +18,13 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/tellor-io/layer/dispute/params";
   }
-  // Reporters queries all the staked reporters.
+  // Disputes queries all disputes.
   rpc Disputes(QueryDisputesRequest) returns (QueryDisputesResponse) {
     option (google.api.http).get = "/tellor-io/layer/dispute/disputes";
+  }
+  // Dispute queries a specific dispute by id.
+  rpc Dispute(QueryDisputeRequest) returns (QueryDisputeResponse) {
+    option (google.api.http).get = "/tellor-io/layer/dispute/dispute/{dispute_id}";
   }
   // OpenDisputes queries all the open disputes.
   rpc OpenDisputes(QueryOpenDisputesRequest) returns (QueryOpenDisputesResponse) {
@@ -68,6 +72,18 @@ message QueryDisputesResponse {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageResponse pagination = 1;
   repeated Disputes disputes = 2;
+}
+
+// QueryDisputeRequest is the request type for the Query/Dispute RPC method.
+message QueryDisputeRequest {
+  // dispute_id defines the dispute id to query for.
+  uint64 dispute_id = 1;
+}
+
+// QueryDisputeResponse is the response type for the Query/Dispute RPC method.
+message QueryDisputeResponse {
+  // dispute is the dispute details.
+  Disputes dispute = 1;
 }
 
 message QueryOpenDisputesRequest {}
