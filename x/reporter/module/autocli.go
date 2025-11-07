@@ -68,6 +68,18 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query the selectors for a reporter",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
 				},
+				{
+					RpcMethod:      "JailedReporters",
+					Use:            "jailed-reporters",
+					Short:          "Query all jailed reporters",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+				},
+				{
+					RpcMethod:      "Reporter",
+					Use:            "reporter [reporter-address]",
+					Short:          "Query a specific reporter by address",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
