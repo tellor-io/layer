@@ -20,8 +20,10 @@ const _ = grpc.SupportPackageIsVersion7
 type QueryClient interface {
 	// Parameters queries the parameters of the module.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
-	// Reporters queries all the staked reporters.
+	// Disputes queries all disputes.
 	Disputes(ctx context.Context, in *QueryDisputesRequest, opts ...grpc.CallOption) (*QueryDisputesResponse, error)
+	// Dispute queries a specific dispute by id.
+	Dispute(ctx context.Context, in *QueryDisputeRequest, opts ...grpc.CallOption) (*QueryDisputeResponse, error)
 	// OpenDisputes queries all the open disputes.
 	OpenDisputes(ctx context.Context, in *QueryOpenDisputesRequest, opts ...grpc.CallOption) (*QueryOpenDisputesResponse, error)
 	// team vote queries the team vote for a dispute.
@@ -54,6 +56,15 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 func (c *queryClient) Disputes(ctx context.Context, in *QueryDisputesRequest, opts ...grpc.CallOption) (*QueryDisputesResponse, error) {
 	out := new(QueryDisputesResponse)
 	err := c.cc.Invoke(ctx, "/layer.dispute.Query/Disputes", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Dispute(ctx context.Context, in *QueryDisputeRequest, opts ...grpc.CallOption) (*QueryDisputeResponse, error) {
+	out := new(QueryDisputeResponse)
+	err := c.cc.Invoke(ctx, "/layer.dispute.Query/Dispute", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -111,8 +122,10 @@ func (c *queryClient) VoteResult(ctx context.Context, in *QueryDisputeVoteResult
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
-	// Reporters queries all the staked reporters.
+	// Disputes queries all disputes.
 	Disputes(context.Context, *QueryDisputesRequest) (*QueryDisputesResponse, error)
+	// Dispute queries a specific dispute by id.
+	Dispute(context.Context, *QueryDisputeRequest) (*QueryDisputeResponse, error)
 	// OpenDisputes queries all the open disputes.
 	OpenDisputes(context.Context, *QueryOpenDisputesRequest) (*QueryOpenDisputesResponse, error)
 	// team vote queries the team vote for a dispute.
@@ -135,6 +148,9 @@ func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*Q
 }
 func (UnimplementedQueryServer) Disputes(context.Context, *QueryDisputesRequest) (*QueryDisputesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Disputes not implemented")
+}
+func (UnimplementedQueryServer) Dispute(context.Context, *QueryDisputeRequest) (*QueryDisputeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Dispute not implemented")
 }
 func (UnimplementedQueryServer) OpenDisputes(context.Context, *QueryOpenDisputesRequest) (*QueryOpenDisputesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method OpenDisputes not implemented")
@@ -196,6 +212,24 @@ func _Query_Disputes_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Disputes(ctx, req.(*QueryDisputesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Dispute_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDisputeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Dispute(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.dispute.Query/Dispute",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Dispute(ctx, req.(*QueryDisputeRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -304,6 +338,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Disputes",
 			Handler:    _Query_Disputes_Handler,
+		},
+		{
+			MethodName: "Dispute",
+			Handler:    _Query_Dispute_Handler,
 		},
 		{
 			MethodName: "OpenDisputes",
