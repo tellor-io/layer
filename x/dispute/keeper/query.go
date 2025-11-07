@@ -55,6 +55,25 @@ func (k Querier) Disputes(ctx context.Context, req *types.QueryDisputesRequest) 
 	return &types.QueryDisputesResponse{Disputes: disputes, Pagination: pageRes}, nil
 }
 
+// Dispute queries a specific dispute by id
+func (k Querier) Dispute(ctx context.Context, req *types.QueryDisputeRequest) (*types.QueryDisputeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	dispute, err := k.Keeper.Disputes.Get(ctx, req.DisputeId)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "dispute not found")
+	}
+
+	return &types.QueryDisputeResponse{
+		Dispute: &types.Disputes{
+			DisputeId: req.DisputeId,
+			Metadata:  &dispute,
+		},
+	}, nil
+}
+
 func (k Querier) OpenDisputes(ctx context.Context, req *types.QueryOpenDisputesRequest) (*types.QueryOpenDisputesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
