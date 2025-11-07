@@ -83,6 +83,53 @@ func (s *KeeperTestSuite) TestDisputesQuery() {
 	}
 }
 
+func (s *KeeperTestSuite) TestDisputeQuery() {
+	require := s.Require()
+	k := s.disputeKeeper
+	q := keeper.NewQuerier(k)
+	require.NotNil(q)
+	ctx := s.ctx
+
+	// Create a test dispute
+	testDispute := types.Dispute{
+		HashId:           []byte{1},
+		DisputeId:        1,
+		DisputeCategory:  types.Warning,
+		DisputeFee:       math.NewInt(1000000),
+		DisputeStatus:    types.Voting,
+		DisputeStartTime: time.Now(),
+		DisputeEndTime:   time.Now().Add(time.Hour * 24),
+		Open:             true,
+		DisputeRound:     1,
+		SlashAmount:      math.NewInt(1000000),
+		BurnAmount:       math.NewInt(100),
+		InitialEvidence: oracletypes.MicroReport{
+			Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
+			Timestamp: time.Now(),
+		},
+	}
+	require.NoError(k.Disputes.Set(ctx, 1, testDispute))
+
+	// Query the specific dispute
+	resp, err := q.Dispute(ctx, &types.QueryDisputeRequest{DisputeId: 1})
+	require.NoError(err)
+	require.NotNil(resp)
+	require.NotNil(resp.Dispute)
+	require.Equal(uint64(1), resp.Dispute.DisputeId)
+	require.Equal(testDispute.DisputeCategory, resp.Dispute.Metadata.DisputeCategory)
+	require.Equal(testDispute.DisputeFee, resp.Dispute.Metadata.DisputeFee)
+	require.Equal(testDispute.DisputeStatus, resp.Dispute.Metadata.DisputeStatus)
+	require.True(resp.Dispute.Metadata.Open)
+
+	// Query non-existent dispute
+	_, err = q.Dispute(ctx, &types.QueryDisputeRequest{DisputeId: 999})
+	require.Error(err)
+
+	// nil request
+	_, err = q.Dispute(ctx, nil)
+	require.Error(err)
+}
+
 func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 	require := s.Require()
 	k := s.disputeKeeper
