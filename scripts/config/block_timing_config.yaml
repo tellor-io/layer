@@ -1,0 +1,20 @@
+endpoints:
+  rpc: "http://localhost:26657"
+  metrics: "http://localhost:26660/metrics"
+  websocket: "ws://localhost:26657/websocket"
+
+monitoring:
+  poll_interval_ms: 200
+  output_dir: "./block_timing_data"
+  enable_websocket: true
+  log_file_path: "~/.layer/layer.log"
+  
+analysis:
+  slow_block_threshold_std_dev: 2.0
+  moving_average_window: 20
+  
+filters:
+  min_height: null  # Start from current if null
+  max_height: null  # Run indefinitely if null
+  track_message_types: ["MsgTip", "MsgSubmitValue", "MsgDelegate", "MsgCreateValidator"]
+
