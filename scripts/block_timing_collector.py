@@ -385,6 +385,85 @@ class BlockTimingCollector:
             print(f"Error fetching {url}: {e}")
         return None
     
+    def calculate_validator_participation(self, block: Dict, height: int) -> Optional[Dict]:
+        """Calculate validator participation rate for a block.
+        
+        Note: The last_commit in block N contains signatures for block N-1.
+        To get participation for block N, we try to fetch block N+1's last_commit.
+        If block N+1 is not available yet, we fall back to using block N's last_commit
+        (which gives participation for block N-1).
+        """
+        try:
+            # Try to get block N+1 first to get participation for block N
+            next_block = self.fetch_json(f"{self.rpc_url}/block?height={height + 1}")
+            if next_block and 'result' in next_block:
+                last_commit = next_block['result'].get('block', {}).get('last_commit', {})
+                commit_height = height  # This commit is for block N
+            else:
+                # Fall back to using current block's last_commit (for block N-1)
+                last_commit = block.get('result', {}).get('block', {}).get('last_commit', {})
+                commit_height = int(last_commit.get('height', height - 1))
+            
+            signatures = last_commit.get('signatures', [])
+            
+            if not signatures:
+                return None
+            
+            # Fetch validator set for the committed height
+            validators_response = self.fetch_json(f"{self.rpc_url}/validators?height={commit_height}")
+            if not validators_response or 'result' not in validators_response:
+                return None
+            
+            validators = validators_response['result'].get('validators', [])
+            
+            # Create a map of validator address to power
+            validator_power_map = {}
+            total_validator_power = 0
+            
+            for validator in validators:
+                address = validator.get('address', '')
+                voting_power_str = validator.get('voting_power', '0')
+                try:
+                    voting_power = int(voting_power_str)
+                    validator_power_map[address] = voting_power
+                    total_validator_power += voting_power
+                except (ValueError, TypeError):
+                    continue
+            
+            if total_validator_power == 0:
+                return None
+            
+            # Calculate signed power
+            # block_id_flag: 0 = absent, 1 = commit (signed), 2 = nil (didn't vote)
+            signed_power = 0
+            num_signatures = 0
+            
+            for sig in signatures:
+                block_id_flag = sig.get('block_id_flag', 0)
+                validator_address = sig.get('validator_address', '')
+                
+                # Only count commits (block_id_flag == 1)
+                if block_id_flag == 1 and validator_address:
+                    power = validator_power_map.get(validator_address, 0)
+                    signed_power += power
+                    if power > 0:
+                        num_signatures += 1
+            
+            # Calculate participation rate
+            participation_rate = (signed_power / total_validator_power * 100) if total_validator_power > 0 else 0
+            
+            return {
+                'block_height_measured': commit_height,  # Which block's participation we're measuring
+                'total_validator_power': total_validator_power,
+                'signed_power': signed_power,
+                'num_validators_signed': num_signatures,
+                'total_validators': len(validators),
+                'participation_rate_percent': round(participation_rate, 2)
+            }
+        except Exception as e:
+            print(f"  Warning: Could not calculate validator participation: {e}")
+            return None
+    
     def collect_block_data(self, height: int) -> Dict:
         """Collect all data for a specific block."""
         print(f"Collecting data for block {height}...")
@@ -511,7 +590,12 @@ class BlockTimingCollector:
                 }
                 break
         
-        # 6. Analysis
+        # 6. Calculate validator participation rate
+        participation = self.calculate_validator_participation(block, height)
+        if participation:
+            block_data['validator_participation'] = participation
+        
+        # 7. Analysis
         block_data['analysis'] = {
             'has_tips': len(tx_analysis.get('tips', [])) > 0,
             'tip_count': len(tx_analysis.get('tips', [])),
@@ -606,6 +690,11 @@ class BlockTimingCollector:
         consensus = block_data.get('consensus', {})
         consensus_time = consensus.get('total_consensus_ms', 0)
         
+        # Get validator participation rate
+        participation = block_data.get('validator_participation', {})
+        participation_rate = participation.get('participation_rate_percent', 0)
+        participation_str = f" | Participation: {participation_rate:.1f}%" if participation_rate > 0 else ""
+        
         # Show which module is slowest
         slowest_module = ""
         if execution.get('end_block_modules'):
@@ -624,7 +713,7 @@ class BlockTimingCollector:
               f"Txs: {num_txs} ({size_str}) | "
               f"Exec: {exec_time:.1f}ms | "
               f"Consensus: {consensus_time:.1f}ms{slowest_module} | "
-              f"Tips: {'YES' if has_tips else 'no'}")
+              f"Tips: {'YES' if has_tips else 'no'}{participation_str}")
 
 
 def load_config(config_file: str) -> Dict:
