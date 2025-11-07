@@ -127,3 +127,89 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 
 	return marketIdToMedianPrice
 }
+
+// MedianPriceData contains the median price and the source data used to calculate it
+type MedianPriceData struct {
+	MedianPrice uint64
+	SourceData  []*ExchangePrice
+}
+
+// GetValidMedianPricesWithSourceData returns median prices for multiple markets along with
+// the source data (exchange IDs and prices) used to calculate each median.
+func (mte *MarketToExchangePrices) GetValidMedianPricesWithSourceData(
+	marketParams []types.MarketParam,
+	readTime time.Time,
+) map[uint32]*MedianPriceData {
+	cutoffTime := readTime.Add(-mte.maxPriceAge)
+	marketIdToMedianPriceData := make(map[uint32]*MedianPriceData)
+
+	mte.Lock()
+	defer mte.Unlock()
+	for _, marketParam := range marketParams {
+		marketId := marketParam.Id
+		exchangeToPrice, ok := mte.marketToExchangePrices[marketId]
+		if !ok {
+			// No market price info yet, skip this market.
+			telemetry.IncrCounterWithLabels(
+				[]string{
+					metrics.PricefeedServer,
+					metrics.NoMarketPrice,
+					metrics.Count,
+				},
+				1,
+				[]gometrics.Label{
+					pricefeedmetrics.GetLabelForMarketId(marketId),
+				},
+			)
+			continue
+		}
+
+		// GetValidPricesWithExchangeIds filters prices based on cutoff time and includes exchange IDs.
+		validPricesWithExchangeIds := exchangeToPrice.GetValidPricesWithExchangeIds(cutoffTime)
+		validPrices := make([]uint64, len(validPricesWithExchangeIds))
+		for i, ep := range validPricesWithExchangeIds {
+			validPrices[i] = ep.Price
+		}
+
+		telemetry.SetGaugeWithLabels(
+			[]string{
+				metrics.PricefeedServer,
+				metrics.ValidPrices,
+				metrics.Count,
+			},
+			float32(len(validPrices)),
+			[]gometrics.Label{
+				pricefeedmetrics.GetLabelForMarketId(marketId),
+			},
+		)
+
+		// The number of valid prices must be >= min number of exchanges.
+		if len(validPrices) >= int(marketParam.MinExchanges) {
+			// Calculate the median. Returns an error if the input is empty.
+			median, err := lib.Median(validPrices)
+			if err != nil {
+				telemetry.IncrCounterWithLabels(
+					[]string{
+						metrics.PricefeedServer,
+						metrics.NoValidMedianPrice,
+						metrics.Count,
+					},
+					1,
+					[]gometrics.Label{
+						pricefeedmetrics.GetLabelForMarketId(marketId),
+					},
+				)
+				continue
+			}
+			// Use copy() instead of loop to satisfy linter
+			sourceData := make([]*ExchangePrice, len(validPricesWithExchangeIds))
+			copy(sourceData, validPricesWithExchangeIds)
+			marketIdToMedianPriceData[marketId] = &MedianPriceData{
+				MedianPrice: median,
+				SourceData:  sourceData,
+			}
+		}
+	}
+
+	return marketIdToMedianPriceData
+}

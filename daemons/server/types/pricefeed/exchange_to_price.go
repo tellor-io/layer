@@ -94,3 +94,47 @@ func (etp *ExchangeToPrice) GetValidPrices(
 	}
 	return validExchangePricesForMarket
 }
+
+// ExchangePrice represents a price from a specific exchange
+type ExchangePrice struct {
+	ExchangeId string
+	Price      uint64
+}
+
+// GetValidPricesWithExchangeIds returns a list of "valid" prices along with their exchange IDs.
+// Prices are considered "valid" iff the last update time is greater than or equal to the given cutoff time.
+func (etp *ExchangeToPrice) GetValidPricesWithExchangeIds(
+	cutoffTime time.Time,
+) []*ExchangePrice {
+	validExchangePricesForMarket := make([]*ExchangePrice, 0, len(etp.exchangeToPriceTimestamp))
+	for exchangeId, priceTimestamp := range etp.exchangeToPriceTimestamp {
+		validity := metrics.Valid
+
+		// PriceTimestamp returns price if the last update time is valid.
+		if price, ok := priceTimestamp.GetValidPrice(cutoffTime); ok {
+			validExchangePricesForMarket = append(validExchangePricesForMarket, &ExchangePrice{
+				ExchangeId: exchangeId,
+				Price:      price,
+			})
+		} else {
+			// Price is invalid.
+			validity = metrics.PriceIsInvalid
+		}
+
+		// Measure count of valid and invalid prices fetched from the in-memory map.
+		telemetry.IncrCounterWithLabels(
+			[]string{
+				metrics.PricefeedServer,
+				metrics.GetValidPrices,
+				validity,
+				metrics.Count,
+			},
+			1,
+			[]gometrics.Label{
+				pricefeedmetrics.GetLabelForExchangeId(exchangeId),
+				pricefeedmetrics.GetLabelForMarketId(etp.marketId),
+			},
+		)
+	}
+	return validExchangePricesForMarket
+}
