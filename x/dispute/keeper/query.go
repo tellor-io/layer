@@ -55,6 +55,25 @@ func (k Querier) Disputes(ctx context.Context, req *types.QueryDisputesRequest) 
 	return &types.QueryDisputesResponse{Disputes: disputes, Pagination: pageRes}, nil
 }
 
+// Dispute queries a specific dispute by id
+func (k Querier) Dispute(ctx context.Context, req *types.QueryDisputeRequest) (*types.QueryDisputeResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	dispute, err := k.Keeper.Disputes.Get(ctx, req.DisputeId)
+	if err != nil {
+		return nil, status.Error(codes.NotFound, "dispute not found")
+	}
+
+	return &types.QueryDisputeResponse{
+		Dispute: &types.Disputes{
+			DisputeId: req.DisputeId,
+			Metadata:  &dispute,
+		},
+	}, nil
+}
+
 func (k Querier) OpenDisputes(ctx context.Context, req *types.QueryOpenDisputesRequest) (*types.QueryOpenDisputesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -100,10 +119,46 @@ func (k Querier) Tally(ctx context.Context, req *types.QueryDisputesTallyRequest
 	if err != nil {
 		return &types.QueryDisputesTallyResponse{}, err
 	}
+
+	// check if dispute has been voted on yet
 	voteCounts, err := k.Keeper.VoteCountsByGroup.Get(ctx, req.DisputeId)
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			// dispute exists but hasn't been voted on yet, return empty tally
+			return &types.QueryDisputesTallyResponse{
+				Users: &types.GroupTally{
+					VoteCount: &types.FormattedVoteCounts{
+						Support: "0.00%",
+						Against: "0.00%",
+						Invalid: "0.00%",
+					},
+					TotalPowerVoted: 0,
+					TotalGroupPower: 0,
+				},
+				Reporters: &types.GroupTally{
+					VoteCount: &types.FormattedVoteCounts{
+						Support: "0.00%",
+						Against: "0.00%",
+						Invalid: "0.00%",
+					},
+					TotalPowerVoted: 0,
+					TotalGroupPower: 0,
+				},
+				Team: &types.FormattedVoteCounts{
+					Support: "0.00%",
+					Against: "0.00%",
+					Invalid: "0.00%",
+				},
+				CombinedTotal: &types.CombinedTotal{
+					Support: "0.00%",
+					Against: "0.00%",
+					Invalid: "0.00%",
+				},
+			}, nil
+		}
 		return &types.QueryDisputesTallyResponse{}, err
 	}
+
 	// use hashID to get blockInfo which has tips and reporter power stored in it
 	blockInfo, err := k.Keeper.BlockInfo.Get(ctx, dispute.HashId)
 	if err != nil {

@@ -66,11 +66,14 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 		if err != nil {
 			return err
 		}
+		// per report reward
+
 		sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
 			sdk.NewEvent(
 				"rewards_added",
-				sdk.NewAttribute("delegator", string(del.DelegatorAddress)),
+				sdk.NewAttribute("delegator", sdk.AccAddress(del.DelegatorAddress).String()),
 				sdk.NewAttribute("amount", newTips.String()),
+				sdk.NewAttribute("rewards_report", delegatorShare.TruncateInt().String()),
 			),
 		})
 	}

@@ -22,6 +22,8 @@ type QueryClient interface {
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 	// Reporters queries all the staked reporters.
 	Reporters(ctx context.Context, in *QueryReportersRequest, opts ...grpc.CallOption) (*QueryReportersResponse, error)
+	// Reporter queries a specific reporter by address.
+	Reporter(ctx context.Context, in *QueryReporterRequest, opts ...grpc.CallOption) (*QueryReporterResponse, error)
 	// SelectorReporter queries the reporter of a selector.
 	SelectorReporter(ctx context.Context, in *QuerySelectorReporterRequest, opts ...grpc.CallOption) (*QuerySelectorReporterResponse, error)
 	// AllowedAmount queries the currently allowed amount to stake or unstake.
@@ -35,6 +37,8 @@ type QueryClient interface {
 	AvailableTips(ctx context.Context, in *QueryAvailableTipsRequest, opts ...grpc.CallOption) (*QueryAvailableTipsResponse, error)
 	// SelectionsTo queries the selections for a given reporter.
 	SelectionsTo(ctx context.Context, in *QuerySelectionsToRequest, opts ...grpc.CallOption) (*QuerySelectionsToResponse, error)
+	// JailedReporters queries all jailed reporters.
+	JailedReporters(ctx context.Context, in *QueryJailedReportersRequest, opts ...grpc.CallOption) (*QueryJailedReportersResponse, error)
 }
 
 type queryClient struct {
@@ -57,6 +61,15 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 func (c *queryClient) Reporters(ctx context.Context, in *QueryReportersRequest, opts ...grpc.CallOption) (*QueryReportersResponse, error) {
 	out := new(QueryReportersResponse)
 	err := c.cc.Invoke(ctx, "/layer.reporter.Query/Reporters", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) Reporter(ctx context.Context, in *QueryReporterRequest, opts ...grpc.CallOption) (*QueryReporterResponse, error) {
+	out := new(QueryReporterResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/Reporter", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -126,6 +139,15 @@ func (c *queryClient) SelectionsTo(ctx context.Context, in *QuerySelectionsToReq
 	return out, nil
 }
 
+func (c *queryClient) JailedReporters(ctx context.Context, in *QueryJailedReportersRequest, opts ...grpc.CallOption) (*QueryJailedReportersResponse, error) {
+	out := new(QueryJailedReportersResponse)
+	err := c.cc.Invoke(ctx, "/layer.reporter.Query/JailedReporters", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -134,6 +156,8 @@ type QueryServer interface {
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	// Reporters queries all the staked reporters.
 	Reporters(context.Context, *QueryReportersRequest) (*QueryReportersResponse, error)
+	// Reporter queries a specific reporter by address.
+	Reporter(context.Context, *QueryReporterRequest) (*QueryReporterResponse, error)
 	// SelectorReporter queries the reporter of a selector.
 	SelectorReporter(context.Context, *QuerySelectorReporterRequest) (*QuerySelectorReporterResponse, error)
 	// AllowedAmount queries the currently allowed amount to stake or unstake.
@@ -147,6 +171,8 @@ type QueryServer interface {
 	AvailableTips(context.Context, *QueryAvailableTipsRequest) (*QueryAvailableTipsResponse, error)
 	// SelectionsTo queries the selections for a given reporter.
 	SelectionsTo(context.Context, *QuerySelectionsToRequest) (*QuerySelectionsToResponse, error)
+	// JailedReporters queries all jailed reporters.
+	JailedReporters(context.Context, *QueryJailedReportersRequest) (*QueryJailedReportersResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -159,6 +185,9 @@ func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*Q
 }
 func (UnimplementedQueryServer) Reporters(context.Context, *QueryReportersRequest) (*QueryReportersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Reporters not implemented")
+}
+func (UnimplementedQueryServer) Reporter(context.Context, *QueryReporterRequest) (*QueryReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Reporter not implemented")
 }
 func (UnimplementedQueryServer) SelectorReporter(context.Context, *QuerySelectorReporterRequest) (*QuerySelectorReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SelectorReporter not implemented")
@@ -180,6 +209,9 @@ func (UnimplementedQueryServer) AvailableTips(context.Context, *QueryAvailableTi
 }
 func (UnimplementedQueryServer) SelectionsTo(context.Context, *QuerySelectionsToRequest) (*QuerySelectionsToResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SelectionsTo not implemented")
+}
+func (UnimplementedQueryServer) JailedReporters(context.Context, *QueryJailedReportersRequest) (*QueryJailedReportersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method JailedReporters not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -226,6 +258,24 @@ func _Query_Reporters_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).Reporters(ctx, req.(*QueryReportersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_Reporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryReporterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Reporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/Reporter",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Reporter(ctx, req.(*QueryReporterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -356,6 +406,24 @@ func _Query_SelectionsTo_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_JailedReporters_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryJailedReportersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).JailedReporters(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.reporter.Query/JailedReporters",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).JailedReporters(ctx, req.(*QueryJailedReportersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -370,6 +438,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Reporters",
 			Handler:    _Query_Reporters_Handler,
+		},
+		{
+			MethodName: "Reporter",
+			Handler:    _Query_Reporter_Handler,
 		},
 		{
 			MethodName: "SelectorReporter",
@@ -398,6 +470,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SelectionsTo",
 			Handler:    _Query_SelectionsTo_Handler,
+		},
+		{
+			MethodName: "JailedReporters",
+			Handler:    _Query_JailedReporters_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
