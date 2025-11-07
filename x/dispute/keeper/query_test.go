@@ -261,6 +261,46 @@ func (s *KeeperTestSuite) TestTallyQuery() {
 
 	require.Equal(res.Users.TotalGroupPower, uint64(5000))
 	require.Equal(res.Reporters.TotalGroupPower, uint64(25000))
+
+	// Test dispute with no votes yet
+	require.NoError(k.Disputes.Set(ctx, 2, types.Dispute{
+		HashId:           []byte{2},
+		DisputeId:        2,
+		DisputeCategory:  types.Warning,
+		DisputeFee:       math.NewInt(1000000),
+		DisputeStatus:    types.Voting,
+		DisputeStartTime: time.Now(),
+		DisputeEndTime:   time.Now().Add(time.Hour * 24),
+		Open:             true,
+		DisputeRound:     1,
+		SlashAmount:      math.NewInt(1000000),
+		BurnAmount:       math.NewInt(100),
+		InitialEvidence: oracletypes.MicroReport{
+			Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
+			Timestamp: time.Now(),
+		},
+	}))
+
+	// Query tally for dispute with no votes - should return empty tally
+	res, err = q.Tally(ctx, &types.QueryDisputesTallyRequest{DisputeId: 2})
+	require.NoError(err)
+	require.NotNil(res)
+	require.Equal("0.00%", res.Users.VoteCount.Support)
+	require.Equal("0.00%", res.Users.VoteCount.Against)
+	require.Equal("0.00%", res.Users.VoteCount.Invalid)
+	require.Equal(uint64(0), res.Users.TotalPowerVoted)
+	require.Equal(uint64(0), res.Users.TotalGroupPower)
+	require.Equal("0.00%", res.Reporters.VoteCount.Support)
+	require.Equal("0.00%", res.Reporters.VoteCount.Against)
+	require.Equal("0.00%", res.Reporters.VoteCount.Invalid)
+	require.Equal(uint64(0), res.Reporters.TotalPowerVoted)
+	require.Equal(uint64(0), res.Reporters.TotalGroupPower)
+	require.Equal("0.00%", res.Team.Support)
+	require.Equal("0.00%", res.Team.Against)
+	require.Equal("0.00%", res.Team.Invalid)
+	require.Equal("0.00%", res.CombinedTotal.Support)
+	require.Equal("0.00%", res.CombinedTotal.Against)
+	require.Equal("0.00%", res.CombinedTotal.Invalid)
 }
 
 func (s *KeeperTestSuite) TestVoteResultQuery() {
