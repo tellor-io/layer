@@ -224,7 +224,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 		ID:                "0bc2d41117ae8779da7623ee76a109c88b84b9bf4d9b404524df04f7d0ca4ca7",
 		AggregationMethod: "median",
 		MaxSpreadPercent:  100.0,
-		MinResponses:      2,
+		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
@@ -239,7 +239,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 		ID:                "1962cde2f19178fe2bb2229e78a6d386e6406979edc7b9a1966d89d83b3ebf2e",
 		AggregationMethod: "median",
 		MaxSpreadPercent:  100.0,
-		MinResponses:      2,
+		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
 			{
