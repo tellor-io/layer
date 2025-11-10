@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -66,10 +67,16 @@ type RPCRequest struct {
 	Params  interface{} `json:"params"`
 }
 
+type RPCError struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    string `json:"data,omitempty"`
+}
+
 type BlockResponse struct {
 	Jsonrpc string `json:"jsonrpc"`
 	Id      int    `json:"id"`
-	Result  struct {
+	Result  *struct {
 		BlockID struct {
 			Hash  string `json:"hash"`
 			Parts struct {
@@ -126,7 +133,8 @@ type BlockResponse struct {
 				} `json:"signatures"`
 			} `json:"last_commit"`
 		} `json:"block"`
-	} `json:"result"`
+	} `json:"result,omitempty"`
+	Error *RPCError `json:"error,omitempty"`
 }
 
 type ConfigType struct {
@@ -146,6 +154,43 @@ type OracleAttestations struct {
 	Snapshots         []string `json:"snapshots"`
 }
 
+// FlexibleStringSlice can unmarshal from either []string or []interface{} (which may contain numbers)
+type FlexibleStringSlice []string
+
+func (f *FlexibleStringSlice) UnmarshalJSON(data []byte) error {
+	// First try to unmarshal as []string
+	var stringSlice []string
+	if err := json.Unmarshal(data, &stringSlice); err == nil {
+		*f = FlexibleStringSlice(stringSlice)
+		return nil
+	}
+
+	// If that fails, try to unmarshal as []interface{} and convert each element
+	var interfaceSlice []interface{}
+	if err := json.Unmarshal(data, &interfaceSlice); err != nil {
+		return fmt.Errorf("failed to unmarshal as []string or []interface{}: %w", err)
+	}
+
+	result := make([]string, len(interfaceSlice))
+	for i, v := range interfaceSlice {
+		switch val := v.(type) {
+		case string:
+			result[i] = val
+		case float64:
+			// Convert number to string
+			result[i] = strconv.FormatFloat(val, 'f', -1, 64)
+		case int64:
+			result[i] = strconv.FormatInt(val, 10)
+		case int:
+			result[i] = strconv.Itoa(val)
+		default:
+			return fmt.Errorf("cannot convert type %T to string at index %d", val, i)
+		}
+	}
+	*f = FlexibleStringSlice(result)
+	return nil
+}
+
 // VoteExtensionData represents the decoded structure of vote extension data
 type VoteExtensionData struct {
 	BlockHeight   uint64 `json:"block_height"`
@@ -154,9 +199,9 @@ type VoteExtensionData struct {
 		EvmAddresses      []string `json:"evm_addresses"`
 	} `json:"op_and_evm_addrs"`
 	ValsetSigs struct {
-		OperatorAddresses []string `json:"operator_addresses"`
-		Timestamps        []string `json:"timestamps"`
-		Signatures        []string `json:"signatures"`
+		OperatorAddresses []string            `json:"operator_addresses"`
+		Timestamps        FlexibleStringSlice `json:"timestamps"`
+		Signatures        []string            `json:"signatures"`
 	} `json:"valset_sigs"`
 	OracleAttestations OracleAttestations `json:"oracle_attestations"`
 	ExtendedCommitInfo struct {
@@ -226,9 +271,22 @@ func NewHTTPClient(rpcURL string) *HTTPClient {
 
 	isLocalhost := strings.Contains(rpcURL, "localhost") || strings.Contains(rpcURL, "127.0.0.1")
 
+	// Configure Transport with connection pooling to prevent connection exhaustion
+	// This helps when making many requests over time
+	transport := &http.Transport{
+		MaxIdleConns:        50,
+		MaxIdleConnsPerHost: 5,
+		IdleConnTimeout:     90 * time.Second,
+		DialContext: (&net.Dialer{
+			Timeout:   10 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+	}
+
 	return &HTTPClient{
 		client: &http.Client{
-			Timeout: 30 * time.Second,
+			Timeout:   30 * time.Second,
+			Transport: transport,
 		},
 		baseURL:     rpcURL,
 		protocol:    protocol,
@@ -272,24 +330,106 @@ func (h *HTTPClient) makeRPCRequest(method string, params interface{}) ([]byte, 
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
+	// Validate that we got a non-empty response
+	if len(body) == 0 {
+		return nil, fmt.Errorf("received empty response body")
+	}
+
+	// Basic validation: check if response looks like JSON
+	if !strings.HasPrefix(strings.TrimSpace(string(body)), "{") {
+		// Log first 200 chars for debugging
+		preview := string(body)
+		if len(preview) > 200 {
+			preview = preview[:200] + "..."
+		}
+		return nil, fmt.Errorf("response does not appear to be valid JSON (preview: %s)", preview)
+	}
+
 	h.lastQuery = time.Now()
 	return body, nil
 }
 
+// StatusResponse represents the response from the status RPC endpoint
+type StatusResponse struct {
+	Jsonrpc string `json:"jsonrpc"`
+	Id      int    `json:"id"`
+	Result  *struct {
+		NodeInfo struct {
+			ProtocolVersion struct {
+				P2P   string `json:"p2p"`
+				Block string `json:"block"`
+				App   string `json:"app"`
+			} `json:"protocol_version"`
+			ID         string `json:"id"`
+			ListenAddr string `json:"listen_addr"`
+			Network    string `json:"network"`
+			Version    string `json:"version"`
+			Channels   string `json:"channels"`
+			Moniker    string `json:"moniker"`
+		} `json:"node_info"`
+		SyncInfo struct {
+			LatestBlockHash     string `json:"latest_block_hash"`
+			LatestAppHash       string `json:"latest_app_hash"`
+			LatestBlockHeight   string `json:"latest_block_height"`
+			LatestBlockTime     string `json:"latest_block_time"`
+			EarliestBlockHash   string `json:"earliest_block_hash"`
+			EarliestAppHash     string `json:"earliest_app_hash"`
+			EarliestBlockHeight string `json:"earliest_block_height"`
+			EarliestBlockTime   string `json:"earliest_block_time"`
+			CatchingUp          bool   `json:"catching_up"`
+		} `json:"sync_info"`
+		ValidatorInfo struct {
+			Address string `json:"address"`
+			PubKey  struct {
+				Type  string `json:"type"`
+				Value string `json:"value"`
+			} `json:"pub_key"`
+			VotingPower string `json:"voting_power"`
+		} `json:"validator_info"`
+	} `json:"result,omitempty"`
+	Error *RPCError `json:"error,omitempty"`
+}
+
+// getStatus queries the status endpoint to get the latest block height
+func (h *HTTPClient) getStatus() (*StatusResponse, error) {
+	body, err := h.makeRPCRequest("status", nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get status: %w", err)
+	}
+
+	var statusResponse StatusResponse
+	if err := json.Unmarshal(body, &statusResponse); err != nil {
+		// Log response preview for debugging
+		preview := string(body)
+		if len(preview) > 500 {
+			preview = preview[:500] + "..."
+		}
+		log.Printf("DEBUG: Failed to unmarshal status response. Response length: %d, Preview: %s", len(body), preview)
+		return nil, fmt.Errorf("failed to unmarshal status response: %w (response length: %d)", err, len(body))
+	}
+
+	// Check for RPC error response
+	if statusResponse.Error != nil {
+		return nil, fmt.Errorf("RPC error: code=%d, message=%s, data=%s", statusResponse.Error.Code, statusResponse.Error.Message, statusResponse.Error.Data)
+	}
+
+	if statusResponse.Result == nil {
+		return nil, fmt.Errorf("RPC status response has no result field")
+	}
+
+	return &statusResponse, nil
+}
+
+// getLatestBlockHeight gets the latest block height from the status endpoint
 func (h *HTTPClient) getLatestBlockHeight() (uint64, error) {
-	body, err := h.makeRPCRequest("block", nil)
+	status, err := h.getStatus()
 	if err != nil {
 		return 0, err
 	}
 
-	var response BlockResponse
-	if err := json.Unmarshal(body, &response); err != nil {
-		return 0, fmt.Errorf("failed to unmarshal block response: %w", err)
-	}
-
-	height, err := strconv.ParseUint(response.Result.Block.Header.Height, 10, 64)
+	height, err := strconv.ParseUint(status.Result.SyncInfo.LatestBlockHeight, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("failed to parse block height: %w", err)
+		return 0, fmt.Errorf("failed to parse latest block height: %w", err)
 	}
 
 	return height, nil
@@ -306,7 +446,31 @@ func (h *HTTPClient) getBlock(height uint64) (*BlockResponse, error) {
 
 	var blockResponse BlockResponse
 	if err := json.Unmarshal(blockBody, &blockResponse); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal block response: %w", err)
+		// Log response preview for debugging
+		preview := string(blockBody)
+		if len(preview) > 500 {
+			preview = preview[:500] + "..."
+		}
+		log.Printf("DEBUG: Failed to unmarshal block response for height %d. Response length: %d, Preview: %s", height, len(blockBody), preview)
+
+		// Check if response is valid JSON at all
+		var testJSON interface{}
+		if jsonErr := json.Unmarshal(blockBody, &testJSON); jsonErr != nil {
+			log.Printf("DEBUG: Response is not valid JSON: %v", jsonErr)
+		} else {
+			log.Printf("DEBUG: Response is valid JSON but doesn't match BlockResponse structure")
+		}
+
+		return nil, fmt.Errorf("failed to unmarshal block response for height %d: %w (response length: %d)", height, err, len(blockBody))
+	}
+
+	// Check for RPC error response
+	if blockResponse.Error != nil {
+		return nil, fmt.Errorf("RPC error for block %d: code=%d, message=%s, data=%s", height, blockResponse.Error.Code, blockResponse.Error.Message, blockResponse.Error.Data)
+	}
+
+	if blockResponse.Result == nil {
+		return nil, fmt.Errorf("RPC response for block %d has no result field", height)
 	}
 
 	return &blockResponse, nil
@@ -831,6 +995,11 @@ func verifySignaturesInVoteExtension(voteExtData VoteExtensionData, height, time
 func processBlock(blockResponse *BlockResponse, height uint64) error {
 	log.Printf("Processing block %d", height)
 
+	// Safety check - Result should never be nil at this point, but check anyway
+	if blockResponse.Result == nil {
+		return fmt.Errorf("block response result is nil for height %d", height)
+	}
+
 	// Log basic block information
 	if blockResponse.Result.Block.Header.Height != "" {
 		log.Printf("Block %d time: %s", height, blockResponse.Result.Block.Header.Time)
@@ -969,71 +1138,81 @@ func MonitorBlocks(ctx context.Context, wg *sync.WaitGroup) {
 	// Start health check
 	go client.healthCheck(ctx)
 
-	// Main monitoring loop
+	// Main monitoring loop - poll status endpoint to check for new blocks
+	ticker := time.NewTicker(BlockQueryInterval)
+	defer ticker.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		default:
-			// Get current block height
+		case <-ticker.C:
+			// Get current block height we've processed
 			blockHeightMutex.RLock()
-			height := currentBlockHeight
+			lastProcessedHeight := currentBlockHeight
 			blockHeightMutex.RUnlock()
 
-			// Try to get the next block with retry logic
-			var blockResponse *BlockResponse
-			var err error
-			retryCount := 0
-			fastRetries := 5
-			totalAttempts := 0
+			// Get latest block height from status endpoint
+			latestHeight, err := client.getLatestBlockHeight()
+			if err != nil {
+				log.Printf("Failed to get latest block height from status: %v", err)
+				// Continue polling - don't crash on temporary status endpoint failures
+				continue
+			}
 
-			for {
-				blockResponse, err = client.getBlock(height + 1)
-				if err == nil {
+			// Check if there are new blocks to process
+			if latestHeight <= lastProcessedHeight {
+				// No new blocks yet, continue polling
+				continue
+			}
+
+			// Process all blocks from lastProcessedHeight + 1 to latestHeight
+			for height := lastProcessedHeight + 1; height <= latestHeight; height++ {
+				// Get the block
+				blockResponse, err := client.getBlock(height)
+				if err != nil {
+					log.Printf("Failed to get block %d: %v", height, err)
+					// If we can't get a block that should be available (based on status),
+					// log an error but continue to next block
+					// This handles edge cases where status says block exists but it's not fully available yet
+					continue
+				}
+
+				// Check for RPC error response
+				if blockResponse.Error != nil {
+					log.Printf("RPC error for block %d: code=%d, message=%s", height, blockResponse.Error.Code, blockResponse.Error.Message)
+					continue
+				}
+
+				if blockResponse.Result == nil {
+					log.Printf("Block %d response has no result field", height)
+					continue
+				}
+
+				// Process the block
+				if err := processBlock(blockResponse, height); err != nil {
+					log.Printf("Error processing block %d: %v", height, err)
+					// Don't increment block height on error, will retry on next status check
+					// Break to ensure we process blocks in order and don't skip any
 					break
 				}
-				retryCount++
-				log.Printf("Failed to get block %d (attempt %d/%d): %v", height+1, retryCount, fastRetries, err)
-				if retryCount < fastRetries {
-					time.Sleep(50 * time.Millisecond)
-				} else {
-					time.Sleep(250 * time.Millisecond)
+
+				// Check if the block was actually valid (not empty)
+				if blockResponse.Result.Block.Header.Height == "" &&
+					blockResponse.Result.Block.Header.Time == "" &&
+					blockResponse.Result.Block.Header.ChainID == "" {
+					// Block is empty, don't increment height, will retry on next status check
+					log.Printf("Block %d is empty, will retry on next status check", height)
+					break
 				}
 
-				if totalAttempts > 15 {
-					log.Printf("Failed to get block %d after 15 attempts, sending crash alert and panicking", height+1)
+				// Successfully processed block - update our tracked height
+				blockHeightMutex.Lock()
+				currentBlockHeight = height
+				blockHeightMutex.Unlock()
 
-					// Send crash alert before panicking
-					message := fmt.Sprintf("**CRITICAL ALERT: Block Retrieval Failure**\nFailed to get block %d after 15 attempts on node %s. The monitor is crashing to prevent data loss.", height+1, nodeName)
-					log.Printf("Would send crash alert: %s", message)
-
-					// Panic to crash the application
-					panic(fmt.Sprintf("Failed to get block %d after 15 attempts", height+1))
-				}
+				log.Printf("Processed block %d", height)
 			}
-
-			// Process the block
-			if err := processBlock(blockResponse, height+1); err != nil {
-				log.Printf("Error processing block %d: %v", height+1, err)
-				// Don't increment block height on error, retry the same block
-				continue
-			}
-
-			// Check if the block was actually valid (not empty)
-			if blockResponse.Result.Block.Header.Height == "" &&
-				blockResponse.Result.Block.Header.Time == "" &&
-				blockResponse.Result.Block.Header.ChainID == "" {
-				// Block is empty, don't increment height, retry the same block
-				log.Printf("Block %d is empty, retrying...", height+1)
-				continue
-			}
-
-			// Only increment block height if we successfully processed a valid block
-			blockHeightMutex.Lock()
-			currentBlockHeight = height + 1
-			blockHeightMutex.Unlock()
-
-			log.Printf("Processed block %d", height+1)
 		}
 	}
 }
