@@ -375,7 +375,7 @@ var StaticQueriesConfig = map[string]*QueryConfig{
 	"ab30caa3e7827a27c153063bce02c0b260b29c0c164040c003f0f9ec66002510": {
 		ID:                "ab30caa3e7827a27c153063bce02c0b260b29c0c164040c003f0f9ec66002510",
 		AggregationMethod: "median",
-		MaxSpreadPercent:  0.0,
+		MaxSpreadPercent:  10.0,
 		MinResponses:      1,
 		ResponseType:      "ufixed256x18",
 		Endpoints: []EndpointConfig{
