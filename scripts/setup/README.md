@@ -1,20 +1,35 @@
-# Setup Scripts
+# install_layer.sh
 
-***NOTE: It's a good idea to backup your home directory before using scripts on it!***
+install_layer.sh is a comprehensive installation script that can help with setting up new nodes. 
 
-# Initital Configuration Scripts
+Here is a breakdown of what this script will do by default:
+1) Download the latest layerd and cosmovisor binaries to `~/layer`.
+2) initialize and configure the layer node in `~/.layer` or `~/.layer_palmito`
+3) Add cosmovisor variables to .bashrc (or .zshrc if mac).
+4) Download and install the latest pre-built snapshot from layer-node.com.
+5) (linux only) Export an example systemd service file with example commands for installation.
 
-This is a guided setup script intended to help you start a working node as quickly as possible.
+## Usage
 
-1) Give the script permission to execute:
+1) Download or create the install_layer.sh script. Give the script permission to execute:
 
-```sh
-# example
-chmod +x configure_palmito_mac.sh
+```bash
+chmod +x install_layer.sh
 ```
-3) Run the script:
 
-```sh
-./configure_palmito_mac.sh
+2) Run the script:
+
 ```
+./install_layer.sh [NETWORK] [NODE_MONIKER]
+```
+Arguments:
+    NETWORK (required): `mainnet` or `palmito` depending on if you want a mainnet node or a testnet node.
+    NODE_MONIKER (optional):  If you provide the NODE_MONIKER, the script will initialize your node with this moniker. Additionally, an account with this name will be created or imported if you have a valid mnemonic. 
 
+Flags:
+    `--snapshot ` Allows for using a pre-built snapshot that you downloaded before running the script.
+    `--no-snapshot` If you want to skip downloading a snapshot with the script. (You will need to configure syncing manually.)
+
+```
+./install_layer.sh [NETWORK] [NODE_MONIKER] --snapshot /home/user/path/to/layer_snapshot.tar
+```

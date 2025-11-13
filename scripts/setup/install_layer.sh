@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# Check if script is run with sudo
+if [ "$EUID" -eq 0 ] || [ -n "$SUDO_USER" ]; then
+    echo "Error: This script should NOT be run with sudo or as root."
+    echo "Please run as a regular user: ./install_layer.sh <NETWORK> [OPTIONS]"
+    exit 1
+fi
+
 # Stop execution if any command fails
 set -e
 
@@ -10,11 +17,13 @@ case "$OS_TYPE" in
         OS="linux"
         SHELL_RC="$HOME/.bashrc"
         SED_INPLACE="sed -i"
+        USER_HOME="/home/$(logname)"
         ;;
     Darwin*)
         OS="mac"
         SHELL_RC="$HOME/.zshrc"
         SED_INPLACE="sed -i ''"
+        USER_HOME="/Users/$(logname)"
         ;;
     *)
         echo "Error: Unsupported operating system: $OS_TYPE"
@@ -117,8 +126,8 @@ MAINNET_KEYRING_BACKEND="test"
 PALMITO_KEYRING_BACKEND="test"
 MAINNET_PEERS="5a9db46eceb055c9238833aa54e15a2a32a09c9a@54.67.36.145:26656,f2644778a8a2ca3b55ec65f1b7799d32d4a7098e@54.149.160.93:26656,2904aa32501548e127d3198c8f5181fb4d67bbe6@18.116.23.104:26656,7fd4d34f3b19c41218027d3b91c90d073ab2ba66@54.221.149.61:26656,2b8af463a1f0e84aec6e4dbf3126edf3225df85e@13.52.231.70:26656,9358c72aa8be31ce151ef591e6ecf08d25812993@18.143.181.83:26656,cbb94e01df344fdfdee1fdf2f9bb481712e7ef8d@34.228.44.252:26656"
 PALMITO_PEERS="ac7c10dc3de67c4394271c564671eeed4ac6f0e0@34.229.148.107:26656,8d19cdf430e491d6d6106863c4c466b75a17088a@54.153.125.203:26656,c7b175a5bafb35176cdcba3027e764a0dbd0811c@34.219.95.82:26656,05105e8bb28e8c5ace1cecacefb8d4efb0338ec6@18.218.114.74:26656,705f6154c6c6aeb0ba36c8b53639a5daa1b186f6@3.80.39.230:266"
-MAINNET_LAYER_HOME="/home/$(logname)/.layer"
-PALMITO_LAYER_HOME="/home/$(logname)/.layer_palmito"
+MAINNET_LAYER_HOME="$USER_HOME/.layer"
+PALMITO_LAYER_HOME="$USER_HOME/.layer_palmito"
 
 # set cosmovisor environment variables for init command
 export DAEMON_NAME=layerd
@@ -174,14 +183,17 @@ echo "This is a quick-installer for Tellor Layer."
 echo "This script will: "
 echo "  1) download the latest layerd and cosmovisor binaries."
 echo "  2) initialize the layer node. (home dir: ~/.layer)."
-echo "  3) Create a systemd service for cosmovisor."
-echo "  4) Add cosmovisor environment variables to .bashrc."
-if [ -n "$SNAPSHOT_PATH" ]; then
-    echo "  5) Install pre-downloaded snapshot from: $SNAPSHOT_PATH"
-elif [ "$SKIP_SNAPSHOT" = true ]; then
-    echo "  5) Skip snapshot installation (you will need to configure sync yourself.)"
+if [ OS == "linux" ]; then
+    echo "  3) Add cosmovisor environment variables to .bashrc."
 else
-    echo "  5) Download and install the latest pre-built snapshot from https://layer-node.com."
+    echo "  3) Add cosmovisor environment variables to .zshrc."
+fi
+if [ -n "$SNAPSHOT_PATH" ]; then
+    echo "  4) Install pre-downloaded snapshot from: $SNAPSHOT_PATH"
+elif [ "$SKIP_SNAPSHOT" = true ]; then
+    echo "  4) Skip snapshot installation (you will need to configure sync yourself.)"
+else
+    echo "  4) Download and install the latest pre-built snapshot from https://layer-node.com."
 fi
 echo ""
 echo "--------------------------------"
@@ -229,14 +241,14 @@ sleep 1
 # Check if binary already exists and verify version
 if [ -d "$LAYERD_TAG" ] && [ -f "$LAYERD_TAG/layerd" ]; then
     echo "Binary directory $LAYERD_TAG already exists. Checking version..."
-    EXISTING_VERSION=$(cd $LAYERD_TAG && /home/$(logname)/layer/binaries/$LAYERD_TAG/layerd version --home /home/$(logname)/tmp/layerd-version-check 2>&1 | tr -d '\n')
+    EXISTING_VERSION=$(cd $LAYERD_TAG && $USER_HOME/layer/binaries/$LAYERD_TAG/layerd version --home $USER_HOME/tmp/layerd-version-check 2>&1 | tr -d '\n')
     # Normalize versions by removing 'v' prefix for comparison
     NORMALIZED_EXISTING="${EXISTING_VERSION#v}"
     NORMALIZED_REQUIRED="${LAYERD_TAG#v}"
     echo "Comparing versions: existing=$NORMALIZED_EXISTING, required=$NORMALIZED_REQUIRED"
     if [ "$NORMALIZED_EXISTING" == "$NORMALIZED_REQUIRED" ]; then
         echo "Existing binary version matches required version ($LAYERD_TAG). Skipping download."
-        rm -rf /home/$(logname)/.layer
+        rm -rf $USER_HOME/.layer
     else
         echo "Existing binary version ($EXISTING_VERSION) does not match required version ($LAYERD_TAG)."
         echo "Downloading correct version..."
@@ -244,7 +256,7 @@ if [ -d "$LAYERD_TAG" ] && [ -f "$LAYERD_TAG/layerd" ]; then
         mkdir $LAYERD_TAG && cd $LAYERD_TAG && wget https://github.com/tellor-io/layer/releases/download/$LAYERD_TAG/layer_Linux_x86_64.tar.gz
         tar -xvzf layer_Linux_x86_64.tar.gz
         rm layer_Linux_x86_64.tar.gz
-        rm -rf /home/$(logname)/.layer
+        rm -rf $USER_HOME/.layer
     fi
 else
     echo "Binary not found. Downloading layerd binary for $NETWORK..."
@@ -262,12 +274,20 @@ else
     mkdir -p ~/layer/binaries/cosmovisor && cd ~/layer/binaries/cosmovisor && wget https://github.com/cosmos/cosmos-sdk/releases/download/cosmovisor%2Fv1.3.0/cosmovisor-v1.3.0-linux-amd64.tar.gz && tar -xvzf cosmovisor-v1.3.0-linux-amd64.tar.gz && rm cosmovisor-v1.3.0-linux-amd64.tar.gz
 fi
 
-LAYERD_PATH="/home/$(logname)/layer/binaries/$LAYERD_TAG/layerd"
+LAYERD_PATH="$USER_HOME/layer/binaries/$LAYERD_TAG/layerd"
 
 # initialize layer directory
 echo "Initializing layer directory..."
-echo "Running: $LAYERD_PATH init $NODE_MONIKER --chain-id $CHAIN_ID --home $LAYER_HOME"
-$LAYERD_PATH init $NODE_MONIKER --chain-id $CHAIN_ID --home $LAYER_HOME
+
+# Set default NODE_MONIKER if not provided
+if [ -z "$NODE_MONIKER" ]; then
+    echo "Running: $LAYERD_PATH init layer --chain-id $CHAIN_ID --home $LAYER_HOME"
+    $LAYERD_PATH init layer --chain-id $CHAIN_ID --home $LAYER_HOME
+    echo "No node moniker provided, using default 'layer'..."
+else
+    echo "Running: $LAYERD_PATH init $NODE_MONIKER --chain-id $CHAIN_ID --home $LAYER_HOME"
+    $LAYERD_PATH init $NODE_MONIKER --chain-id $CHAIN_ID --home $LAYER_HOME
+fi
 
 # check if RPC node is running and verify node id
 export LAYER_NODE_ID=$($LAYERD_PATH status --node $LAYER_NODE_URL | jq -r '.node_info.id')
@@ -386,7 +406,8 @@ elif [ -n "$SNAPSHOT_PATH" ]; then
     fi
 
     # Create temporary extraction directory
-    TEMP_DIR="/home/$(logname)/tmp/layer_snapshot_extract"
+    TEMP_DIR="$USER_HOME/tmp/layer_snapshot_extract"
+    VERSION_CHECK_DIR="$USER_HOME/tmp/layerd-version-check"
     echo "Creating temporary extraction directory: $TEMP_DIR"
     if ! mkdir -p "$TEMP_DIR"; then
         echo "Error: Failed to create temporary extraction directory"
@@ -399,7 +420,7 @@ elif [ -n "$SNAPSHOT_PATH" ]; then
     if ! tar -xf "$SNAPSHOT_PATH" --checkpoint=9999 --checkpoint-action=dot; then
         echo ""
         echo "Error: Failed to extract snapshot"
-        rm -rf "$TEMP_DIR"
+        rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
         exit 1
     fi
     echo ""
@@ -411,13 +432,13 @@ elif [ -n "$SNAPSHOT_PATH" ]; then
         echo "Blockchain data successfully installed"
     else
         echo "Error: Expected .layer_snapshot/data directory not found in extracted snapshot"
-        rm -rf "$TEMP_DIR"
+        rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
         exit 1
     fi
     
     # Clean up temporary files
     echo "Cleaning up temporary files..."
-    rm -rf "$TEMP_DIR"
+    rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
     echo "Snapshot installation complete!"
 else
     # Default behavior: Download and install the latest pre-built snapshot from https://layer-node.com
@@ -442,7 +463,7 @@ else
     echo "Latest snapshot found: $SNAPSHOT_FILE"
     
     # Create temporary download directory
-    TEMP_DIR="/home/$(logname)/tmp/layer_snapshot_download"
+    TEMP_DIR="$USER_HOME/tmp/layer_snapshot_download"
     echo "Creating temporary download directory: $TEMP_DIR"
     if ! mkdir -p "$TEMP_DIR"; then
         echo "Error: Failed to create temporary download directory"
@@ -453,7 +474,7 @@ else
     echo "Downloading snapshot (this may take a while, file size is ~40-75 GB)..."
     if ! curl -L -o "$TEMP_DIR/$SNAPSHOT_FILE" "https://layer-node.com/download/$SNAPSHOT_FILE"; then
         echo "Error: Failed to download snapshot"
-        rm -rf "$TEMP_DIR"
+        rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
         exit 1
     fi
     
@@ -475,13 +496,13 @@ else
         echo "Blockchain data successfully installed"
     else
         echo "Error: Expected .layer_snapshot/data directory not found in extracted snapshot"
-        rm -rf "$TEMP_DIR"
+        rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
         exit 1
     fi
     
     # Clean up temporary files
     echo "Cleaning up temporary files..."
-    rm -rf "$TEMP_DIR"
+    rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
     echo "Snapshot installation complete!"
 fi
 
@@ -511,7 +532,7 @@ echo "Environment variables added successfully."
 # Adding binaries to cosmovisor
 echo ""
 echo "Initializing cosmovisor with layerd binary..."
-if /home/$(logname)/layer/binaries/cosmovisor/cosmovisor init /home/$(logname)/layer/binaries/$LAYERD_TAG/layerd; then
+if $USER_HOME/layer/binaries/cosmovisor/cosmovisor init $USER_HOME/layer/binaries/$LAYERD_TAG/layerd; then
     echo "Cosmovisor initialized successfully."
 else
     echo "Warning: Cosmovisor initialization failed, but continuing..."
@@ -525,7 +546,7 @@ if [ "$OS" == "linux" ]; then
     echo "========================================"
     echo ""
     sleep 1
-    SERVICE_FILE_PATH="/home/$(logname)/layer/layer.service"
+    SERVICE_FILE_PATH="$USER_HOME/layer/layer.service"
 
     # Determine the service file content based on whether NODE_MONIKER is set
     if [ -z "$NODE_MONIKER" ]; then
@@ -538,8 +559,8 @@ After=network-online.target
 [Service]
 User=$(logname)
 Group=$(logname)
-WorkingDirectory=/home/$(logname)/layer
-ExecStart=/home/$(logname)/layer/binaries/cosmovisor/cosmovisor run start --home $LAYER_HOME --keyring-backend="$KEYRING_BACKEND" --api.enable --api.swagger
+WorkingDirectory=$USER_HOME/layer
+ExecStart=$USER_HOME/layer/binaries/cosmovisor/cosmovisor run start --home $LAYER_HOME --keyring-backend="$KEYRING_BACKEND" --api.enable --api.swagger
 Restart=always
 RestartSec=10
 Environment="DAEMON_NAME=layerd"
@@ -563,8 +584,8 @@ After=network-online.target
 [Service]
 User=$(logname)
 Group=$(logname)
-WorkingDirectory=/home/$(logname)/layer
-ExecStart=/home/$(logname)/layer/binaries/cosmovisor/cosmovisor run start --home $LAYER_HOME --keyring-backend="$KEYRING_BACKEND" --key-name="$NODE_MONIKER" --api.enable --api.swagger
+WorkingDirectory=$USER_HOME/layer
+ExecStart=$USER_HOME/layer/binaries/cosmovisor/cosmovisor run start --home $LAYER_HOME --keyring-backend="$KEYRING_BACKEND" --key-name="$NODE_MONIKER" --api.enable --api.swagger
 Restart=always
 RestartSec=10
 Environment="DAEMON_NAME=layerd"
