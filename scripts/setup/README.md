@@ -20,7 +20,7 @@ chmod +x install_layer.sh
 
 2) Run the script:
 
-```
+```bash
 ./install_layer.sh [NETWORK] [NODE_MONIKER]
 ```
 Arguments:
@@ -28,9 +28,15 @@ Arguments:
     NODE_MONIKER (optional):  If you provide the NODE_MONIKER, the script will initialize your node with this moniker. Additionally, an account with this name will be created or imported if you have a valid mnemonic. 
 
 Flags:
-    `--snapshot ` Allows for using a pre-built snapshot that you downloaded before running the script.
-    `--no-snapshot` If you want to skip downloading a snapshot with the script. (You will need to configure syncing manually.)
 
+`--snapshot ` Allows for using a pre-built snapshot that you downloaded before running the script.
+
+```bash
+./install_layer.sh [NETWORK] --snapshot /home/user/path/to/layer_snapshot.tar
 ```
-./install_layer.sh [NETWORK] [NODE_MONIKER] --snapshot /home/user/path/to/layer_snapshot.tar
+
+`--no-snapshot` If you want to skip downloading a snapshot with the script. (You will need to configure syncing manually.)
+
+```bash
+./install_layer.sh [NETWORK] --no-snapshot
 ```
