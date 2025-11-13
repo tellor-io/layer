@@ -2,12 +2,13 @@
 
 install_layer.sh is a comprehensive installation script that can help with setting up new nodes. 
 
-Here is a breakdown of what this script will do by default:
-1) Download the latest layerd and cosmovisor binaries to `~/layer`.
-2) initialize and configure the layer node in `~/.layer` or `~/.layer_palmito`
-3) Add cosmovisor variables to .bashrc (or .zshrc if mac).
-4) Download and install the latest pre-built snapshot from layer-node.com.
-5) (linux only) Export an example systemd service file with example commands for installation.
+Here is a breakdown of what this script does:
+1) Detect platform (linux or mac. Use WSL on Windows.) 
+2) Download the latest layerd and cosmovisor binaries to `~/layer`.
+3) initialize and configure the layer node in `~/.layer` or `~/.layer_palmito`
+4) Add cosmovisor variables to .bashrc (or .zshrc if mac).
+5) Download and install the latest pre-built snapshot from layer-node.com.
+6) (linux only) Export an example systemd service file with example commands for installation.
 
 ## Usage
 
