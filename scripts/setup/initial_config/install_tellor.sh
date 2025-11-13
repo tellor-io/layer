@@ -3,6 +3,27 @@
 # Stop execution if any command fails
 set -e
 
+# Detect operating system
+OS_TYPE=$(uname -s)
+case "$OS_TYPE" in
+    Linux*)
+        OS="linux"
+        SHELL_RC="$HOME/.bashrc"
+        SED_INPLACE="sed -i"
+        ;;
+    Darwin*)
+        OS="mac"
+        SHELL_RC="$HOME/.zshrc"
+        SED_INPLACE="sed -i ''"
+        ;;
+    *)
+        echo "Error: Unsupported operating system: $OS_TYPE"
+        echo "This script only supports Linux and macOS"
+        exit 1
+        ;;
+esac
+
+echo "Detected operating system: $OS"
 
 # Initialize variables
 SNAPSHOT_PATH=""
@@ -146,7 +167,6 @@ echo "
    ██║   ██╔══╝  ██║     ██║     ██║   ██║██╔══██╗
    ██║   ███████╗███████╗███████╗╚██████╔╝██║  ██║
    ╚═╝   ╚══════╝╚══════╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝
-                                                                   
 "
 echo "Node Quick-Installer for Linux"
 echo "--------------------------------"
@@ -170,6 +190,7 @@ echo "Network: $NETWORK"
 echo "Layer Node URL: $LAYER_NODE_URL"
 echo "Keyring Backend: $KEYRING_BACKEND"
 echo "Layer Home: $LAYER_HOME"
+echo "layerd binary version: $LAYERD_TAG"
 echo ""
 echo "--------------------------------"
 while true; do
@@ -198,10 +219,17 @@ done
 echo "Checking for layerd binary for $NETWORK..."
 mkdir -p ~/layer/binaries && cd ~/layer/binaries
 
+echo ""
+echo "================================"
+echo "  GATHERING BINARIES..."
+echo "================================"
+echo ""
+sleep 1
+
 # Check if binary already exists and verify version
 if [ -d "$LAYERD_TAG" ] && [ -f "$LAYERD_TAG/layerd" ]; then
     echo "Binary directory $LAYERD_TAG already exists. Checking version..."
-    EXISTING_VERSION=$(cd $LAYERD_TAG && ./layerd version --home /tmp/layerd-version-check 2>&1 | tr -d '\n')
+    EXISTING_VERSION=$(cd $LAYERD_TAG && /home/$(logname)/layer/binaries/$LAYERD_TAG/layerd version --home /home/$(logname)/tmp/layerd-version-check 2>&1 | tr -d '\n')
     # Normalize versions by removing 'v' prefix for comparison
     NORMALIZED_EXISTING="${EXISTING_VERSION#v}"
     NORMALIZED_REQUIRED="${LAYERD_TAG#v}"
@@ -250,27 +278,34 @@ if [ "$LAYER_NODE_ID" != "$RPC_NODE_ID" ]; then
     exit 1
 fi
 
+echo ""
+echo "================================"
+echo "  INITIALIZING NODE CONFIGS..."
+echo "================================"
+echo ""
+sleep 1
+
 # change denom, chain id, and timeout commit in config files
 echo "Changing configs for $NETWORK..."
-sed -i 's/[0-9]\+stake/0loya/g' $LAYER_HOME/config/app.toml
-sed -i 's/^chain-id = .*$/chain-id = "tellor-1"/g' $LAYER_HOME/config/client.toml
-sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/' $LAYER_HOME/config/config.toml
-sed -i 's/^cors_allowed_origins = \[\]/cors_allowed_origins = \["\*"\]/g' $LAYER_HOME/config/config.toml
-sed -i 's/^keyring-backend = "os"/keyring-backend = "'$KEYRING_BACKEND'"/g' $LAYER_HOME/config/client.toml
-sed -i 's/persistent_peers = ""/persistent_peers = "'$PEERS'"/g' $LAYER_HOME/config/config.toml
-# sed -i 's/^send_rate = .*/send_rate = 10240000/' $LAYER_HOME/config/config.toml
-# sed -i 's/^recv_rate = .*/recv_rate = 10240000/' $LAYER_HOME/config/config.toml
+$SED_INPLACE 's/[0-9]\+stake/0loya/g' $LAYER_HOME/config/app.toml
+$SED_INPLACE 's/^chain-id = .*$/chain-id = "tellor-1"/g' $LAYER_HOME/config/client.toml
+$SED_INPLACE 's/timeout_commit = "5s"/timeout_commit = "1s"/' $LAYER_HOME/config/config.toml
+$SED_INPLACE 's/^cors_allowed_origins = \[\]/cors_allowed_origins = \["\*"\]/g' $LAYER_HOME/config/config.toml
+$SED_INPLACE 's/^keyring-backend = "os"/keyring-backend = "'$KEYRING_BACKEND'"/g' $LAYER_HOME/config/client.toml
+$SED_INPLACE 's/persistent_peers = ""/persistent_peers = "'$PEERS'"/g' $LAYER_HOME/config/config.toml
+# $SED_INPLACE 's/^send_rate = .*/send_rate = 10240000/' $LAYER_HOME/config/config.toml
+# $SED_INPLACE 's/^recv_rate = .*/recv_rate = 10240000/' $LAYER_HOME/config/config.toml
 
 # change snapshot configs to match network normal
 # This make statesync work better accross the whole network..
-sed -i 's/^snapshot-interval = 0/snapshot-interval = 32000/g' $LAYER_HOME/config/app.toml
-sed -i 's/^snapshot-keep-recent = 2/snapshot-keep-recent = 5/g' $LAYER_HOME/config/app.toml
-sed -i 's/^snapshot-interval = 32000/snapshot-interval = 32000/g' $LAYER_HOME/config/app.toml
-sed -i 's/^snapshot-keep-recent = 5/snapshot-keep-recent = 5/g' $LAYER_HOME/config/app.toml
+$SED_INPLACE 's/^snapshot-interval = 0/snapshot-interval = 32000/g' $LAYER_HOME/config/app.toml
+$SED_INPLACE 's/^snapshot-keep-recent = 2/snapshot-keep-recent = 5/g' $LAYER_HOME/config/app.toml
+$SED_INPLACE 's/^snapshot-interval = 32000/snapshot-interval = 32000/g' $LAYER_HOME/config/app.toml
+$SED_INPLACE 's/^snapshot-keep-recent = 5/snapshot-keep-recent = 5/g' $LAYER_HOME/config/app.toml
 
 # open up API and RPC to outside traffic
-sed -i 's/^address = "tcp:\/\/localhost:1317"/address = "tcp:\/\/0.0.0.0:1317"/g' $LAYER_HOME/config/app.toml
-sed -i 's/^laddr = "tcp:\/\/127.0.0.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/g' $LAYER_HOME/config/config.toml
+$SED_INPLACE 's/^address = "tcp:\/\/localhost:1317"/address = "tcp:\/\/0.0.0.0:1317"/g' $LAYER_HOME/config/app.toml
+$SED_INPLACE 's/^laddr = "tcp:\/\/127.0.0.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/g' $LAYER_HOME/config/config.toml
 
 # Replace auto-generated genesis file with genesis from RPC
 rm -f $LAYER_HOME/config/genesis.json
@@ -284,12 +319,46 @@ fi
 if [ -z "$NODE_MONIKER" ]; then
     echo "Skipping account setup..."
 else
-    echo "Creating Tellor account for $NODE_MONIKER..."
-    $LAYERD_PATH keys add $NODE_MONIKER --keyring-backend $KEYRING_BACKEND
-    echo "--------------------------------"
-    echo "Please save your mnemonic in a secure location!"
-    read -p "Press Enter when you have it written down..."
-    echo "--------------------------------"
+    echo ""
+    echo "================================"
+    echo "    CREATING TELLOR ACCOUNT..."
+    echo "================================"
+    echo ""
+    sleep 1
+    
+    # Ask user if they want to import an existing mnemonic
+    while true; do
+        read -p "Do you have an existing mnemonic you would like to import? (y/n): " import_choice
+        
+        case "$import_choice" in
+            y|Y|yes|Yes|YES)
+                echo ""
+                $LAYERD_PATH keys add $NODE_MONIKER --recover --keyring-backend $KEYRING_BACKEND
+                echo "--------------------------------"
+                echo "Account successfully imported!"
+                echo "--------------------------------"
+                break
+                ;;
+            n|N|no|No|NO)
+                echo ""
+                echo "Creating new Tellor account for $NODE_MONIKER..."
+                $LAYERD_PATH keys add $NODE_MONIKER --keyring-backend $KEYRING_BACKEND
+                echo "--------------------------------"
+                echo "Please save your mnemonic in a secure location!"
+                read -p "Press Enter when you have it written down..."
+                echo "--------------------------------"
+                break
+                ;;
+            "")
+                echo "Please enter y (yes) or n (no)."
+                echo ""
+                ;;
+            *)
+                echo "Please enter y (yes) or n (no)."
+                echo ""
+                ;;
+        esac
+    done
 fi
 
 # Handle snapshot installation based on flags
@@ -297,6 +366,12 @@ if [ "$SKIP_SNAPSHOT" = true ]; then
     echo "Skipping snapshot installation (--no-snapshot flag provided)"
     echo "Note: Your node will need to sync from genesis or use state sync"
 elif [ -n "$SNAPSHOT_PATH" ]; then
+    echo ""
+    echo "================================"
+    echo "    INSTALLING SNAPSHOT..."
+    echo "================================"
+    echo ""
+    sleep 1
     echo "Using pre-downloaded snapshot from: $SNAPSHOT_PATH"
 
     # Validate snapshot file exists
@@ -319,7 +394,7 @@ elif [ -n "$SNAPSHOT_PATH" ]; then
     fi
 
     # Extract the snapshot
-    echo "Extracting snapshot..."
+    echo "Extracting snapshot (this may take a while, file size ~40-80 GB)..."
     cd "$TEMP_DIR"
     if ! tar -xf "$SNAPSHOT_PATH" --checkpoint=9999 --checkpoint-action=dot; then
         echo ""
@@ -385,7 +460,7 @@ else
     # Extract the snapshot
     echo "Extracting snapshot..."
     cd "$TEMP_DIR"
-    if ! tar -xf "$SNAPSHOT_FILE" --checkpoint=1000 --checkpoint-action=dot; then
+    if ! tar -xf "$SNAPSHOT_FILE" --checkpoint=5000 --checkpoint-action=dot; then
         echo ""
         echo "Error: Failed to extract snapshot"
         rm -rf "$TEMP_DIR"
@@ -410,29 +485,52 @@ else
     echo "Snapshot installation complete!"
 fi
 
-# Add these lines to .bashrc
-echo "Adding cosmovisor environment variables to .bashrc..."
+echo ""
+echo "================================"
+echo "    CONFIGURING COSMOVISOR..."
+echo "================================"
+echo ""
+sleep 1
 
-echo "export DAEMON_NAME=layerd" >> ~/.bashrc
-echo "export DAEMON_HOME=$HOME/.layer" >> ~/.bashrc
-echo "export DAEMON_RESTART_AFTER_UPGRADE=true" >> ~/.bashrc
-echo "export DAEMON_ALLOW_DOWNLOAD_BINARIES=false" >> ~/.bashrc
-echo "export DAEMON_POLL_INTERVAL=300ms" >> ~/.bashrc
-echo "export UNSAFE_SKIP_BACKUP=true" >> ~/.bashrc
-echo "export DAEMON_PREUPGRADE_MAX_RETRIES=0" >> ~/.bashrc
+# Add environment variables to shell RC file
+if [ "$OS" == "linux" ]; then
+    echo "Adding cosmovisor environment variables to .bashrc..."
+else
+    echo "Adding cosmovisor environment variables to .zshrc..."
+fi
+
+echo "export DAEMON_NAME=layerd" >> $SHELL_RC
+echo "export DAEMON_HOME=$HOME/.layer" >> $SHELL_RC
+echo "export DAEMON_RESTART_AFTER_UPGRADE=true" >> $SHELL_RC
+echo "export DAEMON_ALLOW_DOWNLOAD_BINARIES=false" >> $SHELL_RC
+echo "export DAEMON_POLL_INTERVAL=300ms" >> $SHELL_RC
+echo "export UNSAFE_SKIP_BACKUP=true" >> $SHELL_RC
+echo "export DAEMON_PREUPGRADE_MAX_RETRIES=0" >> $SHELL_RC
+echo "Environment variables added successfully."
 
 # Adding binaries to cosmovisor
-echo "Adding current layerd binary to cosmovisor..."
-/home/$(logname)/layer/binaries/cosmovisor/cosmovisor init /home/$(logname)/layer/binaries/$LAYERD_TAG/layerd
+echo ""
+echo "Initializing cosmovisor with layerd binary..."
+if /home/$(logname)/layer/binaries/cosmovisor/cosmovisor init /home/$(logname)/layer/binaries/$LAYERD_TAG/layerd; then
+    echo "Cosmovisor initialized successfully."
+else
+    echo "Warning: Cosmovisor initialization failed, but continuing..."
+fi
 
-# Create example systemd service file
-echo "Creating example systemd service file..."
-SERVICE_FILE_PATH="/home/$(logname)/layer/layer.service"
+# Create systemd service file (Linux only)
+if [ "$OS" == "linux" ]; then
+    echo ""
+    echo "========================================"
+    echo " CREATING EXAMPLE SYSTEMD SERVICE FILE"
+    echo "========================================"
+    echo ""
+    sleep 1
+    SERVICE_FILE_PATH="/home/$(logname)/layer/layer.service"
 
-# Determine the service file content based on whether NODE_MONIKER is set
-if [ -z "$NODE_MONIKER" ]; then
-    # No NODE_MONIKER, so don't include --key-name flag
-    cat > "$SERVICE_FILE_PATH" << EOF
+    # Determine the service file content based on whether NODE_MONIKER is set
+    if [ -z "$NODE_MONIKER" ]; then
+        # No NODE_MONIKER, so don't include --key-name flag
+        cat > "$SERVICE_FILE_PATH" << EOF
 [Unit]
 Description=Cosmovisor Layer Node Service
 After=network-online.target
@@ -455,9 +553,9 @@ Environment="DAEMON_PREUPGRADE_MAX_RETRIES=0"
 [Install]
 WantedBy=multi-user.target
 EOF
-else
-    # Include --key-name flag with NODE_MONIKER
-    cat > "$SERVICE_FILE_PATH" << EOF
+    else
+        # Include --key-name flag with NODE_MONIKER
+        cat > "$SERVICE_FILE_PATH" << EOF
 [Unit]
 Description=Cosmovisor Layer Node Service
 After=network-online.target
@@ -480,31 +578,37 @@ Environment="DAEMON_PREUPGRADE_MAX_RETRIES=0"
 [Install]
 WantedBy=multi-user.target
 EOF
+    fi
+
+    echo ""
+    echo "================================"
+    echo "SYSTEMD SERVICE FILE CREATED"
+    echo "================================"
+    echo ""
+    echo "An example systemd service file has been created at:"
+    echo "  $SERVICE_FILE_PATH"
+    echo ""
+    echo "To install and activate it as a system service, run:"
+    echo "  sudo cp $SERVICE_FILE_PATH /etc/systemd/system/layer.service"
+    echo "  sudo systemctl daemon-reload"
+    echo "  sudo systemctl enable layer.service"
+    echo "  sudo systemctl start layer.service"
+    echo ""
+    echo "To check the service status:"
+    echo "  sudo systemctl status layer.service"
+    echo ""
+    echo "To view logs:"
+    echo "  sudo journalctl -fu layer.service"
+    echo ""
+    echo "================================"
 fi
 
-echo ""
-echo "================================"
-echo "SYSTEMD SERVICE FILE CREATED"
-echo "================================"
-echo ""
-echo "An example systemd service file has been created at:"
-echo "  $SERVICE_FILE_PATH"
-echo ""
-echo "To install and activate it as a system service, run:"
-echo "  sudo cp $SERVICE_FILE_PATH /etc/systemd/system/layer.service"
-echo "  sudo systemctl daemon-reload"
-echo "  sudo systemctl enable layer.service"
-echo "  sudo systemctl start layer.service"
-echo ""
-echo "To check the service status:"
-echo "  sudo systemctl status layer.service"
-echo ""
-echo "To view logs:"
-echo "  sudo journalctl -fu layer.service"
-echo ""
-echo "================================"
-
 echo "All done!"
-echo "If you don't want to run the node as a system service, you can run it manually:"
+echo "To start the node manually (or if on macos):"
 echo "  ./layerd start --home $LAYER_HOME --keyring-backend $KEYRING_BACKEND --api.enable --api.swagger"
+echo ""
+
+echo "================================"
+echo "    NODE SETUP COMPLETE :)"
+echo "================================"
 echo ""
