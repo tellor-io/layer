@@ -203,7 +203,8 @@ Check out our issues log here on Github or feel free to reach out anytime [info@
 
 - [Official Website](https://tellor.io/)
 - [Discord](https://discord.gg/n7drGjh)
-- [Twitter](https://twitter.com/wearetellor)
+- [X/Twitter](https://x.com/wearetellor)
+- [YouTube](https://www.youtube.com/tellor)
 
 ## Copyright<a name="copyright"> </a>  
 
