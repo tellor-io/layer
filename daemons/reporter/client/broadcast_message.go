@@ -77,15 +77,24 @@ func (c *Client) GenerateDepositMessages(ctx context.Context) error {
 // }
 
 func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []byte, querymeta *oracletypes.QueryMeta) error {
-	value, err := c.median(qd)
+	encodedValue, rawPrice, err := c.median(qd)
 	if err != nil {
 		return fmt.Errorf("error getting median from median client': %w", err)
+	}
+
+	// Check price guard before submitting
+	// rawPrice is 0 for custom queries
+	if c.PriceGuard.enabled && rawPrice > 0 {
+		shouldSubmit, reason := c.PriceGuard.ShouldSubmit(qd, rawPrice)
+		if !shouldSubmit {
+			return fmt.Errorf("price guard blocked submission: %s", reason)
+		}
 	}
 
 	msg := &oracletypes.MsgSubmitValue{
 		Creator:   c.accAddr.String(),
 		QueryData: qd,
-		Value:     value,
+		Value:     encodedValue,
 	}
 
 	c.txChan <- TxChannelInfo{
@@ -99,6 +108,11 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 	mutex.Lock()
 	commitedIds[querymeta.Id] = true
 	mutex.Unlock()
+
+	// Update price guard with this price for next comparison
+	if c.PriceGuard.enabled && rawPrice > 0 {
+		c.PriceGuard.UpdateLastPrice(qd, rawPrice)
+	}
 
 	c.LogProcessStats()
 
