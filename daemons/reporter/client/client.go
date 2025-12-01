@@ -177,6 +177,16 @@ func (c *Client) Start(
 
 	c.PriceGuard = NewPriceGuard(priceGuardThreshold, priceGuardMaxAge, priceGuardEnabled, c.logger)
 
+	// Log price guard configuration
+	if priceGuardEnabled {
+		c.logger.Info("Price guard enabled",
+			"threshold", fmt.Sprintf("%.1f%%", priceGuardThreshold*100),
+			"max_age", priceGuardMaxAge.String(),
+		)
+	} else {
+		c.logger.Info("Price guard disabled")
+	}
+
 	c.cosmosCtx = c.cosmosCtx.WithChainID(chainId)
 	c.cosmosCtx = c.cosmosCtx.WithHomeDir(homeDir)
 	c.cosmosCtx = c.cosmosCtx.WithKeyringDir(homeDir)
