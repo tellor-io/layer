@@ -36,12 +36,7 @@ func NewPriceGuard(globalThreshold float64, maxAge time.Duration, enabled bool, 
 	}
 }
 
-// SetQueryThreshold sets a specific threshold for a query ID (optional, for per-query overrides)
-func (pg *PriceGuard) SetQueryThreshold(queryIdHex string, threshold float64) {
-	pg.mu.Lock()
-	defer pg.mu.Unlock()
-	pg.queryThresholds[queryIdHex] = threshold
-}
+// TODO: SetQueryThreshold, set a specific threshold for a query ID (optional, for per-query overrides)
 
 // ShouldSubmit checks if the new price is within acceptable threshold
 // Returns (shouldSubmit, reason)

@@ -86,6 +86,8 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 	// rawPrice is 0 for custom queries
 	if c.PriceGuard.enabled && rawPrice > 0 {
 		shouldSubmit, reason := c.PriceGuard.ShouldSubmit(qd, rawPrice)
+		// Always update baseline even when blocked to prevent stuck state
+		c.PriceGuard.UpdateLastPrice(qd, rawPrice)
 		if !shouldSubmit {
 			return fmt.Errorf("price guard blocked submission: %s", reason)
 		}
@@ -108,11 +110,6 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 	mutex.Lock()
 	commitedIds[querymeta.Id] = true
 	mutex.Unlock()
-
-	// Update price guard with this price for next comparison
-	if c.PriceGuard.enabled && rawPrice > 0 {
-		c.PriceGuard.UpdateLastPrice(qd, rawPrice)
-	}
 
 	c.LogProcessStats()
 
