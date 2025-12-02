@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
@@ -66,9 +65,9 @@ func init() {
 	rootCmd.Flags().IntVar(&prometheusPort, "prometheus-port", 26661, "Port to serve Prometheus metrics on (default 26661). Applicable only if telemetry is enabled in app.toml.")
 
 	// Price Guard Flags
-	rootCmd.Flags().Bool("price-guard-enabled", false, "Enable price guard to prevent reporting prices that change dramatically")
-	rootCmd.Flags().Float64("price-guard-threshold", 0.5, "Price change threshold (0.5 = 50%) - submissions exceeding this will be blocked")
-	rootCmd.Flags().Duration("price-guard-max-age", 30*time.Minute, "Maximum age of stored price before treating as expired (e.g. 1m, 1h)")
+	rootCmd.Flags().Bool("price-guard-enabled", false, "Enable price guard to prevent reporting prices that differ from last reported price by a given threshold")
+	rootCmd.Flags().Float64("price-guard-threshold", 0, "Price change threshold (0.5 = 50%) - submissions exceeding this will be blocked")
+	rootCmd.Flags().Duration("price-guard-max-age", 0, "Maximum age of stored price before treating as expired (e.g. 1m, 1h)")
 
 	// Marking required flags
 	if err := rootCmd.MarkFlagRequired(flags.FlagHome); err != nil {
