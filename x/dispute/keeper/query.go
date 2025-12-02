@@ -15,6 +15,7 @@ import (
 	"cosmossdk.io/store/prefix"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -272,4 +273,37 @@ func (k Querier) VoteResult(ctx context.Context, req *types.QueryDisputeVoteResu
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &types.QueryDisputeVoteResultResponse{VoteResult: vote.VoteResult}, nil
+}
+
+func (k Querier) DisputeFeePayers(ctx context.Context, req *types.QueryDisputeFeePayersRequest) (*types.QueryDisputeFeePayersResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	payers := make([]*types.DisputeFeePayerInfo, 0)
+	rng := collections.NewPrefixedPairRange[uint64, []byte](req.DisputeId)
+	iter, err := k.Keeper.DisputeFeePayer.Iterate(ctx, rng)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		key, err := iter.Key()
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		value, err := iter.Value()
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		payerAddrBytes := key.K2()
+		payerAddr := sdk.AccAddress(payerAddrBytes)
+		payers = append(payers, &types.DisputeFeePayerInfo{
+			PayerAddress: payerAddr.String(),
+			PayerInfo:    value,
+		})
+	}
+
+	return &types.QueryDisputeFeePayersResponse{Payers: payers}, nil
 }

@@ -47,6 +47,11 @@ service Query {
   rpc VoteResult(QueryDisputeVoteResultRequest) returns (QueryDisputeVoteResultResponse) {
     option (google.api.http).get = "/tellor-io/layer/dispute/vote-result/{dispute_id}";
   }
+
+  // DisputeFeePayers queries all fee payers for a dispute
+  rpc DisputeFeePayers(QueryDisputeFeePayersRequest) returns (QueryDisputeFeePayersResponse) {
+    option (google.api.http).get = "/tellor-io/layer/dispute/dispute-fee-payers/{dispute_id}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -131,4 +136,17 @@ message QueryDisputeVoteResultRequest {
 
 message QueryDisputeVoteResultResponse {
   VoteResult vote_result = 1;
+}
+
+message QueryDisputeFeePayersRequest {
+  uint64 dispute_id = 1;
+}
+
+message DisputeFeePayerInfo {
+  string payer_address = 1;
+  PayerInfo payer_info = 2 [(gogoproto.nullable) = false];
+}
+
+message QueryDisputeFeePayersResponse {
+  repeated DisputeFeePayerInfo payers = 1;
 }

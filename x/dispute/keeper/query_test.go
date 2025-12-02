@@ -367,3 +367,79 @@ func (s *KeeperTestSuite) TestTeamVoteQuery() {
 	require.Equal(res.TeamVote.ReporterPower, math.NewInt(0))
 	require.Equal(res.TeamVote.RewardClaimed, false)
 }
+
+func (s *KeeperTestSuite) TestDisputeFeePayersQuery() {
+	require := s.Require()
+	k := s.disputeKeeper
+	q := keeper.NewQuerier(k)
+	require.NotNil(q)
+	ctx := s.ctx
+
+	payer1 := sdk.AccAddress([]byte("payer1_address"))
+	payer2 := sdk.AccAddress([]byte("payer2_address"))
+	payer3 := sdk.AccAddress([]byte("payer3_address"))
+	payer4 := sdk.AccAddress([]byte("payer4_address"))
+
+	// payer1 pays 1000 loya for dispute 1
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(1), payer1.Bytes()), types.PayerInfo{
+		Amount:   math.NewInt(1000),
+		FromBond: false,
+	}))
+
+	// payers 2,3,4 pay for dispute 2
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(2), payer2.Bytes()), types.PayerInfo{
+		Amount:   math.NewInt(500),
+		FromBond: true,
+	}))
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(2), payer3.Bytes()), types.PayerInfo{
+		Amount:   math.NewInt(750),
+		FromBond: false,
+	}))
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(2), payer4.Bytes()), types.PayerInfo{
+		Amount:   math.NewInt(250),
+		FromBond: true,
+	}))
+
+	// nil request
+	_, err := q.DisputeFeePayers(ctx, nil)
+	require.Error(err)
+
+	// Query dispute 1 - should have 1 payer
+	res1, err := q.DisputeFeePayers(ctx, &types.QueryDisputeFeePayersRequest{DisputeId: 1})
+	require.NoError(err)
+	require.NotNil(res1)
+	require.Len(res1.Payers, 1)
+	require.Equal(payer1.String(), res1.Payers[0].PayerAddress)
+	require.Equal(math.NewInt(1000), res1.Payers[0].PayerInfo.Amount)
+	require.False(res1.Payers[0].PayerInfo.FromBond)
+
+	// Query dispute 2 - should have 3 payers
+	res2, err := q.DisputeFeePayers(ctx, &types.QueryDisputeFeePayersRequest{DisputeId: 2})
+	require.NoError(err)
+	require.NotNil(res2)
+	require.Len(res2.Payers, 3)
+
+	// Verify all three payers are present
+	payerAddresses := make(map[string]types.PayerInfo)
+	for _, payer := range res2.Payers {
+		payerAddresses[payer.PayerAddress] = payer.PayerInfo
+	}
+
+	require.Contains(payerAddresses, payer2.String())
+	require.Equal(math.NewInt(500), payerAddresses[payer2.String()].Amount)
+	require.True(payerAddresses[payer2.String()].FromBond)
+
+	require.Contains(payerAddresses, payer3.String())
+	require.Equal(math.NewInt(750), payerAddresses[payer3.String()].Amount)
+	require.False(payerAddresses[payer3.String()].FromBond)
+
+	require.Contains(payerAddresses, payer4.String())
+	require.Equal(math.NewInt(250), payerAddresses[payer4.String()].Amount)
+	require.True(payerAddresses[payer4.String()].FromBond)
+
+	// Query non-existent dispute - should return empty list
+	res3, err := q.DisputeFeePayers(ctx, &types.QueryDisputeFeePayersRequest{DisputeId: 999})
+	require.NoError(err)
+	require.NotNil(res3)
+	require.Len(res3.Payers, 0)
+}
