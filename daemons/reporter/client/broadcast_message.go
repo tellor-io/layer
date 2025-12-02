@@ -89,7 +89,23 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 		// Always update baseline even when blocked to prevent stuck state
 		c.PriceGuard.UpdateLastPrice(qd, rawPrice)
 		if !shouldSubmit {
-			return fmt.Errorf("price guard blocked submission: %s", reason)
+			commitedIds[querymeta.Id] = true
+			queryId := utils.QueryIDFromData(qd)
+			querydatastr := fmt.Sprintf("%x", qd)
+
+			// Try to find the asset pair from market params
+			pair := ""
+			for _, marketParam := range c.MarketParams {
+				if marketParam.QueryData == querydatastr {
+					pair = marketParam.Pair
+					break
+				}
+			}
+
+			if pair != "" {
+				return fmt.Errorf("price guard blocked submission for %s (queryId: %x): %s", pair, queryId, reason)
+			}
+			return fmt.Errorf("price guard blocked submission for queryId %x: %s", queryId, reason)
 		}
 	}
 
