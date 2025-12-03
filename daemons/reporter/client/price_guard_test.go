@@ -9,7 +9,7 @@ import (
 
 func TestPriceGuard_FirstSubmission(t *testing.T) {
 	logger := log.NewNopLogger()
-	pg := NewPriceGuard(0.5, 30*time.Minute, true, logger)
+	pg := NewPriceGuard(0.5, 30*time.Minute, true, false, logger)
 
 	queryData := []byte("test_query_data")
 
@@ -22,7 +22,7 @@ func TestPriceGuard_FirstSubmission(t *testing.T) {
 
 func TestPriceGuard_WithinThreshold(t *testing.T) {
 	logger := log.NewNopLogger()
-	pg := NewPriceGuard(0.5, 30*time.Minute, true, logger)
+	pg := NewPriceGuard(0.5, 30*time.Minute, true, false, logger)
 
 	queryData := []byte("test_query_data")
 
@@ -39,7 +39,7 @@ func TestPriceGuard_WithinThreshold(t *testing.T) {
 
 func TestPriceGuard_ExceedsThreshold(t *testing.T) {
 	logger := log.NewNopLogger()
-	pg := NewPriceGuard(0.5, 30*time.Minute, true, logger)
+	pg := NewPriceGuard(0.5, 30*time.Minute, true, false, logger)
 
 	queryData := []byte("test_query_data")
 
@@ -60,7 +60,7 @@ func TestPriceGuard_ExceedsThreshold(t *testing.T) {
 
 func TestPriceGuard_ExpiredMaxAge(t *testing.T) {
 	logger := log.NewNopLogger()
-	pg := NewPriceGuard(0.5, 100*time.Millisecond, true, logger) // Very short max age for testing
+	pg := NewPriceGuard(0.5, 100*time.Millisecond, true, false, logger) // Very short max age for testing
 
 	queryData := []byte("test_query_data")
 
@@ -80,7 +80,7 @@ func TestPriceGuard_ExpiredMaxAge(t *testing.T) {
 
 func TestPriceGuard_Disabled(t *testing.T) {
 	logger := log.NewNopLogger()
-	pg := NewPriceGuard(0.5, 30*time.Minute, false, logger) // Disabled
+	pg := NewPriceGuard(0.5, 30*time.Minute, false, false, logger) // Disabled
 
 	queryData := []byte("test_query_data")
 
@@ -97,7 +97,7 @@ func TestPriceGuard_Disabled(t *testing.T) {
 
 func TestPriceGuard_ZeroLastPrice(t *testing.T) {
 	logger := log.NewNopLogger()
-	pg := NewPriceGuard(0.5, 30*time.Minute, true, logger)
+	pg := NewPriceGuard(0.5, 30*time.Minute, true, false, logger)
 
 	queryData := []byte("test_query_data")
 
@@ -114,7 +114,7 @@ func TestPriceGuard_ZeroLastPrice(t *testing.T) {
 
 func TestPriceGuard_OverOneHundredPercentDeviation(t *testing.T) {
 	logger := log.NewNopLogger()
-	pg := NewPriceGuard(2.5, 30*time.Minute, true, logger) // 250% threshold
+	pg := NewPriceGuard(2.5, 30*time.Minute, true, false, logger) // 250% threshold
 
 	queryData := []byte("test_query_data")
 
@@ -136,7 +136,7 @@ func TestPriceGuard_OverOneHundredPercentDeviation(t *testing.T) {
 
 func TestPriceGuard_ExactThresholdBoundary(t *testing.T) {
 	logger := log.NewNopLogger()
-	pg := NewPriceGuard(0.5, 30*time.Minute, true, logger)
+	pg := NewPriceGuard(0.5, 30*time.Minute, true, false, logger)
 
 	queryData := []byte("test_query_data")
 
@@ -158,7 +158,7 @@ func TestPriceGuard_ExactThresholdBoundary(t *testing.T) {
 
 func TestPriceGuard_MultipleQueriesIsolation(t *testing.T) {
 	logger := log.NewNopLogger()
-	pg := NewPriceGuard(0.5, 30*time.Minute, true, logger)
+	pg := NewPriceGuard(0.5, 30*time.Minute, true, false, logger)
 
 	queryData1 := []byte("btc_usd")
 	queryData2 := []byte("eth_usd")
@@ -188,7 +188,7 @@ func TestPriceGuard_MultipleQueriesIsolation(t *testing.T) {
 
 func TestPriceGuard_PriceIncreaseAndDecrease(t *testing.T) {
 	logger := log.NewNopLogger()
-	pg := NewPriceGuard(0.5, 30*time.Minute, true, logger)
+	pg := NewPriceGuard(0.5, 30*time.Minute, true, false, logger)
 
 	queryData := []byte("test_query_data")
 
@@ -223,7 +223,7 @@ func TestPriceGuard_PriceIncreaseAndDecrease(t *testing.T) {
 
 func TestPriceGuard_Volatile(t *testing.T) {
 	logger := log.NewNopLogger()
-	pg := NewPriceGuard(0.3, 30*time.Minute, true, logger) // 30% threshold
+	pg := NewPriceGuard(0.3, 30*time.Minute, true, false, logger) // 30% threshold
 
 	queryData := []byte("btc_usd")
 

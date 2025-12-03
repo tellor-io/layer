@@ -20,10 +20,11 @@ type PriceGuard struct {
 	queryThresholds map[string]float64 // per-queryID overrides
 	maxAge          time.Duration      // max age before treating price as expired
 	enabled         bool
+	updateOnBlocked bool
 	logger          log.Logger
 }
 
-func NewPriceGuard(globalThreshold float64, maxAge time.Duration, enabled bool, logger log.Logger) *PriceGuard {
+func NewPriceGuard(globalThreshold float64, maxAge time.Duration, enabled, updateOnBlocked bool, logger log.Logger) *PriceGuard {
 	return &PriceGuard{
 		lastPrices:      make(map[string]float64),
 		lastUpdateTime:  make(map[string]time.Time),
@@ -32,11 +33,17 @@ func NewPriceGuard(globalThreshold float64, maxAge time.Duration, enabled bool, 
 		queryThresholds: make(map[string]float64),
 		maxAge:          maxAge,
 		enabled:         enabled,
+		updateOnBlocked: updateOnBlocked,
 		logger:          logger.With("component", "price_guard"),
 	}
 }
 
-// TODO: SetQueryThreshold, set a specific threshold for a query ID (optional, for per-query overrides)
+// UpdateOnBlocked returns whether the price guard should update the last known price even if the submission is blocked
+func (pg *PriceGuard) UpdateOnBlocked() bool {
+	return pg.updateOnBlocked
+}
+
+// TODO: Allow setting specific thresholds per query ID (optional, for per-query overrides)
 
 // ShouldSubmit checks if the new price is within acceptable threshold
 // Returns (shouldSubmit, reason)
