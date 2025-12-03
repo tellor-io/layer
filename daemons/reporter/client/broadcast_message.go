@@ -89,11 +89,13 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 		// Always update baseline even when blocked to prevent stuck state
 		c.PriceGuard.UpdateLastPrice(qd, rawPrice)
 		if !shouldSubmit {
+			mutex.Lock()
 			commitedIds[querymeta.Id] = true
-			queryId := utils.QueryIDFromData(qd)
-			querydatastr := fmt.Sprintf("%x", qd)
+			mutex.Unlock()
 
-			// Try to find the asset pair from market params
+			querydatastr := string(qd)
+			queryId := utils.QueryIDFromData(qd)
+
 			pair := ""
 			for _, marketParam := range c.MarketParams {
 				if marketParam.QueryData == querydatastr {
