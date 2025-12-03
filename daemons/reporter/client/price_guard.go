@@ -95,13 +95,13 @@ func (pg *PriceGuard) ShouldSubmit(queryData []byte, newPrice float64) (bool, st
 
 	if change > threshold {
 		reason := fmt.Sprintf(
-			"Price change %.2f%% exceeds threshold %.2f%% (last: %.6f, new: %.6f)",
-			change*100, threshold*100, lastPrice, newPrice,
+			"Price change for %s %.5f%% exceeds threshold %.5f%% (last: %.6f, new: %.6f)",
+			queryIdHex, change*100, threshold*100, lastPrice, newPrice,
 		)
 		pg.logger.Warn("Blocked submission due to price change",
 			"queryId", queryIdHex,
-			"changePercent", fmt.Sprintf("%.2f%%", change*100),
-			"threshold", fmt.Sprintf("%.2f%%", threshold*100),
+			"changePercent", fmt.Sprintf("%.5f%%", change*100),
+			"threshold", fmt.Sprintf("%.5f%%", threshold*100),
 			"lastPrice", lastPrice,
 			"newPrice", newPrice,
 		)
@@ -110,8 +110,8 @@ func (pg *PriceGuard) ShouldSubmit(queryData []byte, newPrice float64) (bool, st
 
 	pg.logger.Debug("Price change within threshold",
 		"queryId", queryIdHex,
-		"changePercent", fmt.Sprintf("%.2f%%", change*100),
-		"threshold", fmt.Sprintf("%.2f%%", threshold*100),
+		"changePercent", fmt.Sprintf("%.5f%%", change*100),
+		"threshold", fmt.Sprintf("%.5f%%", threshold*100),
 	)
 
 	return true, ""
