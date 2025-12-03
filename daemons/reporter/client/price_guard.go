@@ -95,8 +95,8 @@ func (pg *PriceGuard) ShouldSubmit(queryData []byte, newPrice float64) (bool, st
 
 	if change > threshold {
 		reason := fmt.Sprintf(
-			"Price change for %s %.5f%% exceeds threshold %.5f%% (last: %.6f, new: %.6f)",
-			queryIdHex, change*100, threshold*100, lastPrice, newPrice,
+			"change %.5f%% exceeds threshold %.5f%% (last: %.6f, new: %.6f)",
+			change*100, threshold*100, lastPrice, newPrice,
 		)
 		pg.logger.Warn("Blocked submission due to price change",
 			"queryId", queryIdHex,

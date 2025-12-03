@@ -180,7 +180,7 @@ func (c *Client) Start(
 	// Log price guard configuration
 	if priceGuardEnabled {
 		c.logger.Info("Price guard enabled",
-			"threshold", fmt.Sprintf("%.1f%%", priceGuardThreshold*100),
+			"threshold", fmt.Sprintf("%.5f%%", priceGuardThreshold*100),
 			"max_age", priceGuardMaxAge.String(),
 		)
 	} else {

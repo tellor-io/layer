@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -93,8 +94,8 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 			commitedIds[querymeta.Id] = true
 			mutex.Unlock()
 
-			querydatastr := string(qd)
-			queryId := utils.QueryIDFromData(qd)
+			querydatastr := hex.EncodeToString(qd)
+			queryIdHex := utils.QueryIDFromData(qd)
 
 			pair := ""
 			for _, marketParam := range c.MarketParams {
@@ -105,9 +106,9 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 			}
 
 			if pair != "" {
-				return fmt.Errorf("price guard blocked submission for %s (queryId: %x): %s", pair, queryId, reason)
+				return fmt.Errorf("price guard blocked submission for %s: %s", pair, reason)
 			}
-			return fmt.Errorf("price guard blocked submission for queryId %x: %s", queryId, reason)
+			return fmt.Errorf("price guard blocked submission for queryId %x: %s", queryIdHex, reason)
 		}
 	}
 
