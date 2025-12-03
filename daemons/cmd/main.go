@@ -66,7 +66,7 @@ func init() {
 
 	// Price Guard Flags
 	rootCmd.Flags().Bool("price-guard-enabled", false, "Enable price guard to prevent reporting prices that differ from last reported price by a given threshold")
-	rootCmd.Flags().Float64("price-guard-threshold", 0, "Price change threshold (0.5 = 50%) - submissions exceeding this will be blocked")
+	rootCmd.Flags().Float64("price-guard-threshold", 0, "Price change threshold (0.5 = 50%, 0.01 = 1% (up to 15 decimals)) - submissions exceeding this will be blocked")
 	rootCmd.Flags().Duration("price-guard-max-age", 0, "Maximum age of stored price before treating as expired (e.g. 1m, 1h)")
 
 	// Marking required flags
