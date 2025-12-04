@@ -492,7 +492,7 @@ else
 
     # Download the snapshot
     echo "Downloading snapshot (this may take a while, file size ~60-80 GB)..."
-    if ! sudo -u $ACTUAL_USER curl -L -o "$TEMP_DIR/$SNAPSHOT_FILE" "https://layer-node.com/download/$SNAPSHOT_FILE"; then
+    if ! sudo -u $ACTUAL_USER curl -# -L -o "$TEMP_DIR/$SNAPSHOT_FILE" "https://layer-node.com/download/$SNAPSHOT_FILE"; then
         echo "Error: Failed to download snapshot"
         rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
         exit 1
@@ -583,6 +583,8 @@ echo "This may take a while depending on how far behind the snapshot is..."
 SYNC_COMPLETE=false
 MAX_WAIT_SECONDS=86400
 SYNC_WAIT_START=$(date +%s) # 24 hours
+LOG_COUNTER=0
+LOG_INTERVAL=30  # Log every 30 iterations (30 * 0.5min = 15 minutes)
 
 while [ $(($(date +%s) - SYNC_WAIT_START)) -lt $MAX_WAIT_SECONDS ]; do
     # Check if we're seeing "received complete proposal block" in recent logs
@@ -602,9 +604,12 @@ while [ $(($(date +%s) - SYNC_WAIT_START)) -lt $MAX_WAIT_SECONDS ]; do
             echo "  Node stopped receiving blocks, may still be syncing older blocks..."
         fi
     else
-        ELAPSED=$(($(date +%s) - SYNC_WAIT_START))
-        ELAPSED_MINS=$((ELAPSED / 60))
-        echo "  Still syncing... (${ELAPSED_MINS} minutes elapsed)"
+        LOG_COUNTER=$((LOG_COUNTER + 1))
+        if [ $((LOG_COUNTER % LOG_INTERVAL)) -eq 0 ]; then
+            ELAPSED=$(($(date +%s) - SYNC_WAIT_START))
+            ELAPSED_MINS=$((ELAPSED / 60))
+            echo "  Still syncing... (${ELAPSED_MINS} minutes elapsed)"
+        fi
         sleep 30
     fi
 done
