@@ -93,9 +93,13 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 		}
 
 		if !shouldSubmit {
-			mutex.Lock()
-			commitedIds[querymeta.Id] = true
-			mutex.Unlock()
+			if c.PriceGuard.UpdateOnBlocked() {
+				// only update if price guard is configured to update on blocked
+				// help prevent tipped queries from getting stuck if no reports get made
+				mutex.Lock()
+				commitedIds[querymeta.Id] = true
+				mutex.Unlock()
+			}
 
 			querydatastr := hex.EncodeToString(qd)
 			queryIdHex := utils.QueryIDFromData(qd)
