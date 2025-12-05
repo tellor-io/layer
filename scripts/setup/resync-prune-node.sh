@@ -889,7 +889,7 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
         RETRY_COUNT=$((RETRY_COUNT + 1))
         if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
             echo "Layer service is still catching up (attempt $RETRY_COUNT/$MAX_RETRIES). Checking again in 60 seconds..."
-            sleep 60
+            sleep 30
         else
             echo "Error: Layer service is still catching up after $MAX_RETRIES attempts"
             exit 1
@@ -898,10 +898,54 @@ done
 
 echo "Layer service has successfully caught up to the latest block!"
 
+
+
+# Send final success Discord alert
 # Send final success Discord alert
 if [ -n "$DISCORD_WEBHOOK" ]; then
     discord_alert "✅ Layer service has successfully caught up to the latest block! Resync complete."
 fi
 
+echo ""
+echo "================================"
+echo "  CLEANING UP..."
+echo "================================"
+echo ""
+sleep 1
+
+# Clean up temporary backup directory
+echo "Deleting temporary backup directory..."
+if [ -d "$USER_HOME/tmp/layer_data" ]; then
+    echo "Removing $USER_HOME/tmp/layer_data..."
+    if sudo -u "$ACTUAL_USER" rm -rf "$USER_HOME/tmp/layer_data"; then
+        echo "✓ Temporary backup directory deleted"
+    else
+        echo "Warning: Failed to delete $USER_HOME/tmp/layer_data (exit code $?)"
+        echo "You may want to manually delete it later to free up disk space"
+    fi
+else
+    echo "No temporary backup directory found (already cleaned up)"
+fi
+
+# Clean up snapshot home directory
+echo "Deleting snapshot home directory..."
+if [ -d "$LAYER_SNAPSHOT_HOME" ]; then
+    echo "Removing $LAYER_SNAPSHOT_HOME..."
+    if sudo -u "$ACTUAL_USER" rm -rf "$LAYER_SNAPSHOT_HOME"; then
+        echo "✓ Snapshot home directory deleted"
+    else
+        echo "Warning: Failed to delete $LAYER_SNAPSHOT_HOME (exit code $?)"
+        echo "You may want to manually delete it later to free up disk space"
+    fi
+else
+    echo "No snapshot home directory found (already cleaned up)"
+fi
+
+echo "--------------------------------"
+echo ""
+echo "✓ Chain data resync complete!"
+echo "✓ Layer service is running and synced"
+echo "✓ Cleanup complete"
+echo ""
 echo "Have a great day!"
 
