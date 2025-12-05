@@ -651,10 +651,14 @@ echo "Stopping layer service..."
 systemctl stop layer
 sleep 5
 echo "checking if layer service is stopped..."
-if [ "$(systemctl is-active layer)" = "inactive" ]; then
+if journalctl -u layer -n 10 --no-pager | grep -q "Stopped layer.service"; then
     echo "✓ layer service is stopped"
 else
-    echo "Error: layer service is not stopped (status: $(systemctl is-active layer))"
+    echo "Error: layer service is not stopped. "
+    echo "Please check the logs with: sudo journalctl -u layer --pager-end"
+    echo "To stop the service manually, in a separate terminal run: sudo systemctl stop layer"
+    echo "press enter to continue once they are stopped..."
+    read -p ""
     exit 1
 fi
 echo "--------------------------------"
@@ -663,10 +667,14 @@ echo "Stopping layer_snapshot service..."
 systemctl stop layer_snapshot
 sleep 5
 echo "checking if snapshot service is stopped..."
-if [ "$(systemctl is-active layer_snapshot)" = "inactive" ]; then
+if journalctl -u layer_snapshot -n 10 --no-pager | grep -q "Stopped layer_snapshot.service"; then
     echo "✓ layer_snapshot service is stopped"
 else
-    echo "Error: layer_snapshot service is not stopped (status: $(systemctl is-active layer_snapshot))"
+    echo "Error: layer_snapshot service is not stopped..."
+    echo "Please check the logs with: sudo journalctl -u layer_snapshot --pager-end"
+    echo "To stop the service manually, in a separate terminal run: sudo systemctl stop layer_snapshot"
+    echo "press enter to continue once they are stopped..."
+    read -p ""
     exit 1
 fi
 echo "--------------------------------"
