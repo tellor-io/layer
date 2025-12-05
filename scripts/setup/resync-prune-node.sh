@@ -122,13 +122,13 @@ LAYERD_TAG_PALMITO="v6.0.0"
 # Set network-specific variables
 if [ "$NETWORK" == "tellor-1" ]; then
     LAYERD_TAG="$LAYERD_TAG_MAINNET"
-    PEERS="a89082de92cf4e871a9c7d6b484a28d58e16272f@54.183.128.195:26656,c2a9a68730ea0f6c7a1d1c7c9b4f9e5e8a4e4a0e@layer-mainnet-peer.tellor.io:26656"
+    PEERS=""
     LAYER_HOME="$USER_HOME/.layer"
     LAYER_SNAPSHOT_HOME="$USER_HOME/.layer_snapshot"
     CHAIN_ID="tellor-1"
 elif [ "$NETWORK" == "layertest-4" ]; then
     LAYERD_TAG="$LAYERD_TAG_PALMITO"
-    PEERS="7fa4c4e0b1c0c0a0e0d0c0b0a0f0e0d0c0b0a0f0@layer-testnet-peer.tellor.io:26656"
+    PEERS=""
     LAYER_HOME="$USER_HOME/.layer"
     LAYER_SNAPSHOT_HOME="$USER_HOME/.layer_snapshot"
     CHAIN_ID="layertest-4"
