@@ -874,7 +874,7 @@ else
 fi
 
 # check layerd status to see if catching_up is false
-echo "checking if the layer service is not catching up..."
+echo "checking if the layer service is catching up..."
 sleep 10
 MAX_RETRIES=5
 RETRY_COUNT=0
@@ -899,8 +899,6 @@ done
 echo "Layer service has successfully caught up to the latest block!"
 
 
-
-# Send final success Discord alert
 # Send final success Discord alert
 if [ -n "$DISCORD_WEBHOOK" ]; then
     discord_alert "✅ Layer service has successfully caught up to the latest block! Resync complete."
@@ -948,4 +946,3 @@ echo "✓ Layer service is running and synced"
 echo "✓ Cleanup complete"
 echo ""
 echo "Have a great day!"
-
