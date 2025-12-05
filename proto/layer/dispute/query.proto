@@ -52,6 +52,11 @@ service Query {
   rpc DisputeFeePayers(QueryDisputeFeePayersRequest) returns (QueryDisputeFeePayersResponse) {
     option (google.api.http).get = "/tellor-io/layer/dispute/dispute-fee-payers/{dispute_id}";
   }
+
+  // ClaimableDisputeRewards queries the amount of loya that can be claimed for a specific dispute
+  rpc ClaimableDisputeRewards(QueryClaimableDisputeRewardsRequest) returns (QueryClaimableDisputeRewardsResponse) {
+    option (google.api.http).get = "/tellor-io/layer/dispute/claimable-dispute-rewards/{dispute_id}/{address}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -149,4 +154,20 @@ message DisputeFeePayerInfo {
 
 message QueryDisputeFeePayersResponse {
   repeated DisputeFeePayerInfo payers = 1;
+}
+
+message QueryClaimableDisputeRewardsRequest {
+  uint64 dispute_id = 1;
+  string address = 2;
+}
+
+message ClaimableAmount {
+  uint64 dispute_id = 1;
+  string reward_amount = 2 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  string fee_refund_amount = 3 [(gogoproto.customtype) = "cosmossdk.io/math.Int", (gogoproto.nullable) = false];
+  bool reward_claimed = 4;
+}
+
+message QueryClaimableDisputeRewardsResponse {
+  ClaimableAmount claimable_amount = 1;
 }

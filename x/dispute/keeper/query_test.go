@@ -443,3 +443,182 @@ func (s *KeeperTestSuite) TestDisputeFeePayersQuery() {
 	require.NotNil(res3)
 	require.Len(res3.Payers, 0)
 }
+
+func (s *KeeperTestSuite) TestClaimableDisputeRewardsQuery() {
+	require := s.Require()
+	k := s.disputeKeeper
+	q := keeper.NewQuerier(k)
+	ctx := s.ctx
+
+	addr := sdk.AccAddress([]byte("addr1"))
+
+	// 1. Invalid Request (nil)
+	resp, err := q.ClaimableDisputeRewards(ctx, nil)
+	require.Error(err)
+	require.Nil(resp)
+
+	// 2. Invalid Address
+	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 1,
+		Address:   "invalid_address",
+	})
+	require.Error(err)
+	require.Nil(resp)
+
+	// 3. Dispute Not Found
+	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 999,
+		Address:   addr.String(),
+	})
+	require.Error(err)
+	require.Nil(resp)
+
+	// 4. Voter Reward Scenario
+	// Setup Dispute 2 (Resolved, prevId=1)
+	dispute2 := types.Dispute{
+		DisputeId:      2,
+		DisputeStatus:  types.Resolved,
+		PrevDisputeIds: []uint64{1},
+		BlockNumber:    100,
+		VoterReward:    math.NewInt(1000), // Total reward to distribute
+		HashId:         []byte{2},
+	}
+	require.NoError(k.Disputes.Set(ctx, 2, dispute2))
+
+	// Setup Vote for Dispute 2
+	require.NoError(k.Votes.Set(ctx, 2, types.Vote{
+		Id:         2,
+		VoteResult: types.VoteResult_SUPPORT,
+		Executed:   true,
+	}))
+
+	// Setup Voter for Dispute 2 (Current vote check)
+	require.NoError(k.Voter.Set(ctx, collections.Join(uint64(2), addr.Bytes()), types.Voter{
+		RewardClaimed: false,
+	}))
+
+	// Setup Voter for Dispute 1 (Past vote check in CalculateReward)
+	require.NoError(k.Voter.Set(ctx, collections.Join(uint64(1), addr.Bytes()), types.Voter{
+		ReporterPower: math.NewInt(10),
+	}))
+
+	// Setup VoteCounts for Dispute 1 (Past global power in CalculateReward)
+	require.NoError(k.VoteCountsByGroup.Set(ctx, 1, types.StakeholderVoteCounts{
+		Users:     types.VoteCounts{Support: 100},
+		Reporters: types.VoteCounts{Support: 100},
+		Team:      types.VoteCounts{Support: 0},
+	}))
+
+	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, uint64(100), addr).Return(math.NewInt(10), nil).Once()
+
+	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 2,
+		Address:   addr.String(),
+	})
+	require.NoError(err)
+	require.NotNil(resp)
+	require.True(resp.ClaimableAmount.RewardAmount.IsPositive())
+	require.False(resp.ClaimableAmount.RewardClaimed)
+	require.Equal(uint64(2), resp.ClaimableAmount.DisputeId)
+
+	// 4b. Voter Reward Claimed Scenario
+	require.NoError(k.Voter.Set(ctx, collections.Join(uint64(2), addr.Bytes()), types.Voter{
+		RewardClaimed: true,
+	}))
+	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 2,
+		Address:   addr.String(),
+	})
+	require.NoError(err)
+	require.True(resp.ClaimableAmount.RewardAmount.IsZero())
+	require.True(resp.ClaimableAmount.RewardClaimed)
+
+	// 5. Fee Refund - Failed Dispute
+	dispute3 := types.Dispute{
+		DisputeId:     3,
+		DisputeStatus: types.Failed,
+		HashId:        []byte{3},
+	}
+	require.NoError(k.Disputes.Set(ctx, 3, dispute3))
+
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(3), addr.Bytes()), types.PayerInfo{
+		Amount:   math.NewInt(500),
+		FromBond: false,
+	}))
+
+	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 3,
+		Address:   addr.String(),
+	})
+	require.NoError(err)
+	require.Equal(math.NewInt(500), resp.ClaimableAmount.FeeRefundAmount)
+
+	// 6. Fee Refund - Resolved (SUPPORT)
+	dispute4 := types.Dispute{
+		DisputeId:     4,
+		DisputeStatus: types.Resolved,
+		HashId:        []byte{4},
+		SlashAmount:   math.NewInt(1000),
+		FeeTotal:      math.NewInt(2000),
+	}
+	require.NoError(k.Disputes.Set(ctx, 4, dispute4))
+
+	require.NoError(k.Votes.Set(ctx, 4, types.Vote{
+		Id:         4,
+		Executed:   true,
+		VoteResult: types.VoteResult_SUPPORT,
+	}))
+
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(4), addr.Bytes()), types.PayerInfo{
+		Amount: math.NewInt(500),
+	}))
+
+	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 4,
+		Address:   addr.String(),
+	})
+	require.NoError(err)
+	require.True(resp.ClaimableAmount.FeeRefundAmount.IsPositive())
+
+	// 7. Combined - Voter Reward + Fee Refund
+	// Reuse Dispute 1 as past dispute. Reuse addr as voter and payer.
+	dispute5 := types.Dispute{
+		DisputeId:      5,
+		DisputeStatus:  types.Resolved,
+		PrevDisputeIds: []uint64{1},
+		BlockNumber:    200,
+		VoterReward:    math.NewInt(1000),
+		SlashAmount:    math.NewInt(1000),
+		FeeTotal:       math.NewInt(2000),
+		HashId:         []byte{5},
+	}
+	require.NoError(k.Disputes.Set(ctx, 5, dispute5))
+
+	// Setup Vote for Dispute 5
+	require.NoError(k.Votes.Set(ctx, 5, types.Vote{
+		Id:         5,
+		Executed:   true,
+		VoteResult: types.VoteResult_SUPPORT,
+	}))
+
+	// Setup Voter for Dispute 5 (Unclaimed)
+	require.NoError(k.Voter.Set(ctx, collections.Join(uint64(5), addr.Bytes()), types.Voter{
+		RewardClaimed: false,
+	}))
+
+	// Setup Fee Payer for Dispute 5
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(5), addr.Bytes()), types.PayerInfo{
+		Amount: math.NewInt(500),
+	}))
+
+	// Mock GetUserTotalTips for CalculateReward (block 200)
+	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, uint64(200), addr).Return(math.NewInt(10), nil).Once()
+
+	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 5,
+		Address:   addr.String(),
+	})
+	require.NoError(err)
+	require.True(resp.ClaimableAmount.RewardAmount.IsPositive())
+	require.True(resp.ClaimableAmount.FeeRefundAmount.IsPositive())
+}

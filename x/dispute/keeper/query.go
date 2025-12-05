@@ -307,3 +307,82 @@ func (k Querier) DisputeFeePayers(ctx context.Context, req *types.QueryDisputeFe
 
 	return &types.QueryDisputeFeePayersResponse{Payers: payers}, nil
 }
+
+func (q Querier) ClaimableDisputeRewards(ctx context.Context, req *types.QueryClaimableDisputeRewardsRequest) (*types.QueryClaimableDisputeRewardsResponse, error) {
+	if req == nil {
+		return nil, errors.New("invalid request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	dispute, err := q.Keeper.Disputes.Get(ctx, req.DisputeId)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, errors.New("dispute not found")
+		}
+		return nil, err
+	}
+
+	rewardAmount := math.ZeroInt()
+	feeRefundAmount := math.ZeroInt()
+	rewardClaimed := false
+
+	// Calculate Voter Reward
+	if dispute.DisputeStatus == types.Resolved {
+		// Check if they voted
+		voterInfo, err := q.Keeper.Voter.Get(ctx, collections.Join(req.DisputeId, addr.Bytes()))
+		if err == nil {
+			// Found voter info
+			rewardClaimed = voterInfo.RewardClaimed
+			if !voterInfo.RewardClaimed {
+				// They voted and haven't claimed yet
+				// CalculateReward checks if vote.Executed and other conditions
+				reward, err := q.Keeper.CalculateReward(sdkCtx, addr, req.DisputeId)
+				if err == nil {
+					rewardAmount = reward
+				}
+			}
+		}
+	}
+
+	// Calculate Fee Refund
+	// Check if they are a fee payer for the first round
+	payerInfo, err := q.Keeper.DisputeFeePayer.Get(ctx, collections.Join(req.DisputeId, addr.Bytes()))
+	if err == nil {
+		// Address is a fee payer
+		switch dispute.DisputeStatus {
+		case types.Failed:
+			// Failed dispute (underfunded) - full refund
+			feeRefundAmount = payerInfo.Amount
+		case types.Resolved:
+			vote, err := q.Keeper.Votes.Get(ctx, req.DisputeId)
+			if err == nil && vote.Executed {
+				switch vote.VoteResult {
+				case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
+					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount, dispute.FeeTotal)
+					feeRefundAmount = feeRefundAmount.Add(refund)
+
+				case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
+					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount, dispute.FeeTotal)
+					feeRefundAmount = feeRefundAmount.Add(refund)
+
+					reward, _ := CalculateReporterBondRewardAmount(payerInfo.Amount, dispute.FeeTotal, dispute.SlashAmount)
+					feeRefundAmount = feeRefundAmount.Add(reward)
+				}
+			}
+		}
+	}
+
+	return &types.QueryClaimableDisputeRewardsResponse{
+		ClaimableAmount: &types.ClaimableAmount{
+			DisputeId:       req.DisputeId,
+			RewardAmount:    rewardAmount,
+			FeeRefundAmount: feeRefundAmount,
+			RewardClaimed:   rewardClaimed,
+		},
+	}, nil
+}
