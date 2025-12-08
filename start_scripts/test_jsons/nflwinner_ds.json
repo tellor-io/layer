@@ -1,0 +1,22 @@
+{
+    "document_hash": "NFLWinner",
+    "query_type": "NFLWinner",
+    "response_value_type": "bytes",
+    "abi_components": [
+        {
+            "name": "week",
+            "field_type": "uint256"
+        },
+        {
+            "name": "team1",
+            "field_type": "string"
+        },
+        {
+            "name": "team2",
+            "field_type": "string"
+        }
+    ],
+    "aggregation_method": "weighted-mode",
+    "registrar": "tellor1alcefjzkk37qmfrnel8q4eruyll0pc8arxhxxw",
+    "report_block_window": 10
+}

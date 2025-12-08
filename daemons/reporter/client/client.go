@@ -69,8 +69,9 @@ type Client struct {
 	accAddr   sdk.AccAddress
 	minGasFee string
 	// logger is the logger for the daemon.
-	logger log.Logger
-	txChan chan TxChannelInfo
+	logger     log.Logger
+	txChan     chan TxChannelInfo
+	PriceGuard *PriceGuard
 }
 
 // GetUniqueUnorderedTimeout generates a unique timeout timestamp for unordered transactions.
@@ -143,6 +144,54 @@ func (c *Client) Start(
 	brdcstMode := viper.GetString("broadcast-mode")
 	nodeUri := viper.GetString("node")
 	kb := viper.GetString("keyring-backend")
+
+	// Read price guard config
+	priceGuardEnabled := viper.GetBool("price-guard-enabled")
+	updateOnBlocked := viper.GetBool("price-guard-update-on-blocked")
+
+	var priceGuardThreshold float64
+	var priceGuardMaxAge time.Duration
+
+	if priceGuardEnabled {
+		// If price guard is enabled, require explicit configuration
+		if !viper.IsSet("price-guard-threshold") {
+			return fmt.Errorf("price-guard-enabled is true but price-guard-threshold is not set")
+		}
+		priceGuardThreshold = viper.GetFloat64("price-guard-threshold")
+		if priceGuardThreshold <= 0 {
+			return fmt.Errorf("price-guard-threshold must be greater than 0, got: %f", priceGuardThreshold)
+		}
+
+		if !viper.IsSet("price-guard-max-age") {
+			return fmt.Errorf("price-guard-enabled is true but price-guard-max-age is not set")
+		}
+		priceGuardMaxAge = viper.GetDuration("price-guard-max-age")
+		if priceGuardMaxAge <= 0 {
+			return fmt.Errorf("price-guard-max-age must be greater than 0, got: %s", priceGuardMaxAge)
+		}
+
+		if !viper.IsSet("price-guard-update-on-blocked") {
+			return fmt.Errorf("price-guard-enabled is true but price-guard-update-on-blocked is not set")
+		}
+	} else {
+		// If price guard is disabled, error if any other price guard flags are set
+		if viper.IsSet("price-guard-threshold") || viper.IsSet("price-guard-max-age") || viper.IsSet("price-guard-update-on-blocked") {
+			return fmt.Errorf("price-guard flags are set but price-guard-enabled is false")
+		}
+	}
+
+	c.PriceGuard = NewPriceGuard(priceGuardThreshold, priceGuardMaxAge, priceGuardEnabled, updateOnBlocked, c.logger)
+
+	// Log price guard configuration
+	if priceGuardEnabled {
+		c.logger.Info("Price guard enabled",
+			"threshold", fmt.Sprintf("%.5f%%", priceGuardThreshold*100),
+			"max_age", priceGuardMaxAge.String(),
+			"update_on_blocked", updateOnBlocked,
+		)
+	} else {
+		c.logger.Info("Price guard disabled")
+	}
 
 	c.cosmosCtx = c.cosmosCtx.WithChainID(chainId)
 	c.cosmosCtx = c.cosmosCtx.WithHomeDir(homeDir)

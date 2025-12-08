@@ -13,7 +13,7 @@ import (
 	"github.com/tellor-io/layer/utils"
 )
 
-func (c *Client) median(querydata []byte) (string, error) {
+func (c *Client) median(querydata []byte) (encodedValue string, rawPrice float64, err error) {
 	querydatastr := hex.EncodeToString(querydata)
 
 	for _, marketParam := range c.MarketParams {
@@ -21,14 +21,14 @@ func (c *Client) median(querydata []byte) (string, error) {
 			mv := c.MarketToExchange.GetValidMedianPrices([]types.MarketParam{marketParam}, time.Now())
 			val, found := mv[marketParam.Id]
 			if !found {
-				return "", fmt.Errorf("no median values found for query data: %s", querydatastr)
+				return "", 0, fmt.Errorf("no median values found for query data: %s", querydatastr)
 			}
 			value, err := prices.EncodePrice(float64(val), marketParam.Exponent)
 			if err != nil {
-				return "", fmt.Errorf("faild to encode price: %w", err)
+				return "", 0, fmt.Errorf("faild to encode price: %w", err)
 			}
 			c.logger.Info("Median Value", "pair", marketParam.Pair, "price", float64(val))
-			return value, nil
+			return value, float64(val), nil
 		}
 	}
 	// if can't find it here then check custom query config
@@ -36,11 +36,12 @@ func (c *Client) median(querydata []byte) (string, error) {
 	queryIdStr := hex.EncodeToString(queryId)
 	queryConfig, ok := c.Custom_query[queryIdStr]
 	if !ok {
-		return "", fmt.Errorf("no config found for query data: %s", querydatastr)
+		return "", 0, fmt.Errorf("no config found for query data: %s", querydatastr)
 	}
 	results, err := customquery.FetchPrice(context.Background(), queryConfig, c.MarketToExchange)
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch price: %w", err)
+		return "", 0, fmt.Errorf("failed to fetch price: %w", err)
 	}
-	return results.EncodedValue, nil
+	// For custom queries, we return 0 for raw price (price guard won't apply)
+	return results.EncodedValue, 0, nil
 }
