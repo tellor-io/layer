@@ -1,0 +1,14 @@
+{
+    "messages": [
+      {
+        "@type": "/layer.mint.MsgUpdateExtraRewardRate",
+        "authority": "tellor10d07y265gmmuvt4z0w9aw880jnsr700j6527vx",
+        "daily_extra_rewards": "36735000",
+        "bond_denom": "loya"
+      }
+    ],
+    "metadata": "",
+    "deposit": "1000000loya",
+    "title": "Update Extra Rewards Rate",
+    "summary": "Lower the daily extra rewards rate from the current default (146,940,000 loya/day) to 36,735,000 loya/day"
+  }
