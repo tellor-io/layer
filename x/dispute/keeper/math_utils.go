@@ -8,7 +8,7 @@ import (
 
 // CalculateRefundAmount calculates the amount of the fee to be refunded to the payer
 // returns the amount to be refunded (amtFixed6) and the remainder (dust)
-func CalculateRefundAmount(payerFee math.Int, totalFeeRd1 math.Int, disputeFeeTotal math.Int) (math.Int, math.Int) {
+func CalculateRefundAmount(payerFee, totalFeeRd1, disputeFeeTotal math.Int) (math.Int, math.Int) {
 	payerFeeDec := payerFee.ToLegacyDec()
 	totalFeeRd1Dec := math.LegacyNewDecFromInt(totalFeeRd1)
 
@@ -34,7 +34,7 @@ func CalculateRefundAmount(payerFee math.Int, totalFeeRd1 math.Int, disputeFeeTo
 
 // CalculateReporterBondRewardAmount calculates the portion of the reporter's bond to be rewarded to the payer
 // returns the amount to be rewarded (amtFixed6) and the remainder (dust)
-func CalculateReporterBondRewardAmount(payerFee math.Int, totalFeesPaid math.Int, reporterBond math.Int) (math.Int, math.Int) {
+func CalculateReporterBondRewardAmount(payerFee, totalFeesPaid, reporterBond math.Int) (math.Int, math.Int) {
 	feeDec := math.LegacyNewDecFromInt(payerFee)
 	bondDec := math.LegacyNewDecFromInt(reporterBond)
 	totalFeesDec := math.LegacyNewDecFromInt(totalFeesPaid)
