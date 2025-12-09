@@ -687,65 +687,45 @@ echo "========================================="
 echo ""
 sleep 1
 
-# Create tmp directory if it doesn't exist
-echo "Ensuring tmp directory exists..."
-echo "DEBUG: Checking $USER_HOME/tmp before mkdir..."
-if [ -e "$USER_HOME/tmp" ]; then
-    echo "DEBUG: $USER_HOME/tmp exists"
-    ls -ld "$USER_HOME/tmp"
-    if [ -d "$USER_HOME/tmp" ]; then
-        echo "DEBUG: It's a directory"
-    else
-        echo "DEBUG: WARNING - It's NOT a directory (file or symlink?)"
-        file "$USER_HOME/tmp"
-    fi
-else
-    echo "DEBUG: $USER_HOME/tmp does not exist yet"
-fi
+# Prepare tmp directory for backup (clean it if it exists from previous run)
+echo "Preparing temporary backup directory..."
 
-echo "DEBUG: Running mkdir -p $USER_HOME/tmp/layer_data"
-if sudo -u "$ACTUAL_USER" mkdir -p "$USER_HOME/tmp/layer_data"; then
-    echo "DEBUG: mkdir succeeded"
-else
-    echo "DEBUG: mkdir FAILED with exit code $?"
-    exit 1
-fi
-
-echo "DEBUG: Verifying directory was created..."
+# If the directory exists from a previous run, remove it first
 if [ -d "$USER_HOME/tmp/layer_data" ]; then
-    echo "DEBUG: ✓ $USER_HOME/tmp/layer_data exists and is a directory"
-    ls -ld "$USER_HOME/tmp/layer_data"
+    echo "Found existing temporary directory from previous run, cleaning it..."
+    if sudo -u "$ACTUAL_USER" rm -rf "$USER_HOME/tmp/layer_data"; then
+        echo "✓ Old temporary directory cleaned"
+    else
+        echo "Error: Failed to clean old temporary directory at $USER_HOME/tmp/layer_data"
+        echo "Please manually remove it with: sudo rm -rf $USER_HOME/tmp/layer_data"
+        exit 1
+    fi
+fi
+
+# Create fresh empty directory
+echo "Creating fresh temporary backup directory..."
+if sudo -u "$ACTUAL_USER" mkdir -p "$USER_HOME/tmp/layer_data"; then
+    echo "✓ Temporary backup directory created: $USER_HOME/tmp/layer_data"
 else
-    echo "DEBUG: ✗ $USER_HOME/tmp/layer_data was NOT created!"
-    echo "DEBUG: Checking what exists at the path..."
-    ls -la "$USER_HOME/tmp/" 2>/dev/null || echo "DEBUG: Cannot list $USER_HOME/tmp/"
+    echo "Error: Failed to create temporary directory"
     exit 1
 fi
 
-# move the big old chain data to ~/tmp/layer_data
-echo "moving $LAYER_HOME/data to ~/tmp/layer_data..."
-echo "DEBUG: Source directory contents ($LAYER_HOME/data/):"
-ls -la "$LAYER_HOME/data/" 2>&1 || echo "DEBUG: Cannot list source directory"
-echo ""
-echo "DEBUG: Target directory contents before move ($USER_HOME/tmp/layer_data/):"
-ls -la "$USER_HOME/tmp/layer_data/" 2>&1 || echo "DEBUG: Cannot list target directory"
-echo ""
+# Move the old chain data to temporary backup location
+echo "Backing up old chain data to temporary directory..."
+echo "Moving $LAYER_HOME/data/* to $USER_HOME/tmp/layer_data/..."
 
 if ls "$LAYER_HOME/data/"* >/dev/null 2>&1; then
-    echo "DEBUG: Files found in source, attempting move..."
-    echo "DEBUG: Running: sudo -u $ACTUAL_USER mv -f $LAYER_HOME/data/* $USER_HOME/tmp/layer_data/"
     if sudo -u "$ACTUAL_USER" mv -f "$LAYER_HOME/data/"* "$USER_HOME/tmp/layer_data/"; then
-        echo "DEBUG: mv command succeeded"
+        echo "✓ Old chain data backed up successfully"
     else
-        echo "DEBUG: mv command FAILED with exit code $?"
+        echo "Error: Failed to move old chain data to temporary backup"
+        echo "This is critical - stopping to prevent data loss"
         exit 1
     fi
 else
-    echo "Warning: No files found in $LAYER_HOME/data/ to move"
+    echo "Warning: No files found in $LAYER_HOME/data/ to back up"
 fi
-echo "checking if the data was moved..."
-echo "DEBUG: Target directory contents after move:"
-ls -la $USER_HOME/tmp/layer_data
 echo "--------------------------------"
 echo ""
 
@@ -753,93 +733,48 @@ echo "============================================================"
 echo "CRITICAL OPERATION: Moving snapshot data to live chain data"
 echo "============================================================"
 echo ""
-echo "moving data from $LAYER_SNAPSHOT_HOME/data to $LAYER_HOME/data..."
-echo ""
-echo "DEBUG: Source directory contents ($LAYER_SNAPSHOT_HOME/data/):"
-ls -la "$LAYER_SNAPSHOT_HOME/data/" 2>&1 || echo "DEBUG: Cannot list source directory"
-echo ""
-echo "DEBUG: Target directory contents BEFORE move ($LAYER_HOME/data/):"
-ls -la "$LAYER_HOME/data/" 2>&1 || echo "DEBUG: Cannot list target directory (should be empty after backup)"
-echo ""
+echo "Moving synced data from $LAYER_SNAPSHOT_HOME/data to $LAYER_HOME/data..."
 
 if ls "$LAYER_SNAPSHOT_HOME/data/"* >/dev/null 2>&1; then
-    echo "DEBUG: Files found in snapshot source, attempting move..."
-    echo "DEBUG: Running: sudo -u $ACTUAL_USER mv -f $LAYER_SNAPSHOT_HOME/data/* $LAYER_HOME/data/"
     if sudo -u "$ACTUAL_USER" mv -f "$LAYER_SNAPSHOT_HOME/data/"* "$LAYER_HOME/data/"; then
-        echo "DEBUG: mv command succeeded"
+        echo "✓ Snapshot data successfully moved to main node"
     else
-        echo "DEBUG: mv command FAILED with exit code $?"
-        echo "DEBUG: Checking if target directory exists..."
-        ls -ld "$LAYER_HOME/data/" 2>&1 || echo "DEBUG: Target directory doesn't exist!"
-        echo "DEBUG: Checking target directory permissions..."
-        stat "$LAYER_HOME/data/" 2>&1 || echo "DEBUG: Cannot stat target directory"
+        echo "Error: Failed to move snapshot data to main node (exit code $?)"
+        echo "This is critical - the main node cannot start without chain data"
+        echo "Check directory permissions and disk space"
         exit 1
     fi
 else
-    echo "Error: No files found in $LAYER_SNAPSHOT_HOME/data/ to move"
-    echo "DEBUG: This is critical - the snapshot data should exist here!"
-    echo "DEBUG: Checking if directory exists at all..."
-    ls -ld "$LAYER_SNAPSHOT_HOME/data/" 2>&1 || echo "DEBUG: Directory doesn't exist"
-    echo "DEBUG: Checking parent directory..."
-    ls -la "$LAYER_SNAPSHOT_HOME/" 2>&1 || echo "DEBUG: Cannot list $LAYER_SNAPSHOT_HOME/"
+    echo "Error: No files found in $LAYER_SNAPSHOT_HOME/data/"
+    echo "The snapshot data should exist here - something went wrong during sync"
     exit 1
 fi
-
-echo ""
-echo "DEBUG: Target directory contents AFTER move ($LAYER_HOME/data/):"
-ls -la "$LAYER_HOME/data/" 2>&1 || echo "DEBUG: Cannot list target directory after move!"
-echo ""
-echo "DEBUG: Source directory contents after move (should be empty):"
-ls -la "$LAYER_SNAPSHOT_HOME/data/" 2>&1 || echo "DEBUG: Cannot list source directory"
 echo "--------------------------------"
 echo ""
 
-# cp priv_validator_state.json to $LAYER_HOME/data
+# Restore priv_validator_state.json from backup (critical for validator operation)
 echo "============================================================"
 echo "CRITICAL OPERATION: Restoring priv_validator_state.json"
 echo "============================================================"
 echo ""
-echo "copying priv_validator_state.json to $LAYER_HOME/data..."
-echo ""
-echo "DEBUG: Checking source file exists ($USER_HOME/tmp/layer_data/priv_validator_state.json):"
+echo "Restoring validator state from backup..."
+
 if [ -f "$USER_HOME/tmp/layer_data/priv_validator_state.json" ]; then
-    echo "DEBUG: ✓ Source file exists"
-    ls -la "$USER_HOME/tmp/layer_data/priv_validator_state.json"
-    echo "DEBUG: File contents:"
-    cat "$USER_HOME/tmp/layer_data/priv_validator_state.json"
-    echo ""
+    if sudo -u "$ACTUAL_USER" cp -f "$USER_HOME/tmp/layer_data/priv_validator_state.json" "$LAYER_HOME/data/priv_validator_state.json"; then
+        echo "✓ Validator state file restored successfully"
+    else
+        echo "Error: Failed to restore priv_validator_state.json (exit code $?)"
+        echo "This is critical for validator operation!"
+        exit 1
+    fi
 else
-    echo "DEBUG: ✗ Source file NOT FOUND!"
-    echo "DEBUG: Listing $USER_HOME/tmp/layer_data/:"
-    ls -la "$USER_HOME/tmp/layer_data/" 2>&1 || echo "DEBUG: Cannot list directory"
-    echo "ERROR: priv_validator_state.json not found in backup! This is critical!"
-    exit 1
-fi
-
-echo ""
-echo "DEBUG: Running: sudo -u $ACTUAL_USER cp -f $USER_HOME/tmp/layer_data/priv_validator_state.json $LAYER_HOME/data/priv_validator_state.json"
-if sudo -u "$ACTUAL_USER" cp -f "$USER_HOME/tmp/layer_data/priv_validator_state.json" "$LAYER_HOME/data/priv_validator_state.json"; then
-    echo "DEBUG: cp command succeeded"
-else
-    echo "DEBUG: cp command FAILED with exit code $?"
-    exit 1
-fi
-
-echo ""
-echo "DEBUG: Verifying copied file:"
-if [ -f "$LAYER_HOME/data/priv_validator_state.json" ]; then
-    echo "DEBUG: ✓ File exists at destination"
-    ls -la "$LAYER_HOME/data/priv_validator_state.json"
-    echo "DEBUG: File contents:"
-    cat "$LAYER_HOME/data/priv_validator_state.json"
-    echo ""
-else
-    echo "DEBUG: ✗ File NOT FOUND at destination after copy!"
+    echo "Error: priv_validator_state.json not found in backup at $USER_HOME/tmp/layer_data/"
+    echo "This file is critical - without it, the validator may double-sign!"
     exit 1
 fi
 echo "--------------------------------"
 
-echo "New chain data imported!"
+echo "✓ New chain data imported successfully!"
 
 echo ""
 echo "=================================================="
@@ -852,19 +787,20 @@ echo "starting layer service..."
 systemctl start layer
 
 # check if the layer service starts syncing successfully
-echo "checking if the layer service starts syncing successfully..."
+echo "sleeping for 60 seconds before checking main node status..."
 sleep 60
 if journalctl -u layer --since "60 seconds ago" -n 1000 | grep -q "executed block app_hash"; then
-    echo "✓ Layer service has successfully begun syncing"
+    echo "✓ Layer service has begun syncing"
 else
-    echo "Error: Layer service did not begin syncing within 10 seconds"
+    echo "Error: Layer service did not start syncing within 60 seconds"
+    echo "Please check the logs: sudo journalctl -u layer --pager-end"
     exit 1
 fi
 echo "--------------------------------"
 
 # check if the layer service catches up to the latest block
-echo "checking if the layer service catches up to the latest block..."
-sleep 10
+echo "sleeping 30s before verifying main node status..."
+sleep 30
 if journalctl -u layer --since "60 seconds ago" -n 1000 | grep -q "received complete proposal block"; then
     echo "✓ Layer service has successfully caught up to the latest block"
 else
@@ -874,8 +810,8 @@ else
 fi
 
 # check layerd status to see if catching_up is false
-echo "checking if the layer service is catching up..."
-sleep 10
+echo "triple checking that everything is ok..."
+sleep 1
 MAX_RETRIES=5
 RETRY_COUNT=0
 while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
@@ -896,12 +832,12 @@ while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
     fi
 done
 
-echo "Layer service has successfully caught up to the latest block!"
+echo "Layer service has resumed normal operation!"
 
 
 # Send final success Discord alert
 if [ -n "$DISCORD_WEBHOOK" ]; then
-    discord_alert "✅ Layer service has successfully caught up to the latest block! Resync complete."
+    discord_alert "✅ Layer service has resumed normal operation! Resync complete."
 fi
 
 echo ""
