@@ -10,20 +10,89 @@ fi
 # Stop execution if any command fails
 set -e
 
+# Function to check required dependencies
+check_dependencies() {
+    local deps=("jq" "curl" "wget" "tar")
+    local missing=()
+    
+    for dep in "${deps[@]}"; do
+        if ! command -v "$dep" &> /dev/null; then
+            missing+=("$dep")
+        fi
+    done
+    
+    if [ ${#missing[@]} -gt 0 ]; then
+        echo "Error: Required dependencies are not installed: ${missing[*]}"
+        echo "Please install them and try again."
+        echo ""
+        if [ "$OS_TYPE" == "Linux" ]; then
+            echo "On Ubuntu/Debian: sudo apt-get install ${missing[*]}"
+            echo "On Fedora/RHEL: sudo dnf install ${missing[*]}"
+        elif [ "$OS_TYPE" == "Darwin" ]; then
+            echo "On macOS: brew install ${missing[*]}"
+        fi
+        exit 1
+    fi
+}
+
+# Function to check available disk space
+check_disk_space() {
+    local required_gb=128
+    
+    if [ "$OS_TYPE" == "Darwin" ]; then
+        # macOS uses different df output format
+        local available=$(df -g "$HOME" | awk 'NR==2 {print $4}')
+    else
+        # Linux
+        local available=$(df -BG "$HOME" | awk 'NR==2 {print $4}' | sed 's/G//')
+    fi
+    
+    if [ "$available" -lt "$required_gb" ]; then
+        echo "Warning: Low disk space detected."
+        echo "Available: ${available}GB, Recommended: ${required_gb}GB"
+        read -p "Do you want to continue anyway? (y/n): " disk_choice
+        case "$disk_choice" in
+            y|Y|yes|Yes|YES)
+                echo "Continuing with limited disk space..."
+                ;;
+            *)
+                echo "Exiting. Please free up disk space and try again."
+                exit 1
+                ;;
+        esac
+    fi
+}
+
+# Cross-platform sed in-place function
+sed_inplace() {
+    if [ "$OS" == "mac" ]; then
+        sed -i '' "$@"
+    else
+        sed -i "$@"
+    fi
+}
+
+# Get username with fallback
+get_username() {
+    if command -v logname &> /dev/null && logname &> /dev/null; then
+        logname
+    else
+        whoami
+    fi
+}
+
 # Detect operating system
 OS_TYPE=$(uname -s)
 case "$OS_TYPE" in
     Linux*)
         OS="linux"
         SHELL_RC="$HOME/.bashrc"
-        SED_INPLACE="sed -i"
-        USER_HOME="/home/$(logname)"
+        USER_HOME="/home/$(get_username)"
         ;;
     Darwin*)
         OS="mac"
         SHELL_RC="$HOME/.zshrc"
-        SED_INPLACE="sed -i ''"
-        USER_HOME="/Users/$(logname)"
+        USER_HOME="/Users/$(get_username)"
         ;;
     *)
         echo "Error: Unsupported operating system: $OS_TYPE"
@@ -34,9 +103,28 @@ esac
 
 echo "Detected operating system: $OS"
 
+# Check dependencies early
+check_dependencies
+
 # Initialize variables
 SNAPSHOT_PATH=""
 SKIP_SNAPSHOT=false
+TEMP_DIR=""
+VERSION_CHECK_DIR=""
+
+# Cleanup function for temporary directories
+cleanup() {
+    if [ -n "$TEMP_DIR" ] && [ -d "$TEMP_DIR" ]; then
+        echo "Cleaning up temporary directory: $TEMP_DIR"
+        rm -rf "$TEMP_DIR" 2>/dev/null || true
+    fi
+    if [ -n "$VERSION_CHECK_DIR" ] && [ -d "$VERSION_CHECK_DIR" ]; then
+        rm -rf "$VERSION_CHECK_DIR" 2>/dev/null || true
+    fi
+}
+
+# Set trap to cleanup on exit, interrupt, or termination
+trap cleanup EXIT INT TERM
 
 # Check if NETWORK argument is provided
 if [ $# -eq 0 ]; then
@@ -124,19 +212,10 @@ MAINNET_RPC_NODE_ID=cbb94e01df344fdfdee1fdf2f9bb481712e7ef8d
 PALMITO_RPC_NODE_ID=ac7c10dc3de67c4394271c564671eeed4ac6f0e0
 MAINNET_KEYRING_BACKEND="test"
 PALMITO_KEYRING_BACKEND="test"
-MAINNET_PEERS="5a9db46eceb055c9238833aa54e15a2a32a09c9a@54.67.36.145:26656,f2644778a8a2ca3b55ec65f1b7799d32d4a7098e@54.149.160.93:26656,2904aa32501548e127d3198c8f5181fb4d67bbe6@18.116.23.104:26656,7fd4d34f3b19c41218027d3b91c90d073ab2ba66@54.221.149.61:26656,2b8af463a1f0e84aec6e4dbf3126edf3225df85e@13.52.231.70:26656,9358c72aa8be31ce151ef591e6ecf08d25812993@18.143.181.83:26656,cbb94e01df344fdfdee1fdf2f9bb481712e7ef8d@34.228.44.252:26656"
-PALMITO_PEERS="ac7c10dc3de67c4394271c564671eeed4ac6f0e0@34.229.148.107:26656,8d19cdf430e491d6d6106863c4c466b75a17088a@54.153.125.203:26656,c7b175a5bafb35176cdcba3027e764a0dbd0811c@34.219.95.82:26656,05105e8bb28e8c5ace1cecacefb8d4efb0338ec6@18.218.114.74:26656,705f6154c6c6aeb0ba36c8b53639a5daa1b186f6@3.80.39.230:266"
+MAINNET_PEERS="5a9db46eceb055c9238833aa54e15a2a32a09c9a@54.67.36.145:26656,f2644778a8a2ca3b55ec65f1b7799d32d4a7098e@54.149.160.93:26656,2904aa32501548e127d3198c8f5181fb4d67bbe6@18.116.23.104:26656,7fd4d34f3b19c41218027d3b91c90d073ab2ba66@54.221.149.61:26656,2b8af463a1f0e84aec6e4dbf3126edf3225df85e@13.52.231.70:26656,cbb94e01df344fdfdee1fdf2f9bb481712e7ef8d@54.234.103.186:26656"
+PALMITO_PEERS="ac7c10dc3de67c4394271c564671eeed4ac6f0e0@34.229.148.107:26656,8d19cdf430e491d6d6106863c4c466b75a17088a@54.153.125.203:26656,c7b175a5bafb35176cdcba3027e764a0dbd0811c@34.219.95.82:26656,05105e8bb28e8c5ace1cecacefb8d4efb0338ec6@18.218.114.74:26656,705f6154c6c6aeb0ba36c8b53639a5daa1b186f6@3.80.39.230:26656"
 MAINNET_LAYER_HOME="$USER_HOME/.layer"
 PALMITO_LAYER_HOME="$USER_HOME/.layer_palmito"
-
-# set cosmovisor environment variables for init command
-export DAEMON_NAME=layerd
-export DAEMON_HOME=$HOME/.layer
-export DAEMON_RESTART_AFTER_UPGRADE=true
-export DAEMON_ALLOW_DOWNLOAD_BINARIES=false
-export DAEMON_POLL_INTERVAL=300ms
-export UNSAFE_SKIP_BACKUP=true
-export DAEMON_PREUPGRADE_MAX_RETRIES=0
 
 if [ "$NETWORK" == "mainnet" ]; then
     LAYERD_TAG=$LAYERD_TAG_MAINNET
@@ -155,6 +234,15 @@ elif [ "$NETWORK" == "palmito" ]; then
     LAYER_HOME=$PALMITO_LAYER_HOME
     CHAIN_ID="layertest-4"
 fi
+
+# set cosmovisor environment variables for init command (dynamic based on network)
+export DAEMON_NAME=layerd
+export DAEMON_HOME=$LAYER_HOME
+export DAEMON_RESTART_AFTER_UPGRADE=true
+export DAEMON_ALLOW_DOWNLOAD_BINARIES=false
+export DAEMON_POLL_INTERVAL=300ms
+export UNSAFE_SKIP_BACKUP=true
+export DAEMON_PREUPGRADE_MAX_RETRIES=0
 
 # check if layer home directory exists
 if [ -d "$LAYER_HOME" ]; then
@@ -183,7 +271,7 @@ echo "This is a quick-installer for Tellor Layer."
 echo "This script will: "
 echo "  1) download the latest layerd and cosmovisor binaries."
 echo "  2) initialize the layer node. (home dir: ~/.layer)."
-if [ OS == "linux" ]; then
+if [ "$OS" == "linux" ]; then
     echo "  3) Add cosmovisor environment variables to .bashrc."
 else
     echo "  3) Add cosmovisor environment variables to .zshrc."
@@ -227,6 +315,9 @@ while true; do
     esac
 done
 
+# Check disk space before proceeding with downloads
+check_disk_space
+
 # download the current layerd binary
 echo "Checking for layerd binary for $NETWORK..."
 mkdir -p ~/layer/binaries && cd ~/layer/binaries
@@ -237,6 +328,13 @@ echo "  GATHERING BINARIES..."
 echo "================================"
 echo ""
 sleep 1
+
+# Determine the binary file name based on OS
+if [ "$OS_TYPE" == "Darwin" ]; then
+    BINARY_FILE="layer_Darwin_arm64.tar.gz"
+else
+    BINARY_FILE="layer_Linux_x86_64.tar.gz"
+fi
 
 # Check if binary already exists and verify version
 if [ -d "$LAYERD_TAG" ] && [ -f "$LAYERD_TAG/layerd" ]; then
@@ -253,25 +351,52 @@ if [ -d "$LAYERD_TAG" ] && [ -f "$LAYERD_TAG/layerd" ]; then
         echo "Existing binary version ($EXISTING_VERSION) does not match required version ($LAYERD_TAG)."
         echo "Downloading correct version..."
         rm -rf $LAYERD_TAG
-        mkdir $LAYERD_TAG && cd $LAYERD_TAG && wget https://github.com/tellor-io/layer/releases/download/$LAYERD_TAG/layer_Linux_x86_64.tar.gz
-        tar -xvzf layer_Linux_x86_64.tar.gz
-        rm layer_Linux_x86_64.tar.gz
+        mkdir $LAYERD_TAG && cd $LAYERD_TAG
+        if ! wget https://github.com/tellor-io/layer/releases/download/$LAYERD_TAG/$BINARY_FILE; then
+            echo "Error: Failed to download layerd binary"
+            exit 1
+        fi
+        if ! tar -xvzf $BINARY_FILE; then
+            echo "Error: Failed to extract layerd binary"
+            exit 1
+        fi
+        rm $BINARY_FILE
         rm -rf $USER_HOME/.layer
     fi
 else
     echo "Binary not found. Downloading layerd binary for $NETWORK..."
-    mkdir -p $LAYERD_TAG && cd $LAYERD_TAG && wget https://github.com/tellor-io/layer/releases/download/$LAYERD_TAG/layer_Linux_x86_64.tar.gz
-    tar -xvzf layer_Linux_x86_64.tar.gz
-    rm layer_Linux_x86_64.tar.gz
+    mkdir -p $LAYERD_TAG && cd $LAYERD_TAG
+    if ! wget https://github.com/tellor-io/layer/releases/download/$LAYERD_TAG/$BINARY_FILE; then
+        echo "Error: Failed to download layerd binary"
+        exit 1
+    fi
+    if ! tar -xvzf $BINARY_FILE; then
+        echo "Error: Failed to extract layerd binary"
+        exit 1
+    fi
+    rm $BINARY_FILE
 fi
 
-# download the current cosmovisor binary
+# download the current cosmovisor binary (skip on macOS)
 # https://github.com/cosmos/cosmos-sdk/releases/tag/cosmovisor%2Fv1.3.0
-if [ -f ~/layer/binaries/cosmovisor/cosmovisor ]; then
-    echo "Cosmovisor binary already exists. Skipping download."
+if [ "$OS_TYPE" == "Darwin" ]; then
+    echo "Skipping cosmovisor binary download on macOS..."
 else
-    echo "Downloading cosmovisor binary..."
-    mkdir -p ~/layer/binaries/cosmovisor && cd ~/layer/binaries/cosmovisor && wget https://github.com/cosmos/cosmos-sdk/releases/download/cosmovisor%2Fv1.3.0/cosmovisor-v1.3.0-linux-amd64.tar.gz && tar -xvzf cosmovisor-v1.3.0-linux-amd64.tar.gz && rm cosmovisor-v1.3.0-linux-amd64.tar.gz
+    if [ -f ~/layer/binaries/cosmovisor/cosmovisor ]; then
+        echo "Cosmovisor binary already exists. Skipping download."
+    else
+        echo "Downloading cosmovisor binary..."
+        mkdir -p ~/layer/binaries/cosmovisor && cd ~/layer/binaries/cosmovisor
+        if ! wget https://github.com/cosmos/cosmos-sdk/releases/download/cosmovisor%2Fv1.3.0/cosmovisor-v1.3.0-linux-amd64.tar.gz; then
+            echo "Error: Failed to download cosmovisor binary"
+            exit 1
+        fi
+        if ! tar -xvzf cosmovisor-v1.3.0-linux-amd64.tar.gz; then
+            echo "Error: Failed to extract cosmovisor binary"
+            exit 1
+        fi
+        rm cosmovisor-v1.3.0-linux-amd64.tar.gz
+    fi
 fi
 
 LAYERD_PATH="$USER_HOME/layer/binaries/$LAYERD_TAG/layerd"
@@ -307,25 +432,21 @@ sleep 1
 
 # change denom, chain id, and timeout commit in config files
 echo "Changing configs for $NETWORK..."
-$SED_INPLACE 's/[0-9]\+stake/0loya/g' $LAYER_HOME/config/app.toml
-$SED_INPLACE 's/^chain-id = .*$/chain-id = "tellor-1"/g' $LAYER_HOME/config/client.toml
-$SED_INPLACE 's/timeout_commit = "5s"/timeout_commit = "1s"/' $LAYER_HOME/config/config.toml
-$SED_INPLACE 's/^cors_allowed_origins = \[\]/cors_allowed_origins = \["\*"\]/g' $LAYER_HOME/config/config.toml
-$SED_INPLACE 's/^keyring-backend = "os"/keyring-backend = "'$KEYRING_BACKEND'"/g' $LAYER_HOME/config/client.toml
-$SED_INPLACE 's/persistent_peers = ""/persistent_peers = "'$PEERS'"/g' $LAYER_HOME/config/config.toml
-# $SED_INPLACE 's/^send_rate = .*/send_rate = 10240000/' $LAYER_HOME/config/config.toml
-# $SED_INPLACE 's/^recv_rate = .*/recv_rate = 10240000/' $LAYER_HOME/config/config.toml
+sed_inplace 's/[0-9]\+stake/0loya/g' $LAYER_HOME/config/app.toml
+sed_inplace 's/^chain-id = .*$/chain-id = "'$CHAIN_ID'"/g' $LAYER_HOME/config/client.toml
+sed_inplace 's/timeout_commit = "5s"/timeout_commit = "1s"/' $LAYER_HOME/config/config.toml
+sed_inplace 's/^cors_allowed_origins = \[\]/cors_allowed_origins = \["\*"\]/g' $LAYER_HOME/config/config.toml
+sed_inplace 's/^keyring-backend = "os"/keyring-backend = "'$KEYRING_BACKEND'"/g' $LAYER_HOME/config/client.toml
+sed_inplace 's/persistent_peers = ""/persistent_peers = "'$PEERS'"/g' $LAYER_HOME/config/config.toml
 
 # change snapshot configs to match network normal
-# This make statesync work better accross the whole network..
-$SED_INPLACE 's/^snapshot-interval = 0/snapshot-interval = 32000/g' $LAYER_HOME/config/app.toml
-$SED_INPLACE 's/^snapshot-keep-recent = 2/snapshot-keep-recent = 5/g' $LAYER_HOME/config/app.toml
-$SED_INPLACE 's/^snapshot-interval = 32000/snapshot-interval = 32000/g' $LAYER_HOME/config/app.toml
-$SED_INPLACE 's/^snapshot-keep-recent = 5/snapshot-keep-recent = 5/g' $LAYER_HOME/config/app.toml
+# This makes statesync work better across the whole network
+sed_inplace 's/^snapshot-interval = 0/snapshot-interval = 32000/g' $LAYER_HOME/config/app.toml
+sed_inplace 's/^snapshot-keep-recent = 2/snapshot-keep-recent = 5/g' $LAYER_HOME/config/app.toml
 
 # open up API and RPC to outside traffic
-$SED_INPLACE 's/^address = "tcp:\/\/localhost:1317"/address = "tcp:\/\/0.0.0.0:1317"/g' $LAYER_HOME/config/app.toml
-$SED_INPLACE 's/^laddr = "tcp:\/\/127.0.0.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/g' $LAYER_HOME/config/config.toml
+sed_inplace 's/^address = "tcp:\/\/localhost:1317"/address = "tcp:\/\/0.0.0.0:1317"/g' $LAYER_HOME/config/app.toml
+sed_inplace 's/^laddr = "tcp:\/\/127.0.0.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/g' $LAYER_HOME/config/config.toml
 
 # Replace auto-generated genesis file with genesis from RPC
 rm -f $LAYER_HOME/config/genesis.json
@@ -381,6 +502,39 @@ else
     done
 fi
 
+# Function to extract and install snapshot
+extract_and_install_snapshot() {
+    local snapshot_file="$1"
+    local temp_dir="$2"
+    
+    # Extract the snapshot
+    echo "Extracting snapshot (this may take a while, file size ~40-80 GB)..."
+    cd "$temp_dir"
+    if ! tar -xf "$snapshot_file" --checkpoint=5000 --checkpoint-action=dot; then
+        echo ""
+        echo "Error: Failed to extract snapshot"
+        rm -rf "$temp_dir" "$VERSION_CHECK_DIR"
+        exit 1
+    fi
+    echo ""
+    
+    # Move the data files to the Layer home directory
+    echo "Moving blockchain data to $LAYER_HOME/data/..."
+    if [ -d "$temp_dir/.layer_snapshot/data" ]; then
+        cp -rf "$temp_dir/.layer_snapshot/data/"* "$LAYER_HOME/data/"
+        echo "Blockchain data successfully installed"
+    else
+        echo "Error: Expected .layer_snapshot/data directory not found in extracted snapshot"
+        rm -rf "$temp_dir" "$VERSION_CHECK_DIR"
+        exit 1
+    fi
+    
+    # Clean up temporary files
+    echo "Cleaning up temporary files..."
+    rm -rf "$temp_dir" "$VERSION_CHECK_DIR"
+    echo "Snapshot installation complete!"
+}
+
 # Handle snapshot installation based on flags
 if [ "$SKIP_SNAPSHOT" = true ]; then
     echo "Skipping snapshot installation (--no-snapshot flag provided)"
@@ -414,34 +568,16 @@ elif [ -n "$SNAPSHOT_PATH" ]; then
         exit 1
     fi
 
-    # Extract the snapshot
-    echo "Extracting snapshot (this may take a while, file size ~40-80 GB)..."
-    cd "$TEMP_DIR"
-    if ! tar -xf "$SNAPSHOT_PATH" --checkpoint=9999 --checkpoint-action=dot; then
-        echo ""
-        echo "Error: Failed to extract snapshot"
-        rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
-        exit 1
-    fi
-    echo ""
-    
-    # Move the data files to the Layer home directory
-    echo "Moving blockchain data to $LAYER_HOME/data/..."
-    if [ -d "$TEMP_DIR/.layer_snapshot/data" ]; then
-        cp -rf "$TEMP_DIR/.layer_snapshot/data/"* "$LAYER_HOME/data/"
-        echo "Blockchain data successfully installed"
-    else
-        echo "Error: Expected .layer_snapshot/data directory not found in extracted snapshot"
-        rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
-        exit 1
-    fi
-    
-    # Clean up temporary files
-    echo "Cleaning up temporary files..."
-    rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
-    echo "Snapshot installation complete!"
+    # Extract and install the snapshot
+    extract_and_install_snapshot "$SNAPSHOT_PATH" "$TEMP_DIR"
 else
     # Default behavior: Download and install the latest pre-built snapshot from https://layer-node.com
+    echo ""
+    echo "================================"
+    echo "    INSTALLING SNAPSHOT..."
+    echo "================================"
+    echo ""
+    sleep 1
     echo "Downloading and installing the latest pre-built snapshot from https://layer-node.com..."
     
     # Determine the network prefix for filtering snapshots
@@ -464,6 +600,7 @@ else
     
     # Create temporary download directory
     TEMP_DIR="$USER_HOME/tmp/layer_snapshot_download"
+    VERSION_CHECK_DIR="$USER_HOME/tmp/layerd-version-check"
     echo "Creating temporary download directory: $TEMP_DIR"
     if ! mkdir -p "$TEMP_DIR"; then
         echo "Error: Failed to create temporary download directory"
@@ -478,68 +615,39 @@ else
         exit 1
     fi
     
-    # Extract the snapshot
-    echo "Extracting snapshot..."
-    cd "$TEMP_DIR"
-    if ! tar -xf "$SNAPSHOT_FILE" --checkpoint=5000 --checkpoint-action=dot; then
-        echo ""
-        echo "Error: Failed to extract snapshot"
-        rm -rf "$TEMP_DIR"
-        exit 1
-    fi
-    echo ""
-    
-    # Move the data files to the Layer home directory
-    echo "Moving blockchain data to $LAYER_HOME/data/..."
-    if [ -d "$TEMP_DIR/.layer_snapshot/data" ]; then
-        cp -rf "$TEMP_DIR/.layer_snapshot/data/"* "$LAYER_HOME/data/"
-        echo "Blockchain data successfully installed"
-    else
-        echo "Error: Expected .layer_snapshot/data directory not found in extracted snapshot"
-        rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
-        exit 1
-    fi
-    
-    # Clean up temporary files
-    echo "Cleaning up temporary files..."
-    rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
-    echo "Snapshot installation complete!"
-fi
-
-echo ""
-echo "================================"
-echo "    CONFIGURING COSMOVISOR..."
-echo "================================"
-echo ""
-sleep 1
-
-# Add environment variables to shell RC file
-if [ "$OS" == "linux" ]; then
-    echo "Adding cosmovisor environment variables to .bashrc..."
-else
-    echo "Adding cosmovisor environment variables to .zshrc..."
-fi
-
-echo "export DAEMON_NAME=layerd" >> $SHELL_RC
-echo "export DAEMON_HOME=$HOME/.layer" >> $SHELL_RC
-echo "export DAEMON_RESTART_AFTER_UPGRADE=true" >> $SHELL_RC
-echo "export DAEMON_ALLOW_DOWNLOAD_BINARIES=false" >> $SHELL_RC
-echo "export DAEMON_POLL_INTERVAL=300ms" >> $SHELL_RC
-echo "export UNSAFE_SKIP_BACKUP=true" >> $SHELL_RC
-echo "export DAEMON_PREUPGRADE_MAX_RETRIES=0" >> $SHELL_RC
-echo "Environment variables added successfully."
-
-# Adding binaries to cosmovisor
-echo ""
-echo "Initializing cosmovisor with layerd binary..."
-if $USER_HOME/layer/binaries/cosmovisor/cosmovisor init $USER_HOME/layer/binaries/$LAYERD_TAG/layerd; then
-    echo "Cosmovisor initialized successfully."
-else
-    echo "Warning: Cosmovisor initialization failed, but continuing..."
+    # Extract and install the snapshot
+    extract_and_install_snapshot "$TEMP_DIR/$SNAPSHOT_FILE" "$TEMP_DIR"
 fi
 
 # Create systemd service file (Linux only)
 if [ "$OS" == "linux" ]; then
+    echo ""
+    echo "================================"
+    echo "    CONFIGURING COSMOVISOR..."
+    echo "================================"
+    echo ""
+    sleep 1
+
+    # Add environment variables to shell RC file
+    echo "Adding cosmovisor environment variables to $SHELL_RC..."
+
+    echo "export DAEMON_NAME=layerd" >> $SHELL_RC
+    echo "export DAEMON_HOME=$LAYER_HOME" >> $SHELL_RC
+    echo "export DAEMON_RESTART_AFTER_UPGRADE=true" >> $SHELL_RC
+    echo "export DAEMON_ALLOW_DOWNLOAD_BINARIES=false" >> $SHELL_RC
+    echo "export DAEMON_POLL_INTERVAL=300ms" >> $SHELL_RC
+    echo "export UNSAFE_SKIP_BACKUP=true" >> $SHELL_RC
+    echo "export DAEMON_PREUPGRADE_MAX_RETRIES=0" >> $SHELL_RC
+    echo "Environment variables added successfully."
+
+    # Adding binaries to cosmovisor
+    echo ""
+    echo "Initializing cosmovisor with layerd binary..."
+    if $USER_HOME/layer/binaries/cosmovisor/cosmovisor init $USER_HOME/layer/binaries/$LAYERD_TAG/layerd; then
+        echo "Cosmovisor initialized successfully."
+    else
+        echo "Warning: Cosmovisor initialization failed, but continuing..."
+    fi
     echo ""
     echo "========================================"
     echo " CREATING EXAMPLE SYSTEMD SERVICE FILE"
@@ -548,6 +656,8 @@ if [ "$OS" == "linux" ]; then
     sleep 1
     SERVICE_FILE_PATH="$USER_HOME/layer/layer.service"
 
+    USERNAME=$(get_username)
+    
     # Determine the service file content based on whether NODE_MONIKER is set
     if [ -z "$NODE_MONIKER" ]; then
         # No NODE_MONIKER, so don't include --key-name flag
@@ -557,8 +667,8 @@ Description=Cosmovisor Layer Node Service
 After=network-online.target
 
 [Service]
-User=$(logname)
-Group=$(logname)
+User=$USERNAME
+Group=$USERNAME
 WorkingDirectory=$USER_HOME/layer
 ExecStart=$USER_HOME/layer/binaries/cosmovisor/cosmovisor run start --home $LAYER_HOME --keyring-backend="$KEYRING_BACKEND" --api.enable --api.swagger
 Restart=always
@@ -582,8 +692,8 @@ Description=Cosmovisor Layer Node Service
 After=network-online.target
 
 [Service]
-User=$(logname)
-Group=$(logname)
+User=$USERNAME
+Group=$USERNAME
 WorkingDirectory=$USER_HOME/layer
 ExecStart=$USER_HOME/layer/binaries/cosmovisor/cosmovisor run start --home $LAYER_HOME --keyring-backend="$KEYRING_BACKEND" --key-name="$NODE_MONIKER" --api.enable --api.swagger
 Restart=always
@@ -621,15 +731,22 @@ EOF
     echo "To view logs:"
     echo "  sudo journalctl -fu layer.service"
     echo ""
+    echo "To start your node in a foreground terminal:"
+    echo "  cd $USER_HOME/layer/binaries/$LAYERD_TAG && ./layerd start --home $LAYER_HOME --keyring-backend $KEYRING_BACKEND --api.enable --api.swagger"
+    echo ""
     echo "================================"
+    echo "    NODE SETUP COMPLETE :)"
+    echo "================================"
+    echo ""
 fi
 
-echo "All done!"
-echo "To start the node manually (or if on macos):"
-echo "  ./layerd start --home $LAYER_HOME --keyring-backend $KEYRING_BACKEND --api.enable --api.swagger"
-echo ""
-
-echo "================================"
-echo "    NODE SETUP COMPLETE :)"
-echo "================================"
-echo ""
+if [ "$OS" == "mac" ]; then
+    echo "All done!"
+    echo "Layerd start command:"
+    echo "  cd $USER_HOME/layer/binaries/$LAYERD_TAG && ./layerd start --home $LAYER_HOME --keyring-backend $KEYRING_BACKEND --api.enable --api.swagger"
+    echo ""
+    echo "================================"
+    echo "    NODE SETUP COMPLETE :)"
+    echo "================================"
+    echo ""
+fi
