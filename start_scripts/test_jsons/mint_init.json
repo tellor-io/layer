@@ -1,0 +1,12 @@
+{
+    "messages": [
+      {
+        "@type": "/layer.mint.MsgInit",
+        "authority": "tellor10d07y265gmmuvt4z0w9aw880jnsr700j6527vx"
+      }
+    ],
+    "metadata": "mint initialization proposal",
+    "deposit": "1000000loya",
+    "title": "Initialize Mint Module",
+    "summary": "Initialize the mint module to start time-based rewards minting!!"
+}
