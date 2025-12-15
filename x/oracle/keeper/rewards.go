@@ -24,8 +24,8 @@ func (k Keeper) GetTimeBasedRewardsAccount(ctx context.Context) sdk.ModuleAccoun
 	return k.accountKeeper.GetModuleAccount(ctx, minttypes.TimeBasedRewards)
 }
 
-func (k Keeper) AllocateTip(ctx context.Context, addr, queryId []byte, amount math.LegacyDec, height uint64) error {
-	return k.reporterKeeper.DivvyingTips(ctx, addr, amount, queryId, height)
+func (k Keeper) AllocateTip(ctx context.Context, addr []byte, amount math.LegacyDec) error {
+	return k.reporterKeeper.DivvyingTips(ctx, addr, amount)
 }
 
 func (k Keeper) DistributeRewards(ctx context.Context, tipRewardAllocation map[uint64]rewards, tipRewardKeys []uint64) error {
@@ -49,7 +49,7 @@ func (k Keeper) DistributeRewards(ctx context.Context, tipRewardAllocation map[u
 				return err
 			}
 			amount := math.LegacyNewDec(int64(report.Power)).Quo(math.LegacyNewDec(int64(aggregateReport.AggregatePower))).Mul(aggregateReward.reward)
-			err = k.AllocateTip(ctx, reporterk.K2(), report.QueryId, amount, report.BlockNumber)
+			err = k.AllocateTip(ctx, reporterk.K2(), amount)
 			if err != nil {
 				return err
 			}
