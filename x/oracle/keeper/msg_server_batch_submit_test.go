@@ -82,7 +82,7 @@ func (s *KeeperTestSuite) TestBatchSubmitValue() {
 		// Mock registry keeper for spec lookups
 		s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(spotSpec, nil).Times(2)
 
-		rk.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil).Once()
+		rk.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil, nil, nil).Once()
 		rk.On("SetReporterStakeByQueryId", s.ctx, addr, delegations, minStakeAmt.Add(math.NewInt(100)), queryId).Return(nil).Once()
 		rk.On("SetReporterStakeByQueryId", s.ctx, addr, delegations, minStakeAmt.Add(math.NewInt(100)), queryId2).Return(nil).Once()
 
@@ -154,7 +154,7 @@ func (s *KeeperTestSuite) TestBatchSubmitValue() {
 			},
 		}
 
-		rk.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil).Once()
+		rk.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil, nil, nil).Once()
 
 		msg := &types.MsgBatchSubmitValue{
 			Creator: addr.String(),
@@ -175,7 +175,7 @@ func (s *KeeperTestSuite) TestBatchSubmitValue() {
 			},
 		}
 
-		rk.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Sub(math.NewInt(100)), delegations, nil).Once()
+		rk.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Sub(math.NewInt(100)), delegations, nil, nil, nil).Once()
 
 		msg := &types.MsgBatchSubmitValue{
 			Creator: addr.String(),
@@ -207,7 +207,7 @@ func (s *KeeperTestSuite) TestBatchSubmitValue() {
 		// Mock registry keeper for the successful query
 		s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(spotSpec, nil).Once()
 
-		rk.On("GetReporterStake", s.ctx, addr2).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil).Once()
+		rk.On("GetReporterStake", s.ctx, addr2).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil, nil, nil).Once()
 		rk.On("SetReporterStakeByQueryId", s.ctx, addr2, delegations, minStakeAmt.Add(math.NewInt(100)), queryId).Return(nil).Once()
 
 		msg := &types.MsgBatchSubmitValue{
@@ -243,7 +243,7 @@ func (s *KeeperTestSuite) TestBatchSubmitValue() {
 
 	// Test 6: GetReporterStake error
 	s.Run("GetReporterStake error", func() {
-		rk.On("GetReporterStake", s.ctx, addr).Return(math.ZeroInt(), nil, errors.New("reporter error")).Once()
+		rk.On("GetReporterStake", s.ctx, addr).Return(math.ZeroInt(), nil, nil, nil, errors.New("reporter error")).Once()
 
 		msg := &types.MsgBatchSubmitValue{
 			Creator: addr.String(),
@@ -269,7 +269,7 @@ func (s *KeeperTestSuite) TestBatchSubmitValue() {
 			},
 		}
 
-		rk.On("GetReporterStake", s.ctx, addr3).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil).Once()
+		rk.On("GetReporterStake", s.ctx, addr3).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil, nil, nil).Once()
 		s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(spotSpec, nil).Once()
 		rk.On("SetReporterStakeByQueryId", s.ctx, addr3, delegations, minStakeAmt.Add(math.NewInt(100)), queryId).Return(errors.New("set stake error")).Once()
 
@@ -302,7 +302,7 @@ func (s *KeeperTestSuite) TestBatchSubmitValue() {
 			},
 		}
 
-		rk.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil).Once()
+		rk.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil, nil, nil).Once()
 		rk.On("SetReporterStakeByQueryId", s.ctx, addr, delegations, minStakeAmt.Add(math.NewInt(100)), mock.Anything).Return(nil).Once()
 
 		// Mock registry keeper for bridge spec
@@ -341,7 +341,7 @@ func (s *KeeperTestSuite) TestBatchSubmitValue_EmptyBatch() {
 	require.NoError(err)
 	minStakeAmt := params.MinStakeAmount
 
-	s.reporterKeeper.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil).Once()
+	s.reporterKeeper.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil, nil, nil).Once()
 
 	msg := &types.MsgBatchSubmitValue{
 		Creator: addr.String(),
@@ -369,7 +369,7 @@ func (s *KeeperTestSuite) TestBatchSubmitValue_AllFailures() {
 	require.NoError(err)
 	minStakeAmt := params.MinStakeAmount
 
-	s.reporterKeeper.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil).Once()
+	s.reporterKeeper.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil, nil, nil).Once()
 
 	msg := &types.MsgBatchSubmitValue{
 		Creator: addr.String(),

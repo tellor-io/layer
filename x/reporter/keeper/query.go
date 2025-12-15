@@ -41,7 +41,7 @@ func (k Querier) Reporters(ctx context.Context, req *types.QueryReportersRequest
 		if err != nil {
 			return err
 		}
-		stake, _, err := k.GetReporterStake(ctx, sdk.AccAddress(repAddr))
+		stake, _, _, _, err := k.GetReporterStake(ctx, sdk.AccAddress(repAddr))
 		if err != nil {
 			stake = math.ZeroInt()
 		}
@@ -255,7 +255,7 @@ func (k Querier) JailedReporters(ctx context.Context, req *types.QueryJailedRepo
 		if !reporterMeta.Jailed {
 			return false, nil
 		}
-		stake, _, err := k.GetReporterStake(ctx, sdk.AccAddress(repAddr))
+		stake, _, _, _, err := k.GetReporterStake(ctx, sdk.AccAddress(repAddr))
 		if err != nil {
 			stake = math.ZeroInt()
 		}
@@ -286,7 +286,7 @@ func (k Querier) Reporter(ctx context.Context, req *types.QueryReporterRequest) 
 		return nil, status.Error(codes.NotFound, "reporter not found")
 	}
 
-	stake, _, err := k.GetReporterStake(ctx, repAddr)
+	stake, _, _, _, err := k.GetReporterStake(ctx, repAddr)
 	if err != nil {
 		stake = math.ZeroInt()
 	}

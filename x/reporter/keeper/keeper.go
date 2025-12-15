@@ -31,6 +31,11 @@ type (
 		FeePaidFromStake          collections.Map[[]byte, types.DelegationsAmounts]                                                                                         // key: dispute hashId
 		Report                    *collections.IndexedMap[collections.Pair[[]byte, collections.Pair[[]byte, uint64]], types.DelegationsAmounts, ReporterBlockNumberIndexes] // key: queryId, (reporter AccAddress, blockNumber)
 
+		// Distribution queue collections
+		ReporterPeriodData       collections.Map[[]byte, types.PeriodRewardData]      // key: reporter AccAddress -> current period data
+		DistributionQueue        collections.Map[uint64, types.DistributionQueueItem] // key: queue index -> item to distribute
+		DistributionQueueCounter collections.Item[types.DistributionQueueCounter]     // tracks head and tail of queue
+
 		Schema collections.Schema
 		logger log.Logger
 
@@ -76,12 +81,15 @@ func NewKeeper(
 			sb, types.ReporterPrefix, "report",
 			collections.PairKeyCodec(collections.BytesKey, collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)), codec.CollValue[types.DelegationsAmounts](cdc), newReportIndexes(sb),
 		),
-		authority:      authority,
-		logger:         logger,
-		accountKeeper:  accountKeeper,
-		stakingKeeper:  stakingKeeper,
-		bankKeeper:     bankKeeper,
-		registryKeeper: registryKeeper,
+		ReporterPeriodData:       collections.NewMap(sb, types.ReporterPeriodDataPrefix, "reporter_period_data", collections.BytesKey, codec.CollValue[types.PeriodRewardData](cdc)),
+		DistributionQueue:        collections.NewMap(sb, types.DistributionQueuePrefix, "distribution_queue", collections.Uint64Key, codec.CollValue[types.DistributionQueueItem](cdc)),
+		DistributionQueueCounter: collections.NewItem(sb, types.DistributionQueueCounterPrefix, "distribution_queue_counter", codec.CollValue[types.DistributionQueueCounter](cdc)),
+		authority:                authority,
+		logger:                   logger,
+		accountKeeper:            accountKeeper,
+		stakingKeeper:            stakingKeeper,
+		bankKeeper:               bankKeeper,
+		registryKeeper:           registryKeeper,
 	}
 	schema, err := sb.Build()
 	if err != nil {
