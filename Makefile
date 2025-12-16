@@ -78,8 +78,8 @@ build-with-checksum: build-linux-with-checksum build-darwin-with-checksum
 ###############################################################################
 ###                                Linting                                  ###
 ###############################################################################
-# Golangci-lint version
-golangci_version=v1.64.0
+# Golangci-lint version (v2 required for Go 1.25+)
+golangci_version=v2.7.2
 
 #? setup-pre-commit: Set pre-commit git hook
 setup-pre-commit:
@@ -88,10 +88,22 @@ setup-pre-commit:
 	@ln -sf ../../scripts/hooks/pre-commit.sh .git/hooks/pre-commit
 	@echo "Pre-commit hook installed successfully"
 
-#? lint-install: Install golangci-lint
+#? lint-install: Install golangci-lint v2 (builds from source for Go 1.25+ support)
 lint-install:
-	@echo "--> Installing golangci-lint $(golangci_version)"
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
+	@echo "--> Checking golangci-lint installation"
+	@if golangci-lint --version 2>/dev/null | grep -qE "($(golangci_version)|2\.[0-9]+\.[0-9]+.*go1\.25)"; then \
+		echo "golangci-lint already installed with Go 1.25+ support"; \
+	else \
+		echo "Building golangci-lint $(golangci_version) from source for Go 1.25+ support..."; \
+		rm -rf /tmp/golangci-lint-build && \
+		git clone --depth 1 --branch $(golangci_version) https://github.com/golangci/golangci-lint.git /tmp/golangci-lint-build && \
+		cd /tmp/golangci-lint-build && \
+		sed -i 's/go 1.24/go 1.25/' go.mod && \
+		go mod tidy && \
+		go build -o $$(go env GOPATH)/bin/golangci-lint ./cmd/golangci-lint && \
+		rm -rf /tmp/golangci-lint-build && \
+		echo "golangci-lint $(golangci_version) installed successfully"; \
+	fi
 
 #? lint: Run golangci-lint
 lint:
@@ -99,19 +111,19 @@ lint:
 	$(MAKE) lint-install
 	@./scripts/go-lint-all.bash --timeout=15m
 
-#? lint: Run golangci-lint and fix 
+#? lint-fix: Run golangci-lint and fix
 lint-fix:
-	@echo "--> Running linter"
+	@echo "--> Running linter with auto-fix"
 	$(MAKE) lint-install
 	@./scripts/go-lint-all.bash --fix
 
-# Lint specific folders
+#? lint-folder-fix: Lint specific folders with auto-fix
 lint-folder-fix:
 	@echo "--> Running linter for specified folders: $(FOLDER)"
 	$(MAKE) lint-install
 	@./scripts/go-lint-all.bash $(FOLDER) --fix
 
-.PHONY: lint lint-fix lint-folder
+.PHONY: lint lint-install lint-fix lint-folder-fix
 
 
 ###############################################################################

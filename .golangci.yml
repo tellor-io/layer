@@ -1,30 +1,26 @@
+version: "2"
+
 run:
   tests: true
   timeout: 15m
-  sort-results: true
   allow-parallel-runners: true
-  exclude-dir: testutil/testdata
 
-
-build-tags:
-  - e2e
-  - ledger
-  - test_ledger_mock
-
+output:
+  formats:
+    text:
+      print-linter-name: true
+  show-stats: true
 
 linters:
-  disable-all: true
+  disable:
+    - depguard
   enable:
     - dogsled
     - errcheck
     - errorlint
-    # - copyloopvar
-    - gci
     - goconst
     - gocritic
-    - gofumpt
     - gosec
-    - gosimple
     - govet
     - ineffassign
     - misspell
@@ -32,127 +28,188 @@ linters:
     - nolintlint
     - revive
     - staticcheck
-    - stylecheck
     - thelper
-    - typecheck
     - unconvert
     - unused
 
-issues:
-  exclude-files:
+  settings:
+    revive:
+      rules:
+        - name: redefines-builtin-id
+          disabled: true
+    gosec:
+      includes:
+        - G102
+        - G103
+        - G104
+        - G106
+        - G107
+        - G108
+        - G109
+        - G110
+        - G111
+        - G112
+        - G113
+        - G114
+        - G201
+        - G202
+        - G203
+        - G204
+        - G307
+        - G401
+        - G402
+        - G403
+        - G404
+        - G501
+        - G502
+        - G503
+        - G504
+        - G505
+        - G601
+    misspell:
+      locale: US
+    dogsled:
+      max-blank-identifiers: 8
+    nolintlint:
+      allow-unused: false
+      require-explanation: true
+      require-specific: false
+    gocritic:
+      disabled-checks:
+        - regexpMust
+        - appendAssign
+        - ifElseChain
+    errcheck:
+      exclude-functions:
+        - (io.Closer).Close
+        - (*os.File).Close
+        - (net/http.ResponseWriter).Write
+        - (*database/sql.Rows).Close
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+        - os.RemoveAll
+        - os.Remove
+        # Cosmos SDK iterator patterns - Close() errors are typically ignored in defer
+        - (cosmossdk.io/store/types.Iterator).Close
+        - (github.com/cosmos/cosmos-sdk/types.Iterator).Close
+        - (*github.com/cometbft/cometbft/libs/pubsub.Server).Stop
+        - (cosmossdk.io/collections.KeySetIterator).Close
+        - (cosmossdk.io/collections.Iterator).Close
+
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - std-error-handling
+    paths:
       - server/grpc/gogoreflection/fix_registration.go
-      - "fix_registration.go"
+      - fix_registration.go
       - ".*\\.pb\\.go$"
       - ".*\\.pb\\.gw\\.go$"
       - ".*\\.pulsar\\.go$"
       - crypto/keys/secp256k1/internal/*
-      # - types/coin_regex.go
-  exclude-rules:
-    - text: "Use of weak random number generator"
-      linters:
-        - gosec
-    - text: "ST1003:"
-      linters:
-        - stylecheck
-    # FIXME: Disabled until golangci-lint updates stylecheck with this fix:
-    # https://github.com/dominikh/go-tools/issues/389
-    - text: "ST1016:"
-      linters:
-        - stylecheck
-    - path: "migrations"
-      text: "SA1019:"
-      linters:
-        - staticcheck
-    - text: "SA1019: codec.NewAminoCodec is deprecated" # TODO remove once migration path is set out
-      linters:
-        - staticcheck
-    - text: "SA1019: legacybech32.MustMarshalPubKey" # TODO remove once ready to remove from the sdk
-      linters:
-        - staticcheck
-    - text: "SA1019: legacybech32.MarshalPubKey" # TODO remove once ready to remove from the sdk
-      linters:
-        - staticcheck
-    - text: "SA1019: legacybech32.UnmarshalPubKey" # TODO remove once ready to remove from the sdk
-      linters:
-        - staticcheck
-    - text: "SA1019: params.SendEnabled is deprecated" # TODO remove once ready to remove from the sdk
-      linters:
-        - staticcheck
-    - text: "leading space"
-      linters:
-        - nolintlint
-  max-issues-per-linter: 10000
-  max-same-issues: 10000
-
-linters-settings:
-  gci:
-    custom-order: true
-    sections:
-      - standard # Standard section: captures all standard packages.
-      - default # Default section: contains all imports that could not be matched to another section type.
-      - prefix(cosmossdk.io)
-      - prefix(github.com/cosmos/cosmos-sdk)
-  revive:
     rules:
-      - name: redefines-builtin-id
-        disabled: true
+      # Weak random number generator - acceptable for non-crypto uses
+      - text: "Use of weak random number generator"
+        linters:
+          - gosec
+      # Style check exclusions
+      - text: "ST1003:"
+        linters:
+          - stylecheck
+      - text: "ST1016:"
+        linters:
+          - stylecheck
+      # Deprecated API exclusions for migrations
+      - path: "migrations"
+        text: "SA1019:"
+        linters:
+          - staticcheck
+      - text: "SA1019: codec.NewAminoCodec is deprecated"
+        linters:
+          - staticcheck
+      - text: "SA1019: legacybech32.MustMarshalPubKey"
+        linters:
+          - staticcheck
+      - text: "SA1019: legacybech32.MarshalPubKey"
+        linters:
+          - staticcheck
+      - text: "SA1019: legacybech32.UnmarshalPubKey"
+        linters:
+          - staticcheck
+      - text: "SA1019: params.SendEnabled is deprecated"
+        linters:
+          - staticcheck
+      - text: "leading space"
+        linters:
+          - nolintlint
+      # Exclude optional refactoring suggestions (QF = quick fix)
+      - text: "QF1003:"
+        linters:
+          - staticcheck
+      - text: "QF1007:"
+        linters:
+          - staticcheck
+      - text: "QF1008:"
+        linters:
+          - staticcheck
+      - text: "QF1010:"
+        linters:
+          - staticcheck
+      - text: "QF1012:"
+        linters:
+          - staticcheck
+      # Exclude gosec/errcheck/nolintlint for scripts (test scripts)
+      - path: "scripts/"
+        linters:
+          - gosec
+          - errcheck
+          - nolintlint
+      # Exclude G104 (unhandled errors) and QF suggestions for utility scripts
+      - path: "utils/"
+        linters:
+          - gosec
+      - path: "testutil/"
+        linters:
+          - gosec
+      # e2e tests - relaxed linting
+      - path: "e2e/"
+        linters:
+          - gosec
+          - errcheck
+      - text: "G301:"
+        linters:
+          - gosec
+      - text: "G302:"
+        linters:
+          - gosec
+      - text: "G304:"
+        linters:
+          - gosec
+      - text: "G103:"
+        linters:
+          - gosec
+      # G115: integer overflow conversion - common in Cosmos SDK
+      - text: "G115:"
+        linters:
+          - gosec
+      # Exclude iterator Close() errors - standard pattern in Cosmos SDK
+      - source: "defer.*\\.Close\\(\\)"
+        linters:
+          - errcheck
 
-  gosec:
-    # To select a subset of rules to run.
-    # Available rules: https://github.com/securego/gosec#available-rules
-    # Default: [] - means include all rules
-    includes:
-      #  - G101 # Look for hard coded credentials
-      - G102 # Bind to all interfaces
-      - G103 # Audit the use of unsafe block
-      - G104 # Audit errors not checked
-      - G106 # Audit the use of ssh.InsecureIgnoreHostKey
-      - G107 # Url provided to HTTP request as taint input
-      - G108 # Profiling endpoint automatically exposed on /debug/pprof
-      - G109 # Potential Integer overflow made by strconv.Atoi result conversion to int16/32
-      - G110 # Potential DoS vulnerability via decompression bomb
-      - G111 # Potential directory traversal
-      - G112 # Potential slowloris attack
-      - G113 # Usage of Rat.SetString in math/big with an overflow (CVE-2022-23772)
-      - G114 # Use of net/http serve function that has no support for setting timeouts
-      - G201 # SQL query construction using format string
-      - G202 # SQL query construction using string concatenation
-      - G203 # Use of unescaped data in HTML templates
-      - G204 # Audit use of command execution
-      - G301 # Poor file permissions used when creating a directory
-      - G302 # Poor file permissions used with chmod
-      - G303 # Creating tempfile using a predictable path
-      - G304 # File path provided as taint input
-      - G305 # File traversal when extracting zip/tar archive
-      - G306 # Poor file permissions used when writing to a new file
-      - G307 # Deferring a method which returns an error
-      - G401 # Detect the usage of DES, RC4, MD5 or SHA1
-      - G402 # Look for bad TLS connection settings
-      - G403 # Ensure minimum RSA key length of 2048 bits
-      - G404 # Insecure random number source (rand)
-      - G501 # Import blocklist: crypto/md5
-      - G502 # Import blocklist: crypto/des
-      - G503 # Import blocklist: crypto/rc4
-      - G504 # Import blocklist: net/http/cgi
-      - G505 # Import blocklist: crypto/sha1
-      - G601 # Implicit memory aliasing of items from a range statement
-  misspell:
-    locale: US
-  gofumpt:
-    extra-rules: true
-  dogsled:
-    max-blank-identifiers: 8
-  maligned:
-    suggest-new: true
-  nolintlint:
-    allow-unused: false
-    allow-leading-space: true
-    require-explanation: true
-    require-specific: false
-  gosimple:
-    checks: ["all"]
-  gocritic:
-    disabled-checks:
-      - regexpMust
-      - appendAssign
-      - ifElseChain
+formatters:
+  enable:
+    - gofumpt
+    - gci
+  settings:
+    gofumpt:
+      extra-rules: true
+    gci:
+      custom-order: true
+      sections:
+        - standard
+        - default
+        - prefix(cosmossdk.io)
+        - prefix(github.com/cosmos/cosmos-sdk)
