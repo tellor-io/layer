@@ -13,11 +13,15 @@ import (
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/shirou/gopsutil/v3/process"
+	"github.com/spf13/viper"
 	tokenbridgetipstypes "github.com/tellor-io/layer/daemons/server/types/token_bridge_tips"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 const (
@@ -217,6 +221,72 @@ func (c *Client) WithdrawAndStakeEarnedRewardsPeriodically(ctx context.Context, 
 		c.txChan <- TxChannelInfo{Msg: withdrawMsg, isBridge: false, NumRetries: 0, QueryMetaId: 0}
 
 		time.Sleep(time.Duration(frequency) * time.Second)
+	}
+}
+
+func (c *Client) AutoUnbondStakePeriodically(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
+	frequency := viper.GetUint32("auto-unbonding-frequency")
+	amount := viper.GetUint32("auto-unbonding-amount")
+	maxStakePercentageStr := viper.GetString("auto-unbonding-max-stake-percentage")
+
+	secondsInDay := 86400
+	ticker := time.NewTicker(time.Duration(secondsInDay*int(frequency)) * time.Second)
+	defer ticker.Stop()
+
+	if frequency == 0 {
+		c.logger.Info("Auto unbonding is disabled")
+		return
+	}
+	maxStakePercentage, err := math.LegacyNewDecFromStr(maxStakePercentageStr)
+	if err != nil {
+		c.logger.Error("Could not start auto unbonding process due to incorrect parameter. Please enter a valid decimal for the maximum stake percentage")
+		panic(err)
+	}
+	unbondAmount := math.NewInt(int64(amount))
+	valAddr := os.Getenv("REPORTERS_VALIDATOR_ADDRESS")
+	if valAddr == "" {
+		fmt.Println("Returning from Withdraw Monitor due to no validator address env variable was found")
+		return
+	}
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			reporterData, err := c.ReporterClient.SelectionsTo(ctx, &reportertypes.QuerySelectionsToRequest{
+				ReporterAddress: c.accAddr.String(),
+			})
+			if err != nil {
+				c.logger.Error("error getting reporter data", "error", err)
+				continue
+			}
+			if len(reporterData.Selections) == 0 {
+				continue
+			}
+			reporterStake := math.LegacyZeroDec()
+			for _, selection := range reporterData.Selections {
+				if selection.Selector == c.accAddr.String() {
+					reporterStake = selection.DelegationsTotal.ToLegacyDec()
+					break
+				}
+			}
+
+			maxStakeAbleToWithdraw := reporterStake.Mul(maxStakePercentage)
+
+			if maxStakeAbleToWithdraw.LT(math.LegacyNewDecFromInt(unbondAmount)) {
+				c.logger.Info("Not enough stake to withdraw", "reporterStake", reporterStake, "maxStakeAbleToWithdraw", maxStakeAbleToWithdraw)
+				continue
+			}
+
+			unbondMsg := &stakingtypes.MsgUndelegate{
+				DelegatorAddress: c.accAddr.String(),
+				ValidatorAddress: valAddr,
+				Amount:           sdk.NewCoin("loya", unbondAmount),
+			}
+			c.txChan <- TxChannelInfo{Msg: unbondMsg, isBridge: false, NumRetries: 0, QueryMetaId: 0}
+
+		}
 	}
 }
 
