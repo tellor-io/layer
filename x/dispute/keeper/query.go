@@ -3,10 +3,12 @@ package keeper
 import (
 	"context"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 
 	"github.com/tellor-io/layer/x/dispute/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -29,6 +31,55 @@ func NewQuerier(keeper Keeper) Querier {
 	return Querier{Keeper: keeper}
 }
 
+// convertMicroReportToStrings converts MicroReport to MicroReportStrings (string queryId)
+func convertMicroReportToStrings(mr oracletypes.MicroReport) oracletypes.MicroReportStrings {
+	return oracletypes.MicroReportStrings{
+		Reporter:        mr.Reporter,
+		Power:           mr.Power,
+		QueryType:       mr.QueryType,
+		QueryId:         hex.EncodeToString(mr.QueryId),
+		AggregateMethod: mr.AggregateMethod,
+		Value:           mr.Value,
+		Timestamp:       uint64(mr.Timestamp.UnixMilli()),
+		Cyclelist:       mr.Cyclelist,
+		BlockNumber:     mr.BlockNumber,
+		MetaId:          mr.MetaId,
+	}
+}
+
+// take dispute, return hash id and all evidence as strings for display
+func convertDisputeToStrings(d types.Dispute) types.DisputeStrings {
+	// convert all additional evidence to string types
+	additionalEvidence := make([]*oracletypes.MicroReportStrings, len(d.AdditionalEvidence))
+	for i, evidence := range d.AdditionalEvidence {
+		converted := convertMicroReportToStrings(*evidence)
+		additionalEvidence[i] = &converted
+	}
+
+	// convert initial evidence to string type
+	return types.DisputeStrings{
+		HashId:             hex.EncodeToString(d.HashId),
+		DisputeId:          d.DisputeId,
+		DisputeCategory:    d.DisputeCategory,
+		DisputeFee:         d.DisputeFee,
+		DisputeStatus:      d.DisputeStatus,
+		DisputeStartTime:   d.DisputeStartTime,
+		DisputeEndTime:     d.DisputeEndTime,
+		DisputeStartBlock:  d.DisputeStartBlock,
+		DisputeRound:       d.DisputeRound,
+		SlashAmount:        d.SlashAmount,
+		BurnAmount:         d.BurnAmount,
+		InitialEvidence:    convertMicroReportToStrings(d.InitialEvidence),
+		FeeTotal:           d.FeeTotal,
+		PrevDisputeIds:     d.PrevDisputeIds,
+		BlockNumber:        d.BlockNumber,
+		Open:               d.Open,
+		AdditionalEvidence: additionalEvidence,
+		VoterReward:        d.VoterReward,
+		PendingExecution:   d.PendingExecution,
+	}
+}
+
 func (k Querier) Disputes(ctx context.Context, req *types.QueryDisputesRequest) (*types.QueryDisputesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -43,9 +94,10 @@ func (k Querier) Disputes(ctx context.Context, req *types.QueryDisputesRequest) 
 			return err
 		}
 		id := binary.BigEndian.Uint64(disputeID)
+		disputeStrings := convertDisputeToStrings(dispute)
 		disputes = append(disputes, &types.Disputes{
 			DisputeId: id,
-			Metadata:  &dispute,
+			Metadata:  &disputeStrings,
 		})
 		return nil
 	})
@@ -67,10 +119,11 @@ func (k Querier) Dispute(ctx context.Context, req *types.QueryDisputeRequest) (*
 		return nil, status.Error(codes.NotFound, "dispute not found")
 	}
 
+	disputeStrings := convertDisputeToStrings(dispute)
 	return &types.QueryDisputeResponse{
 		Dispute: &types.Disputes{
 			DisputeId: req.DisputeId,
-			Metadata:  &dispute,
+			Metadata:  &disputeStrings,
 		},
 	}, nil
 }

@@ -75,7 +75,7 @@ message QueryDisputesRequest {
 
 message Disputes {
   uint64 disputeId = 1;
-  Dispute metadata = 2;
+  DisputeStrings metadata = 2;
 }
 
 message QueryDisputesResponse {
