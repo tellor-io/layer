@@ -449,7 +449,6 @@ func (s *IntegrationTestSuite) TestRotateQueries() {
 	// expiration should be 9
 	s.Equal(uint64(ctx.BlockHeight()+2), query.Expiration)
 	s.Equal(math.NewInt(9800), query.Amount)
-	s.False(query.CycleList)
 
 	// tip a different query from the list that isn't in cycle
 	// testing for it going into cycle when expired and should be extended
@@ -461,7 +460,6 @@ func (s *IntegrationTestSuite) TestRotateQueries() {
 	s.NoError(err)
 	s.Equal(uint64(9), query.Expiration)
 	s.Equal(math.NewInt(9800), query.Amount)
-	s.False(query.CycleList)
 
 	// rotate the queries which should put queryId1 in cycle
 	// expiration should not be extended for queryId1 only set cycle list to true

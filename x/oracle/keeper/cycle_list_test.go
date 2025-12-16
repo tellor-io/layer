@@ -2,8 +2,15 @@ package keeper_test
 
 import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/utils"
+	minttypes "github.com/tellor-io/layer/x/mint/types"
 	regtypes "github.com/tellor-io/layer/x/registry/types"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (
@@ -31,6 +38,18 @@ func (s *KeeperTestSuite) TestRotateQueries() {
 	s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(regtypes.DataSpec{}, nil)
 	list, err := k.GetCyclelist(s.ctx)
 	require.NoError(err)
+
+	// Setup mocks for liveness rewards (called when cycle completes)
+	// Create a test module account for time_based_rewards
+	add := sample.AccAddressBytes()
+	baseAccount := authtypes.NewBaseAccountWithAddress(add)
+	permissions := []string{authtypes.Minter, authtypes.Burner, authtypes.Staking}
+	testModuleAccount := authtypes.NewModuleAccount(baseAccount, "time_based_rewards", permissions...)
+
+	// Mock for GetModuleAccount - will be called when cycle completes
+	s.accountKeeper.On("GetModuleAccount", s.ctx, minttypes.TimeBasedRewards).Return(sdk.ModuleAccountI(testModuleAccount))
+	// Mock for GetBalance - return zero balance so distribution is skipped
+	s.bankKeeper.On("GetBalance", s.ctx, testModuleAccount.GetAddress(), "loya").Return(sdk.Coin{Amount: math.ZeroInt(), Denom: "loya"})
 
 	firstQuery, err := k.GetCurrentQueryInCycleList(s.ctx)
 	require.NoError(err)

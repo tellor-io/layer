@@ -16,11 +16,13 @@ var (
 	KeyMinStakeAmount = []byte("MinStakeAmount")
 	KeyMinTipAmount   = []byte("MinTipAmount")
 	KeyMaxTipAmount   = []byte("MaxTipAmount")
+	KeyLivenessCycles = []byte("LivenessCycles")
 	// TODO: Determine the default value
 	DefaultMinStakeAmount = math.NewInt(1_000_000) // one TRB
 
-	DefaultMinTipAmount = math.NewInt(10_000)
-	DefaultMaxTipAmount = math.NewInt(25_000_000)
+	DefaultMinTipAmount   = math.NewInt(10_000)
+	DefaultMaxTipAmount   = math.NewInt(25_000_000)
+	DefaultLivenessCycles = uint64(1) // distribute liveness rewards every cycle
 )
 
 // ParamKeyTable the param key table for launch module
@@ -29,17 +31,18 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(minStakeAmount, minTipAmount, maxTipAmount math.Int) Params {
+func NewParams(minStakeAmount, minTipAmount, maxTipAmount math.Int, livenessCycles uint64) Params {
 	return Params{
 		MinStakeAmount: minStakeAmount,
 		MinTipAmount:   minTipAmount,
 		MaxTipAmount:   maxTipAmount,
+		LivenessCycles: livenessCycles,
 	}
 }
 
 // DefaultParams returns a default set of parameters
 func DefaultParams() Params {
-	return NewParams(DefaultMinStakeAmount, DefaultMinTipAmount, DefaultMaxTipAmount)
+	return NewParams(DefaultMinStakeAmount, DefaultMinTipAmount, DefaultMaxTipAmount, DefaultLivenessCycles)
 }
 
 // ParamSetPairs get the params.ParamSet
@@ -63,6 +66,10 @@ func (p Params) Validate() error {
 
 	if p.MaxTipAmount.IsNil() || p.MaxTipAmount.LTE(math.ZeroInt()) {
 		return fmt.Errorf("max tip amount must be greater than 0")
+	}
+
+	if p.LivenessCycles == 0 {
+		return fmt.Errorf("liveness cycles must be greater than 0")
 	}
 
 	return nil

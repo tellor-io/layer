@@ -65,6 +65,14 @@ type (
 		BridgeDepositQueue collections.Map[collections.Pair[uint64, uint64], []byte] // key: aggregate timestamp, queryMetaId, value: queryData
 		// storage for no stake report queryId / queryData
 		NoStakeReportedQueries collections.Map[[]byte, []byte] // key: queryId, value: queryData
+
+		// Liveness reward storage
+		LivenessRecords         collections.Map[[]byte, types.LivenessRecord]           // key: reporter address
+		TotalQueriesInPeriod    collections.Item[uint64]                                // count of cyclelist queries in current period
+		CycleCount              collections.Sequence                                    // tracks completed cycles
+		Dust                    collections.Item[math.Int]                              // leftover from rounding during distribution
+		QueryOpportunities      collections.Map[[]byte, uint64]                         // key: queryId, value: opportunity count
+		ReporterQueriesInPeriod collections.Map[collections.Pair[[]byte, []byte], bool] // key: (reporter, queryId), value: reported
 	}
 )
 
@@ -167,6 +175,14 @@ func NewKeeper(
 			collections.BytesValue),
 		// NoStakeReportedQueries maps the queryId to the queryData
 		NoStakeReportedQueries: collections.NewMap(sb, types.NoStakeReportedQueriesPrefix, "no_stake_reported_queries", collections.BytesKey, collections.BytesValue),
+
+		// Liveness reward storage initialization
+		LivenessRecords:         collections.NewMap(sb, types.LivenessRecordsPrefix, "liveness_records", collections.BytesKey, codec.CollValue[types.LivenessRecord](cdc)),
+		TotalQueriesInPeriod:    collections.NewItem(sb, types.TotalQueriesInPeriodPrefix, "total_queries_in_period", collections.Uint64Value),
+		CycleCount:              collections.NewSequence(sb, types.CycleCountPrefix, "cycle_count"),
+		Dust:                    collections.NewItem(sb, types.DustPrefix, "dust", sdk.IntValue),
+		QueryOpportunities:      collections.NewMap(sb, types.QueryOpportunitiesPrefix, "query_opportunities", collections.BytesKey, collections.Uint64Value),
+		ReporterQueriesInPeriod: collections.NewMap(sb, types.ReporterQueriesInPeriodPrefix, "reporter_queries_in_period", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), collections.BoolValue),
 	}
 
 	schema, err := sb.Build()

@@ -89,8 +89,24 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	if query.Expiration < uint64(ctx.BlockHeight()) {
 		// query expired, create new expiration time
 		query.Expiration = uint64(ctx.BlockHeight()) + query.RegistrySpecBlockWindow
-		// if reporting window is expired that means the query is not in cycle
-		query.CycleList = false
+
+		// check if this is a cyclelist query being tipped out-of-turn
+		isCyclelistQuery, _ := k.keeper.Cyclelist.Has(ctx, queryId)
+		if isCyclelistQuery {
+			// keep CycleList = true for liveness tracking
+			query.CycleList = true
+			// increment query opportunities (creates extra opportunity)
+			if err := k.keeper.IncrementQueryOpportunities(ctx, queryId); err != nil {
+				return nil, err
+			}
+			// increment total queries in period
+			if err := k.keeper.IncrementTotalQueriesInPeriod(ctx); err != nil {
+				return nil, err
+			}
+		} else {
+			// non-cyclelist query, not tracked for liveness
+			query.CycleList = false
+		}
 	}
 	err = k.keeper.Query.Set(ctx, collections.Join(queryId, query.Id), query)
 	if err != nil {

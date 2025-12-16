@@ -42,6 +42,12 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	if err == nil && queryMeta.Expiration > uint64(blockHeight) {
 		return nil
 	}
+
+	// rotation is happening - increment total queries in period for liveness tracking
+	if err := k.IncrementTotalQueriesInPeriod(ctx); err != nil {
+		return err
+	}
+
 	// rotate
 	q, err := k.GetCyclelist(ctx)
 	if err != nil {
@@ -60,11 +66,22 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 			return err
 		}
 		n = 0
+
+		// cycle complete - check if it's time to distribute liveness rewards
+		if err := k.CheckAndDistributeLivenessRewards(ctx); err != nil {
+			return err
+		}
 	default:
 		n += 1
 	}
 	// next query
 	queryId = utils.QueryIDFromData(q[n])
+
+	// increment query opportunities for liveness tracking
+	if err := k.IncrementQueryOpportunities(ctx, queryId); err != nil {
+		return err
+	}
+
 	// get query if it exists, should exist if it has a tip that wasn't cleared by aggregation (ie no one reported for it)
 	querymeta, err := k.CurrentQuery(ctx, queryId)
 	// cycle list queries that are without a tip could linger in the store if

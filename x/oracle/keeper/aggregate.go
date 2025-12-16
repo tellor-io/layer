@@ -11,7 +11,6 @@ import (
 
 	"github.com/tellor-io/layer/lib/metrics"
 	layer "github.com/tellor-io/layer/types"
-	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
@@ -31,20 +30,11 @@ import (
 // proportional to their reporting power.
 // In addition, all the micro-reports that are part of a cyclelist are gathered and their reporters are
 // rewarded with the time-based rewards.
-type rewards struct {
-	aggregateReport types.Aggregate
-	reward          math.LegacyDec
-}
-
 func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 	// aggregate
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := uint64(sdkCtx.BlockHeight())
-	cyclelist := make([]types.Aggregate, 0)
 	transferAmt := math.ZeroInt()
-	totalPowerForTbr := uint64(0)
-	tipRewardAllocation := make(map[uint64]rewards)
-	var tipRewardKeys []uint64
 	// rng for queries that have expired and have revealed reports
 	// ranger is inclusive and descending
 	rng := collections.NewPrefixUntilPairRange[collections.Pair[bool, uint64], collections.Pair[[]byte, uint64]](collections.Join(true, blockHeight)).Descending()
@@ -71,50 +61,27 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			return err
 		}
 
-		aggregateReport, isCyclelist, err := k.AggregateReport(ctx, query.Id, query.QueryData)
+		aggregateReport, err := k.AggregateReport(ctx, query.Id, query.QueryData)
 		if err != nil {
 			return err
 		}
 
 		if !query.Amount.IsZero() {
-			tipRewardAllocation[query.Id] = rewards{aggregateReport: aggregateReport, reward: query.Amount.ToLegacyDec()}
-			tipRewardKeys = append(tipRewardKeys, query.Id)
+			err = k.DistributeTip(ctx, aggregateReport, query.Amount.ToLegacyDec())
+			if err != nil {
+				return err
+			}
 			transferAmt = transferAmt.Add(query.Amount)
 		}
 
-		if isCyclelist {
-			totalPowerForTbr = aggregateReport.AggregatePower
-			cyclelist = append(cyclelist, aggregateReport)
-		}
 		err = k.Query.Remove(ctx, fullKey.K2())
 		if err != nil {
 			return err
 		}
 	}
-	if totalPowerForTbr > 0 {
-		tbr := k.GetTimeBasedRewards(ctx)
-		tipRewardAllocation, tipRewardKeys = k.DistributeTbr(
-			ctx,
-			tipRewardKeys,
-			cyclelist,
-			tipRewardAllocation,
-			totalPowerForTbr,
-			tbr,
-		)
-		err = k.bankKeeper.SendCoinsFromModuleToModule(
-			ctx,
-			minttypes.TimeBasedRewards,
-			reportertypes.TipsEscrowPool,
-			sdk.NewCoins(sdk.NewCoin(layer.BondDenom, tbr)),
-		)
-		if err != nil {
-			return err
-		}
-	}
-	err = k.DistributeRewards(ctx, tipRewardAllocation, tipRewardKeys)
-	if err != nil {
-		return err
-	}
+	// TBR is now distributed at the end of each liveness period via DistributeLivenessRewards
+	// Tip rewards are distributed immediately
+
 	if transferAmt.GT(math.ZeroInt()) {
 		err = k.bankKeeper.SendCoinsFromModuleToModule(
 			ctx,
@@ -170,19 +137,19 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, query
 	return k.Aggregates.Set(ctx, collections.Join(report.QueryId, currentTimestamp), *report)
 }
 
-func (k Keeper) AggregateReport(ctx context.Context, id uint64, queryData []byte) (types.Aggregate, bool, error) {
+func (k Keeper) AggregateReport(ctx context.Context, id uint64, queryData []byte) (types.Aggregate, error) {
 	median, err := k.AggregateValue.Get(ctx, id)
 	if err != nil {
-		return types.Aggregate{}, false, err // return nil and log error ?
+		return types.Aggregate{}, err // return nil and log error ?
 	}
 	aggregateValue, err := k.Values.Get(ctx, collections.Join(id, median.Value))
 	if err != nil {
-		return types.Aggregate{}, false, err // return nil and log error ?
+		return types.Aggregate{}, err // return nil and log error ?
 	}
 	tPower, err := k.ValuesWeightSum.Get(ctx, id)
 	if err != nil {
 		// print error
-		return types.Aggregate{}, false, err
+		return types.Aggregate{}, err
 	}
 
 	microReport := aggregateValue.MicroReport
@@ -196,9 +163,9 @@ func (k Keeper) AggregateReport(ctx context.Context, id uint64, queryData []byte
 	}
 	err = k.SetAggregate(ctx, aggregateReport, queryData, microReport.QueryType)
 	if err != nil {
-		return types.Aggregate{}, false, err
+		return types.Aggregate{}, err
 	}
-	return *aggregateReport, microReport.Cyclelist, nil
+	return *aggregateReport, nil
 }
 
 func (k Keeper) GetTimestampBefore(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error) {

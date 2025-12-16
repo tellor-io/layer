@@ -11,7 +11,8 @@
 - 2024-04-02: clarity
 - 2024-04-05: clarity/spelling
 - 2024-08-03: clarity
-- 1014-12-06: bridge deposits
+- 2024-12-06: bridge deposits
+- 2025-12-09: liveness-weighted distribution
 
 ## Context
 
@@ -47,4 +48,55 @@ Lastly, another option was to only count the reporter weight once.  The problem 
 
 ## Issues / Notes on Implementation
 
+### Liveness-Weighted Distribution (Updated 2025-12)
+
+To further incentivize consistent reporting across ALL cyclelist queries, TBR distribution now incorporates a liveness component. Instead of distributing TBR immediately per aggregate, rewards are accumulated over a configurable period and distributed based on both reporting power AND liveness.
+
+#### Formula
+
+```
+liveness = weighted_queries_reported / total_cyclelist_queries
+weight = accumulated_power × liveness
+reward = (weight / total_weight) × period_TBR
+```
+
+Where:
+- `weighted_queries_reported` = sum of (1 / opportunities) for each unique query reported
+- `total_cyclelist_queries` = number of queries in the cyclelist (e.g., 12)
+- `accumulated_power` = sum of reporter's power across all reports in the period
+
+#### Split-Weight for Multiple Opportunities
+
+When a cyclelist query is tipped out-of-turn (while not in rotation), it creates an extra reporting opportunity. To prevent gaming, the weight is split:
+
+- If Q5 appears once (normal rotation): weight = 1.0
+- If Q5 appears twice (rotation + out-of-turn tip): each opportunity = 0.5 weight
+- Total weight always equals number of cyclelist queries (e.g., 12)
+
+This ensures:
+1. Reporters are incentivized to report on ALL opportunities (including out-of-turn tips)
+2. Missing an out-of-turn tip has a smaller penalty as far as getting full TBR (0.5 points vs 1.0)
+3. No one can dilute others' liveness by tipping many queries
+
+#### Example
+
+With 12 cyclelist queries and Q5 tipped out-of-turn (13 opportunities total):
+- Reporter A reports on all 13 → liveness = 12/12 = 100%
+- Reporter B reports on 12 (misses out-of-turn Q5) → liveness = 11.5/12 = 95.8%
+- Reporter C reports on 11 (misses Q5 entirely) → liveness = 11/12 = 91.7%
+
+#### Configuration
+
+The distribution period is configurable via the `LivenessCycles` governance parameter:
+- Default: 1 (distribute every cycle)
+- Higher values aggregate over multiple cycles before distribution
+
+#### Key Changes from Previous Implementation
+
+| Aspect | Before | After |
+|--------|--------|-------|
+| Distribution timing | Per aggregate (immediate) | Per period (batched) |
+| Reward basis | Power only | Power × Liveness |
+| Out-of-turn tips | Not tracked | Tracked with split-weight |
+| Incentive | Report when convenient | Report on EVERY query |
 

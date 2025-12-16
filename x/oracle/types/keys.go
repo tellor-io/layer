@@ -58,6 +58,14 @@ var (
 	ReporterIndexPrefix              = collections.NewPrefix(32)
 	NoStakeReportedQueriesPrefix     = collections.NewPrefix(33)
 	MaxBatchSizePrefix               = collections.NewPrefix(34)
+
+	// Liveness reward storage prefixes
+	LivenessRecordsPrefix         = collections.NewPrefix(35)
+	TotalQueriesInPeriodPrefix    = collections.NewPrefix(36)
+	CycleCountPrefix              = collections.NewPrefix(37)
+	DustPrefix                    = collections.NewPrefix(38)
+	QueryOpportunitiesPrefix      = collections.NewPrefix(39)
+	ReporterQueriesInPeriodPrefix = collections.NewPrefix(40)
 )
 
 func KeyPrefix(p string) []byte {

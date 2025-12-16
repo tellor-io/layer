@@ -386,25 +386,30 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	err = s.Setup.Bankkeeper.SendCoinsFromAccountToModule(ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.Setup.Denom, reward)))
 	s.NoError(err)
 
-	// testing for a query id and check if the reporter gets the reward, bypassing the commit/reveal process
-	value := []string{"000001"}
-	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0]}, value, []uint64{reporterPower}, qId)
-	queryMetaId := uint64(1)
-	s.NoError(s.Setup.Oraclekeeper.Query.Set(ctx, collections.Join(qId, queryMetaId), types.QueryMeta{
-		Id:                 1,
-		HasRevealedReports: true,
-		QueryData:          ethQueryData,
-	}))
-	for _, r := range reports[:1] {
-		r.Cyclelist = true
-		s.NoError(s.Setup.Oraclekeeper.Reports.Set(ctx, collections.Join3(qId, sdk.MustAccAddressFromBech32(r.Reporter).Bytes(), queryMetaId), r))
-		s.NoError(s.Setup.Oraclekeeper.AddReport(ctx, queryMetaId, r))
-	}
-	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
+	// With the new liveness-weighted system, TBR is distributed at the end of a liveness period
+	// based on (power × liveness) / totalWeight
+	// For a single reporter reporting on all cyclelist queries, they should get 100% of TBR
 
-	queryServer := keeper.NewQuerier(s.Setup.Oraclekeeper)
-	_, err = queryServer.GetCurrentAggregateReport(ctx, &types.QueryGetCurrentAggregateReportRequest{QueryId: hex.EncodeToString(qId)})
+	// Get the cyclelist to set up query opportunities
+	cyclelist, err := s.Setup.Oraclekeeper.GetCyclelist(ctx)
 	s.NoError(err)
+
+	// Set up query opportunities for all cyclelist queries (simulating a full cycle)
+	for _, queryData := range cyclelist {
+		queryId := utils.QueryIDFromData(queryData)
+		s.NoError(s.Setup.Oraclekeeper.IncrementQueryOpportunities(ctx, queryId))
+	}
+
+	// Track that the reporter reported on all cyclelist queries
+	// This simulates the reporter having 100% liveness
+	for _, queryData := range cyclelist {
+		queryId := utils.QueryIDFromData(queryData)
+		// UpdateReporterLiveness tracks both the query and accumulates power
+		s.NoError(s.Setup.Oraclekeeper.UpdateReporterLiveness(ctx, repAccs[0], queryId, reporterPower))
+	}
+
+	// Distribute liveness rewards - this is what happens at the end of a cycle
+	s.NoError(s.Setup.Oraclekeeper.DistributeLivenessRewards(ctx))
 
 	// advance height
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -422,7 +427,6 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	qId := utils.QueryIDFromData(ethQueryData)
 	ctx := s.Setup.Ctx
-	value := []string{"000001", "000002"}
 	reporterPower1 := uint64(1)
 	reporterPower2 := uint64(2)
 	totalReporterPower := reporterPower1 + reporterPower2
@@ -435,47 +439,55 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 	s.NoError(err)
 	reporterStake2, err := s.Setup.Reporterkeeper.ReporterStake(ctx, repAccs[1], qId)
 	s.NoError(err)
+
 	// send timebasedrewards tokens to oracle module to pay reporters with
 	tipper := s.newKeysWithTokens()
 	reward := math.NewInt(100)
 	err = s.Setup.Bankkeeper.SendCoinsFromAccountToModule(ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.Setup.Denom, reward)))
 	s.NoError(err)
-	// generate 2 reports for ethQueryData
-	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1]}, value, []uint64{reporterPower1, reporterPower2}, qId)
 
+	// With liveness-weighted TBR distribution:
+	// reward = (power × liveness) / totalWeight × totalReward
+	// If both reporters have 100% liveness, it simplifies to power / totalPower × totalReward
 	testCases := []struct {
 		name                 string
-		reporterIndex        int
 		beforeBalance        math.Int
 		afterBalanceIncrease math.Int
 		delegator            sdk.AccAddress
 	}{
 		{
 			name:                 "reporter with 1 voting power",
-			reporterIndex:        0,
 			beforeBalance:        reporterStake,
 			afterBalanceIncrease: reporterkeeper.CalculateRewardAmount(reporterPower1, totalReporterPower, reward).TruncateInt(),
 			delegator:            repAccs[0],
 		},
 		{
 			name:                 "reporter with 2 voting power",
-			reporterIndex:        1,
 			beforeBalance:        reporterStake2,
 			afterBalanceIncrease: reporterkeeper.CalculateRewardAmount(reporterPower2, totalReporterPower, reward).TruncateInt(),
 			delegator:            repAccs[1],
 		},
 	}
-	s.NoError(s.Setup.Oraclekeeper.Query.Set(ctx, collections.Join(qId, uint64(1)), types.QueryMeta{
-		Id:                 1,
-		HasRevealedReports: true,
-		QueryData:          ethQueryData,
-	}))
-	for _, r := range reports[:2] {
-		r.Cyclelist = true
-		s.NoError(s.Setup.Oraclekeeper.Reports.Set(ctx, collections.Join3(qId, sdk.MustAccAddressFromBech32(r.Reporter).Bytes(), uint64(1)), r))
-		s.NoError(s.Setup.Oraclekeeper.AddReport(ctx, 1, r))
+
+	// Get the cyclelist to set up query opportunities
+	cyclelist, err := s.Setup.Oraclekeeper.GetCyclelist(ctx)
+	s.NoError(err)
+
+	// Set up query opportunities for all cyclelist queries (simulating a full cycle)
+	for _, queryData := range cyclelist {
+		queryId := utils.QueryIDFromData(queryData)
+		s.NoError(s.Setup.Oraclekeeper.IncrementQueryOpportunities(ctx, queryId))
 	}
-	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
+
+	// Track that both reporters reported on all cyclelist queries (100% liveness each)
+	for _, queryData := range cyclelist {
+		queryId := utils.QueryIDFromData(queryData)
+		s.NoError(s.Setup.Oraclekeeper.UpdateReporterLiveness(ctx, repAccs[0], queryId, reporterPower1))
+		s.NoError(s.Setup.Oraclekeeper.UpdateReporterLiveness(ctx, repAccs[1], queryId, reporterPower2))
+	}
+
+	// Distribute liveness rewards
+	s.NoError(s.Setup.Oraclekeeper.DistributeLivenessRewards(ctx))
 
 	reporterServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	// advance height
@@ -495,13 +507,13 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 
 func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	qId := utils.QueryIDFromData(ethQueryData)
-	values := []string{"000001", "000002", "000003", "000004"}
 	ctx := s.Setup.Ctx
-	reporterPower1 := uint64(1)
-	reporterPower2 := uint64(2)
-	reporterPower3 := uint64(3)
-	totalPower := uint64(12)
-	repAccs, _, _ := s.createValidatorAccs([]uint64{reporterPower1, reporterPower2, reporterPower3})
+	// Accumulated power values for each reporter (simulates multiple reports)
+	accPower1 := uint64(2)
+	accPower2 := uint64(4)
+	accPower3 := uint64(6)
+	totalPower := accPower1 + accPower2 + accPower3 // 12
+	repAccs, _, _ := s.createValidatorAccs([]uint64{1, 2, 3})
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker1")))
 	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
 	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[1], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker2")))
@@ -519,10 +531,9 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 	reward := math.NewInt(100)
 	err = s.Setup.Bankkeeper.SendCoinsFromAccountToModule(ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.Setup.Denom, reward)))
 	s.NoError(err)
-	// generate 4 reports for ethQueryData
 
-	reports := testutil.GenerateReports([]sdk.AccAddress{repAccs[0], repAccs[1], repAccs[2]}, values, []uint64{2, 4, 6}, qId)
-
+	// With liveness-weighted TBR distribution:
+	// If all reporters have 100% liveness, reward is proportional to accumulated power
 	testCases := []struct {
 		name                 string
 		beforeBalance        math.Int
@@ -530,35 +541,46 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 		delegator            sdk.AccAddress
 	}{
 		{
-			name:                 "reporter with 100 voting power",
+			name:                 "reporter with accumulated power 2",
 			beforeBalance:        reporterStake,
-			afterBalanceIncrease: reporterkeeper.CalculateRewardAmount(2, totalPower, reward).TruncateInt(),
+			afterBalanceIncrease: reporterkeeper.CalculateRewardAmount(accPower1, totalPower, reward).TruncateInt(),
 			delegator:            repAccs[0],
 		},
 		{
-			name:                 "reporter with 200 voting power",
+			name:                 "reporter with accumulated power 4",
 			beforeBalance:        reporterStake2,
-			afterBalanceIncrease: reporterkeeper.CalculateRewardAmount(4, totalPower, reward).TruncateInt(),
+			afterBalanceIncrease: reporterkeeper.CalculateRewardAmount(accPower2, totalPower, reward).TruncateInt(),
 			delegator:            repAccs[1],
 		},
 		{
-			name:                 "reporter with 300 voting power",
+			name:                 "reporter with accumulated power 6",
 			beforeBalance:        reporterStake3,
-			afterBalanceIncrease: reporterkeeper.CalculateRewardAmount(6, totalPower, reward).TruncateInt(),
+			afterBalanceIncrease: reporterkeeper.CalculateRewardAmount(accPower3, totalPower, reward).TruncateInt(),
 			delegator:            repAccs[2],
 		},
 	}
-	s.NoError(s.Setup.Oraclekeeper.Query.Set(ctx, collections.Join(qId, uint64(1)), types.QueryMeta{
-		Id:                 1,
-		HasRevealedReports: true,
-		QueryData:          ethQueryData,
-	}))
-	for _, r := range reports[:3] {
-		r.Cyclelist = true
-		s.NoError(s.Setup.Oraclekeeper.Reports.Set(ctx, collections.Join3(qId, sdk.MustAccAddressFromBech32(r.Reporter).Bytes(), uint64(1)), r))
-		s.NoError(s.Setup.Oraclekeeper.AddReport(ctx, 1, r))
+
+	// Get the cyclelist to set up query opportunities
+	cyclelist, err := s.Setup.Oraclekeeper.GetCyclelist(ctx)
+	s.NoError(err)
+
+	// Set up query opportunities for all cyclelist queries
+	for _, queryData := range cyclelist {
+		queryId := utils.QueryIDFromData(queryData)
+		s.NoError(s.Setup.Oraclekeeper.IncrementQueryOpportunities(ctx, queryId))
 	}
-	s.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
+
+	// Track liveness for all reporters on all cyclelist queries (100% liveness each)
+	// The accumulated power represents total power across all reports in the period
+	for _, queryData := range cyclelist {
+		queryId := utils.QueryIDFromData(queryData)
+		s.NoError(s.Setup.Oraclekeeper.UpdateReporterLiveness(ctx, repAccs[0], queryId, accPower1))
+		s.NoError(s.Setup.Oraclekeeper.UpdateReporterLiveness(ctx, repAccs[1], queryId, accPower2))
+		s.NoError(s.Setup.Oraclekeeper.UpdateReporterLiveness(ctx, repAccs[2], queryId, accPower3))
+	}
+
+	// Distribute liveness rewards
+	s.NoError(s.Setup.Oraclekeeper.DistributeLivenessRewards(ctx))
 
 	// advance height
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
@@ -717,6 +739,20 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	agg, _, err = ok.GetCurrentAggregateReport(ctx, crypto.Keccak256(querydata))
 	s.NoError(err)
 	s.Equal(agg.AggregateReporter, reporter5.String())
+
+	// Set up liveness tracking for reporter5 to receive TBR
+	cyclelist, err := ok.GetCyclelist(ctx)
+	s.NoError(err)
+
+	for _, qData := range cyclelist {
+		qId := utils.QueryIDFromData(qData)
+		s.NoError(ok.IncrementQueryOpportunities(ctx, qId))
+		s.NoError(ok.UpdateReporterLiveness(ctx, reporter5, qId, 1))
+	}
+
+	// Distribute liveness rewards (TBR minted by mint module)
+	s.NoError(ok.DistributeLivenessRewards(ctx))
+
 	// msgwithdrawTips
 	reporterMsgServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	_, err = reporterMsgServer.WithdrawTip(ctx, &reportertypes.MsgWithdrawTip{

@@ -8,7 +8,6 @@ import (
 	"github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/collections"
-	// "cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,57 +23,40 @@ func (k Keeper) GetTimeBasedRewardsAccount(ctx context.Context) sdk.ModuleAccoun
 	return k.accountKeeper.GetModuleAccount(ctx, minttypes.TimeBasedRewards)
 }
 
-func (k Keeper) AllocateTip(ctx context.Context, addr []byte, amount math.LegacyDec) error {
+func (k Keeper) AllocateTBR(ctx context.Context, addr []byte, amount math.LegacyDec) error {
 	return k.reporterKeeper.DivvyingTips(ctx, addr, amount)
 }
 
-func (k Keeper) DistributeRewards(ctx context.Context, tipRewardAllocation map[uint64]rewards, tipRewardKeys []uint64) error {
-	for _, id := range tipRewardKeys {
-		aggregateReward := tipRewardAllocation[id]
-		aggregateReport := aggregateReward.aggregateReport
-		iter, err := k.Reports.Indexes.IdQueryId.MatchExact(ctx, collections.Join(aggregateReport.MetaId, aggregateReport.QueryId))
+func (k Keeper) DistributeTip(ctx context.Context, aggregateReport types.Aggregate, reward math.LegacyDec) error {
+	iter, err := k.Reports.Indexes.IdQueryId.MatchExact(ctx, collections.Join(aggregateReport.MetaId, aggregateReport.QueryId))
+	if err != nil {
+		return err
+	}
+
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		reportKey, err := iter.PrimaryKey()
+		if err != nil {
+			return err
+		}
+		report, err := k.Reports.Get(ctx, reportKey)
+		if err != nil {
+			return err
+		}
+		reporter := reportKey.K2()
+		amount := math.LegacyNewDec(int64(report.Power)).Quo(math.LegacyNewDec(int64(aggregateReport.AggregatePower))).Mul(reward)
+		err = k.reporterKeeper.DivvyingTips(ctx, reporter, amount)
 		if err != nil {
 			return err
 		}
 
-		defer iter.Close()
-
-		for ; iter.Valid(); iter.Next() {
-			reporterk, err := iter.PrimaryKey()
-			if err != nil {
-				return err
-			}
-			report, err := k.Reports.Get(ctx, reporterk)
-			if err != nil {
-				return err
-			}
-			amount := math.LegacyNewDec(int64(report.Power)).Quo(math.LegacyNewDec(int64(aggregateReport.AggregatePower))).Mul(aggregateReward.reward)
-			err = k.AllocateTip(ctx, reporterk.K2(), amount)
-			if err != nil {
+		// track liveness for cyclelist reports
+		if report.Cyclelist {
+			if err := k.UpdateReporterLiveness(ctx, reporter, report.QueryId, report.Power); err != nil {
 				return err
 			}
 		}
 	}
 	return nil
-}
-
-func (k Keeper) DistributeTbr(
-	ctx context.Context, tipRewardKeys []uint64,
-	cyclelist []types.Aggregate, tipRewardAllocation map[uint64]rewards,
-	totaltbrPower uint64, tbr math.Int,
-) (map[uint64]rewards, []uint64) {
-	totalPowerDec := math.LegacyNewDec(int64(totaltbrPower))
-	for _, aggregateReport := range cyclelist {
-		aggregatePower := math.LegacyNewDec(int64(aggregateReport.AggregatePower)).Quo(totalPowerDec)
-		share := aggregatePower.Mul(tbr.ToLegacyDec())
-		reward, ok := tipRewardAllocation[aggregateReport.MetaId]
-		if !ok {
-			tipRewardAllocation[aggregateReport.MetaId] = rewards{aggregateReport: aggregateReport, reward: share}
-			tipRewardKeys = append(tipRewardKeys, aggregateReport.MetaId)
-			continue
-		}
-		reward.reward = reward.reward.Add(share)
-		tipRewardAllocation[aggregateReport.MetaId] = reward
-	}
-	return tipRewardAllocation, tipRewardKeys
 }
