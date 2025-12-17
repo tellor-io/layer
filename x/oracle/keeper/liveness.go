@@ -41,8 +41,17 @@ func (k Keeper) IncrementTotalQueriesInPeriod(ctx context.Context) error {
 }
 
 // TrackReporterQuery records that a reporter reported on a specific queryId
+// Increments the count each time a reporter reports on the same query
 func (k Keeper) TrackReporterQuery(ctx context.Context, reporter, queryId []byte) error {
-	return k.ReporterQueriesInPeriod.Set(ctx, collections.Join(reporter, queryId), true)
+	key := collections.Join(reporter, queryId)
+	count, err := k.ReporterQueriesInPeriod.Get(ctx, key)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return err
+		}
+		count = 0
+	}
+	return k.ReporterQueriesInPeriod.Set(ctx, key, count+1)
 }
 
 // UpdateReporterLiveness updates a reporter's liveness record for the current period
@@ -152,12 +161,13 @@ func (k Keeper) DistributeLivenessRewards(ctx context.Context) error {
 		}
 
 		for ; queryIter.Valid(); queryIter.Next() {
-			queryKey, err := queryIter.Key()
+			kv, err := queryIter.KeyValue()
 			if err != nil {
 				queryIter.Close()
 				return err
 			}
-			queryId := queryKey.K2()
+			queryId := kv.Key.K2()
+			reportCount := kv.Value // number of times reporter reported on this query
 
 			// get opportunities for this query
 			opportunities, err := k.QueryOpportunities.Get(ctx, queryId)
@@ -166,9 +176,14 @@ func (k Keeper) DistributeLivenessRewards(ctx context.Context) error {
 				return err
 			}
 
-			// add weighted contribution: 1 / opportunities
+			// add weighted contribution: min(reportCount, opportunities) / opportunities
+			// This caps credit at 1.0 per query even if they over-report
 			if opportunities > 0 {
-				contribution := math.LegacyOneDec().Quo(math.LegacyNewDec(int64(opportunities)))
+				effectiveReports := reportCount
+				if effectiveReports > opportunities {
+					effectiveReports = opportunities
+				}
+				contribution := math.LegacyNewDec(int64(effectiveReports)).Quo(math.LegacyNewDec(int64(opportunities)))
 				weightedLiveness = weightedLiveness.Add(contribution)
 			}
 		}

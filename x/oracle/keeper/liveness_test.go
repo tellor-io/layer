@@ -78,10 +78,10 @@ func (s *KeeperTestSuite) TestTrackReporterQuery() {
 	err := k.TrackReporterQuery(ctx, reporter, queryId)
 	require.NoError(err)
 
-	// Verify it was recorded
+	// Verify it was recorded with count 1
 	reported, err := k.ReporterQueriesInPeriod.Get(ctx, collections.Join([]byte(reporter), queryId))
 	require.NoError(err)
-	require.True(reported)
+	require.Equal(uint64(1), reported)
 }
 
 func (s *KeeperTestSuite) TestUpdateReporterLiveness() {
@@ -104,10 +104,10 @@ func (s *KeeperTestSuite) TestUpdateReporterLiveness() {
 	require.Equal(uint64(1), record.QueriesReported)
 	require.Equal(power, record.AccumulatedPower)
 
-	// Verify reporter query was tracked
+	// Verify reporter query was tracked with count 1
 	reported, err := k.ReporterQueriesInPeriod.Get(ctx, collections.Join([]byte(reporter), queryId1))
 	require.NoError(err)
-	require.True(reported)
+	require.Equal(uint64(1), reported)
 
 	// Second report for different query
 	err = k.UpdateReporterLiveness(ctx, reporter, queryId2, power)
@@ -229,7 +229,7 @@ func (s *KeeperTestSuite) TestResetLivenessData() {
 		AccumulatedPower: 100,
 	}))
 	require.NoError(k.QueryOpportunities.Set(ctx, queryId, 2))
-	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporter), queryId), true))
+	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporter), queryId), uint64(1)))
 	require.NoError(k.Dust.Set(ctx, math.NewInt(50)))
 
 	// Reset
@@ -274,28 +274,28 @@ func (s *KeeperTestSuite) TestLivenessWeightCalculation() {
 	require.NoError(k.QueryOpportunities.Set(ctx, queryId2, 1))
 	require.NoError(k.QueryOpportunities.Set(ctx, queryId3, 1))
 
-	// Reporter A: reports on all 4 opportunities
+	// Reporter A: reports on all 4 opportunities (query1 twice, query2 once, query3 once)
 	reporterA := sample.AccAddressBytes()
-	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporterA), queryId1), true))
-	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporterA), queryId2), true))
-	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporterA), queryId3), true))
+	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporterA), queryId1), uint64(2))) // reported twice
+	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporterA), queryId2), uint64(1)))
+	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporterA), queryId3), uint64(1)))
 	require.NoError(k.LivenessRecords.Set(ctx, reporterA, types.LivenessRecord{
 		QueriesReported:  4, // reported on query1 twice (in rotation + out-of-turn)
 		AccumulatedPower: 100,
 	}))
 
-	// Reporter B: reports only on query2 and query3
+	// Reporter B: reports only on query2 and query3 (misses query1 entirely)
 	reporterB := sample.AccAddressBytes()
-	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporterB), queryId2), true))
-	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporterB), queryId3), true))
+	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporterB), queryId2), uint64(1)))
+	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporterB), queryId3), uint64(1)))
 	require.NoError(k.LivenessRecords.Set(ctx, reporterB, types.LivenessRecord{
 		QueriesReported:  2,
 		AccumulatedPower: 100,
 	}))
 
 	// Verify weighted liveness calculation:
-	// Reporter A: (1/2 + 1/1 + 1/1) / 3 = (0.5 + 1 + 1) / 3 = 2.5 / 3 = 0.833...
-	// Reporter B: (1/1 + 1/1) / 3 = 2 / 3 = 0.666...
+	// Reporter A: (2/2 + 1/1 + 1/1) / 3 = (1 + 1 + 1) / 3 = 3/3 = 1.0 (100%)
+	// Reporter B: (1/1 + 1/1) / 3 = 2/3 = 0.666... (66.7%)
 
 	// This test verifies the data structure is set up correctly
 	// The actual calculation is done in DistributeLivenessRewards

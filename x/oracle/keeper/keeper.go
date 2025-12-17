@@ -72,7 +72,7 @@ type (
 		CycleCount              collections.Sequence                                    // tracks completed cycles
 		Dust                    collections.Item[math.Int]                              // leftover from rounding during distribution
 		QueryOpportunities      collections.Map[[]byte, uint64]                         // key: queryId, value: opportunity count
-		ReporterQueriesInPeriod collections.Map[collections.Pair[[]byte, []byte], bool] // key: (reporter, queryId), value: reported
+		ReporterQueriesInPeriod collections.Map[collections.Pair[[]byte, []byte], uint64] // key: (reporter, queryId), value: report count
 	}
 )
 
@@ -182,7 +182,7 @@ func NewKeeper(
 		CycleCount:              collections.NewSequence(sb, types.CycleCountPrefix, "cycle_count"),
 		Dust:                    collections.NewItem(sb, types.DustPrefix, "dust", sdk.IntValue),
 		QueryOpportunities:      collections.NewMap(sb, types.QueryOpportunitiesPrefix, "query_opportunities", collections.BytesKey, collections.Uint64Value),
-		ReporterQueriesInPeriod: collections.NewMap(sb, types.ReporterQueriesInPeriodPrefix, "reporter_queries_in_period", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), collections.BoolValue),
+		ReporterQueriesInPeriod: collections.NewMap(sb, types.ReporterQueriesInPeriodPrefix, "reporter_queries_in_period", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), collections.Uint64Value),
 	}
 
 	schema, err := sb.Build()
