@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/pelletier/go-toml"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/daemons/configs"
 	"github.com/tellor-io/layer/daemons/constants"
@@ -236,4 +237,122 @@ func TestReadExchangeStartupConfigFile(t *testing.T) {
 
 	// In case tests fail and the path was never removed.
 	os.RemoveAll("config")
+}
+
+func TestMergePricefeedExchangeConfig(t *testing.T) {
+	pwd, _ := os.Getwd()
+
+	tests := map[string]struct {
+		// setup
+		initialExchanges []types.ExchangeQueryConfig
+		expectedAdded     int
+		expectError       bool
+		errorContains     string
+	}{
+		"merge adds missing exchanges": {
+			initialExchanges: []types.ExchangeQueryConfig{
+				{
+					ExchangeId: exchange_common.EXCHANGE_ID_BINANCE,
+					IntervalMs: 2500,
+					TimeoutMs:  3000,
+					MaxQueries: 1,
+				},
+			},
+			expectedAdded: len(constants.StaticExchangeQueryConfig) - 1, // All except Binance
+		},
+		"merge preserves existing custom values": {
+			initialExchanges: []types.ExchangeQueryConfig{
+				{
+					ExchangeId: exchange_common.EXCHANGE_ID_BINANCE,
+					IntervalMs: 5000, // Custom value different from default
+					TimeoutMs:  6000, // Custom value different from default
+					MaxQueries: 5,    // Custom value different from default
+				},
+			},
+			expectedAdded: len(constants.StaticExchangeQueryConfig) - 1,
+		},
+		"merge handles file with all entries already present": {
+			initialExchanges: func() []types.ExchangeQueryConfig {
+				allExchanges := make([]types.ExchangeQueryConfig, 0, len(constants.StaticExchangeQueryConfig))
+				for _, config := range constants.StaticExchangeQueryConfig {
+					allExchanges = append(allExchanges, *config)
+				}
+				return allExchanges
+			}(),
+			expectedAdded: 0, // No new exchanges to add
+		},
+		"merge handles empty file": {
+			initialExchanges: []types.ExchangeQueryConfig{},
+			expectedAdded:     len(constants.StaticExchangeQueryConfig),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup: create config directory and write initial config
+			err := os.Mkdir("config", 0o700)
+			require.NoError(t, err)
+			defer os.RemoveAll("config")
+
+			// Write initial config file
+			configPath := filepath.Join("config", constants.PricefeedExchangeConfigFileName)
+			initialConfig := map[string][]types.ExchangeQueryConfig{
+				"exchanges": tc.initialExchanges,
+			}
+
+			// Marshal to TOML
+			tomlBytes, err := toml.Marshal(initialConfig)
+			require.NoError(t, err)
+			err = os.WriteFile(configPath, tomlBytes, 0o644)
+			require.NoError(t, err)
+
+			// Perform merge
+			err = configs.MergePricefeedExchangeConfig(pwd)
+
+			if tc.expectError {
+				require.Error(t, err)
+				if tc.errorContains != "" {
+					require.Contains(t, err.Error(), tc.errorContains)
+				}
+				return
+			}
+
+			require.NoError(t, err)
+
+			// Read merged config
+			mergedConfig := configs.ReadExchangeQueryConfigFile(pwd)
+
+			// Verify all static exchanges are present
+			require.Equal(t, len(constants.StaticExchangeQueryConfig), len(mergedConfig))
+
+			// Verify initial exchanges preserved their values
+			for _, initialExchange := range tc.initialExchanges {
+				mergedExchange, exists := mergedConfig[initialExchange.ExchangeId]
+				require.True(t, exists, "initial exchange %s should be present", initialExchange.ExchangeId)
+				require.Equal(t, initialExchange.IntervalMs, mergedExchange.IntervalMs, "custom IntervalMs should be preserved")
+				require.Equal(t, initialExchange.TimeoutMs, mergedExchange.TimeoutMs, "custom TimeoutMs should be preserved")
+				require.Equal(t, initialExchange.MaxQueries, mergedExchange.MaxQueries, "custom MaxQueries should be preserved")
+			}
+
+			// Verify new exchanges were added with default values
+			existingIds := make(map[types.ExchangeId]bool)
+			for _, initialExchange := range tc.initialExchanges {
+				existingIds[initialExchange.ExchangeId] = true
+			}
+
+			addedCount := 0
+			for exchangeId, defaultConfig := range constants.StaticExchangeQueryConfig {
+				if !existingIds[exchangeId] {
+					mergedExchange, exists := mergedConfig[exchangeId]
+					require.True(t, exists, "missing exchange %s should be added", exchangeId)
+					require.Equal(t, defaultConfig.IntervalMs, mergedExchange.IntervalMs, "new exchange should have default IntervalMs")
+					require.Equal(t, defaultConfig.TimeoutMs, mergedExchange.TimeoutMs, "new exchange should have default TimeoutMs")
+					require.Equal(t, defaultConfig.MaxQueries, mergedExchange.MaxQueries, "new exchange should have default MaxQueries")
+					addedCount++
+				}
+			}
+
+			require.Equal(t, tc.expectedAdded, addedCount, "expected number of added exchanges")
+		})
+	}
 }

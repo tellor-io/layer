@@ -9,6 +9,7 @@ import (
 	"text/template"
 
 	tmos "github.com/cometbft/cometbft/libs/os"
+	"github.com/pelletier/go-toml"
 )
 
 type CombinedConfig struct {
@@ -172,8 +173,136 @@ func GenerateDefaultConfigTomlString() bytes.Buffer {
 	return configToml
 }
 
+// readExistingCustomQueryConfig reads and parses an existing custom query config file.
+func readExistingCustomQueryConfig(homeDir, localDir, file string) (*Config, error) {
+	configFilePath := getCustomQueryConfigFilePath(homeDir, localDir, file)
+	tomlFile, err := os.ReadFile(configFilePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read existing config file: %w", err)
+	}
+
+	var config Config
+	if err = toml.Unmarshal(tomlFile, &config); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal existing config: %w", err)
+	}
+
+	return &config, nil
+}
+
+// MergeCustomQueryConfig merges missing entries from static configs into existing config file.
+// It preserves existing entries and only adds new ones with default values.
+func MergeCustomQueryConfig(homeDir, localDir, file string) error {
+	configFilePath := getCustomQueryConfigFilePath(homeDir, localDir, file)
+
+	// Read existing config
+	existingConfig, err := readExistingCustomQueryConfig(homeDir, localDir, file)
+	if err != nil {
+		return err
+	}
+
+	// Initialize maps if nil
+	if existingConfig.Endpoints == nil {
+		existingConfig.Endpoints = make(map[string]EndpointTemplate)
+	}
+	if existingConfig.RPCEndpoints == nil {
+		existingConfig.RPCEndpoints = make(map[string]RPCEndpointTemplate)
+	}
+	if existingConfig.Queries == nil {
+		existingConfig.Queries = make(map[string]QueryConfig)
+	}
+
+	// Merge endpoints
+	mergedEndpoints := make(map[string]*EndpointTemplate)
+	for key, endpoint := range existingConfig.Endpoints {
+		endpoint := endpoint // Create local copy to avoid taking address of loop variable
+		mergedEndpoints[key] = &endpoint
+	}
+	for key, defaultEndpoint := range StaticEndpointTemplateConfig {
+		if _, exists := mergedEndpoints[key]; !exists {
+			mergedEndpoints[key] = defaultEndpoint
+		}
+	}
+
+	// Merge RPC endpoints
+	mergedRPCEndpoints := make(map[string]*RPCEndpointTemplate)
+	for key, rpcEndpoint := range existingConfig.RPCEndpoints {
+		rpcEndpoint := rpcEndpoint // Create local copy to avoid taking address of loop variable
+		mergedRPCEndpoints[key] = &rpcEndpoint
+	}
+	for key, defaultRPCEndpoint := range StaticRPCEndpointTemplateConfig {
+		if _, exists := mergedRPCEndpoints[key]; !exists {
+			mergedRPCEndpoints[key] = defaultRPCEndpoint
+		}
+	}
+
+	// Merge queries
+	mergedQueries := make(map[string]*QueryConfig)
+	for key, query := range existingConfig.Queries {
+		query := query // Create local copy to avoid taking address of loop variable
+		mergedQueries[key] = &query
+	}
+	for key, defaultQuery := range StaticQueriesConfig {
+		if _, exists := mergedQueries[key]; !exists {
+			mergedQueries[key] = defaultQuery
+		}
+	}
+
+	// Create combined config for template
+	combined := CombinedConfig{
+		Endpoints:    mergedEndpoints,
+		RPCEndpoints: mergedRPCEndpoints,
+		Queries:      mergedQueries,
+	}
+
+	// Generate merged TOML using template
+	tmpl := template.New("config").Funcs(template.FuncMap{
+		"formatParams":          formatParams,
+		"formatCombinedSources": formatCombinedSources,
+		"formatMapStringString": formatMapStringString,
+		"tomlValue":             tomlValue,
+		"hasSuffix":             strings.HasSuffix,
+	})
+
+	tmpl, err = tmpl.Parse(defaultCustomQueryTomlTemplate)
+	if err != nil {
+		return fmt.Errorf("failed to parse template: %w", err)
+	}
+
+	var mergedToml bytes.Buffer
+	if err = tmpl.Execute(&mergedToml, combined); err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	// Validate merged config by reading it back
+	tempFile := configFilePath + ".tmp"
+	if err = tmos.WriteFile(tempFile, mergedToml.Bytes(), 0o644); err != nil {
+		return fmt.Errorf("failed to write temp file: %w", err)
+	}
+
+	// Validate by attempting to read and parse it
+	testConfig := Config{}
+	testToml, err := os.ReadFile(tempFile)
+	if err != nil {
+		os.Remove(tempFile)
+		return fmt.Errorf("failed to read temp file for validation: %w", err)
+	}
+	if err = toml.Unmarshal(testToml, &testConfig); err != nil {
+		os.Remove(tempFile)
+		return fmt.Errorf("merged config validation failed: %w", err)
+	}
+
+	// Replace original file with validated merged config
+	if err = os.Rename(tempFile, configFilePath); err != nil {
+		os.Remove(tempFile)
+		return fmt.Errorf("failed to replace config file: %w", err)
+	}
+
+	return nil
+}
+
 func WriteDefaultConfigToml(homeDir, localDir, file string) {
 	// Write file into config folder if file does not exist.
+	// If the file exists, merge missing entries from static configs.
 	configFilePath := getCustomQueryConfigFilePath(homeDir, localDir, file)
 	_, err := os.Stat(configFilePath)
 	if err != nil {
@@ -183,6 +312,11 @@ func WriteDefaultConfigToml(homeDir, localDir, file string) {
 		}
 		buffer := GenerateDefaultConfigTomlString()
 		tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0o644)
+	} else {
+		// File exists, merge missing entries
+		if err := MergeCustomQueryConfig(homeDir, localDir, file); err != nil {
+			panic(fmt.Sprintf("failed to merge custom query config: %v", err))
+		}
 	}
 }
 
