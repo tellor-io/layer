@@ -37,6 +37,30 @@ func (_m *OracleKeeper) GetLastReportedAtTimestamp(ctx context.Context, reporter
 	return r0, r1
 }
 
+// GetTimestampForBlockHeight provides a mock function with given fields: ctx, blockHeight
+func (_m *OracleKeeper) GetTimestampForBlockHeight(ctx context.Context, blockHeight uint64) (uint64, error) {
+	ret := _m.Called(ctx, blockHeight)
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) (uint64, error)); ok {
+		return rf(ctx, blockHeight)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) uint64); ok {
+		r0 = rf(ctx, blockHeight)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
+		r1 = rf(ctx, blockHeight)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewOracleKeeper interface {
 	mock.TestingT
 	Cleanup(func())

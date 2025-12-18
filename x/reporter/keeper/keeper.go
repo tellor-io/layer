@@ -237,3 +237,76 @@ func (k Keeper) GetLastReportedAtBlock(ctx context.Context, reporter []byte) (ui
 	}
 	return 0, nil
 }
+
+// PruneOldReports removes Report entries older than 60 days.
+// It iterates the BlockNumber index, checks each block's timestamp via oracle,
+// and deletes entries where timestamp < cutoff (60 days ago).
+// maxIterations limits how many entries are processed per call.
+func (k Keeper) PruneOldReports(ctx context.Context, maxIterations int) error {
+	if k.oracleKeeper == nil {
+		return nil
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// Calculate cutoff timestamp (60 days ago)
+	cutoffTimestamp := uint64(sdkCtx.BlockTime().Add(-60 * 24 * time.Hour).UnixMilli())
+
+	// Iterate BlockNumber index in ascending order
+	// Index key structure from IterateRaw: Pair[Pair[reporter, blockNumber], queryId]
+	pc := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
+	start := collections.Join([]byte{}, uint64(0))
+	startBuffer := make([]byte, pc.Size(start))
+	_, _ = pc.Encode(startBuffer, start)
+
+	iter, err := k.Report.Indexes.BlockNumber.IterateRaw(ctx, startBuffer, nil, collections.OrderAscending)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+
+	keysToDelete := make([]collections.Pair[[]byte, collections.Pair[[]byte, uint64]], 0)
+	// Cache: blockNumber -> isOld (true if timestamp < cutoff)
+	// because multiple Report entries can exist at the same block height (different reporters/queryIds)
+	// we want to avoid redundant oracle calls for the same block height
+	checkedBlocks := make(map[uint64]bool)
+	iterations := 0
+
+	for ; iter.Valid() && iterations < maxIterations; iter.Next() {
+		iterations++
+
+		key, err := iter.Key()
+		if err != nil {
+			continue
+		}
+
+		blockNumber := key.K1().K2()
+
+		// Check cache first to avoid redundant oracle calls
+		isOld, found := checkedBlocks[blockNumber]
+		if !found {
+			// Query oracle for timestamp at this block height
+			timestamp, err := k.oracleKeeper.GetTimestampForBlockHeight(ctx, blockNumber)
+			if err != nil || timestamp == 0 {
+				// Can't determine age, skip this entry
+				continue
+			}
+			isOld = timestamp < cutoffTimestamp
+			checkedBlocks[blockNumber] = isOld
+		}
+
+		if isOld {
+			// Reconstruct primary key: (queryId, (reporter, blockNumber))
+			primaryKey := collections.Join(key.K2(), collections.Join(key.K1().K1(), key.K1().K2()))
+			keysToDelete = append(keysToDelete, primaryKey)
+		}
+	}
+
+	// Delete old entries, can't delete during iteration
+	for _, key := range keysToDelete {
+		if err := k.Report.Remove(ctx, key); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}

@@ -166,6 +166,11 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 		return err
 	}
 
+	// Prune old report entries (older than 60 days)
+	if err := am.keeper.PruneOldReports(ctx, 100); err != nil {
+		return err
+	}
+
 	return am.keeper.TrackStakeChange(ctx)
 }
 

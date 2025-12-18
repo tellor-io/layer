@@ -67,11 +67,11 @@ type (
 		NoStakeReportedQueries collections.Map[[]byte, []byte] // key: queryId, value: queryData
 
 		// Liveness reward storage
-		LivenessRecords         collections.Map[[]byte, types.LivenessRecord]           // key: reporter address
-		TotalQueriesInPeriod    collections.Item[uint64]                                // count of cyclelist queries in current period
-		CycleCount              collections.Sequence                                    // tracks completed cycles
-		Dust                    collections.Item[math.Int]                              // leftover from rounding during distribution
-		QueryOpportunities      collections.Map[[]byte, uint64]                         // key: queryId, value: opportunity count
+		LivenessRecords         collections.Map[[]byte, types.LivenessRecord]             // key: reporter address
+		TotalQueriesInPeriod    collections.Item[uint64]                                  // count of cyclelist queries in current period
+		CycleCount              collections.Sequence                                      // tracks completed cycles
+		Dust                    collections.Item[math.Int]                                // leftover from rounding during distribution
+		QueryOpportunities      collections.Map[[]byte, uint64]                           // key: queryId, value: opportunity count
 		ReporterQueriesInPeriod collections.Map[collections.Pair[[]byte, []byte], uint64] // key: (reporter, queryId), value: report count
 	}
 )
@@ -426,4 +426,25 @@ func (k Keeper) GetMaxBatchSize(ctx context.Context) (uint32, error) {
 		return 0, nil
 	}
 	return maxBatchSize, nil
+}
+
+// GetTimestampForBlockHeight returns the timestamp of aggregates at a given block height.
+// Returns 0 if no aggregates exist at that block height.
+func (k Keeper) GetTimestampForBlockHeight(ctx context.Context, blockHeight uint64) (uint64, error) {
+	rng := collections.NewPrefixedPairRange[uint64, collections.Pair[[]byte, uint64]](blockHeight)
+	iter, err := k.Aggregates.Indexes.BlockHeight.Iterate(ctx, rng)
+	if err != nil {
+		return 0, err
+	}
+	defer iter.Close()
+
+	if iter.Valid() {
+		key, err := iter.PrimaryKey()
+		if err != nil {
+			return 0, err
+		}
+		return key.K2(), nil
+	}
+
+	return 0, nil
 }
