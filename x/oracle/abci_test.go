@@ -34,6 +34,7 @@ type TestSuite struct {
 	accountKeeper  *mocks.AccountKeeper
 	bankKeeper     *mocks.BankKeeper
 	bridgeKeeper   *mocks.BridgeKeeper
+	mintKeeper     *mocks.MintKeeper
 }
 
 func (s *TestSuite) SetupTest() {
@@ -45,6 +46,7 @@ func (s *TestSuite) SetupTest() {
 		s.accountKeeper,
 		s.bankKeeper,
 		s.bridgeKeeper,
+		s.mintKeeper,
 		s.ctx = keepertest.OracleKeeper(s.T())
 }
 
@@ -182,7 +184,7 @@ var spotSpec = registrytypes.DataSpec{
 func BenchmarkOracleEndBlocker(b *testing.B) {
 	b.Run("Rotate_Cycle_List_No_Reports", func(b *testing.B) {
 		require := require.New(b)
-		k, repk, regk, ak, bak, brk, ctx := keepertest.OracleKeeper(b)
+		k, repk, regk, ak, bak, brk, mk, ctx := keepertest.OracleKeeper(b)
 		ctx = ctx.WithBlockHeight(1).WithBlockTime(time.Now())
 		require.NotNil(k)
 		require.NotNil(repk)
@@ -190,6 +192,7 @@ func BenchmarkOracleEndBlocker(b *testing.B) {
 		require.NotNil(ak)
 		require.NotNil(bak)
 		require.NotNil(brk)
+		require.NotNil(mk)
 		// set default cycle list
 		require.NoError(k.GenesisCycleList(ctx, types.InitialCycleList()))
 		// make sure cycle list is populated
@@ -208,7 +211,7 @@ func BenchmarkOracleEndBlocker(b *testing.B) {
 
 	b.Run("Rotate_Cycle_List_And_1_Aggregated_Report_1_Reporter", func(b *testing.B) {
 		require := require.New(b)
-		k, repk, regk, ak, bak, brk, ctx := keepertest.OracleKeeper(b)
+		k, repk, regk, ak, bak, brk, mk, ctx := keepertest.OracleKeeper(b)
 		ctx = ctx.WithBlockHeight(3).WithBlockTime(time.Now())
 
 		require.NotNil(k)
@@ -217,6 +220,7 @@ func BenchmarkOracleEndBlocker(b *testing.B) {
 		require.NotNil(ak)
 		require.NotNil(bak)
 		require.NotNil(brk)
+		require.NotNil(mk)
 
 		// set report to be aggregated
 		queryData := []byte("queryData")

@@ -70,7 +70,8 @@ func setupTest(t *testing.T) (context.Context, store.KVStoreService, codec.Codec
 	bankKeeper := new(mocks.BankKeeper)
 	reporterKeeper := new(mocks.ReporterKeeper)
 	registryKeeper := new(mocks.RegistryKeeper)
-	k := keeper.NewKeeper(cdc, storeService, accountKeeper, bankKeeper, registryKeeper, reporterKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+	mintKeeper := new(mocks.MintKeeper)
+	k := keeper.NewKeeper(cdc, storeService, accountKeeper, bankKeeper, registryKeeper, reporterKeeper, mintKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String())
 
 	ctx := sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 

@@ -45,6 +45,7 @@ type KeeperTestSuite struct {
 	accountKeeper  *mocks.AccountKeeper
 	registryKeeper *mocks.RegistryKeeper
 	reporterKeeper *mocks.ReporterKeeper
+	mintKeeper     *mocks.MintKeeper
 
 	queryClient types.QueryServer
 	msgServer   types.MsgServer
@@ -59,6 +60,7 @@ func (s *KeeperTestSuite) SetupTest() {
 		s.accountKeeper,
 		s.bankKeeper,
 		s.bridgeKeeper,
+		s.mintKeeper,
 		s.ctx = keepertest.OracleKeeper(s.T())
 
 	s.msgServer = keeper.NewMsgServerImpl(s.oracleKeeper)
@@ -77,7 +79,7 @@ func (s *KeeperTestSuite) TestNewKeeper() {
 
 	badAuthority := "bad_authority"
 	require.Panics(func() {
-		_ = keeper.NewKeeper(nil, nil, nil, nil, nil, nil, badAuthority)
+		_ = keeper.NewKeeper(nil, nil, nil, nil, nil, nil, nil, badAuthority)
 	})
 }
 

@@ -14,7 +14,7 @@ import (
 )
 
 func TestGenesis(t *testing.T) {
-	k, _, _, _, _, _, ctx := keepertest.OracleKeeper(t)
+	k, _, _, _, _, _, _, ctx := keepertest.OracleKeeper(t)
 	require := require.New(t)
 	require.NotNil(k)
 	require.NotNil(ctx)
@@ -72,7 +72,7 @@ func TestGenesis(t *testing.T) {
 		QuerySequencer: types.DefaultGenesis().QuerySequencer,
 	}
 
-	k, _, _, _, _, _, ctx = keepertest.OracleKeeper(t)
+	k, _, _, _, _, _, _, ctx = keepertest.OracleKeeper(t)
 	ctx = ctx.WithBlockTime(now.Add(time.Minute * 10))
 	ctx = ctx.WithBlockHeight(1134000 + 100)
 
