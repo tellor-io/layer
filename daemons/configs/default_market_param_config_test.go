@@ -1,7 +1,6 @@
 package configs_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -43,8 +42,8 @@ func TestMergeMarketParamsConfig(t *testing.T) {
 				{
 					Id:                 exchange_common.BTCUSD_ID,
 					Pair:               `"BTC-USD"`,
-					Exponent:           -6, // Custom value different from default
-					MinExchanges:       5,  // Custom value different from default
+					Exponent:           -6,   // Custom value different from default
+					MinExchanges:       5,    // Custom value different from default
 					MinPriceChangePpm:  2000, // Custom value different from default
 					ExchangeConfigJson: `{"exchanges":[]}`,
 					QueryData:          `"test"`,
@@ -142,4 +141,3 @@ func TestMergeMarketParamsConfig(t *testing.T) {
 		})
 	}
 }
-

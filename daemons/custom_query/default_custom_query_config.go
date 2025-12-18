@@ -304,6 +304,14 @@ func WriteDefaultConfigToml(homeDir, localDir, file string) {
 	// Write file into config folder if file does not exist.
 	// If the file exists, merge missing entries from static configs.
 	configFilePath := getCustomQueryConfigFilePath(homeDir, localDir, file)
+	configDir := filepath.Dir(configFilePath)
+	// Ensure config directory exists
+	if err := os.MkdirAll(configDir, 0o755); err != nil {
+		// Check if directory actually exists (might have been created by another process)
+		if _, statErr := os.Stat(configDir); statErr != nil {
+			panic(fmt.Sprintf("failed to create config directory %s: %v", configDir, err))
+		}
+	}
 	_, err := os.Stat(configFilePath)
 	if err != nil {
 		// if the file does not exist, create it

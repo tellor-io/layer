@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -118,16 +119,16 @@ func (c *Client) Start(
 	c.TokenBridgeTipsCache = tokenBridgeTipsCache
 	c.Custom_query = custom_queries
 	// Make a connection to the Cosmos gRPC query services.
+	c.logger.Info("Establishing gRPC connection", "address", grpcAddress)
 	conn, err := grpcClient.NewTcpConnection(ctx, grpcAddress)
 	if err != nil {
-		c.logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
+		c.logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err, "address", grpcAddress)
 		return err
 	}
-	defer func() {
-		if connErr := grpcClient.CloseConnection(conn); connErr != nil {
-			err = connErr
-		}
-	}()
+	c.logger.Info("gRPC connection established successfully", "address", grpcAddress)
+	// Note: We intentionally do NOT close the connection here with defer because
+	// StartReporterDaemonTaskLoop runs indefinitely and needs the connection to stay open.
+	// The connection will be closed when the process exits.
 
 	// Initialize the query clients. These are used to query the Cosmos gRPC query services.
 	c.OracleQueryClient = oracletypes.NewQueryClient(conn)
@@ -249,14 +250,18 @@ func StartReporterDaemonTaskLoop(
 	for !reporterCreated {
 		reporterCreated = client.checkReporter(ctx)
 		if reporterCreated {
+			client.logger.Info("Reporter exists, setting gas price")
 			err := client.SetGasPrice(ctx)
 			if err != nil {
-				client.logger.Error("Setting gas, required before reporter can report", "error", err)
+				client.logger.Error("Setting gas price failed, required before reporter can report", "error", err)
 				reporterCreated = false
+				time.Sleep(time.Second)
+			} else {
+				client.logger.Info("Gas price set successfully", "gas_price", client.minGasFee)
 			}
 		} else {
 			time.Sleep(time.Second)
-			client.logger.Warn("Checking if reporter is created", "reporterCreated", reporterCreated)
+			client.logger.Warn("Reporter not found, retrying...", "selector_address", client.accAddr.String())
 		}
 	}
 
@@ -287,7 +292,65 @@ func StartReporterDaemonTaskLoop(
 }
 
 func (c *Client) checkReporter(ctx context.Context) bool {
-	_, err := c.ReporterClient.SelectorReporter(ctx, &reportertypes.QuerySelectorReporterRequest{SelectorAddress: c.accAddr.String()})
-	c.logger.Debug("Checking if reporter is created", "error", err)
-	return err == nil
+	c.logger.Info("Checking if reporter is created", "address", c.accAddr.String())
+
+	// Retry logic for connection issues - gRPC connections are lazy and may fail initially
+	maxRetries := 3
+	retryDelay := time.Second
+
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		if attempt > 0 {
+			c.logger.Info("Retrying reporter check", "attempt", attempt+1, "max_retries", maxRetries)
+			time.Sleep(retryDelay)
+			retryDelay *= 2 // Exponential backoff
+		}
+
+		// First try to check if the address is a reporter directly
+		reporterResp, err := c.ReporterClient.Reporter(ctx, &reportertypes.QueryReporterRequest{ReporterAddress: c.accAddr.String()})
+		if err == nil {
+			c.logger.Info("Reporter found (direct)", "address", c.accAddr.String(), "reporter", reporterResp)
+			return true
+		}
+
+		// Check if it's a connection error that we should retry
+		if isConnectionError(err) && attempt < maxRetries-1 {
+			c.logger.Debug("Connection error, will retry", "error", err, "attempt", attempt+1)
+			continue
+		}
+
+		c.logger.Debug("Direct reporter check failed, trying selector", "error", err, "address", c.accAddr.String())
+		// If not a reporter, check if it's a selector that has selected a reporter
+		selectorResp, err := c.ReporterClient.SelectorReporter(ctx, &reportertypes.QuerySelectorReporterRequest{SelectorAddress: c.accAddr.String()})
+		if err == nil {
+			c.logger.Info("Reporter found (via selector)", "address", c.accAddr.String(), "reporter", selectorResp.Reporter)
+			return true
+		}
+
+		// Check if it's a connection error that we should retry
+		if isConnectionError(err) && attempt < maxRetries-1 {
+			c.logger.Debug("Connection error on selector check, will retry", "error", err, "attempt", attempt+1)
+			continue
+		}
+
+		// If we get here and it's not a connection error, or we've exhausted retries, return false
+		if !isConnectionError(err) || attempt == maxRetries-1 {
+			c.logger.Info("Reporter check failed - address is neither a reporter nor a selector", "error", err, "address", c.accAddr.String())
+			return false
+		}
+	}
+
+	return false
+}
+
+// isConnectionError checks if an error is a transient connection error that should be retried
+func isConnectionError(err error) bool {
+	if err == nil {
+		return false
+	}
+	errStr := err.Error()
+	return strings.Contains(errStr, "connection refused") ||
+		strings.Contains(errStr, "connection reset") ||
+		strings.Contains(errStr, "connection closed") ||
+		strings.Contains(errStr, "transport: Error while dialing") ||
+		strings.Contains(errStr, "Unavailable")
 }

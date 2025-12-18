@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"text/template"
 
 	tmos "github.com/cometbft/cometbft/libs/os"
@@ -31,21 +33,33 @@ const (
 	#
 	# Pair - The human-readable name of the market pair (e.g. "BTC-USD").
 	#
-	# QueryData - Layer representation of the market pair.{{ range $exchangeId, $element := .}}
+	# QueryData - Layer representation of the market pair.
+{{ range $exchangeId, $element := .}}
 	[[market_params]]
-	ExchangeConfigJson = "{{$element.ExchangeConfigJson}}"
-	QueryData = {{$element.QueryData}}
+	ExchangeConfigJson = "{{escapeTomlString $element.ExchangeConfigJson}}"
+	QueryData = "{{escapeTomlString $element.QueryData}}"
 	Exponent = {{$element.Exponent}}
 	Id = {{$element.Id}}
 	MinExchanges = {{$element.MinExchanges}}
 	MinPriceChangePpm = {{$element.MinPriceChangePpm}}
-	Pair = {{$element.Pair}}{{end}}
+	Pair = "{{escapeTomlString $element.Pair}}"
+{{end}}
 `
 )
 
+// escapeTomlString escapes a string for use in TOML by replacing backslashes and quotes
+func escapeTomlString(s string) string {
+	// Replace backslashes first, then quotes
+	s = strings.ReplaceAll(s, "\\", "\\\\")
+	s = strings.ReplaceAll(s, "\"", "\\\"")
+	return s
+}
+
 // GenerateDefaultExchangeTomlString creates the toml file string containing the default marketParam configs.
 func GenerateDefaultMarketParamsTomlString() bytes.Buffer {
-	template, err := template.New("").Parse(defaultMarketParamTomlTemplate)
+	template, err := template.New("").Funcs(template.FuncMap{
+		"escapeTomlString": escapeTomlString,
+	}).Parse(defaultMarketParamTomlTemplate)
 	// Panic if failure occurs when parsing the template.
 	if err != nil {
 		panic(err)
@@ -75,6 +89,23 @@ func MergeMarketParamsConfig(homeDir string) error {
 	existingParams := map[string][]types.MarketParam{}
 	if err = toml.Unmarshal(tomlFile, &existingParams); err != nil {
 		return fmt.Errorf("failed to unmarshal existing config: %w", err)
+	}
+
+	// Unescape ExchangeConfigJson strings (TOML parser may preserve escaped quotes)
+	// Use strconv.Unquote to properly unescape the JSON string
+	for i := range existingParams["market_params"] {
+		jsonStr := existingParams["market_params"][i].ExchangeConfigJson
+		// If the string looks like it has escaped quotes, try to unquote it
+		if strings.Contains(jsonStr, "\\\"") {
+			// Wrap in quotes for Unquote to work
+			if unquoted, err := strconv.Unquote(`"` + jsonStr + `"`); err == nil {
+				existingParams["market_params"][i].ExchangeConfigJson = unquoted
+			}
+		}
+		// Strip quotes from QueryData if present (constants store it with quotes)
+		if len(existingParams["market_params"][i].QueryData) > 0 && existingParams["market_params"][i].QueryData[0] == '"' {
+			existingParams["market_params"][i].QueryData = strings.Trim(existingParams["market_params"][i].QueryData, "\"")
+		}
 	}
 
 	// Create a map of existing market param IDs for quick lookup
@@ -114,7 +145,9 @@ func MergeMarketParamsConfig(homeDir string) error {
 	}
 
 	// Generate merged TOML using template
-	template, err := template.New("").Parse(defaultMarketParamTomlTemplate)
+	template, err := template.New("").Funcs(template.FuncMap{
+		"escapeTomlString": escapeTomlString,
+	}).Parse(defaultMarketParamTomlTemplate)
 	if err != nil {
 		return fmt.Errorf("failed to parse template: %w", err)
 	}
@@ -138,8 +171,21 @@ func MergeMarketParamsConfig(homeDir string) error {
 		return fmt.Errorf("failed to read temp file for validation: %w", err)
 	}
 	if err = toml.Unmarshal(testToml, &testConfig); err != nil {
+		// Include a snippet of the generated TOML for debugging
+		lines := bytes.Split(mergedToml.Bytes(), []byte("\n"))
+		var context bytes.Buffer
+		if len(lines) > 0 {
+			context.WriteString("First 20 lines of generated TOML:\n")
+			maxLines := 20
+			if len(lines) < maxLines {
+				maxLines = len(lines)
+			}
+			for i := 0; i < maxLines; i++ {
+				context.WriteString(fmt.Sprintf("%d: %s\n", i+1, string(lines[i])))
+			}
+		}
 		os.Remove(tempFile)
-		return fmt.Errorf("merged config validation failed: %w", err)
+		return fmt.Errorf("merged config validation failed: %w\n%s", err, context.String())
 	}
 
 	// Validate each param has required fields
@@ -164,6 +210,14 @@ func WriteDefaultMarketParamsToml(homeDir string) {
 	// Write file into config folder if file does not exist.
 	// If the file exists, merge missing market params from static config.
 	configFilePath := getMarketParamsConfigFilePath(homeDir)
+	configDir := filepath.Dir(configFilePath)
+	// Ensure config directory exists
+	if err := os.MkdirAll(configDir, 0o755); err != nil {
+		// Check if directory actually exists (might have been created by another process)
+		if _, statErr := os.Stat(configDir); statErr != nil {
+			panic(fmt.Sprintf("failed to create config directory %s: %v", configDir, err))
+		}
+	}
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		buffer := GenerateDefaultMarketParamsTomlString()
 		tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0o644)
@@ -186,6 +240,23 @@ func ReadMarketParamsConfigFile(homeDir string) []types.MarketParam {
 	if err = toml.Unmarshal(tomlFile, &params); err != nil {
 		fmt.Println("Error unmarshalling toml file", err.Error())
 		panic(err)
+	}
+
+	// Unescape ExchangeConfigJson strings (TOML parser may preserve escaped quotes)
+	// Use strconv.Unquote to properly unescape the JSON string
+	for i := range params["market_params"] {
+		jsonStr := params["market_params"][i].ExchangeConfigJson
+		// If the string looks like it has escaped quotes, try to unquote it
+		if strings.Contains(jsonStr, "\\\"") {
+			// Wrap in quotes for Unquote to work
+			if unquoted, err := strconv.Unquote(`"` + jsonStr + `"`); err == nil {
+				params["market_params"][i].ExchangeConfigJson = unquoted
+			}
+		}
+		// Strip quotes from QueryData if present (constants store it with quotes)
+		if len(params["market_params"][i].QueryData) > 0 && params["market_params"][i].QueryData[0] == '"' {
+			params["market_params"][i].QueryData = strings.Trim(params["market_params"][i].QueryData, "\"")
+		}
 	}
 
 	paramStartupConfigMap := make(map[uint32]*types.MarketParam, len(params))

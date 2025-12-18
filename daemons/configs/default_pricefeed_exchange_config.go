@@ -60,7 +60,7 @@ func GenerateDefaultExchangeTomlString() bytes.Buffer {
 // It preserves existing exchanges and only adds new ones with default values.
 func MergePricefeedExchangeConfig(homeDir string) error {
 	configFilePath := getConfigFilePath(homeDir)
-	
+
 	// Read existing config file
 	tomlFile, err := os.ReadFile(configFilePath)
 	if err != nil {
@@ -158,6 +158,14 @@ func MergePricefeedExchangeConfig(homeDir string) error {
 // If the file exists, it merges missing exchanges from static config.
 func WriteDefaultPricefeedExchangeToml(homeDir string) {
 	configFilePath := getConfigFilePath(homeDir)
+	configDir := filepath.Dir(configFilePath)
+	// Ensure config directory exists
+	if err := os.MkdirAll(configDir, 0o755); err != nil {
+		// Check if directory actually exists (might have been created by another process)
+		if _, statErr := os.Stat(configDir); statErr != nil {
+			panic(fmt.Sprintf("failed to create config directory %s: %v", configDir, err))
+		}
+	}
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		buffer := GenerateDefaultExchangeTomlString()
 		tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0o644)

@@ -1,14 +1,13 @@
 package customquery_test
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
 	"github.com/pelletier/go-toml"
 	"github.com/stretchr/testify/require"
-	"github.com/tellor-io/layer/daemons/custom_query"
+	customquery "github.com/tellor-io/layer/daemons/custom_query"
 )
 
 func TestMergeCustomQueryConfig(t *testing.T) {
@@ -68,7 +67,7 @@ func TestMergeCustomQueryConfig(t *testing.T) {
 					"05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6": {
 						ID:                "05cddb6b67074aa61fcbe1d2fd5924e028bb699b506267df28c88f7deac4edc6",
 						AggregationMethod: "mean", // Custom value
-						MaxSpreadPercent:   25.0,   // Custom value
+						MaxSpreadPercent:  25.0,   // Custom value
 						MinResponses:      5,      // Custom value
 						ResponseType:      "ufixed256x18",
 						Endpoints:         []customquery.EndpointConfig{},
@@ -253,4 +252,3 @@ func TestMergeCustomQueryConfig(t *testing.T) {
 		})
 	}
 }
-
