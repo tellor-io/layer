@@ -638,6 +638,23 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 			expectedError:     errors.New("sig check error!"),
 		},
 		{
+			name: "New validator not found in valset - should skip silently",
+			setupMocks: func(h *app.VoteExtHandler, bk *mocks.BridgeKeeper, patches *gomonkey.Patches) {
+				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil)
+				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(bridgetypes.CheckpointTimestamp{
+					Timestamp: 10,
+				}, nil)
+				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
+					return oppAddr, nil
+				})
+				// New validator not in valset - returns collections.ErrNotFound
+				bk.On("GetValidatorDidSignCheckpoint", ctx, oppAddr, uint64(10)).Return(false, int64(0), collections.ErrNotFound)
+			},
+			expectedSig:       nil,
+			expectedTimestamp: 0,
+			expectedError:     nil, // Should NOT return error for new validators
+		},
+		{
 			name: "No errors",
 			setupMocks: func(h *app.VoteExtHandler, bk *mocks.BridgeKeeper, patches *gomonkey.Patches) {
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil).Once()

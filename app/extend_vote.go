@@ -125,6 +125,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 				h.logger.Error("ExtendVoteHandler: failed to marshal vote extension", "error", err)
 				return &abci.ResponseExtendVote{}, err
 			}
+			h.logger.Warn("ExtendVoteHandler: returning EMPTY extension due to SignInitialMessage failure", "extensionSize", len(bz))
 			return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 		}
 		// include the initial sig in the vote extension
@@ -191,6 +192,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		h.logger.Error("ExtendVoteHandler: failed to marshal vote extension", "error", err)
 		return &abci.ResponseExtendVote{}, fmt.Errorf("failed to marshal vote extension: %w", err)
 	}
+	h.logger.Info("ExtendVoteHandler: returning vote extension", "extensionSize", len(bz), "hasInitialSig", len(voteExt.InitialSignature.SignatureA) > 0, "hasValsetSig", len(voteExt.ValsetSignature.Signature) > 0, "oracleAttestations", len(voteExt.OracleAttestations))
 	return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 }
 
@@ -340,6 +342,12 @@ func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx context.Context) (s
 	}
 	didSign, valIndex, err := h.bridgeKeeper.GetValidatorDidSignCheckpoint(ctx, operatorAddress, latestCheckpointTimestamp.Timestamp)
 	if err != nil {
+		// If validator is not found in valset (new validator), treat it as not needing to sign
+		// This prevents crash for new validators not yet in the bridge valset
+		if errors.Is(err, collections.ErrNotFound) {
+			h.logger.Info("validator not found in valset, skipping checkpoint signing", "operatorAddress", operatorAddress)
+			return nil, 0, nil
+		}
 		h.logger.Error("failed to get validator did sign checkpoint", "error", err)
 		return nil, 0, err
 	}
