@@ -103,7 +103,18 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 		),
 	})
 	telemetry.IncrCounterWithLabels([]string{"reports_in_aggregate", "report_submitted"}, 1, []metrics.Label{{Name: "chain_id", Value: sdkCtx.ChainID()}, {Name: "query_id", Value: hex.EncodeToString(queryId)}})
-	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id), report)
+	if err := k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id), report); err != nil {
+		return err
+	}
+
+	// Track liveness for cyclelist reports (both in-rotation and out-of-turn tipped)
+	if query.CycleList {
+		if err := k.UpdateReporterLiveness(ctx, reporter.Bytes(), queryId, power); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (k Keeper) GetDataSpec(ctx context.Context, queryType string) (regTypes.DataSpec, error) {

@@ -50,13 +50,6 @@ func (k Keeper) DistributeTip(ctx context.Context, aggregateReport types.Aggrega
 		if err != nil {
 			return err
 		}
-
-		// track liveness for cyclelist reports
-		if report.Cyclelist {
-			if err := k.UpdateReporterLiveness(ctx, reporter, report.QueryId, report.Power); err != nil {
-				return err
-			}
-		}
 	}
 	return nil
 }
