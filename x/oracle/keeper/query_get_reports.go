@@ -33,6 +33,7 @@ func WithCollectionPaginationTripleSuperPrefix[K1, K2, K3 any](prefix1 K1, prefi
 	}
 }
 
+// use GetReportsByReporterQid for ordered results
 func (k Querier) GetReportsbyQid(ctx context.Context, req *types.QueryGetReportsbyQidRequest) (*types.QueryMicroReportsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
