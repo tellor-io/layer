@@ -254,6 +254,7 @@ func (c *Client) AutoUnbondStakePeriodically(ctx context.Context, wg *sync.WaitG
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
+			c.logger.Info("Trying to unbond stake")
 			reporterData, err := c.ReporterClient.SelectionsTo(ctx, &reportertypes.QuerySelectionsToRequest{
 				ReporterAddress: c.accAddr.String(),
 			})
