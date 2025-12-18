@@ -42,6 +42,16 @@ func (k Querier) GetReportsbyQid(ctx context.Context, req *types.QueryGetReports
 	if err != nil {
 		return nil, err
 	}
+
+	if req.Pagination == nil {
+		req.Pagination = &query.PageRequest{}
+	}
+
+	defaultLimit := uint64(10)
+	if req.Pagination.Limit == 0 {
+		req.Pagination.Limit = defaultLimit
+	}
+
 	microreports := make([]types.MicroReportStrings, 0)
 	_, pageRes, err := query.CollectionPaginate(
 		ctx, k.keeper.Reports, req.Pagination, func(_ collections.Triple[[]byte, []byte, uint64], rep types.MicroReport) (types.MicroReport, error) {
@@ -163,6 +173,15 @@ func (k Querier) GetReportsbyReporterQid(ctx context.Context, req *types.QueryGe
 	qId, err := utils.QueryBytesFromString(req.QueryId)
 	if err != nil {
 		return nil, err
+	}
+
+	if req.Pagination == nil {
+		req.Pagination = &query.PageRequest{}
+	}
+
+	defaultLimit := uint64(10)
+	if req.Pagination.Limit == 0 {
+		req.Pagination.Limit = defaultLimit
 	}
 
 	microreports := make([]types.MicroReportStrings, 0)
