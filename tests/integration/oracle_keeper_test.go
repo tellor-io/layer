@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"strconv"
@@ -25,6 +26,7 @@ import (
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -1250,4 +1252,111 @@ func (s *IntegrationTestSuite) TestClaimingBridgeDeposit() {
 
 	_, err = s.Setup.App.EndBlocker(ctx)
 	require.NoError(err)
+}
+
+func (s *IntegrationTestSuite) TestRotateQueriesToExpiredTippedQuery() {
+	require := s.Require()
+	ctx := s.Setup.Ctx
+	app := s.Setup.App
+	okpr := s.Setup.Oraclekeeper
+	ctx = ctx.WithBlockTime(time.Now())
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	msgServer := keeper.NewMsgServerImpl(okpr)
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{100})
+	for _, val := range valAddrs {
+		err := s.Setup.Bridgekeeper.SetEVMAddressByOperator(ctx, val.String(), []byte("not real"))
+		s.NoError(err)
+	}
+	addr := s.newKeysWithTokens()
+	// test for rotating queries going through the cycle list and updating the current query 1,2,3
+	// get cycle list
+	cycleList, err := okpr.GetCyclelist(ctx)
+	s.NoError(err)
+	s.Len(cycleList, 3)
+	queryId0 := utils.QueryIDFromData(cycleList[0])
+	queryId1 := utils.QueryIDFromData(cycleList[1])
+	// should be on the second query since the first one is expired from chain running during setup
+	query1, err := okpr.GetCurrentQueryInCycleList(ctx)
+	s.NoError(err)
+	s.True(bytes.Equal(query1, cycleList[1]))
+	require.NoError(err)
+	require.True(bytes.Equal(query1, cycleList[1]))
+	query, err := okpr.CurrentQuery(ctx, queryId1)
+	s.NoError(err)
+	s.Equal(uint64(3), query.Expiration)
+	s.Equal(math.NewInt(9800), query.Amount)
+	s.False(query.CycleList)
+
+	// Get the initial meta ID of queryId0 before tipping
+	// queryId0 is not the current query (queryId1 is current)
+	initialQuery0, err := okpr.CurrentQuery(ctx, queryId0)
+	var initialMetaId0 uint64
+	if err == nil {
+		initialMetaId0 = initialQuery0.Id
+	} else {
+		// If query doesn't exist yet, it will be initialized with a new ID when rotated to
+		// We'll track this differently
+		initialMetaId0 = 0
+	}
+
+	// Tip queryId0 when it is NOT the current cycle list query (queryId1 is current)
+	// This simulates tipping a query that is in the cycle list but not currently active
+	msg := types.MsgTip{
+		Tipper:    addr.String(),
+		QueryData: cycleList[0], // tip queryId0 which is not current
+		Amount:    sdk.NewCoin("loya", math.NewInt(1*1e6)),
+	}
+	_, err = msgServer.Tip(ctx, &msg)
+	require.NoError(err)
+
+	// Verify the query was tipped but is still not current
+	query, err = okpr.CurrentQuery(ctx, queryId0)
+	require.NoError(err)
+	tippedMetaId0 := query.Id
+	s.True(query.Amount.GT(math.ZeroInt()), "Query should have a tip")
+	s.False(query.CycleList, "Query should not be in cycle list yet")
+
+	// Verify queryId0 expiration after tipping (should be blockHeight + 2 = 3)
+	query, err = okpr.CurrentQuery(ctx, queryId0)
+	require.NoError(err)
+	queryExpiration := query.Expiration
+	s.Equal(uint64(3), queryExpiration, "Query should expire at block 3")
+
+	// Move forward in blocks without anyone reporting for queryId0
+	// This will cause queryId0 to expire without reports
+	// First, let queryId1 expire and rotate to queryId2
+	ctx, err = simtestutil.NextBlock(app, ctx, time.Second) // block 2
+	require.NoError(err)
+	s.Equal(int64(2), ctx.BlockHeight())
+
+	// Should be on queryId2 now
+	query1, err = okpr.GetCurrentQueryInCycleList(ctx)
+	s.NoError(err)
+	s.True(bytes.Equal(query1, cycleList[2]))
+
+	// Move forward so queryId2 expires and rotates to queryId0
+	// queryId0 was tipped but no one reported for it, so it should have expired by now
+	ctx, err = simtestutil.NextBlock(app, ctx, time.Second) // block 3
+	require.NoError(err)
+	s.Equal(int64(3), ctx.BlockHeight())
+	s.GreaterOrEqual(int64(3), int64(queryExpiration), "QueryId0 should have expired by block 3")
+
+	// Should now be on queryId0 since queryId2 expired
+	query1, err = okpr.GetCurrentQueryInCycleList(ctx)
+	s.NoError(err)
+	s.True(bytes.Equal(query1, cycleList[0]))
+
+	// Verify that queryId0 is now the current query and its meta ID has increased
+	// because it was tipped but not reported, and is now rotated to as part of the cycle list
+	query, err = okpr.CurrentQuery(ctx, queryId0)
+	require.NoError(err)
+	s.True(query.CycleList, "Query should now be in cycle list")
+	s.True(query.Amount.GT(math.ZeroInt()), "Query should still have the tip")
+
+	// The meta ID should have increased when the expired tipped query was rotated to
+	if initialMetaId0 > 0 {
+		s.Greater(query.Id, initialMetaId0, "Meta ID should have increased when expired tipped query was rotated to")
+	}
+	// Also verify it's greater than the ID it had when tipped
+	s.Greater(query.Id, tippedMetaId0, "Meta ID should have increased when expired tipped query was rotated to")
 }

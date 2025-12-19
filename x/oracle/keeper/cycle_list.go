@@ -128,7 +128,18 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 		// noRevealedReports := !querymeta.HasRevealedReports
 		if expired {
 			// extend time as if tbr is a tip that would extend the time (tipping)
+			// remove old query with old ID before creating new one with new ID
+			oldId := querymeta.Id
+			err = k.Query.Remove(ctx, collections.Join(queryId, oldId))
+			if err != nil {
+				return err
+			}
 			querymeta.Expiration = uint64(blockHeight) + querymeta.RegistrySpecBlockWindow
+			id, err := k.QuerySequencer.Next(ctx)
+			if err != nil {
+				return err
+			}
+			querymeta.Id = id
 		}
 		emitRotateQueriesEvent(sdkCtx, hex.EncodeToString(queryId), strconv.Itoa(int(querymeta.Id)))
 
