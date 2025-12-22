@@ -7,8 +7,3 @@ message Reports {
   
   repeated MicroReport microReports = 1; 
 }
-
-message LivenessRecord {
-    uint64 queries_reported = 1;
-    uint64 accumulated_power = 2;
-}

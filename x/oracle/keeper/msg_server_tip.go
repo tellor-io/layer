@@ -95,12 +95,13 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 		if isCyclelistQuery {
 			// keep CycleList = true for liveness tracking
 			query.CycleList = true
-			// increment query opportunities (creates extra opportunity)
-			if err := k.keeper.IncrementQueryOpportunities(ctx, queryId); err != nil {
+			// Demote query to non-standard (out-of-turn tip creates extra opportunity)
+			// This moves existing shares from standard to non-standard tracking
+			if err := k.keeper.DemoteQueryToNonStandard(ctx, queryId); err != nil {
 				return nil, err
 			}
-			// increment total queries in period
-			if err := k.keeper.IncrementTotalQueriesInPeriod(ctx); err != nil {
+			// increment query opportunities (creates extra opportunity)
+			if err := k.keeper.IncrementQueryOpportunities(ctx, queryId); err != nil {
 				return nil, err
 			}
 		} else {

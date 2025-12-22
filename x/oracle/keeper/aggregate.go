@@ -66,6 +66,31 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			return err
 		}
 
+		// Track liveness for TBR distribution at aggregation time
+		// This is where we know both individual reporter powers and aggregate total power
+		//
+		// Check for TRBBridge queries first - they have CycleList=true in QueryMeta
+		// but need separate tracking since they share one TBR slot for all TRBBridge reports
+		if strings.EqualFold(query.QueryType, TRBBridgeQueryType) {
+			// Track TRBBridge queries under the marker queryId
+			// All TRBBridge aggregates share a single "slot" in TBR distribution
+			err = k.TrackLivenessForTRBBridge(ctx, aggregateReport)
+			if err != nil {
+				return err
+			}
+			// Increment TRBBridge opportunity count (each aggregate is an opportunity)
+			err = k.IncrementQueryOpportunities(ctx, TRBBridgeMarkerQueryId)
+			if err != nil {
+				return err
+			}
+		} else if query.CycleList {
+			// Regular cyclelist queries - track with actual queryId
+			err = k.TrackLivenessForAggregate(ctx, aggregateReport)
+			if err != nil {
+				return err
+			}
+		}
+
 		if !query.Amount.IsZero() {
 			err = k.DistributeTip(ctx, aggregateReport, query.Amount.ToLegacyDec())
 			if err != nil {

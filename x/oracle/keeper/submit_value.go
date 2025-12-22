@@ -107,13 +107,6 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 		return err
 	}
 
-	// Track liveness for cyclelist reports (both in-rotation and out-of-turn tipped)
-	if query.CycleList {
-		if err := k.UpdateReporterLiveness(ctx, reporter.Bytes(), queryId, power); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 

@@ -60,12 +60,14 @@ var (
 	MaxBatchSizePrefix               = collections.NewPrefix(34)
 
 	// Liveness reward storage prefixes
-	LivenessRecordsPrefix         = collections.NewPrefix(35)
-	TotalQueriesInPeriodPrefix    = collections.NewPrefix(36)
-	CycleCountPrefix              = collections.NewPrefix(37)
-	DustPrefix                    = collections.NewPrefix(38)
-	QueryOpportunitiesPrefix      = collections.NewPrefix(39)
-	ReporterQueriesInPeriodPrefix = collections.NewPrefix(40)
+	LivenessRecordsPrefix          = collections.NewPrefix(35)
+	CycleCountPrefix               = collections.NewPrefix(36)
+	DustPrefix                     = collections.NewPrefix(37)
+	QueryOpportunitiesPrefix       = collections.NewPrefix(38)
+	ReporterQueryShareSumPrefix    = collections.NewPrefix(39)
+	ReporterStandardShareSumPrefix = collections.NewPrefix(40)
+	NonStandardQueriesPrefix       = collections.NewPrefix(41)
+	StandardOpportunitiesPrefix    = collections.NewPrefix(42)
 )
 
 func KeyPrefix(p string) []byte {

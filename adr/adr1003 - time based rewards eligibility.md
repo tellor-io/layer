@@ -48,42 +48,66 @@ Lastly, another option was to only count the reporter weight once.  The problem 
 
 ## Issues / Notes on Implementation
 
-### Liveness-Weighted Distribution (Updated 2025-12)
+### Per-Aggregate Power Share Distribution (Updated 2025-12)
 
-To further incentivize consistent reporting across ALL cyclelist queries, TBR distribution now incorporates a liveness component. Instead of distributing TBR immediately per aggregate, rewards are accumulated over a configurable period and distributed based on both reporting power AND liveness.
+To incentivize consistent reporting across ALL cyclelist queries, TBR distribution uses a per-aggregate power share approach. Instead of distributing TBR immediately per aggregate, rewards are accumulated over a configurable period and distributed based on each reporter's power share within each aggregate.
 
 #### Formula
 
 ```
-liveness = weighted_queries_reported / total_cyclelist_queries
-weight = accumulated_power × liveness
-reward = (weight / total_weight) × period_TBR
-```
+For each reporter:
+  For each queryId they reported on:
+    shareSum = sum of (reporterPower / aggregateTotalPower) for each aggregate
+    reward += (shareSum / opportunities) * rewardPerSlot
 
 Where:
-- `weighted_queries_reported` = sum of (1 / opportunities) for each unique query reported
-- `total_cyclelist_queries` = number of queries in the cyclelist (e.g., 12)
-- `accumulated_power` = sum of reporter's power across all reports in the period
+  rewardPerSlot = TBR / numSlots
+  numSlots = numCyclelistQueries + (1 if TRBBridge has reports)
+```
+
+- `shareSum` is stored as a `LegacyDec` for precision
+- `opportunities` = number of aggregates for that queryId in the period
+- TRBBridge queries share a single "slot" (see below)
+
+#### TRBBridge Slot
+
+TRBBridge queries (bridge deposit reports) receive TBR through a dedicated slot:
+- All TRBBridge aggregates in a period share ONE slot's worth of rewards
+- This prevents TRBBridge from dominating TBR if many deposits occur
+- Rewards within the TRBBridge slot are distributed by power share per aggregate
+
+Example with 3 cyclelist queries + TRBBridge activity:
+- `numSlots = 4` (3 cyclelist + 1 TRBBridge)
+- `rewardPerSlot = TBR / 4`
+- Each cyclelist query's reporters split `rewardPerSlot`
+- All TRBBridge reporters split `rewardPerSlot` based on their aggregate participation
 
 #### Split-Weight for Multiple Opportunities
 
-When a cyclelist query is tipped out-of-turn (while not in rotation), it creates an extra reporting opportunity. To prevent gaming, the weight is split:
+When a cyclelist query is tipped out-of-turn (while not in rotation), it creates an extra reporting opportunity. The reward is naturally split by the formula:
 
-- If Q5 appears once (normal rotation): weight = 1.0
-- If Q5 appears twice (rotation + out-of-turn tip): each opportunity = 0.5 weight
-- Total weight always equals number of cyclelist queries (e.g., 12)
+- If Q5 appears once: `shareSum / 1` = full credit
+- If Q5 appears twice: `shareSum / 2` = each opportunity worth half
+- Reporter who participates in both gets full credit; reporter who misses one gets partial
 
 This ensures:
 1. Reporters are incentivized to report on ALL opportunities (including out-of-turn tips)
-2. Missing an out-of-turn tip has a smaller penalty as far as getting full TBR (0.5 points vs 1.0)
-3. No one can dilute others' liveness by tipping many queries
+2. Missing an out-of-turn tip has a smaller penalty (partial credit vs zero)
+3. No one can dilute others' rewards by tipping many queries
 
 #### Example
 
-With 12 cyclelist queries and Q5 tipped out-of-turn (13 opportunities total):
-- Reporter A reports on all 13 → liveness = 12/12 = 100%
-- Reporter B reports on 12 (misses out-of-turn Q5) → liveness = 11.5/12 = 95.8%
-- Reporter C reports on 11 (misses Q5 entirely) → liveness = 11/12 = 91.7%
+With 3 cyclelist queries, TBR = 1000:
+- `rewardPerSlot = 1000 / 3 = 333.33`
+
+Reporter Alice (power 100) and Bob (power 200) both report on Q1 (total power 300):
+- Alice's share for Q1: `100/300 = 0.333`
+- Bob's share for Q1: `200/300 = 0.667`
+- Alice's reward from Q1: `(0.333 / 1) * 333.33 = 110.99`
+- Bob's reward from Q1: `(0.667 / 1) * 333.33 = 222.33`
+
+If Q1 had 2 opportunities and Alice only reported once:
+- Alice's reward from Q1: `(0.333 / 2) * 333.33 = 55.5` (half credit)
 
 #### Configuration
 
@@ -96,7 +120,8 @@ The distribution period is configurable via the `LivenessCycles` governance para
 | Aspect | Before | After |
 |--------|--------|-------|
 | Distribution timing | Per aggregate (immediate) | Per period (batched) |
-| Reward basis | Power only | Power × Liveness |
-| Out-of-turn tips | Not tracked | Tracked with split-weight |
+| Reward basis | Power only | Power share per aggregate |
+| Out-of-turn tips | Not tracked | Tracked via opportunities |
+| TRBBridge | No TBR | Shares 1 slot |
 | Incentive | Report when convenient | Report on EVERY query |
 

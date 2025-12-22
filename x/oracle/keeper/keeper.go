@@ -8,6 +8,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
@@ -67,12 +68,15 @@ type (
 		NoStakeReportedQueries collections.Map[[]byte, []byte] // key: queryId, value: queryData
 
 		// Liveness reward storage
-		LivenessRecords         collections.Map[[]byte, types.LivenessRecord]             // key: reporter address
-		TotalQueriesInPeriod    collections.Item[uint64]                                  // count of cyclelist queries in current period
-		CycleCount              collections.Sequence                                      // tracks completed cycles
-		Dust                    collections.Item[math.Int]                                // leftover from rounding during distribution
-		QueryOpportunities      collections.Map[[]byte, uint64]                           // key: queryId, value: opportunity count
-		ReporterQueriesInPeriod collections.Map[collections.Pair[[]byte, []byte], uint64] // key: (reporter, queryId), value: report count
+		CycleCount            collections.Sequence                                              // tracks completed cycles
+		Dust                  collections.Item[math.Int]                                        // leftover from rounding during distribution
+		QueryOpportunities    collections.Map[[]byte, uint64]                                   // key: queryId, value: opportunity count
+		ReporterQueryShareSum collections.Map[collections.Pair[[]byte, []byte], math.LegacyDec] // key: (reporter, queryId), value: share sum
+
+		// Liveness tracking (standard/non-standard split)
+		ReporterStandardShareSum collections.Map[[]byte, math.LegacyDec] // key: reporter, value: sum of shares for standard queries
+		NonStandardQueries       collections.Map[[]byte, bool]           // key: queryId, value: true if non-standard
+		StandardOpportunities    collections.Item[uint64]                // number of opportunities for standard queries (cycles completed)
 	}
 )
 
@@ -176,13 +180,16 @@ func NewKeeper(
 		// NoStakeReportedQueries maps the queryId to the queryData
 		NoStakeReportedQueries: collections.NewMap(sb, types.NoStakeReportedQueriesPrefix, "no_stake_reported_queries", collections.BytesKey, collections.BytesValue),
 
-		// Liveness reward storage initialization
-		LivenessRecords:         collections.NewMap(sb, types.LivenessRecordsPrefix, "liveness_records", collections.BytesKey, codec.CollValue[types.LivenessRecord](cdc)),
-		TotalQueriesInPeriod:    collections.NewItem(sb, types.TotalQueriesInPeriodPrefix, "total_queries_in_period", collections.Uint64Value),
-		CycleCount:              collections.NewSequence(sb, types.CycleCountPrefix, "cycle_count"),
-		Dust:                    collections.NewItem(sb, types.DustPrefix, "dust", sdk.IntValue),
-		QueryOpportunities:      collections.NewMap(sb, types.QueryOpportunitiesPrefix, "query_opportunities", collections.BytesKey, collections.Uint64Value),
-		ReporterQueriesInPeriod: collections.NewMap(sb, types.ReporterQueriesInPeriodPrefix, "reporter_queries_in_period", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), collections.Uint64Value),
+		// Liveness reward storage
+		CycleCount:            collections.NewSequence(sb, types.CycleCountPrefix, "cycle_count"),
+		Dust:                  collections.NewItem(sb, types.DustPrefix, "dust", sdk.IntValue),
+		QueryOpportunities:    collections.NewMap(sb, types.QueryOpportunitiesPrefix, "query_opportunities", collections.BytesKey, collections.Uint64Value),
+		ReporterQueryShareSum: collections.NewMap(sb, types.ReporterQueryShareSumPrefix, "reporter_query_share_sum", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), layertypes.LegacyDecValue),
+
+		// Optimized liveness tracking initialization
+		ReporterStandardShareSum: collections.NewMap(sb, types.ReporterStandardShareSumPrefix, "reporter_standard_share_sum", collections.BytesKey, layertypes.LegacyDecValue),
+		NonStandardQueries:       collections.NewMap(sb, types.NonStandardQueriesPrefix, "non_standard_queries", collections.BytesKey, collections.BoolValue),
+		StandardOpportunities:    collections.NewItem(sb, types.StandardOpportunitiesPrefix, "standard_opportunities", collections.Uint64Value),
 	}
 
 	schema, err := sb.Build()

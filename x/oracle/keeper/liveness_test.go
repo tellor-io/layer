@@ -44,29 +44,7 @@ func (s *KeeperTestSuite) TestIncrementQueryOpportunities() {
 	require.Equal(uint64(3), opp)
 }
 
-func (s *KeeperTestSuite) TestIncrementTotalQueriesInPeriod() {
-	require := s.Require()
-	k := s.oracleKeeper
-	ctx := s.ctx
-
-	// First increment - should set to 1
-	err := k.IncrementTotalQueriesInPeriod(ctx)
-	require.NoError(err)
-
-	total, err := k.TotalQueriesInPeriod.Get(ctx)
-	require.NoError(err)
-	require.Equal(uint64(1), total)
-
-	// Second increment - should set to 2
-	err = k.IncrementTotalQueriesInPeriod(ctx)
-	require.NoError(err)
-
-	total, err = k.TotalQueriesInPeriod.Get(ctx)
-	require.NoError(err)
-	require.Equal(uint64(2), total)
-}
-
-func (s *KeeperTestSuite) TestTrackReporterQuery() {
+func (s *KeeperTestSuite) TestAddReporterQueryShareSum() {
 	require := s.Require()
 	k := s.oracleKeeper
 	ctx := s.ctx
@@ -74,14 +52,29 @@ func (s *KeeperTestSuite) TestTrackReporterQuery() {
 	reporter := sample.AccAddressBytes()
 	queryId := []byte("test_query_id")
 
-	// Track reporter query
-	err := k.TrackReporterQuery(ctx, reporter, queryId)
+	// Add share: 100 / 600 = 0.1666...
+	err := k.AddReporterQueryShareSum(ctx, reporter, queryId, 100, 600)
 	require.NoError(err)
 
-	// Verify it was recorded with count 1
-	reported, err := k.ReporterQueriesInPeriod.Get(ctx, collections.Join([]byte(reporter), queryId))
+	// Verify it was recorded
+	shareSum, err := k.ReporterQueryShareSum.Get(ctx, collections.Join([]byte(reporter), queryId))
 	require.NoError(err)
-	require.Equal(uint64(1), reported)
+
+	// Expected: 100 / 600 = 0.1666...
+	expectedShare := math.LegacyNewDec(100).Quo(math.LegacyNewDec(600))
+	require.Equal(expectedShare, shareSum)
+
+	// Add another share for same query: 200 / 500 = 0.4
+	err = k.AddReporterQueryShareSum(ctx, reporter, queryId, 200, 500)
+	require.NoError(err)
+
+	// Verify sum is updated
+	shareSum, err = k.ReporterQueryShareSum.Get(ctx, collections.Join([]byte(reporter), queryId))
+	require.NoError(err)
+
+	// Expected: 0.1666... + 0.4 = 0.5666...
+	secondShare := math.LegacyNewDec(200).Quo(math.LegacyNewDec(500))
+	require.Equal(expectedShare.Add(secondShare), shareSum)
 }
 
 func (s *KeeperTestSuite) TestUpdateReporterLiveness() {
@@ -92,32 +85,57 @@ func (s *KeeperTestSuite) TestUpdateReporterLiveness() {
 	reporter := sample.AccAddressBytes()
 	queryId1 := []byte("test_query_id_1")
 	queryId2 := []byte("test_query_id_2")
-	power := uint64(100)
+	reporterPower := uint64(100)
+	aggregateTotalPower := uint64(600)
 
-	// First report
-	err := k.UpdateReporterLiveness(ctx, reporter, queryId1, power)
+	// First report (standard query)
+	err := k.UpdateReporterLiveness(ctx, reporter, queryId1, reporterPower, aggregateTotalPower, false)
 	require.NoError(err)
 
-	// Verify liveness record
-	record, err := k.LivenessRecords.Get(ctx, reporter)
+	// Verify reporter query share sum was tracked
+	shareSum, err := k.ReporterQueryShareSum.Get(ctx, collections.Join([]byte(reporter), queryId1))
 	require.NoError(err)
-	require.Equal(uint64(1), record.QueriesReported)
-	require.Equal(power, record.AccumulatedPower)
+	expectedShare := math.LegacyNewDec(int64(reporterPower)).Quo(math.LegacyNewDec(int64(aggregateTotalPower)))
+	require.Equal(expectedShare, shareSum)
 
-	// Verify reporter query was tracked with count 1
-	reported, err := k.ReporterQueriesInPeriod.Get(ctx, collections.Join([]byte(reporter), queryId1))
+	// Verify standard share sum was also tracked (since isNonStandard=false)
+	standardShare, err := k.ReporterStandardShareSum.Get(ctx, reporter)
 	require.NoError(err)
-	require.Equal(uint64(1), reported)
+	require.Equal(expectedShare, standardShare)
 
-	// Second report for different query
-	err = k.UpdateReporterLiveness(ctx, reporter, queryId2, power)
+	// Second report for different query (standard query)
+	err = k.UpdateReporterLiveness(ctx, reporter, queryId2, reporterPower, aggregateTotalPower, false)
 	require.NoError(err)
 
-	// Verify updated liveness record
-	record, err = k.LivenessRecords.Get(ctx, reporter)
+	// Verify standard share sum is updated (sum of both queries)
+	standardShare, err = k.ReporterStandardShareSum.Get(ctx, reporter)
 	require.NoError(err)
-	require.Equal(uint64(2), record.QueriesReported)
-	require.Equal(power*2, record.AccumulatedPower)
+	require.Equal(expectedShare.MulInt64(2), standardShare)
+}
+
+func (s *KeeperTestSuite) TestUpdateReporterLiveness_NonStandard() {
+	require := s.Require()
+	k := s.oracleKeeper
+	ctx := s.ctx
+
+	reporter := sample.AccAddressBytes()
+	queryId := []byte("test_query_id")
+	reporterPower := uint64(100)
+	aggregateTotalPower := uint64(600)
+
+	// Report for non-standard query
+	err := k.UpdateReporterLiveness(ctx, reporter, queryId, reporterPower, aggregateTotalPower, true)
+	require.NoError(err)
+
+	// Verify reporter query share sum was tracked
+	shareSum, err := k.ReporterQueryShareSum.Get(ctx, collections.Join([]byte(reporter), queryId))
+	require.NoError(err)
+	expectedShare := math.LegacyNewDec(int64(reporterPower)).Quo(math.LegacyNewDec(int64(aggregateTotalPower)))
+	require.Equal(expectedShare, shareSum)
+
+	// Verify standard share sum was NOT tracked (since isNonStandard=true)
+	_, err = k.ReporterStandardShareSum.Get(ctx, reporter)
+	require.Error(err) // Should not exist
 }
 
 func (s *KeeperTestSuite) TestCheckAndDistributeLivenessRewards_NotYetTime() {
@@ -168,25 +186,10 @@ func (s *KeeperTestSuite) TestDistributeLivenessRewards_ZeroTBR() {
 	s.accountKeeper.On("GetModuleAccount", ctx, minttypes.TimeBasedRewards).Return(sdk.ModuleAccountI(testModuleAccount))
 	s.bankKeeper.On("GetBalance", ctx, testModuleAccount.GetAddress(), "loya").Return(sdk.Coin{Amount: math.ZeroInt(), Denom: "loya"}).Once()
 
-	// Add some liveness data
-	reporter := sample.AccAddressBytes()
-	require.NoError(k.LivenessRecords.Set(ctx, reporter, types.LivenessRecord{
-		QueriesReported:  3,
-		AccumulatedPower: 100,
-	}))
-	require.NoError(k.TotalQueriesInPeriod.Set(ctx, 3))
-
 	// Distribute - should reset data since TBR is 0
 	err := k.DistributeLivenessRewards(ctx)
 	require.NoError(err)
 
-	// Verify data was reset
-	_, err = k.LivenessRecords.Get(ctx, reporter)
-	require.Error(err) // Should be cleared
-
-	total, err := k.TotalQueriesInPeriod.Get(ctx)
-	require.NoError(err)
-	require.Equal(uint64(0), total)
 }
 
 func (s *KeeperTestSuite) TestDistributeLivenessRewards_NoReporters() {
@@ -202,16 +205,17 @@ func (s *KeeperTestSuite) TestDistributeLivenessRewards_NoReporters() {
 	s.accountKeeper.On("GetModuleAccount", ctx, minttypes.TimeBasedRewards).Return(sdk.ModuleAccountI(testModuleAccount))
 	s.bankKeeper.On("GetBalance", ctx, testModuleAccount.GetAddress(), "loya").Return(sdk.Coin{Amount: math.NewInt(1000), Denom: "loya"}).Once()
 
-	// No reporters in period
+	// Mock the SendCoinsFromModuleToModule call (TBR is still transferred even with no reporters)
+	s.bankKeeper.On("SendCoinsFromModuleToModule", ctx, minttypes.TimeBasedRewards, "tips_escrow_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(1000)))).Return(nil).Once()
 
-	// Distribute - should reset data since no reporters
+	// Distribute
 	err := k.DistributeLivenessRewards(ctx)
 	require.NoError(err)
 
-	// Verify data was reset
-	total, err := k.TotalQueriesInPeriod.Get(ctx)
+	// Since no reporters, all TBR should become dust
+	dust, err := k.Dust.Get(ctx)
 	require.NoError(err)
-	require.Equal(uint64(0), total)
+	require.Equal(math.NewInt(1000), dust)
 }
 
 func (s *KeeperTestSuite) TestResetLivenessData() {
@@ -223,87 +227,172 @@ func (s *KeeperTestSuite) TestResetLivenessData() {
 	queryId := []byte("test_query_id")
 
 	// Setup some data
-	require.NoError(k.TotalQueriesInPeriod.Set(ctx, 5))
-	require.NoError(k.LivenessRecords.Set(ctx, reporter, types.LivenessRecord{
-		QueriesReported:  3,
-		AccumulatedPower: 100,
-	}))
 	require.NoError(k.QueryOpportunities.Set(ctx, queryId, 2))
-	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporter), queryId), uint64(1)))
+	require.NoError(k.ReporterQueryShareSum.Set(ctx, collections.Join([]byte(reporter), queryId), math.LegacyNewDec(1000)))
 	require.NoError(k.Dust.Set(ctx, math.NewInt(50)))
+	require.NoError(k.ReporterStandardShareSum.Set(ctx, reporter, math.LegacyNewDec(500)))
+	require.NoError(k.NonStandardQueries.Set(ctx, queryId, true))
+	require.NoError(k.StandardOpportunities.Set(ctx, 3))
 
 	// Reset
 	err := k.ResetLivenessData(ctx)
 	require.NoError(err)
 
-	// Verify TotalQueriesInPeriod is reset
-	total, err := k.TotalQueriesInPeriod.Get(ctx)
-	require.NoError(err)
-	require.Equal(uint64(0), total)
-
-	// Verify LivenessRecords is cleared
-	_, err = k.LivenessRecords.Get(ctx, reporter)
-	require.Error(err)
-
 	// Verify QueryOpportunities is cleared
 	_, err = k.QueryOpportunities.Get(ctx, queryId)
 	require.Error(err)
 
-	// Verify ReporterQueriesInPeriod is cleared
-	_, err = k.ReporterQueriesInPeriod.Get(ctx, collections.Join([]byte(reporter), queryId))
+	// Verify ReporterQueryShareSum is cleared
+	_, err = k.ReporterQueryShareSum.Get(ctx, collections.Join([]byte(reporter), queryId))
 	require.Error(err)
 
 	// Verify Dust is preserved (not reset)
 	dust, err := k.Dust.Get(ctx)
 	require.NoError(err)
 	require.Equal(math.NewInt(50), dust)
+
+	// Verify ReporterStandardShareSum is cleared
+	_, err = k.ReporterStandardShareSum.Get(ctx, reporter)
+	require.Error(err)
+
+	// Verify NonStandardQueries is cleared
+	has, err := k.NonStandardQueries.Has(ctx, queryId)
+	require.NoError(err)
+	require.False(has)
+
+	// Verify StandardOpportunities is reset to 0
+	stdOpp, err := k.StandardOpportunities.Get(ctx)
+	require.NoError(err)
+	require.Equal(uint64(0), stdOpp)
 }
 
-func (s *KeeperTestSuite) TestLivenessWeightCalculation() {
+func (s *KeeperTestSuite) TestPowerShareCalculation() {
 	require := s.Require()
 	k := s.oracleKeeper
 	ctx := s.ctx
 
-	// Scenario: 3 queries in cyclelist, query 1 has 2 opportunities (split weight)
-	queryId1 := []byte("query_1")
-	queryId2 := []byte("query_2")
-	queryId3 := []byte("query_3")
+	// Scenario from spreadsheet:
+	// Query aaa has 2 aggregates, query bbb has 1, query ccc has 1
+	// Total TBR = 1000, cyclelist = 3 queries
+	// reward_per_query = 1000/3 = 333.33
 
-	// Set up opportunities: query1 = 2 (split), query2 = 1, query3 = 1
-	require.NoError(k.QueryOpportunities.Set(ctx, queryId1, 2))
-	require.NoError(k.QueryOpportunities.Set(ctx, queryId2, 1))
-	require.NoError(k.QueryOpportunities.Set(ctx, queryId3, 1))
+	queryAaa := []byte("aaa")
+	queryBbb := []byte("bbb")
+	queryCcc := []byte("ccc")
 
-	// Reporter A: reports on all 4 opportunities (query1 twice, query2 once, query3 once)
-	reporterA := sample.AccAddressBytes()
-	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporterA), queryId1), uint64(2))) // reported twice
-	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporterA), queryId2), uint64(1)))
-	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporterA), queryId3), uint64(1)))
-	require.NoError(k.LivenessRecords.Set(ctx, reporterA, types.LivenessRecord{
-		QueriesReported:  4, // reported on query1 twice (in rotation + out-of-turn)
-		AccumulatedPower: 100,
-	}))
+	// Set up opportunities
+	require.NoError(k.QueryOpportunities.Set(ctx, queryAaa, 2))
+	require.NoError(k.QueryOpportunities.Set(ctx, queryBbb, 1))
+	require.NoError(k.QueryOpportunities.Set(ctx, queryCcc, 1))
 
-	// Reporter B: reports only on query2 and query3 (misses query1 entirely)
-	reporterB := sample.AccAddressBytes()
-	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporterB), queryId2), uint64(1)))
-	require.NoError(k.ReporterQueriesInPeriod.Set(ctx, collections.Join([]byte(reporterB), queryId3), uint64(1)))
-	require.NoError(k.LivenessRecords.Set(ctx, reporterB, types.LivenessRecord{
-		QueriesReported:  2,
-		AccumulatedPower: 100,
-	}))
+	// Reporter Alice: power 100 in agg1 for aaa, power 100 for bbb, power 150 for ccc
+	// Aggregate powers: aaa_agg1=600, bbb=600, ccc=350
+	alice := sample.AccAddressBytes()
 
-	// Verify weighted liveness calculation:
-	// Reporter A: (2/2 + 1/1 + 1/1) / 3 = (1 + 1 + 1) / 3 = 3/3 = 1.0 (100%)
-	// Reporter B: (1/1 + 1/1) / 3 = 2/3 = 0.666... (66.7%)
+	// Alice's shares:
+	// aaa: 100/600 = 0.1667 (only reported on 1 of 2 aggregates)
+	// bbb: 100/600 = 0.1667
+	// ccc: 150/350 = 0.4286
+	require.NoError(k.AddReporterQueryShareSum(ctx, alice, queryAaa, 100, 600))
+	require.NoError(k.AddReporterQueryShareSum(ctx, alice, queryBbb, 100, 600))
+	require.NoError(k.AddReporterQueryShareSum(ctx, alice, queryCcc, 150, 350))
 
-	// This test verifies the data structure is set up correctly
-	// The actual calculation is done in DistributeLivenessRewards
-	oppA, err := k.QueryOpportunities.Get(ctx, queryId1)
+	// Verify the shares are stored correctly
+	aliceAaaShare, err := k.ReporterQueryShareSum.Get(ctx, collections.Join([]byte(alice), queryAaa))
 	require.NoError(err)
-	require.Equal(uint64(2), oppA)
 
-	oppB, err := k.QueryOpportunities.Get(ctx, queryId2)
+	// Expected: 100 / 600 = 0.1666...
+	expectedAliceAaa := math.LegacyNewDec(100).Quo(math.LegacyNewDec(600))
+	require.Equal(expectedAliceAaa, aliceAaaShare)
+
+	// At distribution time with TBR=1000 and 3 queries:
+	// rewardPerQuery = 1000/3 = 333.33
+	// Alice reward for aaa = (0.1667 / 2) * 333.33 = 27.78
+	// Alice reward for bbb = (0.1667 / 1) * 333.33 = 55.56
+	// Alice reward for ccc = (0.4286 / 1) * 333.33 = 142.86
+	// Total Alice = 226.20
+
+	// This test verifies the share accumulation is correct
+	// The actual distribution is tested in integration tests
+}
+
+func (s *KeeperTestSuite) TestIncrementStandardOpportunities() {
+	require := s.Require()
+	k := s.oracleKeeper
+	ctx := s.ctx
+
+	// First increment - should set to 1
+	err := k.IncrementStandardOpportunities(ctx)
 	require.NoError(err)
-	require.Equal(uint64(1), oppB)
+
+	opp, err := k.StandardOpportunities.Get(ctx)
+	require.NoError(err)
+	require.Equal(uint64(1), opp)
+
+	// Second increment - should set to 2
+	err = k.IncrementStandardOpportunities(ctx)
+	require.NoError(err)
+
+	opp, err = k.StandardOpportunities.Get(ctx)
+	require.NoError(err)
+	require.Equal(uint64(2), opp)
+}
+
+func (s *KeeperTestSuite) TestDemoteQueryToNonStandard() {
+	require := s.Require()
+	k := s.oracleKeeper
+	ctx := s.ctx
+
+	reporter1 := sample.AccAddressBytes()
+	reporter2 := sample.AccAddressBytes()
+	queryId := []byte("test_query_id")
+	otherQueryId := []byte("other_query_id")
+
+	// Setup: reporters have standard shares for queryId
+	share1 := math.LegacyNewDec(100).Quo(math.LegacyNewDec(600))
+	share2 := math.LegacyNewDec(200).Quo(math.LegacyNewDec(600))
+
+	// Simulate UpdateReporterLiveness for standard queries
+	require.NoError(k.ReporterQueryShareSum.Set(ctx, collections.Join([]byte(reporter1), queryId), share1))
+	require.NoError(k.ReporterQueryShareSum.Set(ctx, collections.Join([]byte(reporter2), queryId), share2))
+	require.NoError(k.ReporterQueryShareSum.Set(ctx, collections.Join([]byte(reporter1), otherQueryId), share1))
+
+	require.NoError(k.ReporterStandardShareSum.Set(ctx, reporter1, share1.Add(share1))) // queryId + otherQueryId
+	require.NoError(k.ReporterStandardShareSum.Set(ctx, reporter2, share2))             // only queryId
+
+	// Set standard opportunities
+	require.NoError(k.StandardOpportunities.Set(ctx, 2))
+
+	// Demote queryId to non-standard
+	err := k.DemoteQueryToNonStandard(ctx, queryId)
+	require.NoError(err)
+
+	// Verify queryId is now non-standard
+	isNonStandard, err := k.NonStandardQueries.Has(ctx, queryId)
+	require.NoError(err)
+	require.True(isNonStandard)
+
+	// Verify query opportunities is set
+	opp, err := k.QueryOpportunities.Get(ctx, queryId)
+	require.NoError(err)
+	require.Equal(uint64(2), opp) // Should be set to current standard opportunities
+
+	// Verify reporter1's standard share sum is reduced (only otherQueryId remains)
+	r1Standard, err := k.ReporterStandardShareSum.Get(ctx, reporter1)
+	require.NoError(err)
+	require.Equal(share1, r1Standard) // Only otherQueryId's share remains
+
+	// Verify reporter2's standard share sum is reduced to zero
+	r2Standard, err := k.ReporterStandardShareSum.Get(ctx, reporter2)
+	require.NoError(err)
+	require.True(r2Standard.IsZero())
+
+	// Verify per-query shares are still there (for non-standard calculation)
+	r1QueryShare, err := k.ReporterQueryShareSum.Get(ctx, collections.Join([]byte(reporter1), queryId))
+	require.NoError(err)
+	require.Equal(share1, r1QueryShare)
+
+	// Second demotion should be a no-op
+	err = k.DemoteQueryToNonStandard(ctx, queryId)
+	require.NoError(err)
 }

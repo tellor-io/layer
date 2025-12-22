@@ -43,11 +43,6 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 		return nil
 	}
 
-	// rotation is happening - increment total queries in period for liveness tracking
-	if err := k.IncrementTotalQueriesInPeriod(ctx); err != nil {
-		return err
-	}
-
 	// rotate
 	q, err := k.GetCyclelist(ctx)
 	if err != nil {
