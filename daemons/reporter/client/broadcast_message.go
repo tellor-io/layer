@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -77,15 +78,51 @@ func (c *Client) GenerateDepositMessages(ctx context.Context) error {
 // }
 
 func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []byte, querymeta *oracletypes.QueryMeta) error {
-	value, err := c.median(qd)
+	encodedValue, rawPrice, err := c.median(qd)
 	if err != nil {
 		return fmt.Errorf("error getting median from median client': %w", err)
+	}
+
+	// Check price guard before submitting
+	// rawPrice is 0 for custom queries
+	if c.PriceGuard.enabled && rawPrice > 0 {
+		shouldSubmit, reason := c.PriceGuard.ShouldSubmit(qd, rawPrice)
+		// Update baseline if submission allowed OR if configured to update on block
+		if shouldSubmit || c.PriceGuard.UpdateOnBlocked() {
+			c.PriceGuard.UpdateLastPrice(qd, rawPrice)
+		}
+
+		if !shouldSubmit {
+			if c.PriceGuard.UpdateOnBlocked() {
+				// only update if price guard is configured to update on blocked
+				// help prevent tipped queries from getting stuck if no reports get made
+				mutex.Lock()
+				commitedIds[querymeta.Id] = true
+				mutex.Unlock()
+			}
+
+			querydatastr := hex.EncodeToString(qd)
+			queryIdHex := utils.QueryIDFromData(qd)
+
+			pair := ""
+			for _, marketParam := range c.MarketParams {
+				if marketParam.QueryData == querydatastr {
+					pair = marketParam.Pair
+					break
+				}
+			}
+
+			if pair != "" {
+				return fmt.Errorf("price guard blocked submission for %s: %s", pair, reason)
+			}
+			return fmt.Errorf("price guard blocked submission for queryId %x: %s", queryIdHex, reason)
+		}
 	}
 
 	msg := &oracletypes.MsgSubmitValue{
 		Creator:   c.accAddr.String(),
 		QueryData: qd,
-		Value:     value,
+		Value:     encodedValue,
 	}
 
 	c.txChan <- TxChannelInfo{

@@ -107,3 +107,27 @@ exchange_common.TRBUSD_ID: {
         QueryData:          `"00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003747262000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"`,
     },
 ```
+
+## Price Guard
+
+The Price Guard is a safety mechanism that prevents the reporter from submitting prices that deviate too significantly from the last reported price.
+
+### Flags
+
+| Flag | Type | Description | Required (if enabled) |
+|------|------|-------------|---------------------|
+| `--price-guard-enabled` | bool | Enables the price guard mechanism | No |
+| `--price-guard-threshold` | float64 | Maximum allowed percentage change (e.g., 0.5 = 50%). Submissions exceeding this change from the last reported price will be blocked. | Yes |
+| `--price-guard-max-age` | duration | Time after which a stored price is considered expired (e.g., "1h"). If the last price is expired, the new price is accepted regardless of deviation. | Yes |
+| `--price-guard-update-on-blocked` | bool | If true, updates the internal "last known price" to the new value even if submission was blocked. If false, keeps the old price as the baseline. | Yes |
+
+### Notes
+
+1. **First Submission:** Always allowed.
+2. **Expired Price:** If time since last update > `max-age`, the new price is accepted and becomes the new baseline.
+3. **Deviation Check:** Calculates percentage change: `abs(new - old) / old`.
+   - If change > `threshold`: Submission is BLOCKED.
+   - If change <= `threshold`: Submission is ALLOWED.
+4. **Update on Blocked:**
+   - If `true`: A blocked price becomes the new baseline for future checks.
+   - If `false`: The old price remains the baseline; future submissions must be within threshold of the *old* price.
