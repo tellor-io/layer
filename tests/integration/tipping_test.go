@@ -371,6 +371,7 @@ func (s *IntegrationTestSuite) TestRotateQueries() {
 	query, err := okpr.CurrentQuery(ctx, queryId1)
 	s.NoError(err)
 	s.Equal(uint64(3), query.Expiration)
+	firstTestMetaId := query.Id
 
 	// move to block 2
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second) // next block
@@ -405,6 +406,10 @@ func (s *IntegrationTestSuite) TestRotateQueries() {
 	s.Equal(idx, uint64(2))
 	s.True(bytes.Equal(query2, cycleList[idx]))
 
+	query, err = okpr.CurrentQuery(ctx, queryId2)
+	s.NoError(err)
+	s.Equal(firstTestMetaId+1, query.Id)
+
 	// move to block 5
 	ctx, err = simtestutil.NextBlock(app, ctx, time.Second) // next block
 	s.NoError(err)
@@ -429,6 +434,10 @@ func (s *IntegrationTestSuite) TestRotateQueries() {
 	s.Equal(idx, uint64(0)) // reset
 	s.True(bytes.Equal(query0, cycleList[idx]))
 
+	query, err = okpr.CurrentQuery(ctx, queryId0)
+	s.NoError(err)
+	s.Equal(firstTestMetaId+2, query.Id)
+
 	// checks what happens to an expired query that has not been cleared
 	// it would just add time and tip to the query
 	// cyclelist[1] is the next upcoming query, tip it here before it is in cycle
@@ -446,6 +455,8 @@ func (s *IntegrationTestSuite) TestRotateQueries() {
 
 	query, err = okpr.CurrentQuery(ctx, queryId1)
 	s.NoError(err)
+	s.Equal(firstTestMetaId+3, query.Id)
+	tippedQuery1ID := query.Id
 	// expiration should be 9
 	s.Equal(uint64(ctx.BlockHeight()+2), query.Expiration)
 	s.Equal(math.NewInt(9800), query.Amount)
@@ -460,6 +471,8 @@ func (s *IntegrationTestSuite) TestRotateQueries() {
 	s.NoError(err)
 	s.Equal(uint64(9), query.Expiration)
 	s.Equal(math.NewInt(9800), query.Amount)
+	s.True(query.CycleList) //used to be false, now true because of the out-of-turn tip needing to be tracked for liveness
+	s.Equal(firstTestMetaId+4, query.Id)
 
 	// rotate the queries which should put queryId1 in cycle
 	// expiration should not be extended for queryId1 only set cycle list to true
@@ -475,6 +488,7 @@ func (s *IntegrationTestSuite) TestRotateQueries() {
 	s.Equal(uint64(9), query.Expiration)
 	s.Equal(math.NewInt(9800), query.Amount)
 	s.True(query.CycleList)
+	s.Equal(tippedQuery1ID, query.Id)
 
 	// rotate the queries which should put queryId2 in cycle
 	// but since it will be expired it should be extended
@@ -490,6 +504,7 @@ func (s *IntegrationTestSuite) TestRotateQueries() {
 	s.Equal(uint64(11), query.Expiration)
 	s.Equal(math.NewInt(9800), query.Amount)
 	s.True(query.CycleList)
+	s.Equal(firstTestMetaId+5, query.Id)
 
 	// test the clearing of old query that doesn't have a tip and has expired
 	// should clear the old query.Id and generate a new query
@@ -504,10 +519,11 @@ func (s *IntegrationTestSuite) TestRotateQueries() {
 	s.NoError(err)
 	s.Equal(int64(12), ctx.BlockHeight())
 	query, err = okpr.CurrentQuery(ctx, queryId0)
-	s.Equal(uint64(3), query.Id)
+	s.Equal(uint64(6), query.Id)
 	s.NoError(err)
 	// expired query
 	s.Equal(uint64(13), query.Expiration)
+	s.Equal(firstTestMetaId+6, query.Id)
 
 	_, err = okpr.Query.Get(ctx, collections.Join(queryId0, uint64(2)))
 	s.ErrorIs(err, collections.ErrNotFound)
