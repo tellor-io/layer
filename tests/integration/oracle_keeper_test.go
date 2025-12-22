@@ -397,6 +397,9 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsOneReporter() {
 	// Reset liveness data to clear any setup-time increments (RotateQueries runs during FinalizeBlock)
 	s.NoError(s.Setup.Oraclekeeper.ResetLivenessData(ctx))
 
+	// Increment standard opportunities (simulating one cycle completion)
+	s.NoError(s.Setup.Oraclekeeper.IncrementStandardOpportunities(ctx))
+
 	// Set up query opportunities for all cyclelist queries (simulating a full cycle)
 	for _, queryData := range cyclelist {
 		queryId := utils.QueryIDFromData(queryData)
@@ -483,6 +486,9 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsTwoReporters() {
 
 	// Reset liveness data to clear any setup-time increments (RotateQueries runs during FinalizeBlock)
 	s.NoError(s.Setup.Oraclekeeper.ResetLivenessData(ctx))
+
+	// Increment standard opportunities (simulating one cycle completion)
+	s.NoError(s.Setup.Oraclekeeper.IncrementStandardOpportunities(ctx))
 
 	// Set up query opportunities for all cyclelist queries (simulating a full cycle)
 	for _, queryData := range cyclelist {
@@ -579,6 +585,9 @@ func (s *IntegrationTestSuite) TestTimeBasedRewardsThreeReporters() {
 
 	// Reset liveness data to clear any setup-time increments (RotateQueries runs during FinalizeBlock)
 	s.NoError(s.Setup.Oraclekeeper.ResetLivenessData(ctx))
+
+	// Increment standard opportunities (simulating one cycle completion)
+	s.NoError(s.Setup.Oraclekeeper.IncrementStandardOpportunities(ctx))
 
 	// Set up query opportunities for all cyclelist queries
 	for _, queryData := range cyclelist {
