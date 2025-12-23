@@ -312,6 +312,9 @@ func StartReporterDaemonTaskLoop(
 	wg.Add(1)
 	go client.WithdrawAndStakeEarnedRewardsPeriodically(ctx, &wg)
 
+	wg.Add(1)
+	go client.AutoUnbondStakePeriodically(ctx, &wg)
+
 	wg.Wait()
 }
 

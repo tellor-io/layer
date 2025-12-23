@@ -230,14 +230,14 @@ func (c *Client) AutoUnbondStakePeriodically(ctx context.Context, wg *sync.WaitG
 	amount := viper.GetUint32("auto-unbonding-amount")
 	maxStakePercentageStr := viper.GetString("auto-unbonding-max-stake-percentage")
 
-	secondsInDay := 86400
-	ticker := time.NewTicker(time.Duration(secondsInDay*int(frequency)) * time.Second)
-	defer ticker.Stop()
-
 	if frequency == 0 {
 		c.logger.Info("Auto unbonding is disabled")
 		return
 	}
+
+	secondsInDay := 86400
+	ticker := time.NewTicker(time.Duration(secondsInDay*int(frequency)) * time.Second)
+	defer ticker.Stop()
 	maxStakePercentage, err := math.LegacyNewDecFromStr(maxStakePercentageStr)
 	if err != nil {
 		c.logger.Error("Could not start auto unbonding process due to incorrect parameter. Please enter a valid decimal for the maximum stake percentage")
