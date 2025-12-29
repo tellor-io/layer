@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestAddReporterQueryShareSum() {
 	require.NoError(err)
 
 	// Verify it was recorded
-	shareSum, err := k.ReporterQueryShareSum.Get(ctx, collections.Join([]byte(reporter), queryId))
+	shareSum, err := k.ReporterQueryShareSum.Get(ctx, collections.Join(queryId, []byte(reporter)))
 	require.NoError(err)
 
 	// Expected: 100 / 600 = 0.1666...
@@ -69,7 +69,7 @@ func (s *KeeperTestSuite) TestAddReporterQueryShareSum() {
 	require.NoError(err)
 
 	// Verify sum is updated
-	shareSum, err = k.ReporterQueryShareSum.Get(ctx, collections.Join([]byte(reporter), queryId))
+	shareSum, err = k.ReporterQueryShareSum.Get(ctx, collections.Join(queryId, []byte(reporter)))
 	require.NoError(err)
 
 	// Expected: 0.1666... + 0.4 = 0.5666...
@@ -93,7 +93,7 @@ func (s *KeeperTestSuite) TestUpdateReporterLiveness() {
 	require.NoError(err)
 
 	// Verify reporter query share sum was tracked
-	shareSum, err := k.ReporterQueryShareSum.Get(ctx, collections.Join([]byte(reporter), queryId1))
+	shareSum, err := k.ReporterQueryShareSum.Get(ctx, collections.Join(queryId1, []byte(reporter)))
 	require.NoError(err)
 	expectedShare := math.LegacyNewDec(int64(reporterPower)).Quo(math.LegacyNewDec(int64(aggregateTotalPower)))
 	require.Equal(expectedShare, shareSum)
@@ -128,7 +128,7 @@ func (s *KeeperTestSuite) TestUpdateReporterLiveness_NonStandard() {
 	require.NoError(err)
 
 	// Verify reporter query share sum was tracked
-	shareSum, err := k.ReporterQueryShareSum.Get(ctx, collections.Join([]byte(reporter), queryId))
+	shareSum, err := k.ReporterQueryShareSum.Get(ctx, collections.Join(queryId, []byte(reporter)))
 	require.NoError(err)
 	expectedShare := math.LegacyNewDec(int64(reporterPower)).Quo(math.LegacyNewDec(int64(aggregateTotalPower)))
 	require.Equal(expectedShare, shareSum)
@@ -227,7 +227,7 @@ func (s *KeeperTestSuite) TestResetLivenessData() {
 
 	// Setup some data
 	require.NoError(k.QueryOpportunities.Set(ctx, queryId, 2))
-	require.NoError(k.ReporterQueryShareSum.Set(ctx, collections.Join([]byte(reporter), queryId), math.LegacyNewDec(1000)))
+	require.NoError(k.ReporterQueryShareSum.Set(ctx, collections.Join(queryId, []byte(reporter)), math.LegacyNewDec(1000)))
 	require.NoError(k.Dust.Set(ctx, math.NewInt(50)))
 	require.NoError(k.ReporterStandardShareSum.Set(ctx, reporter, math.LegacyNewDec(500)))
 	require.NoError(k.NonStandardQueries.Set(ctx, queryId, true))
@@ -242,7 +242,7 @@ func (s *KeeperTestSuite) TestResetLivenessData() {
 	require.Error(err)
 
 	// Verify ReporterQueryShareSum is cleared
-	_, err = k.ReporterQueryShareSum.Get(ctx, collections.Join([]byte(reporter), queryId))
+	_, err = k.ReporterQueryShareSum.Get(ctx, collections.Join(queryId, []byte(reporter)))
 	require.Error(err)
 
 	// Verify Dust is preserved (not reset)
@@ -297,7 +297,7 @@ func (s *KeeperTestSuite) TestPowerShareCalculation() {
 	require.NoError(k.AddReporterQueryShareSum(ctx, alice, queryCcc, 150, 350))
 
 	// Verify the shares are stored correctly
-	aliceAaaShare, err := k.ReporterQueryShareSum.Get(ctx, collections.Join([]byte(alice), queryAaa))
+	aliceAaaShare, err := k.ReporterQueryShareSum.Get(ctx, collections.Join(queryAaa, []byte(alice)))
 	require.NoError(err)
 
 	// Expected: 100 / 600 = 0.1666...
@@ -352,9 +352,9 @@ func (s *KeeperTestSuite) TestDemoteQueryToNonStandard() {
 	share2 := math.LegacyNewDec(200).Quo(math.LegacyNewDec(600))
 
 	// Simulate UpdateReporterLiveness for standard queries
-	require.NoError(k.ReporterQueryShareSum.Set(ctx, collections.Join([]byte(reporter1), queryId), share1))
-	require.NoError(k.ReporterQueryShareSum.Set(ctx, collections.Join([]byte(reporter2), queryId), share2))
-	require.NoError(k.ReporterQueryShareSum.Set(ctx, collections.Join([]byte(reporter1), otherQueryId), share1))
+	require.NoError(k.ReporterQueryShareSum.Set(ctx, collections.Join(queryId, []byte(reporter1)), share1))
+	require.NoError(k.ReporterQueryShareSum.Set(ctx, collections.Join(queryId, []byte(reporter2)), share2))
+	require.NoError(k.ReporterQueryShareSum.Set(ctx, collections.Join(otherQueryId, []byte(reporter1)), share1))
 
 	require.NoError(k.ReporterStandardShareSum.Set(ctx, reporter1, share1.Add(share1))) // queryId + otherQueryId
 	require.NoError(k.ReporterStandardShareSum.Set(ctx, reporter2, share2))             // only queryId
@@ -387,7 +387,7 @@ func (s *KeeperTestSuite) TestDemoteQueryToNonStandard() {
 	require.True(r2Standard.IsZero())
 
 	// Verify per-query shares are still there (for non-standard calculation)
-	r1QueryShare, err := k.ReporterQueryShareSum.Get(ctx, collections.Join([]byte(reporter1), queryId))
+	r1QueryShare, err := k.ReporterQueryShareSum.Get(ctx, collections.Join(queryId, []byte(reporter1)))
 	require.NoError(err)
 	require.Equal(share1, r1QueryShare)
 
