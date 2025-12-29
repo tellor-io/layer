@@ -1,0 +1,22 @@
+{
+    "document_hash": "EVMCall",
+    "query_type": "EVMCall",
+    "response_value_type": "bytes",
+    "abi_components": [
+        {
+            "name": "chainId",
+            "field_type": "uint256"
+        },
+        {
+            "name": "contractAddress",
+            "field_type": "address"
+        },
+        {
+            "name": "calldata",
+            "field_type": "bytes"
+        }
+    ],
+    "aggregation_method": "weighted-mode",
+    "registrar": "tellor1alcefjzkk37qmfrnel8q4eruyll0pc8arxhxxw",
+    "report_block_window": 10
+}
