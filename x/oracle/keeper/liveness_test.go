@@ -189,7 +189,6 @@ func (s *KeeperTestSuite) TestDistributeLivenessRewards_ZeroTBR() {
 	// Distribute - should reset data since TBR is 0
 	err := k.DistributeLivenessRewards(ctx)
 	require.NoError(err)
-
 }
 
 func (s *KeeperTestSuite) TestDistributeLivenessRewards_NoReporters() {

@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -114,7 +113,7 @@ func (k Keeper) AddReporterQueryShareSum(ctx context.Context, reporter, queryId 
 		return nil
 	}
 
-	key := collections.Join(reporter, queryId)
+	key := collections.Join(queryId, reporter)
 
 	// reporterPower / aggregateTotalPower
 	share := math.LegacyNewDec(int64(reporterPower)).Quo(math.LegacyNewDec(int64(aggregateTotalPower)))
@@ -201,9 +200,8 @@ func (k Keeper) DemoteQueryToNonStandard(ctx context.Context, queryId []byte) er
 	// Move existing shares from standard to non-standard
 	// We need to iterate all reporters who have shares in this query
 	// and subtract from their standard sum
-	// TODO: Consider flipping the key structure so we can more easily query by queryId
-	// rng := collections.NewPrefixedPairRange[[]byte, []byte](queryId)
-	iter, err := k.ReporterQueryShareSum.Iterate(ctx, nil)
+	rng := collections.NewPrefixedPairRange[[]byte, []byte](queryId)
+	iter, err := k.ReporterQueryShareSum.Iterate(ctx, rng)
 	if err != nil {
 		return err
 	}
@@ -215,13 +213,7 @@ func (k Keeper) DemoteQueryToNonStandard(ctx context.Context, queryId []byte) er
 			return err
 		}
 
-		reporter := kv.Key.K1()
-		entryQueryId := kv.Key.K2()
-
-		// Check if this entry is for the query we're demoting
-		if !bytes.Equal(entryQueryId, queryId) {
-			continue
-		}
+		reporter := kv.Key.K2()
 
 		shareSum := kv.Value
 
@@ -404,8 +396,8 @@ func (k Keeper) DistributeLivenessRewards(ctx context.Context) error {
 				return err
 			}
 
-			reporter := kv.Key.K1()
-			queryId := kv.Key.K2()
+			queryId := kv.Key.K1()
+			reporter := kv.Key.K2()
 			shareSum := kv.Value
 
 			// Check if this query is non-standard

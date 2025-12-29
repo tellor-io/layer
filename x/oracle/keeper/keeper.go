@@ -71,7 +71,7 @@ type (
 		CycleCount            collections.Sequence                                              // tracks completed cycles
 		Dust                  collections.Item[math.Int]                                        // leftover from rounding during distribution
 		QueryOpportunities    collections.Map[[]byte, uint64]                                   // key: queryId, value: opportunity count
-		ReporterQueryShareSum collections.Map[collections.Pair[[]byte, []byte], math.LegacyDec] // key: (reporter, queryId), value: share sum
+		ReporterQueryShareSum collections.Map[collections.Pair[[]byte, []byte], math.LegacyDec] // key: (queryId, reporter), value: share sum
 
 		// Liveness tracking (standard/non-standard split)
 		ReporterStandardShareSum collections.Map[[]byte, math.LegacyDec] // key: reporter, value: sum of shares for standard queries
