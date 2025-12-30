@@ -6,8 +6,6 @@ import (
 	"github.com/tellor-io/layer/x/mint/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ types.QueryServer = Querier{}
@@ -40,9 +38,4 @@ func (q Querier) GetExtraRewardsPoolBalance(ctx context.Context, req *types.Quer
 	balance := q.keeper.bankKeeper.GetBalance(ctx, moduleAddr, params.BondDenom)
 
 	return &types.QueryGetExtraRewardsPoolBalanceResponse{Balance: balance}, nil
-}
-
-// GetExtraRewardsPoolAddress returns the address of the extra rewards pool module account.
-func (q Querier) GetExtraRewardsPoolAddress() sdk.AccAddress {
-	return q.keeper.accountKeeper.GetModuleAddress(types.ExtraRewardsPool)
 }
