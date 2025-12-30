@@ -60,10 +60,13 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dispute_id"}},
 				},
 				{
-					RpcMethod:      "ClaimableDisputeRewards",
-					Use:            "claimable-dispute-rewards [address]",
-					Short:          "Shows all claimable dispute rewards for an address",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "address"}},
+					RpcMethod: "ClaimableDisputeRewards",
+					Use:       "claimable-dispute-rewards [dispute-id] [address]",
+					Short:     "Shows claimable dispute rewards for an address",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "dispute_id"},
+						{ProtoField: "address"},
+					},
 				},
 			},
 		},
