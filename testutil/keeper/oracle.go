@@ -23,7 +23,7 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
-func OracleKeeper(tb testing.TB) (keeper.Keeper, *mocks.ReporterKeeper, *mocks.RegistryKeeper, *mocks.AccountKeeper, *mocks.BankKeeper, *mocks.BridgeKeeper, *mocks.MintKeeper, sdk.Context) {
+func OracleKeeper(tb testing.TB) (keeper.Keeper, *mocks.ReporterKeeper, *mocks.RegistryKeeper, *mocks.AccountKeeper, *mocks.BankKeeper, *mocks.BridgeKeeper, sdk.Context) {
 	tb.Helper()
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
@@ -41,7 +41,6 @@ func OracleKeeper(tb testing.TB) (keeper.Keeper, *mocks.ReporterKeeper, *mocks.R
 	bridgeKeeper := new(mocks.BridgeKeeper)
 	registryKeeper := new(mocks.RegistryKeeper)
 	reporterKeeper := new(mocks.ReporterKeeper)
-	mintKeeper := new(mocks.MintKeeper)
 
 	k := keeper.NewKeeper(
 		cdc,
@@ -50,7 +49,6 @@ func OracleKeeper(tb testing.TB) (keeper.Keeper, *mocks.ReporterKeeper, *mocks.R
 		bankKeeper,
 		registryKeeper,
 		reporterKeeper,
-		mintKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
@@ -61,5 +59,5 @@ func OracleKeeper(tb testing.TB) (keeper.Keeper, *mocks.ReporterKeeper, *mocks.R
 	require.Nil(tb, k.GenesisCycleList(ctx, types.InitialCycleList()))
 	k.SetBridgeKeeper(bridgeKeeper)
 
-	return k, reporterKeeper, registryKeeper, accountKeeper, bankKeeper, bridgeKeeper, mintKeeper, ctx
+	return k, reporterKeeper, registryKeeper, accountKeeper, bankKeeper, bridgeKeeper, ctx
 }

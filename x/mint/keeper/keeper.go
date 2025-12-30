@@ -151,6 +151,16 @@ func (k Keeper) GetExtraRewardRateParams(ctx context.Context) types.ExtraRewardP
 	return params
 }
 
+// GetEffectiveExtraRewardsRate returns the effective daily extra rewards rate,
+// falling back to DailyMintRate if not explicitly set.
+func (k Keeper) GetEffectiveExtraRewardsRate(ctx context.Context) int64 {
+	params := k.GetExtraRewardRateParams(ctx)
+	if params.DailyExtraRewards == 0 {
+		return types.DailyMintRate
+	}
+	return params.DailyExtraRewards
+}
+
 // SendExtraRewards sends extra rewards from the extra rewards pool before minting new TBR coins is initiated.
 // Use same rate as TBR minting rate.
 func (k Keeper) SendExtraRewards(ctx context.Context) error {
@@ -174,10 +184,7 @@ func (k Keeper) SendExtraRewards(ctx context.Context) error {
 		return nil
 	}
 
-	dailyExtraRewardRate := rewardParams.DailyExtraRewards
-	if dailyExtraRewardRate == 0 {
-		dailyExtraRewardRate = types.DailyMintRate
-	}
+	dailyExtraRewardRate := k.GetEffectiveExtraRewardsRate(ctx)
 
 	timeElapsed := currentTime.Sub(*previousBlockTime).Milliseconds()
 	if timeElapsed < 0 {

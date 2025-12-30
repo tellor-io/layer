@@ -78,12 +78,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
 				{
-					RpcMethod:      "GetExtraRewardsRate",
-					Use:            "get-extra-rewards-rate",
-					Short:          "Query extra rewards rate from mint module",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
-				},
-				{
 					RpcMethod:      "CurrentCyclelistQuery",
 					Use:            "current-cyclelist-query",
 					Short:          "Query current query in cycle list",

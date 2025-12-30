@@ -576,7 +576,6 @@ func New(
 		app.BankKeeper,
 		app.RegistryKeeper,
 		app.ReporterKeeper,
-		app.MintKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 

@@ -40,7 +40,6 @@ type (
 		bridgeKeeper       types.BridgeKeeper
 		registryKeeper     types.RegistryKeeper
 		reporterKeeper     types.ReporterKeeper
-		mintKeeper         types.MintKeeper
 		Schema             collections.Schema
 		CyclelistSequencer collections.Sequence                                                                                       // key: queryId, tipper
 		TipperTotal        collections.Map[collections.Pair[[]byte, uint64], math.Int]                                                // key: tipperAcc, blockNumber
@@ -76,7 +75,6 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	registryKeeper types.RegistryKeeper,
 	reporterKeeper types.ReporterKeeper,
-	mintKeeper types.MintKeeper,
 	authority string,
 ) Keeper {
 	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
@@ -95,7 +93,6 @@ func NewKeeper(
 		bankKeeper:     bankKeeper,
 		registryKeeper: registryKeeper,
 		reporterKeeper: reporterKeeper,
-		mintKeeper:     mintKeeper,
 
 		authority: authority,
 		Values: collections.NewIndexedMap(sb,

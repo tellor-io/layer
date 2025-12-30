@@ -184,7 +184,6 @@ type OracleInputs struct {
 
 	RegistryKeeper types.RegistryKeeper
 	ReporterKeeper types.ReporterKeeper
-	MintKeeper     types.MintKeeper
 }
 
 type OracleOutputs struct {
@@ -206,7 +205,6 @@ func ProvideModule(in OracleInputs) OracleOutputs {
 		in.BankKeeper,
 		in.RegistryKeeper,
 		in.ReporterKeeper,
-		in.MintKeeper,
 		authority.String(),
 	)
 	m := NewAppModule(

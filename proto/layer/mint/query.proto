@@ -1,8 +1,23 @@
 syntax = "proto3";
 package layer.mint;
 
+import "google/api/annotations.proto";
 
 option go_package = "github.com/tellor-io/layer/x/mint/types";
 
 // Query defines the gRPC querier service.
-service Query {}
+service Query {
+  // Queries the extra rewards rate.
+  rpc GetExtraRewardsRate(QueryGetExtraRewardsRateRequest) returns (QueryGetExtraRewardsRateResponse) {
+    option (google.api.http).get = "/tellor-io/layer/mint/get_extra_rewards_rate";
+  }
+}
+
+// QueryGetExtraRewardsRateRequest is request type for the Query/GetExtraRewardsRate RPC method.
+message QueryGetExtraRewardsRateRequest {}
+
+// QueryGetExtraRewardsRateResponse is response type for the Query/GetExtraRewardsRate RPC method.
+message QueryGetExtraRewardsRateResponse {
+  // daily_extra_rewards defines the daily extra reward rate.
+  int64 daily_extra_rewards = 1;
+}

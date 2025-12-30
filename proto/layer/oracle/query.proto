@@ -66,11 +66,6 @@ service Query {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_time_based_rewards";
   }
 
-  // Queries a list of GetExtraRewardsRate items.
-  rpc GetExtraRewardsRate(QueryGetExtraRewardsRateRequest) returns (QueryGetExtraRewardsRateResponse) {
-    option (google.api.http).get = "/tellor-io/layer/oracle/get_extra_rewards_rate";
-  }
-
   // Queries a list of CurrentCyclelistQuery items.
   rpc CurrentCyclelistQuery(QueryCurrentCyclelistQueryRequest) returns (QueryCurrentCyclelistQueryResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/current_cyclelist_query";
@@ -266,13 +261,6 @@ message QueryGetTimeBasedRewardsResponse {
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
   ];
-}
-// QueryGetExtraRewardsRateRequest is request type for the Query/GetExtraRewardsRate RPC method.
-message QueryGetExtraRewardsRateRequest {}
-// QueryGetExtraRewardsRateResponse is response type for the Query/GetExtraRewardsRate RPC method.
-message QueryGetExtraRewardsRateResponse {
-  // daily_extra_rewards defines the daily extra reward rate.
-  int64 daily_extra_rewards = 1;
 }
 // QueryCurrentCyclelistQueryRequest is request type for the Query/CurrentCyclelistQuery RPC method.
 message QueryCurrentCyclelistQueryRequest {}

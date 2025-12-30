@@ -3,7 +3,6 @@ package types
 import (
 	context "context"
 
-	minttypes "github.com/tellor-io/layer/x/mint/types"
 	rktypes "github.com/tellor-io/layer/x/registry/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
@@ -46,10 +45,6 @@ type ReporterKeeper interface {
 	GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math.Int, []*reportertypes.TokenOriginInfo, error)
 	DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.LegacyDec, queryId []byte, height uint64) error
 	GetLastReportedAtBlock(ctx context.Context, reporter []byte) (uint64, error)
-}
-
-type MintKeeper interface {
-	GetExtraRewardRateParams(ctx context.Context) minttypes.ExtraRewardParams
 }
 
 type RegistryHooks interface {

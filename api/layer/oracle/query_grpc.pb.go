@@ -36,8 +36,6 @@ type QueryClient interface {
 	GetDataAfter(ctx context.Context, in *QueryGetDataAfterRequest, opts ...grpc.CallOption) (*QueryGetDataAfterResponse, error)
 	// Queries a list of GetTimeBasedRewards items.
 	GetTimeBasedRewards(ctx context.Context, in *QueryGetTimeBasedRewardsRequest, opts ...grpc.CallOption) (*QueryGetTimeBasedRewardsResponse, error)
-	// Queries a list of GetExtraRewardsRate items.
-	GetExtraRewardsRate(ctx context.Context, in *QueryGetExtraRewardsRateRequest, opts ...grpc.CallOption) (*QueryGetExtraRewardsRateResponse, error)
 	// Queries a list of CurrentCyclelistQuery items.
 	CurrentCyclelistQuery(ctx context.Context, in *QueryCurrentCyclelistQueryRequest, opts ...grpc.CallOption) (*QueryCurrentCyclelistQueryResponse, error)
 	// Queries a list of NextCyclelistQuery items.
@@ -159,15 +157,6 @@ func (c *queryClient) GetDataAfter(ctx context.Context, in *QueryGetDataAfterReq
 func (c *queryClient) GetTimeBasedRewards(ctx context.Context, in *QueryGetTimeBasedRewardsRequest, opts ...grpc.CallOption) (*QueryGetTimeBasedRewardsResponse, error) {
 	out := new(QueryGetTimeBasedRewardsResponse)
 	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetTimeBasedRewards", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *queryClient) GetExtraRewardsRate(ctx context.Context, in *QueryGetExtraRewardsRateRequest, opts ...grpc.CallOption) (*QueryGetExtraRewardsRateResponse, error) {
-	out := new(QueryGetExtraRewardsRateResponse)
-	err := c.cc.Invoke(ctx, "/layer.oracle.Query/GetExtraRewardsRate", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -358,8 +347,6 @@ type QueryServer interface {
 	GetDataAfter(context.Context, *QueryGetDataAfterRequest) (*QueryGetDataAfterResponse, error)
 	// Queries a list of GetTimeBasedRewards items.
 	GetTimeBasedRewards(context.Context, *QueryGetTimeBasedRewardsRequest) (*QueryGetTimeBasedRewardsResponse, error)
-	// Queries a list of GetExtraRewardsRate items.
-	GetExtraRewardsRate(context.Context, *QueryGetExtraRewardsRateRequest) (*QueryGetExtraRewardsRateResponse, error)
 	// Queries a list of CurrentCyclelistQuery items.
 	CurrentCyclelistQuery(context.Context, *QueryCurrentCyclelistQueryRequest) (*QueryCurrentCyclelistQueryResponse, error)
 	// Queries a list of NextCyclelistQuery items.
@@ -429,9 +416,6 @@ func (UnimplementedQueryServer) GetDataAfter(context.Context, *QueryGetDataAfter
 }
 func (UnimplementedQueryServer) GetTimeBasedRewards(context.Context, *QueryGetTimeBasedRewardsRequest) (*QueryGetTimeBasedRewardsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTimeBasedRewards not implemented")
-}
-func (UnimplementedQueryServer) GetExtraRewardsRate(context.Context, *QueryGetExtraRewardsRateRequest) (*QueryGetExtraRewardsRateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetExtraRewardsRate not implemented")
 }
 func (UnimplementedQueryServer) CurrentCyclelistQuery(context.Context, *QueryCurrentCyclelistQueryRequest) (*QueryCurrentCyclelistQueryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CurrentCyclelistQuery not implemented")
@@ -658,24 +642,6 @@ func _Query_GetTimeBasedRewards_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(QueryServer).GetTimeBasedRewards(ctx, req.(*QueryGetTimeBasedRewardsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Query_GetExtraRewardsRate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryGetExtraRewardsRateRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(QueryServer).GetExtraRewardsRate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/layer.oracle.Query/GetExtraRewardsRate",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).GetExtraRewardsRate(ctx, req.(*QueryGetExtraRewardsRateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1046,10 +1012,6 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTimeBasedRewards",
 			Handler:    _Query_GetTimeBasedRewards_Handler,
-		},
-		{
-			MethodName: "GetExtraRewardsRate",
-			Handler:    _Query_GetExtraRewardsRate_Handler,
 		},
 		{
 			MethodName: "CurrentCyclelistQuery",
