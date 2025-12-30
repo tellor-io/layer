@@ -159,6 +159,18 @@ func (am AppModule) BeginBlock(_ context.Context) error {
 // The end block implementation is optional.
 func (am AppModule) EndBlock(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
+
+	// Process distribution queue with bounded iteration
+	// 10 items * 100 selectors max = 1000 operations max per block
+	if err := am.keeper.ProcessDistributionQueue(ctx, 10); err != nil {
+		return err
+	}
+
+	// Prune old report entries (older than 60 days)
+	if err := am.keeper.PruneOldReports(ctx, 100); err != nil {
+		return err
+	}
+
 	return am.keeper.TrackStakeChange(ctx)
 }
 
