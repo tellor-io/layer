@@ -13,18 +13,24 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			Service: modulev1.Query_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
-					RpcMethod:      "GetExtraRewardsRate",
-					Use:            "get-extra-rewards-rate",
-					Short:          "Query extra rewards rate (loya/day)",
-					Long:           "Query the effective daily extra rewards rate in loya. Use get-extra-rewards-pool-balance to check if extra rewards are being distributed.",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+					RpcMethod: "GetExtraRewardsRate",
+					Use:       "get-extra-rewards-rate",
+					Short:     "Query the effective daily extra rewards rate in loya",
+					Long: `Query the effective daily extra rewards rate in loya.
+
+If no rate has been explicitly set via governance, returns the default rate (DailyMintRate).
+Use 'get-extra-rewards-pool-balance' to check if extra rewards are being distributed.`,
+					Example: "$ layerd query mint get-extra-rewards-rate",
 				},
 				{
-					RpcMethod:      "GetExtraRewardsPoolBalance",
-					Use:            "get-extra-rewards-pool-balance",
-					Short:          "Query extra rewards pool balance",
-					Long:           "Query the current balance of the extra_rewards_pool module account.",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+					RpcMethod: "GetExtraRewardsPoolBalance",
+					Use:       "get-extra-rewards-pool-balance",
+					Short:     "Query the extra rewards pool module account balance",
+					Long: `Query the current balance of the extra_rewards_pool module account.
+
+This pool is used to distribute additional rewards to reporters beyond the base 
+time-based rewards`,
+					Example: "$ layerd query mint get-extra-rewards-pool-balance",
 				},
 			},
 		},
