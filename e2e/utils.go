@@ -49,6 +49,8 @@ var (
 	baseBech32 = "tellor"
 
 	teamMnemonic = "unit curious maid primary holiday lunch lift melody boil blossom three boat work deliver alpha intact tornado october process dignity gravity giggle enrich output"
+
+	DefaultGasPrice = "0.000025000000000000loya"
 )
 
 // ============================================================================
@@ -500,7 +502,7 @@ func DefaultSetupConfig() SetupConfig {
 		NumValidators:   2,
 		NumFullNodes:    0,
 		ModifyGenesis:   CreateStandardGenesis(),
-		GasPrices:       "0.000025000000000000loya",
+		GasPrices:       DefaultGasPrice,
 		GlobalFeeMinGas: "0.000025000000000000",
 	}
 }
@@ -808,7 +810,7 @@ func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
 			Denom:               "loya",
 			Bech32Prefix:        "tellor",
 			CoinType:            "118",
-			GasPrices:           "0.000025000000000000loya",
+			GasPrices:           DefaultGasPrice,
 			GasAdjustment:       1.1,
 			TrustingPeriod:      "504h",
 			NoHostMount:         false,

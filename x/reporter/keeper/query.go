@@ -41,7 +41,7 @@ func (k Querier) Reporters(ctx context.Context, req *types.QueryReportersRequest
 		if err != nil {
 			return err
 		}
-		stake, _, err := k.GetReporterStake(ctx, sdk.AccAddress(repAddr))
+		stake, _, _, _, err := k.GetReporterStake(ctx, sdk.AccAddress(repAddr))
 		if err != nil {
 			stake = math.ZeroInt()
 		}
@@ -152,10 +152,33 @@ func (k Querier) AvailableTips(ctx context.Context, req *types.QueryAvailableTip
 	}
 	selectorAcc := sdk.MustAccAddressFromBech32(req.SelectorAddress)
 
+	// Get current settled tips for this selector
 	rewards, err := k.Keeper.SelectorTips.Get(ctx, selectorAcc)
 	if err != nil {
-		return nil, err
+		rewards = math.LegacyZeroDec()
 	}
+
+	// Also calculate pending rewards from ReporterPeriodData
+	// First, find the selector's reporter
+	selector, err := k.Keeper.Selectors.Get(ctx, selectorAcc)
+	if err == nil {
+		// Selector exists, get their reporter's period data
+		reporterAddr := sdk.AccAddress(selector.GetReporter())
+		periodData, err := k.Keeper.ReporterPeriodData.Get(ctx, reporterAddr)
+		if err == nil && periodData.RewardAmount.IsPositive() && !periodData.Total.IsZero() {
+			// Find this selector's share in the period data
+			for _, sel := range periodData.Selectors {
+				if sdk.AccAddress(sel.SelectorAddress).Equals(selectorAcc) {
+					// Calculate pending: (selector_amount / total) * reward_amount
+					shareRatio := sel.Amount.ToLegacyDec().Quo(periodData.Total.ToLegacyDec())
+					pendingReward := periodData.RewardAmount.Mul(shareRatio)
+					rewards = rewards.Add(pendingReward)
+					break
+				}
+			}
+		}
+	}
+
 	return &types.QueryAvailableTipsResponse{AvailableTips: rewards}, nil
 }
 
@@ -255,7 +278,7 @@ func (k Querier) JailedReporters(ctx context.Context, req *types.QueryJailedRepo
 		if !reporterMeta.Jailed {
 			return false, nil
 		}
-		stake, _, err := k.GetReporterStake(ctx, sdk.AccAddress(repAddr))
+		stake, _, _, _, err := k.GetReporterStake(ctx, sdk.AccAddress(repAddr))
 		if err != nil {
 			stake = math.ZeroInt()
 		}
@@ -286,7 +309,7 @@ func (k Querier) Reporter(ctx context.Context, req *types.QueryReporterRequest) 
 		return nil, status.Error(codes.NotFound, "reporter not found")
 	}
 
-	stake, _, err := k.GetReporterStake(ctx, repAddr)
+	stake, _, _, _, err := k.GetReporterStake(ctx, repAddr)
 	if err != nil {
 		stake = math.ZeroInt()
 	}

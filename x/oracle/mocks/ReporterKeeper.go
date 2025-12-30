@@ -19,13 +19,13 @@ type ReporterKeeper struct {
 	mock.Mock
 }
 
-// DivvyingTips provides a mock function with given fields: ctx, reporterAddr, reward, queryId, height
-func (_m *ReporterKeeper) DivvyingTips(ctx context.Context, reporterAddr types.AccAddress, reward math.LegacyDec, queryId []byte, height uint64) error {
-	ret := _m.Called(ctx, reporterAddr, reward, queryId, height)
+// DivvyingTips provides a mock function with given fields: ctx, reporterAddr, reward
+func (_m *ReporterKeeper) DivvyingTips(ctx context.Context, reporterAddr types.AccAddress, reward math.LegacyDec) error {
+	ret := _m.Called(ctx, reporterAddr, reward)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, math.LegacyDec, []byte, uint64) error); ok {
-		r0 = rf(ctx, reporterAddr, reward, queryId, height)
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, math.LegacyDec) error); ok {
+		r0 = rf(ctx, reporterAddr, reward)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -58,13 +58,15 @@ func (_m *ReporterKeeper) GetLastReportedAtBlock(ctx context.Context, reporter [
 }
 
 // GetReporterStake provides a mock function with given fields: ctx, repAddr
-func (_m *ReporterKeeper) GetReporterStake(ctx context.Context, repAddr types.AccAddress) (math.Int, []*reportertypes.TokenOriginInfo, error) {
+func (_m *ReporterKeeper) GetReporterStake(ctx context.Context, repAddr types.AccAddress) (math.Int, []*reportertypes.TokenOriginInfo, []*reportertypes.SelectorShare, []byte, error) {
 	ret := _m.Called(ctx, repAddr)
 
 	var r0 math.Int
 	var r1 []*reportertypes.TokenOriginInfo
-	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (math.Int, []*reportertypes.TokenOriginInfo, error)); ok {
+	var r2 []*reportertypes.SelectorShare
+	var r3 []byte
+	var r4 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (math.Int, []*reportertypes.TokenOriginInfo, []*reportertypes.SelectorShare, []byte, error)); ok {
 		return rf(ctx, repAddr)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) math.Int); ok {
@@ -81,13 +83,29 @@ func (_m *ReporterKeeper) GetReporterStake(ctx context.Context, repAddr types.Ac
 		}
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, types.AccAddress) error); ok {
+	if rf, ok := ret.Get(2).(func(context.Context, types.AccAddress) []*reportertypes.SelectorShare); ok {
 		r2 = rf(ctx, repAddr)
 	} else {
-		r2 = ret.Error(2)
+		if ret.Get(2) != nil {
+			r2 = ret.Get(2).([]*reportertypes.SelectorShare)
+		}
 	}
 
-	return r0, r1, r2
+	if rf, ok := ret.Get(3).(func(context.Context, types.AccAddress) []byte); ok {
+		r3 = rf(ctx, repAddr)
+	} else {
+		if ret.Get(3) != nil {
+			r3 = ret.Get(3).([]byte)
+		}
+	}
+
+	if rf, ok := ret.Get(4).(func(context.Context, types.AccAddress) error); ok {
+		r4 = rf(ctx, repAddr)
+	} else {
+		r4 = ret.Error(4)
+	}
+
+	return r0, r1, r2, r3, r4
 }
 
 // ReporterStake provides a mock function with given fields: ctx, repAddress, queryId
