@@ -5,6 +5,7 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/tellor-io/layer/x/oracle/migrations/fork"
+	v4 "github.com/tellor-io/layer/x/oracle/migrations/v4"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -34,4 +35,10 @@ func (m Migrator) MigrateFork(ctx sdk.Context) error {
 		m.keeper.cdc,
 		pathToFile,
 	)
+}
+
+// Migrate3to4 migrates from version 3 to 4.
+// This adds the LivenessCycles parameter for liveness-weighted TBR distribution.
+func (m Migrator) Migrate3to4(ctx sdk.Context) error {
+	return v4.MigrateStore(ctx, m.keeper.storeService, m.keeper.cdc)
 }

@@ -31,6 +31,11 @@ type (
 		FeePaidFromStake          collections.Map[[]byte, types.DelegationsAmounts]                                                                                         // key: dispute hashId
 		Report                    *collections.IndexedMap[collections.Pair[[]byte, collections.Pair[[]byte, uint64]], types.DelegationsAmounts, ReporterBlockNumberIndexes] // key: queryId, (reporter AccAddress, blockNumber)
 
+		// Distribution queue collections
+		ReporterPeriodData       collections.Map[[]byte, types.PeriodRewardData]      // key: reporter AccAddress -> current period data
+		DistributionQueue        collections.Map[uint64, types.DistributionQueueItem] // key: queue index -> item to distribute
+		DistributionQueueCounter collections.Item[types.DistributionQueueCounter]     // tracks head and tail of queue
+
 		Schema collections.Schema
 		logger log.Logger
 
@@ -76,12 +81,15 @@ func NewKeeper(
 			sb, types.ReporterPrefix, "report",
 			collections.PairKeyCodec(collections.BytesKey, collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)), codec.CollValue[types.DelegationsAmounts](cdc), newReportIndexes(sb),
 		),
-		authority:      authority,
-		logger:         logger,
-		accountKeeper:  accountKeeper,
-		stakingKeeper:  stakingKeeper,
-		bankKeeper:     bankKeeper,
-		registryKeeper: registryKeeper,
+		ReporterPeriodData:       collections.NewMap(sb, types.ReporterPeriodDataPrefix, "reporter_period_data", collections.BytesKey, codec.CollValue[types.PeriodRewardData](cdc)),
+		DistributionQueue:        collections.NewMap(sb, types.DistributionQueuePrefix, "distribution_queue", collections.Uint64Key, codec.CollValue[types.DistributionQueueItem](cdc)),
+		DistributionQueueCounter: collections.NewItem(sb, types.DistributionQueueCounterPrefix, "distribution_queue_counter", codec.CollValue[types.DistributionQueueCounter](cdc)),
+		authority:                authority,
+		logger:                   logger,
+		accountKeeper:            accountKeeper,
+		stakingKeeper:            stakingKeeper,
+		bankKeeper:               bankKeeper,
+		registryKeeper:           registryKeeper,
 	}
 	schema, err := sb.Build()
 	if err != nil {
@@ -228,4 +236,77 @@ func (k Keeper) GetLastReportedAtBlock(ctx context.Context, reporter []byte) (ui
 		return blockNumber, nil
 	}
 	return 0, nil
+}
+
+// PruneOldReports removes Report entries older than 60 days.
+// It iterates the BlockNumber index, checks each block's timestamp via oracle,
+// and deletes entries where timestamp < cutoff (60 days ago).
+// maxIterations limits how many entries are processed per call.
+func (k Keeper) PruneOldReports(ctx context.Context, maxIterations int) error {
+	if k.oracleKeeper == nil {
+		return nil
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	// Calculate cutoff timestamp (60 days ago)
+	cutoffTimestamp := uint64(sdkCtx.BlockTime().Add(-60 * 24 * time.Hour).UnixMilli())
+
+	// Iterate BlockNumber index in ascending order
+	// Index key structure from IterateRaw: Pair[Pair[reporter, blockNumber], queryId]
+	pc := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
+	start := collections.Join([]byte{}, uint64(0))
+	startBuffer := make([]byte, pc.Size(start))
+	_, _ = pc.Encode(startBuffer, start)
+
+	iter, err := k.Report.Indexes.BlockNumber.IterateRaw(ctx, startBuffer, nil, collections.OrderAscending)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+
+	keysToDelete := make([]collections.Pair[[]byte, collections.Pair[[]byte, uint64]], 0)
+	// Cache: blockNumber -> isOld (true if timestamp < cutoff)
+	// because multiple Report entries can exist at the same block height (different reporters/queryIds)
+	// we want to avoid redundant oracle calls for the same block height
+	checkedBlocks := make(map[uint64]bool)
+	iterations := 0
+
+	for ; iter.Valid() && iterations < maxIterations; iter.Next() {
+		iterations++
+
+		key, err := iter.Key()
+		if err != nil {
+			continue
+		}
+
+		blockNumber := key.K1().K2()
+
+		// Check cache first to avoid redundant oracle calls
+		isOld, found := checkedBlocks[blockNumber]
+		if !found {
+			// Query oracle for timestamp at this block height
+			timestamp, err := k.oracleKeeper.GetTimestampForBlockHeight(ctx, blockNumber)
+			if err != nil || timestamp == 0 {
+				// Can't determine age, skip this entry
+				continue
+			}
+			isOld = timestamp < cutoffTimestamp
+			checkedBlocks[blockNumber] = isOld
+		}
+
+		if isOld {
+			// Reconstruct primary key: (queryId, (reporter, blockNumber))
+			primaryKey := collections.Join(key.K2(), collections.Join(key.K1().K1(), key.K1().K2()))
+			keysToDelete = append(keysToDelete, primaryKey)
+		}
+	}
+
+	// Delete old entries, can't delete during iteration
+	for _, key := range keysToDelete {
+		if err := k.Report.Remove(ctx, key); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

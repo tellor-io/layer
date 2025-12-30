@@ -9,9 +9,11 @@ import (
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -629,4 +631,119 @@ func (s *IntegrationTestSuite) TestCreateAndSwitchReporterMsg() {
 	formerSelector, err = s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, newDelegator)
 	s.NoError(err)
 	s.Equal(formerSelector.Reporter, newDelegator.Bytes())
+}
+
+func (s *IntegrationTestSuite) TestPruneOldReports() {
+	require := s.Require()
+	ctx := s.Setup.Ctx
+
+	rk := s.Setup.Reporterkeeper
+	ok := s.Setup.Oraclekeeper
+
+	reporter := sample.AccAddressBytes()
+
+	startTime := time.Now()
+
+	queryId1 := []byte("queryid1")
+	queryId2 := []byte("queryid2")
+	queryId3 := []byte("queryid3")
+
+	// Timestamps for each block
+	timestamp1 := uint64(startTime.UnixMilli())                          // block 100: startTime
+	timestamp2 := uint64(startTime.Add(30 * 24 * time.Hour).UnixMilli()) // block 200: 30 days later
+	timestamp3 := uint64(startTime.Add(50 * 24 * time.Hour).UnixMilli()) // block 300: 50 days later
+
+	// Set up Report entries directly
+	delegationsAmounts := reportertypes.DelegationsAmounts{
+		Total: math.NewInt(1000000),
+	}
+
+	// Report at block 100
+	err := rk.Report.Set(ctx, collections.Join(queryId1, collections.Join(reporter.Bytes(), uint64(100))), delegationsAmounts)
+	require.NoError(err)
+
+	// Report at block 200
+	err = rk.Report.Set(ctx, collections.Join(queryId2, collections.Join(reporter.Bytes(), uint64(200))), delegationsAmounts)
+	require.NoError(err)
+
+	// Report at block 300
+	err = rk.Report.Set(ctx, collections.Join(queryId3, collections.Join(reporter.Bytes(), uint64(300))), delegationsAmounts)
+	require.NoError(err)
+
+	// Set up Aggregate entries in oracle keeper (needed for GetTimestampForBlockHeight)
+	// The BlockHeight index uses the Height field of the Aggregate
+	aggregate1 := oracletypes.Aggregate{
+		QueryId:           queryId1,
+		AggregateValue:    "100",
+		AggregateReporter: reporter.String(),
+		Height:            100,
+	}
+	err = ok.Aggregates.Set(ctx, collections.Join(queryId1, timestamp1), aggregate1)
+	require.NoError(err)
+
+	aggregate2 := oracletypes.Aggregate{
+		QueryId:           queryId2,
+		AggregateValue:    "100",
+		AggregateReporter: reporter.String(),
+		Height:            200,
+	}
+	err = ok.Aggregates.Set(ctx, collections.Join(queryId2, timestamp2), aggregate2)
+	require.NoError(err)
+
+	aggregate3 := oracletypes.Aggregate{
+		QueryId:           queryId3,
+		AggregateValue:    "100",
+		AggregateReporter: reporter.String(),
+		Height:            300,
+	}
+	err = ok.Aggregates.Set(ctx, collections.Join(queryId3, timestamp3), aggregate3)
+	require.NoError(err)
+
+	// Verify all 3 Report entries exist
+	_, err = rk.Report.Get(ctx, collections.Join(queryId1, collections.Join(reporter.Bytes(), uint64(100))))
+	require.NoError(err, "Report at block 100 should exist")
+	_, err = rk.Report.Get(ctx, collections.Join(queryId2, collections.Join(reporter.Bytes(), uint64(200))))
+	require.NoError(err, "Report at block 200 should exist")
+	_, err = rk.Report.Get(ctx, collections.Join(queryId3, collections.Join(reporter.Bytes(), uint64(300))))
+	require.NoError(err, "Report at block 300 should exist")
+
+	// Count total reports before pruning
+	countBefore := 0
+	err = rk.Report.Walk(ctx, nil, func(key collections.Pair[[]byte, collections.Pair[[]byte, uint64]], value reportertypes.DelegationsAmounts) (stop bool, err error) {
+		countBefore++
+		return false, nil
+	})
+	require.NoError(err)
+	require.Equal(3, countBefore, "Should have exactly 3 reports before pruning")
+
+	// Set context to 70 days from start and call PruneOldReports
+	// Block 100 (timestamp1 = startTime) should be pruned (70 days old > 60 day cutoff)
+	ctx = ctx.WithBlockTime(startTime.Add(70 * 24 * time.Hour))
+	err = rk.PruneOldReports(ctx, 100)
+	require.NoError(err)
+
+	// Verify block 100 report is deleted (it's 70 days old, > 60 day cutoff)
+	_, err = rk.Report.Get(ctx, collections.Join(queryId1, collections.Join(reporter.Bytes(), uint64(100))))
+	require.Error(err, "Report at block 100 should be deleted (70 days old)")
+
+	// Block 200 report is 40 days old (70 - 30), should still exist
+	_, err = rk.Report.Get(ctx, collections.Join(queryId2, collections.Join(reporter.Bytes(), uint64(200))))
+	require.NoError(err, "Report at block 200 should still exist (40 days old)")
+
+	// Block 300 report is 20 days old (70 - 50), should still exist
+	_, err = rk.Report.Get(ctx, collections.Join(queryId3, collections.Join(reporter.Bytes(), uint64(300))))
+	require.NoError(err, "Report at block 300 should still exist (20 days old)")
+
+	// Set context to 120 days from start - now block 200 and 300 reports should be old too
+	ctx = ctx.WithBlockTime(startTime.Add(120 * 24 * time.Hour))
+	err = rk.PruneOldReports(ctx, 100)
+	require.NoError(err)
+
+	// Block 200 report is now 90 days old (120 - 30), should be deleted
+	_, err = rk.Report.Get(ctx, collections.Join(queryId2, collections.Join(reporter.Bytes(), uint64(200))))
+	require.Error(err, "Report at block 200 should be deleted (90 days old)")
+
+	// Block 300 report is 70 days old (120 - 50), should be deleted
+	_, err = rk.Report.Get(ctx, collections.Join(queryId3, collections.Join(reporter.Bytes(), uint64(300))))
+	require.Error(err, "Report at block 300 should be deleted (70 days old)")
 }

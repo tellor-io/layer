@@ -257,3 +257,96 @@ func TestGetLastReportedAtBlock(t *testing.T) {
 	expectedLastReportedAtBlock := uint64(3)
 	require.Equal(t, expectedLastReportedAtBlock, lastReportedAtBlock)
 }
+
+func TestPruneOldReports(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter1 := sample.AccAddressBytes()
+	reporter2 := sample.AccAddressBytes()
+
+	// Current time: Day 100
+	// Cutoff: Day 40 (100 - 60 = 40)
+	// Anything with timestamp < Day 40 is old and should be deleted
+	now := time.Now()
+	ctx = ctx.WithBlockTime(now).WithBlockHeight(500)
+
+	// Set up Report entries at different block heights
+	// Block 100: old (timestamp Day 10)
+	// Block 200: old (timestamp Day 30)
+	// Block 300: recent (timestamp Day 50)
+	// Block 400: recent (timestamp Day 80)
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter1.Bytes(), uint64(100))), types.DelegationsAmounts{Total: math.OneInt()}))
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid2"), collections.Join(reporter1.Bytes(), uint64(200))), types.DelegationsAmounts{Total: math.OneInt()}))
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter2.Bytes(), uint64(100))), types.DelegationsAmounts{Total: math.OneInt()})) // same block as reporter1
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter1.Bytes(), uint64(300))), types.DelegationsAmounts{Total: math.OneInt()}))
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter1.Bytes(), uint64(400))), types.DelegationsAmounts{Total: math.OneInt()}))
+
+	// Set up mock OracleKeeper
+	oracleKeeper := mocks.NewOracleKeeper(t)
+
+	// Mock timestamps: blocks 100, 200 are old; blocks 300, 400 are recent
+	// Day 10 = 90 days ago from now
+	// Day 30 = 70 days ago from now
+	// Day 50 = 50 days ago from now (within 60 days)
+	// Day 80 = 20 days ago from now (within 60 days)
+	oracleKeeper.On("GetTimestampForBlockHeight", ctx, uint64(100)).Return(uint64(now.Add(-90*24*time.Hour).UnixMilli()), nil)
+	oracleKeeper.On("GetTimestampForBlockHeight", ctx, uint64(200)).Return(uint64(now.Add(-70*24*time.Hour).UnixMilli()), nil)
+	oracleKeeper.On("GetTimestampForBlockHeight", ctx, uint64(300)).Return(uint64(now.Add(-50*24*time.Hour).UnixMilli()), nil)
+	oracleKeeper.On("GetTimestampForBlockHeight", ctx, uint64(400)).Return(uint64(now.Add(-20*24*time.Hour).UnixMilli()), nil)
+
+	k.SetOracleKeeper(oracleKeeper)
+
+	// Prune old reports
+	err := k.PruneOldReports(ctx, 100)
+	require.NoError(t, err)
+
+	// Verify old entries are deleted (block 100, 200)
+	_, err = k.Report.Get(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter1.Bytes(), uint64(100))))
+	require.Error(t, err) // should be deleted
+
+	_, err = k.Report.Get(ctx, collections.Join([]byte("queryid2"), collections.Join(reporter1.Bytes(), uint64(200))))
+	require.Error(t, err) // should be deleted
+
+	_, err = k.Report.Get(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter2.Bytes(), uint64(100))))
+	require.Error(t, err) // should be deleted (same block as reporter1)
+
+	// Verify recent entries still exist (block 300, 400)
+	_, err = k.Report.Get(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter1.Bytes(), uint64(300))))
+	require.NoError(t, err) // should still exist
+
+	_, err = k.Report.Get(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter1.Bytes(), uint64(400))))
+	require.NoError(t, err) // should still exist
+}
+
+func TestPruneOldReportsMaxIterations(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter := sample.AccAddressBytes()
+
+	now := time.Now()
+	ctx = ctx.WithBlockTime(now).WithBlockHeight(500)
+
+	// Set up 5 old Report entries
+	for i := uint64(1); i <= 5; i++ {
+		require.NoError(t, k.Report.Set(ctx, collections.Join(fmt.Appendf(nil, "queryid%d", i), collections.Join(reporter.Bytes(), i)), types.DelegationsAmounts{Total: math.OneInt()}))
+	}
+
+	oracleKeeper := mocks.NewOracleKeeper(t)
+	for i := uint64(1); i <= 5; i++ {
+		oracleKeeper.On("GetTimestampForBlockHeight", ctx, i).Return(uint64(now.Add(-90*24*time.Hour).UnixMilli()), nil).Maybe()
+	}
+	k.SetOracleKeeper(oracleKeeper)
+
+	// Prune with maxIterations = 3 (should only process 3 entries)
+	err := k.PruneOldReports(ctx, 3)
+	require.NoError(t, err)
+
+	// Count remaining entries
+	count := 0
+	err = k.Report.Walk(ctx, nil, func(key collections.Pair[[]byte, collections.Pair[[]byte, uint64]], value types.DelegationsAmounts) (stop bool, err error) {
+		count++
+		return false, nil
+	})
+	require.NoError(t, err)
+
+	// Should have 2 remaining (5 - 3 = 2)
+	require.Equal(t, 2, count)
+}
