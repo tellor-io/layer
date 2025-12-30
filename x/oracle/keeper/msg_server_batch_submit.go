@@ -26,7 +26,7 @@ func (k msgServer) BatchSubmitValue(ctx context.Context, msg *types.MsgBatchSubm
 	if err != nil {
 		return nil, err
 	}
-	reporterStake, delegationsUsed, err := k.keeper.reporterKeeper.GetReporterStake(ctx, reporterAddr)
+	reporterStake, delegationsUsed, _, _, err := k.keeper.reporterKeeper.GetReporterStake(ctx, reporterAddr)
 	if err != nil {
 		return nil, err
 	}

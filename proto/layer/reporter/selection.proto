@@ -55,3 +55,47 @@ message FormattedSelection {
   // individual_delegations contains details of each delegation (only populated when delegations_count > 1)
   repeated IndividualDelegation individual_delegations = 5;
 }
+
+message SelectorShare {
+  bytes selector_address = 1;
+  string amount = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message PeriodRewardData {
+  repeated SelectorShare selectors = 1;
+  string total = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  string reward_amount = 3[
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+  bytes hash = 4;
+}
+
+message DistributionQueueItem {
+  bytes reporter = 1;
+  repeated SelectorShare selectors = 2;
+  string total = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  string reward_amount = 4 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+}
+
+message DistributionQueueCounter {
+  uint64 head = 1;
+  uint64 tail = 2;
+}

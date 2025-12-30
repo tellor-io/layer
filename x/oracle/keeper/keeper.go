@@ -8,6 +8,7 @@ import (
 	"math/big"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
@@ -65,6 +66,17 @@ type (
 		BridgeDepositQueue collections.Map[collections.Pair[uint64, uint64], []byte] // key: aggregate timestamp, queryMetaId, value: queryData
 		// storage for no stake report queryId / queryData
 		NoStakeReportedQueries collections.Map[[]byte, []byte] // key: queryId, value: queryData
+
+		// Liveness reward storage
+		CycleCount            collections.Sequence                                              // tracks completed cycles
+		Dust                  collections.Item[math.Int]                                        // leftover from rounding during distribution
+		QueryOpportunities    collections.Map[[]byte, uint64]                                   // key: queryId, value: opportunity count
+		ReporterQueryShareSum collections.Map[collections.Pair[[]byte, []byte], math.LegacyDec] // key: (queryId, reporter), value: share sum
+
+		// Liveness tracking (standard/non-standard split)
+		ReporterStandardShareSum collections.Map[[]byte, math.LegacyDec] // key: reporter, value: sum of shares for standard queries
+		NonStandardQueries       collections.Map[[]byte, bool]           // key: queryId, value: true if non-standard
+		StandardOpportunities    collections.Item[uint64]                // number of opportunities for standard queries (cycles completed)
 	}
 )
 
@@ -167,6 +179,17 @@ func NewKeeper(
 			collections.BytesValue),
 		// NoStakeReportedQueries maps the queryId to the queryData
 		NoStakeReportedQueries: collections.NewMap(sb, types.NoStakeReportedQueriesPrefix, "no_stake_reported_queries", collections.BytesKey, collections.BytesValue),
+
+		// Liveness reward storage
+		CycleCount:            collections.NewSequence(sb, types.CycleCountPrefix, "cycle_count"),
+		Dust:                  collections.NewItem(sb, types.DustPrefix, "dust", sdk.IntValue),
+		QueryOpportunities:    collections.NewMap(sb, types.QueryOpportunitiesPrefix, "query_opportunities", collections.BytesKey, collections.Uint64Value),
+		ReporterQueryShareSum: collections.NewMap(sb, types.ReporterQueryShareSumPrefix, "reporter_query_share_sum", collections.PairKeyCodec(collections.BytesKey, collections.BytesKey), layertypes.LegacyDecValue),
+
+		// Optimized liveness tracking initialization
+		ReporterStandardShareSum: collections.NewMap(sb, types.ReporterStandardShareSumPrefix, "reporter_standard_share_sum", collections.BytesKey, layertypes.LegacyDecValue),
+		NonStandardQueries:       collections.NewMap(sb, types.NonStandardQueriesPrefix, "non_standard_queries", collections.BytesKey, collections.BoolValue),
+		StandardOpportunities:    collections.NewItem(sb, types.StandardOpportunitiesPrefix, "standard_opportunities", collections.Uint64Value),
 	}
 
 	schema, err := sb.Build()
@@ -410,4 +433,25 @@ func (k Keeper) GetMaxBatchSize(ctx context.Context) (uint32, error) {
 		return 0, nil
 	}
 	return maxBatchSize, nil
+}
+
+// GetTimestampForBlockHeight returns the timestamp of aggregates at a given block height.
+// Returns 0 if no aggregates exist at that block height.
+func (k Keeper) GetTimestampForBlockHeight(ctx context.Context, blockHeight uint64) (uint64, error) {
+	rng := collections.NewPrefixedPairRange[uint64, collections.Pair[[]byte, uint64]](blockHeight)
+	iter, err := k.Aggregates.Indexes.BlockHeight.Iterate(ctx, rng)
+	if err != nil {
+		return 0, err
+	}
+	defer iter.Close()
+
+	if iter.Valid() {
+		key, err := iter.PrimaryKey()
+		if err != nil {
+			return 0, err
+		}
+		return key.K2(), nil
+	}
+
+	return 0, nil
 }

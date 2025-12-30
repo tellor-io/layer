@@ -437,6 +437,16 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	delAddr := sdk.MustAccAddressFromBech32(msg.SelectorAddress)
+
+	// Get the selector's reporter and settle any pending rewards
+	selection, err := k.Keeper.Selectors.Get(ctx, delAddr)
+	if err == nil {
+		// Selector exists - settle their reporter's current period
+		if err := k.Keeper.SettleReporter(ctx, selection.Reporter); err != nil {
+			return nil, err
+		}
+	}
+
 	shares, err := k.Keeper.SelectorTips.Get(ctx, delAddr)
 	if err != nil {
 		return nil, err

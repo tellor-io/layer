@@ -76,4 +76,5 @@ type RegistryKeeper interface {
 // OracleKeeper defines the expected interface for the Oracle module.
 type OracleKeeper interface {
 	GetLastReportedAtTimestamp(ctx context.Context, reporter []byte) (uint64, error)
+	GetTimestampForBlockHeight(ctx context.Context, blockHeight uint64) (uint64, error)
 }

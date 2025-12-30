@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
+	"crypto/sha256"
 	"errors"
 
 	"github.com/tellor-io/layer/x/reporter/types"
@@ -46,12 +48,21 @@ func (k Keeper) HasMin(ctx context.Context, addr sdk.AccAddress, minRequired mat
 
 // ReporterStake counts the total amount of BONDED tokens for a given reporter's selectors
 // at the time of reporting and returns the total amount plus stores
-// the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties
+// the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties.
+// It also tracks period data for reward distribution - when delegation state changes,
+// the previous period is queued for distribution.
 func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, queryId []byte) (math.Int, error) {
-	totalTokens, delegates, err := k.GetReporterStake(ctx, repAddr)
+	totalTokens, delegates, selectorShares, hash, err := k.GetReporterStake(ctx, repAddr)
 	if err != nil {
 		return math.Int{}, err
 	}
+
+	// Handle period tracking for reward distribution
+	if err := k.handlePeriodTracking(ctx, repAddr, selectorShares, totalTokens, hash); err != nil {
+		return math.Int{}, err
+	}
+
+	// Store per-report snapshot for disputes (existing behavior)
 	err = k.Report.Set(ctx, collections.Join(queryId, collections.Join(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
 	if err != nil {
 		return math.Int{}, err
@@ -128,43 +139,48 @@ func (k Keeper) GetSelector(ctx context.Context, selectorAddr sdk.AccAddress) (t
 
 // GetReporterStake counts the total amount of BONDED tokens for a given reporter's selectors
 // at the time of reporting and returns the total amount plus stores
-// the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties
-func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math.Int, []*types.TokenOriginInfo, error) {
+// the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties.
+// Also returns aggregated selector shares and a hash of the delegation state for reward distribution.
+func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math.Int, []*types.TokenOriginInfo, []*types.SelectorShare, []byte, error) {
 	reporter, err := k.Reporters.Get(ctx, repAddr.Bytes())
 	if err != nil {
-		return math.Int{}, nil, err
+		return math.Int{}, nil, nil, nil, err
 	}
 	if reporter.Jailed {
-		return math.Int{}, nil, errorsmod.Wrapf(types.ErrReporterJailed, "reporter %s is in jail", repAddr.String())
+		return math.Int{}, nil, nil, nil, errorsmod.Wrapf(types.ErrReporterJailed, "reporter %s is in jail", repAddr.String())
 	}
 
 	totalTokens := math.ZeroInt()
 	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr)
 	if err != nil {
-		return math.Int{}, nil, err
+		return math.Int{}, nil, nil, nil, err
 	}
 	defer iter.Close()
 	delegates := make([]*types.TokenOriginInfo, 0)
+	selectorShares := make([]*types.SelectorShare, 0)
+	// Compute hash inline as we build selector shares
+	hasher := sha256.New()
 	for ; iter.Valid(); iter.Next() {
 		selectorAddr, err := iter.PrimaryKey()
 		if err != nil {
-			return math.Int{}, nil, err
+			return math.Int{}, nil, nil, nil, err
 		}
 		valSet := k.stakingKeeper.GetValidatorSet()
 		maxValSet, err := valSet.MaxValidators(ctx)
 		if err != nil {
-			return math.Int{}, nil, err
+			return math.Int{}, nil, nil, nil, err
 		}
 		// get delegator count
 		selector, err := k.Selectors.Get(ctx, selectorAddr)
 		if err != nil {
-			return math.Int{}, nil, err
+			return math.Int{}, nil, nil, nil, err
 		}
 		// skip selectors that are locked out for switching reporters
 		if selector.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
 			continue
 		}
 		var iterError error
+		selectorTotal := math.ZeroInt()
 		// compare how many delegations a selector has to the max validators to detemine if you should short circuit and iterate the counts number of times
 		// or iterate over all bonded validators for a selector in the case they have more delegations (with multiple validators, bonded or not) than the max bonded validators
 		if selector.DelegationsCount > uint64(maxValSet) {
@@ -186,11 +202,12 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (m
 				// get the token amount
 				tokens := validator.TokensFromSharesTruncated(stakingdel.Shares).TruncateInt()
 				totalTokens = totalTokens.Add(tokens)
+				selectorTotal = selectorTotal.Add(tokens)
 				delegates = append(delegates, &types.TokenOriginInfo{DelegatorAddress: selectorAddr, ValidatorAddress: valAddrr.Bytes(), Amount: tokens})
 				return false
 			})
 			if err != nil {
-				return math.Int{}, nil, err
+				return math.Int{}, nil, nil, nil, err
 			}
 		} else {
 			err = k.stakingKeeper.IterateDelegatorDelegations(ctx, selectorAddr, func(delegation stakingtypes.Delegation) (stop bool) {
@@ -207,22 +224,102 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (m
 				if val.IsBonded() {
 					delTokens := val.TokensFromSharesTruncated(delegation.Shares).TruncateInt()
 					totalTokens = totalTokens.Add(delTokens)
+					selectorTotal = selectorTotal.Add(delTokens)
 					delegates = append(delegates, &types.TokenOriginInfo{DelegatorAddress: selectorAddr, ValidatorAddress: valAddr.Bytes(), Amount: delTokens})
 				}
 				return false
 			})
 			if err != nil {
-				return math.Int{}, nil, err
+				return math.Int{}, nil, nil, nil, err
 			}
 		}
 		if iterError != nil {
-			return math.Int{}, nil, iterError
+			return math.Int{}, nil, nil, nil, iterError
+		}
+		// Add aggregated share for this selector and update hash
+		if selectorTotal.IsPositive() {
+			selectorShares = append(selectorShares, &types.SelectorShare{
+				SelectorAddress: selectorAddr,
+				Amount:          selectorTotal,
+			})
+			hasher.Write(selectorAddr)
+			hasher.Write(selectorTotal.BigInt().Bytes())
 		}
 	}
-	return totalTokens, delegates, nil
+	// Finalize hash with total
+	hasher.Write(totalTokens.BigInt().Bytes())
+	return totalTokens, delegates, selectorShares, hasher.Sum(nil), nil
 }
 
 // Stores the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties
 func (k Keeper) SetReporterStakeByQueryId(ctx context.Context, repAddr sdk.AccAddress, delegates []*types.TokenOriginInfo, totalTokens math.Int, queryId []byte) error {
 	return k.Report.Set(ctx, collections.Join(queryId, collections.Join(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
+}
+
+// handlePeriodTracking manages reward period tracking for a reporter.
+// When delegation state changes (hash differs), it queues the previous period for distribution
+// and stores the new period data.
+func (k Keeper) handlePeriodTracking(ctx context.Context, repAddr sdk.AccAddress, selectorShares []*types.SelectorShare, totalTokens math.Int, newHash []byte) error {
+	// Get previous period data
+	prevData, err := k.ReporterPeriodData.Get(ctx, repAddr)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return err
+		}
+		// First time for this reporter - just store period data
+		return k.ReporterPeriodData.Set(ctx, repAddr, types.PeriodRewardData{
+			Selectors:    selectorShares,
+			Total:        totalTokens,
+			RewardAmount: math.LegacyZeroDec(),
+			Hash:         newHash,
+		})
+	}
+
+	// Check if delegation state changed
+	if bytes.Equal(prevData.Hash, newHash) {
+		// No change - nothing to do, rewards will accumulate via DivvyingTips
+		return nil
+	}
+
+	// Delegation state changed - queue previous period for distribution if it has rewards
+	if prevData.RewardAmount.IsPositive() {
+		if err := k.queueForDistribution(ctx, repAddr, prevData); err != nil {
+			return err
+		}
+	}
+
+	// Store new period data
+	return k.ReporterPeriodData.Set(ctx, repAddr, types.PeriodRewardData{
+		Selectors:    selectorShares,
+		Total:        totalTokens,
+		RewardAmount: math.LegacyZeroDec(),
+		Hash:         newHash,
+	})
+}
+
+// queueForDistribution adds a period's data to the distribution queue.
+func (k Keeper) queueForDistribution(ctx context.Context, reporter sdk.AccAddress, data types.PeriodRewardData) error {
+	// Get current queue counter
+	counter, err := k.DistributionQueueCounter.Get(ctx)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return err
+		}
+		counter = types.DistributionQueueCounter{Head: 0, Tail: 0}
+	}
+
+	// Add item to queue
+	item := types.DistributionQueueItem{
+		Reporter:     reporter,
+		Selectors:    data.Selectors,
+		Total:        data.Total,
+		RewardAmount: data.RewardAmount,
+	}
+	if err := k.DistributionQueue.Set(ctx, counter.Tail, item); err != nil {
+		return err
+	}
+
+	// Increment tail
+	counter.Tail++
+	return k.DistributionQueueCounter.Set(ctx, counter)
 }
