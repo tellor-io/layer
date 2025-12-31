@@ -154,26 +154,8 @@ func (k Keeper) RefundFailedDisputeFee(ctx context.Context, feePayer sdk.AccAddr
 }
 
 func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, disputeFeeTotal math.Int, hashId []byte, slashAmt math.Int) (math.Int, error) {
-	// fee paid in rd 1
-	payerFee := payerInfo.Amount
-	payerFeeDec := payerFee.ToLegacyDec()
-	// total fee rd 1
-	totalFeeRd1 := math.LegacyNewDecFromInt(slashAmt)
-	// total fee all rounds minus burn
-	fivePercentDec := disputeFeeTotal.ToLegacyDec().Quo(math.LegacyNewDec(20))
-	fivePercent := fivePercentDec.TruncateInt()
-	totalFeeMinusBurnDec := disputeFeeTotal.Sub(fivePercent).ToLegacyDec()
-	// power reductions
-	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
+	amtFixed6, remainder := CalculateRefundAmount(payerInfo.Amount, slashAmt, disputeFeeTotal)
 
-	// (fee paid in rd1 / total fee rd 1)(total fee all rounds - burn)
-	amtFixed12Dec := payerFeeDec.Mul(totalFeeMinusBurnDec).Mul(powerReductionDec).Quo(totalFeeRd1)
-
-	amtFixed12 := amtFixed12Dec.TruncateInt()
-
-	remainder := amtFixed12.Mod(layertypes.PowerReduction)
-
-	amtFixed6 := amtFixed12.Quo(layertypes.PowerReduction)
 	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amtFixed6))
 	if !payerInfo.FromBond {
 		return remainder, k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, feePayer, coins)
@@ -183,23 +165,11 @@ func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, p
 }
 
 func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeesPaid, reporterBond math.Int) (math.Int, error) {
-	bond := reporterBond
-	totalFees := totalFeesPaid
+	amtFixed6, remainder := CalculateReporterBondRewardAmount(payerInfo.Amount, totalFeesPaid, reporterBond)
 
-	fee := payerInfo.Amount
-	feeDec := math.LegacyNewDecFromInt(fee)
-	bondDec := math.LegacyNewDecFromInt(bond)
-	totalFeesDec := math.LegacyNewDecFromInt(totalFees)
-	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
-	amtFixed12Dec := feeDec.Mul(bondDec).Mul(powerReductionDec).Quo(totalFeesDec)
-	amtFixed12 := amtFixed12Dec.TruncateInt()
-
-	amtFixed6Dec := amtFixed12Dec.Quo(powerReductionDec)
-	amtFixed6 := amtFixed6Dec.TruncateInt()
 	if err := k.reporterKeeper.AddAmountToStake(ctx, feePayer, amtFixed6); err != nil {
 		return math.Int{}, err
 	}
-	remainder := amtFixed12.Mod(layertypes.PowerReduction)
 	return remainder, k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amtFixed6)))
 }
 

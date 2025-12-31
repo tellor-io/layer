@@ -34,6 +34,10 @@ type QueryClient interface {
 	Tally(ctx context.Context, in *QueryDisputesTallyRequest, opts ...grpc.CallOption) (*QueryDisputesTallyResponse, error)
 	// VoteResult queries the vote result of a dispute
 	VoteResult(ctx context.Context, in *QueryDisputeVoteResultRequest, opts ...grpc.CallOption) (*QueryDisputeVoteResultResponse, error)
+	// DisputeFeePayers queries all fee payers for a dispute
+	DisputeFeePayers(ctx context.Context, in *QueryDisputeFeePayersRequest, opts ...grpc.CallOption) (*QueryDisputeFeePayersResponse, error)
+	// ClaimableDisputeRewards queries the amount of loya that can be claimed for a specific dispute
+	ClaimableDisputeRewards(ctx context.Context, in *QueryClaimableDisputeRewardsRequest, opts ...grpc.CallOption) (*QueryClaimableDisputeRewardsResponse, error)
 }
 
 type queryClient struct {
@@ -116,6 +120,24 @@ func (c *queryClient) VoteResult(ctx context.Context, in *QueryDisputeVoteResult
 	return out, nil
 }
 
+func (c *queryClient) DisputeFeePayers(ctx context.Context, in *QueryDisputeFeePayersRequest, opts ...grpc.CallOption) (*QueryDisputeFeePayersResponse, error) {
+	out := new(QueryDisputeFeePayersResponse)
+	err := c.cc.Invoke(ctx, "/layer.dispute.Query/DisputeFeePayers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ClaimableDisputeRewards(ctx context.Context, in *QueryClaimableDisputeRewardsRequest, opts ...grpc.CallOption) (*QueryClaimableDisputeRewardsResponse, error) {
+	out := new(QueryClaimableDisputeRewardsResponse)
+	err := c.cc.Invoke(ctx, "/layer.dispute.Query/ClaimableDisputeRewards", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
@@ -136,6 +158,10 @@ type QueryServer interface {
 	Tally(context.Context, *QueryDisputesTallyRequest) (*QueryDisputesTallyResponse, error)
 	// VoteResult queries the vote result of a dispute
 	VoteResult(context.Context, *QueryDisputeVoteResultRequest) (*QueryDisputeVoteResultResponse, error)
+	// DisputeFeePayers queries all fee payers for a dispute
+	DisputeFeePayers(context.Context, *QueryDisputeFeePayersRequest) (*QueryDisputeFeePayersResponse, error)
+	// ClaimableDisputeRewards queries the amount of loya that can be claimed for a specific dispute
+	ClaimableDisputeRewards(context.Context, *QueryClaimableDisputeRewardsRequest) (*QueryClaimableDisputeRewardsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -166,6 +192,12 @@ func (UnimplementedQueryServer) Tally(context.Context, *QueryDisputesTallyReques
 }
 func (UnimplementedQueryServer) VoteResult(context.Context, *QueryDisputeVoteResultRequest) (*QueryDisputeVoteResultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VoteResult not implemented")
+}
+func (UnimplementedQueryServer) DisputeFeePayers(context.Context, *QueryDisputeFeePayersRequest) (*QueryDisputeFeePayersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DisputeFeePayers not implemented")
+}
+func (UnimplementedQueryServer) ClaimableDisputeRewards(context.Context, *QueryClaimableDisputeRewardsRequest) (*QueryClaimableDisputeRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClaimableDisputeRewards not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
@@ -324,6 +356,42 @@ func _Query_VoteResult_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_DisputeFeePayers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDisputeFeePayersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DisputeFeePayers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.dispute.Query/DisputeFeePayers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DisputeFeePayers(ctx, req.(*QueryDisputeFeePayersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ClaimableDisputeRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryClaimableDisputeRewardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ClaimableDisputeRewards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.dispute.Query/ClaimableDisputeRewards",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ClaimableDisputeRewards(ctx, req.(*QueryClaimableDisputeRewardsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -362,6 +430,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VoteResult",
 			Handler:    _Query_VoteResult_Handler,
+		},
+		{
+			MethodName: "DisputeFeePayers",
+			Handler:    _Query_DisputeFeePayers_Handler,
+		},
+		{
+			MethodName: "ClaimableDisputeRewards",
+			Handler:    _Query_ClaimableDisputeRewards_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
