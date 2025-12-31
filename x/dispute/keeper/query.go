@@ -3,10 +3,12 @@ package keeper
 import (
 	"context"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 
 	"github.com/tellor-io/layer/x/dispute/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -15,6 +17,7 @@ import (
 	"cosmossdk.io/store/prefix"
 
 	"github.com/cosmos/cosmos-sdk/runtime"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 )
 
@@ -26,6 +29,55 @@ type Querier struct {
 
 func NewQuerier(keeper Keeper) Querier {
 	return Querier{Keeper: keeper}
+}
+
+// convertMicroReportToStrings converts MicroReport to MicroReportStrings (string queryId)
+func convertMicroReportToStrings(mr oracletypes.MicroReport) oracletypes.MicroReportStrings {
+	return oracletypes.MicroReportStrings{
+		Reporter:        mr.Reporter,
+		Power:           mr.Power,
+		QueryType:       mr.QueryType,
+		QueryId:         hex.EncodeToString(mr.QueryId),
+		AggregateMethod: mr.AggregateMethod,
+		Value:           mr.Value,
+		Timestamp:       uint64(mr.Timestamp.UnixMilli()),
+		Cyclelist:       mr.Cyclelist,
+		BlockNumber:     mr.BlockNumber,
+		MetaId:          mr.MetaId,
+	}
+}
+
+// take dispute, return hash id and all evidence as strings for display
+func convertDisputeToStrings(d types.Dispute) types.DisputeStrings {
+	// convert all additional evidence to string types
+	additionalEvidence := make([]*oracletypes.MicroReportStrings, len(d.AdditionalEvidence))
+	for i, evidence := range d.AdditionalEvidence {
+		converted := convertMicroReportToStrings(*evidence)
+		additionalEvidence[i] = &converted
+	}
+
+	// convert initial evidence to string type
+	return types.DisputeStrings{
+		HashId:             hex.EncodeToString(d.HashId),
+		DisputeId:          d.DisputeId,
+		DisputeCategory:    d.DisputeCategory,
+		DisputeFee:         d.DisputeFee,
+		DisputeStatus:      d.DisputeStatus,
+		DisputeStartTime:   d.DisputeStartTime,
+		DisputeEndTime:     d.DisputeEndTime,
+		DisputeStartBlock:  d.DisputeStartBlock,
+		DisputeRound:       d.DisputeRound,
+		SlashAmount:        d.SlashAmount,
+		BurnAmount:         d.BurnAmount,
+		InitialEvidence:    convertMicroReportToStrings(d.InitialEvidence),
+		FeeTotal:           d.FeeTotal,
+		PrevDisputeIds:     d.PrevDisputeIds,
+		BlockNumber:        d.BlockNumber,
+		Open:               d.Open,
+		AdditionalEvidence: additionalEvidence,
+		VoterReward:        d.VoterReward,
+		PendingExecution:   d.PendingExecution,
+	}
 }
 
 func (k Querier) Disputes(ctx context.Context, req *types.QueryDisputesRequest) (*types.QueryDisputesResponse, error) {
@@ -42,9 +94,10 @@ func (k Querier) Disputes(ctx context.Context, req *types.QueryDisputesRequest) 
 			return err
 		}
 		id := binary.BigEndian.Uint64(disputeID)
+		disputeStrings := convertDisputeToStrings(dispute)
 		disputes = append(disputes, &types.Disputes{
 			DisputeId: id,
-			Metadata:  &dispute,
+			Metadata:  &disputeStrings,
 		})
 		return nil
 	})
@@ -66,10 +119,11 @@ func (k Querier) Dispute(ctx context.Context, req *types.QueryDisputeRequest) (*
 		return nil, status.Error(codes.NotFound, "dispute not found")
 	}
 
+	disputeStrings := convertDisputeToStrings(dispute)
 	return &types.QueryDisputeResponse{
 		Dispute: &types.Disputes{
 			DisputeId: req.DisputeId,
-			Metadata:  &dispute,
+			Metadata:  &disputeStrings,
 		},
 	}, nil
 }
@@ -272,4 +326,116 @@ func (k Querier) VoteResult(ctx context.Context, req *types.QueryDisputeVoteResu
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &types.QueryDisputeVoteResultResponse{VoteResult: vote.VoteResult}, nil
+}
+
+func (k Querier) DisputeFeePayers(ctx context.Context, req *types.QueryDisputeFeePayersRequest) (*types.QueryDisputeFeePayersResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	payers := make([]*types.DisputeFeePayerInfo, 0)
+	rng := collections.NewPrefixedPairRange[uint64, []byte](req.DisputeId)
+	iter, err := k.Keeper.DisputeFeePayer.Iterate(ctx, rng)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		key, err := iter.Key()
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		value, err := iter.Value()
+		if err != nil {
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		payerAddrBytes := key.K2()
+		payerAddr := sdk.AccAddress(payerAddrBytes)
+		payers = append(payers, &types.DisputeFeePayerInfo{
+			PayerAddress: payerAddr.String(),
+			PayerInfo:    value,
+		})
+	}
+
+	return &types.QueryDisputeFeePayersResponse{Payers: payers}, nil
+}
+
+func (k Querier) ClaimableDisputeRewards(ctx context.Context, req *types.QueryClaimableDisputeRewardsRequest) (*types.QueryClaimableDisputeRewardsResponse, error) {
+	if req == nil {
+		return nil, errors.New("invalid request")
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	addr, err := sdk.AccAddressFromBech32(req.Address)
+	if err != nil {
+		return nil, err
+	}
+
+	dispute, err := k.Keeper.Disputes.Get(ctx, req.DisputeId)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, errors.New("dispute not found")
+		}
+		return nil, err
+	}
+
+	rewardAmount := math.ZeroInt()
+	feeRefundAmount := math.ZeroInt()
+	rewardClaimed := false
+
+	// Calculate Voter Reward
+	if dispute.DisputeStatus == types.Resolved {
+		// Check if they voted
+		voterInfo, err := k.Keeper.Voter.Get(ctx, collections.Join(req.DisputeId, addr.Bytes()))
+		if err == nil {
+			// Found voter info
+			rewardClaimed = voterInfo.RewardClaimed
+			if !voterInfo.RewardClaimed {
+				// They voted and haven't claimed yet
+				// CalculateReward checks if vote.Executed and other conditions
+				reward, err := k.Keeper.CalculateReward(sdkCtx, addr, req.DisputeId)
+				if err == nil {
+					rewardAmount = reward
+				}
+			}
+		}
+	}
+
+	// Calculate Fee Refund
+	// Check if they are a fee payer for the first round
+	payerInfo, err := k.Keeper.DisputeFeePayer.Get(ctx, collections.Join(req.DisputeId, addr.Bytes()))
+	if err == nil {
+		// Address is a fee payer
+		switch dispute.DisputeStatus {
+		case types.Failed:
+			// Failed dispute (underfunded) - full refund
+			feeRefundAmount = payerInfo.Amount
+		case types.Resolved:
+			vote, err := k.Keeper.Votes.Get(ctx, req.DisputeId)
+			if err == nil && vote.Executed {
+				switch vote.VoteResult {
+				case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
+					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount, dispute.FeeTotal)
+					feeRefundAmount = feeRefundAmount.Add(refund)
+
+				case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
+					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount, dispute.FeeTotal)
+					feeRefundAmount = feeRefundAmount.Add(refund)
+
+					reward, _ := CalculateReporterBondRewardAmount(payerInfo.Amount, dispute.FeeTotal, dispute.SlashAmount)
+					feeRefundAmount = feeRefundAmount.Add(reward)
+				}
+			}
+		}
+	}
+
+	return &types.QueryClaimableDisputeRewardsResponse{
+		ClaimableAmount: &types.ClaimableAmount{
+			DisputeId:       req.DisputeId,
+			RewardAmount:    rewardAmount,
+			FeeRefundAmount: feeRefundAmount,
+			RewardClaimed:   rewardClaimed,
+		},
+	}, nil
 }

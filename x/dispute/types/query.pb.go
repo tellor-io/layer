@@ -5,6 +5,7 @@ package types
 
 import (
 	context "context"
+	cosmossdk_io_math "cosmossdk.io/math"
 	fmt "fmt"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -159,8 +160,8 @@ func (m *QueryDisputesRequest) GetPagination() *query.PageRequest {
 }
 
 type Disputes struct {
-	DisputeId uint64   `protobuf:"varint,1,opt,name=disputeId,proto3" json:"disputeId,omitempty"`
-	Metadata  *Dispute `protobuf:"bytes,2,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	DisputeId uint64          `protobuf:"varint,1,opt,name=disputeId,proto3" json:"disputeId,omitempty"`
+	Metadata  *DisputeStrings `protobuf:"bytes,2,opt,name=metadata,proto3" json:"metadata,omitempty"`
 }
 
 func (m *Disputes) Reset()         { *m = Disputes{} }
@@ -203,7 +204,7 @@ func (m *Disputes) GetDisputeId() uint64 {
 	return 0
 }
 
-func (m *Disputes) GetMetadata() *Dispute {
+func (m *Disputes) GetMetadata() *DisputeStrings {
 	if m != nil {
 		return m.Metadata
 	}
@@ -811,6 +812,296 @@ func (m *QueryDisputeVoteResultResponse) GetVoteResult() VoteResult {
 	return VoteResult_NO_TALLY
 }
 
+type QueryDisputeFeePayersRequest struct {
+	DisputeId uint64 `protobuf:"varint,1,opt,name=dispute_id,json=disputeId,proto3" json:"dispute_id,omitempty"`
+}
+
+func (m *QueryDisputeFeePayersRequest) Reset()         { *m = QueryDisputeFeePayersRequest{} }
+func (m *QueryDisputeFeePayersRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryDisputeFeePayersRequest) ProtoMessage()    {}
+func (*QueryDisputeFeePayersRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_972b8e1a74396a43, []int{17}
+}
+func (m *QueryDisputeFeePayersRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryDisputeFeePayersRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryDisputeFeePayersRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryDisputeFeePayersRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDisputeFeePayersRequest.Merge(m, src)
+}
+func (m *QueryDisputeFeePayersRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryDisputeFeePayersRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDisputeFeePayersRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryDisputeFeePayersRequest proto.InternalMessageInfo
+
+func (m *QueryDisputeFeePayersRequest) GetDisputeId() uint64 {
+	if m != nil {
+		return m.DisputeId
+	}
+	return 0
+}
+
+type DisputeFeePayerInfo struct {
+	PayerAddress string    `protobuf:"bytes,1,opt,name=payer_address,json=payerAddress,proto3" json:"payer_address,omitempty"`
+	PayerInfo    PayerInfo `protobuf:"bytes,2,opt,name=payer_info,json=payerInfo,proto3" json:"payer_info"`
+}
+
+func (m *DisputeFeePayerInfo) Reset()         { *m = DisputeFeePayerInfo{} }
+func (m *DisputeFeePayerInfo) String() string { return proto.CompactTextString(m) }
+func (*DisputeFeePayerInfo) ProtoMessage()    {}
+func (*DisputeFeePayerInfo) Descriptor() ([]byte, []int) {
+	return fileDescriptor_972b8e1a74396a43, []int{18}
+}
+func (m *DisputeFeePayerInfo) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DisputeFeePayerInfo) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DisputeFeePayerInfo.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DisputeFeePayerInfo) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DisputeFeePayerInfo.Merge(m, src)
+}
+func (m *DisputeFeePayerInfo) XXX_Size() int {
+	return m.Size()
+}
+func (m *DisputeFeePayerInfo) XXX_DiscardUnknown() {
+	xxx_messageInfo_DisputeFeePayerInfo.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DisputeFeePayerInfo proto.InternalMessageInfo
+
+func (m *DisputeFeePayerInfo) GetPayerAddress() string {
+	if m != nil {
+		return m.PayerAddress
+	}
+	return ""
+}
+
+func (m *DisputeFeePayerInfo) GetPayerInfo() PayerInfo {
+	if m != nil {
+		return m.PayerInfo
+	}
+	return PayerInfo{}
+}
+
+type QueryDisputeFeePayersResponse struct {
+	Payers []*DisputeFeePayerInfo `protobuf:"bytes,1,rep,name=payers,proto3" json:"payers,omitempty"`
+}
+
+func (m *QueryDisputeFeePayersResponse) Reset()         { *m = QueryDisputeFeePayersResponse{} }
+func (m *QueryDisputeFeePayersResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryDisputeFeePayersResponse) ProtoMessage()    {}
+func (*QueryDisputeFeePayersResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_972b8e1a74396a43, []int{19}
+}
+func (m *QueryDisputeFeePayersResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryDisputeFeePayersResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryDisputeFeePayersResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryDisputeFeePayersResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryDisputeFeePayersResponse.Merge(m, src)
+}
+func (m *QueryDisputeFeePayersResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryDisputeFeePayersResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryDisputeFeePayersResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryDisputeFeePayersResponse proto.InternalMessageInfo
+
+func (m *QueryDisputeFeePayersResponse) GetPayers() []*DisputeFeePayerInfo {
+	if m != nil {
+		return m.Payers
+	}
+	return nil
+}
+
+type QueryClaimableDisputeRewardsRequest struct {
+	DisputeId uint64 `protobuf:"varint,1,opt,name=dispute_id,json=disputeId,proto3" json:"dispute_id,omitempty"`
+	Address   string `protobuf:"bytes,2,opt,name=address,proto3" json:"address,omitempty"`
+}
+
+func (m *QueryClaimableDisputeRewardsRequest) Reset()         { *m = QueryClaimableDisputeRewardsRequest{} }
+func (m *QueryClaimableDisputeRewardsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryClaimableDisputeRewardsRequest) ProtoMessage()    {}
+func (*QueryClaimableDisputeRewardsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_972b8e1a74396a43, []int{20}
+}
+func (m *QueryClaimableDisputeRewardsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryClaimableDisputeRewardsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryClaimableDisputeRewardsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryClaimableDisputeRewardsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryClaimableDisputeRewardsRequest.Merge(m, src)
+}
+func (m *QueryClaimableDisputeRewardsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryClaimableDisputeRewardsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryClaimableDisputeRewardsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryClaimableDisputeRewardsRequest proto.InternalMessageInfo
+
+func (m *QueryClaimableDisputeRewardsRequest) GetDisputeId() uint64 {
+	if m != nil {
+		return m.DisputeId
+	}
+	return 0
+}
+
+func (m *QueryClaimableDisputeRewardsRequest) GetAddress() string {
+	if m != nil {
+		return m.Address
+	}
+	return ""
+}
+
+type ClaimableAmount struct {
+	DisputeId       uint64                `protobuf:"varint,1,opt,name=dispute_id,json=disputeId,proto3" json:"dispute_id,omitempty"`
+	RewardAmount    cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=reward_amount,json=rewardAmount,proto3,customtype=cosmossdk.io/math.Int" json:"reward_amount"`
+	FeeRefundAmount cosmossdk_io_math.Int `protobuf:"bytes,3,opt,name=fee_refund_amount,json=feeRefundAmount,proto3,customtype=cosmossdk.io/math.Int" json:"fee_refund_amount"`
+	RewardClaimed   bool                  `protobuf:"varint,4,opt,name=reward_claimed,json=rewardClaimed,proto3" json:"reward_claimed,omitempty"`
+}
+
+func (m *ClaimableAmount) Reset()         { *m = ClaimableAmount{} }
+func (m *ClaimableAmount) String() string { return proto.CompactTextString(m) }
+func (*ClaimableAmount) ProtoMessage()    {}
+func (*ClaimableAmount) Descriptor() ([]byte, []int) {
+	return fileDescriptor_972b8e1a74396a43, []int{21}
+}
+func (m *ClaimableAmount) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ClaimableAmount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ClaimableAmount.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ClaimableAmount) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClaimableAmount.Merge(m, src)
+}
+func (m *ClaimableAmount) XXX_Size() int {
+	return m.Size()
+}
+func (m *ClaimableAmount) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClaimableAmount.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ClaimableAmount proto.InternalMessageInfo
+
+func (m *ClaimableAmount) GetDisputeId() uint64 {
+	if m != nil {
+		return m.DisputeId
+	}
+	return 0
+}
+
+func (m *ClaimableAmount) GetRewardClaimed() bool {
+	if m != nil {
+		return m.RewardClaimed
+	}
+	return false
+}
+
+type QueryClaimableDisputeRewardsResponse struct {
+	ClaimableAmount *ClaimableAmount `protobuf:"bytes,1,opt,name=claimable_amount,json=claimableAmount,proto3" json:"claimable_amount,omitempty"`
+}
+
+func (m *QueryClaimableDisputeRewardsResponse) Reset()         { *m = QueryClaimableDisputeRewardsResponse{} }
+func (m *QueryClaimableDisputeRewardsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryClaimableDisputeRewardsResponse) ProtoMessage()    {}
+func (*QueryClaimableDisputeRewardsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_972b8e1a74396a43, []int{22}
+}
+func (m *QueryClaimableDisputeRewardsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryClaimableDisputeRewardsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryClaimableDisputeRewardsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryClaimableDisputeRewardsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryClaimableDisputeRewardsResponse.Merge(m, src)
+}
+func (m *QueryClaimableDisputeRewardsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryClaimableDisputeRewardsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryClaimableDisputeRewardsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryClaimableDisputeRewardsResponse proto.InternalMessageInfo
+
+func (m *QueryClaimableDisputeRewardsResponse) GetClaimableAmount() *ClaimableAmount {
+	if m != nil {
+		return m.ClaimableAmount
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "layer.dispute.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "layer.dispute.QueryParamsResponse")
@@ -829,72 +1120,98 @@ func init() {
 	proto.RegisterType((*QueryDisputesTallyResponse)(nil), "layer.dispute.QueryDisputesTallyResponse")
 	proto.RegisterType((*QueryDisputeVoteResultRequest)(nil), "layer.dispute.QueryDisputeVoteResultRequest")
 	proto.RegisterType((*QueryDisputeVoteResultResponse)(nil), "layer.dispute.QueryDisputeVoteResultResponse")
+	proto.RegisterType((*QueryDisputeFeePayersRequest)(nil), "layer.dispute.QueryDisputeFeePayersRequest")
+	proto.RegisterType((*DisputeFeePayerInfo)(nil), "layer.dispute.DisputeFeePayerInfo")
+	proto.RegisterType((*QueryDisputeFeePayersResponse)(nil), "layer.dispute.QueryDisputeFeePayersResponse")
+	proto.RegisterType((*QueryClaimableDisputeRewardsRequest)(nil), "layer.dispute.QueryClaimableDisputeRewardsRequest")
+	proto.RegisterType((*ClaimableAmount)(nil), "layer.dispute.ClaimableAmount")
+	proto.RegisterType((*QueryClaimableDisputeRewardsResponse)(nil), "layer.dispute.QueryClaimableDisputeRewardsResponse")
 }
 
 func init() { proto.RegisterFile("layer/dispute/query.proto", fileDescriptor_972b8e1a74396a43) }
 
 var fileDescriptor_972b8e1a74396a43 = []byte{
-	// 955 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x56, 0xcf, 0x6f, 0x1b, 0x45,
-	0x14, 0xce, 0xba, 0x49, 0xea, 0x3c, 0xa7, 0x1c, 0x86, 0x94, 0x3a, 0xdb, 0xd4, 0xad, 0x27, 0x10,
-	0xbb, 0x05, 0xef, 0xca, 0x31, 0xa5, 0xa2, 0x12, 0x20, 0xd2, 0xaa, 0x55, 0xb9, 0x10, 0x56, 0x11,
-	0x07, 0x14, 0x11, 0x8d, 0xe3, 0x91, 0xb1, 0x64, 0xef, 0x6c, 0x77, 0x67, 0xa3, 0x46, 0x08, 0xa9,
-	0xea, 0x8d, 0x03, 0x08, 0x84, 0xf8, 0x0f, 0xf8, 0x63, 0x7a, 0xac, 0xc4, 0x85, 0x13, 0x42, 0x09,
-	0x7f, 0x48, 0x35, 0xb3, 0x6f, 0xbd, 0x3f, 0xbc, 0x6b, 0xfb, 0x94, 0xcd, 0xbc, 0xef, 0x7b, 0xef,
-	0x7b, 0xdf, 0x9b, 0x79, 0x09, 0x6c, 0x8f, 0xd9, 0x39, 0xf7, 0xed, 0xc1, 0x28, 0xf0, 0x42, 0xc9,
-	0xed, 0xe7, 0x21, 0xf7, 0xcf, 0x2d, 0xcf, 0x17, 0x52, 0x90, 0x6b, 0x3a, 0x64, 0x61, 0xc8, 0xbc,
-	0x77, 0x2a, 0x82, 0x89, 0x08, 0xec, 0x3e, 0x0b, 0x10, 0x67, 0x9f, 0x75, 0xfb, 0x5c, 0xb2, 0xae,
-	0xed, 0xb1, 0xe1, 0xc8, 0x65, 0x72, 0x24, 0xdc, 0x88, 0x6a, 0x6e, 0x0d, 0xc5, 0x50, 0xe8, 0x4f,
-	0x5b, 0x7d, 0xe1, 0xe9, 0xce, 0x50, 0x88, 0xe1, 0x98, 0xdb, 0xcc, 0x1b, 0xd9, 0xcc, 0x75, 0x85,
-	0xd4, 0x94, 0x00, 0xa3, 0x37, 0xb3, 0x4a, 0xf0, 0x27, 0x06, 0x9b, 0xd9, 0xa0, 0xf0, 0xb8, 0x7b,
-	0x82, 0xbf, 0xc4, 0x7c, 0x33, 0x0b, 0xf1, 0x98, 0xcf, 0x26, 0x71, 0x2c, 0xd7, 0xa5, 0x64, 0xe3,
-	0x31, 0x76, 0x69, 0xd6, 0xb3, 0xa1, 0x33, 0x11, 0xd7, 0xa4, 0x5b, 0x40, 0xbe, 0x51, 0x6d, 0x1e,
-	0xea, 0x4c, 0x0e, 0x7f, 0x1e, 0xf2, 0x40, 0xd2, 0xaf, 0xe0, 0xdd, 0xcc, 0x69, 0xe0, 0x09, 0x37,
-	0xe0, 0xa4, 0x07, 0xeb, 0x51, 0xc5, 0xba, 0x71, 0xc7, 0x68, 0xd7, 0xf6, 0xaf, 0x5b, 0x19, 0xf7,
-	0xac, 0x08, 0x7e, 0xb0, 0xfa, 0xfa, 0xdf, 0xdb, 0x2b, 0x0e, 0x42, 0xe9, 0xf7, 0xb0, 0xa5, 0x73,
-	0x3d, 0xc6, 0x4e, 0xb0, 0x06, 0x79, 0x02, 0x90, 0x58, 0x8a, 0x09, 0xf7, 0xac, 0xc8, 0x7f, 0x4b,
-	0xf9, 0x6f, 0x45, 0x73, 0x42, 0xff, 0xad, 0x43, 0x36, 0xe4, 0xc8, 0x75, 0x52, 0x4c, 0x7a, 0x0c,
-	0xd5, 0x38, 0x35, 0xd9, 0x81, 0x0d, 0xd4, 0xf2, 0x6c, 0xa0, 0x53, 0xae, 0x3a, 0xc9, 0x01, 0xd9,
-	0x87, 0xea, 0x84, 0x4b, 0x36, 0x60, 0x92, 0xd5, 0x2b, 0xba, 0xde, 0x7b, 0xb9, 0x06, 0x30, 0x91,
-	0x33, 0xc5, 0xd1, 0x3f, 0x0d, 0xb8, 0x9e, 0x93, 0x8f, 0x66, 0x3c, 0x2d, 0xd0, 0xdf, 0x5a, 0xa8,
-	0x3f, 0x22, 0xa7, 0x1b, 0x20, 0x3d, 0xa8, 0xc6, 0x53, 0xae, 0x57, 0xee, 0x5c, 0x69, 0xd7, 0xf6,
-	0x6f, 0x14, 0xcb, 0x0a, 0x9c, 0x29, 0x90, 0x7e, 0x8c, 0x13, 0x8a, 0x15, 0xa3, 0xa9, 0xb7, 0x00,
-	0x10, 0x72, 0x32, 0x9a, 0x75, 0x80, 0x3e, 0xcb, 0xce, 0x62, 0xda, 0x4b, 0x17, 0xae, 0x22, 0x08,
-	0x1b, 0x29, 0x55, 0x10, 0xe3, 0xa8, 0x09, 0x75, 0x9d, 0xea, 0x6b, 0x8f, 0xbb, 0xb9, 0xd1, 0xd2,
-	0x63, 0xd8, 0x2e, 0x88, 0x61, 0xad, 0x2f, 0x60, 0x53, 0xa4, 0xce, 0xb1, 0xe0, 0xcd, 0x5c, 0xc1,
-	0x0c, 0x35, 0x43, 0xa0, 0xf7, 0xb1, 0x89, 0x23, 0xce, 0x26, 0xdf, 0x8a, 0xa5, 0x7b, 0x3f, 0xc4,
-	0x41, 0x26, 0x34, 0x14, 0xf4, 0x00, 0x36, 0x24, 0x67, 0x93, 0x13, 0xf5, 0x2a, 0x50, 0xcd, 0x56,
-	0x4e, 0x8d, 0xc2, 0xfb, 0x78, 0xaf, 0xab, 0x12, 0x13, 0xd0, 0x6d, 0xb8, 0x31, 0xcd, 0xf8, 0xe5,
-	0x60, 0xe0, 0xf3, 0x60, 0xea, 0xc0, 0x67, 0xe8, 0x4e, 0x26, 0x84, 0xf5, 0x9a, 0xb0, 0xa9, 0xeb,
-	0xb1, 0xe8, 0x5c, 0x97, 0xdc, 0x70, 0x6a, 0x32, 0x81, 0xd2, 0x87, 0x68, 0x60, 0xdc, 0xf3, 0x91,
-	0x7a, 0xcb, 0x4b, 0xf6, 0xf9, 0xaa, 0x02, 0x66, 0x11, 0x19, 0xab, 0xdb, 0xb0, 0x16, 0x06, 0xdc,
-	0x8f, 0x7d, 0xdf, 0xce, 0x75, 0xfa, 0xd4, 0x17, 0xa1, 0x17, 0x31, 0x22, 0x9c, 0xb2, 0xc7, 0xe7,
-	0x9e, 0xf0, 0xa5, 0x22, 0x55, 0x16, 0x91, 0x12, 0x2c, 0xf9, 0x04, 0x56, 0x55, 0x4f, 0xf5, 0x2b,
-	0x9a, 0x43, 0x73, 0x9c, 0x27, 0xc2, 0x9f, 0x30, 0x29, 0xf9, 0x40, 0x59, 0xf9, 0x48, 0x84, 0xae,
-	0x0c, 0x1c, 0x8d, 0x27, 0x07, 0x70, 0xed, 0x54, 0x4c, 0xfa, 0x23, 0x97, 0x0f, 0x8e, 0x84, 0x64,
-	0xe3, 0xfa, 0xaa, 0x4e, 0xb0, 0x93, 0x4b, 0xf0, 0x28, 0x8d, 0x71, 0xb2, 0x14, 0xfa, 0x39, 0xdc,
-	0x4a, 0x7b, 0x80, 0xf3, 0x0e, 0xc7, 0x72, 0x49, 0x13, 0x8f, 0xa1, 0x51, 0xc6, 0x47, 0x1f, 0x1f,
-	0x42, 0x4d, 0x5d, 0x98, 0x13, 0x5f, 0x1f, 0xeb, 0x0c, 0xef, 0xcc, 0x18, 0x93, 0xe2, 0xc1, 0xd9,
-	0xf4, 0x7b, 0xff, 0xe5, 0x06, 0xac, 0xe9, 0xf4, 0xe4, 0x05, 0xac, 0x47, 0x4b, 0x93, 0x34, 0x73,
-	0xd4, 0xd9, 0xad, 0x6c, 0xd2, 0x79, 0x90, 0x48, 0x16, 0x6d, 0xbd, 0xfa, 0xfb, 0xff, 0x3f, 0x2a,
-	0x4d, 0x72, 0xdb, 0x96, 0x7c, 0x3c, 0x16, 0x7e, 0x67, 0x24, 0xec, 0xa2, 0xbf, 0x19, 0xe4, 0xa5,
-	0x91, 0xda, 0x9b, 0xbb, 0x45, 0x99, 0x73, 0xaf, 0xda, 0x7c, 0x7f, 0x3e, 0x08, 0x05, 0xdc, 0xd5,
-	0x02, 0x76, 0x49, 0xb3, 0x54, 0x40, 0xbc, 0xc3, 0xc8, 0xcf, 0x06, 0x5c, 0x45, 0x3e, 0xa1, 0x73,
-	0x92, 0xc7, 0x02, 0x76, 0xe7, 0x62, 0xb0, 0xfe, 0x7d, 0x5d, 0xdf, 0x26, 0x9d, 0x45, 0xf5, 0xed,
-	0x1f, 0x93, 0x0b, 0xf0, 0x13, 0xf9, 0xdd, 0x80, 0xcd, 0xf4, 0xce, 0x21, 0xad, 0xa2, 0x62, 0x05,
-	0xcb, 0xce, 0x6c, 0x2f, 0x06, 0xa2, 0x34, 0x4b, 0x4b, 0x6b, 0x93, 0xbd, 0x52, 0x69, 0x6a, 0xcf,
-	0x75, 0xa6, 0xfe, 0xfc, 0x6a, 0x40, 0x35, 0xde, 0x56, 0xc5, 0x23, 0xca, 0xad, 0xc0, 0xe2, 0x11,
-	0xe5, 0x17, 0x1e, 0x7d, 0xa0, 0x75, 0x74, 0x89, 0x5d, 0xaa, 0x43, 0xbd, 0xc3, 0x8e, 0xba, 0xb0,
-	0x59, 0x93, 0x7e, 0x31, 0xa0, 0x96, 0xda, 0x68, 0x64, 0xaf, 0xac, 0x5c, 0x76, 0x1b, 0x9a, 0xad,
-	0x85, 0x38, 0x54, 0xd6, 0xd1, 0xca, 0x5a, 0xe4, 0x83, 0xf9, 0xca, 0x70, 0x73, 0xaa, 0xa1, 0xad,
-	0xe9, 0xb5, 0x43, 0xda, 0xf3, 0xee, 0x66, 0x7a, 0x7b, 0x9a, 0x77, 0x97, 0x40, 0xa2, 0x9a, 0x9e,
-	0x56, 0xd3, 0x21, 0x1f, 0x96, 0xab, 0x51, 0xf8, 0xac, 0x47, 0x7f, 0x19, 0x00, 0xc9, 0xb3, 0x27,
-	0x1f, 0xcd, 0x29, 0x37, 0xb3, 0x95, 0xcc, 0xce, 0x92, 0x68, 0x14, 0xf8, 0xa9, 0x16, 0xd8, 0x23,
-	0xdd, 0x52, 0x81, 0x6a, 0x86, 0x9d, 0x68, 0x45, 0x65, 0x64, 0x1e, 0x3c, 0x7e, 0x7d, 0xd1, 0x30,
-	0xde, 0x5c, 0x34, 0x8c, 0xff, 0x2e, 0x1a, 0xc6, 0x6f, 0x97, 0x8d, 0x95, 0x37, 0x97, 0x8d, 0x95,
-	0x7f, 0x2e, 0x1b, 0x2b, 0xdf, 0xdd, 0x1b, 0x8e, 0xe4, 0x0f, 0x61, 0xdf, 0x3a, 0x15, 0x93, 0x99,
-	0xb4, 0x2f, 0x92, 0xce, 0xcf, 0x3d, 0x1e, 0xf4, 0xd7, 0xf5, 0x3f, 0x91, 0xbd, 0xb7, 0x01, 0x00,
-	0x00, 0xff, 0xff, 0x92, 0xf4, 0xf5, 0x7a, 0x61, 0x0b, 0x00, 0x00,
+	// 1274 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x57, 0xdf, 0x6f, 0xdb, 0x54,
+	0x14, 0xae, 0xd3, 0xae, 0x4b, 0x4f, 0xd3, 0x6d, 0xdc, 0x75, 0x5a, 0xea, 0xb5, 0xd9, 0xea, 0x6e,
+	0x6b, 0xf7, 0x23, 0xb6, 0xda, 0x30, 0xc6, 0x26, 0x15, 0x58, 0x3b, 0x75, 0x0a, 0x3c, 0xd0, 0x99,
+	0x8a, 0x07, 0x98, 0x56, 0xdd, 0x24, 0x37, 0x99, 0x45, 0xe2, 0xeb, 0xda, 0x4e, 0x59, 0x35, 0x4d,
+	0x42, 0x7b, 0x03, 0x09, 0x04, 0x42, 0xfc, 0x07, 0xbc, 0xf3, 0x6f, 0xec, 0x71, 0x12, 0x42, 0x42,
+	0x3c, 0x4c, 0xa8, 0x45, 0xfc, 0x1d, 0xe8, 0x5e, 0x1f, 0x3b, 0xb6, 0xe3, 0xfc, 0xe0, 0xa9, 0xf1,
+	0xbd, 0xdf, 0x77, 0xce, 0x77, 0xbe, 0x73, 0x7d, 0x8f, 0x0b, 0x0b, 0x6d, 0x7a, 0xc4, 0x5c, 0xa3,
+	0x61, 0x79, 0x4e, 0xd7, 0x67, 0xc6, 0x41, 0x97, 0xb9, 0x47, 0xba, 0xe3, 0x72, 0x9f, 0x93, 0x39,
+	0xb9, 0xa5, 0xe3, 0x96, 0x7a, 0xb3, 0xce, 0xbd, 0x0e, 0xf7, 0x8c, 0x1a, 0xf5, 0x10, 0x67, 0x1c,
+	0xae, 0xd7, 0x98, 0x4f, 0xd7, 0x0d, 0x87, 0xb6, 0x2c, 0x9b, 0xfa, 0x16, 0xb7, 0x03, 0xaa, 0x3a,
+	0xdf, 0xe2, 0x2d, 0x2e, 0x7f, 0x1a, 0xe2, 0x17, 0xae, 0x2e, 0xb6, 0x38, 0x6f, 0xb5, 0x99, 0x41,
+	0x1d, 0xcb, 0xa0, 0xb6, 0xcd, 0x7d, 0x49, 0xf1, 0x70, 0xf7, 0x52, 0x52, 0x09, 0xfe, 0xc5, 0xcd,
+	0xe5, 0xe4, 0x26, 0x77, 0x98, 0xbd, 0x8f, 0x0f, 0x21, 0x5f, 0x4d, 0x42, 0x1c, 0xea, 0xd2, 0x4e,
+	0xb8, 0x97, 0xaa, 0xd2, 0xa7, 0xed, 0x36, 0x56, 0xa9, 0x16, 0x93, 0x5b, 0x87, 0x3c, 0xcc, 0xa9,
+	0xcd, 0x03, 0x79, 0x2c, 0xca, 0xdc, 0x95, 0x91, 0x4c, 0x76, 0xd0, 0x65, 0x9e, 0xaf, 0x7d, 0x0c,
+	0xe7, 0x13, 0xab, 0x9e, 0xc3, 0x6d, 0x8f, 0x91, 0x0a, 0x4c, 0x07, 0x19, 0x8b, 0xca, 0x15, 0x65,
+	0x6d, 0x76, 0xe3, 0x82, 0x9e, 0x70, 0x4f, 0x0f, 0xe0, 0x5b, 0x53, 0xaf, 0xdf, 0x5e, 0x9e, 0x30,
+	0x11, 0xaa, 0x3d, 0x85, 0x79, 0x19, 0xeb, 0x21, 0x56, 0x82, 0x39, 0xc8, 0x0e, 0x40, 0xcf, 0x52,
+	0x0c, 0x78, 0x5d, 0x0f, 0xfc, 0xd7, 0x85, 0xff, 0x7a, 0xd0, 0x27, 0xf4, 0x5f, 0xdf, 0xa5, 0x2d,
+	0x86, 0x5c, 0x33, 0xc6, 0xd4, 0xea, 0x90, 0x0f, 0x43, 0x93, 0x45, 0x98, 0x41, 0x2d, 0xd5, 0x86,
+	0x0c, 0x39, 0x65, 0xf6, 0x16, 0xc8, 0x3d, 0xc8, 0x77, 0x98, 0x4f, 0x1b, 0xd4, 0xa7, 0xc5, 0x9c,
+	0xcc, 0xb7, 0x94, 0x2a, 0x00, 0x03, 0x7d, 0xe6, 0xbb, 0x96, 0xdd, 0xf2, 0xcc, 0x08, 0xae, 0xfd,
+	0xa2, 0xc0, 0x85, 0x54, 0x15, 0xe8, 0xc9, 0xa3, 0x8c, 0x32, 0x56, 0x47, 0x96, 0x11, 0x90, 0xe3,
+	0x75, 0x90, 0x0a, 0xe4, 0xc3, 0x66, 0x17, 0x73, 0x57, 0x26, 0xd7, 0x66, 0x37, 0x2e, 0x66, 0xab,
+	0xf3, 0xcc, 0x08, 0xa8, 0xbd, 0x8b, 0x8d, 0xc2, 0xad, 0xd0, 0xdb, 0x25, 0x00, 0x84, 0xec, 0x5b,
+	0xfd, 0x46, 0x68, 0xd5, 0x64, 0x4b, 0xa2, 0x5a, 0xd6, 0xe1, 0x34, 0x82, 0xb0, 0x90, 0x81, 0x0a,
+	0x42, 0x9c, 0xa6, 0x42, 0x51, 0x86, 0xfa, 0xd4, 0x61, 0x76, 0xaa, 0xc3, 0xda, 0x13, 0x58, 0xc8,
+	0xd8, 0xc3, 0x5c, 0x1f, 0x42, 0x81, 0xc7, 0xd6, 0x31, 0xe1, 0xa5, 0x54, 0xc2, 0x04, 0x35, 0x41,
+	0xd0, 0xee, 0x60, 0x11, 0x7b, 0x8c, 0x76, 0x3e, 0xe7, 0x63, 0xd7, 0xbe, 0x8b, 0x8d, 0xec, 0xd1,
+	0x50, 0xd0, 0x5d, 0x98, 0xf1, 0x19, 0xed, 0xec, 0x8b, 0x97, 0x03, 0xd5, 0xcc, 0xa7, 0xd4, 0x08,
+	0xbc, 0x8b, 0xc7, 0x3b, 0xef, 0x63, 0x00, 0x6d, 0x01, 0x2e, 0x46, 0x11, 0x1f, 0x34, 0x1a, 0x2e,
+	0xf3, 0x22, 0x07, 0x36, 0xd1, 0x9d, 0xc4, 0x16, 0xe6, 0x5b, 0x86, 0x82, 0xcc, 0x47, 0x83, 0x75,
+	0x99, 0x72, 0xc6, 0x9c, 0xf5, 0x7b, 0x50, 0xed, 0x3e, 0x1a, 0x18, 0xd6, 0xbc, 0x27, 0x5e, 0xe9,
+	0x31, 0xeb, 0x7c, 0x95, 0x03, 0x35, 0x8b, 0x8c, 0xd9, 0x0d, 0x38, 0xd5, 0xf5, 0x98, 0x1b, 0xfa,
+	0xbe, 0x90, 0xaa, 0xf4, 0x91, 0xcb, 0xbb, 0x4e, 0xc0, 0x08, 0x70, 0xc2, 0x1e, 0x97, 0x39, 0xdc,
+	0xf5, 0x05, 0x29, 0x37, 0x8a, 0xd4, 0xc3, 0x92, 0xf7, 0x60, 0x4a, 0xd4, 0x54, 0x9c, 0x94, 0x1c,
+	0x2d, 0xc5, 0xd9, 0xe1, 0x6e, 0x87, 0xfa, 0x3e, 0x6b, 0x08, 0x2b, 0xb7, 0x79, 0xd7, 0xf6, 0x3d,
+	0x53, 0xe2, 0xc9, 0x16, 0xcc, 0xd5, 0x79, 0xa7, 0x66, 0xd9, 0xac, 0xb1, 0xc7, 0x7d, 0xda, 0x2e,
+	0x4e, 0xc9, 0x00, 0x8b, 0xa9, 0x00, 0xdb, 0x71, 0x8c, 0x99, 0xa4, 0x68, 0x1f, 0xc0, 0x52, 0xdc,
+	0x03, 0xec, 0x77, 0xb7, 0xed, 0x8f, 0x69, 0xe2, 0x13, 0x28, 0x0d, 0xe2, 0xa3, 0x8f, 0xf7, 0x61,
+	0x56, 0x1c, 0x98, 0x7d, 0x57, 0x2e, 0xcb, 0x08, 0x67, 0xfa, 0x8c, 0x89, 0xf1, 0xe0, 0x30, 0xfa,
+	0xad, 0x6d, 0xc2, 0x62, 0x3c, 0xfa, 0x0e, 0x63, 0xbb, 0x82, 0xe6, 0x8d, 0x29, 0xee, 0x08, 0xce,
+	0xa7, 0x98, 0x55, 0xbb, 0xc9, 0xc9, 0x0a, 0xcc, 0x39, 0xe2, 0x21, 0x75, 0xb0, 0x0a, 0x72, 0x11,
+	0x4f, 0x16, 0xd9, 0x14, 0xb7, 0x96, 0x00, 0x59, 0x76, 0x93, 0x63, 0x3b, 0x8b, 0x7d, 0xb7, 0x39,
+	0x86, 0xc4, 0x13, 0x3f, 0xe3, 0x84, 0x0b, 0xda, 0x97, 0x49, 0x5f, 0x63, 0xca, 0x23, 0x5b, 0xa6,
+	0x25, 0x5a, 0x64, 0x9f, 0xcc, 0x68, 0x7b, 0x86, 0x70, 0x13, 0x19, 0xda, 0x53, 0x58, 0x91, 0xc1,
+	0xb7, 0xdb, 0xd4, 0xea, 0xd0, 0x5a, 0x9b, 0x45, 0xd7, 0xd4, 0xd7, 0xd4, 0x6d, 0x8c, 0xe9, 0x0e,
+	0x29, 0xc2, 0xe9, 0xd0, 0x80, 0x9c, 0x34, 0x20, 0x7c, 0xd4, 0xfe, 0x55, 0xe0, 0x6c, 0x14, 0xfb,
+	0x41, 0x47, 0x9c, 0xb9, 0x51, 0xc1, 0xb6, 0x60, 0xce, 0x95, 0xd9, 0xf7, 0xa9, 0xc4, 0x07, 0x21,
+	0xb7, 0x96, 0x84, 0x2f, 0x7f, 0xbd, 0xbd, 0x7c, 0x21, 0xb8, 0xee, 0xbd, 0xc6, 0x57, 0xba, 0xc5,
+	0x8d, 0x0e, 0xf5, 0x9f, 0xe9, 0x55, 0xdb, 0x37, 0x0b, 0x01, 0x07, 0x53, 0x54, 0xe1, 0x9d, 0x26,
+	0x13, 0x07, 0xa5, 0xd9, 0xb5, 0xa3, 0x38, 0x93, 0xe3, 0xc4, 0x39, 0xdb, 0x64, 0xcc, 0x94, 0x34,
+	0x0c, 0x75, 0x0d, 0xce, 0xa0, 0x9c, 0xba, 0xa8, 0x83, 0x35, 0xe4, 0xbb, 0x91, 0x37, 0x51, 0xe4,
+	0x76, 0xb0, 0xa8, 0x1d, 0xc0, 0xd5, 0xe1, 0x46, 0x62, 0xb3, 0xaa, 0x70, 0xae, 0x1e, 0x42, 0x42,
+	0x61, 0xc1, 0xb5, 0x50, 0x4a, 0xbf, 0x6c, 0x49, 0xdb, 0xcc, 0xb3, 0xf5, 0xe4, 0xc2, 0xc6, 0x77,
+	0x05, 0x38, 0x25, 0x73, 0x92, 0xe7, 0x30, 0x1d, 0x7c, 0x0e, 0x90, 0xe5, 0x54, 0x90, 0xfe, 0xef,
+	0x0d, 0x55, 0x1b, 0x06, 0x09, 0x54, 0x6a, 0xab, 0xaf, 0x7e, 0xff, 0xe7, 0xe7, 0xdc, 0x32, 0xb9,
+	0x6c, 0xf8, 0xac, 0xdd, 0xe6, 0x6e, 0xd9, 0xe2, 0x46, 0xd6, 0xd7, 0x10, 0xf9, 0x46, 0x89, 0x7d,
+	0x11, 0xac, 0x64, 0x45, 0x4e, 0x0d, 0x2a, 0xf5, 0xea, 0x70, 0x10, 0x0a, 0xb8, 0x21, 0x05, 0xac,
+	0x90, 0xe5, 0x81, 0x02, 0xc2, 0xb1, 0x4c, 0xbe, 0x55, 0xe0, 0x34, 0xf2, 0x89, 0x36, 0x24, 0x78,
+	0x28, 0x60, 0x65, 0x28, 0x06, 0xf3, 0xdf, 0x91, 0xf9, 0x0d, 0x52, 0x1e, 0x95, 0xdf, 0x78, 0xd1,
+	0x3b, 0xcb, 0x2f, 0xc9, 0x4f, 0x0a, 0x14, 0xe2, 0x63, 0x94, 0xac, 0x66, 0x25, 0xcb, 0x98, 0xdf,
+	0xea, 0xda, 0x68, 0x20, 0x4a, 0xd3, 0xa5, 0xb4, 0x35, 0x72, 0x7d, 0xa0, 0x34, 0x31, 0xba, 0xcb,
+	0x91, 0x3f, 0x3f, 0x28, 0x90, 0x0f, 0x07, 0x70, 0x76, 0x8b, 0x52, 0x53, 0x3d, 0xbb, 0x45, 0xe9,
+	0x19, 0xae, 0xdd, 0x95, 0x3a, 0xd6, 0x89, 0x31, 0x50, 0x87, 0x18, 0x2d, 0x65, 0x71, 0x07, 0x27,
+	0x4d, 0xfa, 0x5e, 0x81, 0xd9, 0xd8, 0x90, 0x26, 0xd7, 0x07, 0xa5, 0x4b, 0x0e, 0x78, 0x75, 0x75,
+	0x24, 0x0e, 0x95, 0x95, 0xa5, 0xb2, 0x55, 0x72, 0x6d, 0xb8, 0x32, 0xbc, 0xa3, 0x44, 0xd3, 0x4e,
+	0xc9, 0x49, 0x4a, 0xd6, 0x86, 0x9d, 0xcd, 0xf8, 0x07, 0x81, 0x7a, 0x63, 0x0c, 0x24, 0xaa, 0xa9,
+	0x48, 0x35, 0x65, 0x72, 0x6b, 0xb0, 0x1a, 0x81, 0x4f, 0x7a, 0xf4, 0xab, 0x02, 0xd0, 0x9b, 0x64,
+	0xe4, 0xf6, 0x90, 0x74, 0x7d, 0x83, 0x56, 0x2d, 0x8f, 0x89, 0x46, 0x81, 0xf7, 0xa4, 0xc0, 0x0a,
+	0x59, 0x1f, 0x28, 0x50, 0xf4, 0xb0, 0x1c, 0x4c, 0xdd, 0xa4, 0xcc, 0xdf, 0x14, 0x38, 0x97, 0x9e,
+	0x4b, 0xe4, 0xd6, 0x90, 0xf4, 0xe9, 0xb9, 0xab, 0xde, 0x1e, 0x0f, 0x8c, 0x52, 0x3f, 0x92, 0x52,
+	0xef, 0x93, 0xf7, 0x47, 0xbd, 0x96, 0xe5, 0x26, 0x63, 0xe5, 0x60, 0xc6, 0x25, 0x15, 0xff, 0xa1,
+	0xc0, 0xc5, 0x01, 0x77, 0x34, 0xd9, 0xc8, 0xd2, 0x32, 0x7c, 0x32, 0xaa, 0x95, 0xff, 0xc5, 0xc1,
+	0x32, 0x1e, 0xcb, 0x32, 0x3e, 0x21, 0xd5, 0x81, 0x65, 0x44, 0x77, 0x7d, 0xf8, 0x1e, 0x97, 0x83,
+	0x71, 0x93, 0xac, 0xc6, 0x78, 0x81, 0x67, 0xf8, 0xe5, 0xd6, 0xc3, 0xd7, 0xc7, 0x25, 0xe5, 0xcd,
+	0x71, 0x49, 0xf9, 0xfb, 0xb8, 0xa4, 0xfc, 0x78, 0x52, 0x9a, 0x78, 0x73, 0x52, 0x9a, 0xf8, 0xf3,
+	0xa4, 0x34, 0xf1, 0xc5, 0xcd, 0x96, 0xe5, 0x3f, 0xeb, 0xd6, 0xf4, 0x3a, 0xef, 0xf4, 0xa5, 0x7b,
+	0xde, 0x3b, 0x83, 0x47, 0x0e, 0xf3, 0x6a, 0xd3, 0xf2, 0x1f, 0xd5, 0xca, 0x7f, 0x01, 0x00, 0x00,
+	0xff, 0xff, 0x5f, 0x31, 0x0c, 0x73, 0xc5, 0x0f, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -925,6 +1242,10 @@ type QueryClient interface {
 	Tally(ctx context.Context, in *QueryDisputesTallyRequest, opts ...grpc.CallOption) (*QueryDisputesTallyResponse, error)
 	// VoteResult queries the vote result of a dispute
 	VoteResult(ctx context.Context, in *QueryDisputeVoteResultRequest, opts ...grpc.CallOption) (*QueryDisputeVoteResultResponse, error)
+	// DisputeFeePayers queries all fee payers for a dispute
+	DisputeFeePayers(ctx context.Context, in *QueryDisputeFeePayersRequest, opts ...grpc.CallOption) (*QueryDisputeFeePayersResponse, error)
+	// ClaimableDisputeRewards queries the amount of loya that can be claimed for a specific dispute
+	ClaimableDisputeRewards(ctx context.Context, in *QueryClaimableDisputeRewardsRequest, opts ...grpc.CallOption) (*QueryClaimableDisputeRewardsResponse, error)
 }
 
 type queryClient struct {
@@ -1007,6 +1328,24 @@ func (c *queryClient) VoteResult(ctx context.Context, in *QueryDisputeVoteResult
 	return out, nil
 }
 
+func (c *queryClient) DisputeFeePayers(ctx context.Context, in *QueryDisputeFeePayersRequest, opts ...grpc.CallOption) (*QueryDisputeFeePayersResponse, error) {
+	out := new(QueryDisputeFeePayersResponse)
+	err := c.cc.Invoke(ctx, "/layer.dispute.Query/DisputeFeePayers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) ClaimableDisputeRewards(ctx context.Context, in *QueryClaimableDisputeRewardsRequest, opts ...grpc.CallOption) (*QueryClaimableDisputeRewardsResponse, error) {
+	out := new(QueryClaimableDisputeRewardsResponse)
+	err := c.cc.Invoke(ctx, "/layer.dispute.Query/ClaimableDisputeRewards", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Parameters queries the parameters of the module.
@@ -1025,6 +1364,10 @@ type QueryServer interface {
 	Tally(context.Context, *QueryDisputesTallyRequest) (*QueryDisputesTallyResponse, error)
 	// VoteResult queries the vote result of a dispute
 	VoteResult(context.Context, *QueryDisputeVoteResultRequest) (*QueryDisputeVoteResultResponse, error)
+	// DisputeFeePayers queries all fee payers for a dispute
+	DisputeFeePayers(context.Context, *QueryDisputeFeePayersRequest) (*QueryDisputeFeePayersResponse, error)
+	// ClaimableDisputeRewards queries the amount of loya that can be claimed for a specific dispute
+	ClaimableDisputeRewards(context.Context, *QueryClaimableDisputeRewardsRequest) (*QueryClaimableDisputeRewardsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -1054,6 +1397,12 @@ func (*UnimplementedQueryServer) Tally(ctx context.Context, req *QueryDisputesTa
 }
 func (*UnimplementedQueryServer) VoteResult(ctx context.Context, req *QueryDisputeVoteResultRequest) (*QueryDisputeVoteResultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VoteResult not implemented")
+}
+func (*UnimplementedQueryServer) DisputeFeePayers(ctx context.Context, req *QueryDisputeFeePayersRequest) (*QueryDisputeFeePayersResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DisputeFeePayers not implemented")
+}
+func (*UnimplementedQueryServer) ClaimableDisputeRewards(ctx context.Context, req *QueryClaimableDisputeRewardsRequest) (*QueryClaimableDisputeRewardsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClaimableDisputeRewards not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -1204,6 +1553,42 @@ func _Query_VoteResult_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_DisputeFeePayers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryDisputeFeePayersRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).DisputeFeePayers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.dispute.Query/DisputeFeePayers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).DisputeFeePayers(ctx, req.(*QueryDisputeFeePayersRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_ClaimableDisputeRewards_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryClaimableDisputeRewardsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).ClaimableDisputeRewards(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.dispute.Query/ClaimableDisputeRewards",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).ClaimableDisputeRewards(ctx, req.(*QueryClaimableDisputeRewardsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.dispute.Query",
@@ -1240,6 +1625,14 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VoteResult",
 			Handler:    _Query_VoteResult_Handler,
+		},
+		{
+			MethodName: "DisputeFeePayers",
+			Handler:    _Query_DisputeFeePayers_Handler,
+		},
+		{
+			MethodName: "ClaimableDisputeRewards",
+			Handler:    _Query_ClaimableDisputeRewards_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -1816,6 +2209,239 @@ func (m *QueryDisputeVoteResultResponse) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryDisputeFeePayersRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryDisputeFeePayersRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryDisputeFeePayersRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.DisputeId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.DisputeId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *DisputeFeePayerInfo) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DisputeFeePayerInfo) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DisputeFeePayerInfo) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.PayerInfo.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.PayerAddress) > 0 {
+		i -= len(m.PayerAddress)
+		copy(dAtA[i:], m.PayerAddress)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.PayerAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryDisputeFeePayersResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryDisputeFeePayersResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryDisputeFeePayersResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Payers) > 0 {
+		for iNdEx := len(m.Payers) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Payers[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryClaimableDisputeRewardsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryClaimableDisputeRewardsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryClaimableDisputeRewardsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Address)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.DisputeId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.DisputeId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ClaimableAmount) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ClaimableAmount) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ClaimableAmount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.RewardClaimed {
+		i--
+		if m.RewardClaimed {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x20
+	}
+	{
+		size := m.FeeRefundAmount.Size()
+		i -= size
+		if _, err := m.FeeRefundAmount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	{
+		size := m.RewardAmount.Size()
+		i -= size
+		if _, err := m.RewardAmount.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if m.DisputeId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.DisputeId))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryClaimableDisputeRewardsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryClaimableDisputeRewardsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryClaimableDisputeRewardsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.ClaimableAmount != nil {
+		{
+			size, err := m.ClaimableAmount.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -2044,6 +2670,96 @@ func (m *QueryDisputeVoteResultResponse) Size() (n int) {
 	_ = l
 	if m.VoteResult != 0 {
 		n += 1 + sovQuery(uint64(m.VoteResult))
+	}
+	return n
+}
+
+func (m *QueryDisputeFeePayersRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.DisputeId != 0 {
+		n += 1 + sovQuery(uint64(m.DisputeId))
+	}
+	return n
+}
+
+func (m *DisputeFeePayerInfo) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.PayerAddress)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	l = m.PayerInfo.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryDisputeFeePayersResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.Payers) > 0 {
+		for _, e := range m.Payers {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *QueryClaimableDisputeRewardsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.DisputeId != 0 {
+		n += 1 + sovQuery(uint64(m.DisputeId))
+	}
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *ClaimableAmount) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.DisputeId != 0 {
+		n += 1 + sovQuery(uint64(m.DisputeId))
+	}
+	l = m.RewardAmount.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	l = m.FeeRefundAmount.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	if m.RewardClaimed {
+		n += 2
+	}
+	return n
+}
+
+func (m *QueryClaimableDisputeRewardsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.ClaimableAmount != nil {
+		l = m.ClaimableAmount.Size()
+		n += 1 + l + sovQuery(uint64(l))
 	}
 	return n
 }
@@ -2351,7 +3067,7 @@ func (m *Disputes) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.Metadata == nil {
-				m.Metadata = &Dispute{}
+				m.Metadata = &DisputeStrings{}
 			}
 			if err := m.Metadata.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -3453,6 +4169,618 @@ func (m *QueryDisputeVoteResultResponse) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryDisputeFeePayersRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryDisputeFeePayersRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryDisputeFeePayersRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DisputeId", wireType)
+			}
+			m.DisputeId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DisputeId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DisputeFeePayerInfo) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DisputeFeePayerInfo: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DisputeFeePayerInfo: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PayerAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PayerAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PayerInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.PayerInfo.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryDisputeFeePayersResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryDisputeFeePayersResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryDisputeFeePayersResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Payers", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Payers = append(m.Payers, &DisputeFeePayerInfo{})
+			if err := m.Payers[len(m.Payers)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryClaimableDisputeRewardsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryClaimableDisputeRewardsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryClaimableDisputeRewardsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DisputeId", wireType)
+			}
+			m.DisputeId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DisputeId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ClaimableAmount) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ClaimableAmount: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ClaimableAmount: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DisputeId", wireType)
+			}
+			m.DisputeId = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DisputeId |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardAmount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.RewardAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field FeeRefundAmount", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.FeeRefundAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RewardClaimed", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.RewardClaimed = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryClaimableDisputeRewardsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryClaimableDisputeRewardsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryClaimableDisputeRewardsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClaimableAmount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.ClaimableAmount == nil {
+				m.ClaimableAmount = &ClaimableAmount{}
+			}
+			if err := m.ClaimableAmount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

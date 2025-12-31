@@ -3,7 +3,10 @@
 package mint
 
 import (
+	context "context"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -15,6 +18,10 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type QueryClient interface {
+	// Queries the extra rewards rate.
+	GetExtraRewardsRate(ctx context.Context, in *QueryGetExtraRewardsRateRequest, opts ...grpc.CallOption) (*QueryGetExtraRewardsRateResponse, error)
+	// Queries the extra rewards pool balance.
+	GetExtraRewardsPoolBalance(ctx context.Context, in *QueryGetExtraRewardsPoolBalanceRequest, opts ...grpc.CallOption) (*QueryGetExtraRewardsPoolBalanceResponse, error)
 }
 
 type queryClient struct {
@@ -25,10 +32,32 @@ func NewQueryClient(cc grpc.ClientConnInterface) QueryClient {
 	return &queryClient{cc}
 }
 
+func (c *queryClient) GetExtraRewardsRate(ctx context.Context, in *QueryGetExtraRewardsRateRequest, opts ...grpc.CallOption) (*QueryGetExtraRewardsRateResponse, error) {
+	out := new(QueryGetExtraRewardsRateResponse)
+	err := c.cc.Invoke(ctx, "/layer.mint.Query/GetExtraRewardsRate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetExtraRewardsPoolBalance(ctx context.Context, in *QueryGetExtraRewardsPoolBalanceRequest, opts ...grpc.CallOption) (*QueryGetExtraRewardsPoolBalanceResponse, error) {
+	out := new(QueryGetExtraRewardsPoolBalanceResponse)
+	err := c.cc.Invoke(ctx, "/layer.mint.Query/GetExtraRewardsPoolBalance", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility
 type QueryServer interface {
+	// Queries the extra rewards rate.
+	GetExtraRewardsRate(context.Context, *QueryGetExtraRewardsRateRequest) (*QueryGetExtraRewardsRateResponse, error)
+	// Queries the extra rewards pool balance.
+	GetExtraRewardsPoolBalance(context.Context, *QueryGetExtraRewardsPoolBalanceRequest) (*QueryGetExtraRewardsPoolBalanceResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -36,6 +65,12 @@ type QueryServer interface {
 type UnimplementedQueryServer struct {
 }
 
+func (UnimplementedQueryServer) GetExtraRewardsRate(context.Context, *QueryGetExtraRewardsRateRequest) (*QueryGetExtraRewardsRateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetExtraRewardsRate not implemented")
+}
+func (UnimplementedQueryServer) GetExtraRewardsPoolBalance(context.Context, *QueryGetExtraRewardsPoolBalanceRequest) (*QueryGetExtraRewardsPoolBalanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetExtraRewardsPoolBalance not implemented")
+}
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 
 // UnsafeQueryServer may be embedded to opt out of forward compatibility for this service.
@@ -49,13 +84,58 @@ func RegisterQueryServer(s grpc.ServiceRegistrar, srv QueryServer) {
 	s.RegisterService(&Query_ServiceDesc, srv)
 }
 
+func _Query_GetExtraRewardsRate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetExtraRewardsRateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetExtraRewardsRate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.mint.Query/GetExtraRewardsRate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetExtraRewardsRate(ctx, req.(*QueryGetExtraRewardsRateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetExtraRewardsPoolBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetExtraRewardsPoolBalanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetExtraRewardsPoolBalance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.mint.Query/GetExtraRewardsPoolBalance",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetExtraRewardsPoolBalance(ctx, req.(*QueryGetExtraRewardsPoolBalanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Query_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.mint.Query",
 	HandlerType: (*QueryServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "layer/mint/query.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetExtraRewardsRate",
+			Handler:    _Query_GetExtraRewardsRate_Handler,
+		},
+		{
+			MethodName: "GetExtraRewardsPoolBalance",
+			Handler:    _Query_GetExtraRewardsPoolBalance_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "layer/mint/query.proto",
 }
