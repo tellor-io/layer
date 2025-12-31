@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/hex"
 	"fmt"
 	"time"
 
@@ -43,7 +44,7 @@ func (s *KeeperTestSuite) TestDisputesQuery() {
 			name: "one dispute",
 			setup: func() {
 				require.NoError(k.Disputes.Set(ctx, 1, types.Dispute{
-					HashId:           []byte{1},
+					HashId:           []byte("hash1"),
 					DisputeId:        1,
 					DisputeCategory:  types.Warning,
 					DisputeFee:       math.NewInt(1000000),
@@ -56,12 +57,46 @@ func (s *KeeperTestSuite) TestDisputesQuery() {
 					BurnAmount:       math.NewInt(100),
 					InitialEvidence: oracletypes.MicroReport{
 						Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
+						QueryId:   []byte("queryid1"),
 						Timestamp: time.Now(),
 					},
 				}))
 			},
 			req:            &types.QueryDisputesRequest{},
 			expectedLength: 1,
+			err:            false,
+		},
+		{
+			name: "dispute with additional evidence",
+			setup: func() {
+				require.NoError(k.Disputes.Set(ctx, 2, types.Dispute{
+					HashId:           []byte("hash2"),
+					DisputeId:        2,
+					DisputeCategory:  types.Minor,
+					DisputeFee:       math.NewInt(2000000),
+					DisputeStatus:    types.Voting,
+					DisputeStartTime: time.Now(),
+					DisputeEndTime:   time.Now().Add(time.Hour * 48),
+					Open:             true,
+					DisputeRound:     1,
+					SlashAmount:      math.NewInt(2000000),
+					BurnAmount:       math.NewInt(200),
+					InitialEvidence: oracletypes.MicroReport{
+						Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
+						QueryId:   []byte("queryid2"),
+						Timestamp: time.Now(),
+					},
+					AdditionalEvidence: []*oracletypes.MicroReport{
+						{
+							Reporter:  "cosmos1zzz474hfk7clqc4g50z0y3ftm43hj32c9zzzzz",
+							QueryId:   []byte("queryid2_additional"),
+							Timestamp: time.Now(),
+						},
+					},
+				}))
+			},
+			req:            &types.QueryDisputesRequest{},
+			expectedLength: 2,
 			err:            false,
 		},
 	}
@@ -78,6 +113,28 @@ func (s *KeeperTestSuite) TestDisputesQuery() {
 				require.NoError(err)
 				require.NotNil(resp)
 				require.Equal(tc.expectedLength, len(resp.Disputes))
+
+				// Verify string conversions for disputes with data
+				if tc.expectedLength > 0 {
+					for _, dispute := range resp.Disputes {
+						// Verify hash_id is hex string
+						require.NotEmpty(dispute.Metadata.HashId)
+						_, err := hex.DecodeString(dispute.Metadata.HashId)
+						require.NoError(err, "hash_id should be valid hex string")
+
+						// Verify initial_evidence query_id is hex string
+						require.NotEmpty(dispute.Metadata.InitialEvidence.QueryId)
+						_, err = hex.DecodeString(dispute.Metadata.InitialEvidence.QueryId)
+						require.NoError(err, "initial_evidence query_id should be valid hex string")
+
+						// Verify additional_evidence query_ids are hex strings
+						for _, evidence := range dispute.Metadata.AdditionalEvidence {
+							require.NotEmpty(evidence.QueryId)
+							_, err = hex.DecodeString(evidence.QueryId)
+							require.NoError(err, "additional_evidence query_id should be valid hex string")
+						}
+					}
+				}
 			}
 		})
 	}
@@ -90,9 +147,14 @@ func (s *KeeperTestSuite) TestDisputeQuery() {
 	require.NotNil(q)
 	ctx := s.ctx
 
-	// Create a test dispute
+	// Create test hash_id and query_id using readable strings
+	testHashId := []byte("test_hash_id")
+	testQueryId := []byte("test_query_id")
+	additionalQueryId := []byte("additional_query_id")
+
+	// Create a test dispute with query_id bytes and additional evidence
 	testDispute := types.Dispute{
-		HashId:           []byte{1},
+		HashId:           testHashId,
 		DisputeId:        1,
 		DisputeCategory:  types.Warning,
 		DisputeFee:       math.NewInt(1000000),
@@ -105,7 +167,15 @@ func (s *KeeperTestSuite) TestDisputeQuery() {
 		BurnAmount:       math.NewInt(100),
 		InitialEvidence: oracletypes.MicroReport{
 			Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
+			QueryId:   testQueryId,
 			Timestamp: time.Now(),
+		},
+		AdditionalEvidence: []*oracletypes.MicroReport{
+			{
+				Reporter:  "cosmos1zzz474hfk7clqc4g50z0y3ftm43hj32c9zzzzz",
+				QueryId:   additionalQueryId,
+				Timestamp: time.Now(),
+			},
 		},
 	}
 	require.NoError(k.Disputes.Set(ctx, 1, testDispute))
@@ -120,6 +190,19 @@ func (s *KeeperTestSuite) TestDisputeQuery() {
 	require.Equal(testDispute.DisputeFee, resp.Dispute.Metadata.DisputeFee)
 	require.Equal(testDispute.DisputeStatus, resp.Dispute.Metadata.DisputeStatus)
 	require.True(resp.Dispute.Metadata.Open)
+
+	// Verify hash_id is converted to hex string
+	expectedHashIdHex := hex.EncodeToString(testHashId)
+	require.Equal(expectedHashIdHex, resp.Dispute.Metadata.HashId, "hash_id should be hex encoded")
+
+	// Verify initial_evidence query_id is converted to hex string
+	expectedQueryIdHex := hex.EncodeToString(testQueryId)
+	require.Equal(expectedQueryIdHex, resp.Dispute.Metadata.InitialEvidence.QueryId, "initial_evidence query_id should be hex encoded")
+
+	// Verify additional_evidence query_id is converted to hex string
+	require.Len(resp.Dispute.Metadata.AdditionalEvidence, 1)
+	expectedAdditionalQueryIdHex := hex.EncodeToString(additionalQueryId)
+	require.Equal(expectedAdditionalQueryIdHex, resp.Dispute.Metadata.AdditionalEvidence[0].QueryId, "additional_evidence query_id should be hex encoded")
 
 	// Query non-existent dispute
 	_, err = q.Dispute(ctx, &types.QueryDisputeRequest{DisputeId: 999})
@@ -149,7 +232,7 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 
 	// one open dispute
 	require.NoError(k.Disputes.Set(ctx, 1, types.Dispute{
-		HashId:           []byte{1},
+		HashId:           []byte("open_dispute_1"),
 		DisputeId:        1,
 		DisputeCategory:  types.Warning,
 		DisputeFee:       math.NewInt(1000000),
@@ -162,6 +245,7 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 		BurnAmount:       math.NewInt(100),
 		InitialEvidence: oracletypes.MicroReport{
 			Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
+			QueryId:   []byte("open_query_1"),
 			Timestamp: time.Now(),
 		},
 	}))
@@ -172,7 +256,7 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 
 	// two open disputes
 	require.NoError(k.Disputes.Set(ctx, 2, types.Dispute{
-		HashId:           []byte{1},
+		HashId:           []byte("open_dispute_2"),
 		DisputeId:        2,
 		DisputeCategory:  types.Warning,
 		DisputeFee:       math.NewInt(1000000),
@@ -185,6 +269,7 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 		BurnAmount:       math.NewInt(100),
 		InitialEvidence: oracletypes.MicroReport{
 			Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
+			QueryId:   []byte("open_query_2"),
 			Timestamp: time.Now(),
 		},
 	}))
@@ -195,7 +280,7 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 
 	// two open and one closed dispute
 	require.NoError(k.Disputes.Set(ctx, 3, types.Dispute{
-		HashId:           []byte{1},
+		HashId:           []byte("closed_dispute_3"),
 		DisputeId:        3,
 		DisputeCategory:  types.Warning,
 		DisputeFee:       math.NewInt(1000000),
@@ -208,6 +293,7 @@ func (s *KeeperTestSuite) TestOpenDisputesQuery() {
 		BurnAmount:       math.NewInt(100),
 		InitialEvidence: oracletypes.MicroReport{
 			Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
+			QueryId:   []byte("closed_query_3"),
 			Timestamp: time.Now().Add(-time.Hour * 24),
 		},
 	}))
@@ -224,8 +310,9 @@ func (s *KeeperTestSuite) TestTallyQuery() {
 	require.NotNil(q)
 	ctx := s.ctx
 
+	testHashId := []byte("tally_test_hash")
 	require.NoError(k.Disputes.Set(ctx, 1, types.Dispute{
-		HashId:           []byte{1},
+		HashId:           testHashId,
 		DisputeId:        1,
 		DisputeCategory:  types.Warning,
 		DisputeFee:       math.NewInt(1000000),
@@ -238,6 +325,7 @@ func (s *KeeperTestSuite) TestTallyQuery() {
 		BurnAmount:       math.NewInt(100),
 		InitialEvidence: oracletypes.MicroReport{
 			Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
+			QueryId:   []byte("tally_query_1"),
 			Timestamp: time.Now(),
 		},
 	}))
@@ -248,7 +336,7 @@ func (s *KeeperTestSuite) TestTallyQuery() {
 		Team:      types.VoteCounts{Support: 1000, Against: 0, Invalid: 0},
 	}))
 
-	require.NoError(q.BlockInfo.Set(ctx, []byte{1}, types.BlockInfo{TotalReporterPower: math.NewInt(25000), TotalUserTips: math.NewInt(5000)}))
+	require.NoError(q.BlockInfo.Set(ctx, testHashId, types.BlockInfo{TotalReporterPower: math.NewInt(25000), TotalUserTips: math.NewInt(5000)}))
 
 	s.bankKeeper.On("GetSupply", ctx, "loya").Return(sdk.NewCoin("loya", math.NewInt(100000)))
 
@@ -264,7 +352,7 @@ func (s *KeeperTestSuite) TestTallyQuery() {
 
 	// Test dispute with no votes yet
 	require.NoError(k.Disputes.Set(ctx, 2, types.Dispute{
-		HashId:           []byte{2},
+		HashId:           []byte("tally_no_votes_hash"),
 		DisputeId:        2,
 		DisputeCategory:  types.Warning,
 		DisputeFee:       math.NewInt(1000000),
@@ -277,6 +365,7 @@ func (s *KeeperTestSuite) TestTallyQuery() {
 		BurnAmount:       math.NewInt(100),
 		InitialEvidence: oracletypes.MicroReport{
 			Reporter:  "cosmos1v9j474hfk7clqc4g50z0y3ftm43hj32c9mapfk",
+			QueryId:   []byte("tally_no_votes_query"),
 			Timestamp: time.Now(),
 		},
 	}))
@@ -366,4 +455,259 @@ func (s *KeeperTestSuite) TestTeamVoteQuery() {
 	require.Equal(res.TeamVote.VoterPower, math.NewInt(100000000).Quo(math.NewInt(3)))
 	require.Equal(res.TeamVote.ReporterPower, math.NewInt(0))
 	require.Equal(res.TeamVote.RewardClaimed, false)
+}
+
+func (s *KeeperTestSuite) TestDisputeFeePayersQuery() {
+	require := s.Require()
+	k := s.disputeKeeper
+	q := keeper.NewQuerier(k)
+	require.NotNil(q)
+	ctx := s.ctx
+
+	payer1 := sdk.AccAddress([]byte("payer1_address"))
+	payer2 := sdk.AccAddress([]byte("payer2_address"))
+	payer3 := sdk.AccAddress([]byte("payer3_address"))
+	payer4 := sdk.AccAddress([]byte("payer4_address"))
+
+	// payer1 pays 1000 loya for dispute 1
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(1), payer1.Bytes()), types.PayerInfo{
+		Amount:   math.NewInt(1000),
+		FromBond: false,
+	}))
+
+	// payers 2,3,4 pay for dispute 2
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(2), payer2.Bytes()), types.PayerInfo{
+		Amount:   math.NewInt(500),
+		FromBond: true,
+	}))
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(2), payer3.Bytes()), types.PayerInfo{
+		Amount:   math.NewInt(750),
+		FromBond: false,
+	}))
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(2), payer4.Bytes()), types.PayerInfo{
+		Amount:   math.NewInt(250),
+		FromBond: true,
+	}))
+
+	// nil request
+	_, err := q.DisputeFeePayers(ctx, nil)
+	require.Error(err)
+
+	// Query dispute 1 - should have 1 payer
+	res1, err := q.DisputeFeePayers(ctx, &types.QueryDisputeFeePayersRequest{DisputeId: 1})
+	require.NoError(err)
+	require.NotNil(res1)
+	require.Len(res1.Payers, 1)
+	require.Equal(payer1.String(), res1.Payers[0].PayerAddress)
+	require.Equal(math.NewInt(1000), res1.Payers[0].PayerInfo.Amount)
+	require.False(res1.Payers[0].PayerInfo.FromBond)
+
+	// Query dispute 2 - should have 3 payers
+	res2, err := q.DisputeFeePayers(ctx, &types.QueryDisputeFeePayersRequest{DisputeId: 2})
+	require.NoError(err)
+	require.NotNil(res2)
+	require.Len(res2.Payers, 3)
+
+	// Verify all three payers are present
+	payerAddresses := make(map[string]types.PayerInfo)
+	for _, payer := range res2.Payers {
+		payerAddresses[payer.PayerAddress] = payer.PayerInfo
+	}
+
+	require.Contains(payerAddresses, payer2.String())
+	require.Equal(math.NewInt(500), payerAddresses[payer2.String()].Amount)
+	require.True(payerAddresses[payer2.String()].FromBond)
+
+	require.Contains(payerAddresses, payer3.String())
+	require.Equal(math.NewInt(750), payerAddresses[payer3.String()].Amount)
+	require.False(payerAddresses[payer3.String()].FromBond)
+
+	require.Contains(payerAddresses, payer4.String())
+	require.Equal(math.NewInt(250), payerAddresses[payer4.String()].Amount)
+	require.True(payerAddresses[payer4.String()].FromBond)
+
+	// Query non-existent dispute - should return empty list
+	res3, err := q.DisputeFeePayers(ctx, &types.QueryDisputeFeePayersRequest{DisputeId: 999})
+	require.NoError(err)
+	require.NotNil(res3)
+	require.Len(res3.Payers, 0)
+}
+
+func (s *KeeperTestSuite) TestClaimableDisputeRewardsQuery() {
+	require := s.Require()
+	k := s.disputeKeeper
+	q := keeper.NewQuerier(k)
+	ctx := s.ctx
+
+	addr := sdk.AccAddress([]byte("addr1"))
+
+	// 1. Invalid Request (nil)
+	resp, err := q.ClaimableDisputeRewards(ctx, nil)
+	require.Error(err)
+	require.Nil(resp)
+
+	// 2. Invalid Address
+	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 1,
+		Address:   "invalid_address",
+	})
+	require.Error(err)
+	require.Nil(resp)
+
+	// 3. Dispute Not Found
+	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 999,
+		Address:   addr.String(),
+	})
+	require.Error(err)
+	require.Nil(resp)
+
+	// 4. Voter Reward Scenario
+	// Setup Dispute 2 (Resolved, prevId=1)
+	dispute2 := types.Dispute{
+		DisputeId:      2,
+		DisputeStatus:  types.Resolved,
+		PrevDisputeIds: []uint64{1},
+		BlockNumber:    100,
+		VoterReward:    math.NewInt(1000), // Total reward to distribute
+		HashId:         []byte("claimable_dispute2"),
+	}
+	require.NoError(k.Disputes.Set(ctx, 2, dispute2))
+
+	// Setup Vote for Dispute 2
+	require.NoError(k.Votes.Set(ctx, 2, types.Vote{
+		Id:         2,
+		VoteResult: types.VoteResult_SUPPORT,
+		Executed:   true,
+	}))
+
+	// Setup Voter for Dispute 2 (Current vote check)
+	require.NoError(k.Voter.Set(ctx, collections.Join(uint64(2), addr.Bytes()), types.Voter{
+		RewardClaimed: false,
+	}))
+
+	// Setup Voter for Dispute 1 (Past vote check in CalculateReward)
+	require.NoError(k.Voter.Set(ctx, collections.Join(uint64(1), addr.Bytes()), types.Voter{
+		ReporterPower: math.NewInt(10),
+	}))
+
+	// Setup VoteCounts for Dispute 1 (Past global power in CalculateReward)
+	require.NoError(k.VoteCountsByGroup.Set(ctx, 1, types.StakeholderVoteCounts{
+		Users:     types.VoteCounts{Support: 100},
+		Reporters: types.VoteCounts{Support: 100},
+		Team:      types.VoteCounts{Support: 0},
+	}))
+
+	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, uint64(100), addr).Return(math.NewInt(10), nil).Once()
+
+	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 2,
+		Address:   addr.String(),
+	})
+	require.NoError(err)
+	require.NotNil(resp)
+	require.True(resp.ClaimableAmount.RewardAmount.IsPositive())
+	require.False(resp.ClaimableAmount.RewardClaimed)
+	require.Equal(uint64(2), resp.ClaimableAmount.DisputeId)
+
+	// 4b. Voter Reward Claimed Scenario
+	require.NoError(k.Voter.Set(ctx, collections.Join(uint64(2), addr.Bytes()), types.Voter{
+		RewardClaimed: true,
+	}))
+	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 2,
+		Address:   addr.String(),
+	})
+	require.NoError(err)
+	require.True(resp.ClaimableAmount.RewardAmount.IsZero())
+	require.True(resp.ClaimableAmount.RewardClaimed)
+
+	// 5. Fee Refund - Failed Dispute
+	dispute3 := types.Dispute{
+		DisputeId:     3,
+		DisputeStatus: types.Failed,
+		HashId:        []byte("claimable_dispute3_failed"),
+	}
+	require.NoError(k.Disputes.Set(ctx, 3, dispute3))
+
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(3), addr.Bytes()), types.PayerInfo{
+		Amount:   math.NewInt(500),
+		FromBond: false,
+	}))
+
+	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 3,
+		Address:   addr.String(),
+	})
+	require.NoError(err)
+	require.Equal(math.NewInt(500), resp.ClaimableAmount.FeeRefundAmount)
+
+	// 6. Fee Refund - Resolved (SUPPORT)
+	dispute4 := types.Dispute{
+		DisputeId:     4,
+		DisputeStatus: types.Resolved,
+		HashId:        []byte("claimable_dispute4_support"),
+		SlashAmount:   math.NewInt(1000),
+		FeeTotal:      math.NewInt(2000),
+	}
+	require.NoError(k.Disputes.Set(ctx, 4, dispute4))
+
+	require.NoError(k.Votes.Set(ctx, 4, types.Vote{
+		Id:         4,
+		Executed:   true,
+		VoteResult: types.VoteResult_SUPPORT,
+	}))
+
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(4), addr.Bytes()), types.PayerInfo{
+		Amount: math.NewInt(500),
+	}))
+
+	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 4,
+		Address:   addr.String(),
+	})
+	require.NoError(err)
+	require.True(resp.ClaimableAmount.FeeRefundAmount.IsPositive())
+
+	// 7. Combined - Voter Reward + Fee Refund
+	// Reuse Dispute 1 as past dispute. Reuse addr as voter and payer.
+	dispute5 := types.Dispute{
+		DisputeId:      5,
+		DisputeStatus:  types.Resolved,
+		PrevDisputeIds: []uint64{1},
+		BlockNumber:    200,
+		VoterReward:    math.NewInt(1000),
+		SlashAmount:    math.NewInt(1000),
+		FeeTotal:       math.NewInt(2000),
+		HashId:         []byte("claimable_dispute5_combined"),
+	}
+	require.NoError(k.Disputes.Set(ctx, 5, dispute5))
+
+	// Setup Vote for Dispute 5
+	require.NoError(k.Votes.Set(ctx, 5, types.Vote{
+		Id:         5,
+		Executed:   true,
+		VoteResult: types.VoteResult_SUPPORT,
+	}))
+
+	// Setup Voter for Dispute 5 (Unclaimed)
+	require.NoError(k.Voter.Set(ctx, collections.Join(uint64(5), addr.Bytes()), types.Voter{
+		RewardClaimed: false,
+	}))
+
+	// Setup Fee Payer for Dispute 5
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(5), addr.Bytes()), types.PayerInfo{
+		Amount: math.NewInt(500),
+	}))
+
+	// Mock GetUserTotalTips for CalculateReward (block 200)
+	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, uint64(200), addr).Return(math.NewInt(10), nil).Once()
+
+	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 5,
+		Address:   addr.String(),
+	})
+	require.NoError(err)
+	require.True(resp.ClaimableAmount.RewardAmount.IsPositive())
+	require.True(resp.ClaimableAmount.FeeRefundAmount.IsPositive())
 }
