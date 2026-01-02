@@ -26,8 +26,6 @@ var rootCmd = &cobra.Command{
 	Long:  "reporterd is a daemon that runs the reporter that interacts with the layer chain.",
 	Run: func(cmd *cobra.Command, args []string) {
 		homePath := viper.GetString(flags.FlagHome)
-		chainId := viper.GetString(flags.FlagChainID)
-		grpcAddr := viper.GetString(flags.FlagGRPC)
 		logLevelstr := viper.GetString(flags.FlagLogLevel)
 		configs.WriteDefaultPricefeedExchangeToml(homePath)
 		configs.WriteDefaultMarketParamsToml(homePath)
@@ -38,12 +36,46 @@ var rootCmd = &cobra.Command{
 			os.Exit(1)
 		}
 		logger := log.NewLogger(os.Stderr, log.LevelOption(loglevel))
+
+		// Check if test mode is enabled
+		if testMode {
+			if err := runTestMode(homePath, logger); err != nil {
+				fmt.Printf("Test mode failed: %v\n", err)
+				os.Exit(1)
+			}
+			os.Exit(0)
+		}
+
+		// Normal daemon mode - validate required flags
+		chainId := viper.GetString(flags.FlagChainID)
+		grpcAddr := viper.GetString(flags.FlagGRPC)
+		from := viper.GetString(flags.FlagFrom)
+		node := viper.GetString(flags.FlagNode)
+
+		if chainId == "" {
+			fmt.Printf("Error: --chain-id is required in reporter mode\n")
+			os.Exit(1)
+		}
+		if grpcAddr == "" {
+			fmt.Printf("Error: --grpc is required in reporter mode\n")
+			os.Exit(1)
+		}
+		if from == "" {
+			fmt.Printf("Error: --from is required in reporter mode\n")
+			os.Exit(1)
+		}
+		if node == "" {
+			fmt.Printf("Error: --node is required in reporter mode\n")
+			os.Exit(1)
+		}
+
 		// Pass prometheusPort to NewApp
 		daemons.NewApp(logger, chainId, grpcAddr, homePath, prometheusPort)
 	},
 }
 
 var prometheusPort int
+var testMode bool
 
 func main() {
 	daemonflags.AddDaemonFlagsToCmd(rootCmd)
@@ -70,22 +102,15 @@ func init() {
 	rootCmd.Flags().Duration("price-guard-max-age", 0, "Maximum age of stored price before treating as expired (e.g. 1m, 1h)")
 	rootCmd.Flags().Bool("price-guard-update-on-blocked", false, "Update last known price even if submission is blocked (default false)")
 
+	// Test mode flag
+	rootCmd.Flags().BoolVar(&testMode, "test", false, "Test mode: verify price feed configurations and calculate medians without starting daemon")
+
 	// Marking required flags
 	if err := rootCmd.MarkFlagRequired(flags.FlagHome); err != nil {
 		panic(err)
 	}
-	if err := rootCmd.MarkFlagRequired(flags.FlagFrom); err != nil {
-		panic(err)
-	}
-	if err := rootCmd.MarkFlagRequired(flags.FlagGRPC); err != nil {
-		panic(err)
-	}
-	if err := rootCmd.MarkFlagRequired(flags.FlagChainID); err != nil {
-		panic(err)
-	}
-	if err := rootCmd.MarkFlagRequired(flags.FlagNode); err != nil {
-		panic(err)
-	}
+	// Note: --from, --grpc, --chain-id, and --node are only required in normal mode, not test mode
+	// We'll validate them in the Run function instead
 
 	if err := godotenv.Load(); err != nil {
 		panic(err)
