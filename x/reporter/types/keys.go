@@ -30,4 +30,7 @@ var (
 	TipPrefix                       = collections.NewPrefix(19)
 	TbrPrefix                       = collections.NewPrefix(20)
 	ClaimStatusPrefix               = collections.NewPrefix(21)
+	ReporterPeriodDataPrefix        = collections.NewPrefix(22)
+	DistributionQueuePrefix         = collections.NewPrefix(23)
+	DistributionQueueCounterPrefix  = collections.NewPrefix(24)
 )

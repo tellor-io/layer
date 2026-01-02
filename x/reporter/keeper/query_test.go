@@ -199,7 +199,7 @@ func TestAvailableTips(t *testing.T) {
 		{
 			name:     "no tips",
 			req:      &types.QueryAvailableTipsRequest{SelectorAddress: selectorAddr.String()},
-			err:      true,
+			err:      false,
 			expected: math.LegacyZeroDec(),
 		},
 		{

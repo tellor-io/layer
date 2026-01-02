@@ -6,10 +6,17 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	types "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
+	io "io"
 	math "math"
+	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -23,18 +30,213 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// QueryGetExtraRewardsRateRequest is request type for the Query/GetExtraRewardsRate RPC method.
+type QueryGetExtraRewardsRateRequest struct {
+}
+
+func (m *QueryGetExtraRewardsRateRequest) Reset()         { *m = QueryGetExtraRewardsRateRequest{} }
+func (m *QueryGetExtraRewardsRateRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetExtraRewardsRateRequest) ProtoMessage()    {}
+func (*QueryGetExtraRewardsRateRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b872f6dff50af6f8, []int{0}
+}
+func (m *QueryGetExtraRewardsRateRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetExtraRewardsRateRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetExtraRewardsRateRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetExtraRewardsRateRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetExtraRewardsRateRequest.Merge(m, src)
+}
+func (m *QueryGetExtraRewardsRateRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetExtraRewardsRateRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetExtraRewardsRateRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetExtraRewardsRateRequest proto.InternalMessageInfo
+
+// QueryGetExtraRewardsRateResponse is response type for the Query/GetExtraRewardsRate RPC method.
+type QueryGetExtraRewardsRateResponse struct {
+	// daily_extra_rewards defines the daily extra reward rate.
+	DailyExtraRewards int64 `protobuf:"varint,1,opt,name=daily_extra_rewards,json=dailyExtraRewards,proto3" json:"daily_extra_rewards,omitempty"`
+}
+
+func (m *QueryGetExtraRewardsRateResponse) Reset()         { *m = QueryGetExtraRewardsRateResponse{} }
+func (m *QueryGetExtraRewardsRateResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetExtraRewardsRateResponse) ProtoMessage()    {}
+func (*QueryGetExtraRewardsRateResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b872f6dff50af6f8, []int{1}
+}
+func (m *QueryGetExtraRewardsRateResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetExtraRewardsRateResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetExtraRewardsRateResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetExtraRewardsRateResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetExtraRewardsRateResponse.Merge(m, src)
+}
+func (m *QueryGetExtraRewardsRateResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetExtraRewardsRateResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetExtraRewardsRateResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetExtraRewardsRateResponse proto.InternalMessageInfo
+
+func (m *QueryGetExtraRewardsRateResponse) GetDailyExtraRewards() int64 {
+	if m != nil {
+		return m.DailyExtraRewards
+	}
+	return 0
+}
+
+// QueryGetExtraRewardsPoolBalanceRequest is request type for the Query/GetExtraRewardsPoolBalance RPC method.
+type QueryGetExtraRewardsPoolBalanceRequest struct {
+}
+
+func (m *QueryGetExtraRewardsPoolBalanceRequest) Reset() {
+	*m = QueryGetExtraRewardsPoolBalanceRequest{}
+}
+func (m *QueryGetExtraRewardsPoolBalanceRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryGetExtraRewardsPoolBalanceRequest) ProtoMessage()    {}
+func (*QueryGetExtraRewardsPoolBalanceRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b872f6dff50af6f8, []int{2}
+}
+func (m *QueryGetExtraRewardsPoolBalanceRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetExtraRewardsPoolBalanceRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetExtraRewardsPoolBalanceRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetExtraRewardsPoolBalanceRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetExtraRewardsPoolBalanceRequest.Merge(m, src)
+}
+func (m *QueryGetExtraRewardsPoolBalanceRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetExtraRewardsPoolBalanceRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetExtraRewardsPoolBalanceRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetExtraRewardsPoolBalanceRequest proto.InternalMessageInfo
+
+// QueryGetExtraRewardsPoolBalanceResponse is response type for the Query/GetExtraRewardsPoolBalance RPC method.
+type QueryGetExtraRewardsPoolBalanceResponse struct {
+	// balance defines the extra rewards pool balance.
+	Balance types.Coin `protobuf:"bytes,1,opt,name=balance,proto3" json:"balance"`
+}
+
+func (m *QueryGetExtraRewardsPoolBalanceResponse) Reset() {
+	*m = QueryGetExtraRewardsPoolBalanceResponse{}
+}
+func (m *QueryGetExtraRewardsPoolBalanceResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryGetExtraRewardsPoolBalanceResponse) ProtoMessage()    {}
+func (*QueryGetExtraRewardsPoolBalanceResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b872f6dff50af6f8, []int{3}
+}
+func (m *QueryGetExtraRewardsPoolBalanceResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryGetExtraRewardsPoolBalanceResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryGetExtraRewardsPoolBalanceResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryGetExtraRewardsPoolBalanceResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryGetExtraRewardsPoolBalanceResponse.Merge(m, src)
+}
+func (m *QueryGetExtraRewardsPoolBalanceResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryGetExtraRewardsPoolBalanceResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryGetExtraRewardsPoolBalanceResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryGetExtraRewardsPoolBalanceResponse proto.InternalMessageInfo
+
+func (m *QueryGetExtraRewardsPoolBalanceResponse) GetBalance() types.Coin {
+	if m != nil {
+		return m.Balance
+	}
+	return types.Coin{}
+}
+
+func init() {
+	proto.RegisterType((*QueryGetExtraRewardsRateRequest)(nil), "layer.mint.QueryGetExtraRewardsRateRequest")
+	proto.RegisterType((*QueryGetExtraRewardsRateResponse)(nil), "layer.mint.QueryGetExtraRewardsRateResponse")
+	proto.RegisterType((*QueryGetExtraRewardsPoolBalanceRequest)(nil), "layer.mint.QueryGetExtraRewardsPoolBalanceRequest")
+	proto.RegisterType((*QueryGetExtraRewardsPoolBalanceResponse)(nil), "layer.mint.QueryGetExtraRewardsPoolBalanceResponse")
+}
+
 func init() { proto.RegisterFile("layer/mint/query.proto", fileDescriptor_b872f6dff50af6f8) }
 
 var fileDescriptor_b872f6dff50af6f8 = []byte{
-	// 128 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0xcb, 0x49, 0xac, 0x4c,
-	0x2d, 0xd2, 0xcf, 0xcd, 0xcc, 0x2b, 0xd1, 0x2f, 0x2c, 0x4d, 0x2d, 0xaa, 0xd4, 0x2b, 0x28, 0xca,
-	0x2f, 0xc9, 0x17, 0xe2, 0x02, 0x8b, 0xeb, 0x81, 0xc4, 0x8d, 0xd8, 0xb9, 0x58, 0x03, 0x41, 0x52,
-	0x4e, 0x8e, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7, 0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84,
-	0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc, 0x78, 0x2c, 0xc7, 0x10, 0xa5, 0x9e, 0x9e, 0x59,
-	0x92, 0x51, 0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0xab, 0x5f, 0x92, 0x9a, 0x93, 0x93, 0x5f, 0xa4, 0x9b,
-	0x99, 0xaf, 0x0f, 0x31, 0xbb, 0x02, 0x62, 0x7a, 0x49, 0x65, 0x41, 0x6a, 0x71, 0x12, 0x1b, 0xd8,
-	0x78, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0xcb, 0x67, 0xe5, 0x57, 0x78, 0x00, 0x00, 0x00,
+	// 405 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x92, 0xcb, 0x6a, 0xdb, 0x40,
+	0x18, 0x85, 0x25, 0xf7, 0x06, 0xd3, 0x55, 0xe5, 0x52, 0x5a, 0x51, 0x64, 0x57, 0x8b, 0xda, 0x50,
+	0x77, 0x06, 0x5f, 0x28, 0x14, 0xba, 0xa9, 0x4b, 0xe9, 0xb6, 0xd5, 0xb2, 0x1b, 0x31, 0x92, 0x07,
+	0x75, 0x60, 0x3c, 0xbf, 0x3c, 0x33, 0x6e, 0xad, 0x6d, 0x9f, 0xa0, 0xd0, 0x77, 0xc8, 0x8b, 0x64,
+	0xe3, 0xa5, 0x21, 0x9b, 0xac, 0x42, 0xb0, 0xf3, 0x0c, 0x59, 0x07, 0x5d, 0x92, 0x38, 0xd8, 0xc6,
+	0xce, 0x6e, 0x38, 0x73, 0xe6, 0x3f, 0x47, 0x9f, 0x7e, 0xf4, 0x42, 0xd0, 0x8c, 0x29, 0x32, 0xe6,
+	0xd2, 0x90, 0xc9, 0x94, 0xa9, 0x0c, 0xa7, 0x0a, 0x0c, 0x38, 0xa8, 0xd0, 0x71, 0xae, 0xbb, 0x5e,
+	0x0c, 0x7a, 0x0c, 0x9a, 0x44, 0x54, 0x33, 0xf2, 0xbb, 0x1b, 0x31, 0x43, 0xbb, 0x24, 0x06, 0x2e,
+	0x4b, 0xaf, 0xfb, 0x3c, 0x81, 0x04, 0x8a, 0x23, 0xc9, 0x4f, 0x95, 0xfa, 0x3a, 0x01, 0x48, 0x04,
+	0x23, 0x34, 0xe5, 0x84, 0x4a, 0x09, 0x86, 0x1a, 0x0e, 0x52, 0x97, 0xb7, 0xfe, 0x1b, 0xd4, 0xf8,
+	0x91, 0xc7, 0x7d, 0x63, 0xe6, 0xeb, 0xcc, 0x28, 0x1a, 0xb0, 0x3f, 0x54, 0x8d, 0x74, 0x40, 0x0d,
+	0x0b, 0xd8, 0x64, 0xca, 0xb4, 0xf1, 0x03, 0xd4, 0xdc, 0x6d, 0xd1, 0x29, 0x48, 0xcd, 0x1c, 0x8c,
+	0xea, 0x23, 0xca, 0x45, 0x16, 0xb2, 0xdc, 0x11, 0xaa, 0xd2, 0xf2, 0xd2, 0x6e, 0xda, 0xed, 0x07,
+	0xc1, 0xb3, 0xe2, 0x6a, 0xfd, 0xad, 0xdf, 0x46, 0x6f, 0xb7, 0xcd, 0xfc, 0x0e, 0x20, 0x86, 0x54,
+	0x50, 0x19, 0xdf, 0xa4, 0x8f, 0x50, 0x6b, 0xaf, 0xb3, 0x2a, 0xf1, 0x11, 0x3d, 0x89, 0x4a, 0xa9,
+	0x08, 0x7e, 0xda, 0x7b, 0x85, 0x4b, 0x62, 0x38, 0x27, 0x86, 0x2b, 0x62, 0xf8, 0x0b, 0x70, 0x39,
+	0x7c, 0x38, 0x3f, 0x6b, 0x58, 0xc1, 0xb5, 0xbf, 0x77, 0x59, 0x43, 0x8f, 0x8a, 0x18, 0xe7, 0xc8,
+	0x46, 0xf5, 0x2d, 0x5f, 0xea, 0xbc, 0xc3, 0xb7, 0x7f, 0x02, 0xef, 0x41, 0xe6, 0x76, 0x0e, 0x33,
+	0x97, 0xbd, 0xfd, 0xc1, 0xdf, 0x93, 0x8b, 0xff, 0x35, 0xec, 0x74, 0x88, 0x61, 0x42, 0x80, 0x7a,
+	0xcf, 0x81, 0xac, 0xad, 0x43, 0xc2, 0xcc, 0x5d, 0xac, 0xa1, 0xca, 0x0b, 0x1d, 0xdb, 0xc8, 0xdd,
+	0x0d, 0xc5, 0xe9, 0xed, 0xab, 0xb0, 0xc9, 0xda, 0xed, 0xdf, 0xeb, 0x4d, 0xd5, 0xfe, 0x53, 0xd1,
+	0xfe, 0x83, 0x33, 0x38, 0xb4, 0x7d, 0x0a, 0x20, 0xc2, 0x0a, 0xfc, 0xf0, 0xf3, 0x7c, 0xe9, 0xd9,
+	0x8b, 0xa5, 0x67, 0x9f, 0x2f, 0x3d, 0xfb, 0xdf, 0xca, 0xb3, 0x16, 0x2b, 0xcf, 0x3a, 0x5d, 0x79,
+	0xd6, 0xcf, 0x56, 0xc2, 0xcd, 0xaf, 0x69, 0x84, 0x63, 0x18, 0x6f, 0x4c, 0x9e, 0x95, 0xb3, 0x4d,
+	0x96, 0x32, 0x1d, 0x3d, 0x2e, 0x36, 0xb9, 0x7f, 0x15, 0x00, 0x00, 0xff, 0xff, 0x0f, 0x4a, 0x1f,
+	0xbb, 0x43, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -49,6 +251,10 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
+	// Queries the extra rewards rate.
+	GetExtraRewardsRate(ctx context.Context, in *QueryGetExtraRewardsRateRequest, opts ...grpc.CallOption) (*QueryGetExtraRewardsRateResponse, error)
+	// Queries the extra rewards pool balance.
+	GetExtraRewardsPoolBalance(ctx context.Context, in *QueryGetExtraRewardsPoolBalanceRequest, opts ...grpc.CallOption) (*QueryGetExtraRewardsPoolBalanceResponse, error)
 }
 
 type queryClient struct {
@@ -59,23 +265,599 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
+func (c *queryClient) GetExtraRewardsRate(ctx context.Context, in *QueryGetExtraRewardsRateRequest, opts ...grpc.CallOption) (*QueryGetExtraRewardsRateResponse, error) {
+	out := new(QueryGetExtraRewardsRateResponse)
+	err := c.cc.Invoke(ctx, "/layer.mint.Query/GetExtraRewardsRate", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) GetExtraRewardsPoolBalance(ctx context.Context, in *QueryGetExtraRewardsPoolBalanceRequest, opts ...grpc.CallOption) (*QueryGetExtraRewardsPoolBalanceResponse, error) {
+	out := new(QueryGetExtraRewardsPoolBalanceResponse)
+	err := c.cc.Invoke(ctx, "/layer.mint.Query/GetExtraRewardsPoolBalance", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
+	// Queries the extra rewards rate.
+	GetExtraRewardsRate(context.Context, *QueryGetExtraRewardsRateRequest) (*QueryGetExtraRewardsRateResponse, error)
+	// Queries the extra rewards pool balance.
+	GetExtraRewardsPoolBalance(context.Context, *QueryGetExtraRewardsPoolBalanceRequest) (*QueryGetExtraRewardsPoolBalanceResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
 type UnimplementedQueryServer struct {
 }
 
+func (*UnimplementedQueryServer) GetExtraRewardsRate(ctx context.Context, req *QueryGetExtraRewardsRateRequest) (*QueryGetExtraRewardsRateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetExtraRewardsRate not implemented")
+}
+func (*UnimplementedQueryServer) GetExtraRewardsPoolBalance(ctx context.Context, req *QueryGetExtraRewardsPoolBalanceRequest) (*QueryGetExtraRewardsPoolBalanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetExtraRewardsPoolBalance not implemented")
+}
+
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
+}
+
+func _Query_GetExtraRewardsRate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetExtraRewardsRateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetExtraRewardsRate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.mint.Query/GetExtraRewardsRate",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetExtraRewardsRate(ctx, req.(*QueryGetExtraRewardsRateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_GetExtraRewardsPoolBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetExtraRewardsPoolBalanceRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetExtraRewardsPoolBalance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/layer.mint.Query/GetExtraRewardsPoolBalance",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetExtraRewardsPoolBalance(ctx, req.(*QueryGetExtraRewardsPoolBalanceRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "layer.mint.Query",
 	HandlerType: (*QueryServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "layer/mint/query.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "GetExtraRewardsRate",
+			Handler:    _Query_GetExtraRewardsRate_Handler,
+		},
+		{
+			MethodName: "GetExtraRewardsPoolBalance",
+			Handler:    _Query_GetExtraRewardsPoolBalance_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "layer/mint/query.proto",
 }
+
+func (m *QueryGetExtraRewardsRateRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetExtraRewardsRateRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetExtraRewardsRateRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetExtraRewardsRateResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetExtraRewardsRateResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetExtraRewardsRateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.DailyExtraRewards != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.DailyExtraRewards))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetExtraRewardsPoolBalanceRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetExtraRewardsPoolBalanceRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetExtraRewardsPoolBalanceRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryGetExtraRewardsPoolBalanceResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryGetExtraRewardsPoolBalanceResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryGetExtraRewardsPoolBalanceResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Balance.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
+	offset -= sovQuery(v)
+	base := offset
+	for v >= 1<<7 {
+		dAtA[offset] = uint8(v&0x7f | 0x80)
+		v >>= 7
+		offset++
+	}
+	dAtA[offset] = uint8(v)
+	return base
+}
+func (m *QueryGetExtraRewardsRateRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetExtraRewardsRateResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.DailyExtraRewards != 0 {
+		n += 1 + sovQuery(uint64(m.DailyExtraRewards))
+	}
+	return n
+}
+
+func (m *QueryGetExtraRewardsPoolBalanceRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *QueryGetExtraRewardsPoolBalanceResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Balance.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func sovQuery(x uint64) (n int) {
+	return (math_bits.Len64(x|1) + 6) / 7
+}
+func sozQuery(x uint64) (n int) {
+	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *QueryGetExtraRewardsRateRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetExtraRewardsRateRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetExtraRewardsRateRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetExtraRewardsRateResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetExtraRewardsRateResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetExtraRewardsRateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DailyExtraRewards", wireType)
+			}
+			m.DailyExtraRewards = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.DailyExtraRewards |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetExtraRewardsPoolBalanceRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetExtraRewardsPoolBalanceRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetExtraRewardsPoolBalanceRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryGetExtraRewardsPoolBalanceResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryGetExtraRewardsPoolBalanceResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryGetExtraRewardsPoolBalanceResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Balance", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Balance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func skipQuery(dAtA []byte) (n int, err error) {
+	l := len(dAtA)
+	iNdEx := 0
+	depth := 0
+	for iNdEx < l {
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return 0, ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return 0, io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= (uint64(b) & 0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		wireType := int(wire & 0x7)
+		switch wireType {
+		case 0:
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				iNdEx++
+				if dAtA[iNdEx-1] < 0x80 {
+					break
+				}
+			}
+		case 1:
+			iNdEx += 8
+		case 2:
+			var length int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return 0, ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return 0, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				length |= (int(b) & 0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if length < 0 {
+				return 0, ErrInvalidLengthQuery
+			}
+			iNdEx += length
+		case 3:
+			depth++
+		case 4:
+			if depth == 0 {
+				return 0, ErrUnexpectedEndOfGroupQuery
+			}
+			depth--
+		case 5:
+			iNdEx += 4
+		default:
+			return 0, fmt.Errorf("proto: illegal wireType %d", wireType)
+		}
+		if iNdEx < 0 {
+			return 0, ErrInvalidLengthQuery
+		}
+		if depth == 0 {
+			return iNdEx, nil
+		}
+	}
+	return 0, io.ErrUnexpectedEOF
+}
+
+var (
+	ErrInvalidLengthQuery        = fmt.Errorf("proto: negative length found during unmarshaling")
+	ErrIntOverflowQuery          = fmt.Errorf("proto: integer overflow")
+	ErrUnexpectedEndOfGroupQuery = fmt.Errorf("proto: unexpected end of group")
+)

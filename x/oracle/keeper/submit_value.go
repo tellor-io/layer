@@ -103,7 +103,11 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 		),
 	})
 	telemetry.IncrCounterWithLabels([]string{"reports_in_aggregate", "report_submitted"}, 1, []metrics.Label{{Name: "chain_id", Value: sdkCtx.ChainID()}, {Name: "query_id", Value: hex.EncodeToString(queryId)}})
-	return k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id), report)
+	if err := k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id), report); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (k Keeper) GetDataSpec(ctx context.Context, queryType string) (regTypes.DataSpec, error) {

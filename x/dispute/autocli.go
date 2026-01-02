@@ -53,6 +53,21 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Shows the vote result for a dispute",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dispute_id"}},
 				},
+				{
+					RpcMethod:      "DisputeFeePayers",
+					Use:            "dispute-fee-payers [dispute-id]",
+					Short:          "Shows all fee payers for a dispute",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "dispute_id"}},
+				},
+				{
+					RpcMethod: "ClaimableDisputeRewards",
+					Use:       "claimable-dispute-rewards [dispute-id] [address]",
+					Short:     "Shows claimable dispute rewards for an address",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "dispute_id"},
+						{ProtoField: "address"},
+					},
+				},
 			},
 		},
 		Tx: &autocliv1.ServiceCommandDescriptor{

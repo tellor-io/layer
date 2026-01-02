@@ -11,6 +11,7 @@ import (
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/utils"
+	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle"
 	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/mocks"
@@ -21,6 +22,7 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 type TestSuite struct {
@@ -66,6 +68,18 @@ func (s *TestSuite) TestEndBlocker() {
 	require.NotNil(s.bridgeKeeper)
 
 	k.SetBridgeKeeper(s.bridgeKeeper)
+
+	// Setup mocks for liveness rewards (called when cycle completes)
+	// Create a test module account for time_based_rewards
+	add := sample.AccAddressBytes()
+	baseAccount := authtypes.NewBaseAccountWithAddress(add)
+	permissions := []string{authtypes.Minter, authtypes.Burner, authtypes.Staking}
+	testModuleAccount := authtypes.NewModuleAccount(baseAccount, "time_based_rewards", permissions...)
+
+	// Mock for GetModuleAccount - will be called when cycle completes
+	s.accountKeeper.On("GetModuleAccount", ctx, minttypes.TimeBasedRewards).Return(sdk.ModuleAccountI(testModuleAccount))
+	// Mock for GetBalance - return zero balance so distribution is skipped
+	s.bankKeeper.On("GetBalance", ctx, testModuleAccount.GetAddress(), "loya").Return(sdk.Coin{Amount: math.ZeroInt(), Denom: "loya"})
 
 	query1, err := k.GetCurrentQueryInCycleList(ctx)
 	require.NoError(err)
