@@ -107,6 +107,14 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 		return err
 	}
 
+	// Track liveness
+	if err := k.TrackReporterParticipation(ctx, reporter.Bytes()); err != nil {
+		return err
+	}
+	if err := k.SetReporterLastReportTime(ctx, reporter.Bytes(), sdkCtx.BlockTime().UnixMilli()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
