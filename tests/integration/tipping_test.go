@@ -471,7 +471,7 @@ func (s *IntegrationTestSuite) TestRotateQueries() {
 	s.NoError(err)
 	s.Equal(uint64(9), query.Expiration)
 	s.Equal(math.NewInt(9800), query.Amount)
-	s.True(query.CycleList) //used to be false, now true because of the out-of-turn tip needing to be tracked for liveness
+	s.True(query.CycleList) // used to be false, now true because of the out-of-turn tip needing to be tracked for liveness
 	s.Equal(firstTestMetaId+4, query.Id)
 
 	// rotate the queries which should put queryId1 in cycle
