@@ -155,6 +155,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query total tips",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
+				{
+					RpcMethod:      "GetReporterLiveness",
+					Use:            "get-reporter-liveness [reporter]",
+					Short:          "Query liveness for a reporter",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter"}},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},

@@ -505,3 +505,76 @@ func (k Keeper) ResetLivenessData(ctx context.Context) error {
 
 	return nil
 }
+
+// TrackReporterParticipation increments a reporter's lifetime report count.
+// Called at report submission time.
+func (k Keeper) TrackReporterParticipation(ctx context.Context, reporter []byte) error {
+	count, err := k.ReporterAggregatesCount.Get(ctx, reporter)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return err
+		}
+		count = 0
+	}
+	return k.ReporterAggregatesCount.Set(ctx, reporter, count+1)
+}
+
+// SetReporterLastReportTime sets the last report timestamp for a reporter.
+func (k Keeper) SetReporterLastReportTime(ctx context.Context, reporter []byte, timestamp int64) error {
+	return k.ReporterLastReportTime.Set(ctx, reporter, timestamp)
+}
+
+// GetReporterLastReportTime returns the last report timestamp for a reporter.
+func (k Keeper) GetReporterLastReportTime(ctx context.Context, reporter []byte) (int64, error) {
+	timestamp, err := k.ReporterLastReportTime.Get(ctx, reporter)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return 0, nil
+		}
+		return 0, err
+	}
+	return timestamp, nil
+}
+
+// IncrementTotalAggregates increments the global aggregate counter..
+func (k Keeper) IncrementTotalAggregates(ctx context.Context) error {
+	count, err := k.TotalAggregatesCount.Get(ctx)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return err
+		}
+		count = 0
+	}
+	return k.TotalAggregatesCount.Set(ctx, count+1)
+}
+
+// GetReporterPercentLiveness returns the lifetime liveness stats for a reporter.
+// Returns: reports submitted, total aggregates, percent (reports/aggregates * 100)
+func (k Keeper) GetReporterPercentLiveness(ctx context.Context, reporter []byte) (uint64, uint64, math.LegacyDec, error) {
+	total, err := k.TotalAggregatesCount.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return 0, 0, math.LegacyZeroDec(), nil
+		}
+		return 0, 0, math.LegacyDec{}, err
+	}
+
+	if total == 0 {
+		return 0, 0, math.LegacyZeroDec(), nil
+	}
+
+	reported, err := k.ReporterAggregatesCount.Get(ctx, reporter)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return 0, total, math.LegacyZeroDec(), nil
+		}
+		return 0, 0, math.LegacyDec{}, err
+	}
+
+	// percent = (reported / total) * 100
+	percent := math.LegacyNewDec(int64(reported)).
+		Quo(math.LegacyNewDec(int64(total))).
+		MulInt64(100)
+
+	return reported, total, percent, nil
+}

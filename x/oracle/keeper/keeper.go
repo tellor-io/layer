@@ -71,12 +71,17 @@ type (
 		CycleCount            collections.Sequence                                              // tracks completed cycles
 		Dust                  collections.Item[math.Int]                                        // leftover from rounding during distribution
 		QueryOpportunities    collections.Map[[]byte, uint64]                                   // key: queryId, value: opportunity count
-		ReporterQueryShareSum collections.Map[collections.Pair[[]byte, []byte], math.LegacyDec] // key: (queryId, reporter), value: share sum
+		ReporterQueryShareSum collections.Map[collections.Pair[[]byte, []byte], math.LegacyDec] // key: (reporter, queryId), value: share sum
 
 		// Liveness tracking (standard/non-standard split)
 		ReporterStandardShareSum collections.Map[[]byte, math.LegacyDec] // key: reporter, value: sum of shares for standard queries
 		NonStandardQueries       collections.Map[[]byte, bool]           // key: queryId, value: true if non-standard
 		StandardOpportunities    collections.Item[uint64]                // number of opportunities for standard queries (cycles completed)
+
+		// Liveness tracking - for percent liveness query
+		TotalAggregatesCount    collections.Item[uint64]        // total aggregates on chain
+		ReporterAggregatesCount collections.Map[[]byte, uint64] // key: reporter, value: reports submitted (incremented at submission)
+		ReporterLastReportTime  collections.Map[[]byte, int64]  // key: reporter, value: timestamp of last report
 	}
 )
 
@@ -190,6 +195,11 @@ func NewKeeper(
 		ReporterStandardShareSum: collections.NewMap(sb, types.ReporterStandardShareSumPrefix, "reporter_standard_share_sum", collections.BytesKey, layertypes.LegacyDecValue),
 		NonStandardQueries:       collections.NewMap(sb, types.NonStandardQueriesPrefix, "non_standard_queries", collections.BytesKey, collections.BoolValue),
 		StandardOpportunities:    collections.NewItem(sb, types.StandardOpportunitiesPrefix, "standard_opportunities", collections.Uint64Value),
+
+		// Liveness tracking
+		TotalAggregatesCount:    collections.NewItem(sb, types.TotalAggregatesCountPrefix, "total_aggregates_count", collections.Uint64Value),
+		ReporterAggregatesCount: collections.NewMap(sb, types.ReporterAggregatesCountPrefix, "reporter_aggregates_count", collections.BytesKey, collections.Uint64Value),
+		ReporterLastReportTime:  collections.NewMap(sb, types.ReporterLastReportTimePrefix, "reporter_last_report_time", collections.BytesKey, collections.Int64Value),
 	}
 
 	schema, err := sb.Build()

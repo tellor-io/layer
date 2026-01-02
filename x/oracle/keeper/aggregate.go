@@ -66,6 +66,11 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 			return err
 		}
 
+		// Increment total aggregates count for percent liveness
+		if err := k.IncrementTotalAggregates(ctx); err != nil {
+			return err
+		}
+
 		// Track liveness for TBR distribution at aggregation time
 		// This is where we know both individual reporter powers and aggregate total power
 		//
