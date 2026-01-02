@@ -70,6 +70,11 @@ func init() {
 	rootCmd.Flags().Duration("price-guard-max-age", 0, "Maximum age of stored price before treating as expired (e.g. 1m, 1h)")
 	rootCmd.Flags().Bool("price-guard-update-on-blocked", false, "Update last known price even if submission is blocked (default false)")
 
+	// Automatic Unbonding flags
+	rootCmd.Flags().Uint32("auto-unbonding-frequency", 0, "Enable automatic unbonding every N days (0 = disabled, 1 - 21 days = valid")
+	rootCmd.Flags().Uint32("auto-unbonding-amount", 0, "Amount of tokens in loya to unbond each unbonding transaction (0 = disabled)")
+	rootCmd.Flags().String("auto-unbonding-max-stake-percentage", "0.0", "Maximum percentage of stake to unbond each unbonding transaction (0 = disabled, 1.0 = 100%). If unbonding amount exceeds this percentage, we will skip the unbonding transaction until it exceeds this percentage again.")
+
 	// Marking required flags
 	if err := rootCmd.MarkFlagRequired(flags.FlagHome); err != nil {
 		panic(err)
