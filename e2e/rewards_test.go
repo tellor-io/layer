@@ -35,7 +35,7 @@ func TestRewards(t *testing.T) {
 	// Create custom config with 3 validators and realistic gas fees
 	config := e2e.DefaultSetupConfig()
 	config.NumValidators = 3
-	config.GasPrices = "0.000025000000000000loya"
+	config.GasPrices = e2e.DefaultGasPrice
 	config.ModifyGenesis = []cosmos.GenesisKV{
 		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
 		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
