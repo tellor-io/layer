@@ -103,6 +103,10 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		if err != nil {
 			return err
 		}
+		// cleanup aggregation data that is no longer needed
+		if err = k.cleanupAggregationData(ctx, query.Id); err != nil {
+			return err
+		}
 	}
 	// TBR is now distributed at the end of each liveness period via DistributeLivenessRewards
 	// Tip rewards are distributed immediately
@@ -342,4 +346,44 @@ func (k Keeper) GetAggregateBeforeByReporter(ctx context.Context, queryId []byte
 		return nil, err
 	}
 	return aggregate, nil
+}
+
+func (k Keeper) cleanupAggregationData(ctx context.Context, metaId uint64) error {
+	// Remove all Values entries for this metaId
+	// Values key is (metaId, valueHexstring)
+	rng := collections.NewPrefixedPairRange[uint64, string](metaId)
+	iter, err := k.Values.Iterate(ctx, rng)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+
+	keysToRemove := make([]collections.Pair[uint64, string], 0)
+	for ; iter.Valid(); iter.Next() {
+		key, err := iter.Key()
+		if err != nil {
+			return err
+		}
+		keysToRemove = append(keysToRemove, key)
+	}
+
+	for _, key := range keysToRemove {
+		if err := k.Values.Remove(ctx, key); err != nil {
+			return err
+		}
+	}
+
+	// Remove AggregateValue entry for this metaId
+	err = k.AggregateValue.Remove(ctx, metaId)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return err
+	}
+
+	// Remove ValuesWeightSum entry for this metaId
+	err = k.ValuesWeightSum.Remove(ctx, metaId)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return err
+	}
+
+	return nil
 }
