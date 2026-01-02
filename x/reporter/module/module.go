@@ -29,7 +29,6 @@ var (
 	_ module.AppModuleBasic      = (*AppModule)(nil)
 	_ module.AppModuleSimulation = (*AppModule)(nil)
 	_ module.HasGenesis          = (*AppModule)(nil)
-	_ module.HasInvariants       = (*AppModule)(nil) //nolint:staticcheck // removing crisis module will break interchaintests
 	_ module.HasConsensusVersion = (*AppModule)(nil)
 
 	_ appmodule.AppModule       = (*AppModule)(nil)

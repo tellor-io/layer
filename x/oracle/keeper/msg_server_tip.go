@@ -108,6 +108,18 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 			// non-cyclelist query, not tracked for liveness
 			query.CycleList = false
 		}
+
+		id, err := k.keeper.QuerySequencer.Next(ctx)
+		if err != nil {
+			return nil, err
+		}
+		// remove old query with old ID before creating new one with new ID
+		oldId := query.Id
+		err = k.keeper.Query.Remove(ctx, collections.Join(queryId, oldId))
+		if err != nil {
+			return nil, err
+		}
+		query.Id = id
 	}
 	err = k.keeper.Query.Set(ctx, collections.Join(queryId, query.Id), query)
 	if err != nil {
