@@ -17,7 +17,7 @@ install: go.sum
 
 build:
 	@echo "Building reporterd..."
-	go build -o bin/reporterd ./cmd/main.go
+	go build -o bin/reporterd ./cmd
 
 clean:
 	@echo "Cleaning build artifacts..."
