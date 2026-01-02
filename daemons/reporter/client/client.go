@@ -22,6 +22,7 @@ import (
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
@@ -183,6 +184,24 @@ func (c *Client) Start(
 
 	c.PriceGuard = NewPriceGuard(priceGuardThreshold, priceGuardMaxAge, priceGuardEnabled, updateOnBlocked, c.logger)
 
+	// Read auto unbonding configuration
+	autoUnbondingFrequency := viper.GetUint32("auto-unbonding-frequency")
+	autoUnbondingAmount := viper.GetUint32("auto-unbonding-amount")
+	autoUnbondingMaxStakePercentage := viper.GetString("auto-unbonding-max-stake-percentage")
+
+	if autoUnbondingFrequency > 0 {
+		if autoUnbondingAmount == 0 {
+			return fmt.Errorf("auto-unbonding-amount must be greater than 0 when auto-unbonding-frequency is set")
+		}
+		maxStakePercentage, err := math.LegacyNewDecFromStr(autoUnbondingMaxStakePercentage)
+		if err != nil {
+			return fmt.Errorf("auto-unbonding-max-stake-percentage must be a valid decimal, got: %s", autoUnbondingMaxStakePercentage)
+		}
+		if maxStakePercentage.LT(math.LegacyZeroDec()) || maxStakePercentage.GT(math.LegacyNewDecFromInt(math.NewInt(1))) {
+			return fmt.Errorf("auto-unbonding-max-stake-percentage must be between 0.0 and 1.0, got: %s", autoUnbondingMaxStakePercentage)
+		}
+	}
+
 	// Log price guard configuration
 	if priceGuardEnabled {
 		c.logger.Info("Price guard enabled",
@@ -192,6 +211,16 @@ func (c *Client) Start(
 		)
 	} else {
 		c.logger.Info("Price guard disabled")
+	}
+
+	if autoUnbondingFrequency > 0 {
+		c.logger.Info("Auto unbonding enabled",
+			"frequency", autoUnbondingFrequency,
+			"amount", autoUnbondingAmount,
+			"max_stake_percentage", autoUnbondingMaxStakePercentage,
+		)
+	} else {
+		c.logger.Info("Auto unbonding disabled")
 	}
 
 	c.cosmosCtx = c.cosmosCtx.WithChainID(chainId)
@@ -287,6 +316,9 @@ func StartReporterDaemonTaskLoop(
 
 	wg.Add(1)
 	go client.WithdrawAndStakeEarnedRewardsPeriodically(ctx, &wg)
+
+	wg.Add(1)
+	go client.AutoUnbondStakePeriodically(ctx, &wg)
 
 	wg.Wait()
 }
