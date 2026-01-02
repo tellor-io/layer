@@ -155,6 +155,11 @@ service Query {
   rpc GetTipTotal(QueryGetTipTotalRequest) returns (QueryGetTipTotalResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_tip_total";
   }
+
+  // Queries the percent liveness for a reporter (lifetime participation rate)
+  rpc GetReporterLiveness(QueryGetReporterLivenessRequest) returns (QueryGetReporterLivenessResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_reporter_liveness/{reporter}";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -476,4 +481,25 @@ message QueryGetTipTotalResponse {
     (gogoproto.customtype) = "cosmossdk.io/math.Int",
     (gogoproto.nullable) = false
   ];
+}
+
+// QueryGetReporterLivenessRequest is the request type for the Query/GetReporterLiveness RPC method.
+message QueryGetReporterLivenessRequest {
+  // reporter defines the reporter address.
+  string reporter = 1;
+}
+// QueryGetReporterLivenessResponse is the response type for the Query/GetReporterLiveness RPC method.
+message QueryGetReporterLivenessResponse {
+  // reporter_reports is the number of reports the reporter submitted
+  uint64 reporter_reports = 1;
+  // total_aggregates is the total number of aggregates on chain
+  uint64 total_aggregates = 2;
+  // percent_liveness is reports/aggregates * 100 (lifetime participation rate)
+  string percent_liveness = 3 [
+    (cosmos_proto.scalar) = "cosmos.Dec",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false
+  ];
+  // last_report_time is the timestamp of the reporter's last report
+  int64 last_report_time = 4;
 }
