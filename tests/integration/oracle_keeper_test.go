@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
 	"strconv"
@@ -1250,4 +1251,156 @@ func (s *IntegrationTestSuite) TestClaimingBridgeDeposit() {
 
 	_, err = s.Setup.App.EndBlocker(ctx)
 	require.NoError(err)
+}
+
+func (s *IntegrationTestSuite) TestRotateQueriesToExpiredTippedQuery() {
+	require := s.Require()
+	ctx := s.Setup.Ctx
+	app := s.Setup.App
+	okpr := s.Setup.Oraclekeeper
+	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Block: &cmtproto.BlockParams{
+			MaxBytes: 200000,
+			MaxGas:   100_000_000,
+		},
+		Evidence: &cmtproto.EvidenceParams{
+			MaxAgeNumBlocks: 302400,
+			MaxAgeDuration:  504 * time.Hour, // 3 weeks is the max duration
+			MaxBytes:        10000,
+		},
+		Validator: &cmtproto.ValidatorParams{
+			PubKeyTypes: []string{
+				cmttypes.ABCIPubKeyTypeEd25519,
+			},
+		},
+		Abci: &cmtproto.ABCIParams{
+			VoteExtensionsEnableHeight: 1,
+		},
+	})
+	ctx = ctx.WithBlockTime(time.Now())
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	_, err := app.BeginBlocker(ctx)
+	require.NoError(err)
+	msgServer := keeper.NewMsgServerImpl(okpr)
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{100})
+	for _, val := range valAddrs {
+		err = s.Setup.Bridgekeeper.SetEVMAddressByOperator(ctx, val.String(), []byte("not real"))
+		s.NoError(err)
+	}
+	_, err = app.EndBlocker(ctx)
+	require.NoError(err)
+	addr := s.newKeysWithTokens()
+	// test for rotating queries going through the cycle list and updating the current query 1,2,3
+	// get cycle list
+	cycleList, err := okpr.GetCyclelist(ctx)
+	s.NoError(err)
+	s.Len(cycleList, 3)
+	queryId0 := utils.QueryIDFromData(cycleList[0])
+	queryId1 := utils.QueryIDFromData(cycleList[1])
+	// should be on the second query since the first one is expired from chain running during setup
+	query1, err := okpr.GetCurrentQueryInCycleList(ctx)
+	s.NoError(err)
+	s.True(bytes.Equal(query1, cycleList[1]))
+	require.NoError(err)
+	require.True(bytes.Equal(query1, cycleList[1]))
+	query, err := okpr.CurrentQuery(ctx, queryId1)
+	s.NoError(err)
+	s.Equal(uint64(3), query.Expiration)
+	// queryId1 may or may not have a tip or be in cycle list, but that's not what we're testing
+
+	// Get the initial meta ID of queryId0 before tipping
+	// queryId0 is not the current query (queryId1 is current)
+	initialQuery0, err := okpr.CurrentQuery(ctx, queryId0)
+	var initialMetaId0 uint64
+	if err == nil {
+		initialMetaId0 = initialQuery0.Id
+	} else {
+		// If query doesn't exist yet, it will be initialized with a new ID when rotated to
+		// We'll track this differently
+		initialMetaId0 = 0
+	}
+
+	// Tip queryId0 when it is NOT the current cycle list query (queryId1 is current)
+	// This simulates tipping a query that is in the cycle list but not currently active
+	msg := types.MsgTip{
+		Tipper:    addr.String(),
+		QueryData: cycleList[0], // tip queryId0 which is not current
+		Amount:    sdk.NewCoin("loya", math.NewInt(1*1e6)),
+	}
+	_, err = msgServer.Tip(ctx, &msg)
+	require.NoError(err)
+
+	// Verify the query was tipped but is still not current
+	query, err = okpr.CurrentQuery(ctx, queryId0)
+	require.NoError(err)
+	tippedMetaId0 := query.Id
+	s.True(query.Amount.GT(math.ZeroInt()), "Query should have a tip")
+	s.False(query.CycleList, "Query should not be in cycle list yet")
+
+	// Verify queryId0 expiration after tipping (should be blockHeight + 2 = 3)
+	query, err = okpr.CurrentQuery(ctx, queryId0)
+	require.NoError(err)
+	queryExpiration := query.Expiration
+	s.Equal(uint64(3), queryExpiration, "Query should expire at block 3")
+
+	// Move forward in blocks without anyone reporting for queryId0
+	// This will cause queryId0 to expire without reports
+	// First, let queryId1 expire and rotate to queryId2
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1) // block 2
+	_, err = app.BeginBlocker(ctx)
+	require.NoError(err)
+	_, err = app.EndBlocker(ctx)
+	require.NoError(err)
+	s.Equal(int64(2), ctx.BlockHeight())
+
+	// queryId1 hasn't expired yet, should still be on queryId1
+	query1, err = okpr.GetCurrentQueryInCycleList(ctx)
+	s.NoError(err)
+	s.True(bytes.Equal(query1, cycleList[1]))
+
+	// Move forward so queryId2 expires and rotates to queryId0
+	// queryId2 becomes current at block 3 and expires at block 5 (block 3 + 2 window)
+	// queryId0 was tipped but no one reported for it, so it should have expired by now
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1) // block 3
+	_, err = app.BeginBlocker(ctx)
+	require.NoError(err)
+	_, err = app.EndBlocker(ctx)
+	require.NoError(err)
+	s.Equal(int64(3), ctx.BlockHeight())
+
+	// queryId2 is now current, wait for it to expire
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1) // block 4
+	_, err = app.BeginBlocker(ctx)
+	require.NoError(err)
+	_, err = app.EndBlocker(ctx)
+	require.NoError(err)
+	s.Equal(int64(4), ctx.BlockHeight())
+
+	// queryId2 expires at block 5, so rotate to queryId0
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1) // block 5
+	_, err = app.BeginBlocker(ctx)
+	require.NoError(err)
+	_, err = app.EndBlocker(ctx)
+	require.NoError(err)
+	s.Equal(int64(5), ctx.BlockHeight())
+	s.Greater(int64(5), int64(queryExpiration), "QueryId0 should have expired by block 5")
+
+	// Should now be on queryId0 since queryId2 expired
+	query1, err = okpr.GetCurrentQueryInCycleList(ctx)
+	s.NoError(err)
+	s.True(bytes.Equal(query1, cycleList[0]))
+
+	// Verify that queryId0 is now the current query and its meta ID has increased
+	// because it was tipped but not reported, and is now rotated to as part of the cycle list
+	query, err = okpr.CurrentQuery(ctx, queryId0)
+	require.NoError(err)
+	s.True(query.CycleList, "Query should now be in cycle list")
+	s.True(query.Amount.GT(math.ZeroInt()), "Query should still have the tip")
+
+	// The meta ID should have increased when the expired tipped query was rotated to
+	if initialMetaId0 > 0 {
+		s.Greater(query.Id, initialMetaId0, "Meta ID should have increased when expired tipped query was rotated to")
+	}
+	// Also verify it's greater than the ID it had when tipped
+	s.Greater(query.Id, tippedMetaId0, "Meta ID should have increased when expired tipped query was rotated to")
 }
