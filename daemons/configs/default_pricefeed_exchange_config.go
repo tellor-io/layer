@@ -56,13 +56,124 @@ func GenerateDefaultExchangeTomlString() bytes.Buffer {
 	return defaultExchangeToml
 }
 
+// MergePricefeedExchangeConfig merges missing exchanges from static config into existing config file.
+// It preserves existing exchanges and only adds new ones with default values.
+func MergePricefeedExchangeConfig(homeDir string) error {
+	configFilePath := getConfigFilePath(homeDir)
+
+	// Read existing config file
+	tomlFile, err := os.ReadFile(configFilePath)
+	if err != nil {
+		return fmt.Errorf("failed to read existing config file: %w", err)
+	}
+
+	// Unmarshal existing exchanges
+	existingExchanges := map[string][]types.ExchangeQueryConfig{}
+	if err = toml.Unmarshal(tomlFile, &existingExchanges); err != nil {
+		return fmt.Errorf("failed to unmarshal existing config: %w", err)
+	}
+
+	// Create a map of existing exchange IDs for quick lookup
+	existingExchangeMap := make(map[types.ExchangeId]bool)
+	for _, exchange := range existingExchanges["exchanges"] {
+		existingExchangeMap[exchange.ExchangeId] = true
+	}
+
+	// Find missing exchanges from static config
+	missingExchanges := make([]types.ExchangeQueryConfig, 0)
+	for exchangeId, defaultConfig := range constants.StaticExchangeQueryConfig {
+		if !existingExchangeMap[exchangeId] {
+			missingExchanges = append(missingExchanges, *defaultConfig)
+		}
+	}
+
+	// If no missing exchanges, nothing to do
+	if len(missingExchanges) == 0 {
+		return nil
+	}
+
+	// Append missing exchanges to existing ones
+	allExchanges := append(existingExchanges["exchanges"], missingExchanges...)
+
+	// Create merged config map for template
+	mergedConfigMap := make(map[types.ExchangeId]*types.ExchangeQueryConfig)
+	for _, exchange := range allExchanges {
+		mergedConfigMap[exchange.ExchangeId] = &types.ExchangeQueryConfig{
+			ExchangeId: exchange.ExchangeId,
+			IntervalMs: exchange.IntervalMs,
+			TimeoutMs:  exchange.TimeoutMs,
+			MaxQueries: exchange.MaxQueries,
+		}
+	}
+
+	// Generate merged TOML using template
+	template, err := template.New("").Parse(defaultTomlTemplate)
+	if err != nil {
+		return fmt.Errorf("failed to parse template: %w", err)
+	}
+
+	var mergedToml bytes.Buffer
+	if err = template.Execute(&mergedToml, mergedConfigMap); err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	// Validate merged config by reading it back
+	// We'll use a temporary approach: write to temp file, validate, then replace
+	tempFile := configFilePath + ".tmp"
+	if err = tmos.WriteFile(tempFile, mergedToml.Bytes(), 0o644); err != nil {
+		return fmt.Errorf("failed to write temp file: %w", err)
+	}
+
+	// Validate by attempting to read it
+	testConfig := map[string][]types.ExchangeQueryConfig{}
+	testToml, err := os.ReadFile(tempFile)
+	if err != nil {
+		os.Remove(tempFile)
+		return fmt.Errorf("failed to read temp file for validation: %w", err)
+	}
+	if err = toml.Unmarshal(testToml, &testConfig); err != nil {
+		os.Remove(tempFile)
+		return fmt.Errorf("merged config validation failed: %w", err)
+	}
+
+	// Validate each exchange has required fields
+	for _, exchange := range testConfig["exchanges"] {
+		if exchange.IntervalMs == 0 || exchange.TimeoutMs == 0 || exchange.MaxQueries == 0 {
+			os.Remove(tempFile)
+			return fmt.Errorf("merged config has invalid exchange: %v", exchange.ExchangeId)
+		}
+	}
+
+	// Replace original file with validated merged config
+	if err = os.Rename(tempFile, configFilePath); err != nil {
+		os.Remove(tempFile)
+		return fmt.Errorf("failed to replace config file: %w", err)
+	}
+
+	return nil
+}
+
 // WriteDefaultPricefeedExchangeToml reads in the toml string for the pricefeed client and
 // writes said string to the config folder as a toml file if the config file does not exist.
+// If the file exists, it merges missing exchanges from static config.
 func WriteDefaultPricefeedExchangeToml(homeDir string) {
 	configFilePath := getConfigFilePath(homeDir)
+	configDir := filepath.Dir(configFilePath)
+	// Ensure config directory exists
+	if err := os.MkdirAll(configDir, 0o755); err != nil {
+		// Check if directory actually exists (might have been created by another process)
+		if _, statErr := os.Stat(configDir); statErr != nil {
+			panic(fmt.Sprintf("failed to create config directory %s: %v", configDir, err))
+		}
+	}
 	if _, err := os.Stat(configFilePath); os.IsNotExist(err) {
 		buffer := GenerateDefaultExchangeTomlString()
 		tmos.MustWriteFile(configFilePath, buffer.Bytes(), 0o644)
+	} else {
+		// File exists, merge missing exchanges
+		if err := MergePricefeedExchangeConfig(homeDir); err != nil {
+			panic(fmt.Sprintf("failed to merge pricefeed exchange config: %v", err))
+		}
 	}
 }
 
