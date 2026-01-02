@@ -68,6 +68,11 @@ var (
 	ReporterStandardShareSumPrefix = collections.NewPrefix(40)
 	NonStandardQueriesPrefix       = collections.NewPrefix(41)
 	StandardOpportunitiesPrefix    = collections.NewPrefix(42)
+
+	// Liveness tracking
+	TotalAggregatesCountPrefix    = collections.NewPrefix(43)
+	ReporterAggregatesCountPrefix = collections.NewPrefix(44)
+	ReporterLastReportTimePrefix  = collections.NewPrefix(45)
 )
 
 func KeyPrefix(p string) []byte {
