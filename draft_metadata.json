@@ -1,0 +1,10 @@
+{
+ "title": "v6.1.0",
+ "authors": [
+  "tellor"
+ ],
+ "summary": "upgrade to new version",
+ "details": "new",
+ "proposal_forum_url": "tellor.io",
+ "vote_option_context": "yes for yes and no for no"
+}

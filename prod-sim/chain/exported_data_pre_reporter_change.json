@@ -1,0 +1,1287 @@
+{
+    "app_name": "layer",
+    "app_version": "",
+    "genesis_time": "2025-05-14T16:47:34.415645Z",
+    "chain_id": "tellor-devnet",
+    "initial_height": 5743,
+    "app_hash": null,
+    "app_state": {
+        "auth": {
+            "params": {
+                "max_memo_characters": "256",
+                "tx_sig_limit": "7",
+                "tx_size_cost_per_byte": "10",
+                "sig_verify_cost_ed25519": "590",
+                "sig_verify_cost_secp256k1": "1000"
+            },
+            "accounts": [
+                {
+                    "@type": "/cosmos.auth.v1beta1.ModuleAccount",
+                    "base_account": {
+                        "address": "tellor1zgan0w9a88r2drnqcgm535lmxrm05wg5cc6xsd",
+                        "pub_key": null,
+                        "account_number": "10",
+                        "sequence": "0"
+                    },
+                    "name": "tips_escrow_pool",
+                    "permissions": []
+                },
+                {
+                    "@type": "/cosmos.auth.v1beta1.BaseAccount",
+                    "address": "tellor1g9vjqulndqfvfc5a8mnmrgxgfulzjhq2t3wg5q",
+                    "pub_key": {
+                        "@type": "/cosmos.crypto.secp256k1.PubKey",
+                        "key": "AqBC6tqptfBw/Zwng86h9oZK7NRYIQ7QgkbXBpU+Wjkb"
+                    },
+                    "account_number": "0",
+                    "sequence": "17"
+                },
+                {
+                    "@type": "/cosmos.auth.v1beta1.ModuleAccount",
+                    "base_account": {
+                        "address": "tellor1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34ds5rz",
+                        "pub_key": null,
+                        "account_number": "5",
+                        "sequence": "0"
+                    },
+                    "name": "bonded_tokens_pool",
+                    "permissions": [
+                        "burner",
+                        "staking"
+                    ]
+                },
+                {
+                    "@type": "/cosmos.auth.v1beta1.BaseAccount",
+                    "address": "tellor122c3g4enx52qw85l8s9je7kx96q24qydry7qtw",
+                    "pub_key": {
+                        "@type": "/cosmos.crypto.secp256k1.PubKey",
+                        "key": "AhxUQLmjeTFeuUerBVhWpNT+dOHOlmAMjmI78MsZnqrb"
+                    },
+                    "account_number": "2",
+                    "sequence": "11"
+                },
+                {
+                    "@type": "/cosmos.auth.v1beta1.ModuleAccount",
+                    "base_account": {
+                        "address": "tellor1tygms3xhhs3yv487phx3dw4a95jn7t7lpdv94k",
+                        "pub_key": null,
+                        "account_number": "6",
+                        "sequence": "0"
+                    },
+                    "name": "not_bonded_tokens_pool",
+                    "permissions": [
+                        "burner",
+                        "staking"
+                    ]
+                },
+                {
+                    "@type": "/cosmos.auth.v1beta1.ModuleAccount",
+                    "base_account": {
+                        "address": "tellor10d07y265gmmuvt4z0w9aw880jnsr700j6527vx",
+                        "pub_key": null,
+                        "account_number": "7",
+                        "sequence": "0"
+                    },
+                    "name": "gov",
+                    "permissions": [
+                        "burner"
+                    ]
+                },
+                {
+                    "@type": "/cosmos.auth.v1beta1.ModuleAccount",
+                    "base_account": {
+                        "address": "tellor1364k288xd4r0gxlnk2rve5fm3qxamdtted7v4t",
+                        "pub_key": null,
+                        "account_number": "8",
+                        "sequence": "0"
+                    },
+                    "name": "time_based_rewards",
+                    "permissions": []
+                },
+                {
+                    "@type": "/cosmos.auth.v1beta1.ModuleAccount",
+                    "base_account": {
+                        "address": "tellor1jv65s3grqf6v6jl3dp4t6c9t9rk99cd88fa8n2",
+                        "pub_key": null,
+                        "account_number": "4",
+                        "sequence": "0"
+                    },
+                    "name": "distribution",
+                    "permissions": []
+                },
+                {
+                    "@type": "/cosmos.auth.v1beta1.ModuleAccount",
+                    "base_account": {
+                        "address": "tellor1m3h30wlvsf8llruxtpukdvsy0km2kum8g87ra4",
+                        "pub_key": null,
+                        "account_number": "9",
+                        "sequence": "0"
+                    },
+                    "name": "mint",
+                    "permissions": [
+                        "minter"
+                    ]
+                },
+                {
+                    "@type": "/cosmos.auth.v1beta1.BaseAccount",
+                    "address": "tellor1ak0e83xysf5la9k52xpumfgy73wau8hpaewzsg",
+                    "pub_key": {
+                        "@type": "/cosmos.crypto.secp256k1.PubKey",
+                        "key": "Akvvf3rZI9JqP5GngPHFcvSO3ca69M1WXKoygpPdbnim"
+                    },
+                    "account_number": "1",
+                    "sequence": "11"
+                },
+                {
+                    "@type": "/cosmos.auth.v1beta1.ModuleAccount",
+                    "base_account": {
+                        "address": "tellor17xpfvakm2amg962yls6f84z3kell8c5ls06m3g",
+                        "pub_key": null,
+                        "account_number": "3",
+                        "sequence": "0"
+                    },
+                    "name": "fee_collector",
+                    "permissions": []
+                }
+            ]
+        },
+        "authz": {
+            "authorization": []
+        },
+        "bank": {
+            "params": {
+                "send_enabled": [],
+                "default_send_enabled": true
+            },
+            "balances": [
+                {
+                    "address": "tellor1zgan0w9a88r2drnqcgm535lmxrm05wg5cc6xsd",
+                    "coins": [
+                        {
+                            "denom": "loya",
+                            "amount": "1980922"
+                        }
+                    ]
+                },
+                {
+                    "address": "tellor1g9vjqulndqfvfc5a8mnmrgxgfulzjhq2t3wg5q",
+                    "coins": [
+                        {
+                            "denom": "loya",
+                            "amount": "2700742660"
+                        }
+                    ]
+                },
+                {
+                    "address": "tellor1fl48vsnmsdzcv85q5d2q4z5ajdha8yu34ds5rz",
+                    "coins": [
+                        {
+                            "denom": "loya",
+                            "amount": "26019105476"
+                        }
+                    ]
+                },
+                {
+                    "address": "tellor122c3g4enx52qw85l8s9je7kx96q24qydry7qtw",
+                    "coins": [
+                        {
+                            "denom": "loya",
+                            "amount": "2700587223"
+                        }
+                    ]
+                },
+                {
+                    "address": "tellor1364k288xd4r0gxlnk2rve5fm3qxamdtted7v4t",
+                    "coins": [
+                        {
+                            "denom": "loya",
+                            "amount": "217360"
+                        }
+                    ]
+                },
+                {
+                    "address": "tellor1jv65s3grqf6v6jl3dp4t6c9t9rk99cd88fa8n2",
+                    "coins": [
+                        {
+                            "denom": "loya",
+                            "amount": "867847385"
+                        }
+                    ]
+                },
+                {
+                    "address": "tellor1ak0e83xysf5la9k52xpumfgy73wau8hpaewzsg",
+                    "coins": [
+                        {
+                            "denom": "loya",
+                            "amount": "2700587806"
+                        }
+                    ]
+                }
+            ],
+            "supply": [
+                {
+                    "denom": "loya",
+                    "amount": "34991068832"
+                }
+            ],
+            "denom_metadata": [
+                {
+                    "description": "The native token of the Tellor Layer.",
+                    "denom_units": [
+                        {
+                            "denom": "loya",
+                            "exponent": 0,
+                            "aliases": []
+                        },
+                        {
+                            "denom": "TRB",
+                            "exponent": 6,
+                            "aliases": []
+                        }
+                    ],
+                    "base": "loya",
+                    "display": "TRB",
+                    "name": "TRB",
+                    "symbol": "TRB",
+                    "uri": "",
+                    "uri_hash": ""
+                }
+            ],
+            "send_enabled": []
+        },
+        "bridge": {
+            "params": {
+                "attest_slash_percentage": "0.010000000000000000",
+                "attest_rate_limit_window": "600000",
+                "valset_slash_percentage": "0.050000000000000000",
+                "valset_rate_limit_window": "600000",
+                "attest_penalty_time_cutoff": "0",
+                "mainnet_chain_id": "tellor-1"
+            },
+            "snapshot_limit": "1000",
+            "bridge_val_set": {
+                "bridge_validator_set": [
+                    {
+                        "ethereumAddress": "jhKMCE6aQ6RjJjP/oqlN9QHCkn8=",
+                        "power": "8675"
+                    },
+                    {
+                        "ethereumAddress": "XNmef2mNM/ENynYe4xRGb9Qft84=",
+                        "power": "8670"
+                    },
+                    {
+                        "ethereumAddress": "Dn44gzwY6197Vg3/gP8siTui05o=",
+                        "power": "8661"
+                    }
+                ]
+            },
+            "validator_checkpoint": "yjmFMU1afKQ677R02dgXl2dPfiR8Iqlgvpt2LycnjLY=",
+            "withdrawal_id": "0",
+            "operator_to_evm_address_map": [
+                {
+                    "operator_address": "tellorvaloper1g9vjqulndqfvfc5a8mnmrgxgfulzjhq277z6ds",
+                    "evm_address": "Dn44gzwY6197Vg3/gP8siTui05o="
+                },
+                {
+                    "operator_address": "tellorvaloper1ak0e83xysf5la9k52xpumfgy73wau8hpgkzsfc",
+                    "evm_address": "jhKMCE6aQ6RjJjP/oqlN9QHCkn8="
+                },
+                {
+                    "operator_address": "tellorvaloper122c3g4enx52qw85l8s9je7kx96q24qydktjjj7",
+                    "evm_address": "XNmef2mNM/ENynYe4xRGb9Qft84="
+                }
+            ],
+            "evm_registered_map": [
+                {
+                    "operator_address": "8e128c084e9a43a4632633ffa2a94df501c2927f",
+                    "registered": true
+                },
+                {
+                    "operator_address": "5cd99e7f698d33f10dca761ee314466fd41fb7ce",
+                    "registered": true
+                },
+                {
+                    "operator_address": "0e7e38833c18eb5f7b560dff80ff2c893ba2d39a",
+                    "registered": true
+                }
+            ],
+            "bridge_valset_sigs_map": [
+                {
+                    "timestamp": "1767629318548",
+                    "valset_sigs": [
+                        "Jxfx/d2sr5aPsa2xFjRJDuAi46F0LN8IVIGeI5j5NUk8C9IKkfVpYgr0aPWfTDbI+xY2wL68EohKjpzDRZVCXg==",
+                        "DvmGBftTrPQZajHVgFnRaDlZYvxSn7GIiYzZJdZMIBtFxBS6393Trf7IKRL8d1h/xpCY6BhC7LkhjU9Foae9WA==",
+                        "v12AMu51uufm8g1j5ARRo8ouYT7IlEhvn/yOMmuPGPIJ7ZFqEM/pt75aZcTFOC+7Suun46OXEJp6w3XCDeff1w=="
+                    ]
+                },
+                {
+                    "timestamp": "1767384538603",
+                    "valset_sigs": [
+                        "",
+                        "",
+                        ""
+                    ]
+                }
+            ],
+            "validator_checkpoint_params_map": [
+                {
+                    "timestamp": "1767629318548",
+                    "validator_timestamp": "1767629318548",
+                    "validator_power_threshold": "17337",
+                    "validator_set_hash": "KWFcIrQd/VomZcKVGB1e92+FFdefarG0FfGbJ2vte2Y=",
+                    "validator_checkpoint": "yjmFMU1afKQ677R02dgXl2dPfiR8Iqlgvpt2LycnjLY="
+                },
+                {
+                    "timestamp": "1767384538603",
+                    "validator_timestamp": "1767384538603",
+                    "validator_power_threshold": "2",
+                    "validator_set_hash": "sGmhKxjny0zGkJ67yNi0dS86ule38A8gdau8x47NrzI=",
+                    "validator_checkpoint": "8EIPrO9PFJY5wRqjEPRRVxATrkLfmkcV0lOYsQ08NEQ="
+                }
+            ],
+            "validator_checkpoint_idx_map": [
+                {
+                    "index": "1",
+                    "timestamp": "1767629318548"
+                },
+                {
+                    "index": "0",
+                    "timestamp": "1767384538603"
+                }
+            ],
+            "latest_validator_checkpoint_idx": "1",
+            "bridge_valset_by_timestamp_map": [
+                {
+                    "timestamp": "1767629318548",
+                    "valset": {
+                        "bridge_validator_set": [
+                            {
+                                "ethereumAddress": "jhKMCE6aQ6RjJjP/oqlN9QHCkn8=",
+                                "power": "8675"
+                            },
+                            {
+                                "ethereumAddress": "XNmef2mNM/ENynYe4xRGb9Qft84=",
+                                "power": "8670"
+                            },
+                            {
+                                "ethereumAddress": "Dn44gzwY6197Vg3/gP8siTui05o=",
+                                "power": "8661"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "timestamp": "1767384538603",
+                    "valset": {
+                        "bridge_validator_set": [
+                            {
+                                "ethereumAddress": "Dn44gzwY6197Vg3/gP8siTui05o=",
+                                "power": "1"
+                            },
+                            {
+                                "ethereumAddress": "XNmef2mNM/ENynYe4xRGb9Qft84=",
+                                "power": "1"
+                            },
+                            {
+                                "ethereumAddress": "jhKMCE6aQ6RjJjP/oqlN9QHCkn8=",
+                                "power": "1"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "valset_timestamp_to_idx_map": [
+                {
+                    "timestamp": "1767629318548",
+                    "index": "1"
+                },
+                {
+                    "timestamp": "1767384538603",
+                    "index": "0"
+                }
+            ],
+            "deposit_id_claimed_map": []
+        },
+        "capability": {
+            "index": "4",
+            "owners": [
+                {
+                    "index": "1",
+                    "index_owners": {
+                        "owners": [
+                            {
+                                "module": "ibc",
+                                "name": "ports/transfer"
+                            },
+                            {
+                                "module": "transfer",
+                                "name": "ports/transfer"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "index": "2",
+                    "index_owners": {
+                        "owners": [
+                            {
+                                "module": "ibc",
+                                "name": "ports/icqhost"
+                            },
+                            {
+                                "module": "interchainquery",
+                                "name": "ports/icqhost"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "index": "3",
+                    "index_owners": {
+                        "owners": [
+                            {
+                                "module": "ibc",
+                                "name": "ports/icahost"
+                            },
+                            {
+                                "module": "icahost",
+                                "name": "ports/icahost"
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        "dispute": {
+            "params": {
+                "team_address": "+mmRVs069FJdX1vYIwz0VOW05BA="
+            },
+            "disputes": [],
+            "votes": [],
+            "voter": [],
+            "reporters_with_delegators_who_voted": [],
+            "block_info": [],
+            "dispute_fee_payer": [],
+            "dust": "0",
+            "vote_counts_by_group": []
+        },
+        "distribution": {
+            "params": {
+                "community_tax": "0.000000000000000000",
+                "base_proposer_reward": "0.000000000000000000",
+                "bonus_proposer_reward": "0.000000000000000000",
+                "withdraw_addr_enabled": true
+            },
+            "fee_pool": {
+                "community_pool": [
+                    {
+                        "denom": "loya",
+                        "amount": "3.314978210745766183"
+                    }
+                ]
+            },
+            "delegator_withdraw_infos": [],
+            "previous_proposer": "tellorvalcons1xejffqwj5qpjqhv3tgeppryprlm8au8gu5uxgq",
+            "outstanding_rewards": [
+                {
+                    "validator_address": "tellorvaloper1g9vjqulndqfvfc5a8mnmrgxgfulzjhq277z6ds",
+                    "outstanding_rewards": [
+                        {
+                            "denom": "loya",
+                            "amount": "289177653.331070160800622482"
+                        }
+                    ]
+                },
+                {
+                    "validator_address": "tellorvaloper122c3g4enx52qw85l8s9je7kx96q24qydktjjj7",
+                    "outstanding_rewards": [
+                        {
+                            "denom": "loya",
+                            "amount": "289334768.727819332883515163"
+                        }
+                    ]
+                },
+                {
+                    "validator_address": "tellorvaloper1ak0e83xysf5la9k52xpumfgy73wau8hpgkzsfc",
+                    "outstanding_rewards": [
+                        {
+                            "denom": "loya",
+                            "amount": "289334959.626132295570096172"
+                        }
+                    ]
+                }
+            ],
+            "validator_accumulated_commissions": [
+                {
+                    "validator_address": "tellorvaloper1g9vjqulndqfvfc5a8mnmrgxgfulzjhq277z6ds",
+                    "accumulated": {
+                        "commission": [
+                            {
+                                "denom": "loya",
+                                "amount": "289094001.327149634300332489"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "validator_address": "tellorvaloper122c3g4enx52qw85l8s9je7kx96q24qydktjjj7",
+                    "accumulated": {
+                        "commission": [
+                            {
+                                "denom": "loya",
+                                "amount": "289094150.446687185559989552"
+                            }
+                        ]
+                    }
+                },
+                {
+                    "validator_address": "tellorvaloper1ak0e83xysf5la9k52xpumfgy73wau8hpgkzsfc",
+                    "accumulated": {
+                        "commission": [
+                            {
+                                "denom": "loya",
+                                "amount": "289094230.226163179271964457"
+                            }
+                        ]
+                    }
+                }
+            ],
+            "validator_historical_rewards": [
+                {
+                    "validator_address": "tellorvaloper1g9vjqulndqfvfc5a8mnmrgxgfulzjhq277z6ds",
+                    "period": "4",
+                    "rewards": {
+                        "cumulative_reward_ratio": [
+                            {
+                                "denom": "loya",
+                                "amount": "2600.553136010275633766"
+                            }
+                        ],
+                        "reference_count": 2
+                    }
+                },
+                {
+                    "validator_address": "tellorvaloper122c3g4enx52qw85l8s9je7kx96q24qydktjjj7",
+                    "period": "3",
+                    "rewards": {
+                        "cumulative_reward_ratio": [
+                            {
+                                "denom": "loya",
+                                "amount": "2600.553117925130871593"
+                            }
+                        ],
+                        "reference_count": 2
+                    }
+                },
+                {
+                    "validator_address": "tellorvaloper1ak0e83xysf5la9k52xpumfgy73wau8hpgkzsfc",
+                    "period": "3",
+                    "rewards": {
+                        "cumulative_reward_ratio": [
+                            {
+                                "denom": "loya",
+                                "amount": "2600.553117932553216622"
+                            }
+                        ],
+                        "reference_count": 2
+                    }
+                }
+            ],
+            "validator_current_rewards": [
+                {
+                    "validator_address": "tellorvaloper1g9vjqulndqfvfc5a8mnmrgxgfulzjhq277z6ds",
+                    "rewards": {
+                        "rewards": [
+                            {
+                                "denom": "loya",
+                                "amount": "83652.003920513510290227"
+                            }
+                        ],
+                        "period": "5"
+                    }
+                },
+                {
+                    "validator_address": "tellorvaloper122c3g4enx52qw85l8s9je7kx96q24qydktjjj7",
+                    "rewards": {
+                        "rewards": [
+                            {
+                                "denom": "loya",
+                                "amount": "240618.281132146302650160"
+                            }
+                        ],
+                        "period": "4"
+                    }
+                },
+                {
+                    "validator_address": "tellorvaloper1ak0e83xysf5la9k52xpumfgy73wau8hpgkzsfc",
+                    "rewards": {
+                        "rewards": [
+                            {
+                                "denom": "loya",
+                                "amount": "240729.399969115934163415"
+                            }
+                        ],
+                        "period": "4"
+                    }
+                }
+            ],
+            "delegator_starting_infos": [
+                {
+                    "delegator_address": "tellor1g9vjqulndqfvfc5a8mnmrgxgfulzjhq2t3wg5q",
+                    "validator_address": "tellorvaloper1g9vjqulndqfvfc5a8mnmrgxgfulzjhq277z6ds",
+                    "starting_info": {
+                        "previous_period": "4",
+                        "stake": "8665787334.000000000000000000",
+                        "height": "5619"
+                    }
+                },
+                {
+                    "delegator_address": "tellor122c3g4enx52qw85l8s9je7kx96q24qydry7qtw",
+                    "validator_address": "tellorvaloper122c3g4enx52qw85l8s9je7kx96q24qydktjjj7",
+                    "starting_info": {
+                        "previous_period": "3",
+                        "stake": "8674433100.000000000000000000",
+                        "height": "5389"
+                    }
+                },
+                {
+                    "delegator_address": "tellor1ak0e83xysf5la9k52xpumfgy73wau8hpaewzsg",
+                    "validator_address": "tellorvaloper1ak0e83xysf5la9k52xpumfgy73wau8hpgkzsfc",
+                    "starting_info": {
+                        "previous_period": "3",
+                        "stake": "8678885042.000000000000000000",
+                        "height": "5389"
+                    }
+                }
+            ],
+            "validator_slash_events": []
+        },
+        "evidence": {
+            "evidence": []
+        },
+        "feegrant": {
+            "allowances": []
+        },
+        "genutil": {
+            "gen_txs": []
+        },
+        "globalfee": {
+            "params": {
+                "minimum_gas_prices": [
+                    {
+                        "denom": "loya",
+                        "amount": "0.000025000000000000"
+                    }
+                ]
+            }
+        },
+        "gov": {
+            "starting_proposal_id": "3",
+            "deposits": [],
+            "votes": [],
+            "proposals": [
+                {
+                    "id": "1",
+                    "messages": [
+                        {
+                            "@type": "/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade",
+                            "authority": "tellor10d07y265gmmuvt4z0w9aw880jnsr700j6527vx",
+                            "plan": {
+                                "name": "v6.1.0",
+                                "time": "0001-01-01T00:00:00Z",
+                                "height": "500",
+                                "info": "",
+                                "upgraded_client_state": null
+                            }
+                        }
+                    ],
+                    "status": "PROPOSAL_STATUS_PASSED",
+                    "final_tally_result": {
+                        "yes_count": "3000000",
+                        "abstain_count": "0",
+                        "no_count": "0",
+                        "no_with_veto_count": "0"
+                    },
+                    "submit_time": "2026-01-02T20:29:31.323451430Z",
+                    "deposit_end_time": "2026-01-04T20:29:31.323451430Z",
+                    "total_deposit": [
+                        {
+                            "denom": "loya",
+                            "amount": "50000000"
+                        }
+                    ],
+                    "voting_start_time": "2026-01-02T20:29:31.323451430Z",
+                    "voting_end_time": "2026-01-02T20:34:31.323451430Z",
+                    "metadata": "ipfs://CID",
+                    "title": "v6.1.0",
+                    "summary": "upgrade to new version",
+                    "proposer": "tellor1g9vjqulndqfvfc5a8mnmrgxgfulzjhq2t3wg5q",
+                    "expedited": true,
+                    "failed_reason": ""
+                },
+                {
+                    "id": "2",
+                    "messages": [
+                        {
+                            "@type": "/layer.oracle.MsgUpdateCyclelist",
+                            "authority": "tellor10d07y265gmmuvt4z0w9aw880jnsr700j6527vx",
+                            "cyclelist": [
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2V0aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2J0YwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA3RyYgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHVzZGMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGtpbmcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHJldGgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHNhZ2EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB3Nmcnh1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABnN0YXRvbQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABXN1c2RlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABXN1c2RzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHN1c24AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHRidGMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHVzZG4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHVzZHQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABXZ5dXNkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABndzdGV0aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHlldGgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHl1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+                            ]
+                        }
+                    ],
+                    "status": "PROPOSAL_STATUS_PASSED",
+                    "final_tally_result": {
+                        "yes_count": "26008370279",
+                        "abstain_count": "0",
+                        "no_count": "0",
+                        "no_with_veto_count": "0"
+                    },
+                    "submit_time": "2026-01-05T18:18:14.131948796Z",
+                    "deposit_end_time": "2026-01-07T18:18:14.131948796Z",
+                    "total_deposit": [
+                        {
+                            "denom": "loya",
+                            "amount": "50000000"
+                        }
+                    ],
+                    "voting_start_time": "2026-01-05T18:18:14.131948796Z",
+                    "voting_end_time": "2026-01-05T18:23:14.131948796Z",
+                    "metadata": "ipfs://CID",
+                    "title": "Update cyclelist",
+                    "summary": "add all currently active pairs to cyclelist",
+                    "proposer": "tellor1g9vjqulndqfvfc5a8mnmrgxgfulzjhq2t3wg5q",
+                    "expedited": true,
+                    "failed_reason": ""
+                }
+            ],
+            "deposit_params": null,
+            "voting_params": null,
+            "tally_params": null,
+            "params": {
+                "min_deposit": [
+                    {
+                        "denom": "loya",
+                        "amount": "10000000"
+                    }
+                ],
+                "max_deposit_period": "172800s",
+                "voting_period": "172800s",
+                "quorum": "0.334000000000000000",
+                "threshold": "0.500000000000000000",
+                "veto_threshold": "0.334000000000000000",
+                "min_initial_deposit_ratio": "0.000000000000000000",
+                "proposal_cancel_ratio": "0.500000000000000000",
+                "proposal_cancel_dest": "",
+                "expedited_voting_period": "300s",
+                "expedited_threshold": "0.667000000000000000",
+                "expedited_min_deposit": [
+                    {
+                        "denom": "loya",
+                        "amount": "10000"
+                    }
+                ],
+                "burn_vote_quorum": false,
+                "burn_proposal_deposit_prevote": false,
+                "burn_vote_veto": true,
+                "min_deposit_ratio": "0.010000000000000000"
+            },
+            "constitution": ""
+        },
+        "group": {
+            "group_seq": "0",
+            "groups": [],
+            "group_members": [],
+            "group_policy_seq": "0",
+            "group_policies": [],
+            "proposal_seq": "0",
+            "proposals": [],
+            "votes": []
+        },
+        "ibc": {
+            "client_genesis": {
+                "clients": [
+                    {
+                        "client_id": "09-localhost",
+                        "client_state": {
+                            "@type": "/ibc.lightclients.localhost.v2.ClientState",
+                            "latest_height": {
+                                "revision_number": "0",
+                                "revision_height": "5742"
+                            }
+                        }
+                    }
+                ],
+                "clients_consensus": [],
+                "clients_metadata": [],
+                "params": {
+                    "allowed_clients": [
+                        "06-solomachine",
+                        "07-tendermint",
+                        "09-localhost"
+                    ]
+                },
+                "create_localhost": false,
+                "next_client_sequence": "0"
+            },
+            "connection_genesis": {
+                "connections": [
+                    {
+                        "id": "connection-localhost",
+                        "client_id": "09-localhost",
+                        "versions": [
+                            {
+                                "identifier": "1",
+                                "features": [
+                                    "ORDER_ORDERED",
+                                    "ORDER_UNORDERED"
+                                ]
+                            }
+                        ],
+                        "state": "STATE_OPEN",
+                        "counterparty": {
+                            "client_id": "09-localhost",
+                            "connection_id": "connection-localhost",
+                            "prefix": {
+                                "key_prefix": "aWJj"
+                            }
+                        },
+                        "delay_period": "0"
+                    }
+                ],
+                "client_connection_paths": [],
+                "next_connection_sequence": "0",
+                "params": {
+                    "max_expected_time_per_block": "30000000000"
+                }
+            },
+            "channel_genesis": {
+                "channels": [],
+                "acknowledgements": [],
+                "commitments": [],
+                "receipts": [],
+                "send_sequences": [],
+                "recv_sequences": [],
+                "ack_sequences": [],
+                "next_channel_sequence": "0"
+            }
+        },
+        "interchainaccounts": {
+            "controller_genesis_state": {
+                "active_channels": [],
+                "interchain_accounts": [],
+                "ports": [],
+                "params": {
+                    "controller_enabled": true
+                }
+            },
+            "host_genesis_state": {
+                "active_channels": [],
+                "interchain_accounts": [],
+                "port": "icahost",
+                "params": {
+                    "host_enabled": true,
+                    "allow_messages": [
+                        "*"
+                    ]
+                }
+            }
+        },
+        "interchainquery": {
+            "host_port": "icqhost",
+            "params": {
+                "host_enabled": true,
+                "allow_queries": [
+                    "/layer.oracle.Query/GetCurrentAggregateReport"
+                ]
+            }
+        },
+        "mint": {
+            "bond_denom": "loya",
+            "initialized": true,
+            "previous_block_time": "2026-01-05T18:57:17.596838173Z"
+        },
+        "oracle": {
+            "params": {
+                "minStakeAmount": "1000000",
+                "minTipAmount": "10000",
+                "maxTipAmount": "25000000",
+                "liveness_cycles": "1"
+            },
+            "cyclelist": [
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABXN1c2RlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHJldGgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHN1c24AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABndzdGV0aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHl1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABXN1c2RzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA3RyYgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABnN0YXRvbQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHVzZHQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHNhZ2EAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHRidGMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2V0aAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHVzZGMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABXZ5dXNkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHlldGgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA2J0YwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB3Nmcnh1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABGtpbmcAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+                "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJU3BvdFByaWNlAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABHVzZG4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAN1c2QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="
+            ],
+            "query_data_limit": "524288",
+            "query_sequencer": "2872"
+        },
+        "registry": {
+            "params": {
+                "max_report_buffer_window": "700000"
+            },
+            "dataspec": [
+                {
+                    "document_hash": "",
+                    "response_value_type": "uint256",
+                    "abi_components": [
+                        {
+                            "name": "asset",
+                            "field_type": "string",
+                            "nested_component": []
+                        },
+                        {
+                            "name": "currency",
+                            "field_type": "string",
+                            "nested_component": []
+                        }
+                    ],
+                    "aggregation_method": "weighted-median",
+                    "registrar": "genesis",
+                    "report_block_window": "2",
+                    "query_type": "spotprice"
+                },
+                {
+                    "document_hash": "",
+                    "response_value_type": "address, string, uint256, uint256",
+                    "abi_components": [
+                        {
+                            "name": "toLayer",
+                            "field_type": "bool",
+                            "nested_component": []
+                        },
+                        {
+                            "name": "depositId",
+                            "field_type": "uint256",
+                            "nested_component": []
+                        }
+                    ],
+                    "aggregation_method": "weighted-mode",
+                    "registrar": "genesis",
+                    "report_block_window": "2000",
+                    "query_type": "trbbridge"
+                }
+            ]
+        },
+        "reporter": {
+            "params": {
+                "min_commission_rate": "0.000000000000000000",
+                "min_loya": "1000000",
+                "max_selectors": "100",
+                "max_num_of_delegations": "10"
+            },
+            "selectorTips": [
+                {
+                    "selector_address": "7Z+TxMSCaf6W1FGDzaUE9F3eHuE=",
+                    "tips": "73486.255994131867094969"
+                },
+                {
+                    "selector_address": "UrEUVzM1FAcenzwLLPrGLoCqgI0=",
+                    "tips": "73894.569586888295466255"
+                },
+                {
+                    "selector_address": "QVkgc/NoEsTinT7nsaDITz4pXAo=",
+                    "tips": "18020.741837604984522607"
+                }
+            ],
+            "disputed_delegation_amounts": [],
+            "fee_paid_from_stake": []
+        },
+        "slashing": {
+            "params": {
+                "signed_blocks_window": "500",
+                "min_signed_per_window": "0.500000000000000000",
+                "downtime_jail_duration": "600s",
+                "slash_fraction_double_sign": "0.050000000000000000",
+                "slash_fraction_downtime": "0.010000000000000000"
+            },
+            "signing_infos": [
+                {
+                    "address": "tellorvalcons1xejffqwj5qpjqhv3tgeppryprlm8au8gu5uxgq",
+                    "validator_signing_info": {
+                        "address": "tellorvalcons1xejffqwj5qpjqhv3tgeppryprlm8au8gu5uxgq",
+                        "start_height": "0",
+                        "index_offset": "5741",
+                        "jailed_until": "1970-01-01T00:00:00Z",
+                        "tombstoned": false,
+                        "missed_blocks_counter": "0"
+                    }
+                },
+                {
+                    "address": "tellorvalcons1ndqxjdk5c9etpp880g0mduh43qqweamn5austx",
+                    "validator_signing_info": {
+                        "address": "tellorvalcons1ndqxjdk5c9etpp880g0mduh43qqweamn5austx",
+                        "start_height": "0",
+                        "index_offset": "5741",
+                        "jailed_until": "1970-01-01T00:00:00Z",
+                        "tombstoned": false,
+                        "missed_blocks_counter": "0"
+                    }
+                },
+                {
+                    "address": "tellorvalcons1me9xz3h7s8t8lkrehp9cl8krq4h9mcpmkuaf8w",
+                    "validator_signing_info": {
+                        "address": "tellorvalcons1me9xz3h7s8t8lkrehp9cl8krq4h9mcpmkuaf8w",
+                        "start_height": "0",
+                        "index_offset": "5741",
+                        "jailed_until": "1970-01-01T00:00:00Z",
+                        "tombstoned": false,
+                        "missed_blocks_counter": "0"
+                    }
+                }
+            ],
+            "missed_blocks": [
+                {
+                    "address": "tellorvalcons1xejffqwj5qpjqhv3tgeppryprlm8au8gu5uxgq",
+                    "missed_blocks": []
+                },
+                {
+                    "address": "tellorvalcons1ndqxjdk5c9etpp880g0mduh43qqweamn5austx",
+                    "missed_blocks": []
+                },
+                {
+                    "address": "tellorvalcons1me9xz3h7s8t8lkrehp9cl8krq4h9mcpmkuaf8w",
+                    "missed_blocks": []
+                }
+            ]
+        },
+        "staking": {
+            "params": {
+                "unbonding_time": "1814400s",
+                "max_validators": 100,
+                "max_entries": 7,
+                "historical_entries": 10000,
+                "bond_denom": "loya",
+                "min_commission_rate": "0.000000000000000000"
+            },
+            "last_total_power": "26017",
+            "last_validator_powers": [
+                {
+                    "address": "tellorvaloper1g9vjqulndqfvfc5a8mnmrgxgfulzjhq277z6ds",
+                    "power": "8665"
+                },
+                {
+                    "address": "tellorvaloper122c3g4enx52qw85l8s9je7kx96q24qydktjjj7",
+                    "power": "8674"
+                },
+                {
+                    "address": "tellorvaloper1ak0e83xysf5la9k52xpumfgy73wau8hpgkzsfc",
+                    "power": "8678"
+                }
+            ],
+            "validators": [
+                {
+                    "operator_address": "tellorvaloper1g9vjqulndqfvfc5a8mnmrgxgfulzjhq277z6ds",
+                    "consensus_pubkey": {
+                        "@type": "/cosmos.crypto.ed25519.PubKey",
+                        "key": "ampI6HimyQhtqiwYRyGm40+ljbn7nH9kRluFbVt5I6c="
+                    },
+                    "jailed": false,
+                    "status": "BOND_STATUS_BONDED",
+                    "tokens": "8665787334",
+                    "delegator_shares": "8665787334.000000000000000000",
+                    "description": {
+                        "moniker": "validator-0",
+                        "identity": "",
+                        "website": "",
+                        "security_contact": "",
+                        "details": ""
+                    },
+                    "unbonding_height": "0",
+                    "unbonding_time": "1970-01-01T00:00:00Z",
+                    "commission": {
+                        "commission_rates": {
+                            "rate": "0.100000000000000000",
+                            "max_rate": "0.200000000000000000",
+                            "max_change_rate": "0.010000000000000000"
+                        },
+                        "update_time": "2025-05-14T16:47:34.415645Z"
+                    },
+                    "min_self_delegation": "1",
+                    "unbonding_on_hold_ref_count": "0",
+                    "unbonding_ids": []
+                },
+                {
+                    "operator_address": "tellorvaloper122c3g4enx52qw85l8s9je7kx96q24qydktjjj7",
+                    "consensus_pubkey": {
+                        "@type": "/cosmos.crypto.ed25519.PubKey",
+                        "key": "DpNuSh3vtQRuXm/XgAA7m4DRwsTPaQU6HyeDWh3kgHk="
+                    },
+                    "jailed": false,
+                    "status": "BOND_STATUS_BONDED",
+                    "tokens": "8674433100",
+                    "delegator_shares": "8674433100.000000000000000000",
+                    "description": {
+                        "moniker": "validator-2",
+                        "identity": "",
+                        "website": "",
+                        "security_contact": "",
+                        "details": ""
+                    },
+                    "unbonding_height": "0",
+                    "unbonding_time": "1970-01-01T00:00:00Z",
+                    "commission": {
+                        "commission_rates": {
+                            "rate": "0.100000000000000000",
+                            "max_rate": "0.200000000000000000",
+                            "max_change_rate": "0.010000000000000000"
+                        },
+                        "update_time": "2025-05-14T16:47:34.415645Z"
+                    },
+                    "min_self_delegation": "1",
+                    "unbonding_on_hold_ref_count": "0",
+                    "unbonding_ids": []
+                },
+                {
+                    "operator_address": "tellorvaloper1ak0e83xysf5la9k52xpumfgy73wau8hpgkzsfc",
+                    "consensus_pubkey": {
+                        "@type": "/cosmos.crypto.ed25519.PubKey",
+                        "key": "N6kBRmQX3ul25+Iz4aJK1BiMuPOArgpuJGUHgWGOtyE="
+                    },
+                    "jailed": false,
+                    "status": "BOND_STATUS_BONDED",
+                    "tokens": "8678885042",
+                    "delegator_shares": "8678885042.000000000000000000",
+                    "description": {
+                        "moniker": "validator-1",
+                        "identity": "",
+                        "website": "",
+                        "security_contact": "",
+                        "details": ""
+                    },
+                    "unbonding_height": "0",
+                    "unbonding_time": "1970-01-01T00:00:00Z",
+                    "commission": {
+                        "commission_rates": {
+                            "rate": "0.100000000000000000",
+                            "max_rate": "0.200000000000000000",
+                            "max_change_rate": "0.010000000000000000"
+                        },
+                        "update_time": "2025-05-14T16:47:34.415645Z"
+                    },
+                    "min_self_delegation": "1",
+                    "unbonding_on_hold_ref_count": "0",
+                    "unbonding_ids": []
+                }
+            ],
+            "delegations": [
+                {
+                    "delegator_address": "tellor1g9vjqulndqfvfc5a8mnmrgxgfulzjhq2t3wg5q",
+                    "validator_address": "tellorvaloper1g9vjqulndqfvfc5a8mnmrgxgfulzjhq277z6ds",
+                    "shares": "8665787334.000000000000000000"
+                },
+                {
+                    "delegator_address": "tellor122c3g4enx52qw85l8s9je7kx96q24qydry7qtw",
+                    "validator_address": "tellorvaloper122c3g4enx52qw85l8s9je7kx96q24qydktjjj7",
+                    "shares": "8674433100.000000000000000000"
+                },
+                {
+                    "delegator_address": "tellor1ak0e83xysf5la9k52xpumfgy73wau8hpaewzsg",
+                    "validator_address": "tellorvaloper1ak0e83xysf5la9k52xpumfgy73wau8hpgkzsfc",
+                    "shares": "8678885042.000000000000000000"
+                }
+            ],
+            "unbonding_delegations": [],
+            "redelegations": [],
+            "exported": true
+        },
+        "transfer": {
+            "port_id": "transfer",
+            "denom_traces": [],
+            "params": {
+                "send_enabled": true,
+                "receive_enabled": true
+            },
+            "total_escrowed": []
+        },
+        "upgrade": {},
+        "vesting": {}
+    },
+    "consensus": {
+        "validators": [
+            {
+                "address": "DE4A6146FE81D67FD879B84B8F9EC3056E5DE03B",
+                "pub_key": {
+                    "type": "tendermint/PubKeyEd25519",
+                    "value": "ampI6HimyQhtqiwYRyGm40+ljbn7nH9kRluFbVt5I6c="
+                },
+                "power": "8665",
+                "name": "validator-0"
+            },
+            {
+                "address": "36649481D2A003205D915A32108C811FF67EF0E8",
+                "pub_key": {
+                    "type": "tendermint/PubKeyEd25519",
+                    "value": "DpNuSh3vtQRuXm/XgAA7m4DRwsTPaQU6HyeDWh3kgHk="
+                },
+                "power": "8674",
+                "name": "validator-2"
+            },
+            {
+                "address": "9B406936D4C172B084E77A1FB6F2F58800ECF773",
+                "pub_key": {
+                    "type": "tendermint/PubKeyEd25519",
+                    "value": "N6kBRmQX3ul25+Iz4aJK1BiMuPOArgpuJGUHgWGOtyE="
+                },
+                "power": "8678",
+                "name": "validator-1"
+            }
+        ],
+        "params": {
+            "block": {
+                "max_bytes": "22020096",
+                "max_gas": "-1"
+            },
+            "evidence": {
+                "max_age_num_blocks": "100000",
+                "max_age_duration": "172800000000000",
+                "max_bytes": "1048576"
+            },
+            "validator": {
+                "pub_key_types": [
+                    "ed25519"
+                ]
+            },
+            "version": {
+                "app": "0"
+            },
+            "abci": {
+                "vote_extensions_enable_height": "0"
+            }
+        }
+    }
+}
