@@ -90,9 +90,14 @@ func newClient(logger log.Logger, tokenDepositsCache *tokenbridgetypes.DepositRe
 func (c *Client) start(ctx context.Context) {
 	if err := c.InitializeDeposits(); err != nil {
 		c.logger.Error("Failed to initialize deposits", "error", err)
+		c.daemonStartup.Done()
 		return
 	}
+	// Mark startup as complete after initialization
+	c.daemonStartup.Done()
+
 	ticker := time.NewTicker(10 * time.Second)
+	c.tickers = append(c.tickers, ticker)
 	defer ticker.Stop()
 
 	for {
@@ -551,4 +556,31 @@ func (c *Client) QueryDepositDetails(depositId *big.Int) (DepositReceipt, error)
 		Tip:         deposit.Tip,
 		BlockHeight: deposit.BlockHeight,
 	}, nil
+}
+
+// Stop stops the token bridge client and all running subtasks
+func (c *Client) Stop() {
+	// Wait for startup to complete (if it hasn't already)
+	c.daemonStartup.Wait()
+
+	// Stop all tickers
+	for _, ticker := range c.tickers {
+		ticker.Stop()
+	}
+
+	// Close all stop channels
+	for _, stop := range c.stops {
+		close(stop)
+	}
+
+	// Close Ethereum clients
+	if c.primaryEthClient != nil {
+		c.primaryEthClient.Close()
+	}
+	if c.fallbackEthClient != nil {
+		c.fallbackEthClient.Close()
+	}
+
+	// Wait for all subtasks to complete
+	c.runningSubtasksWaitGroup.Wait()
 }

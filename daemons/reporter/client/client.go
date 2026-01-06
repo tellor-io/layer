@@ -29,6 +29,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"google.golang.org/grpc"
 )
 
 const defaultGas = uint64(300000)
@@ -74,6 +75,13 @@ type Client struct {
 	logger     log.Logger
 	txChan     chan TxChannelInfo
 	PriceGuard *PriceGuard
+
+	// Resources that need cleanup
+	grpcConn    *grpc.ClientConn
+	grpcClient  daemontypes.GrpcClient
+	wg          sync.WaitGroup
+	broadcastWg sync.WaitGroup // Tracks goroutines in BroadcastTxMsgToChain
+	stopOnce    sync.Once
 }
 
 // GetUniqueUnorderedTimeout generates a unique timeout timestamp for unordered transactions.
@@ -127,9 +135,9 @@ func (c *Client) Start(
 		return err
 	}
 	c.logger.Info("gRPC connection established successfully", "address", grpcAddress)
-	// Note: We intentionally do NOT close the connection here with defer because
-	// StartReporterDaemonTaskLoop runs indefinitely and needs the connection to stay open.
-	// The connection will be closed when the process exits.
+	// Store connection and grpcClient for cleanup
+	c.grpcConn = conn
+	c.grpcClient = grpcClient
 
 	// Initialize the query clients. These are used to query the Cosmos gRPC query services.
 	c.OracleQueryClient = oracletypes.NewQueryClient(conn)
@@ -137,9 +145,6 @@ func (c *Client) Start(
 	c.GlobalfeeClient = globalfeetypes.NewQueryClient(conn)
 	c.CmtService = cmtservice.NewServiceClient(conn)
 	c.AuthClient = authtypes.NewQueryClient(conn)
-
-	ticker := time.NewTicker(time.Millisecond * 200)
-	stop := make(chan bool)
 
 	keyName := viper.GetString("from")
 	homeDir := viper.GetString("home")
@@ -260,8 +265,7 @@ func (c *Client) Start(
 		c,
 		ctx,
 		flags,
-		ticker,
-		stop,
+		&c.wg,
 	)
 
 	return nil
@@ -271,8 +275,7 @@ func StartReporterDaemonTaskLoop(
 	client *Client,
 	ctx context.Context,
 	flags flags.DaemonFlags,
-	ticker *time.Ticker,
-	stop <-chan bool,
+	wg *sync.WaitGroup,
 ) {
 	reporterCreated := false
 	// Check if the reporter is created
@@ -300,25 +303,26 @@ func StartReporterDaemonTaskLoop(
 		client.logger.Error("Waiting for next block", "error", err)
 	}
 
-	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		client.BroadcastTxMsgToChain(ctx)
+	}()
 
 	wg.Add(1)
-	go client.BroadcastTxMsgToChain()
+	go client.MonitorCyclelistQuery(ctx, wg)
 
 	wg.Add(1)
-	go client.MonitorCyclelistQuery(ctx, &wg)
+	go client.MonitorTokenBridgeReports(ctx, wg)
 
 	wg.Add(1)
-	go client.MonitorTokenBridgeReports(ctx, &wg)
+	go client.MonitorForTippedQueries(ctx, wg)
 
 	wg.Add(1)
-	go client.MonitorForTippedQueries(ctx, &wg)
+	go client.WithdrawAndStakeEarnedRewardsPeriodically(ctx, wg)
 
 	wg.Add(1)
-	go client.WithdrawAndStakeEarnedRewardsPeriodically(ctx, &wg)
-
-	wg.Add(1)
-	go client.AutoUnbondStakePeriodically(ctx, &wg)
+	go client.AutoUnbondStakePeriodically(ctx, wg)
 
 	wg.Wait()
 }
@@ -385,4 +389,25 @@ func isConnectionError(err error) bool {
 		strings.Contains(errStr, "connection closed") ||
 		strings.Contains(errStr, "transport: Error while dialing") ||
 		strings.Contains(errStr, "Unavailable")
+}
+
+// Stop stops the reporter client gracefully
+func (c *Client) Stop() {
+	c.stopOnce.Do(func() {
+		// Close the transaction channel to signal BroadcastTxMsgToChain to stop
+		close(c.txChan)
+
+		// Wait for all goroutines to finish
+		c.wg.Wait()
+
+		// Wait for broadcast goroutines to finish
+		c.broadcastWg.Wait()
+
+		// Close gRPC connection
+		if c.grpcConn != nil && c.grpcClient != nil {
+			if err := c.grpcClient.CloseConnection(c.grpcConn); err != nil {
+				c.logger.Error("Failed to close gRPC connection", "error", err)
+			}
+		}
+	})
 }

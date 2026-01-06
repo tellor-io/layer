@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"runtime/debug"
+	"sync"
 	"time"
 
 	"github.com/spf13/cast"
@@ -35,27 +36,37 @@ type App struct {
 	ReporterClient      *reporterclient.Client
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
 	TokenBridgeClient   *tokenbridgeclient.Client
+	ctx                 context.Context
+	wg                  sync.WaitGroup
+	logger              log.Logger
+	tempDir             string // Track temp directory for cleanup
 }
 
-// NewAppWithPrometheusPort allows specifying the prometheus port.
+// NewApp creates a new daemon application with the given context for graceful shutdown.
 func NewApp(
+	ctx context.Context,
 	logger log.Logger,
 	chainId,
 	grpcAddress,
 	homePath string,
 	prometheusPort int,
-) {
-	RegisterTelemetryIfEnabled(logger, homePath, prometheusPort)
-	tempDir := func() string {
-		dir, err := os.MkdirTemp("", "tellorapp")
-		if err != nil {
-			dir = app.DefaultNodeHome
-		}
-		defer os.RemoveAll(dir)
-
-		return dir
+) *App {
+	appInstance := &App{
+		ctx:    ctx,
+		logger: logger,
 	}
-	appOpts := simtestutil.NewAppOptionsWithFlagHome(tempDir())
+
+	RegisterTelemetryIfEnabled(logger, homePath, prometheusPort)
+	// Create a temporary directory for app options (only the path string is used, not the actual directory)
+	// This matches the pattern used in cmd/layerd/cmd/root.go
+	tempDir, err := os.MkdirTemp("", "tellorapp")
+	if err != nil {
+		// Fallback to default if temp dir creation fails
+		tempDir = app.DefaultNodeHome
+	} else {
+		appInstance.tempDir = tempDir // Track for cleanup
+	}
+	appOpts := simtestutil.NewAppOptionsWithFlagHome(tempDir)
 	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
 	queries, err := customquery.BuildQueryEndpoints(homePath, "config", "custom_query_config.toml")
 	if err != nil {
@@ -76,6 +87,8 @@ func NewApp(
 		daemonFlags.Shared.SocketAddress,
 	)
 
+	appInstance.Server = server
+
 	server.WithPriceFeedMarketToExchangePrices(indexPriceCache)
 	daemonHealthMonitor := daemonservertypes.NewHealthMonitor(
 		daemonservertypes.DaemonStartupGracePeriod,
@@ -83,6 +96,8 @@ func NewApp(
 		logger,
 		daemonFlags.Shared.PanicOnDaemonFailureEnabled,
 	)
+	appInstance.DaemonHealthMonitor = daemonHealthMonitor
+
 	server.WithTokenDepositsCache(tokenDepositsCache)
 	// Create a closure for starting pricefeed daemon and daemon server. Daemon services are delayed until after the gRPC
 	// service is started because daemons depend on the gRPC service being available. If a node is initialized
@@ -93,7 +108,27 @@ func NewApp(
 	// set flag `--price-daemon-max-unhealthy-seconds=0` to disable
 	maxDaemonUnhealthyDuration := time.Duration(daemonFlags.Shared.MaxDaemonUnhealthySeconds) * time.Second
 	// Start server for handling gRPC messages from daemons.
-	go server.Start()
+	appInstance.wg.Add(1)
+	go func() {
+		defer appInstance.wg.Done()
+		// Start server in a goroutine so we can monitor context
+		done := make(chan struct{})
+		go func() {
+			defer close(done)
+			server.Start()
+		}()
+
+		// Wait for either context cancellation or server completion
+		select {
+		case <-ctx.Done():
+			// Context cancelled, stop the server gracefully
+			server.Stop()
+			// Wait for server to actually stop
+			<-done
+		case <-done:
+			// Server stopped on its own (shouldn't happen normally)
+		}
+	}()
 
 	exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
 	marketParamsConfig := configs.ReadMarketParamsConfigFile(homePath)
@@ -101,9 +136,8 @@ func NewApp(
 	// are retrieved via third-party APIs like Binance and then are encoded in-memory and
 	// periodically sent via gRPC to a shared socket with the server.
 	priceFeedClient := pricefeedclient.StartNewClient(
-		// The client will use `context.Background` so that it can have a different context from
-		// the main application.
-		context.Background(),
+		// Use cancellable context instead of context.Background
+		ctx,
 		daemonFlags,
 		grpcAddress,
 		logger,
@@ -113,13 +147,18 @@ func NewApp(
 		constants.StaticExchangeDetails,
 		&pricefeedclient.SubTaskRunnerImpl{},
 	)
+	appInstance.PriceFeedClient = priceFeedClient
 
 	RegisterDaemonWithHealthMonitor(priceFeedClient, daemonHealthMonitor, maxDaemonUnhealthyDuration, logger)
 
+	appInstance.wg.Add(1)
 	go func() {
+		defer appInstance.wg.Done()
 		reporterClient := reporterclient.NewClient(logger, cast.ToString(appOpts.Get("minimum-gas-prices")))
+		appInstance.ReporterClient = reporterClient
 		if err := reporterClient.Start(
-			context.Background(),
+			// Use cancellable context instead of context.Background
+			ctx,
 			daemonFlags,
 			grpcAddress,
 			&daemontypes.GrpcClientImpl{},
@@ -130,17 +169,19 @@ func NewApp(
 			queries,
 			chainId,
 		); err != nil {
-			panic(err)
+			logger.Error("Reporter client failed to start", "error", err)
 		}
 	}()
 
-	_ = tokenbridgeclient.StartNewClient(context.Background(), logger, tokenDepositsCache, tokenBridgeTipsCache)
-	// }
+	tokenBridgeClient := tokenbridgeclient.StartNewClient(ctx, logger, tokenDepositsCache, tokenBridgeTipsCache)
+	appInstance.TokenBridgeClient = tokenBridgeClient
+
 	// Start the Metrics Daemon.
 	// The metrics daemon is purely used for observability. It should never bring the app down.
 	// Note: the metrics daemon is such a simple go-routine that we don't bother implementing a health-check
 	// for this service. The task loop does not produce any errors because the telemetry calls themselves are
 	// not error-returning, so in effect this daemon would never become unhealthy.
+	appInstance.wg.Add(1)
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
@@ -152,16 +193,69 @@ func NewApp(
 					string(debug.Stack()),
 				)
 			}
+			appInstance.wg.Done()
 		}()
 		metricsclient.Start(
-			// The client will use `context.Background` so that it can have a different context from
-			// the main application.
-			context.Background(),
+			// Use cancellable context instead of context.Background
+			ctx,
 			logger,
 		)
 	}()
 
-	select {}
+	return appInstance
+}
+
+// Shutdown gracefully shuts down all daemon services
+func (a *App) Shutdown() {
+	a.logger.Info("Initiating graceful shutdown...")
+
+	// Stop all clients
+	if a.PriceFeedClient != nil {
+		a.logger.Info("Stopping pricefeed client...")
+		a.PriceFeedClient.Stop()
+	}
+
+	if a.TokenBridgeClient != nil {
+		a.logger.Info("Stopping token bridge client...")
+		a.TokenBridgeClient.Stop()
+	}
+
+	if a.ReporterClient != nil {
+		a.logger.Info("Stopping reporter client...")
+		a.ReporterClient.Stop()
+	}
+
+	if a.DaemonHealthMonitor != nil {
+		a.logger.Info("Stopping health monitor...")
+		a.DaemonHealthMonitor.Stop()
+	}
+
+	// Stop gRPC server
+	if a.Server != nil {
+		a.logger.Info("Stopping gRPC server...")
+		a.Server.Stop()
+	}
+
+	// Wait for all goroutines to finish with timeout
+	done := make(chan struct{})
+	go func() {
+		a.wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+		a.logger.Info("All goroutines stopped successfully")
+	case <-time.After(30 * time.Second):
+		a.logger.Error("Timeout waiting for goroutines to stop")
+	}
+
+	// Clean up temporary directory if one was created
+	if a.tempDir != "" && a.tempDir != app.DefaultNodeHome {
+		if err := os.RemoveAll(a.tempDir); err != nil {
+			a.logger.Error("Failed to remove temporary directory", "path", a.tempDir, "error", err)
+		}
+	}
 }
 
 // RegisterDaemonWithHealthMonitor registers a daemon service with the update monitor, which will commence monitoring

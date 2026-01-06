@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/joho/godotenv"
 	"github.com/rs/zerolog"
@@ -69,8 +72,20 @@ var rootCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// Pass prometheusPort to NewApp
-		daemons.NewApp(logger, chainId, grpcAddr, homePath, prometheusPort)
+		// Set up signal handling for graceful shutdown
+		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+		defer stop()
+
+		// Pass prometheusPort and signal context to NewApp
+		appInstance := daemons.NewApp(ctx, logger, chainId, grpcAddr, homePath, prometheusPort)
+
+		// Wait for signal
+		<-ctx.Done()
+		logger.Info("Received shutdown signal, shutting down gracefully...")
+
+		// Gracefully shutdown
+		appInstance.Shutdown()
+		logger.Info("Shutdown complete")
 	},
 }
 

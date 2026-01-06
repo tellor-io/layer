@@ -30,11 +30,17 @@ func Start(
 ) {
 	ticker := time.NewTicker(METRICS_DAEMON_LOOP_DELAY_DURATION * time.Millisecond)
 	defer ticker.Stop()
-	for ; true; <-ticker.C {
-		RunMetricsDaemonTaskLoop(
-			ctx,
-			logger,
-		)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			RunMetricsDaemonTaskLoop(
+				ctx,
+				logger,
+			)
+		}
 	}
 }
 
