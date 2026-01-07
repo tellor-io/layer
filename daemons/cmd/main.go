@@ -85,7 +85,6 @@ var rootCmd = &cobra.Command{
 
 		// Gracefully shutdown
 		appInstance.Shutdown()
-		logger.Info("Shutdown complete")
 	},
 }
 

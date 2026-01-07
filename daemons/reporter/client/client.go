@@ -394,8 +394,11 @@ func isConnectionError(err error) bool {
 // Stop stops the reporter client gracefully
 func (c *Client) Stop() {
 	c.stopOnce.Do(func() {
+		c.logger.Info("ReporterClient: initiating shutdown")
+
 		// Close the transaction channel to signal BroadcastTxMsgToChain to stop
 		close(c.txChan)
+		c.logger.Info("ReporterClient: transaction channel closed")
 
 		// Wait for all goroutines to finish
 		c.wg.Wait()
@@ -407,7 +410,11 @@ func (c *Client) Stop() {
 		if c.grpcConn != nil && c.grpcClient != nil {
 			if err := c.grpcClient.CloseConnection(c.grpcConn); err != nil {
 				c.logger.Error("Failed to close gRPC connection", "error", err)
+			} else {
+				c.logger.Info("ReporterClient: gRPC connection closed")
 			}
 		}
+
+		c.logger.Info("ReporterClient: shutdown complete")
 	})
 }

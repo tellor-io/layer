@@ -103,6 +103,7 @@ func (c *Client) start(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done():
+			c.logger.Info("TokenBridgeClient: context cancelled, exiting")
 			return
 		case <-ticker.C:
 			// Process regular deposits
@@ -560,20 +561,24 @@ func (c *Client) QueryDepositDetails(depositId *big.Int) (DepositReceipt, error)
 
 // Stop stops the token bridge client and all running subtasks
 func (c *Client) Stop() {
+	c.logger.Info("TokenBridgeClient: initiating shutdown")
 	// Wait for startup to complete (if it hasn't already)
 	c.daemonStartup.Wait()
 
 	// Stop all tickers
+	c.logger.Info("TokenBridgeClient: stopping all tickers")
 	for _, ticker := range c.tickers {
 		ticker.Stop()
 	}
 
 	// Close all stop channels
+	c.logger.Info("TokenBridgeClient: closing all stop channels")
 	for _, stop := range c.stops {
 		close(stop)
 	}
 
 	// Close Ethereum clients
+	c.logger.Info("TokenBridgeClient: closing Ethereum clients")
 	if c.primaryEthClient != nil {
 		c.primaryEthClient.Close()
 	}
@@ -582,5 +587,7 @@ func (c *Client) Stop() {
 	}
 
 	// Wait for all subtasks to complete
+	c.logger.Info("TokenBridgeClient: waiting for all subtasks to complete")
 	c.runningSubtasksWaitGroup.Wait()
+	c.logger.Info("TokenBridgeClient: shutdown complete")
 }

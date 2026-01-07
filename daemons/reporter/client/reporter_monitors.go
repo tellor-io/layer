@@ -39,6 +39,7 @@ func (c *Client) MonitorCyclelistQuery(ctx context.Context, wg *sync.WaitGroup) 
 	for {
 		select {
 		case <-ctx.Done():
+			c.logger.Info("MonitorCyclelistQuery: context cancelled, exiting")
 			return
 		case <-ticker.C:
 			queryCtx, cancel := context.WithTimeout(ctx, defaultQueryTimeout)
@@ -91,6 +92,7 @@ func (c *Client) MonitorTokenBridgeReports(ctx context.Context, wg *sync.WaitGro
 	for {
 		select {
 		case <-ctx.Done():
+			c.logger.Info("MonitorTokenBridgeReports: context cancelled, exiting")
 			return
 		case <-ticker.C:
 			txCtx, cancel := context.WithTimeout(ctx, defaultTxTimeout)
@@ -125,6 +127,7 @@ func (c *Client) MonitorForTippedQueries(ctx context.Context, wg *sync.WaitGroup
 	for {
 		select {
 		case <-ctx.Done():
+			c.logger.Info("MonitorForTippedQueries: context cancelled, exiting")
 			return
 		case <-ticker.C:
 			queryCtx, cancel := context.WithTimeout(ctx, defaultQueryTimeout)
@@ -213,6 +216,7 @@ func (c *Client) WithdrawAndStakeEarnedRewardsPeriodically(ctx context.Context, 
 	for {
 		select {
 		case <-ctx.Done():
+			c.logger.Info("WithdrawAndStakeEarnedRewardsPeriodically: context cancelled, exiting")
 			return
 		case <-ticker.C:
 			valAddr := os.Getenv("REPORTERS_VALIDATOR_ADDRESS")
@@ -258,6 +262,7 @@ func (c *Client) AutoUnbondStakePeriodically(ctx context.Context, wg *sync.WaitG
 	for {
 		select {
 		case <-ctx.Done():
+			c.logger.Info("AutoUnbondStakePeriodically: context cancelled, exiting")
 			return
 		case <-ticker.C:
 			c.logger.Info("Trying to unbond stake")
@@ -298,9 +303,6 @@ func (c *Client) AutoUnbondStakePeriodically(ctx context.Context, wg *sync.WaitG
 }
 
 func (c *Client) LogProcessStats() {
-	count := runtime.NumGoroutine()
-	c.logger.Info(fmt.Sprintf("Number of Goroutines: %d\n", count))
-
 	var m runtime.MemStats
 	runtime.ReadMemStats(&m)
 

@@ -153,13 +153,16 @@ func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChan
 }
 
 func (c *Client) BroadcastTxMsgToChain(ctx context.Context) {
+	defer c.broadcastWg.Wait()
+
 	for {
 		select {
 		case <-ctx.Done():
+			c.logger.Info("BroadcastTxMsgToChain: context cancelled, exiting")
 			return
 		case obj, ok := <-c.txChan:
 			if !ok {
-				// Channel closed
+				c.logger.Info("BroadcastTxMsgToChain: channel closed, exiting")
 				return
 			}
 			// submit transaction in goroutine with proper tracking
