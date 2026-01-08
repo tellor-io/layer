@@ -5,7 +5,7 @@ project_name: reporterd
 builds:
   - id: reporterd
     dir: .
-    main: ./cmd/main.go
+    main: ./cmd
     binary: reporterd
     env:
       - CGO_ENABLED=0
