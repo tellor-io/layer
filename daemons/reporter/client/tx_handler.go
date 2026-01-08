@@ -135,6 +135,9 @@ func (c *Client) EstimateGas(ctx context.Context, isBridge bool, txf tx.Factory,
 			return gasEstimate, nil
 		}
 	}
+	if isBridge {
+		txf = txf.WithGasAdjustment(1.75)
+	}
 	_, gasEstimate, err := tx.CalculateGas(c.cosmosCtx, txf, msg...)
 	if err != nil {
 		return 0, fmt.Errorf("error calculating gas: %w", err)
