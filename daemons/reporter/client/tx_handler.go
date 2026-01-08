@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
+	"reflect"
 	"strings"
 	"time"
 
@@ -21,11 +22,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
+var gasEstimateMap = make(map[reflect.Type]uint64)
+var BRIDGE_REPORT_TYPE = reflect.TypeOf("bridge_deposit_report")
+
 func newFactory(clientCtx client.Context) tx.Factory {
 	return tx.Factory{}.
 		WithChainID(clientCtx.ChainID).
 		WithKeybase(clientCtx.Keyring).
-		WithGasAdjustment(1.1).
+		WithGasAdjustment(1.25).
 		WithGas(defaultGas).
 		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT).
 		WithAccountRetriever(clientCtx.AccountRetriever).
@@ -120,7 +124,31 @@ func (c *Client) WaitForBlockHeight(ctx context.Context, h int64) error {
 	}
 }
 
-func (c *Client) sendTx(ctx context.Context, queryMetaId uint64, msg ...sdk.Msg) (*cmttypes.ResultTx, error) {
+func (c *Client) EstimateGas(ctx context.Context, isBridge bool, txf tx.Factory, msg ...sdk.Msg) (uint64, error) {
+	if isBridge {
+		if gasEstimate, ok := gasEstimateMap[BRIDGE_REPORT_TYPE]; ok {
+			return gasEstimate, nil
+		}
+	} else {
+		msgType := reflect.TypeOf(msg[0])
+		if gasEstimate, ok := gasEstimateMap[msgType]; ok {
+			return gasEstimate, nil
+		}
+	}
+	_, gasEstimate, err := tx.CalculateGas(c.cosmosCtx, txf, msg...)
+	if err != nil {
+		return 0, fmt.Errorf("error calculating gas: %w", err)
+	}
+	if isBridge {
+		gasEstimateMap[BRIDGE_REPORT_TYPE] = gasEstimate
+	} else {
+		msgType := reflect.TypeOf(msg[0])
+		gasEstimateMap[msgType] = gasEstimate
+	}
+	return gasEstimate, nil
+}
+
+func (c *Client) sendTx(ctx context.Context, queryMetaId uint64, isBridge bool, msg ...sdk.Msg) (*cmttypes.ResultTx, error) {
 	telemetry.IncrCounter(1, "daemon_sending_txs", "called")
 
 	// Track success status for defer cleanup
@@ -153,7 +181,10 @@ func (c *Client) sendTx(ctx context.Context, queryMetaId uint64, msg ...sdk.Msg)
 	if err != nil {
 		return nil, fmt.Errorf("error preparing transaction factory: %w", err)
 	}
-
+	gasEstimate, err := c.EstimateGas(ctx, isBridge, txf, msg...)
+	if err == nil {
+		txf = txf.WithGas(gasEstimate)
+	}
 	txn, err := txf.BuildUnsignedTx(msg...)
 	if err != nil {
 		return nil, fmt.Errorf("error building unsigned transaction: %w", err)

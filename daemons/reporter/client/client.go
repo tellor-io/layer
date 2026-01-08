@@ -31,7 +31,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
-const defaultGas = uint64(300000)
+const defaultGas = uint64(240000)
 
 var (
 	commitedIds   = make(map[uint64]bool)

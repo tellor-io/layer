@@ -143,7 +143,7 @@ func (c *Client) GenerateAndBroadcastSpotPriceReport(ctx context.Context, qd []b
 }
 
 func (c *Client) HandleBridgeDepositTxInChannel(ctx context.Context, data TxChannelInfo) {
-	resp, err := c.sendTx(ctx, 0, data.Msg) // 0 = no queryMeta tracking for bridge transactions
+	resp, err := c.sendTx(ctx, 0, true, data.Msg) // 0 = no queryMeta tracking for bridge transactions
 	if err != nil {
 		c.logger.Error("submitting deposit report transaction",
 			"error", err,
@@ -200,7 +200,7 @@ func (c *Client) BroadcastTxMsgToChain() {
 			defer cancel()
 
 			if !txInfo.isBridge {
-				_, err := c.sendTx(ctx, txInfo.QueryMetaId, txInfo.Msg)
+				_, err := c.sendTx(ctx, txInfo.QueryMetaId, false, txInfo.Msg)
 				if err != nil {
 					c.logger.Error(fmt.Sprintf("Error sending tx: %v", err))
 				}
