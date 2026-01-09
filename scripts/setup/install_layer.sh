@@ -205,7 +205,7 @@ fi
 
 # init variables for mainnet and palmito
 LAYERD_TAG_MAINNET="v6.0.0"
-LAYERD_TAG_PALMITO="v6.0.0"
+LAYERD_TAG_PALMITO="v6.1.0"
 MAINNET_LAYER_NODE_URL=https://mainnet.tellorlayer.com/rpc/
 PALMITO_LAYER_NODE_URL=https://node-palmito.tellorlayer.com/rpc/
 MAINNET_RPC_NODE_ID=cbb94e01df344fdfdee1fdf2f9bb481712e7ef8d
@@ -502,6 +502,9 @@ else
     done
 fi
 
+# clear the terminal
+clear
+
 # Function to extract and install snapshot
 extract_and_install_snapshot() {
     local snapshot_file="$1"
@@ -521,7 +524,17 @@ extract_and_install_snapshot() {
     # Move the data files to the Layer home directory
     echo "Moving blockchain data to $LAYER_HOME/data/..."
     if [ -d "$temp_dir/.layer_snapshot/data" ]; then
-        cp -rf "$temp_dir/.layer_snapshot/data/"* "$LAYER_HOME/data/"
+        # Preserve priv_validator_state.json before replacing data directory
+        if [ -f "$LAYER_HOME/data/priv_validator_state.json" ]; then
+            cp "$LAYER_HOME/data/priv_validator_state.json" "$temp_dir/priv_validator_state.json.bak"
+        fi
+        # Remove the initialized data directory and replace with snapshot data
+        rm -rf "$LAYER_HOME/data"
+        mv "$temp_dir/.layer_snapshot/data" "$LAYER_HOME/data"
+        # Restore priv_validator_state.json
+        if [ -f "$temp_dir/priv_validator_state.json.bak" ]; then
+            mv "$temp_dir/priv_validator_state.json.bak" "$LAYER_HOME/data/priv_validator_state.json"
+        fi
         echo "Blockchain data successfully installed"
     else
         echo "Error: Expected .layer_snapshot/data directory not found in extracted snapshot"
@@ -743,7 +756,8 @@ fi
 if [ "$OS" == "mac" ]; then
     echo "All done!"
     echo "Layerd start command:"
-    echo "  cd $USER_HOME/layer/binaries/$LAYERD_TAG && ./layerd start --home $LAYER_HOME --keyring-backend $KEYRING_BACKEND --api.enable --api.swagger"
+    echo ""
+    echo "cd $USER_HOME/layer/binaries/$LAYERD_TAG && ./layerd start --home $LAYER_HOME --keyring-backend $KEYRING_BACKEND --api.enable --api.swagger"
     echo ""
     echo "================================"
     echo "    NODE SETUP COMPLETE :)"
