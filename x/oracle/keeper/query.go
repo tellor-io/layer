@@ -222,7 +222,7 @@ func (k Querier) GetTimestampAfter(ctx context.Context, req *types.QueryGetTimes
 	return &types.QueryGetTimestampAfterResponse{Timestamp: uint64(timestamp.UnixMilli())}, nil
 }
 
-// returns a list of queries that are not expired and have a tip available and the query data as a string
+// returns a list of queries that are both expired not expired and have a tip available and the query data as a string
 func (k Querier) GetTippedQueries(ctx context.Context, req *types.QueryGetTippedQueriesRequest) (*types.QueryGetTippedQueriesResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -232,11 +232,12 @@ func (k Querier) GetTippedQueries(ctx context.Context, req *types.QueryGetTipped
 	queryStore := prefix.NewStore(store, types.QueryTipPrefix)
 	activeQueries := make([]*types.QueryMetaButString, 0)
 	expiredQueries := make([]*types.QueryMetaButString, 0)
-	_, err := query.Paginate(queryStore, req.Pagination, func(queryId, value []byte) error {
+	_, err := query.Paginate(queryStore, req.Pagination, func(key, value []byte) error {
+		// key is a Pair(queryId, id) but we don't need to decode it since
+		// all information is in the QueryMeta value
 		// pull querymeta from store
 		var queryMeta types.QueryMeta
-		err := k.keeper.cdc.Unmarshal(value, &queryMeta)
-		if err != nil {
+		if err := k.keeper.cdc.Unmarshal(value, &queryMeta); err != nil {
 			return err
 		}
 		if queryMeta.Expiration > uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()) && queryMeta.Amount.GT(math.ZeroInt()) {
@@ -252,7 +253,7 @@ func (k Querier) GetTippedQueries(ctx context.Context, req *types.QueryGetTipped
 				CycleList:               queryMeta.CycleList,
 			}
 			activeQueries = append(activeQueries, &queryMetaButString)
-		} else if queryMeta.Expiration < uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()) && queryMeta.Amount.GT(math.ZeroInt()) {
+		} else if queryMeta.Expiration <= uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()) && queryMeta.Amount.GT(math.ZeroInt()) {
 			queryMetaButString := types.QueryMetaButString{
 				Id:                      queryMeta.Id,
 				Amount:                  queryMeta.Amount,
