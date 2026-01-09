@@ -58,14 +58,16 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, query
 	}
 
 	// Handle period tracking for reward distribution
-	if err := k.handlePeriodTracking(ctx, repAddr, selectorShares, totalTokens, hash); err != nil {
-		return math.Int{}, err
-	}
-
-	// Store per-report snapshot for disputes (existing behavior)
-	err = k.Report.Set(ctx, collections.Join(queryId, collections.Join(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
+	changed, err := k.handlePeriodTracking(ctx, repAddr, selectorShares, totalTokens, hash)
 	if err != nil {
 		return math.Int{}, err
+	}
+	if changed {
+		// Store per-report snapshot for disputes
+		err = k.Report.Set(ctx, collections.Join(queryId, collections.Join(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
+		if err != nil {
+			return math.Int{}, err
+		}
 	}
 	return totalTokens, nil
 }
@@ -259,15 +261,15 @@ func (k Keeper) SetReporterStakeByQueryId(ctx context.Context, repAddr sdk.AccAd
 // handlePeriodTracking manages reward period tracking for a reporter.
 // When delegation state changes (hash differs), it queues the previous period for distribution
 // and stores the new period data.
-func (k Keeper) handlePeriodTracking(ctx context.Context, repAddr sdk.AccAddress, selectorShares []*types.SelectorShare, totalTokens math.Int, newHash []byte) error {
+func (k Keeper) handlePeriodTracking(ctx context.Context, repAddr sdk.AccAddress, selectorShares []*types.SelectorShare, totalTokens math.Int, newHash []byte) (bool, error) {
 	// Get previous period data
 	prevData, err := k.ReporterPeriodData.Get(ctx, repAddr)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
-			return err
+			return false, err
 		}
 		// First time for this reporter - just store period data
-		return k.ReporterPeriodData.Set(ctx, repAddr, types.PeriodRewardData{
+		return true, k.ReporterPeriodData.Set(ctx, repAddr, types.PeriodRewardData{
 			Selectors:    selectorShares,
 			Total:        totalTokens,
 			RewardAmount: math.LegacyZeroDec(),
@@ -278,18 +280,18 @@ func (k Keeper) handlePeriodTracking(ctx context.Context, repAddr sdk.AccAddress
 	// Check if delegation state changed
 	if bytes.Equal(prevData.Hash, newHash) {
 		// No change - nothing to do, rewards will accumulate via DivvyingTips
-		return nil
+		return false, nil
 	}
 
 	// Delegation state changed - queue previous period for distribution if it has rewards
 	if prevData.RewardAmount.IsPositive() {
 		if err := k.queueForDistribution(ctx, repAddr, prevData); err != nil {
-			return err
+			return false, err
 		}
 	}
 
 	// Store new period data
-	return k.ReporterPeriodData.Set(ctx, repAddr, types.PeriodRewardData{
+	return true, k.ReporterPeriodData.Set(ctx, repAddr, types.PeriodRewardData{
 		Selectors:    selectorShares,
 		Total:        totalTokens,
 		RewardAmount: math.LegacyZeroDec(),

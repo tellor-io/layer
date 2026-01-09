@@ -49,11 +49,15 @@ func (k Querier) GetReportsbyQid(ctx context.Context, req *types.QueryGetReports
 	}
 
 	defaultLimit := uint64(10)
+	maxLimit := uint64(100)
 	if req.Pagination.Limit == 0 {
 		req.Pagination.Limit = defaultLimit
 	}
+	if req.Pagination.Limit > maxLimit {
+		req.Pagination.Limit = maxLimit
+	}
 
-	microreports := make([]types.MicroReportStrings, 0)
+	microreports := make([]types.MicroReportStrings, 0, req.Pagination.Limit)
 	_, pageRes, err := query.CollectionPaginate(
 		ctx, k.keeper.Reports, req.Pagination, func(_ collections.Triple[[]byte, []byte, uint64], rep types.MicroReport) (types.MicroReport, error) {
 			microReport := types.MicroReportStrings{
@@ -96,7 +100,12 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 
 	reporter := sdk.MustAccAddressFromBech32(req.Reporter)
 
-	// TODO: add max limit to prevent abuse
+	// Enforce max limit to prevent abuse
+	const maxLimit = uint64(100)
+	if req.Pagination.Limit > maxLimit {
+		req.Pagination.Limit = maxLimit
+	}
+
 	pageRes := &query.PageResponse{
 		NextKey: nil,
 		Total:   uint64(0),
@@ -121,7 +130,7 @@ func (k Querier) GetReportsbyReporter(ctx context.Context, req *types.QueryGetRe
 			return nil, status.Error(codes.InvalidArgument, "invalid pagination offset")
 		}
 	}
-	reports := make([]types.MicroReportStrings, 0)
+	reports := make([]types.MicroReportStrings, 0, req.Pagination.Limit)
 	counter := uint64(0)
 	for ; iter.Valid() && counter < req.Pagination.Limit; iter.Next() {
 		fullKey, err := iter.FullKey()
@@ -181,11 +190,15 @@ func (k Querier) GetReportsbyReporterQid(ctx context.Context, req *types.QueryGe
 	}
 
 	defaultLimit := uint64(10)
+	maxLimit := uint64(100)
 	if req.Pagination.Limit == 0 {
 		req.Pagination.Limit = defaultLimit
 	}
+	if req.Pagination.Limit > maxLimit {
+		req.Pagination.Limit = maxLimit
+	}
 
-	microreports := make([]types.MicroReportStrings, 0)
+	microreports := make([]types.MicroReportStrings, 0, req.Pagination.Limit)
 	_, pageRes, err := query.CollectionPaginate(
 		ctx, k.keeper.Reports, req.Pagination, func(_ collections.Triple[[]byte, []byte, uint64], rep types.MicroReport) (types.MicroReport, error) {
 			microReport := types.MicroReportStrings{

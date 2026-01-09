@@ -35,7 +35,7 @@ func (q Querier) GetSnapshotsByReport(ctx context.Context, req *types.QueryGetSn
 		return nil, status.Error(codes.InvalidArgument, fmt.Sprintf("snapshots not found for queryId %s and timestamp %s", queryIdStr, timestampStr))
 	}
 
-	var snapshotStringArray []string
+	snapshotStringArray := make([]string, 0, len(snapshots.Snapshots))
 	for _, snapshot := range snapshots.Snapshots {
 		snapshotStringArray = append(snapshotStringArray, hex.EncodeToString(snapshot))
 	}

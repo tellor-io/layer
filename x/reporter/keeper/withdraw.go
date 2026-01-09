@@ -10,7 +10,6 @@ import (
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -192,7 +191,7 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 
 // EscrowReporterStake moves tokens from the reporter's stake (from staking module) to the dispute module
 func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height uint64, amt math.Int, queryId, hashId []byte) error {
-	report, err := k.Report.Get(ctx, collections.Join(queryId, collections.Join(reporterAddr.Bytes(), height)))
+	report, err := k.GetDelegationsAmount(ctx, reporterAddr, height)
 	if err != nil {
 		return err
 	}
