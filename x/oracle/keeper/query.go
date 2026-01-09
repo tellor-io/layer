@@ -230,7 +230,8 @@ func (k Querier) GetTippedQueries(ctx context.Context, req *types.QueryGetTipped
 
 	store := runtime.KVStoreAdapter(k.keeper.storeService.OpenKVStore(ctx))
 	queryStore := prefix.NewStore(store, types.QueryTipPrefix)
-	queries := make([]*types.QueryMetaButString, 0)
+	activeQueries := make([]*types.QueryMetaButString, 0)
+	expiredQueries := make([]*types.QueryMetaButString, 0)
 	_, err := query.Paginate(queryStore, req.Pagination, func(queryId, value []byte) error {
 		// pull querymeta from store
 		var queryMeta types.QueryMeta
@@ -250,14 +251,25 @@ func (k Querier) GetTippedQueries(ctx context.Context, req *types.QueryGetTipped
 				QueryType:               queryMeta.QueryType,
 				CycleList:               queryMeta.CycleList,
 			}
-			queries = append(queries, &queryMetaButString)
+			activeQueries = append(activeQueries, &queryMetaButString)
+		} else if queryMeta.Expiration < uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()) && queryMeta.Amount.GT(math.ZeroInt()) {
+			queryMetaButString := types.QueryMetaButString{
+				Id:                      queryMeta.Id,
+				Amount:                  queryMeta.Amount,
+				Expiration:              queryMeta.Expiration,
+				RegistrySpecBlockWindow: queryMeta.RegistrySpecBlockWindow,
+				HasRevealedReports:      queryMeta.HasRevealedReports,
+				QueryData:               hex.EncodeToString(queryMeta.QueryData),
+				QueryType:               queryMeta.QueryType,
+				CycleList:               queryMeta.CycleList,
+			}
+			expiredQueries = append(expiredQueries, &queryMetaButString)
 		}
-
 		return nil
 	})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryGetTippedQueriesResponse{Queries: queries}, nil
+	return &types.QueryGetTippedQueriesResponse{ActiveQueries: activeQueries, ExpiredQueries: expiredQueries}, nil
 }
