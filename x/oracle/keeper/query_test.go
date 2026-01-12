@@ -327,12 +327,13 @@ func (s *KeeperTestSuite) TestGetTippedQueries() {
 	}
 
 	tests := []struct {
-		name               string
-		req                *types.QueryGetTippedQueriesRequest
-		setup              func()
-		err                bool
-		expectedActiveLen  int
-		expectedExpiredLen int
+		name                       string
+		req                        *types.QueryGetTippedQueriesRequest
+		setup                      func()
+		err                        bool
+		expectedActiveLen          int
+		expectedExpiredLen         int
+		expectedAvailableTipsTotal math.Int
 	}{
 		{
 			name: "nil request",
@@ -356,9 +357,10 @@ func (s *KeeperTestSuite) TestGetTippedQueries() {
 					Offset: 0,
 				},
 			},
-			err:                false,
-			expectedActiveLen:  1,
-			expectedExpiredLen: 0,
+			err:                        false,
+			expectedActiveLen:          1,
+			expectedExpiredLen:         0,
+			expectedAvailableTipsTotal: math.NewInt(100),
 		},
 		{
 			name: "success one active and one expiredtipped query",
@@ -377,9 +379,10 @@ func (s *KeeperTestSuite) TestGetTippedQueries() {
 					Offset: 0,
 				},
 			},
-			err:                false,
-			expectedActiveLen:  1,
-			expectedExpiredLen: 1,
+			err:                        false,
+			expectedActiveLen:          1,
+			expectedExpiredLen:         1,
+			expectedAvailableTipsTotal: math.NewInt(200),
 		},
 	}
 

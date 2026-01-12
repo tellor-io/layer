@@ -232,6 +232,7 @@ func (k Querier) GetTippedQueries(ctx context.Context, req *types.QueryGetTipped
 	queryStore := prefix.NewStore(store, types.QueryTipPrefix)
 	activeQueries := make([]*types.QueryMetaButString, 0)
 	expiredQueries := make([]*types.QueryMetaButString, 0)
+	availableTipsTotal := math.ZeroInt()
 	_, err := query.Paginate(queryStore, req.Pagination, func(key, value []byte) error {
 		// key is a Pair(queryId, id) but we don't need to decode it since
 		// all information is in the QueryMeta value
@@ -253,6 +254,7 @@ func (k Querier) GetTippedQueries(ctx context.Context, req *types.QueryGetTipped
 				CycleList:               queryMeta.CycleList,
 			}
 			activeQueries = append(activeQueries, &queryMetaButString)
+			availableTipsTotal = availableTipsTotal.Add(queryMeta.Amount)
 		} else if queryMeta.Expiration <= uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()) && queryMeta.Amount.GT(math.ZeroInt()) {
 			queryMetaButString := types.QueryMetaButString{
 				Id:                      queryMeta.Id,
@@ -265,6 +267,7 @@ func (k Querier) GetTippedQueries(ctx context.Context, req *types.QueryGetTipped
 				CycleList:               queryMeta.CycleList,
 			}
 			expiredQueries = append(expiredQueries, &queryMetaButString)
+			availableTipsTotal = availableTipsTotal.Add(queryMeta.Amount)
 		}
 		return nil
 	})
