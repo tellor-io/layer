@@ -9,7 +9,10 @@ import (
 	"github.com/tellor-io/layer/app"
 )
 
+var dirName = "tellorapp"
+
 func TestTempDir_CreatesDirectory(t *testing.T) {
+	t.Helper()
 	dir := tempDir()
 	defer func() {
 		// Cleanup in case test fails before NewRootCmd cleanup runs
@@ -25,11 +28,12 @@ func TestTempDir_CreatesDirectory(t *testing.T) {
 		info, err := os.Stat(dir)
 		require.NoError(t, err, "temp directory should exist")
 		require.True(t, info.IsDir(), "should be a directory")
-		require.Contains(t, dir, "tellorapp", "directory name should contain 'tellorapp'")
+		require.Contains(t, dir, dirName, "directory name should contain 'tellorapp'")
 	}
 }
 
 func TestNewRootCmd_CleansUpTempDirectory(t *testing.T) {
+	t.Helper()
 	// Count existing tellorapp directories before
 	beforeCount := countTellorappDirs(t)
 
@@ -49,6 +53,7 @@ func TestNewRootCmd_CleansUpTempDirectory(t *testing.T) {
 }
 
 func TestNewRootCmd_MultipleCallsDoNotAccumulate(t *testing.T) {
+	t.Helper()
 	// Count existing tellorapp directories before
 	beforeCount := countTellorappDirs(t)
 
@@ -69,6 +74,7 @@ func TestNewRootCmd_MultipleCallsDoNotAccumulate(t *testing.T) {
 }
 
 func TestNewRootCmd_TempDirectoryIsRemoved(t *testing.T) {
+	t.Helper()
 	// Track a specific directory to ensure it gets cleaned up
 	var createdDir string
 
@@ -88,7 +94,7 @@ func TestNewRootCmd_TempDirectoryIsRemoved(t *testing.T) {
 	for _, entry := range entries {
 		if entry.IsDir() {
 			name := entry.Name()
-			if len(name) > len("tellorapp") && name[:len("tellorapp")] == "tellorapp" {
+			if len(name) > len(dirName) && name[:len(dirName)] == dirName {
 				// Check if this directory was recently created (within last 2 seconds)
 				info, err := entry.Info()
 				if err == nil {
@@ -108,6 +114,7 @@ func TestNewRootCmd_TempDirectoryIsRemoved(t *testing.T) {
 
 // countTellorappDirs counts the number of tellorapp* directories in /tmp
 func countTellorappDirs(t *testing.T) int {
+	t.Helper()
 	tmpDir := os.TempDir()
 	entries, err := os.ReadDir(tmpDir)
 	require.NoError(t, err)
@@ -117,7 +124,7 @@ func countTellorappDirs(t *testing.T) int {
 		if entry.IsDir() {
 			name := entry.Name()
 			// Check if name starts with "tellorapp"
-			if len(name) >= len("tellorapp") && name[:len("tellorapp")] == "tellorapp" {
+			if len(name) >= len(dirName) && name[:len(dirName)] == dirName {
 				count++
 			}
 		}
@@ -126,6 +133,7 @@ func countTellorappDirs(t *testing.T) int {
 }
 
 func TestTempDir_FallbackToDefaultNodeHome(t *testing.T) {
+	t.Helper()
 	// This test verifies that if MkdirTemp fails, we fall back to DefaultNodeHome
 	// We can't easily simulate MkdirTemp failure, but we can verify the fallback logic exists
 	// by checking that tempDir() can return DefaultNodeHome
@@ -138,11 +146,12 @@ func TestTempDir_FallbackToDefaultNodeHome(t *testing.T) {
 		require.Equal(t, app.DefaultNodeHome, dir)
 	} else {
 		// Normal case - should contain tellorapp
-		require.Contains(t, dir, "tellorapp")
+		require.Contains(t, dir, dirName)
 	}
 }
 
 func TestNewRootCmd_DoesNotLeakTempDirectories(t *testing.T) {
+	t.Helper()
 	// This is a more comprehensive test that verifies no leakage
 	initialDirs := getTellorappDirs(t)
 	initialCount := len(initialDirs)
@@ -179,6 +188,7 @@ func TestNewRootCmd_DoesNotLeakTempDirectories(t *testing.T) {
 
 // getTellorappDirs returns a map of all tellorapp* directories in /tmp
 func getTellorappDirs(t *testing.T) map[string]bool {
+	t.Helper()
 	tmpDir := os.TempDir()
 	entries, err := os.ReadDir(tmpDir)
 	require.NoError(t, err)
@@ -187,7 +197,7 @@ func getTellorappDirs(t *testing.T) map[string]bool {
 	for _, entry := range entries {
 		if entry.IsDir() {
 			name := entry.Name()
-			if len(name) >= len("tellorapp") && name[:len("tellorapp")] == "tellorapp" {
+			if len(name) >= len(dirName) && name[:len(dirName)] == dirName {
 				fullPath := filepath.Join(tmpDir, name)
 				dirs[fullPath] = true
 			}
