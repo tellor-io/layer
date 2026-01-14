@@ -312,7 +312,100 @@ func (s *KeeperTestSuite) TestGetQuery() {
 	}
 }
 
-func (s *KeeperTestSuite) TestTippedQueries() {
+func (s *KeeperTestSuite) TestGetTippedQueries() {
+	require := s.Require()
+	k := s.oracleKeeper
+	q := s.queryClient
+	ctx := s.ctx
+
+	queryMeta := ReturnTestQueryMeta(math.NewInt(100))
+
+	cleanup := func() {
+		iter, err := k.Query.Iterate(ctx, nil)
+		require.NoError(err)
+		defer iter.Close()
+	}
+
+	tests := []struct {
+		name                       string
+		req                        *types.QueryGetTippedQueriesRequest
+		setup                      func()
+		err                        bool
+		expectedActiveLen          int
+		expectedExpiredLen         int
+		expectedAvailableTipsTotal math.Int
+	}{
+		{
+			name: "nil request",
+			req:  nil,
+			err:  true,
+		},
+		{
+			name: "empty request",
+			req:  &types.QueryGetTippedQueriesRequest{},
+			err:  false,
+		},
+		{
+			name: "success one tipped query",
+			setup: func() {
+				ctx := s.ctx.WithBlockHeight(1)
+				queryMeta.Expiration = 2
+				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryData, uint64(1)), queryMeta))
+			},
+			req: &types.QueryGetTippedQueriesRequest{
+				Pagination: &query.PageRequest{
+					Offset: 0,
+				},
+			},
+			err:                        false,
+			expectedActiveLen:          1,
+			expectedExpiredLen:         0,
+			expectedAvailableTipsTotal: math.NewInt(100),
+		},
+		{
+			name: "success one active and one expiredtipped query",
+			setup: func() {
+				ctx = s.ctx.WithBlockHeight(5)
+				queryMeta2 := ReturnTestQueryMeta(math.NewInt(100))
+				queryMeta.Expiration = 2
+				queryMeta.Amount = math.NewInt(100)
+				queryMeta2.Expiration = 8
+				queryMeta2.Amount = math.NewInt(100)
+				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta.QueryData, uint64(1)), queryMeta))
+				require.NoError(k.Query.Set(ctx, collections.Join(queryMeta2.QueryData, uint64(2)), queryMeta2))
+			},
+			req: &types.QueryGetTippedQueriesRequest{
+				Pagination: &query.PageRequest{
+					Offset: 0,
+				},
+			},
+			err:                        false,
+			expectedActiveLen:          1,
+			expectedExpiredLen:         1,
+			expectedAvailableTipsTotal: math.NewInt(200),
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			cleanup()
+			if tt.setup != nil {
+				tt.setup()
+			}
+			resp, err := q.GetTippedQueries(ctx, tt.req)
+			if tt.err {
+				require.Error(err)
+				return
+			}
+			require.NoError(err)
+			require.NotNil(resp)
+			require.Equal(tt.expectedActiveLen, len(resp.ActiveQueries))
+			require.Equal(tt.expectedExpiredLen, len(resp.ExpiredQueries))
+		})
+	}
+}
+
+func (s *KeeperTestSuite) TestTippedQueriesForDaemon() {
 	require := s.Require()
 	k := s.oracleKeeper
 	q := s.queryClient
