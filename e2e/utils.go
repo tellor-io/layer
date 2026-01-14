@@ -464,8 +464,9 @@ type QueryTeamVoteResponse struct {
 }
 
 type QueryGetTippedQueriesResponse struct {
-	Queries    []*QueryMetaButString `protobuf:"bytes,1,rep,name=queries,proto3" json:"queries,omitempty"`
-	Pagination *query.PageResponse   `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+	ActiveQueries  []*QueryMetaButString `protobuf:"bytes,1,rep,name=active_queries,json=activeQueries,proto3" json:"active_queries,omitempty"`
+	ExpiredQueries []*QueryMetaButString `protobuf:"bytes,2,rep,name=expired_queries,json=expiredQueries,proto3" json:"expired_queries,omitempty"`
+	Pagination     *query.PageResponse   `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 type QueryGetDataSpecResponse struct {

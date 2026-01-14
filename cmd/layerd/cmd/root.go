@@ -51,7 +51,18 @@ func NewRootCmd(
 	// Set config
 	// initSDKConfig()
 
-	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDir()))
+	// Create temporary directory for app initialization
+	// This directory is only needed during initialization since we use an in-memory DB
+	tempDirPath := tempDir()
+	// Clean up the temp directory after initialization completes
+	// The directory is only used during app.New() call and is safe to remove afterwards
+	defer func() {
+		if tempDirPath != "" && tempDirPath != app.DefaultNodeHome {
+			_ = os.RemoveAll(tempDirPath)
+		}
+	}()
+
+	tempApp := app.New(log.NewNopLogger(), dbm.NewMemDB(), nil, true, simtestutil.NewAppOptionsWithFlagHome(tempDirPath))
 	initClientCtx := client.Context{}.
 		WithCodec(tempApp.AppCodec()).
 		WithInterfaceRegistry(tempApp.AppCodec().InterfaceRegistry()).
@@ -332,12 +343,16 @@ func initAppConfig() (string, interface{}) {
 	return customAppTemplate, customAppConfig
 }
 
-var tempDir = func() string {
+// tempDir creates a temporary directory for app initialization.
+// The directory is only needed during initialization since the app uses an in-memory database.
+// The caller is responsible for cleaning up the directory after initialization completes.
+func tempDir() string {
 	dir, err := os.MkdirTemp("", "tellorapp")
 	if err != nil {
-		dir = app.DefaultNodeHome
+		// If we can't create a temp dir, fall back to DefaultNodeHome
+		// This is safe since we use an in-memory DB and don't actually write to the directory
+		return app.DefaultNodeHome
 	}
-	defer os.RemoveAll(dir)
 
 	return dir
 }
