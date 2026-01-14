@@ -434,10 +434,18 @@ message QueryGetTippedQueriesRequest {
 }
 // QueryGetTippedQueriesResponse is the response type for the Query/GetTippedQueries RPC method.
 message QueryGetTippedQueriesResponse {
-  // querymeta but string query data 
-  repeated QueryMetaButString queries = 1; 
+  // querymeta but string query data for active queries
+  repeated QueryMetaButString active_queries = 1; 
+  // querymeta but string query data for expired queries with tips
+  repeated QueryMetaButString expired_queries = 2;
+  // available_tips_total defines the total available tips.
+  string available_tips_total = 3 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
   // pagination defines the pagination in the response.
-  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  cosmos.base.query.v1beta1.PageResponse pagination = 4;
 }
 
 // QueryGetReportersNoStakeReportsRequest is the request type for the Query/GetReportersNoStakeReports RPC method.
