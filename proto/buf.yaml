@@ -9,6 +9,7 @@ deps:
 - buf.build/protocolbuffers/wellknowntypes
 - buf.build/cosmos/ics23
 - buf.build/cosmos/ibc
+- buf.build/tendermint/tendermint
 lint:
   except:
   - UNARY_RPC

@@ -116,6 +116,80 @@ paths:
           type: string
       tags:
         - Query
+  /tellor-io/layer/reporter/jailed-reporters:
+    get:
+      summary: JailedReporters queries all jailed reporters.
+      operationId: JailedReporters
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reporters:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                    metadata:
+                      type: object
+                      properties:
+                        min_tokens_required:
+                          type: string
+                          title: min_tokens_required to select this reporter
+                        commission_rate:
+                          type: string
+                          title: commission for the reporter
+                        jailed:
+                          type: boolean
+                          title: >-
+                            jailed is a bool whether the reporter is jailed or
+                            not
+                        jailed_until:
+                          type: string
+                          format: date-time
+                          title: >-
+                            jailed_until is the time the reporter is jailed
+                            until
+                        moniker:
+                          type: string
+                          title: moniker is the moniker of the reporter
+                        last_updated:
+                          type: string
+                          format: date-time
+                          title: Time that the reporter was last updated
+                      title: >-
+                        OracleReporter is the struct that holds the data for a
+                        reporter
+                    power:
+                      type: string
+                      format: uint64
+                description: all the jailed reporters.
+            description: >-
+              QueryJailedReportersResponse is the response type for the
+              Query/JailedReporters RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      tags:
+        - Query
   /tellor-io/layer/reporter/num-of-selectors-by-reporter/{reporter_address}:
     get:
       summary: NumOfSelectorsByReporter queries the number of selectors by a reporter.
@@ -212,6 +286,80 @@ paths:
                     '@type':
                       type: string
                   additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/reporter/reporter/{reporter_address}:
+    get:
+      summary: Reporter queries a specific reporter by address.
+      operationId: Reporter
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reporter:
+                description: reporter is the reporter details.
+                type: object
+                properties:
+                  address:
+                    type: string
+                  metadata:
+                    type: object
+                    properties:
+                      min_tokens_required:
+                        type: string
+                        title: min_tokens_required to select this reporter
+                      commission_rate:
+                        type: string
+                        title: commission for the reporter
+                      jailed:
+                        type: boolean
+                        title: jailed is a bool whether the reporter is jailed or not
+                      jailed_until:
+                        type: string
+                        format: date-time
+                        title: jailed_until is the time the reporter is jailed until
+                      moniker:
+                        type: string
+                        title: moniker is the moniker of the reporter
+                      last_updated:
+                        type: string
+                        format: date-time
+                        title: Time that the reporter was last updated
+                    title: >-
+                      OracleReporter is the struct that holds the data for a
+                      reporter
+                  power:
+                    type: string
+                    format: uint64
+            description: >-
+              QueryReporterResponse is the response type for the Query/Reporter
+              RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reporter_address
+          description: reporter_address defines the reporter address to query for.
+          in: path
+          required: true
+          type: string
       tags:
         - Query
   /tellor-io/layer/reporter/reporters:
@@ -356,9 +504,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -689,9 +834,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -848,9 +990,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -1012,9 +1151,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -1040,6 +1176,10 @@ paths:
                     type: string
                   maxTipAmount:
                     type: string
+                  liveness_cycles:
+                    type: string
+                    format: uint64
+                    title: distribute rewards every N cycles
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -1762,9 +1902,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -1885,6 +2022,68 @@ paths:
                     '@type':
                       type: string
                   additionalProperties: {}
+      tags:
+        - Query
+  /tellor-io/layer/oracle/get_reporter_liveness/{reporter}:
+    get:
+      summary: >-
+        Queries the percent liveness for a reporter (lifetime participation
+        rate)
+      operationId: GetReporterLiveness
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              reporter_reports:
+                type: string
+                format: uint64
+                title: >-
+                  reporter_reports is the number of reports the reporter
+                  submitted
+              total_aggregates:
+                type: string
+                format: uint64
+                title: total_aggregates is the total number of aggregates on chain
+              percent_liveness:
+                type: string
+                title: >-
+                  percent_liveness is reports/aggregates * 100 (lifetime
+                  participation rate)
+              last_report_time:
+                type: string
+                format: int64
+                title: >-
+                  last_report_time is the timestamp of the reporter's last
+                  report
+            description: >-
+              QueryGetReporterLivenessResponse is the response type for the
+              Query/GetReporterLiveness RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: reporter
+          description: reporter defines the reporter address.
+          in: path
+          required: true
+          type: string
       tags:
         - Query
   /tellor-io/layer/oracle/get_reporters_no_stake_reports/{reporter}:
@@ -2014,9 +2213,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -2179,9 +2375,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -2501,9 +2694,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -2739,9 +2929,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -2950,9 +3137,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -3590,6 +3774,9 @@ paths:
                     title: >-
                       Timestamp cutoff before which no attestations or valset
                       signatures can be slashed
+                  mainnet_chain_id:
+                    type: string
+                    title: Mainnet chain ID for domain separator encoding
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -3613,9 +3800,370 @@ paths:
                   additionalProperties: {}
       tags:
         - Query
+  /tellor-io/layer/dispute/claimable-dispute-rewards/{dispute_id}/{address}:
+    get:
+      summary: >-
+        ClaimableDisputeRewards queries the amount of loya that can be claimed
+        for a specific dispute
+      operationId: ClaimableDisputeRewards
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              claimable_amount:
+                type: object
+                properties:
+                  dispute_id:
+                    type: string
+                    format: uint64
+                  reward_amount:
+                    type: string
+                  fee_refund_amount:
+                    type: string
+                  reward_claimed:
+                    type: boolean
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: dispute_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+        - name: address
+          in: path
+          required: true
+          type: string
+      tags:
+        - Query
+  /tellor-io/layer/dispute/dispute-fee-payers/{dispute_id}:
+    get:
+      summary: DisputeFeePayers queries all fee payers for a dispute
+      operationId: DisputeFeePayers
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              payers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    payer_address:
+                      type: string
+                    payer_info:
+                      type: object
+                      properties:
+                        amount:
+                          type: string
+                          title: amount paid
+                        from_bond:
+                          type: boolean
+                          title: >-
+                            source of funds either from bond or free floating
+                            funds
+                      title: >-
+                        PayerInfo defines the payer info of a dispute
+
+                        fee payer's info that was involved in paying the dispute
+                        fee in order to start the dispute
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: dispute_id
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
+  /tellor-io/layer/dispute/dispute/{dispute_id}:
+    get:
+      summary: Dispute queries a specific dispute by id.
+      operationId: Dispute
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              dispute:
+                description: dispute is the dispute details.
+                type: object
+                properties:
+                  disputeId:
+                    type: string
+                    format: uint64
+                  metadata:
+                    type: object
+                    properties:
+                      hash_id:
+                        type: string
+                        title: unique dispute hash identifier
+                      dispute_id:
+                        type: string
+                        format: uint64
+                        title: current dispute id
+                      dispute_category:
+                        title: dispute severity level
+                        type: string
+                        enum:
+                          - DISPUTE_CATEGORY_UNSPECIFIED
+                          - DISPUTE_CATEGORY_WARNING
+                          - DISPUTE_CATEGORY_MINOR
+                          - DISPUTE_CATEGORY_MAJOR
+                        default: DISPUTE_CATEGORY_UNSPECIFIED
+                        description: |-
+                          DisputeCategory defines the severity of a dispute.
+
+                           - DISPUTE_CATEGORY_UNSPECIFIED: UNSPECIFIED defines an invalid dispute category.
+                           - DISPUTE_CATEGORY_WARNING: WARNING defines a 1 percent slashing.
+                           - DISPUTE_CATEGORY_MINOR: MINOR defines a 5 percent slashing.
+                           - DISPUTE_CATEGORY_MAJOR: MAJOR defines a 100 percent slashing.
+                      dispute_fee:
+                        type: string
+                        title: cost to start dispute
+                      dispute_status:
+                        title: current dispute status
+                        type: string
+                        enum:
+                          - DISPUTE_STATUS_PREVOTE
+                          - DISPUTE_STATUS_VOTING
+                          - DISPUTE_STATUS_RESOLVED
+                          - DISPUTE_STATUS_UNRESOLVED
+                          - DISPUTE_STATUS_FAILED
+                        default: DISPUTE_STATUS_PREVOTE
+                        description: |-
+                          DisputeStatus defines the status of a dispute.
+
+                           - DISPUTE_STATUS_PREVOTE: PREVOTE defines a dispute that hasn't started voting (ie in funding).
+                           - DISPUTE_STATUS_VOTING: VOTING defines a dispute that has been funded and is in voting.
+                           - DISPUTE_STATUS_RESOLVED: RESOLVED defines a dispute where dispute period has ended
+                           - DISPUTE_STATUS_UNRESOLVED: UNRESOLVED defines a dispute where dispute period has not ended but voting period has.
+                           - DISPUTE_STATUS_FAILED: FAILED defines a dispute that failed to pay the dispute fee to start vote.
+                      dispute_start_time:
+                        type: string
+                        format: date-time
+                        title: >-
+                          start time of the dispute that begins after dispute
+                          fee is fully paid
+                      dispute_end_time:
+                        type: string
+                        format: date-time
+                        title: >-
+                          end time that the dispute stop taking votes and
+                          creating new rounds
+                      dispute_start_block:
+                        type: string
+                        format: uint64
+                        title: height of the block that started the dispute
+                      dispute_round:
+                        type: string
+                        format: uint64
+                        title: current dispute round
+                      slash_amount:
+                        type: string
+                        title: reporter's slashed amount
+                      burn_amount:
+                        type: string
+                        title: >-
+                          burn amount that will be divided in half and paid to
+                          voters and the other half burned
+                      initial_evidence:
+                        title: initial single report evidence to be disputed
+                        type: object
+                        properties:
+                          reporter:
+                            type: string
+                            title: reporter is the address of the reporter
+                          power:
+                            type: string
+                            format: uint64
+                            title: >-
+                              the power of the reporter based on total tokens
+                              normalized
+                          query_type:
+                            type: string
+                            title: string identifier of the data spec
+                          query_id:
+                            type: string
+                            title: hash of the query data
+                          aggregate_method:
+                            type: string
+                            title: >-
+                              aggregate method to use for aggregating all the
+                              reports for the query id
+                          value:
+                            type: string
+                            title: hex string of the response value
+                          timestamp:
+                            type: string
+                            format: uint64
+                            title: timestamp of when the report was created
+                          cyclelist:
+                            type: boolean
+                            title: >-
+                              indicates if the report's query id is in the
+                              cyclelist
+                          block_number:
+                            type: string
+                            format: uint64
+                            title: block number of when the report was created
+                          meta_id:
+                            type: string
+                            format: uint64
+                            title: identifier for the report's aggregate group
+                      fee_total:
+                        type: string
+                        title: >-
+                          fee payers that were involved in paying the dispute
+                          fee in order to start the dispute
+
+                          total fee paid tracked to know if dispute fee is fully
+                          paid to start dispute
+                      prev_dispute_ids:
+                        type: array
+                        items:
+                          type: string
+                          format: uint64
+                        title: >-
+                          list of dispute ids that preceded before this current
+                          round began
+                      block_number:
+                        type: string
+                        format: uint64
+                        title: block number when this specific dispute was created
+                      open:
+                        type: boolean
+                      additional_evidence:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            reporter:
+                              type: string
+                              title: reporter is the address of the reporter
+                            power:
+                              type: string
+                              format: uint64
+                              title: >-
+                                the power of the reporter based on total tokens
+                                normalized
+                            query_type:
+                              type: string
+                              title: string identifier of the data spec
+                            query_id:
+                              type: string
+                              title: hash of the query data
+                            aggregate_method:
+                              type: string
+                              title: >-
+                                aggregate method to use for aggregating all the
+                                reports for the query id
+                            value:
+                              type: string
+                              title: hex string of the response value
+                            timestamp:
+                              type: string
+                              format: uint64
+                              title: timestamp of when the report was created
+                            cyclelist:
+                              type: boolean
+                              title: >-
+                                indicates if the report's query id is in the
+                                cyclelist
+                            block_number:
+                              type: string
+                              format: uint64
+                              title: block number of when the report was created
+                            meta_id:
+                              type: string
+                              format: uint64
+                              title: identifier for the report's aggregate group
+                          title: MicroReports but with strings to return for queries
+                      voter_reward:
+                        type: string
+                        title: total tokens allocated to voters
+                      pending_execution:
+                        type: boolean
+                        title: >-
+                          pending execution is true if the dispute has reached
+                          quorum and is pending execution.
+
+                          however, if a new dispute round begins, this is set to
+                          false again
+                    title: >-
+                      DisputeStrings is a dispute that uses strings instead of
+                      bytes for the hash id and micro reports for query display
+            description: >-
+              QueryDisputeResponse is the response type for the Query/Dispute
+              RPC method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    '@type':
+                      type: string
+                  additionalProperties: {}
+      parameters:
+        - name: dispute_id
+          description: dispute_id defines the dispute id to query for.
+          in: path
+          required: true
+          type: string
+          format: uint64
+      tags:
+        - Query
   /tellor-io/layer/dispute/disputes:
     get:
-      summary: Reporters queries all the staked reporters.
+      summary: Disputes queries all disputes.
       operationId: Disputes
       responses:
         '200':
@@ -3655,7 +4203,6 @@ paths:
                       properties:
                         hash_id:
                           type: string
-                          format: byte
                           title: unique dispute hash identifier
                         dispute_id:
                           type: string
@@ -3744,7 +4291,6 @@ paths:
                               title: string identifier of the data spec
                             query_id:
                               type: string
-                              format: byte
                               title: hash of the query data
                             aggregate_method:
                               type: string
@@ -3756,7 +4302,7 @@ paths:
                               title: hex string of the response value
                             timestamp:
                               type: string
-                              format: date-time
+                              format: uint64
                               title: timestamp of when the report was created
                             cyclelist:
                               type: boolean
@@ -3812,7 +4358,6 @@ paths:
                                 title: string identifier of the data spec
                               query_id:
                                 type: string
-                                format: byte
                                 title: hash of the query data
                               aggregate_method:
                                 type: string
@@ -3824,7 +4369,7 @@ paths:
                                 title: hex string of the response value
                               timestamp:
                                 type: string
-                                format: date-time
+                                format: uint64
                                 title: timestamp of when the report was created
                               cyclelist:
                                 type: boolean
@@ -3839,7 +4384,9 @@ paths:
                                 type: string
                                 format: uint64
                                 title: identifier for the report's aggregate group
-                            title: MicroReport represents data for a single report
+                            title: >-
+                              MicroReports but with strings to return for
+                              queries
                         voter_reward:
                           type: string
                           title: total tokens allocated to voters
@@ -3851,7 +4398,10 @@ paths:
 
                             however, if a new dispute round begins, this is set
                             to false again
-                      description: Dispute defines a dispute.
+                      title: >-
+                        DisputeStrings is a dispute that uses strings instead of
+                        bytes for the hash id and micro reports for query
+                        display
         default:
           description: An unexpected error response.
           schema:
@@ -3921,9 +4471,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -4772,9 +5319,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -4782,9 +5326,6 @@ paths:
           description: >-
             resolve_denom is the flag to resolve the denom into a human-readable
             form from the metadata.
-
-
-            Since: cosmos-sdk 0.50
           in: query
           required: false
           type: boolean
@@ -4854,9 +5395,6 @@ paths:
         of
 
         gas if the pagination field is incorrectly set.
-
-
-        Since: cosmos-sdk 0.46
       operationId: DenomOwners
       responses:
         '200':
@@ -4892,9 +5430,6 @@ paths:
                     address and account
 
                     balance of the denominated token.
-
-
-                    Since: cosmos-sdk 0.46
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -4917,9 +5452,6 @@ paths:
             description: >-
               QueryDenomOwnersResponse defines the RPC response of a DenomOwners
               RPC query.
-
-
-              Since: cosmos-sdk 0.46
         default:
           description: An unexpected error response.
           schema:
@@ -4946,6 +5478,7 @@ paths:
           in: path
           required: true
           type: string
+          pattern: .+
         - name: pagination.key
           description: |-
             key is a value returned in PageResponse.next_key to begin
@@ -4996,9 +5529,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -5011,7 +5541,6 @@ paths:
         particular token
 
         denomination.
-      description: 'Since: cosmos-sdk 0.50.3'
       operationId: DenomOwnersByQuery
       responses:
         '200':
@@ -5047,9 +5576,6 @@ paths:
                     address and account
 
                     balance of the denominated token.
-
-
-                    Since: cosmos-sdk 0.46
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object
@@ -5072,9 +5598,6 @@ paths:
             description: >-
               QueryDenomOwnersByQueryResponse defines the RPC response of a
               DenomOwnersByQuery RPC query.
-
-
-              Since: cosmos-sdk 0.50.3
         default:
           description: An unexpected error response.
           schema:
@@ -5151,9 +5674,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -5229,7 +5749,6 @@ paths:
                         displayed in clients.
                     name:
                       type: string
-                      description: 'Since: cosmos-sdk 0.43'
                       title: 'name defines the name of the token (eg: Cosmos Atom)'
                     symbol:
                       type: string
@@ -5238,17 +5757,11 @@ paths:
                         (eg: ATOM). This can
 
                         be the same as the display.
-
-
-                        Since: cosmos-sdk 0.43
                     uri:
                       type: string
                       description: >-
                         URI to a document (on or off-chain) that contains
                         additional information. Optional.
-
-
-                        Since: cosmos-sdk 0.46
                     uri_hash:
                       type: string
                       description: >-
@@ -5256,9 +5769,6 @@ paths:
                         It's used to verify that
 
                         the document didn't change. Optional.
-
-
-                        Since: cosmos-sdk 0.46
                   description: |-
                     Metadata represents a struct that describes
                     a basic token.
@@ -5358,9 +5868,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -5435,7 +5942,6 @@ paths:
                       displayed in clients.
                   name:
                     type: string
-                    description: 'Since: cosmos-sdk 0.43'
                     title: 'name defines the name of the token (eg: Cosmos Atom)'
                   symbol:
                     type: string
@@ -5444,17 +5950,11 @@ paths:
                       ATOM). This can
 
                       be the same as the display.
-
-
-                      Since: cosmos-sdk 0.43
                   uri:
                     type: string
                     description: >-
                       URI to a document (on or off-chain) that contains
                       additional information. Optional.
-
-
-                      Since: cosmos-sdk 0.46
                   uri_hash:
                     type: string
                     description: >-
@@ -5462,9 +5962,6 @@ paths:
                       It's used to verify that
 
                       the document didn't change. Optional.
-
-
-                      Since: cosmos-sdk 0.46
             description: >-
               QueryDenomMetadataResponse is the response type for the
               Query/DenomMetadata RPC
@@ -5494,6 +5991,7 @@ paths:
           in: path
           required: true
           type: string
+          pattern: .+
       tags:
         - Query
   /cosmos/bank/v1beta1/denoms_metadata_by_query_string:
@@ -5567,7 +6065,6 @@ paths:
                       displayed in clients.
                   name:
                     type: string
-                    description: 'Since: cosmos-sdk 0.43'
                     title: 'name defines the name of the token (eg: Cosmos Atom)'
                   symbol:
                     type: string
@@ -5576,17 +6073,11 @@ paths:
                       ATOM). This can
 
                       be the same as the display.
-
-
-                      Since: cosmos-sdk 0.43
                   uri:
                     type: string
                     description: >-
                       URI to a document (on or off-chain) that contains
                       additional information. Optional.
-
-
-                      Since: cosmos-sdk 0.46
                   uri_hash:
                     type: string
                     description: >-
@@ -5594,9 +6085,6 @@ paths:
                       It's used to verify that
 
                       the document didn't change. Optional.
-
-
-                      Since: cosmos-sdk 0.46
             description: >-
               QueryDenomMetadataByQueryStringResponse is the response type for
               the Query/DenomMetadata RPC
@@ -5705,9 +6193,6 @@ paths:
         default
 
         params.default_send_enabled, and will not be returned by this query.
-
-
-        Since: cosmos-sdk 0.47
       operationId: SendEnabled
       responses:
         '200':
@@ -5755,9 +6240,6 @@ paths:
             description: >-
               QuerySendEnabledResponse defines the RPC response of a SendEnable
               query.
-
-
-              Since: cosmos-sdk 0.47
         default:
           description: An unexpected error response.
           schema:
@@ -5837,9 +6319,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -5857,9 +6336,6 @@ paths:
         of
 
         gas if the pagination field is incorrectly set.
-
-
-        Since: cosmos-sdk 0.46
       operationId: SpendableBalances
       responses:
         '200':
@@ -5909,9 +6385,6 @@ paths:
               for querying
 
               an account's spendable balances.
-
-
-              Since: cosmos-sdk 0.46
         default:
           description: An unexpected error response.
           schema:
@@ -5986,9 +6459,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -6006,9 +6476,6 @@ paths:
         of
 
         gas if the pagination field is incorrectly set.
-
-
-        Since: cosmos-sdk 0.47
       operationId: SpendableBalanceByDenom
       responses:
         '200':
@@ -6029,9 +6496,6 @@ paths:
               structure for
 
               querying an account's spendable balance for a specific denom.
-
-
-              Since: cosmos-sdk 0.47
         default:
           description: An unexpected error response.
           schema:
@@ -6097,10 +6561,7 @@ paths:
                     signatures required by gogoproto.
                 title: supply is the supply of the coins
               pagination:
-                description: |-
-                  pagination defines the pagination in the response.
-
-                  Since: cosmos-sdk 0.43
+                description: pagination defines the pagination in the response.
                 type: object
                 properties:
                   next_key:
@@ -6192,9 +6653,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -6710,9 +7168,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -6989,10 +7444,7 @@ paths:
                         }
       parameters:
         - name: hash
-          description: |-
-            hash defines the evidence hash of the requested evidence.
-
-            Since: cosmos-sdk 0.47
+          description: hash defines the evidence hash of the requested evidence.
           in: path
           required: true
           type: string
@@ -7345,9 +7797,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -7789,9 +8238,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -8153,9 +8599,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -8358,9 +8801,6 @@ paths:
                       description: >-
                         min_self_delegation is the validator's self declared
                         minimum self delegation.
-
-
-                        Since: cosmos-sdk 0.46
                     unbonding_on_hold_ref_count:
                       type: string
                       format: int64
@@ -8668,9 +9108,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -8866,9 +9303,6 @@ paths:
                     description: >-
                       min_self_delegation is the validator's self declared
                       minimum self delegation.
-
-
-                      Since: cosmos-sdk 0.46
                   unbonding_on_hold_ref_count:
                     type: string
                     format: int64
@@ -9149,7 +9583,10 @@ paths:
                               hash:
                                 type: string
                                 format: byte
-                            title: PartsetHeader
+                            description: Header of the parts set for a block.
+                        description: >-
+                          BlockID defines the unique ID of a block as its hash
+                          and its `PartSetHeader`.
                       last_commit_hash:
                         type: string
                         format: byte
@@ -9373,9 +9810,6 @@ paths:
                           description: >-
                             min_self_delegation is the validator's self declared
                             minimum self delegation.
-
-
-                            Since: cosmos-sdk 0.46
                         unbonding_on_hold_ref_count:
                           type: string
                           format: int64
@@ -10262,9 +10696,6 @@ paths:
                       description: >-
                         min_self_delegation is the validator's self declared
                         minimum self delegation.
-
-
-                        Since: cosmos-sdk 0.46
                     unbonding_on_hold_ref_count:
                       type: string
                       format: int64
@@ -10572,9 +11003,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -10768,9 +11196,6 @@ paths:
                     description: >-
                       min_self_delegation is the validator's self declared
                       minimum self delegation.
-
-
-                      Since: cosmos-sdk 0.46
                   unbonding_on_hold_ref_count:
                     type: string
                     format: int64
@@ -11321,9 +11746,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -12218,9 +12640,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -12229,6 +12648,7 @@ paths:
   /cosmos/distribution/v1beta1/community_pool:
     get:
       summary: CommunityPool queries the community pool coins.
+      description: 'WARNING: This query will fail if an external community pool is used.'
       operationId: CommunityPool
       responses:
         '200':
@@ -12929,9 +13349,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -12940,7 +13357,6 @@ paths:
   /cosmos/auth/v1beta1/account_info/{address}:
     get:
       summary: AccountInfo queries account info which is common to all account types.
-      description: 'Since: cosmos-sdk 0.47'
       operationId: AccountInfo
       responses:
         '200':
@@ -13139,10 +13555,7 @@ paths:
                   sequence:
                     type: string
                     format: uint64
-            description: |-
-              QueryAccountInfoResponse is the Query/AccountInfo response type.
-
-              Since: cosmos-sdk 0.47
+            description: QueryAccountInfoResponse is the Query/AccountInfo response type.
         default:
           description: An unexpected error response.
           schema:
@@ -13350,9 +13763,6 @@ paths:
         of
 
         gas if the pagination field is incorrectly set.
-
-
-        Since: cosmos-sdk 0.43
       operationId: Accounts
       responses:
         '200':
@@ -13564,9 +13974,6 @@ paths:
             description: >-
               QueryAccountsResponse is the response type for the Query/Accounts
               RPC method.
-
-
-              Since: cosmos-sdk 0.43
         default:
           description: An unexpected error response.
           schema:
@@ -13809,9 +14216,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -14207,7 +14611,6 @@ paths:
   /cosmos/auth/v1beta1/address_by_id/{id}:
     get:
       summary: AccountAddressByID returns account address based on account number.
-      description: 'Since: cosmos-sdk 0.46.2'
       operationId: AccountAddressByID
       responses:
         '200':
@@ -14217,7 +14620,6 @@ paths:
             properties:
               account_address:
                 type: string
-            description: 'Since: cosmos-sdk 0.46.2'
             title: >-
               QueryAccountAddressByIDResponse is the response type for
               AccountAddressByID rpc method
@@ -14425,10 +14827,7 @@ paths:
           type: string
           format: int64
         - name: account_id
-          description: |-
-            account_id is the account number of the address to be queried.
-
-            Since: cosmos-sdk 0.47
+          description: account_id is the account number of the address to be queried.
           in: query
           required: false
           type: string
@@ -14438,7 +14837,6 @@ paths:
   /cosmos/auth/v1beta1/bech32:
     get:
       summary: Bech32Prefix queries bech32Prefix
-      description: 'Since: cosmos-sdk 0.46'
       operationId: Bech32Prefix
       responses:
         '200':
@@ -14451,9 +14849,6 @@ paths:
             description: >-
               Bech32PrefixResponse is the response type for Bech32Prefix rpc
               method.
-
-
-              Since: cosmos-sdk 0.46
         default:
           description: An unexpected error response.
           schema:
@@ -14650,7 +15045,6 @@ paths:
   /cosmos/auth/v1beta1/bech32/{address_bytes}:
     get:
       summary: AddressBytesToString converts Account Address bytes to string
-      description: 'Since: cosmos-sdk 0.46'
       operationId: AddressBytesToString
       responses:
         '200':
@@ -14663,9 +15057,6 @@ paths:
             description: >-
               AddressBytesToStringResponse is the response type for
               AddressString rpc method.
-
-
-              Since: cosmos-sdk 0.46
         default:
           description: An unexpected error response.
           schema:
@@ -14868,7 +15259,6 @@ paths:
   /cosmos/auth/v1beta1/bech32/{address_string}:
     get:
       summary: AddressStringToBytes converts Address string to bytes
-      description: 'Since: cosmos-sdk 0.46'
       operationId: AddressStringToBytes
       responses:
         '200':
@@ -14882,9 +15272,6 @@ paths:
             description: >-
               AddressStringToBytesResponse is the response type for AddressBytes
               rpc method.
-
-
-              Since: cosmos-sdk 0.46
         default:
           description: An unexpected error response.
           schema:
@@ -15086,7 +15473,6 @@ paths:
   /cosmos/auth/v1beta1/module_accounts:
     get:
       summary: ModuleAccounts returns all the existing module accounts.
-      description: 'Since: cosmos-sdk 0.46'
       operationId: ModuleAccounts
       responses:
         '200':
@@ -15278,9 +15664,6 @@ paths:
             description: >-
               QueryModuleAccountsResponse is the response type for the
               Query/ModuleAccounts RPC method.
-
-
-              Since: cosmos-sdk 0.46
         default:
           description: An unexpected error response.
           schema:
@@ -16306,7 +16689,6 @@ paths:
   /cosmos/upgrade/v1beta1/authority:
     get:
       summary: Returns the account with authority to conduct upgrades
-      description: 'Since: cosmos-sdk 0.46'
       operationId: Authority
       responses:
         '200':
@@ -16316,7 +16698,6 @@ paths:
             properties:
               address:
                 type: string
-            description: 'Since: cosmos-sdk 0.46'
             title: QueryAuthorityResponse is the response type for Query/Authority
         default:
           description: An unexpected error response.
@@ -16842,7 +17223,6 @@ paths:
   /cosmos/upgrade/v1beta1/module_versions:
     get:
       summary: ModuleVersions queries the list of module versions from state.
-      description: 'Since: cosmos-sdk 0.43'
       operationId: ModuleVersions
       responses:
         '200':
@@ -16862,10 +17242,7 @@ paths:
                       type: string
                       format: uint64
                       title: consensus version of the app module
-                  description: |-
-                    ModuleVersion specifies a module and its consensus version.
-
-                    Since: cosmos-sdk 0.43
+                  description: ModuleVersion specifies a module and its consensus version.
                 description: >-
                   module_versions is a list of module names with their consensus
                   versions.
@@ -16874,9 +17251,6 @@ paths:
               Query/ModuleVersions
 
               RPC method.
-
-
-              Since: cosmos-sdk 0.43
         default:
           description: An unexpected error response.
           schema:
@@ -17103,7 +17477,6 @@ paths:
               upgraded_consensus_state:
                 type: string
                 format: byte
-                title: 'Since: cosmos-sdk 0.43'
             description: >-
               QueryUpgradedConsensusStateResponse is the response type for the
               Query/UpgradedConsensusState
@@ -17531,9 +17904,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -17919,10 +18289,7 @@ paths:
 
                       vetoed. Default value: 1/3.
               params:
-                description: |-
-                  params defines all the paramaters of x/gov module.
-
-                  Since: cosmos-sdk 0.47
+                description: params defines all the paramaters of x/gov module.
                 type: object
                 properties:
                   min_deposit:
@@ -17980,9 +18347,6 @@ paths:
                     description: >-
                       The cancel ratio which will not be returned back to the
                       depositors when a proposal is cancelled.
-
-
-                      Since: cosmos-sdk 0.50
                   proposal_cancel_dest:
                     type: string
                     description: >-
@@ -17991,23 +18355,14 @@ paths:
 
                       If empty, the (proposal_cancel_ratio * deposit) proposal
                       deposits will be burned.
-
-
-                      Since: cosmos-sdk 0.50
                   expedited_voting_period:
                     type: string
-                    description: |-
-                      Duration of the voting period of an expedited proposal.
-
-                      Since: cosmos-sdk 0.50
+                    description: Duration of the voting period of an expedited proposal.
                   expedited_threshold:
                     type: string
                     description: >-
                       Minimum proportion of Yes votes for proposal to pass.
                       Default value: 0.67.
-
-
-                      Since: cosmos-sdk 0.50
                   expedited_min_deposit:
                     type: array
                     items:
@@ -18037,6 +18392,16 @@ paths:
                   burn_vote_veto:
                     type: boolean
                     title: burn deposits if quorum with vote type no_veto is met
+                  min_deposit_ratio:
+                    type: string
+                    description: >-
+                      The ratio representing the proportion of the deposit value
+                      minimum that must be met when making a deposit.
+
+                      Default value: 0.01. Meaning that for a chain with a
+                      min_deposit of 100stake, a deposit of 1stake would be
+
+                      required.
             description: >-
               QueryParamsResponse is the response type for the Query/Params RPC
               method.
@@ -18531,26 +18896,22 @@ paths:
 
                         the recommended format of the metadata is to be found
                         here:
+
                         https://docs.cosmos.network/v0.47/modules/gov#proposal-3
                     title:
                       type: string
-                      description: 'Since: cosmos-sdk 0.47'
                       title: title is the title of the proposal
                     summary:
                       type: string
-                      description: 'Since: cosmos-sdk 0.47'
                       title: summary is a short summary of the proposal
                     proposer:
                       type: string
-                      description: 'Since: cosmos-sdk 0.47'
                       title: proposer is the address of the proposal sumbitter
                     expedited:
                       type: boolean
-                      description: 'Since: cosmos-sdk 0.50'
                       title: expedited defines if the proposal is expedited
                     failed_reason:
                       type: string
-                      description: 'Since: cosmos-sdk 0.50'
                       title: failed_reason defines the reason why the proposal failed
                   description: >-
                     Proposal defines the core field members of a governance
@@ -18858,9 +19219,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -19152,26 +19510,22 @@ paths:
 
                       the recommended format of the metadata is to be found
                       here:
+
                       https://docs.cosmos.network/v0.47/modules/gov#proposal-3
                   title:
                     type: string
-                    description: 'Since: cosmos-sdk 0.47'
                     title: title is the title of the proposal
                   summary:
                     type: string
-                    description: 'Since: cosmos-sdk 0.47'
                     title: summary is a short summary of the proposal
                   proposer:
                     type: string
-                    description: 'Since: cosmos-sdk 0.47'
                     title: proposer is the address of the proposal sumbitter
                   expedited:
                     type: boolean
-                    description: 'Since: cosmos-sdk 0.50'
                     title: expedited defines if the proposal is expedited
                   failed_reason:
                     type: string
-                    description: 'Since: cosmos-sdk 0.50'
                     title: failed_reason defines the reason why the proposal failed
             description: >-
               QueryProposalResponse is the response type for the Query/Proposal
@@ -19695,9 +20049,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -20519,9 +20870,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -21460,9 +21808,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -21471,7 +21816,6 @@ paths:
   /cosmos/feegrant/v1beta1/issued/{granter}:
     get:
       summary: AllowancesByGranter returns all the grants given by an address
-      description: 'Since: cosmos-sdk 0.46'
       operationId: AllowancesByGranter
       responses:
         '200':
@@ -21588,9 +21932,6 @@ paths:
             description: >-
               QueryAllowancesByGranterResponse is the response type for the
               Query/AllowancesByGranter RPC method.
-
-
-              Since: cosmos-sdk 0.46
         default:
           description: An unexpected error response.
           schema:
@@ -21837,9 +22178,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -22416,9 +22754,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -22816,9 +23151,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -23217,9 +23549,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -23548,7 +23877,6 @@ paths:
   /cosmos/group/v1/groups:
     get:
       summary: Groups queries all groups in state.
-      description: 'Since: cosmos-sdk 0.47.1'
       operationId: Groups
       responses:
         '200':
@@ -23624,10 +23952,7 @@ paths:
                       PageRequest.count_total
 
                       was set, its value is undefined otherwise
-            description: |-
-              QueryGroupsResponse is the Query/Groups response type.
-
-              Since: cosmos-sdk 0.47.1
+            description: QueryGroupsResponse is the Query/Groups response type.
         default:
           description: An unexpected error response.
           schema:
@@ -23870,9 +24195,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -24206,9 +24528,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -24542,9 +24861,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -24870,11 +25186,9 @@ paths:
                       the proposal passes.
                   title:
                     type: string
-                    description: 'Since: cosmos-sdk 0.47'
                     title: title is the title of the proposal
                   summary:
                     type: string
-                    description: 'Since: cosmos-sdk 0.47'
                     title: summary is a short summary of the proposal
             description: QueryProposalResponse is the Query/Proposal response type.
         default:
@@ -25637,11 +25951,9 @@ paths:
                         if the proposal passes.
                     title:
                       type: string
-                      description: 'Since: cosmos-sdk 0.47'
                       title: title is the title of the proposal
                     summary:
                       type: string
-                      description: 'Since: cosmos-sdk 0.47'
                       title: summary is a short summary of the proposal
                   description: >-
                     Proposal defines a group proposal. Any member of a group can
@@ -25926,9 +26238,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -26504,9 +26813,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -26827,9 +27133,6 @@ paths:
           description: >-
             reverse is set to true if results are to be returned in the
             descending order.
-
-
-            Since: cosmos-sdk 0.43
           in: query
           required: false
           type: boolean
@@ -26966,399 +27269,6 @@ paths:
             description: >-
               QueryParamsResponse defines the response type for querying
               x/consensus parameters.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      tags:
-        - Query
-  /ibc/apps/transfer/v1/channels/{channel_id}/ports/{port_id}/escrow_address:
-    get:
-      summary: >-
-        EscrowAddress returns the escrow address for a particular port and
-        channel id.
-      operationId: EscrowAddress
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              escrow_address:
-                type: string
-                title: the escrow account address
-            description: >-
-              QueryEscrowAddressResponse is the response type of the
-              EscrowAddress RPC method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: channel_id
-          description: unique channel identifier
-          in: path
-          required: true
-          type: string
-        - name: port_id
-          description: unique port identifier
-          in: path
-          required: true
-          type: string
-      tags:
-        - Query
-  /ibc/apps/transfer/v1/denom_hashes/{trace}:
-    get:
-      summary: DenomHash queries a denomination hash information.
-      operationId: DenomHash
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              hash:
-                type: string
-                description: hash (in hex format) of the denomination trace information.
-            description: >-
-              QueryDenomHashResponse is the response type for the
-              Query/DenomHash RPC
-
-              method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: trace
-          description: The denomination trace ([port_id]/[channel_id])+/[denom]
-          in: path
-          required: true
-          type: string
-          pattern: .+
-      tags:
-        - Query
-  /ibc/apps/transfer/v1/denom_traces:
-    get:
-      summary: DenomTraces queries all denomination traces.
-      operationId: DenomTraces
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              denom_traces:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    path:
-                      type: string
-                      description: >-
-                        path defines the chain of port/channel identifiers used
-                        for tracing the
-
-                        source of the fungible token.
-                    base_denom:
-                      type: string
-                      description: base denomination of the relayed fungible token.
-                  description: >-
-                    DenomTrace contains the base denomination for ICS20 fungible
-                    tokens and the
-
-                    source tracing information path.
-                description: denom_traces returns all denominations trace information.
-              pagination:
-                description: pagination defines the pagination in the response.
-                type: object
-                properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    description: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently. It will be empty if
-                      there are no more results.
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-            description: >-
-              QueryConnectionsResponse is the response type for the
-              Query/DenomTraces RPC
-
-              method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-
-
-            Since: cosmos-sdk 0.43
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
-  /ibc/apps/transfer/v1/denom_traces/{hash}:
-    get:
-      summary: DenomTrace queries a denomination trace information.
-      operationId: DenomTrace
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              denom_trace:
-                description: >-
-                  denom_trace returns the requested denomination trace
-                  information.
-                type: object
-                properties:
-                  path:
-                    type: string
-                    description: >-
-                      path defines the chain of port/channel identifiers used
-                      for tracing the
-
-                      source of the fungible token.
-                  base_denom:
-                    type: string
-                    description: base denomination of the relayed fungible token.
-            description: >-
-              QueryDenomTraceResponse is the response type for the
-              Query/DenomTrace RPC
-
-              method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: hash
-          description: >-
-            hash (in hex format) or denom (full denom with ibc prefix) of the
-            denomination trace information.
-          in: path
-          required: true
-          type: string
-          pattern: .+
-      tags:
-        - Query
-  /ibc/apps/transfer/v1/denoms/{denom}/total_escrow:
-    get:
-      summary: >-
-        TotalEscrowForDenom returns the total amount of tokens in escrow based
-        on the denom.
-      operationId: TotalEscrowForDenom
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              amount:
-                type: object
-                properties:
-                  denom:
-                    type: string
-                  amount:
-                    type: string
-                description: >-
-                  Coin defines a token with a denomination and an amount.
-
-
-                  NOTE: The amount field is an Int which implements the custom
-                  method
-
-                  signatures required by gogoproto.
-            description: >-
-              QueryTotalEscrowForDenomResponse is the response type for
-              TotalEscrowForDenom RPC method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: denom
-          in: path
-          required: true
-          type: string
-          pattern: .+
-      tags:
-        - Query
-  /ibc/apps/transfer/v1/params:
-    get:
-      summary: Params queries all parameters of the ibc-transfer module.
-      operationId: IBCParams
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              params:
-                description: params defines the parameters of the module.
-                type: object
-                properties:
-                  send_enabled:
-                    type: boolean
-                    description: >-
-                      send_enabled enables or disables all cross-chain token
-                      transfers from this
-
-                      chain.
-                  receive_enabled:
-                    type: boolean
-                    description: >-
-                      receive_enabled enables or disables all cross-chain token
-                      transfers to this
-
-                      chain.
-            description: >-
-              QueryParamsResponse is the response type for the Query/Params RPC
-              method.
         default:
           description: An unexpected error response.
           schema:
