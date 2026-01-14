@@ -155,7 +155,7 @@ func TestLayerFlow(t *testing.T) {
 	var tippedQueries e2e.QueryGetTippedQueriesResponse
 	err = json.Unmarshal(res, &tippedQueries)
 	require.NoError(t, err)
-	fmt.Println("Tipped queries: ", tippedQueries.Queries[0])
+	fmt.Println("Tipped queries: ", tippedQueries.ActiveQueries[0])
 	// validatorI reports
 	txHash, err = validatorI.ExecTx(ctx, "validator", "oracle", "submit-value", qData, value, "--keyring-dir", layer.HomeDir())
 	require.NoError(t, err)
