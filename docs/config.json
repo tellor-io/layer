@@ -151,14 +151,6 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/layer/tmp/ibc/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "IBCParams"
-        }
-      }
-    },
-    {
       "url": "./tmp-swagger-gen/layer/tmp/icacontroller/query.swagger.json",
       "operationIds": {
         "rename": {

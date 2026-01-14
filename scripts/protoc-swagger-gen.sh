@@ -9,46 +9,43 @@ cd proto
 mkdir -p ./layer/tmp/bank
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/bank/v1beta1/query.proto -O ./layer/tmp/bank/query.proto
 
-mkdir ./layer/tmp/evidence
+mkdir -p ./layer/tmp/evidence
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/evidence/v1beta1/query.proto -O ./layer/tmp/evidence/query.proto
 
-mkdir ./layer/tmp/staking
+mkdir -p ./layer/tmp/staking
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/staking/v1beta1/query.proto -O ./layer/tmp/staking/query.proto
 
-mkdir ./layer/tmp/distribution
+mkdir -p ./layer/tmp/distribution
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/distribution/v1beta1/query.proto -O ./layer/tmp/distribution/query.proto
 
-mkdir ./layer/tmp/auth
+mkdir -p ./layer/tmp/auth
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/auth/v1beta1/query.proto -O ./layer/tmp/auth/query.proto
 
-mkdir ./layer/tmp/upgrade
+mkdir -p ./layer/tmp/upgrade
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/upgrade/v1beta1/query.proto -O ./layer/tmp/upgrade/query.proto
 
-mkdir ./layer/tmp/slashing
+mkdir -p ./layer/tmp/slashing
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/slashing/v1beta1/query.proto -O ./layer/tmp/slashing/query.proto
 
-mkdir ./layer/tmp/gov
+mkdir -p ./layer/tmp/gov
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/gov/v1/query.proto -O ./layer/tmp/gov/query.proto
 
-mkdir ./layer/tmp/feegrant
+mkdir -p ./layer/tmp/feegrant
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/feegrant/v1beta1/query.proto -O ./layer/tmp/feegrant/query.proto
 
-mkdir ./layer/tmp/group
+mkdir -p ./layer/tmp/group
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/group/v1/query.proto -O ./layer/tmp/group/query.proto
 
-mkdir ./layer/tmp/consensus
+mkdir -p ./layer/tmp/consensus
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/consensus/v1/query.proto -O ./layer/tmp/consensus/query.proto
 
-mkdir ./layer/tmp/ibc
-wget https://raw.githubusercontent.com/cosmos/ibc-go/refs/tags/v8.0.0/proto/ibc/applications/transfer/v1/query.proto -O ./layer/tmp/ibc/query.proto
-
-mkdir ./layer/tmp/icacontroller
+mkdir -p ./layer/tmp/icacontroller
 wget https://raw.githubusercontent.com/cosmos/ibc-go/refs/tags/v8.0.0/proto/ibc/applications/interchain_accounts/controller/v1/query.proto -O ./layer/tmp/icacontroller/query.proto
 
-mkdir ./layer/tmp/icahost
+mkdir -p ./layer/tmp/icahost
 wget https://raw.githubusercontent.com/cosmos/ibc-go/refs/tags/v8.0.0/proto/ibc/applications/interchain_accounts/host/v1/query.proto -O ./layer/tmp/icahost/query.proto
 
-mkdir ./layer/tmp/globalfee
+mkdir -p ./layer/tmp/globalfee
 wget https://raw.githubusercontent.com/strangelove-ventures/globalfee/refs/tags/v0.50.1/proto/gaia/globalfee/v1beta1/query.proto -O ./layer/tmp/globalfee/query.proto
 
 proto_dirs=$(find ./layer -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
