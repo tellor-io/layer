@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/tellor-io/layer/app/upgrades"
-	v_6_1_1 "github.com/tellor-io/layer/app/upgrades/v6.1.0"
+	v_6_1_1 "github.com/tellor-io/layer/app/upgrades/v6.1.1"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
