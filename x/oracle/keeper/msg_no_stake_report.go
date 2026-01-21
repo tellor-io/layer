@@ -6,6 +6,7 @@ import (
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
@@ -21,7 +22,7 @@ func (k msgServer) NoStakeReport(ctx context.Context, msg *types.MsgNoStakeRepor
 	}
 
 	queryData := msg.QueryData
-	value := msg.Value
+	value := registrytypes.Remove0xPrefix(msg.Value)
 	timestamp := sdkCtx.BlockTime().UnixMilli()
 	queryId := utils.QueryIDFromData(queryData)
 

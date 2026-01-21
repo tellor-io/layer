@@ -8,6 +8,7 @@ import (
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
@@ -34,6 +35,7 @@ import (
 // 7. Set queryMeta.HasRevealedReports to true
 // 8. Emit an event for the new report
 func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (res *types.MsgSubmitValueResponse, err error) {
+	msg.Value = registrytypes.Remove0xPrefix(msg.Value)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	err = validateSubmitValue(msg)
 	if err != nil {

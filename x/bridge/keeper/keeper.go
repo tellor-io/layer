@@ -20,6 +20,7 @@ import (
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
@@ -789,7 +790,7 @@ func (k Keeper) SetBridgeValsetSignature(ctx context.Context, operatorAddress st
 		return err
 	}
 	// decode the signature hex
-	signatureBytes, err := hex.DecodeString(signature)
+	signatureBytes, err := hex.DecodeString(registrytypes.Remove0xPrefix(signature))
 	if err != nil {
 		k.Logger(ctx).Info("Error decoding signature hex", "error", err)
 		return err
@@ -1177,8 +1178,7 @@ func (k Keeper) EncodeOracleAttestationData(
 	var queryIdBytes32 [32]byte
 	copy(queryIdBytes32[:], queryId)
 
-	// Convert value to bytes
-	valueBytes, err := hex.DecodeString(value)
+	valueBytes, err := hex.DecodeString(registrytypes.Remove0xPrefix(value))
 	if err != nil {
 		return nil, err
 	}
@@ -1317,7 +1317,7 @@ func (k Keeper) CreateNoStakeSnapshot(ctx context.Context, report *oracletypes.N
 		{Type: bytesType},
 		{Type: stringType},
 	}
-	valBz, err := hex.DecodeString(report.Value)
+	valBz, err := hex.DecodeString(registrytypes.Remove0xPrefix(report.Value))
 	if err != nil {
 		return err
 	}
