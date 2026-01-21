@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/tellor-io/layer/x/bridge/types"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/collections"
 
@@ -40,7 +41,7 @@ func (k Keeper) CheckValsetSignatureEvidence(ctx context.Context, request types.
 	}
 
 	// get the checkpoint from the inputted params
-	valsetHashBytes, err := hex.DecodeString(request.ValsetHash)
+	valsetHashBytes, err := hex.DecodeString(registrytypes.Remove0xPrefix(request.ValsetHash))
 	if err != nil {
 		return err
 	}

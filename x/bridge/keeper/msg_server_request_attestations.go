@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/tellor-io/layer/x/bridge/types"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -26,7 +27,7 @@ func (k msgServer) RequestAttestations(ctx context.Context, msg *types.MsgReques
 		return nil, err
 	}
 
-	queryId, err := hex.DecodeString(msg.QueryId)
+	queryId, err := hex.DecodeString(registrytypes.Remove0xPrefix(msg.QueryId))
 	if err != nil {
 		k.Keeper.Logger(sdkCtx).Error("failed to decode query id", "error", err)
 		return nil, status.Error(codes.InvalidArgument, err.Error())
