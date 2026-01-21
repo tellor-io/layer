@@ -14,6 +14,7 @@ import (
 	"github.com/tellor-io/layer/lib/metrics"
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/bridge/types"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/collections"
 
@@ -166,8 +167,7 @@ func (k Keeper) DecodeDepositReportValue(ctx context.Context, reportValue string
 		{Type: Uint256Type},
 		{Type: Uint256Type},
 	}
-	// decode report value
-	reportValueBytes, err := hex.DecodeString(reportValue)
+	reportValueBytes, err := hex.DecodeString(registrytypes.Remove0xPrefix(reportValue))
 	if err != nil {
 		k.Logger(ctx).Error("DecodeDepositReportValue", "error", fmt.Errorf("failed to decode report value, err: %w", err))
 		return nil, sdk.Coins{}, sdk.Coins{}, err
