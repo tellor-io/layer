@@ -17,6 +17,7 @@ import (
 	"github.com/spf13/viper"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
@@ -376,7 +377,7 @@ func (h *VoteExtHandler) GetValidatorIndexInValset(ctx context.Context, evmAddre
 
 func (h *VoteExtHandler) EncodeAndSignMessage(checkpointString string) ([]byte, error) {
 	// Encode the checkpoint string to bytes
-	checkpoint, err := hex.DecodeString(checkpointString)
+	checkpoint, err := hex.DecodeString(registrytypes.Remove0xPrefix(checkpointString))
 	if err != nil {
 		h.logger.Error("Failed to decode checkpoint", "error", err)
 		return nil, err
