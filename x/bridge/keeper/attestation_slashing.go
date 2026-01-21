@@ -10,6 +10,7 @@ import (
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/tellor-io/layer/x/bridge/types"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -43,11 +44,11 @@ func (k Keeper) CheckAttestationEvidence(ctx context.Context, request types.MsgS
 	}
 
 	// determine the snapshot from the inputted params
-	queryId, err := hex.DecodeString(request.QueryId)
+	queryId, err := hex.DecodeString(registrytypes.Remove0xPrefix(request.QueryId))
 	if err != nil {
 		return err
 	}
-	checkpoint, err := hex.DecodeString(request.ValsetCheckpoint)
+	checkpoint, err := hex.DecodeString(registrytypes.Remove0xPrefix(request.ValsetCheckpoint))
 	if err != nil {
 		return err
 	}
@@ -127,7 +128,7 @@ func (k Keeper) CheckAttestationEvidence(ctx context.Context, request types.MsgS
 }
 
 func (k Keeper) GetOperatorAddressFromSignature(ctx context.Context, msg []byte, sig string) (types.OperatorAddress, error) {
-	sigBytes, err := hex.DecodeString(sig)
+	sigBytes, err := hex.DecodeString(registrytypes.Remove0xPrefix(sig))
 	if err != nil {
 		return types.OperatorAddress{}, err
 	}
