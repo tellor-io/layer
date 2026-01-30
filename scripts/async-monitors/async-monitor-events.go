@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math/big"
 	"net/http"
 	"os"
 	"os/signal"
@@ -24,13 +25,22 @@ import (
 )
 
 const (
-	AlertCooldownPeriod  = 2 * time.Hour
-	AlertWindowPeriod    = 10 * time.Minute
-	MaxAlertsInWindow    = 10
-	PowerThreshold       = 2.0 / 3.0
-	DefaultRpcURL        = "127.0.0.1:26657"
-	MaxReconnectAttempts = 5
-	BlockQueryInterval   = 1 * time.Second
+	AlertCooldownPeriod      = 2 * time.Hour
+	AlertWindowPeriod        = 10 * time.Minute
+	MaxAlertsInWindow        = 10
+	PowerThreshold           = 2.0 / 3.0
+	DefaultRpcURL            = "127.0.0.1:26657"
+	DefaultSwaggerURL        = "http://127.0.0.1:1317"
+	MaxReconnectAttempts     = 5
+	BlockQueryInterval       = 1 * time.Second
+	MinAmountThresholdTRB    = 500
+	MinAmountThresholdBase   = 500_000_000 // 500 TRB in base units (500 * 1_000_000)
+	PowerPercentageThreshold = 0.31        // 31%
+)
+
+var (
+	// MinAmountThresholdBigInt is 500 TRB in base units as a big.Int for safe comparisons
+	MinAmountThresholdBigInt = big.NewInt(MinAmountThresholdBase)
 )
 
 var (
@@ -40,6 +50,8 @@ var (
 	// Rate limiting variables
 	AGGREGATE_REPORT_EVENT_TYPE = "aggregate_report"
 	AGGREGATE_POWER_ATTR_KEY    = "aggregate_power"
+	DELEGATE_EVENT_TYPE         = "delegate"
+	TIP_WITHDRAWN_EVENT_TYPE    = "tip_withdrawn"
 	aggregateAlertCount         int
 	aggregateAlertTimestamps    []time.Time
 	aggregateAlertMutex         sync.RWMutex
@@ -49,8 +61,12 @@ var (
 	// Supported query IDs map for asset pair lookups
 	supportedQueryIDsMap *SupportedQueryIDsMap
 	queryIDsMutex        sync.RWMutex
+	// HTTP client for RPC requests (shared across goroutines)
+	globalHTTPClient *HTTPClient
+	httpClientMutex  sync.RWMutex
 	// Command line parameters
 	rpcURL                   string
+	swaggerURL               string
 	configFilePath           string
 	supportedQueryIDsMapPath string
 	nodeName                 string
@@ -61,6 +77,9 @@ var (
 	isTimestampAnalyzer      bool
 	currentBlockHeight       uint64
 	blockHeightMutex         sync.RWMutex
+	// Track validators that have been alerted for exceeding power threshold
+	alertedValidators      map[string]bool
+	alertedValidatorsMutex sync.RWMutex
 )
 
 type Params struct {
@@ -325,6 +344,215 @@ func (h *HTTPClient) getBlock(height uint64) (*BlockResponse, *BlockResultsRespo
 	return &blockResponse, &resultsResponse, nil
 }
 
+func (h *HTTPClient) getValidators(height uint64) (*ValidatorResponse, error) {
+	var params interface{}
+	if height > 0 {
+		params = map[string]interface{}{
+			"height": fmt.Sprintf("%d", height),
+		}
+	} else {
+		params = nil // nil means latest validators
+	}
+
+	body, err := h.makeRPCRequest("validators", params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get validators: %w", err)
+	}
+
+	var resp ValidatorResponse
+	if err := json.Unmarshal(body, &resp); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal validators response: %w", err)
+	}
+
+	return &resp, nil
+}
+
+func CheckForValidatorsWithMoreThan31PercentPower(validatorData ValidatorResponse) error {
+	// First, calculate total power
+	var totalPower int64
+	validatorPowers := make(map[string]int64) // Map validator address to power for quick lookup
+
+	for _, validator := range validatorData.Result.Validators {
+		power, err := strconv.ParseInt(validator.VotingPower, 10, 64)
+		if err != nil {
+			log.Printf("Error parsing voting power for validator %s: %v\n", validator.Address, err)
+			continue
+		}
+		totalPower += power
+		validatorPowers[validator.Address] = power
+	}
+
+	if totalPower == 0 {
+		return fmt.Errorf("total power is zero, cannot calculate percentages")
+	}
+
+	// Early return if the first (highest power) validator doesn't exceed threshold
+	// Validators are already sorted by the RPC response
+	if len(validatorData.Result.Validators) == 0 {
+		return nil
+	}
+
+	firstAddr := validatorData.Result.Validators[0].Address
+	firstPower, ok := validatorPowers[firstAddr]
+	if !ok {
+		return fmt.Errorf("failed to get voting power for first validator %s", firstAddr)
+	}
+	firstValidatorPowerPercent := float64(firstPower) / float64(totalPower)
+	if firstValidatorPowerPercent <= PowerPercentageThreshold {
+		// No validators exceed threshold, but check if any previously alerted validators dropped below
+		configMutex.RLock()
+		eventType, hasWebhook := eventTypeMap["validator-power-alert"]
+		configMutex.RUnlock()
+
+		alertedValidatorsMutex.Lock()
+		for address := range alertedValidators {
+			// Check if this validator is still in the current set
+			currentPower, found := validatorPowers[address]
+			if !found {
+				// Validator no longer in set, remove from tracking
+				delete(alertedValidators, address)
+			} else {
+				currentPowerPercent := float64(currentPower) / float64(totalPower)
+				if currentPowerPercent <= PowerPercentageThreshold {
+					// Validator dropped below threshold - send alert
+					message := "**Alert: Validator Dropped Below Power Threshold**\n"
+					message += fmt.Sprintf("Validator Address: %s\n", address)
+					message += fmt.Sprintf("Current Voting Power: %d\n", currentPower)
+					message += fmt.Sprintf("Total Power: %d\n", totalPower)
+					message += fmt.Sprintf("Current Power Percentage: %.2f%%\n", currentPowerPercent*100)
+					message += fmt.Sprintf("Threshold: %.2f%%\n", PowerPercentageThreshold*100)
+
+					if hasWebhook {
+						discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
+						if err := discordNotifier.SendAlert(message); err != nil {
+							log.Printf("Error sending Discord alert for validator %s dropping below threshold: %v\n", address, err)
+						} else {
+							log.Printf("Sent Discord alert for validator dropping below threshold: %s (%.2f%%)\n", address, currentPowerPercent*100)
+						}
+					} else {
+						log.Printf("Validator %s dropped below threshold (%.2f%% <= %.2f%%) but no webhook configured\n", address, currentPowerPercent*100, PowerPercentageThreshold*100)
+					}
+
+					// Remove from tracking
+					delete(alertedValidators, address)
+				}
+			}
+		}
+		alertedValidatorsMutex.Unlock()
+		return nil
+	}
+
+	// Get webhook URL for alerts
+	configMutex.RLock()
+	eventType, hasWebhook := eventTypeMap["validator-power-alert"]
+	configMutex.RUnlock()
+
+	if !hasWebhook {
+		log.Printf("No webhook configured for validator-power-alert, skipping alerts\n")
+	}
+
+	// Track current validators that exceed threshold
+	currentExceedingValidators := make(map[string]bool)
+
+	// Check each validator (they're already sorted, so we can stop early if needed)
+	for _, validator := range validatorData.Result.Validators {
+		power, ok := validatorPowers[validator.Address]
+		if !ok {
+			// Should be rare (only if we failed to parse this validator's voting power earlier)
+			log.Printf("Skipping validator %s: missing parsed voting power\n", validator.Address)
+			continue
+		}
+		powerPercent := float64(power) / float64(totalPower)
+
+		if powerPercent > PowerPercentageThreshold {
+			currentExceedingValidators[validator.Address] = true
+
+			// Check if this validator was previously alerted
+			alertedValidatorsMutex.RLock()
+			wasAlerted := alertedValidators[validator.Address]
+			alertedValidatorsMutex.RUnlock()
+
+			if !wasAlerted {
+				// New validator exceeding threshold - send alert
+				message := "**Alert: Validator Exceeding Power Threshold**\n"
+				message += fmt.Sprintf("Validator Address: %s\n", validator.Address)
+				message += fmt.Sprintf("Voting Power: %d\n", power)
+				message += fmt.Sprintf("Total Power: %d\n", totalPower)
+				message += fmt.Sprintf("Power Percentage: %.2f%%\n", powerPercent*100)
+				message += fmt.Sprintf("Threshold: %.2f%%\n", PowerPercentageThreshold*100)
+
+				if hasWebhook {
+					discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
+					if err := discordNotifier.SendAlert(message); err != nil {
+						log.Printf("Error sending Discord alert for validator %s: %v\n", validator.Address, err)
+					} else {
+						log.Printf("Sent Discord alert for validator exceeding threshold: %s (%.2f%%)\n", validator.Address, powerPercent*100)
+						// Mark as alerted
+						alertedValidatorsMutex.Lock()
+						if alertedValidators == nil {
+							alertedValidators = make(map[string]bool)
+						}
+						alertedValidators[validator.Address] = true
+						alertedValidatorsMutex.Unlock()
+					}
+				} else {
+					log.Printf("Validator %s exceeds threshold (%.2f%% > %.2f%%) but no webhook configured\n", validator.Address, powerPercent*100, PowerPercentageThreshold*100)
+					// Still track it even without webhook
+					alertedValidatorsMutex.Lock()
+					if alertedValidators == nil {
+						alertedValidators = make(map[string]bool)
+					}
+					alertedValidators[validator.Address] = true
+					alertedValidatorsMutex.Unlock()
+				}
+			}
+		} else {
+			// This validator is below threshold, so all subsequent ones will be too (already sorted)
+			break
+		}
+	}
+
+	// Check for validators that dropped below threshold
+	alertedValidatorsMutex.Lock()
+	for address := range alertedValidators {
+		if !currentExceedingValidators[address] {
+			// Get the validator's current power from our map
+			currentPower, found := validatorPowers[address]
+			if !found {
+				// Validator no longer in set, remove from tracking
+				delete(alertedValidators, address)
+				continue
+			}
+			currentPowerPercent := float64(currentPower) / float64(totalPower)
+
+			// Send alert for dropping below threshold
+			message := "**Alert: Validator Dropped Below Power Threshold**\n"
+			message += fmt.Sprintf("Validator Address: %s\n", address)
+			message += fmt.Sprintf("Current Voting Power: %d\n", currentPower)
+			message += fmt.Sprintf("Total Power: %d\n", totalPower)
+			message += fmt.Sprintf("Current Power Percentage: %.2f%%\n", currentPowerPercent*100)
+			message += fmt.Sprintf("Threshold: %.2f%%\n", PowerPercentageThreshold*100)
+
+			if hasWebhook {
+				discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
+				if err := discordNotifier.SendAlert(message); err != nil {
+					log.Printf("Error sending Discord alert for validator %s dropping below threshold: %v\n", address, err)
+				} else {
+					log.Printf("Sent Discord alert for validator dropping below threshold: %s (%.2f%%)\n", address, currentPowerPercent*100)
+				}
+			} else {
+				log.Printf("Validator %s dropped below threshold (%.2f%% <= %.2f%%) but no webhook configured\n", address, currentPowerPercent*100, PowerPercentageThreshold*100)
+			}
+
+			// Remove from tracking
+			delete(alertedValidators, address)
+		}
+	}
+	alertedValidatorsMutex.Unlock()
+
+	return nil
+}
+
 func loadConfig() error {
 	data, err := os.ReadFile(configFilePath)
 	if err != nil {
@@ -520,6 +748,11 @@ func MonitorBlockEvents(ctx context.Context, wg *sync.WaitGroup) {
 	}
 
 	client := NewHTTPClient(rpcURL)
+
+	// Store global HTTP client for use in other goroutines
+	httpClientMutex.Lock()
+	globalHTTPClient = client
+	httpClientMutex.Unlock()
 
 	// Get initial block height
 	initialHeight, err := client.getLatestBlockHeight()
@@ -718,6 +951,7 @@ func processBlock(blockResponse *BlockResponse, resultsResponse *BlockResultsRes
 		}
 
 		go processBlockEvents(resultsResponse.Result.FinalizeBlockEvents, fmt.Sprintf("%d", height))
+
 	}
 
 	// Process transaction events
@@ -794,10 +1028,252 @@ func writeTimestampToCSV(timestamp string) error {
 	return nil
 }
 
+// SwaggerValidator represents a single validator from the Swagger API response
+type SwaggerValidator struct {
+	OperatorAddress string `json:"operator_address"`
+	Tokens          string `json:"tokens"`
+	Status          string `json:"status"`
+}
+
+// SwaggerValidatorsResponse represents the response from the Swagger API validators endpoint
+type SwaggerValidatorsResponse struct {
+	Validators []SwaggerValidator `json:"validators"`
+	Pagination interface{}        `json:"pagination,omitempty"`
+}
+
+// ValidatorPowerInfo contains validator power and total bonded power information
+type ValidatorPowerInfo struct {
+	ValidatorPower *big.Int
+	TotalPower     *big.Int
+}
+
+// getValidatorPowerForAddress gets the voting power (tokens) for a specific validator operator address
+// and calculates total bonded power using the Swagger API endpoint /cosmos/staking/v1beta1/validators
+// Returns both the validator's power and the total bonded power
+func getValidatorPowerForAddress(operatorAddress string) (*ValidatorPowerInfo, error) {
+	if swaggerURL == "" {
+		return nil, fmt.Errorf("swagger URL not configured")
+	}
+
+	apiURL := fmt.Sprintf("%s/cosmos/staking/v1beta1/validators", swaggerURL)
+
+	// Create HTTP client with timeout
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	resp, err := client.Get(apiURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query validators from Swagger API: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("Swagger API returned status %d: %s", resp.StatusCode, string(body))
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var validatorsResp SwaggerValidatorsResponse
+	if err := json.Unmarshal(body, &validatorsResp); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal validators response: %w", err)
+	}
+
+	// Find the matching validator and calculate total bonded power
+	var validatorPower *big.Int
+	totalPower := big.NewInt(0)
+	var foundValidator bool
+
+	for _, validator := range validatorsResp.Validators {
+		// Only count bonded validators for total power
+		if validator.Status == "BOND_STATUS_BONDED" {
+			tokens, ok := new(big.Int).SetString(validator.Tokens, 10)
+			if !ok {
+				log.Printf("Warning: failed to parse tokens for validator %s: invalid format\n", validator.OperatorAddress)
+				continue
+			}
+			totalPower.Add(totalPower, tokens)
+
+			// Check if this is the validator we're looking for
+			if validator.OperatorAddress == operatorAddress {
+				validatorPower = new(big.Int).Set(tokens)
+				foundValidator = true
+			}
+		}
+	}
+
+	if !foundValidator {
+		return nil, fmt.Errorf("validator not found with operator address: %s", operatorAddress)
+	}
+
+	if totalPower.Sign() == 0 {
+		return nil, fmt.Errorf("total bonded power is zero")
+	}
+
+	return &ValidatorPowerInfo{
+		ValidatorPower: validatorPower,
+		TotalPower:     totalPower,
+	}, nil
+}
+
+// parseAmountFromString parses an amount string (e.g., "500000000loya" or "500000000") and returns the numeric value as big.Int
+func parseAmountFromString(amountStr string) (*big.Int, error) {
+	// Remove denom if present (e.g., "500000000loya" -> "500000000")
+	amountStr = strings.TrimSuffix(amountStr, "loya")
+	amountStr = strings.TrimSpace(amountStr)
+
+	amount, ok := new(big.Int).SetString(amountStr, 10)
+	if !ok {
+		return nil, fmt.Errorf("failed to parse amount: invalid format")
+	}
+	return amount, nil
+}
+
+// handleDelegateOrTipWithdrawn handles delegate and tip_withdrawn events with special conditions
+func handleDelegateOrTipWithdrawn(event Event, eventType ConfigType) {
+	var validatorAddress string
+	var delegatorOrSelectorAddress string
+	var amount *big.Int
+	var foundAmount bool
+	var foundValidatorAddress bool
+
+	// Extract attributes based on event type
+	// delegate event: "validator", "delegator", "amount", "new_shares"
+	// tip_withdrawn event: "validator", "selector", "amount", "shares"
+	for _, attr := range event.Attributes {
+		if attr.Key == "amount" {
+			var err error
+			amount, err = parseAmountFromString(attr.Value)
+			if err != nil {
+				log.Printf("Error parsing amount for %s event: %v\n", event.Type, err)
+				return
+			}
+			foundAmount = true
+		}
+		// Validator address (present in both event types)
+		if attr.Key == "validator" {
+			validatorAddress = attr.Value
+			foundValidatorAddress = true
+		}
+		// Delegator address (for delegate events)
+		if attr.Key == "delegator" {
+			delegatorOrSelectorAddress = attr.Value
+		}
+		// Selector address (for tip_withdrawn events)
+		if attr.Key == "selector" {
+			delegatorOrSelectorAddress = attr.Value
+		}
+	}
+
+	if !foundAmount {
+		log.Printf("No amount found in %s event\n", event.Type)
+		return
+	}
+
+	if !foundValidatorAddress {
+		log.Printf("No validator address found in %s event\n", event.Type)
+		return
+	}
+
+	// Check condition 1: Amount > 500 TRB
+	amountExceedsThreshold := amount.Cmp(MinAmountThresholdBigInt) >= 0
+
+	// Check condition 2: Power percentage > 31%
+	var powerExceedsThreshold bool
+	var powerPercentage float64
+	var validatorPower *big.Int
+	var totalPower *big.Int
+
+	// Get validator power and total power from Swagger API
+	powerInfo, err := getValidatorPowerForAddress(validatorAddress)
+	if err != nil {
+		log.Printf("Error getting validator power for address %s: %v\n", validatorAddress, err)
+		// If we can't get validator power, only check amount threshold
+		if !amountExceedsThreshold {
+			log.Printf("Amount %s does not exceed threshold %s, skipping alert\n", amount.String(), MinAmountThresholdBigInt.String())
+			return
+		}
+	} else {
+		validatorPower = powerInfo.ValidatorPower
+		totalPower = powerInfo.TotalPower
+
+		// Calculate power percentage using big.Int for precision
+		// percentage = (validatorPower * 10000) / totalPower (multiply by 10000 to get percentage with 2 decimal places)
+		// Then compare: (validatorPower * 10000) / totalPower > (31 * 10000) / 100
+		// Which simplifies to: (validatorPower * 100) / totalPower > 31
+		// To avoid floating point, we compare: validatorPower * 100 > totalPower * 31
+		validatorPowerTimes100 := new(big.Int).Mul(validatorPower, big.NewInt(100))
+		totalPowerTimes31 := new(big.Int).Mul(totalPower, big.NewInt(31))
+		powerExceedsThreshold = validatorPowerTimes100.Cmp(totalPowerTimes31) > 0
+
+		// Calculate power percentage for logging (using float64 for display)
+		validatorPowerFloat := new(big.Float).SetInt(validatorPower)
+		totalPowerFloat := new(big.Float).SetInt(totalPower)
+		powerPercentageFloat := new(big.Float).Quo(validatorPowerFloat, totalPowerFloat)
+		powerPercentage, _ = powerPercentageFloat.Float64()
+	}
+
+	// Only send alert if either condition is met
+	if !amountExceedsThreshold && !powerExceedsThreshold {
+		log.Printf("Neither condition met for %s event: amount=%s (threshold=%s), power=%.2f%% (threshold=%.2f%%)\n",
+			event.Type, amount.String(), MinAmountThresholdBigInt.String(), powerPercentage*100, PowerPercentageThreshold*100)
+		return
+	}
+
+	// Build alert message
+	message := fmt.Sprintf("**Event Alert: %s**\n", eventType.AlertName)
+	for _, attr := range event.Attributes {
+		message += fmt.Sprintf("%s: %s\n", attr.Key, attr.Value)
+	}
+
+	// Add condition details
+	message += "\n**Alert Conditions Met:**\n"
+	if amountExceedsThreshold {
+		// Convert big.Int to float64 for TRB calculation
+		amountFloat := new(big.Float).SetInt(amount)
+		trbFloat := new(big.Float).Quo(amountFloat, big.NewFloat(1_000_000.0))
+		trbValue, _ := trbFloat.Float64()
+		message += fmt.Sprintf("✓ Amount (%s base units = %.2f TRB) exceeds threshold (%s base units = %d TRB)\n",
+			amount.String(), trbValue, MinAmountThresholdBigInt.String(), MinAmountThresholdTRB)
+	}
+	if powerExceedsThreshold {
+		message += fmt.Sprintf("✓ Validator power percentage (%.2f%%) exceeds threshold (%.2f%%)\n",
+			powerPercentage*100, PowerPercentageThreshold*100)
+		message += fmt.Sprintf("  Validator Address: %s\n", validatorAddress)
+		if delegatorOrSelectorAddress != "" {
+			if event.Type == DELEGATE_EVENT_TYPE {
+				message += fmt.Sprintf("  Delegator Address: %s\n", delegatorOrSelectorAddress)
+			} else {
+				message += fmt.Sprintf("  Selector Address: %s\n", delegatorOrSelectorAddress)
+			}
+		}
+		message += fmt.Sprintf("  Validator Power: %s\n", validatorPower.String())
+		message += fmt.Sprintf("  Total Power: %s\n", totalPower.String())
+	}
+
+	discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
+	if err := discordNotifier.SendAlert(message); err != nil {
+		log.Printf("Error sending Discord alert for event %s: %v\n", event.Type, err)
+	} else {
+		log.Printf("Sent Discord alert for event: %s\n", event.Type)
+		configMutex.Lock()
+		eventConfig := eventTypeMap[eventType.AlertType]
+		eventConfig.LastAlerted = time.Now()
+		eventTypeMap[eventType.AlertType] = eventConfig
+		configMutex.Unlock()
+	}
+}
+
 // Add a helper function to handle events
 func handleEvent(event Event, eventType ConfigType) {
 	if event.Type == AGGREGATE_REPORT_EVENT_TYPE {
 		handleAggregateReport(event, eventType)
+	} else if event.Type == DELEGATE_EVENT_TYPE || event.Type == TIP_WITHDRAWN_EVENT_TYPE {
+		handleDelegateOrTipWithdrawn(event, eventType)
 	} else {
 		message := fmt.Sprintf("**Event Alert: %s**\n", eventType.AlertName)
 		for _, attr := range event.Attributes {
@@ -872,21 +1348,10 @@ func updateTotalReporterPower(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			body, err := client.makeRPCRequest("validators", nil)
+			validatorResp, err := client.getValidators(0) // 0 means latest validators
 			if err != nil {
 				log.Printf("Error querying validators: %v\n", err)
 				// Implement exponential backoff
-				time.Sleep(backoffDuration)
-				backoffDuration *= 2
-				if backoffDuration > maxBackoff {
-					backoffDuration = maxBackoff
-				}
-				continue
-			}
-
-			var validatorResp ValidatorResponse
-			if err := json.Unmarshal(body, &validatorResp); err != nil {
-				log.Printf("Error decoding validator response: %v\n", err)
 				time.Sleep(backoffDuration)
 				backoffDuration *= 2
 				if backoffDuration > maxBackoff {
@@ -1267,6 +1732,7 @@ func runHeartbeatCheck() {
 func main() {
 	// Parse command line flags
 	flag.StringVar(&rpcURL, "rpc-url", DefaultRpcURL, "RPC URL (default: 127.0.0.1:26657)")
+	flag.StringVar(&swaggerURL, "swagger-url", DefaultSwaggerURL, "Swagger API URL (default: http://127.0.0.1:1317)")
 	flag.StringVar(&configFilePath, "config", "", "Path to config file")
 	flag.StringVar(&supportedQueryIDsMapPath, "query-ids-map", "", "Path to supported query IDs map JSON file")
 	flag.StringVar(&nodeName, "node", "", "Name of the node being monitored")

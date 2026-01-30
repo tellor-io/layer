@@ -1,0 +1,123 @@
+{
+  "timestamp": "2026-01-29T21:18:00Z",
+  "module_params": {
+    "bridge": {
+      "attest_slash_percentage": "0.010000000000000000",
+      "attest_rate_limit_window": "600000",
+      "valset_slash_percentage": "0.050000000000000000",
+      "valset_rate_limit_window": "600000",
+      "mainnet_chain_id": "tellor-1"
+    },
+    "dispute": {
+      "team_address": "G1100jpNpeJyWjsn0fMmbntdzG0="
+    },
+    "oracle": {
+      "minStakeAmount": "1000000",
+      "minTipAmount": "1000",
+      "maxTipAmount": "25000000",
+      "liveness_cycles": "1"
+    },
+    "registry": {
+      "max_report_buffer_window": "700000"
+    },
+    "reporter": {
+      "min_commission_rate": "0.000000000000000000",
+      "min_loya": "1000000",
+      "max_selectors": "100",
+      "max_num_of_delegations": "10"
+    },
+    "auth": {
+      "max_memo_characters": "256",
+      "tx_sig_limit": "7",
+      "tx_size_cost_per_byte": "10",
+      "sig_verify_cost_ed25519": "590",
+      "sig_verify_cost_secp256k1": "1000"
+    },
+    "bank": {
+      "default_send_enabled": true
+    },
+    "staking": {
+      "unbonding_time": "504h0m0s",
+      "max_validators": 100,
+      "max_entries": 22,
+      "historical_entries": 10000,
+      "bond_denom": "loya",
+      "min_commission_rate": "0.000000000000000000"
+    },
+    "distribution": {
+      "community_tax": "0.000000000000000000",
+      "base_proposer_reward": "0.000000000000000000",
+      "bonus_proposer_reward": "0.000000000000000000",
+      "withdraw_addr_enabled": true
+    },
+    "slashing": {
+      "signed_blocks_window": "2000",
+      "min_signed_per_window": "0.500000000000000000",
+      "downtime_jail_duration": "10m0s",
+      "slash_fraction_double_sign": "0.050000000000000000",
+      "slash_fraction_downtime": "0.010000000000000000"
+    },
+    "gov": {
+      "min_deposit": [
+        {
+          "denom": "loya",
+          "amount": "10000000"
+        }
+      ],
+      "max_deposit_period": "48h0m0s",
+      "voting_period": "168h0m0s",
+      "quorum": "0.334000000000000000",
+      "threshold": "0.500000000000000000",
+      "veto_threshold": "0.334000000000000000",
+      "min_initial_deposit_ratio": "0.000000000000000000",
+      "proposal_cancel_ratio": "0.500000000000000000",
+      "expedited_voting_period": "96h0m0s",
+      "expedited_threshold": "0.667000000000000000",
+      "expedited_min_deposit": [
+        {
+          "denom": "loya",
+          "amount": "50000000"
+        }
+      ],
+      "burn_vote_veto": true,
+      "min_deposit_ratio": "0.010000000000000000"
+    },
+    "consensus": {
+      "block": {
+        "max_bytes": "22020096",
+        "max_gas": "-1"
+      },
+      "evidence": {
+        "max_age_num_blocks": "100000",
+        "max_age_duration": "48h0m0s",
+        "max_bytes": "1048576"
+      },
+      "validator": {
+        "pub_key_types": [
+          "ed25519"
+        ]
+      },
+      "version": {},
+      "abci": {
+        "vote_extensions_enable_height": "1"
+      }
+    },
+    "evidence": null,
+    "feegrant": null,
+    "authz": null,
+    "group": null,
+    "upgrade": null,
+    "ibc-transfer": {
+      "send_enabled": true,
+      "receive_enabled": true
+    },
+    "ibc": {
+      "allowed_clients": [
+        "06-solomachine",
+        "07-tendermint",
+        "09-localhost"
+      ]
+    },
+    "globalfee": null
+  }
+}
