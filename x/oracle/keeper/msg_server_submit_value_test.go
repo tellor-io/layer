@@ -53,7 +53,7 @@ var bridgeSpec = registrytypes.DataSpec{
 	AggregationMethod: "weighted-mode",
 	Registrar:         "genesis",
 	ReportBlockWindow: 2000,
-	QueryType:         "trbbridge",
+	QueryType:         "trbbridgev2",
 }
 
 func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {

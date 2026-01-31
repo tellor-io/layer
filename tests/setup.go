@@ -362,6 +362,26 @@ func (s *SharedSetup) SetupTest(t *testing.T) {
 	s.queryHelper = baseapp.NewQueryServerTestHelper(s.Ctx, s.interfaceRegistry)
 	s.Denom = sdk.DefaultBondDenom
 	s.App = app
+	s.require.NoError(s.Registrykeeper.SetDataSpec(s.Ctx, "trbbridgev2", registrytypes.DataSpec{
+		DocumentHash:      "",
+		ResponseValueType: "address, string, uint256, uint256",
+		AbiComponents: []*registrytypes.ABIComponent{
+			{
+				Name:            "toLayer",
+				FieldType:       "bool",
+				NestedComponent: []*registrytypes.ABIComponent{},
+			},
+			{
+				Name:            "depositId",
+				FieldType:       "uint256",
+				NestedComponent: []*registrytypes.ABIComponent{},
+			},
+		},
+		AggregationMethod: "weighted-mode",
+		Registrar:         "genesis",
+		ReportBlockWindow: 2000,
+		QueryType:         "trbbridgev2",
+	}))
 }
 
 func (s *SharedSetup) CreateValidators(numValidators int) ([]sdk.AccAddress, []sdk.ValAddress, []stakingtypes.Validator) {
