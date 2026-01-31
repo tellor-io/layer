@@ -9,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/tellor-io/layer/x/bridge/types"
+	oraclemodule "github.com/tellor-io/layer/x/oracle/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,12 +30,12 @@ func (k Keeper) WithdrawTokens(ctx context.Context, amount sdk.Coin, sender sdk.
 		return 0, err
 	}
 
-	aggregate, queryData, err := k.CreateWithdrawalAggregate(ctx, amount, sender, recipient, withdrawalId)
+	aggregate, queryData, err := k.CreateWithdrawalAggregate(ctx, oraclemodule.TRBBridgeV2QueryType, amount, sender, recipient, withdrawalId)
 	if err != nil {
 		return 0, err
 	}
 
-	err = k.oracleKeeper.SetAggregate(ctx, aggregate, queryData, "TRBBridge-withdraw")
+	err = k.oracleKeeper.SetAggregate(ctx, aggregate, queryData, "TRBBridgeV2-withdraw")
 	if err != nil {
 		return 0, err
 	}
@@ -59,9 +60,9 @@ func (k Keeper) IncrementWithdrawalId(goCtx context.Context) (uint64, error) {
 	return id.Id, nil
 }
 
-func (k Keeper) CreateWithdrawalAggregate(goCtx context.Context, amount sdk.Coin, sender sdk.AccAddress, recipient []byte, withdrawalId uint64) (*oracletypes.Aggregate, []byte, error) {
+func (k Keeper) CreateWithdrawalAggregate(goCtx context.Context, queryTypeString string, amount sdk.Coin, sender sdk.AccAddress, recipient []byte, withdrawalId uint64) (*oracletypes.Aggregate, []byte, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	queryId, queryData, err := k.GetWithdrawalQueryId(withdrawalId)
+	queryId, queryData, err := k.GetWithdrawalQueryId(queryTypeString, withdrawalId)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -88,10 +89,8 @@ func (k Keeper) CreateWithdrawalAggregate(goCtx context.Context, amount sdk.Coin
 	return aggregate, queryData, nil
 }
 
-func (k Keeper) GetWithdrawalQueryId(withdrawalId uint64) ([]byte, []byte, error) {
-	// replicate solidity encoding,  keccak256(abi.encode(string "TRBBridge", abi.encode(bool false, uint256 withdrawalId)))
-
-	queryTypeString := "TRBBridge"
+func (k Keeper) GetWithdrawalQueryId(queryTypeString string, withdrawalId uint64) ([]byte, []byte, error) {
+	// replicate solidity encoding,  keccak256(abi.encode(string "TRBBridgeV2", abi.encode(bool false, uint256 withdrawalId)))
 	toLayerBool := false
 	withdrawalIdUint64 := new(big.Int).SetUint64(withdrawalId)
 

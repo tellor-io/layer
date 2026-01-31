@@ -11,10 +11,11 @@ import (
 )
 
 const (
-	TRBBridgeQueryType = "TRBBridge"
+	TRBBridgeQueryType   = "TRBBridge"
+	TRBBridgeV2QueryType = "TRBBridgeV2"
 )
 
-// Generates a new QueryMeta for a TRBBridgeQueryType
+// Generates a new QueryMeta for a TRBBridgeV2QueryType
 func (k Keeper) TokenBridgeDepositQuery(ctx context.Context, queryData []byte) (types.QueryMeta, error) {
 	// decode query data partial
 	nextId, err := k.QuerySequencer.Next(ctx)
@@ -26,7 +27,7 @@ func (k Keeper) TokenBridgeDepositQuery(ctx context.Context, queryData []byte) (
 		Id:                      nextId,
 		RegistrySpecBlockWindow: 2000,
 		Expiration:              uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()) + 2000,
-		QueryType:               TRBBridgeQueryType,
+		QueryType:               TRBBridgeV2QueryType,
 		QueryData:               queryData,
 		Amount:                  math.NewInt(0),
 		CycleList:               true,

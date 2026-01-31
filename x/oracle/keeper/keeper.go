@@ -6,6 +6,7 @@ import (
 	"fmt"
 	gomath "math"
 	"math/big"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	layertypes "github.com/tellor-io/layer/types"
@@ -233,6 +234,9 @@ func (k Keeper) InitializeQuery(ctx context.Context, querydata []byte) (types.Qu
 	queryType, _, err := regTypes.DecodeQueryType(querydata)
 	if err != nil {
 		return types.QueryMeta{}, err
+	}
+	if strings.EqualFold(queryType, TRBBridgeQueryType) {
+		return types.QueryMeta{}, errors.New("cannot initialize deprecated TRBBridge query type")
 	}
 	dataSpec, err := k.GetDataSpec(ctx, queryType)
 	if err != nil {

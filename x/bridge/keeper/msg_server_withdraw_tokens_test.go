@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/bridge/keeper"
 	"github.com/tellor-io/layer/x/bridge/types"
+	oraclemodule "github.com/tellor-io/layer/x/oracle/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	math "cosmossdk.io/math"
@@ -67,7 +68,7 @@ func TestMsgWithdrawTokens(t *testing.T) {
 	}
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(10*1e6), nil)
 	// ok.On("SetAggregate", ctx, &aggregate).Return(nil)
-	agg, queryData, err := k.CreateWithdrawalAggregate(ctx, amount, creatorAddr, []byte(recipientAddr), 1)
+	agg, queryData, err := k.CreateWithdrawalAggregate(ctx, oraclemodule.TRBBridgeV2QueryType, amount, creatorAddr, []byte(recipientAddr), 1)
 	require.NoError(t, err)
 	require.NotNil(t, agg)
 	require.NotNil(t, queryData)
@@ -118,7 +119,7 @@ func TestMsgWithdrawTokensBadRecipient(t *testing.T) {
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(10*1e6), nil)
 	goodRecipientHex, err := hex.DecodeString(goodRecipientAddr)
 	require.NoError(t, err)
-	agg, queryData, err := k.CreateWithdrawalAggregate(ctx, amount, creatorAddr, goodRecipientHex, 1)
+	agg, queryData, err := k.CreateWithdrawalAggregate(ctx, oraclemodule.TRBBridgeV2QueryType, amount, creatorAddr, goodRecipientHex, 1)
 	require.NoError(t, err)
 	require.NotNil(t, agg)
 	require.NotNil(t, queryData)

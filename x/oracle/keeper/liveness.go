@@ -20,7 +20,7 @@ import (
 // queries as a single "slot" for TBR distribution. All TRBBridge aggregates share
 // one slot's worth of rewards, split proportionally among reporters.
 // TRBBridge is always treated as non-standard.
-var TRBBridgeMarkerQueryId = []byte("TRBBridge")
+var TRBBridgeMarkerQueryId = []byte("TRBBridge") // TRBBridgeV2 not needed here
 
 // TrackLivenessForAggregate iterates through all reporters in an aggregate and tracks their liveness
 // Called at aggregation time when we know of who reported and with what power

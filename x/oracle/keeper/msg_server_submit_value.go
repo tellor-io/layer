@@ -22,7 +22,7 @@ import (
 // accepts QueryData (bytes), Value (string)
 // QueryData undergoes multiple checks to ensure it is a valid query
 // 1. Check if the queryData is decodable
-// 2. Check if the queryData is a TRBBridgeQueryType
+// 2. Check if the queryData is a TRBBridgeV2QueryType
 //   - If it is, check if it is a bridge withdrawal (not accepted) or deposit report
 //
 // 3. Check if the reporter has enough stake to submit the value

@@ -76,7 +76,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		//
 		// Check for TRBBridge queries first - they have CycleList=true in QueryMeta
 		// but need separate tracking since they share one TBR slot for all TRBBridge reports
-		if strings.EqualFold(query.QueryType, TRBBridgeQueryType) {
+		if strings.EqualFold(query.QueryType, TRBBridgeV2QueryType) || strings.EqualFold(query.QueryType, TRBBridgeQueryType) {
 			// Track TRBBridge queries under the marker queryId
 			// All TRBBridge aggregates share a single "slot" in TBR distribution
 			err = k.TrackLivenessForTRBBridge(ctx, aggregateReport)
@@ -148,7 +148,7 @@ func (k Keeper) SetAggregate(ctx context.Context, report *types.Aggregate, query
 	report.Height = uint64(sdkCtx.BlockHeight())
 
 	// if bridge report, set in deposit queue
-	if strings.EqualFold(queryType, TRBBridgeQueryType) {
+	if strings.EqualFold(queryType, TRBBridgeV2QueryType) || strings.EqualFold(queryType, TRBBridgeQueryType) {
 		err = k.BridgeDepositQueue.Set(ctx, collections.Join(currentTimestamp, report.MetaId), queryData)
 		if err != nil {
 			return err
