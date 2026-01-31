@@ -11,7 +11,7 @@ import (
 func (s *KeeperTestSuite) TestPreventBridgeWithdrawalReport() {
 	require := s.Require()
 	k := s.oracleKeeper
-	queryTypeString := "TRBBridge"
+	queryTypeString := "TRBBridgeV2"
 	toLayerBool := true
 	withdrawalId := uint64(1)
 	withdrawalIdUint64 := new(big.Int).SetUint64(withdrawalId)
