@@ -14,6 +14,7 @@ import (
 	"github.com/tellor-io/layer/lib/metrics"
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/bridge/types"
+	oraclemodule "github.com/tellor-io/layer/x/oracle/keeper"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/collections"
@@ -97,9 +98,8 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64) e
 	return nil
 }
 
-// replicate solidity encoding,  keccak256(abi.encode(string "TRBBridge", abi.encode(bool true, uint256 depositId)))
+// replicate solidity encoding,  keccak256(abi.encode(string "TRBBridgeV2", abi.encode(bool true, uint256 depositId)))
 func (k Keeper) GetDepositQueryId(depositId uint64) ([]byte, error) {
-	queryTypeString := "TRBBridge"
 	toLayerBool := true
 	depositIdUint64 := new(big.Int).SetUint64(depositId)
 
@@ -136,7 +136,7 @@ func (k Keeper) GetDepositQueryId(depositId uint64) ([]byte, error) {
 		{Type: StringType},
 		{Type: BytesType},
 	}
-	queryDataEncoded, err := finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
+	queryDataEncoded, err := finalArgs.Pack(oraclemodule.TRBBridgeV2QueryType, queryDataArgsEncoded)
 	if err != nil {
 		return nil, err
 	}
