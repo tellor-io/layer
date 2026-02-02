@@ -827,7 +827,7 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         assert.equal(await freshBridge.withdrawClaimed(0), true, "withdrawId 0 should be claimed")
         assert.equal(await freshBridge.withdrawClaimed(1), true, "withdrawId 1 should be claimed")
         assert.equal(await freshBridge.withdrawClaimed(2), true, "withdrawId 2 should be claimed")
-        assert.equal(await freshBridge.withdrawClaimed(3), false, "withdrawId 3 should not be claimed")
+        assert.equal(await freshBridge.withdrawClaimed(3), true, "withdrawId 3 should be claimed")
         assert.equal(await freshBridge.withdrawClaimed(4), false, "withdrawId 4 should not be claimed")
         
         // test cannot initialize twice

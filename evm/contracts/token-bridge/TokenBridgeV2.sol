@@ -6,11 +6,11 @@ import {LayerTransition} from "./LayerTransition.sol";
 
 /// @author Tellor Inc.
 /// @title TokenBridgeV2
-/// @dev This is the tellor token bridge to move tokens from
-/// Ethereum to layer.  No one needs to do this.  The only reason you
-/// move your tokens over is to become a reporter/validator/tipper.  It works by
-/// using layer itself as the bridge and then reads the lightclient contract for
-/// bridging back.  There is a long delay in bridging back (enforced by layer) of 12 hours
+/// @dev Tellor token bridge for moving tokens between Ethereum and Tellor Layer.
+/// Deposits are recorded on-chain and relayed to Layer via the oracle; withdraws from Layer back
+/// to Ethereum are attested via TellorDataBridge (validator signatures). Security measures include
+/// a 12-hour delay in both directions, per-period token rate limits, and a temporary guardian-approved
+/// pause that requires burning a large tribute (PAUSE_TRIBUTE_AMOUNT).
 contract TokenBridgeV2 is LayerTransition {
     /*Storage*/
     ITellorDataBridge public dataBridge;
@@ -29,7 +29,7 @@ contract TokenBridgeV2 is LayerTransition {
     uint256 public withdrawLimitRecord; // amount you can withdraw per limit period
     uint256 public constant DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
     uint256 public constant MS_PER_SECOND = 1000; // factor to convert milliseconds to seconds
-    uint256 public constant PAUSE_PERIOD = 21 days; // time period guardian can pause bridge, only once
+    uint256 public constant PAUSE_PERIOD = 21 days; // bridge pause period duration
     uint256 public constant PAUSE_TRIBUTE_AMOUNT = 10000 ether; // amount of tokens burned to pause bridge
     uint256 public constant TOKEN_DECIMAL_PRECISION_MULTIPLIER = 1e12; // multiplier to convert from loya to 1e18
     uint256 public constant TWELVE_HOUR_CONSTANT = 12 hours; // deposit and withdraw limits update interval
@@ -94,12 +94,12 @@ contract TokenBridgeV2 is LayerTransition {
         address _proposer,
         uint256 _proposalTime
     );
+    event TokensToClaimUpdated(address _recipient, uint256 _amount);
     event PauseRefunded(
         uint256 _proposalId,
         address _proposer,
         uint256 _proposalTime
     );
-    event PendingGuardianUpdated(address _pendingGuardian);
     event Withdraw(
         uint256 _depositId,
         string _sender,
@@ -134,10 +134,22 @@ contract TokenBridgeV2 is LayerTransition {
         require(!initialized, "TokenBridge: already initialized");
         depositId = _depositId;
         // set withdraws up to _withdrawId to all claimed
-        for (uint256 i = 0; i < _withdrawId; i++) {
+        for (uint256 i = 0; i <= _withdrawId; i++) {
             withdrawClaimed[i] = true;
         }
         initialized = true;
+    }
+
+    /// @notice accepts the pending guardian
+    function acceptPendingGuardian() external {
+        _onlyGuardian();
+        require(
+            pendingGuardian != address(0),
+            "TokenBridge: no pending guardian to accept"
+        );
+        guardian = pendingGuardian;
+        pendingGuardian = address(0);
+        emit GuardianUpdated(guardian);
     }
 
     /// @notice approves a pause proposal
@@ -149,7 +161,10 @@ contract TokenBridgeV2 is LayerTransition {
             "TokenBridge: can only propose pause when bridge is unpaused"
         );
         PauseProposal storage _proposal = pauseProposals[_proposalId];
-        require(_proposal.state == PauseProposalState.PENDING);
+        require(
+            _proposal.state == PauseProposalState.PENDING,
+            "TokenBridge: proposal is not pending"
+        );
         bridgeState = BridgeState.PAUSED;
         bridgeStateUpdateTime = block.timestamp;
         _proposal.state = PauseProposalState.APPROVED;
@@ -184,6 +199,7 @@ contract TokenBridgeV2 is LayerTransition {
             token.transfer(_recipient, _amountConverted),
             "TokenBridge: transfer failed"
         );
+        emit TokensToClaimUpdated(_recipient, tokensToClaim[_recipient]);
         emit ExtraWithdrawClaimed(_recipient, _amountConverted);
     }
 
@@ -263,6 +279,10 @@ contract TokenBridgeV2 is LayerTransition {
     function proposeUpdateGuardian(address _newGuardian) external {
         _onlyGuardian();
         require(
+            _newGuardian != address(0),
+            "TokenBridge: new guardian cannot be the zero address"
+        );
+        require(
             pendingGuardian == address(0),
             "TokenBridge: pending guardian already exists"
         );
@@ -270,16 +290,25 @@ contract TokenBridgeV2 is LayerTransition {
         emit GuardianUpdateProposed(_newGuardian);
     }
 
-    /// @notice accepts the pending guardian
-    function acceptPendingGuardian() external {
-        _onlyGuardian();
+    /// @notice refunds a pause proposal
+    /// @param _proposalId the id of the pause proposal
+    function refundPauseProposal(uint256 _proposalId) external {
+        PauseProposal storage _proposal = pauseProposals[_proposalId];
         require(
-            pendingGuardian != address(0),
-            "TokenBridge: no pending guardian to accept"
+            _proposal.state == PauseProposalState.PENDING,
+            "TokenBridge: proposal is not pending"
         );
-        guardian = pendingGuardian;
-        pendingGuardian = address(0);
-        emit GuardianUpdated(guardian);
+        require(
+            block.timestamp - _proposal.proposalTime > PAUSE_TRIBUTE_LOCK_TIME,
+            "TokenBridge: must wait before refunding pause proposal"
+        );
+        require(
+            token.transfer(_proposal.proposer, PAUSE_TRIBUTE_AMOUNT),
+            "TokenBridge: transfer failed"
+        );
+        _proposal.state = PauseProposalState.REFUNDED;
+        totalPauseTributeBalance -= PAUSE_TRIBUTE_AMOUNT;
+        emit PauseRefunded(_proposalId, _proposal.proposer, block.timestamp);
     }
 
     /// @notice rejects the pending guardian
@@ -292,24 +321,6 @@ contract TokenBridgeV2 is LayerTransition {
         address _pendingGuardian = pendingGuardian;
         pendingGuardian = address(0);
         emit GuardianUpdateRejected(_pendingGuardian);
-    }
-
-    /// @notice refunds a pause proposal
-    /// @param _proposalId the id of the pause proposal
-    function refundPauseProposal(uint256 _proposalId) external {
-        PauseProposal storage _proposal = pauseProposals[_proposalId];
-        require(_proposal.state == PauseProposalState.PENDING);
-        require(
-            block.timestamp - _proposal.proposalTime > PAUSE_TRIBUTE_LOCK_TIME,
-            "TokenBridge: must wait before refunding pause proposal"
-        );
-        require(
-            token.transfer(_proposal.proposer, PAUSE_TRIBUTE_AMOUNT),
-            "TokenBridge: transfer failed"
-        );
-        _proposal.state = PauseProposalState.REFUNDED;
-        totalPauseTributeBalance -= PAUSE_TRIBUTE_AMOUNT;
-        emit PauseRefunded(_proposalId, _proposal.proposer, block.timestamp);
     }
 
     /// @notice updates the data bridge
@@ -379,7 +390,7 @@ contract TokenBridgeV2 is LayerTransition {
         dataBridge.verifyOracleData(_attestData, _valset, _sigs);
         require(
             _attestData.report.aggregatePower >= dataBridge.powerThreshold(),
-            "Report aggregate power must be greater than or equal to _minimumPower"
+            "TokenBridge: report aggregate power must be greater than or equal to power threshold"
         );
         withdrawClaimed[_depositId] = true;
         (
@@ -399,6 +410,7 @@ contract TokenBridgeV2 is LayerTransition {
                 tokensToClaim[_recipient] +
                 (_amountConverted - _withdrawLimit);
             _amountConverted = _withdrawLimit;
+            emit TokensToClaimUpdated(_recipient, tokensToClaim[_recipient]);
         }
         withdrawLimitRecord -= _amountConverted;
         require(
