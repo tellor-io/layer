@@ -359,15 +359,15 @@ contract TokenBridgeV2 is LayerTransition {
     }
 
     /// @notice This withdraws tokens from layer to mainnet Ethereum
-    /// @param _attestData The data being verified
+    /// @param _attestData The oracle data being verified, including the withdraw info
     /// @param _valset array of current validator set
-    /// @param _sigs Signatures
-    /// @param _depositId depositId from the layer side
+    /// @param _sigs attestations
+    /// @param _withdrawId withdrawId from the layer side
     function withdrawFromLayer(
         OracleAttestationData calldata _attestData,
         Validator[] calldata _valset,
         Signature[] calldata _sigs,
-        uint256 _depositId
+        uint256 _withdrawId
     ) external {
         require(
             bridgeState != BridgeState.PAUSED,
@@ -377,12 +377,12 @@ contract TokenBridgeV2 is LayerTransition {
         require(
             _attestData.queryId ==
                 keccak256(
-                    abi.encode("TRBBridgeV2", abi.encode(false, _depositId))
+                    abi.encode("TRBBridgeV2", abi.encode(false, _withdrawId))
                 ),
             "TokenBridge: invalid queryId"
         );
         require(
-            !withdrawClaimed[_depositId],
+            !withdrawClaimed[_withdrawId],
             "TokenBridge: withdraw already claimed"
         );
         require(
@@ -401,7 +401,7 @@ contract TokenBridgeV2 is LayerTransition {
             _attestData.report.aggregatePower >= dataBridge.powerThreshold(),
             "TokenBridge: report aggregate power must be greater than or equal to power threshold"
         );
-        withdrawClaimed[_depositId] = true;
+        withdrawClaimed[_withdrawId] = true;
         (
             address _recipient,
             string memory _layerSender,
@@ -426,7 +426,7 @@ contract TokenBridgeV2 is LayerTransition {
             token.transfer(_recipient, _amountConverted),
             "TokenBridge: transfer failed"
         );
-        emit Withdraw(_depositId, _layerSender, _recipient, _amountConverted);
+        emit Withdraw(_withdrawId, _layerSender, _recipient, _amountConverted);
     }
 
     /* View Functions */
@@ -483,6 +483,7 @@ contract TokenBridgeV2 is LayerTransition {
     }
 
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
+    /// @param _amount of tokens to deposit
     /// @return max amount of tokens that can be deposited
     function _refreshDepositLimit(uint256 _amount) internal returns (uint256) {
         if (block.timestamp - depositLimitUpdateTime > TWELVE_HOUR_CONSTANT) {
