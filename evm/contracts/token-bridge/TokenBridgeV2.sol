@@ -109,7 +109,6 @@ contract TokenBridgeV2 is LayerTransition {
         uint256 _amount
     );
 
-    // Functions
     /*Functions*/
     /// @notice constructor
     /// @param _token address of tellor token for bridging
@@ -131,9 +130,9 @@ contract TokenBridgeV2 is LayerTransition {
     function init(uint256 _depositId, uint256 _withdrawId) external {
         require(
             msg.sender == deployer,
-            "TokenBridge: only deployer can initialize"
+            "TokenBridgeV2: only deployer can initialize"
         );
-        require(!initialized, "TokenBridge: already initialized");
+        require(!initialized, "TokenBridgeV2: already initialized");
         depositId = _depositId;
         // set withdraws up to _withdrawId to all claimed
         for (uint256 i = 0; i <= _withdrawId; i++) {
@@ -147,11 +146,11 @@ contract TokenBridgeV2 is LayerTransition {
         _onlyGuardian();
         require(
             pendingGuardian != address(0),
-            "TokenBridge: no pending guardian to accept"
+            "TokenBridgeV2: no pending guardian to accept"
         );
         require(
             block.timestamp - guardianUpdateProposalTime > GUARDIAN_UPDATE_DELAY,
-            "TokenBridge: must wait before accepting pending guardian"
+            "TokenBridgeV2: must wait before accepting pending guardian"
         );
         guardianUpdateProposalTime = 0;
         guardian = pendingGuardian;
@@ -165,12 +164,12 @@ contract TokenBridgeV2 is LayerTransition {
         _onlyGuardian();
         require(
             bridgeState == BridgeState.UNPAUSED,
-            "TokenBridge: can only propose pause when bridge is unpaused"
+            "TokenBridgeV2: can only propose pause when bridge is unpaused"
         );
         PauseProposal storage _proposal = pauseProposals[_proposalId];
         require(
             _proposal.state == PauseProposalState.PENDING,
-            "TokenBridge: proposal is not pending"
+            "TokenBridgeV2: proposal is not pending"
         );
         bridgeState = BridgeState.PAUSED;
         bridgeStateUpdateTime = block.timestamp;
@@ -186,13 +185,13 @@ contract TokenBridgeV2 is LayerTransition {
     function claimExtraWithdraw(address _recipient) external {
         require(
             bridgeState != BridgeState.PAUSED,
-            "TokenBridge: bridge is paused"
+            "TokenBridgeV2: bridge is paused"
         );
-        require(initialized, "TokenBridge: not initialized");
+        require(initialized, "TokenBridgeV2: not initialized");
         uint256 _amountConverted = tokensToClaim[_recipient];
         require(_amountConverted > 0, "amount must be > 0");
         uint256 _withdrawLimit = _refreshWithdrawLimit(_amountConverted);
-        require(_withdrawLimit > 0, "TokenBridge: withdraw limit must be > 0");
+        require(_withdrawLimit > 0, "TokenBridgeV2: withdraw limit must be > 0");
         if (_withdrawLimit < _amountConverted) {
             tokensToClaim[_recipient] =
                 tokensToClaim[_recipient] -
@@ -204,7 +203,7 @@ contract TokenBridgeV2 is LayerTransition {
         withdrawLimitRecord -= _amountConverted;
         require(
             token.transfer(_recipient, _amountConverted),
-            "TokenBridge: transfer failed"
+            "TokenBridgeV2: transfer failed"
         );
         emit TokensToClaimUpdated(_recipient, tokensToClaim[_recipient]);
         emit ExtraWithdrawClaimed(_recipient, _amountConverted);
@@ -219,32 +218,32 @@ contract TokenBridgeV2 is LayerTransition {
         uint256 _tip,
         string memory _layerRecipient
     ) external {
-        require(initialized, "TokenBridge: not initialized");
+        require(initialized, "TokenBridgeV2: not initialized");
         require(
             _amount > 0.1 ether,
-            "TokenBridge: amount must be greater than 0.1 tokens"
+            "TokenBridgeV2: amount must be greater than 0.1 tokens"
         );
         require(
             _amount % TOKEN_DECIMAL_PRECISION_MULTIPLIER == 0,
-            "TokenBridge: amount must be divisible by 1e12"
+            "TokenBridgeV2: amount must be divisible by 1e12"
         );
         require(
             _amount <= _refreshDepositLimit(_amount),
-            "TokenBridge: amount exceeds deposit limit for time period"
+            "TokenBridgeV2: amount exceeds deposit limit for time period"
         );
         require(
             _tip <= _amount,
-            "TokenBridge: tip must be less than or equal to amount"
+            "TokenBridgeV2: tip must be less than or equal to amount"
         );
         if (_tip > 0) {
             require(
                 _tip >= 1e12,
-                "TokenBridge: tip must be greater than or equal to 1 loya"
+                "TokenBridgeV2: tip must be greater than or equal to 1 loya"
             );
         }
         require(
             token.transferFrom(msg.sender, address(this), _amount),
-            "TokenBridge: transferFrom failed"
+            "TokenBridgeV2: transferFrom failed"
         );
         depositId++;
         depositLimitRecord -= _amount;
@@ -263,11 +262,11 @@ contract TokenBridgeV2 is LayerTransition {
     function proposePauseBridge(string calldata _layerAddress) external {
         require(
             bridgeState == BridgeState.UNPAUSED,
-            "TokenBridge: can only propose pause when bridge is unpaused"
+            "TokenBridgeV2: can only propose pause when bridge is unpaused"
         );
         require(
             token.transferFrom(msg.sender, address(this), PAUSE_TRIBUTE_AMOUNT),
-            "TokenBridge: transfer failed"
+            "TokenBridgeV2: transfer failed"
         );
         totalPauseTributeBalance += PAUSE_TRIBUTE_AMOUNT;
         uint256 _pauseProposalId = pauseProposalId;
@@ -287,11 +286,11 @@ contract TokenBridgeV2 is LayerTransition {
         _onlyGuardian();
         require(
             _newGuardian != address(0),
-            "TokenBridge: new guardian cannot be the zero address"
+            "TokenBridgeV2: new guardian cannot be the zero address"
         );
         require(
             pendingGuardian == address(0),
-            "TokenBridge: pending guardian already exists"
+            "TokenBridgeV2: pending guardian already exists"
         );
         guardianUpdateProposalTime = block.timestamp;
         pendingGuardian = _newGuardian;
@@ -304,15 +303,15 @@ contract TokenBridgeV2 is LayerTransition {
         PauseProposal storage _proposal = pauseProposals[_proposalId];
         require(
             _proposal.state == PauseProposalState.PENDING,
-            "TokenBridge: proposal is not pending"
+            "TokenBridgeV2: proposal is not pending"
         );
         require(
             block.timestamp - _proposal.proposalTime > PAUSE_TRIBUTE_LOCK_TIME,
-            "TokenBridge: must wait before refunding pause proposal"
+            "TokenBridgeV2: must wait before refunding pause proposal"
         );
         require(
             token.transfer(_proposal.proposer, PAUSE_TRIBUTE_AMOUNT),
-            "TokenBridge: transfer failed"
+            "TokenBridgeV2: transfer failed"
         );
         _proposal.state = PauseProposalState.REFUNDED;
         totalPauseTributeBalance -= PAUSE_TRIBUTE_AMOUNT;
@@ -324,7 +323,7 @@ contract TokenBridgeV2 is LayerTransition {
         _onlyGuardian();
         require(
             pendingGuardian != address(0),
-            "TokenBridge: no pending guardian to reject"
+            "TokenBridgeV2: no pending guardian to reject"
         );
         address _pendingGuardian = pendingGuardian;
         pendingGuardian = address(0);
@@ -338,7 +337,7 @@ contract TokenBridgeV2 is LayerTransition {
         _onlyGuardian();
         require(
             bridgeState == BridgeState.PAUSED,
-            "TokenBridge: can only update data bridge when bridge is paused"
+            "TokenBridgeV2: can only update data bridge when bridge is paused"
         );
         dataBridge = ITellorDataBridge(_dataBridge);
         emit DataBridgeUpdated(_dataBridge);
@@ -348,11 +347,11 @@ contract TokenBridgeV2 is LayerTransition {
     function unpauseBridge() external {
         require(
             bridgeState == BridgeState.PAUSED,
-            "TokenBridge: bridge is not paused"
+            "TokenBridgeV2: bridge is not paused"
         );
         require(
             block.timestamp - bridgeStateUpdateTime > PAUSE_PERIOD,
-            "TokenBridge: must wait before unpausing"
+            "TokenBridgeV2: must wait before unpausing"
         );
         bridgeState = BridgeState.UNPAUSED;
         emit BridgeStateUpdated(BridgeState.UNPAUSED);
@@ -371,35 +370,35 @@ contract TokenBridgeV2 is LayerTransition {
     ) external {
         require(
             bridgeState != BridgeState.PAUSED,
-            "TokenBridge: bridge is paused"
+            "TokenBridgeV2: bridge is paused"
         );
-        require(initialized, "TokenBridge: not initialized");
+        require(initialized, "TokenBridgeV2: not initialized");
         require(
             _attestData.queryId ==
                 keccak256(
                     abi.encode("TRBBridgeV2", abi.encode(false, _withdrawId))
                 ),
-            "TokenBridge: invalid queryId"
+            "TokenBridgeV2: invalid queryId"
         );
         require(
             !withdrawClaimed[_withdrawId],
-            "TokenBridge: withdraw already claimed"
+            "TokenBridgeV2: withdraw already claimed"
         );
         require(
             block.timestamp - (_attestData.report.timestamp / MS_PER_SECOND) >
                 TWELVE_HOUR_CONSTANT,
-            "TokenBridge: premature attestation"
+            "TokenBridgeV2: premature attestation"
         );
         require(
             block.timestamp -
                 (_attestData.attestationTimestamp / MS_PER_SECOND) <
                 TWELVE_HOUR_CONSTANT,
-            "TokenBridge: attestation too old"
+            "TokenBridgeV2: attestation too old"
         );
         dataBridge.verifyOracleData(_attestData, _valset, _sigs);
         require(
             _attestData.report.aggregatePower >= dataBridge.powerThreshold(),
-            "TokenBridge: report aggregate power must be greater than or equal to power threshold"
+            "TokenBridgeV2: report aggregate power must be greater than or equal to power threshold"
         );
         withdrawClaimed[_withdrawId] = true;
         (
@@ -424,7 +423,7 @@ contract TokenBridgeV2 is LayerTransition {
         withdrawLimitRecord -= _amountConverted;
         require(
             token.transfer(_recipient, _amountConverted),
-            "TokenBridge: transfer failed"
+            "TokenBridgeV2: transfer failed"
         );
         emit Withdraw(_withdrawId, _layerSender, _recipient, _amountConverted);
     }
@@ -478,7 +477,7 @@ contract TokenBridgeV2 is LayerTransition {
     function _onlyGuardian() internal view {
         require(
             msg.sender == guardian,
-            "TokenBridge: only guardian can call this function"
+            "TokenBridgeV2: only guardian can call this function"
         );
     }
 
