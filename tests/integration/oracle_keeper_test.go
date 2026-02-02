@@ -1545,10 +1545,6 @@ func (s *IntegrationTestSuite) TestRemoveOldReports() {
 		require.NoError(err)
 	}
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
-	_, err = s.Setup.App.BeginBlocker(ctx)
-	require.NoError(err)
-	_, err = s.Setup.App.EndBlocker(ctx)
-	require.NoError(err)
 	require.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
 
 	// --- submit reports 31 days ago (should be pruned) ---
@@ -1563,10 +1559,6 @@ func (s *IntegrationTestSuite) TestRemoveOldReports() {
 		require.NoError(err)
 	}
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
-	_, err = s.Setup.App.BeginBlocker(ctx)
-	require.NoError(err)
-	_, err = s.Setup.App.EndBlocker(ctx)
-	require.NoError(err)
 	require.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
 
 	// --- submit reports 5 days ago (should NOT be pruned) ---
@@ -1581,29 +1573,19 @@ func (s *IntegrationTestSuite) TestRemoveOldReports() {
 		require.NoError(err)
 	}
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
-	_, err = s.Setup.App.BeginBlocker(ctx)
-	require.NoError(err)
-	_, err = s.Setup.App.EndBlocker(ctx)
-	require.NoError(err)
 	require.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
 
 	// We should have 6 reports total: 2 reporters × 3 queries
 	totalBefore := countReports(ctx)
 	require.Equal(6, totalBefore, "should have 6 reports before pruning")
 
-	// --- Prune with current time (now), batch size 2 ---
-	// Only 2 should be deleted (batch limit)
+	// Prune with current time (now)
+	// All 4 old reports deleted
 	ctx = ctx.WithBlockTime(now)
 	require.NoError(s.Setup.Oraclekeeper.RemoveOldReports(ctx))
-	require.Equal(4, countReports(ctx), "should have 4 reports after first batch prune")
+	require.Equal(2, countReports(ctx), "should have 2 reports after pruning old ones")
 
-	// --- Prune again, batch size 2 ---
-	// 2 more old reports deleted
-	require.NoError(s.Setup.Oraclekeeper.RemoveOldReports(ctx))
-	require.Equal(2, countReports(ctx), "should have 2 reports after second batch prune")
-
-	// --- Prune again, batch size 100 ---
-	// No more old reports, recent ones should remain
+	// Prune again, nothing left to prune
 	require.NoError(s.Setup.Oraclekeeper.RemoveOldReports(ctx))
 	require.Equal(2, countReports(ctx), "recent reports should not be pruned")
 

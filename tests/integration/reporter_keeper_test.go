@@ -8,6 +8,7 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
+	"github.com/tellor-io/layer/utils"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	"github.com/tellor-io/layer/x/reporter/keeper"
@@ -670,33 +671,46 @@ func (s *IntegrationTestSuite) TestPruneOldReports() {
 	err = rk.Report.Set(ctx, collections.Join(queryId3, collections.Join(reporter.Bytes(), uint64(300))), delegationsAmounts)
 	require.NoError(err)
 
-	// Set up Aggregate entries in oracle keeper (needed for GetTimestampForBlockHeight)
-	// The BlockHeight index uses the Height field of the Aggregate
-	aggregate1 := oracletypes.Aggregate{
-		QueryId:           queryId1,
+	// Set up ETH/USD aggregate entries in oracle keeper for GetBlockHeightFromTimestamp.
+	// GetBlockHeightFromTimestamp uses ETH/USD queryId to resolve timestamps to block heights.
+	ethUsdQueryId := utils.QueryIDFromData(ethQueryData)
+
+	// Aggregate at startTime with Height 50 (before block 100)
+	err = ok.Aggregates.Set(ctx, collections.Join(ethUsdQueryId, timestamp1), oracletypes.Aggregate{
+		QueryId:           ethUsdQueryId,
 		AggregateValue:    "100",
 		AggregateReporter: reporter.String(),
-		Height:            100,
-	}
-	err = ok.Aggregates.Set(ctx, collections.Join(queryId1, timestamp1), aggregate1)
+		Height:            50,
+	})
 	require.NoError(err)
 
-	aggregate2 := oracletypes.Aggregate{
-		QueryId:           queryId2,
+	// Aggregate at startTime+30d with Height 150 (between block 100 and 200)
+	err = ok.Aggregates.Set(ctx, collections.Join(ethUsdQueryId, timestamp2), oracletypes.Aggregate{
+		QueryId:           ethUsdQueryId,
 		AggregateValue:    "100",
 		AggregateReporter: reporter.String(),
-		Height:            200,
-	}
-	err = ok.Aggregates.Set(ctx, collections.Join(queryId2, timestamp2), aggregate2)
+		Height:            150,
+	})
 	require.NoError(err)
 
-	aggregate3 := oracletypes.Aggregate{
-		QueryId:           queryId3,
+	// Aggregate at startTime+50d with Height 250 (between block 200 and 300)
+	err = ok.Aggregates.Set(ctx, collections.Join(ethUsdQueryId, timestamp3), oracletypes.Aggregate{
+		QueryId:           ethUsdQueryId,
 		AggregateValue:    "100",
 		AggregateReporter: reporter.String(),
-		Height:            300,
-	}
-	err = ok.Aggregates.Set(ctx, collections.Join(queryId3, timestamp3), aggregate3)
+		Height:            250,
+	})
+	require.NoError(err)
+
+	// Aggregate at startTime+80d with Height 350 (above block 300)
+	// Used when pruning at 120 days: cutoff=startTime+90d, nearest before is startTime+80d -> Height 350
+	timestamp4 := uint64(startTime.Add(80 * 24 * time.Hour).UnixMilli())
+	err = ok.Aggregates.Set(ctx, collections.Join(ethUsdQueryId, timestamp4), oracletypes.Aggregate{
+		QueryId:           ethUsdQueryId,
+		AggregateValue:    "100",
+		AggregateReporter: reporter.String(),
+		Height:            350,
+	})
 	require.NoError(err)
 
 	// Verify all 3 Report entries exist
