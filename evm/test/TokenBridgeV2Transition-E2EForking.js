@@ -4,10 +4,7 @@ var assert = require('assert');
 const web3 = require('web3');
 const { ethers } = require("hardhat");
 
-// E2E Forking tests for transitioning minting rewards to the TokenBridge (V1) - this is 
-// deprecated now
-
-describe.skip("TokenBridge Transition - E2E Forking Tests", function() {
+describe("TokenBridgeV2 Transition - E2E Forking Tests", function() {
   // Mainnet addresses
   const TELLOR_MASTER = "0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0"
   const DEV_WALLET = "0x39E419bA25196794B595B2a595Ea8E527ddC9856"
@@ -72,7 +69,7 @@ describe.skip("TokenBridge Transition - E2E Forking Tests", function() {
     await blobstream.init(1, 2, UNBONDING_PERIOD, fakeValCheckpoint)
 
     // Deploy TokenBridge
-    tbridge = await ethers.deployContract("TokenBridge", [TELLOR_MASTER, blobstream.address, TELLORFLEX])
+    tbridge = await ethers.deployContract("TokenBridgeV2", [TELLOR_MASTER, blobstream.address, TELLORFLEX])
 
     // Fund accounts
     await accounts[10].sendTransaction({
