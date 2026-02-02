@@ -22,5 +22,9 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 		return err
 	}
 
-	return k.RotateQueries(ctx)
+	if err := k.RotateQueries(ctx); err != nil {
+		return err
+	}
+
+	return k.RemoveOldReports(ctx)
 }
