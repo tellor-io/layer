@@ -510,6 +510,8 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         await h.expectThrow(tbridge.connect(oldGuardian).proposeUpdateGuardian(accounts[12].address)) // pending guardian already exists
         await h.expectThrow(tbridge.connect(newGuardian).acceptPendingGuardian()) // only guardian can accept pending guardian
 
+        await h.expectThrow(tbridge.connect(oldGuardian).acceptPendingGuardian()) // must wait before accepting pending guardian
+        await h.advanceTime(86400 * 7 + 1)
         tx = await tbridge.connect(oldGuardian).acceptPendingGuardian()
         receipt = await tx.wait()
         evs = _getBridgeEvents(receipt, "GuardianUpdated")

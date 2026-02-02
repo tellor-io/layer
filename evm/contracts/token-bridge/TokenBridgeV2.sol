@@ -21,6 +21,7 @@ contract TokenBridgeV2 is LayerTransition {
     BridgeState public bridgeState; // state of the bridge
     uint256 public bridgeStateUpdateTime; // last time the bridge state was updated
     address public guardian; // address of the guardian
+    uint256 public guardianUpdateProposalTime; // last time the guardian proposal was made
     bool public initialized; // whether the bridge has been initialized
     uint256 public pauseProposalId; // counter of how many pause proposals have been made
     address public pendingGuardian; // address of the pending guardian
@@ -28,6 +29,7 @@ contract TokenBridgeV2 is LayerTransition {
     uint256 public withdrawLimitUpdateTime; // last time the withdraw limit was updated
     uint256 public withdrawLimitRecord; // amount you can withdraw per limit period
     uint256 public constant DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
+    uint256 public constant GUARDIAN_UPDATE_DELAY = 7 days; // time period before a new guardian proposal can be accepted
     uint256 public constant MS_PER_SECOND = 1000; // factor to convert milliseconds to seconds
     uint256 public constant PAUSE_PERIOD = 21 days; // bridge pause period duration
     uint256 public constant PAUSE_TRIBUTE_AMOUNT = 10000 ether; // amount of tokens burned to pause bridge
@@ -147,6 +149,11 @@ contract TokenBridgeV2 is LayerTransition {
             pendingGuardian != address(0),
             "TokenBridge: no pending guardian to accept"
         );
+        require(
+            block.timestamp - guardianUpdateProposalTime > GUARDIAN_UPDATE_DELAY,
+            "TokenBridge: must wait before accepting pending guardian"
+        );
+        guardianUpdateProposalTime = 0;
         guardian = pendingGuardian;
         pendingGuardian = address(0);
         emit GuardianUpdated(guardian);
@@ -286,6 +293,7 @@ contract TokenBridgeV2 is LayerTransition {
             pendingGuardian == address(0),
             "TokenBridge: pending guardian already exists"
         );
+        guardianUpdateProposalTime = block.timestamp;
         pendingGuardian = _newGuardian;
         emit GuardianUpdateProposed(_newGuardian);
     }
@@ -320,6 +328,7 @@ contract TokenBridgeV2 is LayerTransition {
         );
         address _pendingGuardian = pendingGuardian;
         pendingGuardian = address(0);
+        guardianUpdateProposalTime = 0;
         emit GuardianUpdateRejected(_pendingGuardian);
     }
 
