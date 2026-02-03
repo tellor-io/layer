@@ -210,6 +210,9 @@ func (k msgServer) SelectReporter(goCtx context.Context, msg *types.MsgSelectRep
 		),
 	})
 	telemetry.IncrCounterWithLabels([]string{"num_of_selectors", "join"}, 1, []metrics.Label{{Name: "chain_id", Value: sdk.UnwrapSDKContext(goCtx).ChainID()}})
+	if err := k.Keeper.FlagStakeRecalc(goCtx, reporterAddr); err != nil {
+		return nil, err
+	}
 	return &types.MsgSelectReporterResponse{}, nil
 }
 
@@ -317,6 +320,12 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 			sdk.NewAttribute("selector_locked_until", selector.LockedUntilTime.String()),
 		),
 	})
+	if err := k.Keeper.FlagStakeRecalc(goCtx, prevReporter); err != nil {
+		return nil, err
+	}
+	if err := k.Keeper.FlagStakeRecalc(goCtx, reporterAddr); err != nil {
+		return nil, err
+	}
 	return &types.MsgSwitchReporterResponse{}, nil
 }
 

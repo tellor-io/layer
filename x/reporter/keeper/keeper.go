@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -35,6 +36,9 @@ type (
 		ReporterPeriodData       collections.Map[[]byte, types.PeriodRewardData]      // key: reporter AccAddress -> current period data
 		DistributionQueue        collections.Map[uint64, types.DistributionQueueItem] // key: queue index -> item to distribute
 		DistributionQueueCounter collections.Item[types.DistributionQueueCounter]     // tracks head and tail of queue
+
+		LastValSetUpdateHeight collections.Item[uint64]    // block height of last validator set update
+		StakeRecalcFlag        collections.Map[[]byte, bool] // reporters flagged for stake recalculation
 
 		Schema collections.Schema
 		logger log.Logger
@@ -84,6 +88,8 @@ func NewKeeper(
 		ReporterPeriodData:       collections.NewMap(sb, types.ReporterPeriodDataPrefix, "reporter_period_data", collections.BytesKey, codec.CollValue[types.PeriodRewardData](cdc)),
 		DistributionQueue:        collections.NewMap(sb, types.DistributionQueuePrefix, "distribution_queue", collections.Uint64Key, codec.CollValue[types.DistributionQueueItem](cdc)),
 		DistributionQueueCounter: collections.NewItem(sb, types.DistributionQueueCounterPrefix, "distribution_queue_counter", codec.CollValue[types.DistributionQueueCounter](cdc)),
+		LastValSetUpdateHeight:   collections.NewItem(sb, types.LastValSetUpdateHeightPrefix, "last_val_set_update_height", collections.Uint64Value),
+		StakeRecalcFlag:          collections.NewMap(sb, types.StakeRecalcFlagPrefix, "stake_recalc_flag", collections.BytesKey, collections.BoolValue),
 		authority:                authority,
 		logger:                   logger,
 		accountKeeper:            accountKeeper,
@@ -208,6 +214,10 @@ func CalculateRewardAmount(reporterPower, totalPower uint64, reward math.Int) ma
 	return amount
 }
 
+func (k *Keeper) FlagStakeRecalc(ctx context.Context, reporter sdk.AccAddress) error {
+	return k.StakeRecalcFlag.Set(ctx, reporter.Bytes(), true)
+}
+
 func (k *Keeper) SetOracleKeeper(ok types.OracleKeeper) {
 	k.oracleKeeper = ok
 }
@@ -280,4 +290,12 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 	}
 
 	return nil
+}
+
+func (k Keeper) OnValidatorSetUpdated(ctx sdk.Context, updates []abci.ValidatorUpdate) {
+	height := uint64(ctx.BlockHeight())
+	if err := k.LastValSetUpdateHeight.Set(ctx, height); err != nil {
+		k.logger.Error("failed to set last val set update height", "error", err)
+	}
+	k.logger.Info("Validator set updated", "num_updates", len(updates), "height", ctx.BlockHeight())
 }

@@ -52,9 +52,34 @@ func (k Keeper) HasMin(ctx context.Context, addr sdk.AccAddress, minRequired mat
 // It also tracks period data for reward distribution - when delegation state changes,
 // the previous period is queued for distribution.
 func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, queryId []byte) (math.Int, error) {
+	needsRecalc, err := k.needsStakeRecalc(ctx, repAddr)
+	if err != nil {
+		return math.Int{}, err
+	}
+
+	if !needsRecalc {
+		// Stake hasn't changed, fetch cached total from last Report entry
+		cached, err := k.GetDelegationsAmount(ctx, repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))
+		if err != nil {
+			return math.Int{}, err
+		}
+		if !cached.Total.IsNil() && cached.Total.IsPositive() {
+			return cached.Total, nil
+		}
+		// if it ain't positive, just recalculate
+	}
+
 	totalTokens, delegates, selectorShares, hash, err := k.GetReporterStake(ctx, repAddr)
 	if err != nil {
 		return math.Int{}, err
+	}
+
+	// Clear stake recalc flag after recalculation
+	if err := k.StakeRecalcFlag.Remove(ctx, repAddr.Bytes()); err != nil {
+		// TODO: this error is not something that happens with Remove ?
+		if !errors.Is(err, collections.ErrNotFound) {
+			return math.Int{}, err
+		}
 	}
 
 	// Handle period tracking for reward distribution
@@ -70,6 +95,34 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, query
 		}
 	}
 	return totalTokens, nil
+}
+
+// needsStakeRecalc checks if a reporter's stake needs to be recalculated
+func (k Keeper) needsStakeRecalc(ctx context.Context, repAddr sdk.AccAddress) (bool, error) {
+	// Check persisted recalc flag (set by hooks/msg handlers)
+	flagged, err := k.StakeRecalcFlag.Has(ctx, repAddr.Bytes())
+	if err != nil {
+		return true, nil
+	}
+	if flagged {
+		return true, nil
+	}
+
+	// Check if validator set updated since last calculation
+	lastCalcBlock, err := k.GetLastReportedAtBlock(ctx, repAddr.Bytes())
+	if err != nil {
+		return true, nil // means first time for reporter
+	}
+	if lastCalcBlock == 0 {
+		return true, nil // never calculated
+	}
+
+	valSetUpdateHeight, err := k.LastValSetUpdateHeight.Get(ctx)
+	if err != nil {
+		return true, nil // no update height stored yet, recalc to be safe
+	}
+
+	return valSetUpdateHeight > lastCalcBlock, nil
 }
 
 // function that iterates through a selector's delegations and checks if they meet the min requirement

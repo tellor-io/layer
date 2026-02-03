@@ -33,4 +33,6 @@ var (
 	ReporterPeriodDataPrefix        = collections.NewPrefix(22)
 	DistributionQueuePrefix         = collections.NewPrefix(23)
 	DistributionQueueCounterPrefix  = collections.NewPrefix(24)
+	LastValSetUpdateHeightPrefix    = collections.NewPrefix(25)
+	StakeRecalcFlagPrefix           = collections.NewPrefix(26)
 )

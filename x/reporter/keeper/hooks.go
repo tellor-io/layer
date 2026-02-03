@@ -55,8 +55,13 @@ func (h Hooks) BeforeDelegationSharesModified(_ context.Context, _ sdk.AccAddres
 	return nil
 }
 
-func (h Hooks) AfterDelegationModified(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
-	return nil
+func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, _ sdk.ValAddress) error {
+	selector, err := h.k.Selectors.Get(ctx, delAddr.Bytes())
+	if err != nil {
+		// Not a selector, ignore
+		return nil
+	}
+	return h.k.FlagStakeRecalc(ctx, sdk.AccAddress(selector.Reporter))
 }
 
 // this hook is called in the staking module when a delegation is being created and its implemented here to update a selector's delegations count
