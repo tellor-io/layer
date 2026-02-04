@@ -413,17 +413,17 @@ describe("TokenBridge V1 -> V2 Upgrade - Forking Tests", function () {
     const toClaim0 = await tbridgeV2.tokensToClaim(recipient);
     assert.equal(toClaim0.toString(), amountConverted2.sub(expectedPaid1).toString(), "V2 tokensToClaim should equal remainder");
 
-    // claim next tranche after 12h
+    // claim next tranche after 12h using claimExtraWithdrawByWithdrawId
     await h.advanceTime(43200 + 2);
     const v2BalClaim0 = await tellor.balanceOf(tbridgeV2.address);
     const userBalClaim0 = await tellor.balanceOf(recipient);
-    await tbridgeV2.claimExtraWithdraw(recipient);
+    await tbridgeV2.claimExtraWithdrawByWithdrawId(withdrawIdV2);
     const v2BalClaim1 = await tellor.balanceOf(tbridgeV2.address);
     const userBalClaim1 = await tellor.balanceOf(recipient);
 
     const expectedLimit2 = v2BalClaim0.div(20);
     const expectedPaid2 = expectedLimit2.lt(toClaim0) ? expectedLimit2 : toClaim0;
-    assert.equal(userBalClaim1.sub(userBalClaim0).toString(), expectedPaid2.toString(), "recipient should receive tranche2 via claimExtraWithdraw");
+    assert.equal(userBalClaim1.sub(userBalClaim0).toString(), expectedPaid2.toString(), "recipient should receive tranche2 via claimExtraWithdrawByWithdrawId");
     assert.equal(v2BalClaim0.sub(v2BalClaim1).toString(), expectedPaid2.toString(), "V2 balance should decrease by tranche2");
     const toClaim1 = await tbridgeV2.tokensToClaim(recipient);
     assert.equal(toClaim1.toString(), toClaim0.sub(expectedPaid2).toString(), "V2 tokensToClaim should decrease by tranche2");

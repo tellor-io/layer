@@ -1,5 +1,6 @@
 require("dotenv").config();
 require("@nomiclabs/hardhat-ethers");
+require("@nomicfoundation/hardhat-verify");
 
 module.exports = {
   solidity: {
@@ -60,7 +61,7 @@ module.exports = {
       },
       forking: {
         url: process.env.NODE_URL_MAINNET,
-        // blockNumber: 24350000
+        // blockNumber: 24371000
         // url: process.env.NODE_URL_SEPOLIA_TESTNET
         // blockNumber: 9307000
       },
@@ -78,6 +79,9 @@ module.exports = {
       gas: 8000000 ,
       gasPrice: 1000000000
     },
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN,
   },
 };
 
