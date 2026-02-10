@@ -926,7 +926,11 @@ func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 		k.Logger(ctx).Info("Error getting snapshot limit", "error", err)
 		return err
 	}
-	reports := k.oracleKeeper.GetAggregatedReportsByHeight(ctx, uint64(blockHeight))
+	reports, err := k.oracleKeeper.GetAggregatedReportsByHeight(ctx, uint64(blockHeight))
+	if err != nil {
+		k.Logger(ctx).Info("Error getting aggregated reports by height", "error", err)
+		return err
+	}
 	for _, report := range reports {
 		queryId := report.QueryId
 		timeNow := sdkCtx.BlockTime().Add(time.Second)
