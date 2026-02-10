@@ -46,8 +46,10 @@ func (h Hooks) AfterValidatorCreated(_ context.Context, _ sdk.ValAddress) error 
 
 func (h Hooks) BeforeValidatorModified(_ context.Context, _ sdk.ValAddress) error { return nil }
 
-func (h Hooks) BeforeValidatorSlashed(_ context.Context, _ sdk.ValAddress, _ sdkmath.LegacyDec) error {
-	return nil
+// BeforeValidatorSlashed is called when a validator is about to be slashed and i think this doesn't necessarily mean
+// they are leaving the validator set but it does mean their voting power is being reduced, so we should trigger a recalculation for all reporters
+func (h Hooks) BeforeValidatorSlashed(ctx context.Context, _ sdk.ValAddress, _ sdkmath.LegacyDec) error {
+	return h.k.LastValSetUpdateHeight.Set(ctx, uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))
 }
 
 func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error { return nil }

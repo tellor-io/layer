@@ -396,6 +396,9 @@ func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSel
 	if err := k.Keeper.Selectors.Remove(goCtx, selectorAddr); err != nil {
 		return nil, err
 	}
+	if err := k.Keeper.FlagStakeRecalc(goCtx, sdk.AccAddress(selector.Reporter)); err != nil {
+		return nil, err
+	}
 	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"selector_removed",

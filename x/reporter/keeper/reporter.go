@@ -128,7 +128,7 @@ func (k Keeper) needsStakeRecalc(ctx context.Context, repAddr sdk.AccAddress) (b
 		return true, nil // no update height stored yet, recalc to be safe
 	}
 
-	return valSetUpdateHeight > lastCalcBlock, nil
+	return valSetUpdateHeight >= lastCalcBlock, nil
 }
 
 // function that iterates through a selector's delegations and checks if they meet the min requirement
