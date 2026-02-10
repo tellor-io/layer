@@ -98,9 +98,15 @@ func NewRootCmd(
 
 			customAppTemplate, customAppConfig := initAppConfig()
 			customTMConfig := initTendermintConfig()
-			return server.InterceptConfigsPreRunHandler(
+			err = server.InterceptConfigsPreRunHandler(
 				cmd, customAppTemplate, customAppConfig, customTMConfig,
 			)
+			if err != nil {
+				return err
+			}
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			serverCtx.Config.Consensus.TimeoutCommit = 3 * time.Second
+			return nil
 		},
 	}
 
@@ -123,7 +129,6 @@ func NewRootCmd(
 // return tmcfg.DefaultConfig if no custom configuration is required for the application.
 func initTendermintConfig() *tmcfg.Config {
 	cfg := tmcfg.DefaultConfig()
-	cfg.Consensus.TimeoutCommit = 3 * time.Second
 	return cfg
 }
 
