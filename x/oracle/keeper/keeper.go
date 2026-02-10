@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	gomath "math"
 	"math/big"
+	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	layertypes "github.com/tellor-io/layer/types"
@@ -28,7 +30,11 @@ import (
 const (
 	twelveHrsInMillis = 12 * 60 * 60 * 1000
 	// twoMinInMillis    = 2 * 60 * 1000
+	maxPruneSize = 100
 )
+
+// ethUsdQueryId is the queryId for ETH/USD SpotPrice, used to find nearest timestamps to block heights since its always available.
+var ethUsdQueryId, _ = hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992")
 
 type (
 	Keeper struct {
@@ -464,4 +470,57 @@ func (k Keeper) GetTimestampForBlockHeight(ctx context.Context, blockHeight uint
 	}
 
 	return 0, nil
+}
+
+// GetBlockHeightFromTimestamp returns the block height of the aggregate closest to
+// and before the given timestamp, using the ETH/USD query which always has data.
+func (k Keeper) GetBlockHeightFromTimestamp(ctx context.Context, timestamp time.Time) (uint64, error) {
+	aggTimestamp, err := k.GetTimestampBefore(ctx, ethUsdQueryId, timestamp)
+	if err != nil {
+		return 0, err
+	}
+	agg, err := k.GetAggregateByTimestamp(ctx, ethUsdQueryId, uint64(aggTimestamp.UnixMilli()))
+	if err != nil {
+		return 0, err
+	}
+	return agg.Height, nil
+}
+
+// RemoveOldReports deletes microreports older than 30.
+// It walks the IdQueryId index from the lowest metaId upward, collects
+// keys for reports whose timestamp is past the cutoff, then deletes them.
+// Returns the number of reports deleted.
+func (k Keeper) RemoveOldReports(ctx context.Context) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	cutoff := sdkCtx.BlockTime().Add(-30 * 24 * time.Hour)
+
+	var toDelete []collections.Triple[[]byte, []byte, uint64]
+
+	iter, err := k.Reports.Indexes.IdQueryId.Iterate(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer iter.Close()
+	for ; iter.Valid() && len(toDelete) < maxPruneSize; iter.Next() {
+		pk, err := iter.PrimaryKey()
+		if err != nil {
+			return err
+		}
+		report, err := k.Reports.Get(ctx, pk)
+		if err != nil {
+			return err
+		}
+		if !report.Timestamp.Before(cutoff) {
+			break
+		}
+		toDelete = append(toDelete, pk)
+	}
+
+	for _, pk := range toDelete {
+		if err := k.Reports.Remove(ctx, pk); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

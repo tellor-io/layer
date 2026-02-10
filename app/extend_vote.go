@@ -31,7 +31,7 @@ import (
 type OracleKeeper interface {
 	GetTimestampBefore(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
 	GetTimestampAfter(ctx context.Context, queryId []byte, timestamp time.Time) (time.Time, error)
-	GetAggregatedReportsByHeight(ctx context.Context, height uint64) []oracletypes.Aggregate
+	GetAggregatedReportsByHeight(ctx context.Context, height uint64) ([]oracletypes.Aggregate, error)
 }
 
 type BridgeKeeper interface {

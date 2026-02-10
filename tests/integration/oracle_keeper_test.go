@@ -1404,3 +1404,219 @@ func (s *IntegrationTestSuite) TestRotateQueriesToExpiredTippedQuery() {
 	// Also verify it's greater than the ID it had when tipped
 	s.Greater(query.Id, tippedMetaId0, "Meta ID should have increased when expired tipped query was rotated to")
 }
+
+func (s *IntegrationTestSuite) TestSubmitMultipleReportsDifferentMetaIds() {
+	require := s.Require()
+	ctx := s.Setup.Ctx
+	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Abci: &cmtproto.ABCIParams{
+			VoteExtensionsEnableHeight: 1,
+		},
+	})
+	ctx = ctx.WithBlockTime(time.Now())
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	_, err := s.Setup.App.BeginBlocker(ctx)
+	require.NoError(err)
+
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{100, 200})
+	for _, val := range valAddrs {
+		require.NoError(s.Setup.Bridgekeeper.SetEVMAddressByOperator(ctx, val.String(), []byte("not real")))
+	}
+	_, err = s.Setup.App.EndBlocker(ctx)
+	require.NoError(err)
+
+	tipper := s.newKeysWithTokens()
+
+	// register reporters
+	for _, rep := range repAccs {
+		require.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, rep, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter")))
+		require.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, rep, reportertypes.NewSelection(rep, 1)))
+		_, err := s.Setup.Reporterkeeper.ReporterStake(ctx, rep, []byte{})
+		require.NoError(err)
+	}
+
+	tip := sdk.NewCoin(s.Setup.Denom, math.NewInt(100_000))
+	queryDatas := [][]byte{ethQueryData, btcQueryData, trbQueryData}
+	metaIds := make([]uint64, 3)
+
+	for i, qd := range queryDatas {
+		// tip the query
+		_, err := msgServer.Tip(ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: qd, Amount: tip})
+		require.NoError(err)
+
+		queryId := utils.QueryIDFromData(qd)
+		query, err := s.Setup.Oraclekeeper.CurrentQuery(ctx, queryId)
+		require.NoError(err)
+		metaIds[i] = query.Id
+
+		// both reporters submit
+		for _, rep := range repAccs {
+			_, err = msgServer.SubmitValue(ctx, &types.MsgSubmitValue{
+				Creator:   rep.String(),
+				QueryData: qd,
+				Value:     testValue,
+			})
+			require.NoError(err)
+		}
+
+		// advance blocks to expire and aggregate
+		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+		_, err = s.Setup.App.BeginBlocker(ctx)
+		require.NoError(err)
+		_, err = s.Setup.App.EndBlocker(ctx)
+		require.NoError(err)
+		require.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
+
+		ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	}
+
+	// verify all metaIds are different
+	require.NotEqual(metaIds[0], metaIds[1], "eth and btc should have different metaIds")
+	require.NotEqual(metaIds[1], metaIds[2], "btc and trb should have different metaIds")
+	require.NotEqual(metaIds[0], metaIds[2], "eth and trb should have different metaIds")
+
+	// verify reports exist for each query
+	for i, qd := range queryDatas {
+		queryId := utils.QueryIDFromData(qd)
+		for _, rep := range repAccs {
+			report, err := s.Setup.Oraclekeeper.Reports.Get(ctx, collections.Join3(queryId, rep.Bytes(), metaIds[i]))
+			require.NoError(err)
+			require.Equal(rep.String(), report.Reporter)
+		}
+	}
+
+	fmt.Printf("MetaIds - ETH/USD: %d, BTC/USD: %d, TRB/USD: %d\n", metaIds[0], metaIds[1], metaIds[2])
+}
+
+func (s *IntegrationTestSuite) TestRemoveOldReports() {
+	require := s.Require()
+	ctx := s.Setup.Ctx
+	ctx = ctx.WithConsensusParams(cmtproto.ConsensusParams{
+		Abci: &cmtproto.ABCIParams{
+			VoteExtensionsEnableHeight: 1,
+		},
+	})
+
+	now := time.Now()
+	ctx = ctx.WithBlockTime(now)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+	_, err := s.Setup.App.BeginBlocker(ctx)
+	require.NoError(err)
+
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{100, 200})
+	for _, val := range valAddrs {
+		require.NoError(s.Setup.Bridgekeeper.SetEVMAddressByOperator(ctx, val.String(), []byte("not real")))
+	}
+	_, err = s.Setup.App.EndBlocker(ctx)
+	require.NoError(err)
+
+	tipper := s.newKeysWithTokens()
+
+	for _, rep := range repAccs {
+		require.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, rep, reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter")))
+		require.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, rep, reportertypes.NewSelection(rep, 1)))
+		_, err := s.Setup.Reporterkeeper.ReporterStake(ctx, rep, []byte{})
+		require.NoError(err)
+	}
+
+	tip := sdk.NewCoin(s.Setup.Denom, math.NewInt(100_000))
+
+	// helper to count all reports in the store
+	countReports := func(c sdk.Context) int {
+		count := 0
+		_ = s.Setup.Oraclekeeper.Reports.Walk(c, nil, func(_ collections.Triple[[]byte, []byte, uint64], _ types.MicroReport) (bool, error) {
+			count++
+			return false, nil
+		})
+		return count
+	}
+
+	// --- Round 1: submit reports 45 days ago (should be pruned) ---
+	oldTime := now.Add(-45 * 24 * time.Hour)
+	ctx = ctx.WithBlockTime(oldTime)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	_, err = msgServer.Tip(ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: ethQueryData, Amount: tip})
+	require.NoError(err)
+	for _, rep := range repAccs {
+		_, err = msgServer.SubmitValue(ctx, &types.MsgSubmitValue{Creator: rep.String(), QueryData: ethQueryData, Value: testValue})
+		require.NoError(err)
+	}
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	require.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
+
+	// --- submit reports 31 days ago (should be pruned) ---
+	oldTime2 := now.Add(-31 * 24 * time.Hour)
+	ctx = ctx.WithBlockTime(oldTime2)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	_, err = msgServer.Tip(ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: btcQueryData, Amount: tip})
+	require.NoError(err)
+	for _, rep := range repAccs {
+		_, err = msgServer.SubmitValue(ctx, &types.MsgSubmitValue{Creator: rep.String(), QueryData: btcQueryData, Value: testValue})
+		require.NoError(err)
+	}
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	require.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
+
+	// --- submit reports 5 days ago (should NOT be pruned) ---
+	recentTime := now.Add(-5 * 24 * time.Hour)
+	ctx = ctx.WithBlockTime(recentTime)
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	_, err = msgServer.Tip(ctx, &types.MsgTip{Tipper: tipper.String(), QueryData: trbQueryData, Amount: tip})
+	require.NoError(err)
+	for _, rep := range repAccs {
+		_, err = msgServer.SubmitValue(ctx, &types.MsgSubmitValue{Creator: rep.String(), QueryData: trbQueryData, Value: testValue})
+		require.NoError(err)
+	}
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	require.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
+
+	// We should have 6 reports total: 2 reporters × 3 queries
+	totalBefore := countReports(ctx)
+	require.Equal(6, totalBefore, "should have 6 reports before pruning")
+
+	// Prune with current time (now)
+	// All 4 old reports deleted
+	ctx = ctx.WithBlockTime(now)
+	require.NoError(s.Setup.Oraclekeeper.RemoveOldReports(ctx))
+	require.Equal(2, countReports(ctx), "should have 2 reports after pruning old ones")
+
+	// Prune again, nothing left to prune
+	require.NoError(s.Setup.Oraclekeeper.RemoveOldReports(ctx))
+	require.Equal(2, countReports(ctx), "recent reports should not be pruned")
+
+	// --- Verify the remaining reports are the TRB/USD ones ---
+	trbQueryId := utils.QueryIDFromData(trbQueryData)
+	for _, rep := range repAccs {
+		has, err := s.Setup.Oraclekeeper.Reports.Has(ctx, collections.Join3(trbQueryId, rep.Bytes(), uint64(2)))
+		require.NoError(err)
+		require.True(has, "TRB/USD report should still exist")
+	}
+
+	// --- Verify old reports are gone ---
+	ethQueryId := utils.QueryIDFromData(ethQueryData)
+	btcQueryId := utils.QueryIDFromData(btcQueryData)
+	for _, rep := range repAccs {
+		has, err := s.Setup.Oraclekeeper.Reports.Has(ctx, collections.Join3(ethQueryId, rep.Bytes(), uint64(0)))
+		require.NoError(err)
+		require.False(has, "ETH/USD report should be pruned")
+
+		has, err = s.Setup.Oraclekeeper.Reports.Has(ctx, collections.Join3(btcQueryId, rep.Bytes(), uint64(1)))
+		require.NoError(err)
+		require.False(has, "BTC/USD report should be pruned")
+	}
+
+	// --- Verify indexes are also cleaned up ---
+	indexCount := 0
+	iter, err := s.Setup.Oraclekeeper.Reports.Indexes.IdQueryId.Iterate(ctx, nil)
+	require.NoError(err)
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		indexCount++
+	}
+	require.Equal(2, indexCount, "IdQueryId index should only have 2 entries after pruning")
+}

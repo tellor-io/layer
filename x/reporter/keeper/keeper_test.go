@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/testutil/sample"
@@ -281,17 +282,10 @@ func TestPruneOldReports(t *testing.T) {
 	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter1.Bytes(), uint64(400))), types.DelegationsAmounts{Total: math.OneInt()}))
 
 	// Set up mock OracleKeeper
+	// GetBlockHeightFromTimestamp returns the cutoff block height.
+	// Blocks 100, 200 are below cutoff (old), blocks 300, 400 are above (recent).
 	oracleKeeper := mocks.NewOracleKeeper(t)
-
-	// Mock timestamps: blocks 100, 200 are old; blocks 300, 400 are recent
-	// Day 10 = 90 days ago from now
-	// Day 30 = 70 days ago from now
-	// Day 50 = 50 days ago from now (within 60 days)
-	// Day 80 = 20 days ago from now (within 60 days)
-	oracleKeeper.On("GetTimestampForBlockHeight", ctx, uint64(100)).Return(uint64(now.Add(-90*24*time.Hour).UnixMilli()), nil)
-	oracleKeeper.On("GetTimestampForBlockHeight", ctx, uint64(200)).Return(uint64(now.Add(-70*24*time.Hour).UnixMilli()), nil)
-	oracleKeeper.On("GetTimestampForBlockHeight", ctx, uint64(300)).Return(uint64(now.Add(-50*24*time.Hour).UnixMilli()), nil)
-	oracleKeeper.On("GetTimestampForBlockHeight", ctx, uint64(400)).Return(uint64(now.Add(-20*24*time.Hour).UnixMilli()), nil)
+	oracleKeeper.On("GetBlockHeightFromTimestamp", mock.Anything, mock.Anything).Return(uint64(250), nil)
 
 	k.SetOracleKeeper(oracleKeeper)
 
@@ -330,12 +324,10 @@ func TestPruneOldReportsMaxIterations(t *testing.T) {
 	}
 
 	oracleKeeper := mocks.NewOracleKeeper(t)
-	for i := uint64(1); i <= 5; i++ {
-		oracleKeeper.On("GetTimestampForBlockHeight", ctx, i).Return(uint64(now.Add(-90*24*time.Hour).UnixMilli()), nil).Maybe()
-	}
+	oracleKeeper.On("GetBlockHeightFromTimestamp", mock.Anything, mock.Anything).Return(uint64(400), nil)
 	k.SetOracleKeeper(oracleKeeper)
 
-	// Prune with maxIterations = 3 (should only process 3 entries)
+	// Prune with maxBatchSize = 3 (should only delete 3 entries)
 	err := k.PruneOldReports(ctx, 3)
 	require.NoError(t, err)
 
@@ -349,4 +341,106 @@ func TestPruneOldReportsMaxIterations(t *testing.T) {
 
 	// Should have 2 remaining (5 - 3 = 2)
 	require.Equal(t, 2, count)
+}
+
+func TestStakeRecalcFlag(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter := sample.AccAddressBytes()
+
+	// Initially no flag
+	has, err := k.StakeRecalcFlag.Has(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	require.False(t, has)
+
+	// Set flag
+	require.NoError(t, k.FlagStakeRecalc(ctx, reporter))
+
+	// Now flag should exist
+	has, err = k.StakeRecalcFlag.Has(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	require.True(t, has)
+
+	// Remove flag
+	require.NoError(t, k.StakeRecalcFlag.Remove(ctx, reporter.Bytes()))
+
+	// Flag should be gone
+	has, err = k.StakeRecalcFlag.Has(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	require.False(t, has)
+}
+
+func TestLastValSetUpdateHeight(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+
+	// Initially not set
+	_, err := k.LastValSetUpdateHeight.Get(ctx)
+	require.Error(t, err)
+
+	// Set it
+	require.NoError(t, k.LastValSetUpdateHeight.Set(ctx, uint64(100)))
+
+	// Should be retrievable
+	height, err := k.LastValSetUpdateHeight.Get(ctx)
+	require.NoError(t, err)
+	require.Equal(t, uint64(100), height)
+
+	// Update it
+	require.NoError(t, k.LastValSetUpdateHeight.Set(ctx, uint64(200)))
+	height, err = k.LastValSetUpdateHeight.Get(ctx)
+	require.NoError(t, err)
+	require.Equal(t, uint64(200), height)
+}
+
+func TestRecalcAtTime(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter := sample.AccAddressBytes()
+
+	// Initially not set
+	_, err := k.RecalcAtTime.Get(ctx, reporter.Bytes())
+	require.Error(t, err)
+
+	// Set it
+	lockExpiry := time.Now().Add(21 * 24 * time.Hour).Unix()
+	require.NoError(t, k.RecalcAtTime.Set(ctx, reporter.Bytes(), lockExpiry))
+
+	// Should be retrievable
+	stored, err := k.RecalcAtTime.Get(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	require.Equal(t, lockExpiry, stored)
+
+	// Remove it
+	require.NoError(t, k.RecalcAtTime.Remove(ctx, reporter.Bytes()))
+	_, err = k.RecalcAtTime.Get(ctx, reporter.Bytes())
+	require.Error(t, err)
+}
+
+func TestRecalcAtTime_MinOfMultipleSwitches(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter := sample.AccAddressBytes()
+
+	// First switch: lock expires at T1
+	t1 := time.Now().Add(21 * 24 * time.Hour).Unix()
+	require.NoError(t, k.RecalcAtTime.Set(ctx, reporter.Bytes(), t1))
+
+	// Second switch: lock expires at T2 > T1, should keep T1 (the min)
+	t2 := time.Now().Add(30 * 24 * time.Hour).Unix()
+	existing, err := k.RecalcAtTime.Get(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	if t2 < existing {
+		require.NoError(t, k.RecalcAtTime.Set(ctx, reporter.Bytes(), t2))
+	}
+	stored, err := k.RecalcAtTime.Get(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	require.Equal(t, t1, stored)
+
+	// Third switch: lock expires at T0 < T1, should update to T0
+	t0 := time.Now().Add(10 * 24 * time.Hour).Unix()
+	existing, err = k.RecalcAtTime.Get(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	if t0 < existing {
+		require.NoError(t, k.RecalcAtTime.Set(ctx, reporter.Bytes(), t0))
+	}
+	stored, err = k.RecalcAtTime.Get(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	require.Equal(t, t0, stored)
 }

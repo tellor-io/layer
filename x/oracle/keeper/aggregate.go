@@ -210,7 +210,7 @@ func (k Keeper) GetTimestampBefore(ctx context.Context, queryId []byte, timestam
 		return true, nil
 	})
 	if err != nil {
-		panic(err)
+		return time.Time{}, fmt.Errorf("failed to walk aggregates: %w", err)
 	}
 
 	if mostRecent == 0 {
@@ -228,7 +228,7 @@ func (k Keeper) GetTimestampAfter(ctx context.Context, queryId []byte, timestamp
 		return true, nil
 	})
 	if err != nil {
-		panic(err)
+		return time.Time{}, fmt.Errorf("failed to walk aggregates: %w", err)
 	}
 
 	if mostRecent == 0 {
@@ -238,15 +238,15 @@ func (k Keeper) GetTimestampAfter(ctx context.Context, queryId []byte, timestamp
 	return time.UnixMilli(int64(mostRecent)), nil
 }
 
-func (k Keeper) GetAggregatedReportsByHeight(ctx context.Context, height uint64) []types.Aggregate {
+func (k Keeper) GetAggregatedReportsByHeight(ctx context.Context, height uint64) ([]types.Aggregate, error) {
 	iter, err := k.Aggregates.Indexes.BlockHeight.MatchExact(ctx, height)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to get aggregates by height: %w", err)
 	}
 
 	kvs, err := indexes.CollectKeyValues(ctx, k.Aggregates, iter)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("failed to collect aggregate key values: %w", err)
 	}
 
 	reports := make([]types.Aggregate, len(kvs))
@@ -254,7 +254,7 @@ func (k Keeper) GetAggregatedReportsByHeight(ctx context.Context, height uint64)
 		reports[i] = kv.Value
 	}
 
-	return reports
+	return reports, nil
 }
 
 func (k Keeper) GetCurrentAggregateReport(ctx context.Context, queryId []byte) (aggregate *types.Aggregate, timestamp time.Time, err error) {
