@@ -43,6 +43,7 @@ contract RoleManager {
         _roleRestricted(keccak256("MAIN_GUARDIAN"));
         RoleUpdate storage _roleUpdate = roleUpdateProposals[_role];
         require(_roleUpdate.newAddress == address(0), "RoleManager: Role update already proposed");
+        require(_newAddress != address(0), "RoleManager: New address cannot be the zero address");
         _roleUpdate.newAddress = _newAddress;
         _roleUpdate.newUpdateDelay = _newUpdateDelay;
         _roleUpdate.proposalTime = block.timestamp;
