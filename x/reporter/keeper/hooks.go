@@ -25,12 +25,17 @@ func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
+// AfterValidatorBonded is called when a validator becomes bonded status.
+// We set LastValSetUpdateHeight so all reporters recalculate on their next report.
 func (h Hooks) AfterValidatorBonded(ctx context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
-	return nil
+	return h.k.LastValSetUpdateHeight.Set(ctx, uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))
 }
 
+// AfterValidatorBeginUnbonding is called when a validator leaves the bonded set.
+// Selectors delegating to this validator will no longer have those tokens counted,
+// so all reporters should recalculate.
 func (h Hooks) AfterValidatorBeginUnbonding(ctx context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
-	return nil
+	return h.k.LastValSetUpdateHeight.Set(ctx, uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))
 }
 
 func (h Hooks) AfterValidatorRemoved(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {

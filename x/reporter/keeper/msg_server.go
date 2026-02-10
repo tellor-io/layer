@@ -306,6 +306,15 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 		}
 
 		selector.LockedUntilTime = sdk.UnwrapSDKContext(goCtx).BlockTime().Add(unbondingTime)
+
+		// Set RecalcAtTime for the new reporter so their cache is updated when this lock expires.
+		lockUnix := selector.LockedUntilTime.Unix()
+		existing, err := k.Keeper.RecalcAtTime.Get(goCtx, reporterAddr.Bytes())
+		if err != nil || lockUnix < existing {
+			if err := k.Keeper.RecalcAtTime.Set(goCtx, reporterAddr.Bytes(), lockUnix); err != nil {
+				return nil, err
+			}
+		}
 	}
 	selector.Reporter = reporterAddr.Bytes()
 	if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), selector); err != nil {

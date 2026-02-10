@@ -108,6 +108,15 @@ func (k Keeper) needsStakeRecalc(ctx context.Context, repAddr sdk.AccAddress) (b
 		return true, nil
 	}
 
+	// Check if a selector's switch lock has expired since last calc
+	recalcAt, err := k.RecalcAtTime.Get(ctx, repAddr.Bytes())
+	if err == nil {
+		blockTime := sdk.UnwrapSDKContext(ctx).BlockTime().Unix()
+		if recalcAt <= blockTime {
+			return true, nil
+		}
+	}
+
 	// Check if validator set updated since last calculation
 	lastCalcBlock, err := k.GetLastReportedAtBlock(ctx, repAddr.Bytes())
 	if err != nil {
@@ -215,6 +224,7 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (m
 	selectorShares := make([]*types.SelectorShare, 0)
 	// Compute hash inline as we build selector shares
 	hasher := sha256.New()
+	var earliestFutureLock int64 // track earliest future lock expiry (unix seconds)
 	for ; iter.Valid(); iter.Next() {
 		selectorAddr, err := iter.PrimaryKey()
 		if err != nil {
@@ -232,6 +242,10 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (m
 		}
 		// skip selectors that are locked out for switching reporters
 		if selector.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
+			lockUnix := selector.LockedUntilTime.Unix()
+			if earliestFutureLock == 0 || lockUnix < earliestFutureLock {
+				earliestFutureLock = lockUnix
+			}
 			continue
 		}
 		var iterError error
@@ -301,6 +315,14 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (m
 			hasher.Write(selectorTotal.BigInt().Bytes())
 		}
 	}
+	// Update RecalcAtTime: if there are still-locked selectors, set the earliest expiry
+	// so needsStakeRecalc triggers when it expires. If none are locked, clean up.
+	if earliestFutureLock == 0 {
+		_ = k.RecalcAtTime.Remove(ctx, repAddr.Bytes())
+	} else {
+		_ = k.RecalcAtTime.Set(ctx, repAddr.Bytes(), earliestFutureLock)
+	}
+
 	// Finalize hash with total
 	hasher.Write(totalTokens.BigInt().Bytes())
 	return totalTokens, delegates, selectorShares, hasher.Sum(nil), nil

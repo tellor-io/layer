@@ -943,14 +943,7 @@ func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 
 // EndBlocker application updates every end block
 func (app *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
-	endBlock, err := app.mm.EndBlock(ctx)
-	if err != nil {
-		return endBlock, err
-	}
-	if len(endBlock.ValidatorUpdates) > 0 {
-		app.ReporterKeeper.OnValidatorSetUpdated(ctx, endBlock.ValidatorUpdates)
-	}
-	return endBlock, err
+	return app.mm.EndBlock(ctx)
 }
 
 // Simple struct to hold upgrade plan in genesis

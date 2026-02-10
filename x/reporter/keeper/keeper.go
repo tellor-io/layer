@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -37,8 +36,9 @@ type (
 		DistributionQueue        collections.Map[uint64, types.DistributionQueueItem] // key: queue index -> item to distribute
 		DistributionQueueCounter collections.Item[types.DistributionQueueCounter]     // tracks head and tail of queue
 
-		LastValSetUpdateHeight collections.Item[uint64]    // block height of last validator set update
-		StakeRecalcFlag        collections.Map[[]byte, bool] // reporters flagged for stake recalculation
+		LastValSetUpdateHeight collections.Item[uint64]       // block height of last validator set update
+		StakeRecalcFlag        collections.Map[[]byte, bool]  // reporters flagged for stake recalculation
+		RecalcAtTime           collections.Map[[]byte, int64] // per-reporter earliest lock expiry in seconds requiring recalculation
 
 		Schema collections.Schema
 		logger log.Logger
@@ -90,6 +90,7 @@ func NewKeeper(
 		DistributionQueueCounter: collections.NewItem(sb, types.DistributionQueueCounterPrefix, "distribution_queue_counter", codec.CollValue[types.DistributionQueueCounter](cdc)),
 		LastValSetUpdateHeight:   collections.NewItem(sb, types.LastValSetUpdateHeightPrefix, "last_val_set_update_height", collections.Uint64Value),
 		StakeRecalcFlag:          collections.NewMap(sb, types.StakeRecalcFlagPrefix, "stake_recalc_flag", collections.BytesKey, collections.BoolValue),
+		RecalcAtTime:             collections.NewMap(sb, types.RecalcAtTimePrefix, "recalc_at_time", collections.BytesKey, collections.Int64Value),
 		authority:                authority,
 		logger:                   logger,
 		accountKeeper:            accountKeeper,
@@ -290,12 +291,4 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 	}
 
 	return nil
-}
-
-func (k Keeper) OnValidatorSetUpdated(ctx sdk.Context, updates []abci.ValidatorUpdate) {
-	height := uint64(ctx.BlockHeight())
-	if err := k.LastValSetUpdateHeight.Set(ctx, height); err != nil {
-		k.logger.Error("failed to set last val set update height", "error", err)
-	}
-	k.logger.Info("Validator set updated", "num_updates", len(updates), "height", ctx.BlockHeight())
 }

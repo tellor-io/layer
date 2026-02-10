@@ -35,4 +35,5 @@ var (
 	DistributionQueueCounterPrefix  = collections.NewPrefix(24)
 	LastValSetUpdateHeightPrefix    = collections.NewPrefix(25)
 	StakeRecalcFlagPrefix           = collections.NewPrefix(26)
+	RecalcAtTimePrefix              = collections.NewPrefix(27)
 )

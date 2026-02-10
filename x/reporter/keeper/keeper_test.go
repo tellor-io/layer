@@ -342,3 +342,105 @@ func TestPruneOldReportsMaxIterations(t *testing.T) {
 	// Should have 2 remaining (5 - 3 = 2)
 	require.Equal(t, 2, count)
 }
+
+func TestStakeRecalcFlag(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter := sample.AccAddressBytes()
+
+	// Initially no flag
+	has, err := k.StakeRecalcFlag.Has(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	require.False(t, has)
+
+	// Set flag
+	require.NoError(t, k.FlagStakeRecalc(ctx, reporter))
+
+	// Now flag should exist
+	has, err = k.StakeRecalcFlag.Has(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	require.True(t, has)
+
+	// Remove flag
+	require.NoError(t, k.StakeRecalcFlag.Remove(ctx, reporter.Bytes()))
+
+	// Flag should be gone
+	has, err = k.StakeRecalcFlag.Has(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	require.False(t, has)
+}
+
+func TestLastValSetUpdateHeight(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+
+	// Initially not set
+	_, err := k.LastValSetUpdateHeight.Get(ctx)
+	require.Error(t, err)
+
+	// Set it
+	require.NoError(t, k.LastValSetUpdateHeight.Set(ctx, uint64(100)))
+
+	// Should be retrievable
+	height, err := k.LastValSetUpdateHeight.Get(ctx)
+	require.NoError(t, err)
+	require.Equal(t, uint64(100), height)
+
+	// Update it
+	require.NoError(t, k.LastValSetUpdateHeight.Set(ctx, uint64(200)))
+	height, err = k.LastValSetUpdateHeight.Get(ctx)
+	require.NoError(t, err)
+	require.Equal(t, uint64(200), height)
+}
+
+func TestRecalcAtTime(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter := sample.AccAddressBytes()
+
+	// Initially not set
+	_, err := k.RecalcAtTime.Get(ctx, reporter.Bytes())
+	require.Error(t, err)
+
+	// Set it
+	lockExpiry := time.Now().Add(21 * 24 * time.Hour).Unix()
+	require.NoError(t, k.RecalcAtTime.Set(ctx, reporter.Bytes(), lockExpiry))
+
+	// Should be retrievable
+	stored, err := k.RecalcAtTime.Get(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	require.Equal(t, lockExpiry, stored)
+
+	// Remove it
+	require.NoError(t, k.RecalcAtTime.Remove(ctx, reporter.Bytes()))
+	_, err = k.RecalcAtTime.Get(ctx, reporter.Bytes())
+	require.Error(t, err)
+}
+
+func TestRecalcAtTime_MinOfMultipleSwitches(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter := sample.AccAddressBytes()
+
+	// First switch: lock expires at T1
+	t1 := time.Now().Add(21 * 24 * time.Hour).Unix()
+	require.NoError(t, k.RecalcAtTime.Set(ctx, reporter.Bytes(), t1))
+
+	// Second switch: lock expires at T2 > T1, should keep T1 (the min)
+	t2 := time.Now().Add(30 * 24 * time.Hour).Unix()
+	existing, err := k.RecalcAtTime.Get(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	if t2 < existing {
+		require.NoError(t, k.RecalcAtTime.Set(ctx, reporter.Bytes(), t2))
+	}
+	stored, err := k.RecalcAtTime.Get(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	require.Equal(t, t1, stored)
+
+	// Third switch: lock expires at T0 < T1, should update to T0
+	t0 := time.Now().Add(10 * 24 * time.Hour).Unix()
+	existing, err = k.RecalcAtTime.Get(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	if t0 < existing {
+		require.NoError(t, k.RecalcAtTime.Set(ctx, reporter.Bytes(), t0))
+	}
+	stored, err = k.RecalcAtTime.Get(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	require.Equal(t, t0, stored)
+}
