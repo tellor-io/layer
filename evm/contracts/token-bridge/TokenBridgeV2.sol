@@ -3,6 +3,7 @@ pragma solidity 0.8.19;
 
 import "../interfaces/ITellorDataBridge.sol";
 import { LayerTransition } from "./LayerTransition.sol";
+import { RoleManager } from "./RoleManager.sol";
 
 /// @author Tellor Inc.
 /// @title TokenBridgeV2
@@ -11,7 +12,7 @@ import { LayerTransition } from "./LayerTransition.sol";
 /// to Ethereum are attested via TellorDataBridge (validator signatures). Security measures include
 /// a 12-hour delay in both directions, per-period token rate limits, and a temporary guardian-approved
 /// pause that requires burning a large tribute (PAUSE_TRIBUTE_AMOUNT).
-contract TokenBridgeV2 is LayerTransition {
+contract TokenBridgeV2 is LayerTransition, RoleManager {
     /*Storage*/
     ITellorDataBridge public dataBridge;
     address public deployer; // address that deployed the bridge
@@ -20,17 +21,13 @@ contract TokenBridgeV2 is LayerTransition {
     uint256 public depositLimitRecord; // amount you can deposit per limit period
     BridgeState public bridgeState; // state of the bridge
     uint256 public bridgeStateUpdateTime; // last time the bridge state was updated
-    address public guardian; // address of the guardian
-    uint256 public guardianUpdateProposalTime; // last time the guardian proposal was made
     bool public initialized; // whether the bridge has been initialized
     uint256 public lastPauseTimestamp; // last time the bridge was paused
     uint256 public pauseProposalId; // counter of how many pause proposals have been made
-    address public pendingGuardian; // address of the pending guardian
     uint256 public totalPauseTributeBalance; // total amount of tokens held as pause tribute
     uint256 public withdrawLimitUpdateTime; // last time the withdraw limit was updated
     uint256 public withdrawLimitRecord; // amount you can withdraw per limit period
     uint256 public constant DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
-    uint256 public constant GUARDIAN_UPDATE_DELAY = 8 days; // time period before a new guardian proposal can be accepted
     uint256 public constant MS_PER_SECOND = 1000; // factor to convert milliseconds to seconds
     uint256 public constant PAUSE_PERIOD = 21 days; // bridge pause period duration
     uint256 public constant PAUSE_TRIBUTE_AMOUNT = 10000 ether; // amount of tokens burned to pause bridge
@@ -86,9 +83,6 @@ contract TokenBridgeV2 is LayerTransition {
     event DataBridgeUpdated(address _dataBridge);
     event Deposit(uint256 _depositId, address _sender, string _recipient, uint256 _amount, uint256 _tip);
     event ExtraWithdrawClaimed(uint256 _withdrawId, address _recipient, uint256 _amount);
-    event GuardianUpdated(address _guardian);
-    event GuardianUpdateProposed(address _newGuardian);
-    event GuardianUpdateRejected(address _pendingGuardian);
     event PauseApproved(uint256 _proposalId, address _proposer, uint256 _proposalTime);
     event PauseProposed(uint256 _proposalId, address _proposer, uint256 _proposalTime);
     event TokensToClaimUpdated(address _recipient, uint256 _amount);
@@ -100,10 +94,28 @@ contract TokenBridgeV2 is LayerTransition {
     /// @param _token address of tellor token for bridging
     /// @param _dataBridge address of TellorDataBridge data bridge
     /// @param _tellorFlex address of oracle(tellorFlex) on chain
-    constructor(address _token, address _dataBridge, address _tellorFlex) LayerTransition(_tellorFlex, _token) {
+    /// @param _mainGuardian address of the main guardian
+    /// @param _subGuardian address of the sub guardian
+    /// @param _defaultRoleUpdateDelay default delay before a role update can be accepted
+    constructor(
+        address _token,
+        address _dataBridge,
+        address _tellorFlex,
+        address _mainGuardian,
+        address _subGuardian,
+        uint256 _defaultRoleUpdateDelay
+    ) LayerTransition(_tellorFlex, _token) RoleManager(_mainGuardian, _defaultRoleUpdateDelay) {
         dataBridge = ITellorDataBridge(_dataBridge);
         deployer = msg.sender;
-        guardian = dataBridge.guardian();
+
+        roles[keccak256("APPROVE_PAUSE")] = RoleInfo({
+            roleAddress: _subGuardian,
+            roleUpdateDelay: _defaultRoleUpdateDelay
+        });
+        roles[keccak256("UPDATE_DATA_BRIDGE")] = RoleInfo({
+            roleAddress: _mainGuardian,
+            roleUpdateDelay: _defaultRoleUpdateDelay
+        });
     }
 
     /// @notice initializes the bridge, only on testnet
@@ -120,21 +132,10 @@ contract TokenBridgeV2 is LayerTransition {
         initialized = true;
     }
 
-    /// @notice accepts the pending guardian
-    function acceptPendingGuardian() external {
-        _onlyGuardian();
-        require(pendingGuardian != address(0), "TokenBridgeV2: no pending guardian to accept");
-        require(block.timestamp - guardianUpdateProposalTime > GUARDIAN_UPDATE_DELAY, "TokenBridgeV2: must wait before accepting pending guardian");
-        guardianUpdateProposalTime = 0;
-        guardian = pendingGuardian;
-        pendingGuardian = address(0);
-        emit GuardianUpdated(guardian);
-    }
-
     /// @notice approves a pause proposal
     /// @param _proposalId the id of the pause proposal
     function approvePause(uint256 _proposalId) public {
-        _onlyGuardian();
+        _roleRestricted(keccak256("APPROVE_PAUSE"));
         require(bridgeState == BridgeState.UNPAUSED, "TokenBridgeV2: can only propose pause when bridge is unpaused");
         PauseProposal storage _proposal = pauseProposals[_proposalId];
         require(_proposal.state == PauseProposalState.PENDING, "TokenBridgeV2: proposal is not pending");
@@ -228,17 +229,6 @@ contract TokenBridgeV2 is LayerTransition {
         emit PauseProposed(_pauseProposalId, msg.sender, block.timestamp);
     }
 
-    /// @notice proposes a new guardian
-    /// @param _newGuardian the address of the new guardian
-    function proposeUpdateGuardian(address _newGuardian) external {
-        _onlyGuardian();
-        require(_newGuardian != address(0), "TokenBridgeV2: new guardian cannot be the zero address");
-        require(pendingGuardian == address(0), "TokenBridgeV2: pending guardian already exists");
-        guardianUpdateProposalTime = block.timestamp;
-        pendingGuardian = _newGuardian;
-        emit GuardianUpdateProposed(_newGuardian);
-    }
-
     /// @notice refunds a pause proposal
     /// @param _proposalId the id of the pause proposal
     function refundPauseProposal(uint256 _proposalId) external {
@@ -251,20 +241,10 @@ contract TokenBridgeV2 is LayerTransition {
         emit PauseRefunded(_proposalId, _proposal.proposer, block.timestamp);
     }
 
-    /// @notice rejects the pending guardian
-    function rejectPendingGuardian() external {
-        _onlyGuardian();
-        require(pendingGuardian != address(0), "TokenBridgeV2: no pending guardian to reject");
-        address _pendingGuardian = pendingGuardian;
-        pendingGuardian = address(0);
-        guardianUpdateProposalTime = 0;
-        emit GuardianUpdateRejected(_pendingGuardian);
-    }
-
     /// @notice updates the data bridge
     /// @param _dataBridge the address of the new data bridge
     function updateDataBridge(address _dataBridge) external {
-        _onlyGuardian();
+        _roleRestricted(keccak256("UPDATE_DATA_BRIDGE"));
         require(bridgeState == BridgeState.PAUSED, "TokenBridgeV2: can only update data bridge when bridge is paused");
         dataBridge = ITellorDataBridge(_dataBridge);
         emit DataBridgeUpdated(_dataBridge);
@@ -352,11 +332,6 @@ contract TokenBridgeV2 is LayerTransition {
     /// @return amount of tokens in the contract less the pause tribute
     function _getTokenBalanceLessPauseTribute() internal view returns (uint256) {
         return token.balanceOf(address(this)) - totalPauseTributeBalance;
-    }
-
-    /// @notice only allows the guardian to call the function
-    function _onlyGuardian() internal view {
-        require(msg.sender == guardian, "TokenBridgeV2: only guardian can call this function");
     }
 
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
