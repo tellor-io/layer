@@ -318,9 +318,12 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (m
 	// Update RecalcAtTime: if there are still-locked selectors, set the earliest expiry
 	// so needsStakeRecalc triggers when it expires. If none are locked, clean up.
 	if earliestFutureLock == 0 {
-		_ = k.RecalcAtTime.Remove(ctx, repAddr.Bytes())
+		err = k.RecalcAtTime.Remove(ctx, repAddr.Bytes())
 	} else {
-		_ = k.RecalcAtTime.Set(ctx, repAddr.Bytes(), earliestFutureLock)
+		err = k.RecalcAtTime.Set(ctx, repAddr.Bytes(), earliestFutureLock)
+	}
+	if err != nil {
+		return math.Int{}, nil, nil, nil, err
 	}
 
 	// Finalize hash with total
