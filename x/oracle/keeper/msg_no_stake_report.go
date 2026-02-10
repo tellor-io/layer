@@ -17,7 +17,8 @@ import (
 
 func (k msgServer) NoStakeReport(ctx context.Context, msg *types.MsgNoStakeReport) (res *types.MsgNoStakeReportResponse, err error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	if err := k.validateNoStakeReport(msg); err != nil {
+	reporterAddr, err := k.validateNoStakeReport(msg)
+	if err != nil {
 		return nil, err
 	}
 
@@ -47,11 +48,6 @@ func (k msgServer) NoStakeReport(ctx context.Context, msg *types.MsgNoStakeRepor
 		}
 	}
 
-	reporterAddr, err := sdk.AccAddressFromBech32(msg.Creator)
-	if err != nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
-	}
-
 	// Size limit check (0.5MB)
 	limit, err := k.keeper.QueryDataLimit.Get(ctx)
 	if err != nil {
@@ -74,18 +70,18 @@ func (k msgServer) NoStakeReport(ctx context.Context, msg *types.MsgNoStakeRepor
 	return &types.MsgNoStakeReportResponse{}, nil
 }
 
-func (k msgServer) validateNoStakeReport(msg *types.MsgNoStakeReport) error {
-	_, err := sdk.AccAddressFromBech32(msg.Creator)
+func (k msgServer) validateNoStakeReport(msg *types.MsgNoStakeReport) (reporter sdk.AccAddress, err error) {
+	reporter, err = sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	// make sure query data is not empty
 	if len(msg.QueryData) == 0 {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "query data cannot be empty")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "query data cannot be empty")
 	}
 	// make sure value is not empty
 	if msg.Value == "" {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be empty")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be empty")
 	}
-	return nil
+	return reporter, nil
 }

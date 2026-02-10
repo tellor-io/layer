@@ -37,12 +37,11 @@ import (
 func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	err := validateTip(msg)
+	tipper, err := validateTip(msg)
 	if err != nil {
 		return nil, err
 	}
 
-	tipper := sdk.MustAccAddressFromBech32(msg.Tipper)
 	params, err := k.keeper.GetParams(ctx)
 	if err != nil {
 		return nil, err
@@ -152,18 +151,18 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	return &types.MsgTipResponse{}, nil
 }
 
-func validateTip(msg *types.MsgTip) error {
-	_, err := sdk.AccAddressFromBech32(msg.Tipper)
+func validateTip(msg *types.MsgTip) (tipper sdk.AccAddress, err error) {
+	tipper, err = sdk.AccAddressFromBech32(msg.Tipper)
 	if err != nil {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid tipper address (%s)", err)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid tipper address (%s)", err)
 	}
 	// ensure that the msg.Amount.Denom matches the layer.BondDenom and the amount is a positive number
 	if msg.Amount.Denom != layer.BondDenom || msg.Amount.Amount.IsZero() || msg.Amount.Amount.IsNegative() {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid tip amount (%s)", msg.Amount.String())
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid tip amount (%s)", msg.Amount.String())
 	}
 	// ensure that the queryData is not empty
 	if len(msg.QueryData) == 0 {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "query data is empty")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "query data is empty")
 	}
-	return nil
+	return tipper, nil
 }

@@ -128,6 +128,11 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 
 func (h *ProposalHandler) ProcessProposalHandler(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 	if req.Height > ctx.ConsensusParams().Abci.VoteExtensionsEnableHeight {
+		// in case proposer says 0 tx in a block after vote extensions enabled
+		if len(req.Txs) == 0 {
+			h.logger.Error("ProcessProposalHandler: rejecting proposal, empty transactions after vote extensions enabled")
+			return &abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}, nil
+		}
 		var injectedVoteExtTx VoteExtTx
 		if err := json.Unmarshal(req.Txs[0], &injectedVoteExtTx); err != nil {
 			h.logger.Error("ProcessProposalHandler: failed to decode injected vote extension tx", "err", err)
