@@ -76,10 +76,7 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, query
 
 	// Clear stake recalc flag after recalculation
 	if err := k.StakeRecalcFlag.Remove(ctx, repAddr.Bytes()); err != nil {
-		// TODO: this error is not something that happens with Remove ?
-		if !errors.Is(err, collections.ErrNotFound) {
-			return math.Int{}, err
-		}
+		return math.Int{}, err
 	}
 
 	// Handle period tracking for reward distribution
