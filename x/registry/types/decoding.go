@@ -42,7 +42,10 @@ func DecodeValue(value, datatype string) ([]interface{}, error) {
 			})
 		}
 		comp = append(comp, _comp)
-		args := MakeArguments(comp)
+		args, err := MakeArguments(comp)
+		if err != nil {
+			return nil, fmt.Errorf("failed to make arguments for tuple type: %w", err)
+		}
 
 		return args.Unpack(valueBytes)
 	}

@@ -66,7 +66,10 @@ func GenesisDataSpec() []DataSpec {
 
 func (d DataSpec) EncodeData(querytype, datafields string) ([]byte, error) {
 	argMarshller := d.MakeArgMarshaller()
-	args := MakeArguments(argMarshller)
+	args, err := MakeArguments(argMarshller)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make arguments: %w", err)
+	}
 	interfacefields := MakePackdata(datafields, argMarshller)
 	encodedBytes, err := args.Pack(interfacefields...)
 	if err != nil {
@@ -118,20 +121,20 @@ func (d DataSpec) MakeArgMarshaller() []abi.ArgumentMarshaling {
 	return argMrsh
 }
 
-func MakeArguments(argMrsh []abi.ArgumentMarshaling) abi.Arguments {
+func MakeArguments(argMrsh []abi.ArgumentMarshaling) (abi.Arguments, error) {
 	var arguments abi.Arguments
 	for _, arg := range argMrsh {
 		// make struct for each
 		argType, err := abi.NewType(arg.Type, arg.Type, arg.Components)
 		if err != nil {
-			panic(err)
+			return nil, fmt.Errorf("failed to create ABI type %q: %w", arg.Type, err)
 		}
 		arguments = append(arguments, abi.Argument{
 			Name: arg.Name,
 			Type: argType,
 		})
 	}
-	return arguments
+	return arguments, nil
 }
 
 func MakePackdata(fields string, argMrsh []abi.ArgumentMarshaling) []interface{} {

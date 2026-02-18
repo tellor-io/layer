@@ -10,17 +10,17 @@ const TypeMsgTip = "tip"
 
 var _ sdk.Msg = &MsgTip{}
 
-func NewMsgTip(tipper, queryData string, amount sdk.Coin) *MsgTip {
+func NewMsgTip(tipper, queryData string, amount sdk.Coin) (*MsgTip, error) {
 	queryDataBz, err := utils.QueryBytesFromString(queryData)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return &MsgTip{
 		Tipper:    tipper,
 		QueryData: queryDataBz,
 		Amount:    amount,
-	}
+	}, nil
 }
 
 func (msg *MsgTip) Route() string {

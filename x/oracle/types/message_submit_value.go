@@ -13,17 +13,17 @@ const TypeMsgSubmitValue = "submit_value"
 
 var _ sdk.Msg = &MsgSubmitValue{}
 
-func NewMsgSubmitValue(creator, queryData, value, salt string) *MsgSubmitValue {
+func NewMsgSubmitValue(creator, queryData, value, salt string) (*MsgSubmitValue, error) {
 	queryDataBz, err := utils.QueryBytesFromString(queryData)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return &MsgSubmitValue{
 		Creator:   creator,
 		QueryData: queryDataBz,
 		Value:     value,
-	}
+	}, nil
 }
 
 func (msg *MsgSubmitValue) Route() string {
