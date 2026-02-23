@@ -8,9 +8,12 @@ const h = require("../test/helpers/evmHelpers");
 
 //npx hardhat run scripts/DeployTokenBridgeV2.js --network sepolia
 
-var _token = " "
-var _tellor_flex = " "
-var _data_bridge = " "
+var _token = "0x8fd88b1C086dE72EbC090654e41662f3fab6A32D"
+var _tellor_flex = "0x8fd88b1C086dE72EbC090654e41662f3fab6A32D"
+var _data_bridge = "0x8517Df068877ebFbEaef35ce2AB1BEC4e38e43e3"
+var _main_guardian = " "
+var _sub_guardian = " "
+var _default_role_update_delay = 8 * 86400; // 8 days
 
 async function deployForMainnet(_pk, _nodeURL) {
     console.log("Deploying TokenBridgeV2")
@@ -33,7 +36,7 @@ async function deployForMainnet(_pk, _nodeURL) {
     /// @param _token address of tellor token for bridging
     /// @param _dataBridge address of tellor data bridge
     /// @param _tellorFlex address of oracle(tellorFlex) on chain
-    const tokenBridge= await tbWithSigner.deploy(_token,_data_bridge,_tellor_flex);
+    const tokenBridge= await tbWithSigner.deploy(_token,_data_bridge,_tellor_flex,_main_guardian,_sub_guardian,_default_role_update_delay);
     await tokenBridge.deployed();
     
     /////////  Print addresses   ///////////////////////////

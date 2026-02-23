@@ -6,15 +6,15 @@ require("dotenv").config();
 const hre = require("hardhat"); 
 const h = require("../test/helpers/evmHelpers");
 
-//npx hardhat run scripts/deploy.js --network sepolia
+//npx hardhat run scripts/DeployFullTestBridgesV1.js --network sepolia
 
 // This script deploys the TellorPlayground, TellorDataBridge, and TokenBridge v1 contracts.
 // Then it initializes the token bridge and mints it an initial balance.
 
-var _guardian_address = " "
+var _data_bridge_guardian_address = " "
 var _layer_chain_id = " "
 
-// contract init 
+// tokenbridge v1 contract init 
 var token_bridge_deposit_id = 0;
 var token_bridge_withdraw_id = 0;
 var token_bridge_initial_balance_trb = 10000
@@ -23,7 +23,7 @@ _valset_domain_separator = h.getDomainSeparator(_layer_chain_id)
 
 async function deployForMainnet(_pk, _nodeURL) {
     console.log("deploying bridge with token bridge")
-    console.log("guardian address", _guardian_address)
+    console.log("guardian address", _data_bridge_guardian_address)
     console.log("layer chain id", _layer_chain_id)
     console.log("valset domain separator", _valset_domain_separator)
   
@@ -46,7 +46,7 @@ async function deployForMainnet(_pk, _nodeURL) {
     console.log("deploy TellorDataBridge")
     const TellorDataBridge = await ethers.getContractFactory("contracts/bridge/TellorDataBridge.sol:TellorDataBridge", wallet);
     var TellorWithSigner = await TellorDataBridge.connect(wallet);
-    const tellorDataBridge= await TellorWithSigner.deploy(_guardian_address,_valset_domain_separator);
+    const tellorDataBridge= await TellorWithSigner.deploy(_data_bridge_guardian_address,_valset_domain_separator);
     await tellorDataBridge.deployed();
 
     ////////  Deploy token bridge contract  ////////////////////////
@@ -103,7 +103,7 @@ async function deployForMainnet(_pk, _nodeURL) {
     try {
         await hre.run("verify:verify", {
             address: tellorDataBridge.address,
-            constructorArguments: [_guardian_address, _valset_domain_separator]
+            constructorArguments: [_data_bridge_guardian_address, _valset_domain_separator]
         });
         console.log("Contract verified");
     } catch (error) {
@@ -135,9 +135,10 @@ async function deployForMainnet(_pk, _nodeURL) {
     }
     console.log("Tokens minted to the wallet address");
     console.log("Transferring tokens to the token bridge")
-    await tellorPlayground.transfer(tokenBridge.address, ethers.utils.parseEther(token_bridge_initial_balance_trb.toString()));
+    transfer_tx = await tellorPlayground.transfer(tokenBridge.address, ethers.utils.parseEther(token_bridge_initial_balance_trb.toString()));
+    await transfer_tx.wait(2);
     console.log("Tokens transferred to the token bridge");
-    console.log("Token bridge balance:", ethers.utils.formatEther(await tokenBridge.balanceOf(tokenBridge.address)), "TRB");
+    console.log("Token bridge balance:", ethers.utils.formatEther(await tellorPlayground.balanceOf(tokenBridge.address)), "TRB");
   };
 
   deployForMainnet(process.env.TESTNET_PK, process.env.NODE_URL_SEPOLIA_TESTNET)
