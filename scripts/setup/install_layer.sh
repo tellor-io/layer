@@ -12,7 +12,7 @@ set -e
 
 # Function to check required dependencies
 check_dependencies() {
-    local deps=("jq" "curl" "wget" "tar")
+    local deps=("jq" "curl" "wget" "tar" "zstd" "lz4")
     local missing=()
     
     for dep in "${deps[@]}"; do
@@ -523,7 +523,39 @@ extract_and_install_snapshot() {
     # Extract the snapshot
     echo "Extracting snapshot (this may take a while, file size ~40-80 GB)..."
     cd "$temp_dir"
-    if ! tar -xf "$snapshot_file" --checkpoint=5000 --checkpoint-action=dot; then
+    if [[ "$snapshot_file" == *.zstd ]] || [[ "$snapshot_file" == *.zst ]]; then
+        if ! zstd -dc "$snapshot_file" | tar -xf - --checkpoint=5000 --checkpoint-action=dot; then
+            echo ""
+            echo "Error: Failed to extract zstd-compressed snapshot"
+            echo ""
+            if [ "$is_downloaded" = "true" ]; then
+                echo "The downloaded snapshot has been preserved at:"
+                echo "  $snapshot_file"
+                echo ""
+                echo "You can retry installation with:"
+                echo "  ./install_layer.sh $NETWORK --snapshot \"$snapshot_file\""
+            fi
+            # Clean up extraction directory but preserve the snapshot file
+            rm -rf "$temp_dir" "$VERSION_CHECK_DIR"
+            exit 1
+        fi
+    elif [[ "$snapshot_file" == *.lz4 ]]; then
+        if ! lz4 -dc "$snapshot_file" | tar -xf - --checkpoint=5000 --checkpoint-action=dot; then
+            echo ""
+            echo "Error: Failed to extract lz4-compressed snapshot"
+            echo ""
+            if [ "$is_downloaded" = "true" ]; then
+                echo "The downloaded snapshot has been preserved at:"
+                echo "  $snapshot_file"
+                echo ""
+                echo "You can retry installation with:"
+                echo "  ./install_layer.sh $NETWORK --snapshot \"$snapshot_file\""
+            fi
+            # Clean up extraction directory but preserve the snapshot file
+            rm -rf "$temp_dir" "$VERSION_CHECK_DIR"
+            exit 1
+        fi
+    elif ! tar -xf "$snapshot_file" --checkpoint=5000 --checkpoint-action=dot; then
         echo ""
         echo "Error: Failed to extract snapshot"
         echo ""
@@ -636,9 +668,9 @@ elif [ -n "$SNAPSHOT_PATH" ]; then
         exit 1
     fi
 
-    # Validate it's a tar file
-    if [[ "$SNAPSHOT_PATH" != *.tar ]]; then
-        echo "Warning: Snapshot file does not have .tar extension. Proceeding anyway..."
+    # Validate snapshot extension
+    if [[ "$SNAPSHOT_PATH" != *.tar ]] && [[ "$SNAPSHOT_PATH" != *.zstd ]] && [[ "$SNAPSHOT_PATH" != *.zst ]] && [[ "$SNAPSHOT_PATH" != *.lz4 ]]; then
+        echo "Warning: Snapshot file does not have a recognized extension (.tar, .zstd, .zst, .lz4). Proceeding anyway..."
     fi
 
     # Create temporary extraction directory
@@ -671,7 +703,7 @@ else
     
     # Fetch available snapshots and parse JSON to get the latest one
     echo "Fetching available snapshots for $NETWORK..."
-    SNAPSHOT_FILE=$(curl -s https://layer-node.com/files | jq -r --arg prefix "$SNAPSHOT_PREFIX" '.files[] | select(.filename | contains($prefix)) | select(.filename | endswith(".tar")) | {filename: .filename, upload_time: .upload_time}' | jq -s 'sort_by(.upload_time) | reverse | .[0].filename' | tr -d '"')
+    SNAPSHOT_FILE=$(curl -s https://layer-node.com/files | jq -r --arg prefix "$SNAPSHOT_PREFIX" '.files[] | select(.filename | contains($prefix)) | select(.filename | test("\\.(tar|zstd|zst|lz4)$")) | {filename: .filename, upload_time: .upload_time}' | jq -s 'sort_by(.upload_time) | reverse | .[0].filename' | tr -d '"')
     
     if [ -z "$SNAPSHOT_FILE" ] || [ "$SNAPSHOT_FILE" == "null" ]; then
         echo "Error: No snapshots found for $NETWORK network"
