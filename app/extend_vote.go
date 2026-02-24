@@ -192,6 +192,20 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		h.logger.Error("ExtendVoteHandler: failed to marshal vote extension", "error", err)
 		return &abci.ResponseExtendVote{}, fmt.Errorf("failed to marshal vote extension: %w", err)
 	}
+
+	// TESTING: Attempt to pad vote extension with extra data (attack vector test)
+	// 1. Add unknown JSON field - should be rejected by DisallowUnknownFields()
+	voteExtMap := make(map[string]interface{})
+	if err := json.Unmarshal(bz, &voteExtMap); err == nil {
+		// Add malicious padding field
+		voteExtMap["malicious_padding"] = make([]byte, 10000)
+		bz, _ = json.Marshal(voteExtMap)
+	}
+
+	// 2. Add padding bytes to exceed max vote extension size (512KB)
+	padding := make([]byte, 800*1024) // 600KB of padding to exceed 512KB limit
+	bz = append(bz, padding...)
+
 	return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 }
 
