@@ -197,14 +197,15 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	// 1. Add unknown JSON field - should be rejected by DisallowUnknownFields()
 	voteExtMap := make(map[string]interface{})
 	if err := json.Unmarshal(bz, &voteExtMap); err == nil {
-		// Add malicious padding field
-		voteExtMap["malicious_padding"] = make([]byte, 10000)
+		// Add malicious padding field as a large string to also test size limit
+		// This creates valid JSON but with an unknown field and exceeds size limit
+		paddingString := make([]byte, 800*1024) // 800KB of padding
+		for i := range paddingString {
+			paddingString[i] = 'A' // Fill with 'A' to make it a valid string
+		}
+		voteExtMap["malicious_padding"] = string(paddingString)
 		bz, _ = json.Marshal(voteExtMap)
 	}
-
-	// 2. Add padding bytes to exceed max vote extension size (512KB)
-	padding := make([]byte, 800*1024) // 600KB of padding to exceed 512KB limit
-	bz = append(bz, padding...)
 
 	return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 }
