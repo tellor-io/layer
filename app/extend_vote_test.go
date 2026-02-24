@@ -228,6 +228,103 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 	bk.AssertExpectations(s.T())
 }
 
+func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler_RejectsUnknownFields() {
+	require := s.Require()
+	h, _, bk, _ := s.CreateHandlerAndMocks()
+	s.ctx = s.ctx.WithBlockHeight(3)
+
+	attReq := bridgetypes.AttestationRequests{
+		Requests: []*bridgetypes.AttestationRequest{
+			{Snapshot: make([]byte, 32)},
+		},
+	}
+	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil)
+
+	validVE := &app.BridgeVoteExtension{
+		OracleAttestations: []app.OracleAttestation{
+			{Snapshot: make([]byte, 32), Attestation: make([]byte, 65)},
+		},
+		InitialSignature: app.InitialSignature{
+			SignatureA: make([]byte, 65),
+			SignatureB: make([]byte, 65),
+		},
+		ValsetSignature: app.BridgeValsetSignature{
+			Signature: make([]byte, 65),
+			Timestamp: 1,
+		},
+	}
+
+	// valid VE should be accepted
+	bz, err := json.Marshal(validVE)
+	require.NoError(err)
+	res, err := h.VerifyVoteExtensionHandler(s.ctx, &abci.RequestVerifyVoteExtension{VoteExtension: bz})
+	require.NoError(err)
+	require.Equal(abci.ResponseVerifyVoteExtension_ACCEPT, res.Status)
+
+	// inject an unknown JSON field -- should be rejected by DisallowUnknownFields
+	injected := make([]byte, len(bz))
+	copy(injected, bz)
+	// replace closing '}' with ',"_pad":"junk"}'
+	injected = append(injected[:len(injected)-1], []byte(`,"_pad":"junk"}`)...)
+	res, err = h.VerifyVoteExtensionHandler(s.ctx, &abci.RequestVerifyVoteExtension{VoteExtension: injected})
+	require.NoError(err)
+	require.Equal(abci.ResponseVerifyVoteExtension_REJECT, res.Status)
+}
+
+func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler_RejectsOversizedRawVE() {
+	require := s.Require()
+	h, _, _, _ := s.CreateHandlerAndMocks()
+
+	// create a payload larger than maxVoteExtensionSize (512KB)
+	oversized := make([]byte, 512*1024+1)
+	// fill with valid-looking JSON start so it's clearly over the limit before parsing
+	copy(oversized, []byte(`{"OracleAttestations":[]}`))
+	res, err := h.VerifyVoteExtensionHandler(s.ctx, &abci.RequestVerifyVoteExtension{VoteExtension: oversized})
+	require.NoError(err)
+	require.Equal(abci.ResponseVerifyVoteExtension_REJECT, res.Status)
+}
+
+func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler_RejectsOversizedAttestationFields() {
+	require := s.Require()
+	h, _, bk, _ := s.CreateHandlerAndMocks()
+	s.ctx = s.ctx.WithBlockHeight(3)
+
+	attReq := bridgetypes.AttestationRequests{
+		Requests: []*bridgetypes.AttestationRequest{
+			{Snapshot: make([]byte, 32)},
+		},
+	}
+	bk.On("GetAttestationRequestsByHeight", s.ctx, uint64(2)).Return(&attReq, nil)
+
+	// oversized snapshot (>32 bytes) should be rejected
+	veOversizedSnapshot := &app.BridgeVoteExtension{
+		OracleAttestations: []app.OracleAttestation{
+			{Snapshot: make([]byte, 100), Attestation: make([]byte, 65)},
+		},
+		InitialSignature: app.InitialSignature{},
+		ValsetSignature:  app.BridgeValsetSignature{},
+	}
+	bz, err := json.Marshal(veOversizedSnapshot)
+	require.NoError(err)
+	res, err := h.VerifyVoteExtensionHandler(s.ctx, &abci.RequestVerifyVoteExtension{VoteExtension: bz})
+	require.NoError(err)
+	require.Equal(abci.ResponseVerifyVoteExtension_REJECT, res.Status)
+
+	// oversized attestation sig (>65 bytes) should be rejected
+	veOversizedAttSig := &app.BridgeVoteExtension{
+		OracleAttestations: []app.OracleAttestation{
+			{Snapshot: make([]byte, 32), Attestation: make([]byte, 100)},
+		},
+		InitialSignature: app.InitialSignature{},
+		ValsetSignature:  app.BridgeValsetSignature{},
+	}
+	bz, err = json.Marshal(veOversizedAttSig)
+	require.NoError(err)
+	res, err = h.VerifyVoteExtensionHandler(s.ctx, &abci.RequestVerifyVoteExtension{VoteExtension: bz})
+	require.NoError(err)
+	require.Equal(abci.ResponseVerifyVoteExtension_REJECT, res.Status)
+}
+
 func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 	require := s.Require()
 	ctx := s.ctx.WithBlockHeight(3)
