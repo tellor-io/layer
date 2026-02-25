@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"syscall"
 	"time"
@@ -209,6 +210,12 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 	if err := decoder.Decode(&voteExt); err != nil {
 		validatorAddress := sdk.ConsAddress(req.ValidatorAddress)
 		h.logger.Error("VerifyVoteExtensionHandler: failed to unmarshal vote extension", "error", err, "validator", validatorAddress)
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+	}
+	// Enforce a single top-level JSON value to reject trailing data.
+	if err := decoder.Decode(&struct{}{}); err != io.EOF {
+		validatorAddress := sdk.ConsAddress(req.ValidatorAddress)
+		h.logger.Error("VerifyVoteExtensionHandler: vote extension contains trailing data", "error", err, "validator", validatorAddress)
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
 

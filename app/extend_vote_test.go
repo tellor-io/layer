@@ -271,6 +271,35 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler_RejectsUnknownFields()
 	require.Equal(abci.ResponseVerifyVoteExtension_REJECT, res.Status)
 }
 
+func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler_RejectsTrailingJSONData() {
+	require := s.Require()
+	h, _, _, _ := s.CreateHandlerAndMocks()
+	s.ctx = s.ctx.WithBlockHeight(3)
+
+	validVE := &app.BridgeVoteExtension{
+		OracleAttestations: []app.OracleAttestation{
+			{Snapshot: make([]byte, 32), Attestation: make([]byte, 65)},
+		},
+		InitialSignature: app.InitialSignature{
+			SignatureA: make([]byte, 65),
+			SignatureB: make([]byte, 65),
+		},
+		ValsetSignature: app.BridgeValsetSignature{
+			Signature: make([]byte, 65),
+			Timestamp: 1,
+		},
+	}
+
+	bz, err := json.Marshal(validVE)
+	require.NoError(err)
+
+	// Append a second top-level JSON value; should be rejected.
+	bzWithTrailingData := append(append([]byte{}, bz...), []byte(` {}`)...)
+	res, err := h.VerifyVoteExtensionHandler(s.ctx, &abci.RequestVerifyVoteExtension{VoteExtension: bzWithTrailingData})
+	require.NoError(err)
+	require.Equal(abci.ResponseVerifyVoteExtension_REJECT, res.Status)
+}
+
 func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler_RejectsOversizedRawVE() {
 	require := s.Require()
 	h, _, _, _ := s.CreateHandlerAndMocks()
