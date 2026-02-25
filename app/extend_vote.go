@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"syscall"
 	"time"
@@ -195,14 +196,29 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	return &abci.ResponseExtendVote{VoteExtension: bz}, nil
 }
 
+const maxVoteExtensionSize = 512 * 1024 // 512KB upper bound; legitimate VEs are ~171KB max with snapshotLimit=1000
+
 func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.RequestVerifyVoteExtension) (*abci.ResponseVerifyVoteExtension, error) {
+	if len(req.VoteExtension) > maxVoteExtensionSize {
+		h.logger.Error("VerifyVoteExtensionHandler: vote extension exceeds max size", "size", len(req.VoteExtension), "max", maxVoteExtensionSize)
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+	}
+
 	var voteExt BridgeVoteExtension
-	err := json.Unmarshal(req.VoteExtension, &voteExt)
-	if err != nil {
+	decoder := json.NewDecoder(bytes.NewReader(req.VoteExtension))
+	decoder.DisallowUnknownFields()
+	if err := decoder.Decode(&voteExt); err != nil {
 		validatorAddress := sdk.ConsAddress(req.ValidatorAddress)
 		h.logger.Error("VerifyVoteExtensionHandler: failed to unmarshal vote extension", "error", err, "validator", validatorAddress)
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
+	// Enforce a single top-level JSON value to reject trailing data.
+	if err := decoder.Decode(&struct{}{}); err != io.EOF {
+		validatorAddress := sdk.ConsAddress(req.ValidatorAddress)
+		h.logger.Error("VerifyVoteExtensionHandler: vote extension contains trailing data", "error", err, "validator", validatorAddress)
+		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+	}
+
 	// ensure oracle attestations length is less than or equal to the number of attestation requests
 	attestationRequests, err := h.bridgeKeeper.GetAttestationRequestsByHeight(ctx, uint64(ctx.BlockHeight()-1))
 	if err != nil {
@@ -217,6 +233,19 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 		h.logger.Error("VerifyVoteExtensionHandler: oracle attestations length is greater than attestation requests length", "voteExt", voteExt)
 		return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
 	}
+
+	// verify per-attestation field sizes (snapshots are Keccak256 hashes, attestations are ECDSA sigs)
+	for _, att := range voteExt.OracleAttestations {
+		if len(att.Snapshot) > 32 {
+			h.logger.Error("VerifyVoteExtensionHandler: attestation snapshot size exceeds 32 bytes", "size", len(att.Snapshot))
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+		}
+		if len(att.Attestation) > 65 {
+			h.logger.Error("VerifyVoteExtensionHandler: attestation signature size exceeds 65 bytes", "size", len(att.Attestation))
+			return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_REJECT}, nil
+		}
+	}
+
 	// verify the initial signature size
 	if len(voteExt.InitialSignature.SignatureA) > 65 || len(voteExt.InitialSignature.SignatureB) > 65 {
 		h.logger.Error("VerifyVoteExtensionHandler: initial signature size is greater than 65", "voteExt", voteExt)
