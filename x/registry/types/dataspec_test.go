@@ -331,7 +331,8 @@ func TestMakeAruments(t *testing.T) {
 		AggregationMethod: "weighted-median",
 	}
 	val := dataspec.MakeArgMarshaller()
-	args := MakeArguments(val)
+	args, err := MakeArguments(val)
+	require.NoError(t, err)
 	require.Equal(t, args[0].Name, "asset")
 }
 
