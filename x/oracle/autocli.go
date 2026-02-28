@@ -138,18 +138,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
 				{
-					RpcMethod:      "GetReportersNoStakeReports",
-					Use:            "get-reporters-no-stake-reports [reporter]",
-					Short:          "Query no stake reports by reporter with or without pagination",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter"}},
-				},
-				{
-					RpcMethod:      "GetNoStakeReportsByQueryId",
-					Use:            "get-no-stake-reports-by-query-id [query_id]",
-					Short:          "Query no stake reports by query id",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_id"}},
-				},
-				{
 					RpcMethod:      "GetTipTotal",
 					Use:            "get-tip-total",
 					Short:          "Query total tips",
@@ -208,12 +196,6 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "UpdateMaxBatchSize",
 					Skip:      true, // skipped because authority gated
-				},
-				{
-					RpcMethod:      "NoStakeReport",
-					Use:            "no-stake-report [query_data] [value]",
-					Short:          "Execute the NoStakeReport RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_data"}, {ProtoField: "value"}},
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},

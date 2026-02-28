@@ -255,13 +255,6 @@ type OracleReporter struct {
 	Moniker        string    `json:"moniker"`
 }
 
-type NoStakeMicroReportStrings struct {
-	Reporter    string `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
-	Value       string `protobuf:"bytes,3,opt,name=value,proto3" json:"value,omitempty"`
-	Timestamp   string `protobuf:"varint,4,opt,name=timestamp,json=timestamp,proto3" json:"timestamp,omitempty"`
-	BlockNumber string `protobuf:"varint,5,opt,name=block_number,json=blockNumber,proto3" json:"block_number,omitempty"`
-}
-
 // ============================================================================
 // REGISTRY TYPES
 // ============================================================================
@@ -475,16 +468,6 @@ type QueryGetDataSpecResponse struct {
 
 type QueryGetDepositClaimedResponse struct {
 	Claimed bool `protobuf:"varint,1,opt,name=claimed,proto3" json:"claimed,omitempty"`
-}
-
-type QueryGetNoStakeReportsByQueryIdResponse struct {
-	NoStakeReports []*NoStakeMicroReportStrings `protobuf:"bytes,1,rep,name=no_stake_reports,json=noStakeReports,proto3" json:"no_stake_reports,omitempty"`
-	Pagination     *PageResponse                `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
-}
-
-type QueryGetReportersNoStakeReportsResponse struct {
-	NoStakeReports []*NoStakeMicroReportStrings `protobuf:"bytes,1,rep,name=no_stake_reports,json=noStakeReports,proto3" json:"no_stake_reports,omitempty"`
-	Pagination     *PageResponse                `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
 type PageResponse struct {
