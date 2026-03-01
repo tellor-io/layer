@@ -263,7 +263,7 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 
 	cutoffBlock, err := k.oracleKeeper.GetBlockHeightFromTimestamp(ctx, cutoff)
 	if err != nil {
-		k.logger.Info("PruneOldReports", "height", sdkCtx.BlockHeight(), "error", "failed to get cutoff block", "elapsed", time.Since(start))
+		k.logger.Info("PruneOldReports", "height", sdkCtx.BlockHeight(), "error", "failed to get cutoff block", "elapsed_ms", time.Since(start).Milliseconds())
 		return nil
 	}
 
@@ -303,10 +303,10 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 		"cutoffBlock", cutoffBlock,
 		"scanned", scanned,
 		"deleted", len(toDelete),
-		"lookupDur", time.Since(start)-scanDur-delDur,
-		"scanDur", scanDur,
-		"deleteDur", delDur,
-		"totalDur", time.Since(start),
+		"lookup_ms", (time.Since(start) - scanDur - delDur).Milliseconds(),
+		"scan_ms", scanDur.Milliseconds(),
+		"delete_ms", delDur.Milliseconds(),
+		"total_ms", time.Since(start).Milliseconds(),
 	)
 	return nil
 }

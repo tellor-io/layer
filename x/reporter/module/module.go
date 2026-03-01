@@ -183,10 +183,10 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	am.keeper.Logger().Info("reporter EndBlocker",
 		"height", sdkCtx.BlockHeight(),
-		"ProcessDistributionQueue", distQueueDur,
-		"PruneOldReports", pruneReportsDur,
-		"TrackStakeChange", trackStakeDur,
-		"total", time.Since(endBlockStart),
+		"ProcessDistributionQueue_ms", distQueueDur.Milliseconds(),
+		"PruneOldReports_ms", pruneReportsDur.Milliseconds(),
+		"TrackStakeChange_ms", trackStakeDur.Milliseconds(),
+		"total_ms", time.Since(endBlockStart).Milliseconds(),
 	)
 
 	return err

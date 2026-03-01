@@ -533,9 +533,9 @@ func (k Keeper) RemoveOldReports(ctx context.Context) error {
 		"height", sdkCtx.BlockHeight(),
 		"scanned", scanned,
 		"deleted", len(toDelete),
-		"scanDur", scanDur,
-		"deleteDur", delDur,
-		"totalDur", time.Since(start),
+		"scan_ms", scanDur.Milliseconds(),
+		"delete_ms", delDur.Milliseconds(),
+		"total_ms", time.Since(start).Milliseconds(),
 	)
 	return nil
 }

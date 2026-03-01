@@ -43,11 +43,11 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	k.Logger(ctx).Info("oracle EndBlocker",
 		"height", sdkCtx.BlockHeight(),
-		"SetAggregatedReport", setAggDur,
-		"AutoClaimDeposits", autoClaimDur,
-		"RotateQueries", rotateDur,
-		"RemoveOldReports", removeReportsDur,
-		"total", time.Since(endBlockStart),
+		"SetAggregatedReport_ms", setAggDur.Milliseconds(),
+		"AutoClaimDeposits_ms", autoClaimDur.Milliseconds(),
+		"RotateQueries_ms", rotateDur.Milliseconds(),
+		"RemoveOldReports_ms", removeReportsDur.Milliseconds(),
+		"total_ms", time.Since(endBlockStart).Milliseconds(),
 	)
 
 	return err
