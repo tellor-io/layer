@@ -492,16 +492,20 @@ func (k Keeper) GetBlockHeightFromTimestamp(ctx context.Context, timestamp time.
 // Returns the number of reports deleted.
 func (k Keeper) RemoveOldReports(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	start := time.Now()
 	cutoff := sdkCtx.BlockTime().Add(-30 * 24 * time.Hour)
 
 	var toDelete []collections.Triple[[]byte, []byte, uint64]
+	scanned := 0
 
 	iter, err := k.Reports.Indexes.IdQueryId.Iterate(ctx, nil)
 	if err != nil {
 		return err
 	}
 	defer iter.Close()
+	iterDone := time.Now()
 	for ; iter.Valid() && len(toDelete) < maxPruneSize; iter.Next() {
+		scanned++
 		pk, err := iter.PrimaryKey()
 		if err != nil {
 			return err
@@ -515,12 +519,23 @@ func (k Keeper) RemoveOldReports(ctx context.Context) error {
 		}
 		toDelete = append(toDelete, pk)
 	}
+	scanDur := time.Since(iterDone)
 
+	delStart := time.Now()
 	for _, pk := range toDelete {
 		if err := k.Reports.Remove(ctx, pk); err != nil {
 			return err
 		}
 	}
+	delDur := time.Since(delStart)
 
+	k.Logger(ctx).Info("RemoveOldReports",
+		"height", sdkCtx.BlockHeight(),
+		"scanned", scanned,
+		"deleted", len(toDelete),
+		"scanDur", scanDur,
+		"deleteDur", delDur,
+		"totalDur", time.Since(start),
+	)
 	return nil
 }

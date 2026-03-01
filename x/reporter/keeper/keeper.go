@@ -258,15 +258,18 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 	}
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	start := time.Now()
 	cutoff := sdkCtx.BlockTime().Add(-30 * 24 * time.Hour)
 
 	cutoffBlock, err := k.oracleKeeper.GetBlockHeightFromTimestamp(ctx, cutoff)
 	if err != nil {
+		k.logger.Info("PruneOldReports", "height", sdkCtx.BlockHeight(), "error", "failed to get cutoff block", "elapsed", time.Since(start))
 		return nil
 	}
 
 	type reportKey = collections.Pair[[]byte, collections.Pair[[]byte, uint64]]
 	var toDelete []reportKey
+	scanned := 0
 
 	iter, err := k.Report.Iterate(ctx, nil)
 	if err != nil {
@@ -274,7 +277,9 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 	}
 	defer iter.Close()
 
+	scanStart := time.Now()
 	for ; iter.Valid() && len(toDelete) < maxBatchSize; iter.Next() {
+		scanned++
 		pk, err := iter.Key()
 		if err != nil {
 			return err
@@ -283,12 +288,25 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 			toDelete = append(toDelete, pk)
 		}
 	}
+	scanDur := time.Since(scanStart)
 
+	delStart := time.Now()
 	for _, pk := range toDelete {
 		if err := k.Report.Remove(ctx, pk); err != nil {
 			return err
 		}
 	}
+	delDur := time.Since(delStart)
 
+	k.logger.Info("PruneOldReports",
+		"height", sdkCtx.BlockHeight(),
+		"cutoffBlock", cutoffBlock,
+		"scanned", scanned,
+		"deleted", len(toDelete),
+		"lookupDur", time.Since(start)-scanDur-delDur,
+		"scanDur", scanDur,
+		"deleteDur", delDur,
+		"totalDur", time.Since(start),
+	)
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	modulev1 "github.com/tellor-io/layer/api/layer/reporter/module"
@@ -158,19 +159,37 @@ func (am AppModule) BeginBlock(_ context.Context) error {
 // The end block implementation is optional.
 func (am AppModule) EndBlock(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
+	endBlockStart := time.Now()
 
 	// Process distribution queue with bounded iteration
 	// 10 items * 100 selectors max = 1000 operations max per block
+	t0 := time.Now()
 	if err := am.keeper.ProcessDistributionQueue(ctx, 10); err != nil {
 		return err
 	}
+	distQueueDur := time.Since(t0)
 
-	// Prune old report entries (older than 60 days)
+	// Prune old report entries (older than 30 days)
+	t1 := time.Now()
 	if err := am.keeper.PruneOldReports(ctx, 100); err != nil {
 		return err
 	}
+	pruneReportsDur := time.Since(t1)
 
-	return am.keeper.TrackStakeChange(ctx)
+	t2 := time.Now()
+	err := am.keeper.TrackStakeChange(ctx)
+	trackStakeDur := time.Since(t2)
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	am.keeper.Logger().Info("reporter EndBlocker",
+		"height", sdkCtx.BlockHeight(),
+		"ProcessDistributionQueue", distQueueDur,
+		"PruneOldReports", pruneReportsDur,
+		"TrackStakeChange", trackStakeDur,
+		"total", time.Since(endBlockStart),
+	)
+
+	return err
 }
 
 // IsOnePerModuleType implements the depinject.OnePerModuleType interface.
