@@ -213,7 +213,7 @@ else
 fi
 
 # init variables for mainnet and palmito
-LAYERD_TAG_MAINNET="v6.1.1"
+LAYERD_TAG_MAINNET="v6.1.3"
 LAYERD_TAG_PALMITO="v6.1.3"
 MAINNET_LAYER_NODE_URL=https://mainnet.tellorlayer.com/rpc/
 PALMITO_LAYER_NODE_URL=https://node-palmito.tellorlayer.com/rpc/
