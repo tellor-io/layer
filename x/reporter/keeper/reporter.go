@@ -86,7 +86,7 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, query
 	}
 	if changed {
 		// Store per-report snapshot for disputes
-		err = k.Report.Set(ctx, collections.Join(queryId, collections.Join(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
+		err = k.ReportByBlock.Set(ctx, collections.Join(repAddr.Bytes(), collections.Join(uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()), queryId)), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
 		if err != nil {
 			return math.Int{}, err
 		}
@@ -330,7 +330,7 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (m
 
 // Stores the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties
 func (k Keeper) SetReporterStakeByQueryId(ctx context.Context, repAddr sdk.AccAddress, delegates []*types.TokenOriginInfo, totalTokens math.Int, queryId []byte) error {
-	return k.Report.Set(ctx, collections.Join(queryId, collections.Join(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
+	return k.ReportByBlock.Set(ctx, collections.Join(repAddr.Bytes(), collections.Join(uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()), queryId)), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
 }
 
 // handlePeriodTracking manages reward period tracking for a reporter.
