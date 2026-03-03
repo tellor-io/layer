@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/tellor-io/layer/app/upgrades"
-	v_6_1_5_actual "github.com/tellor-io/layer/app/upgrades/v6.1.5-actual"
+	v_6_1_5_actual "github.com/tellor-io/layer/app/upgrades/v6.1.5-patch"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -29,6 +29,9 @@ func (app *App) setupUpgradeHandlers() {
 		v_6_1_5_actual.CreateUpgradeHandler(
 			app.ModuleManager(),
 			app.configurator,
+			app.OracleKeeper,
+			app.BridgeKeeper,
+			app.RegistryKeeper,
 		),
 	)
 }
