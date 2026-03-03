@@ -7,8 +7,9 @@ const abiCoder = new ethers.utils.AbiCoder();
 
 describe("TokenBridgeV2 - Function Tests", async function () {
 
-    let blobstream, accounts, guardian, tbridge, token, blocky0,
+    let blobstream, accounts, mainGuardian, subGuardian, tbridge, token, blocky0,
         valTs, valParams, valSet, initialValAddrs, initialPowers, threshold;
+    const DEFAULT_ROLE_UPDATE_DELAY = 86400 * 8
     const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks
     const WITHDRAW1_QUERY_DATA_ARGS = abiCoder.encode(["bool", "uint256"], [false, 1])
     const WITHDRAW1_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TRBBridgeV2", WITHDRAW1_QUERY_DATA_ARGS])
@@ -22,7 +23,8 @@ describe("TokenBridgeV2 - Function Tests", async function () {
     beforeEach(async function () {
         // init accounts
         accounts = await ethers.getSigners();
-        guardian = accounts[10]
+        mainGuardian = accounts[10]
+        subGuardian = accounts[11]
         val1 = ethers.Wallet.createRandom()
         val2 = ethers.Wallet.createRandom()
         initialValAddrs = [val1.address,val2.address]
@@ -35,14 +37,21 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         // deploy contracts
         blobstream = await ethers.deployContract(
             "TellorDataBridge", [
-            guardian.address,
+            mainGuardian.address,
             VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET
         ]
         )
         await blobstream.init(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint)
         token = await ethers.deployContract("TellorPlayground")
         oldOracle = await ethers.deployContract("TellorPlayground")
-        tbridge = await ethers.deployContract("TestTokenBridgeV2", [token.address,blobstream.address, oldOracle.address])
+        tbridge = await ethers.deployContract("TestTokenBridgeV2", [
+            token.address,
+            blobstream.address,
+            oldOracle.address,
+            mainGuardian.address,
+            subGuardian.address,
+            DEFAULT_ROLE_UPDATE_DELAY
+        ])
         blocky0 = await h.getBlock()
         // fund accounts
         await token.faucet(accounts[0].address)
@@ -58,7 +67,10 @@ describe("TokenBridgeV2 - Function Tests", async function () {
     it("constructor", async function () {
         assert.equal(await tbridge.token(), await token.address)
         assert.equal(await tbridge.dataBridge(), await blobstream.address)
-        assert.equal(await tbridge.guardian(), await guardian.address)
+        const mainGuardianRole = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("MAIN_GUARDIAN"))
+        const approvePauseRole = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("APPROVE_PAUSE"))
+        assert.equal((await tbridge.roles(mainGuardianRole)).roleAddress, await mainGuardian.address)
+        assert.equal((await tbridge.roles(approvePauseRole)).roleAddress, await subGuardian.address)
     })
     it("withdrawFromLayer", async function () {
         depositAmount = h.toWei("20")
@@ -173,7 +185,7 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         }
         await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
         await tbridge.connect(accounts[1]).proposePauseBridge("layer")
-        await tbridge.connect(guardian).approvePause(0)
+        await tbridge.connect(subGuardian).approvePause(0)
         await h.expectThrow(tbridge.withdrawFromLayer(
             oracleDataStruct,
             currentValSetArray,
@@ -189,7 +201,7 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         valTimestamp = (blocky.timestamp - 2) * 1000
         newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
         valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
-        await blobstream.connect(guardian).guardianResetValidatorSet(threshold, valTimestamp, valCheckpoint)
+        await blobstream.connect(mainGuardian).guardianResetValidatorSet(threshold, valTimestamp, valCheckpoint)
 
         // withdraw
         timestamp = (blocky.timestamp - 43200) * 1000
@@ -303,7 +315,14 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         assert(withdrawLimit == expectedWithdrawLimit, "withdrawLimit should be correct")
     })
     it("claimExtraWithdrawByWithdrawId", async function () {
-        tbridge2 = await ethers.deployContract("TestTokenBridgeV2", [token.address,blobstream.address, oldOracle.address])
+        tbridge2 = await ethers.deployContract("TestTokenBridgeV2", [
+            token.address,
+            blobstream.address,
+            oldOracle.address,
+            mainGuardian.address,
+            subGuardian.address,
+            DEFAULT_ROLE_UPDATE_DELAY
+        ])
         await token.setOracleMintRecipient(await tbridge2.address)
         const WITHDRAW_AMOUNT = h.toWei("10")
         let _addy = await accounts[2].address
@@ -426,8 +445,8 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
         await tbridge.connect(accounts[1]).proposePauseBridge("layer")
 
-        await h.expectThrow(tbridge.connect(accounts[1]).approvePause(0)) // not guardian
-        await tbridge.connect(guardian).approvePause(0)
+        await h.expectThrow(tbridge.connect(accounts[1]).approvePause(0)) // not approve pause role
+        await tbridge.connect(subGuardian).approvePause(0)
 
         bridgeState = await tbridge.bridgeState()
         burnedBalance = await token.balanceOf("0x000000000000000000000000000000000000dEaD")
@@ -459,7 +478,7 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         assert.equal((await tbridge.totalPauseTributeBalance()).toString(), h.toWei("0"), "pause tribute balance should be correct")
         assert.equal((await token.balanceOf(await accounts[1].address)).toString(), h.toWei("10000"), "refund should be correct")
         await h.expectThrow(tbridge.refundPauseProposal(0)) // already refunded
-        await h.expectThrow(tbridge.connect(guardian).approvePause(0)) // no longer pending
+        await h.expectThrow(tbridge.connect(subGuardian).approvePause(0)) // no longer pending
     })
 
     it("updateDataBridge", async function () {
@@ -470,30 +489,28 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         }
         await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
         await tbridge.connect(accounts[1]).proposePauseBridge("layer")
-        await tbridge.connect(guardian).approvePause(0)
+        await tbridge.connect(subGuardian).approvePause(0)
 
         blobstream2 = await ethers.deployContract(
             "TellorDataBridge", [
-            guardian.address,
+            mainGuardian.address,
             VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET
         ]
         )
         fakeValCheckpoint2 = ethers.utils.solidityKeccak256(["string"], ["testy2"])
         await blobstream2.init(1, 2, UNBONDING_PERIOD, fakeValCheckpoint2)
 
-        await h.expectThrow(tbridge.connect(accounts[1]).updateDataBridge(blobstream2.address)) // not guardian
-        await tbridge.connect(guardian).updateDataBridge(blobstream2.address)
+        await h.expectThrow(tbridge.connect(accounts[1]).updateDataBridge(blobstream2.address)) // not main guardian role
+        await tbridge.connect(mainGuardian).updateDataBridge(blobstream2.address)
         assert.equal(await tbridge.dataBridge(), blobstream2.address)
     })
 
-    it("updateGuardian", async function () {
-        oldGuardian = guardian
-        newGuardian = accounts[11]
-
-        assert.equal(await tbridge.guardian(), oldGuardian.address, "guardian should start as blobstream guardian")
-        assert.equal(await tbridge.pendingGuardian(), h.zeroAddress, "pendingGuardian should start as zero address")
-
-        await h.expectThrow(tbridge.connect(accounts[1]).proposeUpdateGuardian(newGuardian.address)) // not guardian
+    it("role updates", async function () {
+        const MAIN_GUARDIAN_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("MAIN_GUARDIAN"))
+        const APPROVE_PAUSE_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("APPROVE_PAUSE"))
+        const UPDATE_DATA_BRIDGE_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("UPDATE_DATA_BRIDGE"))
+        const newMainGuardian = accounts[12]
+        const newSubGuardian = accounts[13]
         const _getBridgeEvents = (receipt, eventName) => {
             const bridgeAddr = tbridge.address.toLowerCase()
             return receipt.logs
@@ -508,59 +525,49 @@ describe("TokenBridgeV2 - Function Tests", async function () {
                 .filter((e) => e && e.name === eventName)
         }
 
-        let tx = await tbridge.connect(oldGuardian).proposeUpdateGuardian(newGuardian.address)
+        await h.expectThrow(tbridge.connect(accounts[1]).proposeRoleUpdate(APPROVE_PAUSE_ROLE, newSubGuardian.address, DEFAULT_ROLE_UPDATE_DELAY))
+        let tx = await tbridge.connect(mainGuardian).proposeRoleUpdate(APPROVE_PAUSE_ROLE, newSubGuardian.address, DEFAULT_ROLE_UPDATE_DELAY)
         let receipt = await tx.wait()
-        let evs = _getBridgeEvents(receipt, "GuardianUpdateProposed")
-        assert.equal(evs.length, 1, "GuardianUpdateProposed should emit once")
-        assert.equal(evs[0].args[0], newGuardian.address, "GuardianUpdateProposed arg should be newGuardian")
-        assert.equal(await tbridge.pendingGuardian(), newGuardian.address, "pendingGuardian should be set")
+        let evs = _getBridgeEvents(receipt, "RoleUpdateProposed")
+        assert.equal(evs.length, 1, "RoleUpdateProposed should emit once")
+        assert.equal(evs[0].args[0], APPROVE_PAUSE_ROLE, "RoleUpdateProposed role should match")
+        assert.equal(evs[0].args[1], newSubGuardian.address, "RoleUpdateProposed address should match")
 
-        await h.expectThrow(tbridge.connect(oldGuardian).proposeUpdateGuardian(accounts[12].address)) // pending guardian already exists
-        await h.expectThrow(tbridge.connect(newGuardian).acceptPendingGuardian()) // only guardian can accept pending guardian
-
-        await h.expectThrow(tbridge.connect(oldGuardian).acceptPendingGuardian()) // must wait before accepting pending guardian
-        await h.advanceTime(86400 * 8 + 1) // GUARDIAN_UPDATE_DELAY is 8 days
-        tx = await tbridge.connect(oldGuardian).acceptPendingGuardian()
+        await h.expectThrow(tbridge.connect(mainGuardian).acceptRoleUpdate(APPROVE_PAUSE_ROLE))
+        await h.advanceTime(DEFAULT_ROLE_UPDATE_DELAY + 1)
+        tx = await tbridge.connect(mainGuardian).acceptRoleUpdate(APPROVE_PAUSE_ROLE)
         receipt = await tx.wait()
-        evs = _getBridgeEvents(receipt, "GuardianUpdated")
-        assert.equal(evs.length, 1, "GuardianUpdated should emit once")
-        assert.equal(evs[0].args[0], newGuardian.address, "GuardianUpdated arg should be newGuardian")
-        assert.equal(await tbridge.guardian(), newGuardian.address, "guardian should be updated")
-        assert.equal(await tbridge.pendingGuardian(), h.zeroAddress, "pendingGuardian should be reset")
+        evs = _getBridgeEvents(receipt, "RoleUpdateAccepted")
+        assert.equal(evs.length, 1, "RoleUpdateAccepted should emit once")
+        assert.equal((await tbridge.roles(APPROVE_PAUSE_ROLE)).roleAddress, newSubGuardian.address, "APPROVE_PAUSE role should update")
 
-        // permissions should move to the new guardian (approvePause is a good proxy)
         for (let i = 0; i < 10; i++) {
             await token.faucet(accounts[2].address)
         }
         await token.connect(accounts[2]).approve(tbridge.address, h.toWei("10000"))
         await tbridge.connect(accounts[2]).proposePauseBridge("layer")
-
-        await h.expectThrow(tbridge.connect(oldGuardian).approvePause(0)) // old guardian should not be able to approve
-        await tbridge.connect(newGuardian).approvePause(0)
+        await h.expectThrow(tbridge.connect(subGuardian).approvePause(0))
+        await tbridge.connect(newSubGuardian).approvePause(0)
         bridgeState = await tbridge.bridgeState()
         assert.equal(bridgeState, 1, "bridge state should be paused")
 
-        // rejectPendingGuardian() path
-        const rejectedGuardian = accounts[12]
-        tx = await tbridge.connect(newGuardian).proposeUpdateGuardian(rejectedGuardian.address)
+        tx = await tbridge.connect(mainGuardian).proposeRoleUpdate(UPDATE_DATA_BRIDGE_ROLE, accounts[14].address, DEFAULT_ROLE_UPDATE_DELAY)
+        await tx.wait()
+        tx = await tbridge.connect(mainGuardian).rejectRoleUpdate(UPDATE_DATA_BRIDGE_ROLE)
         receipt = await tx.wait()
-        evs = _getBridgeEvents(receipt, "GuardianUpdateProposed")
-        assert.equal(evs.length, 1, "GuardianUpdateProposed (2nd) should emit once")
-        assert.equal(evs[0].args[0], rejectedGuardian.address, "GuardianUpdateProposed (2nd) arg should be rejectedGuardian")
-        assert.equal(await tbridge.pendingGuardian(), rejectedGuardian.address, "pendingGuardian should be set (2nd proposal)")
+        evs = _getBridgeEvents(receipt, "RoleUpdateRejected")
+        assert.equal(evs.length, 1, "RoleUpdateRejected should emit once")
+        assert.equal(evs[0].args[0], UPDATE_DATA_BRIDGE_ROLE, "RoleUpdateRejected role should match")
+        assert.equal((await tbridge.roles(UPDATE_DATA_BRIDGE_ROLE)).roleAddress, mainGuardian.address, "UPDATE_DATA_BRIDGE role should remain unchanged")
 
-        await h.expectThrow(tbridge.connect(oldGuardian).rejectPendingGuardian()) // old guardian should not be able to reject
-        tx = await tbridge.connect(newGuardian).rejectPendingGuardian()
-        receipt = await tx.wait()
-        evs = _getBridgeEvents(receipt, "GuardianUpdateRejected")
-        assert.equal(evs.length, 1, "GuardianUpdateRejected should emit once")
-        assert.equal(evs[0].args[0], rejectedGuardian.address, "GuardianUpdateRejected arg should be rejectedGuardian")
-        assert.equal(await tbridge.guardian(), newGuardian.address, "guardian should remain unchanged after reject")
-        assert.equal(await tbridge.pendingGuardian(), h.zeroAddress, "pendingGuardian should be reset after reject")
+        tx = await tbridge.connect(mainGuardian).proposeRoleUpdate(MAIN_GUARDIAN_ROLE, newMainGuardian.address, DEFAULT_ROLE_UPDATE_DELAY)
+        await tx.wait()
+        await h.advanceTime(DEFAULT_ROLE_UPDATE_DELAY + 1)
+        await tbridge.connect(mainGuardian).acceptRoleUpdate(MAIN_GUARDIAN_ROLE)
+        assert.equal((await tbridge.roles(MAIN_GUARDIAN_ROLE)).roleAddress, newMainGuardian.address, "MAIN_GUARDIAN role should update")
 
-        // no pending guardian reverts
-        await h.expectThrow(tbridge.connect(newGuardian).acceptPendingGuardian())
-        await h.expectThrow(tbridge.connect(newGuardian).rejectPendingGuardian())
+        await h.expectThrow(tbridge.connect(mainGuardian).proposeRoleUpdate(UPDATE_DATA_BRIDGE_ROLE, accounts[15].address, DEFAULT_ROLE_UPDATE_DELAY))
+        await tbridge.connect(newMainGuardian).proposeRoleUpdate(UPDATE_DATA_BRIDGE_ROLE, accounts[15].address, DEFAULT_ROLE_UPDATE_DELAY)
     })
 
     it("can pause multiple times", async function () {
@@ -570,12 +577,12 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         await token.connect(accounts[1]).approve(tbridge.address, h.toWei("20000"))
 
         await tbridge.connect(accounts[1]).proposePauseBridge("layer")
-        await tbridge.connect(guardian).approvePause(0)
+        await tbridge.connect(subGuardian).approvePause(0)
         await h.advanceTime(86400 * 21 + 1)
         await tbridge.unpauseBridge()
 
         await tbridge.connect(accounts[1]).proposePauseBridge("layer2")
-        await tbridge.connect(guardian).approvePause(1)
+        await tbridge.connect(subGuardian).approvePause(1)
         burnedBalance = await token.balanceOf("0x000000000000000000000000000000000000dEaD")
         assert.equal(burnedBalance.toString(), h.toWei("20000"), "burned balance should be correct")
     })
@@ -631,7 +638,7 @@ describe("TokenBridgeV2 - Function Tests", async function () {
                 valTimestamp = (blocky.timestamp - 2) * 1000
                 newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
                 valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
-                await blobstream.connect(guardian).guardianResetValidatorSet(threshold, valTimestamp, valCheckpoint)
+                await blobstream.connect(mainGuardian).guardianResetValidatorSet(threshold, valTimestamp, valCheckpoint)
             }
             withdrawId0 = i * 2 + 1
             withdrawId1 = i * 2 + 2
@@ -802,7 +809,14 @@ describe("TokenBridgeV2 - Function Tests", async function () {
     })
 
     it("mintToOracle on deposit", async function() {
-        const bridge2 = await ethers.deployContract("TestTokenBridgeV2", [token.address,blobstream.address, oldOracle.address])
+        const bridge2 = await ethers.deployContract("TestTokenBridgeV2", [
+            token.address,
+            blobstream.address,
+            oldOracle.address,
+            mainGuardian.address,
+            subGuardian.address,
+            DEFAULT_ROLE_UPDATE_DELAY
+        ])
         await bridge2.init(0, 0)
         await token.setOracleMintRecipient(bridge2.address)
         lastReleaseTimeBytes = ethers.utils.solidityKeccak256(["string"], ["_LAST_RELEASE_TIME_DAO"])
@@ -887,7 +901,7 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         }
         await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
         await tbridge.connect(accounts[1]).proposePauseBridge("layer")
-        await tbridge.connect(guardian).approvePause(0)
+        await tbridge.connect(subGuardian).approvePause(0)
         
         // Verify lastPauseTimestamp was set
         const lastPauseTimestamp = await tbridge.lastPauseTimestamp()
@@ -963,7 +977,7 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         }
         await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
         await tbridge.connect(accounts[1]).proposePauseBridge("layer")
-        await tbridge.connect(guardian).approvePause(0)
+        await tbridge.connect(subGuardian).approvePause(0)
         
         // Wait for pause period and unpause
         await h.advanceTime(86400 * 21 + 1)
@@ -974,7 +988,7 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         newValTimestamp = (blocky.timestamp - 2) * 1000
         newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
         valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, newValTimestamp)
-        await blobstream.connect(guardian).guardianResetValidatorSet(threshold, newValTimestamp, valCheckpoint)
+        await blobstream.connect(mainGuardian).guardianResetValidatorSet(threshold, newValTimestamp, valCheckpoint)
         
         // Create fresh attestation data for re-verification
         blocky = await h.getBlock()
@@ -1079,7 +1093,7 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         }
         await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
         await tbridge.connect(accounts[1]).proposePauseBridge("layer")
-        await tbridge.connect(guardian).approvePause(0)
+        await tbridge.connect(subGuardian).approvePause(0)
         await h.advanceTime(86400 * 21 + 1)
         await tbridge.unpauseBridge()
         
@@ -1088,7 +1102,7 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         newValTimestamp = (blocky.timestamp - 2) * 1000
         newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
         valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, newValTimestamp)
-        await blobstream.connect(guardian).guardianResetValidatorSet(threshold, newValTimestamp, valCheckpoint)
+        await blobstream.connect(mainGuardian).guardianResetValidatorSet(threshold, newValTimestamp, valCheckpoint)
         
         // Try to re-verify with wrong amount
         const wrongAmount = h.toWei("5") // different from original 10
@@ -1167,7 +1181,14 @@ describe("TokenBridgeV2 - Function Tests", async function () {
 
     it("init", async function() {
         // deploy fresh bridge contract for testing init
-        const freshBridge = await ethers.deployContract("TestTokenBridgeV2", [token.address,blobstream.address, oldOracle.address])
+        const freshBridge = await ethers.deployContract("TestTokenBridgeV2", [
+            token.address,
+            blobstream.address,
+            oldOracle.address,
+            mainGuardian.address,
+            subGuardian.address,
+            DEFAULT_ROLE_UPDATE_DELAY
+        ])
         
         // test only deployer can initialize
         await h.expectThrow(freshBridge.connect(accounts[1]).init(5, 3)) // not deployer

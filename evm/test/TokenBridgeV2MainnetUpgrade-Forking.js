@@ -51,7 +51,14 @@ describe("TokenBridge V1 -> V2 Upgrade - Forking Tests", function () {
     );
 
     // Deploy V2 pointing at mainnet Tellor + mainnet DataBridge
-    tbridgeV2 = await ethers.deployContract("TokenBridgeV2", [TELLOR_MASTER, DATABRIDGE, TELLORFLEX]);
+    tbridgeV2 = await ethers.deployContract("TokenBridgeV2", [
+      TELLOR_MASTER,
+      DATABRIDGE,
+      TELLORFLEX,
+      accounts[0].address,
+      accounts[0].address,
+      86400 * 8
+    ]);
   });
 
   it("upgrade: deploy V2, init ids, drain V1 -> V2 via synthetic withdraw + claimExtraWithdraw", async function () {

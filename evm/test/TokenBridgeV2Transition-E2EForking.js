@@ -69,7 +69,14 @@ describe("TokenBridgeV2 Transition - E2E Forking Tests", function() {
     await blobstream.init(1, 2, UNBONDING_PERIOD, fakeValCheckpoint)
 
     // Deploy TokenBridge
-    tbridge = await ethers.deployContract("TokenBridgeV2", [TELLOR_MASTER, blobstream.address, TELLORFLEX])
+    tbridge = await ethers.deployContract("TokenBridgeV2", [
+      TELLOR_MASTER,
+      blobstream.address,
+      TELLORFLEX,
+      DEV_WALLET,
+      DEV_WALLET,
+      86400 * 8
+    ])
 
     // Fund accounts
     await accounts[10].sendTransaction({

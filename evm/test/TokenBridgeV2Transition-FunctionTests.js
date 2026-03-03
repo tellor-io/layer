@@ -66,7 +66,14 @@ describe("TokenBridgeV2 LayerTransition - Function Tests", function() {
     fakeValCheckpoint = ethers.utils.solidityKeccak256(["string"], ["testy"])
     await blobstream.init(1, 2, UNBONDING_PERIOD, fakeValCheckpoint)
     // deploy tokenbridge
-    tbridge = await ethers.deployContract("TokenBridgeV2", [TELLOR_MASTER,await blobstream.address, TELLORFLEX])
+    tbridge = await ethers.deployContract("TokenBridgeV2", [
+      TELLOR_MASTER,
+      await blobstream.address,
+      TELLORFLEX,
+      DEV_WALLET,
+      DEV_WALLET,
+      86400 * 8
+    ])
     await tbridge.init(0, 0)
     // stake reporter
     await tellor.connect(bigWallet).transfer(await accounts[0].address, h.toWei("1000"))
