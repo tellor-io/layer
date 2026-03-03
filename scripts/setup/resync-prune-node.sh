@@ -116,8 +116,8 @@ EOF
 }
 
 # Define version tags
-LAYERD_TAG_MAINNET="v6.1.1"
-LAYERD_TAG_PALMITO="v6.1.2"
+LAYERD_TAG_MAINNET="v6.1.3"
+LAYERD_TAG_PALMITO="v6.1.3"
 
 # Set network-specific variables
 if [ "$NETWORK" == "tellor-1" ]; then
