@@ -30,7 +30,7 @@ type (
 		DisputedDelegationAmounts collections.Map[[]byte, types.DelegationsAmounts]                                                                                         // key: dispute hashId
 		FeePaidFromStake          collections.Map[[]byte, types.DelegationsAmounts]                                                                                         // key: dispute hashId
 		Report                    *collections.IndexedMap[collections.Pair[[]byte, collections.Pair[[]byte, uint64]], types.DelegationsAmounts, ReporterBlockNumberIndexes] // key: queryId, (reporter AccAddress, blockNumber)
-		ReportByBlock             *collections.IndexedMap[collections.Pair[[]byte, collections.Pair[uint64, []byte]], types.DelegationsAmounts, ReportByBlockIndexes]       // key: reporter AccAddress, (blockNumber, queryId)
+		ReportByBlock             *collections.IndexedMap[collections.Triple[[]byte, uint64, []byte], types.DelegationsAmounts, ReportByBlockIndexes]                       // key: reporter AccAddress, blockNumber, queryId
 
 		// Distribution queue collections
 		ReporterPeriodData       collections.Map[[]byte, types.PeriodRewardData]      // key: reporter AccAddress -> current period data
@@ -88,7 +88,7 @@ func NewKeeper(
 		),
 		ReportByBlock: collections.NewIndexedMap(
 			sb, types.ReportByBlockPrefix, "report_by_block",
-			collections.PairKeyCodec(collections.BytesKey, collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey)),
+			collections.TripleKeyCodec(collections.BytesKey, collections.Uint64Key, collections.BytesKey),
 			codec.CollValue[types.DelegationsAmounts](cdc), newReportByBlockIndexes(sb),
 		),
 		ReporterPeriodData:       collections.NewMap(sb, types.ReporterPeriodDataPrefix, "reporter_period_data", collections.BytesKey, codec.CollValue[types.PeriodRewardData](cdc)),
@@ -261,7 +261,7 @@ func (k Keeper) GetLastReportedAtBlock(ctx context.Context, reporter []byte) (ui
 		if err != nil {
 			return 0, err
 		}
-		return key.K2().K1(), nil
+		return key.K2(), nil
 	}
 
 	// Fallback to old collection only if new collection had nothing
@@ -329,7 +329,7 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 	// Iterate from lowest blockNumber, break at cutoff
 	remaining := maxBatchSize - totalDeleted
 	if remaining > 0 {
-		type newKey = collections.Pair[[]byte, collections.Pair[uint64, []byte]]
+		type newKey = collections.Triple[[]byte, uint64, []byte]
 		var newToDelete []newKey
 		newScanned := 0
 		newIter, err := k.ReportByBlock.Indexes.BlockNumber.Iterate(ctx, nil)
@@ -343,7 +343,7 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 				return err
 			}
 
-			if pk.K2().K1() >= cutoffBlock {
+			if pk.K2() >= cutoffBlock {
 				break
 			}
 			newToDelete = append(newToDelete, pk)
