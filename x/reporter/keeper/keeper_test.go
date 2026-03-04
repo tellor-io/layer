@@ -224,6 +224,62 @@ func TestGetDelegationsAmount(t *testing.T) {
 	require.Equal(t, math.NewInt(15000), total)
 }
 
+func TestTransitionPathsPreferNewCollection(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter := sample.AccAddressBytes()
+	ctx = ctx.WithBlockHeight(10)
+
+	// Legacy snapshot exists.
+	require.NoError(t, k.Report.Set(
+		ctx,
+		collections.Join([]byte("legacy-query"), collections.Join(reporter.Bytes(), uint64(4))),
+		types.DelegationsAmounts{Total: math.NewInt(100)},
+	))
+
+	// New snapshot at a later eligible block should be preferred.
+	require.NoError(t, k.ReportByBlock.Set(
+		ctx,
+		collections.Join3(reporter.Bytes(), uint64(6), []byte("new-query")),
+		types.DelegationsAmounts{Total: math.NewInt(250)},
+	))
+
+	got, err := k.GetDelegationsAmount(ctx, reporter, 10)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(250), got.Total)
+
+	last, err := k.GetLastReportedAtBlock(ctx, reporter)
+	require.NoError(t, err)
+	require.Equal(t, uint64(6), last)
+}
+
+func TestTransitionPathsFallbackToOldCollection(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter := sample.AccAddressBytes()
+	ctx = ctx.WithBlockHeight(5)
+
+	// Legacy snapshot should still be served when new collection has no eligible entry.
+	require.NoError(t, k.Report.Set(
+		ctx,
+		collections.Join([]byte("legacy-query"), collections.Join(reporter.Bytes(), uint64(4))),
+		types.DelegationsAmounts{Total: math.NewInt(123)},
+	))
+
+	// New snapshot exists but is outside the requested/current block window.
+	require.NoError(t, k.ReportByBlock.Set(
+		ctx,
+		collections.Join3(reporter.Bytes(), uint64(8), []byte("new-query")),
+		types.DelegationsAmounts{Total: math.NewInt(999)},
+	))
+
+	got, err := k.GetDelegationsAmount(ctx, reporter, 5)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(123), got.Total)
+
+	last, err := k.GetLastReportedAtBlock(ctx, reporter)
+	require.NoError(t, err)
+	require.Equal(t, uint64(4), last)
+}
+
 // called in endblocker
 func BenchmarkReporterTrackStakeChange(b *testing.B) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(b)
