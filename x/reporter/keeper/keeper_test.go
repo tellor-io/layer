@@ -224,6 +224,62 @@ func TestGetDelegationsAmount(t *testing.T) {
 	require.Equal(t, math.NewInt(15000), total)
 }
 
+func TestTransitionPathsPreferNewCollection(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter := sample.AccAddressBytes()
+	ctx = ctx.WithBlockHeight(10)
+
+	// Legacy snapshot exists.
+	require.NoError(t, k.Report.Set(
+		ctx,
+		collections.Join([]byte("legacy-query"), collections.Join(reporter.Bytes(), uint64(4))),
+		types.DelegationsAmounts{Total: math.NewInt(100)},
+	))
+
+	// New snapshot at a later eligible block should be preferred.
+	require.NoError(t, k.ReportByBlock.Set(
+		ctx,
+		collections.Join3(reporter.Bytes(), uint64(6), []byte("new-query")),
+		types.DelegationsAmounts{Total: math.NewInt(250)},
+	))
+
+	got, err := k.GetDelegationsAmount(ctx, reporter, 10)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(250), got.Total)
+
+	last, err := k.GetLastReportedAtBlock(ctx, reporter)
+	require.NoError(t, err)
+	require.Equal(t, uint64(6), last)
+}
+
+func TestTransitionPathsFallbackToOldCollection(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter := sample.AccAddressBytes()
+	ctx = ctx.WithBlockHeight(5)
+
+	// Legacy snapshot should still be served when new collection has no eligible entry.
+	require.NoError(t, k.Report.Set(
+		ctx,
+		collections.Join([]byte("legacy-query"), collections.Join(reporter.Bytes(), uint64(4))),
+		types.DelegationsAmounts{Total: math.NewInt(123)},
+	))
+
+	// New snapshot exists but is outside the requested/current block window.
+	require.NoError(t, k.ReportByBlock.Set(
+		ctx,
+		collections.Join3(reporter.Bytes(), uint64(8), []byte("new-query")),
+		types.DelegationsAmounts{Total: math.NewInt(999)},
+	))
+
+	got, err := k.GetDelegationsAmount(ctx, reporter, 5)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(123), got.Total)
+
+	last, err := k.GetLastReportedAtBlock(ctx, reporter)
+	require.NoError(t, err)
+	require.Equal(t, uint64(4), last)
+}
+
 // called in endblocker
 func BenchmarkReporterTrackStakeChange(b *testing.B) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(b)
@@ -341,6 +397,65 @@ func TestPruneOldReportsMaxIterations(t *testing.T) {
 
 	// Should have 2 remaining (5 - 3 = 2)
 	require.Equal(t, 2, count)
+}
+
+func TestPruneNewCollectionBlockOrder(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter1 := sample.AccAddressBytes()
+	reporter2 := sample.AccAddressBytes()
+
+	now := time.Now()
+	ctx = ctx.WithBlockTime(now).WithBlockHeight(500)
+
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(reporter1.Bytes(), uint64(50), []byte("q1")), types.DelegationsAmounts{Total: math.OneInt()}))
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(reporter2.Bytes(), uint64(300), []byte("q1")), types.DelegationsAmounts{Total: math.OneInt()}))
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(reporter1.Bytes(), uint64(10), []byte("q1")), types.DelegationsAmounts{Total: math.OneInt()}))
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(reporter2.Bytes(), uint64(200), []byte("q1")), types.DelegationsAmounts{Total: math.OneInt()}))
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(reporter1.Bytes(), uint64(400), []byte("q1")), types.DelegationsAmounts{Total: math.OneInt()}))
+
+	// Verify Multi index iterates in ascending blockNumber order
+	iter, err := k.ReportByBlock.Indexes.BlockNumber.Iterate(ctx, nil)
+	require.NoError(t, err)
+	defer iter.Close()
+
+	var blockNumbers []uint64
+	for ; iter.Valid(); iter.Next() {
+		pk, err := iter.PrimaryKey()
+		require.NoError(t, err)
+		blockNumbers = append(blockNumbers, pk.K2())
+	}
+	require.Equal(t, []uint64{10, 50, 200, 300, 400}, blockNumbers)
+
+	// Now prune with cutoff at 250 — should delete blocks 10, 50, 200 and stop
+	oracleKeeper := mocks.NewOracleKeeper(t)
+	oracleKeeper.On("GetBlockHeightFromTimestamp", mock.Anything, mock.Anything).Return(uint64(250), nil)
+	k.SetOracleKeeper(oracleKeeper)
+
+	err = k.PruneOldReports(ctx, 100)
+	require.NoError(t, err)
+
+	// Verify only blocks 300 and 400 remain
+	remaining := 0
+	err = k.ReportByBlock.Walk(ctx, nil, func(_ collections.Triple[[]byte, uint64, []byte], _ types.DelegationsAmounts) (bool, error) {
+		remaining++
+		return false, nil
+	})
+	require.NoError(t, err)
+	require.Equal(t, 2, remaining)
+
+	// Verify the correct entries survived
+	_, err = k.ReportByBlock.Get(ctx, collections.Join3(reporter2.Bytes(), uint64(300), []byte("q1")))
+	require.NoError(t, err)
+	_, err = k.ReportByBlock.Get(ctx, collections.Join3(reporter1.Bytes(), uint64(400), []byte("q1")))
+	require.NoError(t, err)
+
+	// Verify old entries are gone
+	_, err = k.ReportByBlock.Get(ctx, collections.Join3(reporter1.Bytes(), uint64(10), []byte("q1")))
+	require.Error(t, err)
+	_, err = k.ReportByBlock.Get(ctx, collections.Join3(reporter1.Bytes(), uint64(50), []byte("q1")))
+	require.Error(t, err)
+	_, err = k.ReportByBlock.Get(ctx, collections.Join3(reporter2.Bytes(), uint64(200), []byte("q1")))
+	require.Error(t, err)
 }
 
 func TestStakeRecalcFlag(t *testing.T) {
