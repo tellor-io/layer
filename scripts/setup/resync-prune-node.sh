@@ -312,6 +312,22 @@ EOF
     # Fix 15: Reload systemd after creating new service
     echo "Reloading systemd daemon..."
     systemctl daemon-reload
+else
+    # Service file exists — verify ExecStart points to the correct layerd binary
+    CURRENT_EXEC_START=$(grep '^ExecStart=' /etc/systemd/system/layer_snapshot.service | head -1)
+    CURRENT_BINARY=$(echo "$CURRENT_EXEC_START" | sed 's/^ExecStart=\([^ ]*\).*/\1/')
+    if [ "$CURRENT_BINARY" != "$LAYERD_PATH" ]; then
+        echo "layer_snapshot.service ExecStart binary mismatch detected."
+        echo "  Current:  $CURRENT_BINARY"
+        echo "  Expected: $LAYERD_PATH"
+        echo "Updating layer_snapshot.service to use $LAYERD_PATH..."
+        sed -i "s|^ExecStart=.*|ExecStart=$LAYERD_PATH start --home $LAYER_SNAPSHOT_HOME|" /etc/systemd/system/layer_snapshot.service
+        echo "Reloading systemd daemon..."
+        systemctl daemon-reload
+        echo "✓ layer_snapshot.service updated successfully."
+    else
+        echo "✓ layer_snapshot.service ExecStart binary path is correct ($LAYERD_PATH)."
+    fi
 fi
 
 
