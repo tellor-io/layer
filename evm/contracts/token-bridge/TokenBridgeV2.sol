@@ -145,7 +145,7 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
         lastPauseTimestamp = block.timestamp;
         _proposal.state = PauseProposalState.APPROVED;
         totalPauseTributeBalance -= PAUSE_TRIBUTE_AMOUNT;
-        token.transfer(address(0xdEaD), PAUSE_TRIBUTE_AMOUNT);
+        require(token.transfer(address(0xdEaD), PAUSE_TRIBUTE_AMOUNT), "TokenBridgeV2: transfer failed");
         emit BridgeStateUpdated(BridgeState.PAUSED);
         emit PauseApproved(_proposalId, _proposal.proposer, block.timestamp);
     }
@@ -248,6 +248,7 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
     function updateDataBridge(address _dataBridge) external {
         _roleRestricted(keccak256("UPDATE_DATA_BRIDGE"));
         require(bridgeState == BridgeState.PAUSED, "TokenBridgeV2: can only update data bridge when bridge is paused");
+        require(_dataBridge != address(0), "TokenBridgeV2: data bridge address cannot be the zero address");
         dataBridge = ITellorDataBridge(_dataBridge);
         emit DataBridgeUpdated(_dataBridge);
     }

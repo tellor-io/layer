@@ -60,8 +60,8 @@ contract RoleManager {
         require(block.timestamp - _roleUpdateProposal.proposalTime > _roleInfo.roleUpdateDelay, "RoleManager: Role update delay not passed");
         _roleInfo.roleAddress = _roleUpdateProposal.newAddress;
         _roleInfo.roleUpdateDelay = _roleUpdateProposal.newUpdateDelay;
-        delete roleUpdateProposals[_role];
         emit RoleUpdateAccepted(_role, _roleUpdateProposal.newAddress);
+        delete roleUpdateProposals[_role];
     }
 
     /// @notice rejects a role update
