@@ -88,6 +88,7 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
     event TokensToClaimUpdated(address _recipient, uint256 _amount);
     event PauseRefunded(uint256 _proposalId, address _proposer, uint256 _proposalTime);
     event Withdraw(uint256 _depositId, string _sender, address _recipient, uint256 _amount);
+    event ExtraWithdrawReverified(uint256 _withdrawId, address _recipient, uint256 _amount);
 
     /*Functions*/
     /// @notice constructor
@@ -189,12 +190,12 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
         WithdrawDetails storage _withdrawDetails = withdrawDetails[_withdrawId];
         require(_withdrawDetails.pendingAmount > 0, "TokenBridgeV2: pending amount is zero");
         require(_withdrawDetails.lastVerifiedTime < lastPauseTimestamp, "TokenBridgeV2: last verified timestamp recent enough");
-        // NOTE: Should we re-verify the original transfer amount, recipient, etc? Or, use new withdraw info to zero out malicious withdraw info?
         require(_withdrawDetails.amount == _amountConverted, "TokenBridgeV2: amount does not match record");
         require(_withdrawDetails.recipient == _recipient, "TokenBridgeV2: recipient address does not match record");
         _verifyWithdraw(_attestData, _valset, _sigs, _withdrawId);
         // Update last verified time so tokens can be withdrawn
         _withdrawDetails.lastVerifiedTime = block.timestamp;
+        emit ExtraWithdrawReverified(_withdrawId, _recipient, _amountConverted);
     }
 
     /// @notice deposits tokens from Ethereum to layer
@@ -210,10 +211,10 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
         if (_tip > 0) {
             require(_tip >= 1e12, "TokenBridgeV2: tip must be greater than or equal to 1 loya");
         }
-        require(token.transferFrom(msg.sender, address(this), _amount), "TokenBridgeV2: transferFrom failed");
         depositId++;
         depositLimitRecord -= _amount;
         deposits[depositId] = DepositDetails(msg.sender, _layerRecipient, _amount, _tip, block.number);
+        require(token.transferFrom(msg.sender, address(this), _amount), "TokenBridgeV2: transferFrom failed");
         emit Deposit(depositId, msg.sender, _layerRecipient, _amount, _tip);
     }
 
@@ -221,11 +222,11 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
     /// @param _layerAddress the address of the layer contract
     function proposePauseBridge(string calldata _layerAddress) external {
         require(bridgeState == BridgeState.UNPAUSED, "TokenBridgeV2: can only propose pause when bridge is unpaused");
-        require(token.transferFrom(msg.sender, address(this), PAUSE_TRIBUTE_AMOUNT), "TokenBridgeV2: transfer failed");
         totalPauseTributeBalance += PAUSE_TRIBUTE_AMOUNT;
         uint256 _pauseProposalId = pauseProposalId;
         pauseProposalId++;
         pauseProposals[_pauseProposalId] = PauseProposal(msg.sender, block.timestamp, PauseProposalState.PENDING, _layerAddress);
+        require(token.transferFrom(msg.sender, address(this), PAUSE_TRIBUTE_AMOUNT), "TokenBridgeV2: transfer failed");
         emit PauseProposed(_pauseProposalId, msg.sender, block.timestamp);
     }
 
@@ -233,11 +234,12 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
     /// @param _proposalId the id of the pause proposal
     function refundPauseProposal(uint256 _proposalId) external {
         PauseProposal storage _proposal = pauseProposals[_proposalId];
+        require(msg.sender == _proposal.proposer || msg.sender == roles[keccak256("APPROVE_PAUSE")].roleAddress, "TokenBridgeV2: only proposer or sub guardian can refund pause proposal");
         require(_proposal.state == PauseProposalState.PENDING, "TokenBridgeV2: proposal is not pending");
         require(block.timestamp - _proposal.proposalTime > PAUSE_TRIBUTE_LOCK_TIME, "TokenBridgeV2: must wait before refunding pause proposal");
-        require(token.transfer(_proposal.proposer, PAUSE_TRIBUTE_AMOUNT), "TokenBridgeV2: transfer failed");
         _proposal.state = PauseProposalState.REFUNDED;
         totalPauseTributeBalance -= PAUSE_TRIBUTE_AMOUNT;
+        require(token.transfer(_proposal.proposer, PAUSE_TRIBUTE_AMOUNT), "TokenBridgeV2: transfer failed");
         emit PauseRefunded(_proposalId, _proposal.proposer, block.timestamp);
     }
 

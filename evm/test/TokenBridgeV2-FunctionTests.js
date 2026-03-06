@@ -470,14 +470,14 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         }
         await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
         await tbridge.connect(accounts[1]).proposePauseBridge("layer")
-        await h.expectThrow(tbridge.refundPauseProposal(0)) // must wait before refunding
+        await h.expectThrow(tbridge.connect(accounts[1]).refundPauseProposal(0)) // must wait before refunding
         await h.advanceTime(86400 * 7 + 1)
-        await tbridge.refundPauseProposal(0)
+        await tbridge.connect(accounts[1]).refundPauseProposal(0)
         proposal = await tbridge.pauseProposals(0)
         assert.equal(proposal.state, 3, "proposal state should be correct")
         assert.equal((await tbridge.totalPauseTributeBalance()).toString(), h.toWei("0"), "pause tribute balance should be correct")
         assert.equal((await token.balanceOf(await accounts[1].address)).toString(), h.toWei("10000"), "refund should be correct")
-        await h.expectThrow(tbridge.refundPauseProposal(0)) // already refunded
+        await h.expectThrow(tbridge.connect(accounts[1]).refundPauseProposal(0)) // already refunded
         await h.expectThrow(tbridge.connect(subGuardian).approvePause(0)) // no longer pending
     })
 
