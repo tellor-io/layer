@@ -1,4 +1,4 @@
-package v6_1_5_actual
+package v6_1_4
 
 import (
 	"github.com/tellor-io/layer/app/upgrades"
@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	UpgradeName = "v6.1.5-actual"
+	UpgradeName = "v6.1.4"
 )
 
 var Upgrade = upgrades.Upgrade{
