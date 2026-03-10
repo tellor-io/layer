@@ -12,7 +12,7 @@ set -e
 
 # Function to check required dependencies
 check_dependencies() {
-    local deps=("jq" "curl" "wget" "tar")
+    local deps=("jq" "curl" "wget" "tar" "zstd" "lz4")
     local missing=()
     
     for dep in "${deps[@]}"; do
@@ -111,15 +111,24 @@ SNAPSHOT_PATH=""
 SKIP_SNAPSHOT=false
 TEMP_DIR=""
 VERSION_CHECK_DIR=""
+SNAPSHOT_DOWNLOAD_DIR=""
+DOWNLOADED_SNAPSHOT_FILE=""
 
-# Cleanup function for temporary directories
+# Cleanup function for temporary directories (preserves downloaded snapshots)
 cleanup() {
     if [ -n "$TEMP_DIR" ] && [ -d "$TEMP_DIR" ]; then
-        echo "Cleaning up temporary directory: $TEMP_DIR"
+        echo "Cleaning up temporary extraction directory: $TEMP_DIR"
         rm -rf "$TEMP_DIR" 2>/dev/null || true
     fi
     if [ -n "$VERSION_CHECK_DIR" ] && [ -d "$VERSION_CHECK_DIR" ]; then
         rm -rf "$VERSION_CHECK_DIR" 2>/dev/null || true
+    fi
+    # Note: Downloaded snapshot files are intentionally preserved in ~/layer/snapshots/
+    # to avoid re-downloading on failure. User will be prompted to delete on success.
+    if [ -n "$DOWNLOADED_SNAPSHOT_FILE" ] && [ -f "$DOWNLOADED_SNAPSHOT_FILE" ]; then
+        echo ""
+        echo "Note: Downloaded snapshot preserved at: $DOWNLOADED_SNAPSHOT_FILE"
+        echo "You can reuse it with: ./install_layer.sh $NETWORK --snapshot \"$DOWNLOADED_SNAPSHOT_FILE\""
     fi
 }
 
@@ -204,8 +213,8 @@ else
 fi
 
 # init variables for mainnet and palmito
-LAYERD_TAG_MAINNET="v6.0.0"
-LAYERD_TAG_PALMITO="v6.1.0"
+LAYERD_TAG_MAINNET="v6.1.3"
+LAYERD_TAG_PALMITO="v6.1.3"
 MAINNET_LAYER_NODE_URL=https://mainnet.tellorlayer.com/rpc/
 PALMITO_LAYER_NODE_URL=https://node-palmito.tellorlayer.com/rpc/
 MAINNET_RPC_NODE_ID=cbb94e01df344fdfdee1fdf2f9bb481712e7ef8d
@@ -509,13 +518,55 @@ clear
 extract_and_install_snapshot() {
     local snapshot_file="$1"
     local temp_dir="$2"
+    local is_downloaded="$3"  # "true" if this was downloaded (not user-provided)
     
     # Extract the snapshot
     echo "Extracting snapshot (this may take a while, file size ~40-80 GB)..."
     cd "$temp_dir"
-    if ! tar -xf "$snapshot_file" --checkpoint=5000 --checkpoint-action=dot; then
+    if [[ "$snapshot_file" == *.zstd ]] || [[ "$snapshot_file" == *.zst ]]; then
+        if ! zstd -dc "$snapshot_file" | tar -xf - --checkpoint=5000 --checkpoint-action=dot; then
+            echo ""
+            echo "Error: Failed to extract zstd-compressed snapshot"
+            echo ""
+            if [ "$is_downloaded" = "true" ]; then
+                echo "The downloaded snapshot has been preserved at:"
+                echo "  $snapshot_file"
+                echo ""
+                echo "You can retry installation with:"
+                echo "  ./install_layer.sh $NETWORK --snapshot \"$snapshot_file\""
+            fi
+            # Clean up extraction directory but preserve the snapshot file
+            rm -rf "$temp_dir" "$VERSION_CHECK_DIR"
+            exit 1
+        fi
+    elif [[ "$snapshot_file" == *.lz4 ]]; then
+        if ! lz4 -dc "$snapshot_file" | tar -xf - --checkpoint=5000 --checkpoint-action=dot; then
+            echo ""
+            echo "Error: Failed to extract lz4-compressed snapshot"
+            echo ""
+            if [ "$is_downloaded" = "true" ]; then
+                echo "The downloaded snapshot has been preserved at:"
+                echo "  $snapshot_file"
+                echo ""
+                echo "You can retry installation with:"
+                echo "  ./install_layer.sh $NETWORK --snapshot \"$snapshot_file\""
+            fi
+            # Clean up extraction directory but preserve the snapshot file
+            rm -rf "$temp_dir" "$VERSION_CHECK_DIR"
+            exit 1
+        fi
+    elif ! tar -xf "$snapshot_file" --checkpoint=5000 --checkpoint-action=dot; then
         echo ""
         echo "Error: Failed to extract snapshot"
+        echo ""
+        if [ "$is_downloaded" = "true" ]; then
+            echo "The downloaded snapshot has been preserved at:"
+            echo "  $snapshot_file"
+            echo ""
+            echo "You can retry installation with:"
+            echo "  ./install_layer.sh $NETWORK --snapshot \"$snapshot_file\""
+        fi
+        # Clean up extraction directory but preserve the snapshot file
         rm -rf "$temp_dir" "$VERSION_CHECK_DIR"
         exit 1
     fi
@@ -538,14 +589,64 @@ extract_and_install_snapshot() {
         echo "Blockchain data successfully installed"
     else
         echo "Error: Expected .layer_snapshot/data directory not found in extracted snapshot"
+        echo ""
+        if [ "$is_downloaded" = "true" ]; then
+            echo "The downloaded snapshot has been preserved at:"
+            echo "  $snapshot_file"
+            echo ""
+            echo "You can retry installation with:"
+            echo "  ./install_layer.sh $NETWORK --snapshot \"$snapshot_file\""
+        fi
+        # Clean up extraction directory but preserve the snapshot file
         rm -rf "$temp_dir" "$VERSION_CHECK_DIR"
         exit 1
     fi
     
-    # Clean up temporary files
-    echo "Cleaning up temporary files..."
+    # Clean up temporary extraction directory
+    echo "Cleaning up temporary extraction directory..."
     rm -rf "$temp_dir" "$VERSION_CHECK_DIR"
-    echo "Snapshot installation complete!"
+    
+    # If this was a downloaded snapshot, ask user if they want to delete it
+    if [ "$is_downloaded" = "true" ]; then
+        echo ""
+        echo "Snapshot installation complete!"
+        echo ""
+        echo "The downloaded snapshot file is stored at:"
+        echo "  $snapshot_file"
+        echo ""
+        while true; do
+            read -p "Do you want to delete the snapshot file to free up disk space? (y/n): " delete_choice
+            case "$delete_choice" in
+                y|Y|yes|Yes|YES)
+                    echo "Deleting snapshot file..."
+                    rm -f "$snapshot_file"
+                    # Remove the snapshots directory if empty
+                    rmdir "$SNAPSHOT_DOWNLOAD_DIR" 2>/dev/null || true
+                    echo "Snapshot file deleted."
+                    # Clear the variable so cleanup doesn't print the preservation message
+                    DOWNLOADED_SNAPSHOT_FILE=""
+                    break
+                    ;;
+                n|N|no|No|NO)
+                    echo "Keeping snapshot file. You can delete it later or reuse it with:"
+                    echo "  ./install_layer.sh $NETWORK --snapshot \"$snapshot_file\""
+                    # Clear the variable so cleanup doesn't print the preservation message
+                    DOWNLOADED_SNAPSHOT_FILE=""
+                    break
+                    ;;
+                "")
+                    echo "Please enter y (yes) or n (no)."
+                    echo ""
+                    ;;
+                *)
+                    echo "Please enter y (yes) or n (no)."
+                    echo ""
+                    ;;
+            esac
+        done
+    else
+        echo "Snapshot installation complete!"
+    fi
 }
 
 # Handle snapshot installation based on flags
@@ -567,9 +668,9 @@ elif [ -n "$SNAPSHOT_PATH" ]; then
         exit 1
     fi
 
-    # Validate it's a tar file
-    if [[ "$SNAPSHOT_PATH" != *.tar ]]; then
-        echo "Warning: Snapshot file does not have .tar extension. Proceeding anyway..."
+    # Validate snapshot extension
+    if [[ "$SNAPSHOT_PATH" != *.tar ]] && [[ "$SNAPSHOT_PATH" != *.zstd ]] && [[ "$SNAPSHOT_PATH" != *.zst ]] && [[ "$SNAPSHOT_PATH" != *.lz4 ]]; then
+        echo "Warning: Snapshot file does not have a recognized extension (.tar, .zstd, .zst, .lz4). Proceeding anyway..."
     fi
 
     # Create temporary extraction directory
@@ -581,8 +682,8 @@ elif [ -n "$SNAPSHOT_PATH" ]; then
         exit 1
     fi
 
-    # Extract and install the snapshot
-    extract_and_install_snapshot "$SNAPSHOT_PATH" "$TEMP_DIR"
+    # Extract and install the snapshot (user-provided, not downloaded)
+    extract_and_install_snapshot "$SNAPSHOT_PATH" "$TEMP_DIR" "false"
 else
     # Default behavior: Download and install the latest pre-built snapshot from https://layer-node.com
     echo ""
@@ -602,7 +703,7 @@ else
     
     # Fetch available snapshots and parse JSON to get the latest one
     echo "Fetching available snapshots for $NETWORK..."
-    SNAPSHOT_FILE=$(curl -s https://layer-node.com/files | jq -r --arg prefix "$SNAPSHOT_PREFIX" '.files[] | select(.filename | contains($prefix)) | select(.filename | endswith(".tar")) | {filename: .filename, upload_time: .upload_time}' | jq -s 'sort_by(.upload_time) | reverse | .[0].filename' | tr -d '"')
+    SNAPSHOT_FILE=$(curl -s https://layer-node.com/files | jq -r --arg prefix "$SNAPSHOT_PREFIX" '.files[] | select(.filename | contains($prefix)) | select(.filename | test("\\.(tar|zstd|zst|lz4)$")) | {filename: .filename, upload_time: .upload_time}' | jq -s 'sort_by(.upload_time) | reverse | .[0].filename' | tr -d '"')
     
     if [ -z "$SNAPSHOT_FILE" ] || [ "$SNAPSHOT_FILE" == "null" ]; then
         echo "Error: No snapshots found for $NETWORK network"
@@ -611,25 +712,80 @@ else
     
     echo "Latest snapshot found: $SNAPSHOT_FILE"
     
-    # Create temporary download directory
-    TEMP_DIR="$USER_HOME/tmp/layer_snapshot_download"
+    # Create snapshot download directory (persistent location)
+    SNAPSHOT_DOWNLOAD_DIR="$USER_HOME/layer/snapshots"
+    TEMP_DIR="$USER_HOME/tmp/layer_snapshot_extract"
     VERSION_CHECK_DIR="$USER_HOME/tmp/layerd-version-check"
-    echo "Creating temporary download directory: $TEMP_DIR"
+    
+    echo "Creating snapshot directory: $SNAPSHOT_DOWNLOAD_DIR"
+    if ! mkdir -p "$SNAPSHOT_DOWNLOAD_DIR"; then
+        echo "Error: Failed to create snapshot directory"
+        exit 1
+    fi
+    
+    echo "Creating temporary extraction directory: $TEMP_DIR"
     if ! mkdir -p "$TEMP_DIR"; then
-        echo "Error: Failed to create temporary download directory"
+        echo "Error: Failed to create temporary extraction directory"
         exit 1
     fi
     
-    # Download the snapshot
-    echo "Downloading snapshot (this may take a while, file size is ~40-75 GB)..."
-    if ! curl -L -o "$TEMP_DIR/$SNAPSHOT_FILE" "https://layer-node.com/download/$SNAPSHOT_FILE"; then
-        echo "Error: Failed to download snapshot"
-        rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
-        exit 1
+    # Set the download path and track it for cleanup messaging
+    DOWNLOADED_SNAPSHOT_FILE="$SNAPSHOT_DOWNLOAD_DIR/$SNAPSHOT_FILE"
+    
+    # Check if snapshot already exists (from a previous failed attempt)
+    if [ -f "$DOWNLOADED_SNAPSHOT_FILE" ]; then
+        echo ""
+        echo "Found existing snapshot file at: $DOWNLOADED_SNAPSHOT_FILE"
+        while true; do
+            read -p "Use existing file instead of re-downloading? (y/n): " reuse_choice
+            case "$reuse_choice" in
+                y|Y|yes|Yes|YES)
+                    echo "Using existing snapshot file..."
+                    break
+                    ;;
+                n|N|no|No|NO)
+                    echo "Removing existing file and downloading fresh copy..."
+                    rm -f "$DOWNLOADED_SNAPSHOT_FILE"
+                    # Download the snapshot
+                    echo "Downloading snapshot (this may take a while, file size is ~40-75 GB)..."
+                    if ! curl -L -o "$DOWNLOADED_SNAPSHOT_FILE" "https://layer-node.com/download/$SNAPSHOT_FILE"; then
+                        echo "Error: Failed to download snapshot"
+                        echo ""
+                        echo "If a partial download exists, it has been preserved at:"
+                        echo "  $DOWNLOADED_SNAPSHOT_FILE"
+                        rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
+                        exit 1
+                    fi
+                    break
+                    ;;
+                "")
+                    echo "Please enter y (yes) or n (no)."
+                    echo ""
+                    ;;
+                *)
+                    echo "Please enter y (yes) or n (no)."
+                    echo ""
+                    ;;
+            esac
+        done
+    else
+        # Download the snapshot
+        echo "Downloading snapshot (this may take a while, file size is ~40-75 GB)..."
+        if ! curl -L -o "$DOWNLOADED_SNAPSHOT_FILE" "https://layer-node.com/download/$SNAPSHOT_FILE"; then
+            echo "Error: Failed to download snapshot"
+            echo ""
+            echo "If a partial download exists, it has been preserved at:"
+            echo "  $DOWNLOADED_SNAPSHOT_FILE"
+            echo ""
+            echo "You can retry the download by running this script again,"
+            echo "or manually download and use: ./install_layer.sh $NETWORK --snapshot <path>"
+            rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
+            exit 1
+        fi
     fi
     
-    # Extract and install the snapshot
-    extract_and_install_snapshot "$TEMP_DIR/$SNAPSHOT_FILE" "$TEMP_DIR"
+    # Extract and install the snapshot (mark as downloaded for cleanup prompts)
+    extract_and_install_snapshot "$DOWNLOADED_SNAPSHOT_FILE" "$TEMP_DIR" "true"
 fi
 
 # Create systemd service file (Linux only)

@@ -202,11 +202,11 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	require.Equal(report.MicroReports[0].MetaId, uint64(5))
 
 	// add bridge report from each reporter
-	_ = s.registryKeeper.On("GetSpec", ctx, "TRBBridge").Return(bridgeSpec, nil).Once()
+	_ = s.registryKeeper.On("GetSpec", ctx, "TRBBridgeV2").Return(bridgeSpec, nil).Once()
 	_ = s.bridgeKeeper.On("GetDepositStatus", ctx, uint64(8)).Return(false, nil).Maybe()
 
-	// create proper TRBBridge query data - this should be a deposit (true) with depositId 8
-	queryDataStr := "0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000095452424272696467650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000008"
+	// create proper TRBBridgeV2 query data - this should be a deposit (true) with depositId 8
+	queryDataStr := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000b5452424272696467655632000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000008"
 	queryData, err = hex.DecodeString(queryDataStr)
 	require.NoError(err)
 	bridgeQueryId := utils.QueryIDFromData(queryData)
@@ -217,7 +217,7 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 		RegistrySpecBlockWindow: 10,
 		HasRevealedReports:      false,
 		QueryData:               queryData,
-		QueryType:               queryType,
+		QueryType:               "TRBBridgeV2",
 		CycleList:               true,
 	}
 	err = s.oracleKeeper.Query.Set(ctx, collections.Join(bridgeQueryId, queryMeta.Id), queryMeta)
@@ -236,7 +236,7 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	require.NotNil(res)
 
 	// other reporter reports same query
-	_ = s.registryKeeper.On("GetSpec", ctx, "TRBBridge").Return(bridgeSpec, nil).Once()
+	_ = s.registryKeeper.On("GetSpec", ctx, "TRBBridgeV2").Return(bridgeSpec, nil).Once()
 	queryMeta = types.QueryMeta{
 		Id:                      uint64(9),
 		Amount:                  math.NewInt(100_000),
@@ -244,7 +244,7 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 		RegistrySpecBlockWindow: 10,
 		HasRevealedReports:      false,
 		QueryData:               queryData,
-		QueryType:               queryType,
+		QueryType:               "TRBBridgeV2",
 		CycleList:               true,
 	}
 	err = s.oracleKeeper.Query.Set(ctx, collections.Join(bridgeQueryId, queryMeta.Id), queryMeta)

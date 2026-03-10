@@ -8,6 +8,8 @@ import (
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/bridge/types"
 
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -16,11 +18,14 @@ import (
 func (k msgServer) WithdrawTokens(goCtx context.Context, msg *types.MsgWithdrawTokens) (*types.MsgWithdrawTokensResponse, error) {
 	sdkCtx := sdk.UnwrapSDKContext(goCtx)
 
+	sender, err := sdk.AccAddressFromBech32(msg.Creator)
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+	}
+
 	if msg.Amount.Denom != layer.BondDenom || msg.Amount.Amount.IsZero() || msg.Amount.Amount.IsNegative() {
 		return nil, sdkerrors.ErrInvalidRequest
 	}
-
-	sender := sdk.MustAccAddressFromBech32(msg.Creator)
 
 	recipient, err := hex.DecodeString(msg.Recipient)
 	if err != nil {

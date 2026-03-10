@@ -478,4 +478,46 @@ func (s *KeeperTestSuite) TestUpdateDispute() {
 	require.NoError(err)
 	require.Equal(voteRes.Id, vote.Id)
 	require.Equal(voteRes.VoteResult, vote.VoteResult)
+
+	// tie with quorum - two options equal and highest (support == against)
+	vote = types.Vote{
+		Id:         id,
+		VoteResult: types.VoteResult_NO_TALLY, // starts as NO_TALLY
+	}
+	scaledSupport = math.NewInt(50)
+	scaledAgainst = math.NewInt(50)
+	scaledInvalid = math.ZeroInt()
+
+	require.NoError(k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true))
+	voteRes, err = k.Votes.Get(ctx, id)
+	require.NoError(err)
+	require.Equal(types.VoteResult_INVALID, voteRes.VoteResult, "tie with quorum should result in INVALID")
+
+	// tie without quorum - three-way tie
+	vote = types.Vote{
+		Id:         id,
+		VoteResult: types.VoteResult_NO_TALLY,
+	}
+	scaledSupport = math.NewInt(33)
+	scaledAgainst = math.NewInt(33)
+	scaledInvalid = math.NewInt(33)
+
+	require.NoError(k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, false))
+	voteRes, err = k.Votes.Get(ctx, id)
+	require.NoError(err)
+	require.Equal(types.VoteResult_NO_QUORUM_MAJORITY_INVALID, voteRes.VoteResult, "tie without quorum should result in NO_QUORUM_MAJORITY_INVALID")
+
+	// tie: support == invalid, both higher than against
+	vote = types.Vote{
+		Id:         id,
+		VoteResult: types.VoteResult_NO_TALLY,
+	}
+	scaledSupport = math.NewInt(40)
+	scaledAgainst = math.NewInt(20)
+	scaledInvalid = math.NewInt(40)
+
+	require.NoError(k.UpdateDispute(ctx, id, dispute, vote, scaledSupport, scaledAgainst, scaledInvalid, true))
+	voteRes, err = k.Votes.Get(ctx, id)
+	require.NoError(err)
+	require.Equal(types.VoteResult_INVALID, voteRes.VoteResult, "two-way tie with quorum should result in INVALID")
 }

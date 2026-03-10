@@ -117,7 +117,7 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 			return err
 		}
 		var dstValAddr sdk.ValAddress
-		if addr, err := sdk.ValAddressFromBech32(msg.ValidatorSrcAddress); err == nil {
+		if addr, err := sdk.ValAddressFromBech32(msg.ValidatorDstAddress); err == nil {
 			dstValAddr = addr
 		} else {
 			return err

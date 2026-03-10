@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 # This Dockerfile performs a multi-stage build. BUILDER_IMAGE is the image used
 # to compile the layerd binary. RUNTIME_IMAGE is the image that will be
 # returned with the final layerd binary.
@@ -24,9 +26,16 @@ RUN apk update && apk add --no-cache \
     linux-headers \
     make \
     musl-dev
-COPY . /layer
 WORKDIR /layer
-RUN uname -a &&\
+
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
+COPY . .
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    uname -a &&\
     CGO_ENABLED=${CGO_ENABLED} GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
     make build
 

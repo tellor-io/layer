@@ -165,7 +165,10 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 			}
 			tokensVotedBefore = math.ZeroInt()
 		}
-		reporterTokens = reporterTokens.Sub(tokensVotedBefore)
+		reporterTokens, err = reporterTokens.SafeSub(tokensVotedBefore)
+		if err != nil {
+			return math.Int{}, err
+		}
 		return reporterTokens, k.AddReporterVoteCount(ctx, id, reporterTokens.Uint64(), choice, oldVote)
 	}
 	// voter is non-reporter selector
@@ -193,10 +196,16 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		if err != nil {
 			return math.Int{}, err
 		}
-		// update reporter's power record for reward calculation
-		reporterVote.ReporterPower = reporterVote.ReporterPower.Sub(selectorTokens)
+		// update reporter's power record for reward calcu lation
+		reporterVote.ReporterPower, err = reporterVote.ReporterPower.SafeSub(selectorTokens)
+		if err != nil {
+			return math.Int{}, err
+		}
 		// decrease reporterVote.VoterPower by selectorTokens
-		reporterVote.VoterPower = reporterVote.VoterPower.Sub(selectorTokens)
+		reporterVote.VoterPower, err = reporterVote.VoterPower.SafeSub(selectorTokens)
+		if err != nil {
+			return math.Int{}, err
+		}
 		err = k.Voter.Set(ctx, collections.Join(id, reporter.Bytes()), reporterVote)
 		if err != nil {
 			return math.Int{}, err
@@ -210,7 +219,10 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		}
 		delegatorTokensVoted = math.ZeroInt()
 	}
-	delegatorTokensVoted = delegatorTokensVoted.Add(selectorTokens)
+	delegatorTokensVoted, err = delegatorTokensVoted.SafeAdd(selectorTokens)
+	if err != nil {
+		return math.Int{}, err
+	}
 	err = k.ReportersWithDelegatorsVotedBefore.Set(ctx, collections.Join(reporter.Bytes(), id), delegatorTokensVoted)
 	if err != nil {
 		return math.Int{}, err
