@@ -24,6 +24,8 @@ const { ethers } = hre;
 // - EXPECTED_SYNTH_RECIPIENT
 // - EXPECTED_SYNTH_AMOUNT_LOYA
 // - EXPECTED_TOKEN_BRIDGE_V2_DATA_BRIDGE
+// - UPGRADE_TIME_TOLERANCE_SECONDS (default: 86400)
+// - UNCLAIMED_SCAN_LIMIT (default: 250)
 
 const TOKEN_BRIDGE_V1_ABI = [
   "function initialized() view returns (bool)",
@@ -156,6 +158,119 @@ function pickNumericField(obj, keys) {
   return null;
 }
 
+function pickBooleanField(obj, keys) {
+  for (const key of keys) {
+    if (obj && obj[key] !== undefined && obj[key] !== null) {
+      const value = obj[key];
+      if (typeof value === "boolean") {
+        return value;
+      }
+      if (typeof value === "string") {
+        if (value.toLowerCase() === "true") return true;
+        if (value.toLowerCase() === "false") return false;
+      }
+      if (typeof value === "number") {
+        return value !== 0;
+      }
+    }
+  }
+  return null;
+}
+
+function toBigNumberOrNull(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  try {
+    return ethers.BigNumber.from(String(value));
+  } catch (e) {
+    return null;
+  }
+}
+
+function decodedHasParams(decoded) {
+  if (!decoded) {
+    return false;
+  }
+  const isNonZeroRecipient = normalizeAddress(decoded.recipient) !== ethers.constants.AddressZero;
+  const hasLayerSender = typeof decoded.layerSender === "string" && decoded.layerSender.trim().length > 0;
+  const hasAmount = !decoded.amountLoya.isZero();
+  const hasTip = !decoded.tipLoya.isZero();
+  return isNonZeroRecipient || hasLayerSender || hasAmount || hasTip;
+}
+
+async function fetchAggregateAtOrBefore(layerRestUrl, queryIdNoPrefix, timestampMs) {
+  const res = await queryLayerJson(
+    layerRestUrl,
+    `/tellor-io/layer/oracle/get_data_before/${queryIdNoPrefix}/${timestampMs}`
+  );
+  if (!res.ok) {
+    return {
+      found: false,
+      timestamp: null,
+      aggregateValueRaw: null,
+      decodedValue: null,
+      fetchError: res.error,
+      fetchStatus: res.status,
+    };
+  }
+
+  const aggregateObj = res.data?.aggregate || res.data;
+  const aggregateValue =
+    aggregateObj?.aggregate_value ??
+    aggregateObj?.aggregateValue ??
+    aggregateObj?.aggregate_value_raw ??
+    null;
+  const reportTimestamp = pickNumericField(res.data, ["timestamp"]);
+
+  return {
+    found: true,
+    timestamp: reportTimestamp,
+    aggregateValueRaw: aggregateValue,
+    decodedValue: decodeAggregateValue(aggregateValue),
+    fetchError: null,
+    fetchStatus: res.status,
+  };
+}
+
+async function scanUnclaimedDeposits(layerRestUrl, highestDepositIdBn, scanLimit) {
+  if (highestDepositIdBn.isZero()) {
+    return [];
+  }
+  const maxIters = highestDepositIdBn.gte(scanLimit) ? scanLimit : highestDepositIdBn.toNumber();
+  const unclaimed = [];
+  for (let i = 0; i < maxIters; i++) {
+    const id = highestDepositIdBn.sub(i);
+    const res = await queryLayerJson(layerRestUrl, `/layer/bridge/get_deposit_claimed/${id.toString()}`);
+    if (!res.ok) {
+      continue;
+    }
+    const isClaimed = pickBooleanField(res.data, ["claimed", "is_claimed", "isClaimed"]);
+    if (isClaimed === false) {
+      unclaimed.push(id.toString());
+    }
+  }
+  return unclaimed;
+}
+
+async function scanUnclaimedWithdraws(v1, highestWithdrawIdBn, scanLimit) {
+  if (highestWithdrawIdBn.isZero()) {
+    return [];
+  }
+  const maxIters = highestWithdrawIdBn.gte(scanLimit - 1)
+    ? scanLimit
+    : highestWithdrawIdBn.toNumber() + 1;
+  const unclaimed = [];
+  for (let i = 0; i < maxIters; i++) {
+    const id = highestWithdrawIdBn.sub(i);
+    const isClaimed = await v1.withdrawClaimed(id);
+    if (!isClaimed) {
+      unclaimed.push(id.toString());
+    }
+  }
+  return unclaimed;
+}
+
 async function fetchLayerState(layerRestUrl, syntheticWithdrawId, syntheticLegacyQueryIdNoPrefix) {
   const [lastWithdrawalRes, currentValTsRes] = await Promise.all([
     queryLayerJson(layerRestUrl, "/layer/bridge/get_last_withdrawal_id"),
@@ -229,6 +344,8 @@ async function main() {
   const expectedV2DataBridgeAddress = optionalEnv("EXPECTED_TOKEN_BRIDGE_V2_DATA_BRIDGE");
   const expectedSyntheticRecipient = optionalEnv("EXPECTED_SYNTH_RECIPIENT");
   const expectedSyntheticAmountLoya = optionalEnv("EXPECTED_SYNTH_AMOUNT_LOYA");
+  const upgradeTimeToleranceSec = Number(optionalEnv("UPGRADE_TIME_TOLERANCE_SECONDS") || "86400");
+  const unclaimedScanLimit = Number(optionalEnv("UNCLAIMED_SCAN_LIMIT") || "250");
   const syntheticWithdrawId = toWeiBigNumber(optionalEnv("SYNTHETIC_WITHDRAW_ID") || "1000000000000", "SYNTHETIC_WITHDRAW_ID");
 
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
@@ -286,9 +403,16 @@ async function main() {
   ]);
 
   let v2CursorCoversLayerLastWithdrawal = null;
+  let v2CursorStopsAfterLayerLastWithdrawal = null;
+  let v2CursorCoversSynthetic = null;
+  let v2CursorStopsAfterSynthetic = null;
+  const layerLastWithdrawalIdBn = toBigNumberOrNull(layerState.lastWithdrawalId);
   if (layerState.lastWithdrawalId !== null) {
-    v2CursorCoversLayerLastWithdrawal = await v2.withdrawClaimed(layerState.lastWithdrawalId);
+    v2CursorCoversLayerLastWithdrawal = await v2.withdrawClaimed(layerLastWithdrawalIdBn);
+    v2CursorStopsAfterLayerLastWithdrawal = !(await v2.withdrawClaimed(layerLastWithdrawalIdBn.add(1)));
   }
+  v2CursorCoversSynthetic = await v2.withdrawClaimed(syntheticWithdrawId);
+  v2CursorStopsAfterSynthetic = !(await v2.withdrawClaimed(syntheticWithdrawId.add(1)));
 
   const bridgeStateNameV2 =
     Number(v2BridgeState) === 0 ? "UNPAUSED" : Number(v2BridgeState) === 1 ? "PAUSED" : `UNKNOWN(${v2BridgeState})`;
@@ -310,6 +434,43 @@ async function main() {
     expectedSyntheticAmountLoya && decodedSynthetic
       ? decodedSynthetic.amountLoya.eq(toWeiBigNumber(expectedSyntheticAmountLoya, "EXPECTED_SYNTH_AMOUNT_LOYA"))
       : null;
+  const syntheticHasParams = decodedHasParams(decodedSynthetic);
+
+  const upgradeTimestampSec = v2BridgeStateUpdateTime.isZero()
+    ? latestBlock.timestamp
+    : Number(v2BridgeStateUpdateTime.toString());
+  const syntheticAtOrBeforeUpgrade = await fetchAggregateAtOrBefore(
+    layerRestUrl,
+    syntheticLegacyQueryIdNoPrefix,
+    String(upgradeTimestampSec * 1000)
+  );
+  const syntheticBeforeUpgradeTsSec =
+    syntheticAtOrBeforeUpgrade.timestamp === null
+      ? null
+      : Math.floor(Number(syntheticAtOrBeforeUpgrade.timestamp) / 1000);
+  const syntheticNearUpgradeTime =
+    syntheticBeforeUpgradeTsSec === null
+      ? null
+      : Math.abs(syntheticBeforeUpgradeTsSec - upgradeTimestampSec) <= upgradeTimeToleranceSec;
+  const syntheticBeforeUpgradeDecoded = syntheticAtOrBeforeUpgrade.decodedValue;
+  const syntheticBeforeUpgradeRecipientMatches =
+    expectedSyntheticRecipient && syntheticBeforeUpgradeDecoded
+      ? normalizeAddress(syntheticBeforeUpgradeDecoded.recipient) === normalizeAddress(expectedSyntheticRecipient)
+      : null;
+  const syntheticBeforeUpgradeAmountMatches =
+    expectedSyntheticAmountLoya && syntheticBeforeUpgradeDecoded
+      ? syntheticBeforeUpgradeDecoded.amountLoya.eq(
+          toWeiBigNumber(expectedSyntheticAmountLoya, "EXPECTED_SYNTH_AMOUNT_LOYA")
+        )
+      : null;
+  const syntheticBeforeUpgradeHasParams = decodedHasParams(syntheticBeforeUpgradeDecoded);
+
+  const unclaimedDepositIds = await scanUnclaimedDeposits(layerRestUrl, v1DepositId, unclaimedScanLimit);
+  const unclaimedWithdrawIds = await scanUnclaimedWithdraws(
+    v1,
+    layerLastWithdrawalIdBn || syntheticWithdrawId,
+    unclaimedScanLimit
+  );
 
   const checks = [
     {
@@ -323,6 +484,11 @@ async function main() {
       detail: `v2 depositId=${v2DepositId.toString()}`,
     },
     {
+      label: "V2 init depositId matches V1 cursor",
+      done: v2DepositId.eq(v1DepositId),
+      detail: `v1 depositId=${v1DepositId.toString()}, v2 depositId=${v2DepositId.toString()}`,
+    },
+    {
       label: "V2 init cursor includes Layer last withdrawal id",
       done: v2CursorCoversLayerLastWithdrawal === true,
       detail:
@@ -331,9 +497,68 @@ async function main() {
           : `layer lastWithdrawalId=${layerState.lastWithdrawalId}`,
     },
     {
+      label: "V2 init cursor stops immediately after Layer last withdrawal id",
+      done:
+        layerState.lastWithdrawalId === null ? false : v2CursorStopsAfterLayerLastWithdrawal === true,
+      detail:
+        layerState.lastWithdrawalId === null
+          ? "could not query Layer withdrawal cursor"
+          : `withdrawClaimed(${layerLastWithdrawalIdBn.add(1).toString()})=${!v2CursorStopsAfterLayerLastWithdrawal}`,
+    },
+    {
+      label: "V2 init cursor includes synthetic withdraw id",
+      done: v2CursorCoversSynthetic === true,
+      detail: `withdrawClaimed(${syntheticWithdrawId.toString()})=${v2CursorCoversSynthetic}`,
+    },
+    {
+      label: "V2 init cursor stops immediately after synthetic withdraw id",
+      done: v2CursorStopsAfterSynthetic === true,
+      detail: `withdrawClaimed(${syntheticWithdrawId.add(1).toString()})=${!v2CursorStopsAfterSynthetic}`,
+    },
+    {
       label: "Synthetic legacy withdraw report exists on Layer",
       done: layerState.syntheticAggregate.found,
       detail: `legacy queryId=${syntheticLegacyQueryId}`,
+    },
+    {
+      label: "Synthetic legacy withdraw includes explicit params",
+      done: syntheticHasParams,
+      detail: syntheticHasParams
+        ? "decoded recipient/layerSender/amount/tip are non-empty"
+        : "decoded params look empty; verify synthetic relay inputs",
+    },
+    {
+      label: "Synthetic withdraw near upgrade time (get_data_before)",
+      done: syntheticNearUpgradeTime === true,
+      detail:
+        syntheticBeforeUpgradeTsSec === null
+          ? "could not resolve synthetic report timestamp near upgrade"
+          : `synthetic ts=${syntheticBeforeUpgradeTsSec}, upgrade ts=${upgradeTimestampSec}, tolerance=${upgradeTimeToleranceSec}s`,
+    },
+    {
+      label: "Synthetic withdraw near upgrade has params",
+      done: syntheticBeforeUpgradeHasParams,
+      detail: syntheticBeforeUpgradeHasParams
+        ? "decoded recipient/layerSender/amount/tip are non-empty"
+        : "decoded params empty near upgrade; unexpected for giant synthetic withdraw",
+    },
+    {
+      label: "No unclaimed deposits in scanned pre-upgrade range",
+      done: unclaimedDepositIds.length === 0,
+      detail:
+        unclaimedDepositIds.length === 0
+          ? `scanned ${
+              v1DepositId.gte(unclaimedScanLimit) ? unclaimedScanLimit : v1DepositId.toString()
+            } ids ending at ${v1DepositId.toString()}`
+          : `found unclaimed deposit ids: ${unclaimedDepositIds.slice(0, 10).join(", ")}${unclaimedDepositIds.length > 10 ? " ..." : ""}`,
+    },
+    {
+      label: "No unclaimed withdraws in scanned pre-upgrade range",
+      done: unclaimedWithdrawIds.length === 0,
+      detail:
+        unclaimedWithdrawIds.length === 0
+          ? `scanned ${unclaimedScanLimit} ids down from ${(layerLastWithdrawalIdBn || syntheticWithdrawId).toString()}`
+          : `found unclaimed withdraw ids: ${unclaimedWithdrawIds.slice(0, 10).join(", ")}${unclaimedWithdrawIds.length > 10 ? " ..." : ""}`,
     },
     {
       label: "Synthetic legacy withdraw relayed on V1",
@@ -445,6 +670,36 @@ async function main() {
       }
     } else {
       console.log("Synthetic aggregate value could not be ABI-decoded as (address,string,uint256,uint256).");
+    }
+  }
+
+  console.log("\nSynthetic Around Upgrade (get_data_before)");
+  console.log("-----------------------------------------");
+  if (!syntheticAtOrBeforeUpgrade.found) {
+    console.log(
+      `Synthetic before-upgrade lookup failed (status=${syntheticAtOrBeforeUpgrade.fetchStatus}): ${syntheticAtOrBeforeUpgrade.fetchError}`
+    );
+  } else {
+    console.log(
+      `Synthetic report timestamp <= upgrade timestamp: ${
+        syntheticAtOrBeforeUpgrade.timestamp === null ? "unavailable" : syntheticAtOrBeforeUpgrade.timestamp
+      }`
+    );
+    console.log(`Synthetic before-upgrade raw value: ${syntheticAtOrBeforeUpgrade.aggregateValueRaw}`);
+    if (syntheticBeforeUpgradeDecoded) {
+      console.log("Synthetic before-upgrade decoded:");
+      console.log(`  recipient: ${syntheticBeforeUpgradeDecoded.recipient}`);
+      console.log(`  layerSender: ${syntheticBeforeUpgradeDecoded.layerSender}`);
+      console.log(`  amount (loya): ${syntheticBeforeUpgradeDecoded.amountLoya.toString()}`);
+      console.log(`  tip (loya): ${syntheticBeforeUpgradeDecoded.tipLoya.toString()}`);
+      if (syntheticBeforeUpgradeRecipientMatches !== null) {
+        console.log(`  expected recipient match: ${syntheticBeforeUpgradeRecipientMatches}`);
+      }
+      if (syntheticBeforeUpgradeAmountMatches !== null) {
+        console.log(`  expected amount match: ${syntheticBeforeUpgradeAmountMatches}`);
+      }
+    } else {
+      console.log("Synthetic before-upgrade value could not be ABI-decoded as (address,string,uint256,uint256).");
     }
   }
 
