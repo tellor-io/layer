@@ -1,4 +1,4 @@
-package v6_1_2
+package v6_1_3
 
 import (
 	"context"
@@ -11,12 +11,9 @@ import (
 )
 
 /*
-Upgrade to v6.1.2 includes:
-  - Reporter stake caching: skip full recalculation when delegation state hasn't changed
-  - New reporter collections: LastValSetUpdateHeight, StakeRecalcFlag, RecalcAtTime
-  - Staking hooks now flag reporters for recalculation on validator set changes and delegation modifications
-  - Microreport pruning: oracle EndBlocker removes reports older than 30 days (batched, max 100/block)
-  - Simplified reporter PruneOldReports using oracle block-height lookup
+Upgrade to v6.1.3 includes:
+  - extra checks added to the vote extension handler to prevent abuse
+  - removed some panics and added further fuzz testing
 */
 
 func CreateUpgradeHandler(

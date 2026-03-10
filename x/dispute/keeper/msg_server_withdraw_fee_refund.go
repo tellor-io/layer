@@ -8,9 +8,11 @@ import (
 	"github.com/tellor-io/layer/x/dispute/types"
 
 	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // WithdrawFeeRefund allows whoever paid the first round dispute fee to get refunded the fee if the
@@ -18,7 +20,10 @@ import (
 // If the dispute resolves to support, a first round fee payer also gets the disputed reporter's slashed tokens.
 func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdrawFeeRefund) (*types.MsgWithdrawFeeRefundResponse, error) {
 	// should be ok to be called by anyone
-	feePayer := sdk.MustAccAddressFromBech32(msg.PayerAddress)
+	feePayer, err := sdk.AccAddressFromBech32(msg.PayerAddress)
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid payer address (%s)", err)
+	}
 	// dispute
 	dispute, err := k.Disputes.Get(ctx, msg.Id)
 	if err != nil {

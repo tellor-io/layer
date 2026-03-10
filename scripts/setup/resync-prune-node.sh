@@ -116,8 +116,8 @@ EOF
 }
 
 # Define version tags
-LAYERD_TAG_MAINNET="v6.1.0-fix"
-LAYERD_TAG_PALMITO="v6.1.1"
+LAYERD_TAG_MAINNET="v6.1.3"
+LAYERD_TAG_PALMITO="v6.1.3"
 
 # Set network-specific variables
 if [ "$NETWORK" == "tellor-1" ]; then
@@ -467,9 +467,9 @@ if [ -n "$SNAPSHOT_PATH" ]; then
         exit 1
     fi
 
-    # Validate it's a tar file
-    if [[ "$SNAPSHOT_PATH" != *.tar ]]; then
-        echo "Warning: Snapshot file does not have .tar extension. Proceeding anyway..."
+    # Validate snapshot extension
+    if [[ "$SNAPSHOT_PATH" != *.tar ]] && [[ "$SNAPSHOT_PATH" != *.zstd ]] && [[ "$SNAPSHOT_PATH" != *.zst ]] && [[ "$SNAPSHOT_PATH" != *.lz4 ]]; then
+        echo "Warning: Snapshot file does not have a recognized extension (.tar, .zstd, .zst, .lz4). Proceeding anyway..."
     fi
 
     SNAPSHOT_TAR="$SNAPSHOT_PATH"
@@ -479,7 +479,7 @@ else
 
     # Fetch available snapshots and parse JSON to get the latest one
     echo "Fetching available snapshots for $NETWORK..."
-    SNAPSHOT_FILE=$(curl -s https://layer-node.com/files | jq -r --arg prefix "$NETWORK" '.files[] | select(.filename | contains($prefix)) | select(.filename | endswith(".tar")) | {filename: .filename, upload_time: .upload_time}' | jq -s 'sort_by(.upload_time) | reverse | .[0].filename' | tr -d '"')
+    SNAPSHOT_FILE=$(curl -s https://layer-node.com/files | jq -r --arg prefix "$NETWORK" '.files[] | select(.filename | contains($prefix)) | select(.filename | test("\\.(tar|zstd|zst|lz4)$")) | {filename: .filename, upload_time: .upload_time}' | jq -s 'sort_by(.upload_time) | reverse | .[0].filename' | tr -d '"')
 
     if [ -z "$SNAPSHOT_FILE" ] || [ "$SNAPSHOT_FILE" == "null" ]; then
         echo "Error: No snapshots found for $NETWORK network"
@@ -518,7 +518,33 @@ fi
 # Extract the snapshot
 echo "Extracting snapshot (this may take a while, file size ~40-80 GB)..."
 cd "$TEMP_DIR"
-if ! sudo -u $ACTUAL_USER tar -xf "$SNAPSHOT_TAR" --checkpoint=5000 --checkpoint-action=dot; then
+if [[ "$SNAPSHOT_TAR" == *.zstd ]] || [[ "$SNAPSHOT_TAR" == *.zst ]]; then
+    if ! command -v zstd &> /dev/null; then
+        echo "Error: zstd is required to extract $SNAPSHOT_TAR"
+        echo "Install it with: sudo apt-get install zstd"
+        rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
+        exit 1
+    fi
+    if ! sudo -u $ACTUAL_USER sh -c "zstd -dc \"$SNAPSHOT_TAR\" | tar -xf - --checkpoint=5000 --checkpoint-action=dot"; then
+        echo ""
+        echo "Error: Failed to extract zstd-compressed snapshot"
+        rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
+        exit 1
+    fi
+elif [[ "$SNAPSHOT_TAR" == *.lz4 ]]; then
+    if ! command -v lz4 &> /dev/null; then
+        echo "Error: lz4 is required to extract $SNAPSHOT_TAR"
+        echo "Install it with: sudo apt-get install lz4"
+        rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
+        exit 1
+    fi
+    if ! sudo -u $ACTUAL_USER sh -c "lz4 -dc \"$SNAPSHOT_TAR\" | tar -xf - --checkpoint=5000 --checkpoint-action=dot"; then
+        echo ""
+        echo "Error: Failed to extract lz4-compressed snapshot"
+        rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"
+        exit 1
+    fi
+elif ! sudo -u $ACTUAL_USER tar -xf "$SNAPSHOT_TAR" --checkpoint=5000 --checkpoint-action=dot; then
     echo ""
     echo "Error: Failed to extract snapshot"
     rm -rf "$TEMP_DIR" "$VERSION_CHECK_DIR"

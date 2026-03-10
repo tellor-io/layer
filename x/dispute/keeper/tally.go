@@ -247,8 +247,15 @@ func (k Keeper) UpdateDispute(
 			result = types.VoteResult_NO_QUORUM_MAJORITY_INVALID
 		}
 	default:
-		k.Logger(ctx).Error("Vote tally", "result", "no majority")
-		return nil
+		// tie -- no single option has strictly more votes than both others
+		// treat as INVALID since no clear winner emerged
+		// set reuslt so that ExecuteVote doesnt err
+		k.Logger(ctx).Info("Vote tally", "result", "no majority, defaulting to invalid")
+		if quorum {
+			result = types.VoteResult_INVALID
+		} else {
+			result = types.VoteResult_NO_QUORUM_MAJORITY_INVALID
+		}
 	}
 	vote.VoteResult = result
 	vote.VoteEnd = sdk.UnwrapSDKContext(ctx).BlockTime()

@@ -387,6 +387,25 @@ func (s *ProposalHandlerTestSuite) TestProcessProposalHandler() {
 	require.NotNil(res)
 }
 
+func (s *ProposalHandlerTestSuite) TestProcessProposalHandler_EmptyTxs() {
+	require := s.Require()
+	p := s.proposalHandler
+	ctx := s.ctx
+
+	ctx = ctx.WithBlockHeight(3)
+
+	// Empty Txs after vote extensions enabled should reject, not panic
+	req := abcitypes.RequestProcessProposal{
+		Txs:    [][]byte{},
+		Height: 3,
+	}
+
+	res, err := p.ProcessProposalHandler(ctx, &req)
+	require.NoError(err)
+	require.NotNil(res)
+	require.Equal(abcitypes.ResponseProcessProposal_REJECT, res.Status)
+}
+
 func (s *ProposalHandlerTestSuite) TestPreBlocker() {
 	require := s.Require()
 	p := s.proposalHandler

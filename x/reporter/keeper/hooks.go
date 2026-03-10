@@ -25,12 +25,17 @@ func (k Keeper) Hooks() Hooks {
 	return Hooks{k}
 }
 
+// AfterValidatorBonded is called when a validator becomes bonded status.
+// We set LastValSetUpdateHeight so all reporters recalculate on their next report.
 func (h Hooks) AfterValidatorBonded(ctx context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
-	return nil
+	return h.k.LastValSetUpdateHeight.Set(ctx, uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))
 }
 
+// AfterValidatorBeginUnbonding is called when a validator leaves the bonded set.
+// Selectors delegating to this validator will no longer have those tokens counted,
+// so all reporters should recalculate.
 func (h Hooks) AfterValidatorBeginUnbonding(ctx context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
-	return nil
+	return h.k.LastValSetUpdateHeight.Set(ctx, uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))
 }
 
 func (h Hooks) AfterValidatorRemoved(_ context.Context, _ sdk.ConsAddress, _ sdk.ValAddress) error {
@@ -41,8 +46,10 @@ func (h Hooks) AfterValidatorCreated(_ context.Context, _ sdk.ValAddress) error 
 
 func (h Hooks) BeforeValidatorModified(_ context.Context, _ sdk.ValAddress) error { return nil }
 
-func (h Hooks) BeforeValidatorSlashed(_ context.Context, _ sdk.ValAddress, _ sdkmath.LegacyDec) error {
-	return nil
+// BeforeValidatorSlashed is called when a validator is about to be slashed and i think this doesn't necessarily mean
+// they are leaving the validator set but it does mean their voting power is being reduced, so we should trigger a recalculation for all reporters
+func (h Hooks) BeforeValidatorSlashed(ctx context.Context, _ sdk.ValAddress, _ sdkmath.LegacyDec) error {
+	return h.k.LastValSetUpdateHeight.Set(ctx, uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))
 }
 
 func (h Hooks) AfterUnbondingInitiated(_ context.Context, _ uint64) error { return nil }
@@ -55,8 +62,13 @@ func (h Hooks) BeforeDelegationSharesModified(_ context.Context, _ sdk.AccAddres
 	return nil
 }
 
-func (h Hooks) AfterDelegationModified(_ context.Context, _ sdk.AccAddress, _ sdk.ValAddress) error {
-	return nil
+func (h Hooks) AfterDelegationModified(ctx context.Context, delAddr sdk.AccAddress, _ sdk.ValAddress) error {
+	selector, err := h.k.Selectors.Get(ctx, delAddr.Bytes())
+	if err != nil {
+		// Not a selector, ignore
+		return nil
+	}
+	return h.k.FlagStakeRecalc(ctx, sdk.AccAddress(selector.Reporter))
 }
 
 // this hook is called in the staking module when a delegation is being created and its implemented here to update a selector's delegations count
