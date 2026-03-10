@@ -21,7 +21,7 @@ import (
 )
 
 /*
-Upgrade to v6.1.2 includes:
+Upgrade to v6.1.4 includes:
   - Deprecation of TRBBridge query type in favor of TRBBridgeV2
   - Updates to oracle keeper to handle TRBBridgeV2 query type and prevent usage of TRBBridge
 */

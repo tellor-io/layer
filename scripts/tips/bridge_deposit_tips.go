@@ -87,7 +87,7 @@ func encodeBridgeDepositQueryData(depositId uint64) (string, error) {
 }
 
 // submitTip submits a tip transaction using the layerd CLI
-func submitTip(queryDataHex string, tipAmount string, layerdPath string) error {
+func submitTip(queryDataHex, tipAmount, layerdPath string) error {
 	cmd := exec.Command(layerdPath, "tx", "oracle", "tip",
 		queryDataHex,
 		tipAmount,

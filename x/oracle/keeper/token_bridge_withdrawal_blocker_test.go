@@ -55,6 +55,27 @@ func (s *KeeperTestSuite) TestPreventBridgeWithdrawalReport() {
 	_, err = k.PreventBridgeWithdrawalReport(s.ctx, queryDataEncoded)
 	require.Error(err)
 
+	// try with deprecated TRBBridge deposit; should be blocked
+	queryTypeString = "TRBBridge"
+	toLayerBool = true
+	queryDataArgsEncoded, err = queryDataArgs.Pack(toLayerBool, withdrawalIdUint64)
+	require.NoError(err)
+	queryDataEncoded, err = finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
+	require.NoError(err)
+	res, err := k.PreventBridgeWithdrawalReport(s.ctx, queryDataEncoded)
+	require.ErrorContains(err, "cannot report deprecated TRBBridge queries")
+	require.False(res)
+
+	// try with deprecated TRBBridge withdrawal; should also be blocked
+	toLayerBool = false
+	queryDataArgsEncoded, err = queryDataArgs.Pack(toLayerBool, withdrawalIdUint64)
+	require.NoError(err)
+	queryDataEncoded, err = finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
+	require.NoError(err)
+	res, err = k.PreventBridgeWithdrawalReport(s.ctx, queryDataEncoded)
+	require.ErrorContains(err, "cannot report deprecated TRBBridge queries")
+	require.False(res)
+
 	// try with trb/usd
 	queryBytes, err := utils.QueryBytesFromString(queryData)
 	require.NoError(err)
