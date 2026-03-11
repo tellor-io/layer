@@ -3,7 +3,7 @@ const { expect } = require("chai");
 const h = require("./helpers/evmHelpers");
 var assert = require('assert');
 
-describe("NewTransition (TokenBridge V1) - Function Tests", function() {
+describe("TokenBridgeV2 LayerTransition - Function Tests", function() {
 
   const TELLOR_MASTER = "0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0"
   const DEV_WALLET = "0x39E419bA25196794B595B2a595Ea8E527ddC9856"
@@ -66,7 +66,14 @@ describe("NewTransition (TokenBridge V1) - Function Tests", function() {
     fakeValCheckpoint = ethers.utils.solidityKeccak256(["string"], ["testy"])
     await blobstream.init(1, 2, UNBONDING_PERIOD, fakeValCheckpoint)
     // deploy tokenbridge
-    tbridge = await ethers.deployContract("TokenBridge", [TELLOR_MASTER,await blobstream.address, TELLORFLEX])
+    tbridge = await ethers.deployContract("TokenBridgeV2", [
+      TELLOR_MASTER,
+      await blobstream.address,
+      TELLORFLEX,
+      DEV_WALLET,
+      DEV_WALLET,
+      86400 * 8
+    ])
     await tbridge.init(0, 0)
     // stake reporter
     await tellor.connect(bigWallet).transfer(await accounts[0].address, h.toWei("1000"))
@@ -80,6 +87,7 @@ describe("NewTransition (TokenBridge V1) - Function Tests", function() {
     await tellor.updateOracleAddress()
     await h.advanceTime(86400 * 7)
     await tellor.updateOracleAddress()
+
     // submit some data
     await flex.submitValue(ETH_QUERY_ID, h.uintTob32("100"), 0, ETH_QUERY_DATA)
     blocky0 = await h.getBlock()
