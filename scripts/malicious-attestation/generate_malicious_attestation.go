@@ -34,7 +34,6 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -47,27 +46,27 @@ func main() {
 	privateKeyHex := "YOUR_PRIVATE_KEY_HERE"
 
 	// paste the current validator checkpoint from the chain here (without 0x prefix)
-	checkpointHex := "YOUR_CHECKPOINT_HERE"
+	checkpointHex := "3c062093c3eef956ff2455c5c8cb48eb8ed8ceceea6a79be1e4742435bb1bf02"
 
 	// creator address (your account address that will submit the evidence)
-	creatorAddress := "YOUR_CREATOR_ADDRESS_HERE"
+	creatorAddress := "tellor1heavygrqg2a3h4edlg0aznh6hyf6e9t9xfgufl"
 
 	// ===== HARDCODED ATTESTATION DATA =====
 
 	// hardcoded query ID for testing
-	queryId := "83a7f3d48786ac2667503a61e8c415438ed2922eb86a2906e4ee66d9a2ce4992"
+	queryId := "14206b01679c1f9157516dae03684b8b13af234227158be7a23ca0521cca18ef"
 
 	// malicious value (different from what was actually reported)
-	maliciousValue := "000000000000000000000000000000000000000000000058528649cf90ee0000"
+	maliciousValue := "000000000000000000000000fe2952ad10262c6b466070ca34dbb7fa54b882e300000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000029b927000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002d74656c6c6f7231686561767967727167326133683465646c6730617a6e6836687966366539743978666775666c00000000000000000000000000000000000000"
 
 	// timestamps and other data
-	currentTime := uint64(time.Now().UnixMilli())
-	timestamp := currentTime - 1000       // report timestamp (slightly in past)
-	attestationTimestamp := currentTime   // when attestation was made
-	lastConsensusTimestamp := currentTime // last consensus time
-	aggregatePower := uint64(1000000)     // voting power
-	previousTimestamp := timestamp - 3000 // previous report timestamp
-	nextTimestamp := uint64(0)            // next timestamp (0 if none)
+	currentTime := uint64(1773343619464)
+	timestamp := currentTime - (44200 * 1000) // report timestamp (13 hours ago)
+	attestationTimestamp := currentTime       // when attestation was made
+	lastConsensusTimestamp := currentTime     // last consensus time
+	aggregatePower := uint64(1000000)         // voting power
+	previousTimestamp := timestamp - 3000     // previous report timestamp
+	nextTimestamp := uint64(0)                // next timestamp (0 if none)
 
 	// ===== VALIDATION =====
 	if privateKeyHex == "YOUR_PRIVATE_KEY_HERE" {
@@ -145,30 +144,6 @@ func main() {
 
 	fmt.Println("\n=== Signature Generated ===")
 	fmt.Printf("Signature (64 bytes): %s\n", sigHex)
-
-	// ===== GENERATE CLI COMMAND =====
-
-	fmt.Println("\n=== CLI Command ===")
-	fmt.Println("Run the following command to submit the malicious attestation evidence:")
-	fmt.Println()
-
-	cliCommand := fmt.Sprintf(
-		"./layerd tx bridge submit-attestation-evidence %s %s %s %d %d %d %d %s %d %d %s --from %s --keyring-backend test --chain-id layertest-4 --fees 500loya",
-		creatorAddress,
-		queryId,
-		maliciousValue,
-		timestamp,
-		aggregatePower,
-		previousTimestamp,
-		nextTimestamp,
-		checkpointHex,
-		attestationTimestamp,
-		lastConsensusTimestamp,
-		sigHex,
-		creatorAddress,
-	)
-
-	fmt.Println(cliCommand)
 
 	fmt.Println("\n=== Parameter Breakdown ===")
 	fmt.Printf("Creator Address: %s\n", creatorAddress)
