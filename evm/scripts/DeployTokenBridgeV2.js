@@ -14,6 +14,7 @@ var _data_bridge = " "
 var _main_guardian = " "
 var _sub_guardian = " "
 var _default_role_update_delay = 8 * 86400; // 8 days
+var _pause_period = 86400 * 21; // 21 days
 
 async function deployForMainnet(_pk, _nodeURL) {
     console.log("Deploying TokenBridgeV2")
@@ -37,7 +38,7 @@ async function deployForMainnet(_pk, _nodeURL) {
     /// @param _token address of tellor token for bridging
     /// @param _dataBridge address of tellor data bridge
     /// @param _tellorFlex address of oracle(tellorFlex) on chain
-    const tokenBridge= await tbWithSigner.deploy(_token,_data_bridge,_tellor_flex,_main_guardian,_sub_guardian,_default_role_update_delay);
+    const tokenBridge= await tbWithSigner.deploy(_token,_data_bridge,_tellor_flex,_main_guardian,_sub_guardian,_default_role_update_delay,_pause_period);
     await tokenBridge.deployed();
     
     /////////  Print addresses   ///////////////////////////
@@ -65,7 +66,7 @@ async function deployForMainnet(_pk, _nodeURL) {
         await hre.run("verify:verify", {
             address: tokenBridge.address,
             contract: "contracts/token-bridge/TokenBridgeV2.sol:TokenBridgeV2",
-            constructorArguments: [_token,_data_bridge,_tellor_flex,_main_guardian,_sub_guardian,_default_role_update_delay]
+            constructorArguments: [_token,_data_bridge,_tellor_flex,_main_guardian,_sub_guardian,_default_role_update_delay,_pause_period]
         });
         console.log("Contract verified");
     } catch (error) {

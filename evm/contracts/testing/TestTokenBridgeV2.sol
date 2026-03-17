@@ -12,8 +12,9 @@ contract TestTokenBridgeV2 is TokenBridgeV2 {
         address _tellorFlex,
         address _mainGuardian,
         address _subGuardian,
-        uint256 _defaultRoleUpdateDelay
-    ) TokenBridgeV2(_token, _blobstream, _tellorFlex, _mainGuardian, _subGuardian, _defaultRoleUpdateDelay) {}
+        uint256 _defaultRoleUpdateDelay,
+        uint256 _pausePeriod
+    ) TokenBridgeV2(_token, _blobstream, _tellorFlex, _mainGuardian, _subGuardian, _defaultRoleUpdateDelay, _pausePeriod) {}
 
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
     function refreshDepositLimit() external returns (uint256) {

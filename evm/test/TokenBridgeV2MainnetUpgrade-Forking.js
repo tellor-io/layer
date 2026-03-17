@@ -17,6 +17,7 @@ describe("TokenBridge V1 -> V2 Upgrade - Forking Tests", function () {
   // Layer constants (matching other fork tests)
   const BIG_WITHDRAW_ID = ethers.BigNumber.from("1000000000000"); // matches upgrade-plan notes
   const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks
+  const PAUSE_PERIOD = 86400 * 21;
   const TOKEN_DECIMAL_PRECISION_MULTIPLIER = ethers.BigNumber.from("1000000000000"); // 1e12
   const VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET =
     "0x636865636b706f696e7400000000000000000000000000000000000000000000";
@@ -57,7 +58,8 @@ describe("TokenBridge V1 -> V2 Upgrade - Forking Tests", function () {
       TELLORFLEX,
       accounts[0].address,
       accounts[0].address,
-      86400 * 8
+      86400 * 8,
+      PAUSE_PERIOD
     ]);
   });
 

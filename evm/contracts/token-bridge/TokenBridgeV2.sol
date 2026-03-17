@@ -29,7 +29,7 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
     uint256 public withdrawLimitRecord; // amount you can withdraw per limit period
     uint256 public constant DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
     uint256 public constant MS_PER_SECOND = 1000; // factor to convert milliseconds to seconds
-    uint256 public constant PAUSE_PERIOD = 21 days; // bridge pause period duration
+    uint256 public immutable PAUSE_PERIOD; // bridge pause period duration
     uint256 public constant PAUSE_TRIBUTE_AMOUNT = 10000 ether; // amount of tokens burned to pause bridge
     uint256 public constant TOKEN_DECIMAL_PRECISION_MULTIPLIER = 1e12; // multiplier to convert from loya to 1e18
     uint256 public constant TWELVE_HOUR_CONSTANT = 12 hours; // deposit and withdraw limits update interval
@@ -99,16 +99,20 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
     /// @param _mainGuardian address of the main guardian
     /// @param _subGuardian address of the sub guardian
     /// @param _defaultRoleUpdateDelay default delay before a role update can be accepted
+    /// @param _pausePeriod bridge pause period duration (in seconds)
     constructor(
         address _token,
         address _dataBridge,
         address _tellorFlex,
         address _mainGuardian,
         address _subGuardian,
-        uint256 _defaultRoleUpdateDelay
+        uint256 _defaultRoleUpdateDelay,
+        uint256 _pausePeriod
     ) LayerTransition(_tellorFlex, _token) RoleManager(_mainGuardian, _defaultRoleUpdateDelay) {
+        require(_pausePeriod > 0, "TokenBridgeV2: pause period must be > 0");
         dataBridge = ITellorDataBridge(_dataBridge);
         deployer = msg.sender;
+        PAUSE_PERIOD = _pausePeriod;
 
         roles[keccak256("APPROVE_PAUSE")] = RoleInfo({
             roleAddress: _subGuardian,

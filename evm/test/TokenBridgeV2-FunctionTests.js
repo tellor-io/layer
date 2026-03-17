@@ -10,6 +10,7 @@ describe("TokenBridgeV2 - Function Tests", async function () {
     let blobstream, accounts, mainGuardian, subGuardian, tbridge, token, blocky0,
         valTs, valParams, valSet, initialValAddrs, initialPowers, threshold;
     const DEFAULT_ROLE_UPDATE_DELAY = 86400 * 8
+    const PAUSE_PERIOD = 86400 * 21
     const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks
     const WITHDRAW1_QUERY_DATA_ARGS = abiCoder.encode(["bool", "uint256"], [false, 1])
     const WITHDRAW1_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TRBBridgeV2", WITHDRAW1_QUERY_DATA_ARGS])
@@ -50,7 +51,8 @@ describe("TokenBridgeV2 - Function Tests", async function () {
             oldOracle.address,
             mainGuardian.address,
             subGuardian.address,
-            DEFAULT_ROLE_UPDATE_DELAY
+            DEFAULT_ROLE_UPDATE_DELAY,
+            PAUSE_PERIOD
         ])
         blocky0 = await h.getBlock()
         // fund accounts
@@ -262,7 +264,7 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         assert.equal(userBal.toString(), h.toWei("999"))
         expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10) - BigInt(depositAmount)
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
-        await tbridge.refreshDepositLimit(1)
+        await tbridge.refreshDepositLimit()
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
         assert.equal(await tbridge.depositId(), 1)
         depositDetails = await tbridge.deposits(1)
@@ -274,7 +276,7 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         assert.equal(await tbridge.depositId(), 1)
         await h.advanceTime(43200)
         expectedDepositLimit2 = (BigInt(100e18) + BigInt(depositAmount)) * BigInt(2) / BigInt(10)
-        await tbridge.refreshDepositLimit(1)
+        await tbridge.refreshDepositLimit()
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit2);
     })
     it("depositLimit", async function () {
@@ -289,18 +291,18 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         assert(depositLimit == expectedDepositLimit, "depositLimit should be correct")
 
         expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10)
-        await tbridge.refreshDepositLimit(1)
+        await tbridge.refreshDepositLimit()
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
         await token.approve(await tbridge.address, h.toWei("900"))
         depositAmount = h.toWei("2")
         tip = h.toWei("0")
         await tbridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)
         expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10) - BigInt(depositAmount)
-        await tbridge.refreshDepositLimit(1)
+        await tbridge.refreshDepositLimit()
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
         await h.advanceTime(43200)
         expectedDepositLimit2 = (BigInt(100e18) + BigInt(depositAmount)) / BigInt(5)
-        await tbridge.refreshDepositLimit(1)
+        await tbridge.refreshDepositLimit()
         assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit2);
     })
     it("withdrawLimit", async function () {
@@ -321,7 +323,8 @@ describe("TokenBridgeV2 - Function Tests", async function () {
             oldOracle.address,
             mainGuardian.address,
             subGuardian.address,
-            DEFAULT_ROLE_UPDATE_DELAY
+            DEFAULT_ROLE_UPDATE_DELAY,
+            PAUSE_PERIOD
         ])
         await token.setOracleMintRecipient(await tbridge2.address)
         const WITHDRAW_AMOUNT = h.toWei("10")
@@ -410,8 +413,8 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
         await tbridge.connect(accounts[1]).proposePauseBridge("layer")
 
-        await tbridge.refreshDepositLimit(1)
-        await tbridge.refreshWithdrawLimit(1)
+        await tbridge.refreshDepositLimit()
+        await tbridge.refreshWithdrawLimit()
 
         expectedDepositLimit = BigInt(INITIAL_LAYER_TOKEN_SUPPLY) / BigInt(5)
         expectedWithdrawLimit = BigInt(INITIAL_LAYER_TOKEN_SUPPLY) / BigInt(20)
@@ -815,7 +818,8 @@ describe("TokenBridgeV2 - Function Tests", async function () {
             oldOracle.address,
             mainGuardian.address,
             subGuardian.address,
-            DEFAULT_ROLE_UPDATE_DELAY
+            DEFAULT_ROLE_UPDATE_DELAY,
+            PAUSE_PERIOD
         ])
         await bridge2.init(0, 0)
         await token.setOracleMintRecipient(bridge2.address)
@@ -1188,7 +1192,8 @@ describe("TokenBridgeV2 - Function Tests", async function () {
             oldOracle.address,
             mainGuardian.address,
             subGuardian.address,
-            DEFAULT_ROLE_UPDATE_DELAY
+            DEFAULT_ROLE_UPDATE_DELAY,
+            PAUSE_PERIOD
         ])
         
         // test only deployer can initialize

@@ -12,6 +12,7 @@ describe("TokenBridgeV2 LayerTransition - Function Tests", function() {
   const GOVERNANCE_FLEX = "0xB30b1B98d8276b80bC4f5aF9f9170ef3220EC27D"
   const TELLORFLEX = "0x8cFc184c877154a8F9ffE0fe75649dbe5e2DBEbf"
   const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks layer unbonding period
+  const PAUSE_PERIOD = 86400 * 21;
   const abiCoder = new ethers.utils.AbiCoder();
   const ETH_QUERY_DATA_ARGS = abiCoder.encode(["string", "string"], ["eth", "usd"]);
   const ETH_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["SpotPrice", ETH_QUERY_DATA_ARGS]);
@@ -72,7 +73,8 @@ describe("TokenBridgeV2 LayerTransition - Function Tests", function() {
       TELLORFLEX,
       DEV_WALLET,
       DEV_WALLET,
-      86400 * 8
+      86400 * 8,
+      PAUSE_PERIOD
     ])
     await tbridge.init(0, 0)
     // stake reporter

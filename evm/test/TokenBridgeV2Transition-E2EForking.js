@@ -16,6 +16,7 @@ describe("TokenBridgeV2 Transition - E2E Forking Tests", function() {
   const TELLOR_PROVIDER_AMPL = "0xf5b7562791114fB1A8838A9E8025de4b7627Aa79"
   const MEDIAN_ORACLE_AMPL = "0x99C9775E076FDF99388C029550155032Ba2d8914"
   const UNBONDING_PERIOD = 86400 * 7 * 3 // 3 weeks layer unbonding period
+  const PAUSE_PERIOD = 86400 * 21
   const VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET = "0x636865636b706f696e7400000000000000000000000000000000000000000000";
 
   const abiCoder = new ethers.utils.AbiCoder()
@@ -75,7 +76,8 @@ describe("TokenBridgeV2 Transition - E2E Forking Tests", function() {
       TELLORFLEX,
       DEV_WALLET,
       DEV_WALLET,
-      86400 * 8
+      86400 * 8,
+      PAUSE_PERIOD
     ])
 
     // Fund accounts
