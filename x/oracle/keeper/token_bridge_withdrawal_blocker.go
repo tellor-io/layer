@@ -5,6 +5,7 @@ import (
 	"errors"
 	"math/big"
 	"reflect"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -15,9 +16,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
-// PreventBridgeWithdrawalReport verifies if the queryData is a TRBBridgeQueryType. If not, it returns false, nil.
-// If it is, then it further checks whether it is a withdrawal or deposit report. If it is a withdrawal report, it returns an error
-// indicating that such reports should not be processed.
+// PreventBridgeWithdrawalReport enforces bridge report policy:
+//   - reject all TRBBridge (V1) reports
+//   - for TRBBridgeV2, reject withdrawals and allow deposits
+//   - for non-bridge queries, return false, nil
 func (k Keeper) PreventBridgeWithdrawalReport(ctx context.Context, queryData []byte) (bool, error) {
 	// Size limit check (0.5MB)
 	limit, err := k.QueryDataLimit.Get(ctx)
@@ -51,7 +53,11 @@ func (k Keeper) PreventBridgeWithdrawalReport(ctx context.Context, queryData []b
 	if reflect.TypeOf(queryDataDecodedPartial[0]).Kind() != reflect.String {
 		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid query data type")
 	}
-	if queryDataDecodedPartial[0].(string) != TRBBridgeQueryType {
+	queryType := queryDataDecodedPartial[0].(string)
+	if strings.EqualFold(queryType, TRBBridgeQueryType) {
+		return false, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid report type, cannot report deprecated %s queries", TRBBridgeQueryType)
+	}
+	if !strings.EqualFold(queryType, TRBBridgeV2QueryType) {
 		return false, nil
 	}
 	// decode query data arguments

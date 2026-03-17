@@ -14,6 +14,7 @@
   "license": "ISC",
   "devDependencies": {
     "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
+    "@nomicfoundation/hardhat-verify": "^2.1.3",
     "@nomiclabs/hardhat-ethers": "^2.0.4",
     "@nomiclabs/hardhat-waffle": "^2.0.6",
     "@nomiclabs/hardhat-web3": "^2.0.0",
