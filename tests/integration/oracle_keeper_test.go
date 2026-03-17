@@ -669,7 +669,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 			{Name: "depositId", FieldType: "uint256"},
 		},
 	}
-	querydata, err := spec.EncodeData("TRBBridge", `["true","1"]`)
+	querydata, err := spec.EncodeData("TRBBridgeV2", `["true","1"]`)
 	s.NoError(err)
 
 	reporter1, reporter2, reporter3, reporter4, reporter5 := repAccs[0], repAccs[1], repAccs[2], repAccs[3], repAccs[4]
@@ -766,7 +766,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	s.NoError(err)
 	s.Equal(agg.AggregateReporter, reporter5.String())
 
-	// Note: WithdrawTip is not tested here because TRBBridge queries don't receive
+	// Note: WithdrawTip is not tested here because TRBBridgeV2 queries don't receive
 	// cyclelist TBR rewards (they're not in the cyclelist). This test focuses on
 	// verifying the token bridge query submission and aggregation flow.
 }
@@ -807,7 +807,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 			{Name: "depositId", FieldType: "uint256"},
 		},
 	}
-	querydata, err := spec.EncodeData("TRBBridge", `["true","1"]`)
+	querydata, err := spec.EncodeData("TRBBridgeV2", `["true","1"]`)
 	s.NoError(err)
 
 	reporter1, reporter2, reporter3, reporter4, reporter5 := repAccs[0], repAccs[1], repAccs[2], repAccs[3], repAccs[4]
@@ -1160,7 +1160,7 @@ func (s *IntegrationTestSuite) TestClaimingBridgeDeposit() {
 	}
 
 	// tip bridge deposit
-	bridgeQueryDataString := "0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000095452424272696467650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001"
+	bridgeQueryDataString := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000b5452424272696467655632000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001"
 	bridgeQueryData, _ := hex.DecodeString(bridgeQueryDataString)
 	msgTip := types.MsgTip{
 		Tipper:    valAccAddrs[0].String(),
