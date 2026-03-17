@@ -16,12 +16,12 @@ contract TestTokenBridgeV2 is TokenBridgeV2 {
     ) TokenBridgeV2(_token, _blobstream, _tellorFlex, _mainGuardian, _subGuardian, _defaultRoleUpdateDelay) {}
 
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
-    function refreshDepositLimit(uint256 _amount) external returns (uint256) {
-        return _refreshDepositLimit(_amount);
+    function refreshDepositLimit() external returns (uint256) {
+        return _refreshDepositLimit();
     }
 
     /// @notice refreshes the withdraw limit every 12 hours so no one can spam layer with new tokens
-    function refreshWithdrawLimit(uint256 _amount) external returns (uint256) {
-        return _refreshWithdrawLimit(_amount);
+    function refreshWithdrawLimit() external returns (uint256) {
+        return _refreshWithdrawLimit();
     }
 }

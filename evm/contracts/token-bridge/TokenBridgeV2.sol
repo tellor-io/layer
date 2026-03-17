@@ -83,6 +83,7 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
     event DataBridgeUpdated(address _dataBridge);
     event Deposit(uint256 _depositId, address _sender, string _recipient, uint256 _amount, uint256 _tip);
     event ExtraWithdrawClaimed(uint256 _withdrawId, address _recipient, uint256 _amount);
+    event MintToOracleFailed();
     event PauseApproved(uint256 _proposalId, address _proposer, uint256 _proposalTime);
     event PauseProposed(uint256 _proposalId, address _proposer, uint256 _proposalTime);
     event TokensToClaimUpdated(address _recipient, uint256 _amount);
@@ -159,7 +160,7 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
         require(_withdrawDetails.lastVerifiedTime > lastPauseTimestamp, "TokenBridgeV2: must re-verify withdraws after pause");
         uint256 _amountConverted = _withdrawDetails.pendingAmount;
         require(_amountConverted > 0, "TokenBridgeV2: no pending amount");
-        uint256 _withdrawLimit = _refreshWithdrawLimit(_amountConverted);
+        uint256 _withdrawLimit = _refreshWithdrawLimit();
         require(_withdrawLimit > 0, "TokenBridgeV2: withdraw limit must be > 0");
         if (_withdrawLimit < _amountConverted) {
             _amountConverted = _withdrawLimit;
@@ -172,32 +173,6 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
         emit TokensToClaimUpdated(_withdrawDetails.recipient, tokensToClaim[_withdrawDetails.recipient]);
     }
 
-    /// @notice re-verifies an extra withdraw after the bridge has been paused
-    /// @param _attestData the oracle data being verified
-    /// @param _valset the validator set
-    /// @param _sigs the attestations
-    /// @param _withdrawId the withdraw id
-    function reverifyExtraWithdraw(
-        OracleAttestationData calldata _attestData,
-        Validator[] calldata _valset,
-        Signature[] calldata _sigs,
-        uint256 _withdrawId
-    ) external {
-        require(bridgeState != BridgeState.PAUSED, "TokenBridgeV2: bridge is paused");
-        require(initialized, "TokenBridgeV2: not initialized");
-        (address _recipient /*sender*/, , uint256 _amountLoya /*tip*/, ) = abi.decode(_attestData.report.value, (address, string, uint256, uint256));
-        uint256 _amountConverted = _amountLoya * TOKEN_DECIMAL_PRECISION_MULTIPLIER;
-        WithdrawDetails storage _withdrawDetails = withdrawDetails[_withdrawId];
-        require(_withdrawDetails.pendingAmount > 0, "TokenBridgeV2: pending amount is zero");
-        require(_withdrawDetails.lastVerifiedTime < lastPauseTimestamp, "TokenBridgeV2: last verified timestamp recent enough");
-        require(_withdrawDetails.amount == _amountConverted, "TokenBridgeV2: amount does not match record");
-        require(_withdrawDetails.recipient == _recipient, "TokenBridgeV2: recipient address does not match record");
-        _verifyWithdraw(_attestData, _valset, _sigs, _withdrawId);
-        // Update last verified time so tokens can be withdrawn
-        _withdrawDetails.lastVerifiedTime = block.timestamp;
-        emit ExtraWithdrawReverified(_withdrawId, _recipient, _amountConverted);
-    }
-
     /// @notice deposits tokens from Ethereum to layer
     /// @param _amount total amount of tokens to bridge over
     /// @param _tip amount of tokens to tip the claimDeposit caller on layer
@@ -206,7 +181,7 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
         require(initialized, "TokenBridgeV2: not initialized");
         require(_amount > 0.1 ether, "TokenBridgeV2: amount must be greater than 0.1 tokens");
         require(_amount % TOKEN_DECIMAL_PRECISION_MULTIPLIER == 0, "TokenBridgeV2: amount must be divisible by 1e12");
-        require(_amount <= _refreshDepositLimit(_amount), "TokenBridgeV2: amount exceeds deposit limit for time period");
+        require(_amount <= _refreshDepositLimit(), "TokenBridgeV2: amount exceeds deposit limit for time period");
         require(_tip <= _amount, "TokenBridgeV2: tip must be less than or equal to amount");
         if (_tip > 0) {
             require(_tip >= 1e12, "TokenBridgeV2: tip must be greater than or equal to 1 loya");
@@ -241,6 +216,32 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
         totalPauseTributeBalance -= PAUSE_TRIBUTE_AMOUNT;
         require(token.transfer(_proposal.proposer, PAUSE_TRIBUTE_AMOUNT), "TokenBridgeV2: transfer failed");
         emit PauseRefunded(_proposalId, _proposal.proposer, block.timestamp);
+    }
+
+    /// @notice re-verifies an extra withdraw after the bridge has been paused
+    /// @param _attestData the oracle data being verified
+    /// @param _valset the validator set
+    /// @param _sigs the attestations
+    /// @param _withdrawId the withdraw id
+    function reverifyExtraWithdraw(
+        OracleAttestationData calldata _attestData,
+        Validator[] calldata _valset,
+        Signature[] calldata _sigs,
+        uint256 _withdrawId
+    ) external {
+        require(bridgeState != BridgeState.PAUSED, "TokenBridgeV2: bridge is paused");
+        require(initialized, "TokenBridgeV2: not initialized");
+        (address _recipient /*sender*/, , uint256 _amountLoya /*tip*/, ) = abi.decode(_attestData.report.value, (address, string, uint256, uint256));
+        uint256 _amountConverted = _amountLoya * TOKEN_DECIMAL_PRECISION_MULTIPLIER;
+        WithdrawDetails storage _withdrawDetails = withdrawDetails[_withdrawId];
+        require(_withdrawDetails.pendingAmount > 0, "TokenBridgeV2: pending amount is zero");
+        require(_withdrawDetails.lastVerifiedTime < lastPauseTimestamp, "TokenBridgeV2: last verified timestamp recent enough");
+        require(_withdrawDetails.amount == _amountConverted, "TokenBridgeV2: amount does not match record");
+        require(_withdrawDetails.recipient == _recipient, "TokenBridgeV2: recipient address does not match record");
+        _verifyWithdraw(_attestData, _valset, _sigs, _withdrawId);
+        // Update last verified time so tokens can be withdrawn
+        _withdrawDetails.lastVerifiedTime = block.timestamp;
+        emit ExtraWithdrawReverified(_withdrawId, _recipient, _amountConverted);
     }
 
     /// @notice updates the data bridge
@@ -281,7 +282,7 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
             (address, string, uint256, uint256)
         );
         uint256 _amountConverted = _amountLoya * TOKEN_DECIMAL_PRECISION_MULTIPLIER;
-        uint256 _withdrawLimit = _refreshWithdrawLimit(_amountConverted);
+        uint256 _withdrawLimit = _refreshWithdrawLimit();
         if (_withdrawLimit < _amountConverted) {
             tokensToClaim[_recipient] = tokensToClaim[_recipient] + (_amountConverted - _withdrawLimit);
             withdrawDetails[_withdrawId] = WithdrawDetails(
@@ -338,15 +339,13 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
     }
 
     /// @notice refreshes the deposit limit every 12 hours so no one can spam layer with new tokens
-    /// @param _amount of tokens to deposit
     /// @return max amount of tokens that can be deposited
-    function _refreshDepositLimit(uint256 _amount) internal returns (uint256) {
+    function _refreshDepositLimit() internal returns (uint256) {
         if (block.timestamp - depositLimitUpdateTime > TWELVE_HOUR_CONSTANT) {
-            uint256 _tokenBalance = _getTokenBalanceLessPauseTribute();
-            if (_tokenBalance < _amount) {
-                token.mintToOracle();
-                _tokenBalance = _getTokenBalanceLessPauseTribute();
+            try token.mintToOracle() {} catch {
+                emit MintToOracleFailed();
             }
+            uint256 _tokenBalance = _getTokenBalanceLessPauseTribute();
             depositLimitRecord = _tokenBalance / DEPOSIT_LIMIT_DENOMINATOR;
             depositLimitUpdateTime = block.timestamp;
         }
@@ -354,15 +353,13 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
     }
 
     /// @notice refreshes the withdraw limit every 12 hours so no one can spam layer with new tokens
-    /// @param _amount of tokens to withdraw
     /// @return max amount of tokens that can be withdrawn
-    function _refreshWithdrawLimit(uint256 _amount) internal returns (uint256) {
+    function _refreshWithdrawLimit() internal returns (uint256) {
         if (block.timestamp - withdrawLimitUpdateTime > TWELVE_HOUR_CONSTANT) {
-            uint256 _tokenBalance = _getTokenBalanceLessPauseTribute();
-            if (_tokenBalance < _amount) {
-                token.mintToOracle();
-                _tokenBalance = _getTokenBalanceLessPauseTribute();
+            try token.mintToOracle() {} catch {
+                emit MintToOracleFailed();
             }
+            uint256 _tokenBalance = _getTokenBalanceLessPauseTribute();
             withdrawLimitRecord = _tokenBalance / WITHDRAW_LIMIT_DENOMINATOR;
             withdrawLimitUpdateTime = block.timestamp;
         }
