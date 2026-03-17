@@ -3,6 +3,8 @@ const h = require("./helpers/evmHelpers");
 var assert = require('assert');
 const { ethers } = require("hardhat");
 
+// Forking tests for updating the oracle address on sepolia
+
 describe.skip("Testnet Oracle Address Change - Forking Tests", function() {
   // Sepolia addresses
   const TELLOR_MASTER = "0x80fc34a2f9FfE86F41580F47368289C402DEc660"

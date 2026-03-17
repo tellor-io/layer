@@ -7,7 +7,7 @@ const h = require("../test/helpers/evmHelpers");
 
 // update these variables
 var guardianaddress = " "
-var tellorChainId = ""
+var tellorChainId = " "
 var PK = process.env.TESTNET_PK
 var NODE_URL = process.env.NODE_URL_SEPOLIA_TESTNET
 
@@ -28,8 +28,8 @@ async function deployTellorDataBridge(_pk, _nodeURL) {
     
     ////////  Deploy TellorDataBridge contract  ////////////////////////
     console.log("deploy TellorDataBridge")
-    const TellorDataBridge = await ethers.getContractFactory("contracts/TellorDataBridge.sol:TellorDataBridge", wallet);
-    const tellorDataBridge= await TellorDataBridge.deploy(guardianaddress);
+    const TellorDataBridge = await ethers.getContractFactory("contracts/bridge/TellorDataBridge.sol:TellorDataBridge", wallet);
+    const tellorDataBridge= await TellorDataBridge.deploy(guardianaddress, valsetDomainSep);
     await tellorDataBridge.deployed();
     console.log("TellorDataBridge deployed to:", tellorDataBridge.address);
   };
