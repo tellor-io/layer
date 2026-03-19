@@ -20,7 +20,6 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
     uint256 public depositLimitUpdateTime; // last time the deposit limit was updated
     uint256 public depositLimitRecord; // amount you can deposit per limit period
     BridgeState public bridgeState; // state of the bridge
-    uint256 public bridgeStateUpdateTime; // last time the bridge state was updated
     bool public initialized; // whether the bridge has been initialized
     uint256 public lastPauseTimestamp; // last time the bridge was paused
     uint256 public pauseProposalId; // counter of how many pause proposals have been made
@@ -146,7 +145,6 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
         PauseProposal storage _proposal = pauseProposals[_proposalId];
         require(_proposal.state == PauseProposalState.PENDING, "TokenBridgeV2: proposal is not pending");
         bridgeState = BridgeState.PAUSED;
-        bridgeStateUpdateTime = block.timestamp;
         lastPauseTimestamp = block.timestamp;
         _proposal.state = PauseProposalState.APPROVED;
         totalPauseTributeBalance -= PAUSE_TRIBUTE_AMOUNT;
@@ -239,7 +237,7 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
         uint256 _amountConverted = _amountLoya * TOKEN_DECIMAL_PRECISION_MULTIPLIER;
         WithdrawDetails storage _withdrawDetails = withdrawDetails[_withdrawId];
         require(_withdrawDetails.pendingAmount > 0, "TokenBridgeV2: pending amount is zero");
-        require(_withdrawDetails.lastVerifiedTime < lastPauseTimestamp, "TokenBridgeV2: last verified timestamp recent enough");
+        require(_withdrawDetails.lastVerifiedTime <= lastPauseTimestamp, "TokenBridgeV2: last verified timestamp recent enough");
         require(_withdrawDetails.amount == _amountConverted, "TokenBridgeV2: amount does not match record");
         require(_withdrawDetails.recipient == _recipient, "TokenBridgeV2: recipient address does not match record");
         _verifyWithdraw(_attestData, _valset, _sigs, _withdrawId);
@@ -261,7 +259,7 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
     /// @notice unpauses the bridge after the pause period has passed, can be called by anyone
     function unpauseBridge() external {
         require(bridgeState == BridgeState.PAUSED, "TokenBridgeV2: bridge is not paused");
-        require(block.timestamp - bridgeStateUpdateTime > PAUSE_PERIOD, "TokenBridgeV2: must wait before unpausing");
+        require(block.timestamp - lastPauseTimestamp > PAUSE_PERIOD, "TokenBridgeV2: must wait before unpausing");
         bridgeState = BridgeState.UNPAUSED;
         emit BridgeStateUpdated(BridgeState.UNPAUSED);
     }
