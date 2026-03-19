@@ -28,9 +28,9 @@ Upgrade to v6.1.4 includes:
 // TODO: change these to real addresses
 const (
 	MainnetChainID       = "tellor1"
-	MainnetTokenBridgeV2 = "0x0000000000000000000000000000000000000000"
+	MainnetTokenBridgeV2 = "0xa5fE7C1dD35Ce246fdc7FA165A2782049202D3D2"
 	TestnetChainID       = "layertest-4"
-	TestnetTokenBridgeV2 = "0x0000000000000000000000000000000000000000"
+	TestnetTokenBridgeV2 = "0x55355157703A44f7516FBB831333317E98944e32"
 )
 
 func CreateUpgradeHandler(
