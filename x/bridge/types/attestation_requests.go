@@ -1,6 +1,8 @@
 package types
 
 import (
+	"bytes"
+
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -17,6 +19,16 @@ type AttestationRequests struct {
 // `request` is the request for an attestation.
 func (b *AttestationRequests) AddRequest(request *AttestationRequest) {
 	b.Requests = append(b.Requests, request)
+}
+
+// HasSnapshot returns true if the given snapshot already exists in requests.
+func (b *AttestationRequests) HasSnapshot(snapshot []byte) bool {
+	for _, request := range b.Requests {
+		if bytes.Equal(request.Snapshot, snapshot) {
+			return true
+		}
+	}
+	return false
 }
 
 // Ensure OracleAttestations implements proto.Message
