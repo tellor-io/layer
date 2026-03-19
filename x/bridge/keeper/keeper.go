@@ -962,7 +962,7 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 				k.Logger(ctx).Info("Error getting no stake report by query id and timestamp", "error", err)
 				return err
 			}
-			err = k.CreateNoStakeSnapshot(ctx, noStakeReport, queryId)
+			err = k.CreateNoStakeSnapshot(ctx, noStakeReport, queryId, isExternalRequest)
 			if err != nil {
 				k.Logger(ctx).Info("Error creating no stake snapshot", "error", err)
 				return err
@@ -1097,12 +1097,15 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 		k.Logger(ctx).Info("Error getting attestation requests by height", "error", err)
 		return err
 	}
+	if isExternalRequest && attestRequests.HasSnapshot(snapshotBytes) {
+		return nil
+	}
 	snapshotLimit, err := k.SnapshotLimit.Get(ctx)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting snapshot limit", "error", err)
 		return err
 	}
-	if isExternalRequest && len(attestRequests.Requests) > int(snapshotLimit.Limit) {
+	if isExternalRequest && len(attestRequests.Requests) >= int(snapshotLimit.Limit) {
 		return errors.New("too many external requests")
 	}
 	request := types.AttestationRequest{
@@ -1296,7 +1299,7 @@ func (k Keeper) GetAuthority() string {
 	return k.authority
 }
 
-func (k Keeper) CreateNoStakeSnapshot(ctx context.Context, report *oracletypes.NoStakeMicroReport, queryId []byte) error {
+func (k Keeper) CreateNoStakeSnapshot(ctx context.Context, report *oracletypes.NoStakeMicroReport, queryId []byte, isExternalRequest bool) error {
 	// get the current validator checkpoint
 	validatorCheckpoint, err := k.GetValidatorCheckpointFromStorage(ctx)
 	if err != nil {
@@ -1428,12 +1431,15 @@ func (k Keeper) CreateNoStakeSnapshot(ctx context.Context, report *oracletypes.N
 		k.Logger(ctx).Info("Error getting attestation requests by height", "error", err)
 		return err
 	}
+	if isExternalRequest && attestRequests.HasSnapshot(snapshotBytes) {
+		return nil
+	}
 	snapshotLimit, err := k.SnapshotLimit.Get(ctx)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting snapshot limit", "error", err)
 		return err
 	}
-	if len(attestRequests.Requests) > int(snapshotLimit.Limit) {
+	if len(attestRequests.Requests) >= int(snapshotLimit.Limit) {
 		return errors.New("too many external requests")
 	}
 	request := types.AttestationRequest{
