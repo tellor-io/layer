@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	UpgradeName = "fork"
+	UpgradeName = "v6.1.4_palmito_fork"
 )
 
 var Upgrade = upgrades.Upgrade{

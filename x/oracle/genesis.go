@@ -86,6 +86,11 @@ type ModuleStateData struct {
 	TippedQueries []types.QueryMeta `json:"tipped_queries"`
 }
 
+type AggregateStateData struct {
+	Aggregate types.Aggregate `json:"aggregate"`
+	Timestamp uint64          `json:"timestamp"`
+}
+
 func exportModuleData(ctx context.Context, k keeper.Keeper) {
 	writer, err := utils.NewModuleStateWriter("oracle_module_state.json")
 	if err != nil {
@@ -186,6 +191,20 @@ func exportModuleData(ctx context.Context, k keeper.Keeper) {
 		numQueries++
 	}
 	err = writer.EndArraySection(numQueries)
+	if err != nil {
+		panic(err)
+	}
+
+	bigDepositQueryId, err := hex.DecodeString("8c30173e5ff12306a57e969d93e1682b770b2aa108531d6d344fb37afbe52c28")
+	aggregate, timestamp, err := k.GetCurrentAggregateReport(ctx, bigDepositQueryId)
+	if err != nil {
+		panic(err)
+	}
+
+	err = writer.WriteValue("big_deposit_aggregate", AggregateStateData{
+		Aggregate: *aggregate,
+		Timestamp: uint64(timestamp.UnixMilli()),
+	})
 	if err != nil {
 		panic(err)
 	}

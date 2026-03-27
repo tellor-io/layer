@@ -19,6 +19,7 @@ var (
 	fd_GenesisState_bond_denom          protoreflect.FieldDescriptor
 	fd_GenesisState_initialized         protoreflect.FieldDescriptor
 	fd_GenesisState_previous_block_time protoreflect.FieldDescriptor
+	fd_GenesisState_daily_extra_rewards protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -27,6 +28,7 @@ func init() {
 	fd_GenesisState_bond_denom = md_GenesisState.Fields().ByName("bond_denom")
 	fd_GenesisState_initialized = md_GenesisState.Fields().ByName("initialized")
 	fd_GenesisState_previous_block_time = md_GenesisState.Fields().ByName("previous_block_time")
+	fd_GenesisState_daily_extra_rewards = md_GenesisState.Fields().ByName("daily_extra_rewards")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -112,6 +114,12 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
+	if x.DailyExtraRewards != int64(0) {
+		value := protoreflect.ValueOfInt64(x.DailyExtraRewards)
+		if !f(fd_GenesisState_daily_extra_rewards, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -133,6 +141,8 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return x.Initialized != false
 	case "layer.mint.GenesisState.previous_block_time":
 		return x.PreviousBlockTime != nil
+	case "layer.mint.GenesisState.daily_extra_rewards":
+		return x.DailyExtraRewards != int64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.mint.GenesisState"))
@@ -155,6 +165,8 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.Initialized = false
 	case "layer.mint.GenesisState.previous_block_time":
 		x.PreviousBlockTime = nil
+	case "layer.mint.GenesisState.daily_extra_rewards":
+		x.DailyExtraRewards = int64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.mint.GenesisState"))
@@ -180,6 +192,9 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 	case "layer.mint.GenesisState.previous_block_time":
 		value := x.PreviousBlockTime
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "layer.mint.GenesisState.daily_extra_rewards":
+		value := x.DailyExtraRewards
+		return protoreflect.ValueOfInt64(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.mint.GenesisState"))
@@ -206,6 +221,8 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		x.Initialized = value.Bool()
 	case "layer.mint.GenesisState.previous_block_time":
 		x.PreviousBlockTime = value.Message().Interface().(*timestamppb.Timestamp)
+	case "layer.mint.GenesisState.daily_extra_rewards":
+		x.DailyExtraRewards = value.Int()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.mint.GenesisState"))
@@ -235,6 +252,8 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		panic(fmt.Errorf("field bond_denom of message layer.mint.GenesisState is not mutable"))
 	case "layer.mint.GenesisState.initialized":
 		panic(fmt.Errorf("field initialized of message layer.mint.GenesisState is not mutable"))
+	case "layer.mint.GenesisState.daily_extra_rewards":
+		panic(fmt.Errorf("field daily_extra_rewards of message layer.mint.GenesisState is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.mint.GenesisState"))
@@ -255,6 +274,8 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "layer.mint.GenesisState.previous_block_time":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "layer.mint.GenesisState.daily_extra_rewards":
+		return protoreflect.ValueOfInt64(int64(0))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.mint.GenesisState"))
@@ -335,6 +356,9 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			l = options.Size(x.PreviousBlockTime)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if x.DailyExtraRewards != 0 {
+			n += 1 + runtime.Sov(uint64(x.DailyExtraRewards))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -363,6 +387,11 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.DailyExtraRewards != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.DailyExtraRewards))
+			i--
+			dAtA[i] = 0x28
 		}
 		if x.PreviousBlockTime != nil {
 			encoded, err := options.Marshal(x.PreviousBlockTime)
@@ -532,6 +561,25 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
+			case 5:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DailyExtraRewards", wireType)
+				}
+				x.DailyExtraRewards = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.DailyExtraRewards |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -592,6 +640,8 @@ type GenesisState struct {
 	Initialized bool `protobuf:"varint,3,opt,name=initialized,proto3" json:"initialized,omitempty"`
 	// PreviousBlockTime is the timestamp of the previous block.
 	PreviousBlockTime *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=previous_block_time,json=previousBlockTime,proto3" json:"previous_block_time,omitempty"`
+	// ExtraRewardParams is the extra reward params.
+	DailyExtraRewards int64 `protobuf:"varint,5,opt,name=daily_extra_rewards,json=dailyExtraRewards,proto3" json:"daily_extra_rewards,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -635,6 +685,13 @@ func (x *GenesisState) GetPreviousBlockTime() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *GenesisState) GetDailyExtraRewards() int64 {
+	if x != nil {
+		return x.DailyExtraRewards
+	}
+	return 0
+}
+
 var File_layer_mint_genesis_proto protoreflect.FileDescriptor
 
 var file_layer_mint_genesis_proto_rawDesc = []byte{
@@ -643,7 +700,7 @@ var file_layer_mint_genesis_proto_rawDesc = []byte{
 	0x72, 0x2e, 0x6d, 0x69, 0x6e, 0x74, 0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
 	0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xa7, 0x01,
+	0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xd7, 0x01,
 	0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x1d,
 	0x0a, 0x0a, 0x62, 0x6f, 0x6e, 0x64, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02, 0x20, 0x01,
 	0x28, 0x09, 0x52, 0x09, 0x62, 0x6f, 0x6e, 0x64, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x20, 0x0a,
@@ -654,7 +711,10 @@ var file_layer_mint_genesis_proto_rawDesc = []byte{
 	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54,
 	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x04, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x11,
 	0x70, 0x72, 0x65, 0x76, 0x69, 0x6f, 0x75, 0x73, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x54, 0x69, 0x6d,
-	0x65, 0x4a, 0x04, 0x08, 0x01, 0x10, 0x02, 0x42, 0x92, 0x01, 0x0a, 0x0e, 0x63, 0x6f, 0x6d, 0x2e,
+	0x65, 0x12, 0x2e, 0x0a, 0x13, 0x64, 0x61, 0x69, 0x6c, 0x79, 0x5f, 0x65, 0x78, 0x74, 0x72, 0x61,
+	0x5f, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x11,
+	0x64, 0x61, 0x69, 0x6c, 0x79, 0x45, 0x78, 0x74, 0x72, 0x61, 0x52, 0x65, 0x77, 0x61, 0x72, 0x64,
+	0x73, 0x4a, 0x04, 0x08, 0x01, 0x10, 0x02, 0x42, 0x92, 0x01, 0x0a, 0x0e, 0x63, 0x6f, 0x6d, 0x2e,
 	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x6d, 0x69, 0x6e, 0x74, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65,
 	0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x29, 0x67, 0x69, 0x74, 0x68,
 	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f,
