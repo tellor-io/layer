@@ -2565,7 +2565,7 @@ paths:
           schema:
             type: object
             properties:
-              queries:
+              active_queries:
                 type: array
                 items:
                   type: object
@@ -2602,7 +2602,48 @@ paths:
                   title: >-
                     QueryMetaButString is QueryMeta but with the query_data as a
                     string for query display purposes
-                title: querymeta but string query data
+                title: querymeta but string query data for active queries
+              expired_queries:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uint64
+                      title: >-
+                        unique id of the query that changes after query's
+                        lifecycle ends
+                    amount:
+                      type: string
+                      title: amount of tokens that was tipped
+                    expiration:
+                      type: string
+                      format: uint64
+                      title: expiration time of the query
+                    registry_spec_block_window:
+                      type: string
+                      format: uint64
+                      title: timeframe of the query according to the data spec
+                    has_revealed_reports:
+                      type: boolean
+                      title: indicates whether query has revealed reports
+                    query_data:
+                      type: string
+                      title: decoded hex string of the query_data
+                    query_type:
+                      type: string
+                      title: string identifier of the data spec
+                    cycle_list:
+                      type: boolean
+                      title: bool cycle list query
+                  title: >-
+                    QueryMetaButString is QueryMeta but with the query_data as a
+                    string for query display purposes
+                title: querymeta but string query data for expired queries with tips
+              available_tips_total:
+                type: string
+                description: available_tips_total defines the total available tips.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object

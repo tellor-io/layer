@@ -16,6 +16,10 @@ func (k Keeper) InitGenesis(ctx context.Context, ak types.AccountKeeper, gen *ty
 	if err != nil {
 		panic(err)
 	}
+	err = k.ExtraRewardParams.Set(ctx, types.ExtraRewardParams{DailyExtraRewards: gen.DailyExtraRewards, PreviousBlockTime: gen.PreviousBlockTime, BondDenom: gen.BondDenom})
+	if err != nil {
+		panic(err)
+	}
 	k.accountKeeper.GetModuleAccount(ctx, types.TimeBasedRewards)
 	k.accountKeeper.GetModuleAccount(ctx, types.ExtraRewardsPool)
 }
@@ -29,5 +33,10 @@ func (k Keeper) ExportGenesis(ctx context.Context) *types.GenesisState {
 	bondDenom := minter.BondDenom
 	initialized := minter.Initialized
 	previousBlockTime := minter.PreviousBlockTime
-	return types.NewGenesisState(bondDenom, initialized, previousBlockTime)
+
+	extraRewardParams, err := k.ExtraRewardParams.Get(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return types.NewGenesisState(bondDenom, initialized, previousBlockTime, extraRewardParams.DailyExtraRewards)
 }

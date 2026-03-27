@@ -16,7 +16,7 @@ import (
 var _ protoreflect.List = (*_GenesisState_6_list)(nil)
 
 type _GenesisState_6_list struct {
-	list *[]*OperatorToEVMAddressMapEntry
+	list *[]*BridgeValSetSigsMapEntry
 }
 
 func (x *_GenesisState_6_list) Len() int {
@@ -32,18 +32,18 @@ func (x *_GenesisState_6_list) Get(i int) protoreflect.Value {
 
 func (x *_GenesisState_6_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*OperatorToEVMAddressMapEntry)
+	concreteValue := valueUnwrapped.Interface().(*BridgeValSetSigsMapEntry)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_GenesisState_6_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*OperatorToEVMAddressMapEntry)
+	concreteValue := valueUnwrapped.Interface().(*BridgeValSetSigsMapEntry)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_GenesisState_6_list) AppendMutable() protoreflect.Value {
-	v := new(OperatorToEVMAddressMapEntry)
+	v := new(BridgeValSetSigsMapEntry)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -56,7 +56,7 @@ func (x *_GenesisState_6_list) Truncate(n int) {
 }
 
 func (x *_GenesisState_6_list) NewElement() protoreflect.Value {
-	v := new(OperatorToEVMAddressMapEntry)
+	v := new(BridgeValSetSigsMapEntry)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -67,7 +67,7 @@ func (x *_GenesisState_6_list) IsValid() bool {
 var _ protoreflect.List = (*_GenesisState_7_list)(nil)
 
 type _GenesisState_7_list struct {
-	list *[]*EVMRegisteredMapEntry
+	list *[]*ValidatorCheckpointParamsStateEntry
 }
 
 func (x *_GenesisState_7_list) Len() int {
@@ -83,18 +83,18 @@ func (x *_GenesisState_7_list) Get(i int) protoreflect.Value {
 
 func (x *_GenesisState_7_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*EVMRegisteredMapEntry)
+	concreteValue := valueUnwrapped.Interface().(*ValidatorCheckpointParamsStateEntry)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_GenesisState_7_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*EVMRegisteredMapEntry)
+	concreteValue := valueUnwrapped.Interface().(*ValidatorCheckpointParamsStateEntry)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_GenesisState_7_list) AppendMutable() protoreflect.Value {
-	v := new(EVMRegisteredMapEntry)
+	v := new(ValidatorCheckpointParamsStateEntry)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -107,7 +107,7 @@ func (x *_GenesisState_7_list) Truncate(n int) {
 }
 
 func (x *_GenesisState_7_list) NewElement() protoreflect.Value {
-	v := new(EVMRegisteredMapEntry)
+	v := new(ValidatorCheckpointParamsStateEntry)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -118,7 +118,7 @@ func (x *_GenesisState_7_list) IsValid() bool {
 var _ protoreflect.List = (*_GenesisState_8_list)(nil)
 
 type _GenesisState_8_list struct {
-	list *[]*BridgeValSetSigsMapEntry
+	list *[]*ValidatorCheckpointIdxMapEntry
 }
 
 func (x *_GenesisState_8_list) Len() int {
@@ -134,18 +134,18 @@ func (x *_GenesisState_8_list) Get(i int) protoreflect.Value {
 
 func (x *_GenesisState_8_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*BridgeValSetSigsMapEntry)
+	concreteValue := valueUnwrapped.Interface().(*ValidatorCheckpointIdxMapEntry)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_GenesisState_8_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*BridgeValSetSigsMapEntry)
+	concreteValue := valueUnwrapped.Interface().(*ValidatorCheckpointIdxMapEntry)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_GenesisState_8_list) AppendMutable() protoreflect.Value {
-	v := new(BridgeValSetSigsMapEntry)
+	v := new(ValidatorCheckpointIdxMapEntry)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -158,7 +158,7 @@ func (x *_GenesisState_8_list) Truncate(n int) {
 }
 
 func (x *_GenesisState_8_list) NewElement() protoreflect.Value {
-	v := new(BridgeValSetSigsMapEntry)
+	v := new(ValidatorCheckpointIdxMapEntry)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -166,61 +166,10 @@ func (x *_GenesisState_8_list) IsValid() bool {
 	return x.list != nil
 }
 
-var _ protoreflect.List = (*_GenesisState_9_list)(nil)
-
-type _GenesisState_9_list struct {
-	list *[]*ValidatorCheckpointParamsStateEntry
-}
-
-func (x *_GenesisState_9_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_GenesisState_9_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_GenesisState_9_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*ValidatorCheckpointParamsStateEntry)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_GenesisState_9_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*ValidatorCheckpointParamsStateEntry)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_GenesisState_9_list) AppendMutable() protoreflect.Value {
-	v := new(ValidatorCheckpointParamsStateEntry)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_GenesisState_9_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_GenesisState_9_list) NewElement() protoreflect.Value {
-	v := new(ValidatorCheckpointParamsStateEntry)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_GenesisState_9_list) IsValid() bool {
-	return x.list != nil
-}
-
 var _ protoreflect.List = (*_GenesisState_10_list)(nil)
 
 type _GenesisState_10_list struct {
-	list *[]*ValidatorCheckpointIdxMapEntry
+	list *[]*BridgeValsetByTimestampMapEntry
 }
 
 func (x *_GenesisState_10_list) Len() int {
@@ -236,18 +185,18 @@ func (x *_GenesisState_10_list) Get(i int) protoreflect.Value {
 
 func (x *_GenesisState_10_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*ValidatorCheckpointIdxMapEntry)
+	concreteValue := valueUnwrapped.Interface().(*BridgeValsetByTimestampMapEntry)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_GenesisState_10_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*ValidatorCheckpointIdxMapEntry)
+	concreteValue := valueUnwrapped.Interface().(*BridgeValsetByTimestampMapEntry)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_GenesisState_10_list) AppendMutable() protoreflect.Value {
-	v := new(ValidatorCheckpointIdxMapEntry)
+	v := new(BridgeValsetByTimestampMapEntry)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -260,7 +209,7 @@ func (x *_GenesisState_10_list) Truncate(n int) {
 }
 
 func (x *_GenesisState_10_list) NewElement() protoreflect.Value {
-	v := new(ValidatorCheckpointIdxMapEntry)
+	v := new(BridgeValsetByTimestampMapEntry)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
@@ -268,10 +217,61 @@ func (x *_GenesisState_10_list) IsValid() bool {
 	return x.list != nil
 }
 
+var _ protoreflect.List = (*_GenesisState_11_list)(nil)
+
+type _GenesisState_11_list struct {
+	list *[]*ValsetTimestampToIdxMapEntry
+}
+
+func (x *_GenesisState_11_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_11_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_11_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*ValsetTimestampToIdxMapEntry)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_11_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*ValsetTimestampToIdxMapEntry)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_11_list) AppendMutable() protoreflect.Value {
+	v := new(ValsetTimestampToIdxMapEntry)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_11_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_11_list) NewElement() protoreflect.Value {
+	v := new(ValsetTimestampToIdxMapEntry)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_11_list) IsValid() bool {
+	return x.list != nil
+}
+
 var _ protoreflect.List = (*_GenesisState_12_list)(nil)
 
 type _GenesisState_12_list struct {
-	list *[]*BridgeValsetByTimestampMapEntry
+	list *[]*DepositIdClaimedMapEntry
 }
 
 func (x *_GenesisState_12_list) Len() int {
@@ -287,18 +287,18 @@ func (x *_GenesisState_12_list) Get(i int) protoreflect.Value {
 
 func (x *_GenesisState_12_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*BridgeValsetByTimestampMapEntry)
+	concreteValue := valueUnwrapped.Interface().(*DepositIdClaimedMapEntry)
 	(*x.list)[i] = concreteValue
 }
 
 func (x *_GenesisState_12_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*BridgeValsetByTimestampMapEntry)
+	concreteValue := valueUnwrapped.Interface().(*DepositIdClaimedMapEntry)
 	*x.list = append(*x.list, concreteValue)
 }
 
 func (x *_GenesisState_12_list) AppendMutable() protoreflect.Value {
-	v := new(BridgeValsetByTimestampMapEntry)
+	v := new(DepositIdClaimedMapEntry)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
@@ -311,113 +311,11 @@ func (x *_GenesisState_12_list) Truncate(n int) {
 }
 
 func (x *_GenesisState_12_list) NewElement() protoreflect.Value {
-	v := new(BridgeValsetByTimestampMapEntry)
+	v := new(DepositIdClaimedMapEntry)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
 func (x *_GenesisState_12_list) IsValid() bool {
-	return x.list != nil
-}
-
-var _ protoreflect.List = (*_GenesisState_13_list)(nil)
-
-type _GenesisState_13_list struct {
-	list *[]*ValsetTimestampToIdxMapEntry
-}
-
-func (x *_GenesisState_13_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_GenesisState_13_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_GenesisState_13_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*ValsetTimestampToIdxMapEntry)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_GenesisState_13_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*ValsetTimestampToIdxMapEntry)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_GenesisState_13_list) AppendMutable() protoreflect.Value {
-	v := new(ValsetTimestampToIdxMapEntry)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_GenesisState_13_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_GenesisState_13_list) NewElement() protoreflect.Value {
-	v := new(ValsetTimestampToIdxMapEntry)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_GenesisState_13_list) IsValid() bool {
-	return x.list != nil
-}
-
-var _ protoreflect.List = (*_GenesisState_14_list)(nil)
-
-type _GenesisState_14_list struct {
-	list *[]*DepositIdClaimedMapEntry
-}
-
-func (x *_GenesisState_14_list) Len() int {
-	if x.list == nil {
-		return 0
-	}
-	return len(*x.list)
-}
-
-func (x *_GenesisState_14_list) Get(i int) protoreflect.Value {
-	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
-}
-
-func (x *_GenesisState_14_list) Set(i int, value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*DepositIdClaimedMapEntry)
-	(*x.list)[i] = concreteValue
-}
-
-func (x *_GenesisState_14_list) Append(value protoreflect.Value) {
-	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*DepositIdClaimedMapEntry)
-	*x.list = append(*x.list, concreteValue)
-}
-
-func (x *_GenesisState_14_list) AppendMutable() protoreflect.Value {
-	v := new(DepositIdClaimedMapEntry)
-	*x.list = append(*x.list, v)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_GenesisState_14_list) Truncate(n int) {
-	for i := n; i < len(*x.list); i++ {
-		(*x.list)[i] = nil
-	}
-	*x.list = (*x.list)[:n]
-}
-
-func (x *_GenesisState_14_list) NewElement() protoreflect.Value {
-	v := new(DepositIdClaimedMapEntry)
-	return protoreflect.ValueOfMessage(v.ProtoReflect())
-}
-
-func (x *_GenesisState_14_list) IsValid() bool {
 	return x.list != nil
 }
 
@@ -428,8 +326,6 @@ var (
 	fd_GenesisState_bridge_val_set                  protoreflect.FieldDescriptor
 	fd_GenesisState_validator_checkpoint            protoreflect.FieldDescriptor
 	fd_GenesisState_withdrawal_id                   protoreflect.FieldDescriptor
-	fd_GenesisState_operator_to_evm_address_map     protoreflect.FieldDescriptor
-	fd_GenesisState_evm_registered_map              protoreflect.FieldDescriptor
 	fd_GenesisState_bridge_valset_sigs_map          protoreflect.FieldDescriptor
 	fd_GenesisState_validator_checkpoint_params_map protoreflect.FieldDescriptor
 	fd_GenesisState_validator_checkpoint_idx_map    protoreflect.FieldDescriptor
@@ -447,8 +343,6 @@ func init() {
 	fd_GenesisState_bridge_val_set = md_GenesisState.Fields().ByName("bridge_val_set")
 	fd_GenesisState_validator_checkpoint = md_GenesisState.Fields().ByName("validator_checkpoint")
 	fd_GenesisState_withdrawal_id = md_GenesisState.Fields().ByName("withdrawal_id")
-	fd_GenesisState_operator_to_evm_address_map = md_GenesisState.Fields().ByName("operator_to_evm_address_map")
-	fd_GenesisState_evm_registered_map = md_GenesisState.Fields().ByName("evm_registered_map")
 	fd_GenesisState_bridge_valset_sigs_map = md_GenesisState.Fields().ByName("bridge_valset_sigs_map")
 	fd_GenesisState_validator_checkpoint_params_map = md_GenesisState.Fields().ByName("validator_checkpoint_params_map")
 	fd_GenesisState_validator_checkpoint_idx_map = md_GenesisState.Fields().ByName("validator_checkpoint_idx_map")
@@ -553,32 +447,20 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
-	if len(x.OperatorToEvmAddressMap) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_6_list{list: &x.OperatorToEvmAddressMap})
-		if !f(fd_GenesisState_operator_to_evm_address_map, value) {
-			return
-		}
-	}
-	if len(x.EvmRegisteredMap) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_7_list{list: &x.EvmRegisteredMap})
-		if !f(fd_GenesisState_evm_registered_map, value) {
-			return
-		}
-	}
 	if len(x.BridgeValsetSigsMap) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_8_list{list: &x.BridgeValsetSigsMap})
+		value := protoreflect.ValueOfList(&_GenesisState_6_list{list: &x.BridgeValsetSigsMap})
 		if !f(fd_GenesisState_bridge_valset_sigs_map, value) {
 			return
 		}
 	}
 	if len(x.ValidatorCheckpointParamsMap) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_9_list{list: &x.ValidatorCheckpointParamsMap})
+		value := protoreflect.ValueOfList(&_GenesisState_7_list{list: &x.ValidatorCheckpointParamsMap})
 		if !f(fd_GenesisState_validator_checkpoint_params_map, value) {
 			return
 		}
 	}
 	if len(x.ValidatorCheckpointIdxMap) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_10_list{list: &x.ValidatorCheckpointIdxMap})
+		value := protoreflect.ValueOfList(&_GenesisState_8_list{list: &x.ValidatorCheckpointIdxMap})
 		if !f(fd_GenesisState_validator_checkpoint_idx_map, value) {
 			return
 		}
@@ -590,19 +472,19 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 		}
 	}
 	if len(x.BridgeValsetByTimestampMap) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_12_list{list: &x.BridgeValsetByTimestampMap})
+		value := protoreflect.ValueOfList(&_GenesisState_10_list{list: &x.BridgeValsetByTimestampMap})
 		if !f(fd_GenesisState_bridge_valset_by_timestamp_map, value) {
 			return
 		}
 	}
 	if len(x.ValsetTimestampToIdxMap) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_13_list{list: &x.ValsetTimestampToIdxMap})
+		value := protoreflect.ValueOfList(&_GenesisState_11_list{list: &x.ValsetTimestampToIdxMap})
 		if !f(fd_GenesisState_valset_timestamp_to_idx_map, value) {
 			return
 		}
 	}
 	if len(x.DepositIdClaimedMap) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_14_list{list: &x.DepositIdClaimedMap})
+		value := protoreflect.ValueOfList(&_GenesisState_12_list{list: &x.DepositIdClaimedMap})
 		if !f(fd_GenesisState_deposit_id_claimed_map, value) {
 			return
 		}
@@ -632,10 +514,6 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return len(x.ValidatorCheckpoint) != 0
 	case "layer.bridge.GenesisState.withdrawal_id":
 		return x.WithdrawalId != uint64(0)
-	case "layer.bridge.GenesisState.operator_to_evm_address_map":
-		return len(x.OperatorToEvmAddressMap) != 0
-	case "layer.bridge.GenesisState.evm_registered_map":
-		return len(x.EvmRegisteredMap) != 0
 	case "layer.bridge.GenesisState.bridge_valset_sigs_map":
 		return len(x.BridgeValsetSigsMap) != 0
 	case "layer.bridge.GenesisState.validator_checkpoint_params_map":
@@ -676,10 +554,6 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.ValidatorCheckpoint = nil
 	case "layer.bridge.GenesisState.withdrawal_id":
 		x.WithdrawalId = uint64(0)
-	case "layer.bridge.GenesisState.operator_to_evm_address_map":
-		x.OperatorToEvmAddressMap = nil
-	case "layer.bridge.GenesisState.evm_registered_map":
-		x.EvmRegisteredMap = nil
 	case "layer.bridge.GenesisState.bridge_valset_sigs_map":
 		x.BridgeValsetSigsMap = nil
 	case "layer.bridge.GenesisState.validator_checkpoint_params_map":
@@ -725,56 +599,44 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 	case "layer.bridge.GenesisState.withdrawal_id":
 		value := x.WithdrawalId
 		return protoreflect.ValueOfUint64(value)
-	case "layer.bridge.GenesisState.operator_to_evm_address_map":
-		if len(x.OperatorToEvmAddressMap) == 0 {
-			return protoreflect.ValueOfList(&_GenesisState_6_list{})
-		}
-		listValue := &_GenesisState_6_list{list: &x.OperatorToEvmAddressMap}
-		return protoreflect.ValueOfList(listValue)
-	case "layer.bridge.GenesisState.evm_registered_map":
-		if len(x.EvmRegisteredMap) == 0 {
-			return protoreflect.ValueOfList(&_GenesisState_7_list{})
-		}
-		listValue := &_GenesisState_7_list{list: &x.EvmRegisteredMap}
-		return protoreflect.ValueOfList(listValue)
 	case "layer.bridge.GenesisState.bridge_valset_sigs_map":
 		if len(x.BridgeValsetSigsMap) == 0 {
-			return protoreflect.ValueOfList(&_GenesisState_8_list{})
+			return protoreflect.ValueOfList(&_GenesisState_6_list{})
 		}
-		listValue := &_GenesisState_8_list{list: &x.BridgeValsetSigsMap}
+		listValue := &_GenesisState_6_list{list: &x.BridgeValsetSigsMap}
 		return protoreflect.ValueOfList(listValue)
 	case "layer.bridge.GenesisState.validator_checkpoint_params_map":
 		if len(x.ValidatorCheckpointParamsMap) == 0 {
-			return protoreflect.ValueOfList(&_GenesisState_9_list{})
+			return protoreflect.ValueOfList(&_GenesisState_7_list{})
 		}
-		listValue := &_GenesisState_9_list{list: &x.ValidatorCheckpointParamsMap}
+		listValue := &_GenesisState_7_list{list: &x.ValidatorCheckpointParamsMap}
 		return protoreflect.ValueOfList(listValue)
 	case "layer.bridge.GenesisState.validator_checkpoint_idx_map":
 		if len(x.ValidatorCheckpointIdxMap) == 0 {
-			return protoreflect.ValueOfList(&_GenesisState_10_list{})
+			return protoreflect.ValueOfList(&_GenesisState_8_list{})
 		}
-		listValue := &_GenesisState_10_list{list: &x.ValidatorCheckpointIdxMap}
+		listValue := &_GenesisState_8_list{list: &x.ValidatorCheckpointIdxMap}
 		return protoreflect.ValueOfList(listValue)
 	case "layer.bridge.GenesisState.latest_validator_checkpoint_idx":
 		value := x.LatestValidatorCheckpointIdx
 		return protoreflect.ValueOfUint64(value)
 	case "layer.bridge.GenesisState.bridge_valset_by_timestamp_map":
 		if len(x.BridgeValsetByTimestampMap) == 0 {
-			return protoreflect.ValueOfList(&_GenesisState_12_list{})
+			return protoreflect.ValueOfList(&_GenesisState_10_list{})
 		}
-		listValue := &_GenesisState_12_list{list: &x.BridgeValsetByTimestampMap}
+		listValue := &_GenesisState_10_list{list: &x.BridgeValsetByTimestampMap}
 		return protoreflect.ValueOfList(listValue)
 	case "layer.bridge.GenesisState.valset_timestamp_to_idx_map":
 		if len(x.ValsetTimestampToIdxMap) == 0 {
-			return protoreflect.ValueOfList(&_GenesisState_13_list{})
+			return protoreflect.ValueOfList(&_GenesisState_11_list{})
 		}
-		listValue := &_GenesisState_13_list{list: &x.ValsetTimestampToIdxMap}
+		listValue := &_GenesisState_11_list{list: &x.ValsetTimestampToIdxMap}
 		return protoreflect.ValueOfList(listValue)
 	case "layer.bridge.GenesisState.deposit_id_claimed_map":
 		if len(x.DepositIdClaimedMap) == 0 {
-			return protoreflect.ValueOfList(&_GenesisState_14_list{})
+			return protoreflect.ValueOfList(&_GenesisState_12_list{})
 		}
-		listValue := &_GenesisState_14_list{list: &x.DepositIdClaimedMap}
+		listValue := &_GenesisState_12_list{list: &x.DepositIdClaimedMap}
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
@@ -806,39 +668,31 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		x.ValidatorCheckpoint = value.Bytes()
 	case "layer.bridge.GenesisState.withdrawal_id":
 		x.WithdrawalId = value.Uint()
-	case "layer.bridge.GenesisState.operator_to_evm_address_map":
-		lv := value.List()
-		clv := lv.(*_GenesisState_6_list)
-		x.OperatorToEvmAddressMap = *clv.list
-	case "layer.bridge.GenesisState.evm_registered_map":
-		lv := value.List()
-		clv := lv.(*_GenesisState_7_list)
-		x.EvmRegisteredMap = *clv.list
 	case "layer.bridge.GenesisState.bridge_valset_sigs_map":
 		lv := value.List()
-		clv := lv.(*_GenesisState_8_list)
+		clv := lv.(*_GenesisState_6_list)
 		x.BridgeValsetSigsMap = *clv.list
 	case "layer.bridge.GenesisState.validator_checkpoint_params_map":
 		lv := value.List()
-		clv := lv.(*_GenesisState_9_list)
+		clv := lv.(*_GenesisState_7_list)
 		x.ValidatorCheckpointParamsMap = *clv.list
 	case "layer.bridge.GenesisState.validator_checkpoint_idx_map":
 		lv := value.List()
-		clv := lv.(*_GenesisState_10_list)
+		clv := lv.(*_GenesisState_8_list)
 		x.ValidatorCheckpointIdxMap = *clv.list
 	case "layer.bridge.GenesisState.latest_validator_checkpoint_idx":
 		x.LatestValidatorCheckpointIdx = value.Uint()
 	case "layer.bridge.GenesisState.bridge_valset_by_timestamp_map":
 		lv := value.List()
-		clv := lv.(*_GenesisState_12_list)
+		clv := lv.(*_GenesisState_10_list)
 		x.BridgeValsetByTimestampMap = *clv.list
 	case "layer.bridge.GenesisState.valset_timestamp_to_idx_map":
 		lv := value.List()
-		clv := lv.(*_GenesisState_13_list)
+		clv := lv.(*_GenesisState_11_list)
 		x.ValsetTimestampToIdxMap = *clv.list
 	case "layer.bridge.GenesisState.deposit_id_claimed_map":
 		lv := value.List()
-		clv := lv.(*_GenesisState_14_list)
+		clv := lv.(*_GenesisState_12_list)
 		x.DepositIdClaimedMap = *clv.list
 	default:
 		if fd.IsExtension() {
@@ -870,53 +724,41 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 			x.BridgeValSet = new(BridgeValidatorSet)
 		}
 		return protoreflect.ValueOfMessage(x.BridgeValSet.ProtoReflect())
-	case "layer.bridge.GenesisState.operator_to_evm_address_map":
-		if x.OperatorToEvmAddressMap == nil {
-			x.OperatorToEvmAddressMap = []*OperatorToEVMAddressMapEntry{}
-		}
-		value := &_GenesisState_6_list{list: &x.OperatorToEvmAddressMap}
-		return protoreflect.ValueOfList(value)
-	case "layer.bridge.GenesisState.evm_registered_map":
-		if x.EvmRegisteredMap == nil {
-			x.EvmRegisteredMap = []*EVMRegisteredMapEntry{}
-		}
-		value := &_GenesisState_7_list{list: &x.EvmRegisteredMap}
-		return protoreflect.ValueOfList(value)
 	case "layer.bridge.GenesisState.bridge_valset_sigs_map":
 		if x.BridgeValsetSigsMap == nil {
 			x.BridgeValsetSigsMap = []*BridgeValSetSigsMapEntry{}
 		}
-		value := &_GenesisState_8_list{list: &x.BridgeValsetSigsMap}
+		value := &_GenesisState_6_list{list: &x.BridgeValsetSigsMap}
 		return protoreflect.ValueOfList(value)
 	case "layer.bridge.GenesisState.validator_checkpoint_params_map":
 		if x.ValidatorCheckpointParamsMap == nil {
 			x.ValidatorCheckpointParamsMap = []*ValidatorCheckpointParamsStateEntry{}
 		}
-		value := &_GenesisState_9_list{list: &x.ValidatorCheckpointParamsMap}
+		value := &_GenesisState_7_list{list: &x.ValidatorCheckpointParamsMap}
 		return protoreflect.ValueOfList(value)
 	case "layer.bridge.GenesisState.validator_checkpoint_idx_map":
 		if x.ValidatorCheckpointIdxMap == nil {
 			x.ValidatorCheckpointIdxMap = []*ValidatorCheckpointIdxMapEntry{}
 		}
-		value := &_GenesisState_10_list{list: &x.ValidatorCheckpointIdxMap}
+		value := &_GenesisState_8_list{list: &x.ValidatorCheckpointIdxMap}
 		return protoreflect.ValueOfList(value)
 	case "layer.bridge.GenesisState.bridge_valset_by_timestamp_map":
 		if x.BridgeValsetByTimestampMap == nil {
 			x.BridgeValsetByTimestampMap = []*BridgeValsetByTimestampMapEntry{}
 		}
-		value := &_GenesisState_12_list{list: &x.BridgeValsetByTimestampMap}
+		value := &_GenesisState_10_list{list: &x.BridgeValsetByTimestampMap}
 		return protoreflect.ValueOfList(value)
 	case "layer.bridge.GenesisState.valset_timestamp_to_idx_map":
 		if x.ValsetTimestampToIdxMap == nil {
 			x.ValsetTimestampToIdxMap = []*ValsetTimestampToIdxMapEntry{}
 		}
-		value := &_GenesisState_13_list{list: &x.ValsetTimestampToIdxMap}
+		value := &_GenesisState_11_list{list: &x.ValsetTimestampToIdxMap}
 		return protoreflect.ValueOfList(value)
 	case "layer.bridge.GenesisState.deposit_id_claimed_map":
 		if x.DepositIdClaimedMap == nil {
 			x.DepositIdClaimedMap = []*DepositIdClaimedMapEntry{}
 		}
-		value := &_GenesisState_14_list{list: &x.DepositIdClaimedMap}
+		value := &_GenesisState_12_list{list: &x.DepositIdClaimedMap}
 		return protoreflect.ValueOfList(value)
 	case "layer.bridge.GenesisState.snapshot_limit":
 		panic(fmt.Errorf("field snapshot_limit of message layer.bridge.GenesisState is not mutable"))
@@ -951,32 +793,26 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 		return protoreflect.ValueOfBytes(nil)
 	case "layer.bridge.GenesisState.withdrawal_id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "layer.bridge.GenesisState.operator_to_evm_address_map":
-		list := []*OperatorToEVMAddressMapEntry{}
-		return protoreflect.ValueOfList(&_GenesisState_6_list{list: &list})
-	case "layer.bridge.GenesisState.evm_registered_map":
-		list := []*EVMRegisteredMapEntry{}
-		return protoreflect.ValueOfList(&_GenesisState_7_list{list: &list})
 	case "layer.bridge.GenesisState.bridge_valset_sigs_map":
 		list := []*BridgeValSetSigsMapEntry{}
-		return protoreflect.ValueOfList(&_GenesisState_8_list{list: &list})
+		return protoreflect.ValueOfList(&_GenesisState_6_list{list: &list})
 	case "layer.bridge.GenesisState.validator_checkpoint_params_map":
 		list := []*ValidatorCheckpointParamsStateEntry{}
-		return protoreflect.ValueOfList(&_GenesisState_9_list{list: &list})
+		return protoreflect.ValueOfList(&_GenesisState_7_list{list: &list})
 	case "layer.bridge.GenesisState.validator_checkpoint_idx_map":
 		list := []*ValidatorCheckpointIdxMapEntry{}
-		return protoreflect.ValueOfList(&_GenesisState_10_list{list: &list})
+		return protoreflect.ValueOfList(&_GenesisState_8_list{list: &list})
 	case "layer.bridge.GenesisState.latest_validator_checkpoint_idx":
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.bridge.GenesisState.bridge_valset_by_timestamp_map":
 		list := []*BridgeValsetByTimestampMapEntry{}
-		return protoreflect.ValueOfList(&_GenesisState_12_list{list: &list})
+		return protoreflect.ValueOfList(&_GenesisState_10_list{list: &list})
 	case "layer.bridge.GenesisState.valset_timestamp_to_idx_map":
 		list := []*ValsetTimestampToIdxMapEntry{}
-		return protoreflect.ValueOfList(&_GenesisState_13_list{list: &list})
+		return protoreflect.ValueOfList(&_GenesisState_11_list{list: &list})
 	case "layer.bridge.GenesisState.deposit_id_claimed_map":
 		list := []*DepositIdClaimedMapEntry{}
-		return protoreflect.ValueOfList(&_GenesisState_14_list{list: &list})
+		return protoreflect.ValueOfList(&_GenesisState_12_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.GenesisState"))
@@ -1064,18 +900,6 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.WithdrawalId != 0 {
 			n += 1 + runtime.Sov(uint64(x.WithdrawalId))
 		}
-		if len(x.OperatorToEvmAddressMap) > 0 {
-			for _, e := range x.OperatorToEvmAddressMap {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
-		if len(x.EvmRegisteredMap) > 0 {
-			for _, e := range x.EvmRegisteredMap {
-				l = options.Size(e)
-				n += 1 + l + runtime.Sov(uint64(l))
-			}
-		}
 		if len(x.BridgeValsetSigsMap) > 0 {
 			for _, e := range x.BridgeValsetSigsMap {
 				l = options.Size(e)
@@ -1157,7 +981,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				copy(dAtA[i:], encoded)
 				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 				i--
-				dAtA[i] = 0x72
+				dAtA[i] = 0x62
 			}
 		}
 		if len(x.ValsetTimestampToIdxMap) > 0 {
@@ -1173,7 +997,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				copy(dAtA[i:], encoded)
 				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 				i--
-				dAtA[i] = 0x6a
+				dAtA[i] = 0x5a
 			}
 		}
 		if len(x.BridgeValsetByTimestampMap) > 0 {
@@ -1189,13 +1013,13 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				copy(dAtA[i:], encoded)
 				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 				i--
-				dAtA[i] = 0x62
+				dAtA[i] = 0x52
 			}
 		}
 		if x.LatestValidatorCheckpointIdx != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.LatestValidatorCheckpointIdx))
 			i--
-			dAtA[i] = 0x58
+			dAtA[i] = 0x48
 		}
 		if len(x.ValidatorCheckpointIdxMap) > 0 {
 			for iNdEx := len(x.ValidatorCheckpointIdxMap) - 1; iNdEx >= 0; iNdEx-- {
@@ -1210,7 +1034,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				copy(dAtA[i:], encoded)
 				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 				i--
-				dAtA[i] = 0x52
+				dAtA[i] = 0x42
 			}
 		}
 		if len(x.ValidatorCheckpointParamsMap) > 0 {
@@ -1226,44 +1050,12 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				copy(dAtA[i:], encoded)
 				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 				i--
-				dAtA[i] = 0x4a
+				dAtA[i] = 0x3a
 			}
 		}
 		if len(x.BridgeValsetSigsMap) > 0 {
 			for iNdEx := len(x.BridgeValsetSigsMap) - 1; iNdEx >= 0; iNdEx-- {
 				encoded, err := options.Marshal(x.BridgeValsetSigsMap[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0x42
-			}
-		}
-		if len(x.EvmRegisteredMap) > 0 {
-			for iNdEx := len(x.EvmRegisteredMap) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.EvmRegisteredMap[iNdEx])
-				if err != nil {
-					return protoiface.MarshalOutput{
-						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-						Buf:               input.Buf,
-					}, err
-				}
-				i -= len(encoded)
-				copy(dAtA[i:], encoded)
-				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-				i--
-				dAtA[i] = 0x3a
-			}
-		}
-		if len(x.OperatorToEvmAddressMap) > 0 {
-			for iNdEx := len(x.OperatorToEvmAddressMap) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.OperatorToEvmAddressMap[iNdEx])
 				if err != nil {
 					return protoiface.MarshalOutput{
 						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1517,74 +1309,6 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				}
 			case 6:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OperatorToEvmAddressMap", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.OperatorToEvmAddressMap = append(x.OperatorToEvmAddressMap, &OperatorToEVMAddressMapEntry{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.OperatorToEvmAddressMap[len(x.OperatorToEvmAddressMap)-1]); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 7:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field EvmRegisteredMap", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.EvmRegisteredMap = append(x.EvmRegisteredMap, &EVMRegisteredMapEntry{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.EvmRegisteredMap[len(x.EvmRegisteredMap)-1]); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 8:
-				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BridgeValsetSigsMap", wireType)
 				}
 				var msglen int
@@ -1617,7 +1341,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 9:
+			case 7:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorCheckpointParamsMap", wireType)
 				}
@@ -1651,7 +1375,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 10:
+			case 8:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValidatorCheckpointIdxMap", wireType)
 				}
@@ -1685,7 +1409,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 11:
+			case 9:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field LatestValidatorCheckpointIdx", wireType)
 				}
@@ -1704,7 +1428,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
-			case 12:
+			case 10:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BridgeValsetByTimestampMap", wireType)
 				}
@@ -1738,7 +1462,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 13:
+			case 11:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ValsetTimestampToIdxMap", wireType)
 				}
@@ -1772,7 +1496,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			case 14:
+			case 12:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DepositIdClaimedMap", wireType)
 				}
@@ -1806,966 +1530,6 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
-	md_OperatorToEVMAddressMapEntry                  protoreflect.MessageDescriptor
-	fd_OperatorToEVMAddressMapEntry_operator_address protoreflect.FieldDescriptor
-	fd_OperatorToEVMAddressMapEntry_evm_address      protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_layer_bridge_genesis_proto_init()
-	md_OperatorToEVMAddressMapEntry = File_layer_bridge_genesis_proto.Messages().ByName("OperatorToEVMAddressMapEntry")
-	fd_OperatorToEVMAddressMapEntry_operator_address = md_OperatorToEVMAddressMapEntry.Fields().ByName("operator_address")
-	fd_OperatorToEVMAddressMapEntry_evm_address = md_OperatorToEVMAddressMapEntry.Fields().ByName("evm_address")
-}
-
-var _ protoreflect.Message = (*fastReflection_OperatorToEVMAddressMapEntry)(nil)
-
-type fastReflection_OperatorToEVMAddressMapEntry OperatorToEVMAddressMapEntry
-
-func (x *OperatorToEVMAddressMapEntry) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_OperatorToEVMAddressMapEntry)(x)
-}
-
-func (x *OperatorToEVMAddressMapEntry) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_genesis_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_OperatorToEVMAddressMapEntry_messageType fastReflection_OperatorToEVMAddressMapEntry_messageType
-var _ protoreflect.MessageType = fastReflection_OperatorToEVMAddressMapEntry_messageType{}
-
-type fastReflection_OperatorToEVMAddressMapEntry_messageType struct{}
-
-func (x fastReflection_OperatorToEVMAddressMapEntry_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_OperatorToEVMAddressMapEntry)(nil)
-}
-func (x fastReflection_OperatorToEVMAddressMapEntry_messageType) New() protoreflect.Message {
-	return new(fastReflection_OperatorToEVMAddressMapEntry)
-}
-func (x fastReflection_OperatorToEVMAddressMapEntry_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_OperatorToEVMAddressMapEntry
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) Descriptor() protoreflect.MessageDescriptor {
-	return md_OperatorToEVMAddressMapEntry
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) Type() protoreflect.MessageType {
-	return _fastReflection_OperatorToEVMAddressMapEntry_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) New() protoreflect.Message {
-	return new(fastReflection_OperatorToEVMAddressMapEntry)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) Interface() protoreflect.ProtoMessage {
-	return (*OperatorToEVMAddressMapEntry)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.OperatorAddress != "" {
-		value := protoreflect.ValueOfString(x.OperatorAddress)
-		if !f(fd_OperatorToEVMAddressMapEntry_operator_address, value) {
-			return
-		}
-	}
-	if len(x.EvmAddress) != 0 {
-		value := protoreflect.ValueOfBytes(x.EvmAddress)
-		if !f(fd_OperatorToEVMAddressMapEntry_evm_address, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "layer.bridge.OperatorToEVMAddressMapEntry.operator_address":
-		return x.OperatorAddress != ""
-	case "layer.bridge.OperatorToEVMAddressMapEntry.evm_address":
-		return len(x.EvmAddress) != 0
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.OperatorToEVMAddressMapEntry"))
-		}
-		panic(fmt.Errorf("message layer.bridge.OperatorToEVMAddressMapEntry does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "layer.bridge.OperatorToEVMAddressMapEntry.operator_address":
-		x.OperatorAddress = ""
-	case "layer.bridge.OperatorToEVMAddressMapEntry.evm_address":
-		x.EvmAddress = nil
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.OperatorToEVMAddressMapEntry"))
-		}
-		panic(fmt.Errorf("message layer.bridge.OperatorToEVMAddressMapEntry does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "layer.bridge.OperatorToEVMAddressMapEntry.operator_address":
-		value := x.OperatorAddress
-		return protoreflect.ValueOfString(value)
-	case "layer.bridge.OperatorToEVMAddressMapEntry.evm_address":
-		value := x.EvmAddress
-		return protoreflect.ValueOfBytes(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.OperatorToEVMAddressMapEntry"))
-		}
-		panic(fmt.Errorf("message layer.bridge.OperatorToEVMAddressMapEntry does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "layer.bridge.OperatorToEVMAddressMapEntry.operator_address":
-		x.OperatorAddress = value.Interface().(string)
-	case "layer.bridge.OperatorToEVMAddressMapEntry.evm_address":
-		x.EvmAddress = value.Bytes()
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.OperatorToEVMAddressMapEntry"))
-		}
-		panic(fmt.Errorf("message layer.bridge.OperatorToEVMAddressMapEntry does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.bridge.OperatorToEVMAddressMapEntry.operator_address":
-		panic(fmt.Errorf("field operator_address of message layer.bridge.OperatorToEVMAddressMapEntry is not mutable"))
-	case "layer.bridge.OperatorToEVMAddressMapEntry.evm_address":
-		panic(fmt.Errorf("field evm_address of message layer.bridge.OperatorToEVMAddressMapEntry is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.OperatorToEVMAddressMapEntry"))
-		}
-		panic(fmt.Errorf("message layer.bridge.OperatorToEVMAddressMapEntry does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.bridge.OperatorToEVMAddressMapEntry.operator_address":
-		return protoreflect.ValueOfString("")
-	case "layer.bridge.OperatorToEVMAddressMapEntry.evm_address":
-		return protoreflect.ValueOfBytes(nil)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.OperatorToEVMAddressMapEntry"))
-		}
-		panic(fmt.Errorf("message layer.bridge.OperatorToEVMAddressMapEntry does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.OperatorToEVMAddressMapEntry", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_OperatorToEVMAddressMapEntry) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*OperatorToEVMAddressMapEntry)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		l = len(x.OperatorAddress)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		l = len(x.EvmAddress)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*OperatorToEVMAddressMapEntry)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.EvmAddress) > 0 {
-			i -= len(x.EvmAddress)
-			copy(dAtA[i:], x.EvmAddress)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.EvmAddress)))
-			i--
-			dAtA[i] = 0x12
-		}
-		if len(x.OperatorAddress) > 0 {
-			i -= len(x.OperatorAddress)
-			copy(dAtA[i:], x.OperatorAddress)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OperatorAddress)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*OperatorToEVMAddressMapEntry)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OperatorToEVMAddressMapEntry: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: OperatorToEVMAddressMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OperatorAddress", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.OperatorAddress = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 2:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field EvmAddress", wireType)
-				}
-				var byteLen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					byteLen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if byteLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + byteLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.EvmAddress = append(x.EvmAddress[:0], dAtA[iNdEx:postIndex]...)
-				if x.EvmAddress == nil {
-					x.EvmAddress = []byte{}
-				}
-				iNdEx = postIndex
-			default:
-				iNdEx = preIndex
-				skippy, err := runtime.Skip(dAtA[iNdEx:])
-				if err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				if (skippy < 0) || (iNdEx+skippy) < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if (iNdEx + skippy) > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if !options.DiscardUnknown {
-					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
-				}
-				iNdEx += skippy
-			}
-		}
-
-		if iNdEx > l {
-			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-		}
-		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
-	}
-	return &protoiface.Methods{
-		NoUnkeyedLiterals: struct{}{},
-		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
-		Size:              size,
-		Marshal:           marshal,
-		Unmarshal:         unmarshal,
-		Merge:             nil,
-		CheckInitialized:  nil,
-	}
-}
-
-var (
-	md_EVMRegisteredMapEntry                  protoreflect.MessageDescriptor
-	fd_EVMRegisteredMapEntry_operator_address protoreflect.FieldDescriptor
-	fd_EVMRegisteredMapEntry_registered       protoreflect.FieldDescriptor
-)
-
-func init() {
-	file_layer_bridge_genesis_proto_init()
-	md_EVMRegisteredMapEntry = File_layer_bridge_genesis_proto.Messages().ByName("EVMRegisteredMapEntry")
-	fd_EVMRegisteredMapEntry_operator_address = md_EVMRegisteredMapEntry.Fields().ByName("operator_address")
-	fd_EVMRegisteredMapEntry_registered = md_EVMRegisteredMapEntry.Fields().ByName("registered")
-}
-
-var _ protoreflect.Message = (*fastReflection_EVMRegisteredMapEntry)(nil)
-
-type fastReflection_EVMRegisteredMapEntry EVMRegisteredMapEntry
-
-func (x *EVMRegisteredMapEntry) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_EVMRegisteredMapEntry)(x)
-}
-
-func (x *EVMRegisteredMapEntry) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_genesis_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-var _fastReflection_EVMRegisteredMapEntry_messageType fastReflection_EVMRegisteredMapEntry_messageType
-var _ protoreflect.MessageType = fastReflection_EVMRegisteredMapEntry_messageType{}
-
-type fastReflection_EVMRegisteredMapEntry_messageType struct{}
-
-func (x fastReflection_EVMRegisteredMapEntry_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_EVMRegisteredMapEntry)(nil)
-}
-func (x fastReflection_EVMRegisteredMapEntry_messageType) New() protoreflect.Message {
-	return new(fastReflection_EVMRegisteredMapEntry)
-}
-func (x fastReflection_EVMRegisteredMapEntry_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_EVMRegisteredMapEntry
-}
-
-// Descriptor returns message descriptor, which contains only the protobuf
-// type information for the message.
-func (x *fastReflection_EVMRegisteredMapEntry) Descriptor() protoreflect.MessageDescriptor {
-	return md_EVMRegisteredMapEntry
-}
-
-// Type returns the message type, which encapsulates both Go and protobuf
-// type information. If the Go type information is not needed,
-// it is recommended that the message descriptor be used instead.
-func (x *fastReflection_EVMRegisteredMapEntry) Type() protoreflect.MessageType {
-	return _fastReflection_EVMRegisteredMapEntry_messageType
-}
-
-// New returns a newly allocated and mutable empty message.
-func (x *fastReflection_EVMRegisteredMapEntry) New() protoreflect.Message {
-	return new(fastReflection_EVMRegisteredMapEntry)
-}
-
-// Interface unwraps the message reflection interface and
-// returns the underlying ProtoMessage interface.
-func (x *fastReflection_EVMRegisteredMapEntry) Interface() protoreflect.ProtoMessage {
-	return (*EVMRegisteredMapEntry)(x)
-}
-
-// Range iterates over every populated field in an undefined order,
-// calling f for each field descriptor and value encountered.
-// Range returns immediately if f returns false.
-// While iterating, mutating operations may only be performed
-// on the current field descriptor.
-func (x *fastReflection_EVMRegisteredMapEntry) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.OperatorAddress != "" {
-		value := protoreflect.ValueOfString(x.OperatorAddress)
-		if !f(fd_EVMRegisteredMapEntry_operator_address, value) {
-			return
-		}
-	}
-	if x.Registered != false {
-		value := protoreflect.ValueOfBool(x.Registered)
-		if !f(fd_EVMRegisteredMapEntry_registered, value) {
-			return
-		}
-	}
-}
-
-// Has reports whether a field is populated.
-//
-// Some fields have the property of nullability where it is possible to
-// distinguish between the default value of a field and whether the field
-// was explicitly populated with the default value. Singular message fields,
-// member fields of a oneof, and proto2 scalar fields are nullable. Such
-// fields are populated only if explicitly set.
-//
-// In other cases (aside from the nullable cases above),
-// a proto3 scalar field is populated if it contains a non-zero value, and
-// a repeated field is populated if it is non-empty.
-func (x *fastReflection_EVMRegisteredMapEntry) Has(fd protoreflect.FieldDescriptor) bool {
-	switch fd.FullName() {
-	case "layer.bridge.EVMRegisteredMapEntry.operator_address":
-		return x.OperatorAddress != ""
-	case "layer.bridge.EVMRegisteredMapEntry.registered":
-		return x.Registered != false
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.EVMRegisteredMapEntry"))
-		}
-		panic(fmt.Errorf("message layer.bridge.EVMRegisteredMapEntry does not contain field %s", fd.FullName()))
-	}
-}
-
-// Clear clears the field such that a subsequent Has call reports false.
-//
-// Clearing an extension field clears both the extension type and value
-// associated with the given field number.
-//
-// Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EVMRegisteredMapEntry) Clear(fd protoreflect.FieldDescriptor) {
-	switch fd.FullName() {
-	case "layer.bridge.EVMRegisteredMapEntry.operator_address":
-		x.OperatorAddress = ""
-	case "layer.bridge.EVMRegisteredMapEntry.registered":
-		x.Registered = false
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.EVMRegisteredMapEntry"))
-		}
-		panic(fmt.Errorf("message layer.bridge.EVMRegisteredMapEntry does not contain field %s", fd.FullName()))
-	}
-}
-
-// Get retrieves the value for a field.
-//
-// For unpopulated scalars, it returns the default value, where
-// the default value of a bytes scalar is guaranteed to be a copy.
-// For unpopulated composite types, it returns an empty, read-only view
-// of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_EVMRegisteredMapEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
-	switch descriptor.FullName() {
-	case "layer.bridge.EVMRegisteredMapEntry.operator_address":
-		value := x.OperatorAddress
-		return protoreflect.ValueOfString(value)
-	case "layer.bridge.EVMRegisteredMapEntry.registered":
-		value := x.Registered
-		return protoreflect.ValueOfBool(value)
-	default:
-		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.EVMRegisteredMapEntry"))
-		}
-		panic(fmt.Errorf("message layer.bridge.EVMRegisteredMapEntry does not contain field %s", descriptor.FullName()))
-	}
-}
-
-// Set stores the value for a field.
-//
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType.
-// When setting a composite type, it is unspecified whether the stored value
-// aliases the source's memory in any way. If the composite value is an
-// empty, read-only value, then it panics.
-//
-// Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EVMRegisteredMapEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
-	switch fd.FullName() {
-	case "layer.bridge.EVMRegisteredMapEntry.operator_address":
-		x.OperatorAddress = value.Interface().(string)
-	case "layer.bridge.EVMRegisteredMapEntry.registered":
-		x.Registered = value.Bool()
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.EVMRegisteredMapEntry"))
-		}
-		panic(fmt.Errorf("message layer.bridge.EVMRegisteredMapEntry does not contain field %s", fd.FullName()))
-	}
-}
-
-// Mutable returns a mutable reference to a composite type.
-//
-// If the field is unpopulated, it may allocate a composite value.
-// For a field belonging to a oneof, it implicitly clears any other field
-// that may be currently set within the same oneof.
-// For extension fields, it implicitly stores the provided ExtensionType
-// if not already stored.
-// It panics if the field does not contain a composite type.
-//
-// Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EVMRegisteredMapEntry) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.bridge.EVMRegisteredMapEntry.operator_address":
-		panic(fmt.Errorf("field operator_address of message layer.bridge.EVMRegisteredMapEntry is not mutable"))
-	case "layer.bridge.EVMRegisteredMapEntry.registered":
-		panic(fmt.Errorf("field registered of message layer.bridge.EVMRegisteredMapEntry is not mutable"))
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.EVMRegisteredMapEntry"))
-		}
-		panic(fmt.Errorf("message layer.bridge.EVMRegisteredMapEntry does not contain field %s", fd.FullName()))
-	}
-}
-
-// NewField returns a new value that is assignable to the field
-// for the given descriptor. For scalars, this returns the default value.
-// For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_EVMRegisteredMapEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
-	switch fd.FullName() {
-	case "layer.bridge.EVMRegisteredMapEntry.operator_address":
-		return protoreflect.ValueOfString("")
-	case "layer.bridge.EVMRegisteredMapEntry.registered":
-		return protoreflect.ValueOfBool(false)
-	default:
-		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.bridge.EVMRegisteredMapEntry"))
-		}
-		panic(fmt.Errorf("message layer.bridge.EVMRegisteredMapEntry does not contain field %s", fd.FullName()))
-	}
-}
-
-// WhichOneof reports which field within the oneof is populated,
-// returning nil if none are populated.
-// It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_EVMRegisteredMapEntry) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
-	switch d.FullName() {
-	default:
-		panic(fmt.Errorf("%s is not a oneof field in layer.bridge.EVMRegisteredMapEntry", d.FullName()))
-	}
-	panic("unreachable")
-}
-
-// GetUnknown retrieves the entire list of unknown fields.
-// The caller may only mutate the contents of the RawFields
-// if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_EVMRegisteredMapEntry) GetUnknown() protoreflect.RawFields {
-	return x.unknownFields
-}
-
-// SetUnknown stores an entire list of unknown fields.
-// The raw fields must be syntactically valid according to the wire format.
-// An implementation may panic if this is not the case.
-// Once stored, the caller must not mutate the content of the RawFields.
-// An empty RawFields may be passed to clear the fields.
-//
-// SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EVMRegisteredMapEntry) SetUnknown(fields protoreflect.RawFields) {
-	x.unknownFields = fields
-}
-
-// IsValid reports whether the message is valid.
-//
-// An invalid message is an empty, read-only value.
-//
-// An invalid message often corresponds to a nil pointer of the concrete
-// message type, but the details are implementation dependent.
-// Validity is not part of the protobuf data model, and may not
-// be preserved in marshaling or other operations.
-func (x *fastReflection_EVMRegisteredMapEntry) IsValid() bool {
-	return x != nil
-}
-
-// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
-// This method may return nil.
-//
-// The returned methods type is identical to
-// "google.golang.org/protobuf/runtime/protoiface".Methods.
-// Consult the protoiface package documentation for details.
-func (x *fastReflection_EVMRegisteredMapEntry) ProtoMethods() *protoiface.Methods {
-	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*EVMRegisteredMapEntry)
-		if x == nil {
-			return protoiface.SizeOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Size:              0,
-			}
-		}
-		options := runtime.SizeInputToOptions(input)
-		_ = options
-		var n int
-		var l int
-		_ = l
-		l = len(x.OperatorAddress)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.Registered {
-			n += 2
-		}
-		if x.unknownFields != nil {
-			n += len(x.unknownFields)
-		}
-		return protoiface.SizeOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Size:              n,
-		}
-	}
-
-	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*EVMRegisteredMapEntry)
-		if x == nil {
-			return protoiface.MarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Buf:               input.Buf,
-			}, nil
-		}
-		options := runtime.MarshalInputToOptions(input)
-		_ = options
-		size := options.Size(x)
-		dAtA := make([]byte, size)
-		i := len(dAtA)
-		_ = i
-		var l int
-		_ = l
-		if x.unknownFields != nil {
-			i -= len(x.unknownFields)
-			copy(dAtA[i:], x.unknownFields)
-		}
-		if x.Registered {
-			i--
-			if x.Registered {
-				dAtA[i] = 1
-			} else {
-				dAtA[i] = 0
-			}
-			i--
-			dAtA[i] = 0x10
-		}
-		if len(x.OperatorAddress) > 0 {
-			i -= len(x.OperatorAddress)
-			copy(dAtA[i:], x.OperatorAddress)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OperatorAddress)))
-			i--
-			dAtA[i] = 0xa
-		}
-		if input.Buf != nil {
-			input.Buf = append(input.Buf, dAtA...)
-		} else {
-			input.Buf = dAtA
-		}
-		return protoiface.MarshalOutput{
-			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-			Buf:               input.Buf,
-		}, nil
-	}
-	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*EVMRegisteredMapEntry)
-		if x == nil {
-			return protoiface.UnmarshalOutput{
-				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-				Flags:             input.Flags,
-			}, nil
-		}
-		options := runtime.UnmarshalInputToOptions(input)
-		_ = options
-		dAtA := input.Buf
-		l := len(dAtA)
-		iNdEx := 0
-		for iNdEx < l {
-			preIndex := iNdEx
-			var wire uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-				}
-				if iNdEx >= l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				wire |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			fieldNum := int32(wire >> 3)
-			wireType := int(wire & 0x7)
-			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EVMRegisteredMapEntry: wiretype end group for non-group")
-			}
-			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EVMRegisteredMapEntry: illegal tag %d (wire type %d)", fieldNum, wire)
-			}
-			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OperatorAddress", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.OperatorAddress = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 2:
-				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Registered", wireType)
-				}
-				var v int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					v |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				x.Registered = bool(v != 0)
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2869,7 +1633,7 @@ func (x *BridgeValSetSigsMapEntry) ProtoReflect() protoreflect.Message {
 }
 
 func (x *BridgeValSetSigsMapEntry) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_genesis_proto_msgTypes[3]
+	mi := &file_layer_bridge_genesis_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3357,7 +2121,7 @@ func (x *ValidatorCheckpointParamsStateEntry) ProtoReflect() protoreflect.Messag
 }
 
 func (x *ValidatorCheckpointParamsStateEntry) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_genesis_proto_msgTypes[4]
+	mi := &file_layer_bridge_genesis_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3983,7 +2747,7 @@ func (x *ValidatorCheckpointIdxMapEntry) ProtoReflect() protoreflect.Message {
 }
 
 func (x *ValidatorCheckpointIdxMapEntry) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_genesis_proto_msgTypes[5]
+	mi := &file_layer_bridge_genesis_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4435,7 +3199,7 @@ func (x *BridgeValsetByTimestampMapEntry) ProtoReflect() protoreflect.Message {
 }
 
 func (x *BridgeValsetByTimestampMapEntry) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_genesis_proto_msgTypes[6]
+	mi := &file_layer_bridge_genesis_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4918,7 +3682,7 @@ func (x *ValsetTimestampToIdxMapEntry) ProtoReflect() protoreflect.Message {
 }
 
 func (x *ValsetTimestampToIdxMapEntry) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_genesis_proto_msgTypes[7]
+	mi := &file_layer_bridge_genesis_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5370,7 +4134,7 @@ func (x *DepositIdClaimedMapEntry) ProtoReflect() protoreflect.Message {
 }
 
 func (x *DepositIdClaimedMapEntry) slowProtoReflect() protoreflect.Message {
-	mi := &file_layer_bridge_genesis_proto_msgTypes[8]
+	mi := &file_layer_bridge_genesis_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5830,15 +4594,13 @@ type GenesisState struct {
 	BridgeValSet                 *BridgeValidatorSet                    `protobuf:"bytes,3,opt,name=bridge_val_set,json=bridgeValSet,proto3" json:"bridge_val_set,omitempty"`
 	ValidatorCheckpoint          []byte                                 `protobuf:"bytes,4,opt,name=validator_checkpoint,json=validatorCheckpoint,proto3" json:"validator_checkpoint,omitempty"`
 	WithdrawalId                 uint64                                 `protobuf:"varint,5,opt,name=withdrawal_id,json=withdrawalId,proto3" json:"withdrawal_id,omitempty"`
-	OperatorToEvmAddressMap      []*OperatorToEVMAddressMapEntry        `protobuf:"bytes,6,rep,name=operator_to_evm_address_map,json=operatorToEvmAddressMap,proto3" json:"operator_to_evm_address_map,omitempty"`
-	EvmRegisteredMap             []*EVMRegisteredMapEntry               `protobuf:"bytes,7,rep,name=evm_registered_map,json=evmRegisteredMap,proto3" json:"evm_registered_map,omitempty"`
-	BridgeValsetSigsMap          []*BridgeValSetSigsMapEntry            `protobuf:"bytes,8,rep,name=bridge_valset_sigs_map,json=bridgeValsetSigsMap,proto3" json:"bridge_valset_sigs_map,omitempty"`
-	ValidatorCheckpointParamsMap []*ValidatorCheckpointParamsStateEntry `protobuf:"bytes,9,rep,name=validator_checkpoint_params_map,json=validatorCheckpointParamsMap,proto3" json:"validator_checkpoint_params_map,omitempty"`
-	ValidatorCheckpointIdxMap    []*ValidatorCheckpointIdxMapEntry      `protobuf:"bytes,10,rep,name=validator_checkpoint_idx_map,json=validatorCheckpointIdxMap,proto3" json:"validator_checkpoint_idx_map,omitempty"`
-	LatestValidatorCheckpointIdx uint64                                 `protobuf:"varint,11,opt,name=latest_validator_checkpoint_idx,json=latestValidatorCheckpointIdx,proto3" json:"latest_validator_checkpoint_idx,omitempty"`
-	BridgeValsetByTimestampMap   []*BridgeValsetByTimestampMapEntry     `protobuf:"bytes,12,rep,name=bridge_valset_by_timestamp_map,json=bridgeValsetByTimestampMap,proto3" json:"bridge_valset_by_timestamp_map,omitempty"`
-	ValsetTimestampToIdxMap      []*ValsetTimestampToIdxMapEntry        `protobuf:"bytes,13,rep,name=valset_timestamp_to_idx_map,json=valsetTimestampToIdxMap,proto3" json:"valset_timestamp_to_idx_map,omitempty"`
-	DepositIdClaimedMap          []*DepositIdClaimedMapEntry            `protobuf:"bytes,14,rep,name=deposit_id_claimed_map,json=depositIdClaimedMap,proto3" json:"deposit_id_claimed_map,omitempty"`
+	BridgeValsetSigsMap          []*BridgeValSetSigsMapEntry            `protobuf:"bytes,6,rep,name=bridge_valset_sigs_map,json=bridgeValsetSigsMap,proto3" json:"bridge_valset_sigs_map,omitempty"`
+	ValidatorCheckpointParamsMap []*ValidatorCheckpointParamsStateEntry `protobuf:"bytes,7,rep,name=validator_checkpoint_params_map,json=validatorCheckpointParamsMap,proto3" json:"validator_checkpoint_params_map,omitempty"`
+	ValidatorCheckpointIdxMap    []*ValidatorCheckpointIdxMapEntry      `protobuf:"bytes,8,rep,name=validator_checkpoint_idx_map,json=validatorCheckpointIdxMap,proto3" json:"validator_checkpoint_idx_map,omitempty"`
+	LatestValidatorCheckpointIdx uint64                                 `protobuf:"varint,9,opt,name=latest_validator_checkpoint_idx,json=latestValidatorCheckpointIdx,proto3" json:"latest_validator_checkpoint_idx,omitempty"`
+	BridgeValsetByTimestampMap   []*BridgeValsetByTimestampMapEntry     `protobuf:"bytes,10,rep,name=bridge_valset_by_timestamp_map,json=bridgeValsetByTimestampMap,proto3" json:"bridge_valset_by_timestamp_map,omitempty"`
+	ValsetTimestampToIdxMap      []*ValsetTimestampToIdxMapEntry        `protobuf:"bytes,11,rep,name=valset_timestamp_to_idx_map,json=valsetTimestampToIdxMap,proto3" json:"valset_timestamp_to_idx_map,omitempty"`
+	DepositIdClaimedMap          []*DepositIdClaimedMapEntry            `protobuf:"bytes,12,rep,name=deposit_id_claimed_map,json=depositIdClaimedMap,proto3" json:"deposit_id_claimed_map,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -5896,20 +4658,6 @@ func (x *GenesisState) GetWithdrawalId() uint64 {
 	return 0
 }
 
-func (x *GenesisState) GetOperatorToEvmAddressMap() []*OperatorToEVMAddressMapEntry {
-	if x != nil {
-		return x.OperatorToEvmAddressMap
-	}
-	return nil
-}
-
-func (x *GenesisState) GetEvmRegisteredMap() []*EVMRegisteredMapEntry {
-	if x != nil {
-		return x.EvmRegisteredMap
-	}
-	return nil
-}
-
 func (x *GenesisState) GetBridgeValsetSigsMap() []*BridgeValSetSigsMapEntry {
 	if x != nil {
 		return x.BridgeValsetSigsMap
@@ -5959,92 +4707,6 @@ func (x *GenesisState) GetDepositIdClaimedMap() []*DepositIdClaimedMapEntry {
 	return nil
 }
 
-type OperatorToEVMAddressMapEntry struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
-	EvmAddress      []byte `protobuf:"bytes,2,opt,name=evm_address,json=evmAddress,proto3" json:"evm_address,omitempty"`
-}
-
-func (x *OperatorToEVMAddressMapEntry) Reset() {
-	*x = OperatorToEVMAddressMapEntry{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_genesis_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *OperatorToEVMAddressMapEntry) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*OperatorToEVMAddressMapEntry) ProtoMessage() {}
-
-// Deprecated: Use OperatorToEVMAddressMapEntry.ProtoReflect.Descriptor instead.
-func (*OperatorToEVMAddressMapEntry) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *OperatorToEVMAddressMapEntry) GetOperatorAddress() string {
-	if x != nil {
-		return x.OperatorAddress
-	}
-	return ""
-}
-
-func (x *OperatorToEVMAddressMapEntry) GetEvmAddress() []byte {
-	if x != nil {
-		return x.EvmAddress
-	}
-	return nil
-}
-
-type EVMRegisteredMapEntry struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	OperatorAddress string `protobuf:"bytes,1,opt,name=operator_address,json=operatorAddress,proto3" json:"operator_address,omitempty"`
-	Registered      bool   `protobuf:"varint,2,opt,name=registered,proto3" json:"registered,omitempty"`
-}
-
-func (x *EVMRegisteredMapEntry) Reset() {
-	*x = EVMRegisteredMapEntry{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_genesis_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *EVMRegisteredMapEntry) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*EVMRegisteredMapEntry) ProtoMessage() {}
-
-// Deprecated: Use EVMRegisteredMapEntry.ProtoReflect.Descriptor instead.
-func (*EVMRegisteredMapEntry) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *EVMRegisteredMapEntry) GetOperatorAddress() string {
-	if x != nil {
-		return x.OperatorAddress
-	}
-	return ""
-}
-
-func (x *EVMRegisteredMapEntry) GetRegistered() bool {
-	if x != nil {
-		return x.Registered
-	}
-	return false
-}
-
 type BridgeValSetSigsMapEntry struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -6057,7 +4719,7 @@ type BridgeValSetSigsMapEntry struct {
 func (x *BridgeValSetSigsMapEntry) Reset() {
 	*x = BridgeValSetSigsMapEntry{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_genesis_proto_msgTypes[3]
+		mi := &file_layer_bridge_genesis_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6071,7 +4733,7 @@ func (*BridgeValSetSigsMapEntry) ProtoMessage() {}
 
 // Deprecated: Use BridgeValSetSigsMapEntry.ProtoReflect.Descriptor instead.
 func (*BridgeValSetSigsMapEntry) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{3}
+	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *BridgeValSetSigsMapEntry) GetTimestamp() uint64 {
@@ -6103,7 +4765,7 @@ type ValidatorCheckpointParamsStateEntry struct {
 func (x *ValidatorCheckpointParamsStateEntry) Reset() {
 	*x = ValidatorCheckpointParamsStateEntry{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_genesis_proto_msgTypes[4]
+		mi := &file_layer_bridge_genesis_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6117,7 +4779,7 @@ func (*ValidatorCheckpointParamsStateEntry) ProtoMessage() {}
 
 // Deprecated: Use ValidatorCheckpointParamsStateEntry.ProtoReflect.Descriptor instead.
 func (*ValidatorCheckpointParamsStateEntry) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{4}
+	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *ValidatorCheckpointParamsStateEntry) GetTimestamp() uint64 {
@@ -6167,7 +4829,7 @@ type ValidatorCheckpointIdxMapEntry struct {
 func (x *ValidatorCheckpointIdxMapEntry) Reset() {
 	*x = ValidatorCheckpointIdxMapEntry{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_genesis_proto_msgTypes[5]
+		mi := &file_layer_bridge_genesis_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6181,7 +4843,7 @@ func (*ValidatorCheckpointIdxMapEntry) ProtoMessage() {}
 
 // Deprecated: Use ValidatorCheckpointIdxMapEntry.ProtoReflect.Descriptor instead.
 func (*ValidatorCheckpointIdxMapEntry) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{5}
+	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *ValidatorCheckpointIdxMapEntry) GetIndex() uint64 {
@@ -6210,7 +4872,7 @@ type BridgeValsetByTimestampMapEntry struct {
 func (x *BridgeValsetByTimestampMapEntry) Reset() {
 	*x = BridgeValsetByTimestampMapEntry{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_genesis_proto_msgTypes[6]
+		mi := &file_layer_bridge_genesis_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6224,7 +4886,7 @@ func (*BridgeValsetByTimestampMapEntry) ProtoMessage() {}
 
 // Deprecated: Use BridgeValsetByTimestampMapEntry.ProtoReflect.Descriptor instead.
 func (*BridgeValsetByTimestampMapEntry) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{6}
+	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *BridgeValsetByTimestampMapEntry) GetTimestamp() uint64 {
@@ -6253,7 +4915,7 @@ type ValsetTimestampToIdxMapEntry struct {
 func (x *ValsetTimestampToIdxMapEntry) Reset() {
 	*x = ValsetTimestampToIdxMapEntry{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_genesis_proto_msgTypes[7]
+		mi := &file_layer_bridge_genesis_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6267,7 +4929,7 @@ func (*ValsetTimestampToIdxMapEntry) ProtoMessage() {}
 
 // Deprecated: Use ValsetTimestampToIdxMapEntry.ProtoReflect.Descriptor instead.
 func (*ValsetTimestampToIdxMapEntry) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{7}
+	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ValsetTimestampToIdxMapEntry) GetTimestamp() uint64 {
@@ -6296,7 +4958,7 @@ type DepositIdClaimedMapEntry struct {
 func (x *DepositIdClaimedMapEntry) Reset() {
 	*x = DepositIdClaimedMapEntry{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_layer_bridge_genesis_proto_msgTypes[8]
+		mi := &file_layer_bridge_genesis_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6310,7 +4972,7 @@ func (*DepositIdClaimedMapEntry) ProtoMessage() {}
 
 // Deprecated: Use DepositIdClaimedMapEntry.ProtoReflect.Descriptor instead.
 func (*DepositIdClaimedMapEntry) Descriptor() ([]byte, []int) {
-	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{8}
+	return file_layer_bridge_genesis_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *DepositIdClaimedMapEntry) GetDepositId() uint64 {
@@ -6337,7 +4999,7 @@ var file_layer_bridge_genesis_proto_rawDesc = []byte{
 	0x1a, 0x19, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x70,
 	0x61, 0x72, 0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x18, 0x6c, 0x61, 0x79,
 	0x65, 0x72, 0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x8d, 0x09, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xd0, 0x07, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69,
 	0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x32, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
 	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x04, 0xc8, 0xde,
@@ -6354,133 +5016,108 @@ var file_layer_bridge_genesis_proto_rawDesc = []byte{
 	0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x12, 0x23, 0x0a, 0x0d,
 	0x77, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20,
 	0x01, 0x28, 0x04, 0x52, 0x0c, 0x77, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x49,
-	0x64, 0x12, 0x68, 0x0a, 0x1b, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x74, 0x6f,
-	0x5f, 0x65, 0x76, 0x6d, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x5f, 0x6d, 0x61, 0x70,
-	0x18, 0x06, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x6f,
-	0x45, 0x56, 0x4d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74,
-	0x72, 0x79, 0x52, 0x17, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x6f, 0x45, 0x76,
-	0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x4d, 0x61, 0x70, 0x12, 0x51, 0x0a, 0x12, 0x65,
-	0x76, 0x6d, 0x5f, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x65, 0x64, 0x5f, 0x6d, 0x61,
-	0x70, 0x18, 0x07, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
-	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x45, 0x56, 0x4d, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74,
-	0x65, 0x72, 0x65, 0x64, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x10, 0x65, 0x76,
-	0x6d, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x65, 0x64, 0x4d, 0x61, 0x70, 0x12, 0x5b,
-	0x0a, 0x16, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f,
-	0x73, 0x69, 0x67, 0x73, 0x5f, 0x6d, 0x61, 0x70, 0x18, 0x08, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x26,
+	0x64, 0x12, 0x5b, 0x0a, 0x16, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x76, 0x61, 0x6c, 0x73,
+	0x65, 0x74, 0x5f, 0x73, 0x69, 0x67, 0x73, 0x5f, 0x6d, 0x61, 0x70, 0x18, 0x06, 0x20, 0x03, 0x28,
+	0x0b, 0x32, 0x26, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x53, 0x65, 0x74, 0x53, 0x69, 0x67,
+	0x73, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x13, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x4d, 0x61, 0x70, 0x12, 0x78,
+	0x0a, 0x1f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63,
+	0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x5f, 0x6d, 0x61,
+	0x70, 0x18, 0x07, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x31, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
+	0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73,
+	0x53, 0x74, 0x61, 0x74, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x1c, 0x76, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50,
+	0x61, 0x72, 0x61, 0x6d, 0x73, 0x4d, 0x61, 0x70, 0x12, 0x6d, 0x0a, 0x1c, 0x76, 0x61, 0x6c, 0x69,
+	0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74,
+	0x5f, 0x69, 0x64, 0x78, 0x5f, 0x6d, 0x61, 0x70, 0x18, 0x08, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2c,
+	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x56, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e,
+	0x74, 0x49, 0x64, 0x78, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x19, 0x76, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e,
+	0x74, 0x49, 0x64, 0x78, 0x4d, 0x61, 0x70, 0x12, 0x45, 0x0a, 0x1f, 0x6c, 0x61, 0x74, 0x65, 0x73,
+	0x74, 0x5f, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63,
+	0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x78, 0x18, 0x09, 0x20, 0x01, 0x28, 0x04,
+	0x52, 0x1c, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x49, 0x64, 0x78, 0x12, 0x71,
+	0x0a, 0x1e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f,
+	0x62, 0x79, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x5f, 0x6d, 0x61, 0x70,
+	0x18, 0x0a, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x73,
+	0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x4d, 0x61, 0x70,
+	0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x1a, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c,
+	0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x4d, 0x61,
+	0x70, 0x12, 0x68, 0x0a, 0x1b, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x5f, 0x74, 0x6f, 0x5f, 0x69, 0x64, 0x78, 0x5f, 0x6d, 0x61, 0x70,
+	0x18, 0x0b, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x54, 0x69, 0x6d, 0x65,
+	0x73, 0x74, 0x61, 0x6d, 0x70, 0x54, 0x6f, 0x49, 0x64, 0x78, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74,
+	0x72, 0x79, 0x52, 0x17, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74,
+	0x61, 0x6d, 0x70, 0x54, 0x6f, 0x49, 0x64, 0x78, 0x4d, 0x61, 0x70, 0x12, 0x5b, 0x0a, 0x16, 0x64,
+	0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x5f, 0x69, 0x64, 0x5f, 0x63, 0x6c, 0x61, 0x69, 0x6d, 0x65,
+	0x64, 0x5f, 0x6d, 0x61, 0x70, 0x18, 0x0c, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x44, 0x65, 0x70, 0x6f, 0x73,
+	0x69, 0x74, 0x49, 0x64, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64, 0x4d, 0x61, 0x70, 0x45, 0x6e,
+	0x74, 0x72, 0x79, 0x52, 0x13, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49, 0x64, 0x43, 0x6c,
+	0x61, 0x69, 0x6d, 0x65, 0x64, 0x4d, 0x61, 0x70, 0x22, 0x59, 0x0a, 0x18, 0x42, 0x72, 0x69, 0x64,
+	0x67, 0x65, 0x56, 0x61, 0x6c, 0x53, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x4d, 0x61, 0x70, 0x45,
+	0x6e, 0x74, 0x72, 0x79, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
+	0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
+	0x6d, 0x70, 0x12, 0x1f, 0x0a, 0x0b, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x73, 0x69, 0x67,
+	0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0c, 0x52, 0x0a, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53,
+	0x69, 0x67, 0x73, 0x22, 0x91, 0x02, 0x0a, 0x23, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d,
+	0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x1c, 0x0a, 0x09, 0x74,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09,
+	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x2f, 0x0a, 0x13, 0x76, 0x61, 0x6c,
+	0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x12, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x3a, 0x0a, 0x19, 0x76, 0x61,
+	0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x5f, 0x74, 0x68,
+	0x72, 0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x17, 0x76,
+	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72,
+	0x65, 0x73, 0x68, 0x6f, 0x6c, 0x64, 0x12, 0x2c, 0x0a, 0x12, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
+	0x74, 0x6f, 0x72, 0x5f, 0x73, 0x65, 0x74, 0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x0c, 0x52, 0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74,
+	0x48, 0x61, 0x73, 0x68, 0x12, 0x31, 0x0a, 0x14, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
+	0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x05, 0x20, 0x01,
+	0x28, 0x0c, 0x52, 0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65,
+	0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x22, 0x54, 0x0a, 0x1e, 0x56, 0x61, 0x6c, 0x69, 0x64,
+	0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x49, 0x64,
+	0x78, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x69, 0x6e, 0x64,
+	0x65, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x12,
+	0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x79, 0x0a,
+	0x1f, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79,
+	0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x38,
+	0x0a, 0x06, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20,
 	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x42, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x53, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x4d, 0x61,
-	0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x13, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61,
-	0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x4d, 0x61, 0x70, 0x12, 0x78, 0x0a, 0x1f, 0x76,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f,
-	0x69, 0x6e, 0x74, 0x5f, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x5f, 0x6d, 0x61, 0x70, 0x18, 0x09,
-	0x20, 0x03, 0x28, 0x0b, 0x32, 0x31, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69,
-	0x64, 0x67, 0x65, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65,
-	0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x53, 0x74, 0x61,
-	0x74, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x1c, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61,
-	0x6d, 0x73, 0x4d, 0x61, 0x70, 0x12, 0x6d, 0x0a, 0x1c, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74,
-	0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x5f, 0x69, 0x64,
-	0x78, 0x5f, 0x6d, 0x61, 0x70, 0x18, 0x0a, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x56, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x49, 0x64,
-	0x78, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x19, 0x76, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x49, 0x64,
-	0x78, 0x4d, 0x61, 0x70, 0x12, 0x45, 0x0a, 0x1f, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x74, 0x5f, 0x76,
-	0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f,
-	0x69, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x78, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x04, 0x52, 0x1c, 0x6c,
-	0x61, 0x74, 0x65, 0x73, 0x74, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68,
-	0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x49, 0x64, 0x78, 0x12, 0x71, 0x0a, 0x1e, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x62, 0x79, 0x5f,
-	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x5f, 0x6d, 0x61, 0x70, 0x18, 0x0c, 0x20,
-	0x03, 0x28, 0x0b, 0x32, 0x2d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
-	0x67, 0x65, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x42,
-	0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74,
-	0x72, 0x79, 0x52, 0x1a, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74,
-	0x42, 0x79, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x4d, 0x61, 0x70, 0x12, 0x68,
-	0x0a, 0x1b, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x5f, 0x74, 0x6f, 0x5f, 0x69, 0x64, 0x78, 0x5f, 0x6d, 0x61, 0x70, 0x18, 0x0d, 0x20,
-	0x03, 0x28, 0x0b, 0x32, 0x2a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64,
-	0x67, 0x65, 0x2e, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x54, 0x6f, 0x49, 0x64, 0x78, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52,
-	0x17, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
-	0x54, 0x6f, 0x49, 0x64, 0x78, 0x4d, 0x61, 0x70, 0x12, 0x5b, 0x0a, 0x16, 0x64, 0x65, 0x70, 0x6f,
-	0x73, 0x69, 0x74, 0x5f, 0x69, 0x64, 0x5f, 0x63, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64, 0x5f, 0x6d,
-	0x61, 0x70, 0x18, 0x0e, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49,
-	0x64, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79,
-	0x52, 0x13, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49, 0x64, 0x43, 0x6c, 0x61, 0x69, 0x6d,
-	0x65, 0x64, 0x4d, 0x61, 0x70, 0x22, 0x6a, 0x0a, 0x1c, 0x4f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f,
-	0x72, 0x54, 0x6f, 0x45, 0x56, 0x4d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x4d, 0x61, 0x70,
-	0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x29, 0x0a, 0x10, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f,
-	0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x0f, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x12, 0x1f, 0x0a, 0x0b, 0x65, 0x76, 0x6d, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0a, 0x65, 0x76, 0x6d, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x22, 0x62, 0x0a, 0x15, 0x45, 0x56, 0x4d, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72,
-	0x65, 0x64, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x29, 0x0a, 0x10, 0x6f, 0x70,
-	0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x6f, 0x70, 0x65, 0x72, 0x61, 0x74, 0x6f, 0x72, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1e, 0x0a, 0x0a, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65,
-	0x72, 0x65, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0a, 0x72, 0x65, 0x67, 0x69, 0x73,
-	0x74, 0x65, 0x72, 0x65, 0x64, 0x22, 0x59, 0x0a, 0x18, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x56,
-	0x61, 0x6c, 0x53, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72,
-	0x79, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12,
-	0x1f, 0x0a, 0x0b, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x5f, 0x73, 0x69, 0x67, 0x73, 0x18, 0x02,
-	0x20, 0x03, 0x28, 0x0c, 0x52, 0x0a, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x53, 0x69, 0x67, 0x73,
-	0x22, 0x91, 0x02, 0x0a, 0x23, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68,
-	0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x53, 0x74,
-	0x61, 0x74, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65,
+	0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74,
+	0x52, 0x06, 0x76, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x22, 0x52, 0x0a, 0x1c, 0x56, 0x61, 0x6c, 0x73,
+	0x65, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x54, 0x6f, 0x49, 0x64, 0x78,
+	0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65,
 	0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d,
-	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x2f, 0x0a, 0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61,
-	0x74, 0x6f, 0x72, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x04, 0x52, 0x12, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x54, 0x69,
-	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x3a, 0x0a, 0x19, 0x76, 0x61, 0x6c, 0x69, 0x64,
-	0x61, 0x74, 0x6f, 0x72, 0x5f, 0x70, 0x6f, 0x77, 0x65, 0x72, 0x5f, 0x74, 0x68, 0x72, 0x65, 0x73,
-	0x68, 0x6f, 0x6c, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x17, 0x76, 0x61, 0x6c, 0x69,
-	0x64, 0x61, 0x74, 0x6f, 0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x54, 0x68, 0x72, 0x65, 0x73, 0x68,
-	0x6f, 0x6c, 0x64, 0x12, 0x2c, 0x0a, 0x12, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72,
-	0x5f, 0x73, 0x65, 0x74, 0x5f, 0x68, 0x61, 0x73, 0x68, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52,
-	0x10, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x48, 0x61, 0x73,
-	0x68, 0x12, 0x31, 0x0a, 0x14, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x5f, 0x63,
-	0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0c, 0x52,
-	0x13, 0x76, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70,
-	0x6f, 0x69, 0x6e, 0x74, 0x22, 0x54, 0x0a, 0x1e, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f,
-	0x72, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x70, 0x6f, 0x69, 0x6e, 0x74, 0x49, 0x64, 0x78, 0x4d, 0x61,
-	0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x1c, 0x0a, 0x09,
-	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52,
-	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x79, 0x0a, 0x1f, 0x42, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x42, 0x79, 0x54, 0x69, 0x6d, 0x65,
-	0x73, 0x74, 0x61, 0x6d, 0x70, 0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x1c, 0x0a,
-	0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04,
-	0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x38, 0x0a, 0x06, 0x76,
-	0x61, 0x6c, 0x73, 0x65, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67,
-	0x65, 0x56, 0x61, 0x6c, 0x69, 0x64, 0x61, 0x74, 0x6f, 0x72, 0x53, 0x65, 0x74, 0x52, 0x06, 0x76,
-	0x61, 0x6c, 0x73, 0x65, 0x74, 0x22, 0x52, 0x0a, 0x1c, 0x56, 0x61, 0x6c, 0x73, 0x65, 0x74, 0x54,
-	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x54, 0x6f, 0x49, 0x64, 0x78, 0x4d, 0x61, 0x70,
-	0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61,
-	0x6d, 0x70, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74,
-	0x61, 0x6d, 0x70, 0x12, 0x14, 0x0a, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x04, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x22, 0x57, 0x0a, 0x18, 0x44, 0x65, 0x70,
-	0x6f, 0x73, 0x69, 0x74, 0x49, 0x64, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64, 0x4d, 0x61, 0x70,
-	0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x1d, 0x0a, 0x0a, 0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74,
-	0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x64, 0x65, 0x70, 0x6f, 0x73,
-	0x69, 0x74, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x69, 0x73, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x65,
-	0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x69, 0x73, 0x43, 0x6c, 0x61, 0x69, 0x6d,
-	0x65, 0x64, 0x42, 0x9e, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73,
-	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e,
-	0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x62, 0x72,
-	0x69, 0x64, 0x67, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa, 0x02, 0x0c, 0x4c, 0x61, 0x79,
-	0x65, 0x72, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02, 0x0c, 0x4c, 0x61, 0x79, 0x65,
-	0x72, 0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61, 0x79, 0x65, 0x72,
-	0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x42, 0x72, 0x69,
-	0x64, 0x67, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x12, 0x14, 0x0a, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x22, 0x57, 0x0a, 0x18,
+	0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49, 0x64, 0x43, 0x6c, 0x61, 0x69, 0x6d, 0x65, 0x64,
+	0x4d, 0x61, 0x70, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x1d, 0x0a, 0x0a, 0x64, 0x65, 0x70, 0x6f,
+	0x73, 0x69, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x64, 0x65,
+	0x70, 0x6f, 0x73, 0x69, 0x74, 0x49, 0x64, 0x12, 0x1c, 0x0a, 0x09, 0x69, 0x73, 0x43, 0x6c, 0x61,
+	0x69, 0x6d, 0x65, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x69, 0x73, 0x43, 0x6c,
+	0x61, 0x69, 0x6d, 0x65, 0x64, 0x42, 0x9e, 0x01, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65,
+	0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2b, 0x67, 0x69, 0x74, 0x68,
+	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f,
+	0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2f, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0xa2, 0x02, 0x03, 0x4c, 0x42, 0x58, 0xaa, 0x02, 0x0c,
+	0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xca, 0x02, 0x0c, 0x4c,
+	0x61, 0x79, 0x65, 0x72, 0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0xe2, 0x02, 0x18, 0x4c, 0x61,
+	0x79, 0x65, 0x72, 0x5c, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0d, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a,
+	0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -6495,37 +5132,33 @@ func file_layer_bridge_genesis_proto_rawDescGZIP() []byte {
 	return file_layer_bridge_genesis_proto_rawDescData
 }
 
-var file_layer_bridge_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_layer_bridge_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_layer_bridge_genesis_proto_goTypes = []interface{}{
 	(*GenesisState)(nil),                        // 0: layer.bridge.GenesisState
-	(*OperatorToEVMAddressMapEntry)(nil),        // 1: layer.bridge.OperatorToEVMAddressMapEntry
-	(*EVMRegisteredMapEntry)(nil),               // 2: layer.bridge.EVMRegisteredMapEntry
-	(*BridgeValSetSigsMapEntry)(nil),            // 3: layer.bridge.BridgeValSetSigsMapEntry
-	(*ValidatorCheckpointParamsStateEntry)(nil), // 4: layer.bridge.ValidatorCheckpointParamsStateEntry
-	(*ValidatorCheckpointIdxMapEntry)(nil),      // 5: layer.bridge.ValidatorCheckpointIdxMapEntry
-	(*BridgeValsetByTimestampMapEntry)(nil),     // 6: layer.bridge.BridgeValsetByTimestampMapEntry
-	(*ValsetTimestampToIdxMapEntry)(nil),        // 7: layer.bridge.ValsetTimestampToIdxMapEntry
-	(*DepositIdClaimedMapEntry)(nil),            // 8: layer.bridge.DepositIdClaimedMapEntry
-	(*Params)(nil),                              // 9: layer.bridge.Params
-	(*BridgeValidatorSet)(nil),                  // 10: layer.bridge.BridgeValidatorSet
+	(*BridgeValSetSigsMapEntry)(nil),            // 1: layer.bridge.BridgeValSetSigsMapEntry
+	(*ValidatorCheckpointParamsStateEntry)(nil), // 2: layer.bridge.ValidatorCheckpointParamsStateEntry
+	(*ValidatorCheckpointIdxMapEntry)(nil),      // 3: layer.bridge.ValidatorCheckpointIdxMapEntry
+	(*BridgeValsetByTimestampMapEntry)(nil),     // 4: layer.bridge.BridgeValsetByTimestampMapEntry
+	(*ValsetTimestampToIdxMapEntry)(nil),        // 5: layer.bridge.ValsetTimestampToIdxMapEntry
+	(*DepositIdClaimedMapEntry)(nil),            // 6: layer.bridge.DepositIdClaimedMapEntry
+	(*Params)(nil),                              // 7: layer.bridge.Params
+	(*BridgeValidatorSet)(nil),                  // 8: layer.bridge.BridgeValidatorSet
 }
 var file_layer_bridge_genesis_proto_depIdxs = []int32{
-	9,  // 0: layer.bridge.GenesisState.params:type_name -> layer.bridge.Params
-	10, // 1: layer.bridge.GenesisState.bridge_val_set:type_name -> layer.bridge.BridgeValidatorSet
-	1,  // 2: layer.bridge.GenesisState.operator_to_evm_address_map:type_name -> layer.bridge.OperatorToEVMAddressMapEntry
-	2,  // 3: layer.bridge.GenesisState.evm_registered_map:type_name -> layer.bridge.EVMRegisteredMapEntry
-	3,  // 4: layer.bridge.GenesisState.bridge_valset_sigs_map:type_name -> layer.bridge.BridgeValSetSigsMapEntry
-	4,  // 5: layer.bridge.GenesisState.validator_checkpoint_params_map:type_name -> layer.bridge.ValidatorCheckpointParamsStateEntry
-	5,  // 6: layer.bridge.GenesisState.validator_checkpoint_idx_map:type_name -> layer.bridge.ValidatorCheckpointIdxMapEntry
-	6,  // 7: layer.bridge.GenesisState.bridge_valset_by_timestamp_map:type_name -> layer.bridge.BridgeValsetByTimestampMapEntry
-	7,  // 8: layer.bridge.GenesisState.valset_timestamp_to_idx_map:type_name -> layer.bridge.ValsetTimestampToIdxMapEntry
-	8,  // 9: layer.bridge.GenesisState.deposit_id_claimed_map:type_name -> layer.bridge.DepositIdClaimedMapEntry
-	10, // 10: layer.bridge.BridgeValsetByTimestampMapEntry.valset:type_name -> layer.bridge.BridgeValidatorSet
-	11, // [11:11] is the sub-list for method output_type
-	11, // [11:11] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	7, // 0: layer.bridge.GenesisState.params:type_name -> layer.bridge.Params
+	8, // 1: layer.bridge.GenesisState.bridge_val_set:type_name -> layer.bridge.BridgeValidatorSet
+	1, // 2: layer.bridge.GenesisState.bridge_valset_sigs_map:type_name -> layer.bridge.BridgeValSetSigsMapEntry
+	2, // 3: layer.bridge.GenesisState.validator_checkpoint_params_map:type_name -> layer.bridge.ValidatorCheckpointParamsStateEntry
+	3, // 4: layer.bridge.GenesisState.validator_checkpoint_idx_map:type_name -> layer.bridge.ValidatorCheckpointIdxMapEntry
+	4, // 5: layer.bridge.GenesisState.bridge_valset_by_timestamp_map:type_name -> layer.bridge.BridgeValsetByTimestampMapEntry
+	5, // 6: layer.bridge.GenesisState.valset_timestamp_to_idx_map:type_name -> layer.bridge.ValsetTimestampToIdxMapEntry
+	6, // 7: layer.bridge.GenesisState.deposit_id_claimed_map:type_name -> layer.bridge.DepositIdClaimedMapEntry
+	8, // 8: layer.bridge.BridgeValsetByTimestampMapEntry.valset:type_name -> layer.bridge.BridgeValidatorSet
+	9, // [9:9] is the sub-list for method output_type
+	9, // [9:9] is the sub-list for method input_type
+	9, // [9:9] is the sub-list for extension type_name
+	9, // [9:9] is the sub-list for extension extendee
+	0, // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_layer_bridge_genesis_proto_init() }
@@ -6549,30 +5182,6 @@ func file_layer_bridge_genesis_proto_init() {
 			}
 		}
 		file_layer_bridge_genesis_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*OperatorToEVMAddressMapEntry); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_layer_bridge_genesis_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EVMRegisteredMapEntry); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_layer_bridge_genesis_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*BridgeValSetSigsMapEntry); i {
 			case 0:
 				return &v.state
@@ -6584,7 +5193,7 @@ func file_layer_bridge_genesis_proto_init() {
 				return nil
 			}
 		}
-		file_layer_bridge_genesis_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_bridge_genesis_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ValidatorCheckpointParamsStateEntry); i {
 			case 0:
 				return &v.state
@@ -6596,7 +5205,7 @@ func file_layer_bridge_genesis_proto_init() {
 				return nil
 			}
 		}
-		file_layer_bridge_genesis_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_bridge_genesis_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ValidatorCheckpointIdxMapEntry); i {
 			case 0:
 				return &v.state
@@ -6608,7 +5217,7 @@ func file_layer_bridge_genesis_proto_init() {
 				return nil
 			}
 		}
-		file_layer_bridge_genesis_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_bridge_genesis_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*BridgeValsetByTimestampMapEntry); i {
 			case 0:
 				return &v.state
@@ -6620,7 +5229,7 @@ func file_layer_bridge_genesis_proto_init() {
 				return nil
 			}
 		}
-		file_layer_bridge_genesis_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_bridge_genesis_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ValsetTimestampToIdxMapEntry); i {
 			case 0:
 				return &v.state
@@ -6632,7 +5241,7 @@ func file_layer_bridge_genesis_proto_init() {
 				return nil
 			}
 		}
-		file_layer_bridge_genesis_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+		file_layer_bridge_genesis_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DepositIdClaimedMapEntry); i {
 			case 0:
 				return &v.state
@@ -6651,7 +5260,7 @@ func file_layer_bridge_genesis_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_bridge_genesis_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

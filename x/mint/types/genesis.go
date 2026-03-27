@@ -6,17 +6,18 @@ import (
 )
 
 // NewGenesisState creates a new GenesisState object
-func NewGenesisState(bondDenom string, initialized bool, previousBlockTime *time.Time) *GenesisState {
+func NewGenesisState(bondDenom string, initialized bool, previousBlockTime *time.Time, dailyExtraRewards int64) *GenesisState {
 	return &GenesisState{
 		BondDenom:         bondDenom,
 		Initialized:       initialized,
 		PreviousBlockTime: previousBlockTime,
+		DailyExtraRewards: dailyExtraRewards,
 	}
 }
 
 // DefaultGenesisState creates a default GenesisState object
 func DefaultGenesis() *GenesisState {
-	return NewGenesisState(DefaultBondDenom, false, nil)
+	return NewGenesisState(DefaultBondDenom, false, nil, 0)
 }
 
 // ValidateGenesis validates the provided genesis state to ensure the

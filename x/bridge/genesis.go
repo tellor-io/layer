@@ -40,18 +40,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			panic(err)
 		}
 
-		for _, data := range genState.OperatorToEvmAddressMap {
-			if err := k.OperatorToEVMAddressMap.Set(ctx, data.OperatorAddress, types.EVMAddress{EVMAddress: data.EvmAddress}); err != nil {
-				panic(err)
-			}
-		}
-
-		for _, data := range genState.EvmRegisteredMap {
-			if err := k.EVMAddressRegisteredMap.Set(ctx, data.OperatorAddress, types.EVMAddressRegistered{Registered: data.Registered}); err != nil {
-				panic(err)
-			}
-		}
-
 		for _, data := range genState.BridgeValsetSigsMap {
 			if err := k.BridgeValsetSignaturesMap.Set(ctx, data.Timestamp, types.BridgeValsetSignatures{Signatures: data.ValsetSigs}); err != nil {
 				panic(err)
@@ -133,52 +121,6 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		}
 	}
 	genesis.WithdrawalId = withdrawalId.Id
-
-	iterOperaterToEVM, err := k.OperatorToEVMAddressMap.IterateRaw(ctx, nil, nil, collections.OrderDescending)
-	if err != nil {
-		panic(err)
-	}
-	operaterToEVMs := make([]*types.OperatorToEVMAddressMapEntry, 0)
-	for ; iterOperaterToEVM.Valid(); iterOperaterToEVM.Next() {
-		operatorAddr, err := iterOperaterToEVM.Key()
-		if err != nil {
-			panic(err)
-		}
-
-		evmAddr, err := iterOperaterToEVM.Value()
-		if err != nil {
-			panic(err)
-		}
-		operaterToEVMs = append(operaterToEVMs, &types.OperatorToEVMAddressMapEntry{OperatorAddress: operatorAddr, EvmAddress: evmAddr.EVMAddress})
-	}
-	genesis.OperatorToEvmAddressMap = operaterToEVMs
-	err = iterOperaterToEVM.Close()
-	if err != nil {
-		panic(err)
-	}
-
-	iterEVMRegisteredMap, err := k.EVMAddressRegisteredMap.IterateRaw(ctx, nil, nil, collections.OrderDescending)
-	if err != nil {
-		panic(err)
-	}
-	evmRegistered := make([]*types.EVMRegisteredMapEntry, 0)
-	for ; iterEVMRegisteredMap.Valid(); iterEVMRegisteredMap.Next() {
-		operaterAddr, err := iterEVMRegisteredMap.Key()
-		if err != nil {
-			panic(err)
-		}
-
-		isRegistered, err := iterEVMRegisteredMap.Value()
-		if err != nil {
-			panic(err)
-		}
-		evmRegistered = append(evmRegistered, &types.EVMRegisteredMapEntry{OperatorAddress: operaterAddr, Registered: isRegistered.Registered})
-	}
-	genesis.EvmRegisteredMap = evmRegistered
-	err = iterEVMRegisteredMap.Close()
-	if err != nil {
-		panic(err)
-	}
 
 	iterBridgeValSetSigs, err := k.BridgeValsetSignaturesMap.IterateRaw(ctx, nil, nil, collections.OrderDescending)
 	if err != nil {

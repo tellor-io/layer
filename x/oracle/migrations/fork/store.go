@@ -36,6 +36,11 @@ type ModuleStateData struct {
 	TippedQueries   []oracletypes.QueryMeta `json:"tipped_queries"`
 }
 
+type AggregateStateData struct {
+	Aggregate oracletypes.Aggregate `json:"aggregate"`
+	Timestamp uint64                `json:"timestamp"`
+}
+
 func MigrateFork(ctx context.Context, storeService store.KVStoreService, cdc codec.BinaryCodec, pathToFile string) error {
 	sb := collections.NewSchemaBuilder(storeService)
 	path := filepath.Join(
@@ -70,6 +75,11 @@ func MigrateFork(ctx context.Context, storeService store.KVStoreService, cdc cod
 
 	// Process tipped queries array
 	if err := processTippedQueriesSection(ctx, decoder, sb, cdc); err != nil {
+		return err
+	}
+
+	// Process aggregate section
+	if err := processAggregate(ctx, decoder, sb, cdc); err != nil {
 		return err
 	}
 
@@ -225,5 +235,36 @@ func processTippedQueriesSection(ctx context.Context, decoder *json.Decoder, sb 
 		return err
 	}
 
+	return nil
+}
+
+func processAggregate(ctx context.Context, decoder *json.Decoder, sb *collections.SchemaBuilder, cdc codec.BinaryCodec) error {
+
+	// Read "big_deposit_aggregate" property name
+	t, err := decoder.Token()
+	if err != nil {
+		return err
+	}
+	if name, ok := t.(string); !ok || name != "big_deposit_aggregate" {
+		return fmt.Errorf("expected big_deposit_aggregate section, got %v", t)
+	}
+
+	aggregateMap := collections.NewIndexedMap(sb,
+		oracletypes.AggregatesPrefix,
+		"aggregates",
+		collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+		codec.CollValue[oracletypes.Aggregate](cdc),
+		oracletypes.NewAggregatesIndex(sb),
+	)
+
+	var entry AggregateStateData
+	if err := decoder.Decode(&entry); err != nil {
+		return err
+	}
+
+	pair := collections.Join(entry.Aggregate.QueryId, entry.Timestamp)
+	if err := aggregateMap.Set(ctx, pair, entry.Aggregate); err != nil {
+		return fmt.Errorf("failed to set aggregate: %w", err)
+	}
 	return nil
 }
