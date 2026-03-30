@@ -989,16 +989,7 @@ func (app *App) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.
 
 	// Handle version map setup based on whether we have a genesis upgrade
 	var initialVersionMap module.VersionMap
-	if upgradePlan != nil && upgradePlan.Height <= ctx.BlockHeight() {
-		// For genesis upgrades, set initial version map to simulate "before" state
-		initialVersionMap = getPreUpgradeVersionMap(app.mm.GetVersionMap())
-		app.Logger().Info("Setting pre-upgrade version map for genesis upgrade",
-			"upgrade", upgradePlan.Name,
-			"pre_versions", initialVersionMap)
-	} else {
-		// Normal initialization - use current module versions
-		initialVersionMap = app.mm.GetVersionMap()
-	}
+	initialVersionMap = app.mm.GetVersionMap()
 
 	// Set the initial version map
 	err := app.UpgradeKeeper.SetModuleVersionMap(ctx, initialVersionMap)
