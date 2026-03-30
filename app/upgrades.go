@@ -27,8 +27,9 @@ func (app *App) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		fork.UpgradeName,
 		fork.CreateUpgradeHandler(
-			app.ModuleManager(),
-			app.configurator,
+			app.DisputeKeeper,
+			app.ReporterKeeper,
+			app.OracleKeeper,
 		),
 	)
 }
