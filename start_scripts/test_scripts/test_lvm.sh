@@ -7,8 +7,8 @@
 # | IN TELLIOT, NOT CONFIG GOOD (sfrxusd/usd) | SpotPrice | sfrxusd/usd | Good value |
 # | IN TELLIOT, NOT CONFIG BAD (ltc/usd) | SpotPrice | ltc/usd | Bad value (using new reporter account) |
 # | IN CONFIG, NOT TELLIOT (soup/usd) | SpotPrice | soup/usd | Test value |
-# | TRBBRIDGE GOOD | TRBBridge | Deposit ID 142 | Good bridge withdrawal data |
-# | TRBBRIDGE BAD | TRBBridge | Deposit ID 141 | Bad bridge withdrawal data |
+# | TRBBRIDGE V1 FAILS | TRBBridge | Deposit ID 142 | Legacy query type is rejected |
+# | TRBBRIDGEV2 SUCCEEDS | TRBBridgeV2 | Deposit ID 142 | Bridge deposit report succeeds |
 # | NFLWINNER (not in telliot or config) | NFLWinner | Week 9, colts vs steelers | Winner: steelers |
 # | EVMCALL BAD | EVMCall | Chain 1, contract 0x5589e306b1920f009979a50b88cae32aecd471e4, calldata 0x7f629c65 | Bad value (0x2bad00 = 2862336) |
 
@@ -19,6 +19,273 @@ export HOME_DIR="$HOME/.layer-chains/testnet/layer"
 # Arrays to track test results
 declare -a TEST_NAMES
 declare -a TEST_RESULTS
+
+TX_QUERY_RESULT=""
+LAST_TX_CODE=""
+LAST_TX_RAW_LOG=""
+LAST_TX_GAS_USED=""
+
+extract_txhash() {
+  echo "$1" | awk '/^txhash: / {print $2; exit}'
+}
+
+query_tx_with_retry() {
+  local txhash=$1
+  local description=$2
+  local max_attempts=${3:-12}
+  local sleep_seconds=${4:-1}
+  local attempt=1
+
+  TX_QUERY_RESULT=""
+
+  while [ $attempt -le $max_attempts ]; do
+    TX_QUERY_RESULT=$(./layerd query tx "$txhash" --home $HOME_DIR/alice --output json 2>&1)
+    if [ $? -eq 0 ]; then
+      return 0
+    fi
+
+    if [ $attempt -eq 1 ]; then
+      echo "⚠️  $description tx not found immediately, waiting ${sleep_seconds}s and retrying..."
+    elif [ $attempt -lt $max_attempts ]; then
+      echo "⚠️  $description tx still pending (attempt $attempt/$max_attempts), waiting ${sleep_seconds}s..."
+    fi
+
+    if [ $attempt -lt $max_attempts ]; then
+      sleep "$sleep_seconds"
+    fi
+
+    attempt=$((attempt + 1))
+  done
+
+  return 1
+}
+
+confirm_tx_status() {
+  local txhash=$1
+  local description=$2
+  local max_attempts=${3:-12}
+  local sleep_seconds=${4:-1}
+  local tx_code
+  local gas_used
+  local raw_log
+
+  if ! query_tx_with_retry "$txhash" "$description" "$max_attempts" "$sleep_seconds"; then
+    LAST_TX_CODE=""
+    LAST_TX_RAW_LOG="$TX_QUERY_RESULT"
+    LAST_TX_GAS_USED=""
+    echo "❌ ERROR: $description tx not found after $max_attempts attempts"
+    echo "Last error: $TX_QUERY_RESULT"
+    return 1
+  fi
+
+  tx_code=$(echo "$TX_QUERY_RESULT" | jq -r '.code // 0')
+  gas_used=$(echo "$TX_QUERY_RESULT" | jq -r '.gas_used // "unknown"')
+  raw_log=$(echo "$TX_QUERY_RESULT" | jq -r '.raw_log // empty')
+  LAST_TX_CODE="$tx_code"
+  LAST_TX_RAW_LOG="$raw_log"
+  LAST_TX_GAS_USED="$gas_used"
+
+  if [ "$tx_code" = "0" ]; then
+    echo "✓ $description tx confirmed (code: 0, gas used: ${gas_used:-unknown})"
+    return 0
+  fi
+
+  echo "⚠️  $description tx returned code: $tx_code (gas used: ${gas_used:-unknown})"
+  if [ -n "$raw_log" ]; then
+    echo "  raw_log: $raw_log"
+  fi
+  return 1
+}
+
+retry_submit_after_retip() {
+  local query_data=$1
+  local tip_amount=$2
+  local submit_value=$3
+  local submit_gas_limit=$4
+  local from_account=${5:-"alice"}
+  local retry_tip_output
+  local retry_tip_txhash
+  local retry_submit_output
+  local retry_submit_txhash
+
+  echo "Re-submitting tip to reopen the reporting window..."
+  retry_tip_output=$(./layerd tx oracle tip "$query_data" "$tip_amount" \
+    --from $from_account \
+    --chain-id layer-local-1 \
+    --keyring-backend test \
+    --home $HOME_DIR/alice \
+    --keyring-dir $HOME_DIR/alice \
+    --fees 500loya \
+    --unordered \
+    --timeout-duration 30s \
+    --yes 2>&1)
+
+  retry_tip_txhash=$(extract_txhash "$retry_tip_output")
+  if [ -z "$retry_tip_txhash" ]; then
+    echo "❌ ERROR: Could not extract retry tip tx hash"
+    echo "Full output:"
+    echo "$retry_tip_output"
+    return 1
+  fi
+
+  echo "✓ Retry tip tx hash extracted: $retry_tip_txhash"
+  echo "Checking retry tip tx status..."
+  if ! confirm_tx_status "$retry_tip_txhash" "Retry tip" 12 1; then
+    return 1
+  fi
+
+  if [ -n "$submit_gas_limit" ]; then
+    echo "Retrying submit value after reopening the reporting window (custom gas limit: $submit_gas_limit)..."
+    retry_submit_output=$(./layerd tx oracle submit-value "$query_data" "$submit_value" \
+      --from $from_account \
+      --chain-id layer-local-1 \
+      --keyring-backend test \
+      --home $HOME_DIR/alice \
+      --keyring-dir $HOME_DIR/alice \
+      --fees 650loya \
+      --gas $submit_gas_limit \
+      --unordered \
+      --timeout-duration 30s \
+      --yes 2>&1)
+  else
+    echo "Retrying submit value after reopening the reporting window (using auto gas estimation)..."
+    retry_submit_output=$(./layerd tx oracle submit-value "$query_data" "$submit_value" \
+      --from $from_account \
+      --chain-id layer-local-1 \
+      --keyring-backend test \
+      --home $HOME_DIR/alice \
+      --keyring-dir $HOME_DIR/alice \
+      --fees 650loya \
+      --unordered \
+      --timeout-duration 30s \
+      --yes 2>&1)
+  fi
+
+  echo "--- Full retry submit-value command output ---"
+  echo "$retry_submit_output"
+  echo "--- End of output ---"
+
+  retry_submit_txhash=$(extract_txhash "$retry_submit_output")
+  if [ -z "$retry_submit_txhash" ]; then
+    echo "❌ ERROR: Could not extract retry submit tx hash"
+    echo "Full output:"
+    echo "$retry_submit_output"
+    return 1
+  fi
+
+  echo "✓ Retry submit tx hash extracted: $retry_submit_txhash"
+  echo "Checking retry submit tx status..."
+  if ! confirm_tx_status "$retry_submit_txhash" "Retry submit" 12 1; then
+    return 1
+  fi
+
+  return 0
+}
+
+get_report_count() {
+  local query_id=$1
+
+  ./layerd query oracle get-reportsby-qid "$query_id" \
+    --home $HOME_DIR/alice \
+    --output json \
+    --page-limit 1 \
+    --page-count-total 2>/dev/null | jq -r '.pagination.total // "0"'
+}
+
+ensure_trbbridgev2_spec_registered() {
+  echo "Checking if TRBBridgeV2 data spec is registered..."
+  if ./layerd query registry data-spec TRBBridgeV2 --home $HOME_DIR/alice &>/dev/null; then
+    echo "TRBBridgeV2 data spec found."
+    echo ""
+    return 0
+  fi
+
+  echo "⚠️  WARNING: TRBBridgeV2 data spec is not registered on this chain."
+  echo "Restart the local chain with the updated start_a_chain.sh to include it in genesis."
+  echo ""
+  return 1
+}
+
+submit_and_expect_failure() {
+  local description=$1
+  local query_data=$2
+  local submit_value=$3
+  local expected_error=$4
+  local submit_gas_limit=${5:-""}
+  local from_account=${6:-"alice"}
+  local test_status="SUCCESS"
+  local submit_output
+  local submit_txhash
+
+  TEST_NAMES+=("$description")
+
+  echo "=========================================="
+  echo "Testing: $description"
+  echo "=========================================="
+
+  if [ -n "$submit_gas_limit" ]; then
+    echo "Submitting value (expecting failure, custom gas limit: $submit_gas_limit)..."
+    submit_output=$(./layerd tx oracle submit-value "$query_data" "$submit_value" \
+      --from $from_account \
+      --chain-id layer-local-1 \
+      --keyring-backend test \
+      --home $HOME_DIR/alice \
+      --keyring-dir $HOME_DIR/alice \
+      --fees 650loya \
+      --gas $submit_gas_limit \
+      --unordered \
+      --timeout-duration 30s \
+      --yes 2>&1)
+  else
+    echo "Submitting value (expecting failure, using auto gas estimation)..."
+    submit_output=$(./layerd tx oracle submit-value "$query_data" "$submit_value" \
+      --from $from_account \
+      --chain-id layer-local-1 \
+      --keyring-backend test \
+      --home $HOME_DIR/alice \
+      --keyring-dir $HOME_DIR/alice \
+      --fees 650loya \
+      --unordered \
+      --timeout-duration 30s \
+      --yes 2>&1)
+  fi
+
+  echo "  Query data length: ${#query_data} chars"
+  echo "  Value length: ${#submit_value} chars"
+  echo "--- Full expected-failure submit-value command output ---"
+  echo "$submit_output"
+  echo "--- End of output ---"
+
+  submit_txhash=$(extract_txhash "$submit_output")
+  if [ -z "$submit_txhash" ]; then
+    echo "❌ ERROR: Could not extract expected-failure submit tx hash"
+    echo "Full output:"
+    echo "$submit_output"
+    test_status="FAILED"
+    TEST_RESULTS+=("$test_status")
+    echo ""
+    return 1
+  fi
+
+  echo "✓ Expected-failure submit tx hash extracted: $submit_txhash"
+  echo "Checking expected-failure submit tx status..."
+  if confirm_tx_status "$submit_txhash" "Expected-failure submit" 12 1; then
+    echo "❌ ERROR: Submit tx unexpectedly succeeded"
+    test_status="FAILED"
+  elif [ -z "$LAST_TX_CODE" ]; then
+    echo "❌ ERROR: Submit tx status could not be confirmed"
+    test_status="FAILED"
+  elif echo "$LAST_TX_RAW_LOG" | grep -Fqi "$expected_error"; then
+    echo "✅ SUCCESS: Submit failed as expected"
+  else
+    echo "❌ ERROR: Submit failed, but not with the expected error"
+    echo "Expected to find: $expected_error"
+    test_status="FAILED"
+  fi
+
+  TEST_RESULTS+=("$test_status")
+  echo ""
+}
 
 # Helper function to submit tip, extract txhash, wait, and check status
 submit_and_check() {
@@ -55,7 +322,7 @@ submit_and_check() {
       --timeout-duration 30s \
       --yes 2>&1)
     
-    TIP_TXHASH=$(echo "$TIP_OUTPUT" | grep -o 'txhash: [A-Z0-9]*' | cut -d' ' -f2)
+    TIP_TXHASH=$(extract_txhash "$TIP_OUTPUT")
     
     if [ -z "$TIP_TXHASH" ]; then
       echo "⚠️  Tip tx hash not found in first attempt, checking for errors..."
@@ -65,7 +332,7 @@ submit_and_check() {
       fi
       echo "Retrying hash extraction in 1s..."
       sleep 1
-      TIP_TXHASH=$(echo "$TIP_OUTPUT" | grep -o 'txhash: [A-Z0-9]*' | cut -d' ' -f2)
+      TIP_TXHASH=$(extract_txhash "$TIP_OUTPUT")
     fi
     
     if [ -z "$TIP_TXHASH" ]; then
@@ -82,34 +349,14 @@ submit_and_check() {
     sleep 1
     
     echo "Checking tip tx status..."
-    TIP_TX_STATUS=$(./layerd query tx "$TIP_TXHASH" --home $HOME_DIR/alice 2>&1)
-    if [ $? -ne 0 ]; then
-      echo "⚠️  Tip tx not found immediately, waiting 1s and retrying..."
-      sleep 1
-      TIP_TX_STATUS=$(./layerd query tx "$TIP_TXHASH" --home $HOME_DIR/alice 2>&1)
-      if [ $? -ne 0 ]; then
-        echo "❌ ERROR: Tip tx not found after retry"
-        echo "Error details: $TIP_TX_STATUS" | head -10
-        test_status="FAILED"
-        TEST_RESULTS+=("$test_status")
-        echo ""
-        return 1
-      fi
-    fi
-    
-    # Check if transaction succeeded
     TIP_TX_SUCCESS=false
-    if echo "$TIP_TX_STATUS" | grep -q '"code":0'; then
-      echo "✓ Tip tx confirmed (code: 0)"
+    if confirm_tx_status "$TIP_TXHASH" "Tip" 12 1; then
       TIP_TX_SUCCESS=true
-    elif echo "$TIP_TX_STATUS" | grep -q '"code"'; then
-      TX_CODE=$(echo "$TIP_TX_STATUS" | grep -o '"code":[0-9]*' | cut -d':' -f2)
-      echo "⚠️  Tip tx found but returned code: $TX_CODE"
-      echo "$TIP_TX_STATUS" | grep -A 5 "raw_log\|code" | head -10
-      TIP_TX_SUCCESS=false
     else
-      echo "✓ Tip tx confirmed"
-      TIP_TX_SUCCESS=true
+      test_status="FAILED"
+      TEST_RESULTS+=("$test_status")
+      echo ""
+      return 1
     fi
   fi
   
@@ -125,7 +372,7 @@ submit_and_check() {
     # Get initial report count before submitting
     if [ -n "$query_id" ]; then
       echo "Querying initial report count for query ID: $query_id"
-      INITIAL_COUNT=$(./layerd query oracle get-reportsby-qid "$query_id" --home $HOME_DIR/alice --output json 2>/dev/null | jq -r '.pagination.total // "0"')
+      INITIAL_COUNT=$(get_report_count "$query_id")
       echo "Initial report count: $INITIAL_COUNT"
     fi
     
@@ -182,7 +429,7 @@ submit_and_check() {
       echo "$SUBMIT_OUTPUT"
       echo "--- End of output ---"
       
-      SUBMIT_TXHASH=$(echo "$SUBMIT_OUTPUT" | grep -o 'txhash: [A-Z0-9]*' | cut -d' ' -f2)
+      SUBMIT_TXHASH=$(extract_txhash "$SUBMIT_OUTPUT")
       
       if [ -n "$SUBMIT_TXHASH" ]; then
         echo "✓ Submit tx hash extracted: $SUBMIT_TXHASH"
@@ -212,17 +459,17 @@ submit_and_check() {
       echo ""
       return 1
     fi
-    sleep 3
-    
     echo "Checking submit tx status..."
-    SUBMIT_TX_STATUS=$(./layerd query tx "$SUBMIT_TXHASH" --home $HOME_DIR/alice 2>&1)
-    if [ $? -ne 0 ]; then
-      echo "⚠️  Submit tx not found immediately, waiting 1s and retrying..."
-      sleep 1
-      SUBMIT_TX_STATUS=$(./layerd query tx "$SUBMIT_TXHASH" --home $HOME_DIR/alice 2>&1)
-      if [ $? -ne 0 ]; then
-        echo "❌ ERROR: Submit tx not found after retry"
-        echo "Error details: $SUBMIT_TX_STATUS" | head -10
+    if ! confirm_tx_status "$SUBMIT_TXHASH" "Submit" 12 1; then
+      if [ "$LAST_TX_CODE" = "1114" ] && [ -n "$tip_amount" ]; then
+        echo "⚠️  Submission window expired before the tx landed. Re-tipping and retrying submit once..."
+        if ! retry_submit_after_retip "$query_data" "$tip_amount" "$submit_value" "$submit_gas_limit" "$from_account"; then
+          test_status="FAILED"
+          TEST_RESULTS+=("$test_status")
+          echo ""
+          return 1
+        fi
+      else
         test_status="FAILED"
         TEST_RESULTS+=("$test_status")
         echo ""
@@ -230,24 +477,11 @@ submit_and_check() {
       fi
     fi
     
-    # Check if transaction succeeded
-    if echo "$SUBMIT_TX_STATUS" | grep -q '"code":0'; then
-      GAS_USED=$(echo "$SUBMIT_TX_STATUS" | grep -o '"gas_used":"[0-9]*"' | cut -d'"' -f4)
-      echo "✓ Submit tx confirmed (code: 0, gas used: ${GAS_USED:-unknown})"
-    elif echo "$SUBMIT_TX_STATUS" | grep -q '"code"'; then
-      TX_CODE=$(echo "$SUBMIT_TX_STATUS" | grep -o '"code":[0-9]*' | cut -d':' -f2)
-      GAS_USED=$(echo "$SUBMIT_TX_STATUS" | grep -o '"gas_used":"[0-9]*"' | cut -d'"' -f4)
-      echo "⚠️  Submit tx found but returned code: $TX_CODE (gas used: ${GAS_USED:-unknown})"
-      echo "$SUBMIT_TX_STATUS" | grep -A 5 "raw_log\|code" | head -10
-    else
-      echo "✓ Submit tx confirmed"
-    fi
-    
     # Get final report count and verify it increased by 1
     if [ -n "$query_id" ]; then
       echo ""
       echo "Querying final report count for query ID: $query_id"
-      FINAL_COUNT=$(./layerd query oracle get-reportsby-qid "$query_id" --home $HOME_DIR/alice --output json 2>/dev/null | jq -r '.pagination.total // "0"')
+      FINAL_COUNT=$(get_report_count "$query_id")
       echo "Final report count: $FINAL_COUNT"
       
       EXPECTED_COUNT=$((INITIAL_COUNT + 1))
@@ -256,7 +490,7 @@ submit_and_check() {
       else
         echo "Count did not increase yet, waiting 2s and retrying..."
         sleep 2
-        FINAL_COUNT=$(./layerd query oracle get-reportsby-qid "$query_id" --home $HOME_DIR/alice --output json 2>/dev/null | jq -r '.pagination.total // "0"')
+        FINAL_COUNT=$(get_report_count "$query_id")
         echo "Final report count (after retry): $FINAL_COUNT"
         
         if [ "$FINAL_COUNT" -eq "$EXPECTED_COUNT" ]; then
@@ -270,7 +504,7 @@ submit_and_check() {
   elif [ -n "$query_id" ]; then
     # If no submit_value but there's a query_id, just query once
     echo "Querying reports by query ID: $query_id"
-    REPORT_COUNT=$(./layerd query oracle get-reportsby-qid "$query_id" --home $HOME_DIR/alice --output json 2>/dev/null | jq -r '.pagination.total // "0"')
+    REPORT_COUNT=$(get_report_count "$query_id")
     echo "Total reports: $REPORT_COUNT"
   fi
   
@@ -316,7 +550,7 @@ create_reporter_account() {
     --timeout-duration 30s \
     --yes 2>&1)
   
-  FUND_TXHASH=$(echo "$FUND_OUTPUT" | grep -o 'txhash: [A-Z0-9]*' | cut -d' ' -f2)
+  FUND_TXHASH=$(extract_txhash "$FUND_OUTPUT")
   if [ -n "$FUND_TXHASH" ]; then
     echo "✓ Funding tx sent: $FUND_TXHASH"
     sleep 2
@@ -359,7 +593,7 @@ create_reporter_account() {
       --timeout-duration 30s \
       --yes 2>&1)
   
-    DELEGATE_TXHASH=$(echo "$DELEGATE_OUTPUT" | grep -o 'txhash: [A-Z0-9]*' | cut -d' ' -f2)
+    DELEGATE_TXHASH=$(extract_txhash "$DELEGATE_OUTPUT")
     
     if [ -n "$DELEGATE_TXHASH" ]; then
       echo "✓ Delegation tx sent: $DELEGATE_TXHASH"
@@ -407,7 +641,7 @@ create_reporter_account() {
     echo "$CREATE_REPORTER_OUTPUT"
     echo "--- End of output ---"
   
-    CREATE_REPORTER_TXHASH=$(echo "$CREATE_REPORTER_OUTPUT" | grep -o 'txhash: [A-Z0-9]*' | cut -d' ' -f2)
+    CREATE_REPORTER_TXHASH=$(extract_txhash "$CREATE_REPORTER_OUTPUT")
     
     if [ -n "$CREATE_REPORTER_TXHASH" ]; then
       echo "✓ Create reporter tx sent: $CREATE_REPORTER_TXHASH"
@@ -415,15 +649,10 @@ create_reporter_account() {
       
       # Verify the transaction status
       echo "Checking create-reporter tx status..."
-      CREATE_REPORTER_TX_STATUS=$(./layerd query tx "$CREATE_REPORTER_TXHASH" --home $HOME_DIR/alice 2>&1)
-      if echo "$CREATE_REPORTER_TX_STATUS" | grep -q '"code":0'; then
-        echo "✓ Reporter created successfully (code: 0)"
-      elif echo "$CREATE_REPORTER_TX_STATUS" | grep -q '"code"'; then
-        TX_CODE=$(echo "$CREATE_REPORTER_TX_STATUS" | grep -o '"code":[0-9]*' | cut -d':' -f2)
-        echo "⚠️  Create reporter tx returned code: $TX_CODE"
-        echo "$CREATE_REPORTER_TX_STATUS" | grep -A 5 "raw_log\|code" | head -10
-      else
+      if confirm_tx_status "$CREATE_REPORTER_TXHASH" "Create reporter" 12 1; then
         echo "✓ Reporter created successfully"
+      else
+        echo "⚠️  Reporter creation failed, later submissions with $reporter_name may also fail."
       fi
       break
     fi
@@ -505,17 +734,22 @@ SOUP_QID="dddaf631c368e4728f2a68e1feb705e4b2a2bdc7bd636c5f2b94bcd8bad48677"
 submit_and_check "IN CONFIG, NOT TELLIOT (soup/usd)" "$SOUP_QUERY_DATA" "10000loya" "$SOUP_VALUE" "$SOUP_QID"
 
 # 0x62733e63499a25E35844c91275d4c3bdb159D29d
-# TRBBRIDGE GOOD 142
-TRBRIDGE_QUERY_DATA="000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000009545242427269646765000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000008e"
+# Legacy TRBBridge deposit 142 should fail
+LEGACY_TRBRIDGE_QUERY_DATA="000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000009545242427269646765000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000008e"
 TRBRIDGE_VALUE="000000000000000000000000e4746dd0b7d785766405fcf909953ce4f50fb53400000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000008ac7230489e800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002d74656c6c6f72313878373475716875326b6b6872333278763870323436726636616c3565617966657a6a6b6a6b00000000000000000000000000000000000000"
-TRBRIDGE_QID="e2a6a9e0b945ffcd8f3a9db5e8e37e47f5f0a3c25550077a0b542596684b14fe"
-submit_and_check "TRBBRIDGE GOOD" "$TRBRIDGE_QUERY_DATA" "1000000loya" "$TRBRIDGE_VALUE" "$TRBRIDGE_QID" "250000"
+submit_and_expect_failure "TRBBRIDGE V1 FAILS" "$LEGACY_TRBRIDGE_QUERY_DATA" "$TRBRIDGE_VALUE" "cannot report deprecated trbbridge queries" "250000"
 
-# # TRBBRIDGE BAD 141
-TRBRIDGE_QUERY_DATA="000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000009545242427269646765000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000008d"
-TRBRIDGE_VALUE="000000000000000000000000e4746dd0b7d785766405fcf909953ce4f50fb53400000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000008ac7230489e800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002d74656c6c6f72313878373475716875326b6b6872333278763870323436726636616c3565617966657a6a6b6a6b00000000000000000000000000000000000000"
-TRBRIDGE_QID="ca3410dff9bc0a4d0392a2b24ee061b515063f49fa163e4376a92c8bc7c69ec7"
-submit_and_check "TRBBRIDGE BAD" "$TRBRIDGE_QUERY_DATA" "1000000loya" "$TRBRIDGE_VALUE" "$TRBRIDGE_QID" "250000"
+if ensure_trbbridgev2_spec_registered; then
+  # TRBBridgeV2 deposit 142 should succeed
+  TRBRIDGEV2_QUERY_DATA="00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000b545242427269646765563200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000008e"
+  TRBRIDGEV2_QID="b2e283e744cc05ab396ee614e38488474cac932643e482b28a4a39246afbdfc5"
+  submit_and_check "TRBBRIDGEV2 SUCCEEDS" "$TRBRIDGEV2_QUERY_DATA" "" "$TRBRIDGE_VALUE" "$TRBRIDGEV2_QID" "250000"
+else
+  echo "⚠️  WARNING: TRBBridgeV2 data spec is not available. Skipping bridge tests."
+  TEST_NAMES+=("TRBBRIDGEV2 SUCCEEDS")
+  TEST_RESULTS+=("SKIPPED")
+  echo ""
+fi
 
 # NFLWINNER
 echo "Checking if NFLWinner data spec is registered..."
