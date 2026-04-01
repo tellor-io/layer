@@ -932,6 +932,9 @@ func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 		return err
 	}
 	for _, report := range reports {
+		if snapshotlimit.Limit == 0 {
+			break
+		}
 		queryId := report.QueryId
 		timeNow := sdkCtx.BlockTime().Add(time.Second)
 		reportTime, err := k.oracleKeeper.GetTimestampBefore(ctx, queryId, timeNow)
@@ -941,9 +944,6 @@ func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 		err = k.CreateSnapshot(ctx, queryId, reportTime, false)
 		if err != nil {
 			return err
-		}
-		if snapshotlimit.Limit == 0 {
-			break
 		}
 		snapshotlimit.Limit--
 	}
