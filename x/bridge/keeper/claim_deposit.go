@@ -63,13 +63,6 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64) e
 		return fmt.Errorf("%s: %w", types.ErrInvalidDepositReportValue.Error(), err)
 	}
 
-	newClaimedStatus := types.DepositClaimed{Claimed: true}
-	err = k.DepositIdClaimedMap.Set(ctx, depositId, newClaimedStatus)
-	if err != nil {
-		k.Logger(ctx).Error("Failed to set deposit claimed status", "depositId", depositId, "err", err)
-		return err
-	}
-
 	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, amount); err != nil {
 		k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to mint coins, err: %w", err))
 		return err
@@ -79,6 +72,13 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64) e
 
 	if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, recipient, claimAmount); err != nil {
 		k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to send coins, err: %w", err))
+		return err
+	}
+
+	newClaimedStatus := types.DepositClaimed{Claimed: true}
+	err = k.DepositIdClaimedMap.Set(ctx, depositId, newClaimedStatus)
+	if err != nil {
+		k.Logger(ctx).Error("Failed to set deposit claimed status", "depositId", depositId, "err", err)
 		return err
 	}
 
