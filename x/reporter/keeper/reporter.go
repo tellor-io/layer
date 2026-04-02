@@ -52,17 +52,23 @@ func (k Keeper) HasMin(ctx context.Context, addr sdk.AccAddress, minRequired mat
 // It also tracks period data for reward distribution - when delegation state changes,
 // the previous period is queued for distribution.
 func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, queryId []byte) (math.Int, error) {
+	blockNumber := uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())
 	needsRecalc, err := k.needsStakeRecalc(ctx, repAddr)
 	if err != nil {
 		return math.Int{}, err
 	}
 
+	// Dispute voting reads from the historical Report snapshot store. If pruning has
+	// removed every prior snapshot for this reporter, we need to recreate one on the
+	// next report even when the selector hash is unchanged.
+	cached, err := k.GetDelegationsAmount(ctx, repAddr.Bytes(), blockNumber)
+	if err != nil {
+		return math.Int{}, err
+	}
+	missingSnapshot := cached.Total.IsNil()
+
 	if !needsRecalc {
-		// Stake hasn't changed, fetch cached total from last Report entry
-		cached, err := k.GetDelegationsAmount(ctx, repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))
-		if err != nil {
-			return math.Int{}, err
-		}
+		// Stake hasn't changed, so a surviving cached snapshot is enough.
 		if !cached.Total.IsNil() && cached.Total.IsPositive() {
 			return cached.Total, nil
 		}
@@ -84,9 +90,9 @@ func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, query
 	if err != nil {
 		return math.Int{}, err
 	}
-	if changed {
+	if changed || missingSnapshot {
 		// Store per-report snapshot for disputes
-		err = k.Report.Set(ctx, collections.Join(queryId, collections.Join(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
+		err = k.Report.Set(ctx, collections.Join(queryId, collections.Join(repAddr.Bytes(), blockNumber)), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
 		if err != nil {
 			return math.Int{}, err
 		}

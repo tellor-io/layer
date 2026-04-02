@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"crypto/sha256"
 	"errors"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/tellor-io/layer/x/reporter/mocks"
 	"github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -191,6 +193,66 @@ func TestReporterStake(t *testing.T) {
 			require.Equal(t, stake, tc.stake)
 		})
 	}
+}
+
+func TestReporterStakeRestoresPrunedSnapshot(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	ctx = ctx.WithBlockHeight(10)
+
+	reporterAddr := sample.AccAddressBytes()
+	queryID := []byte("queryid")
+
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter_moniker")))
+	require.NoError(t, k.Selectors.Set(ctx, reporterAddr, types.NewSelection(reporterAddr, 1)))
+
+	validatorSet := new(mocks.ValidatorSet)
+	validator := stakingtypes.Validator{
+		OperatorAddress: sdk.ValAddress(reporterAddr).String(),
+		DelegatorShares: math.LegacyOneDec(),
+		Status:          stakingtypes.Bonded,
+		Tokens:          math.OneInt(),
+	}
+	delegation := stakingtypes.Delegation{
+		ValidatorAddress: sdk.ValAddress(reporterAddr).String(),
+		Shares:           math.LegacyOneDec(),
+	}
+
+	sk.On("GetValidatorSet").Return(validatorSet)
+	validatorSet.On("MaxValidators", ctx).Return(uint32(2), nil)
+	sk.On("IterateDelegatorDelegations", ctx, reporterAddr, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		sk.On("GetValidator", ctx, sdk.ValAddress(reporterAddr)).Return(validator, nil)
+		fn(delegation)
+	})
+
+	totalTokens := math.OneInt()
+	hasher := sha256.New()
+	hasher.Write(reporterAddr)
+	hasher.Write(totalTokens.BigInt().Bytes())
+	hasher.Write(totalTokens.BigInt().Bytes())
+	require.NoError(t, k.ReporterPeriodData.Set(ctx, reporterAddr, types.PeriodRewardData{
+		Selectors: []*types.SelectorShare{
+			{
+				SelectorAddress: reporterAddr,
+				Amount:          totalTokens,
+			},
+		},
+		Total:        totalTokens,
+		RewardAmount: math.LegacyZeroDec(),
+		Hash:         hasher.Sum(nil),
+	}))
+
+	stake, err := k.ReporterStake(ctx, reporterAddr, queryID)
+	require.NoError(t, err)
+	require.Equal(t, totalTokens, stake)
+
+	snapshot, err := k.Report.Get(ctx, collections.Join(queryID, collections.Join(reporterAddr.Bytes(), uint64(ctx.BlockHeight()))))
+	require.NoError(t, err)
+	require.Equal(t, totalTokens, snapshot.Total)
+
+	tokensAtBlock, err := k.GetReporterTokensAtBlock(ctx, reporterAddr, uint64(ctx.BlockHeight()))
+	require.NoError(t, err)
+	require.Equal(t, totalTokens, tokensAtBlock)
 }
 
 func TestCheckSelectorsDelegations(t *testing.T) {
