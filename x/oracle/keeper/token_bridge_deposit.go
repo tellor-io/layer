@@ -77,9 +77,18 @@ func (k Keeper) HandleBridgeDepositDirectReveal(
 // this is a simpler version of DecodeDepositReportValue in x/bridge/keeper
 // rewriting to avoid circular dependencies
 func validateBridgeDepositAmount(value string) error {
-	addressType, _ := abi.NewType("address", "", nil)
-	stringType, _ := abi.NewType("string", "", nil)
-	uint256Type, _ := abi.NewType("uint256", "", nil)
+	addressType, err := abi.NewType("address", "", nil)
+	if err != nil {
+		return types.ErrInvalidValue.Wrap("failed to create address type")
+	}
+	stringType, err := abi.NewType("string", "", nil)
+	if err != nil {
+		return types.ErrInvalidValue.Wrap("failed to create string type")
+	}
+	uint256Type, err := abi.NewType("uint256", "", nil)
+	if err != nil {
+		return types.ErrInvalidValue.Wrap("failed to create uint256 type")
+	}
 
 	args := abi.Arguments{
 		{Type: addressType},
