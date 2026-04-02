@@ -252,6 +252,8 @@ func (k Keeper) GetLastReportedAtBlock(ctx context.Context, reporter []byte) (ui
 // PruneOldReports removes Report entries older than 30 days.
 // It finds the cutoff block height with by calling the oracle using
 // ETH/USD aggregates, then iterates and deletes entries below that height.
+// It keeps at least one entry per reporter so dispute voting always has
+// a snapshot to read historical power from.
 func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 	if k.oracleKeeper == nil {
 		return nil
@@ -267,6 +269,9 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 
 	type reportKey = collections.Pair[[]byte, collections.Pair[[]byte, uint64]]
 	var toDelete []reportKey
+	// Track the most recent old entry per reporter. Keep it so dispute
+	// voting always has at least one snapshot to read power from.
+	latest := make(map[string]uint64)
 
 	iter, err := k.Report.Iterate(ctx, nil)
 	if err != nil {
@@ -281,10 +286,17 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 		}
 		if pk.K2().K2() < cutoffBlock {
 			toDelete = append(toDelete, pk)
+			reporter := string(pk.K2().K1())
+			if block := pk.K2().K2(); block > latest[reporter] {
+				latest[reporter] = block
+			}
 		}
 	}
 
 	for _, pk := range toDelete {
+		if pk.K2().K2() == latest[string(pk.K2().K1())] {
+			continue
+		}
 		if err := k.Report.Remove(ctx, pk); err != nil {
 			return err
 		}
