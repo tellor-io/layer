@@ -2,8 +2,12 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
+	"math/big"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/x/oracle/types"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/math"
 
@@ -63,5 +67,37 @@ func (k Keeper) HandleBridgeDepositDirectReveal(
 		return types.ErrSubmissionWindowExpired.Wrapf("query for bridge deposit is expired")
 	}
 
+	if err := validateBridgeDepositAmount(value); err != nil {
+		return err
+	}
+
 	return k.SetValue(ctx, reporterAcc, query, value, querydata, voterPower, true)
+}
+
+// this is a simpler version of DecodeDepositReportValue in x/bridge/keeper
+// rewriting to avoid circular dependencies
+func validateBridgeDepositAmount(value string) error {
+	addressType, _ := abi.NewType("address", "", nil)
+	stringType, _ := abi.NewType("string", "", nil)
+	uint256Type, _ := abi.NewType("uint256", "", nil)
+
+	args := abi.Arguments{
+		{Type: addressType},
+		{Type: stringType},
+		{Type: uint256Type},
+		{Type: uint256Type},
+	}
+	valueBytes, err := hex.DecodeString(registrytypes.Remove0xPrefix(value))
+	if err != nil {
+		return types.ErrInvalidValue.Wrap("failed to decode bridge deposit value hex")
+	}
+	decoded, err := args.Unpack(valueBytes)
+	if err != nil {
+		return types.ErrInvalidValue.Wrap("failed to decode bridge deposit value")
+	}
+	amount := decoded[2].(*big.Int)
+	if amount.Sign() <= 0 {
+		return types.ErrInvalidValue.Wrap("bridge deposit amount cannot be zero")
+	}
+	return nil
 }
