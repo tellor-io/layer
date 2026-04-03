@@ -26,4 +26,5 @@ var (
 	ErrSubmissionWindowExpired     = sdkerrors.Register(ModuleName, 1114, "submission window expired")
 	ErrNotEnoughTip                = sdkerrors.Register(ModuleName, 1115, "tip amount does not mean the minimum tip amount")
 	ErrTipExceedsMax               = sdkerrors.Register(ModuleName, 1116, "tip amount exceeds the maximum tip amount")
+	ErrInvalidValue                = sdkerrors.Register(ModuleName, 1117, "invalid value")
 )

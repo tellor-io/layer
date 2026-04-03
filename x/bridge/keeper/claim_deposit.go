@@ -62,6 +62,9 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64) e
 		k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to decode deposit report value, err: %w", err))
 		return fmt.Errorf("%s: %w", types.ErrInvalidDepositReportValue.Error(), err)
 	}
+	if !amount.IsAllPositive() {
+		return types.ErrInvalidDepositReportValue.Wrap("deposit amount cannot be zero")
+	}
 
 	newClaimedStatus := types.DepositClaimed{Claimed: true}
 	err = k.DepositIdClaimedMap.Set(ctx, depositId, newClaimedStatus)
@@ -118,6 +121,14 @@ func (k Keeper) ResolveDepositAggregateByTimestamp(ctx context.Context, depositI
 
 // replicate solidity encoding,  keccak256(abi.encode(string queryType, abi.encode(bool true, uint256 depositId)))
 func (k Keeper) GetDepositQueryIdByType(depositId uint64, queryType string) ([]byte, error) {
+	queryData, err := k.EncodeDepositQueryData(depositId, queryType)
+	if err != nil {
+		return nil, err
+	}
+	return crypto.Keccak256(queryData), nil
+}
+
+func (k Keeper) EncodeDepositQueryData(depositId uint64, queryType string) ([]byte, error) {
 	toLayerBool := true
 	depositIdUint64 := new(big.Int).SetUint64(depositId)
 
@@ -154,14 +165,7 @@ func (k Keeper) GetDepositQueryIdByType(depositId uint64, queryType string) ([]b
 		{Type: StringType},
 		{Type: BytesType},
 	}
-	queryDataEncoded, err := finalArgs.Pack(queryType, queryDataArgsEncoded)
-	if err != nil {
-		return nil, err
-	}
-
-	// generate query id
-	queryId := crypto.Keccak256(queryDataEncoded)
-	return queryId, nil
+	return finalArgs.Pack(queryType, queryDataArgsEncoded)
 }
 
 // GetDepositQueryId returns the TRBBridgeV2 query ID for a deposit id.

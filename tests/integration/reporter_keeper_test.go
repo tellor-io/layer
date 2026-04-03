@@ -736,9 +736,9 @@ func (s *IntegrationTestSuite) TestPruneOldReports() {
 	err = rk.PruneOldReports(ctx, 100)
 	require.NoError(err)
 
-	// Verify block 100 report is deleted (it's 70 days old, > 60 day cutoff)
+	// Block 100 is the only old entry for this reporter, kept as last snapshot
 	_, err = rk.Report.Get(ctx, collections.Join(queryId1, collections.Join(reporter.Bytes(), uint64(100))))
-	require.Error(err, "Report at block 100 should be deleted (70 days old)")
+	require.NoError(err, "Report at block 100 should be kept (last snapshot for reporter)")
 
 	// Block 200 report is 40 days old (70 - 30), should still exist
 	_, err = rk.Report.Get(ctx, collections.Join(queryId2, collections.Join(reporter.Bytes(), uint64(200))))
@@ -757,7 +757,8 @@ func (s *IntegrationTestSuite) TestPruneOldReports() {
 	_, err = rk.Report.Get(ctx, collections.Join(queryId2, collections.Join(reporter.Bytes(), uint64(200))))
 	require.Error(err, "Report at block 200 should be deleted (90 days old)")
 
-	// Block 300 report is 70 days old (120 - 50), should be deleted
+	// Block 300 is the most recent old entry for this reporter so its kept so
+	// dispute voting always has a snapshot to read historical power from
 	_, err = rk.Report.Get(ctx, collections.Join(queryId3, collections.Join(reporter.Bytes(), uint64(300))))
-	require.Error(err, "Report at block 300 should be deleted (70 days old)")
+	require.NoError(err, "Report at block 300 should be kept (last snapshot for reporter)")
 }
