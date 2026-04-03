@@ -298,7 +298,15 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 		return nil
 	}
 
+<<<<<<< HEAD
 	totalDeleted := 0
+=======
+	type reportKey = collections.Pair[[]byte, collections.Pair[[]byte, uint64]]
+	var toDelete []reportKey
+	// Track the most recent old entry per reporter. Keep it so dispute
+	// voting always has at least one snapshot to read power from.
+	latest := make(map[string]uint64)
+>>>>>>> 7586998a (Fix mode running calculation (#996))
 
 	// Prune old collection first
 	type oldKey = collections.Pair[[]byte, collections.Pair[[]byte, uint64]]
@@ -320,16 +328,28 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 			return err
 		}
 		if pk.K2().K2() < cutoffBlock {
+<<<<<<< HEAD
 			oldToDelete = append(oldToDelete, pk)
 			reporter := string(pk.K2().K1())
 			if block := pk.K2().K2(); block > oldLatest[reporter] {
 				oldLatest[reporter] = block
+=======
+			toDelete = append(toDelete, pk)
+			reporter := string(pk.K2().K1())
+			if block := pk.K2().K2(); block > latest[reporter] {
+				latest[reporter] = block
+>>>>>>> 7586998a (Fix mode running calculation (#996))
 			}
 		}
 	}
 
+<<<<<<< HEAD
 	for _, pk := range oldToDelete {
 		if pk.K2().K2() == oldLatest[string(pk.K2().K1())] {
+=======
+	for _, pk := range toDelete {
+		if pk.K2().K2() == latest[string(pk.K2().K1())] {
+>>>>>>> 7586998a (Fix mode running calculation (#996))
 			continue
 		}
 		if err := k.Report.Remove(ctx, pk); err != nil {

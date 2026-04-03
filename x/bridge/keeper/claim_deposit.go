@@ -64,6 +64,16 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64) e
 	}
 	if !amount.IsAllPositive() {
 		return types.ErrInvalidDepositReportValue.Wrap("deposit amount cannot be zero")
+<<<<<<< HEAD
+=======
+	}
+
+	newClaimedStatus := types.DepositClaimed{Claimed: true}
+	err = k.DepositIdClaimedMap.Set(ctx, depositId, newClaimedStatus)
+	if err != nil {
+		k.Logger(ctx).Error("Failed to set deposit claimed status", "depositId", depositId, "err", err)
+		return err
+>>>>>>> 7586998a (Fix mode running calculation (#996))
 	}
 
 	if err := k.bankKeeper.MintCoins(ctx, types.ModuleName, amount); err != nil {
