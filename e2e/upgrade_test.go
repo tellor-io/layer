@@ -25,10 +25,11 @@ import (
 const (
 	haltHeightDelta    = 12 // will propose upgrade this many blocks in the future
 	blocksAfterUpgrade = 12
+	testTokenBridgeV2  = "0x0000000000000000000000000000000000000000"
 )
 
 func TestLayerUpgrade(t *testing.T) {
-	ChainUpgradeTest(t, "layer", "layer", "local", "v6.1.3")
+	ChainUpgradeTest(t, "layer", "layer", "local", "v6.1.5")
 }
 
 func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVersion, upgradeName string) {
@@ -78,6 +79,7 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 				EncodingConfig:      e2e.LayerEncoding(),
 				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
 				AdditionalStartArgs: []string{"--key-name", "validator"},
+				Env:                 []string{"TOKEN_BRIDGE_V2_ADDRESS=" + testTokenBridgeV2},
 			},
 		},
 	})

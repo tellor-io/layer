@@ -3,7 +3,7 @@ const { expect } = require("chai");
 const h = require("./helpers/evmHelpers");
 var assert = require('assert');
 
-describe("NewTransition (TokenBridge V1) - Function Tests", function() {
+describe("TokenBridgeV2 LayerTransition - Function Tests", function() {
 
   const TELLOR_MASTER = "0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0"
   const DEV_WALLET = "0x39E419bA25196794B595B2a595Ea8E527ddC9856"
@@ -12,6 +12,7 @@ describe("NewTransition (TokenBridge V1) - Function Tests", function() {
   const GOVERNANCE_FLEX = "0xB30b1B98d8276b80bC4f5aF9f9170ef3220EC27D"
   const TELLORFLEX = "0x8cFc184c877154a8F9ffE0fe75649dbe5e2DBEbf"
   const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks layer unbonding period
+  const PAUSE_PERIOD = 86400 * 21;
   const abiCoder = new ethers.utils.AbiCoder();
   const ETH_QUERY_DATA_ARGS = abiCoder.encode(["string", "string"], ["eth", "usd"]);
   const ETH_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["SpotPrice", ETH_QUERY_DATA_ARGS]);
@@ -66,7 +67,15 @@ describe("NewTransition (TokenBridge V1) - Function Tests", function() {
     fakeValCheckpoint = ethers.utils.solidityKeccak256(["string"], ["testy"])
     await blobstream.init(1, 2, UNBONDING_PERIOD, fakeValCheckpoint)
     // deploy tokenbridge
-    tbridge = await ethers.deployContract("TokenBridge", [TELLOR_MASTER,await blobstream.address, TELLORFLEX])
+    tbridge = await ethers.deployContract("TokenBridgeV2", [
+      TELLOR_MASTER,
+      await blobstream.address,
+      TELLORFLEX,
+      DEV_WALLET,
+      DEV_WALLET,
+      86400 * 8,
+      PAUSE_PERIOD
+    ])
     await tbridge.init(0, 0)
     // stake reporter
     await tellor.connect(bigWallet).transfer(await accounts[0].address, h.toWei("1000"))
@@ -80,6 +89,7 @@ describe("NewTransition (TokenBridge V1) - Function Tests", function() {
     await tellor.updateOracleAddress()
     await h.advanceTime(86400 * 7)
     await tellor.updateOracleAddress()
+
     // submit some data
     await flex.submitValue(ETH_QUERY_ID, h.uintTob32("100"), 0, ETH_QUERY_DATA)
     blocky0 = await h.getBlock()

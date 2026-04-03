@@ -10,7 +10,7 @@ const abiCoder = new ethers.utils.AbiCoder();
 // const ec = new EC('secp256k1');
 
 
-describe("Blobstream - Function Tests", async function () {
+describe("TellorDataBridge - Function Tests", async function () {
 
     let blobstream, accounts, guardian, initialPowers, initialValAddrs;
     let val1, val2, val3;

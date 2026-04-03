@@ -5,8 +5,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
+	"strings"
 
 	"github.com/tellor-io/layer/lib/metrics"
 	"github.com/tellor-io/layer/utils"
@@ -316,27 +316,13 @@ func (k Keeper) AddReportWeightedMode(ctx context.Context, id uint64, report typ
 		}
 		return fmt.Errorf("failed to get current median: %w", err)
 	}
-	// check if the new value power is greater than the current median power
-	// if it is not do nothing and return else update the median
-	if currentMedian.CrossoverWeight > power {
-		return nil
+	// if this report is for the current winning value, update CrossoverWeight to stay current
+	if strings.EqualFold(currentMedian.Value, value) {
+		return k.AggregateValue.Set(ctx, id, types.RunningAggregate{Value: value, CrossoverWeight: existingValue.CrossoverWeight})
 	}
-	rng := collections.NewPrefixedPairRange[collections.Pair[uint64, uint64], collections.Pair[uint64, string]](collections.Join(id, uint64(math.MaxUint64))).Descending()
-	iter, err := k.Values.Indexes.Power.Iterate(ctx, rng)
-	if err != nil {
-		return err
-	}
-	defer iter.Close()
-	if iter.Valid() {
-		pk, err := iter.PrimaryKey()
-		if err != nil {
-			return err
-		}
-		maxValue, err := k.Values.Get(ctx, pk)
-		if err != nil {
-			return err
-		}
-		return k.AggregateValue.Set(ctx, id, types.RunningAggregate{Value: maxValue.MicroReport.Value, CrossoverWeight: maxValue.CrossoverWeight})
+	// compare accumulated powers, update aggregate if new value has more total power
+	if existingValue.CrossoverWeight > currentMedian.CrossoverWeight {
+		return k.AggregateValue.Set(ctx, id, types.RunningAggregate{Value: value, CrossoverWeight: existingValue.CrossoverWeight})
 	}
 	return nil
 }

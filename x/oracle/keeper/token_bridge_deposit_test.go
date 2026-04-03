@@ -26,7 +26,7 @@ func (s *KeeperTestSuite) TestGetTokenBridgeDeposit() {
 	require.False(res, "should not be a token deposit")
 
 	// build TRBBridge queryData with method from x/bridge/withdraw_tokens.go
-	queryTypeString := "TRBBridge"
+	queryTypeString := "TRBBridgeV2"
 	toLayerBool := true
 	withdrawalId := uint64(1)
 	withdrawalIdUint64 := new(big.Int).SetUint64(withdrawalId)
@@ -57,7 +57,7 @@ func (s *KeeperTestSuite) TestGetTokenBridgeDeposit() {
 	resp, err := k.TokenBridgeDepositQuery(ctx, queryDataEncoded)
 
 	require.NoError(err)
-	require.Equal(resp.QueryType, "TRBBridge")
+	require.Equal(resp.QueryType, "TRBBridgeV2")
 	require.Equal(resp.Amount, math.NewInt(0))
 	require.Equal(resp.Expiration, uint64(2000))
 	require.Equal(resp.RegistrySpecBlockWindow, uint64(2000))

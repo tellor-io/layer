@@ -1,0 +1,1295 @@
+const { expect } = require("chai");
+const { ethers } = require("hardhat");
+const h = require("./helpers/evmHelpers");
+var assert = require('assert');
+const abiCoder = new ethers.utils.AbiCoder();
+
+
+describe("TokenBridgeV2 - Function Tests", async function () {
+
+    let blobstream, accounts, mainGuardian, subGuardian, tbridge, token, blocky0,
+        valTs, valParams, valSet, initialValAddrs, initialPowers, threshold;
+    const DEFAULT_ROLE_UPDATE_DELAY = 86400 * 8
+    const PAUSE_PERIOD = 86400 * 21
+    const UNBONDING_PERIOD = 86400 * 7 * 3; // 3 weeks
+    const WITHDRAW1_QUERY_DATA_ARGS = abiCoder.encode(["bool", "uint256"], [false, 1])
+    const WITHDRAW1_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TRBBridgeV2", WITHDRAW1_QUERY_DATA_ARGS])
+    const WITHDRAW1_QUERY_ID = h.hash(WITHDRAW1_QUERY_DATA)
+    const EVM_RECIPIENT = "0x88dF592F8eb5D7Bd38bFeF7dEb0fBc02cf3778a0"
+    const LAYER_RECIPIENT = "tellor1zy50vdk8fdae0var2ryjhj2ysxtcm8dp2qtckd"
+    const INITIAL_LAYER_TOKEN_SUPPLY = h.toWei("100")
+    const VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET = "0x636865636b706f696e7400000000000000000000000000000000000000000000";
+
+
+    beforeEach(async function () {
+        // init accounts
+        accounts = await ethers.getSigners();
+        mainGuardian = accounts[10]
+        subGuardian = accounts[11]
+        val1 = ethers.Wallet.createRandom()
+        val2 = ethers.Wallet.createRandom()
+        initialValAddrs = [val1.address,val2.address]
+        initialPowers = [1, 2]
+        threshold = 2
+        blocky = await h.getBlock()
+        valTimestamp = (blocky.timestamp - 2) * 1000
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
+        // deploy contracts
+        blobstream = await ethers.deployContract(
+            "TellorDataBridge", [
+            mainGuardian.address,
+            VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET
+        ]
+        )
+        await blobstream.init(threshold, valTimestamp, UNBONDING_PERIOD, valCheckpoint)
+        token = await ethers.deployContract("TellorPlayground")
+        oldOracle = await ethers.deployContract("TellorPlayground")
+        tbridge = await ethers.deployContract("TestTokenBridgeV2", [
+            token.address,
+            blobstream.address,
+            oldOracle.address,
+            mainGuardian.address,
+            subGuardian.address,
+            DEFAULT_ROLE_UPDATE_DELAY,
+            PAUSE_PERIOD
+        ])
+        blocky0 = await h.getBlock()
+        // fund accounts
+        await token.faucet(accounts[0].address)
+        await token.faucet(accounts[10].address)
+        await token.connect(accounts[10]).transfer(tbridge.address, INITIAL_LAYER_TOKEN_SUPPLY)
+        // init tokenbridge (only on testnet)
+        await tbridge.init(0, 0)
+
+        // sleep 1 second for api rate limit
+        await new Promise(r => setTimeout(r, 1000));
+    });
+
+    it("constructor", async function () {
+        assert.equal(await tbridge.token(), await token.address)
+        assert.equal(await tbridge.dataBridge(), await blobstream.address)
+        const mainGuardianRole = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("MAIN_GUARDIAN"))
+        const approvePauseRole = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("APPROVE_PAUSE"))
+        assert.equal((await tbridge.roles(mainGuardianRole)).roleAddress, await mainGuardian.address)
+        assert.equal((await tbridge.roles(approvePauseRole)).roleAddress, await subGuardian.address)
+    })
+    it("withdrawFromLayer", async function () {
+        depositAmount = h.toWei("20")
+        tip = h.toWei("0")
+        await h.expectThrow(tbridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)) // not approved
+        await token.approve(await tbridge.address, h.toWei("100"))
+        await tbridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)
+        await h.advanceTime(43200)
+        value = h.getWithdrawValue(EVM_RECIPIENT,LAYER_RECIPIENT,20)
+        blocky = await h.getBlock()
+        timestamp = (blocky.timestamp - 43200) * 1000
+        aggregatePower = 3
+        attestTimestamp = blocky.timestamp * 1000
+        previousTimestamp = 0
+        nextTimestamp = 0
+        lastConsensusTimestamp = timestamp
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = await h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
+        dataDigest = await h.getDataDigest(
+            WITHDRAW1_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
+        sig1 = await h.layerSign(dataDigest, val1.privateKey)
+        sig2 = await h.layerSign(dataDigest, val2.privateKey)
+        sigStructArray = await h.getSigStructArray([sig1, sig2])
+        oracleDataStruct = await h.getOracleDataStruct(
+            WITHDRAW1_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        // ensure legacy query type is rejected
+        LEGACY_WITHDRAW1_QUERY_DATA_ARGS = abiCoder.encode(["bool", "uint256"], [false, 1])
+        LEGACY_WITHDRAW1_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TRBBridge", LEGACY_WITHDRAW1_QUERY_DATA_ARGS])
+        LEGACY_WITHDRAW1_QUERY_ID = h.hash(LEGACY_WITHDRAW1_QUERY_DATA)
+        legacyOracleDataStruct = await h.getOracleDataStruct(
+            LEGACY_WITHDRAW1_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        await h.expectThrow(tbridge.withdrawFromLayer(
+            legacyOracleDataStruct,
+            [],
+            [],
+            1,
+        ))
+        await tbridge.withdrawFromLayer(
+            oracleDataStruct,
+            currentValSetArray,
+            sigStructArray,
+            1,
+        )
+        recipientBal = await token.balanceOf(EVM_RECIPIENT)
+        expectedBal = 20e12 // 20 loya
+        assert.equal(recipientBal.toString(), expectedBal)
+
+        // assemble another withdraw, freeze bridge, then unfreeze
+        await token.faucet(accounts[0].address)
+        await token.transfer(tbridge.address, h.toWei("1000"))
+        await h.advanceTime(43200)
+        blocky = await h.getBlock()
+        timestamp = (blocky.timestamp - 43200) * 1000
+        attestTimestamp = blocky.timestamp * 1000
+        lastConsensusTimestamp = timestamp
+        WITHDRAW2_QUERY_DATA_ARGS = abiCoder.encode(["bool", "uint256"], [false, 2])
+        WITHDRAW2_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TRBBridgeV2", WITHDRAW2_QUERY_DATA_ARGS])
+        WITHDRAW2_QUERY_ID = h.hash(WITHDRAW2_QUERY_DATA)
+        value = h.getWithdrawValue(EVM_RECIPIENT,LAYER_RECIPIENT,20)
+        dataDigest = await h.getDataDigest(
+            WITHDRAW2_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        sig1 = await h.layerSign(dataDigest, val1.privateKey)
+        sig2 = await h.layerSign(dataDigest, val2.privateKey)
+        sigStructArray = await h.getSigStructArray([sig1, sig2])
+        oracleDataStruct = await h.getOracleDataStruct(
+            WITHDRAW2_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        for (let i = 0; i < 20; i++) {
+            await token.faucet(accounts[1].address)
+        }
+        await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
+        await tbridge.connect(accounts[1]).proposePauseBridge("layer")
+        await tbridge.connect(subGuardian).approvePause(0)
+        await h.expectThrow(tbridge.withdrawFromLayer(
+            oracleDataStruct,
+            currentValSetArray,
+            sigStructArray,
+            2
+        ))
+        balanceDead = await token.balanceOf("0x000000000000000000000000000000000000dEaD")
+        assert.equal(balanceDead.toString(), h.toWei("10000"))
+
+        await h.advanceTime(86400 * 21 + 1)
+        // update the validator set
+        blocky = await h.getBlock()
+        valTimestamp = (blocky.timestamp - 2) * 1000
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
+        await blobstream.connect(mainGuardian).guardianResetValidatorSet(threshold, valTimestamp, valCheckpoint)
+
+        // withdraw
+        timestamp = (blocky.timestamp - 43200) * 1000
+        attestTimestamp = blocky.timestamp * 1000
+        value = h.getWithdrawValue(EVM_RECIPIENT,LAYER_RECIPIENT,20)
+        dataDigest = await h.getDataDigest(
+            WITHDRAW2_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        sig1 = await h.layerSign(dataDigest, val1.privateKey)
+        sig2 = await h.layerSign(dataDigest, val2.privateKey)
+        sigStructArray = await h.getSigStructArray([sig1, sig2])
+        oracleDataStruct = await h.getOracleDataStruct(
+            WITHDRAW2_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        await tbridge.unpauseBridge()
+        await tbridge.withdrawFromLayer(
+            oracleDataStruct,
+            currentValSetArray,
+            sigStructArray,
+            2
+        )
+        recipientBal = await token.balanceOf(EVM_RECIPIENT)
+        expectedBal = 40e12 // 40 loya
+        assert.equal(recipientBal.toString(), expectedBal)
+    })
+    it("depositToLayer", async function () {
+        depositAmount = h.toWei("1")
+        tip = h.toWei(".01")
+        assert.equal(await token.balanceOf(await accounts[0].address), h.toWei("1000"))
+        assert.equal(await token.balanceOf(await tbridge.address), INITIAL_LAYER_TOKEN_SUPPLY)
+        await h.expectThrow(tbridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)) // not approved
+        await token.approve(await tbridge.address, h.toWei("900"))
+        await h.expectThrow(tbridge.depositToLayer(0, tip, LAYER_RECIPIENT)) // zero amount
+        await h.expectThrow(tbridge.depositToLayer(h.toWei("21"), tip, LAYER_RECIPIENT)) // over limit
+        await h.expectThrow(tbridge.depositToLayer(depositAmount, h.toWei("1.01"), LAYER_RECIPIENT)) // tip over amount
+        await h.expectThrow(tbridge.depositToLayer(h.toWei("1.00000000001"), tip, LAYER_RECIPIENT)) // not divisible by 1e12
+        await tbridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)
+        blocky1 = await h.getBlock()
+        tbridgeBal = await token.balanceOf(await tbridge.address)
+        expBalBridge = BigInt(depositAmount) + BigInt(INITIAL_LAYER_TOKEN_SUPPLY)
+        assert.equal(tbridgeBal.toString(), expBalBridge.toString())
+        userBal = await token.balanceOf(await accounts[0].address)
+        assert.equal(userBal.toString(), h.toWei("999"))
+        expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10) - BigInt(depositAmount)
+        assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
+        await tbridge.refreshDepositLimit()
+        assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
+        assert.equal(await tbridge.depositId(), 1)
+        depositDetails = await tbridge.deposits(1)
+        assert.equal(depositDetails.amount.toString(), depositAmount)
+        assert.equal(depositDetails.tip.toString(), tip)
+        assert.equal(depositDetails.recipient, LAYER_RECIPIENT)
+        assert.equal(depositDetails.sender, await accounts[0].address)
+        assert.equal(depositDetails.blockHeight, blocky1.number)
+        assert.equal(await tbridge.depositId(), 1)
+        await h.advanceTime(43200)
+        expectedDepositLimit2 = (BigInt(100e18) + BigInt(depositAmount)) * BigInt(2) / BigInt(10)
+        await tbridge.refreshDepositLimit()
+        assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit2);
+    })
+    it("depositLimit", async function () {
+        lastReleaseTimeBytes = ethers.utils.solidityKeccak256(["string"], ["_LAST_RELEASE_TIME_DAO"])
+        timeOfLastRelease = await token.getUintVar(lastReleaseTimeBytes)
+        blocky = await h.getBlock()
+        expectedReleaseAmount = (BigInt(h.toWei("146.94")) *
+            (BigInt(blocky.timestamp) - BigInt(timeOfLastRelease))) /
+            BigInt(86400);
+        expectedDepositLimit = (BigInt(100e18) + expectedReleaseAmount) / BigInt(5)
+        depositLimit = await tbridge.depositLimit()
+        assert(depositLimit == expectedDepositLimit, "depositLimit should be correct")
+
+        expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10)
+        await tbridge.refreshDepositLimit()
+        assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
+        await token.approve(await tbridge.address, h.toWei("900"))
+        depositAmount = h.toWei("2")
+        tip = h.toWei("0")
+        await tbridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)
+        expectedDepositLimit = BigInt(100e18) * BigInt(2) / BigInt(10) - BigInt(depositAmount)
+        await tbridge.refreshDepositLimit()
+        assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit);
+        await h.advanceTime(43200)
+        expectedDepositLimit2 = (BigInt(100e18) + BigInt(depositAmount)) / BigInt(5)
+        await tbridge.refreshDepositLimit()
+        assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit2);
+    })
+    it("withdrawLimit", async function () {
+        lastReleaseTimeBytes = ethers.utils.solidityKeccak256(["string"], ["_LAST_RELEASE_TIME_DAO"])
+        timeOfLastRelease = await token.getUintVar(lastReleaseTimeBytes)
+        blocky = await h.getBlock()
+        expectedReleaseAmount = (BigInt(h.toWei("146.94")) *
+            (BigInt(blocky.timestamp) - BigInt(timeOfLastRelease))) /
+            BigInt(86400);
+        expectedWithdrawLimit = (BigInt(100e18) + expectedReleaseAmount) / BigInt(20)
+        withdrawLimit = await tbridge.withdrawLimit()
+        assert(withdrawLimit == expectedWithdrawLimit, "withdrawLimit should be correct")
+    })
+    it("claimExtraWithdrawByWithdrawId", async function () {
+        tbridge2 = await ethers.deployContract("TestTokenBridgeV2", [
+            token.address,
+            blobstream.address,
+            oldOracle.address,
+            mainGuardian.address,
+            subGuardian.address,
+            DEFAULT_ROLE_UPDATE_DELAY,
+            PAUSE_PERIOD
+        ])
+        await token.setOracleMintRecipient(await tbridge2.address)
+        const WITHDRAW_AMOUNT = h.toWei("10")
+        let _addy = await accounts[2].address
+        const withdrawId = 1
+        value = h.getWithdrawValue(_addy,LAYER_RECIPIENT,BigInt(WITHDRAW_AMOUNT) / BigInt(1e12))
+        blocky = await h.getBlock()
+        timestamp = (blocky.timestamp - 2) * 1000
+        aggregatePower = 3
+        attestTimestamp = (blocky.timestamp + 43200) * 1000
+        previousTimestamp = 0
+        nextTimestamp = 0
+        lastConsensusTimestamp = timestamp
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = await h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
+        dataDigest = await h.getDataDigest(
+            WITHDRAW1_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
+        sig1 = await h.layerSign(dataDigest, val1.privateKey)
+        sig2 = await h.layerSign(dataDigest, val2.privateKey)
+        sigStructArray = await h.getSigStructArray([sig1, sig2])
+        oracleDataStruct = await h.getOracleDataStruct(
+            WITHDRAW1_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        await h.advanceTime(43200)
+        _limit0 = BigInt(INITIAL_LAYER_TOKEN_SUPPLY) / BigInt(20)
+        assert(await token.balanceOf(_addy) == 0)
+        await tbridge.withdrawFromLayer(
+            oracleDataStruct,
+            currentValSetArray,
+            sigStructArray,
+            withdrawId,
+        )
+        recipientBal0 = await token.balanceOf(_addy)
+        assert(BigInt(recipientBal0) - BigInt(_limit0) == BigInt(0), "token balance should be correct")
+        tokensToClaim = await tbridge.tokensToClaim(accounts[2].address)
+        assert(tokensToClaim == BigInt(WITHDRAW_AMOUNT) - BigInt(recipientBal0), "tokensToClaim should be correct")
+        // check withdrawDetails stored correctly
+        withdrawDetails = await tbridge.withdrawDetails(withdrawId)
+        assert(withdrawDetails.withdrawId == withdrawId, "withdrawDetails.withdrawId should be correct")
+        assert(withdrawDetails.recipient == _addy, "withdrawDetails.recipient should be correct")
+        assert(BigInt(withdrawDetails.amount) == BigInt(WITHDRAW_AMOUNT), "withdrawDetails.amount should be correct")
+        assert(BigInt(withdrawDetails.pendingAmount) == BigInt(WITHDRAW_AMOUNT) - BigInt(recipientBal0), "withdrawDetails.pendingAmount should be correct")
+        assert(withdrawDetails.lastVerifiedTime > 0, "withdrawDetails.lastVerifiedTime should be set")
+        await h.expectThrow(tbridge.claimExtraWithdrawByWithdrawId(withdrawId)) // must wait 12 hours
+        await h.advanceTime(43200)
+        await token.mintToOracle()
+        _limit1 = await tbridge.withdrawLimit.call()
+
+        await tbridge.claimExtraWithdrawByWithdrawId(withdrawId);
+        await h.expectThrow(tbridge.claimExtraWithdrawByWithdrawId(withdrawId)) // no more limit available
+        recipientBal1 = await token.balanceOf(await accounts[2].address)
+        assert(recipientBal1 == BigInt(recipientBal0) + BigInt(_limit1), "token balance should be correct")
+        tokensToClaim = await tbridge.tokensToClaim(accounts[2].address)
+        assert(tokensToClaim == BigInt(WITHDRAW_AMOUNT) - BigInt(recipientBal1), "tokensToClaim should be correct")
+        await h.advanceTime(43200)
+        
+        await tbridge.claimExtraWithdrawByWithdrawId(withdrawId);
+        await h.expectThrow(tbridge.claimExtraWithdrawByWithdrawId(withdrawId)) // no pending amount left
+        recipientBal2 = await token.balanceOf(await accounts[2].address)
+        assert(recipientBal2 == WITHDRAW_AMOUNT, "token balance should be correct")
+        tokensToClaim = await tbridge.tokensToClaim(accounts[2].address)
+        assert(tokensToClaim == BigInt(0), "tokensToClaim should be correct")
+    })
+
+    it("limits exclude pause tribute", async function () {
+        for (let i = 0; i < 10; i++) {
+            await token.faucet(accounts[1].address)
+        }
+        await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
+        await tbridge.connect(accounts[1]).proposePauseBridge("layer")
+
+        await tbridge.refreshDepositLimit()
+        await tbridge.refreshWithdrawLimit()
+
+        expectedDepositLimit = BigInt(INITIAL_LAYER_TOKEN_SUPPLY) / BigInt(5)
+        expectedWithdrawLimit = BigInt(INITIAL_LAYER_TOKEN_SUPPLY) / BigInt(20)
+        assert.equal(BigInt(await tbridge.depositLimitRecord()), expectedDepositLimit)
+        assert.equal(BigInt(await tbridge.withdrawLimitRecord()), expectedWithdrawLimit)
+    })
+
+    it("proposePauseBridge", async function () {
+        bridgeState = await tbridge.bridgeState()
+        assert.equal(bridgeState, 0, "bridge state should be correct")
+        for (let i = 0; i < 10; i++) {
+            await token.faucet(accounts[1].address)
+        }
+        await h.expectThrow(tbridge.connect(accounts[1]).proposePauseBridge("layer")) // not approved
+        await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
+        await tbridge.connect(accounts[1]).proposePauseBridge("layer")
+
+        proposal = await tbridge.pauseProposals(0)
+        assert.equal(proposal.proposer, await accounts[1].address, "proposal proposer should be correct")
+        assert.equal(proposal.state, 1, "proposal state should be correct")
+        assert.equal(proposal.layerAddress, "layer", "proposal layerAddress should be correct")
+        assert.equal(await tbridge.pauseProposalId(), 1, "pauseProposalId should be correct")
+        assert.equal((await tbridge.totalPauseTributeBalance()).toString(), h.toWei("10000"), "pause tribute balance should be correct")
+    })
+
+    it("approvePause + unpauseBridge", async function () {
+        await h.expectThrow(tbridge.unpauseBridge()) // not paused
+        for (let i = 0; i < 10; i++) {
+            await token.faucet(accounts[1].address)
+        }
+        await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
+        await tbridge.connect(accounts[1]).proposePauseBridge("layer")
+
+        await h.expectThrow(tbridge.connect(accounts[1]).approvePause(0)) // not approve pause role
+        await tbridge.connect(subGuardian).approvePause(0)
+
+        bridgeState = await tbridge.bridgeState()
+        burnedBalance = await token.balanceOf("0x000000000000000000000000000000000000dEaD")
+        proposal = await tbridge.pauseProposals(0)
+        assert.equal(bridgeState, 1, "bridge state should be correct")
+        assert.equal(proposal.state, 2, "proposal state should be correct")
+        assert.equal(burnedBalance.toString(), h.toWei("10000"), "burned balance should be correct")
+        assert.equal((await tbridge.totalPauseTributeBalance()).toString(), h.toWei("0"), "pause tribute balance should be correct")
+
+        await h.expectThrow(tbridge.connect(accounts[1]).proposePauseBridge("layer")) // already paused
+        await h.expectThrow(tbridge.unpauseBridge()) // not enough time
+        await h.advanceTime(86400 * 21 + 1)
+        await tbridge.unpauseBridge()
+        bridgeState = await tbridge.bridgeState()
+        assert.equal(bridgeState, 0, "bridge state should be correct")
+    })
+
+    it("refundPauseProposal", async function () {
+        for (let i = 0; i < 10; i++) {
+            await token.faucet(accounts[1].address)
+        }
+        await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
+        await tbridge.connect(accounts[1]).proposePauseBridge("layer")
+        await h.expectThrow(tbridge.connect(accounts[1]).refundPauseProposal(0)) // must wait before refunding
+        await h.advanceTime(86400 * 7 + 1)
+        await tbridge.connect(accounts[1]).refundPauseProposal(0)
+        proposal = await tbridge.pauseProposals(0)
+        assert.equal(proposal.state, 3, "proposal state should be correct")
+        assert.equal((await tbridge.totalPauseTributeBalance()).toString(), h.toWei("0"), "pause tribute balance should be correct")
+        assert.equal((await token.balanceOf(await accounts[1].address)).toString(), h.toWei("10000"), "refund should be correct")
+        await h.expectThrow(tbridge.connect(accounts[1]).refundPauseProposal(0)) // already refunded
+        await h.expectThrow(tbridge.connect(subGuardian).approvePause(0)) // no longer pending
+    })
+
+    it("updateDataBridge", async function () {
+        await h.expectThrow(tbridge.updateDataBridge(accounts[0].address)) // not paused
+
+        for (let i = 0; i < 10; i++) {
+            await token.faucet(accounts[1].address)
+        }
+        await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
+        await tbridge.connect(accounts[1]).proposePauseBridge("layer")
+        await tbridge.connect(subGuardian).approvePause(0)
+
+        blobstream2 = await ethers.deployContract(
+            "TellorDataBridge", [
+            mainGuardian.address,
+            VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET
+        ]
+        )
+        fakeValCheckpoint2 = ethers.utils.solidityKeccak256(["string"], ["testy2"])
+        await blobstream2.init(1, 2, UNBONDING_PERIOD, fakeValCheckpoint2)
+
+        await h.expectThrow(tbridge.connect(accounts[1]).updateDataBridge(blobstream2.address)) // not main guardian role
+        await tbridge.connect(mainGuardian).updateDataBridge(blobstream2.address)
+        assert.equal(await tbridge.dataBridge(), blobstream2.address)
+    })
+
+    it("role updates", async function () {
+        const MAIN_GUARDIAN_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("MAIN_GUARDIAN"))
+        const APPROVE_PAUSE_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("APPROVE_PAUSE"))
+        const UPDATE_DATA_BRIDGE_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("UPDATE_DATA_BRIDGE"))
+        const newMainGuardian = accounts[12]
+        const newSubGuardian = accounts[13]
+        const _getBridgeEvents = (receipt, eventName) => {
+            const bridgeAddr = tbridge.address.toLowerCase()
+            return receipt.logs
+                .filter((l) => (l.address || "").toLowerCase() === bridgeAddr)
+                .map((l) => {
+                    try {
+                        return tbridge.interface.parseLog(l)
+                    } catch (e) {
+                        return null
+                    }
+                })
+                .filter((e) => e && e.name === eventName)
+        }
+
+        await h.expectThrow(tbridge.connect(accounts[1]).proposeRoleUpdate(APPROVE_PAUSE_ROLE, newSubGuardian.address, DEFAULT_ROLE_UPDATE_DELAY))
+        let tx = await tbridge.connect(mainGuardian).proposeRoleUpdate(APPROVE_PAUSE_ROLE, newSubGuardian.address, DEFAULT_ROLE_UPDATE_DELAY)
+        let receipt = await tx.wait()
+        let evs = _getBridgeEvents(receipt, "RoleUpdateProposed")
+        assert.equal(evs.length, 1, "RoleUpdateProposed should emit once")
+        assert.equal(evs[0].args[0], APPROVE_PAUSE_ROLE, "RoleUpdateProposed role should match")
+        assert.equal(evs[0].args[1], newSubGuardian.address, "RoleUpdateProposed address should match")
+
+        await h.expectThrow(tbridge.connect(mainGuardian).acceptRoleUpdate(APPROVE_PAUSE_ROLE))
+        await h.advanceTime(DEFAULT_ROLE_UPDATE_DELAY + 1)
+        tx = await tbridge.connect(mainGuardian).acceptRoleUpdate(APPROVE_PAUSE_ROLE)
+        receipt = await tx.wait()
+        evs = _getBridgeEvents(receipt, "RoleUpdateAccepted")
+        assert.equal(evs.length, 1, "RoleUpdateAccepted should emit once")
+        assert.equal((await tbridge.roles(APPROVE_PAUSE_ROLE)).roleAddress, newSubGuardian.address, "APPROVE_PAUSE role should update")
+
+        for (let i = 0; i < 10; i++) {
+            await token.faucet(accounts[2].address)
+        }
+        await token.connect(accounts[2]).approve(tbridge.address, h.toWei("10000"))
+        await tbridge.connect(accounts[2]).proposePauseBridge("layer")
+        await h.expectThrow(tbridge.connect(subGuardian).approvePause(0))
+        await tbridge.connect(newSubGuardian).approvePause(0)
+        bridgeState = await tbridge.bridgeState()
+        assert.equal(bridgeState, 1, "bridge state should be paused")
+
+        tx = await tbridge.connect(mainGuardian).proposeRoleUpdate(UPDATE_DATA_BRIDGE_ROLE, accounts[14].address, DEFAULT_ROLE_UPDATE_DELAY)
+        await tx.wait()
+        tx = await tbridge.connect(mainGuardian).rejectRoleUpdate(UPDATE_DATA_BRIDGE_ROLE)
+        receipt = await tx.wait()
+        evs = _getBridgeEvents(receipt, "RoleUpdateRejected")
+        assert.equal(evs.length, 1, "RoleUpdateRejected should emit once")
+        assert.equal(evs[0].args[0], UPDATE_DATA_BRIDGE_ROLE, "RoleUpdateRejected role should match")
+        assert.equal((await tbridge.roles(UPDATE_DATA_BRIDGE_ROLE)).roleAddress, mainGuardian.address, "UPDATE_DATA_BRIDGE role should remain unchanged")
+
+        tx = await tbridge.connect(mainGuardian).proposeRoleUpdate(MAIN_GUARDIAN_ROLE, newMainGuardian.address, DEFAULT_ROLE_UPDATE_DELAY)
+        await tx.wait()
+        await h.advanceTime(DEFAULT_ROLE_UPDATE_DELAY + 1)
+        await tbridge.connect(mainGuardian).acceptRoleUpdate(MAIN_GUARDIAN_ROLE)
+        assert.equal((await tbridge.roles(MAIN_GUARDIAN_ROLE)).roleAddress, newMainGuardian.address, "MAIN_GUARDIAN role should update")
+
+        await h.expectThrow(tbridge.connect(mainGuardian).proposeRoleUpdate(UPDATE_DATA_BRIDGE_ROLE, accounts[15].address, DEFAULT_ROLE_UPDATE_DELAY))
+        await tbridge.connect(newMainGuardian).proposeRoleUpdate(UPDATE_DATA_BRIDGE_ROLE, accounts[15].address, DEFAULT_ROLE_UPDATE_DELAY)
+    })
+
+    it("can pause multiple times", async function () {
+        for (let i = 0; i < 20; i++) {
+            await token.faucet(accounts[1].address)
+        }
+        await token.connect(accounts[1]).approve(tbridge.address, h.toWei("20000"))
+
+        await tbridge.connect(accounts[1]).proposePauseBridge("layer")
+        await tbridge.connect(subGuardian).approvePause(0)
+        await h.advanceTime(86400 * 21 + 1)
+        await tbridge.unpauseBridge()
+
+        await tbridge.connect(accounts[1]).proposePauseBridge("layer2")
+        await tbridge.connect(subGuardian).approvePause(1)
+        burnedBalance = await token.balanceOf("0x000000000000000000000000000000000000dEaD")
+        assert.equal(burnedBalance.toString(), h.toWei("20000"), "burned balance should be correct")
+    })
+
+    // more complex tests
+    it.skip("100 deposits and withdrawals", async function () {
+        this.timeout(300000)
+        // fund accts
+        await token.faucet(accounts[0].address)
+        await token.faucet(accounts[1].address)
+        await token.faucet(accounts[1].address)
+        await token.connect(accounts[0]).approve(tbridge.address, h.toWei("10000"))
+        await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
+
+        initUserBal0 = await token.balanceOf(accounts[0].address)
+        initUserBal1 = await token.balanceOf(accounts[1].address)
+        niters = 100
+        depositAmount0 = h.toWei("5")
+        depositAmount1 = h.toWei("10")
+        tip = h.toWei("0")
+        // deposits
+        for (let i = 0; i < niters; i++) {
+            await tbridge.connect(accounts[0]).depositToLayer(depositAmount0, tip, LAYER_RECIPIENT)
+            await tbridge.connect(accounts[1]).depositToLayer(depositAmount1, tip, LAYER_RECIPIENT)
+            await h.advanceTime(43200)
+        }
+        // checks
+        userBal0 = await token.balanceOf(accounts[0].address)
+        userBal1 = await token.balanceOf(accounts[1].address)
+        bridgeBal = await token.balanceOf(await tbridge.address)
+        expectedBal0 = BigInt(initUserBal0) - BigInt(depositAmount0) * BigInt(niters)
+        expectedBal1 = BigInt(initUserBal1) - BigInt(depositAmount1) * BigInt(niters)
+        expectedBalBridge = BigInt(depositAmount0) * BigInt(niters) + BigInt(depositAmount1) * BigInt(niters) + BigInt(INITIAL_LAYER_TOKEN_SUPPLY)
+        assert(BigInt(userBal0) == expectedBal0, "user 0 balance should be correct")
+        assert(BigInt(userBal1) == expectedBal1, "user 1 balance should be correct")
+        assert(BigInt(bridgeBal) == expectedBalBridge, "bridge balance should be correct")
+        assert(await tbridge.depositId() == BigInt(niters * 2), "deposit id should be correct")
+
+        // withdrawals
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = await h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
+        withdrawValue0 = h.getWithdrawValue(accounts[0].address, LAYER_RECIPIENT, BigInt(depositAmount0) / BigInt(1e12))
+        withdrawValue1 = h.getWithdrawValue(accounts[1].address, LAYER_RECIPIENT, BigInt(depositAmount1) / BigInt(1e12))
+        aggregatePower = 3
+        expTokensToClaim0 = BigInt(0)
+        expTokensToClaim1 = BigInt(0)
+        
+        for (let i = 0; i<niters; i++) {
+            // guardian reset valset, past unbonding period
+            blocky = await h.getBlock()
+            validatorTimestamp = await blobstream.validatorTimestamp()
+            if (blocky.timestamp - (validatorTimestamp / 1000) > UNBONDING_PERIOD) {
+                valTimestamp = (blocky.timestamp - 2) * 1000
+                newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+                valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
+                await blobstream.connect(mainGuardian).guardianResetValidatorSet(threshold, valTimestamp, valCheckpoint)
+            }
+            withdrawId0 = i * 2 + 1
+            withdrawId1 = i * 2 + 2
+            withdrawQueryDataArgs0 = abiCoder.encode(['bool', 'uint256'], [false, withdrawId0])
+            withdrawQueryDataArgs1 = abiCoder.encode(['bool', 'uint256'], [false, withdrawId1])
+            withdrawQueryData0 = abiCoder.encode(['string', 'bytes'], ['TRBBridgeV2', withdrawQueryDataArgs0])
+            withdrawQueryData1 = abiCoder.encode(['string', 'bytes'], ['TRBBridgeV2', withdrawQueryDataArgs1])
+            withdrawQueryId0 = h.hash(withdrawQueryData0)
+            withdrawQueryId1 = h.hash(withdrawQueryData1)
+            blocky = await h.getBlock()
+            reportTimestamp = (blocky.timestamp - 84600) * 1000
+            attestationTimestamp = blocky.timestamp * 1000
+            dataDigest0 = await h.getDataDigest(
+                withdrawQueryId0,
+                withdrawValue0,
+                reportTimestamp,
+                aggregatePower,
+                reportTimestamp - 1,
+                0,
+                valCheckpoint,
+                attestationTimestamp,
+                reportTimestamp
+            )
+            dataDigest1 = await h.getDataDigest(
+                withdrawQueryId1,
+                withdrawValue1,
+                reportTimestamp,
+                aggregatePower,
+                reportTimestamp - 1,
+                0,
+                valCheckpoint,
+                attestationTimestamp,
+                reportTimestamp
+            )
+            currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
+            sig0_1 = await h.layerSign(dataDigest0, val1.privateKey)
+            sig0_2 = await h.layerSign(dataDigest0, val2.privateKey)
+            sig1_1 = await h.layerSign(dataDigest1, val1.privateKey)
+            sig1_2 = await h.layerSign(dataDigest1, val2.privateKey)
+            sigStructArray0 = await h.getSigStructArray([sig0_1, sig0_2])
+            sigStructArray1 = await h.getSigStructArray([sig1_1, sig1_2])
+            oracleDataStruct0 = await h.getOracleDataStruct(
+                withdrawQueryId0,
+                withdrawValue0,
+                reportTimestamp,
+                aggregatePower,
+                reportTimestamp - 1,
+                0,
+                attestationTimestamp,
+                reportTimestamp
+            )
+            oracleDataStruct1 = await h.getOracleDataStruct(
+                withdrawQueryId1,
+                withdrawValue1,
+                reportTimestamp,
+                aggregatePower,
+                reportTimestamp - 1,
+                0,
+                attestationTimestamp,
+                reportTimestamp
+            )
+
+            withdrawLimitBefore0 = await tbridge.withdrawLimit()
+            await tbridge.withdrawFromLayer(
+                oracleDataStruct0,
+                currentValSetArray,
+                sigStructArray0,
+                withdrawId0,
+            )
+            withdrawLimitBefore1 = await tbridge.withdrawLimit()
+            await tbridge.withdrawFromLayer(
+                oracleDataStruct1,
+                currentValSetArray,
+                sigStructArray1,
+                withdrawId1,
+            )
+            
+            if (BigInt(depositAmount0) > BigInt(withdrawLimitBefore0)) {
+                expectedBal0 += BigInt(withdrawLimitBefore0)
+                expTokensToClaim0 += BigInt(depositAmount0) - BigInt(withdrawLimitBefore0)
+                expectedBalBridge -= BigInt(withdrawLimitBefore0)
+            } else {
+                expectedBal0 += BigInt(depositAmount0)
+                expectedBalBridge -= BigInt(depositAmount0)
+            }
+            if (depositAmount1 > withdrawLimitBefore1) {
+                expectedBal1 += BigInt(withdrawLimitBefore1)
+                expTokensToClaim1 += BigInt(depositAmount1) - BigInt(withdrawLimitBefore1)
+                expectedBalBridge -= BigInt(withdrawLimitBefore1)
+            } else {
+                expectedBal1 += BigInt(depositAmount1)
+                expectedBalBridge -= BigInt(depositAmount1)
+            }
+            userBal0 = await token.balanceOf(accounts[0].address)
+            userBal1 = await token.balanceOf(accounts[1].address)
+            bridgeBal = await token.balanceOf(await tbridge.address)
+            tokensToClaim0 = await tbridge.tokensToClaim(accounts[0].address)
+            tokensToClaim1 = await tbridge.tokensToClaim(accounts[1].address)
+
+            assert(BigInt(userBal0) == expectedBal0, "user0 bal should be correct")
+            assert(BigInt(userBal1) == expectedBal1, "user1 bal should be correct")
+            assert(BigInt(bridgeBal) == expectedBalBridge, "bridge bal should be correct")
+            assert(BigInt(tokensToClaim0) == expTokensToClaim0, "tokensToClaim0 should be correct")
+            assert(BigInt(tokensToClaim1) == expTokensToClaim1, "tokensToClaim1 should be correct")
+        }
+
+        // Get all withdraw ids for accounts with pending claims
+        let withdrawIds0 = await tbridge.recipientWithdrawIds(accounts[0].address, 0).catch(() => null)
+        let withdrawIds1 = await tbridge.recipientWithdrawIds(accounts[1].address, 0).catch(() => null)
+        await h.advanceTime(43200)
+
+        // Claim pending amounts for account 0's withdrawIds
+        for (let i = 0; i < niters * 2; i++) {
+            const wid = i * 2 + 1
+            const details = await tbridge.withdrawDetails(wid)
+            if (BigInt(details.pendingAmount) > 0) {
+                await tbridge.claimExtraWithdrawByWithdrawId(wid)
+                await h.advanceTime(43200)
+            }
+        }
+        // Claim pending amounts for account 1's withdrawIds
+        for (let i = 0; i < niters * 2; i++) {
+            const wid = i * 2 + 2
+            const details = await tbridge.withdrawDetails(wid)
+            if (BigInt(details.pendingAmount) > 0) {
+                await tbridge.claimExtraWithdrawByWithdrawId(wid)
+                await h.advanceTime(43200)
+            }
+        }
+        tokensToClaim0 = await tbridge.tokensToClaim(accounts[0].address)
+        tokensToClaim1 = await tbridge.tokensToClaim(accounts[1].address)
+
+        userBal0 = await token.balanceOf(accounts[0].address)
+        userBal1 = await token.balanceOf(accounts[1].address)
+        bridgeBal = await token.balanceOf(await tbridge.address)
+        assert(BigInt(userBal0) == initUserBal0, "user0 bal should be correct")
+        assert(BigInt(userBal1) == initUserBal1, "user1 bal should be correct")
+        assert(BigInt(bridgeBal) == BigInt(INITIAL_LAYER_TOKEN_SUPPLY), "bridge bal should be correct")
+    }, 300000)
+    
+    it("mint rate rounding error", async function() {
+        // test worst case rounding error of mintToOracle every block
+        // and no rounding errors from EVM->Layer decimal conversion.
+        // layer mintToOracle calculation:
+        // uint256 _releasedAmount = (146.94 ether *
+        //     (block.timestamp - uints[keccak256("_LAST_RELEASE_TIME_DAO")])) /
+        //     86400;
+
+        // minting rate per day on layer
+        const amtPerDayLayer = BigInt(h.toWei("146.94"));
+        
+        // minting rate per block on evm (12 sec blocks)
+        const blocksPerDayEVM = BigInt(86400) / BigInt(12);
+        const amtPerBlockEVM = amtPerDayLayer / blocksPerDayEVM;
+
+        // total minted amount in a year on evm
+        const amtPerYearEVM = amtPerBlockEVM * blocksPerDayEVM * BigInt(365);
+        
+        // total minted amount in a year on layer
+        const amtPerYearLayer = amtPerDayLayer * BigInt(365);
+
+        // difference in minted amounts between evm and layer in a year
+        const diffPerYear = amtPerYearLayer - amtPerYearEVM;
+
+        // Assert that difference is less than a small threshold (e.g., 1e12 wei)
+        const threshold = BigInt(1e12);
+        assert(diffPerYear < threshold, "Difference in minting rates between EVM and Layer should be less than threshold");
+    })
+
+    it("mintToOracle on deposit", async function() {
+        const bridge2 = await ethers.deployContract("TestTokenBridgeV2", [
+            token.address,
+            blobstream.address,
+            oldOracle.address,
+            mainGuardian.address,
+            subGuardian.address,
+            DEFAULT_ROLE_UPDATE_DELAY,
+            PAUSE_PERIOD
+        ])
+        await bridge2.init(0, 0)
+        await token.setOracleMintRecipient(bridge2.address)
+        lastReleaseTimeBytes = ethers.utils.solidityKeccak256(["string"], ["_LAST_RELEASE_TIME_DAO"])
+        deployTime = await token.getUintVar(lastReleaseTimeBytes)
+        bridgeBal = await token.balanceOf(await bridge2.address)
+        assert(BigInt(bridgeBal) == BigInt(0), "bridge bal should be correct")
+        await token.approve(bridge2.address, h.toWei("10000"))
+        await h.advanceTime(86400)
+        tip = h.toWei("0")
+        await bridge2.depositToLayer(h.toWei("20"), tip, LAYER_RECIPIENT)
+        blocky1 = await h.getBlock()
+        // formula from Tellor360:
+        // uint256 _releasedAmount = (146.94 ether *
+        // (block.timestamp - uints[keccak256("_LAST_RELEASE_TIME_DAO")])) /
+        // 86400;
+        expectedBal = (BigInt(h.toWei("146.94")) * (BigInt(blocky1.timestamp) - BigInt(deployTime))) / BigInt(86400) + BigInt(h.toWei("20"))
+        bridgeBal = await token.balanceOf(await bridge2.address)
+        assert(BigInt(bridgeBal) == BigInt(expectedBal), "bridge bal should be correct")
+        await h.advanceTime(86400)
+        await bridge2.depositToLayer(h.toWei("20"), tip, LAYER_RECIPIENT)
+        blocky2 = await h.getBlock()
+        expectedBal = expectedBal + (BigInt(h.toWei("146.94")) * (BigInt(blocky2.timestamp) - BigInt(blocky1.timestamp))) / BigInt(86400) + BigInt(h.toWei("20"))
+        bridgeBal = await token.balanceOf(await bridge2.address)
+        assert(BigInt(bridgeBal) == BigInt(expectedBal), "bridge bal should be correct")
+    })
+    it("claimExtraWithdraw requires re-verification after pause", async function () {
+        // Setup: create a withdraw with pending amount
+        const WITHDRAW_AMOUNT = h.toWei("10")
+        let _addy = await accounts[2].address
+        const withdrawId = 1
+        value = h.getWithdrawValue(_addy, LAYER_RECIPIENT, BigInt(WITHDRAW_AMOUNT) / BigInt(1e12))
+        blocky = await h.getBlock()
+        timestamp = (blocky.timestamp - 2) * 1000
+        aggregatePower = 3
+        attestTimestamp = (blocky.timestamp + 43200) * 1000
+        previousTimestamp = 0
+        nextTimestamp = 0
+        lastConsensusTimestamp = timestamp
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = await h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
+        dataDigest = await h.getDataDigest(
+            WITHDRAW1_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
+        sig1 = await h.layerSign(dataDigest, val1.privateKey)
+        sig2 = await h.layerSign(dataDigest, val2.privateKey)
+        sigStructArray = await h.getSigStructArray([sig1, sig2])
+        oracleDataStruct = await h.getOracleDataStruct(
+            WITHDRAW1_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        await h.advanceTime(43200)
+        
+        // Withdraw, creating pending amount
+        await tbridge.withdrawFromLayer(
+            oracleDataStruct,
+            currentValSetArray,
+            sigStructArray,
+            withdrawId,
+        )
+        
+        // Verify pending amount exists
+        let tokensToClaim = await tbridge.tokensToClaim(_addy)
+        assert(BigInt(tokensToClaim) > 0, "should have pending amount")
+        
+        // Now pause the bridge
+        for (let i = 0; i < 10; i++) {
+            await token.faucet(accounts[1].address)
+        }
+        await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
+        await tbridge.connect(accounts[1]).proposePauseBridge("layer")
+        await tbridge.connect(subGuardian).approvePause(0)
+        
+        // Verify lastPauseTimestamp was set
+        const lastPauseTimestamp = await tbridge.lastPauseTimestamp()
+        assert(lastPauseTimestamp > 0, "lastPauseTimestamp should be set")
+        
+        // Wait for pause period and unpause
+        await h.advanceTime(86400 * 21 + 1)
+        await tbridge.unpauseBridge()
+        
+        // Now try to claim - should fail because lastVerifiedTime <= lastPauseTimestamp
+        await h.advanceTime(43200)
+        await h.expectThrow(tbridge.claimExtraWithdrawByWithdrawId(withdrawId)) // must re-verify after pause
+    })
+
+    it("reverifyExtraWithdraw after pause allows claiming", async function () {
+        // Setup: create a withdraw with pending amount
+        const WITHDRAW_AMOUNT = h.toWei("10")
+        let _addy = await accounts[2].address
+        const withdrawId = 1
+        value = h.getWithdrawValue(_addy, LAYER_RECIPIENT, BigInt(WITHDRAW_AMOUNT) / BigInt(1e12))
+        blocky = await h.getBlock()
+        timestamp = (blocky.timestamp - 2) * 1000
+        aggregatePower = 3
+        attestTimestamp = (blocky.timestamp + 43200) * 1000
+        previousTimestamp = 0
+        nextTimestamp = 0
+        lastConsensusTimestamp = timestamp
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = await h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
+        dataDigest = await h.getDataDigest(
+            WITHDRAW1_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
+        sig1 = await h.layerSign(dataDigest, val1.privateKey)
+        sig2 = await h.layerSign(dataDigest, val2.privateKey)
+        sigStructArray = await h.getSigStructArray([sig1, sig2])
+        oracleDataStruct = await h.getOracleDataStruct(
+            WITHDRAW1_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        await h.advanceTime(43200)
+        
+        // Withdraw, creating pending amount
+        await tbridge.withdrawFromLayer(
+            oracleDataStruct,
+            currentValSetArray,
+            sigStructArray,
+            withdrawId,
+        )
+        
+        // Verify pending amount exists
+        let tokensToClaim = await tbridge.tokensToClaim(_addy)
+        assert(BigInt(tokensToClaim) > 0, "should have pending amount")
+        const pendingBefore = BigInt((await tbridge.withdrawDetails(withdrawId)).pendingAmount)
+        
+        // Now pause the bridge
+        for (let i = 0; i < 10; i++) {
+            await token.faucet(accounts[1].address)
+        }
+        await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
+        await tbridge.connect(accounts[1]).proposePauseBridge("layer")
+        await tbridge.connect(subGuardian).approvePause(0)
+        
+        // Wait for pause period and unpause
+        await h.advanceTime(86400 * 21 + 1)
+        await tbridge.unpauseBridge()
+        
+        // Update validator set (simulate chain fork with new validators)
+        blocky = await h.getBlock()
+        newValTimestamp = (blocky.timestamp - 2) * 1000
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, newValTimestamp)
+        await blobstream.connect(mainGuardian).guardianResetValidatorSet(threshold, newValTimestamp, valCheckpoint)
+        
+        // Create fresh attestation data for re-verification
+        blocky = await h.getBlock()
+        timestamp = (blocky.timestamp - 43200) * 1000
+        attestTimestamp = blocky.timestamp * 1000
+        lastConsensusTimestamp = timestamp
+        dataDigest = await h.getDataDigest(
+            WITHDRAW1_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        sig1 = await h.layerSign(dataDigest, val1.privateKey)
+        sig2 = await h.layerSign(dataDigest, val2.privateKey)
+        sigStructArray = await h.getSigStructArray([sig1, sig2])
+        oracleDataStruct = await h.getOracleDataStruct(
+            WITHDRAW1_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
+        
+        // Re-verify the withdraw
+        await tbridge.reverifyExtraWithdraw(
+            oracleDataStruct,
+            currentValSetArray,
+            sigStructArray,
+            withdrawId
+        )
+        
+        // Now claiming should work
+        await h.advanceTime(43200)
+        const recipientBalBefore = await token.balanceOf(_addy)
+        await tbridge.claimExtraWithdrawByWithdrawId(withdrawId)
+        const recipientBalAfter = await token.balanceOf(_addy)
+        assert(BigInt(recipientBalAfter) > BigInt(recipientBalBefore), "should have received tokens after re-verification")
+    })
+
+    it("reverifyExtraWithdraw reverts for mismatched amount or recipient", async function () {
+        // Setup: create a withdraw with pending amount
+        const WITHDRAW_AMOUNT = h.toWei("10")
+        let _addy = await accounts[2].address
+        const withdrawId = 1
+        value = h.getWithdrawValue(_addy, LAYER_RECIPIENT, BigInt(WITHDRAW_AMOUNT) / BigInt(1e12))
+        blocky = await h.getBlock()
+        timestamp = (blocky.timestamp - 2) * 1000
+        aggregatePower = 3
+        attestTimestamp = (blocky.timestamp + 43200) * 1000
+        previousTimestamp = 0
+        nextTimestamp = 0
+        lastConsensusTimestamp = timestamp
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = await h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
+        dataDigest = await h.getDataDigest(
+            WITHDRAW1_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
+        sig1 = await h.layerSign(dataDigest, val1.privateKey)
+        sig2 = await h.layerSign(dataDigest, val2.privateKey)
+        sigStructArray = await h.getSigStructArray([sig1, sig2])
+        oracleDataStruct = await h.getOracleDataStruct(
+            WITHDRAW1_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        await h.advanceTime(43200)
+        
+        // Withdraw, creating pending amount
+        await tbridge.withdrawFromLayer(
+            oracleDataStruct,
+            currentValSetArray,
+            sigStructArray,
+            withdrawId,
+        )
+        
+        // Pause and unpause the bridge
+        for (let i = 0; i < 10; i++) {
+            await token.faucet(accounts[1].address)
+        }
+        await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
+        await tbridge.connect(accounts[1]).proposePauseBridge("layer")
+        await tbridge.connect(subGuardian).approvePause(0)
+        await h.advanceTime(86400 * 21 + 1)
+        await tbridge.unpauseBridge()
+        
+        // Update validator set
+        blocky = await h.getBlock()
+        newValTimestamp = (blocky.timestamp - 2) * 1000
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = h.calculateValCheckpoint(newValHash, threshold, newValTimestamp)
+        await blobstream.connect(mainGuardian).guardianResetValidatorSet(threshold, newValTimestamp, valCheckpoint)
+        
+        // Try to re-verify with wrong amount
+        const wrongAmount = h.toWei("5") // different from original 10
+        let wrongValue = h.getWithdrawValue(_addy, LAYER_RECIPIENT, BigInt(wrongAmount) / BigInt(1e12))
+        blocky = await h.getBlock()
+        timestamp = (blocky.timestamp - 43200) * 1000
+        attestTimestamp = blocky.timestamp * 1000
+        lastConsensusTimestamp = timestamp
+        let wrongDataDigest = await h.getDataDigest(
+            WITHDRAW1_QUERY_ID,
+            wrongValue,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        let wrongSig1 = await h.layerSign(wrongDataDigest, val1.privateKey)
+        let wrongSig2 = await h.layerSign(wrongDataDigest, val2.privateKey)
+        let wrongSigStructArray = await h.getSigStructArray([wrongSig1, wrongSig2])
+        let wrongOracleDataStruct = await h.getOracleDataStruct(
+            WITHDRAW1_QUERY_ID,
+            wrongValue,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        
+        await h.expectThrow(tbridge.reverifyExtraWithdraw(
+            wrongOracleDataStruct,
+            currentValSetArray,
+            wrongSigStructArray,
+            withdrawId
+        )) // amount does not match record
+        
+        // Try to re-verify with wrong recipient
+        let wrongRecipient = accounts[5].address
+        wrongValue = h.getWithdrawValue(wrongRecipient, LAYER_RECIPIENT, BigInt(WITHDRAW_AMOUNT) / BigInt(1e12))
+        wrongDataDigest = await h.getDataDigest(
+            WITHDRAW1_QUERY_ID,
+            wrongValue,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        wrongSig1 = await h.layerSign(wrongDataDigest, val1.privateKey)
+        wrongSig2 = await h.layerSign(wrongDataDigest, val2.privateKey)
+        wrongSigStructArray = await h.getSigStructArray([wrongSig1, wrongSig2])
+        wrongOracleDataStruct = await h.getOracleDataStruct(
+            WITHDRAW1_QUERY_ID,
+            wrongValue,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        
+        await h.expectThrow(tbridge.reverifyExtraWithdraw(
+            wrongOracleDataStruct,
+            currentValSetArray,
+            wrongSigStructArray,
+            withdrawId
+        )) // recipient does not match record
+    })
+
+    it("init", async function() {
+        // deploy fresh bridge contract for testing init
+        const freshBridge = await ethers.deployContract("TestTokenBridgeV2", [
+            token.address,
+            blobstream.address,
+            oldOracle.address,
+            mainGuardian.address,
+            subGuardian.address,
+            DEFAULT_ROLE_UPDATE_DELAY,
+            PAUSE_PERIOD
+        ])
+        
+        // test only deployer can initialize
+        await h.expectThrow(freshBridge.connect(accounts[1]).init(5, 3)) // not deployer
+        
+        // test successful initialization
+        assert.equal(await freshBridge.initialized(), false, "should not be initialized yet")
+        assert.equal(await freshBridge.depositId(), 0, "depositId should be 0 initially")
+        
+        await freshBridge.init(5, 3)
+        
+        // verify initialization state
+        assert.equal(await freshBridge.initialized(), true, "should be initialized")
+        assert.equal(await freshBridge.depositId(), 5, "depositId should be set correctly")
+        
+        // verify withdraw claims are set correctly
+        assert.equal(await freshBridge.withdrawClaimed(0), true, "withdrawId 0 should be claimed")
+        assert.equal(await freshBridge.withdrawClaimed(1), true, "withdrawId 1 should be claimed")
+        assert.equal(await freshBridge.withdrawClaimed(2), true, "withdrawId 2 should be claimed")
+        assert.equal(await freshBridge.withdrawClaimed(3), true, "withdrawId 3 should be claimed")
+        assert.equal(await freshBridge.withdrawClaimed(4), false, "withdrawId 4 should not be claimed")
+        
+        // test cannot initialize twice
+        await h.expectThrow(freshBridge.init(10, 5)) // already initialized
+
+        // fund the fresh bridge with tokens for testing
+        await token.connect(accounts[10]).transfer(freshBridge.address, INITIAL_LAYER_TOKEN_SUPPLY)
+
+        // test deposit with higher starting depositId
+        depositAmount = h.toWei("2")
+        tip = h.toWei("0")
+        await token.approve(freshBridge.address, h.toWei("100"))
+        await freshBridge.depositToLayer(depositAmount, tip, LAYER_RECIPIENT)
+        
+        // verify deposit worked with correct incremented ID
+        assert.equal(await freshBridge.depositId(), 6, "depositId should increment from 5 to 6")
+        depositDetails = await freshBridge.deposits(6)
+        assert.equal(depositDetails.amount.toString(), depositAmount, "deposit amount should be correct")
+        assert.equal(depositDetails.recipient, LAYER_RECIPIENT, "deposit recipient should be correct")
+        assert.equal(depositDetails.sender, await accounts[0].address, "deposit sender should be correct")
+
+        // test withdraw with higher starting withdrawId
+        await h.advanceTime(43200)
+        value = h.getWithdrawValue(EVM_RECIPIENT, LAYER_RECIPIENT, 20)
+        blocky = await h.getBlock()
+        timestamp = (blocky.timestamp - 43200) * 1000
+        aggregatePower = 3
+        attestTimestamp = blocky.timestamp * 1000
+        previousTimestamp = 0
+        nextTimestamp = 0
+        lastConsensusTimestamp = timestamp
+        
+        // create withdraw for depositId 4 (which should not be claimed)
+        WITHDRAW4_QUERY_DATA_ARGS = abiCoder.encode(["bool", "uint256"], [false, 4])
+        WITHDRAW4_QUERY_DATA = abiCoder.encode(["string", "bytes"], ["TRBBridgeV2", WITHDRAW4_QUERY_DATA_ARGS])
+        WITHDRAW4_QUERY_ID = h.hash(WITHDRAW4_QUERY_DATA)
+        
+        newValHash = await h.calculateValHash(initialValAddrs, initialPowers)
+        valCheckpoint = await h.calculateValCheckpoint(newValHash, threshold, valTimestamp)
+        dataDigest = await h.getDataDigest(
+            WITHDRAW4_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            valCheckpoint,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        currentValSetArray = await h.getValSetStructArray(initialValAddrs, initialPowers)
+        sig1 = await h.layerSign(dataDigest, val1.privateKey)
+        sig2 = await h.layerSign(dataDigest, val2.privateKey)
+        sigStructArray = await h.getSigStructArray([sig1, sig2])
+        oracleDataStruct = await h.getOracleDataStruct(
+            WITHDRAW4_QUERY_ID,
+            value,
+            timestamp,
+            aggregatePower,
+            previousTimestamp,
+            nextTimestamp,
+            attestTimestamp,
+            lastConsensusTimestamp
+        )
+        
+        await freshBridge.withdrawFromLayer(
+            oracleDataStruct,
+            currentValSetArray,
+            sigStructArray,
+            4
+        )
+        
+        // verify withdraw worked
+        recipientBal = await token.balanceOf(EVM_RECIPIENT)
+        expectedBal = 20e12 // 20 loya converted to wei
+        assert.equal(recipientBal.toString(), expectedBal, "recipient balance should be correct")
+        assert.equal(await freshBridge.withdrawClaimed(4), true, "withdrawId 4 should now be claimed")
+    })
+})
