@@ -30,6 +30,7 @@ type (
 		DisputedDelegationAmounts collections.Map[[]byte, types.DelegationsAmounts]                                                                                         // key: dispute hashId
 		FeePaidFromStake          collections.Map[[]byte, types.DelegationsAmounts]                                                                                         // key: dispute hashId
 		Report                    *collections.IndexedMap[collections.Pair[[]byte, collections.Pair[[]byte, uint64]], types.DelegationsAmounts, ReporterBlockNumberIndexes] // key: queryId, (reporter AccAddress, blockNumber)
+		ReportByBlock             *collections.IndexedMap[collections.Triple[[]byte, uint64, []byte], types.DelegationsAmounts, ReportByBlockIndexes]                       // key: reporter AccAddress, blockNumber, queryId
 
 		// Distribution queue collections
 		ReporterPeriodData       collections.Map[[]byte, types.PeriodRewardData]      // key: reporter AccAddress -> current period data
@@ -84,6 +85,11 @@ func NewKeeper(
 		Report: collections.NewIndexedMap(
 			sb, types.ReporterPrefix, "report",
 			collections.PairKeyCodec(collections.BytesKey, collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)), codec.CollValue[types.DelegationsAmounts](cdc), newReportIndexes(sb),
+		),
+		ReportByBlock: collections.NewIndexedMap(
+			sb, types.ReportByBlockPrefix, "report_by_block",
+			collections.TripleKeyCodec(collections.BytesKey, collections.Uint64Key, collections.BytesKey),
+			codec.CollValue[types.DelegationsAmounts](cdc), newReportByBlockIndexes(sb),
 		),
 		ReporterPeriodData:       collections.NewMap(sb, types.ReporterPeriodDataPrefix, "reporter_period_data", collections.BytesKey, codec.CollValue[types.PeriodRewardData](cdc)),
 		DistributionQueue:        collections.NewMap(sb, types.DistributionQueuePrefix, "distribution_queue", collections.Uint64Key, codec.CollValue[types.DistributionQueueItem](cdc)),
@@ -164,22 +170,32 @@ func (k Keeper) GetDelegationsAmount(ctx context.Context, reporter []byte, block
 		return delAmounts, err
 	}
 
-	iter, err := k.Report.Indexes.BlockNumber.IterateRaw(ctx, startBuffer, endBuffer, collections.OrderDescending)
+	// Check new collection first
+	newIter, err := k.ReportByBlock.IterateRaw(ctx, startBuffer, endBuffer, collections.OrderDescending)
 	if err != nil {
 		return delAmounts, err
 	}
-	if iter.Valid() {
-		key, err := iter.Key()
+	defer newIter.Close()
+	if newIter.Valid() {
+		val, err := newIter.Value()
 		if err != nil {
 			return delAmounts, err
 		}
+		return val, nil
+	}
 
-		rep, err := k.Report.Get(ctx, collections.Join(key.K2(), collections.Join(key.K1().K1(), key.K1().K2())))
+	// Fallback to old collection only if new collection had nothing
+	oldIter, err := k.Report.Indexes.BlockNumber.IterateRaw(ctx, startBuffer, endBuffer, collections.OrderDescending)
+	if err != nil {
+		return delAmounts, err
+	}
+	defer oldIter.Close()
+	if oldIter.Valid() {
+		key, err := oldIter.Key()
 		if err != nil {
 			return delAmounts, err
 		}
-
-		return rep, nil
+		return k.Report.Get(ctx, collections.Join(key.K2(), collections.Join(key.K1().K1(), key.K1().K2())))
 	}
 	return delAmounts, nil
 }
@@ -233,18 +249,33 @@ func (k Keeper) GetLastReportedAtBlock(ctx context.Context, reporter []byte) (ui
 	endBuf := make([]byte, pc.Size(end))
 	_, _ = pc.Encode(startBuf, start)
 	_, _ = pc.Encode(endBuf, end)
-	iter, err := k.Report.Indexes.BlockNumber.IterateRaw(ctx, startBuf, endBuf, collections.OrderDescending)
+
+	// Check new collection first
+	newIter, err := k.ReportByBlock.IterateRaw(ctx, startBuf, endBuf, collections.OrderDescending)
 	if err != nil {
 		return 0, err
 	}
-	defer iter.Close()
-	if iter.Valid() {
-		key, err := iter.Key()
+	defer newIter.Close()
+	if newIter.Valid() {
+		key, err := newIter.Key()
 		if err != nil {
 			return 0, err
 		}
-		blockNumber := key.K1().K2()
-		return blockNumber, nil
+		return key.K2(), nil
+	}
+
+	// Fallback to old collection only if new collection had nothing
+	oldIter, err := k.Report.Indexes.BlockNumber.IterateRaw(ctx, startBuf, endBuf, collections.OrderDescending)
+	if err != nil {
+		return 0, err
+	}
+	defer oldIter.Close()
+	if oldIter.Valid() {
+		key, err := oldIter.Key()
+		if err != nil {
+			return 0, err
+		}
+		return key.K1().K2(), nil
 	}
 	return 0, nil
 }
@@ -267,38 +298,82 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 		return nil
 	}
 
-	type reportKey = collections.Pair[[]byte, collections.Pair[[]byte, uint64]]
-	var toDelete []reportKey
+	totalDeleted := 0
+
+	// Prune old collection first
+	type oldKey = collections.Pair[[]byte, collections.Pair[[]byte, uint64]]
+	var oldToDelete []oldKey
 	// Track the most recent old entry per reporter. Keep it so dispute
 	// voting always has at least one snapshot to read power from.
-	latest := make(map[string]uint64)
+	oldLatest := make(map[string]uint64)
+	oldScanned := 0
 
-	iter, err := k.Report.Iterate(ctx, nil)
+	oldIter, err := k.Report.Iterate(ctx, nil)
 	if err != nil {
 		return err
 	}
-	defer iter.Close()
-
-	for ; iter.Valid() && len(toDelete) < maxBatchSize; iter.Next() {
-		pk, err := iter.Key()
+	defer oldIter.Close()
+	for ; oldIter.Valid() && oldScanned < maxBatchSize && len(oldToDelete) < maxBatchSize; oldIter.Next() {
+		oldScanned++
+		pk, err := oldIter.Key()
 		if err != nil {
 			return err
 		}
 		if pk.K2().K2() < cutoffBlock {
-			toDelete = append(toDelete, pk)
+			oldToDelete = append(oldToDelete, pk)
 			reporter := string(pk.K2().K1())
-			if block := pk.K2().K2(); block > latest[reporter] {
-				latest[reporter] = block
+			if block := pk.K2().K2(); block > oldLatest[reporter] {
+				oldLatest[reporter] = block
 			}
 		}
 	}
 
-	for _, pk := range toDelete {
-		if pk.K2().K2() == latest[string(pk.K2().K1())] {
+	for _, pk := range oldToDelete {
+		if pk.K2().K2() == oldLatest[string(pk.K2().K1())] {
 			continue
 		}
 		if err := k.Report.Remove(ctx, pk); err != nil {
 			return err
+		}
+		totalDeleted++
+	}
+
+	// Prune new collection (ReportByBlock), iterate from lowest blockNumber, break at cutoff
+	remaining := maxBatchSize - totalDeleted
+	if remaining > 0 {
+		type newKey = collections.Triple[[]byte, uint64, []byte]
+		var newToDelete []newKey
+		// Same retention logic for the new collection
+		newLatest := make(map[string]uint64)
+		newIter, err := k.ReportByBlock.Indexes.BlockNumber.Iterate(ctx, nil)
+		if err != nil {
+			return err
+		}
+		defer newIter.Close()
+		for ; newIter.Valid() && len(newToDelete) < remaining; newIter.Next() {
+			pk, err := newIter.PrimaryKey()
+			if err != nil {
+				return err
+			}
+
+			if pk.K2() >= cutoffBlock {
+				break
+			}
+			newToDelete = append(newToDelete, pk)
+			reporter := string(pk.K1())
+			if block := pk.K2(); block > newLatest[reporter] {
+				newLatest[reporter] = block
+			}
+		}
+
+		for _, pk := range newToDelete {
+			if pk.K2() == newLatest[string(pk.K1())] {
+				continue
+			}
+			if err := k.ReportByBlock.Remove(ctx, pk); err != nil {
+				return err
+			}
+			totalDeleted++
 		}
 	}
 
