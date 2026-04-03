@@ -54,7 +54,6 @@ type (
 		TotalTips          collections.Map[uint64, math.Int]                                                                          // key: blockNumber
 		Nonces             collections.Map[[]byte, uint64]                                                                            // key: queryId
 		Reports            *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, types.ReportsIndex] // key: queryId, reporter, queryMeta.id
-		NoStakeReports     *collections.IndexedMap[collections.Pair[[]byte, uint64], types.NoStakeMicroReport, types.ReporterIndex]   // key: queryId, timestamp
 		QuerySequencer     collections.Sequence
 		Query              *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, types.QueryMetaIndex]  // key: queryId, id
 		Aggregates         *collections.IndexedMap[collections.Pair[[]byte, uint64], types.Aggregate, types.AggregatesIndex] // key: queryId, timestamp
@@ -71,8 +70,6 @@ type (
 		ValuesWeightedMode collections.Map[collections.Pair[uint64, string], uint64] // key: queryMeta.Id, valueHexstring  value: total power of reporters that submitted the value
 		// storage for bridge deposit reports queue
 		BridgeDepositQueue collections.Map[collections.Pair[uint64, uint64], []byte] // key: aggregate timestamp, queryMetaId, value: queryData
-		// storage for no stake report queryId / queryData
-		NoStakeReportedQueries collections.Map[[]byte, []byte] // key: queryId, value: queryData
 
 		// Liveness reward storage
 		CycleCount            collections.Sequence                                              // tracks completed cycles
@@ -149,14 +146,6 @@ func NewKeeper(
 			codec.CollValue[types.MicroReport](cdc),
 			types.NewReportsIndex(sb),
 		),
-		// NoStakeReports maps the queryId:reporter:timestamp to the microReport
-		NoStakeReports: collections.NewIndexedMap(sb,
-			types.NoStakeReportsPrefix,
-			"no_stake_reports",
-			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
-			codec.CollValue[types.NoStakeMicroReport](cdc),
-			types.NewReporterIndex(sb),
-		),
 		// QuerySequencer is an id generator for queryMeta that increments with each new query to distinguish between expired queries and new queries
 		QuerySequencer: collections.NewSequence(sb, types.QuerySeqPrefix, "sequencer"),
 		// Query maps the queryId:id to the queryMeta (holds information about the query and the tip, expiration time, tip amount, query spec reporting window etc.)
@@ -189,8 +178,6 @@ func NewKeeper(
 			"bridge_deposit_queue",
 			collections.PairKeyCodec(collections.Uint64Key, collections.Uint64Key),
 			collections.BytesValue),
-		// NoStakeReportedQueries maps the queryId to the queryData
-		NoStakeReportedQueries: collections.NewMap(sb, types.NoStakeReportedQueriesPrefix, "no_stake_reported_queries", collections.BytesKey, collections.BytesValue),
 
 		// Liveness reward storage
 		CycleCount:            collections.NewSequence(sb, types.CycleCountPrefix, "cycle_count"),

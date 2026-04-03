@@ -44,3 +44,24 @@ func newReportIndexes(sb *collections.SchemaBuilder) ReporterBlockNumberIndexes 
 		),
 	}
 }
+
+type ReportByBlockIndexes struct {
+	BlockNumber *indexes.Multi[uint64, collections.Triple[[]byte, uint64, []byte], types.DelegationsAmounts]
+}
+
+func (b ReportByBlockIndexes) IndexesList() []collections.Index[collections.Triple[[]byte, uint64, []byte], types.DelegationsAmounts] {
+	return []collections.Index[collections.Triple[[]byte, uint64, []byte], types.DelegationsAmounts]{b.BlockNumber}
+}
+
+func newReportByBlockIndexes(sb *collections.SchemaBuilder) ReportByBlockIndexes {
+	return ReportByBlockIndexes{
+		BlockNumber: indexes.NewMulti(
+			sb, types.ReportByBlockNumberIndexPrefix, "report_by_block_number_index",
+			collections.Uint64Key,
+			collections.TripleKeyCodec(collections.BytesKey, collections.Uint64Key, collections.BytesKey),
+			func(pk collections.Triple[[]byte, uint64, []byte], _ types.DelegationsAmounts) (uint64, error) {
+				return pk.K2(), nil // blockNumber
+			},
+		),
+	}
+}
