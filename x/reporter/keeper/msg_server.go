@@ -239,6 +239,9 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	if err != nil {
 		return nil, err
 	}
+	if bytes.Equal(selector.Reporter, reporterAddr.Bytes()) {
+		return nil, errors.New("selector is already assigned to this reporter")
+	}
 	prevReporter := sdk.AccAddress(selector.Reporter)
 	// check if reporter exists
 	reporter, err := k.Keeper.Reporters.Get(goCtx, reporterAddr)
@@ -341,6 +344,9 @@ func validateSwitchReporter(msg *types.MsgSwitchReporter) (selector, reporter sd
 	reporter, err = sdk.AccAddressFromBech32(msg.ReporterAddress)
 	if err != nil {
 		return nil, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid reporter address (%s)", err)
+	}
+	if bytes.Equal(selector.Bytes(), reporter.Bytes()) {
+		return nil, nil, errors.New("selector and reporter cannot be the same address")
 	}
 	return selector, reporter, nil
 }

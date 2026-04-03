@@ -94,6 +94,15 @@ jq '.app_state.gov.params.min_deposit[0].denom = "loya"' $HOME_DIR/bill/config/g
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
 jq '.app_state.gov.params.expedited_voting_period = "30s"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
 
+# Add TRBBridgeV2 data spec to genesis so local bridge tests work without runtime registration
+echo "Adding TRBBridgeV2 data spec to genesis..."
+echo "main..."
+jq --slurpfile trbbridgev2_spec start_scripts/test_jsons/trbbridgev2_ds.json 'if any((.app_state.registry.dataspec // [])[]; (.query_type | ascii_downcase) == "trbbridgev2") then . else .app_state.registry.dataspec = ((.app_state.registry.dataspec // []) + [$trbbridgev2_spec[0]]) end' $HOME_DIR/config/genesis.json > temp.json && mv temp.json $HOME_DIR/config/genesis.json
+echo "$KEY_NAME..."
+jq --slurpfile trbbridgev2_spec start_scripts/test_jsons/trbbridgev2_ds.json 'if any((.app_state.registry.dataspec // [])[]; (.query_type | ascii_downcase) == "trbbridgev2") then . else .app_state.registry.dataspec = ((.app_state.registry.dataspec // []) + [$trbbridgev2_spec[0]]) end' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
+echo "bill..."
+jq --slurpfile trbbridgev2_spec start_scripts/test_jsons/trbbridgev2_ds.json 'if any((.app_state.registry.dataspec // [])[]; (.query_type | ascii_downcase) == "trbbridgev2") then . else .app_state.registry.dataspec = ((.app_state.registry.dataspec // []) + [$trbbridgev2_spec[0]]) end' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
+
 # Create a tx to give alice loyas to stake
 echo "Adding genesis accounts..."
 echo "$KEY_NAME..."

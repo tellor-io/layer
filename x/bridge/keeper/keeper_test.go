@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	layertypes "github.com/tellor-io/layer/types"
@@ -1286,6 +1287,30 @@ func TestCreateNewReportSnapshots(t *testing.T) {
 
 	err = k.CreateNewReportSnapshots(ctx)
 	require.NoError(t, err)
+}
+
+func TestCreateNewReportSnapshotsZeroLimitDoesNoSnapshotWork(t *testing.T) {
+	k, _, _, ok, _, _, _, ctx := setupKeeper(t)
+	require.NotNil(t, k)
+	require.NotNil(t, ctx)
+
+	err := k.SnapshotLimit.Set(ctx, types.SnapshotLimit{Limit: 0})
+	require.NoError(t, err)
+
+	queryId := []byte("queryId")
+	ok.On("GetAggregatedReportsByHeight", ctx, uint64(0)).Return([]oracletypes.Aggregate{
+		{
+			Height:         0,
+			QueryId:        queryId,
+			AggregateValue: "5000",
+			AggregatePower: uint64(100),
+		},
+	}, nil).Once()
+
+	err = k.CreateNewReportSnapshots(ctx)
+	require.NoError(t, err)
+	ok.AssertNotCalled(t, "GetTimestampBefore", mock.Anything, mock.Anything, mock.Anything)
+	ok.AssertNotCalled(t, "GetAggregateByTimestamp", mock.Anything, mock.Anything, mock.Anything)
 }
 
 func TestCreateSnapshotDisputedReport(t *testing.T) {
