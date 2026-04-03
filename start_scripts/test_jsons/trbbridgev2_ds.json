@@ -1,0 +1,18 @@
+{
+    "document_hash": "TRBBridgeV2",
+    "query_type": "TRBBridgeV2",
+    "response_value_type": "address, string, uint256, uint256",
+    "abi_components": [
+        {
+            "name": "toLayer",
+            "field_type": "bool"
+        },
+        {
+            "name": "depositId",
+            "field_type": "uint256"
+        }
+    ],
+    "aggregation_method": "weighted-mode",
+    "registrar": "tellor1alcefjzkk37qmfrnel8q4eruyll0pc8arxhxxw",
+    "report_block_window": 2000
+}

@@ -185,6 +185,9 @@ func TestSwitchReporter(t *testing.T) {
 	require.True(t, bytes.Equal(reporter2.Bytes(), selection.Reporter))
 	require.True(t, selection.LockedUntilTime.IsZero())
 
+	_, err = ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selector.String(), ReporterAddress: reporter2.String()})
+	require.ErrorContains(t, err, "selector is already assigned to this reporter")
+
 	// reset reporter for selector
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporter, 1)))
 
@@ -209,6 +212,67 @@ func TestSwitchReporter(t *testing.T) {
 	require.True(t, bytes.Equal(reporter2.Bytes(), selection.Reporter))
 	require.False(t, selection.LockedUntilTime.IsZero())
 	require.Equal(t, selection.LockedUntilTime, ctx.BlockTime().Add(1814400*time.Second))
+}
+
+func TestSwitchReporterRejectsSelfSwitchAfterSelectingAndCreatingReporter(t *testing.T) {
+	k, sk, _, _, _, ms, ctx := setupMsgServer(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(1)
+
+	selector := sample.AccAddressBytes()
+	initialReporter := sample.AccAddressBytes()
+	require.NoError(t, k.Reporters.Set(ctx, initialReporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "initial")))
+
+	sk.On("IterateDelegatorDelegations", ctx, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Twice().Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		delegations := []stakingtypes.Delegation{
+			{
+				DelegatorAddress: selector.String(),
+				ValidatorAddress: sdk.ValAddress(selector).String(),
+				Shares:           math.LegacyNewDec(1000),
+			},
+		}
+		for _, delegation := range delegations {
+			val := stakingtypes.Validator{
+				OperatorAddress: sdk.ValAddress(selector).String(),
+				Status:          stakingtypes.Bonded,
+				Tokens:          math.NewInt(1_000_000),
+				DelegatorShares: math.LegacyNewDec(1_000),
+			}
+
+			sk.On("GetValidator", ctx, sdk.ValAddress(selector)).Return(val, nil)
+
+			if fn(delegation) {
+				break
+			}
+		}
+	})
+
+	_, err := ms.SelectReporter(ctx, &types.MsgSelectReporter{
+		SelectorAddress: selector.String(),
+		ReporterAddress: initialReporter.String(),
+	})
+	require.NoError(t, err)
+
+	_, err = ms.CreateReporter(ctx, &types.MsgCreateReporter{
+		ReporterAddress:   selector.String(),
+		CommissionRate:    types.DefaultMinCommissionRate,
+		MinTokensRequired: types.DefaultMinLoya,
+		Moniker:           "self",
+	})
+	require.NoError(t, err)
+
+	_, err = ms.SwitchReporter(ctx, &types.MsgSwitchReporter{
+		SelectorAddress: selector.String(),
+		ReporterAddress: selector.String(),
+	})
+	require.ErrorContains(t, err, "selector and reporter cannot be the same address")
+
+	selection, err := k.Selectors.Get(ctx, selector)
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(selector.Bytes(), selection.Reporter))
+
+	_, err = k.Reporters.Get(ctx, selector)
+	require.NoError(t, err)
 }
 
 func TestRemoveSelector(t *testing.T) {
