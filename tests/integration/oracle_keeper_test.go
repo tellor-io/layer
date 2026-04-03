@@ -681,7 +681,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	msgSubmitValue := types.MsgSubmitValue{
 		Creator:   reporter1.String(),
 		QueryData: querydata,
-		Value:     testValue,
+		Value:     bridgeTestValue,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -695,7 +695,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter2.String(),
 		QueryData: querydata,
-		Value:     testValue,
+		Value:     bridgeTestValue,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -709,7 +709,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter3.String(),
 		QueryData: querydata,
-		Value:     testValue,
+		Value:     bridgeTestValue,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -728,7 +728,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter4.String(),
 		QueryData: querydata,
-		Value:     testValue,
+		Value:     bridgeTestValue,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -750,7 +750,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQuery() {
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter5.String(),
 		QueryData: querydata,
-		Value:     testValue,
+		Value:     bridgeTestValue,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -811,7 +811,6 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	s.NoError(err)
 
 	reporter1, reporter2, reporter3, reporter4, reporter5 := repAccs[0], repAccs[1], repAccs[2], repAccs[3], repAccs[4]
-	value := "000000000000000000000000000000000000000000000058528649cf90ee0000"
 
 	_, err = app.BeginBlocker(ctx)
 	s.NoError(err)
@@ -819,7 +818,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	msgSubmitValue := types.MsgSubmitValue{
 		Creator:   reporter1.String(),
 		QueryData: querydata,
-		Value:     value,
+		Value:     bridgeTestValue,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -832,7 +831,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter2.String(),
 		QueryData: querydata,
-		Value:     value,
+		Value:     bridgeTestValue,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -845,7 +844,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter3.String(),
 		QueryData: querydata,
-		Value:     value,
+		Value:     bridgeTestValue,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -865,7 +864,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter4.String(),
 		QueryData: querydata,
-		Value:     value,
+		Value:     bridgeTestValue,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -886,7 +885,7 @@ func (s *IntegrationTestSuite) TestTokenBridgeQueryDirectreveal() {
 	msgSubmitValue = types.MsgSubmitValue{
 		Creator:   reporter5.String(),
 		QueryData: querydata,
-		Value:     value,
+		Value:     bridgeTestValue,
 	}
 	_, err = msgServer.SubmitValue(ctx, &msgSubmitValue)
 	s.NoError(err)
@@ -1172,12 +1171,11 @@ func (s *IntegrationTestSuite) TestClaimingBridgeDeposit() {
 
 	// everybody reports the bridge deposit
 	// value := layerutil.EncodeValue(10000000)
-	value := "0000000000000000000000003386518f7ab3eb51591571adbe62cf94540ead29000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000f424000000000000000000000000000000000000000000000000000000000000003e8000000000000000000000000000000000000000000000000000000000000002d74656c6c6f72317038386a7530796875746d6635703275373938787633756d616137756a77376763683972346600000000000000000000000000000000000000"
 	for _, rep := range valAccAddrs {
 		msgSubmitValue := types.MsgSubmitValue{
 			Creator:   rep.String(),
 			QueryData: bridgeQueryData,
-			Value:     value,
+			Value:     bridgeTestValue,
 		}
 		_, err = oracleMsgServer.SubmitValue(ctx, &msgSubmitValue)
 		require.NoError(err)
