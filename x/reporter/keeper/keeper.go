@@ -283,6 +283,8 @@ func (k Keeper) GetLastReportedAtBlock(ctx context.Context, reporter []byte) (ui
 // PruneOldReports removes Report entries older than 30 days.
 // It finds the cutoff block height with by calling the oracle using
 // ETH/USD aggregates, then iterates and deletes entries below that height.
+// It keeps at least one entry per reporter so dispute voting always has
+// a snapshot to read historical power from.
 func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 	if k.oracleKeeper == nil {
 		return nil
@@ -301,6 +303,9 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 	// Prune old collection first
 	type oldKey = collections.Pair[[]byte, collections.Pair[[]byte, uint64]]
 	var oldToDelete []oldKey
+	// Track the most recent old entry per reporter. Keep it so dispute
+	// voting always has at least one snapshot to read power from.
+	oldLatest := make(map[string]uint64)
 	oldScanned := 0
 
 	oldIter, err := k.Report.Iterate(ctx, nil)
@@ -316,22 +321,30 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 		}
 		if pk.K2().K2() < cutoffBlock {
 			oldToDelete = append(oldToDelete, pk)
+			reporter := string(pk.K2().K1())
+			if block := pk.K2().K2(); block > oldLatest[reporter] {
+				oldLatest[reporter] = block
+			}
 		}
 	}
 
 	for _, pk := range oldToDelete {
+		if pk.K2().K2() == oldLatest[string(pk.K2().K1())] {
+			continue
+		}
 		if err := k.Report.Remove(ctx, pk); err != nil {
 			return err
 		}
 		totalDeleted++
 	}
 
-	// Iterate from lowest blockNumber, break at cutoff
+	// Prune new collection (ReportByBlock), iterate from lowest blockNumber, break at cutoff
 	remaining := maxBatchSize - totalDeleted
 	if remaining > 0 {
 		type newKey = collections.Triple[[]byte, uint64, []byte]
 		var newToDelete []newKey
-		newScanned := 0
+		// Same retention logic for the new collection
+		newLatest := make(map[string]uint64)
 		newIter, err := k.ReportByBlock.Indexes.BlockNumber.Iterate(ctx, nil)
 		if err != nil {
 			return err
@@ -347,10 +360,16 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 				break
 			}
 			newToDelete = append(newToDelete, pk)
-			newScanned++
+			reporter := string(pk.K1())
+			if block := pk.K2(); block > newLatest[reporter] {
+				newLatest[reporter] = block
+			}
 		}
 
 		for _, pk := range newToDelete {
+			if pk.K2() == newLatest[string(pk.K1())] {
+				continue
+			}
 			if err := k.ReportByBlock.Remove(ctx, pk); err != nil {
 				return err
 			}

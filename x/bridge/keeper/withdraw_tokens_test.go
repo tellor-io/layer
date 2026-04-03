@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/bridge/types"
+	oraclemodule "github.com/tellor-io/layer/x/oracle/keeper"
 
 	math "cosmossdk.io/math"
 
@@ -35,12 +36,12 @@ func TestGetWithdrawalReportValue(t *testing.T) {
 func TestGetWithdrawalQueryId(t *testing.T) {
 	k, _, _, _, _, _, _, _ := setupKeeper(t)
 
-	res, queryData, err := k.GetWithdrawalQueryId(1)
+	res, queryData, err := k.GetWithdrawalQueryId(oraclemodule.TRBBridgeV2QueryType, 1)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.NotNil(t, queryData)
 
-	res2, queryData2, err := k.GetWithdrawalQueryId(2)
+	res2, queryData2, err := k.GetWithdrawalQueryId(oraclemodule.TRBBridgeV2QueryType, 2)
 	require.NoError(t, err)
 	require.NotNil(t, res2)
 	require.NotEqual(t, res, res2)
@@ -51,13 +52,13 @@ func TestCreateWithdrawalAggregate(t *testing.T) {
 	k, _, _, _, _, sk, _, ctx := setupKeeper(t)
 
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100), nil).Once()
-	agg, _, err := k.CreateWithdrawalAggregate(ctx, sdk.Coin{Amount: math.NewInt(100), Denom: "loya"}, sdk.AccAddress("operatorAddr1"), []byte("evmAddress1"), 1)
+	agg, _, err := k.CreateWithdrawalAggregate(ctx, "TRBBridgeV2", sdk.Coin{Amount: math.NewInt(100), Denom: "loya"}, sdk.AccAddress("operatorAddr1"), []byte("evmAddress1"), 1)
 	require.NoError(t, err)
 	require.Equal(t, agg.AggregatePower, uint64(100))
 	require.Equal(t, agg.Height, uint64(0))
 	require.Equal(t, agg.Flagged, false)
 	require.Equal(t, agg.Index, uint64(0))
-	queryIdExpected, _, err := k.GetWithdrawalQueryId(1)
+	queryIdExpected, _, err := k.GetWithdrawalQueryId(oraclemodule.TRBBridgeV2QueryType, 1)
 	require.NoError(t, err)
 	require.Equal(t, agg.QueryId, queryIdExpected)
 	aggValueExpected, err := k.GetWithdrawalReportValue(sdk.Coin{Amount: math.NewInt(100), Denom: "loya"}, sdk.AccAddress("operatorAddr1"), []byte("evmAddress1"))
@@ -85,7 +86,7 @@ func TestWithdrawTokens(t *testing.T) {
 	amount := sdk.Coin{Denom: "loya", Amount: math.NewInt(10 * 1e6)}
 
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100*1e6), nil)
-	agg, queryData, err := k.CreateWithdrawalAggregate(ctx, amount, creatorAddr, []byte(recipientAddr), 1)
+	agg, queryData, err := k.CreateWithdrawalAggregate(ctx, oraclemodule.TRBBridgeV2QueryType, amount, creatorAddr, []byte(recipientAddr), 1)
 	require.NoError(t, err)
 	require.NotNil(t, agg)
 

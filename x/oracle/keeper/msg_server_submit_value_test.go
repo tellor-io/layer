@@ -3,9 +3,11 @@ package keeper_test
 import (
 	"encoding/hex"
 	"errors"
+	"math/big"
 	"testing"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
@@ -53,7 +55,7 @@ var bridgeSpec = registrytypes.DataSpec{
 	AggregationMethod: "weighted-mode",
 	Registrar:         "genesis",
 	ReportBlockWindow: 2000,
-	QueryType:         "trbbridge",
+	QueryType:         "trbbridgev2",
 }
 
 func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
@@ -128,6 +130,47 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 	require.Equal(expectedReport.MicroReports, report.MicroReports)
 
 	return addr, queryId
+}
+
+func (s *KeeperTestSuite) TestSubmitValueRejectsDeprecatedTRBBridge() {
+	require := s.Require()
+	addr := sample.AccAddressBytes()
+
+	err := s.oracleKeeper.QueryDataLimit.Set(s.ctx, types.QueryDataLimit{Limit: types.InitialQueryDataLimit()})
+	require.NoError(err)
+
+	stringType, err := abi.NewType("string", "", nil)
+	require.NoError(err)
+	bytesType, err := abi.NewType("bytes", "", nil)
+	require.NoError(err)
+	boolType, err := abi.NewType("bool", "", nil)
+	require.NoError(err)
+	uint256Type, err := abi.NewType("uint256", "", nil)
+	require.NoError(err)
+
+	queryDataArgs := abi.Arguments{
+		{Type: boolType},
+		{Type: uint256Type},
+	}
+	queryDataArgsEncoded, err := queryDataArgs.Pack(true, new(big.Int).SetUint64(1))
+	require.NoError(err)
+
+	finalArgs := abi.Arguments{
+		{Type: stringType},
+		{Type: bytesType},
+	}
+	queryDataEncoded, err := finalArgs.Pack("TRBBridge", queryDataArgsEncoded)
+	require.NoError(err)
+
+	submitReq := types.MsgSubmitValue{
+		Creator:   addr.String(),
+		QueryData: queryDataEncoded,
+		Value:     value,
+	}
+
+	res, err := s.msgServer.SubmitValue(s.ctx, &submitReq)
+	require.Nil(res)
+	require.ErrorContains(err, "cannot report deprecated TRBBridge queries")
 }
 
 func (s *KeeperTestSuite) TestSubmitWithNoCreator() {
@@ -244,7 +287,6 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	// query amount is 0, query expiration is before blocktime, not incycle, should err
 	qDataBz, err := utils.QueryBytesFromString(qData)
 	require.NoError(err)
-	queryId := utils.QueryIDFromData(qDataBz)
 	query := types.QueryMeta{
 		Id:                      1,
 		Amount:                  math.NewInt(0),
@@ -260,22 +302,32 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	err = k.DirectReveal(ctx, query, qDataBz, value, reporter, votingPower, !isBridgeDeposit)
 	require.ErrorContains(err, types.ErrNoTipsNotInCycle.Error())
 
-	// query amount is 0, query expiration + offset is before blocktime, incycle, should set nextId and setValue
-	query.Expiration = uint64(ctx.BlockHeight())
-	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
-	regK.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil).Once()
-	err = k.DirectReveal(ctx, query, qDataBz, value, reporter, votingPower, isBridgeDeposit)
+	bridgeQueryDataStr := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000b5452424272696467655632000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001"
+	bridgeQDataBz, err := hex.DecodeString(bridgeQueryDataStr)
 	require.NoError(err)
-	microReport, err := k.Reports.Get(ctx, collections.Join3(queryId, reporter.Bytes(), uint64(1)))
+	bridgeQueryId := utils.QueryIDFromData(bridgeQDataBz)
+	bridgeQuery := types.QueryMeta{
+		Id:                      1,
+		Amount:                  math.NewInt(0),
+		Expiration:              uint64(ctx.BlockHeight()),
+		RegistrySpecBlockWindow: 2000,
+		QueryData:               bridgeQDataBz,
+		QueryType:               "TRBBridgeV2",
+	}
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
+	regK.On("GetSpec", ctx, "TRBBridgeV2").Return(bridgeSpec, nil).Once()
+	err = k.DirectReveal(ctx, bridgeQuery, bridgeQDataBz, bridgeDepositValue, reporter, votingPower, isBridgeDeposit)
+	require.NoError(err)
+	microReport, err := k.Reports.Get(ctx, collections.Join3(bridgeQueryId, reporter.Bytes(), uint64(1)))
 	require.NoError(err)
 	require.NotNil(microReport)
-	require.Equal(microReport.AggregateMethod, "weighted-median")
-	require.Equal(microReport.BlockNumber, uint64(15))
-	require.Equal(microReport.Cyclelist, true)
-	require.Equal(microReport.QueryId, queryId)
-	require.Equal(microReport.Reporter, reporter.String())
-	require.Equal(microReport.Timestamp, ctx.BlockTime())
-	require.Equal(microReport.Value, value)
+	require.Equal("weighted-mode", microReport.AggregateMethod)
+	require.Equal(uint64(15), microReport.BlockNumber)
+	require.Equal(true, microReport.Cyclelist)
+	require.Equal(bridgeQueryId, microReport.QueryId)
+	require.Equal(reporter.String(), microReport.Reporter)
+	require.Equal(ctx.BlockTime(), microReport.Timestamp)
+	require.Equal(bridgeDepositValue, microReport.Value)
 
 	// query amount > 0, query expiration is before blocktime, not in cycle
 	query.Amount = math.NewInt(1)
@@ -286,23 +338,24 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	err = k.DirectReveal(ctx, query, qDataBz, value, reporter, votingPower, !isBridgeDeposit)
 	require.ErrorContains(err, "submission window expired")
 
-	// query amount > 0, query expiration is before blocktime, in cycle, should setValue
-	query.Expiration = 10
+	bridgeQuery.Amount = math.NewInt(1)
+	bridgeQuery.Expiration = 10
+	bridgeQuery.Id = 4
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
 	ctx = ctx.WithBlockHeight(15)
-	regK.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil).Once()
-	err = k.DirectReveal(ctx, query, qDataBz, value, reporter, votingPower, isBridgeDeposit)
+	regK.On("GetSpec", ctx, "TRBBridgeV2").Return(bridgeSpec, nil).Once()
+	err = k.DirectReveal(ctx, bridgeQuery, bridgeQDataBz, bridgeDepositValue, reporter, votingPower, isBridgeDeposit)
 	require.NoError(err)
-	microReport, err = k.Reports.Get(ctx, collections.Join3(queryId, reporter.Bytes(), uint64(4))) //
+	microReport, err = k.Reports.Get(ctx, collections.Join3(bridgeQueryId, reporter.Bytes(), uint64(4)))
 	require.NoError(err)
 	require.NotNil(microReport)
-	require.Equal(microReport.AggregateMethod, "weighted-median")
-	require.Equal(microReport.BlockNumber, uint64(15))
-	require.Equal(microReport.Cyclelist, true)
-	require.Equal(microReport.QueryId, queryId)
-	require.Equal(microReport.Reporter, reporter.String())
-	require.Equal(microReport.Timestamp, ctx.BlockTime())
-	require.Equal(microReport.Value, value)
+	require.Equal("weighted-mode", microReport.AggregateMethod)
+	require.Equal(uint64(15), microReport.BlockNumber)
+	require.Equal(true, microReport.Cyclelist)
+	require.Equal(bridgeQueryId, microReport.QueryId)
+	require.Equal(reporter.String(), microReport.Reporter)
+	require.Equal(ctx.BlockTime(), microReport.Timestamp)
+	require.Equal(bridgeDepositValue, microReport.Value)
 }
 
 func BenchmarkSubmitValue(b *testing.B) {

@@ -14,6 +14,8 @@ import (
 	"github.com/tellor-io/layer/lib/metrics"
 	layer "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/bridge/types"
+	oraclemodule "github.com/tellor-io/layer/x/oracle/keeper"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/collections"
@@ -24,11 +26,7 @@ import (
 
 func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64) error {
 	cosmosCtx := sdk.UnwrapSDKContext(ctx)
-	queryId, err := k.GetDepositQueryId(depositId)
-	if err != nil {
-		return err
-	}
-	aggregate, err := k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, timestamp)
+	_, aggregate, err := k.ResolveDepositAggregateByTimestamp(ctx, depositId, timestamp)
 	if err != nil {
 		return err
 	}
@@ -64,6 +62,9 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64) e
 		k.Logger(ctx).Error("claimDeposit", "error", fmt.Errorf("failed to decode deposit report value, err: %w", err))
 		return fmt.Errorf("%s: %w", types.ErrInvalidDepositReportValue.Error(), err)
 	}
+	if !amount.IsAllPositive() {
+		return types.ErrInvalidDepositReportValue.Wrap("deposit amount cannot be zero")
+	}
 
 	newClaimedStatus := types.DepositClaimed{Claimed: true}
 	err = k.DepositIdClaimedMap.Set(ctx, depositId, newClaimedStatus)
@@ -97,9 +98,37 @@ func (k Keeper) ClaimDeposit(ctx context.Context, depositId, timestamp uint64) e
 	return nil
 }
 
-// replicate solidity encoding,  keccak256(abi.encode(string "TRBBridge", abi.encode(bool true, uint256 depositId)))
-func (k Keeper) GetDepositQueryId(depositId uint64) ([]byte, error) {
-	queryTypeString := "TRBBridge"
+func (k Keeper) ResolveDepositAggregateByTimestamp(ctx context.Context, depositId, timestamp uint64) ([]byte, oracletypes.Aggregate, error) {
+	// Prefer V2, but allow legacy V1 query IDs so pre-upgrade deposits remain claimable.
+	candidateQueryTypes := []string{oraclemodule.TRBBridgeV2QueryType, oraclemodule.TRBBridgeQueryType}
+	var lastErr error
+	for _, queryType := range candidateQueryTypes {
+		queryId, err := k.GetDepositQueryIdByType(depositId, queryType)
+		if err != nil {
+			return nil, oracletypes.Aggregate{}, err
+		}
+		aggregate, err := k.oracleKeeper.GetAggregateByTimestamp(ctx, queryId, timestamp)
+		if err == nil {
+			return queryId, aggregate, nil
+		}
+		lastErr = err
+	}
+	if lastErr != nil {
+		return nil, oracletypes.Aggregate{}, lastErr
+	}
+	return nil, oracletypes.Aggregate{}, fmt.Errorf("aggregate not found for deposit id %d at timestamp %d", depositId, timestamp)
+}
+
+// replicate solidity encoding,  keccak256(abi.encode(string queryType, abi.encode(bool true, uint256 depositId)))
+func (k Keeper) GetDepositQueryIdByType(depositId uint64, queryType string) ([]byte, error) {
+	queryData, err := k.EncodeDepositQueryData(depositId, queryType)
+	if err != nil {
+		return nil, err
+	}
+	return crypto.Keccak256(queryData), nil
+}
+
+func (k Keeper) EncodeDepositQueryData(depositId uint64, queryType string) ([]byte, error) {
 	toLayerBool := true
 	depositIdUint64 := new(big.Int).SetUint64(depositId)
 
@@ -136,14 +165,12 @@ func (k Keeper) GetDepositQueryId(depositId uint64) ([]byte, error) {
 		{Type: StringType},
 		{Type: BytesType},
 	}
-	queryDataEncoded, err := finalArgs.Pack(queryTypeString, queryDataArgsEncoded)
-	if err != nil {
-		return nil, err
-	}
+	return finalArgs.Pack(queryType, queryDataArgsEncoded)
+}
 
-	// generate query id
-	queryId := crypto.Keccak256(queryDataEncoded)
-	return queryId, nil
+// GetDepositQueryId returns the TRBBridgeV2 query ID for a deposit id.
+func (k Keeper) GetDepositQueryId(depositId uint64) ([]byte, error) {
+	return k.GetDepositQueryIdByType(depositId, oraclemodule.TRBBridgeV2QueryType)
 }
 
 // replicate solidity decoding, abi.decode(reportValue, (address ethSender, string layerRecipient, uint256 amount, uint256 tip))

@@ -8,10 +8,10 @@ const h = require("../test/helpers/evmHelpers");
 
 //npx hardhat run scripts/deploy.js --network sepolia
 
-var _guardian_address = ""
-var _token = ""
-var _tellor_flex = ""
-var _layer_chain_id = "layertest-4"
+var _guardian_address = " "
+var _token = " "
+var _tellor_flex = " "
+var _layer_chain_id = " "
 
 
 _valset_domain_separator = h.getDomainSeparator(_layer_chain_id)
