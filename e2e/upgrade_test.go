@@ -29,7 +29,7 @@ const (
 )
 
 func TestLayerUpgrade(t *testing.T) {
-	ChainUpgradeTest(t, "layer", "layer", "local", "v6.1.4")
+	ChainUpgradeTest(t, "layer", "layer", "local", "v6.1.5")
 }
 
 func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVersion, upgradeName string) {

@@ -2,11 +2,13 @@ package keeper
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
@@ -51,8 +53,13 @@ func (k msgServer) BatchSubmitValue(ctx context.Context, msg *types.MsgBatchSubm
 	for i, singleValue := range msg.Values {
 		// validate each individual report
 		queryDataBz := singleValue.QueryData
-		value := singleValue.Value
-		if len(queryDataBz) == 0 || singleValue.Value == "" {
+		valueBytes, err := hex.DecodeString(registrytypes.Remove0xPrefix(singleValue.Value))
+		if err != nil {
+			failedIndices = append(failedIndices, uint32(i))
+			continue
+		}
+		value := hex.EncodeToString(valueBytes)
+		if len(queryDataBz) == 0 || value == "" {
 			failedIndices = append(failedIndices, uint32(i))
 			continue
 		}

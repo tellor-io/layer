@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/tellor-io/layer/app/upgrades"
-	v_6_1_4 "github.com/tellor-io/layer/app/upgrades/v6.1.4"
+	v_6_1_5 "github.com/tellor-io/layer/app/upgrades/v6.1.5"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -13,7 +13,7 @@ var (
 	// `Upgrades` defines the upgrade handlers and store loaders for the application.
 	// New upgrades should be added to this slice after they are implemented.
 	Upgrades = []*upgrades.Upgrade{
-		&v_6_1_4.Upgrade,
+		&v_6_1_5.Upgrade,
 	}
 	Forks = []upgrades.Fork{}
 )
@@ -21,17 +21,17 @@ var (
 // setupUpgradeHandlers registers the upgrade handlers to perform custom upgrade
 // logic and state migrations for software upgrades.
 func (app *App) setupUpgradeHandlers() {
-	if app.UpgradeKeeper.HasHandler(v_6_1_4.UpgradeName) {
-		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v_6_1_4.UpgradeName))
+	if app.UpgradeKeeper.HasHandler(v_6_1_5.UpgradeName) {
+		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v_6_1_5.UpgradeName))
 	}
 	app.UpgradeKeeper.SetUpgradeHandler(
-		v_6_1_4.UpgradeName,
-		v_6_1_4.CreateUpgradeHandler(
+		v_6_1_5.UpgradeName,
+		v_6_1_5.CreateUpgradeHandler(
 			app.ModuleManager(),
 			app.configurator,
-			app.OracleKeeper,
+			app.ChainID(),
 			app.BridgeKeeper,
-			app.RegistryKeeper,
+			app.OracleKeeper,
 		),
 	)
 }
