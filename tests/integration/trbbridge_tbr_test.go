@@ -166,7 +166,7 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistribution() {
 		msg := types.MsgSubmitValue{
 			Creator:   rep.String(),
 			QueryData: trbBridgeQueryData,
-			Value:     testValue,
+			Value:     bridgeTestValue,
 		}
 		_, err := oracleMsgServer.SubmitValue(ctx, &msg)
 		s.NoError(err)
@@ -359,7 +359,7 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistributionMultipleAggregates() 
 		msg := types.MsgSubmitValue{
 			Creator:   rep.String(),
 			QueryData: trbBridgeQueryData1,
-			Value:     testValue,
+			Value:     bridgeTestValue,
 		}
 		_, err := oracleMsgServer.SubmitValue(ctx, &msg)
 		s.NoError(err)
@@ -392,7 +392,7 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistributionMultipleAggregates() 
 	msg := types.MsgSubmitValue{
 		Creator:   repAccs[0].String(),
 		QueryData: trbBridgeQueryData2,
-		Value:     testValue,
+		Value:     bridgeTestValue,
 	}
 	_, err = oracleMsgServer.SubmitValue(ctx, &msg)
 	s.NoError(err)

@@ -293,22 +293,24 @@ func TestPruneOldReports(t *testing.T) {
 	err := k.PruneOldReports(ctx, 100)
 	require.NoError(t, err)
 
-	// Verify old entries are deleted (block 100, 200)
+	// reporter1 block 100 deleted (not the most recent old entry)
 	_, err = k.Report.Get(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter1.Bytes(), uint64(100))))
 	require.Error(t, err) // should be deleted
 
+	// reporter1 block 200 kept (most recent old entry in batch)
 	_, err = k.Report.Get(ctx, collections.Join([]byte("queryid2"), collections.Join(reporter1.Bytes(), uint64(200))))
-	require.Error(t, err) // should be deleted
+	require.NoError(t, err) // kept as most recent old entry
 
+	// reporter2 block 100 kept (only entry, most recent old entry)
 	_, err = k.Report.Get(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter2.Bytes(), uint64(100))))
-	require.Error(t, err) // should be deleted (same block as reporter1)
+	require.NoError(t, err) // kept as most recent old entry
 
-	// Verify recent entries still exist (block 300, 400)
+	// Recent entries still exist (block 300, 400)
 	_, err = k.Report.Get(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter1.Bytes(), uint64(300))))
-	require.NoError(t, err) // should still exist
+	require.NoError(t, err)
 
 	_, err = k.Report.Get(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter1.Bytes(), uint64(400))))
-	require.NoError(t, err) // should still exist
+	require.NoError(t, err)
 }
 
 func TestPruneOldReportsMaxIterations(t *testing.T) {
@@ -339,8 +341,10 @@ func TestPruneOldReportsMaxIterations(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// Should have 2 remaining (5 - 3 = 2)
-	require.Equal(t, 2, count)
+	// Batch collected 3 reports (blocks 1,2,3). Block 3 is kept as the
+	// most recent for this reporter within the batch. Blocks 1,2 deleted.
+	// Blocks 3,4,5 remain.
+	require.Equal(t, 3, count)
 }
 
 func TestStakeRecalcFlag(t *testing.T) {

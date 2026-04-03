@@ -228,7 +228,7 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	submitreq = types.MsgSubmitValue{
 		Creator:   addr.String(),
 		QueryData: queryData,
-		Value:     value,
+		Value:     bridgeDepositValue,
 	}
 	fmt.Println("submitting bridge value... ")
 	res, err = s.msgServer.SubmitValue(ctx, &submitreq)
@@ -255,7 +255,7 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	submitreq = types.MsgSubmitValue{
 		Creator:   addr2.String(),
 		QueryData: queryData,
-		Value:     value,
+		Value:     bridgeDepositValue,
 	}
 	fmt.Println("submitting bridge value... ")
 	res, err = s.msgServer.SubmitValue(ctx, &submitreq)

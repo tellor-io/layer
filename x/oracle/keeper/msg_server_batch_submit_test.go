@@ -314,7 +314,7 @@ func (s *KeeperTestSuite) TestBatchSubmitValue() {
 			Values: []*types.SubmitValueItem{
 				{
 					QueryData: bridgeQueryDataBz,
-					Value:     "000000000000000000000000000000000000000000000000000000000000001e",
+					Value:     bridgeDepositValue,
 				},
 			},
 		}
