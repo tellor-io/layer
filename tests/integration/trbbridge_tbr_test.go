@@ -19,9 +19,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TestTRBBridgeTBRDistribution tests that TRBBridge queries receive a share of TBR
-// even though they're not in the cyclelist. TRBBridge queries as a group get 1 "slot"
-// (same as 1 cyclelist query), and that slot is split among all TRBBridge reporters.
+// TestTRBBridgeTBRDistribution tests that TRBBridgeV2 queries receive a share of TBR
+// even though they're not in the cyclelist. TRBBridgeV2 queries as a group get 1 "slot"
+// (same as 1 cyclelist query), and that slot is split among all TRBBridgeV2 reporters.
 func (s *IntegrationTestSuite) TestTRBBridgeTBRDistribution() {
 	require := s.Require()
 
@@ -64,7 +64,7 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistribution() {
 
 	// Fund TBR pool with a known amount
 	tipper := s.newKeysWithTokens()
-	tbrAmount := math.NewInt(400_000) // Use 400,000 so it divides evenly by 4 (3 cyclelist + 1 TRBBridge)
+	tbrAmount := math.NewInt(400_000) // Use 400,000 so it divides evenly by 4 (3 cyclelist + 1 TRBBridgeV2)
 	s.NoError(s.Setup.Bankkeeper.SendCoinsFromAccountToModule(ctx, tipper, minttypes.TimeBasedRewards, sdk.NewCoins(sdk.NewCoin(s.Setup.Denom, tbrAmount))))
 
 	// Verify TBR pool has the expected amount
@@ -90,17 +90,17 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistribution() {
 
 	oracleMsgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
 
-	// Create TRBBridge query data
+	// Create TRBBridgeV2 query data
 	spec := registrytypes.DataSpec{
 		AbiComponents: []*registrytypes.ABIComponent{
 			{Name: "tolayer", FieldType: "bool"},
 			{Name: "depositId", FieldType: "uint256"},
 		},
 	}
-	trbBridgeQueryData, err := spec.EncodeData("TRBBridge", `["true","1"]`)
+	trbBridgeQueryData, err := spec.EncodeData("TRBBridgeV2", `["true","1"]`)
 	s.NoError(err)
 	trbBridgeQueryId := utils.QueryIDFromData(trbBridgeQueryData)
-	s.T().Logf("TRBBridge queryId: %s", hex.EncodeToString(trbBridgeQueryId[:4]))
+	s.T().Logf("TRBBridgeV2 queryId: %s", hex.EncodeToString(trbBridgeQueryId[:4]))
 
 	// Track which cyclelist queries we've submitted for
 	queriesSubmitted := make(map[string]bool)
@@ -153,15 +153,15 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistribution() {
 	require.True(cycleCompleted, "Cyclelist cycle should have completed")
 	s.T().Logf("Cyclelist cycle completed")
 
-	// Now submit TRBBridge queries - these are not in cyclelist but should get TBR
-	// Submit 2 separate TRBBridge queries to test that all share 1 slot
-	// TRBBridge query 1 - only reporter 0 and 1 submit
+	// Now submit TRBBridgeV2 queries - these are not in cyclelist but should get TBR
+	// Submit 2 separate TRBBridgeV2 queries to test that all share 1 slot
+	// TRBBridgeV2 query 1 - only reporter 0 and 1 submit
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Second * 2))
 	_, err = s.Setup.App.BeginBlocker(ctx)
 	s.NoError(err)
 
-	s.T().Logf("Block %d: Submitting TRBBridge query (reporters 0 and 1)", ctx.BlockHeight())
+	s.T().Logf("Block %d: Submitting TRBBridgeV2 query (reporters 0 and 1)", ctx.BlockHeight())
 	for _, rep := range repAccs[:2] { // Only first 2 reporters
 		msg := types.MsgSubmitValue{
 			Creator:   rep.String(),
@@ -175,7 +175,7 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistribution() {
 	_, err = s.Setup.App.EndBlocker(ctx)
 	s.NoError(err)
 
-	// Advance time to aggregate the TRBBridge query (needs 1 hour to pass)
+	// Advance time to aggregate the TRBBridgeV2 query (needs 1 hour to pass)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 2000)
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour + time.Second*11))
 	_, err = s.Setup.App.BeginBlocker(ctx)
@@ -183,17 +183,17 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistribution() {
 	_, err = s.Setup.App.EndBlocker(ctx)
 	s.NoError(err)
 
-	// Verify TRBBridge aggregate was created
+	// Verify TRBBridgeV2 aggregate was created
 	agg, _, err := s.Setup.Oraclekeeper.GetCurrentAggregateReport(ctx, trbBridgeQueryId)
 	s.NoError(err)
 	s.NotNil(agg)
-	s.T().Logf("TRBBridge aggregate created with power: %d", agg.AggregatePower)
+	s.T().Logf("TRBBridgeV2 aggregate created with power: %d", agg.AggregatePower)
 
-	// Check TRBBridge marker has opportunities
+	// Check TRBBridgeV2 marker has opportunities
 	trbBridgeOpportunities, err := s.Setup.Oraclekeeper.QueryOpportunities.Get(ctx, keeper.TRBBridgeMarkerQueryId)
 	s.NoError(err)
-	s.T().Logf("TRBBridge opportunities: %d", trbBridgeOpportunities)
-	require.Equal(uint64(1), trbBridgeOpportunities, "TRBBridge should have 1 opportunity")
+	s.T().Logf("TRBBridgeV2 opportunities: %d", trbBridgeOpportunities)
+	require.Equal(uint64(1), trbBridgeOpportunities, "TRBBridgeV2 should have 1 opportunity")
 
 	// Manually trigger distribution
 	s.T().Logf("Triggering TBR distribution...")
@@ -230,11 +230,11 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistribution() {
 	}
 
 	// 3. Reporter 0 and 1 should have received more than reporter 2
-	//    (because they participated in TRBBridge as well as cyclelist)
+	//    (because they participated in TRBBridgeV2 as well as cyclelist)
 	require.True(tipDeltas[0].GT(tipDeltas[2]),
-		"Reporter 0 should have received more than reporter 2 (TRBBridge participation)")
+		"Reporter 0 should have received more than reporter 2 (TRBBridgeV2 participation)")
 	require.True(tipDeltas[1].GT(tipDeltas[2]),
-		"Reporter 1 should have received more than reporter 2 (TRBBridge participation)")
+		"Reporter 1 should have received more than reporter 2 (TRBBridgeV2 participation)")
 
 	// 4. Reporter 0 and 1 should have received roughly equal amounts
 	//    (both participated in all queries)
@@ -244,13 +244,13 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistribution() {
 		"Reporter 0 and 1 should have roughly equal rewards")
 
 	// 5. Calculate expected distribution:
-	//    - 4 slots total (3 cyclelist + 1 TRBBridge)
+	//    - 4 slots total (3 cyclelist + 1 TRBBridgeV2)
 	//    - rewardPerSlot = 400,000 / 4 = 100,000 per slot
 	//
 	// For cyclelist (all standard, StandardOpportunities = 1):
 	//    - Each reporter gets: 100,000/3 + 100,000/3 + 100,000/3 = 100,000
 	//
-	// For TRBBridge (1 slot, 1 opportunity, 2 reporters with equal power):
+	// For TRBBridgeV2 (1 slot, 1 opportunity, 2 reporters with equal power):
 	//    - Reporter 0: (1/2) * 100,000 = 50,000
 	//    - Reporter 1: (1/2) * 100,000 = 50,000
 	//    - Reporter 2: 0
@@ -264,12 +264,12 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistribution() {
 	ratio02 := tipDeltas[0].Quo(tipDeltas[2])
 	s.T().Logf("Ratio reporter0/reporter2: %.2f (expected ~1.5)", ratio02.MustFloat64())
 	require.True(ratio02.GT(math.LegacyMustNewDecFromStr("1.4")) && ratio02.LT(math.LegacyMustNewDecFromStr("1.6")),
-		"Reporter 0 should have ~1.5x more rewards than reporter 2 due to TRBBridge participation")
+		"Reporter 0 should have ~1.5x more rewards than reporter 2 due to TRBBridgeV2 participation")
 
-	s.T().Logf("SUCCESS: TRBBridge queries received TBR distribution!")
+	s.T().Logf("SUCCESS: TRBBridgeV2 queries received TBR distribution!")
 }
 
-// TestTRBBridgeTBRDistributionMultipleAggregates tests that multiple TRBBridge aggregates
+// TestTRBBridgeTBRDistributionMultipleAggregates tests that multiple TRBBridgeV2 aggregates
 // share the same slot proportionally
 func (s *IntegrationTestSuite) TestTRBBridgeTBRDistributionMultipleAggregates() {
 	require := s.Require()
@@ -333,28 +333,28 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistributionMultipleAggregates() 
 	initialTips := getAvailableTips()
 	oracleMsgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
 
-	// Create two different TRBBridge queries
+	// Create two different TRBBridgeV2 queries
 	spec := registrytypes.DataSpec{
 		AbiComponents: []*registrytypes.ABIComponent{
 			{Name: "tolayer", FieldType: "bool"},
 			{Name: "depositId", FieldType: "uint256"},
 		},
 	}
-	trbBridgeQueryData1, err := spec.EncodeData("TRBBridge", `["true","1"]`)
+	trbBridgeQueryData1, err := spec.EncodeData("TRBBridgeV2", `["true","1"]`)
 	s.NoError(err)
 	trbBridgeQueryId1 := utils.QueryIDFromData(trbBridgeQueryData1)
 
-	trbBridgeQueryData2, err := spec.EncodeData("TRBBridge", `["true","2"]`)
+	trbBridgeQueryData2, err := spec.EncodeData("TRBBridgeV2", `["true","2"]`)
 	s.NoError(err)
 	trbBridgeQueryId2 := utils.QueryIDFromData(trbBridgeQueryData2)
 
-	// Submit first TRBBridge query - both reporters
+	// Submit first TRBBridgeV2 query - both reporters
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Second * 2))
 	_, err = s.Setup.App.BeginBlocker(ctx)
 	s.NoError(err)
 
-	s.T().Logf("Submitting TRBBridge query 1 (both reporters)")
+	s.T().Logf("Submitting TRBBridgeV2 query 1 (both reporters)")
 	for _, rep := range repAccs {
 		msg := types.MsgSubmitValue{
 			Creator:   rep.String(),
@@ -380,15 +380,15 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistributionMultipleAggregates() 
 	agg1, _, err := s.Setup.Oraclekeeper.GetCurrentAggregateReport(ctx, trbBridgeQueryId1)
 	s.NoError(err)
 	s.NotNil(agg1)
-	s.T().Logf("TRBBridge query 1 aggregated")
+	s.T().Logf("TRBBridgeV2 query 1 aggregated")
 
-	// Submit second TRBBridge query - only reporter 0
+	// Submit second TRBBridgeV2 query - only reporter 0
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Second * 2))
 	_, err = s.Setup.App.BeginBlocker(ctx)
 	s.NoError(err)
 
-	s.T().Logf("Submitting TRBBridge query 2 (only reporter 0)")
+	s.T().Logf("Submitting TRBBridgeV2 query 2 (only reporter 0)")
 	msg := types.MsgSubmitValue{
 		Creator:   repAccs[0].String(),
 		QueryData: trbBridgeQueryData2,
@@ -412,13 +412,13 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistributionMultipleAggregates() 
 	agg2, _, err := s.Setup.Oraclekeeper.GetCurrentAggregateReport(ctx, trbBridgeQueryId2)
 	s.NoError(err)
 	s.NotNil(agg2)
-	s.T().Logf("TRBBridge query 2 aggregated")
+	s.T().Logf("TRBBridgeV2 query 2 aggregated")
 
-	// Check TRBBridge marker has 2 opportunities (one per aggregate)
+	// Check TRBBridgeV2 marker has 2 opportunities (one per aggregate)
 	trbBridgeOpportunities, err := s.Setup.Oraclekeeper.QueryOpportunities.Get(ctx, keeper.TRBBridgeMarkerQueryId)
 	s.NoError(err)
-	s.T().Logf("TRBBridge opportunities: %d", trbBridgeOpportunities)
-	require.Equal(uint64(2), trbBridgeOpportunities, "TRBBridge should have 2 opportunities (2 aggregates)")
+	s.T().Logf("TRBBridgeV2 opportunities: %d", trbBridgeOpportunities)
+	require.Equal(uint64(2), trbBridgeOpportunities, "TRBBridgeV2 should have 2 opportunities (2 aggregates)")
 
 	// Manually trigger distribution
 	s.T().Logf("Triggering TBR distribution...")
@@ -436,28 +436,28 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistributionMultipleAggregates() 
 
 	s.T().Logf("Tip deltas: [%s, %s]", tipDeltas[0], tipDeltas[1])
 
-	// With 3 cyclelist queries (0 opportunities since we didn't submit) + 1 TRBBridge slot (2 opportunities):
-	// Actually, we only have TRBBridge queries in this test, no cyclelist submissions
-	// So total slots = 3 cyclelist (with 0 opportunities) + 1 TRBBridge (with 2 opportunities)
+	// With 3 cyclelist queries (0 opportunities since we didn't submit) + 1 TRBBridgeV2 slot (2 opportunities):
+	// Actually, we only have TRBBridgeV2 queries in this test, no cyclelist submissions
+	// So total slots = 3 cyclelist (with 0 opportunities) + 1 TRBBridgeV2 (with 2 opportunities)
 	//
 	// Wait, the distribution formula uses opportunities per queryId.
-	// For TRBBridge: 2 opportunities, reporter0 submitted to both, reporter1 submitted to 1
+	// For TRBBridgeV2: 2 opportunities, reporter0 submitted to both, reporter1 submitted to 1
 	// rewardPerSlot = 400,000 / 4 = 100,000 (if there are no cyclelist opportunities, this might be different)
 	//
 	// Actually let's think about this more carefully:
 	// - numSlots = numCyclelistQueries (3) + hasTRBBridge (1 if opportunities > 0) = 4
 	// - rewardPerSlot = 400,000 / 4 = 100,000
-	// - For TRBBridge with 2 opportunities:
+	// - For TRBBridgeV2 with 2 opportunities:
 	//   - Reporter 0: share in agg1 (1/2) + share in agg2 (1/1) = 0.5 + 1.0 = 1.5 total shares
 	//   - Reporter 1: share in agg1 (1/2) = 0.5 total shares
 	//   - Average share for reporter 0: 1.5 / 2 opportunities = 0.75
 	//   - Average share for reporter 1: 0.5 / 2 opportunities = 0.25
-	//   - Reporter 0 TRBBridge reward: 0.75 * 100,000 = 75,000
-	//   - Reporter 1 TRBBridge reward: 0.25 * 100,000 = 25,000
+	//   - Reporter 0 TRBBridgeV2 reward: 0.75 * 100,000 = 75,000
+	//   - Reporter 1 TRBBridgeV2 reward: 0.25 * 100,000 = 25,000
 
 	// Reporter 0 should have received more than reporter 1
 	require.True(tipDeltas[0].GT(tipDeltas[1]),
-		"Reporter 0 should have received more than reporter 1 (participated in both TRBBridge)")
+		"Reporter 0 should have received more than reporter 1 (participated in both TRBBridgeV2)")
 
 	// The ratio should be about 3:1 (0.75/0.25 = 3)
 	ratio := tipDeltas[0].Quo(tipDeltas[1])
@@ -465,5 +465,5 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistributionMultipleAggregates() 
 	require.True(ratio.GT(math.LegacyMustNewDecFromStr("2.5")) && ratio.LT(math.LegacyMustNewDecFromStr("3.5")),
 		"Reporter 0 should have ~3x more rewards than reporter 1")
 
-	s.T().Logf("SUCCESS: Multiple TRBBridge aggregates share the slot correctly!")
+	s.T().Logf("SUCCESS: Multiple TRBBridgeV2 aggregates share the slot correctly!")
 }

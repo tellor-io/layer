@@ -3,9 +3,11 @@ package keeper_test
 import (
 	"encoding/hex"
 	"errors"
+	"math/big"
 	"testing"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
@@ -53,7 +55,7 @@ var bridgeSpec = registrytypes.DataSpec{
 	AggregationMethod: "weighted-mode",
 	Registrar:         "genesis",
 	ReportBlockWindow: 2000,
-	QueryType:         "trbbridge",
+	QueryType:         "trbbridgev2",
 }
 
 func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
@@ -128,6 +130,47 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 	require.Equal(expectedReport.MicroReports, report.MicroReports)
 
 	return addr, queryId
+}
+
+func (s *KeeperTestSuite) TestSubmitValueRejectsDeprecatedTRBBridge() {
+	require := s.Require()
+	addr := sample.AccAddressBytes()
+
+	err := s.oracleKeeper.QueryDataLimit.Set(s.ctx, types.QueryDataLimit{Limit: types.InitialQueryDataLimit()})
+	require.NoError(err)
+
+	stringType, err := abi.NewType("string", "", nil)
+	require.NoError(err)
+	bytesType, err := abi.NewType("bytes", "", nil)
+	require.NoError(err)
+	boolType, err := abi.NewType("bool", "", nil)
+	require.NoError(err)
+	uint256Type, err := abi.NewType("uint256", "", nil)
+	require.NoError(err)
+
+	queryDataArgs := abi.Arguments{
+		{Type: boolType},
+		{Type: uint256Type},
+	}
+	queryDataArgsEncoded, err := queryDataArgs.Pack(true, new(big.Int).SetUint64(1))
+	require.NoError(err)
+
+	finalArgs := abi.Arguments{
+		{Type: stringType},
+		{Type: bytesType},
+	}
+	queryDataEncoded, err := finalArgs.Pack("TRBBridge", queryDataArgsEncoded)
+	require.NoError(err)
+
+	submitReq := types.MsgSubmitValue{
+		Creator:   addr.String(),
+		QueryData: queryDataEncoded,
+		Value:     value,
+	}
+
+	res, err := s.msgServer.SubmitValue(s.ctx, &submitReq)
+	require.Nil(res)
+	require.ErrorContains(err, "cannot report deprecated TRBBridge queries")
 }
 
 func (s *KeeperTestSuite) TestSubmitWithNoCreator() {

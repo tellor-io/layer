@@ -1082,12 +1082,15 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 		k.Logger(ctx).Info("Error getting attestation requests by height", "error", err)
 		return err
 	}
+	if isExternalRequest && attestRequests.HasSnapshot(snapshotBytes) {
+		return nil
+	}
 	snapshotLimit, err := k.SnapshotLimit.Get(ctx)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting snapshot limit", "error", err)
 		return err
 	}
-	if isExternalRequest && len(attestRequests.Requests) > int(snapshotLimit.Limit) {
+	if isExternalRequest && len(attestRequests.Requests) >= int(snapshotLimit.Limit) {
 		return errors.New("too many external requests")
 	}
 	request := types.AttestationRequest{
