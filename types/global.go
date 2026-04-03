@@ -1,6 +1,8 @@
 package types
 
 import (
+	"errors"
+
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,4 +17,13 @@ var (
 	OnePercent = math.NewInt(10_000)
 
 	PowerReduction = sdk.DefaultPowerReduction
+
+	ErrSelfSwitch = errors.New("cannot switch reporter to self")
 )
+
+func ValidateSwitchReporter(caller, newReporter sdk.AccAddress) error {
+	if caller.Equals(newReporter) {
+		return ErrSelfSwitch
+	}
+	return nil
+}
