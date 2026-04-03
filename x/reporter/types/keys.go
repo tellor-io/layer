@@ -36,4 +36,6 @@ var (
 	LastValSetUpdateHeightPrefix    = collections.NewPrefix(25)
 	StakeRecalcFlagPrefix           = collections.NewPrefix(26)
 	RecalcAtTimePrefix              = collections.NewPrefix(27)
+	ReportByBlockPrefix             = collections.NewPrefix(28)
+	ReportByBlockNumberIndexPrefix  = collections.NewPrefix(29)
 )
