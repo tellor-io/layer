@@ -438,14 +438,15 @@ func TestPruneNewCollectionBlockOrder(t *testing.T) {
 	err = k.PruneOldReports(ctx, 100)
 	require.NoError(t, err)
 
-	// Verify only blocks 300 and 400 remain
+	// Verify blocks 300, 400 remain plus old entry for reporter1 at block 50 and reporter2 at block 200
+	// plus their new entries at block 300 and 400 so 4 should remain
 	remaining := 0
 	err = k.ReportByBlock.Walk(ctx, nil, func(_ collections.Triple[[]byte, uint64, []byte], _ types.DelegationsAmounts) (bool, error) {
 		remaining++
 		return false, nil
 	})
 	require.NoError(t, err)
-	require.Equal(t, 2, remaining)
+	require.Equal(t, 4, remaining)
 
 	// Verify the correct entries survived
 	_, err = k.ReportByBlock.Get(ctx, collections.Join3(reporter2.Bytes(), uint64(300), []byte("q1")))
@@ -453,12 +454,14 @@ func TestPruneNewCollectionBlockOrder(t *testing.T) {
 	_, err = k.ReportByBlock.Get(ctx, collections.Join3(reporter1.Bytes(), uint64(400), []byte("q1")))
 	require.NoError(t, err)
 
-	// Verify old entries are gone
-	_, err = k.ReportByBlock.Get(ctx, collections.Join3(reporter1.Bytes(), uint64(10), []byte("q1")))
-	require.Error(t, err)
+	// Verify most recent old entries are still
 	_, err = k.ReportByBlock.Get(ctx, collections.Join3(reporter1.Bytes(), uint64(50), []byte("q1")))
-	require.Error(t, err)
+	require.NoError(t, err) // kept as most recent old entry for reporter1
 	_, err = k.ReportByBlock.Get(ctx, collections.Join3(reporter2.Bytes(), uint64(200), []byte("q1")))
+	require.NoError(t, err) // kept as most recent old entry for reporter2
+
+	// Verify oldest entry is deleted
+	_, err = k.ReportByBlock.Get(ctx, collections.Join3(reporter1.Bytes(), uint64(10), []byte("q1")))
 	require.Error(t, err)
 }
 
