@@ -3,7 +3,7 @@
 # Check if script is run with sudo (it should be run with sudo.)
 if [ "$EUID" -ne 0 ]; then
     echo "Error: This script should be run with sudo."
-    echo "Please run as sudo: sudo $0 --network <tellor-1|layertest-4>"
+    echo "Please run as sudo: sudo $0 --network <tellor-1|layertest-5>"
     exit 1
 fi
 
@@ -37,7 +37,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         --help|-h)
-            echo "Usage: sudo $0 --network <tellor-1|layertest-4> [--snapshot <path>] [--discord-webhook <url>]"
+            echo "Usage: sudo $0 --network <tellor-1|layertest-5> [--snapshot <path>] [--discord-webhook <url>]"
             echo ""
             echo "Options:"
             echo "  --network, -n         Required. Network to use: mainnet or palmito"
@@ -48,7 +48,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: sudo $0 --network <tellor-1|layertest-4> [--snapshot <path>] [--discord-webhook <url>]"
+            echo "Usage: sudo $0 --network <tellor-1|layertest-5> [--snapshot <path>] [--discord-webhook <url>]"
             exit 1
             ;;
     esac
@@ -57,14 +57,14 @@ done
 # Validate NETWORK flag is provided
 if [ -z "$NETWORK" ]; then
     echo "Error: --network flag is required."
-    echo "Usage: sudo $0 --network <tellor-1|layertest-4> [--snapshot <path>] [--discord-webhook <url>]"
+    echo "Usage: sudo $0 --network <tellor-1|layertest-5> [--snapshot <path>] [--discord-webhook <url>]"
     exit 1
 fi
 
 # Validate NETWORK value
-if [ "$NETWORK" != "tellor-1" ] && [ "$NETWORK" != "layertest-4" ]; then
-    echo "Error: Invalid network '$NETWORK'. Must be 'tellor-1' or 'layertest-4'."
-    echo "Usage: sudo $0 --network <tellor-1|layertest-4> [--snapshot <path>] [--discord-webhook <url>]"
+if [ "$NETWORK" != "tellor-1" ] && [ "$NETWORK" != "layertest-5" ]; then
+    echo "Error: Invalid network '$NETWORK'. Must be 'tellor-1' or 'layertest-5'."
+    echo "Usage: sudo $0 --network <tellor-1|layertest-5> [--snapshot <path>] [--discord-webhook <url>]"
     exit 1
 fi
 
@@ -117,7 +117,7 @@ EOF
 
 # Define version tags
 LAYERD_TAG_MAINNET="v6.1.3"
-LAYERD_TAG_PALMITO="v6.1.3"
+LAYERD_TAG_PALMITO="v6.1.5"
 
 # Set network-specific variables
 if [ "$NETWORK" == "tellor-1" ]; then
@@ -126,12 +126,12 @@ if [ "$NETWORK" == "tellor-1" ]; then
     LAYER_HOME="$USER_HOME/.layer"
     LAYER_SNAPSHOT_HOME="$USER_HOME/.layer_snapshot"
     CHAIN_ID="tellor-1"
-elif [ "$NETWORK" == "layertest-4" ]; then
+elif [ "$NETWORK" == "layertest-5" ]; then
     LAYERD_TAG="$LAYERD_TAG_PALMITO"
     PEERS=""
     LAYER_HOME="$USER_HOME/.layer"
     LAYER_SNAPSHOT_HOME="$USER_HOME/.layer_snapshot"
-    CHAIN_ID="layertest-4"
+    CHAIN_ID="layertest-5"
 fi
 
 # check if layer home directory exists. If it does, ask if they want to remove it before continuing.
