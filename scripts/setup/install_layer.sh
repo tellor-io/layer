@@ -214,7 +214,7 @@ fi
 
 # init variables for mainnet and palmito
 LAYERD_TAG_MAINNET="v6.1.3"
-LAYERD_TAG_PALMITO="v6.1.3"
+LAYERD_TAG_PALMITO="v6.1.5"
 MAINNET_LAYER_NODE_URL=https://mainnet.tellorlayer.com/rpc/
 PALMITO_LAYER_NODE_URL=https://node-palmito.tellorlayer.com/rpc/
 MAINNET_RPC_NODE_ID=cbb94e01df344fdfdee1fdf2f9bb481712e7ef8d
@@ -241,7 +241,7 @@ elif [ "$NETWORK" == "palmito" ]; then
     KEYRING_BACKEND=$PALMITO_KEYRING_BACKEND
     PEERS=$PALMITO_PEERS
     LAYER_HOME=$PALMITO_LAYER_HOME
-    CHAIN_ID="layertest-4"
+    CHAIN_ID="layertest-5"
 fi
 
 # set cosmovisor environment variables for init command (dynamic based on network)
