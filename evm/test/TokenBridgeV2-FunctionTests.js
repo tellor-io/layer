@@ -69,6 +69,11 @@ describe("TokenBridgeV2 - Function Tests", async function () {
     it("constructor", async function () {
         assert.equal(await tbridge.token(), await token.address)
         assert.equal(await tbridge.dataBridge(), await blobstream.address)
+        assert.equal(
+            (await tbridge.DATA_BRIDGE_UPDATE_BUFFER()).toString(),
+            String((PAUSE_PERIOD * 2) / 21),
+            "DATA_BRIDGE_UPDATE_BUFFER should be 2/21 of pause period"
+        )
         const mainGuardianRole = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("MAIN_GUARDIAN"))
         const approvePauseRole = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("APPROVE_PAUSE"))
         assert.equal((await tbridge.roles(mainGuardianRole)).roleAddress, await mainGuardian.address)
@@ -506,6 +511,32 @@ describe("TokenBridgeV2 - Function Tests", async function () {
         await h.expectThrow(tbridge.connect(accounts[1]).updateDataBridge(blobstream2.address)) // not main guardian role
         await tbridge.connect(mainGuardian).updateDataBridge(blobstream2.address)
         assert.equal(await tbridge.dataBridge(), blobstream2.address)
+    })
+
+    it("updateDataBridge reverts after buffer window before pause period ends", async function () {
+        for (let i = 0; i < 10; i++) {
+            await token.faucet(accounts[1].address)
+        }
+        await token.connect(accounts[1]).approve(tbridge.address, h.toWei("10000"))
+        await tbridge.connect(accounts[1]).proposePauseBridge("layer")
+        await tbridge.connect(subGuardian).approvePause(0)
+
+        const lastPause = await tbridge.lastPauseTimestamp()
+        const pausePeriod = await tbridge.PAUSE_PERIOD()
+        const buffer = await tbridge.DATA_BRIDGE_UPDATE_BUFFER()
+        const latest = ethers.BigNumber.from((await ethers.provider.getBlock("latest")).timestamp)
+        const deadline = lastPause.add(pausePeriod).sub(buffer)
+        const advance = deadline.sub(latest)
+        await h.advanceTime(advance.toNumber())
+
+        const blobstream3 = await ethers.deployContract(
+            "TellorDataBridge", [
+            mainGuardian.address,
+            VALIDATOR_SET_DOMAIN_SEPARATOR_MAINNET
+        ]
+        )
+        await blobstream3.init(1, 2, UNBONDING_PERIOD, ethers.utils.solidityKeccak256(["string"], ["buffer-test"]))
+        await h.expectThrow(tbridge.connect(mainGuardian).updateDataBridge(blobstream3.address))
     })
 
     it("role updates", async function () {

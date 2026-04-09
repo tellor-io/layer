@@ -26,6 +26,7 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
     uint256 public totalPauseTributeBalance; // total amount of tokens held as pause tribute
     uint256 public withdrawLimitUpdateTime; // last time the withdraw limit was updated
     uint256 public withdrawLimitRecord; // amount you can withdraw per limit period
+    uint256 public immutable DATA_BRIDGE_UPDATE_BUFFER; // buffer time at end of pause period when bridge can not longer be updated
     uint256 public constant DEPOSIT_LIMIT_DENOMINATOR = 100e18 / 20e18; // 100/depositLimitPercentage
     uint256 public constant MS_PER_SECOND = 1000; // factor to convert milliseconds to seconds
     uint256 public immutable PAUSE_PERIOD; // bridge pause period duration
@@ -112,6 +113,7 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
         dataBridge = ITellorDataBridge(_dataBridge);
         deployer = msg.sender;
         PAUSE_PERIOD = _pausePeriod;
+        DATA_BRIDGE_UPDATE_BUFFER = _pausePeriod * 2 / 21;
 
         roles[keccak256("APPROVE_PAUSE")] = RoleInfo({
             roleAddress: _subGuardian,
@@ -251,6 +253,7 @@ contract TokenBridgeV2 is LayerTransition, RoleManager {
     function updateDataBridge(address _dataBridge) external {
         _roleRestricted(keccak256("UPDATE_DATA_BRIDGE"));
         require(bridgeState == BridgeState.PAUSED, "TokenBridgeV2: can only update data bridge when bridge is paused");
+        require(block.timestamp < lastPauseTimestamp + PAUSE_PERIOD - DATA_BRIDGE_UPDATE_BUFFER, "TokenBridgeV2: can only update data bridge before the buffer time");
         require(_dataBridge != address(0), "TokenBridgeV2: data bridge address cannot be the zero address");
         dataBridge = ITellorDataBridge(_dataBridge);
         emit DataBridgeUpdated(_dataBridge);
