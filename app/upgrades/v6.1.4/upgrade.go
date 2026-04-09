@@ -28,7 +28,7 @@ Upgrade to v6.1.4 includes:
 // TODO: change these to real addresses
 const (
 	MainnetChainID       = "tellor1"
-	MainnetTokenBridgeV2 = "0xa5fE7C1dD35Ce246fdc7FA165A2782049202D3D2"
+	MainnetTokenBridgeV2 = "0x6ec401744008f4B018Ed9A36f76e6629799Ee50E"
 	TestnetChainID       = "layertest-4"
 	TestnetTokenBridgeV2 = "0x55355157703A44f7516FBB831333317E98944e32"
 )
