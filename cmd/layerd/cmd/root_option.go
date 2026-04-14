@@ -25,6 +25,12 @@ func GetOptionWithCustomStartCmd() *RootCmdOption {
 	f := func(cmd *cobra.Command) {
 		cmd.Flags().String("keyring-backend", "test", "Select keyring's backend (os|file|kwallet|pass|test)")
 		cmd.Flags().String("key-name", "alice", "Select key name")
+		cmd.Flags().Bool("remote-signer-enabled", false, "Use bridge-signer sidecar instead of local keyring")
+		cmd.Flags().String("remote-signer-addr", "", "gRPC address of the bridge-signer sidecar")
+		cmd.Flags().String("remote-signer-ca-cert", "", "Path to CA cert for verifying the sidecar")
+		cmd.Flags().String("remote-signer-client-cert", "", "Path to validator's client TLS cert")
+		cmd.Flags().String("remote-signer-client-key", "", "Path to validator's client TLS key")
+		cmd.Flags().String("remote-signer-server-name", "bridge-signer", "Expected CN in sidecar's TLS cert")
 	}
 	option.setCustomizeStartCmd(f)
 	return option

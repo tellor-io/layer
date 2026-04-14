@@ -295,7 +295,7 @@ local-image:
 ifeq (,$(shell which heighliner))
 	echo 'heighliner' binary not found. Consider running `make get-heighliner`
 else
-	heighliner build -c layer --local --dockerfile cosmos --go-version "1.23.2-alpine3.20" --build-target "make install" --binaries "/go/bin/layerd"
+	heighliner build -c layer --local --dockerfile cosmos --build-target "make install" --binaries "/go/bin/layerd"
 endif
 
 get-localic:
