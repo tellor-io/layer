@@ -3,6 +3,8 @@ package oracle
 import (
 	"context"
 	"encoding/hex"
+	"slices"
+	"strings"
 
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/keeper"
@@ -171,6 +173,7 @@ func exportModuleData(ctx context.Context, k keeper.Keeper) {
 	if err != nil {
 		panic(err)
 	}
+	defer iterQuery.Close()
 	err = writer.StartArraySection("tipped_queries", true)
 	if err != nil {
 		panic(err)
@@ -195,19 +198,87 @@ func exportModuleData(ctx context.Context, k keeper.Keeper) {
 		panic(err)
 	}
 
-	bigDepositQueryId, err := hex.DecodeString("8c30173e5ff12306a57e969d93e1682b770b2aa108531d6d344fb37afbe52c28")
-	aggregate, timestamp, err := k.GetCurrentAggregateReport(ctx, bigDepositQueryId)
+	err = writer.StartArraySection("trbbridge_aggregates", true)
 	if err != nil {
 		panic(err)
 	}
-
-	err = writer.WriteValue("big_deposit_aggregate", AggregateStateData{
-		Aggregate: *aggregate,
-		Timestamp: uint64(timestamp.UnixMilli()),
+	numTrbBridgeAggs := 0
+	err = k.Nonces.Walk(ctx, nil, func(queryId []byte, _ uint64) (bool, error) {
+		queryId = slices.Clone(queryId)
+		firstAgg, ok, err := firstAggregateForQueryID(ctx, k, queryId)
+		if err != nil {
+			return true, err
+		}
+		if !ok {
+			return false, nil
+		}
+		queryType, ok, err := queryTypeFromAggregateReports(ctx, k, firstAgg)
+		if err != nil {
+			return true, err
+		}
+		if !ok || !strings.Contains(strings.ToLower(queryType), "trbbridge") {
+			return false, nil
+		}
+		rng := collections.NewPrefixedPairRange[[]byte, uint64](queryId)
+		walkErr := k.Aggregates.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], value types.Aggregate) (bool, error) {
+			if err := writer.WriteArrayItem(AggregateStateData{
+				Aggregate: value,
+				Timestamp: key.K2(),
+			}); err != nil {
+				return true, err
+			}
+			numTrbBridgeAggs++
+			return false, nil
+		})
+		if walkErr != nil {
+			return true, walkErr
+		}
+		return false, nil
 	})
+	if err != nil {
+		panic(err)
+	}
+	err = writer.EndArraySection(numTrbBridgeAggs)
 	if err != nil {
 		panic(err)
 	}
 
 	writer.Close()
+}
+
+// firstAggregateForQueryID returns the earliest aggregate for queryId by store order (timestamp key ascending).
+func firstAggregateForQueryID(ctx context.Context, k keeper.Keeper, queryId []byte) (types.Aggregate, bool, error) {
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](queryId)
+	var out types.Aggregate
+	found := false
+	err := k.Aggregates.Walk(ctx, rng, func(_ collections.Pair[[]byte, uint64], value types.Aggregate) (bool, error) {
+		out = value
+		found = true
+		return true, nil
+	})
+	if err != nil {
+		return types.Aggregate{}, false, err
+	}
+	return out, found, nil
+}
+
+// queryTypeFromAggregateReports loads query_type from any micro report tied to the aggregate's (meta_id, query_id).
+func queryTypeFromAggregateReports(ctx context.Context, k keeper.Keeper, agg types.Aggregate) (string, bool, error) {
+	iter, err := k.Reports.Indexes.IdQueryId.MatchExact(ctx, collections.Join(agg.MetaId, agg.QueryId))
+	if err != nil {
+		return "", false, err
+	}
+	defer iter.Close()
+	if !iter.Valid() {
+		return "", false, nil
+	}
+	pk, err := iter.PrimaryKey()
+	if err != nil {
+		return "", false, err
+	}
+	rep, err := k.Reports.Get(ctx, pk)
+	if err != nil {
+		return "", false, err
+	}
+	return rep.QueryType, true, nil
 }

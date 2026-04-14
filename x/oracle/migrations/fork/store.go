@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/tellor-io/layer/utils"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
@@ -78,8 +79,12 @@ func MigrateFork(ctx context.Context, storeService store.KVStoreService, cdc cod
 		return err
 	}
 
-	// Process aggregate section
-	if err := processAggregate(ctx, decoder, sb, cdc); err != nil {
+	// Process TRB bridge aggregates array
+	if err := processTrbBridgeAggregatesSection(ctx, decoder, sb, cdc); err != nil {
+		return err
+	}
+
+	if err := processChecksumSection(decoder); err != nil {
 		return err
 	}
 
@@ -96,15 +101,22 @@ func processTipperTotalSection(ctx context.Context, decoder *json.Decoder, sb *c
 		return fmt.Errorf("expected tipper_total section, got %v", t)
 	}
 
+	if err := expectColon(decoder); err != nil {
+		return err
+	}
+
 	tipperTotalMap := collections.NewMap(sb,
 		oracletypes.TipperTotalPrefix,
 		"tipper_total",
 		collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
 		sdk.IntValue,
 	)
-	// Read opening bracket of tipper_total array
-	if _, err := decoder.Token(); err != nil {
+	tOpen, err := decoder.Token()
+	if err != nil {
 		return err
+	}
+	if delim, ok := tOpen.(json.Delim); !ok || delim != '[' {
+		return fmt.Errorf("expected [ for tipper_total array, got %v", tOpen)
 	}
 	// Read array values
 	for decoder.More() {
@@ -132,13 +144,16 @@ func processTipperTotalSection(ctx context.Context, decoder *json.Decoder, sb *c
 }
 
 func processTotalTipsSection(ctx context.Context, decoder *json.Decoder, sb *collections.SchemaBuilder, cdc codec.BinaryCodec) error {
-	// Read "total_tips" property name
-	t, err := decoder.Token()
+	name, err := readSectionKey(decoder)
 	if err != nil {
 		return err
 	}
-	if name, ok := t.(string); !ok || name != "latest_total_tips" {
-		return fmt.Errorf("expected total_tips section, got %v", t)
+	if name != "latest_total_tips" {
+		return fmt.Errorf("expected latest_total_tips section, got %s", name)
+	}
+
+	if err := expectColon(decoder); err != nil {
+		return err
 	}
 
 	totalTipsMap := collections.NewMap(sb,
@@ -148,7 +163,6 @@ func processTotalTipsSection(ctx context.Context, decoder *json.Decoder, sb *col
 		sdk.IntValue,
 	)
 
-	// Read and decode the single TotalTipsData object
 	var entry TotalTipsData
 	if err := decoder.Decode(&entry); err != nil {
 		return err
@@ -194,13 +208,16 @@ func NewQueryIndex(sb *collections.SchemaBuilder) QueryMetaIndex {
 }
 
 func processTippedQueriesSection(ctx context.Context, decoder *json.Decoder, sb *collections.SchemaBuilder, cdc codec.BinaryCodec) error {
-	// Read "tipped_queries" property name
-	t, err := decoder.Token()
+	name, err := readSectionKey(decoder)
 	if err != nil {
 		return err
 	}
-	if name, ok := t.(string); !ok || name != "tipped_queries" {
-		return fmt.Errorf("expected tipped_queries section, got %v", t)
+	if name != "tipped_queries" {
+		return fmt.Errorf("expected tipped_queries section, got %s", name)
+	}
+
+	if err := expectColon(decoder); err != nil {
+		return err
 	}
 
 	tippedQueriesMap := collections.NewIndexedMap(sb,
@@ -211,9 +228,12 @@ func processTippedQueriesSection(ctx context.Context, decoder *json.Decoder, sb 
 		NewQueryIndex(sb),
 	)
 
-	// Read opening bracket of tipped_queries array
-	if _, err := decoder.Token(); err != nil {
+	tOpen, err := decoder.Token()
+	if err != nil {
 		return err
+	}
+	if delim, ok := tOpen.(json.Delim); !ok || delim != '[' {
+		return fmt.Errorf("expected [ for tipped_queries array, got %v", tOpen)
 	}
 	// Read array values
 	for decoder.More() {
@@ -238,15 +258,17 @@ func processTippedQueriesSection(ctx context.Context, decoder *json.Decoder, sb 
 	return nil
 }
 
-func processAggregate(ctx context.Context, decoder *json.Decoder, sb *collections.SchemaBuilder, cdc codec.BinaryCodec) error {
-
-	// Read "big_deposit_aggregate" property name
-	t, err := decoder.Token()
+func processTrbBridgeAggregatesSection(ctx context.Context, decoder *json.Decoder, sb *collections.SchemaBuilder, cdc codec.BinaryCodec) error {
+	name, err := readSectionKey(decoder)
 	if err != nil {
 		return err
 	}
-	if name, ok := t.(string); !ok || name != "big_deposit_aggregate" {
-		return fmt.Errorf("expected big_deposit_aggregate section, got %v", t)
+	if name != "trbbridge_aggregates" {
+		return fmt.Errorf("expected trbbridge_aggregates section, got %s", name)
+	}
+
+	if err := expectColon(decoder); err != nil {
+		return err
 	}
 
 	aggregateMap := collections.NewIndexedMap(sb,
@@ -256,15 +278,109 @@ func processAggregate(ctx context.Context, decoder *json.Decoder, sb *collection
 		codec.CollValue[oracletypes.Aggregate](cdc),
 		oracletypes.NewAggregatesIndex(sb),
 	)
+	noncesMap := collections.NewMap(sb,
+		oracletypes.NoncesPrefix,
+		"nonces",
+		collections.BytesKey,
+		collections.Uint64Value,
+	)
 
-	var entry AggregateStateData
-	if err := decoder.Decode(&entry); err != nil {
+	tOpen, err := decoder.Token()
+	if err != nil {
+		return err
+	}
+	if delim, ok := tOpen.(json.Delim); !ok || delim != '[' {
+		return fmt.Errorf("expected [ for trbbridge_aggregates array, got %v", tOpen)
+	}
+
+	maxNonceByQueryID := make(map[string]uint64)
+	for decoder.More() {
+		var entry AggregateStateData
+		if err := decoder.Decode(&entry); err != nil {
+			return err
+		}
+
+		pair := collections.Join(entry.Aggregate.QueryId, entry.Timestamp)
+		if err := aggregateMap.Set(ctx, pair, entry.Aggregate); err != nil {
+			return fmt.Errorf("failed to set aggregate: %w", err)
+		}
+
+		qKey := string(slices.Clone(entry.Aggregate.QueryId))
+		if entry.Aggregate.Index > maxNonceByQueryID[qKey] {
+			maxNonceByQueryID[qKey] = entry.Aggregate.Index
+		}
+	}
+
+	if _, err := decoder.Token(); err != nil {
 		return err
 	}
 
-	pair := collections.Join(entry.Aggregate.QueryId, entry.Timestamp)
-	if err := aggregateMap.Set(ctx, pair, entry.Aggregate); err != nil {
-		return fmt.Errorf("failed to set aggregate: %w", err)
+	for qKey, n := range maxNonceByQueryID {
+		if err := noncesMap.Set(ctx, []byte(qKey), n); err != nil {
+			return fmt.Errorf("failed to set nonce for query id: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func processChecksumSection(decoder *json.Decoder) error {
+	name, err := readSectionKey(decoder)
+	if err != nil {
+		return err
+	}
+	if name != "checksum" {
+		return fmt.Errorf("expected checksum field, got %s", name)
+	}
+	if err := expectColon(decoder); err != nil {
+		return err
+	}
+	var checksum string
+	if err := decoder.Decode(&checksum); err != nil {
+		return err
+	}
+	_ = checksum
+
+	closeTok, err := decoder.Token()
+	if err != nil {
+		return err
+	}
+	closeBrace, ok := closeTok.(json.Delim)
+	if !ok || closeBrace != '}' {
+		return fmt.Errorf("expected closing brace after checksum, got %v", closeTok)
 	}
 	return nil
+}
+
+func expectColon(decoder *json.Decoder) error {
+	t, err := decoder.Token()
+	if err != nil {
+		return err
+	}
+	delim, ok := t.(json.Delim)
+	if !ok || delim != ':' {
+		return fmt.Errorf("expected ':', got %v", t)
+	}
+	return nil
+}
+
+// readSectionKey returns the next object property name, skipping comma delimiters between members.
+func readSectionKey(decoder *json.Decoder) (string, error) {
+	for {
+		t, err := decoder.Token()
+		if err != nil {
+			return "", err
+		}
+		switch v := t.(type) {
+		case json.Delim:
+			if v == ',' {
+				continue
+			}
+			return "", fmt.Errorf("unexpected delimiter while reading object key: %v", v)
+		case string:
+			return v, nil
+		default:
+			return "", fmt.Errorf("unexpected JSON token type %T", t)
+		}
+	}
 }
