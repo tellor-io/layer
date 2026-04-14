@@ -401,7 +401,6 @@ func TestPruneOldReportsMaxIterations(t *testing.T) {
 	// most recent for this reporter within the batch. Blocks 1,2 deleted.
 	// Blocks 3,4,5 remain.
 	require.Equal(t, 3, count)
-<<<<<<< HEAD
 }
 
 func TestPruneNewCollectionBlockOrder(t *testing.T) {
@@ -464,8 +463,6 @@ func TestPruneNewCollectionBlockOrder(t *testing.T) {
 	// Verify oldest entry is deleted
 	_, err = k.ReportByBlock.Get(ctx, collections.Join3(reporter1.Bytes(), uint64(10), []byte("q1")))
 	require.Error(t, err)
-=======
->>>>>>> 7586998a (Fix mode running calculation (#996))
 }
 
 func TestStakeRecalcFlag(t *testing.T) {
