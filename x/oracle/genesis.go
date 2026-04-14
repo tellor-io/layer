@@ -294,5 +294,10 @@ func queryTypeFromAggregateReports(ctx context.Context, k keeper.Keeper, agg typ
 	if err != nil {
 		return "", false, err
 	}
+	k.Logger(ctx).Info(
+		"oracle export: query type from aggregate reports",
+		"query_id", hex.EncodeToString(pk.K1()),
+		"report", rep.String(),
+	)
 	return rep.QueryType, true, nil
 }
