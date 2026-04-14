@@ -101,10 +101,6 @@ func processTipperTotalSection(ctx context.Context, decoder *json.Decoder, sb *c
 		return fmt.Errorf("expected tipper_total section, got %v", t)
 	}
 
-	if err := expectColon(decoder); err != nil {
-		return err
-	}
-
 	tipperTotalMap := collections.NewMap(sb,
 		oracletypes.TipperTotalPrefix,
 		"tipper_total",
@@ -150,10 +146,6 @@ func processTotalTipsSection(ctx context.Context, decoder *json.Decoder, sb *col
 	}
 	if name != "latest_total_tips" {
 		return fmt.Errorf("expected latest_total_tips section, got %s", name)
-	}
-
-	if err := expectColon(decoder); err != nil {
-		return err
 	}
 
 	totalTipsMap := collections.NewMap(sb,
@@ -216,10 +208,6 @@ func processTippedQueriesSection(ctx context.Context, decoder *json.Decoder, sb 
 		return fmt.Errorf("expected tipped_queries section, got %s", name)
 	}
 
-	if err := expectColon(decoder); err != nil {
-		return err
-	}
-
 	tippedQueriesMap := collections.NewIndexedMap(sb,
 		oracletypes.QueryTipPrefix,
 		"query",
@@ -265,10 +253,6 @@ func processTrbBridgeAggregatesSection(ctx context.Context, decoder *json.Decode
 	}
 	if name != "trbbridge_aggregates" {
 		return fmt.Errorf("expected trbbridge_aggregates section, got %s", name)
-	}
-
-	if err := expectColon(decoder); err != nil {
-		return err
 	}
 
 	aggregateMap := collections.NewIndexedMap(sb,
@@ -332,9 +316,6 @@ func processChecksumSection(decoder *json.Decoder) error {
 	if name != "checksum" {
 		return fmt.Errorf("expected checksum field, got %s", name)
 	}
-	if err := expectColon(decoder); err != nil {
-		return err
-	}
 	var checksum string
 	if err := decoder.Decode(&checksum); err != nil {
 		return err
@@ -348,18 +329,6 @@ func processChecksumSection(decoder *json.Decoder) error {
 	closeBrace, ok := closeTok.(json.Delim)
 	if !ok || closeBrace != '}' {
 		return fmt.Errorf("expected closing brace after checksum, got %v", closeTok)
-	}
-	return nil
-}
-
-func expectColon(decoder *json.Decoder) error {
-	t, err := decoder.Token()
-	if err != nil {
-		return err
-	}
-	delim, ok := t.(json.Delim)
-	if !ok || delim != ':' {
-		return fmt.Errorf("expected ':', got %v", t)
 	}
 	return nil
 }
