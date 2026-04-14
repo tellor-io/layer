@@ -214,8 +214,22 @@ func exportModuleData(ctx context.Context, k keeper.Keeper) {
 		}
 		queryType, ok, err := queryTypeFromAggregateReports(ctx, k, firstAgg)
 		if err != nil {
+			k.Logger(ctx).Error(
+				"oracle export: error getting query type from aggregate reports",
+				"error", err,
+				"query_id", hex.EncodeToString(queryId),
+			)
 			return true, err
 		}
+		qtLogged := queryType
+		if !ok {
+			qtLogged = "<unavailable: no micro report for meta_id/query_id>"
+		}
+		k.Logger(ctx).Info(
+			"oracle export: first aggregate sample query_type",
+			"query_id", hex.EncodeToString(queryId),
+			"query_type", qtLogged,
+		)
 		if !ok || !strings.Contains(strings.ToLower(queryType), "trbbridge") {
 			return false, nil
 		}
