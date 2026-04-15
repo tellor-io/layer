@@ -10,6 +10,7 @@ export PEERS="ac7c10dc3de67c4394271c564671eeed4ac6f0e0@34.229.148.107:26656,8d19
 export LAYER_HOME="/home/$(logname)/.layer"
 export STATE_SYNC_RPC="https://node-palmito.tellorlayer.com/rpc/"
 export KEY_NAME="test"
+export TOKEN_BRIDGE_V2_ADDRESS="0x6ec401744008f4B018Ed9A36f76e6629799Ee50E"
 
 #print an ascii art of the tellor logo
 echo "--------------------------------"
@@ -32,6 +33,7 @@ echo "KEYRING_BACKEND: $KEYRING_BACKEND"
 echo "PEERS: $PEERS"
 echo "LAYER_HOME: $LAYER_HOME"
 echo "STATE_SYNC_RPC: $STATE_SYNC_RPC"
+echo "TOKEN_BRIDGE_V2_ADDRESS: $TOKEN_BRIDGE_V2_ADDRESS"
 echo ""
 echo "--------------------------------"
 while true; do
@@ -68,7 +70,7 @@ fi
 
 # initialize layer directory
 echo "Initializing layer directory..."
-./layerd init layer --chain-id layertest-4
+./layerd init layer --chain-id layertest-5
 
 export STATE_SYNC_NODE_ID=$(./layerd status --node $STATE_SYNC_RPC | jq -r '.node_info.id')
 
@@ -76,7 +78,7 @@ echo "Change min gas price to 0loya in config files..."
 sed -i 's/[0-9]\+stake/0loya/g' $LAYER_HOME/config/app.toml
 
 echo "Set Chain Id to layer in client config file..."
-sed -i 's/^chain-id = .*$/chain-id = "layertest-4"/g' $LAYER_HOME/config/client.toml
+sed -i 's/^chain-id = .*$/chain-id = "layertest-5"/g' $LAYER_HOME/config/client.toml
 
 # Modify timeout_commit in config.toml for node
 echo "Modifying timeout_commit in config.toml for node..."

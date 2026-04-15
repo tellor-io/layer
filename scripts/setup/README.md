@@ -89,7 +89,7 @@ sudo ./resync-prune-node.sh --network tellor-1
 or for testnet:
 
 ```bash
-sudo ./resync-prune-node.sh --network layertest-4
+sudo ./resync-prune-node.sh --network layertest-5
 ```
 
 **With pre-downloaded snapshot:**
@@ -106,7 +106,7 @@ sudo ./resync-prune-node.sh --network tellor-1 --discord-webhook "https://discor
 
 ### Command-line Options
 
-- `--network, -n` (required): Network to use. Must be either `tellor-1` (mainnet) or `layertest-4` (testnet)
+- `--network, -n` (required): Network to use. Must be either `tellor-1` (mainnet) or `layertest-5` (testnet)
 - `--snapshot, -s` (optional): Path to a pre-downloaded snapshot file. If not provided, the script will download the latest snapshot automatically
 - `--discord-webhook, -d` (optional): Discord webhook URL for receiving status notifications during the resync process
 - `--help, -h`: Display help message
@@ -122,7 +122,7 @@ sudo ./resync-prune-node.sh --network tellor-1 --discord-webhook "https://discor
 **Testnet resync with pre-downloaded snapshot:**
 
 ```bash
-sudo ./resync-prune-node.sh --network layertest-4 --snapshot ~/downloads/layertest-4-snapshot.tar
+sudo ./resync-prune-node.sh --network layertest-5 --snapshot ~/downloads/layertest-5-snapshot.tar
 ```
 
 ### What to Expect

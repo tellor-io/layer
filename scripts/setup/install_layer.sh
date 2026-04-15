@@ -81,6 +81,20 @@ get_username() {
     fi
 }
 
+# Add or update an environment variable in the selected shell rc file
+ensure_shell_rc_export() {
+    local var_name="$1"
+    local var_value="$2"
+    local export_line="export ${var_name}=${var_value}"
+
+    touch "$SHELL_RC"
+    if grep -q "^export ${var_name}=" "$SHELL_RC"; then
+        sed_inplace "s|^export ${var_name}=.*$|${export_line}|" "$SHELL_RC"
+    else
+        echo "$export_line" >> "$SHELL_RC"
+    fi
+}
+
 # Detect operating system
 OS_TYPE=$(uname -s)
 case "$OS_TYPE" in
@@ -213,7 +227,7 @@ else
 fi
 
 # init variables for mainnet and palmito
-LAYERD_TAG_MAINNET="v6.1.3"
+LAYERD_TAG_MAINNET="v6.1.5"
 LAYERD_TAG_PALMITO="v6.1.5"
 MAINNET_LAYER_NODE_URL=https://mainnet.tellorlayer.com/rpc/
 PALMITO_LAYER_NODE_URL=https://node-palmito.tellorlayer.com/rpc/
@@ -225,6 +239,7 @@ MAINNET_PEERS="5a9db46eceb055c9238833aa54e15a2a32a09c9a@54.67.36.145:26656,f2644
 PALMITO_PEERS="ac7c10dc3de67c4394271c564671eeed4ac6f0e0@34.229.148.107:26656,8d19cdf430e491d6d6106863c4c466b75a17088a@54.153.125.203:26656,c7b175a5bafb35176cdcba3027e764a0dbd0811c@34.219.95.82:26656,05105e8bb28e8c5ace1cecacefb8d4efb0338ec6@18.218.114.74:26656,705f6154c6c6aeb0ba36c8b53639a5daa1b186f6@3.80.39.230:26656"
 MAINNET_LAYER_HOME="$USER_HOME/.layer"
 PALMITO_LAYER_HOME="$USER_HOME/.layer_palmito"
+TOKEN_BRIDGE_V2_ADDRESS="0x6ec401744008f4B018Ed9A36f76e6629799Ee50E"
 
 if [ "$NETWORK" == "mainnet" ]; then
     LAYERD_TAG=$LAYERD_TAG_MAINNET
@@ -252,6 +267,7 @@ export DAEMON_ALLOW_DOWNLOAD_BINARIES=false
 export DAEMON_POLL_INTERVAL=300ms
 export UNSAFE_SKIP_BACKUP=true
 export DAEMON_PREUPGRADE_MAX_RETRIES=0
+export TOKEN_BRIDGE_V2_ADDRESS
 
 # check if layer home directory exists
 if [ -d "$LAYER_HOME" ]; then
@@ -788,6 +804,25 @@ else
     extract_and_install_snapshot "$DOWNLOADED_SNAPSHOT_FILE" "$TEMP_DIR" "true"
 fi
 
+echo ""
+echo "================================"
+echo "  CONFIGURING ENVIRONMENT..."
+echo "================================"
+echo ""
+sleep 1
+
+# Add environment variables to shell rc file
+echo "Adding environment variables to $SHELL_RC..."
+ensure_shell_rc_export "DAEMON_NAME" "layerd"
+ensure_shell_rc_export "DAEMON_HOME" "$LAYER_HOME"
+ensure_shell_rc_export "DAEMON_RESTART_AFTER_UPGRADE" "true"
+ensure_shell_rc_export "DAEMON_ALLOW_DOWNLOAD_BINARIES" "false"
+ensure_shell_rc_export "DAEMON_POLL_INTERVAL" "300ms"
+ensure_shell_rc_export "UNSAFE_SKIP_BACKUP" "true"
+ensure_shell_rc_export "DAEMON_PREUPGRADE_MAX_RETRIES" "0"
+ensure_shell_rc_export "TOKEN_BRIDGE_V2_ADDRESS" "$TOKEN_BRIDGE_V2_ADDRESS"
+echo "Environment variables added successfully."
+
 # Create systemd service file (Linux only)
 if [ "$OS" == "linux" ]; then
     echo ""
@@ -796,18 +831,6 @@ if [ "$OS" == "linux" ]; then
     echo "================================"
     echo ""
     sleep 1
-
-    # Add environment variables to shell RC file
-    echo "Adding cosmovisor environment variables to $SHELL_RC..."
-
-    echo "export DAEMON_NAME=layerd" >> $SHELL_RC
-    echo "export DAEMON_HOME=$LAYER_HOME" >> $SHELL_RC
-    echo "export DAEMON_RESTART_AFTER_UPGRADE=true" >> $SHELL_RC
-    echo "export DAEMON_ALLOW_DOWNLOAD_BINARIES=false" >> $SHELL_RC
-    echo "export DAEMON_POLL_INTERVAL=300ms" >> $SHELL_RC
-    echo "export UNSAFE_SKIP_BACKUP=true" >> $SHELL_RC
-    echo "export DAEMON_PREUPGRADE_MAX_RETRIES=0" >> $SHELL_RC
-    echo "Environment variables added successfully."
 
     # Adding binaries to cosmovisor
     echo ""
@@ -849,6 +872,7 @@ Environment="DAEMON_ALLOW_DOWNLOAD_BINARIES=false"
 Environment="DAEMON_POLL_INTERVAL=300ms"
 Environment="UNSAFE_SKIP_BACKUP=true"
 Environment="DAEMON_PREUPGRADE_MAX_RETRIES=0"
+Environment="TOKEN_BRIDGE_V2_ADDRESS=$TOKEN_BRIDGE_V2_ADDRESS"
 
 [Install]
 WantedBy=multi-user.target
@@ -874,6 +898,7 @@ Environment="DAEMON_ALLOW_DOWNLOAD_BINARIES=false"
 Environment="DAEMON_POLL_INTERVAL=300ms"
 Environment="UNSAFE_SKIP_BACKUP=true"
 Environment="DAEMON_PREUPGRADE_MAX_RETRIES=0"
+Environment="TOKEN_BRIDGE_V2_ADDRESS=$TOKEN_BRIDGE_V2_ADDRESS"
 
 [Install]
 WantedBy=multi-user.target

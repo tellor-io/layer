@@ -118,6 +118,7 @@ EOF
 # Define version tags
 LAYERD_TAG_MAINNET="v6.1.3"
 LAYERD_TAG_PALMITO="v6.1.5"
+TOKEN_BRIDGE_V2_ADDRESS="0x6ec401744008f4B018Ed9A36f76e6629799Ee50E"
 
 # Set network-specific variables
 if [ "$NETWORK" == "tellor-1" ]; then
@@ -304,6 +305,7 @@ ExecStart=$LAYERD_PATH start --home $LAYER_SNAPSHOT_HOME
 Restart=always
 RestartSec=10
 MemoryMax=10G
+Environment="TOKEN_BRIDGE_V2_ADDRESS=$TOKEN_BRIDGE_V2_ADDRESS"
 
 [Install]
 WantedBy=multi-user.target
@@ -328,6 +330,14 @@ else
     else
         echo "✓ layer_snapshot.service ExecStart binary path is correct ($LAYERD_PATH)."
     fi
+
+    if grep -q '^Environment="TOKEN_BRIDGE_V2_ADDRESS=' /etc/systemd/system/layer_snapshot.service; then
+        sed -i "s|^Environment=\"TOKEN_BRIDGE_V2_ADDRESS=.*|Environment=\"TOKEN_BRIDGE_V2_ADDRESS=$TOKEN_BRIDGE_V2_ADDRESS\"|" /etc/systemd/system/layer_snapshot.service
+    else
+        sed -i "/^\[Install\]/i Environment=\"TOKEN_BRIDGE_V2_ADDRESS=$TOKEN_BRIDGE_V2_ADDRESS\"" /etc/systemd/system/layer_snapshot.service
+    fi
+    echo "Reloading systemd daemon..."
+    systemctl daemon-reload
 fi
 
 
