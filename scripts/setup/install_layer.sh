@@ -267,7 +267,7 @@ export DAEMON_ALLOW_DOWNLOAD_BINARIES=false
 export DAEMON_POLL_INTERVAL=300ms
 export UNSAFE_SKIP_BACKUP=true
 export DAEMON_PREUPGRADE_MAX_RETRIES=0
-export TOKEN_BRIDGE_V2_ADDRESS
+export TOKEN_BRIDGE_V2_ADDRESS=$TOKEN_BRIDGE_V2_ADDRESS
 
 # check if layer home directory exists
 if [ -d "$LAYER_HOME" ]; then
@@ -290,12 +290,16 @@ echo "
    ██║   ███████╗███████╗███████╗╚██████╔╝██║  ██║
    ╚═╝   ╚══════╝╚══════╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝
 "
-echo "Node Quick-Installer for Linux"
+if [ "$OS" == "linux" ]; then
+    echo "Node Quick-Installer for Linux"
+else
+    echo "Node Quick-Installer for macOS"
+fi
 echo "--------------------------------"
 echo "This is a quick-installer for Tellor Layer."
 echo "This script will: "
 echo "  1) download the latest layerd and cosmovisor binaries."
-echo "  2) initialize the layer node. (home dir: ~/.layer)."
+echo "  2) initialize the layer node. (home dir: $LAYER_HOME)."
 if [ "$OS" == "linux" ]; then
     echo "  3) Add cosmovisor environment variables to .bashrc."
 else
@@ -371,7 +375,7 @@ if [ -d "$LAYERD_TAG" ] && [ -f "$LAYERD_TAG/layerd" ]; then
     echo "Comparing versions: existing=$NORMALIZED_EXISTING, required=$NORMALIZED_REQUIRED"
     if [ "$NORMALIZED_EXISTING" == "$NORMALIZED_REQUIRED" ]; then
         echo "Existing binary version matches required version ($LAYERD_TAG). Skipping download."
-        rm -rf $USER_HOME/.layer
+        rm -rf "$LAYER_HOME"
     else
         echo "Existing binary version ($EXISTING_VERSION) does not match required version ($LAYERD_TAG)."
         echo "Downloading correct version..."
@@ -386,7 +390,7 @@ if [ -d "$LAYERD_TAG" ] && [ -f "$LAYERD_TAG/layerd" ]; then
             exit 1
         fi
         rm $BINARY_FILE
-        rm -rf $USER_HOME/.layer
+        rm -rf "$LAYER_HOME"
     fi
 else
     echo "Binary not found. Downloading layerd binary for $NETWORK..."
