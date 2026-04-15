@@ -10,7 +10,7 @@ export PEERS="ac7c10dc3de67c4394271c564671eeed4ac6f0e0@34.229.148.107:26656,8d19
 export LAYER_HOME="/Users/$USER/.layer"
 export STATE_SYNC_RPC="https://node-palmito.tellorlayer.com/rpc/"
 export KEY_NAME="test"
-export TOKEN_BRIDGE_V2_ADDRESS="0x6ec401744008f4B018Ed9A36f76e6629799Ee50E"
+export TOKEN_BRIDGE_V2_ADDRESS="0x55355157703A44f7516FBB831333317E98944e32"
 
 #print an ascii art of the tellor logo
 echo "--------------------------------"

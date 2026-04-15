@@ -118,7 +118,8 @@ EOF
 # Define version tags
 LAYERD_TAG_MAINNET="v6.1.3"
 LAYERD_TAG_PALMITO="v6.1.5"
-TOKEN_BRIDGE_V2_ADDRESS="0x6ec401744008f4B018Ed9A36f76e6629799Ee50E"
+MAINNET_TOKEN_BRIDGE_V2_ADDRESS="0x6ec401744008f4B018Ed9A36f76e6629799Ee50E"
+PALMITO_TOKEN_BRIDGE_V2_ADDRESS="0x55355157703A44f7516FBB831333317E98944e32"
 
 # Set network-specific variables
 if [ "$NETWORK" == "tellor-1" ]; then
@@ -127,12 +128,14 @@ if [ "$NETWORK" == "tellor-1" ]; then
     LAYER_HOME="$USER_HOME/.layer"
     LAYER_SNAPSHOT_HOME="$USER_HOME/.layer_snapshot"
     CHAIN_ID="tellor-1"
+    TOKEN_BRIDGE_V2_ADDRESS="$MAINNET_TOKEN_BRIDGE_V2_ADDRESS"
 elif [ "$NETWORK" == "layertest-5" ]; then
     LAYERD_TAG="$LAYERD_TAG_PALMITO"
     PEERS=""
     LAYER_HOME="$USER_HOME/.layer"
     LAYER_SNAPSHOT_HOME="$USER_HOME/.layer_snapshot"
     CHAIN_ID="layertest-5"
+    TOKEN_BRIDGE_V2_ADDRESS="$PALMITO_TOKEN_BRIDGE_V2_ADDRESS"
 fi
 
 # check if layer home directory exists. If it does, ask if they want to remove it before continuing.
