@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	signerv1 "github.com/tellor-io/bridge-remote-signer/api/gen/signer/v1"
+	bridgetls "github.com/tellor-io/bridge-remote-signer/api/tls"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 
 	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	signerv1 "github.com/tellor-io/bridge-remote-signer/api/gen/signer/v1"
-	bridgetls "github.com/tellor-io/bridge-remote-signer/api/tls"
 )
 
 // GRPCSignerConfig holds the connection config for the remote signing sidecar.

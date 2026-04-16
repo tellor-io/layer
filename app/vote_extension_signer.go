@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/spf13/viper"
+
+	"github.com/cosmos/cosmos-sdk/codec"
 )
 
 // VoteExtensionSigner is the interface VoteExtHandler uses for all bridge signing.
@@ -19,7 +20,6 @@ type VoteExtensionSigner interface {
 }
 
 func NewVoteExtensionSigner(appCodec codec.Codec) (VoteExtensionSigner, error) {
-
 	if viper.GetBool("remote-signer-enabled") {
 		addr := viper.GetString("remote-signer-addr")
 		if addr == "" {

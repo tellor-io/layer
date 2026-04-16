@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/spf13/viper"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/viper"
 )
 
 // KeyringSignerConfig holds resolved config for the keyring signer.

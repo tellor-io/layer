@@ -177,7 +177,7 @@ func CreateNewAccountsAndFundReporters(numOfReporters int) (map[string]ReporterI
 }
 
 func GetAddressFromKeyName(key_name string) string {
-	cmd := exec.Command(COMMAND_PATH, "keys", "show", key_name, "-a", "--keyring-backend", "test", "--home", fmt.Sprintf("%s/%s", LAYER_PATH, key_name)) //nolint:all // has been tested manually
+	cmd := exec.Command(COMMAND_PATH, "keys", "show", key_name, "-a", "--keyring-backend", "test", "--home", fmt.Sprintf("%s/%s", LAYER_PATH, key_name))
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Fatalf("cmd.Run() failed: %v\n", err)

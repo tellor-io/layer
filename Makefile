@@ -79,7 +79,7 @@ build-with-checksum: build-linux-with-checksum build-darwin-with-checksum
 ###                                Linting                                  ###
 ###############################################################################
 # Golangci-lint version
-golangci_version=v1.64.0
+golangci_version=v2.11.4
 
 #? setup-pre-commit: Set pre-commit git hook
 setup-pre-commit:
@@ -91,7 +91,7 @@ setup-pre-commit:
 #? lint-install: Install golangci-lint
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
+	@go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(golangci_version)
 
 #? lint: Run golangci-lint
 lint:
