@@ -10,6 +10,7 @@ export PEERS="5a9db46eceb055c9238833aa54e15a2a32a09c9a@54.67.36.145:26656,f26447
 export LAYER_HOME="/Users/$USER/.layer"
 export STATE_SYNC_RPC="https://mainnet.tellorlayer.com/rpc/"
 export KEY_NAME="test"
+export TOKEN_BRIDGE_V2_ADDRESS="0x6ec401744008f4B018Ed9A36f76e6629799Ee50E"
 
 #print an ascii art of the tellor logo
 echo "--------------------------------"
@@ -32,6 +33,7 @@ echo "KEYRING_BACKEND: $KEYRING_BACKEND"
 echo "PEERS: $PEERS"
 echo "LAYER_HOME: $LAYER_HOME"
 echo "STATE_SYNC_RPC: $STATE_SYNC_RPC"
+echo "TOKEN_BRIDGE_V2_ADDRESS: $TOKEN_BRIDGE_V2_ADDRESS"
 echo ""
 echo "--------------------------------"
 while true; do
