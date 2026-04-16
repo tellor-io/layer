@@ -35,7 +35,7 @@ jobs:
           build-target: make install
           binaries: |
             - /go/bin/layerd
-          heighliner-tag: v1.7.5
+          heighliner-tag: v1.7.6
 
       - name: Publish Primary Tarball as Artifact
         uses: actions/upload-artifact@v4
@@ -69,7 +69,7 @@ jobs:
           build-target: make install
           binaries: |
             - /go/bin/layerd
-          heighliner-tag: v1.7.5
+          heighliner-tag: v1.7.6
 
       - name: Publish IBC Tarball as Artifact
         uses: actions/upload-artifact@v4

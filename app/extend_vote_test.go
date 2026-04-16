@@ -711,11 +711,11 @@ func (s *VoteExtensionTestSuite) TestEncodeAndSignMessage() {
 	expectedBytes, _ := hex.DecodeString("0123456789abcdef")
 
 	tests := []struct {
-		name              string
-		checkpointString  string
-		setupSigner       func(signer *mocks.VoteExtensionSigner)
-		expectedSignature []byte
-		expectedError     string
+		name               string
+		checkpointString   string
+		setupSigner        func(signer *mocks.VoteExtensionSigner)
+		expectedSignature  []byte
+		expectedError      string
 		signShouldBeCalled bool
 	}{
 		{
