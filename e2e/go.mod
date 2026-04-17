@@ -1,6 +1,6 @@
 module github.com/tellor-io/layer/e2e
 
-go 1.25.0
+go 1.25.9
 
 require (
 	cosmossdk.io/math v1.5.3
