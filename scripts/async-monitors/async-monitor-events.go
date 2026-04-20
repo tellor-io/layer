@@ -52,6 +52,7 @@ var (
 	queryIDsMutex        sync.RWMutex
 	// Command line parameters
 	rpcURL                   string
+	apiURL                   string // REST / gRPC-gateway base (LCD); Tendermint :26657 does not serve these routes
 	configFilePath           string
 	supportedQueryIDsMapPath string
 	nodeName                 string
@@ -349,7 +350,7 @@ func (h *HTTPClient) getReportsByAggregate(queryID string, timestamp uint64) ([]
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("reports by aggregate query failed with status: %d", resp.StatusCode)
+		return nil, fmt.Errorf("reports by aggregate query failed with status: %d (use -api-url or LAYER_API_URL if -rpc-url is Tendermint only, e.g. :26657)", resp.StatusCode)
 	}
 
 	var result ReportsByAggregateResponse
@@ -395,6 +396,15 @@ func getAggregateAttributeValue(event Event, key string) (string, bool) {
 	return "", false
 }
 
+// effectiveAPIBaseURL returns the base URL for Cosmos REST (gRPC-gateway) routes.
+// Tendermint RPC (-rpc-url on :26657) does not expose /tellor-io/layer/... ; use -api-url or LAYER_API_URL.
+func effectiveAPIBaseURL() string {
+	if s := strings.TrimSpace(apiURL); s != "" {
+		return s
+	}
+	return rpcURL
+}
+
 func getMissingImportantReporters(event Event) ([]string, error) {
 	if len(importantReporters) == 0 {
 		return nil, nil
@@ -415,7 +425,7 @@ func getMissingImportantReporters(event Event) ([]string, error) {
 		return nil, fmt.Errorf("failed to parse aggregate timestamp %q: %w", timestampStr, err)
 	}
 
-	client := NewHTTPClient(rpcURL)
+	client := NewHTTPClient(effectiveAPIBaseURL())
 	microReports, err := client.getReportsByAggregate(queryID, timestamp)
 	if err != nil {
 		return nil, err
@@ -1389,6 +1399,7 @@ func runHeartbeatCheck() {
 func main() {
 	// Parse command line flags
 	flag.StringVar(&rpcURL, "rpc-url", DefaultRpcURL, "RPC URL (default: 127.0.0.1:26657)")
+	flag.StringVar(&apiURL, "api-url", "", "REST / gRPC-gateway base URL for module queries (e.g. https://node.example.com:1317). Use when -rpc-url is Tendermint only (:26657); required for IMPORTANT_REPORTERS missing-reporter lookup. Overrides LAYER_API_URL if set.")
 	flag.StringVar(&configFilePath, "config", "", "Path to config file")
 	flag.StringVar(&supportedQueryIDsMapPath, "query-ids-map", "", "Path to supported query IDs map JSON file")
 	flag.StringVar(&nodeName, "node", "", "Name of the node being monitored")
@@ -1396,9 +1407,13 @@ func main() {
 	flag.DurationVar(&blockTimeThreshold, "block-time-threshold", 0, "Block time threshold (e.g. 5m, 1h). If not set, block time monitoring is disabled.")
 	flag.Parse()
 
+	if strings.TrimSpace(apiURL) == "" {
+		apiURL = strings.TrimSpace(os.Getenv("LAYER_API_URL"))
+	}
+
 	// Validate required parameters
 	if configFilePath == "" || nodeName == "" || supportedQueryIDsMapPath == "" {
-		log.Fatal("Usage: go run ./scripts/async-monitors/async-monitor-events.go -rpc-url=<rpc_url> -config=<config_file_path> -query-ids-map=<query_ids_map_file_path> -node=<node_name>")
+		log.Fatal("Usage: go run ./scripts/async-monitors/async-monitor-events.go -rpc-url=<rpc_url> [-api-url=<rest_base_url>] -config=<config_file_path> -query-ids-map=<query_ids_map_file_path> -node=<node_name>")
 	}
 
 	// Initialize Current_Total_Reporter_Power with a default value
@@ -1408,6 +1423,11 @@ func main() {
 	importantReporters = parseImportantReportersFromEnv()
 	if len(importantReporters) > 0 {
 		log.Printf("Loaded %d IMPORTANT_REPORTERS addresses\n", len(importantReporters))
+		base := effectiveAPIBaseURL()
+		if strings.Contains(base, ":26657") {
+			log.Printf("IMPORTANT_REPORTERS is set but REST base looks like Tendermint (:26657). get_reports_by_aggregate needs gRPC-gateway/LCD; set -api-url or LAYER_API_URL (e.g. https://node-palmito.tellorlayer.com or http://127.0.0.1:1317).\n")
+		}
+		log.Printf("REST base for oracle queries: %s\n", base)
 	}
 
 	lastBlockHeight = 0
