@@ -37,6 +37,7 @@ var (
 	configMutex                  sync.RWMutex
 	Current_Total_Reporter_Power uint64
 	reporterPowerMutex           sync.RWMutex
+	importantReporters           []string
 	// Rate limiting variables
 	AGGREGATE_REPORT_EVENT_TYPE = "aggregate_report"
 	AGGREGATE_POWER_ATTR_KEY    = "aggregate_power"
@@ -216,6 +217,14 @@ type HTTPClient struct {
 	mu          sync.RWMutex
 }
 
+type ReportsByAggregateResponse struct {
+	MicroReports []MicroReport `json:"microReports"`
+}
+
+type MicroReport struct {
+	Reporter string `json:"reporter"`
+}
+
 func NewHTTPClient(rpcURL string) *HTTPClient {
 	var protocol string
 	if strings.HasPrefix(rpcURL, "http://") || strings.HasPrefix(rpcURL, "localhost") {
@@ -323,6 +332,112 @@ func (h *HTTPClient) getBlock(height uint64) (*BlockResponse, *BlockResultsRespo
 	}
 
 	return &blockResponse, &resultsResponse, nil
+}
+
+func (h *HTTPClient) getReportsByAggregate(queryID string, timestamp uint64) ([]MicroReport, error) {
+	baseURL := h.baseURL
+	if !strings.HasPrefix(baseURL, "http://") && !strings.HasPrefix(baseURL, "https://") {
+		baseURL = fmt.Sprintf("%s://%s", h.protocol, baseURL)
+	}
+	baseURL = strings.TrimRight(baseURL, "/")
+	endpoint := fmt.Sprintf("%s/tellor-io/layer/oracle/get_reports_by_aggregate/%s/%d", baseURL, queryID, timestamp)
+
+	resp, err := h.client.Get(endpoint)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query reports by aggregate: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("reports by aggregate query failed with status: %d", resp.StatusCode)
+	}
+
+	var result ReportsByAggregateResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode reports by aggregate response: %w", err)
+	}
+
+	return result.MicroReports, nil
+}
+
+func parseImportantReportersFromEnv() []string {
+	raw := os.Getenv("IMPORTANT_REPORTERS")
+	if strings.TrimSpace(raw) == "" {
+		return nil
+	}
+
+	parts := strings.Split(raw, ",")
+	reporters := make([]string, 0, len(parts))
+	seen := make(map[string]struct{}, len(parts))
+	for _, part := range parts {
+		reporter := strings.TrimSpace(part)
+		if reporter == "" {
+			continue
+		}
+		normalized := strings.ToLower(reporter)
+		if _, exists := seen[normalized]; exists {
+			continue
+		}
+		seen[normalized] = struct{}{}
+		reporters = append(reporters, reporter)
+	}
+
+	sort.Strings(reporters)
+	return reporters
+}
+
+func getAggregateAttributeValue(event Event, key string) (string, bool) {
+	for _, attr := range event.Attributes {
+		if attr.Key == key {
+			return attr.Value, true
+		}
+	}
+	return "", false
+}
+
+func getMissingImportantReporters(event Event) ([]string, error) {
+	if len(importantReporters) == 0 {
+		return nil, nil
+	}
+
+	queryID, found := getAggregateAttributeValue(event, "query_id")
+	if !found || queryID == "" {
+		return nil, fmt.Errorf("aggregate event missing query_id")
+	}
+
+	timestampStr, found := getAggregateAttributeValue(event, "timestamp")
+	if !found || timestampStr == "" {
+		return nil, fmt.Errorf("aggregate event missing timestamp")
+	}
+
+	timestamp, err := strconv.ParseUint(timestampStr, 10, 64)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse aggregate timestamp %q: %w", timestampStr, err)
+	}
+
+	client := NewHTTPClient(rpcURL)
+	microReports, err := client.getReportsByAggregate(queryID, timestamp)
+	if err != nil {
+		return nil, err
+	}
+
+	reportedSet := make(map[string]struct{}, len(microReports))
+	for _, report := range microReports {
+		reporter := strings.TrimSpace(report.Reporter)
+		if reporter == "" {
+			continue
+		}
+		reportedSet[strings.ToLower(reporter)] = struct{}{}
+	}
+
+	missing := make([]string, 0)
+	for _, reporter := range importantReporters {
+		if _, exists := reportedSet[strings.ToLower(reporter)]; !exists {
+			missing = append(missing, reporter)
+		}
+	}
+
+	return missing, nil
 }
 
 func loadConfig() error {
@@ -445,6 +560,11 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 			if aggregatePower, err := strconv.ParseUint(event.Attributes[j].Value, 10, 64); err == nil {
 				if float64(aggregatePower) < float64(currentPower)*2/3 {
 					log.Printf("Aggregate power is less than 2/3 of current power: %d\n", currentPower)
+					missingReporters, missingErr := getMissingImportantReporters(event)
+					if missingErr != nil {
+						log.Printf("Error resolving missing important reporters: %v\n", missingErr)
+					}
+					missingReportersStr := strings.Join(missingReporters, ",")
 					// Check if we've hit the alert limit
 					if aggregateAlertCount >= 10 {
 						// Send final alert and start cooldown
@@ -458,6 +578,7 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 								}
 							}
 						}
+						message += fmt.Sprintf("missing_reporters: %s\n", missingReportersStr)
 
 						discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
 						if err := discordNotifier.SendAlert(message); err != nil {
@@ -481,6 +602,7 @@ func handleAggregateReport(event Event, eventType ConfigType) {
 					for _, attr := range event.Attributes {
 						message += fmt.Sprintf("%s: %s\n", attr.Key, attr.Value)
 					}
+					message += fmt.Sprintf("missing_reporters: %s\n", missingReportersStr)
 
 					discordNotifier := utils.NewDiscordNotifier(eventType.WebhookURL)
 					if err := discordNotifier.SendAlert(message); err != nil {
@@ -1283,6 +1405,10 @@ func main() {
 	reporterPowerMutex.Lock()
 	Current_Total_Reporter_Power = 100 // Default value until first update
 	reporterPowerMutex.Unlock()
+	importantReporters = parseImportantReportersFromEnv()
+	if len(importantReporters) > 0 {
+		log.Printf("Loaded %d IMPORTANT_REPORTERS addresses\n", len(importantReporters))
+	}
 
 	lastBlockHeight = 0
 
