@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"syscall"
 	"time"
 
@@ -61,7 +62,13 @@ type VoteExtHandler struct {
 	oracleKeeper OracleKeeper
 	bridgeKeeper BridgeKeeper
 	codec        codec.Codec
-	signer       VoteExtensionSigner
+
+	// signer may be nil at startup when the keyring path is configured
+	// (or when nothing is configured at all). It is populated on
+	// the first ExtendVote invocation via ensureSigner.
+	signerInitOnce sync.Once
+	signerInitErr  error
+	signer         VoteExtensionSigner
 }
 
 type OracleAttestation struct {
@@ -95,6 +102,27 @@ func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper Ora
 	}
 }
 
+// ensureSigner is called at the top of ExtendVote. If a signer was
+// supplied at startup (remote signer path), it is a noop. Otherwise it
+// attempts to build a KeyringSigner from viper once, caches the result,
+// and returns any error to the caller. Subsequent calls return the
+// cached state.
+func (h *VoteExtHandler) ensureSigner() error {
+	if h.signer != nil {
+		return nil
+	}
+	h.signerInitOnce.Do(func() {
+		h.logger.Info("init of bridge vote extension signer (keyring path)")
+		signer, err := NewKeyringSignerFromViperIfSet(h.codec)
+		if err != nil {
+			h.signerInitErr = err
+			return
+		}
+		h.signer = signer
+	})
+	return h.signerInitErr
+}
+
 func (h *VoteExtHandler) ForceProcessTermination(format string, args ...interface{}) {
 	h.logger.Error(format, args...)
 	// Send SIGABRT to the current process
@@ -108,6 +136,11 @@ func (h *VoteExtHandler) ForceProcessTermination(format string, args ...interfac
 }
 
 func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+	if err := h.ensureSigner(); err != nil {
+		h.ForceProcessTermination("CRITICAL: CometBFT invoked ExtendVote but the bridge signer is unavailable: %v. ", err)
+		return nil, err
+	}
+
 	voteExt := BridgeVoteExtension{}
 
 	operatorAddress, errOp := h.signer.GetOperatorAddress(ctx)

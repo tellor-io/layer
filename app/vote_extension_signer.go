@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/spf13/viper"
@@ -19,7 +20,7 @@ type VoteExtensionSigner interface {
 	GetOperatorAddress(ctx context.Context) (string, error)
 }
 
-func NewVoteExtensionSigner(appCodec codec.Codec) (VoteExtensionSigner, error) {
+func RemoteVoteExtensionSigner(appCodec codec.Codec) (VoteExtensionSigner, error) {
 	if viper.GetBool("remote-signer-enabled") {
 		addr := viper.GetString("remote-signer-addr")
 		if addr == "" {
@@ -33,11 +34,15 @@ func NewVoteExtensionSigner(appCodec codec.Codec) (VoteExtensionSigner, error) {
 			ServerName: viper.GetString("remote-signer-server-name"),
 		})
 	}
+	return nil, nil
+}
 
-	keyName := viper.GetString("key-name")
-	if keyName == "" {
-		return nil, nil
+// NewKeyringSignerFromViperIfSet is the lazy entry point used by the
+// vote extension handler on first invocation. It reads --key-name from
+// viper and tries to build a KeyringSigner if set.
+func NewKeyringSignerFromViperIfSet(appCodec codec.Codec) (VoteExtensionSigner, error) {
+	if viper.GetString("key-name") == "" {
+		return nil, errors.New("no bridge signer configured; set --key-name or --remote-signer-enabled")
 	}
-
 	return NewKeyringSignerFromViper(appCodec)
 }

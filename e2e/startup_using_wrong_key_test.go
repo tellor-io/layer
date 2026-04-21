@@ -163,6 +163,15 @@ func TestStartupUsingWrongKey(t *testing.T) {
 	fmt.Println("✅ Wrong key is now named 'validator' (what the daemon uses for vote extensions)")
 	fmt.Println("✅ This simulates the real-world scenario where validator uses wrong key for vote extensions")
 
+	// Restart the validator so the signer caches the wrong key's operator address at startup
+	fmt.Println("\n=== Restarting validator 0 to pick up wrong key ===")
+	require.NoError(validators[0].Node.StopContainer(ctx))
+	require.NoError(validators[0].Node.StartContainer(ctx))
+
+	// Wait for the node to catch up
+	err = testutil.WaitForBlocks(ctx, 5, validators[1].Node)
+	require.NoError(err)
+
 	// Verify that the validator can still sign blocks normally
 	fmt.Println("\n=== Verifying validator can still sign blocks ===")
 

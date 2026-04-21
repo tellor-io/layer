@@ -631,16 +631,18 @@ func New(
 		),
 	)
 
-	voteExtSigner, err := NewVoteExtensionSigner(appCodec)
+	// Attempt to initialize vote extension signer using a configured remote signer if available.
+	voteExtSigner, err := RemoteVoteExtensionSigner(appCodec)
 	if err != nil {
-		panic(fmt.Sprintf("failed to initialize vote extension signer: %v", err))
+		panic(fmt.Sprintf("failed to initialize remote vote extension signer: %v", err))
+	}
+	if voteExtSigner == nil {
+		app.Logger().Info("bridge vote extension signer deferred; will be built on first ExtendVote if CometBFT invokes this node as a validator")
 	}
 
-	if voteExtSigner != nil {
-		voteExtHandler := NewVoteExtHandler(app.Logger(), app.AppCodec(), app.OracleKeeper, app.BridgeKeeper, voteExtSigner)
-		app.BaseApp.SetExtendVoteHandler(voteExtHandler.ExtendVoteHandler)
-		app.BaseApp.SetVerifyVoteExtensionHandler(voteExtHandler.VerifyVoteExtensionHandler)
-	}
+	voteExtHandler := NewVoteExtHandler(app.Logger(), app.AppCodec(), app.OracleKeeper, app.BridgeKeeper, voteExtSigner)
+	app.BaseApp.SetExtendVoteHandler(voteExtHandler.ExtendVoteHandler)
+	app.BaseApp.SetVerifyVoteExtensionHandler(voteExtHandler.VerifyVoteExtensionHandler)
 
 	prepareProposalHandler := NewProposalHandler(app.Logger(), app.StakingKeeper, app.AppCodec(), app.OracleKeeper, app.BridgeKeeper, app.StakingKeeper)
 	app.BaseApp.SetPrepareProposal(prepareProposalHandler.PrepareProposalHandler)
