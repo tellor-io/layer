@@ -10,12 +10,12 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"syscall"
 	"time"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/spf13/viper"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
@@ -24,7 +24,6 @@ import (
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -63,7 +62,13 @@ type VoteExtHandler struct {
 	oracleKeeper OracleKeeper
 	bridgeKeeper BridgeKeeper
 	codec        codec.Codec
-	kr           keyring.Keyring
+
+	// signer may be nil at startup when the keyring path is configured
+	// (or when nothing is configured at all). It is populated on
+	// the first ExtendVote invocation via ensureSigner.
+	signerInitOnce sync.Once
+	signerInitErr  error
+	signer         VoteExtensionSigner
 }
 
 type OracleAttestation struct {
@@ -87,13 +92,35 @@ type BridgeVoteExtension struct {
 	ValsetSignature    BridgeValsetSignature
 }
 
-func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper OracleKeeper, bridgeKeeper BridgeKeeper) *VoteExtHandler {
+func NewVoteExtHandler(logger log.Logger, appCodec codec.Codec, oracleKeeper OracleKeeper, bridgeKeeper BridgeKeeper, signer VoteExtensionSigner) *VoteExtHandler {
 	return &VoteExtHandler{
 		oracleKeeper: oracleKeeper,
 		bridgeKeeper: bridgeKeeper,
 		logger:       logger,
 		codec:        appCodec,
+		signer:       signer,
 	}
+}
+
+// ensureSigner is called at the top of ExtendVote. If a signer was
+// supplied at startup (remote signer path), it is a noop. Otherwise it
+// attempts to build a KeyringSigner from viper once, caches the result,
+// and returns any error to the caller. Subsequent calls return the
+// cached state.
+func (h *VoteExtHandler) ensureSigner() error {
+	if h.signer != nil {
+		return nil
+	}
+	h.signerInitOnce.Do(func() {
+		h.logger.Info("init of bridge vote extension signer (keyring path)")
+		signer, err := NewKeyringSignerFromViperIfSet(h.codec)
+		if err != nil {
+			h.signerInitErr = err
+			return
+		}
+		h.signer = signer
+	})
+	return h.signerInitErr
 }
 
 func (h *VoteExtHandler) ForceProcessTermination(format string, args ...interface{}) {
@@ -109,9 +136,14 @@ func (h *VoteExtHandler) ForceProcessTermination(format string, args ...interfac
 }
 
 func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+	if err := h.ensureSigner(); err != nil {
+		h.ForceProcessTermination("CRITICAL: CometBFT invoked ExtendVote but the bridge signer is unavailable: %v. ", err)
+		return nil, err
+	}
+
 	voteExt := BridgeVoteExtension{}
 
-	operatorAddress, errOp := h.GetOperatorAddress()
+	operatorAddress, errOp := h.signer.GetOperatorAddress(ctx)
 	if errOp != nil {
 		h.logger.Error("ExtendVoteHandler: failed to get operator address", "error", errOp)
 		h.ForceProcessTermination("CRITICAL: failed to get operator address: %v", errOp)
@@ -122,19 +154,12 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 		initialSigA, initialSigB, err := h.SignInitialMessage(operatorAddress)
 		if err != nil {
 			h.logger.Info("ExtendVoteHandler: failed to sign initial message", "error", err)
-			bz, err := json.Marshal(voteExt)
-			if err != nil {
-				h.logger.Error("ExtendVoteHandler: failed to marshal vote extension", "error", err)
-				return &abci.ResponseExtendVote{}, err
-			}
-			return &abci.ResponseExtendVote{VoteExtension: bz}, nil
+			return h.marshalVoteExt(voteExt)
 		}
-		// include the initial sig in the vote extension
-		initialSignature := InitialSignature{
+		voteExt.InitialSignature = InitialSignature{
 			SignatureA: initialSigA,
 			SignatureB: initialSigB,
 		}
-		voteExt.InitialSignature = initialSignature
 	}
 	// generate oracle attestations and include them via vote extensions
 	blockHeight := ctx.BlockHeight() - 1
@@ -142,52 +167,37 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			h.logger.Error("ExtendVoteHandler: failed to get attestation requests", "error", err)
-			bz, err := json.Marshal(voteExt)
-			if err != nil {
-				h.logger.Error("ExtendVoteHandler: failed to marshal vote extension", "error", err)
-				return &abci.ResponseExtendVote{}, err
-			}
-			return &abci.ResponseExtendVote{VoteExtension: bz}, nil
+			return h.marshalVoteExt(voteExt)
 		}
-	} else {
-		snapshots := attestationRequests.Requests
-		// iterate through snapshots and generate sigs
-		if len(snapshots) > 0 {
-			for _, snapshot := range snapshots {
-				sig, err := h.SignMessage(snapshot.Snapshot)
-				if err != nil {
-					h.logger.Error("ExtendVoteHandler: failed to sign message", "error", err)
-					bz, err := json.Marshal(voteExt)
-					if err != nil {
-						h.logger.Error("ExtendVoteHandler: failed to marshal vote extension", "error", err)
-						return &abci.ResponseExtendVote{}, err
-					}
-					return &abci.ResponseExtendVote{VoteExtension: bz}, nil
-				}
-				oracleAttestation := OracleAttestation{
-					Snapshot:    snapshot.Snapshot,
-					Attestation: sig,
-				}
-				voteExt.OracleAttestations = append(voteExt.OracleAttestations, oracleAttestation)
+	} else if len(attestationRequests.Requests) > 0 {
+		for _, snapshot := range attestationRequests.Requests {
+			sig, err := h.signer.Sign(ctx, snapshot.Snapshot)
+			if err != nil {
+				h.logger.Error("ExtendVoteHandler: failed to sign attestation", "error", err)
+				return h.marshalVoteExt(voteExt)
 			}
+			voteExt.OracleAttestations = append(voteExt.OracleAttestations, OracleAttestation{
+				Snapshot:    snapshot.Snapshot,
+				Attestation: sig,
+			})
 		}
 	}
 	// include the valset sig in the vote extension
 	sig, timestamp, err := h.CheckAndSignValidatorCheckpoint(ctx)
 	if err != nil {
 		h.logger.Error("ExtendVoteHandler: failed to sign validator checkpoint", "error", err)
-		bz, err := json.Marshal(voteExt)
-		if err != nil {
-			h.logger.Error("ExtendVoteHandler: failed to marshal vote extension", "error", err)
-			return &abci.ResponseExtendVote{}, fmt.Errorf("failed to marshal vote extension: %w", err)
-		}
-		return &abci.ResponseExtendVote{VoteExtension: bz}, nil
+		return h.marshalVoteExt(voteExt)
 	}
-	valsetSignature := BridgeValsetSignature{
+	voteExt.ValsetSignature = BridgeValsetSignature{
 		Signature: sig,
 		Timestamp: timestamp,
 	}
-	voteExt.ValsetSignature = valsetSignature
+
+	return h.marshalVoteExt(voteExt)
+}
+
+// marshalVoteExt marshals the vote extension, returning an error only if marshaling itself fails.
+func (h *VoteExtHandler) marshalVoteExt(voteExt BridgeVoteExtension) (*abci.ResponseExtendVote, error) {
 	bz, err := json.Marshal(voteExt)
 	if err != nil {
 		h.logger.Error("ExtendVoteHandler: failed to marshal vote extension", "error", err)
@@ -260,25 +270,6 @@ func (h *VoteExtHandler) VerifyVoteExtensionHandler(ctx sdk.Context, req *abci.R
 	return &abci.ResponseVerifyVoteExtension{Status: abci.ResponseVerifyVoteExtension_ACCEPT}, nil
 }
 
-func (h *VoteExtHandler) SignMessage(msg []byte) ([]byte, error) {
-	kr, err := h.GetKeyring()
-	if err != nil {
-		h.ForceProcessTermination("CRITICAL: failed to get keyring: %v", err)
-		return nil, err // won't reach here
-	}
-	keyName := viper.GetString("key-name")
-	if keyName == "" {
-		h.ForceProcessTermination("CRITICAL: key name not found, please set --key-name flag")
-		return nil, errors.New("missing key name") // won't reach here
-	}
-	sig, _, err := kr.Sign(keyName, msg, 1)
-	if err != nil {
-		h.ForceProcessTermination("CRITICAL: failed to sign message: %v", err)
-		return nil, err // won't reach here
-	}
-	return sig, nil
-}
-
 func (h *VoteExtHandler) SignInitialMessage(operatorAddress string) ([]byte, []byte, error) {
 	messageA := fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddress)
 	messageB := fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddress)
@@ -296,57 +287,16 @@ func (h *VoteExtHandler) SignInitialMessage(operatorAddress string) ([]byte, []b
 	msgHashBBytes := msgHashBBytes32[:]
 
 	// sign message
-	sigA, err := h.SignMessage(msgHashABytes)
+	sigA, err := h.signer.Sign(context.Background(), msgHashABytes)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to sign message A: %w", err)
 	}
 
-	sigB, err := h.SignMessage(msgHashBBytes)
+	sigB, err := h.signer.Sign(context.Background(), msgHashBBytes)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to sign message B: %w", err)
 	}
 	return sigA, sigB, nil
-}
-
-func (h *VoteExtHandler) GetOperatorAddress() (string, error) {
-	kr, err := h.GetKeyring()
-	if err != nil {
-		h.logger.Error("GetOperatorAddress: failed to get keyring", "error", err)
-		return "", fmt.Errorf("failed to get keyring: %w", err)
-	}
-	keyName := viper.GetString("key-name")
-	if keyName == "" {
-		h.logger.Error("GetOperatorAddress: key name not found")
-		return "", fmt.Errorf("key name not found, please set --key-name flag")
-	}
-	// list all keys
-	krlist, err := kr.List()
-	if err != nil {
-		h.logger.Error("GetOperatorAddress: failed to list keys", "error", err)
-		return "", fmt.Errorf("failed to list keys: %w", err)
-	}
-	if len(krlist) == 0 {
-		h.logger.Error("GetOperatorAddress: no keys found in keyring")
-		return "", fmt.Errorf("no keys found in keyring")
-	}
-
-	// Fetch the operator key from the keyring.
-	info, err := kr.Key(keyName)
-	if err != nil {
-		h.logger.Error("GetOperatorAddress: failed to get operator key", "keyName", keyName, "error", err)
-		return "", fmt.Errorf("failed to get operator key: %w", err)
-	}
-	// Output the public key associated with the operator key.
-	key, _ := info.GetPubKey()
-
-	// Convert the operator's public key to a Bech32 validator address
-	config := sdk.GetConfig()
-	bech32PrefixValAddr := config.GetBech32ValidatorAddrPrefix()
-	bech32ValAddr, err := sdk.Bech32ifyAddressBytes(bech32PrefixValAddr, key.Address().Bytes())
-	if err != nil {
-		return "", fmt.Errorf("failed to convert operator public key to Bech32 validator address: %w", err)
-	}
-	return bech32ValAddr, nil
 }
 
 func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx context.Context) (signature []byte, timestamp uint64, err error) {
@@ -363,7 +313,7 @@ func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx context.Context) (s
 		return nil, 0, err
 	}
 
-	operatorAddress, err := h.GetOperatorAddress()
+	operatorAddress, err := h.signer.GetOperatorAddress(ctx)
 	if err != nil {
 		h.logger.Error("failed to get operator address", "error", err)
 		return nil, 0, err
@@ -373,26 +323,24 @@ func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx context.Context) (s
 		h.logger.Error("failed to get validator did sign checkpoint", "error", err)
 		return nil, 0, err
 	}
-	if didSign {
+	if didSign || valIndex < 0 {
 		return nil, 0, nil
-	} else if valIndex < 0 {
-		return nil, 0, nil
-	} else {
-		// sign the latest checkpoint
-		checkpointParams, err := h.bridgeKeeper.GetValidatorCheckpointParamsFromStorage(ctx, latestCheckpointTimestamp.Timestamp)
-		if err != nil {
-			h.logger.Error("failed to get checkpoint params", "error", err)
-			return nil, 0, err
-		}
-		checkpoint := checkpointParams.Checkpoint
-		checkpointString := hex.EncodeToString(checkpoint)
-		signature, err := h.EncodeAndSignMessage(checkpointString)
-		if err != nil {
-			h.logger.Error("failed to encode and sign message", "error", err)
-			return nil, 0, err
-		}
-		return signature, latestCheckpointTimestamp.Timestamp, nil
 	}
+
+	// sign the latest checkpoint
+	checkpointParams, err := h.bridgeKeeper.GetValidatorCheckpointParamsFromStorage(ctx, latestCheckpointTimestamp.Timestamp)
+	if err != nil {
+		h.logger.Error("failed to get checkpoint params", "error", err)
+		return nil, 0, err
+	}
+	checkpoint := checkpointParams.Checkpoint
+	checkpointString := hex.EncodeToString(checkpoint)
+	signature, err = h.EncodeAndSignMessage(checkpointString)
+	if err != nil {
+		h.logger.Error("failed to encode and sign message", "error", err)
+		return nil, 0, err
+	}
+	return signature, latestCheckpointTimestamp.Timestamp, nil
 }
 
 func (h *VoteExtHandler) GetValidatorIndexInValset(ctx context.Context, evmAddress []byte, valset *bridgetypes.BridgeValidatorSet) (int, error) {
@@ -411,40 +359,10 @@ func (h *VoteExtHandler) EncodeAndSignMessage(checkpointString string) ([]byte, 
 		h.logger.Error("Failed to decode checkpoint", "error", err)
 		return nil, err
 	}
-	signature, err := h.SignMessage(checkpoint)
+	signature, err := h.signer.Sign(context.Background(), checkpoint)
 	if err != nil {
 		h.logger.Error("Failed to sign message", "error", err)
 		return nil, err
 	}
 	return signature, nil
-}
-
-func (h *VoteExtHandler) InitKeyring() (keyring.Keyring, error) {
-	krBackend := viper.GetString("keyring-backend")
-	if krBackend == "" {
-		return nil, fmt.Errorf("keyring-backend not set, please use --keyring-backend flag")
-	}
-	krDir := viper.GetString("keyring-dir")
-	if krDir == "" {
-		krDir = viper.GetString("home")
-	}
-	if krDir == "" {
-		return nil, fmt.Errorf("keyring directory not set, please use --home or --keyring-dir flag")
-	}
-	kr, err := keyring.New(sdk.KeyringServiceName(), krBackend, krDir, os.Stdin, h.codec)
-	if err != nil {
-		return nil, err
-	}
-	return kr, nil
-}
-
-func (h *VoteExtHandler) GetKeyring() (keyring.Keyring, error) {
-	if h.kr == nil {
-		kr, err := h.InitKeyring()
-		if err != nil {
-			return nil, err
-		}
-		h.kr = kr
-	}
-	return h.kr, nil
 }

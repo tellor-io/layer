@@ -629,7 +629,7 @@ func getPricesHandler(db *sql.DB) http.HandlerFunc {
 		}
 
 		if offset != "" {
-			query += fmt.Sprintf(" OFFSET $%d", argIndex)
+			query += fmt.Sprintf(" OFFSET $%d", argIndex) //nolint:gosec // G202: only appends $N placeholder; values are passed via db.Query args, not interpolated
 			args = append(args, offset)
 		}
 
@@ -798,7 +798,7 @@ func getPricesByMarketHandler(db *sql.DB) http.HandlerFunc {
 		}
 
 		if offset != "" {
-			query += fmt.Sprintf(" OFFSET $%d", argIndex)
+			query += fmt.Sprintf(" OFFSET $%d", argIndex) //nolint:gosec // G202: only appends $N placeholder; values are passed via db.Query args, not interpolated
 			args = append(args, offset)
 		}
 
@@ -898,7 +898,7 @@ func getPricesByExchangeHandler(db *sql.DB) http.HandlerFunc {
 		}
 
 		if offset != "" {
-			query += fmt.Sprintf(" OFFSET $%d", argIndex)
+			query += fmt.Sprintf(" OFFSET $%d", argIndex) //nolint:gosec // G202: only appends $N placeholder; values are passed via db.Query args, not interpolated
 			args = append(args, offset)
 		}
 
@@ -1060,7 +1060,7 @@ func getPricesByRangeHandler(db *sql.DB) http.HandlerFunc {
 		}
 
 		if offset != "" {
-			query += fmt.Sprintf(" OFFSET $%d", argIndex)
+			query += fmt.Sprintf(" OFFSET $%d", argIndex) //nolint:gosec // G202: only appends $N placeholder; values are passed via db.Query args, not interpolated
 			args = append(args, offset)
 		}
 

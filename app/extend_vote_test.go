@@ -1,6 +1,8 @@
 package app_test
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -10,7 +12,7 @@ import (
 	"github.com/agiledragon/gomonkey/v2"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/spf13/viper"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
 	"github.com/tellor-io/layer/app"
 	"github.com/tellor-io/layer/app/mocks"
@@ -18,21 +20,17 @@ import (
 	"github.com/tellor-io/layer/testutil/sample"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
-	"cosmossdk.io/api/cosmos/crypto/secp256k1"
 	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type VoteExtensionTestSuite struct {
 	suite.Suite
 	ctx sdk.Context
-	kr  *mocks.Keyring
 	cdc codec.Codec
 }
 
@@ -41,22 +39,23 @@ func (s *VoteExtensionTestSuite) SetupTest() {
 	s.cdc = codec.NewProtoCodec(registry)
 
 	s.ctx = testutils.CreateTestContext(s.T())
-	viper.Reset()
 }
 
-func (s *VoteExtensionTestSuite) CreateHandlerAndMocks() (*app.VoteExtHandler, *mocks.OracleKeeper, *mocks.BridgeKeeper, *mocks.StakingKeeper) {
+func (s *VoteExtensionTestSuite) CreateHandlerAndMocks() (*app.VoteExtHandler, *mocks.OracleKeeper, *mocks.BridgeKeeper, *mocks.StakingKeeper, *mocks.VoteExtensionSigner) {
 	oracleKeeper := mocks.NewOracleKeeper(s.T())
 	bridgeKeeper := mocks.NewBridgeKeeper(s.T())
 	stakingKeeper := mocks.NewStakingKeeper(s.T())
+	signer := mocks.NewVoteExtensionSigner(s.T())
 
 	handler := app.NewVoteExtHandler(
 		log.NewNopLogger(),
 		s.cdc,
 		oracleKeeper,
 		bridgeKeeper,
+		signer,
 	)
 
-	return handler, oracleKeeper, bridgeKeeper, stakingKeeper
+	return handler, oracleKeeper, bridgeKeeper, stakingKeeper, signer
 }
 
 func TestVoteExtensionTestSuite(t *testing.T) {
@@ -66,7 +65,7 @@ func TestVoteExtensionTestSuite(t *testing.T) {
 // TODO: turn into test case array
 func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 	require := s.Require()
-	h, _, bk, _ := s.CreateHandlerAndMocks()
+	h, _, bk, _, _ := s.CreateHandlerAndMocks()
 
 	res, err := h.VerifyVoteExtensionHandler(s.ctx, &abci.RequestVerifyVoteExtension{})
 	require.NoError(err)
@@ -230,7 +229,7 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler() {
 
 func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler_RejectsUnknownFields() {
 	require := s.Require()
-	h, _, bk, _ := s.CreateHandlerAndMocks()
+	h, _, bk, _, _ := s.CreateHandlerAndMocks()
 	s.ctx = s.ctx.WithBlockHeight(3)
 
 	attReq := bridgetypes.AttestationRequests{
@@ -273,7 +272,7 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler_RejectsUnknownFields()
 
 func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler_RejectsTrailingJSONData() {
 	require := s.Require()
-	h, _, _, _ := s.CreateHandlerAndMocks()
+	h, _, _, _, _ := s.CreateHandlerAndMocks()
 	s.ctx = s.ctx.WithBlockHeight(3)
 
 	validVE := &app.BridgeVoteExtension{
@@ -302,7 +301,7 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler_RejectsTrailingJSONDat
 
 func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler_RejectsOversizedRawVE() {
 	require := s.Require()
-	h, _, _, _ := s.CreateHandlerAndMocks()
+	h, _, _, _, _ := s.CreateHandlerAndMocks()
 
 	// create a payload larger than maxVoteExtensionSize (512KB)
 	oversized := make([]byte, 512*1024+1)
@@ -315,7 +314,7 @@ func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler_RejectsOversizedRawVE(
 
 func (s *VoteExtensionTestSuite) TestVerifyVoteExtHandler_RejectsOversizedAttestationFields() {
 	require := s.Require()
-	h, _, bk, _ := s.CreateHandlerAndMocks()
+	h, _, bk, _, _ := s.CreateHandlerAndMocks()
 	s.ctx = s.ctx.WithBlockHeight(3)
 
 	attReq := bridgetypes.AttestationRequests{
@@ -363,7 +362,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 
 	type testCase struct {
 		name             string
-		setupMocks       func(bk *mocks.BridgeKeeper, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches)
+		setupMocks       func(bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches)
 		expectedPanic    bool
 		validateResponse func(*abci.ResponseExtendVote)
 	}
@@ -371,12 +370,10 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 	testCases := []testCase{
 		{
 			name: "err on SignInitialMessage",
-			setupMocks: func(bk *mocks.BridgeKeeper, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
-				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
-					return oppAddr, nil
-				})
+			setupMocks: func(bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
+				signer.On("GetOperatorAddress", mock.Anything).Return(oppAddr, nil)
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound)
-				patches.ApplyMethod(reflect.TypeOf(h), "SignInitialMessage", func(_ *app.VoteExtHandler) ([]byte, []byte, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "SignInitialMessage", func(_ *app.VoteExtHandler, operatorAddress string) ([]byte, []byte, error) {
 					return nil, nil, errors.New("error!")
 				})
 				return bk, patches
@@ -388,10 +385,8 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 		},
 		{
 			name: "err on GetOperatorAddress",
-			setupMocks: func(bk *mocks.BridgeKeeper, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
-				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
-					return "", errors.New("error!")
-				})
+			setupMocks: func(bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
+				signer.On("GetOperatorAddress", mock.Anything).Return("", errors.New("error!"))
 				return bk, patches
 			},
 			expectedPanic: true,
@@ -401,12 +396,10 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 		},
 		{
 			name: "err on GetAttestationRequestsByHeight",
-			setupMocks: func(bk *mocks.BridgeKeeper, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
-				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
-					return oppAddr, nil
-				})
+			setupMocks: func(bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
+				signer.On("GetOperatorAddress", mock.Anything).Return(oppAddr, nil)
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound)
-				patches.ApplyMethod(reflect.TypeOf(h), "SignInitialMessage", func(_ *app.VoteExtHandler) ([]byte, []byte, error) {
+				patches.ApplyMethod(reflect.TypeOf(h), "SignInitialMessage", func(_ *app.VoteExtHandler, operatorAddress string) ([]byte, []byte, error) {
 					return []byte("signatureA"), []byte("signatureB"), nil
 				})
 				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return((*bridgetypes.AttestationRequests)(nil), errors.New("error!"))
@@ -418,11 +411,33 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			},
 		},
 		{
+			name: "no EVM address, real SignInitialMessage succeeds, no attestations",
+			setupMocks: func(bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
+				signer.On("GetOperatorAddress", mock.Anything).Return(oppAddr, nil)
+				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound)
+				// Let real SignInitialMessage run — mock signer.Sign with exact expected hashes
+				hashA := sha256.Sum256([]byte(fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", oppAddr)))
+				hashB := sha256.Sum256([]byte(fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", oppAddr)))
+				signer.On("Sign", mock.Anything, hashA[:]).Return([]byte("sigA"), nil).Once()
+				signer.On("Sign", mock.Anything, hashB[:]).Return([]byte("sigB"), nil).Once()
+				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(nil, collections.ErrNotFound)
+				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(0), errors.New("no checkpoint"))
+				return bk, patches
+			},
+			expectedPanic: false,
+			validateResponse: func(resp *abci.ResponseExtendVote) {
+				require.NotNil(resp)
+				// Verify the initial signatures were included in the vote extension
+				var voteExt app.BridgeVoteExtension
+				require.NoError(json.Unmarshal(resp.VoteExtension, &voteExt))
+				require.Equal([]byte("sigA"), voteExt.InitialSignature.SignatureA)
+				require.Equal([]byte("sigB"), voteExt.InitialSignature.SignatureB)
+			},
+		},
+		{
 			name: "err signing checkpoint",
-			setupMocks: func(bk *mocks.BridgeKeeper, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
-				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
-					return oppAddr, nil
-				})
+			setupMocks: func(bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
+				signer.On("GetOperatorAddress", mock.Anything).Return(oppAddr, nil)
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(evmAddr.Bytes(), nil)
 				attReq := bridgetypes.AttestationRequests{
 					Requests: []*bridgetypes.AttestationRequest{
@@ -432,9 +447,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 					},
 				}
 				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil)
-				patches.ApplyMethod(reflect.TypeOf(h), "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
-					return []byte("signedMsg"), nil
-				})
+				signer.On("Sign", mock.Anything, []byte("snapshot")).Return([]byte("signedMsg"), nil)
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(0), errors.New("error"))
 				return bk, patches
 			},
@@ -446,20 +459,18 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 		{
 			name: "no errors",
 			// order:
-			// 1. h.GetOperatorAddress()
+			// 1. h.signer.GetOperatorAddress()
 			// 2. h.bk.GetEVMAddressByOperator()
 			// 3. h.bk.GetAttestationRequestsByHeight()
-			// 4. h.SignMessage()
+			// 4. h.signer.Sign()
 			// 5. h.CheckAndSignValidatorCheckpoint()
 			// 5a. h.bk.GetLatestCheckpointIndex()
 			// 5b. h.bk.GetValidatorTimestampByIdxFromStorage()
-			// 5c. h.GetOperatorAddress
+			// 5c. h.signer.GetOperatorAddress()
 			// 5d. h.bk.GetValidatorDidSignCheckpoint()
-			setupMocks: func(bk *mocks.BridgeKeeper, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
-				// 1.
-				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
-					return oppAddr, nil
-				})
+			setupMocks: func(bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, h *app.VoteExtHandler, patches *gomonkey.Patches) (*mocks.BridgeKeeper, *gomonkey.Patches) {
+				// 1 + 5c.
+				signer.On("GetOperatorAddress", mock.Anything).Return(oppAddr, nil)
 				// 2.
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(evmAddr.Bytes(), nil)
 				attReq := bridgetypes.AttestationRequests{
@@ -472,10 +483,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				// 3.
 				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil)
 				// 4.
-				patches.ApplyMethod(reflect.TypeOf(h), "SignMessage",
-					func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
-						return []byte("signedMsg"), nil
-					})
+				signer.On("Sign", mock.Anything, []byte("snapshot")).Return([]byte("signedMsg"), nil)
 				// 5a.
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil).Once()
 				checkpointTimestamp := bridgetypes.CheckpointTimestamp{
@@ -483,10 +491,6 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				}
 				// 5b.
 				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(checkpointTimestamp, nil)
-				// 5c.
-				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
-					return oppAddr, nil
-				})
 				// 5d.
 				bk.On("GetValidatorDidSignCheckpoint", ctx, oppAddr, uint64(1)).Return(true, int64(1), nil)
 
@@ -505,9 +509,9 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			s.T().Cleanup(func() {
 				patches.Reset()
 			})
-			h, _, bk, _ := s.CreateHandlerAndMocks()
+			h, _, bk, _, signer := s.CreateHandlerAndMocks()
 			if tc.setupMocks != nil {
-				bk, patches = tc.setupMocks(bk, h, patches)
+				bk, patches = tc.setupMocks(bk, signer, h, patches)
 				require.NotNil(bk)
 				require.NotNil(patches)
 			}
@@ -536,167 +540,62 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 	}
 }
 
-func (s *VoteExtensionTestSuite) TestGetKeyring() {
-	require := s.Require()
-	h, _, _, _ := s.CreateHandlerAndMocks()
-
-	viper.Set("keyring-backend", "test")
-	viper.Set("keyring-dir", s.T().TempDir())
-	kr, err := h.GetKeyring()
-	require.NoError(err)
-	require.NotNil(kr)
-
-	s.T().Cleanup(func() {
-		viper.Reset()
-	})
-}
-
-func (s *VoteExtensionTestSuite) TestGetOperatorAddress() {
+func (s *VoteExtensionTestSuite) TestSignInitialMessage() {
 	require := s.Require()
 
-	type testCase struct {
-		name             string
-		setupMocks       func(h *app.VoteExtHandler, patches *gomonkey.Patches)
-		expectedError    bool
-		expectedErrorMsg string
-	}
+	operatorAddr := "operatorAddr1"
+	expectedHashA := sha256.Sum256([]byte(fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddr)))
+	expectedHashB := sha256.Sum256([]byte(fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddr)))
 
-	testCases := []testCase{
-		{
-			name: "err getting keyname",
-			setupMocks: func(h *app.VoteExtHandler, patches *gomonkey.Patches) {
-				s.kr = mocks.NewKeyring(s.T())
-				tempDir := s.T().TempDir()
-				viper.Set("keyring-backend", "test")
-				viper.Set("keyring-dir", tempDir)
-				viper.Set("key-name", "")
-			},
-			expectedError:    true,
-			expectedErrorMsg: "key name not found, please set --key-name flag",
-		},
-		{
-			name: "empty keyring",
-			setupMocks: func(h *app.VoteExtHandler, patches *gomonkey.Patches) {
-				tempDir := s.T().TempDir()
-				viper.Set("key-name", "testkey")
-				viper.Set("keyring-backend", "test")
-				viper.Set("keyring-dir", tempDir)
-				mockKr := mocks.NewKeyring(s.T())
-				mockKr.On("List").Return([]*keyring.Record{}, nil)
-
-				patches.ApplyMethod(reflect.TypeOf(h), "GetKeyring",
-					func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
-						return mockKr, nil
-					})
-			},
-			expectedError:    true,
-			expectedErrorMsg: "no keys found in keyring",
-		},
-		{
-			name: "kr.Key error",
-			setupMocks: func(h *app.VoteExtHandler, patches *gomonkey.Patches) {
-				tempDir := s.T().TempDir()
-				viper.Set("keyring-backend", "test")
-				viper.Set("keyring-dir", tempDir)
-				viper.Set("key-name", "testkey")
-				pubKey := &secp256k1.PubKey{Key: []byte("pubkey")}
-				anyPubKey, err := codectypes.NewAnyWithValue(pubKey)
-				require.NoError(err)
-				mockKr := mocks.NewKeyring(s.T())
-				mockKr.On("List").Return([]*keyring.Record{
-					{Name: "testkey", PubKey: anyPubKey},
-				}, nil)
-				mockKr.On("Key", "testkey").Return(nil, errors.New("error!"))
-
-				patches.ApplyMethod(reflect.TypeOf(h), "GetKeyring",
-					func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
-						return mockKr, nil
-					})
-			},
-			expectedError:    true,
-			expectedErrorMsg: "failed to get operator key:",
-		},
+	testCases := []struct {
+		name          string
+		setupSigner   func(signer *mocks.VoteExtensionSigner)
+		expectedSigA  []byte
+		expectedSigB  []byte
+		expectedError string
+	}{
 		{
 			name: "success",
-			setupMocks: func(h *app.VoteExtHandler, patches *gomonkey.Patches) {
-				tempDir := s.T().TempDir()
-				viper.Set("keyring-backend", "test")
-				viper.Set("keyring-dir", tempDir)
-				viper.Set("key-name", "testkey")
-				priv := hd.Secp256k1.Generate()([]byte("test"))
-				pubKey := priv.PubKey()
-				anyPubKey, err := codectypes.NewAnyWithValue(pubKey)
-				require.NoError(err)
-				localItem, err := keyring.NewLocalRecord(
-					"testkey",
-					priv,
-					pubKey,
-				)
-				require.NoError(err)
-				mockKr := mocks.NewKeyring(s.T())
-				mockKr.On("List").Return([]*keyring.Record{
-					{Name: "testkey", PubKey: anyPubKey},
-				}, nil)
-
-				mockKr.On("Key", "testkey").Return(&keyring.Record{
-					Name:   "testkey",
-					PubKey: anyPubKey,
-					Item:   localItem.Item,
-				}, nil)
-				patches.ApplyMethod(reflect.TypeOf(h), "GetKeyring",
-					func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
-						return mockKr, nil
-					})
+			setupSigner: func(signer *mocks.VoteExtensionSigner) {
+				signer.On("Sign", mock.Anything, expectedHashA[:]).Return([]byte("signedMsgA"), nil).Once()
+				signer.On("Sign", mock.Anything, expectedHashB[:]).Return([]byte("signedMsgB"), nil).Once()
 			},
-			expectedError: false,
+			expectedSigA: []byte("signedMsgA"),
+			expectedSigB: []byte("signedMsgB"),
+		},
+		{
+			name: "error signing message A",
+			setupSigner: func(signer *mocks.VoteExtensionSigner) {
+				signer.On("Sign", mock.Anything, expectedHashA[:]).Return(nil, errors.New("sign A failed")).Once()
+			},
+			expectedError: "failed to sign message A",
+		},
+		{
+			name: "error signing message B",
+			setupSigner: func(signer *mocks.VoteExtensionSigner) {
+				signer.On("Sign", mock.Anything, expectedHashA[:]).Return([]byte("signedMsgA"), nil).Once()
+				signer.On("Sign", mock.Anything, expectedHashB[:]).Return(nil, errors.New("sign B failed")).Once()
+			},
+			expectedError: "failed to sign message B",
 		},
 	}
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			patches := gomonkey.NewPatches()
-			patches.Reset()
-			h, _, _, _ := s.CreateHandlerAndMocks()
-			s.T().Cleanup(func() {
-				patches.Reset()
-				viper.Reset()
-			})
-			if tc.setupMocks != nil {
-				tc.setupMocks(h, patches)
-			}
-			resp, err := h.GetOperatorAddress()
-			if tc.expectedError {
+			h, _, _, _, signer := s.CreateHandlerAndMocks()
+			tc.setupSigner(signer)
+
+			sigA, sigB, err := h.SignInitialMessage(operatorAddr)
+			if tc.expectedError != "" {
 				require.Error(err)
-				require.Contains(err.Error(), tc.expectedErrorMsg)
+				require.Contains(err.Error(), tc.expectedError)
 			} else {
 				require.NoError(err)
-				require.NotEmpty(resp)
+				require.Equal(tc.expectedSigA, sigA)
+				require.Equal(tc.expectedSigB, sigB)
 			}
-			s.T().Cleanup(func() {
-				patches.Reset()
-			})
 		})
 	}
-}
-
-func (s *VoteExtensionTestSuite) TestSignInitialMessage() {
-	require := s.Require()
-	h, _, _, _ := s.CreateHandlerAndMocks()
-
-	patches := gomonkey.NewPatches()
-	patches.Reset()
-	patches.ApplyMethod(reflect.TypeOf(h), "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
-		return []byte("signedMsg"), nil
-	})
-
-	sigA, sigB, err := h.SignInitialMessage("operatorAddr1")
-	require.NoError(err)
-	require.NotEmpty(sigA)
-	require.NotEmpty(sigB)
-
-	s.T().Cleanup(func() {
-		patches.Reset()
-	})
 }
 
 func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
@@ -707,21 +606,19 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 
 	testCases := []struct {
 		name              string
-		setupMocks        func(h *app.VoteExtHandler, bk *mocks.BridgeKeeper, patches *gomonkey.Patches)
+		setupMocks        func(h *app.VoteExtHandler, bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, patches *gomonkey.Patches)
 		expectedSig       []byte
 		expectedTimestamp uint64
 		expectedError     error
 	}{
 		{
 			name: "Validator already signed",
-			setupMocks: func(h *app.VoteExtHandler, bk *mocks.BridgeKeeper, patches *gomonkey.Patches) {
+			setupMocks: func(h *app.VoteExtHandler, bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, patches *gomonkey.Patches) {
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil).Once()
 				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(bridgetypes.CheckpointTimestamp{
 					Timestamp: 10,
 				}, nil).Once()
-				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
-					return oppAddr, nil
-				})
+				signer.On("GetOperatorAddress", mock.Anything).Return(oppAddr, nil)
 				bk.On("GetValidatorDidSignCheckpoint", ctx, oppAddr, uint64(10)).Return(true, int64(1), nil).Once()
 			},
 			expectedSig:       nil,
@@ -730,7 +627,7 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 		},
 		{
 			name: "Error getting latest checkpoint index",
-			setupMocks: func(h *app.VoteExtHandler, bk *mocks.BridgeKeeper, patches *gomonkey.Patches) {
+			setupMocks: func(h *app.VoteExtHandler, bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, patches *gomonkey.Patches) {
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(0), errors.New("index error!"))
 			},
 			expectedSig:       nil,
@@ -739,7 +636,7 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 		},
 		{
 			name: "Error getting validator timestamp",
-			setupMocks: func(h *app.VoteExtHandler, bk *mocks.BridgeKeeper, patches *gomonkey.Patches) {
+			setupMocks: func(h *app.VoteExtHandler, bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, patches *gomonkey.Patches) {
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil)
 				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(bridgetypes.CheckpointTimestamp{}, errors.New("timestamp error!"))
 			},
@@ -749,14 +646,12 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 		},
 		{
 			name: "Error checking if validator signed",
-			setupMocks: func(h *app.VoteExtHandler, bk *mocks.BridgeKeeper, patches *gomonkey.Patches) {
+			setupMocks: func(h *app.VoteExtHandler, bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, patches *gomonkey.Patches) {
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil)
 				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(bridgetypes.CheckpointTimestamp{
 					Timestamp: 10,
 				}, nil)
-				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
-					return oppAddr, nil
-				})
+				signer.On("GetOperatorAddress", mock.Anything).Return(oppAddr, nil)
 				bk.On("GetValidatorDidSignCheckpoint", ctx, oppAddr, uint64(10)).Return(false, int64(0), errors.New("sig check error!"))
 			},
 			expectedSig:       nil,
@@ -765,14 +660,12 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 		},
 		{
 			name: "No errors",
-			setupMocks: func(h *app.VoteExtHandler, bk *mocks.BridgeKeeper, patches *gomonkey.Patches) {
+			setupMocks: func(h *app.VoteExtHandler, bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, patches *gomonkey.Patches) {
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(1), nil).Once()
 				bk.On("GetValidatorTimestampByIdxFromStorage", ctx, uint64(1)).Return(bridgetypes.CheckpointTimestamp{
 					Timestamp: 10,
 				}, nil).Once()
-				patches.ApplyMethod(reflect.TypeOf(h), "GetOperatorAddress", func(_ *app.VoteExtHandler) (string, error) {
-					return oppAddr, nil
-				})
+				signer.On("GetOperatorAddress", mock.Anything).Return(oppAddr, nil)
 				bk.On("GetValidatorDidSignCheckpoint", ctx, oppAddr, uint64(10)).Return(false, int64(1), nil).Once()
 				bk.On("GetValidatorCheckpointParamsFromStorage", ctx, uint64(10)).Return(bridgetypes.ValidatorCheckpointParams{
 					Checkpoint: []byte("checkpoint"),
@@ -791,9 +684,9 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 		s.Run(tc.name, func() {
 			patches := gomonkey.NewPatches()
 			patches.Reset()
-			h, _, bk, _ := s.CreateHandlerAndMocks()
+			h, _, bk, _, signer := s.CreateHandlerAndMocks()
 			if tc.setupMocks != nil {
-				tc.setupMocks(h, bk, patches)
+				tc.setupMocks(h, bk, signer, patches)
 			}
 			sig, timestamp, err := h.CheckAndSignValidatorCheckpoint(ctx)
 			if tc.expectedError != nil {
@@ -815,51 +708,52 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 func (s *VoteExtensionTestSuite) TestEncodeAndSignMessage() {
 	require := s.Require()
 
+	expectedBytes, _ := hex.DecodeString("0123456789abcdef")
+
 	tests := []struct {
-		name              string
-		checkpointString  string
-		mockSignature     []byte
-		mockError         error
-		expectedSignature []byte
-		expectedError     string
+		name               string
+		checkpointString   string
+		setupSigner        func(signer *mocks.VoteExtensionSigner)
+		expectedSignature  []byte
+		expectedError      string
+		signShouldBeCalled bool
 	}{
 		{
-			name:              "Valid checkpoint",
-			checkpointString:  "0123456789abcdef",
-			mockSignature:     []byte("signedMsg"),
-			mockError:         nil,
-			expectedSignature: []byte("signedMsg"),
-			expectedError:     "",
+			name:             "Valid checkpoint",
+			checkpointString: "0123456789abcdef",
+			setupSigner: func(signer *mocks.VoteExtensionSigner) {
+				signer.On("Sign", mock.Anything, expectedBytes).Return([]byte("signedMsg"), nil).Once()
+			},
+			expectedSignature:  []byte("signedMsg"),
+			signShouldBeCalled: true,
 		},
 		{
-			name:              "Invalid hex string",
-			checkpointString:  "invalid hex",
-			mockSignature:     nil,
-			mockError:         nil,
-			expectedSignature: nil,
-			expectedError:     "encoding/hex: invalid byte",
+			name:             "Invalid hex string",
+			checkpointString: "invalid hex",
+			setupSigner: func(signer *mocks.VoteExtensionSigner) {
+				// Sign should not be called when hex decoding fails
+			},
+			expectedSignature:  nil,
+			expectedError:      "encoding/hex: invalid byte",
+			signShouldBeCalled: false,
 		},
 		{
-			name:              "SignMessage error",
-			checkpointString:  "0123456789abcdef",
-			mockSignature:     nil,
-			mockError:         errors.New("signing error"),
-			expectedSignature: nil,
-			expectedError:     "signing error",
+			name:             "Sign error",
+			checkpointString: "0123456789abcdef",
+			setupSigner: func(signer *mocks.VoteExtensionSigner) {
+				signer.On("Sign", mock.Anything, expectedBytes).Return(nil, errors.New("signing error")).Once()
+			},
+			expectedSignature:  nil,
+			expectedError:      "signing error",
+			signShouldBeCalled: true,
 		},
 	}
 
 	for _, tt := range tests {
-		fmt.Println(tt.name)
 		s.Run(tt.name, func() {
-			h, _, _, _ := s.CreateHandlerAndMocks()
-			patches := gomonkey.NewPatches()
-			patches.Reset()
-			patches.ApplyMethod(reflect.TypeOf(h), "SignMessage",
-				func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
-					return tt.mockSignature, tt.mockError
-				})
-			fmt.Println(tt.name)
+			h, _, _, _, signer := s.CreateHandlerAndMocks()
+			tt.setupSigner(signer)
+
 			signature, err := h.EncodeAndSignMessage(tt.checkpointString)
 
 			if tt.expectedError != "" {
@@ -869,9 +763,10 @@ func (s *VoteExtensionTestSuite) TestEncodeAndSignMessage() {
 				require.NoError(err)
 			}
 			require.Equal(tt.expectedSignature, signature)
-			s.T().Cleanup(func() {
-				patches.Reset()
-			})
+
+			if !tt.signShouldBeCalled {
+				signer.AssertNotCalled(s.T(), "Sign", mock.Anything, mock.Anything)
+			}
 		})
 	}
 }
@@ -936,7 +831,7 @@ func (s *VoteExtensionTestSuite) TestGetValidatorIndexInValset() {
 
 	for _, tc := range testCases {
 		s.Run(tc.name, func() {
-			h, _, _, _ := s.CreateHandlerAndMocks()
+			h, _, _, _, _ := s.CreateHandlerAndMocks()
 			index, err := h.GetValidatorIndexInValset(ctx, tc.evmAddr, tc.valset)
 
 			if tc.expectedError != nil {
