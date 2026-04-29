@@ -15,6 +15,8 @@ Environment overrides:
   KEYRING_BACKEND=test    optional keyring backend
   KEYRING_DIR=/path       optional keyring directory
   HOME_DIR=/path          optional layerd home directory
+  ACCOUNT_ADDRESS=tellor1...       optional: skip keyring lookup for account address
+  VALIDATOR_ADDRESS=tellorvaloper1... optional: skip keyring lookup for validator address
 
 The script queries profit state first, then asks before every transaction.
 USAGE
@@ -53,6 +55,8 @@ NODE="${NODE:-}"
 KEYRING_BACKEND="${KEYRING_BACKEND:-}"
 KEYRING_DIR="${KEYRING_DIR:-}"
 HOME_DIR="${HOME_DIR:-}"
+ACCOUNT_ADDRESS="${ACCOUNT_ADDRESS:-}"
+VALIDATOR_ADDRESS="${VALIDATOR_ADDRESS:-}"
 
 prompt_default() {
   local prompt="$1"
@@ -341,17 +345,28 @@ build_query_flags
 build_tx_flags
 build_key_flags
 
-ACCOUNT_ADDRESS="$("$LAYERD_BIN" keys show "$ACCOUNT_NAME" -a "${KEY_FLAGS[@]}")"
 if [[ -z "$ACCOUNT_ADDRESS" ]]; then
-  echo "Could not resolve account address for key '$ACCOUNT_NAME'." >&2
-  exit 1
+  echo
+  echo "Resolving account address with keyring. Unlock the keyring if prompted."
+  ACCOUNT_ADDRESS="$("$LAYERD_BIN" keys show "$ACCOUNT_NAME" -a "${KEY_FLAGS[@]}" || true)"
 fi
 
-DERIVED_VALIDATOR="$("$LAYERD_BIN" keys show "$ACCOUNT_NAME" --bech val -a "${KEY_FLAGS[@]}" 2>/dev/null || true)"
-VALIDATOR_ADDRESS="$(prompt_default "Validator operator address for rewards/staking" "$DERIVED_VALIDATOR")"
+if [[ -z "$ACCOUNT_ADDRESS" ]]; then
+  echo "Could not resolve account address from keyring."
+  ACCOUNT_ADDRESS="$(prompt_default "Account address for queries and bridge exits" "$ACCOUNT_ADDRESS")"
+fi
+
+if [[ -z "$VALIDATOR_ADDRESS" ]]; then
+  echo
+  echo "Resolving validator operator address with keyring. Unlock the keyring if prompted."
+  VALIDATOR_ADDRESS="$("$LAYERD_BIN" keys show "$ACCOUNT_NAME" --bech val -a "${KEY_FLAGS[@]}" || true)"
+fi
+
+VALIDATOR_ADDRESS="$(prompt_default "Validator operator address for rewards/staking" "$VALIDATOR_ADDRESS")"
 SELECTOR_ADDRESS="$(prompt_default "Selector address for reporter rewards" "$ACCOUNT_ADDRESS")"
 REPORTER_REWARD_VALIDATOR="$(prompt_default "Bonded validator to receive withdrawn reporter rewards" "$VALIDATOR_ADDRESS")"
 
+require_value "Account address" "$ACCOUNT_ADDRESS"
 require_value "Validator operator address" "$VALIDATOR_ADDRESS"
 require_value "Selector address" "$SELECTOR_ADDRESS"
 require_value "Bonded validator for reporter rewards" "$REPORTER_REWARD_VALIDATOR"
