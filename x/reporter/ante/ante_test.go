@@ -514,3 +514,130 @@ func TestTrackStakeChangesDecoratorDelegatorStakeShareUsesFinalTxTotal(t *testin
 	})
 	require.ErrorIs(t, err, types.ErrExceedsMaxStakeShare)
 }
+
+type validatorPowerIterator struct {
+	values [][]byte
+	index  int
+}
+
+func (i *validatorPowerIterator) Domain() (start, end []byte) { return nil, nil }
+func (i *validatorPowerIterator) Valid() bool                 { return i.index < len(i.values) }
+func (i *validatorPowerIterator) Next()                       { i.index++ }
+func (i *validatorPowerIterator) Key() []byte                 { return nil }
+func (i *validatorPowerIterator) Value() []byte               { return i.values[i.index] }
+func (i *validatorPowerIterator) Error() error                { return nil }
+func (i *validatorPowerIterator) Close() error                { return nil }
+
+func TestTrackStakeChangesDecoratorBlocksUnbondedValidatorBondingOverStakeShare(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
+	decorator := NewTrackStakeChangesDecorator(k, sk)
+	currentTotal := math.NewInt(100)
+	require.NoError(t, k.Tracker.Set(ctx, types.StakeTracker{
+		Expiration: nil,
+		Amount:     currentTotal,
+	}))
+
+	delegatorAddr := sample.AccAddressBytes()
+	bondedValAddr := sdk.ValAddress(sample.AccAddressBytes())
+	bondedValidator := stakingtypes.Validator{
+		OperatorAddress:   bondedValAddr.String(),
+		Status:            stakingtypes.Bonded,
+		Tokens:            currentTotal,
+		DelegatorShares:   currentTotal.ToLegacyDec(),
+		MinSelfDelegation: math.OneInt(),
+	}
+	bondedDelegations := []stakingtypes.Delegation{
+		{
+			DelegatorAddress: delegatorAddr.String(),
+			ValidatorAddress: bondedValAddr.String(),
+			Shares:           math.NewInt(29).ToLegacyDec(),
+		},
+	}
+	candidateValAddr := sdk.ValAddress(sample.AccAddressBytes())
+	candidateValidator := stakingtypes.Validator{
+		OperatorAddress:   candidateValAddr.String(),
+		Status:            stakingtypes.Unbonded,
+		Tokens:            math.ZeroInt(),
+		DelegatorShares:   math.LegacyZeroDec(),
+		MinSelfDelegation: math.OneInt(),
+	}
+
+	sk.On("TotalBondedTokens", ctx).Return(currentTotal, nil)
+	sk.On("GetAllDelegatorDelegations", ctx, delegatorAddr).Return(bondedDelegations, nil)
+	sk.On("GetValidator", ctx, candidateValAddr).Return(candidateValidator, nil)
+	sk.On("GetValidator", ctx, bondedValAddr).Return(bondedValidator, nil)
+	sk.On("MaxValidators", ctx).Return(uint32(2), nil)
+	sk.On("PowerReduction", ctx).Return(math.OneInt())
+	sk.On("ValidatorsPowerStoreIterator", ctx).Return(&validatorPowerIterator{values: [][]byte{bondedValAddr}}, nil)
+	sk.On("GetValidatorDelegations", ctx, candidateValAddr).Return([]stakingtypes.Delegation{}, nil)
+	sk.On("IterateDelegatorDelegations", ctx, delegatorAddr, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		for _, delegation := range bondedDelegations {
+			if fn(delegation) {
+				return
+			}
+		}
+	})
+
+	s := encoding.GetTestEncodingCfg()
+	txBuilder := client.Context{}.WithTxConfig(s.TxConfig).TxConfig.NewTxBuilder()
+	require.NoError(t, txBuilder.SetMsgs(&stakingtypes.MsgDelegate{
+		DelegatorAddress: delegatorAddr.String(),
+		ValidatorAddress: candidateValAddr.String(),
+		Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(2)},
+	}))
+
+	_, err := decorator.AnteHandle(ctx, txBuilder.GetTx(), false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		return ctx, nil
+	})
+	require.ErrorIs(t, err, types.ErrExceedsMaxStakeShare)
+}
+
+func TestTrackStakeChangesDecoratorBlocksUnbondedValidatorBondingOverFivePercent(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
+	decorator := NewTrackStakeChangesDecorator(k, sk)
+	currentTotal := math.NewInt(100)
+	require.NoError(t, k.Tracker.Set(ctx, types.StakeTracker{
+		Expiration: nil,
+		Amount:     currentTotal,
+	}))
+
+	delegatorAddr := sample.AccAddressBytes()
+	bondedValAddr := sdk.ValAddress(sample.AccAddressBytes())
+	bondedValidator := stakingtypes.Validator{
+		OperatorAddress:   bondedValAddr.String(),
+		Status:            stakingtypes.Bonded,
+		Tokens:            currentTotal,
+		DelegatorShares:   currentTotal.ToLegacyDec(),
+		MinSelfDelegation: math.OneInt(),
+	}
+	candidateValAddr := sdk.ValAddress(sample.AccAddressBytes())
+	candidateValidator := stakingtypes.Validator{
+		OperatorAddress:   candidateValAddr.String(),
+		Status:            stakingtypes.Unbonded,
+		Tokens:            math.NewInt(5),
+		DelegatorShares:   math.NewInt(5).ToLegacyDec(),
+		MinSelfDelegation: math.OneInt(),
+	}
+
+	sk.On("TotalBondedTokens", ctx).Return(currentTotal, nil)
+	sk.On("GetAllDelegatorDelegations", ctx, delegatorAddr).Return([]stakingtypes.Delegation{}, nil)
+	sk.On("GetValidator", ctx, candidateValAddr).Return(candidateValidator, nil)
+	sk.On("GetValidator", ctx, bondedValAddr).Return(bondedValidator, nil)
+	sk.On("MaxValidators", ctx).Return(uint32(2), nil)
+	sk.On("PowerReduction", ctx).Return(math.OneInt())
+	sk.On("ValidatorsPowerStoreIterator", ctx).Return(&validatorPowerIterator{values: [][]byte{bondedValAddr}}, nil)
+
+	s := encoding.GetTestEncodingCfg()
+	txBuilder := client.Context{}.WithTxConfig(s.TxConfig).TxConfig.NewTxBuilder()
+	require.NoError(t, txBuilder.SetMsgs(&stakingtypes.MsgDelegate{
+		DelegatorAddress: delegatorAddr.String(),
+		ValidatorAddress: candidateValAddr.String(),
+		Amount:           sdk.Coin{Denom: "loya", Amount: math.OneInt()},
+	}))
+
+	_, err := decorator.AnteHandle(ctx, txBuilder.GetTx(), false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		return ctx, nil
+	})
+	require.ErrorContains(t, err, "total stake increase exceeds the allowed 5% threshold within a twelve-hour period")
+}

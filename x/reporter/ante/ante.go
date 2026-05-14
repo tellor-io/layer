@@ -1,8 +1,10 @@
 package ante
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/tellor-io/layer/x/reporter/keeper"
@@ -29,6 +31,21 @@ type TrackStakeChangesDecorator struct {
 type stakeChangeTracker struct {
 	totalBondedDelta     math.Int
 	delegatorBondedDelta map[string]math.Int
+	validatorTokenDelta  map[string]math.Int
+	validatorDeltas      map[string]map[string]math.Int
+}
+
+type pendingValidatorDelta struct {
+	validator sdk.ValAddress
+	delegator sdk.AccAddress
+	amount    math.Int
+}
+
+type prospectiveValidator struct {
+	addr       sdk.ValAddress
+	validator  stakingtypes.Validator
+	postTokens math.Int
+	touched    bool
 }
 
 func NewTrackStakeChangesDecorator(rk keeper.Keeper, sk types.StakingKeeper) TrackStakeChangesDecorator {
@@ -42,15 +59,28 @@ func newStakeChangeTracker() *stakeChangeTracker {
 	return &stakeChangeTracker{
 		totalBondedDelta:     math.ZeroInt(),
 		delegatorBondedDelta: make(map[string]math.Int),
+		validatorTokenDelta:  make(map[string]math.Int),
+		validatorDeltas:      make(map[string]map[string]math.Int),
 	}
 }
 
 func (t *stakeChangeTracker) delegatorDelta(delegator sdk.AccAddress) math.Int {
-	delta, ok := t.delegatorBondedDelta[string(delegator)]
+	return intFromMap(t.delegatorBondedDelta, string(delegator))
+}
+
+func intFromMap(values map[string]math.Int, key string) math.Int {
+	value, ok := values[key]
 	if !ok {
 		return math.ZeroInt()
 	}
-	return delta
+	return value
+}
+
+func addInt(values map[string]math.Int, key string, amount math.Int) {
+	if amount.IsZero() {
+		return
+	}
+	values[key] = intFromMap(values, key).Add(amount)
 }
 
 func (t *stakeChangeTracker) add(delegator sdk.AccAddress, amount math.Int) {
@@ -58,10 +88,40 @@ func (t *stakeChangeTracker) add(delegator sdk.AccAddress, amount math.Int) {
 		return
 	}
 	t.totalBondedDelta = t.totalBondedDelta.Add(amount)
+	t.addDelegatorDelta(delegator, amount)
+}
+
+func (t *stakeChangeTracker) addTotalDelta(amount math.Int) {
+	if amount.IsZero() {
+		return
+	}
+	t.totalBondedDelta = t.totalBondedDelta.Add(amount)
+}
+
+func (t *stakeChangeTracker) addDelegatorDelta(delegator sdk.AccAddress, amount math.Int) {
+	if amount.IsZero() {
+		return
+	}
 	if delegator == nil {
 		return
 	}
-	t.delegatorBondedDelta[string(delegator)] = t.delegatorDelta(delegator).Add(amount)
+	addInt(t.delegatorBondedDelta, string(delegator), amount)
+}
+
+func (t *stakeChangeTracker) addValidatorDelta(validator sdk.ValAddress, delegator sdk.AccAddress, amount math.Int) {
+	if amount.IsZero() {
+		return
+	}
+	validatorKey := string(validator)
+	addInt(t.validatorTokenDelta, validatorKey, amount)
+	if delegator == nil {
+		return
+	}
+	if _, ok := t.validatorDeltas[validatorKey]; !ok {
+		t.validatorDeltas[validatorKey] = make(map[string]math.Int)
+	}
+	delegatorKey := string(delegator)
+	addInt(t.validatorDeltas[validatorKey], delegatorKey, amount)
 }
 
 // implement the AnteDecorator interface
@@ -72,6 +132,9 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 		if err := t.processMessage(ctx, msg, 1, stakeChanges); err != nil {
 			return ctx, err
 		}
+	}
+	if err := t.applyProspectiveBondedValidatorChanges(ctx, stakeChanges); err != nil {
+		return ctx, err
 	}
 	if err := t.checkDelegatorStakeShares(ctx, stakeChanges); err != nil {
 		return ctx, err
@@ -107,8 +170,9 @@ func (t TrackStakeChangesDecorator) processMessage(ctx sdk.Context, msg sdk.Msg,
 }
 
 func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Msg, stakeChanges *stakeChangeTracker) error {
-	var msgAmount math.Int
+	msgAmount := math.ZeroInt()
 	var delegatorAddr sdk.AccAddress
+	var validatorDeltas []pendingValidatorDelta
 	switch msg := msg.(type) {
 	case *stakingtypes.MsgCreateValidator:
 		msgAmount = msg.Value.Amount
@@ -140,7 +204,11 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 		if val.Status == stakingtypes.Bonded {
 			msgAmount = msg.Amount.Amount
 		} else {
-			return nil
+			validatorDeltas = append(validatorDeltas, pendingValidatorDelta{
+				validator: valAddr,
+				delegator: delegatorAddr,
+				amount:    msg.Amount.Amount,
+			})
 		}
 	case *stakingtypes.MsgBeginRedelegate:
 		isAllowed, err := t.checkAmountOfDelegationsByAddressDoesNotExceedMax(ctx, msg)
@@ -181,10 +249,35 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 
 		if sourceVal.Status == stakingtypes.Bonded && destVal.Status != stakingtypes.Bonded {
 			msgAmount = msg.Amount.Amount.MulRaw(-1)
+			validatorDeltas = append(validatorDeltas, pendingValidatorDelta{
+				validator: dstValAddr,
+				delegator: delegatorAddr,
+				amount:    msg.Amount.Amount,
+			})
 		} else if sourceVal.Status == destVal.Status {
-			return nil
+			if sourceVal.Status != stakingtypes.Bonded {
+				validatorDeltas = append(validatorDeltas,
+					pendingValidatorDelta{
+						validator: srcValAddr,
+						delegator: delegatorAddr,
+						amount:    msg.Amount.Amount.Neg(),
+					},
+					pendingValidatorDelta{
+						validator: dstValAddr,
+						delegator: delegatorAddr,
+						amount:    msg.Amount.Amount,
+					},
+				)
+			} else {
+				return nil
+			}
 		} else if sourceVal.Status != stakingtypes.Bonded && destVal.Status == stakingtypes.Bonded {
 			msgAmount = msg.Amount.Amount
+			validatorDeltas = append(validatorDeltas, pendingValidatorDelta{
+				validator: srcValAddr,
+				delegator: delegatorAddr,
+				amount:    msg.Amount.Amount.Neg(),
+			})
 		}
 	case *stakingtypes.MsgCancelUnbondingDelegation:
 		var err error
@@ -205,7 +298,11 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 		if val.Status == stakingtypes.Bonded {
 			msgAmount = msg.Amount.Amount
 		} else {
-			return nil
+			validatorDeltas = append(validatorDeltas, pendingValidatorDelta{
+				validator: valAddr,
+				delegator: delegatorAddr,
+				amount:    msg.Amount.Amount,
+			})
 		}
 	case *stakingtypes.MsgUndelegate:
 		var err error
@@ -228,49 +325,241 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 			// and to help with the comparison later on
 			msgAmount = msg.Amount.Amount.Neg()
 		} else {
-			return nil
+			validatorDeltas = append(validatorDeltas, pendingValidatorDelta{
+				validator: valAddr,
+				delegator: delegatorAddr,
+				amount:    msg.Amount.Amount.Neg(),
+			})
 		}
 	default:
 		return nil
 	}
 
-	currentAmount, err := t.stakingKeeper.TotalBondedTokens(ctx)
+	if msgAmount.IsZero() && len(validatorDeltas) == 0 {
+		return nil
+	}
+
+	if !msgAmount.IsZero() {
+		currentAmount, err := t.stakingKeeper.TotalBondedTokens(ctx)
+		if err != nil {
+			return err
+		}
+
+		// get the total bonded tokens that was set in the last update
+		// to compare against the current amount of bonded tokens
+		lastupdated, err := t.reporterKeeper.Tracker.Get(ctx)
+		if err != nil {
+			// for when chain is first started
+			if errors.Is(err, collections.ErrNotFound) {
+				if stakeChanges != nil {
+					for _, delta := range validatorDeltas {
+						stakeChanges.addValidatorDelta(delta.validator, delta.delegator, delta.amount)
+					}
+					stakeChanges.add(delegatorAddr, msgAmount)
+				}
+				return nil
+			}
+			return err
+		}
+		changeAmt := currentAmount.Add(msgAmount)
+		if stakeChanges != nil {
+			changeAmt = currentAmount.Add(stakeChanges.totalBondedDelta).Add(msgAmount)
+		}
+		if msgAmount.IsNegative() {
+			// subtract 5 percent from last updated amount
+			allowedLowerBound := lastupdated.Amount.Sub(lastupdated.Amount.QuoRaw(20))
+			if changeAmt.LT(allowedLowerBound) {
+				return errors.New("total stake decrease exceeds the allowed 5% threshold within a twelve-hour period")
+			}
+		} else {
+			// add 5 percent to last updated amount
+			allowedUpperBound := lastupdated.Amount.Add(lastupdated.Amount.QuoRaw(20))
+			if changeAmt.GT(allowedUpperBound) {
+				return errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period")
+			}
+		}
+	}
+	if stakeChanges != nil {
+		for _, delta := range validatorDeltas {
+			stakeChanges.addValidatorDelta(delta.validator, delta.delegator, delta.amount)
+		}
+		stakeChanges.add(delegatorAddr, msgAmount)
+	}
+	return nil
+}
+
+func (t TrackStakeChangesDecorator) applyProspectiveBondedValidatorChanges(ctx sdk.Context, stakeChanges *stakeChangeTracker) error {
+	if stakeChanges == nil || len(stakeChanges.validatorTokenDelta) == 0 {
+		return nil
+	}
+	newlyBonded, err := t.prospectiveBondedValidators(ctx, stakeChanges)
 	if err != nil {
 		return err
 	}
+	if len(newlyBonded) == 0 {
+		return nil
+	}
 
-	// get the total bonded tokens that was set in the last update
-	// to compare against the current amount of bonded tokens
+	prospectiveBondedDelta := math.ZeroInt()
+	for _, validator := range newlyBonded {
+		prospectiveBondedDelta = prospectiveBondedDelta.Add(validator.postTokens)
+	}
+	if err := t.checkTotalStakeChange(ctx, stakeChanges.totalBondedDelta.Add(prospectiveBondedDelta)); err != nil {
+		return err
+	}
+
+	stakeChanges.addTotalDelta(prospectiveBondedDelta)
+	for _, validator := range newlyBonded {
+		if err := t.addProspectiveValidatorDelegatorDeltas(ctx, stakeChanges, validator); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (t TrackStakeChangesDecorator) prospectiveBondedValidators(ctx sdk.Context, stakeChanges *stakeChangeTracker) ([]prospectiveValidator, error) {
+	maxValidators, err := t.stakingKeeper.MaxValidators(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if maxValidators == 0 {
+		return nil, nil
+	}
+	powerReduction := t.stakingKeeper.PowerReduction(ctx)
+	validators := make(map[string]prospectiveValidator)
+	iterator, err := t.stakingKeeper.ValidatorsPowerStoreIterator(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer iterator.Close()
+
+	for count := uint32(0); iterator.Valid() && count < maxValidators; iterator.Next() {
+		valAddr := sdk.ValAddress(iterator.Value())
+		validator, err := t.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
+			return nil, err
+		}
+		validatorDelta := intFromMap(stakeChanges.validatorTokenDelta, string(valAddr))
+		postTokens := validator.Tokens.Add(validatorDelta)
+		if postTokens.IsNegative() {
+			postTokens = math.ZeroInt()
+		}
+		if sdk.TokensToConsensusPower(postTokens, powerReduction) == 0 {
+			break
+		}
+		validators[string(valAddr)] = prospectiveValidator{
+			addr:       valAddr,
+			validator:  validator,
+			postTokens: postTokens,
+			touched:    !validatorDelta.IsZero(),
+		}
+		count++
+	}
+	if err := iterator.Error(); err != nil {
+		return nil, err
+	}
+
+	for validatorKey, delta := range stakeChanges.validatorTokenDelta {
+		if _, ok := validators[validatorKey]; ok {
+			continue
+		}
+		valAddr := sdk.ValAddress([]byte(validatorKey))
+		validator, err := t.stakingKeeper.GetValidator(ctx, valAddr)
+		if err != nil {
+			return nil, err
+		}
+		if validator.IsBonded() {
+			continue
+		}
+		postTokens := validator.Tokens.Add(delta)
+		if postTokens.IsNegative() {
+			postTokens = math.ZeroInt()
+		}
+		if sdk.TokensToConsensusPower(postTokens, powerReduction) == 0 {
+			continue
+		}
+		validators[validatorKey] = prospectiveValidator{
+			addr:       valAddr,
+			validator:  validator,
+			postTokens: postTokens,
+			touched:    true,
+		}
+	}
+
+	ordered := make([]prospectiveValidator, 0, len(validators))
+	for _, validator := range validators {
+		ordered = append(ordered, validator)
+	}
+	sort.Slice(ordered, func(i, j int) bool {
+		iPower := sdk.TokensToConsensusPower(ordered[i].postTokens, powerReduction)
+		jPower := sdk.TokensToConsensusPower(ordered[j].postTokens, powerReduction)
+		if iPower == jPower {
+			return bytes.Compare(ordered[i].addr, ordered[j].addr) < 0
+		}
+		return iPower > jPower
+	})
+
+	limit := int(maxValidators)
+	if len(ordered) < limit {
+		limit = len(ordered)
+	}
+	newlyBonded := make([]prospectiveValidator, 0)
+	for _, validator := range ordered[:limit] {
+		if validator.touched && !validator.validator.IsBonded() {
+			newlyBonded = append(newlyBonded, validator)
+		}
+	}
+	return newlyBonded, nil
+}
+
+func (t TrackStakeChangesDecorator) addProspectiveValidatorDelegatorDeltas(ctx sdk.Context, stakeChanges *stakeChangeTracker, validator prospectiveValidator) error {
+	delegatorAmounts := make(map[string]math.Int)
+	delegations, err := t.stakingKeeper.GetValidatorDelegations(ctx, validator.addr)
+	if err != nil {
+		return err
+	}
+	for _, delegation := range delegations {
+		delegator, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
+		if err != nil {
+			return err
+		}
+		amount := validator.validator.TokensFromShares(delegation.Shares).TruncateInt()
+		addInt(delegatorAmounts, string(delegator), amount)
+	}
+	for delegatorKey, delta := range stakeChanges.validatorDeltas[string(validator.addr)] {
+		addInt(delegatorAmounts, delegatorKey, delta)
+	}
+	for delegatorKey, amount := range delegatorAmounts {
+		if amount.IsPositive() {
+			stakeChanges.addDelegatorDelta(sdk.AccAddress([]byte(delegatorKey)), amount)
+		}
+	}
+	return nil
+}
+
+func (t TrackStakeChangesDecorator) checkTotalStakeChange(ctx sdk.Context, totalBondedDelta math.Int) error {
 	lastupdated, err := t.reporterKeeper.Tracker.Get(ctx)
 	if err != nil {
-		// for when chain is first started
 		if errors.Is(err, collections.ErrNotFound) {
-			if stakeChanges != nil {
-				stakeChanges.add(delegatorAddr, msgAmount)
-			}
 			return nil
 		}
 		return err
 	}
-	changeAmt := currentAmount.Add(msgAmount)
-	if stakeChanges != nil {
-		changeAmt = currentAmount.Add(stakeChanges.totalBondedDelta).Add(msgAmount)
+	currentAmount, err := t.stakingKeeper.TotalBondedTokens(ctx)
+	if err != nil {
+		return err
 	}
-	if msgAmount.IsNegative() {
-		// subtract 5 percent from last updated amount
+	changeAmt := currentAmount.Add(totalBondedDelta)
+	if totalBondedDelta.IsNegative() {
 		allowedLowerBound := lastupdated.Amount.Sub(lastupdated.Amount.QuoRaw(20))
 		if changeAmt.LT(allowedLowerBound) {
 			return errors.New("total stake decrease exceeds the allowed 5% threshold within a twelve-hour period")
 		}
-	} else {
-		// add 5 percent to last updated amount
-		allowedUpperBound := lastupdated.Amount.Add(lastupdated.Amount.QuoRaw(20))
-		if changeAmt.GT(allowedUpperBound) {
-			return errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period")
-		}
+		return nil
 	}
-	if stakeChanges != nil {
-		stakeChanges.add(delegatorAddr, msgAmount)
+	allowedUpperBound := lastupdated.Amount.Add(lastupdated.Amount.QuoRaw(20))
+	if changeAmt.GT(allowedUpperBound) {
+		return errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period")
 	}
 	return nil
 }
