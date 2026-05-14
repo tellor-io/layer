@@ -28,11 +28,31 @@ type TrackStakeChangesDecorator struct {
 	stakingKeeper  types.StakingKeeper
 }
 
+type delegatorAddressKey string
+
+func newDelegatorAddressKey(addr sdk.AccAddress) delegatorAddressKey {
+	return delegatorAddressKey(addr.String())
+}
+
+func (k delegatorAddressKey) address() (sdk.AccAddress, error) {
+	return sdk.AccAddressFromBech32(string(k))
+}
+
+type validatorAddressKey string
+
+func newValidatorAddressKey(addr sdk.ValAddress) validatorAddressKey {
+	return validatorAddressKey(addr.String())
+}
+
+func (k validatorAddressKey) address() (sdk.ValAddress, error) {
+	return sdk.ValAddressFromBech32(string(k))
+}
+
 type stakeChangeTracker struct {
 	totalBondedDelta     math.Int
-	delegatorBondedDelta map[string]math.Int
-	validatorTokenDelta  map[string]math.Int
-	validatorDeltas      map[string]map[string]math.Int
+	delegatorBondedDelta map[delegatorAddressKey]math.Int
+	validatorTokenDelta  map[validatorAddressKey]math.Int
+	validatorDeltas      map[validatorAddressKey]map[delegatorAddressKey]math.Int
 }
 
 type pendingValidatorDelta struct {
@@ -58,17 +78,17 @@ func NewTrackStakeChangesDecorator(rk keeper.Keeper, sk types.StakingKeeper) Tra
 func newStakeChangeTracker() *stakeChangeTracker {
 	return &stakeChangeTracker{
 		totalBondedDelta:     math.ZeroInt(),
-		delegatorBondedDelta: make(map[string]math.Int),
-		validatorTokenDelta:  make(map[string]math.Int),
-		validatorDeltas:      make(map[string]map[string]math.Int),
+		delegatorBondedDelta: make(map[delegatorAddressKey]math.Int),
+		validatorTokenDelta:  make(map[validatorAddressKey]math.Int),
+		validatorDeltas:      make(map[validatorAddressKey]map[delegatorAddressKey]math.Int),
 	}
 }
 
 func (t *stakeChangeTracker) delegatorDelta(delegator sdk.AccAddress) math.Int {
-	return intFromMap(t.delegatorBondedDelta, string(delegator))
+	return intFromMap(t.delegatorBondedDelta, newDelegatorAddressKey(delegator))
 }
 
-func intFromMap(values map[string]math.Int, key string) math.Int {
+func intFromMap[K comparable](values map[K]math.Int, key K) math.Int {
 	value, ok := values[key]
 	if !ok {
 		return math.ZeroInt()
@@ -76,7 +96,7 @@ func intFromMap(values map[string]math.Int, key string) math.Int {
 	return value
 }
 
-func addInt(values map[string]math.Int, key string, amount math.Int) {
+func addInt[K comparable](values map[K]math.Int, key K, amount math.Int) {
 	if amount.IsZero() {
 		return
 	}
@@ -105,22 +125,22 @@ func (t *stakeChangeTracker) addDelegatorDelta(delegator sdk.AccAddress, amount 
 	if delegator == nil {
 		return
 	}
-	addInt(t.delegatorBondedDelta, string(delegator), amount)
+	addInt(t.delegatorBondedDelta, newDelegatorAddressKey(delegator), amount)
 }
 
 func (t *stakeChangeTracker) addValidatorDelta(validator sdk.ValAddress, delegator sdk.AccAddress, amount math.Int) {
 	if amount.IsZero() {
 		return
 	}
-	validatorKey := string(validator)
+	validatorKey := newValidatorAddressKey(validator)
 	addInt(t.validatorTokenDelta, validatorKey, amount)
 	if delegator == nil {
 		return
 	}
 	if _, ok := t.validatorDeltas[validatorKey]; !ok {
-		t.validatorDeltas[validatorKey] = make(map[string]math.Int)
+		t.validatorDeltas[validatorKey] = make(map[delegatorAddressKey]math.Int)
 	}
-	delegatorKey := string(delegator)
+	delegatorKey := newDelegatorAddressKey(delegator)
 	addInt(t.validatorDeltas[validatorKey], delegatorKey, amount)
 }
 
@@ -426,7 +446,7 @@ func (t TrackStakeChangesDecorator) prospectiveBondedValidators(ctx sdk.Context,
 		return nil, nil
 	}
 	powerReduction := t.stakingKeeper.PowerReduction(ctx)
-	validators := make(map[string]prospectiveValidator)
+	validators := make(map[validatorAddressKey]prospectiveValidator)
 	iterator, err := t.stakingKeeper.ValidatorsPowerStoreIterator(ctx)
 	if err != nil {
 		return nil, err
@@ -439,7 +459,7 @@ func (t TrackStakeChangesDecorator) prospectiveBondedValidators(ctx sdk.Context,
 		if err != nil {
 			return nil, err
 		}
-		validatorDelta := intFromMap(stakeChanges.validatorTokenDelta, string(valAddr))
+		validatorDelta := intFromMap(stakeChanges.validatorTokenDelta, newValidatorAddressKey(valAddr))
 		postTokens := validator.Tokens.Add(validatorDelta)
 		if postTokens.IsNegative() {
 			postTokens = math.ZeroInt()
@@ -447,7 +467,7 @@ func (t TrackStakeChangesDecorator) prospectiveBondedValidators(ctx sdk.Context,
 		if sdk.TokensToConsensusPower(postTokens, powerReduction) == 0 {
 			break
 		}
-		validators[string(valAddr)] = prospectiveValidator{
+		validators[newValidatorAddressKey(valAddr)] = prospectiveValidator{
 			addr:       valAddr,
 			validator:  validator,
 			postTokens: postTokens,
@@ -463,7 +483,10 @@ func (t TrackStakeChangesDecorator) prospectiveBondedValidators(ctx sdk.Context,
 		if _, ok := validators[validatorKey]; ok {
 			continue
 		}
-		valAddr := sdk.ValAddress([]byte(validatorKey))
+		valAddr, err := validatorKey.address()
+		if err != nil {
+			return nil, err
+		}
 		validator, err := t.stakingKeeper.GetValidator(ctx, valAddr)
 		if err != nil {
 			return nil, err
@@ -513,7 +536,7 @@ func (t TrackStakeChangesDecorator) prospectiveBondedValidators(ctx sdk.Context,
 }
 
 func (t TrackStakeChangesDecorator) addProspectiveValidatorDelegatorDeltas(ctx sdk.Context, stakeChanges *stakeChangeTracker, validator prospectiveValidator) error {
-	delegatorAmounts := make(map[string]math.Int)
+	delegatorAmounts := make(map[delegatorAddressKey]math.Int)
 	delegations, err := t.stakingKeeper.GetValidatorDelegations(ctx, validator.addr)
 	if err != nil {
 		return err
@@ -524,14 +547,18 @@ func (t TrackStakeChangesDecorator) addProspectiveValidatorDelegatorDeltas(ctx s
 			return err
 		}
 		amount := validator.validator.TokensFromShares(delegation.Shares).TruncateInt()
-		addInt(delegatorAmounts, string(delegator), amount)
+		addInt(delegatorAmounts, newDelegatorAddressKey(delegator), amount)
 	}
-	for delegatorKey, delta := range stakeChanges.validatorDeltas[string(validator.addr)] {
+	for delegatorKey, delta := range stakeChanges.validatorDeltas[newValidatorAddressKey(validator.addr)] {
 		addInt(delegatorAmounts, delegatorKey, delta)
 	}
 	for delegatorKey, amount := range delegatorAmounts {
 		if amount.IsPositive() {
-			stakeChanges.addDelegatorDelta(sdk.AccAddress([]byte(delegatorKey)), amount)
+			delegator, err := delegatorKey.address()
+			if err != nil {
+				return err
+			}
+			stakeChanges.addDelegatorDelta(delegator, amount)
 		}
 	}
 	return nil
@@ -580,7 +607,10 @@ func (t TrackStakeChangesDecorator) checkDelegatorStakeShares(ctx sdk.Context, s
 		if !delta.IsPositive() {
 			continue
 		}
-		delegator := sdk.AccAddress([]byte(delegatorKey))
+		delegator, err := delegatorKey.address()
+		if err != nil {
+			return err
+		}
 		currentDelegatorBonded, err := t.delegatorBondedTokens(ctx, delegator)
 		if err != nil {
 			return err
