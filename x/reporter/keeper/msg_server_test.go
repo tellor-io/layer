@@ -136,6 +136,7 @@ func TestSwitchReporter(t *testing.T) {
 	selector, reporter, reporter2 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
 
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporter, 1)))
+	require.NoError(t, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "r1")))
 	// reporter2 does not exist
 	_, err := ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selector.String(), ReporterAddress: reporter2.String()})
 	require.ErrorIs(t, err, collections.ErrNotFound)
@@ -182,36 +183,82 @@ func TestSwitchReporter(t *testing.T) {
 
 	selection, err := k.Selectors.Get(ctx, selector)
 	require.NoError(t, err)
-	require.True(t, bytes.Equal(reporter2.Bytes(), selection.Reporter))
+	require.True(t, bytes.Equal(reporter.Bytes(), selection.Reporter))
+	pk := collections.Join(reporter.Bytes(), selector.Bytes())
+	has, err := k.OutgoingPendingSwitches.Has(ctx, pk)
+	require.NoError(t, err)
+	require.True(t, has)
+	ent, err := k.OutgoingPendingSwitches.Get(ctx, pk)
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(reporter2.Bytes(), ent.ToReporter))
 	require.True(t, selection.LockedUntilTime.IsZero())
 
-	_, err = ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selector.String(), ReporterAddress: reporter2.String()})
-	require.ErrorContains(t, err, "selector is already assigned to this reporter")
-
-	// reset reporter for selector
-	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporter, 1)))
-
-	// this time selector was part of previous reporting
-	tokenOrigin := &types.TokenOriginInfo{
-		DelegatorAddress: selector.Bytes(),
-		ValidatorAddress: selector.Bytes(),
-		Amount:           math.NewInt(1000 * 1e6),
-	}
-	tokenOrigins := []*types.TokenOriginInfo{tokenOrigin}
-
-	delegationAmounts := types.DelegationsAmounts{TokenOrigins: tokenOrigins, Total: math.NewInt(1000 * 1e6)}
-	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporter.Bytes(), uint64(ctx.BlockHeight()))), delegationAmounts))
-
-	// rk.On("MaxReportBufferWindow", ctx).Return(700_000, nil)
-	sk.On("UnbondingTime", ctx).Return(1814400*time.Second, nil)
-	_, err = ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selector.String(), ReporterAddress: reporter2.String()})
+	ctx = ctx.WithBlockHeight(2)
+	_, err = k.ReporterStake(ctx, reporter, []byte{})
 	require.NoError(t, err)
 
 	selection, err = k.Selectors.Get(ctx, selector)
 	require.NoError(t, err)
 	require.True(t, bytes.Equal(reporter2.Bytes(), selection.Reporter))
-	require.False(t, selection.LockedUntilTime.IsZero())
-	require.Equal(t, selection.LockedUntilTime, ctx.BlockTime().Add(1814400*time.Second))
+
+	_, err = ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selector.String(), ReporterAddress: reporter2.String()})
+	require.ErrorContains(t, err, "selector is already assigned to this reporter")
+}
+
+func TestSwitchReporterReplacesPendingTargetKeepsUnlock(t *testing.T) {
+	k, sk, _, _, _, ms, ctx := setupMsgServer(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(10)
+	sel, r1, r2, r3 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+
+	require.NoError(t, k.Selectors.Set(ctx, sel, types.NewSelection(r1, 1)))
+	require.NoError(t, k.Reporters.Set(ctx, r1, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "r1")))
+	require.NoError(t, k.Reporters.Set(ctx, r2, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "r2")))
+	require.NoError(t, k.Reporters.Set(ctx, r3, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "r3")))
+	require.NoError(t, k.Params.Set(ctx, types.Params{MaxSelectors: 10}))
+
+	sk.On("IterateDelegatorDelegations", ctx, sel, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Maybe().Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		delegations := []stakingtypes.Delegation{
+			{
+				DelegatorAddress: sel.String(),
+				ValidatorAddress: sdk.ValAddress(sel).String(),
+				Shares:           math.LegacyNewDec(1000),
+			},
+		}
+		for _, delegation := range delegations {
+			val := stakingtypes.Validator{
+				OperatorAddress: sdk.ValAddress(sel).String(),
+				Status:          stakingtypes.Bonded,
+				Tokens:          math.NewInt(1_000_000),
+				DelegatorShares: math.LegacyNewDec(1_000),
+			}
+			sk.On("GetValidator", ctx, sdk.ValAddress(sel)).Return(val, nil)
+			if fn(delegation) {
+				break
+			}
+		}
+	})
+
+	_, err := ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: sel.String(), ReporterAddress: r2.String()})
+	require.NoError(t, err)
+	pk := collections.Join(r1.Bytes(), sel.Bytes())
+	ent1, err := k.OutgoingPendingSwitches.Get(ctx, pk)
+	require.NoError(t, err)
+	unlock := ent1.UnlockBlock
+
+	_, err = ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: sel.String(), ReporterAddress: r3.String()})
+	require.NoError(t, err)
+	ent2, err := k.OutgoingPendingSwitches.Get(ctx, pk)
+	require.NoError(t, err)
+	require.Equal(t, unlock, ent2.UnlockBlock)
+	require.True(t, bytes.Equal(r3.Bytes(), ent2.ToReporter))
+
+	hasOld, err := k.IncomingPendingSwitchIdx.Has(ctx, collections.Join(r2.Bytes(), sel.Bytes()))
+	require.NoError(t, err)
+	require.False(t, hasOld)
+	hasNew, err := k.IncomingPendingSwitchIdx.Has(ctx, collections.Join(r3.Bytes(), sel.Bytes()))
+	require.NoError(t, err)
+	require.True(t, hasNew)
 }
 
 func TestSwitchReporterRejectsSelfSwitchAfterSelectingAndCreatingReporter(t *testing.T) {
@@ -268,6 +315,18 @@ func TestSwitchReporterRejectsSelfSwitchAfterSelectingAndCreatingReporter(t *tes
 	require.ErrorContains(t, err, "selector and reporter cannot be the same address")
 
 	selection, err := k.Selectors.Get(ctx, selector)
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(initialReporter.Bytes(), selection.Reporter))
+	pk := collections.Join(initialReporter.Bytes(), selector.Bytes())
+	has, err := k.OutgoingPendingSwitches.Has(ctx, pk)
+	require.NoError(t, err)
+	require.True(t, has)
+
+	ctx = ctx.WithBlockHeight(2)
+	_, err = k.ReporterStake(ctx, initialReporter, []byte{})
+	require.NoError(t, err)
+
+	selection, err = k.Selectors.Get(ctx, selector)
 	require.NoError(t, err)
 	require.True(t, bytes.Equal(selector.Bytes(), selection.Reporter))
 

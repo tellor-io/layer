@@ -71,6 +71,9 @@ var (
 	TotalAggregatesCountPrefix    = collections.NewPrefix(43)
 	ReporterAggregatesCountPrefix = collections.NewPrefix(44)
 	ReporterLastReportTimePrefix  = collections.NewPrefix(45)
+	// MaxOpenCommitmentByReporter maps reporter address -> monotonic max query
+	// Expiration height from reports submitted by that reporter (updated on SubmitValue).
+	MaxOpenCommitmentByReporterPrefix = collections.NewPrefix(46)
 )
 
 func KeyPrefix(p string) []byte {

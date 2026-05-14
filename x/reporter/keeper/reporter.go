@@ -51,7 +51,12 @@ func (k Keeper) HasMin(ctx context.Context, addr sdk.AccAddress, minRequired mat
 // the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties.
 // It also tracks period data for reward distribution - when delegation state changes,
 // the previous period is queued for distribution.
+// Ready pending reporter switches involving this reporter are finalized first (same entry path as MsgSubmitValue).
 func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, queryId []byte) (math.Int, error) {
+	if err := k.applyReadyPendingSwitchesForReporter(ctx, repAddr); err != nil {
+		return math.Int{}, err
+	}
+
 	needsRecalc, err := k.needsStakeRecalc(ctx, repAddr)
 	if err != nil {
 		return math.Int{}, err
@@ -194,6 +199,26 @@ func (k Keeper) GetNumOfSelectors(ctx context.Context, repAddr sdk.AccAddress) (
 	return len(keys), nil
 }
 
+// CountSelectorsDelegatingToReporterExcludingSelf counts selector accounts whose
+// Selection.reporter is repAddr, excluding repAddr itself (the self-reporter row).
+func (k Keeper) CountSelectorsDelegatingToReporterExcludingSelf(ctx context.Context, repAddr sdk.AccAddress) (int, error) {
+	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr.Bytes())
+	if err != nil {
+		return 0, err
+	}
+	keys, err := iter.PrimaryKeys()
+	if err != nil {
+		return 0, err
+	}
+	n := 0
+	for _, selAddr := range keys {
+		if !bytes.Equal(selAddr, repAddr.Bytes()) {
+			n++
+		}
+	}
+	return n, nil
+}
+
 func (k Keeper) GetSelector(ctx context.Context, selectorAddr sdk.AccAddress) (types.Selection, error) {
 	return k.Selectors.Get(ctx, selectorAddr)
 }
@@ -237,7 +262,17 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (m
 		if err != nil {
 			return math.Int{}, nil, nil, nil, err
 		}
-		// skip selectors that are locked out for switching reporters
+		// Skip selectors with a pending switch away from this reporter: their
+		// stake no longer counts toward the outgoing reporter until ReporterStake
+		// finalizes the handoff after unlock height.
+		hasPending, err := k.hasOutgoingPendingSwitch(ctx, repAddr.Bytes(), selectorAddr)
+		if err != nil {
+			return math.Int{}, nil, nil, nil, err
+		}
+		if hasPending && bytes.Equal(selector.Reporter, repAddr.Bytes()) {
+			continue
+		}
+		// skip selectors still inside legacy locked_until_time (e.g. post-dispute), unrelated to pending switch rows
 		if selector.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
 			lockUnix := selector.LockedUntilTime.Unix()
 			if earliestFutureLock == 0 || lockUnix < earliestFutureLock {

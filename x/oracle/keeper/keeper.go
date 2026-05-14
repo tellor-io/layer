@@ -86,6 +86,10 @@ type (
 		TotalAggregatesCount    collections.Item[uint64]        // total aggregates on chain
 		ReporterAggregatesCount collections.Map[[]byte, uint64] // key: reporter, value: reports submitted (incremented at submission)
 		ReporterLastReportTime  collections.Map[[]byte, int64]  // key: reporter, value: timestamp of last report
+		// MaxOpenCommitmentByReporter: monotonic max QueryMeta.Expiration seen per
+		// reporter on each successful SubmitValue; read when scheduling a pending
+		// reporter switch (unlock height snapshot on the outgoing reporter).
+		MaxOpenCommitmentByReporter collections.Map[[]byte, uint64]
 	}
 )
 
@@ -194,6 +198,12 @@ func NewKeeper(
 		TotalAggregatesCount:    collections.NewItem(sb, types.TotalAggregatesCountPrefix, "total_aggregates_count", collections.Uint64Value),
 		ReporterAggregatesCount: collections.NewMap(sb, types.ReporterAggregatesCountPrefix, "reporter_aggregates_count", collections.BytesKey, collections.Uint64Value),
 		ReporterLastReportTime:  collections.NewMap(sb, types.ReporterLastReportTimePrefix, "reporter_last_report_time", collections.BytesKey, collections.Int64Value),
+		MaxOpenCommitmentByReporter: collections.NewMap(sb,
+			types.MaxOpenCommitmentByReporterPrefix,
+			"max_open_commitment_by_reporter",
+			collections.BytesKey,
+			collections.Uint64Value,
+		),
 	}
 
 	schema, err := sb.Build()

@@ -21,8 +21,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			desc:     "valid genesis state",
 			genState: &types.GenesisState{
-
-				// this line is used by starport scaffolding # types/genesis/validField
+				Params: types.DefaultParams(),
 			},
 			valid: true,
 		},

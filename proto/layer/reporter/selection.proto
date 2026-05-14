@@ -20,6 +20,28 @@ message Selection {
   ];
   // delegations_count is the number of delegations to the reporter
   uint64 delegations_count = 3;
+  // switch_out_locked_until_block is the block height until which this selector
+  // cannot initiate another reporter switch while a handoff is incomplete: it
+  // stores the oracle snapshot (max open query expiration for the outgoing
+  // reporter at schedule time). Cleared when the pending switch is finalized.
+  uint64 switch_out_locked_until_block = 4;
+
+  reserved 5;
+}
+
+// Pending switch keyed by (outgoing_reporter, selector) in keeper collections.
+message PendingSwitchEntry {
+  bytes to_reporter = 1;
+  uint64 unlock_block = 2;
+}
+
+// Single-reporter summary for O(1) checks in ReporterStake: one Get per reporter
+// to see if any pending switch involving this reporter may be ready at height.
+message ReporterPendingSwitchHead {
+  uint32 outgoing_count = 1;
+  uint64 outgoing_min_unlock = 2;
+  uint32 incoming_count = 3;
+  uint64 incoming_min_unlock = 4;
 }
 
 // IndividualDelegation represents a single delegation to a validator

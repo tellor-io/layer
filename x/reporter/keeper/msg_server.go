@@ -77,36 +77,49 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 		if bytes.Equal(selection.Reporter, addr.Bytes()) {
 			return nil, errors.New("address is already a reporter")
 		}
-		// check if selector was part of a report before switching
-		prevReporter := sdk.AccAddress(selection.Reporter)
-		prevReportedPower, err := k.Keeper.GetReporterTokensAtBlock(goCtx, prevReporter, uint64(sdk.UnwrapSDKContext(goCtx).BlockHeight()))
+		hasPending, err := k.Keeper.hasOutgoingPendingSwitch(goCtx, selection.Reporter, addr.Bytes())
 		if err != nil {
 			return nil, err
 		}
-		if !prevReportedPower.IsZero() {
-			unbondingTime, err := k.stakingKeeper.UnbondingTime(goCtx)
-			if err != nil {
-				return nil, err
+		prevReporter := sdk.AccAddress(selection.Reporter)
+		sdkCtx := sdk.UnwrapSDKContext(goCtx)
+
+		if !hasPending {
+			if selection.SwitchOutLockedUntilBlock >= uint64(sdkCtx.BlockHeight()) && selection.SwitchOutLockedUntilBlock != 0 {
+				return nil, errors.New("selector is locked until the current reporter switch completes")
 			}
-			selection.LockedUntilTime = sdk.UnwrapSDKContext(goCtx).BlockTime().Add(unbondingTime)
 		}
-		selection.Reporter = addr.Bytes()
-		if err := k.Keeper.Selectors.Set(goCtx, addr.Bytes(), selection); err != nil {
+
+		if err := k.Keeper.scheduleReporterSwitch(goCtx, addr, &selection, prevReporter, addr); err != nil {
 			return nil, err
 		}
+
 		if err := k.Keeper.Reporters.Set(goCtx, addr.Bytes(), types.NewReporter(msg.CommissionRate, msg.MinTokensRequired, msg.Moniker)); err != nil {
 			return nil, err
 		}
-		sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
+
+		selAfter, err := k.Keeper.Selectors.Get(goCtx, addr.Bytes())
+		if err != nil {
+			return nil, err
+		}
+		maxExp := selAfter.SwitchOutLockedUntilBlock
+		sdkCtx.EventManager().EmitEvents(sdk.Events{
 			sdk.NewEvent(
 				"created_reporter_from_selector",
 				sdk.NewAttribute("reporter", msg.ReporterAddress),
 				sdk.NewAttribute("commission", msg.CommissionRate.String()),
 				sdk.NewAttribute("min_tokens_required", msg.MinTokensRequired.String()),
 				sdk.NewAttribute("moniker", msg.Moniker),
+				sdk.NewAttribute("pending_switch_lock_until_block", strconv.FormatUint(maxExp, 10)),
 			),
 		})
-		telemetry.IncrCounterWithLabels([]string{"create_reporter_count"}, 1, []metrics.Label{{Name: "chain_id", Value: sdk.UnwrapSDKContext(goCtx).ChainID()}})
+		if err := k.Keeper.FlagStakeRecalc(goCtx, prevReporter); err != nil {
+			return nil, err
+		}
+		if err := k.Keeper.FlagStakeRecalc(goCtx, addr); err != nil {
+			return nil, err
+		}
+		telemetry.IncrCounterWithLabels([]string{"create_reporter_count"}, 1, []metrics.Label{{Name: "chain_id", Value: sdkCtx.ChainID()}})
 		return &types.MsgCreateReporterResponse{}, nil
 	}
 
@@ -225,10 +238,13 @@ func validateSelectReporter(msg *types.MsgSelectReporter) (selector, reporter sd
 	return selector, reporter, nil
 }
 
-// Msg: SwitchReporter, allows a selector to switch reporters if they meet the new reporters min requirement
-// and the new reporter has not reached the max selectors allowed
-// switching reporters will not automatically include the selector's tokens to be part of reporting until the unbonding time has passed
-// in order to prevent the selector from being part of a report twice unless they were part of a reporter that hasn't reported yet
+// Msg: SwitchReporter schedules a move to another reporter: a pending row is stored
+// under the outgoing reporter, Selection.reporter stays on the outgoing address until
+// unlock height, and ReporterStake (e.g. via MsgSubmitValue) applies the handoff.
+// The selector's stake stops counting toward the outgoing reporter immediately; it
+// does not count toward the incoming reporter until finalization. Caps, min stake, and
+// oracle snapshot unlock (switch_out_locked_until_block) apply when not already
+// in-flight for this selector.
 func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchReporter) (*types.MsgSwitchReporterResponse, error) {
 	selectorAddr, reporterAddr, err := validateSwitchReporter(msg)
 	if err != nil {
@@ -248,18 +264,29 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	if err != nil {
 		return nil, err
 	}
-	// check if reporter is trying to become a selector, can only switch if havent reported in the last 21 days
+	pending, toB, err := k.Keeper.pendingSwitchToReporter(goCtx, prevReporter, selectorAddr)
+	if err != nil {
+		return nil, err
+	}
+	if pending && bytes.Equal(toB, reporterAddr.Bytes()) {
+		return &types.MsgSwitchReporterResponse{}, nil
+	}
+	// check if reporter is trying to become a selector of another reporter: if they
+	// still have other selectors, require 21 days since their last oracle report.
 	if bytes.Equal(selector.Reporter, selectorAddr.Bytes()) {
-		// get the timestamp of the most recent report for reporter switching to selector (msg signer/selector)
-		lastReportTimestamp, err := k.Keeper.oracleKeeper.GetLastReportedAtTimestamp(goCtx, selectorAddr.Bytes())
+		others, err := k.Keeper.CountSelectorsDelegatingToReporterExcludingSelf(goCtx, selectorAddr)
 		if err != nil {
 			return nil, err
 		}
-
-		// check if the reporter has reported in the last 21 days
-		currentBlocktime := uint64(sdk.UnwrapSDKContext(goCtx).BlockTime().UnixMilli())
-		if currentBlocktime-lastReportTimestamp < TwentyOneDaysInMs {
-			return nil, errors.New("reporter has reported in the last 21 days, please wait before switching reporters")
+		if others > 0 {
+			lastReportTimestamp, err := k.Keeper.oracleKeeper.GetLastReportedAtTimestamp(goCtx, selectorAddr.Bytes())
+			if err != nil {
+				return nil, err
+			}
+			currentBlocktime := uint64(sdk.UnwrapSDKContext(goCtx).BlockTime().UnixMilli())
+			if currentBlocktime-lastReportTimestamp < TwentyOneDaysInMs {
+				return nil, errors.New("reporter has other selectors; must wait 21 days since last report before delegating reporting to another reporter")
+			}
 		}
 
 		if err := k.Keeper.Reporters.Remove(goCtx, selectorAddr.Bytes()); err != nil {
@@ -291,45 +318,43 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 		return nil, fmt.Errorf("reporter's min requirement of %s not met by selector. Must stake enough to reach the minimum", reporter.MinTokensRequired.String())
 	}
 
-	// check if selector was part of a report before switching
-	prevReportedPower, err := k.Keeper.GetReporterTokensAtBlock(goCtx, prevReporter, uint64(sdk.UnwrapSDKContext(goCtx).BlockHeight()))
+	sdkCtx := sdk.UnwrapSDKContext(goCtx)
+	currentBlock := uint64(sdkCtx.BlockHeight())
+
+	hasPending, err := k.Keeper.hasOutgoingPendingSwitch(goCtx, prevReporter.Bytes(), selectorAddr.Bytes())
 	if err != nil {
 		return nil, err
 	}
-
-	if !prevReportedPower.IsZero() {
-		unbondingTime, err := k.stakingKeeper.UnbondingTime(goCtx)
-		if err != nil {
-			return nil, err
-		}
-
-		selector.LockedUntilTime = sdk.UnwrapSDKContext(goCtx).BlockTime().Add(unbondingTime)
-
-		// Set RecalcAtTime for the new reporter so their cache is updated when this lock expires.
-		lockUnix := selector.LockedUntilTime.Unix()
-		existing, err := k.Keeper.RecalcAtTime.Get(goCtx, reporterAddr.Bytes())
-		if err != nil || lockUnix < existing {
-			if err := k.Keeper.RecalcAtTime.Set(goCtx, reporterAddr.Bytes(), lockUnix); err != nil {
-				return nil, err
-			}
+	if !hasPending {
+		if selector.SwitchOutLockedUntilBlock >= currentBlock && selector.SwitchOutLockedUntilBlock != 0 {
+			return nil, errors.New("selector is locked until the current reporter switch completes")
 		}
 	}
-	selector.Reporter = reporterAddr.Bytes()
-	if err := k.Keeper.Selectors.Set(goCtx, selectorAddr.Bytes(), selector); err != nil {
+
+	// Original reporter must recompute stake immediately so the selector's power
+	// is excluded from future reports while the switch is pending.
+	if err := k.Keeper.FlagStakeRecalc(goCtx, prevReporter); err != nil {
 		return nil, err
 	}
-	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvents(sdk.Events{
+
+	if err := k.Keeper.scheduleReporterSwitch(goCtx, selectorAddr, &selector, prevReporter, reporterAddr); err != nil {
+		return nil, err
+	}
+
+	selAfter, err := k.Keeper.Selectors.Get(goCtx, selectorAddr.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	maxExp := selAfter.SwitchOutLockedUntilBlock
+	sdkCtx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"switched_reporter",
 			sdk.NewAttribute("selector", msg.SelectorAddress),
 			sdk.NewAttribute("previous_reporter", prevReporter.String()),
 			sdk.NewAttribute("new_reporter", msg.ReporterAddress),
-			sdk.NewAttribute("selector_locked_until", selector.LockedUntilTime.String()),
+			sdk.NewAttribute("pending_switch_lock_until_block", strconv.FormatUint(maxExp, 10)),
 		),
 	})
-	if err := k.Keeper.FlagStakeRecalc(goCtx, prevReporter); err != nil {
-		return nil, err
-	}
 	if err := k.Keeper.FlagStakeRecalc(goCtx, reporterAddr); err != nil {
 		return nil, err
 	}

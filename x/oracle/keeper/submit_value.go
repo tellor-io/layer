@@ -106,6 +106,9 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 	if err := k.Reports.Set(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id), report); err != nil {
 		return err
 	}
+	if err := k.bumpMaxOpenCommitmentForReporter(ctx, reporter.Bytes(), query.Expiration); err != nil {
+		return err
+	}
 
 	// Track liveness
 	if err := k.TrackReporterParticipation(ctx, reporter.Bytes()); err != nil {

@@ -41,6 +41,13 @@ type (
 		StakeRecalcFlag        collections.Map[[]byte, bool]  // reporters flagged for stake recalculation
 		RecalcAtTime           collections.Map[[]byte, int64] // per-reporter earliest lock expiry in seconds requiring recalculation
 
+		// Deferred reporter switches: key (outgoing_reporter, selector) -> target + unlock height.
+		OutgoingPendingSwitches collections.Map[collections.Pair[[]byte, []byte], types.PendingSwitchEntry]
+		// Incoming index: key (incoming_reporter, selector) -> outgoing_reporter address bytes.
+		IncomingPendingSwitchIdx collections.Map[collections.Pair[[]byte, []byte], []byte]
+		// One row per reporter: counts + min unlock for O(1) checks in ReporterStake.
+		ReporterPendingSwitchHeads collections.Map[[]byte, types.ReporterPendingSwitchHead]
+
 		Schema collections.Schema
 		logger log.Logger
 
@@ -97,7 +104,25 @@ func NewKeeper(
 		LastValSetUpdateHeight:   collections.NewItem(sb, types.LastValSetUpdateHeightPrefix, "last_val_set_update_height", collections.Uint64Value),
 		StakeRecalcFlag:          collections.NewMap(sb, types.StakeRecalcFlagPrefix, "stake_recalc_flag", collections.BytesKey, collections.BoolValue),
 		RecalcAtTime:             collections.NewMap(sb, types.RecalcAtTimePrefix, "recalc_at_time", collections.BytesKey, collections.Int64Value),
-		authority:                authority,
+		OutgoingPendingSwitches: collections.NewMap(sb,
+			types.OutgoingPendingSwitchPrefix,
+			"outgoing_pending_switch",
+			collections.PairKeyCodec(collections.BytesKey, collections.BytesKey),
+			codec.CollValue[types.PendingSwitchEntry](cdc),
+		),
+		IncomingPendingSwitchIdx: collections.NewMap(sb,
+			types.IncomingPendingSwitchIdxPrefix,
+			"incoming_pending_switch_idx",
+			collections.PairKeyCodec(collections.BytesKey, collections.BytesKey),
+			collections.BytesValue,
+		),
+		ReporterPendingSwitchHeads: collections.NewMap(sb,
+			types.ReporterPendingSwitchHeadPrefix,
+			"reporter_pending_switch_heads",
+			collections.BytesKey,
+			codec.CollValue[types.ReporterPendingSwitchHead](cdc),
+		),
+		authority: authority,
 		logger:                   logger,
 		accountKeeper:            accountKeeper,
 		stakingKeeper:            stakingKeeper,

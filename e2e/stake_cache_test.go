@@ -483,9 +483,9 @@ func TestStakeCacheSelectorSwitch(t *testing.T) {
 	}
 
 	// After switch: reporter 0 should lose selector's stake.
-	// Reporter 1 does NOT gain the selector's stake yet because the selector is locked
-	// for the unbonding period after switching reporters (LockedUntilTime is set in SwitchReporter).
-	// GetReporterStake skips selectors whose LockedUntilTime is after the current block time.
+	// Reporter 1 does NOT gain the selector's stake yet because the handoff is deferred
+	// until the outgoing reporter's open commitments are past (pending switch path).
+	// GetReporterStake skips selectors with an outgoing pending switch away from that reporter.
 	fmt.Printf("Reporter 0: %d -> %d\n", reporter0PowerBefore, reporter0PowerAfter)
 	fmt.Printf("Reporter 1: %d -> %d\n", reporter1PowerBefore, reporter1PowerAfter)
 	require.Less(reporter0PowerAfter, reporter0PowerBefore, "Reporter 0 should lose power after selector switches away")
