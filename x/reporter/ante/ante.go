@@ -73,6 +73,9 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			return ctx, err
 		}
 	}
+	if err := t.checkDelegatorStakeShares(ctx, stakeChanges); err != nil {
+		return ctx, err
+	}
 
 	return next(ctx, tx, simulate)
 }
@@ -242,11 +245,6 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 	if err != nil {
 		// for when chain is first started
 		if errors.Is(err, collections.ErrNotFound) {
-			if msgAmount.IsPositive() {
-				if err := t.checkDelegatorStakeShare(ctx, delegatorAddr, msgAmount, currentAmount, stakeChanges); err != nil {
-					return err
-				}
-			}
 			if stakeChanges != nil {
 				stakeChanges.add(delegatorAddr, msgAmount)
 			}
@@ -271,38 +269,37 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 			return errors.New("total stake increase exceeds the allowed 5% threshold within a twelve-hour period")
 		}
 	}
-	if msgAmount.IsPositive() {
-		if err := t.checkDelegatorStakeShare(ctx, delegatorAddr, msgAmount, currentAmount, stakeChanges); err != nil {
-			return err
-		}
-	}
 	if stakeChanges != nil {
 		stakeChanges.add(delegatorAddr, msgAmount)
 	}
 	return nil
 }
 
-func (t TrackStakeChangesDecorator) checkDelegatorStakeShare(ctx sdk.Context, delegator sdk.AccAddress, msgAmount math.Int, currentTotalBonded math.Int, stakeChanges *stakeChangeTracker) error {
-	if delegator == nil || !currentTotalBonded.IsPositive() {
+func (t TrackStakeChangesDecorator) checkDelegatorStakeShares(ctx sdk.Context, stakeChanges *stakeChangeTracker) error {
+	if stakeChanges == nil || len(stakeChanges.delegatorBondedDelta) == 0 {
 		return nil
 	}
-	totalBondedAfter := currentTotalBonded.Add(msgAmount)
-	if stakeChanges != nil {
-		totalBondedAfter = currentTotalBonded.Add(stakeChanges.totalBondedDelta).Add(msgAmount)
-	}
-	if !totalBondedAfter.IsPositive() {
-		return nil
-	}
-	currentDelegatorBonded, err := t.delegatorBondedTokens(ctx, delegator)
+	currentTotalBonded, err := t.stakingKeeper.TotalBondedTokens(ctx)
 	if err != nil {
 		return err
 	}
-	delegatorBondedAfter := currentDelegatorBonded.Add(msgAmount)
-	if stakeChanges != nil {
-		delegatorBondedAfter = currentDelegatorBonded.Add(stakeChanges.delegatorDelta(delegator)).Add(msgAmount)
+	totalBondedAfter := currentTotalBonded.Add(stakeChanges.totalBondedDelta)
+	if !totalBondedAfter.IsPositive() {
+		return nil
 	}
-	if delegatorBondedAfter.MulRaw(10).GT(totalBondedAfter.MulRaw(3)) {
-		return types.ErrExceedsMaxStakeShare
+	for delegatorKey, delta := range stakeChanges.delegatorBondedDelta {
+		if !delta.IsPositive() {
+			continue
+		}
+		delegator := sdk.AccAddress([]byte(delegatorKey))
+		currentDelegatorBonded, err := t.delegatorBondedTokens(ctx, delegator)
+		if err != nil {
+			return err
+		}
+		delegatorBondedAfter := currentDelegatorBonded.Add(delta)
+		if delegatorBondedAfter.MulRaw(10).GT(totalBondedAfter.MulRaw(3)) {
+			return types.ErrExceedsMaxStakeShare
+		}
 	}
 	return nil
 }

@@ -444,3 +444,73 @@ func TestTrackStakeChangesDecoratorDelegatorStakeShare(t *testing.T) {
 		})
 	}
 }
+
+func TestTrackStakeChangesDecoratorDelegatorStakeShareUsesFinalTxTotal(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
+	decorator := NewTrackStakeChangesDecorator(k, sk)
+	currentTotal := math.NewInt(100)
+	require.NoError(t, k.Tracker.Set(ctx, types.StakeTracker{
+		Expiration: nil,
+		Amount:     currentTotal,
+	}))
+
+	aliceAddr := sample.AccAddressBytes()
+	aliceValAddr := sdk.ValAddress(sample.AccAddressBytes())
+	aliceValidator := stakingtypes.Validator{
+		OperatorAddress:   aliceValAddr.String(),
+		Status:            stakingtypes.Bonded,
+		Tokens:            math.NewInt(29),
+		DelegatorShares:   math.NewInt(29).ToLegacyDec(),
+		MinSelfDelegation: math.OneInt(),
+	}
+	aliceDelegations := []stakingtypes.Delegation{
+		{
+			DelegatorAddress: aliceAddr.String(),
+			ValidatorAddress: aliceValAddr.String(),
+			Shares:           math.NewInt(29).ToLegacyDec(),
+		},
+	}
+
+	bobAddr := sample.AccAddressBytes()
+	bobValAddr := sdk.ValAddress(sample.AccAddressBytes())
+	bobValidator := stakingtypes.Validator{
+		OperatorAddress:   bobValAddr.String(),
+		Status:            stakingtypes.Bonded,
+		Tokens:            math.NewInt(2),
+		DelegatorShares:   math.NewInt(2).ToLegacyDec(),
+		MinSelfDelegation: math.OneInt(),
+	}
+
+	sk.On("TotalBondedTokens", ctx).Return(currentTotal, nil)
+	sk.On("GetAllDelegatorDelegations", ctx, aliceAddr).Return(aliceDelegations, nil)
+	sk.On("GetValidator", ctx, aliceValAddr).Return(aliceValidator, nil)
+	sk.On("GetValidator", ctx, bobValAddr).Return(bobValidator, nil)
+	sk.On("IterateDelegatorDelegations", ctx, aliceAddr, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		for _, delegation := range aliceDelegations {
+			if fn(delegation) {
+				return
+			}
+		}
+	})
+
+	s := encoding.GetTestEncodingCfg()
+	txBuilder := client.Context{}.WithTxConfig(s.TxConfig).TxConfig.NewTxBuilder()
+	require.NoError(t, txBuilder.SetMsgs(
+		&stakingtypes.MsgDelegate{
+			DelegatorAddress: aliceAddr.String(),
+			ValidatorAddress: aliceValAddr.String(),
+			Amount:           sdk.Coin{Denom: "loya", Amount: math.OneInt()},
+		},
+		&stakingtypes.MsgUndelegate{
+			DelegatorAddress: bobAddr.String(),
+			ValidatorAddress: bobValAddr.String(),
+			Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(2)},
+		},
+	))
+
+	_, err := decorator.AnteHandle(ctx, txBuilder.GetTx(), false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		return ctx, nil
+	})
+	require.ErrorIs(t, err, types.ErrExceedsMaxStakeShare)
+}
