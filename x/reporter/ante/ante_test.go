@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/encoding"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
@@ -32,6 +33,7 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
 	decorator := NewTrackStakeChangesDecorator(k, sk)
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100), nil)
+	sk.On("IterateDelegatorDelegations", ctx, mock.Anything, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil)
 	err := k.Tracker.Set(ctx, types.StakeTracker{
 		Expiration: nil,
 		Amount:     math.NewInt(105),
@@ -331,6 +333,105 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 			require.NoError(t, err)
 			tx := txBuilder.GetTx()
 			_, err = decorator.AnteHandle(ctx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+				return ctx, nil
+			})
+
+			if tc.err != nil {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.err.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestTrackStakeChangesDecoratorDelegatorStakeShare(t *testing.T) {
+	testCases := []struct {
+		name          string
+		currentTotal  math.Int
+		existingStake math.Int
+		delegateAmts  []math.Int
+		err           error
+	}{
+		{
+			name:          "blocks delegate over 30 percent",
+			currentTotal:  math.NewInt(100),
+			existingStake: math.NewInt(30),
+			delegateAmts:  []math.Int{math.OneInt()},
+			err:           types.ErrExceedsMaxStakeShare,
+		},
+		{
+			name:          "allows exactly 30 percent",
+			currentTotal:  math.NewInt(99),
+			existingStake: math.NewInt(29),
+			delegateAmts:  []math.Int{math.OneInt()},
+			err:           nil,
+		},
+		{
+			name:          "tracks multiple delegate messages in one tx",
+			currentTotal:  math.NewInt(100),
+			existingStake: math.NewInt(29),
+			delegateAmts:  []math.Int{math.OneInt(), math.OneInt()},
+			err:           types.ErrExceedsMaxStakeShare,
+		},
+	}
+
+	s := encoding.GetTestEncodingCfg()
+	clientCtx := client.Context{}.
+		WithTxConfig(s.TxConfig)
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
+			decorator := NewTrackStakeChangesDecorator(k, sk)
+			require.NoError(t, k.Tracker.Set(ctx, types.StakeTracker{
+				Expiration: nil,
+				Amount:     tc.currentTotal,
+			}))
+
+			delAddr := sample.AccAddressBytes()
+			valAddr := sdk.ValAddress(sample.AccAddressBytes())
+			validator := stakingtypes.Validator{
+				OperatorAddress:   valAddr.String(),
+				Status:            stakingtypes.Bonded,
+				Tokens:            tc.existingStake,
+				DelegatorShares:   tc.existingStake.ToLegacyDec(),
+				MinSelfDelegation: math.OneInt(),
+			}
+			delegations := []stakingtypes.Delegation{
+				{
+					DelegatorAddress: delAddr.String(),
+					ValidatorAddress: valAddr.String(),
+					Shares:           tc.existingStake.ToLegacyDec(),
+				},
+			}
+
+			sk.On("TotalBondedTokens", ctx).Return(tc.currentTotal, nil)
+			sk.On("GetAllDelegatorDelegations", ctx, delAddr).Return(delegations, nil)
+			sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
+			sk.On("IterateDelegatorDelegations", ctx, delAddr, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+				fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+				for _, delegation := range delegations {
+					if fn(delegation) {
+						return
+					}
+				}
+			})
+
+			msgs := make([]sdk.Msg, 0, len(tc.delegateAmts))
+			for _, amount := range tc.delegateAmts {
+				msgs = append(msgs, &stakingtypes.MsgDelegate{
+					DelegatorAddress: delAddr.String(),
+					ValidatorAddress: valAddr.String(),
+					Amount:           sdk.Coin{Denom: "loya", Amount: amount},
+				})
+			}
+			txBuilder := clientCtx.TxConfig.NewTxBuilder()
+			require.NoError(t, txBuilder.SetMsgs(msgs...))
+			tx := txBuilder.GetTx()
+
+			_, err := decorator.AnteHandle(ctx, tx, false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
 				return ctx, nil
 			})
 
