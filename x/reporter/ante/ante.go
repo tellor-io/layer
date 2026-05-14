@@ -156,8 +156,11 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	if err := t.applyProspectiveBondedValidatorChanges(ctx, stakeChanges); err != nil {
 		return ctx, err
 	}
-	if err := t.checkDelegatorStakeShares(ctx, stakeChanges); err != nil {
-		return ctx, err
+	// Allows multi-validator genesis
+	if ctx.BlockHeight() > 0 {
+		if err := t.checkDelegatorStakeShares(ctx, stakeChanges); err != nil {
+			return ctx, err
+		}
 	}
 
 	return next(ctx, tx, simulate)

@@ -346,9 +346,10 @@ func TestNewTrackStakeChangesDecorator(t *testing.T) {
 	}
 }
 
-func TestTrackStakeChangesDecoratorDelegatorStakeShare(t *testing.T) {
+func TestStakeShare(t *testing.T) {
 	testCases := []struct {
 		name          string
+		blockHeight   int64
 		currentTotal  math.Int
 		existingStake math.Int
 		delegateAmts  []math.Int
@@ -356,6 +357,7 @@ func TestTrackStakeChangesDecoratorDelegatorStakeShare(t *testing.T) {
 	}{
 		{
 			name:          "blocks delegate over 30 percent",
+			blockHeight:   1,
 			currentTotal:  math.NewInt(100),
 			existingStake: math.NewInt(30),
 			delegateAmts:  []math.Int{math.OneInt()},
@@ -363,6 +365,7 @@ func TestTrackStakeChangesDecoratorDelegatorStakeShare(t *testing.T) {
 		},
 		{
 			name:          "allows exactly 30 percent",
+			blockHeight:   1,
 			currentTotal:  math.NewInt(99),
 			existingStake: math.NewInt(29),
 			delegateAmts:  []math.Int{math.OneInt()},
@@ -370,10 +373,19 @@ func TestTrackStakeChangesDecoratorDelegatorStakeShare(t *testing.T) {
 		},
 		{
 			name:          "tracks multiple delegate messages in one tx",
+			blockHeight:   1,
 			currentTotal:  math.NewInt(100),
 			existingStake: math.NewInt(29),
 			delegateAmts:  []math.Int{math.OneInt(), math.OneInt()},
 			err:           types.ErrExceedsMaxStakeShare,
+		},
+		{
+			name:          "allows genesis gentx bootstrap at height zero",
+			blockHeight:   0,
+			currentTotal:  math.NewInt(100),
+			existingStake: math.NewInt(30),
+			delegateAmts:  []math.Int{math.OneInt()},
+			err:           nil,
 		},
 	}
 
@@ -384,6 +396,7 @@ func TestTrackStakeChangesDecoratorDelegatorStakeShare(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
+			ctx = ctx.WithBlockHeight(tc.blockHeight)
 			decorator := NewTrackStakeChangesDecorator(k, sk)
 			require.NoError(t, k.Tracker.Set(ctx, types.StakeTracker{
 				Expiration: nil,
@@ -435,6 +448,9 @@ func TestTrackStakeChangesDecoratorDelegatorStakeShare(t *testing.T) {
 				return ctx, nil
 			})
 
+			// Height 0 is InitChain gentx replay, where validators are bonded
+			// one at a time. Post-genesis blocks enforce the 30% delegator cap
+			// against the final stake produced by all messages in the tx.
 			if tc.err != nil {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.err.Error())
@@ -445,8 +461,121 @@ func TestTrackStakeChangesDecoratorDelegatorStakeShare(t *testing.T) {
 	}
 }
 
-func TestTrackStakeChangesDecoratorDelegatorStakeShareUsesFinalTxTotal(t *testing.T) {
+func TestStakeShareSameTxDrop(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
+	ctx = ctx.WithBlockHeight(1)
+	decorator := NewTrackStakeChangesDecorator(k, sk)
+	currentTotal := math.NewInt(100)
+	require.NoError(t, k.Tracker.Set(ctx, types.StakeTracker{
+		Expiration: nil,
+		Amount:     currentTotal,
+	}))
+
+	attackerAddr := sample.AccAddressBytes()
+	attackerValAddr := sdk.ValAddress(sample.AccAddressBytes())
+	attackerValidator := stakingtypes.Validator{
+		OperatorAddress:   attackerValAddr.String(),
+		Status:            stakingtypes.Bonded,
+		Tokens:            math.NewInt(29),
+		DelegatorShares:   math.NewInt(29).ToLegacyDec(),
+		MinSelfDelegation: math.OneInt(),
+	}
+	attackerDelegations := []stakingtypes.Delegation{
+		{
+			DelegatorAddress: attackerAddr.String(),
+			ValidatorAddress: attackerValAddr.String(),
+			Shares:           math.NewInt(29).ToLegacyDec(),
+		},
+	}
+	otherAddr := sample.AccAddressBytes()
+	otherValAddr := sdk.ValAddress(sample.AccAddressBytes())
+	otherValidator := stakingtypes.Validator{
+		OperatorAddress:   otherValAddr.String(),
+		Status:            stakingtypes.Bonded,
+		Tokens:            math.NewInt(10),
+		DelegatorShares:   math.NewInt(10).ToLegacyDec(),
+		MinSelfDelegation: math.OneInt(),
+	}
+
+	sk.On("TotalBondedTokens", ctx).Return(currentTotal, nil)
+	sk.On("GetAllDelegatorDelegations", ctx, attackerAddr).Return(attackerDelegations, nil)
+	sk.On("GetValidator", ctx, attackerValAddr).Return(attackerValidator, nil)
+	sk.On("GetValidator", ctx, otherValAddr).Return(otherValidator, nil)
+	sk.On("IterateDelegatorDelegations", ctx, attackerAddr, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		for _, delegation := range attackerDelegations {
+			if fn(delegation) {
+				return
+			}
+		}
+	})
+
+	s := encoding.GetTestEncodingCfg()
+	txBuilder := client.Context{}.WithTxConfig(s.TxConfig).TxConfig.NewTxBuilder()
+	// The tx first removes 5 tokens from another delegator, lowering total
+	// bonded stake, then adds 1 token to the attacker. The final state is
+	// attacker 30 / total 96, which is above the 30% cap and must fail.
+	require.NoError(t, txBuilder.SetMsgs(
+		&stakingtypes.MsgUndelegate{
+			DelegatorAddress: otherAddr.String(),
+			ValidatorAddress: otherValAddr.String(),
+			Amount:           sdk.Coin{Denom: "loya", Amount: math.NewInt(5)},
+		},
+		&stakingtypes.MsgDelegate{
+			DelegatorAddress: attackerAddr.String(),
+			ValidatorAddress: attackerValAddr.String(),
+			Amount:           sdk.Coin{Denom: "loya", Amount: math.OneInt()},
+		},
+	))
+
+	_, err := decorator.AnteHandle(ctx, txBuilder.GetTx(), false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		return ctx, nil
+	})
+	require.ErrorIs(t, err, types.ErrExceedsMaxStakeShare)
+}
+
+func TestStakeShareReduction(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
+	ctx = ctx.WithBlockHeight(1)
+	decorator := NewTrackStakeChangesDecorator(k, sk)
+	currentTotal := math.NewInt(100)
+	require.NoError(t, k.Tracker.Set(ctx, types.StakeTracker{
+		Expiration: nil,
+		Amount:     currentTotal,
+	}))
+
+	delAddr := sample.AccAddressBytes()
+	valAddr := sdk.ValAddress(sample.AccAddressBytes())
+	validator := stakingtypes.Validator{
+		OperatorAddress:   valAddr.String(),
+		Status:            stakingtypes.Bonded,
+		Tokens:            math.NewInt(40),
+		DelegatorShares:   math.NewInt(40).ToLegacyDec(),
+		MinSelfDelegation: math.OneInt(),
+	}
+
+	sk.On("TotalBondedTokens", ctx).Return(currentTotal, nil)
+	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
+
+	s := encoding.GetTestEncodingCfg()
+	txBuilder := client.Context{}.WithTxConfig(s.TxConfig).TxConfig.NewTxBuilder()
+	// A delegator already over the cap must still be able to reduce stake.
+	// This tx only undelegates, so it cannot increase concentration risk.
+	require.NoError(t, txBuilder.SetMsgs(&stakingtypes.MsgUndelegate{
+		DelegatorAddress: delAddr.String(),
+		ValidatorAddress: valAddr.String(),
+		Amount:           sdk.Coin{Denom: "loya", Amount: math.OneInt()},
+	}))
+
+	_, err := decorator.AnteHandle(ctx, txBuilder.GetTx(), false, func(ctx sdk.Context, tx sdk.Tx, simulate bool) (newCtx sdk.Context, err error) {
+		return ctx, nil
+	})
+	require.NoError(t, err)
+}
+
+func TestStakeShareFinalTotal(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
+	ctx = ctx.WithBlockHeight(1)
 	decorator := NewTrackStakeChangesDecorator(k, sk)
 	currentTotal := math.NewInt(100)
 	require.NoError(t, k.Tracker.Set(ctx, types.StakeTracker{
@@ -496,6 +625,9 @@ func TestTrackStakeChangesDecoratorDelegatorStakeShareUsesFinalTxTotal(t *testin
 
 	s := encoding.GetTestEncodingCfg()
 	txBuilder := client.Context{}.WithTxConfig(s.TxConfig).TxConfig.NewTxBuilder()
+	// Alice would be exactly 30 / 100 after her delegate alone. Bob's
+	// undelegate in the same tx lowers final total stake to 98, so Alice's
+	// final share exceeds 30% and the whole tx must fail.
 	require.NoError(t, txBuilder.SetMsgs(
 		&stakingtypes.MsgDelegate{
 			DelegatorAddress: aliceAddr.String(),
@@ -528,8 +660,9 @@ func (i *validatorPowerIterator) Value() []byte               { return i.values[
 func (i *validatorPowerIterator) Error() error                { return nil }
 func (i *validatorPowerIterator) Close() error                { return nil }
 
-func TestTrackStakeChangesDecoratorBlocksUnbondedValidatorBondingOverStakeShare(t *testing.T) {
+func TestUnbondedBondingStakeShare(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
+	ctx = ctx.WithBlockHeight(1)
 	decorator := NewTrackStakeChangesDecorator(k, sk)
 	currentTotal := math.NewInt(100)
 	require.NoError(t, k.Tracker.Set(ctx, types.StakeTracker{
@@ -581,6 +714,9 @@ func TestTrackStakeChangesDecoratorBlocksUnbondedValidatorBondingOverStakeShare(
 
 	s := encoding.GetTestEncodingCfg()
 	txBuilder := client.Context{}.WithTxConfig(s.TxConfig).TxConfig.NewTxBuilder()
+	// The candidate starts unbonded, but this delegate would make it enter the
+	// bonded set. The cap is checked against that prospective bonded state, so
+	// the delegator's 31 / 102 final share is rejected.
 	require.NoError(t, txBuilder.SetMsgs(&stakingtypes.MsgDelegate{
 		DelegatorAddress: delegatorAddr.String(),
 		ValidatorAddress: candidateValAddr.String(),
