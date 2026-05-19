@@ -985,6 +985,14 @@ func ExecProposal(ctx context.Context, keyName string, prop Proposal, tn *cosmos
 
 func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *cosmos.ChainNode) error {
 	fmt.Println("Turning on minting...")
+	mintingProposalPassed := func() (bool, error) {
+		proposal, err := layer.GovQueryProposal(ctx, 1)
+		if err != nil {
+			return false, err
+		}
+		return proposal.Status.String() == "PROPOSAL_STATUS_PASSED", nil
+	}
+
 	prop := Proposal{
 		Messages: []map[string]interface{}{
 			{
@@ -1004,8 +1012,17 @@ func TurnOnMinting(ctx context.Context, layer *cosmos.CosmosChain, validatorI *c
 	}
 
 	for _, v := range layer.Validators {
+		passed, err := mintingProposalPassed()
+		if err == nil && passed {
+			return nil
+		}
+
 		_, err = v.ExecTx(ctx, "validator", "gov", "vote", "1", "yes", "--gas", "1000000", "--fees", "500loya", "--keyring-dir", layer.HomeDir())
 		if err != nil {
+			passed, queryErr := mintingProposalPassed()
+			if queryErr == nil && passed {
+				return nil
+			}
 			return err
 		}
 	}
