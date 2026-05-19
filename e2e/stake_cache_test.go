@@ -174,7 +174,7 @@ func TestStakeCacheValSetUpdate(t *testing.T) {
 
 	cosmos.SetSDKConfig("tellor")
 
-	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	chain, ic, ctx := e2e.SetupChain(t, 4, 0)
 	defer ic.Close()
 
 	validators, err := e2e.GetValidators(ctx, chain)
@@ -367,7 +367,11 @@ func TestStakeCacheSelectorSwitch(t *testing.T) {
 
 	cosmos.SetSDKConfig("tellor")
 
-	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	config := e2e.DefaultSetupConfig()
+	config.ModifyGenesis = append(config.ModifyGenesis,
+		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "10"),
+	)
+	chain, ic, ctx := e2e.SetupChainWithCustomConfig(t, config)
 	defer ic.Close()
 
 	validators, err := e2e.GetValidators(ctx, chain)
@@ -406,11 +410,41 @@ func TestStakeCacheSelectorSwitch(t *testing.T) {
 
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
+	waitForCycleListQuery := func(previousQueryMetaID string) e2e.QueryCurrentCyclelistQueryResponse {
+		const minReportBlocksRemaining = 4
+
+		for range 20 {
+			currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
+			require.NoError(err)
+
+			var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
+			require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
+			require.NotNil(currentCycleList.QueryMeta)
+
+			if previousQueryMetaID != "" && currentCycleList.QueryMeta.Id == previousQueryMetaID {
+				require.NoError(testutil.WaitForBlocks(ctx, 1, validators[0].Node))
+				continue
+			}
+
+			expiration, err := strconv.ParseUint(currentCycleList.QueryMeta.Expiration, 10, 64)
+			require.NoError(err)
+
+			height, err := validators[0].Node.Height(ctx)
+			require.NoError(err)
+			if expiration >= uint64(height)+minReportBlocksRemaining {
+				return currentCycleList
+			}
+
+			require.NoError(testutil.WaitForBlocks(ctx, 1, validators[0].Node))
+		}
+
+		require.FailNow("timed out waiting for cyclelist query with enough remaining report blocks")
+		return e2e.QueryCurrentCyclelistQueryResponse{}
+	}
+
 	// Both reporters submit first report
-	currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
-	require.NoError(err)
-	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
-	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
+	currentCycleList := waitForCycleListQuery("")
+	firstQueryMetaID := currentCycleList.QueryMeta.Id
 
 	value := layerutil.EncodeValue(300.0)
 	for i := range validators {
@@ -450,9 +484,7 @@ func TestStakeCacheSelectorSwitch(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
 	// Both reporters submit second report
-	currentCycleListRes, _, err = e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
-	require.NoError(err)
-	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
+	currentCycleList = waitForCycleListQuery(firstQueryMetaID)
 
 	for i := range validators {
 		_, _, err = validators[i].Node.Exec(ctx, validators[i].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[i].Node.HomeDir()), validators[i].Node.Chain.Config().Env)
