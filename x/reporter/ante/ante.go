@@ -84,10 +84,6 @@ func newStakeChangeTracker() *stakeChangeTracker {
 	}
 }
 
-func (t *stakeChangeTracker) delegatorDelta(delegator sdk.AccAddress) math.Int {
-	return intFromMap(t.delegatorBondedDelta, newDelegatorAddressKey(delegator))
-}
-
 func intFromMap[K comparable](values map[K]math.Int, key K) math.Int {
 	value, ok := values[key]
 	if !ok {
