@@ -396,7 +396,7 @@ func TestUnjailReporter(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, reporter.Jailed)
 	_, err = msg.UnjailReporter(ctx, &types.MsgUnjailReporter{ReporterAddress: addr.String()})
-	require.ErrorContains(t, err, "cannot unjail an already unjailed reporter, false: reporter not jailed")
+	require.ErrorContains(t, err, "cannot unjail an already unjailed reporter")
 
 	reporter.Jailed = true
 	reporter.JailedUntil = ctx.BlockTime().Add(time.Hour)

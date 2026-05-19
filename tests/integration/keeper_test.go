@@ -13,6 +13,7 @@ import (
 	_ "github.com/tellor-io/layer/x/dispute"
 	_ "github.com/tellor-io/layer/x/oracle"
 	_ "github.com/tellor-io/layer/x/registry/module"
+	"github.com/tellor-io/layer/x/reporter/types"
 	_ "github.com/tellor-io/layer/x/reporter/module"
 
 	"cosmossdk.io/math"
@@ -56,6 +57,22 @@ func (s *IntegrationTestSuite) newKeysWithTokens() sdk.AccAddress {
 	Addr := sample.AccAddressBytes()
 	s.Setup.MintTokens(Addr, math.NewInt(1_000_000))
 	return Addr
+}
+
+// assignSelectorToReporter writes a Selection directly (bypassing MsgSelectReporter) and
+// flags the reporter for stake recalculation. MsgSelectReporter does both; when tests set
+// Selectors directly they must also flag recalc so the next ReporterStake (e.g. on
+// MsgSubmitValue) recomputes power and writes ReportByBlock with the selector in TokenOrigins.
+func (s *IntegrationTestSuite) assignSelectorToReporter(
+	selector, reporter sdk.AccAddress,
+	delegationsCount uint64,
+) {
+	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(
+		s.Setup.Ctx,
+		selector.Bytes(),
+		types.NewSelection(reporter, delegationsCount),
+	))
+	s.NoError(s.Setup.Reporterkeeper.FlagStakeRecalc(s.Setup.Ctx, reporter))
 }
 
 func CreateRandomPrivateKeys(accNum int) []ed25519.PrivKey {

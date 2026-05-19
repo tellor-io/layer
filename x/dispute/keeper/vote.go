@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/tellor-io/layer/x/dispute/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -180,7 +181,7 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		}
 		return math.ZeroInt(), nil
 	}
-	if selector.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
+	if reportertypes.SelectorStakeLocked(selector, sdk.UnwrapSDKContext(ctx).BlockTime()) {
 		return math.ZeroInt(), nil
 	}
 	selectorTokens, err := k.reporterKeeper.GetDelegatorTokensAtBlock(ctx, voter, blockNumber)

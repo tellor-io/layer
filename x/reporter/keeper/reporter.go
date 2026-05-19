@@ -220,7 +220,14 @@ func (k Keeper) CountSelectorsDelegatingToReporterExcludingSelf(ctx context.Cont
 }
 
 func (k Keeper) GetSelector(ctx context.Context, selectorAddr sdk.AccAddress) (types.Selection, error) {
-	return k.Selectors.Get(ctx, selectorAddr)
+	sel, err := k.Selectors.Get(ctx, selectorAddr)
+	if err != nil {
+		return types.Selection{}, err
+	}
+	if err := k.lazyUnjailSelectorIfExpired(ctx, selectorAddr, &sel); err != nil {
+		return types.Selection{}, err
+	}
+	return sel, nil
 }
 
 // GetReporterStake counts the total amount of BONDED tokens for a given reporter's selectors
@@ -257,8 +264,8 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (m
 		if err != nil {
 			return math.Int{}, nil, nil, nil, err
 		}
-		// get delegator count
-		selector, err := k.Selectors.Get(ctx, selectorAddr)
+		// get delegator count (lazy-clears expired selector dispute jail)
+		selector, err := k.GetSelector(ctx, sdk.AccAddress(selectorAddr))
 		if err != nil {
 			return math.Int{}, nil, nil, nil, err
 		}
@@ -272,11 +279,18 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (m
 		if hasPending && bytes.Equal(selector.Reporter, repAddr.Bytes()) {
 			continue
 		}
-		// skip selectors still inside legacy locked_until_time (e.g. post-dispute), unrelated to pending switch rows
-		if selector.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
-			lockUnix := selector.LockedUntilTime.Unix()
-			if earliestFutureLock == 0 || lockUnix < earliestFutureLock {
-				earliestFutureLock = lockUnix
+		// skip dispute-locked selectors (locked_until_time and/or jailed)
+		now := sdk.UnwrapSDKContext(ctx).BlockTime()
+		if selectorStakeLocked(selector, now) {
+			lockUntil := selector.LockedUntilTime
+			if selector.Jailed && selector.JailedUntil.After(lockUntil) {
+				lockUntil = selector.JailedUntil
+			}
+			if lockUntil.After(now) {
+				lockUnix := lockUntil.Unix()
+				if earliestFutureLock == 0 || lockUnix < earliestFutureLock {
+					earliestFutureLock = lockUnix
+				}
 			}
 			continue
 		}

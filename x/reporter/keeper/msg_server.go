@@ -12,6 +12,7 @@ import (
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 
@@ -289,6 +290,14 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 			}
 		}
 
+		selfRep, selfErr := k.Keeper.Reporters.Get(goCtx, selectorAddr.Bytes())
+		if selfErr == nil && selfRep.Jailed {
+			if err := k.Keeper.copyReporterJailToSelection(goCtx, selectorAddr, selfRep); err != nil {
+				return nil, err
+			}
+		} else if selfErr != nil && !errors.Is(selfErr, collections.ErrNotFound) {
+			return nil, selfErr
+		}
 		if err := k.Keeper.Reporters.Remove(goCtx, selectorAddr.Bytes()); err != nil {
 			return nil, err
 		}
@@ -461,12 +470,7 @@ func (k msgServer) UnjailReporter(goCtx context.Context, msg *types.MsgUnjailRep
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid reporter address (%s)", err)
 	}
 
-	reporter, err := k.Reporters.Get(ctx, reporterAddr)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := k.Keeper.UnjailReporter(ctx, reporterAddr, reporter); err != nil {
+	if err := k.Keeper.UnjailReporter(ctx, reporterAddr); err != nil {
 		return nil, err
 	}
 	ctx.EventManager().EmitEvents(sdk.Events{
