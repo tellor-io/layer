@@ -219,8 +219,15 @@ func (k Keeper) CountSelectorsDelegatingToReporterExcludingSelf(ctx context.Cont
 	return n, nil
 }
 
+// GetSelector returns the stored selection row without mutating state (safe for queries).
 func (k Keeper) GetSelector(ctx context.Context, selectorAddr sdk.AccAddress) (types.Selection, error) {
-	sel, err := k.Selectors.Get(ctx, selectorAddr)
+	return k.Selectors.Get(ctx, selectorAddr.Bytes())
+}
+
+// GetSelectorForStake returns the selection row and clears expired dispute-jail before
+// stake counting or dispute voting (mutates state when the sentence has ended).
+func (k Keeper) GetSelectorForStake(ctx context.Context, selectorAddr sdk.AccAddress) (types.Selection, error) {
+	sel, err := k.Selectors.Get(ctx, selectorAddr.Bytes())
 	if err != nil {
 		return types.Selection{}, err
 	}
@@ -230,11 +237,18 @@ func (k Keeper) GetSelector(ctx context.Context, selectorAddr sdk.AccAddress) (t
 	return sel, nil
 }
 
-// GetReporterStake counts the total amount of BONDED tokens for a given reporter's selectors
-// at the time of reporting and returns the total amount plus stores
-// the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties.
-// Also returns aggregated selector shares and a hash of the delegation state for reward distribution.
+// GetReporterStake counts bonded selector stake for reporting paths. It may lazy-unjail
+// expired selector rows and update RecalcAtTime when locks are still active.
 func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math.Int, []*types.TokenOriginInfo, []*types.SelectorShare, []byte, error) {
+	return k.getReporterStake(ctx, repAddr, true)
+}
+
+// GetReporterStakeView is the read-only stake snapshot used by gRPC queries.
+func (k Keeper) GetReporterStakeView(ctx context.Context, repAddr sdk.AccAddress) (math.Int, []*types.TokenOriginInfo, []*types.SelectorShare, []byte, error) {
+	return k.getReporterStake(ctx, repAddr, false)
+}
+
+func (k Keeper) getReporterStake(ctx context.Context, repAddr sdk.AccAddress, mutate bool) (math.Int, []*types.TokenOriginInfo, []*types.SelectorShare, []byte, error) {
 	reporter, err := k.Reporters.Get(ctx, repAddr.Bytes())
 	if err != nil {
 		return math.Int{}, nil, nil, nil, err
@@ -264,8 +278,12 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (m
 		if err != nil {
 			return math.Int{}, nil, nil, nil, err
 		}
-		// get delegator count (lazy-clears expired selector dispute jail)
-		selector, err := k.GetSelector(ctx, sdk.AccAddress(selectorAddr))
+		var selector types.Selection
+		if mutate {
+			selector, err = k.GetSelectorForStake(ctx, sdk.AccAddress(selectorAddr))
+		} else {
+			selector, err = k.GetSelector(ctx, sdk.AccAddress(selectorAddr))
+		}
 		if err != nil {
 			return math.Int{}, nil, nil, nil, err
 		}
@@ -361,15 +379,16 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (m
 			hasher.Write(selectorTotal.BigInt().Bytes())
 		}
 	}
-	// Update RecalcAtTime: if there are still-locked selectors, set the earliest expiry
-	// so needsStakeRecalc triggers when it expires. If none are locked, clean up.
-	if earliestFutureLock == 0 {
-		err = k.RecalcAtTime.Remove(ctx, repAddr.Bytes())
-	} else {
-		err = k.RecalcAtTime.Set(ctx, repAddr.Bytes(), earliestFutureLock)
-	}
-	if err != nil {
-		return math.Int{}, nil, nil, nil, err
+	// Update RecalcAtTime on write paths only (queries must not mutate store).
+	if mutate {
+		if earliestFutureLock == 0 {
+			err = k.RecalcAtTime.Remove(ctx, repAddr.Bytes())
+		} else {
+			err = k.RecalcAtTime.Set(ctx, repAddr.Bytes(), earliestFutureLock)
+		}
+		if err != nil {
+			return math.Int{}, nil, nil, nil, err
+		}
 	}
 
 	// Finalize hash with total

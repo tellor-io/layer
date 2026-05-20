@@ -147,8 +147,8 @@ func (_m *ReporterKeeper) GetReporterTokensAtBlock(ctx context.Context, reporter
 	return r0, r1
 }
 
-// GetSelector provides a mock function with given fields: ctx, selectorAddr
-func (_m *ReporterKeeper) GetSelector(ctx context.Context, selectorAddr types.AccAddress) (reportertypes.Selection, error) {
+// GetSelectorForStake provides a mock function with given fields: ctx, selectorAddr
+func (_m *ReporterKeeper) GetSelectorForStake(ctx context.Context, selectorAddr types.AccAddress) (reportertypes.Selection, error) {
 	ret := _m.Called(ctx, selectorAddr)
 
 	var r0 reportertypes.Selection

@@ -297,7 +297,7 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 				}, nil).Once()
 				// selector has 100 selected to reporter
 				rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).Return(math.NewInt(100), nil).Once()
-				rk.On("GetSelector", ctx, selector).Return(reportertypes.Selection{
+				rk.On("GetSelectorForStake", ctx, selector).Return(reportertypes.Selection{
 					Reporter:         reporter,
 					LockedUntilTime:  ctx.BlockTime().Add(time.Hour * -24),
 					DelegationsCount: 10,
@@ -337,7 +337,7 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 					},
 				}))
 				require.NoError(k.ReportersWithDelegatorsVotedBefore.Set(ctx, collections.Join(reporter.Bytes(), disputeId), math.NewInt(50)))
-				rk.On("GetSelector", ctx, selector).Return(reportertypes.Selection{
+				rk.On("GetSelectorForStake", ctx, selector).Return(reportertypes.Selection{
 					Reporter:         reporter,
 					LockedUntilTime:  ctx.BlockTime().Add(time.Hour * -24),
 					DelegationsCount: 10,
@@ -366,7 +366,7 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 				}, nil).Once()
 				// selector has 100 selected to reporter
 				rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).Return(math.NewInt(100), nil).Once()
-				rk.On("GetSelector", ctx, selector).Return(reportertypes.Selection{
+				rk.On("GetSelectorForStake", ctx, selector).Return(reportertypes.Selection{
 					Reporter:         reporter,
 					LockedUntilTime:  ctx.BlockTime().Add(time.Hour * 24),
 					DelegationsCount: 10,

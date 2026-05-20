@@ -4,6 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
+
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,9 +29,32 @@ proto fields deserialize to empty / zero for existing chains.
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
+	rk reporterkeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, _ upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		sdk.UnwrapSDKContext(ctx).Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
-		return mm.RunMigrations(ctx, configurator, vm)
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		sdkCtx.Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
+
+		vm, err := mm.RunMigrations(ctx, configurator, vm)
+		if err != nil {
+			return vm, err
+		}
+
+		params, err := rk.Params.Get(ctx)
+		if err != nil {
+			return vm, fmt.Errorf("reporter params: %w", err)
+		}
+		if params.MaxPendingSwitchesPerReporter == 0 {
+			params.MaxPendingSwitchesPerReporter = reportertypes.DefaultMaxPendingSwitchesPerReporter
+			if err := rk.Params.Set(ctx, params); err != nil {
+				return vm, fmt.Errorf("set max_pending_switches_per_reporter: %w", err)
+			}
+			sdkCtx.Logger().Info(
+				"set reporter max_pending_switches_per_reporter",
+				"value", params.MaxPendingSwitchesPerReporter,
+			)
+		}
+
+		return vm, nil
 	}
 }

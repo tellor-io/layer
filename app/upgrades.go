@@ -45,6 +45,7 @@ func (app *App) setupUpgradeHandlers() {
 		v_6_2_0.CreateUpgradeHandler(
 			app.ModuleManager(),
 			app.configurator,
+			app.ReporterKeeper,
 		),
 	)
 }

@@ -180,7 +180,9 @@ func TestLazyUnjailSelectorIfExpired(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	selector := sample.AccAddressBytes()
 	reporter := sample.AccAddressBytes()
-	expired := ctx.BlockTime().Add(-time.Hour)
+	now := time.Now().UTC()
+	ctx = ctx.WithBlockTime(now)
+	expired := now.Add(-time.Hour)
 
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.Selection{
 		Reporter:        reporter,
@@ -189,7 +191,7 @@ func TestLazyUnjailSelectorIfExpired(t *testing.T) {
 		LockedUntilTime: expired,
 	}))
 
-	sel, err := k.GetSelector(ctx, selector)
+	sel, err := k.GetSelectorForStake(ctx, selector)
 	require.NoError(t, err)
 	require.False(t, sel.Jailed)
 	require.Equal(t, expired, sel.JailedUntil)
@@ -205,7 +207,9 @@ func TestLazyUnjailSelectorFlagsRecalcForPendingSwitchTargets(t *testing.T) {
 	selector := sample.AccAddressBytes()
 	reporterA := sample.AccAddressBytes()
 	reporterB := sample.AccAddressBytes()
-	expired := ctx.BlockTime().Add(-time.Hour)
+	now := time.Now().UTC()
+	ctx = ctx.WithBlockTime(now)
+	expired := now.Add(-time.Hour)
 
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.Selection{
 		Reporter:        reporterA,
@@ -218,7 +222,7 @@ func TestLazyUnjailSelectorFlagsRecalcForPendingSwitchTargets(t *testing.T) {
 		UnlockBlock: uint64(ctx.BlockHeight()) + 100,
 	}))
 
-	_, err := k.GetSelector(ctx, selector)
+	_, err := k.GetSelectorForStake(ctx, selector)
 	require.NoError(t, err)
 
 	hasA, err := k.StakeRecalcFlag.Has(ctx, reporterA.Bytes())
@@ -232,7 +236,8 @@ func TestLazyUnjailSelectorFlagsRecalcForPendingSwitchTargets(t *testing.T) {
 func TestLazyUnjailSelectorSkipsWhileLockedUntilActive(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	selector := sample.AccAddressBytes()
-	now := ctx.BlockTime()
+	now := time.Now().UTC()
+	ctx = ctx.WithBlockTime(now)
 
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.Selection{
 		Reporter:        sample.AccAddressBytes(),

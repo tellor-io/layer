@@ -174,7 +174,7 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 	}
 	// voter is non-reporter selector
 	// skip selectors that are locked from switching reporters
-	selector, err := k.reporterKeeper.GetSelector(ctx, voter)
+	selector, err := k.reporterKeeper.GetSelectorForStake(ctx, voter)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return math.Int{}, err
