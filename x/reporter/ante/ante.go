@@ -50,22 +50,29 @@ func (k validatorAddressKey) address() (sdk.ValAddress, error) {
 
 type stakeChangeTracker struct {
 	totalBondedDelta     math.Int
-	delegatorBondedDelta map[delegatorAddressKey]math.Int
+	delegatorBondedDelta map[delegatorAddressKey]math.LegacyDec
 	validatorTokenDelta  map[validatorAddressKey]math.Int
-	validatorDeltas      map[validatorAddressKey]map[delegatorAddressKey]math.Int
+	validatorDeltas      map[validatorAddressKey]map[delegatorAddressKey]math.LegacyDec
+	pendingValidators    map[validatorAddressKey]prospectiveValidator
+	activeSetDelta       bool
 }
 
 type pendingValidatorDelta struct {
-	validator sdk.ValAddress
-	delegator sdk.AccAddress
-	amount    math.Int
+	validator      sdk.ValAddress
+	delegator      sdk.AccAddress
+	amount         math.Int
+	activeSetDelta bool
 }
 
 type prospectiveValidator struct {
 	addr       sdk.ValAddress
 	validator  stakingtypes.Validator
 	postTokens math.Int
-	touched    bool
+}
+
+type activeSetChanges struct {
+	entering []prospectiveValidator
+	leaving  []prospectiveValidator
 }
 
 func NewTrackStakeChangesDecorator(rk keeper.Keeper, sk types.StakingKeeper) TrackStakeChangesDecorator {
@@ -78,9 +85,10 @@ func NewTrackStakeChangesDecorator(rk keeper.Keeper, sk types.StakingKeeper) Tra
 func newStakeChangeTracker() *stakeChangeTracker {
 	return &stakeChangeTracker{
 		totalBondedDelta:     math.ZeroInt(),
-		delegatorBondedDelta: make(map[delegatorAddressKey]math.Int),
+		delegatorBondedDelta: make(map[delegatorAddressKey]math.LegacyDec),
 		validatorTokenDelta:  make(map[validatorAddressKey]math.Int),
-		validatorDeltas:      make(map[validatorAddressKey]map[delegatorAddressKey]math.Int),
+		validatorDeltas:      make(map[validatorAddressKey]map[delegatorAddressKey]math.LegacyDec),
+		pendingValidators:    make(map[validatorAddressKey]prospectiveValidator),
 	}
 }
 
@@ -99,12 +107,27 @@ func addInt[K comparable](values map[K]math.Int, key K, amount math.Int) {
 	values[key] = intFromMap(values, key).Add(amount)
 }
 
+func decFromMap[K comparable](values map[K]math.LegacyDec, key K) math.LegacyDec {
+	value, ok := values[key]
+	if !ok {
+		return math.LegacyZeroDec()
+	}
+	return value
+}
+
+func addDec[K comparable](values map[K]math.LegacyDec, key K, amount math.LegacyDec) {
+	if amount.IsZero() {
+		return
+	}
+	values[key] = decFromMap(values, key).Add(amount)
+}
+
 func (t *stakeChangeTracker) add(delegator sdk.AccAddress, amount math.Int) {
 	if amount.IsZero() {
 		return
 	}
 	t.totalBondedDelta = t.totalBondedDelta.Add(amount)
-	t.addDelegatorDelta(delegator, amount)
+	t.addDelegatorDelta(delegator, amount.ToLegacyDec())
 }
 
 func (t *stakeChangeTracker) addTotalDelta(amount math.Int) {
@@ -114,19 +137,22 @@ func (t *stakeChangeTracker) addTotalDelta(amount math.Int) {
 	t.totalBondedDelta = t.totalBondedDelta.Add(amount)
 }
 
-func (t *stakeChangeTracker) addDelegatorDelta(delegator sdk.AccAddress, amount math.Int) {
+func (t *stakeChangeTracker) addDelegatorDelta(delegator sdk.AccAddress, amount math.LegacyDec) {
 	if amount.IsZero() {
 		return
 	}
 	if delegator == nil {
 		return
 	}
-	addInt(t.delegatorBondedDelta, newDelegatorAddressKey(delegator), amount)
+	addDec(t.delegatorBondedDelta, newDelegatorAddressKey(delegator), amount)
 }
 
-func (t *stakeChangeTracker) addValidatorDelta(validator sdk.ValAddress, delegator sdk.AccAddress, amount math.Int) {
+func (t *stakeChangeTracker) addValidatorDelta(validator sdk.ValAddress, delegator sdk.AccAddress, amount math.Int, activeSetDelta bool) {
 	if amount.IsZero() {
 		return
+	}
+	if activeSetDelta {
+		t.activeSetDelta = true
 	}
 	validatorKey := newValidatorAddressKey(validator)
 	addInt(t.validatorTokenDelta, validatorKey, amount)
@@ -134,10 +160,26 @@ func (t *stakeChangeTracker) addValidatorDelta(validator sdk.ValAddress, delegat
 		return
 	}
 	if _, ok := t.validatorDeltas[validatorKey]; !ok {
-		t.validatorDeltas[validatorKey] = make(map[delegatorAddressKey]math.Int)
+		t.validatorDeltas[validatorKey] = make(map[delegatorAddressKey]math.LegacyDec)
 	}
 	delegatorKey := newDelegatorAddressKey(delegator)
-	addInt(t.validatorDeltas[validatorKey], delegatorKey, amount)
+	addDec(t.validatorDeltas[validatorKey], delegatorKey, amount.ToLegacyDec())
+}
+
+func (t *stakeChangeTracker) addPendingValidator(validator sdk.ValAddress, amount math.Int) {
+	validatorKey := newValidatorAddressKey(validator)
+	t.pendingValidators[validatorKey] = prospectiveValidator{
+		addr: validator,
+		validator: stakingtypes.Validator{
+			OperatorAddress:   validator.String(),
+			Status:            stakingtypes.Unbonded,
+			Tokens:            math.ZeroInt(),
+			DelegatorShares:   math.LegacyZeroDec(),
+			MinSelfDelegation: math.OneInt(),
+		},
+		postTokens: amount,
+	}
+	t.activeSetDelta = true
 }
 
 // implement the AnteDecorator interface
@@ -194,9 +236,19 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 	var validatorDeltas []pendingValidatorDelta
 	switch msg := msg.(type) {
 	case *stakingtypes.MsgCreateValidator:
-		msgAmount = msg.Value.Amount
-		if valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err == nil {
-			delegatorAddr = sdk.AccAddress(valAddr)
+		valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+		if err != nil {
+			return err
+		}
+		delegatorAddr = sdk.AccAddress(valAddr)
+		validatorDeltas = append(validatorDeltas, pendingValidatorDelta{
+			validator:      valAddr,
+			delegator:      delegatorAddr,
+			amount:         msg.Value.Amount,
+			activeSetDelta: true,
+		})
+		if stakeChanges != nil {
+			stakeChanges.addPendingValidator(valAddr, msg.Value.Amount)
 		}
 	case *stakingtypes.MsgDelegate:
 		isAllowed, err := t.checkAmountOfDelegationsByAddressDoesNotExceedMax(ctx, msg)
@@ -222,13 +274,13 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 		}
 		if val.Status == stakingtypes.Bonded {
 			msgAmount = msg.Amount.Amount
-		} else {
-			validatorDeltas = append(validatorDeltas, pendingValidatorDelta{
-				validator: valAddr,
-				delegator: delegatorAddr,
-				amount:    msg.Amount.Amount,
-			})
 		}
+		validatorDeltas = append(validatorDeltas, pendingValidatorDelta{
+			validator:      valAddr,
+			delegator:      delegatorAddr,
+			amount:         msg.Amount.Amount,
+			activeSetDelta: !val.IsBonded(),
+		})
 	case *stakingtypes.MsgBeginRedelegate:
 		isAllowed, err := t.checkAmountOfDelegationsByAddressDoesNotExceedMax(ctx, msg)
 		if err != nil {
@@ -269,33 +321,43 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 		if sourceVal.Status == stakingtypes.Bonded && destVal.Status != stakingtypes.Bonded {
 			msgAmount = msg.Amount.Amount.MulRaw(-1)
 			validatorDeltas = append(validatorDeltas, pendingValidatorDelta{
-				validator: dstValAddr,
-				delegator: delegatorAddr,
-				amount:    msg.Amount.Amount,
+				validator:      srcValAddr,
+				delegator:      delegatorAddr,
+				amount:         msg.Amount.Amount.Neg(),
+				activeSetDelta: true,
+			}, pendingValidatorDelta{
+				validator:      dstValAddr,
+				delegator:      delegatorAddr,
+				amount:         msg.Amount.Amount,
+				activeSetDelta: true,
 			})
 		} else if sourceVal.Status == destVal.Status {
-			if sourceVal.Status != stakingtypes.Bonded {
-				validatorDeltas = append(validatorDeltas,
-					pendingValidatorDelta{
-						validator: srcValAddr,
-						delegator: delegatorAddr,
-						amount:    msg.Amount.Amount.Neg(),
-					},
-					pendingValidatorDelta{
-						validator: dstValAddr,
-						delegator: delegatorAddr,
-						amount:    msg.Amount.Amount,
-					},
-				)
-			} else {
-				return nil
-			}
+			validatorDeltas = append(validatorDeltas,
+				pendingValidatorDelta{
+					validator:      srcValAddr,
+					delegator:      delegatorAddr,
+					amount:         msg.Amount.Amount.Neg(),
+					activeSetDelta: true,
+				},
+				pendingValidatorDelta{
+					validator:      dstValAddr,
+					delegator:      delegatorAddr,
+					amount:         msg.Amount.Amount,
+					activeSetDelta: !destVal.IsBonded(),
+				},
+			)
 		} else if sourceVal.Status != stakingtypes.Bonded && destVal.Status == stakingtypes.Bonded {
 			msgAmount = msg.Amount.Amount
 			validatorDeltas = append(validatorDeltas, pendingValidatorDelta{
-				validator: srcValAddr,
-				delegator: delegatorAddr,
-				amount:    msg.Amount.Amount.Neg(),
+				validator:      srcValAddr,
+				delegator:      delegatorAddr,
+				amount:         msg.Amount.Amount.Neg(),
+				activeSetDelta: true,
+			}, pendingValidatorDelta{
+				validator:      dstValAddr,
+				delegator:      delegatorAddr,
+				amount:         msg.Amount.Amount,
+				activeSetDelta: false,
 			})
 		}
 	case *stakingtypes.MsgCancelUnbondingDelegation:
@@ -316,13 +378,13 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 		}
 		if val.Status == stakingtypes.Bonded {
 			msgAmount = msg.Amount.Amount
-		} else {
-			validatorDeltas = append(validatorDeltas, pendingValidatorDelta{
-				validator: valAddr,
-				delegator: delegatorAddr,
-				amount:    msg.Amount.Amount,
-			})
 		}
+		validatorDeltas = append(validatorDeltas, pendingValidatorDelta{
+			validator:      valAddr,
+			delegator:      delegatorAddr,
+			amount:         msg.Amount.Amount,
+			activeSetDelta: !val.IsBonded(),
+		})
 	case *stakingtypes.MsgUndelegate:
 		var err error
 		delegatorAddr, err = sdk.AccAddressFromBech32(msg.DelegatorAddress)
@@ -343,13 +405,13 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 			// negate the amount since undelegating is removing stake from the chain
 			// and to help with the comparison later on
 			msgAmount = msg.Amount.Amount.Neg()
-		} else {
-			validatorDeltas = append(validatorDeltas, pendingValidatorDelta{
-				validator: valAddr,
-				delegator: delegatorAddr,
-				amount:    msg.Amount.Amount.Neg(),
-			})
 		}
+		validatorDeltas = append(validatorDeltas, pendingValidatorDelta{
+			validator:      valAddr,
+			delegator:      delegatorAddr,
+			amount:         msg.Amount.Amount.Neg(),
+			activeSetDelta: true,
+		})
 	default:
 		return nil
 	}
@@ -372,7 +434,7 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 			if errors.Is(err, collections.ErrNotFound) {
 				if stakeChanges != nil {
 					for _, delta := range validatorDeltas {
-						stakeChanges.addValidatorDelta(delta.validator, delta.delegator, delta.amount)
+						stakeChanges.addValidatorDelta(delta.validator, delta.delegator, delta.amount, delta.activeSetDelta)
 					}
 					stakeChanges.add(delegatorAddr, msgAmount)
 				}
@@ -400,7 +462,7 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 	}
 	if stakeChanges != nil {
 		for _, delta := range validatorDeltas {
-			stakeChanges.addValidatorDelta(delta.validator, delta.delegator, delta.amount)
+			stakeChanges.addValidatorDelta(delta.validator, delta.delegator, delta.amount, delta.activeSetDelta)
 		}
 		stakeChanges.add(delegatorAddr, msgAmount)
 	}
@@ -408,110 +470,121 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 }
 
 func (t TrackStakeChangesDecorator) applyProspectiveBondedValidatorChanges(ctx sdk.Context, stakeChanges *stakeChangeTracker) error {
-	if stakeChanges == nil || len(stakeChanges.validatorTokenDelta) == 0 {
+	if stakeChanges == nil || !stakeChanges.activeSetDelta {
 		return nil
 	}
-	newlyBonded, err := t.prospectiveBondedValidators(ctx, stakeChanges)
+	activeSetChanges, err := t.prospectiveActiveSetChanges(ctx, stakeChanges)
 	if err != nil {
 		return err
 	}
-	if len(newlyBonded) == 0 {
+	if len(activeSetChanges.entering) == 0 && len(activeSetChanges.leaving) == 0 {
 		return nil
 	}
 
+	// Replacement changes include both sides: entrants add their post-change
+	// stake, while leavers remove the stake they would still have after the tx.
 	prospectiveBondedDelta := math.ZeroInt()
-	for _, validator := range newlyBonded {
+	for _, validator := range activeSetChanges.entering {
 		prospectiveBondedDelta = prospectiveBondedDelta.Add(validator.postTokens)
+	}
+	for _, validator := range activeSetChanges.leaving {
+		prospectiveBondedDelta = prospectiveBondedDelta.Sub(validator.postTokens)
 	}
 	if err := t.checkTotalStakeChange(ctx, stakeChanges.totalBondedDelta.Add(prospectiveBondedDelta)); err != nil {
 		return err
 	}
 
 	stakeChanges.addTotalDelta(prospectiveBondedDelta)
-	for _, validator := range newlyBonded {
-		if err := t.addProspectiveValidatorDelegatorDeltas(ctx, stakeChanges, validator); err != nil {
+	for _, validator := range activeSetChanges.entering {
+		if err := t.addActiveSetValidatorDelegatorDeltas(ctx, stakeChanges, validator, math.LegacyOneDec()); err != nil {
+			return err
+		}
+	}
+	for _, validator := range activeSetChanges.leaving {
+		if err := t.addActiveSetValidatorDelegatorDeltas(ctx, stakeChanges, validator, math.LegacyNewDec(-1)); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (t TrackStakeChangesDecorator) prospectiveBondedValidators(ctx sdk.Context, stakeChanges *stakeChangeTracker) ([]prospectiveValidator, error) {
+func (t TrackStakeChangesDecorator) prospectiveActiveSetChanges(ctx sdk.Context, stakeChanges *stakeChangeTracker) (activeSetChanges, error) {
 	maxValidators, err := t.stakingKeeper.MaxValidators(ctx)
 	if err != nil {
-		return nil, err
+		return activeSetChanges{}, err
 	}
 	if maxValidators == 0 {
-		return nil, nil
+		return activeSetChanges{}, nil
 	}
 	powerReduction := t.stakingKeeper.PowerReduction(ctx)
 	validators := make(map[validatorAddressKey]prospectiveValidator)
 	iterator, err := t.stakingKeeper.ValidatorsPowerStoreIterator(ctx)
 	if err != nil {
-		return nil, err
+		return activeSetChanges{}, err
 	}
 	defer iterator.Close()
 
-	for count := uint32(0); iterator.Valid() && count < maxValidators; iterator.Next() {
+	// Start from the power index so an untouched unbonded validator can still
+	// enter when a currently bonded validator loses enough stake.
+	for ; iterator.Valid(); iterator.Next() {
 		valAddr := sdk.ValAddress(iterator.Value())
 		validator, err := t.stakingKeeper.GetValidator(ctx, valAddr)
 		if err != nil {
-			return nil, err
+			return activeSetChanges{}, err
 		}
 		validatorDelta := intFromMap(stakeChanges.validatorTokenDelta, newValidatorAddressKey(valAddr))
 		postTokens := validator.Tokens.Add(validatorDelta)
 		if postTokens.IsNegative() {
 			postTokens = math.ZeroInt()
 		}
-		if sdk.TokensToConsensusPower(postTokens, powerReduction) == 0 {
-			break
-		}
 		validators[newValidatorAddressKey(valAddr)] = prospectiveValidator{
 			addr:       valAddr,
 			validator:  validator,
 			postTokens: postTokens,
-			touched:    !validatorDelta.IsZero(),
 		}
-		count++
 	}
 	if err := iterator.Error(); err != nil {
-		return nil, err
+		return activeSetChanges{}, err
 	}
 
+	// Add validators touched by this tx that were not present in the power
+	// index scan, including validators created by MsgCreateValidator.
 	for validatorKey, delta := range stakeChanges.validatorTokenDelta {
 		if _, ok := validators[validatorKey]; ok {
 			continue
 		}
 		valAddr, err := validatorKey.address()
 		if err != nil {
-			return nil, err
+			return activeSetChanges{}, err
+		}
+		if pending, ok := stakeChanges.pendingValidators[validatorKey]; ok {
+			validators[validatorKey] = pending
+			continue
 		}
 		validator, err := t.stakingKeeper.GetValidator(ctx, valAddr)
 		if err != nil {
-			return nil, err
-		}
-		if validator.IsBonded() {
-			continue
+			return activeSetChanges{}, err
 		}
 		postTokens := validator.Tokens.Add(delta)
 		if postTokens.IsNegative() {
 			postTokens = math.ZeroInt()
 		}
-		if sdk.TokensToConsensusPower(postTokens, powerReduction) == 0 {
-			continue
-		}
 		validators[validatorKey] = prospectiveValidator{
 			addr:       valAddr,
 			validator:  validator,
 			postTokens: postTokens,
-			touched:    true,
 		}
 	}
 
 	ordered := make([]prospectiveValidator, 0, len(validators))
 	for _, validator := range validators {
+		if sdk.TokensToConsensusPower(validator.postTokens, powerReduction) == 0 {
+			continue
+		}
 		ordered = append(ordered, validator)
 	}
+	// Match staking's active-set ranking: consensus power first, then operator
+	// address to make ties deterministic.
 	sort.Slice(ordered, func(i, j int) bool {
 		iPower := sdk.TokensToConsensusPower(ordered[i].postTokens, powerReduction)
 		jPower := sdk.TokensToConsensusPower(ordered[j].postTokens, powerReduction)
@@ -525,31 +598,45 @@ func (t TrackStakeChangesDecorator) prospectiveBondedValidators(ctx sdk.Context,
 	if len(ordered) < limit {
 		limit = len(ordered)
 	}
-	newlyBonded := make([]prospectiveValidator, 0)
+	nextSet := make(map[validatorAddressKey]struct{}, limit)
 	for _, validator := range ordered[:limit] {
-		if validator.touched && !validator.validator.IsBonded() {
-			newlyBonded = append(newlyBonded, validator)
+		nextSet[newValidatorAddressKey(validator.addr)] = struct{}{}
+	}
+
+	changes := activeSetChanges{}
+	for validatorKey, validator := range validators {
+		_, inNextSet := nextSet[validatorKey]
+		switch {
+		case inNextSet && !validator.validator.IsBonded():
+			changes.entering = append(changes.entering, validator)
+		case !inNextSet && validator.validator.IsBonded():
+			changes.leaving = append(changes.leaving, validator)
 		}
 	}
-	return newlyBonded, nil
+	return changes, nil
 }
 
-func (t TrackStakeChangesDecorator) addProspectiveValidatorDelegatorDeltas(ctx sdk.Context, stakeChanges *stakeChangeTracker, validator prospectiveValidator) error {
-	delegatorAmounts := make(map[delegatorAddressKey]math.Int)
-	delegations, err := t.stakingKeeper.GetValidatorDelegations(ctx, validator.addr)
-	if err != nil {
-		return err
-	}
-	for _, delegation := range delegations {
-		delegator, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
+func (t TrackStakeChangesDecorator) addActiveSetValidatorDelegatorDeltas(ctx sdk.Context, stakeChanges *stakeChangeTracker, validator prospectiveValidator, sign math.LegacyDec) error {
+	delegatorAmounts := make(map[delegatorAddressKey]math.LegacyDec)
+	validatorKey := newValidatorAddressKey(validator.addr)
+	// Pending validators have no stored delegations yet; their self-delegation
+	// is already represented in validatorDeltas.
+	if _, pending := stakeChanges.pendingValidators[validatorKey]; !pending {
+		delegations, err := t.stakingKeeper.GetValidatorDelegations(ctx, validator.addr)
 		if err != nil {
 			return err
 		}
-		amount := validator.validator.TokensFromShares(delegation.Shares).TruncateInt()
-		addInt(delegatorAmounts, newDelegatorAddressKey(delegator), amount)
+		for _, delegation := range delegations {
+			delegator, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
+			if err != nil {
+				return err
+			}
+			amount := validator.validator.TokensFromShares(delegation.Shares)
+			addDec(delegatorAmounts, newDelegatorAddressKey(delegator), amount)
+		}
 	}
-	for delegatorKey, delta := range stakeChanges.validatorDeltas[newValidatorAddressKey(validator.addr)] {
-		addInt(delegatorAmounts, delegatorKey, delta)
+	for delegatorKey, delta := range stakeChanges.validatorDeltas[validatorKey] {
+		addDec(delegatorAmounts, delegatorKey, delta)
 	}
 	for delegatorKey, amount := range delegatorAmounts {
 		if amount.IsPositive() {
@@ -557,7 +644,7 @@ func (t TrackStakeChangesDecorator) addProspectiveValidatorDelegatorDeltas(ctx s
 			if err != nil {
 				return err
 			}
-			stakeChanges.addDelegatorDelta(delegator, amount)
+			stakeChanges.addDelegatorDelta(delegator, amount.Mul(sign))
 		}
 	}
 	return nil
@@ -602,6 +689,7 @@ func (t TrackStakeChangesDecorator) checkDelegatorStakeShares(ctx sdk.Context, s
 	if !totalBondedAfter.IsPositive() {
 		return nil
 	}
+	totalBondedAfterDec := totalBondedAfter.ToLegacyDec()
 	for delegatorKey, delta := range stakeChanges.delegatorBondedDelta {
 		if !delta.IsPositive() {
 			continue
@@ -615,15 +703,15 @@ func (t TrackStakeChangesDecorator) checkDelegatorStakeShares(ctx sdk.Context, s
 			return err
 		}
 		delegatorBondedAfter := currentDelegatorBonded.Add(delta)
-		if delegatorBondedAfter.MulRaw(10).GT(totalBondedAfter.MulRaw(3)) {
+		if delegatorBondedAfter.MulInt64(10).GT(totalBondedAfterDec.MulInt64(3)) {
 			return types.ErrExceedsMaxStakeShare
 		}
 	}
 	return nil
 }
 
-func (t TrackStakeChangesDecorator) delegatorBondedTokens(ctx sdk.Context, delegator sdk.AccAddress) (math.Int, error) {
-	tokens := math.ZeroInt()
+func (t TrackStakeChangesDecorator) delegatorBondedTokens(ctx sdk.Context, delegator sdk.AccAddress) (math.LegacyDec, error) {
+	tokens := math.LegacyZeroDec()
 	var iterError error
 	err := t.stakingKeeper.IterateDelegatorDelegations(ctx, delegator, func(delegation stakingtypes.Delegation) (stop bool) {
 		valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
@@ -637,12 +725,12 @@ func (t TrackStakeChangesDecorator) delegatorBondedTokens(ctx sdk.Context, deleg
 			return true
 		}
 		if val.IsBonded() {
-			tokens = tokens.Add(val.TokensFromShares(delegation.Shares).TruncateInt())
+			tokens = tokens.Add(val.TokensFromShares(delegation.Shares))
 		}
 		return false
 	})
 	if err != nil {
-		return math.Int{}, err
+		return math.LegacyDec{}, err
 	}
 	return tokens, iterError
 }

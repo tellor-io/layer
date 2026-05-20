@@ -336,28 +336,15 @@ func TestStakeCacheSelectorJoin(t *testing.T) {
 	fmt.Println("TX HASH (validator 0 becomes reporter):", txHash)
 
 	// First report (only validator's self-delegation)
-	currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
-	require.NoError(err)
-	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
-	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
+	currentCycleList := waitForStakeCacheCycleListQuery(t, ctx, validators[0].Node, "")
+	firstQueryMetaID := currentCycleList.QueryMeta.Id
 
 	value := layerutil.EncodeValue(200.0)
 	submitStakeCacheValue(t, ctx, validators[0].Node, currentCycleList.QueryData, value)
 	fmt.Println("First report submitted")
 
-	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
-
 	// Query first report power
-	qDataBz, err := hex.DecodeString(currentCycleList.QueryData)
-	require.NoError(err)
-	qIdBz := utils.QueryIDFromData(qDataBz)
-	qId := hex.EncodeToString(qIdBz)
-	res, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "get-current-aggregate-report", qId)
-	require.NoError(err)
-	var aggRes e2e.QueryGetCurrentAggregateReportResponse
-	require.NoError(json.Unmarshal(res, &aggRes))
-	firstPower, err := strconv.ParseUint(aggRes.Aggregate.AggregatePower, 10, 64)
-	require.NoError(err)
+	firstPower := waitForStakeCacheAggregatePower(t, ctx, validators[0].Node, currentCycleList.QueryData)
 	fmt.Println("First report power:", firstPower)
 
 	// User selects validator 0 as their reporter
@@ -368,25 +355,13 @@ func TestStakeCacheSelectorJoin(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
 	// Second report - should include selector's stake
-	currentCycleListRes, _, err = e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
-	require.NoError(err)
-	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
+	currentCycleList = waitForStakeCacheCycleListQuery(t, ctx, validators[0].Node, firstQueryMetaID)
 
 	submitStakeCacheValue(t, ctx, validators[0].Node, currentCycleList.QueryData, value)
 	fmt.Println("Second report submitted")
 
-	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
-
 	// Query second report power
-	qDataBz, err = hex.DecodeString(currentCycleList.QueryData)
-	require.NoError(err)
-	qIdBz = utils.QueryIDFromData(qDataBz)
-	qId = hex.EncodeToString(qIdBz)
-	res, _, err = e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "get-current-aggregate-report", qId)
-	require.NoError(err)
-	require.NoError(json.Unmarshal(res, &aggRes))
-	secondPower, err := strconv.ParseUint(aggRes.Aggregate.AggregatePower, 10, 64)
-	require.NoError(err)
+	secondPower := waitForStakeCacheAggregatePower(t, ctx, validators[0].Node, currentCycleList.QueryData)
 	fmt.Println("Second report power:", secondPower)
 
 	// Second power should be greater due to new selector
@@ -569,28 +544,15 @@ func TestStakeCacheDelegationChange(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
 	// First report
-	currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
-	require.NoError(err)
-	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
-	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
+	currentCycleList := waitForStakeCacheCycleListQuery(t, ctx, validators[0].Node, "")
+	firstQueryMetaID := currentCycleList.QueryMeta.Id
 
 	value := layerutil.EncodeValue(400.0)
 	submitStakeCacheValue(t, ctx, validators[0].Node, currentCycleList.QueryData, value)
 	fmt.Println("First report submitted")
 
-	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
-
 	// Query first report power
-	qDataBz, err := hex.DecodeString(currentCycleList.QueryData)
-	require.NoError(err)
-	qIdBz := utils.QueryIDFromData(qDataBz)
-	qId := hex.EncodeToString(qIdBz)
-	res, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "get-current-aggregate-report", qId)
-	require.NoError(err)
-	var aggRes e2e.QueryGetCurrentAggregateReportResponse
-	require.NoError(json.Unmarshal(res, &aggRes))
-	firstPower, err := strconv.ParseUint(aggRes.Aggregate.AggregatePower, 10, 64)
-	require.NoError(err)
+	firstPower := waitForStakeCacheAggregatePower(t, ctx, validators[0].Node, currentCycleList.QueryData)
 	fmt.Println("First report power:", firstPower)
 
 	// User delegates more (this triggers AfterDelegationModified hook)
@@ -602,25 +564,13 @@ func TestStakeCacheDelegationChange(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 3, validators[0].Node))
 
 	// Second report - should recalculate with new stake
-	currentCycleListRes, _, err = e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
-	require.NoError(err)
-	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
+	currentCycleList = waitForStakeCacheCycleListQuery(t, ctx, validators[0].Node, firstQueryMetaID)
 
 	submitStakeCacheValue(t, ctx, validators[0].Node, currentCycleList.QueryData, value)
 	fmt.Println("Second report submitted")
 
-	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
-
 	// Query second report power
-	qDataBz, err = hex.DecodeString(currentCycleList.QueryData)
-	require.NoError(err)
-	qIdBz = utils.QueryIDFromData(qDataBz)
-	qId = hex.EncodeToString(qIdBz)
-	res, _, err = e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "get-current-aggregate-report", qId)
-	require.NoError(err)
-	require.NoError(json.Unmarshal(res, &aggRes))
-	secondPower, err := strconv.ParseUint(aggRes.Aggregate.AggregatePower, 10, 64)
-	require.NoError(err)
+	secondPower := waitForStakeCacheAggregatePower(t, ctx, validators[0].Node, currentCycleList.QueryData)
 	fmt.Println("Second report power:", secondPower)
 
 	// Second power should be greater due to additional delegation

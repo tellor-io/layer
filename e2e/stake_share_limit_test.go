@@ -3,6 +3,7 @@ package e2e_test
 import (
 	"testing"
 
+	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
@@ -15,7 +16,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestDelegatorStakeShareLimit(t *testing.T) {
+func TestShareCapRejects(t *testing.T) {
 	require := require.New(t)
 
 	cosmos.SetSDKConfig("tellor")
@@ -63,4 +64,32 @@ func TestDelegatorStakeShareLimit(t *testing.T) {
 	)
 	require.Error(err)
 	require.ErrorContains(err, "delegator bonded stake exceeds 30% of total bonded stake")
+}
+
+func TestShareCapAllows(t *testing.T) {
+	require := require.New(t)
+
+	cosmos.SetSDKConfig("tellor")
+
+	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	defer ic.Close()
+
+	validators, err := e2e.GetValidators(ctx, chain)
+	require.NoError(err)
+	require.Len(validators, 2)
+
+	// A fresh account with a tiny delegation is well below 30% of bonded stake.
+	user := interchaintest.GetAndFundTestUsers(t, ctx, "share-cap-user", math.NewInt(1_000_000), chain)[0]
+	delegateAmt := sdk.NewCoin("loya", math.OneInt())
+	_, err = validators[0].Node.ExecTx(
+		ctx,
+		user.FormattedAddress(),
+		"staking", "delegate",
+		validators[0].ValAddr,
+		delegateAmt.String(),
+		"--keyring-dir", validators[0].Node.HomeDir(),
+		"--gas", "500000",
+		"--fees", "10loya",
+	)
+	require.NoError(err)
 }
