@@ -13,14 +13,14 @@ var _ paramtypes.ParamSet = (*Params)(nil)
 var (
 	KeyMinCommissionRate = []byte("MinCommissionRate")
 	// TODO: Determine the default value
-	DefaultMinCommissionRate   = math.LegacyZeroDec()
-	KeyMinLoya                 = []byte("MinLoya")
-	DefaultMinLoya             = math.NewIntWithDecimal(1, 6)
-	KeyMaxSelectors            = []byte("MaxSelectors")
-	DefaultMaxSelectors        = uint64(100)
-	KeyMaxNumOfDelegations              = []byte("MaxNumOfDelegations")
-	DefaultMaxNumOfDelegations          = uint64(10)
-	KeyMaxPendingSwitchesPerReporter    = []byte("MaxPendingSwitchesPerReporter")
+	DefaultMinCommissionRate             = math.LegacyZeroDec()
+	KeyMinLoya                           = []byte("MinLoya")
+	DefaultMinLoya                       = math.NewIntWithDecimal(1, 6)
+	KeyMaxSelectors                      = []byte("MaxSelectors")
+	DefaultMaxSelectors                  = uint64(100)
+	KeyMaxNumOfDelegations               = []byte("MaxNumOfDelegations")
+	DefaultMaxNumOfDelegations           = uint64(10)
+	KeyMaxPendingSwitchesPerReporter     = []byte("MaxPendingSwitchesPerReporter")
 	DefaultMaxPendingSwitchesPerReporter = uint64(10)
 )
 
@@ -38,10 +38,10 @@ func NewParams(
 	maxPendingSwitchesPerReporter uint64,
 ) Params {
 	return Params{
-		MinCommissionRate:            minCommissionRate,
-		MinLoya:                      minLoya,
-		MaxSelectors:                 maxSelectors,
-		MaxNumOfDelegations:          maxNumOfDelegations,
+		MinCommissionRate:             minCommissionRate,
+		MinLoya:                       minLoya,
+		MaxSelectors:                  maxSelectors,
+		MaxNumOfDelegations:           maxNumOfDelegations,
 		MaxPendingSwitchesPerReporter: maxPendingSwitchesPerReporter,
 	}
 }
