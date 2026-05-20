@@ -31,8 +31,8 @@ var (
 	_ module.HasGenesis          = (*AppModule)(nil)
 	_ module.HasConsensusVersion = (*AppModule)(nil)
 
-	_ appmodule.AppModule       = (*AppModule)(nil)
-	_ appmodule.HasEndBlocker   = (*AppModule)(nil)
+	_ appmodule.AppModule     = (*AppModule)(nil)
+	_ appmodule.HasEndBlocker = (*AppModule)(nil)
 )
 
 // ----------------------------------------------------------------------------

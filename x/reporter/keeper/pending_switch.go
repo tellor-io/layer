@@ -116,7 +116,7 @@ func (k Keeper) applyReadyIncomingPendingForReporter(ctx context.Context, to []b
 	return nil
 }
 
-func (k Keeper) finalizePendingSwitch(ctx context.Context, from []byte, selector []byte) error {
+func (k Keeper) finalizePendingSwitch(ctx context.Context, from, selector []byte) error {
 	outK := collections.Join(from, selector)
 	entry, err := k.OutgoingPendingSwitches.Get(ctx, outK)
 	if err != nil {

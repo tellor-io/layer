@@ -122,12 +122,12 @@ func NewKeeper(
 			collections.BytesKey,
 			codec.CollValue[types.ReporterPendingSwitchHead](cdc),
 		),
-		authority: authority,
-		logger:                   logger,
-		accountKeeper:            accountKeeper,
-		stakingKeeper:            stakingKeeper,
-		bankKeeper:               bankKeeper,
-		registryKeeper:           registryKeeper,
+		authority:      authority,
+		logger:         logger,
+		accountKeeper:  accountKeeper,
+		stakingKeeper:  stakingKeeper,
+		bankKeeper:     bankKeeper,
+		registryKeeper: registryKeeper,
 	}
 	schema, err := sb.Build()
 	if err != nil {

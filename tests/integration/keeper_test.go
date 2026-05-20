@@ -13,8 +13,8 @@ import (
 	_ "github.com/tellor-io/layer/x/dispute"
 	_ "github.com/tellor-io/layer/x/oracle"
 	_ "github.com/tellor-io/layer/x/registry/module"
-	"github.com/tellor-io/layer/x/reporter/types"
 	_ "github.com/tellor-io/layer/x/reporter/module"
+	"github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/math"
 
