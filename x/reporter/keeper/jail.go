@@ -38,6 +38,10 @@ func (k Keeper) lockSelectorRow(ctx context.Context, delegator sdk.AccAddress, u
 		}
 		return err
 	}
+	now := sdk.UnwrapSDKContext(ctx).BlockTime()
+	if until.Before(now) {
+		until = now
+	}
 	sel.LockedUntilTime = maxTime(sel.LockedUntilTime, until)
 	sel.JailedUntil = maxTime(sel.JailedUntil, until)
 	sel.Jailed = true
@@ -167,24 +171,30 @@ func (k Keeper) copyReporterJailToSelection(ctx context.Context, addr sdk.AccAdd
 }
 
 // JailReporter jails the reporter row (if present) and every selector in the report snapshot.
+// Warning disputes use jailDuration 0: until is block time, so the reporter is jailed but may
+// unjail immediately; JailedUntil is only bumped when it is already before block time.
 func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration, reportBlockNumber uint64) error {
-	if jailDuration == 0 {
-		return nil
-	}
 	until, err := k.jailUntil(ctx, jailDuration)
 	if err != nil {
 		return err
 	}
 	sdkctx := sdk.UnwrapSDKContext(ctx)
+	now := sdkctx.BlockTime()
+	if until.Before(now) {
+		until = now
+	}
 
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err == nil {
-		if !reporter.Jailed {
+		wasJailed := reporter.Jailed
+		reporter.Jailed = true
+		if reporter.JailedUntil.Before(now) {
 			reporter.JailedUntil = until
-			reporter.Jailed = true
-			if err := k.Reporters.Set(ctx, reporterAddr, reporter); err != nil {
-				return err
-			}
+		}
+		if err := k.Reporters.Set(ctx, reporterAddr, reporter); err != nil {
+			return err
+		}
+		if !wasJailed {
 			sdkctx.EventManager().EmitEvent(sdk.NewEvent(
 				"jailed_reporter",
 				sdk.NewAttribute("reporter", reporterAddr.String()),

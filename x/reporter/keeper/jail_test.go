@@ -34,6 +34,40 @@ func TestJailReporter(t *testing.T) {
 	require.Equal(t, updatedAt.Add(time.Second*110), updatedReporter.JailedUntil)
 }
 
+func TestJailReporterZeroDurationFlagsOnly(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporterAddr := sample.AccAddressBytes()
+	selectorAddr := sample.AccAddressBytes()
+	reportBlock := uint64(5)
+	updatedAt := time.Now().UTC()
+	ctx = ctx.WithBlockTime(updatedAt)
+
+	reporter := types.NewReporter(types.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, reporter))
+	require.NoError(t, k.Selectors.Set(ctx, selectorAddr, types.NewSelection(reporterAddr, 1)))
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(reporterAddr.Bytes(), reportBlock, []byte("q1")), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selectorAddr}},
+	}))
+
+	require.NoError(t, k.JailReporter(ctx, reporterAddr, 0, reportBlock))
+
+	gotReporter, err := k.Reporters.Get(ctx, reporterAddr)
+	require.NoError(t, err)
+	require.True(t, gotReporter.Jailed)
+	require.Equal(t, updatedAt, gotReporter.JailedUntil)
+
+	gotSelector, err := k.Selectors.Get(ctx, selectorAddr)
+	require.NoError(t, err)
+	require.True(t, gotSelector.Jailed)
+	require.Equal(t, updatedAt, gotSelector.JailedUntil)
+	require.Equal(t, updatedAt, gotSelector.LockedUntilTime)
+
+	require.NoError(t, k.UnjailReporter(ctx, reporterAddr))
+	gotReporter, err = k.Reporters.Get(ctx, reporterAddr)
+	require.NoError(t, err)
+	require.False(t, gotReporter.Jailed)
+}
+
 func TestUnJailReporter(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	addr := sample.AccAddressBytes()
