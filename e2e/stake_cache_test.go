@@ -271,20 +271,31 @@ func TestStakeCacheValSetUpdate(t *testing.T) {
 	firstPower := waitForStakeCacheAggregatePower(t, ctx, validators[0].Node, currentCycleList.QueryData)
 	fmt.Println("First report power:", firstPower)
 
-	// Fund validator 0 with extra tokens and self-delegate to increase their own reporter stake
+	// Fund validator 0 with extra tokens and self-delegate to increase their own reporter stake.
 	// The validator is already a selector of themselves (from create-reporter), so this delegation
 	// triggers AfterDelegationModified hook and should be reflected in the next report's power.
-	delegateAmt := sdk.NewCoin("loya", math.NewInt(50_000*1e6))
+	delegateAmt := sdk.NewCoin("loya", math.NewInt(1_000*1e6))
 	require.NoError(chain.SendFunds(ctx, "faucet", ibc.WalletAmount{
 		Address: validators[0].AccAddr,
-		Amount:  math.NewInt(100_000 * 1e6),
+		Amount:  math.NewInt(3_000_000 * 1e6),
 		Denom:   "loya",
 	}))
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
-	txHash, err = validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "staking", "delegate", validators[0].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "10loya")
+	txHash, err = validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "staking", "delegate", validators[0].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "500000", "--fees", "10loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (validator 0 self-delegates more):", txHash)
+
+	tooMuchSelfDelegate := sdk.NewCoin("loya", math.NewInt(2_000_000*1e6))
+	_, err = validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "staking", "delegate", validators[0].ValAddr, tooMuchSelfDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "500000", "--fees", "10loya")
+	require.Error(err)
+	require.ErrorContains(err, "delegator bonded stake exceeds 30% of total bonded stake")
+
+	overLimitDelegator := interchaintest.GetAndFundTestUsers(t, ctx, "stake-share-over-limit", math.NewInt(10_000_000*1e6), chain)[0]
+	tooMuchDelegatorStake := sdk.NewCoin("loya", math.NewInt(9_000_000*1e6))
+	_, err = validators[0].Node.ExecTx(ctx, overLimitDelegator.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, tooMuchDelegatorStake.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "500000", "--fees", "10loya")
+	require.Error(err)
+	require.ErrorContains(err, "delegator bonded stake exceeds 30% of total bonded stake")
 
 	require.NoError(testutil.WaitForBlocks(ctx, 3, validators[0].Node))
 
