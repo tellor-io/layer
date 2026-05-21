@@ -1045,10 +1045,10 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Error(err)
 	fmt.Println("TX HASH (user1 tries to remove self as selector): ", txHash)
 
-	// user1 tries to become a selector, cant because of reporting in the last 21 days
+	// user1 switches reporter to user0 (solo reporter: no 21-day block; pending switch until finalize)
 	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "switch-reporter", user0Addr, "--keyring-dir", val1.HomeDir())
-	require.Error(err)
-	fmt.Println("TX HASH (user1 tries to become a selector): ", txHash)
+	require.NoError(err)
+	fmt.Println("TX HASH (user1 switches reporter to user0): ", txHash)
 
 	// check reporter module
 	res, _, err = e2e.QueryWithTimeout(ctx, val1, "reporter", "reporters")
@@ -1261,17 +1261,7 @@ func TestEscalatingDispute(t *testing.T) {
 	require.Equal(disputes.Disputes[0].Metadata.FeeTotal, "10000000") // 10 * 1e6 is 1% of 1000
 	fmt.Println("open dispute: ", disputes.Disputes[0])
 
-	// try to open minor dispute on same report, errors with cannot jail already jailed reporter
-	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "minor", "1000000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
-	require.Error(err)
-	fmt.Println("TX HASH (user0 opens minor dispute): ", txHash)
-
-	// user1 unjails reporter
-	txHash, err = val1.Node.ExecTx(ctx, user1Addr, "reporter", "unjail-reporter", "--keyring-dir", val1.Node.HomeDir())
-	require.NoError(err)
-	fmt.Println("TX HASH (user1 unjails reporter): ", txHash)
-
-	// user0 opens minor dispute on same report
+	// user0 opens minor dispute on same report (jailed reporter can be jailed again; idempotent jail)
 	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "minor", "1000000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens minor dispute): ", txHash)
@@ -2431,10 +2421,10 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	fmt.Println("reports from val2: ", reportsRes)
 	require.NotEmpty(reportsRes.MicroReports, "val2 should have reports after aggregation")
 
-	// val2 tries to become a selector for val1 instead of a reporter, shouldnt be allowed because of reporting in the last 21 days
+	// val2 switches reporter to val1 (solo reporter: pending switch; selector stays on val2 until finalize)
 	txHash, err := val2.Node.ExecTx(ctx, val2.AccAddr, "reporter", "switch-reporter", val1.AccAddr, "--keyring-dir", val2.Node.HomeDir())
-	require.Error(err)
-	fmt.Println("TX HASH (val2 fails to become a selector): ", txHash)
+	require.NoError(err)
+	fmt.Println("TX HASH (val2 switches reporter to val1): ", txHash)
 
 	// verify val2 is still a selector for themselves (default reporter state)
 	res, _, err := e2e.QueryWithTimeout(ctx, val1.Node, "reporter", "selector-reporter", val2.AccAddr)

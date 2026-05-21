@@ -482,14 +482,12 @@ func TestStakeCacheSelectorSwitch(t *testing.T) {
 		fmt.Printf("Validator %d power after switch: %d\n", i, power)
 	}
 
-	// After switch: reporter 0 should lose selector's stake.
-	// Reporter 1 does NOT gain the selector's stake yet because the handoff is deferred
-	// until the outgoing reporter's open commitments are past (pending switch path).
-	// GetReporterStake skips selectors with an outgoing pending switch away from that reporter.
+	// After switch: reporter 0 loses selector stake immediately (pending switch away).
+	// Reporter 1 gains stake on the next submit when unlock_block < height (often 0 after cyclelist).
 	fmt.Printf("Reporter 0: %d -> %d\n", reporter0PowerBefore, reporter0PowerAfter)
 	fmt.Printf("Reporter 1: %d -> %d\n", reporter1PowerBefore, reporter1PowerAfter)
 	require.Less(reporter0PowerAfter, reporter0PowerBefore, "Reporter 0 should lose power after selector switches away")
-	require.Equal(reporter1PowerAfter, reporter1PowerBefore, "Reporter 1 should not gain power yet (selector is locked for unbonding period)")
+	require.Greater(reporter1PowerAfter, reporter1PowerBefore, "Reporter 1 should gain power after pending switch finalizes")
 }
 
 // TestStakeCacheDelegationChange tests that reporter stake is recalculated after delegation change

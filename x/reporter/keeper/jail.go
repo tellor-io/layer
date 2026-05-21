@@ -188,9 +188,7 @@ func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, j
 	if err == nil {
 		wasJailed := reporter.Jailed
 		reporter.Jailed = true
-		if reporter.JailedUntil.Before(now) {
-			reporter.JailedUntil = until
-		}
+		reporter.JailedUntil = maxTime(reporter.JailedUntil, until)
 		if err := k.Reporters.Set(ctx, reporterAddr, reporter); err != nil {
 			return err
 		}
