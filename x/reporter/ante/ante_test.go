@@ -1003,8 +1003,13 @@ func (i *validatorPowerIterator) Valid() bool                 { return i.index <
 func (i *validatorPowerIterator) Next()                       { i.index++ }
 func (i *validatorPowerIterator) Key() []byte                 { return nil }
 func (i *validatorPowerIterator) Value() []byte               { return i.values[i.index] }
-func (i *validatorPowerIterator) Error() error                { return nil }
-func (i *validatorPowerIterator) Close() error                { return nil }
+func (i *validatorPowerIterator) Error() error {
+	if !i.Valid() {
+		return fmt.Errorf("invalid cacheMergeIterator")
+	}
+	return nil
+}
+func (i *validatorPowerIterator) Close() error { return nil }
 
 func TestShareCapNewBonded(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
@@ -1201,6 +1206,7 @@ func TestShareCapStillUnbonded(t *testing.T) {
 
 func TestFivePercentNewBonded(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
+	ctx = ctx.WithBlockHeight(1)
 	decorator := NewTrackStakeChangesDecorator(k, sk)
 	currentTotal := math.NewInt(100)
 	require.NoError(t, k.Tracker.Set(ctx, types.StakeTracker{

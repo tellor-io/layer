@@ -51,12 +51,19 @@ func (k validatorAddressKey) address() (sdk.ValAddress, error) {
 type stakeChangeTracker struct {
 	totalBondedDelta     math.Int
 	delegatorBondedDelta map[delegatorAddressKey]math.LegacyDec
-	validatorTokenDelta  map[validatorAddressKey]math.Int
-	validatorDeltas      map[validatorAddressKey]map[delegatorAddressKey]math.LegacyDec
-	pendingValidators    map[validatorAddressKey]prospectiveValidator
-	activeSetDelta       bool
+	// validatorTokenDelta accumulates per-validator token changes from the tx so
+	// ante can model the post-tx active set before staking handlers run.
+	validatorTokenDelta map[validatorAddressKey]math.Int
+	validatorDeltas     map[validatorAddressKey]map[delegatorAddressKey]math.LegacyDec
+	// pendingValidators holds MsgCreateValidator candidates because they do not
+	// exist in staking keeper state yet while ante is running.
+	pendingValidators map[validatorAddressKey]prospectiveValidator
+	// activeSetDelta is true when a tx can change which validators are bonded.
+	activeSetDelta bool
 }
 
+// pendingValidatorDelta captures one staking message's token movement for a
+// validator. amount is signed relative to that validator's token balance.
 type pendingValidatorDelta struct {
 	validator      sdk.ValAddress
 	delegator      sdk.AccAddress
@@ -191,11 +198,11 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			return ctx, err
 		}
 	}
-	if err := t.applyProspectiveBondedValidatorChanges(ctx, stakeChanges); err != nil {
-		return ctx, err
-	}
 	// Allows multi-validator genesis
 	if ctx.BlockHeight() > 0 {
+		if err := t.applyProspectiveBondedValidatorChanges(ctx, stakeChanges); err != nil {
+			return ctx, err
+		}
 		if err := t.checkDelegatorStakeShares(ctx, stakeChanges); err != nil {
 			return ctx, err
 		}
@@ -233,6 +240,7 @@ func (t TrackStakeChangesDecorator) processMessage(ctx sdk.Context, msg sdk.Msg,
 func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Msg, stakeChanges *stakeChangeTracker) error {
 	msgAmount := math.ZeroInt()
 	var delegatorAddr sdk.AccAddress
+	// validatorDeltas records validator-level effects from this message. These are later merged into stakeChanges so active-set changes can be evaluatedagainst the full transaction, not one message at a time.
 	var validatorDeltas []pendingValidatorDelta
 	switch msg := msg.(type) {
 	case *stakingtypes.MsgCreateValidator:
@@ -241,6 +249,7 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 			return err
 		}
 		delegatorAddr = sdk.AccAddress(valAddr)
+		// A new validator is not stored until the staking handler runs, but its self-delegation can still make it enter the active set after this tx.
 		validatorDeltas = append(validatorDeltas, pendingValidatorDelta{
 			validator:      valAddr,
 			delegator:      delegatorAddr,
@@ -524,8 +533,7 @@ func (t TrackStakeChangesDecorator) prospectiveActiveSetChanges(ctx sdk.Context,
 	}
 	defer iterator.Close()
 
-	// Start from the power index so an untouched unbonded validator can still
-	// enter when a currently bonded validator loses enough stake.
+	// Start from the power index so an untouched unbonded validator can still enter when a currently bonded validator loses enough stake.
 	for ; iterator.Valid(); iterator.Next() {
 		valAddr := sdk.ValAddress(iterator.Value())
 		validator, err := t.stakingKeeper.GetValidator(ctx, valAddr)
@@ -542,9 +550,6 @@ func (t TrackStakeChangesDecorator) prospectiveActiveSetChanges(ctx sdk.Context,
 			validator:  validator,
 			postTokens: postTokens,
 		}
-	}
-	if err := iterator.Error(); err != nil {
-		return activeSetChanges{}, err
 	}
 
 	// Add validators touched by this tx that were not present in the power

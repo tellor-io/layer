@@ -16,7 +16,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-func TestShareCapRejects(t *testing.T) {
+func TestDelegatorStakeShareLimit(t *testing.T) {
 	require := require.New(t)
 
 	cosmos.SetSDKConfig("tellor")
@@ -60,7 +60,7 @@ func TestShareCapRejects(t *testing.T) {
 		delegateAmt.String(),
 		"--keyring-dir", validators[0].Node.HomeDir(),
 		"--gas", "500000",
-		"--fees", "10loya",
+		"--fees", "20loya",
 	)
 	require.Error(err)
 	require.ErrorContains(err, "delegator bonded stake exceeds 30% of total bonded stake")
@@ -89,7 +89,7 @@ func TestShareCapAllows(t *testing.T) {
 		delegateAmt.String(),
 		"--keyring-dir", validators[0].Node.HomeDir(),
 		"--gas", "500000",
-		"--fees", "10loya",
+		"--fees", "20loya",
 	)
 	require.NoError(err)
 }
