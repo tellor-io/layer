@@ -320,7 +320,7 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig simtestuti
 	return app, nil
 }
 
-func (s *SharedSetup) SetupTest(t *testing.T) {
+func (s *SharedSetup) SetupTest(t testing.TB) {
 	t.Helper()
 	s.require = require.New(t)
 	sdk.DefaultBondDenom = "loya"
