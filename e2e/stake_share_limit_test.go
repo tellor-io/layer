@@ -1,6 +1,7 @@
 package e2e_test
 
 import (
+	"context"
 	"testing"
 
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
@@ -16,12 +17,24 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+// setupShareCapChain fixes the validator count for share-cap tests so the
+// intended initial bonded distribution is explicit.
+func setupShareCapChain(t *testing.T) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
+	t.Helper()
+
+	config := e2e.DefaultSetupConfig()
+	// Two equal genesis validators intentionally put each self-delegator above
+	// 30%, so a tiny self-delegation isolates the share cap without hitting 5%.
+	config.NumValidators = 2
+	return e2e.SetupChainWithCustomConfig(t, config)
+}
+
 func TestDelegatorStakeShareLimit(t *testing.T) {
 	require := require.New(t)
 
 	cosmos.SetSDKConfig("tellor")
 
-	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	chain, ic, ctx := setupShareCapChain(t)
 	defer ic.Close()
 
 	validators, err := e2e.GetValidators(ctx, chain)
@@ -52,6 +65,10 @@ func TestDelegatorStakeShareLimit(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[0].Node))
 
 	delegateAmt := sdk.NewCoin("loya", math.OneInt())
+	require.True(
+		delegateAmt.Amount.LT(totalBonded.QuoRaw(20)),
+		"test amount must stay below the 5% total stake-change limit",
+	)
 	_, err = validators[0].Node.ExecTx(
 		ctx,
 		validators[0].AccAddr,
@@ -71,7 +88,7 @@ func TestShareCapAllows(t *testing.T) {
 
 	cosmos.SetSDKConfig("tellor")
 
-	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	chain, ic, ctx := setupShareCapChain(t)
 	defer ic.Close()
 
 	validators, err := e2e.GetValidators(ctx, chain)
@@ -81,6 +98,16 @@ func TestShareCapAllows(t *testing.T) {
 	// A fresh account with a tiny delegation is well below 30% of bonded stake.
 	user := interchaintest.GetAndFundTestUsers(t, ctx, "share-cap-user", math.NewInt(1_000_000), chain)[0]
 	delegateAmt := sdk.NewCoin("loya", math.OneInt())
+	bondedValidators, err := chain.StakingQueryValidators(ctx, stakingtypes.BondStatusBonded)
+	require.NoError(err)
+	totalBonded := math.ZeroInt()
+	for _, validator := range bondedValidators {
+		totalBonded = totalBonded.Add(validator.Tokens)
+	}
+	require.True(
+		delegateAmt.Amount.LT(totalBonded.QuoRaw(20)),
+		"test amount must stay below the 5% total stake-change limit",
+	)
 	_, err = validators[0].Node.ExecTx(
 		ctx,
 		user.FormattedAddress(),
