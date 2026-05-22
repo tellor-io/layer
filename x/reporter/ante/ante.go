@@ -49,10 +49,6 @@ func newValidatorAddressKey(addr sdk.ValAddress) validatorAddressKey {
 	return validatorAddressKey(addr.String())
 }
 
-func (k validatorAddressKey) address() (sdk.ValAddress, error) {
-	return sdk.ValAddressFromBech32(string(k))
-}
-
 type stakeChangeTracker struct {
 	totalBondedDelta     math.Int
 	delegatorBondedDelta map[delegatorAddressKey]math.LegacyDec
