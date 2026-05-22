@@ -25,6 +25,7 @@ import (
 const (
 	stakeCacheCommissRate = "0.1"
 	moniker               = "reporter_0"
+	stakeCacheTxFee       = "500loya"
 )
 
 func stakeCacheSetupConfig() e2e.SetupConfig {
@@ -72,14 +73,14 @@ func waitForStakeCacheCycleListQuery(t *testing.T, ctx context.Context, node *co
 func submitStakeCacheValue(t *testing.T, ctx context.Context, node *cosmos.ChainNode, queryData string, value string) string {
 	t.Helper()
 
-	txBytes, _, err := node.Exec(ctx, node.TxCommand("validator", "oracle", "submit-value", queryData, value, "--fees", "5loya", "--keyring-dir", node.HomeDir()), node.Chain.Config().Env)
+	txBytes, _, err := node.Exec(ctx, node.TxCommand("validator", "oracle", "submit-value", queryData, value, "--fees", stakeCacheTxFee, "--keyring-dir", node.HomeDir()), node.Chain.Config().Env)
 	require.NoError(t, err)
 	txHash, err := e2e.GetTxHashFromExec(txBytes)
 	require.NoError(t, err)
 	return txHash
 }
 
-func waitForStakeCacheAggregatePower(t *testing.T, ctx context.Context, node *cosmos.ChainNode, queryData string) uint64 {
+func waitForStakeCacheAggregatePower(t *testing.T, ctx context.Context, node *cosmos.ChainNode, queryData string, expectedMetaID string) uint64 {
 	t.Helper()
 
 	qDataBz, err := hex.DecodeString(queryData)
@@ -99,6 +100,11 @@ func waitForStakeCacheAggregatePower(t *testing.T, ctx context.Context, node *co
 		require.NoError(t, json.Unmarshal(res, &aggRes))
 		if aggRes.Aggregate == nil {
 			lastErr = fmt.Errorf("aggregate response missing aggregate")
+			require.NoError(t, testutil.WaitForBlocks(ctx, 1, node))
+			continue
+		}
+		if aggRes.Aggregate.MetaId != expectedMetaID {
+			lastErr = fmt.Errorf("latest aggregate meta id %s does not match expected meta id %s", aggRes.Aggregate.MetaId, expectedMetaID)
 			require.NoError(t, testutil.WaitForBlocks(ctx, 1, node))
 			continue
 		}
@@ -144,7 +150,7 @@ func TestStakingHooksTriggered(t *testing.T) {
 	user := interchaintest.GetAndFundTestUsers(t, ctx, "selector", fundAmt, chain)[0]
 	fmt.Println("=== Step 2: Selector address:", user.FormattedAddress())
 
-	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, initialDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "10loya")
+	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, initialDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", stakeCacheTxFee)
 	require.NoError(err)
 	fmt.Println("=== Step 2: Initial delegation txHash:", txHash)
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
@@ -155,7 +161,7 @@ func TestStakingHooksTriggered(t *testing.T) {
 	fmt.Println("=== Step 2: Delegation exists:", string(delRes))
 
 	// Selector joins reporter
-	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "reporter", "select-reporter", validators[0].AccAddr, "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "5loya")
+	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "reporter", "select-reporter", validators[0].AccAddr, "--keyring-dir", validators[0].Node.HomeDir(), "--fees", stakeCacheTxFee)
 	require.NoError(err)
 	fmt.Println("=== Step 2: Select-reporter txHash:", txHash)
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
@@ -177,13 +183,13 @@ func TestStakingHooksTriggered(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
 	// Get first report power
-	firstPower := waitForStakeCacheAggregatePower(t, ctx, validators[0].Node, currentCycleList.QueryData)
+	firstPower := waitForStakeCacheAggregatePower(t, ctx, validators[0].Node, currentCycleList.QueryData, currentCycleList.QueryMeta.Id)
 	fmt.Println("=== Step 3: First report power (cached baseline):", firstPower)
 
 	// Step 4: Selector delegates MORE - this MUST trigger AfterDelegationModified hook
 	// The hook should set StakeRecalcFlag for the reporter
 	additionalDelegate := sdk.NewCoin("loya", math.NewInt(10_000*1e6))
-	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, additionalDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "10loya")
+	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, additionalDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", stakeCacheTxFee)
 	require.NoError(err)
 	fmt.Println("=== Step 4: Additional delegation txHash:", txHash)
 
@@ -208,7 +214,7 @@ func TestStakingHooksTriggered(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
 	// Get second report power
-	secondPower := waitForStakeCacheAggregatePower(t, ctx, validators[0].Node, currentCycleList.QueryData)
+	secondPower := waitForStakeCacheAggregatePower(t, ctx, validators[0].Node, currentCycleList.QueryData, currentCycleList.QueryMeta.Id)
 	fmt.Println("=== Step 5: Second report power (after hook should recalc):", secondPower)
 
 	// Step 6: Assertions
@@ -239,6 +245,9 @@ func TestStakeCacheValSetUpdate(t *testing.T) {
 
 	config := stakeCacheSetupConfig()
 	config.NumValidators = 4
+	config.ModifyGenesis = append(config.ModifyGenesis,
+		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "30s"),
+	)
 	chain, ic, ctx := e2e.SetupChainWithCustomConfig(t, config)
 	defer ic.Close()
 
@@ -268,7 +277,7 @@ func TestStakeCacheValSetUpdate(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
 	// Query first report power
-	firstPower := waitForStakeCacheAggregatePower(t, ctx, validators[0].Node, currentCycleList.QueryData)
+	firstPower := waitForStakeCacheAggregatePower(t, ctx, validators[0].Node, currentCycleList.QueryData, currentCycleList.QueryMeta.Id)
 	fmt.Println("First report power:", firstPower)
 
 	// Fund validator 0 with extra tokens and self-delegate to increase their own reporter stake.
@@ -282,20 +291,20 @@ func TestStakeCacheValSetUpdate(t *testing.T) {
 	}))
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
-	txHash, err = validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "staking", "delegate", validators[0].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "500000", "--fees", "10loya")
+	txHash, err = validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "staking", "delegate", validators[0].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "500000", "--fees", stakeCacheTxFee)
 	require.NoError(err)
 	fmt.Println("TX HASH (validator 0 self-delegates more):", txHash)
 
 	tooMuchSelfDelegate := sdk.NewCoin("loya", math.NewInt(2_000_000*1e6))
-	_, err = validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "staking", "delegate", validators[0].ValAddr, tooMuchSelfDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "500000", "--fees", "10loya")
+	_, err = validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "staking", "delegate", validators[0].ValAddr, tooMuchSelfDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "500000", "--fees", stakeCacheTxFee)
 	require.Error(err)
-	require.ErrorContains(err, "delegator bonded stake exceeds 30% of total bonded stake")
+	require.ErrorContains(err, "total stake increase exceeds the allowed 5% threshold within a twelve-hour period")
 
 	overLimitDelegator := interchaintest.GetAndFundTestUsers(t, ctx, "stake-share-over-limit", math.NewInt(10_000_000*1e6), chain)[0]
 	tooMuchDelegatorStake := sdk.NewCoin("loya", math.NewInt(9_000_000*1e6))
-	_, err = validators[0].Node.ExecTx(ctx, overLimitDelegator.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, tooMuchDelegatorStake.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "500000", "--fees", "10loya")
+	_, err = validators[0].Node.ExecTx(ctx, overLimitDelegator.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, tooMuchDelegatorStake.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "500000", "--fees", stakeCacheTxFee)
 	require.Error(err)
-	require.ErrorContains(err, "delegator bonded stake exceeds 30% of total bonded stake")
+	require.ErrorContains(err, "total stake increase exceeds the allowed 5% threshold within a twelve-hour period")
 
 	require.NoError(testutil.WaitForBlocks(ctx, 3, validators[0].Node))
 
@@ -308,7 +317,7 @@ func TestStakeCacheValSetUpdate(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 3, validators[0].Node))
 
 	// Query second report power
-	secondPower := waitForStakeCacheAggregatePower(t, ctx, validators[0].Node, currentCycleList.QueryData)
+	secondPower := waitForStakeCacheAggregatePower(t, ctx, validators[0].Node, currentCycleList.QueryData, currentCycleList.QueryMeta.Id)
 	fmt.Println("Second report power:", secondPower)
 
 	// Second power should be greater due to new delegation
@@ -340,7 +349,7 @@ func TestStakeCacheSelectorJoin(t *testing.T) {
 	user := interchaintest.GetAndFundTestUsers(t, ctx, "selector", fundAmt, chain)[0]
 
 	// User delegates to validator 1
-	txHash, err := validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[1].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "10loya")
+	txHash, err := validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[1].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", stakeCacheTxFee)
 	require.NoError(err)
 	fmt.Println("TX HASH (user delegates):", txHash)
 
@@ -378,7 +387,7 @@ func TestStakeCacheSelectorJoin(t *testing.T) {
 	fmt.Println("First report power:", firstPower)
 
 	// User selects validator 0 as their reporter
-	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "reporter", "select-reporter", validators[0].AccAddr, "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "5loya")
+	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "reporter", "select-reporter", validators[0].AccAddr, "--keyring-dir", validators[0].Node.HomeDir(), "--fees", stakeCacheTxFee)
 	require.NoError(err)
 	fmt.Println("TX HASH (user selects reporter):", txHash)
 
@@ -445,14 +454,14 @@ func TestStakeCacheSelectorSwitch(t *testing.T) {
 	user := interchaintest.GetAndFundTestUsers(t, ctx, "selector", fundAmt, chain)[0]
 
 	// User delegates to validator 0
-	txHash, err := validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "10loya")
+	txHash, err := validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", stakeCacheTxFee)
 	require.NoError(err)
 	fmt.Println("TX HASH (user delegates to val 0):", txHash)
 
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
 	// User selects validator 0 as their reporter initially
-	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "reporter", "select-reporter", validators[0].AccAddr, "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "5loya")
+	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "reporter", "select-reporter", validators[0].AccAddr, "--keyring-dir", validators[0].Node.HomeDir(), "--fees", stakeCacheTxFee)
 	require.NoError(err)
 	fmt.Println("TX HASH (user selects validator 0 as reporter):", txHash)
 
@@ -492,7 +501,7 @@ func TestStakeCacheSelectorSwitch(t *testing.T) {
 	require.Greater(reporter0PowerBefore, reporter1PowerBefore, "Reporter 0 should have more power than reporter 1 before switch (has selector)")
 
 	// User switches reporter from validator 0 to validator 1
-	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "reporter", "switch-reporter", validators[1].AccAddr, "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "5loya")
+	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "reporter", "switch-reporter", validators[1].AccAddr, "--keyring-dir", validators[0].Node.HomeDir(), "--fees", stakeCacheTxFee)
 	require.NoError(err)
 	fmt.Println("TX HASH (user switches to validator 1):", txHash)
 
@@ -569,14 +578,14 @@ func TestStakeCacheDelegationChange(t *testing.T) {
 	user := interchaintest.GetAndFundTestUsers(t, ctx, "selector", fundAmt, chain)[0]
 
 	// User delegates initial amount
-	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, initialDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "10loya")
+	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, initialDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", stakeCacheTxFee)
 	require.NoError(err)
 	fmt.Println("TX HASH (user initial delegation):", txHash)
 
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
 	// User selects validator 0 as their reporter
-	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "reporter", "select-reporter", validators[0].AccAddr, "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "5loya")
+	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "reporter", "select-reporter", validators[0].AccAddr, "--keyring-dir", validators[0].Node.HomeDir(), "--fees", stakeCacheTxFee)
 	require.NoError(err)
 	fmt.Println("TX HASH (user selects reporter):", txHash)
 
@@ -609,7 +618,7 @@ func TestStakeCacheDelegationChange(t *testing.T) {
 
 	// User delegates more (this triggers AfterDelegationModified hook)
 	additionalDelegate := sdk.NewCoin("loya", math.NewInt(5000*1e6))
-	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, additionalDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "10loya")
+	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, additionalDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", stakeCacheTxFee)
 	require.NoError(err)
 	fmt.Println("TX HASH (user additional delegation):", txHash)
 
