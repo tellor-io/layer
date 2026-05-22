@@ -70,7 +70,7 @@ func waitForStakeCacheCycleListQuery(t *testing.T, ctx context.Context, node *co
 	return e2e.QueryCurrentCyclelistQueryResponse{}
 }
 
-func submitStakeCacheValue(t *testing.T, ctx context.Context, node *cosmos.ChainNode, queryData string, value string) string {
+func submitStakeCacheValue(t *testing.T, ctx context.Context, node *cosmos.ChainNode, queryData, value string) string {
 	t.Helper()
 
 	txBytes, _, err := node.Exec(ctx, node.TxCommand("validator", "oracle", "submit-value", queryData, value, "--fees", stakeCacheTxFee, "--keyring-dir", node.HomeDir()), node.Chain.Config().Env)
@@ -80,7 +80,7 @@ func submitStakeCacheValue(t *testing.T, ctx context.Context, node *cosmos.Chain
 	return txHash
 }
 
-func waitForStakeCacheAggregatePower(t *testing.T, ctx context.Context, node *cosmos.ChainNode, queryData string, expectedMetaID string) uint64 {
+func waitForStakeCacheAggregatePower(t *testing.T, ctx context.Context, node *cosmos.ChainNode, queryData, expectedMetaID string) uint64 {
 	t.Helper()
 
 	qDataBz, err := hex.DecodeString(queryData)
