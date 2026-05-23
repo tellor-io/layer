@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/tellor-io/layer/testutil/encoding"
 	setup "github.com/tellor-io/layer/tests"
+	"github.com/tellor-io/layer/testutil/encoding"
 	reporterante "github.com/tellor-io/layer/x/reporter/ante"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 	_ "github.com/tellor-io/layer/x/reporter/module"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -82,8 +82,8 @@ func benchSetup(t *testing.T, numValidators int) (*setup.SharedSetup, sdk.AccAdd
 	return s, delegator, targetVal
 }
 
-func runAnte(t testing.TB, s *setup.SharedSetup, msg sdk.Msg) (storetypes.Gas, time.Duration, error) {
-	t.Helper()
+func runAnte(tb testing.TB, s *setup.SharedSetup, msg sdk.Msg) (storetypes.Gas, time.Duration, error) {
+	tb.Helper()
 	txBuilder := client.Context{}.WithTxConfig(encoding.GetTestEncodingCfg().TxConfig).TxConfig.NewTxBuilder()
 	if err := txBuilder.SetMsgs(msg); err != nil {
 		return 0, 0, err
