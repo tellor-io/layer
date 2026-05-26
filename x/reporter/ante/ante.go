@@ -293,7 +293,6 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 		}
 		delegatorAddr := sdk.AccAddress(valAddr)
 		stakeChanges.addPendingValidator(valAddr, msg.Value.Amount)
-		stakeChanges.markActiveSetDelta(true)
 		stakeChanges.addDelegationShareDelta(valAddr, delegatorAddr, msg.Value.Amount.ToLegacyDec())
 	case *stakingtypes.MsgDelegate:
 		isAllowed, err := t.checkAmountOfDelegationsByAddressDoesNotExceedMax(ctx, msg)
