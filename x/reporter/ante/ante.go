@@ -21,9 +21,8 @@ import (
 
 const (
 	MaxNestedMsgCount = 7
-	// ActiveSetDelegationCheckGas makes active-set delegation expansion visible
-	// to gas accounting instead of allowing free ante-time scans.
-	ActiveSetDelegationCheckGas   = storetypes.Gas(1_000)
+	// ActiveSetDelegationCheckGas makes active-set delegation expansion visible to gas accounting instead of allowing free ante-time scans.
+	ActiveSetDelegationCheckGas   = storetypes.Gas(1_000_000)
 	activeSetDelegationGasMessage = "active set delegation stake share check"
 )
 
@@ -161,8 +160,7 @@ func (t *stakeChangeTracker) addDelegationShareDelta(validator sdk.ValAddress, d
 	addDec(t.delegationShareDelta[validatorKey], newDelegatorAddressKey(delegator), shares)
 }
 
-// addPendingValidator records a MsgCreateValidator candidate that does not exist
-// in staking keeper state yet, so later same-tx messages can still project it.
+// addPendingValidator records a MsgCreateValidator candidate that does not exist in staking keeper state yet, so later same-tx messages can still project it.
 func (t *stakeChangeTracker) addPendingValidator(validator sdk.ValAddress, amount math.Int) {
 	validatorKey := newValidatorAddressKey(validator)
 	pending := prospectiveValidator{
@@ -183,8 +181,7 @@ func (t *stakeChangeTracker) addPendingValidator(validator sdk.ValAddress, amoun
 	t.activeSetDelta = true
 }
 
-// setProjectedValidator stores the latest post-message validator state for this
-// tx. Later messages read this instead of stale keeper state.
+// setProjectedValidator stores the latest post-message validator state for this tx. Later messages read this instead of stale keeper state.
 func (t *stakeChangeTracker) setProjectedValidator(validator prospectiveValidator) {
 	validatorKey := newValidatorAddressKey(validator.addr)
 	t.validatorProjections[validatorKey] = validator
@@ -193,8 +190,7 @@ func (t *stakeChangeTracker) setProjectedValidator(validator prospectiveValidato
 	}
 }
 
-// projectedValidator returns the current tx projection for a validator, loading
-// keeper state only the first time an existing validator is touched.
+// projectedValidator returns the current tx projection for a validator, loading keeper state only the first time an existing validator is touched.
 func (t *stakeChangeTracker) projectedValidator(ctx sdk.Context, stakingKeeper types.StakingKeeper, valAddr sdk.ValAddress) (prospectiveValidator, error) {
 	validatorKey := newValidatorAddressKey(valAddr)
 	if validator, ok := t.validatorProjections[validatorKey]; ok {
@@ -214,8 +210,7 @@ func (t *stakeChangeTracker) projectedValidator(ctx sdk.Context, stakingKeeper t
 	return projected, nil
 }
 
-// postState materializes the validator after all tracked token/share changes so
-// staking's own share conversion helpers can be reused.
+// postState materializes the validator after all tracked token/share changes so staking's own share conversion helpers can be reused.
 func (v prospectiveValidator) postState() stakingtypes.Validator {
 	validator := v.validator
 	validator.Tokens = v.postTokens
@@ -223,8 +218,7 @@ func (v prospectiveValidator) postState() stakingtypes.Validator {
 	return validator
 }
 
-// withPostState copies staking's updated token/share fields back into the
-// projection while preserving the original bonded status used for delta checks.
+// withPostState copies staking's updated token/share fields back into the projection while preserving the original bonded status used for delta checks.
 func (v prospectiveValidator) withPostState(validator stakingtypes.Validator) prospectiveValidator {
 	v.postTokens = validator.Tokens
 	v.postShares = validator.DelegatorShares
@@ -250,9 +244,7 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 	return next(ctx, tx, simulate)
 }
 
-// finalizeStakeChanges runs the stake limits once against the final projected tx
-// state. This avoids false failures for atomic txs that temporarily cross a
-// threshold and then offset before handlers finish.
+// finalizeStakeChanges runs the stake limits once against the final projected tx state. This avoids false failures for atomic txs that temporarily cross a threshold and then offset before handlers finish.
 func (t TrackStakeChangesDecorator) finalizeStakeChanges(ctx sdk.Context, stakeChanges *stakeChangeTracker) error {
 	if stakeChanges.activeSetDelta {
 		if err := t.applyProspectiveBondedValidatorChanges(ctx, stakeChanges); err != nil {
