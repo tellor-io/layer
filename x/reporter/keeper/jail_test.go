@@ -58,11 +58,10 @@ func TestJailReporterZeroDurationFlagsOnly(t *testing.T) {
 
 	gotSelector, err := k.Selectors.Get(ctx, selectorAddr)
 	require.NoError(t, err)
-	require.True(t, gotSelector.Jailed)
-	require.Equal(t, updatedAt, gotSelector.JailedUntil)
-	require.Equal(t, updatedAt, gotSelector.LockedUntilTime)
+	require.Equal(t, updatedAt, gotSelector.DisputeLockedUntil)
+	require.True(t, gotSelector.LockedUntilTime.IsZero())
 
-	require.NoError(t, k.UnjailReporter(ctx, reporterAddr))
+	require.NoError(t, k.UnjailReporter(ctx, reporterAddr, reporterAddr))
 	gotReporter, err = k.Reporters.Get(ctx, reporterAddr)
 	require.NoError(t, err)
 	require.False(t, gotReporter.Jailed)
@@ -78,19 +77,43 @@ func TestUnJailReporter(t *testing.T) {
 	require.NoError(t, k.Reporters.Set(ctx, addr, reporter))
 
 	ctx = ctx.WithBlockTime(jailedAt.Add(time.Second * 50))
-	err := k.UnjailReporter(ctx, addr)
+	err := k.UnjailReporter(ctx, addr, addr)
 	require.Error(t, err)
 
 	ctx = ctx.WithBlockTime(jailedAt.Add(time.Second * 505))
-	err = k.UnjailReporter(ctx, addr)
+	err = k.UnjailReporter(ctx, addr, addr)
 	require.NoError(t, err)
 
 	updatedReporter, err := k.Reporters.Get(ctx, addr)
 	require.NoError(t, err)
 	require.Equal(t, false, updatedReporter.Jailed)
 
-	err = k.UnjailReporter(ctx, addr)
+	err = k.UnjailReporter(ctx, addr, addr)
 	require.Error(t, err)
+}
+
+func TestThirdPartyUnjailReporter(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	jailed := sample.AccAddressBytes()
+	caller := sample.AccAddressBytes()
+	jailedAt := time.Now().UTC()
+	reporter := types.NewReporter(types.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker")
+	reporter.Jailed = true
+	reporter.JailedUntil = jailedAt.Add(100 * time.Second)
+	require.NoError(t, k.Reporters.Set(ctx, jailed, reporter))
+
+	// Third party cannot unjail before self-eligibility.
+	ctx = ctx.WithBlockTime(jailedAt.Add(200 * time.Second))
+	err := k.UnjailReporter(ctx, caller, jailed)
+	require.ErrorIs(t, err, types.ErrThirdPartyUnjailTooEarly)
+
+	// Third party can unjail 7 days after self-eligibility.
+	ctx = ctx.WithBlockTime(jailedAt.Add(100*time.Second + 7*24*time.Hour))
+	require.NoError(t, k.UnjailReporter(ctx, caller, jailed))
+
+	got, err := k.Reporters.Get(ctx, jailed)
+	require.NoError(t, err)
+	require.False(t, got.Jailed)
 }
 
 func TestUpdateJailedUntilOnFailedDispute(t *testing.T) {
@@ -119,8 +142,8 @@ func TestUpdateJailedUntilOnFailedDispute(t *testing.T) {
 
 	selA, err := k.Selectors.Get(ctx, selectorA)
 	require.NoError(t, err)
-	require.False(t, selA.Jailed)
-	require.True(t, selA.LockedUntilTime.Before(ctx.BlockTime()))
+	require.True(t, selA.DisputeLockedUntil.Before(ctx.BlockTime()))
+	require.True(t, selA.LockedUntilTime.IsZero())
 	has, err := k.StakeRecalcFlag.Has(ctx, reporterAddr.Bytes())
 	require.NoError(t, err)
 	require.True(t, has)
@@ -128,6 +151,34 @@ func TestUpdateJailedUntilOnFailedDispute(t *testing.T) {
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	require.NoError(t, err)
 	require.Equal(t, jailedAt.Add(time.Second*49), reporter.JailedUntil)
+}
+
+func TestFailedDisputePreservesLegacyLockedUntilTime(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporterAddr := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	reportBlock := uint64(10)
+	now := time.Now().UTC()
+	ctx = ctx.WithBlockTime(now)
+	legacyLock := now.Add(21 * 24 * time.Hour)
+
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, math.OneInt(), "reporter")))
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.Selection{
+		Reporter:        reporterAddr,
+		LockedUntilTime: legacyLock,
+	}))
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(reporterAddr.Bytes(), reportBlock, []byte("q1")), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selector}},
+	}))
+
+	require.NoError(t, k.JailReporter(ctx, reporterAddr, 600, reportBlock))
+	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, reportBlock))
+
+	sel, err := k.Selectors.Get(ctx, selector)
+	require.NoError(t, err)
+	require.True(t, sel.DisputeLockedUntil.Before(now))
+	require.True(t, sel.LockedUntilTime.Equal(legacyLock))
+	require.True(t, types.SelectorStakeLocked(sel, now))
 }
 
 func TestJailUsesReportByBlockNotReporterIndex(t *testing.T) {
@@ -149,12 +200,12 @@ func TestJailUsesReportByBlockNotReporterIndex(t *testing.T) {
 
 	selA, err := k.Selectors.Get(ctx, selectorA)
 	require.NoError(t, err)
-	require.True(t, selA.Jailed)
-	require.True(t, selA.LockedUntilTime.After(ctx.BlockTime()))
+	require.True(t, selA.DisputeLockedUntil.After(ctx.BlockTime()))
+	require.True(t, selA.LockedUntilTime.IsZero())
 
 	selC, err := k.Selectors.Get(ctx, selectorC)
 	require.NoError(t, err)
-	require.False(t, selC.Jailed)
+	require.True(t, selC.DisputeLockedUntil.IsZero())
 }
 
 func TestJailReporterLocksSnapshotDelegators(t *testing.T) {
@@ -179,12 +230,35 @@ func TestJailReporterLocksSnapshotDelegators(t *testing.T) {
 	for _, sel := range [][]byte{selectorA, selectorB} {
 		got, err := k.Selectors.Get(ctx, sel)
 		require.NoError(t, err)
-		require.True(t, got.Jailed)
-		require.True(t, got.LockedUntilTime.After(ctx.BlockTime()))
+		require.True(t, got.DisputeLockedUntil.After(ctx.BlockTime()))
+		require.True(t, got.LockedUntilTime.IsZero())
 	}
 }
 
-func TestJailUsesMaxLockTime(t *testing.T) {
+func TestJailSetsDisputeLockedUntilOnly(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	selector := sample.AccAddressBytes()
+	reporter := sample.AccAddressBytes()
+	reportBlock := uint64(3)
+	legacyLock := ctx.BlockTime().Add(30 * 24 * time.Hour)
+
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.Selection{
+		Reporter:        reporter,
+		LockedUntilTime: legacyLock,
+	}))
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(reporter.Bytes(), reportBlock, []byte("q1")), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selector}},
+	}))
+
+	require.NoError(t, k.JailReporter(ctx, reporter, 3600, reportBlock))
+
+	got, err := k.Selectors.Get(ctx, selector)
+	require.NoError(t, err)
+	require.True(t, got.DisputeLockedUntil.After(ctx.BlockTime()))
+	require.True(t, got.LockedUntilTime.Equal(legacyLock))
+}
+
+func TestJailUsesMaxDisputeLockTime(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	selector := sample.AccAddressBytes()
 	reporter := sample.AccAddressBytes()
@@ -193,10 +267,8 @@ func TestJailUsesMaxLockTime(t *testing.T) {
 	longer := ctx.BlockTime().Add(2 * time.Hour)
 
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.Selection{
-		Reporter:        reporter,
-		LockedUntilTime: shorter,
-		Jailed:          true,
-		JailedUntil:     shorter,
+		Reporter:           reporter,
+		DisputeLockedUntil: shorter,
 	}))
 	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(reporter.Bytes(), reportBlock, []byte("q1")), types.DelegationsAmounts{
 		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selector}},
@@ -206,11 +278,42 @@ func TestJailUsesMaxLockTime(t *testing.T) {
 
 	got, err := k.Selectors.Get(ctx, selector)
 	require.NoError(t, err)
-	require.True(t, got.LockedUntilTime.Equal(longer))
-	require.True(t, got.JailedUntil.Equal(longer))
+	require.True(t, got.DisputeLockedUntil.Equal(longer))
 }
 
-func TestLazyUnjailSelectorIfExpired(t *testing.T) {
+func TestJailDisputeLockSchedulesRecalc(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	selector := sample.AccAddressBytes()
+	reporterA := sample.AccAddressBytes()
+	reporterB := sample.AccAddressBytes()
+	reportBlock := uint64(3)
+
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.Selection{Reporter: reporterA}))
+	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(reporterA.Bytes(), selector.Bytes()), types.PendingSwitchEntry{
+		ToReporter:  reporterB.Bytes(),
+		UnlockBlock: uint64(ctx.BlockHeight()) + 100,
+	}))
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(reporterA.Bytes(), reportBlock, []byte("q1")), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selector}},
+	}))
+
+	require.NoError(t, k.JailReporter(ctx, reporterA, 3600, reportBlock))
+
+	hasA, err := k.StakeRecalcFlag.Has(ctx, reporterA.Bytes())
+	require.NoError(t, err)
+	require.True(t, hasA)
+	hasB, err := k.StakeRecalcFlag.Has(ctx, reporterB.Bytes())
+	require.NoError(t, err)
+	require.True(t, hasB)
+
+	recalcAt, err := k.RecalcAtTime.Get(ctx, reporterA.Bytes())
+	require.NoError(t, err)
+	got, err := k.Selectors.Get(ctx, selector)
+	require.NoError(t, err)
+	require.Equal(t, got.DisputeLockedUntil.Unix(), recalcAt)
+}
+
+func TestLazyClearSelectorLocksIfExpired(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	selector := sample.AccAddressBytes()
 	reporter := sample.AccAddressBytes()
@@ -219,16 +322,14 @@ func TestLazyUnjailSelectorIfExpired(t *testing.T) {
 	expired := now.Add(-time.Hour)
 
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.Selection{
-		Reporter:        reporter,
-		Jailed:          true,
-		JailedUntil:     expired,
-		LockedUntilTime: expired,
+		Reporter:           reporter,
+		DisputeLockedUntil: expired,
+		LockedUntilTime:    expired,
 	}))
 
 	sel, err := k.GetSelectorForStake(ctx, selector)
 	require.NoError(t, err)
-	require.False(t, sel.Jailed)
-	require.Equal(t, expired, sel.JailedUntil)
+	require.Equal(t, expired, sel.DisputeLockedUntil)
 	require.Equal(t, expired, sel.LockedUntilTime)
 	require.False(t, types.SelectorStakeLocked(sel, ctx.BlockTime()))
 	has, err := k.StakeRecalcFlag.Has(ctx, reporter.Bytes())
@@ -236,7 +337,7 @@ func TestLazyUnjailSelectorIfExpired(t *testing.T) {
 	require.True(t, has)
 }
 
-func TestLazyUnjailSelectorFlagsRecalcForPendingSwitchTargets(t *testing.T) {
+func TestLazyClearSelectorLocksFlagsRecalcForPendingSwitchTargets(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	selector := sample.AccAddressBytes()
 	reporterA := sample.AccAddressBytes()
@@ -246,10 +347,9 @@ func TestLazyUnjailSelectorFlagsRecalcForPendingSwitchTargets(t *testing.T) {
 	expired := now.Add(-time.Hour)
 
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.Selection{
-		Reporter:        reporterA,
-		Jailed:          true,
-		JailedUntil:     expired,
-		LockedUntilTime: expired,
+		Reporter:           reporterA,
+		DisputeLockedUntil: expired,
+		LockedUntilTime:    expired,
 	}))
 	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(reporterA.Bytes(), selector.Bytes()), types.PendingSwitchEntry{
 		ToReporter:  reporterB.Bytes(),
@@ -267,44 +367,46 @@ func TestLazyUnjailSelectorFlagsRecalcForPendingSwitchTargets(t *testing.T) {
 	require.True(t, hasB)
 }
 
-func TestLazyUnjailSelectorSkipsWhileLockedUntilActive(t *testing.T) {
+func TestLazyClearSelectorLocksSkipsWhileLockedUntilActive(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	selector := sample.AccAddressBytes()
 	now := time.Now().UTC()
 	ctx = ctx.WithBlockTime(now)
 
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.Selection{
-		Reporter:        sample.AccAddressBytes(),
-		Jailed:          true,
-		JailedUntil:     now.Add(-time.Hour),
-		LockedUntilTime: now.Add(time.Hour),
+		Reporter:           sample.AccAddressBytes(),
+		DisputeLockedUntil: now.Add(-time.Hour),
+		LockedUntilTime:    now.Add(time.Hour),
 	}))
 
 	sel, err := k.GetSelector(ctx, selector)
 	require.NoError(t, err)
-	require.True(t, sel.Jailed)
 	require.True(t, types.SelectorStakeLocked(sel, now))
+	has, err := k.StakeRecalcFlag.Has(ctx, sel.Reporter)
+	require.NoError(t, err)
+	require.False(t, has)
 }
 
-func TestUnjailReporterClearsSelection(t *testing.T) {
+func TestUnjailReporterClearsDisputeLockOnly(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	addr := sample.AccAddressBytes()
 	until := ctx.BlockTime().Add(time.Hour)
+	legacyLock := ctx.BlockTime().Add(21 * 24 * time.Hour)
 	require.NoError(t, k.Reporters.Set(ctx, addr, types.NewReporter(types.DefaultMinCommissionRate, math.OneInt(), "r")))
 	require.NoError(t, k.Selectors.Set(ctx, addr, types.Selection{
-		Reporter:        addr,
-		Jailed:          true,
-		JailedUntil:     until,
-		LockedUntilTime: until,
+		Reporter:           addr,
+		DisputeLockedUntil: until,
+		LockedUntilTime:    legacyLock,
 	}))
 
 	ctx = ctx.WithBlockTime(until.Add(time.Second))
-	require.NoError(t, k.UnjailReporter(ctx, addr))
+	require.NoError(t, k.UnjailReporter(ctx, addr, addr))
 
 	sel, err := k.Selectors.Get(ctx, addr)
 	require.NoError(t, err)
-	require.False(t, sel.Jailed)
-	require.True(t, sel.LockedUntilTime.Before(ctx.BlockTime()))
+	require.True(t, sel.DisputeLockedUntil.Before(ctx.BlockTime()))
+	require.True(t, sel.LockedUntilTime.Equal(legacyLock))
+	require.True(t, types.SelectorStakeLocked(sel, ctx.BlockTime()))
 	has, err := k.StakeRecalcFlag.Has(ctx, addr.Bytes())
 	require.NoError(t, err)
 	require.True(t, has)

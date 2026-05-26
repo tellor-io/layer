@@ -22,6 +22,7 @@ var (
 	ErrReporterDoesNotExist         = sdkerrors.Register(ModuleName, 1111, "reporter does not exist")
 	ErrReporterJailed               = sdkerrors.Register(ModuleName, 1112, "reporter jailed")
 	ErrReporterNotJailed            = sdkerrors.Register(ModuleName, 1113, "reporter not jailed")
+	ErrThirdPartyUnjailTooEarly     = sdkerrors.Register(ModuleName, 1116, "third-party unjail not yet allowed")
 	ErrNoUnbondingDelegationEntries = sdkerrors.Register(ModuleName, 1114, "no unbonding delegation entries")
 	ErrExceedsMaxDelegations        = sdkerrors.Register(ModuleName, 1115, "exceeds max number of delegations")
 )

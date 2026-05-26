@@ -231,7 +231,7 @@ func (k Keeper) GetSelectorForStake(ctx context.Context, selectorAddr sdk.AccAdd
 	if err != nil {
 		return types.Selection{}, err
 	}
-	if err := k.lazyUnjailSelectorIfExpired(ctx, selectorAddr, &sel); err != nil {
+	if err := k.lazyClearSelectorLocksIfExpired(ctx, selectorAddr, &sel); err != nil {
 		return types.Selection{}, err
 	}
 	return sel, nil
@@ -301,8 +301,8 @@ func (k Keeper) getReporterStake(ctx context.Context, repAddr sdk.AccAddress, mu
 		now := sdk.UnwrapSDKContext(ctx).BlockTime()
 		if selectorStakeLocked(selector, now) {
 			lockUntil := selector.LockedUntilTime
-			if selector.Jailed && selector.JailedUntil.After(lockUntil) {
-				lockUntil = selector.JailedUntil
+			if selector.DisputeLockedUntil.After(lockUntil) {
+				lockUntil = selector.DisputeLockedUntil
 			}
 			if lockUntil.After(now) {
 				lockUnix := lockUntil.Unix()

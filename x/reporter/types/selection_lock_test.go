@@ -22,10 +22,18 @@ func TestSelectorStakeLocked(t *testing.T) {
 		require.False(t, types.SelectorStakeLocked(sel, now))
 	})
 
-	t.Run("jailed only", func(t *testing.T) {
-		sel := types.Selection{Jailed: true, JailedUntil: now.Add(time.Hour)}
+	t.Run("dispute_locked_until only", func(t *testing.T) {
+		sel := types.Selection{DisputeLockedUntil: now.Add(time.Hour)}
 		require.True(t, types.SelectorStakeLocked(sel, now))
-		sel.JailedUntil = now
+		sel.DisputeLockedUntil = now
 		require.False(t, types.SelectorStakeLocked(sel, now))
+	})
+
+	t.Run("either field locks", func(t *testing.T) {
+		sel := types.Selection{
+			LockedUntilTime:    now.Add(-time.Hour),
+			DisputeLockedUntil: now.Add(time.Hour),
+		}
+		require.True(t, types.SelectorStakeLocked(sel, now))
 	})
 }

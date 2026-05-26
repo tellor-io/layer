@@ -395,18 +395,18 @@ func TestUnjailReporter(t *testing.T) {
 	reporter, err := k.Reporters.Get(ctx, addr)
 	require.NoError(t, err)
 	require.False(t, reporter.Jailed)
-	_, err = msg.UnjailReporter(ctx, &types.MsgUnjailReporter{ReporterAddress: addr.String()})
+	_, err = msg.UnjailReporter(ctx, &types.MsgUnjailReporter{SignerAddress: addr.String(), ReporterAddress: addr.String()})
 	require.ErrorContains(t, err, "cannot unjail an already unjailed reporter")
 
 	reporter.Jailed = true
 	reporter.JailedUntil = ctx.BlockTime().Add(time.Hour)
 	require.NoError(t, k.Reporters.Set(ctx, addr, reporter))
 
-	_, err = msg.UnjailReporter(ctx, &types.MsgUnjailReporter{ReporterAddress: addr.String()})
-	require.ErrorContains(t, err, "cannot unjail reporter before jail time is up")
+	_, err = msg.UnjailReporter(ctx, &types.MsgUnjailReporter{SignerAddress: addr.String(), ReporterAddress: addr.String()})
+	require.ErrorContains(t, err, "cannot unjail before jail time is up")
 
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
-	_, err = msg.UnjailReporter(ctx, &types.MsgUnjailReporter{ReporterAddress: addr.String()})
+	_, err = msg.UnjailReporter(ctx, &types.MsgUnjailReporter{SignerAddress: addr.String(), ReporterAddress: addr.String()})
 	require.NoError(t, err)
 
 	reporter, err = k.Reporters.Get(ctx, addr)
@@ -659,6 +659,7 @@ func BenchmarkUnjailReporter(b *testing.B) {
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
 
 	msg := &types.MsgUnjailReporter{
+		SignerAddress:   addr.String(),
 		ReporterAddress: addr.String(),
 	}
 

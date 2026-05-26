@@ -128,10 +128,13 @@ message MsgRemoveSelectorResponse {}
 
 // MsgUnjailReporter defines the Msg/UnjailReporter request type.
 message MsgUnjailReporter {
-  option (cosmos.msg.v1.signer) = "reporter_address";
+  option (cosmos.msg.v1.signer) = "signer_address";
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
-  string reporter_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // signer_address is the transaction signer (self-unjail when equal to reporter_address).
+  string signer_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // reporter_address is the jailed reporter or selector to unjail.
+  string reporter_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgUnjailReporterResponse defines the Msg/UnjailReporter response type.

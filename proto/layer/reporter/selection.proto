@@ -12,8 +12,7 @@ option go_package = "github.com/tellor-io/layer/x/reporter/types";
 message Selection {
   // reporter is the address of the reporter being delegated to
   bytes reporter = 1;
-  // locked_until_time is the time until which the tokens are locked before they
-  // can be used for reporting again
+  // locked_until_time — non-dispute / legacy stake exclusion only (e.g. pre-upgrade switch locks).
   google.protobuf.Timestamp locked_until_time = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
@@ -25,10 +24,8 @@ message Selection {
   // stores the oracle snapshot (max open query expiration for the outgoing
   // reporter at schedule time). Cleared when the pending switch is finalized.
   uint64 switch_out_locked_until_block = 4;
-  // jailed is true while this selector is penalized from a dispute on their reporter.
-  bool jailed = 5;
-  // jailed_until is when selector dispute-jail ends (wall clock, same semantics as reporter).
-  google.protobuf.Timestamp jailed_until = 6 [
+  // dispute_locked_until — dispute jail only; max on set; never copied to locked_until_time.
+  google.protobuf.Timestamp dispute_locked_until = 5 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
   ];
@@ -81,10 +78,8 @@ message FormattedSelection {
   ];
   // individual_delegations contains details of each delegation (only populated when delegations_count > 1)
   repeated IndividualDelegation individual_delegations = 5;
-  // jailed is true while this selector is penalized from a dispute on their reporter.
-  bool jailed = 6;
-  // jailed_until is when selector dispute-jail ends (wall clock, same semantics as reporter).
-  google.protobuf.Timestamp jailed_until = 7 [
+  // dispute_locked_until — dispute jail only (query surface).
+  google.protobuf.Timestamp dispute_locked_until = 6 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
   ];

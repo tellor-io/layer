@@ -30,7 +30,8 @@ func (k Keeper) jailUntil(ctx context.Context, jailDuration uint64) (time.Time, 
 	return sdkctx.BlockTime().Add(time.Second * time.Duration(jailDuration)), nil
 }
 
-func (k Keeper) lockSelectorRow(ctx context.Context, delegator sdk.AccAddress, until time.Time) error {
+// lockSelectorRowDispute extends dispute_locked_until only (never locked_until_time).
+func (k Keeper) lockSelectorRowDispute(ctx context.Context, delegator sdk.AccAddress, until time.Time) error {
 	sel, err := k.Selectors.Get(ctx, delegator.Bytes())
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -42,16 +43,46 @@ func (k Keeper) lockSelectorRow(ctx context.Context, delegator sdk.AccAddress, u
 	if until.Before(now) {
 		until = now
 	}
-	sel.LockedUntilTime = maxTime(sel.LockedUntilTime, until)
-	sel.JailedUntil = maxTime(sel.JailedUntil, until)
-	sel.Jailed = true
-	return k.Selectors.Set(ctx, delegator.Bytes(), sel)
+	prev := sel.DisputeLockedUntil
+	sel.DisputeLockedUntil = maxTime(sel.DisputeLockedUntil, until)
+	if err := k.Selectors.Set(ctx, delegator.Bytes(), sel); err != nil {
+		return err
+	}
+	if !sel.DisputeLockedUntil.After(prev) {
+		return nil
+	}
+	if err := k.flagStakeRecalcForUnlockedSelector(ctx, delegator, sel); err != nil {
+		return err
+	}
+	return k.bumpRecalcAtTimeForSelectorLock(ctx, sdk.AccAddress(sel.Reporter), sel.DisputeLockedUntil)
 }
 
-// flagStakeRecalcForUnjailedSelector flags reporters that should recompute stake after a
-// selector's dispute lock ends. With an outgoing pending switch, sel.Reporter is still the
+func (k Keeper) bumpRecalcAtTimeForSelectorLock(ctx context.Context, reporter sdk.AccAddress, lockUntil time.Time) error {
+	lockUnix := lockUntil.Unix()
+	existing, err := k.RecalcAtTime.Get(ctx, reporter.Bytes())
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return err
+		}
+		return k.RecalcAtTime.Set(ctx, reporter.Bytes(), lockUnix)
+	}
+	if lockUnix > existing {
+		return k.RecalcAtTime.Set(ctx, reporter.Bytes(), lockUnix)
+	}
+	return nil
+}
+
+// clearDisputeLock ends an active dispute lock without touching locked_until_time.
+func clearDisputeLock(sel *types.Selection, now time.Time) {
+	if sel.DisputeLockedUntil.After(now) {
+		sel.DisputeLockedUntil = now.Add(-time.Second)
+	}
+}
+
+// flagStakeRecalcForUnlockedSelector flags reporters that should recompute stake after a
+// selector lock ends. With an outgoing pending switch, sel.Reporter is still the
 // outgoing reporter (stake is held back until finalize); flag both sides of the handoff.
-func (k Keeper) flagStakeRecalcForUnjailedSelector(ctx context.Context, selectorAddr sdk.AccAddress, sel types.Selection) error {
+func (k Keeper) flagStakeRecalcForUnlockedSelector(ctx context.Context, selectorAddr sdk.AccAddress, sel types.Selection) error {
 	hasOutgoing, err := k.hasOutgoingPendingSwitch(ctx, sel.Reporter, selectorAddr.Bytes())
 	if err != nil {
 		return err
@@ -69,31 +100,17 @@ func (k Keeper) flagStakeRecalcForUnjailedSelector(ctx context.Context, selector
 	return k.FlagStakeRecalc(ctx, sdk.AccAddress(sel.Reporter))
 }
 
-// unjailSelectorRow ends an active dispute lock on a selector without writing zero
-// timestamps (invalid for state encoding). Historical JailedUntil is retained.
-func (k Keeper) unjailSelectorRow(ctx context.Context, selectorAddr sdk.AccAddress, sel *types.Selection, clearActiveLockUntil bool) error {
-	now := sdk.UnwrapSDKContext(ctx).BlockTime()
-	sel.Jailed = false
-	if clearActiveLockUntil && sel.LockedUntilTime.After(now) {
-		sel.LockedUntilTime = now.Add(-time.Second)
-	}
-	if err := k.Selectors.Set(ctx, selectorAddr.Bytes(), *sel); err != nil {
-		return err
-	}
-	return k.flagStakeRecalcForUnjailedSelector(ctx, selectorAddr, *sel)
-}
-
-// lazyUnjailSelectorIfExpired clears selector dispute-jail once the sentence has ended so
-// stake counts again on the next report. Reporter rows are never auto-unjailed.
-func (k Keeper) lazyUnjailSelectorIfExpired(ctx context.Context, selectorAddr sdk.AccAddress, sel *types.Selection) error {
-	if !sel.Jailed {
+// lazyClearSelectorLocksIfExpired flags stake recalc once a dispute lock has expired while
+// legacy locked_until_time may still exclude stake. Reporter rows are never auto-unjailed.
+func (k Keeper) lazyClearSelectorLocksIfExpired(ctx context.Context, selectorAddr sdk.AccAddress, sel *types.Selection) error {
+	if sel.DisputeLockedUntil.IsZero() {
 		return nil
 	}
 	now := sdk.UnwrapSDKContext(ctx).BlockTime()
 	if types.SelectorStakeLocked(*sel, now) {
 		return nil
 	}
-	return k.unjailSelectorRow(ctx, selectorAddr, sel, false)
+	return k.flagStakeRecalcForUnlockedSelector(ctx, selectorAddr, *sel)
 }
 
 func (k Keeper) jailSelectorsFromReportSnapshot(
@@ -121,7 +138,7 @@ func (k Keeper) jailSelectorsFromReportSnapshot(
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	for _, key := range delegators {
 		delegator := sdk.MustAccAddressFromBech32(key)
-		if err := k.lockSelectorRow(ctx, delegator, until); err != nil {
+		if err := k.lockSelectorRowDispute(ctx, delegator, until); err != nil {
 			return err
 		}
 		sdkctx.EventManager().EmitEvent(sdk.NewEvent(
@@ -143,6 +160,7 @@ func (k Keeper) clearSelectorLocksFromReportSnapshot(
 		return err
 	}
 	seen := make(map[string]struct{})
+	now := sdk.UnwrapSDKContext(ctx).BlockTime()
 	for _, origin := range snap.TokenOrigins {
 		delegator := sdk.AccAddress(origin.DelegatorAddress)
 		if _, ok := seen[delegator.String()]; ok {
@@ -156,7 +174,11 @@ func (k Keeper) clearSelectorLocksFromReportSnapshot(
 			}
 			return err
 		}
-		if err := k.unjailSelectorRow(ctx, delegator, &sel, true); err != nil {
+		clearDisputeLock(&sel, now)
+		if err := k.Selectors.Set(ctx, delegator.Bytes(), sel); err != nil {
+			return err
+		}
+		if err := k.flagStakeRecalcForUnlockedSelector(ctx, delegator, sel); err != nil {
 			return err
 		}
 	}
@@ -167,7 +189,7 @@ func (k Keeper) copyReporterJailToSelection(ctx context.Context, addr sdk.AccAdd
 	if !reporter.Jailed {
 		return nil
 	}
-	return k.lockSelectorRow(ctx, addr, reporter.JailedUntil)
+	return k.lockSelectorRowDispute(ctx, addr, reporter.JailedUntil)
 }
 
 // JailReporter jails the reporter row (if present) and every selector in the report snapshot.
@@ -206,46 +228,77 @@ func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, j
 	return k.jailSelectorsFromReportSnapshot(ctx, reporterAddr.Bytes(), reportBlockNumber, until)
 }
 
+// thirdPartyUnjailDelay is how long after self-unjail eligibility a third party may unjail.
+const thirdPartyUnjailDelay = 7 * 24 * time.Hour
+
 // UnjailReporter clears jail on the reporter row and/or that address's selection row.
-func (k Keeper) UnjailReporter(ctx context.Context, reporterAddr sdk.AccAddress) error {
-	sdkctx := sdk.UnwrapSDKContext(ctx)
-	now := sdkctx.BlockTime()
-	unjailed := false
+// Self-unjail is allowed once jail/dispute locks expire; third-party unjail requires an
+// additional thirdPartyUnjailDelay after that time.
+func (k Keeper) UnjailReporter(ctx context.Context, callerAddr, reporterAddr sdk.AccAddress) error {
+	now := sdk.UnwrapSDKContext(ctx).BlockTime()
+	selfUnjail := callerAddr.Equals(reporterAddr)
 
-	reporter, err := k.Reporters.Get(ctx, reporterAddr)
+	var reporter types.OracleReporter
+	hasReporter := false
+	reporterResult, err := k.Reporters.Get(ctx, reporterAddr)
 	if err == nil {
-		if reporter.Jailed {
-			if now.Before(reporter.JailedUntil) {
-				return types.ErrReporterJailed.Wrapf("cannot unjail reporter before jail time is up, %v", reporter.JailedUntil)
-			}
-			reporter.Jailed = false
-			if err := k.Reporters.Set(ctx, reporterAddr, reporter); err != nil {
-				return err
-			}
-			unjailed = true
-		}
+		reporter = reporterResult
+		hasReporter = true
 	} else if !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
-	sel, err := k.Selectors.Get(ctx, reporterAddr.Bytes())
+	var sel types.Selection
+	hasSelector := false
+	selResult, err := k.Selectors.Get(ctx, reporterAddr.Bytes())
 	if err == nil {
-		if sel.Jailed {
-			if now.Before(sel.JailedUntil) {
-				return types.ErrReporterJailed.Wrapf("cannot unjail selector before jail time is up, %v", sel.JailedUntil)
-			}
-			if err := k.unjailSelectorRow(ctx, reporterAddr, &sel, true); err != nil {
-				return err
-			}
-			unjailed = true
-		}
+		sel = selResult
+		hasSelector = true
 	} else if !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
 
-	if !unjailed {
+	earliest := time.Time{}
+	if hasReporter && reporter.Jailed {
+		earliest = maxTime(earliest, reporter.JailedUntil)
+	}
+	if hasSelector && sel.DisputeLockedUntil.After(earliest) {
+		earliest = sel.DisputeLockedUntil
+	}
+
+	if selfUnjail {
+		if now.Before(earliest) {
+			return types.ErrReporterJailed.Wrapf("cannot unjail before jail time is up, %v", earliest)
+		}
+	} else if now.Before(earliest.Add(thirdPartyUnjailDelay)) {
+		return types.ErrThirdPartyUnjailTooEarly.Wrapf(
+			"third-party unjail not allowed until %v (7 days after self-unjail eligibility at %v)",
+			earliest.Add(thirdPartyUnjailDelay), earliest,
+		)
+	}
+
+	hasWork := (hasReporter && reporter.Jailed) || (hasSelector && !sel.DisputeLockedUntil.IsZero())
+	if !hasWork {
 		return types.ErrReporterNotJailed.Wrapf("cannot unjail an already unjailed reporter")
 	}
+
+	if hasReporter && reporter.Jailed {
+		reporter.Jailed = false
+		if err := k.Reporters.Set(ctx, reporterAddr, reporter); err != nil {
+			return err
+		}
+	}
+
+	if hasSelector && !sel.DisputeLockedUntil.IsZero() {
+		clearDisputeLock(&sel, now)
+		if err := k.Selectors.Set(ctx, reporterAddr.Bytes(), sel); err != nil {
+			return err
+		}
+		if err := k.flagStakeRecalcForUnlockedSelector(ctx, reporterAddr, sel); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

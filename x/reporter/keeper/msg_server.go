@@ -346,6 +346,9 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 		return nil, err
 	}
 
+	if err := k.Keeper.lazyClearSelectorLocksIfExpired(goCtx, selectorAddr, &selector); err != nil {
+		return nil, err
+	}
 	if err := k.Keeper.scheduleReporterSwitch(goCtx, selectorAddr, &selector, prevReporter, reporterAddr); err != nil {
 		return nil, err
 	}
@@ -461,25 +464,40 @@ func validateRemoveSelector(msg *types.MsgRemoveSelector) (selector sdk.AccAddre
 	return selector, nil
 }
 
-// Msg: UnjailReporter, allows a reporter that is jailed to be unjailed if the jail period has passed (jail period is set during a dispute)
+// Msg: UnjailReporter allows a jailed reporter or selector to be unjailed after their
+// sentence. The reporter may unjail themselves once eligible; any account may unjail them
+// seven days after that.
 func (k msgServer) UnjailReporter(goCtx context.Context, msg *types.MsgUnjailReporter) (*types.MsgUnjailReporterResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	reporterAddr, err := sdk.AccAddressFromBech32(msg.ReporterAddress)
+	callerAddr, reporterAddr, err := validateUnjailReporter(msg)
 	if err != nil {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid reporter address (%s)", err)
+		return nil, err
 	}
 
-	if err := k.Keeper.UnjailReporter(ctx, reporterAddr); err != nil {
+	if err := k.Keeper.UnjailReporter(ctx, callerAddr, reporterAddr); err != nil {
 		return nil, err
 	}
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"unjailed_reporter",
 			sdk.NewAttribute("reporter", reporterAddr.String()),
+			sdk.NewAttribute("caller", callerAddr.String()),
 		),
 	})
 	return &types.MsgUnjailReporterResponse{}, nil
+}
+
+func validateUnjailReporter(msg *types.MsgUnjailReporter) (caller, reporter sdk.AccAddress, err error) {
+	caller, err = sdk.AccAddressFromBech32(msg.SignerAddress)
+	if err != nil {
+		return nil, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid signer address (%s)", err)
+	}
+	reporter, err = sdk.AccAddressFromBech32(msg.ReporterAddress)
+	if err != nil {
+		return nil, nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid reporter address (%s)", err)
+	}
+	return caller, reporter, nil
 }
 
 // Msg: WithdrawTip, allows selectors to directly withdraw reporting rewards and stake them with a BONDED validator

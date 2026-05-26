@@ -223,8 +223,7 @@ func (k Querier) SelectionsTo(ctx context.Context, req *types.QuerySelectionsToR
 			DelegationsCount:      delegationCount,
 			DelegationsTotal:      totalTokens,
 			IndividualDelegations: individualDelegations,
-			Jailed:                selection.Jailed,
-			JailedUntil:           selection.JailedUntil,
+			DisputeLockedUntil:    selection.DisputeLockedUntil,
 		}
 		selections = append(selections, formattedSelection)
 	}

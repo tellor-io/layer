@@ -311,6 +311,7 @@ func (s *IntegrationTestSuite) TestDisputes() {
 
 	// create msgUnJailReporter
 	msgUnjailReporter := reportertypes.MsgUnjailReporter{
+		SignerAddress:   reporterAccount.String(),
 		ReporterAddress: reporterAccount.String(),
 	}
 	// send unjailreporter tx
@@ -495,6 +496,7 @@ func (s *IntegrationTestSuite) TestDisputes() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(disputekeeper.THREE_DAYS))
 	// call unjail function
 	msgUnjailReporter = reportertypes.MsgUnjailReporter{
+		SignerAddress:   reporterAccount.String(),
 		ReporterAddress: reporterAccount.String(),
 	}
 	_, err = msgServerReporter.UnjailReporter(s.Setup.Ctx, &msgUnjailReporter)
@@ -1458,6 +1460,7 @@ func (s *IntegrationTestSuite) TestDisputes2() {
 
 	// disputed reporter can report after calling unjail function
 	msgUnjail := reportertypes.MsgUnjailReporter{
+		SignerAddress:   repsAccs[0].String(),
 		ReporterAddress: repsAccs[0].String(),
 	}
 	_, err = msgServerReporter.UnjailReporter(s.Setup.Ctx, &msgUnjail)
@@ -1576,6 +1579,7 @@ func (s *IntegrationTestSuite) TestDisputes2() {
 
 	// disputed reporter can report after calling unjail function
 	msgUnjail = reportertypes.MsgUnjailReporter{
+		SignerAddress:   repsAccs[0].String(),
 		ReporterAddress: repsAccs[0].String(),
 	}
 	_, err = msgServerReporter.UnjailReporter(s.Setup.Ctx, &msgUnjail)
