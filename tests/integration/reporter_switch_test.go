@@ -851,22 +851,6 @@ func (s *IntegrationTestSuite) reporterSelfSwitchFixture() (
 	return reporterA, reporterB, bridgeQueryData, queryID
 }
 
-func (s *IntegrationTestSuite) submitSpotPriceReport(
-	reporter, tipper sdk.AccAddress,
-	height int64,
-) (oracletypes.MicroReport, []byte, uint64) {
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(height).WithBlockTime(time.Now())
-	queryData := s.Setup.CreateSpotPriceTip(s.Setup.Ctx, tipper, `["btc","usd"]`, math.NewInt(1*1e6))
-	s.Setup.Report(s.Setup.Ctx, reporter, queryData, testValue)
-
-	queryID := utils.QueryIDFromData(queryData)
-	qMeta, err := s.Setup.Oraclekeeper.CurrentQuery(s.Setup.Ctx, queryID)
-	s.NoError(err)
-	report, err := s.Setup.Oraclekeeper.Reports.Get(s.Setup.Ctx, collections.Join3(queryID, reporter.Bytes(), qMeta.Id))
-	s.NoError(err)
-	return report, queryData, uint64(height)
-}
-
 // executeMinorDisputeAgainst drives a minor dispute to an executed reporter-wins (AGAINST) outcome.
 // Quorum needs ~51% weighted participation across team, users, and reporters (see dispute keeper
 // TallyVote); team alone is only ~33%, so reporter validators must vote with non-zero stake.
