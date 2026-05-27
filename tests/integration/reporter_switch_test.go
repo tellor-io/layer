@@ -1021,7 +1021,7 @@ func (s *IntegrationTestSuite) TestReporterSwitchSelfDemotionWhileJailed() {
 	s.NoError(err)
 	s.Equal(stakeBBase, stakeBPending)
 
-	maxCommit, err := s.Setup.Oraclekeeper.GetMaxOpenCommitmentForReporter(s.Setup.Ctx, reporterA.Bytes())
+	maxCommit, err = s.Setup.Oraclekeeper.GetMaxOpenCommitmentForReporter(s.Setup.Ctx, reporterA.Bytes())
 	s.NoError(err)
 	finalizeHeight := int64(maxCommit) + 1
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(finalizeHeight).WithBlockTime(disputeTime.Add(30 * time.Second))
