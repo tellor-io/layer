@@ -24,6 +24,9 @@ import (
 const (
 	stakeCacheCommissRate = "0.1"
 	moniker               = "reporter_0"
+	// submit-value with stake recalc (e.g. after switch-reporter) can exceed the 200k default gas.
+	stakeCacheSubmitGas  = "500000"
+	stakeCacheSubmitFees = "25loya" // must cover 500k * min gas price (~13.75 loya with adjustment)
 )
 
 // TestStakingHooksTriggered specifically tests that the reporter module's staking hooks
@@ -89,7 +92,7 @@ func TestStakingHooksTriggered(t *testing.T) {
 	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
 
 	value := layerutil.EncodeValue(500.0)
-	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
 	require.NoError(err)
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
@@ -132,7 +135,7 @@ func TestStakingHooksTriggered(t *testing.T) {
 	require.NoError(err)
 	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
 
-	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
 	require.NoError(err)
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
@@ -199,7 +202,7 @@ func TestStakeCacheValSetUpdate(t *testing.T) {
 
 	// First report
 	value := layerutil.EncodeValue(100.0)
-	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("First report submitted")
 
@@ -240,7 +243,7 @@ func TestStakeCacheValSetUpdate(t *testing.T) {
 	require.NoError(err)
 	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
 
-	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("Second report submitted")
 
@@ -306,7 +309,7 @@ func TestStakeCacheSelectorJoin(t *testing.T) {
 	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
 
 	value := layerutil.EncodeValue(200.0)
-	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("First report submitted")
 
@@ -337,7 +340,7 @@ func TestStakeCacheSelectorJoin(t *testing.T) {
 	require.NoError(err)
 	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
 
-	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("Second report submitted")
 
@@ -414,7 +417,7 @@ func TestStakeCacheSelectorSwitch(t *testing.T) {
 
 	value := layerutil.EncodeValue(300.0)
 	for i := range validators {
-		_, _, err = validators[i].Node.Exec(ctx, validators[i].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[i].Node.HomeDir()), validators[i].Node.Chain.Config().Env)
+		_, _, err = validators[i].Node.Exec(ctx, validators[i].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[i].Node.HomeDir()), validators[i].Node.Chain.Config().Env)
 		require.NoError(err)
 		fmt.Printf("Validator %d first report submitted\n", i)
 	}
@@ -455,7 +458,7 @@ func TestStakeCacheSelectorSwitch(t *testing.T) {
 	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
 
 	for i := range validators {
-		_, _, err = validators[i].Node.Exec(ctx, validators[i].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[i].Node.HomeDir()), validators[i].Node.Chain.Config().Env)
+		_, _, err = validators[i].Node.Exec(ctx, validators[i].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[i].Node.HomeDir()), validators[i].Node.Chain.Config().Env)
 		require.NoError(err)
 		fmt.Printf("Validator %d second report submitted\n", i)
 	}
@@ -541,7 +544,7 @@ func TestStakeCacheDelegationChange(t *testing.T) {
 	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
 
 	value := layerutil.EncodeValue(400.0)
-	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("First report submitted")
 
@@ -573,7 +576,7 @@ func TestStakeCacheDelegationChange(t *testing.T) {
 	require.NoError(err)
 	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
 
-	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
 	require.NoError(err)
 	fmt.Println("Second report submitted")
 

@@ -14,8 +14,8 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
-	layertypes "github.com/tellor-io/layer/types"
 	layerutil "github.com/tellor-io/layer/testutil"
+	layertypes "github.com/tellor-io/layer/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/math"
@@ -1064,7 +1064,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.NoError(err)
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
-	require.Equal(len(reportersRes.Reporters), numReporters+1) // 2 reporters + 1 validator reporter
+	require.Equal(len(reportersRes.Reporters), numReporters) // 2 reporters (the third reporter was deleted )
 	fmt.Println("reportersRes: ", reportersRes)
 
 	// user1 redelegates to val2
@@ -1893,7 +1893,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 
 	// unjail reporters
 	for i, usr := range userReports {
-		txHash, err = val1.Node.ExecTx(ctx, usr.UserReport.MicroReports[0].Reporter, "reporter", "unjail-reporter", "--keyring-dir", val1.Node.HomeDir())
+		txHash, err = val1.Node.ExecTx(ctx, usr.UserReport.MicroReports[0].Reporter, "reporter", "unjail-reporter", usr.UserReport.MicroReports[0].Reporter, "--keyring-dir", val1.Node.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (user", i, "unjails reporter): ", txHash)
 	}
