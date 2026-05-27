@@ -476,7 +476,7 @@ func TestReportUnbondMajorDispute(t *testing.T) {
 	require.NoError(err)
 
 	// user1 unbonds all of their tokens
-	txHash, err = val1.Node.ExecTx(ctx, user1Addr, "staking", "unbond", val1.ValAddr, "1000000000loya", "--keyring-dir", val1.Node.HomeDir())
+	txHash, err = val1.Node.ExecTx(ctx, user1Addr, "staking", "unbond", val1.ValAddr, "1000000000loya", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user1 unbonds all of their tokens): ", txHash)
 

@@ -24,4 +24,5 @@ var (
 	ErrReporterNotJailed            = sdkerrors.Register(ModuleName, 1113, "reporter not jailed")
 	ErrNoUnbondingDelegationEntries = sdkerrors.Register(ModuleName, 1114, "no unbonding delegation entries")
 	ErrExceedsMaxDelegations        = sdkerrors.Register(ModuleName, 1115, "exceeds max number of delegations")
+	ErrExceedsMaxStakeShare         = sdkerrors.Register(ModuleName, 1116, "delegator bonded stake exceeds 30% of total bonded stake")
 )

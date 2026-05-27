@@ -320,9 +320,9 @@ func SetupWithConfiguration(appConfig depinject.Config, startupConfig simtestuti
 	return app, nil
 }
 
-func (s *SharedSetup) SetupTest(t *testing.T) {
-	t.Helper()
-	s.require = require.New(t)
+func (s *SharedSetup) SetupTest(tb testing.TB) {
+	tb.Helper()
+	s.require = require.New(tb)
 	sdk.DefaultBondDenom = "loya"
 	config.SetupConfig()
 
@@ -351,7 +351,7 @@ func (s *SharedSetup) SetupTest(t *testing.T) {
 		&s.Accountkeeper, &s.Bankkeeper, &s.Stakingkeeper, &s.SlashingKeeper, &s.interfaceRegistry,
 		&s.appCodec, &s.authConfig, &s.Oraclekeeper, &s.Mintkeeper, &s.Bridgekeeper, &s.GlobalFeekeeper,
 		&s.Disputekeeper, &s.Registrykeeper, &s.Govkeeper, &s.distrKeeper, &s.Reporterkeeper)
-	require.NoError(t, err)
+	require.NoError(tb, err)
 	s.Ctx = sdk.UnwrapSDKContext(app.BaseApp.NewContextLegacy(false, tmproto.Header{Time: time.Now()}))
 	s.require.NotNil(s.Bridgekeeper)
 	s.Oraclekeeper.SetBridgeKeeper(s.Bridgekeeper)
