@@ -290,6 +290,15 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 			}
 		}
 
+		maxCommit, err := k.Keeper.oracleKeeper.GetMaxOpenCommitmentForReporter(goCtx, selectorAddr.Bytes())
+		if err != nil {
+			return nil, err
+		}
+		currentBlock := uint64(sdk.UnwrapSDKContext(goCtx).BlockHeight())
+		if maxCommit >= currentBlock {
+			return nil, errors.New("cannot self-demote while reporter has open query commitments; wait until block height exceeds max open commitment height")
+		}
+
 		selfRep, selfErr := k.Keeper.Reporters.Get(goCtx, selectorAddr.Bytes())
 		if selfErr == nil && selfRep.Jailed {
 			if err := k.Keeper.copyReporterJailToSelection(goCtx, selectorAddr, selfRep); err != nil {

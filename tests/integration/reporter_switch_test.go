@@ -997,7 +997,9 @@ func (s *IntegrationTestSuite) TestReporterSwitchSelfDemotionWhileJailed() {
 	s.NoError(err)
 	s.True(repA.Jailed)
 
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(bridgeHeight + 1)
+	maxCommit, err := s.Setup.Oraclekeeper.GetMaxOpenCommitmentForReporter(s.Setup.Ctx, reporterA.Bytes())
+	s.NoError(err)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(int64(maxCommit) + 1)
 	_, err = msgServer.SwitchReporter(s.Setup.Ctx, &reportertypes.MsgSwitchReporter{
 		SelectorAddress: reporterA.String(),
 		ReporterAddress: reporterB.String(),

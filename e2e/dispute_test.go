@@ -2375,8 +2375,14 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 
 	cosmos.SetSDKConfig("tellor")
 
-	// Use standard configuration
-	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	// Short SpotPrice commitment window so self-demotion can proceed after a few blocks.
+	config := e2e.DefaultSetupConfig()
+	config.NumValidators = 2
+	config.NumFullNodes = 0
+	config.ModifyGenesis = append(config.ModifyGenesis,
+		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
+	)
+	chain, ic, ctx := e2e.SetupChainWithCustomConfig(t, config)
 	defer ic.Close()
 
 	// Get validators using the helper
@@ -2430,6 +2436,9 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	fmt.Println("reports from val2: ", reportsRes)
 	require.NotEmpty(reportsRes.MicroReports, "val2 should have reports after aggregation")
 
+	// Wait until val2's max open commitment height has passed before self-demotion.
+	require.NoError(testutil.WaitForBlocks(ctx, 8, val1.Node))
+
 	// val2 switches reporter to val1 (solo reporter: pending switch; selector stays on val2 until finalize)
 	txHash, err := val2.Node.ExecTx(ctx, val2.AccAddr, "reporter", "switch-reporter", val1.AccAddr, "--keyring-dir", val2.Node.HomeDir())
 	require.NoError(err)
@@ -2445,10 +2454,10 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	require.Equal(selectorRes.Reporter, val2.AccAddr)
 
 	// make third party user to dispute
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
 	keyname := "user1"
 	fundAmt := math.NewInt(100_000 * 1e6)
 	user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
-	fmt.Println("user: ", user)
 	userAddr := user.FormattedAddress()
 
 	// user1 disputes val1's report
