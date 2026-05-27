@@ -166,6 +166,32 @@ func (_m *StakingKeeper) GetValidator(ctx context.Context, addr sdk.ValAddress) 
 	return r0, r1
 }
 
+// GetValidatorDelegations provides a mock function with given fields: ctx, valAddr
+func (_m *StakingKeeper) GetValidatorDelegations(ctx context.Context, valAddr sdk.ValAddress) ([]stakingtypes.Delegation, error) {
+	ret := _m.Called(ctx, valAddr)
+
+	var r0 []stakingtypes.Delegation
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, sdk.ValAddress) ([]stakingtypes.Delegation, error)); ok {
+		return rf(ctx, valAddr)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, sdk.ValAddress) []stakingtypes.Delegation); ok {
+		r0 = rf(ctx, valAddr)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]stakingtypes.Delegation)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, sdk.ValAddress) error); ok {
+		r1 = rf(ctx, valAddr)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetValidatorSet provides a mock function with given fields:
 func (_m *StakingKeeper) GetValidatorSet() stakingtypes.ValidatorSet {
 	ret := _m.Called()
@@ -177,6 +203,44 @@ func (_m *StakingKeeper) GetValidatorSet() stakingtypes.ValidatorSet {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(stakingtypes.ValidatorSet)
 		}
+	}
+
+	return r0
+}
+
+// MaxValidators provides a mock function with given fields: ctx
+func (_m *StakingKeeper) MaxValidators(ctx context.Context) (uint32, error) {
+	ret := _m.Called(ctx)
+
+	var r0 uint32
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (uint32, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) uint32); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(uint32)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// PowerReduction provides a mock function with given fields: ctx
+func (_m *StakingKeeper) PowerReduction(ctx context.Context) math.Int {
+	ret := _m.Called(ctx)
+
+	var r0 math.Int
+	if rf, ok := ret.Get(0).(func(context.Context) math.Int); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(math.Int)
 	}
 
 	return r0
