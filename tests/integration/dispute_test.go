@@ -1094,8 +1094,8 @@ func (s *IntegrationTestSuite) TestOpenDisputePrecision() {
 	require.Equal(expectedAnnaPower.String(), annaReporterStake.String())
 
 	// chris tips random fraction of trb to get matic/usd spot price
-	// tip is between 1 loya and 1 trb
-	randomTipAmount := math.NewInt(rand.Int63n(1*1e6) + 1)
+	// tip is between 1000 loya and 1 trb
+	randomTipAmount := math.NewInt(rand.Int63n((1*1e6)-1000+1) + 1000)
 	maticQueryData := s.Setup.CreateSpotPriceTip(ctx, chrisAccAddr, `["matic","usd"]`, randomTipAmount)
 
 	_, err = s.Setup.App.EndBlocker(ctx)
