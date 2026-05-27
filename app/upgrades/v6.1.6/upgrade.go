@@ -1,4 +1,4 @@
-package v6_2_0
+package v6_1_6
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 )
 
 /*
-Upgrade to v6.2.0:
+Upgrade to v6.1.6:
 - Deferred reporter switches stored in OutgoingPendingSwitches / IncomingPendingSwitchIdx
   with ReporterPendingSwitchHeads for O(1) checks.
 - Finalization runs at the start of ReporterStake (e.g. when a reporter submits),
