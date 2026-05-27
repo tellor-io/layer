@@ -267,7 +267,9 @@ func TestStakeCacheValSetUpdate(t *testing.T) {
 
 	// Validator 0 becomes a reporter
 	minStakeAmt := "1000000"
-	txHash, err := validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "reporter", "create-reporter", stakeCacheCommissRate, minStakeAmt, moniker, "--keyring-dir", validators[0].Node.HomeDir())
+	highGas := stakeCacheSubmitGas
+	highFees := stakeCacheSubmitFees
+	txHash, err := validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "reporter", "create-reporter", stakeCacheCommissRate, minStakeAmt, moniker, "--keyring-dir", validators[0].Node.HomeDir(), "--gas", highGas, "--fees", highFees)
 	require.NoError(err)
 	fmt.Println("TX HASH (validator 0 becomes reporter):", txHash)
 
@@ -298,18 +300,18 @@ func TestStakeCacheValSetUpdate(t *testing.T) {
 	}))
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
-	txHash, err = validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "staking", "delegate", validators[0].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "500000", "--fees", stakeCacheTxFee)
+	txHash, err = validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "staking", "delegate", validators[0].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", highGas, "--fees", highFees)
 	require.NoError(err)
 	fmt.Println("TX HASH (validator 0 self-delegates more):", txHash)
 
 	tooMuchSelfDelegate := sdk.NewCoin("loya", math.NewInt(2_000_000*1e6))
-	_, err = validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "staking", "delegate", validators[0].ValAddr, tooMuchSelfDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "500000", "--fees", stakeCacheTxFee)
+	_, err = validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "staking", "delegate", validators[0].ValAddr, tooMuchSelfDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", highGas, "--fees", highFees)
 	require.Error(err)
 	require.ErrorContains(err, "total stake increase exceeds the allowed 5% threshold within a twelve-hour period")
 
 	overLimitDelegator := interchaintest.GetAndFundTestUsers(t, ctx, "stake-share-over-limit", math.NewInt(10_000_000*1e6), chain)[0]
 	tooMuchDelegatorStake := sdk.NewCoin("loya", math.NewInt(9_000_000*1e6))
-	_, err = validators[0].Node.ExecTx(ctx, overLimitDelegator.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, tooMuchDelegatorStake.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "500000", "--fees", stakeCacheTxFee)
+	_, err = validators[0].Node.ExecTx(ctx, overLimitDelegator.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, tooMuchDelegatorStake.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", highGas, "--fees", highFees)
 	require.Error(err)
 	require.ErrorContains(err, "total stake increase exceeds the allowed 5% threshold within a twelve-hour period")
 
