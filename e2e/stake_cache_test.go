@@ -25,6 +25,8 @@ import (
 const (
 	stakeCacheCommissRate = "0.1"
 	moniker               = "reporter_0"
+	// Shared fee for stake-cache txs; keep this high enough to avoid fee-related flakes.
+	stakeCacheTxFee = "7loya"
 	// submit-value with stake recalc (e.g. after switch-reporter) can exceed the 200k default gas.
 	stakeCacheSubmitGas  = "500000"
 	stakeCacheSubmitFees = "25loya" // must cover 500k * min gas price (~13.75 loya with adjustment)
@@ -152,7 +154,7 @@ func TestStakingHooksTriggered(t *testing.T) {
 	user := interchaintest.GetAndFundTestUsers(t, ctx, "selector", fundAmt, chain)[0]
 	fmt.Println("=== Step 2: Selector address:", user.FormattedAddress())
 
-	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, initialDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", stakeCacheTxFee)
+	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, initialDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "5loya")
 	require.NoError(err)
 	fmt.Println("=== Step 2: Initial delegation txHash:", txHash)
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
