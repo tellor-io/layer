@@ -19,6 +19,8 @@ secrets.yaml
 .env
 /layerd_new
 .cursor
+.pi/
+*.code-workspace
 e2e/dbfile/*
 prod-sim/chain/bin/*
 
