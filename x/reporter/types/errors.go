@@ -25,5 +25,5 @@ var (
 	ErrThirdPartyUnjailTooEarly     = sdkerrors.Register(ModuleName, 1116, "third-party unjail not yet allowed")
 	ErrNoUnbondingDelegationEntries = sdkerrors.Register(ModuleName, 1114, "no unbonding delegation entries")
 	ErrExceedsMaxDelegations        = sdkerrors.Register(ModuleName, 1115, "exceeds max number of delegations")
-	ErrExceedsMaxStakeShare         = sdkerrors.Register(ModuleName, 1116, "delegator bonded stake exceeds 30% of total bonded stake")
+	ErrExceedsMaxStakeShare         = sdkerrors.Register(ModuleName, 1117, "delegator bonded stake exceeds 30% of total bonded stake")
 )
