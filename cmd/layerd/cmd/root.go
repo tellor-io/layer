@@ -39,6 +39,9 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 )
 
+// EnvPrefix is the prefix for layerd CLI environment variables (e.g. LAYER_HOME, LAYER_NODE).
+const EnvPrefix = "LAYER"
+
 var MigrationMap = genutiltypes.MigrationMap{
 	"v0.43": v043.Migrate, // NOTE: v0.43, v0.44 and v0.45 are genesis compatible.
 	"v0.46": v046.Migrate,
@@ -71,8 +74,7 @@ func NewRootCmd(
 		WithLegacyAmino(tempApp.LegacyAmino()).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
-		WithHomeDir(app.DefaultNodeHome).
-		WithViper("")
+		WithViper(EnvPrefix)
 
 	rootCmd := &cobra.Command{
 		Use:   app.Name + "d",
@@ -83,6 +85,9 @@ func NewRootCmd(
 			cmd.SetErr(cmd.ErrOrStderr())
 
 			initClientCtx = initClientCtx.WithCmdContext(cmd.Context())
+			if err := applyLayerEnvToFlags(cmd); err != nil {
+				return err
+			}
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -109,9 +114,13 @@ func NewRootCmd(
 		flags.FlagKeyringBackend: "test",
 	})
 	autoCliOpts := tempApp.AutoCliOpts()
-	initClientCtx, _ = config.ReadFromClientConfig(initClientCtx)
+	autoCliCtx := initClientCtx
+	if autoCliCtx.HomeDir == "" {
+		autoCliCtx = autoCliCtx.WithHomeDir(app.DefaultNodeHome)
+	}
+	autoCliCtx, _ = config.ReadFromClientConfig(autoCliCtx)
 	// autoCliOpts.Keyring, _ = keyring.NewAutoCLIKeyring(initClientCtx.Keyring)
-	autoCliOpts.ClientCtx = initClientCtx
+	autoCliOpts.ClientCtx = autoCliCtx
 	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
