@@ -325,7 +325,7 @@ Your stake is excluded from **reporter oracle power** and from **dispute vote po
 Wait until `dispute_locked_until` is in the past, then call **`MsgUnjailReporter`** on your own address (if you also have a reporter row, that is cleared too when applicable). The chain may also lazy-clear an expired dispute lock when you interact with reporter messages.
 
 **Can someone else unjail me?**  
-A third party can call unjail on your reporter/selector address only after **7 days beyond** when you would have been allowed to unjail yourself.
+Yes. You have 7 days to address any problems and unjail yourself. Anyone can unjail you after that 7 day period. This is to prevent people waiting 21 days in a jailed state to avoid disputes.
 
 **Does unjail remove my old ~21-day `locked_until_time`?**  
 No. Unjail clears **dispute** lock (`dispute_locked_until`) and reporter-row jail. Legacy `locked_until_time` is unchanged unless a separate path clears it.

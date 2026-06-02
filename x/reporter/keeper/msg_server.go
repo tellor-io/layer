@@ -418,6 +418,10 @@ func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSel
 		return nil, errors.New("selector cannot be removed if it is the reporter's own address")
 	}
 
+	if err := k.Keeper.maybeFinalizePendingSwitchForRemoveSelector(goCtx, selectorAddr, &selector, &reporter); err != nil {
+		return nil, err
+	}
+
 	hasMin, err := k.Keeper.HasMin(goCtx, selectorAddr, reporter.MinTokensRequired)
 	if err != nil {
 		return nil, err
@@ -444,6 +448,7 @@ func (k msgServer) RemoveSelector(goCtx context.Context, msg *types.MsgRemoveSel
 			return nil, errors.New("selector can only be removed if reporter has reached max selectors and doesn't meet min requirement")
 		}
 	}
+
 	// remove selector
 	if err := k.Keeper.Selectors.Remove(goCtx, selectorAddr); err != nil {
 		return nil, err

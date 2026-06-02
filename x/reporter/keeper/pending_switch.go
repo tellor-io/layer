@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -130,16 +131,13 @@ func (k Keeper) finalizePendingSwitch(ctx context.Context, from, selector []byte
 
 	sel, err := k.Selectors.Get(ctx, selector)
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return k.removeOutgoingPendingSwitch(ctx, from, selector, to)
+		}
 		return err
 	}
 	if !bytes.Equal(sel.Reporter, from) {
-		// stale row; clean up
-		_ = k.OutgoingPendingSwitches.Remove(ctx, outK)
-		_ = k.IncomingPendingSwitchIdx.Remove(ctx, inK)
-		if err := k.recomputeReporterPendingSwitchHead(ctx, from); err != nil {
-			return err
-		}
-		return k.recomputeReporterPendingSwitchHead(ctx, to)
+		return k.removeOutgoingPendingSwitch(ctx, from, selector, to)
 	}
 
 	sel.Reporter = append([]byte(nil), to...)
@@ -375,6 +373,46 @@ func (k Keeper) mergeReporterPendingSwitchHeadIncomingAdd(ctx context.Context, r
 // from repAddr (stake must not count toward that reporter).
 func (k Keeper) hasOutgoingPendingSwitch(ctx context.Context, repAddr, selectorAddr []byte) (bool, error) {
 	return k.OutgoingPendingSwitches.Has(ctx, collections.Join(repAddr, selectorAddr))
+}
+
+// maybeFinalizePendingSwitchForRemoveSelector applies a ready pending switch before
+// RemoveSelector proceeds, or rejects removal while the handoff is still locked.
+// Finalize uses the same height rule as ReporterStake: unlock_block < current height.
+func (k Keeper) maybeFinalizePendingSwitchForRemoveSelector(
+	ctx context.Context,
+	selectorAddr sdk.AccAddress,
+	selector *types.Selection,
+	reporter *types.OracleReporter,
+) error {
+	from := selector.Reporter
+	hasPending, err := k.hasOutgoingPendingSwitch(ctx, from, selectorAddr.Bytes())
+	if err != nil {
+		return err
+	}
+	if !hasPending {
+		return nil
+	}
+	outK := collections.Join(from, selectorAddr.Bytes())
+	entry, err := k.OutgoingPendingSwitches.Get(ctx, outK)
+	if err != nil {
+		return err
+	}
+	currentBlock := uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())
+	if currentBlock > entry.UnlockBlock {
+		if err := k.finalizePendingSwitch(ctx, from, selectorAddr.Bytes()); err != nil {
+			return err
+		}
+		*selector, err = k.Selectors.Get(ctx, selectorAddr.Bytes())
+		if err != nil {
+			return err
+		}
+		*reporter, err = k.Reporters.Get(ctx, selector.Reporter)
+		return err
+	}
+	return fmt.Errorf(
+		"selector cannot be removed while a reporter switch is pending (switch finalizes after block height %d)",
+		entry.UnlockBlock,
+	)
 }
 
 // pendingSwitchToReporter returns (true, toAddr) if there is a pending switch

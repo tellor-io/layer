@@ -388,6 +388,133 @@ func TestRemoveSelector(t *testing.T) {
 	require.ErrorIs(t, err, collections.ErrNotFound)
 }
 
+func TestRemoveSelectorRejectsPendingSwitch(t *testing.T) {
+	k, sk, _, _, _, ms, ctx := setupMsgServer(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(1)
+	reporter, reporter2, selector := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+
+	selectorStake := math.NewInt(1_000_000)
+	// Outgoing reporter requires more than the selector has bonded so RemoveSelector is allowed.
+	outgoingMin := selectorStake.Add(math.NewInt(1))
+
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporter, 1)))
+	require.NoError(t, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, outgoingMin, "r1")))
+	require.NoError(t, k.Reporters.Set(ctx, reporter2, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "r2")))
+	require.NoError(t, k.Params.Set(ctx, types.Params{MaxSelectors: 10}))
+
+	mockSelectorBondedDelegations := func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		delegations := []stakingtypes.Delegation{
+			{
+				DelegatorAddress: selector.String(),
+				ValidatorAddress: sdk.ValAddress(selector).String(),
+				Shares:           math.LegacyNewDec(1000),
+			},
+		}
+		for _, delegation := range delegations {
+			val := stakingtypes.Validator{
+				OperatorAddress: sdk.ValAddress(selector).String(),
+				Status:          stakingtypes.Bonded,
+				Tokens:          selectorStake,
+				DelegatorShares: math.LegacyNewDec(1_000),
+			}
+			sk.On("GetValidator", ctx, sdk.ValAddress(selector)).Return(val, nil)
+			if fn(delegation) {
+				break
+			}
+		}
+	}
+	sk.On("IterateDelegatorDelegations", ctx, selector, mock.AnythingOfType("func(types.Delegation) bool")).
+		Return(nil).Run(mockSelectorBondedDelegations)
+
+	_, err := ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selector.String(), ReporterAddress: reporter2.String()})
+	require.NoError(t, err)
+
+	outPK := collections.Join(reporter.Bytes(), selector.Bytes())
+	hasPending, err := k.OutgoingPendingSwitches.Has(ctx, outPK)
+	require.NoError(t, err)
+	require.True(t, hasPending)
+
+	ent, err := k.OutgoingPendingSwitches.Get(ctx, outPK)
+	require.NoError(t, err)
+	ent.UnlockBlock = 1000
+	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, outPK, ent))
+
+	require.NoError(t, k.Params.Set(ctx, types.Params{MaxSelectors: 0}))
+	_, err = ms.RemoveSelector(ctx, &types.MsgRemoveSelector{SelectorAddress: selector.String(), AnyAddress: reporter.String()})
+	require.ErrorContains(t, err, "selector cannot be removed while a reporter switch is pending")
+	require.ErrorContains(t, err, "switch finalizes after block height 1000")
+
+	_, err = k.Selectors.Get(ctx, selector)
+	require.NoError(t, err)
+
+	hasPending, err = k.OutgoingPendingSwitches.Has(ctx, outPK)
+	require.NoError(t, err)
+	require.True(t, hasPending)
+}
+
+func TestRemoveSelectorFinalizesPendingSwitchWhenUnlockReached(t *testing.T) {
+	k, sk, _, _, _, ms, ctx := setupMsgServer(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(10)
+	reporter, reporter2, selector := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+
+	selectorStake := math.NewInt(1_000_000)
+	incomingMin := selectorStake.Add(math.NewInt(1))
+
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporter, 1)))
+	require.NoError(t, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "r1")))
+	require.NoError(t, k.Reporters.Set(ctx, reporter2, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "r2")))
+	require.NoError(t, k.Params.Set(ctx, types.Params{MaxSelectors: 10}))
+
+	sk.On("IterateDelegatorDelegations", ctx, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		delegations := []stakingtypes.Delegation{
+			{
+				DelegatorAddress: selector.String(),
+				ValidatorAddress: sdk.ValAddress(selector).String(),
+				Shares:           math.LegacyNewDec(1000),
+			},
+		}
+		for _, delegation := range delegations {
+			val := stakingtypes.Validator{
+				OperatorAddress: sdk.ValAddress(selector).String(),
+				Status:          stakingtypes.Bonded,
+				Tokens:          selectorStake,
+				DelegatorShares: math.LegacyNewDec(1_000),
+			}
+			sk.On("GetValidator", ctx, sdk.ValAddress(selector)).Return(val, nil)
+			if fn(delegation) {
+				break
+			}
+		}
+	})
+
+	_, err := ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selector.String(), ReporterAddress: reporter2.String()})
+	require.NoError(t, err)
+
+	outPK := collections.Join(reporter.Bytes(), selector.Bytes())
+	hasPending, err := k.OutgoingPendingSwitches.Has(ctx, outPK)
+	require.NoError(t, err)
+	require.True(t, hasPending)
+
+	// After finalize, removal is evaluated against the incoming reporter.
+	rep2, err := k.Reporters.Get(ctx, reporter2.Bytes())
+	require.NoError(t, err)
+	rep2.MinTokensRequired = incomingMin
+	require.NoError(t, k.Reporters.Set(ctx, reporter2.Bytes(), rep2))
+	require.NoError(t, k.Params.Set(ctx, types.Params{MaxSelectors: 0}))
+
+	_, err = ms.RemoveSelector(ctx, &types.MsgRemoveSelector{SelectorAddress: selector.String(), AnyAddress: reporter.String()})
+	require.NoError(t, err)
+
+	_, err = k.Selectors.Get(ctx, selector)
+	require.ErrorIs(t, err, collections.ErrNotFound)
+
+	hasPending, err = k.OutgoingPendingSwitches.Has(ctx, outPK)
+	require.NoError(t, err)
+	require.False(t, hasPending)
+}
+
 func TestUnjailReporter(t *testing.T) {
 	k, _, _, _, _, msg, ctx := setupMsgServer(t)
 	addr := sample.AccAddressBytes()
