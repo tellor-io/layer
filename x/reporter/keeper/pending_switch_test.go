@@ -9,8 +9,6 @@ import (
 	"github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestFinalizePendingSwitchCleansOrphanWhenSelectorMissing(t *testing.T) {
@@ -37,7 +35,7 @@ func TestFinalizePendingSwitchCleansOrphanWhenSelectorMissing(t *testing.T) {
 		IncomingMinUnlock: 1,
 	}))
 
-	_, err := k.ReporterStake(ctx, sdk.AccAddress(incoming), []byte{})
+	_, err := k.ReporterStake(ctx, incoming, []byte{})
 	require.NoError(t, err)
 
 	hasOut, err := k.OutgoingPendingSwitches.Has(ctx, outPK)
