@@ -42,4 +42,10 @@ var (
 	OutgoingPendingSwitchPrefix     = collections.NewPrefix(32)
 	IncomingPendingSwitchIdxPrefix  = collections.NewPrefix(33)
 	ReporterPendingSwitchHeadPrefix = collections.NewPrefix(34)
+	// SelectorDisputeLockPrefix stores per-(selector, dispute_hash_id) jail-until unix seconds.
+	SelectorDisputeLockPrefix = collections.NewPrefix(35)
 )
+
+// ReporterJailDisputeLockKey keys selector dispute locks copied from OracleReporter.JailedUntil
+// when a self-reporter demotes without an originating dispute hash.
+var ReporterJailDisputeLockKey = []byte{0}

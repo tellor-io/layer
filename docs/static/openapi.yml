@@ -574,17 +574,12 @@ paths:
                       title: >-
                         individual_delegations contains details of each
                         delegation (only populated when delegations_count > 1)
-                    jailed:
-                      type: boolean
-                      description: >-
-                        jailed is true while this selector is penalized from a
-                        dispute on their reporter.
-                    jailed_until:
+                    dispute_locked_until:
                       type: string
                       format: date-time
                       description: >-
-                        jailed_until is when selector dispute-jail ends (wall
-                        clock, same semantics as reporter).
+                        dispute_locked_until — dispute jail only (query
+                        surface).
                   title: >-
                     FormattedSelection is a type that represents a selector's
                     information for the SelectionsTo query

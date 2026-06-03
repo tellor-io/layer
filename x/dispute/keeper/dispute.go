@@ -175,11 +175,11 @@ func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroRe
 	if err != nil {
 		return err
 	}
-	return k.reporterKeeper.JailReporter(ctx, reporterAddr, jailDuration, report.BlockNumber)
+	return k.reporterKeeper.JailReporter(ctx, reporterAddr, jailDuration, report.BlockNumber, hashId)
 }
 
-func (k Keeper) JailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDuration, reportBlockNumber uint64) error {
-	return k.reporterKeeper.JailReporter(ctx, repAddr, jailDuration, reportBlockNumber)
+func (k Keeper) JailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDuration, reportBlockNumber uint64, disputeHashID []byte) error {
+	return k.reporterKeeper.JailReporter(ctx, repAddr, jailDuration, reportBlockNumber, disputeHashID)
 }
 
 // Get percentage of slash amount based on category, returned as fixed6

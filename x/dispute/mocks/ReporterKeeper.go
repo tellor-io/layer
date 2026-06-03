@@ -171,13 +171,13 @@ func (_m *ReporterKeeper) GetSelectorForStake(ctx context.Context, selectorAddr 
 	return r0, r1
 }
 
-// JailReporter provides a mock function with given fields: ctx, reporterAddr, jailDuration, reportBlockNumber
-func (_m *ReporterKeeper) JailReporter(ctx context.Context, reporterAddr types.AccAddress, jailDuration uint64, reportBlockNumber uint64) error {
-	ret := _m.Called(ctx, reporterAddr, jailDuration, reportBlockNumber)
+// JailReporter provides a mock function with given fields: ctx, reporterAddr, jailDuration, reportBlockNumber, disputeHashID
+func (_m *ReporterKeeper) JailReporter(ctx context.Context, reporterAddr types.AccAddress, jailDuration uint64, reportBlockNumber uint64, disputeHashID []byte) error {
+	ret := _m.Called(ctx, reporterAddr, jailDuration, reportBlockNumber, disputeHashID)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64, uint64) error); ok {
-		r0 = rf(ctx, reporterAddr, jailDuration, reportBlockNumber)
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64, uint64, []byte) error); ok {
+		r0 = rf(ctx, reporterAddr, jailDuration, reportBlockNumber, disputeHashID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -233,13 +233,13 @@ func (_m *ReporterKeeper) TotalReporterPower(ctx context.Context) (math.Int, err
 	return r0, r1
 }
 
-// UpdateJailedUntilOnFailedDispute provides a mock function with given fields: ctx, reporterAddr, reportBlockNumber
-func (_m *ReporterKeeper) UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr types.AccAddress, reportBlockNumber uint64) error {
-	ret := _m.Called(ctx, reporterAddr, reportBlockNumber)
+// UpdateJailedUntilOnFailedDispute provides a mock function with given fields: ctx, reporterAddr, reportBlockNumber, disputeHashID
+func (_m *ReporterKeeper) UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr types.AccAddress, reportBlockNumber uint64, disputeHashID []byte) error {
+	ret := _m.Called(ctx, reporterAddr, reportBlockNumber, disputeHashID)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64) error); ok {
-		r0 = rf(ctx, reporterAddr, reportBlockNumber)
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64, []byte) error); ok {
+		r0 = rf(ctx, reporterAddr, reportBlockNumber, disputeHashID)
 	} else {
 		r0 = ret.Error(0)
 	}

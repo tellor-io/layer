@@ -12,6 +12,10 @@ import (
 	"cosmossdk.io/math"
 )
 
+func testDisputeHashID(suffix byte) []byte {
+	return []byte{'t', 'e', 's', 't', '-', 'd', 'i', 's', 'p', 'u', 't', 'e', '-', suffix}
+}
+
 func TestJailReporter(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	addr := sample.AccAddressBytes()
@@ -24,7 +28,7 @@ func TestJailReporter(t *testing.T) {
 	ctx = ctx.WithBlockTime(updatedAt.Add(time.Second * 10))
 	jailedDuration := uint64(100)
 
-	err = k.JailReporter(ctx, addr, jailedDuration, 1)
+	err = k.JailReporter(ctx, addr, jailedDuration, 1, testDisputeHashID('a'))
 	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(updatedAt.Add(time.Second * 15))
@@ -49,7 +53,7 @@ func TestJailReporterZeroDurationFlagsOnly(t *testing.T) {
 		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selectorAddr}},
 	}))
 
-	require.NoError(t, k.JailReporter(ctx, reporterAddr, 0, reportBlock))
+	require.NoError(t, k.JailReporter(ctx, reporterAddr, 0, reportBlock, testDisputeHashID('a')))
 
 	gotReporter, err := k.Reporters.Get(ctx, reporterAddr)
 	require.NoError(t, err)
@@ -58,7 +62,8 @@ func TestJailReporterZeroDurationFlagsOnly(t *testing.T) {
 
 	gotSelector, err := k.Selectors.Get(ctx, selectorAddr)
 	require.NoError(t, err)
-	require.Equal(t, updatedAt, gotSelector.DisputeLockedUntil)
+	// Per-dispute locks persist until as unix seconds; sub-second precision is not preserved.
+	require.Equal(t, updatedAt.Truncate(time.Second), gotSelector.DisputeLockedUntil)
 	require.True(t, gotSelector.LockedUntilTime.IsZero())
 
 	require.NoError(t, k.UnjailReporter(ctx, reporterAddr, reporterAddr))
@@ -135,10 +140,11 @@ func TestUpdateJailedUntilOnFailedDispute(t *testing.T) {
 	}))
 
 	ctx = ctx.WithBlockTime(jailedAt)
-	require.NoError(t, k.JailReporter(ctx, reporterAddr, 600, reportBlock))
+	disputeHash := testDisputeHashID('a')
+	require.NoError(t, k.JailReporter(ctx, reporterAddr, 600, reportBlock, disputeHash))
 
 	ctx = ctx.WithBlockTime(jailedAt.Add(time.Second * 50))
-	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, reportBlock))
+	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, reportBlock, disputeHash))
 
 	selA, err := k.Selectors.Get(ctx, selectorA)
 	require.NoError(t, err)
@@ -171,8 +177,9 @@ func TestFailedDisputePreservesLegacyLockedUntilTime(t *testing.T) {
 		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selector}},
 	}))
 
-	require.NoError(t, k.JailReporter(ctx, reporterAddr, 600, reportBlock))
-	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, reportBlock))
+	disputeHash := testDisputeHashID('a')
+	require.NoError(t, k.JailReporter(ctx, reporterAddr, 600, reportBlock, disputeHash))
+	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, reportBlock, disputeHash))
 
 	sel, err := k.Selectors.Get(ctx, selector)
 	require.NoError(t, err)
@@ -196,7 +203,7 @@ func TestJailUsesReportByBlockNotReporterIndex(t *testing.T) {
 		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selectorA}},
 	}))
 
-	require.NoError(t, k.JailReporter(ctx, reporterR, 3600, reportBlock))
+	require.NoError(t, k.JailReporter(ctx, reporterR, 3600, reportBlock, testDisputeHashID('a')))
 
 	selA, err := k.Selectors.Get(ctx, selectorA)
 	require.NoError(t, err)
@@ -225,7 +232,7 @@ func TestJailReporterLocksSnapshotDelegators(t *testing.T) {
 		},
 	}))
 
-	require.NoError(t, k.JailReporter(ctx, reporterR, 600, reportBlock))
+	require.NoError(t, k.JailReporter(ctx, reporterR, 600, reportBlock, testDisputeHashID('a')))
 
 	for _, sel := range [][]byte{selectorA, selectorB} {
 		got, err := k.Selectors.Get(ctx, sel)
@@ -250,7 +257,7 @@ func TestJailSetsDisputeLockedUntilOnly(t *testing.T) {
 		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selector}},
 	}))
 
-	require.NoError(t, k.JailReporter(ctx, reporter, 3600, reportBlock))
+	require.NoError(t, k.JailReporter(ctx, reporter, 3600, reportBlock, testDisputeHashID('a')))
 
 	got, err := k.Selectors.Get(ctx, selector)
 	require.NoError(t, err)
@@ -265,20 +272,20 @@ func TestJailUsesMaxDisputeLockTime(t *testing.T) {
 	reportBlock := uint64(3)
 	shorter := ctx.BlockTime().Add(30 * time.Minute)
 	longer := ctx.BlockTime().Add(2 * time.Hour)
+	shortHash := testDisputeHashID('a')
+	longHash := testDisputeHashID('b')
 
-	require.NoError(t, k.Selectors.Set(ctx, selector, types.Selection{
-		Reporter:           reporter,
-		DisputeLockedUntil: shorter,
-	}))
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporter, 1)))
+	require.NoError(t, k.SelectorDisputeLocks.Set(ctx, collections.Join(selector.Bytes(), shortHash), shorter.Unix()))
 	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(reporter.Bytes(), reportBlock, []byte("q1")), types.DelegationsAmounts{
 		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selector}},
 	}))
 
-	require.NoError(t, k.JailReporter(ctx, reporter, 7200, reportBlock))
+	require.NoError(t, k.JailReporter(ctx, reporter, 7200, reportBlock, longHash))
 
 	got, err := k.Selectors.Get(ctx, selector)
 	require.NoError(t, err)
-	require.True(t, got.DisputeLockedUntil.Equal(longer))
+	require.True(t, got.DisputeLockedUntil.Equal(longer.Truncate(time.Second)))
 }
 
 func TestJailDisputeLockSchedulesRecalc(t *testing.T) {
@@ -297,7 +304,7 @@ func TestJailDisputeLockSchedulesRecalc(t *testing.T) {
 		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selector}},
 	}))
 
-	require.NoError(t, k.JailReporter(ctx, reporterA, 3600, reportBlock))
+	require.NoError(t, k.JailReporter(ctx, reporterA, 3600, reportBlock, testDisputeHashID('a')))
 
 	hasA, err := k.StakeRecalcFlag.Has(ctx, reporterA.Bytes())
 	require.NoError(t, err)
@@ -392,22 +399,66 @@ func TestUnjailReporterClearsDisputeLockOnly(t *testing.T) {
 	addr := sample.AccAddressBytes()
 	until := ctx.BlockTime().Add(time.Hour)
 	legacyLock := ctx.BlockTime().Add(21 * 24 * time.Hour)
+	disputeHash := testDisputeHashID('a')
 	require.NoError(t, k.Reporters.Set(ctx, addr, types.NewReporter(types.DefaultMinCommissionRate, math.OneInt(), "r")))
 	require.NoError(t, k.Selectors.Set(ctx, addr, types.Selection{
 		Reporter:           addr,
 		DisputeLockedUntil: until,
 		LockedUntilTime:    legacyLock,
 	}))
+	require.NoError(t, k.SelectorDisputeLocks.Set(ctx, collections.Join(addr.Bytes(), disputeHash), until.Unix()))
 
 	ctx = ctx.WithBlockTime(until.Add(time.Second))
 	require.NoError(t, k.UnjailReporter(ctx, addr, addr))
 
 	sel, err := k.Selectors.Get(ctx, addr)
 	require.NoError(t, err)
-	require.True(t, sel.DisputeLockedUntil.Before(ctx.BlockTime()))
+	require.True(t, sel.DisputeLockedUntil.IsZero())
 	require.True(t, sel.LockedUntilTime.Equal(legacyLock))
 	require.True(t, types.SelectorStakeLocked(sel, ctx.BlockTime()))
-	has, err := k.StakeRecalcFlag.Has(ctx, addr.Bytes())
+	_, err = k.SelectorDisputeLocks.Get(ctx, collections.Join(addr.Bytes(), disputeHash))
+	require.ErrorIs(t, err, collections.ErrNotFound)
+}
+
+func TestClearOneDisputeLockPreservesOther(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporterAddr := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	reportBlock := uint64(10)
+	now := time.Now().UTC()
+	ctx = ctx.WithBlockTime(now)
+	minorHash := testDisputeHashID('a')
+	majorHash := testDisputeHashID('b')
+
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, math.OneInt(), "reporter")))
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 1)))
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(reporterAddr.Bytes(), reportBlock, []byte("q1")), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selector}},
+	}))
+
+	require.NoError(t, k.JailReporter(ctx, reporterAddr, 600, reportBlock, minorHash))
+	require.NoError(t, k.JailReporter(ctx, reporterAddr, 7200, reportBlock, majorHash))
+
+	sel, err := k.Selectors.Get(ctx, selector)
 	require.NoError(t, err)
-	require.True(t, has)
+	majorUntil := now.Add(7200 * time.Second).Truncate(time.Second)
+	require.True(t, sel.DisputeLockedUntil.Equal(majorUntil))
+
+	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, reportBlock, minorHash))
+
+	sel, err = k.Selectors.Get(ctx, selector)
+	require.NoError(t, err)
+	require.True(t, sel.DisputeLockedUntil.Equal(majorUntil))
+	require.True(t, types.SelectorStakeLocked(sel, now))
+
+	_, err = k.SelectorDisputeLocks.Get(ctx, collections.Join(selector.Bytes(), minorHash))
+	require.ErrorIs(t, err, collections.ErrNotFound)
+	_, err = k.SelectorDisputeLocks.Get(ctx, collections.Join(selector.Bytes(), majorHash))
+	require.NoError(t, err)
+
+	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, reportBlock, majorHash))
+	sel, err = k.Selectors.Get(ctx, selector)
+	require.NoError(t, err)
+	require.True(t, sel.DisputeLockedUntil.IsZero())
+	require.False(t, types.SelectorStakeLocked(sel, now))
 }

@@ -30,8 +30,62 @@ func (k Keeper) jailUntil(ctx context.Context, jailDuration uint64) (time.Time, 
 	return sdkctx.BlockTime().Add(time.Second * time.Duration(jailDuration)), nil
 }
 
-// lockSelectorRowDispute extends dispute_locked_until only (never locked_until_time).
-func (k Keeper) lockSelectorRowDispute(ctx context.Context, delegator sdk.AccAddress, until time.Time) error {
+func selectorDisputeLockKey(delegator, disputeHashID []byte) collections.Pair[[]byte, []byte] {
+	return collections.Join(delegator, disputeHashID)
+}
+
+func unixToTime(unix int64) time.Time {
+	return time.Unix(unix, 0).UTC()
+}
+
+// maxSelectorDisputeLockUntil returns the latest lock end among all dispute entries for a selector.
+func (k Keeper) maxSelectorDisputeLockUntil(ctx context.Context, delegator []byte) (time.Time, error) {
+	maxUntil := time.Time{}
+	rng := collections.NewPrefixedPairRange[[]byte, []byte](delegator)
+	err := k.SelectorDisputeLocks.Walk(ctx, rng, func(_ collections.Pair[[]byte, []byte], untilUnix int64) (bool, error) {
+		until := unixToTime(untilUnix)
+		if until.After(maxUntil) {
+			maxUntil = until
+		}
+		return false, nil
+	})
+	return maxUntil, err
+}
+
+// syncSelectorDisputeLockedUntil recomputes Selection.dispute_locked_until from per-dispute entries.
+func (k Keeper) syncSelectorDisputeLockedUntil(ctx context.Context, delegator sdk.AccAddress, sel types.Selection) (types.Selection, bool, error) {
+	maxUntil, err := k.maxSelectorDisputeLockUntil(ctx, delegator.Bytes())
+	if err != nil {
+		return sel, false, err
+	}
+	prev := sel.DisputeLockedUntil
+	sel.DisputeLockedUntil = maxUntil
+	return sel, !sel.DisputeLockedUntil.Equal(prev), nil
+}
+
+// setSelectorDisputeLock records one dispute's lock and updates the cached max on the selection row.
+func (k Keeper) setSelectorDisputeLock(ctx context.Context, delegator sdk.AccAddress, disputeHashID []byte, until time.Time) error {
+	now := sdk.UnwrapSDKContext(ctx).BlockTime()
+	if until.Before(now) {
+		until = now
+	}
+	lockKey := selectorDisputeLockKey(delegator.Bytes(), disputeHashID)
+	existing, err := k.SelectorDisputeLocks.Get(ctx, lockKey)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return err
+	}
+	newUnix := until.Unix()
+	if err == nil {
+		newUnix = maxTime(unixToTime(existing), until).Unix()
+	}
+	if err := k.SelectorDisputeLocks.Set(ctx, lockKey, newUnix); err != nil {
+		return err
+	}
+	return k.lockSelectorRowDispute(ctx, delegator, disputeHashID)
+}
+
+// lockSelectorRowDispute syncs dispute_locked_until from per-dispute entries (never locked_until_time).
+func (k Keeper) lockSelectorRowDispute(ctx context.Context, delegator sdk.AccAddress, disputeHashID []byte) error {
 	sel, err := k.Selectors.Get(ctx, delegator.Bytes())
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
@@ -39,16 +93,15 @@ func (k Keeper) lockSelectorRowDispute(ctx context.Context, delegator sdk.AccAdd
 		}
 		return err
 	}
-	now := sdk.UnwrapSDKContext(ctx).BlockTime()
-	if until.Before(now) {
-		until = now
-	}
 	prev := sel.DisputeLockedUntil
-	sel.DisputeLockedUntil = maxTime(sel.DisputeLockedUntil, until)
+	sel, changed, err := k.syncSelectorDisputeLockedUntil(ctx, delegator, sel)
+	if err != nil {
+		return err
+	}
 	if err := k.Selectors.Set(ctx, delegator.Bytes(), sel); err != nil {
 		return err
 	}
-	if !sel.DisputeLockedUntil.After(prev) {
+	if !changed || !sel.DisputeLockedUntil.After(prev) {
 		return nil
 	}
 	if err := k.flagStakeRecalcForUnlockedSelector(ctx, delegator, sel); err != nil {
@@ -72,11 +125,65 @@ func (k Keeper) bumpRecalcAtTimeForSelectorLock(ctx context.Context, reporter sd
 	return nil
 }
 
-// clearDisputeLock ends an active dispute lock without touching locked_until_time.
-func clearDisputeLock(sel *types.Selection, now time.Time) {
-	if sel.DisputeLockedUntil.After(now) {
-		sel.DisputeLockedUntil = now.Add(-time.Second)
+// clearSelectorDisputeLock removes one dispute's lock entry and recomputes the cached max.
+func (k Keeper) clearSelectorDisputeLock(ctx context.Context, delegator sdk.AccAddress, disputeHashID []byte) error {
+	lockKey := selectorDisputeLockKey(delegator.Bytes(), disputeHashID)
+	if err := k.SelectorDisputeLocks.Remove(ctx, lockKey); err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return err
 	}
+	sel, err := k.Selectors.Get(ctx, delegator.Bytes())
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil
+		}
+		return err
+	}
+	prev := sel.DisputeLockedUntil
+	sel, _, err = k.syncSelectorDisputeLockedUntil(ctx, delegator, sel)
+	if err != nil {
+		return err
+	}
+	if err := k.Selectors.Set(ctx, delegator.Bytes(), sel); err != nil {
+		return err
+	}
+	if sel.DisputeLockedUntil.Equal(prev) {
+		return nil
+	}
+	return k.flagStakeRecalcForUnlockedSelector(ctx, delegator, sel)
+}
+
+// clearAllSelectorDisputeLocks removes every per-dispute lock for a selector (e.g. MsgUnjailReporter).
+func (k Keeper) clearAllSelectorDisputeLocks(ctx context.Context, delegator sdk.AccAddress) error {
+	var keys []collections.Pair[[]byte, []byte]
+	rng := collections.NewPrefixedPairRange[[]byte, []byte](delegator.Bytes())
+	err := k.SelectorDisputeLocks.Walk(ctx, rng, func(key collections.Pair[[]byte, []byte], _ int64) (bool, error) {
+		keys = append(keys, key)
+		return false, nil
+	})
+	if err != nil {
+		return err
+	}
+	for _, key := range keys {
+		if err := k.SelectorDisputeLocks.Remove(ctx, key); err != nil {
+			return err
+		}
+	}
+	sel, err := k.Selectors.Get(ctx, delegator.Bytes())
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil
+		}
+		return err
+	}
+	prev := sel.DisputeLockedUntil
+	sel.DisputeLockedUntil = time.Time{}
+	if err := k.Selectors.Set(ctx, delegator.Bytes(), sel); err != nil {
+		return err
+	}
+	if sel.DisputeLockedUntil.Equal(prev) {
+		return nil
+	}
+	return k.flagStakeRecalcForUnlockedSelector(ctx, delegator, sel)
 }
 
 // flagStakeRecalcForUnlockedSelector flags reporters that should recompute stake after a
@@ -117,6 +224,7 @@ func (k Keeper) jailSelectorsFromReportSnapshot(
 	ctx context.Context,
 	reporter []byte,
 	reportBlockNumber uint64,
+	disputeHashID []byte,
 	until time.Time,
 ) error {
 	snap, err := k.GetDelegationsAmount(ctx, reporter, reportBlockNumber)
@@ -138,13 +246,14 @@ func (k Keeper) jailSelectorsFromReportSnapshot(
 	sdkctx := sdk.UnwrapSDKContext(ctx)
 	for _, key := range delegators {
 		delegator := sdk.MustAccAddressFromBech32(key)
-		if err := k.lockSelectorRowDispute(ctx, delegator, until); err != nil {
+		if err := k.setSelectorDisputeLock(ctx, delegator, disputeHashID, until); err != nil {
 			return err
 		}
 		sdkctx.EventManager().EmitEvent(sdk.NewEvent(
 			"jailed_selector",
 			sdk.NewAttribute("selector", key),
 			sdk.NewAttribute("until", until.Format(time.RFC3339)),
+			sdk.NewAttribute("dispute_hash_id", string(disputeHashID)),
 		))
 	}
 	return nil
@@ -154,31 +263,20 @@ func (k Keeper) clearSelectorLocksFromReportSnapshot(
 	ctx context.Context,
 	reporter []byte,
 	reportBlockNumber uint64,
+	disputeHashID []byte,
 ) error {
 	snap, err := k.GetDelegationsAmount(ctx, reporter, reportBlockNumber)
 	if err != nil {
 		return err
 	}
 	seen := make(map[string]struct{})
-	now := sdk.UnwrapSDKContext(ctx).BlockTime()
 	for _, origin := range snap.TokenOrigins {
 		delegator := sdk.AccAddress(origin.DelegatorAddress)
 		if _, ok := seen[delegator.String()]; ok {
 			continue
 		}
 		seen[delegator.String()] = struct{}{}
-		sel, err := k.Selectors.Get(ctx, delegator.Bytes())
-		if err != nil {
-			if errors.Is(err, collections.ErrNotFound) {
-				continue
-			}
-			return err
-		}
-		clearDisputeLock(&sel, now)
-		if err := k.Selectors.Set(ctx, delegator.Bytes(), sel); err != nil {
-			return err
-		}
-		if err := k.flagStakeRecalcForUnlockedSelector(ctx, delegator, sel); err != nil {
+		if err := k.clearSelectorDisputeLock(ctx, delegator, disputeHashID); err != nil {
 			return err
 		}
 	}
@@ -189,13 +287,13 @@ func (k Keeper) copyReporterJailToSelection(ctx context.Context, addr sdk.AccAdd
 	if !reporter.Jailed {
 		return nil
 	}
-	return k.lockSelectorRowDispute(ctx, addr, reporter.JailedUntil)
+	return k.setSelectorDisputeLock(ctx, addr, types.ReporterJailDisputeLockKey, reporter.JailedUntil)
 }
 
 // JailReporter jails the reporter row (if present) and every selector in the report snapshot.
 // Warning disputes use jailDuration 0: until is block time, so the reporter is jailed but may
 // unjail immediately; JailedUntil is only bumped when it is already before block time.
-func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration, reportBlockNumber uint64) error {
+func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration, reportBlockNumber uint64, disputeHashID []byte) error {
 	until, err := k.jailUntil(ctx, jailDuration)
 	if err != nil {
 		return err
@@ -225,7 +323,7 @@ func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, j
 		return err
 	}
 
-	return k.jailSelectorsFromReportSnapshot(ctx, reporterAddr.Bytes(), reportBlockNumber, until)
+	return k.jailSelectorsFromReportSnapshot(ctx, reporterAddr.Bytes(), reportBlockNumber, disputeHashID, until)
 }
 
 // thirdPartyUnjailDelay is how long after self-unjail eligibility a third party may unjail.
@@ -277,7 +375,16 @@ func (k Keeper) UnjailReporter(ctx context.Context, callerAddr, reporterAddr sdk
 		)
 	}
 
-	hasWork := (hasReporter && reporter.Jailed) || (hasSelector && !sel.DisputeLockedUntil.IsZero())
+	hasDisputeLocks := false
+	if hasSelector {
+		rng := collections.NewPrefixedPairRange[[]byte, []byte](reporterAddr.Bytes())
+		_ = k.SelectorDisputeLocks.Walk(ctx, rng, func(_ collections.Pair[[]byte, []byte], _ int64) (bool, error) {
+			hasDisputeLocks = true
+			return true, nil
+		})
+	}
+
+	hasWork := (hasReporter && reporter.Jailed) || (hasSelector && (hasDisputeLocks || !sel.DisputeLockedUntil.IsZero()))
 	if !hasWork {
 		return types.ErrReporterNotJailed.Wrapf("cannot unjail an already unjailed reporter")
 	}
@@ -289,12 +396,8 @@ func (k Keeper) UnjailReporter(ctx context.Context, callerAddr, reporterAddr sdk
 		}
 	}
 
-	if hasSelector && !sel.DisputeLockedUntil.IsZero() {
-		clearDisputeLock(&sel, now)
-		if err := k.Selectors.Set(ctx, reporterAddr.Bytes(), sel); err != nil {
-			return err
-		}
-		if err := k.flagStakeRecalcForUnlockedSelector(ctx, reporterAddr, sel); err != nil {
+	if hasSelector && (hasDisputeLocks || !sel.DisputeLockedUntil.IsZero()) {
+		if err := k.clearAllSelectorDisputeLocks(ctx, reporterAddr); err != nil {
 			return err
 		}
 	}
@@ -302,7 +405,7 @@ func (k Keeper) UnjailReporter(ctx context.Context, callerAddr, reporterAddr sdk
 	return nil
 }
 
-func (k Keeper) UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr sdk.AccAddress, reportBlockNumber uint64) error {
+func (k Keeper) UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr sdk.AccAddress, reportBlockNumber uint64, disputeHashID []byte) error {
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err == nil && reporter.Jailed {
 		sdkctx := sdk.UnwrapSDKContext(ctx)
@@ -313,5 +416,5 @@ func (k Keeper) UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAd
 	} else if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
-	return k.clearSelectorLocksFromReportSnapshot(ctx, reporterAddr.Bytes(), reportBlockNumber)
+	return k.clearSelectorLocksFromReportSnapshot(ctx, reporterAddr.Bytes(), reportBlockNumber, disputeHashID)
 }

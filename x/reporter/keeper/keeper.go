@@ -47,6 +47,8 @@ type (
 		IncomingPendingSwitchIdx collections.Map[collections.Pair[[]byte, []byte], []byte]
 		// One row per reporter: counts + min unlock for O(1) checks in ReporterStake.
 		ReporterPendingSwitchHeads collections.Map[[]byte, types.ReporterPendingSwitchHead]
+		// Per-dispute selector jail: (selector, dispute_hash_id) -> unix seconds (lock until).
+		SelectorDisputeLocks collections.Map[collections.Pair[[]byte, []byte], int64]
 
 		Schema collections.Schema
 		logger log.Logger
@@ -121,6 +123,12 @@ func NewKeeper(
 			"reporter_pending_switch_heads",
 			collections.BytesKey,
 			codec.CollValue[types.ReporterPendingSwitchHead](cdc),
+		),
+		SelectorDisputeLocks: collections.NewMap(sb,
+			types.SelectorDisputeLockPrefix,
+			"selector_dispute_locks",
+			collections.PairKeyCodec(collections.BytesKey, collections.BytesKey),
+			collections.Int64Value,
 		),
 		authority:      authority,
 		logger:         logger,
