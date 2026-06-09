@@ -199,6 +199,20 @@ func (k Keeper) GetNumOfSelectors(ctx context.Context, repAddr sdk.AccAddress) (
 	return len(keys), nil
 }
 
+// GetNumOfSelectorsIncludingPendingIncoming returns active selectors plus selectors
+// with a pending switch into this reporter that has not yet been finalized.
+func (k Keeper) GetNumOfSelectorsIncludingPendingIncoming(ctx context.Context, repAddr sdk.AccAddress) (int, error) {
+	count, err := k.GetNumOfSelectors(ctx, repAddr)
+	if err != nil {
+		return 0, err
+	}
+	head, err := k.reporterPendingSwitchHeadOrZero(ctx, repAddr.Bytes())
+	if err != nil {
+		return 0, err
+	}
+	return count + int(head.IncomingCount), nil
+}
+
 // CountSelectorsDelegatingToReporterExcludingSelf counts selector accounts whose
 // Selection.reporter is repAddr, excluding repAddr itself (the self-reporter row).
 func (k Keeper) CountSelectorsDelegatingToReporterExcludingSelf(ctx context.Context, repAddr sdk.AccAddress) (int, error) {
@@ -237,8 +251,9 @@ func (k Keeper) GetSelectorForStake(ctx context.Context, selectorAddr sdk.AccAdd
 	return sel, nil
 }
 
-// GetReporterStake counts bonded selector stake for reporting paths. It may lazy-unjail
-// expired selector rows and update RecalcAtTime when locks are still active.
+// GetReporterStake counts bonded selector stake for reporting paths. It finalizes ready
+// pending switches, may lazy-unjail expired selector rows, and update RecalcAtTime when
+// locks are still active.
 func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math.Int, []*types.TokenOriginInfo, []*types.SelectorShare, []byte, error) {
 	return k.getReporterStake(ctx, repAddr, true)
 }
@@ -249,6 +264,12 @@ func (k Keeper) GetReporterStakeView(ctx context.Context, repAddr sdk.AccAddress
 }
 
 func (k Keeper) getReporterStake(ctx context.Context, repAddr sdk.AccAddress, mutate bool) (math.Int, []*types.TokenOriginInfo, []*types.SelectorShare, []byte, error) {
+	if mutate {
+		if err := k.applyReadyPendingSwitchesForReporter(ctx, repAddr); err != nil {
+			return math.Int{}, nil, nil, nil, err
+		}
+	}
+
 	reporter, err := k.Reporters.Get(ctx, repAddr.Bytes())
 	if err != nil {
 		return math.Int{}, nil, nil, nil, err

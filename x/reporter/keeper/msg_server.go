@@ -183,20 +183,16 @@ func (k msgServer) SelectReporter(goCtx context.Context, msg *types.MsgSelectRep
 	if err != nil {
 		return nil, err
 	}
-	// check if reporter is capped at max selectors
-	iter, err := k.Keeper.Selectors.Indexes.Reporter.MatchExact(goCtx, reporterAddr.Bytes())
-	if err != nil {
-		return nil, err
-	}
-	selectors, err := iter.FullKeys()
-	if err != nil {
-		return nil, err
-	}
+	// check if reporter is capped at max selectors (include incoming pending switches)
 	params, err := k.Keeper.Params.Get(goCtx)
 	if err != nil {
 		return nil, err
 	}
-	if len(selectors) >= int(params.MaxSelectors) {
+	selectorCount, err := k.Keeper.GetNumOfSelectorsIncludingPendingIncoming(goCtx, reporterAddr)
+	if err != nil {
+		return nil, err
+	}
+	if selectorCount >= int(params.MaxSelectors) {
 		return nil, errors.New("reporter has reached max selectors")
 	}
 	// count the selectors BONDED tokens in the staking module
@@ -217,7 +213,7 @@ func (k msgServer) SelectReporter(goCtx context.Context, msg *types.MsgSelectRep
 			"reporter_selected",
 			sdk.NewAttribute("selector", msg.SelectorAddress),
 			sdk.NewAttribute("reporter", msg.ReporterAddress),
-			sdk.NewAttribute("reporter_selector_count_increased", strconv.Itoa(len(selectors)+1)),
+			sdk.NewAttribute("reporter_selector_count_increased", strconv.Itoa(selectorCount+1)),
 		),
 	})
 	telemetry.IncrCounterWithLabels([]string{"num_of_selectors", "join"}, 1, []metrics.Label{{Name: "chain_id", Value: sdk.UnwrapSDKContext(goCtx).ChainID()}})
@@ -311,20 +307,16 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 			return nil, err
 		}
 	}
-	// check if reporter is capped at max selectors
-	iter, err := k.Keeper.Selectors.Indexes.Reporter.MatchExact(goCtx, reporterAddr.Bytes())
-	if err != nil {
-		return nil, err
-	}
-	selectors, err := iter.FullKeys()
-	if err != nil {
-		return nil, err
-	}
+	// check if reporter is capped at max selectors (include incoming pending switches)
 	params, err := k.Keeper.Params.Get(goCtx)
 	if err != nil {
 		return nil, err
 	}
-	if len(selectors) >= int(params.MaxSelectors) {
+	selectorCount, err := k.Keeper.GetNumOfSelectorsIncludingPendingIncoming(goCtx, reporterAddr)
+	if err != nil {
+		return nil, err
+	}
+	if selectorCount >= int(params.MaxSelectors) {
 		return nil, errors.New("reporter has reached max selectors")
 	}
 	// check if selector meets reporters min requirement
