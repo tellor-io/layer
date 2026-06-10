@@ -34,11 +34,17 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 type Selection struct {
 	// reporter is the address of the reporter being delegated to
 	Reporter []byte `protobuf:"bytes,1,opt,name=reporter,proto3" json:"reporter,omitempty"`
-	// locked_until_time is the time until which the tokens are locked before they
-	// can be used for reporting again
+	// locked_until_time — non-dispute / legacy stake exclusion only (e.g. pre-upgrade switch locks).
 	LockedUntilTime time.Time `protobuf:"bytes,2,opt,name=locked_until_time,json=lockedUntilTime,proto3,stdtime" json:"locked_until_time"`
 	// delegations_count is the number of delegations to the reporter
 	DelegationsCount uint64 `protobuf:"varint,3,opt,name=delegations_count,json=delegationsCount,proto3" json:"delegations_count,omitempty"`
+	// switch_out_locked_until_block is the block height until which this selector
+	// cannot initiate another reporter switch while a handoff is incomplete: it
+	// stores the oracle snapshot (max open query expiration for the outgoing
+	// reporter at schedule time). Cleared when the pending switch is finalized.
+	SwitchOutLockedUntilBlock uint64 `protobuf:"varint,4,opt,name=switch_out_locked_until_block,json=switchOutLockedUntilBlock,proto3" json:"switch_out_locked_until_block,omitempty"`
+	// dispute_locked_until — dispute jail only; max on set; never copied to locked_until_time.
+	DisputeLockedUntil time.Time `protobuf:"bytes,5,opt,name=dispute_locked_until,json=disputeLockedUntil,proto3,stdtime" json:"dispute_locked_until"`
 }
 
 func (m *Selection) Reset()         { *m = Selection{} }
@@ -95,6 +101,143 @@ func (m *Selection) GetDelegationsCount() uint64 {
 	return 0
 }
 
+func (m *Selection) GetSwitchOutLockedUntilBlock() uint64 {
+	if m != nil {
+		return m.SwitchOutLockedUntilBlock
+	}
+	return 0
+}
+
+func (m *Selection) GetDisputeLockedUntil() time.Time {
+	if m != nil {
+		return m.DisputeLockedUntil
+	}
+	return time.Time{}
+}
+
+// Pending switch keyed by (outgoing_reporter, selector) in keeper collections.
+type PendingSwitchEntry struct {
+	ToReporter  []byte `protobuf:"bytes,1,opt,name=to_reporter,json=toReporter,proto3" json:"to_reporter,omitempty"`
+	UnlockBlock uint64 `protobuf:"varint,2,opt,name=unlock_block,json=unlockBlock,proto3" json:"unlock_block,omitempty"`
+}
+
+func (m *PendingSwitchEntry) Reset()         { *m = PendingSwitchEntry{} }
+func (m *PendingSwitchEntry) String() string { return proto.CompactTextString(m) }
+func (*PendingSwitchEntry) ProtoMessage()    {}
+func (*PendingSwitchEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0b0e998201c9cd64, []int{1}
+}
+func (m *PendingSwitchEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PendingSwitchEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PendingSwitchEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PendingSwitchEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PendingSwitchEntry.Merge(m, src)
+}
+func (m *PendingSwitchEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *PendingSwitchEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_PendingSwitchEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PendingSwitchEntry proto.InternalMessageInfo
+
+func (m *PendingSwitchEntry) GetToReporter() []byte {
+	if m != nil {
+		return m.ToReporter
+	}
+	return nil
+}
+
+func (m *PendingSwitchEntry) GetUnlockBlock() uint64 {
+	if m != nil {
+		return m.UnlockBlock
+	}
+	return 0
+}
+
+// Single-reporter summary for O(1) checks in ReporterStake: one Get per reporter
+// to see if any pending switch involving this reporter may be ready at height.
+type ReporterPendingSwitchHead struct {
+	OutgoingCount     uint32 `protobuf:"varint,1,opt,name=outgoing_count,json=outgoingCount,proto3" json:"outgoing_count,omitempty"`
+	OutgoingMinUnlock uint64 `protobuf:"varint,2,opt,name=outgoing_min_unlock,json=outgoingMinUnlock,proto3" json:"outgoing_min_unlock,omitempty"`
+	IncomingCount     uint32 `protobuf:"varint,3,opt,name=incoming_count,json=incomingCount,proto3" json:"incoming_count,omitempty"`
+	IncomingMinUnlock uint64 `protobuf:"varint,4,opt,name=incoming_min_unlock,json=incomingMinUnlock,proto3" json:"incoming_min_unlock,omitempty"`
+}
+
+func (m *ReporterPendingSwitchHead) Reset()         { *m = ReporterPendingSwitchHead{} }
+func (m *ReporterPendingSwitchHead) String() string { return proto.CompactTextString(m) }
+func (*ReporterPendingSwitchHead) ProtoMessage()    {}
+func (*ReporterPendingSwitchHead) Descriptor() ([]byte, []int) {
+	return fileDescriptor_0b0e998201c9cd64, []int{2}
+}
+func (m *ReporterPendingSwitchHead) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ReporterPendingSwitchHead) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ReporterPendingSwitchHead.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ReporterPendingSwitchHead) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ReporterPendingSwitchHead.Merge(m, src)
+}
+func (m *ReporterPendingSwitchHead) XXX_Size() int {
+	return m.Size()
+}
+func (m *ReporterPendingSwitchHead) XXX_DiscardUnknown() {
+	xxx_messageInfo_ReporterPendingSwitchHead.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ReporterPendingSwitchHead proto.InternalMessageInfo
+
+func (m *ReporterPendingSwitchHead) GetOutgoingCount() uint32 {
+	if m != nil {
+		return m.OutgoingCount
+	}
+	return 0
+}
+
+func (m *ReporterPendingSwitchHead) GetOutgoingMinUnlock() uint64 {
+	if m != nil {
+		return m.OutgoingMinUnlock
+	}
+	return 0
+}
+
+func (m *ReporterPendingSwitchHead) GetIncomingCount() uint32 {
+	if m != nil {
+		return m.IncomingCount
+	}
+	return 0
+}
+
+func (m *ReporterPendingSwitchHead) GetIncomingMinUnlock() uint64 {
+	if m != nil {
+		return m.IncomingMinUnlock
+	}
+	return 0
+}
+
 // IndividualDelegation represents a single delegation to a validator
 type IndividualDelegation struct {
 	// validator_address is the address of the validator
@@ -107,7 +250,7 @@ func (m *IndividualDelegation) Reset()         { *m = IndividualDelegation{} }
 func (m *IndividualDelegation) String() string { return proto.CompactTextString(m) }
 func (*IndividualDelegation) ProtoMessage()    {}
 func (*IndividualDelegation) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0b0e998201c9cd64, []int{1}
+	return fileDescriptor_0b0e998201c9cd64, []int{3}
 }
 func (m *IndividualDelegation) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -156,13 +299,15 @@ type FormattedSelection struct {
 	DelegationsTotal cosmossdk_io_math.Int `protobuf:"bytes,4,opt,name=delegations_total,json=delegationsTotal,proto3,customtype=cosmossdk.io/math.Int" json:"delegations_total"`
 	// individual_delegations contains details of each delegation (only populated when delegations_count > 1)
 	IndividualDelegations []*IndividualDelegation `protobuf:"bytes,5,rep,name=individual_delegations,json=individualDelegations,proto3" json:"individual_delegations,omitempty"`
+	// dispute_locked_until — dispute jail only (query surface).
+	DisputeLockedUntil time.Time `protobuf:"bytes,6,opt,name=dispute_locked_until,json=disputeLockedUntil,proto3,stdtime" json:"dispute_locked_until"`
 }
 
 func (m *FormattedSelection) Reset()         { *m = FormattedSelection{} }
 func (m *FormattedSelection) String() string { return proto.CompactTextString(m) }
 func (*FormattedSelection) ProtoMessage()    {}
 func (*FormattedSelection) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0b0e998201c9cd64, []int{2}
+	return fileDescriptor_0b0e998201c9cd64, []int{4}
 }
 func (m *FormattedSelection) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -219,6 +364,13 @@ func (m *FormattedSelection) GetIndividualDelegations() []*IndividualDelegation 
 	return nil
 }
 
+func (m *FormattedSelection) GetDisputeLockedUntil() time.Time {
+	if m != nil {
+		return m.DisputeLockedUntil
+	}
+	return time.Time{}
+}
+
 type SelectorShare struct {
 	SelectorAddress []byte                `protobuf:"bytes,1,opt,name=selector_address,json=selectorAddress,proto3" json:"selector_address,omitempty"`
 	Amount          cosmossdk_io_math.Int `protobuf:"bytes,2,opt,name=amount,proto3,customtype=cosmossdk.io/math.Int" json:"amount"`
@@ -228,7 +380,7 @@ func (m *SelectorShare) Reset()         { *m = SelectorShare{} }
 func (m *SelectorShare) String() string { return proto.CompactTextString(m) }
 func (*SelectorShare) ProtoMessage()    {}
 func (*SelectorShare) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0b0e998201c9cd64, []int{3}
+	return fileDescriptor_0b0e998201c9cd64, []int{5}
 }
 func (m *SelectorShare) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -275,7 +427,7 @@ func (m *PeriodRewardData) Reset()         { *m = PeriodRewardData{} }
 func (m *PeriodRewardData) String() string { return proto.CompactTextString(m) }
 func (*PeriodRewardData) ProtoMessage()    {}
 func (*PeriodRewardData) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0b0e998201c9cd64, []int{4}
+	return fileDescriptor_0b0e998201c9cd64, []int{6}
 }
 func (m *PeriodRewardData) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -329,7 +481,7 @@ func (m *DistributionQueueItem) Reset()         { *m = DistributionQueueItem{} }
 func (m *DistributionQueueItem) String() string { return proto.CompactTextString(m) }
 func (*DistributionQueueItem) ProtoMessage()    {}
 func (*DistributionQueueItem) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0b0e998201c9cd64, []int{5}
+	return fileDescriptor_0b0e998201c9cd64, []int{7}
 }
 func (m *DistributionQueueItem) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -381,7 +533,7 @@ func (m *DistributionQueueCounter) Reset()         { *m = DistributionQueueCount
 func (m *DistributionQueueCounter) String() string { return proto.CompactTextString(m) }
 func (*DistributionQueueCounter) ProtoMessage()    {}
 func (*DistributionQueueCounter) Descriptor() ([]byte, []int) {
-	return fileDescriptor_0b0e998201c9cd64, []int{6}
+	return fileDescriptor_0b0e998201c9cd64, []int{8}
 }
 func (m *DistributionQueueCounter) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -426,6 +578,8 @@ func (m *DistributionQueueCounter) GetTail() uint64 {
 
 func init() {
 	proto.RegisterType((*Selection)(nil), "layer.reporter.Selection")
+	proto.RegisterType((*PendingSwitchEntry)(nil), "layer.reporter.PendingSwitchEntry")
+	proto.RegisterType((*ReporterPendingSwitchHead)(nil), "layer.reporter.ReporterPendingSwitchHead")
 	proto.RegisterType((*IndividualDelegation)(nil), "layer.reporter.IndividualDelegation")
 	proto.RegisterType((*FormattedSelection)(nil), "layer.reporter.FormattedSelection")
 	proto.RegisterType((*SelectorShare)(nil), "layer.reporter.SelectorShare")
@@ -437,49 +591,60 @@ func init() {
 func init() { proto.RegisterFile("layer/reporter/selection.proto", fileDescriptor_0b0e998201c9cd64) }
 
 var fileDescriptor_0b0e998201c9cd64 = []byte{
-	// 667 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x55, 0xc1, 0x6e, 0xd3, 0x40,
-	0x10, 0x8d, 0x93, 0xb4, 0x6a, 0xb7, 0x29, 0x4d, 0x56, 0x2d, 0x32, 0x41, 0x38, 0x51, 0xc4, 0x21,
-	0xa8, 0xaa, 0x2d, 0x0a, 0x37, 0x4e, 0x4d, 0x53, 0xa4, 0x48, 0x1c, 0x8a, 0x53, 0x10, 0x82, 0x83,
-	0xb5, 0xb1, 0x07, 0x67, 0x55, 0xdb, 0x1b, 0xad, 0xd7, 0x85, 0x9e, 0xe0, 0xce, 0xa5, 0xdf, 0xc0,
-	0x81, 0x2f, 0xe8, 0x47, 0xf4, 0x58, 0xf5, 0x84, 0x38, 0x14, 0xd4, 0xfe, 0x07, 0x42, 0xde, 0xb5,
-	0xd3, 0x84, 0x56, 0x20, 0xaa, 0x4a, 0x5c, 0xac, 0xdd, 0x79, 0x33, 0x6f, 0xde, 0xbe, 0x59, 0xdb,
-	0xc8, 0x08, 0xc8, 0x3e, 0x70, 0x8b, 0xc3, 0x88, 0x71, 0x01, 0xdc, 0x8a, 0x21, 0x00, 0x57, 0x50,
-	0x16, 0x99, 0x23, 0xce, 0x04, 0xc3, 0xb7, 0x24, 0x6e, 0xe6, 0x78, 0xbd, 0x46, 0x42, 0x1a, 0x31,
-	0x4b, 0x3e, 0x55, 0x4a, 0xfd, 0x8e, 0xcb, 0xe2, 0x90, 0xc5, 0x8e, 0xdc, 0x59, 0x6a, 0x93, 0x41,
-	0xcb, 0x3e, 0xf3, 0x99, 0x8a, 0xa7, 0xab, 0x2c, 0xda, 0xf0, 0x19, 0xf3, 0x03, 0xb0, 0xe4, 0x6e,
-	0x90, 0xbc, 0xb5, 0x04, 0x0d, 0x21, 0x16, 0x24, 0x1c, 0xa9, 0x84, 0xd6, 0x17, 0x0d, 0xcd, 0xf7,
-	0x73, 0x21, 0xb8, 0x8e, 0xe6, 0xf2, 0xf6, 0xba, 0xd6, 0xd4, 0xda, 0x15, 0x7b, 0xbc, 0xc7, 0xdb,
-	0xa8, 0x16, 0x30, 0x77, 0x17, 0x3c, 0x27, 0x89, 0x04, 0x0d, 0x9c, 0x94, 0x49, 0x2f, 0x36, 0xb5,
-	0xf6, 0xc2, 0x7a, 0xdd, 0x54, 0x6d, 0xcc, 0xbc, 0x8d, 0xb9, 0x93, 0xb7, 0xe9, 0xcc, 0x1d, 0x9d,
-	0x36, 0x0a, 0x07, 0xdf, 0x1b, 0x9a, 0xbd, 0xa4, 0xca, 0x5f, 0xa4, 0xd5, 0x29, 0x8e, 0x57, 0x51,
-	0xcd, 0x83, 0x00, 0x7c, 0x92, 0xf6, 0x8e, 0x1d, 0x97, 0x25, 0x91, 0xd0, 0x4b, 0x4d, 0xad, 0x5d,
-	0xb6, 0xab, 0x13, 0xc0, 0x66, 0x1a, 0x6f, 0x7d, 0xd6, 0xd0, 0x72, 0x2f, 0xf2, 0xe8, 0x1e, 0xf5,
-	0x12, 0x12, 0x74, 0xc7, 0x30, 0xde, 0x42, 0xb5, 0x3d, 0x12, 0x50, 0x8f, 0x08, 0xc6, 0x1d, 0xe2,
-	0x79, 0x1c, 0xe2, 0x58, 0x8a, 0x9f, 0xef, 0xe8, 0x27, 0x87, 0x6b, 0xcb, 0x99, 0x4b, 0x1b, 0x0a,
-	0xe9, 0x0b, 0x4e, 0x23, 0xdf, 0xae, 0x8e, 0x4b, 0xb2, 0x38, 0xde, 0x44, 0xb3, 0x24, 0x94, 0x0a,
-	0x8a, 0xb2, 0x76, 0x35, 0xd5, 0xfd, 0xed, 0xb4, 0xb1, 0xa2, 0xea, 0x63, 0x6f, 0xd7, 0xa4, 0xcc,
-	0x0a, 0x89, 0x18, 0x9a, 0xbd, 0x48, 0x9c, 0x1c, 0xae, 0xa1, 0x8c, 0xb8, 0x17, 0x09, 0x3b, 0x2b,
-	0x6d, 0x7d, 0x2c, 0x21, 0xfc, 0x94, 0xf1, 0x90, 0x08, 0x01, 0xde, 0x85, 0xad, 0x8f, 0xd1, 0x9c,
-	0x1a, 0x36, 0xe3, 0x7f, 0x55, 0x36, 0xce, 0xfc, 0xcf, 0x86, 0xe3, 0x57, 0xd3, 0xc9, 0x82, 0x09,
-	0x12, 0xe8, 0xe5, 0x7f, 0xf7, 0x66, 0x92, 0x79, 0x27, 0x25, 0xc1, 0x6f, 0xd0, 0x6d, 0x3a, 0x9e,
-	0xa4, 0x33, 0x01, 0xeb, 0x33, 0xcd, 0x52, 0x7b, 0x61, 0xfd, 0xbe, 0x39, 0xfd, 0x26, 0x98, 0x57,
-	0xcd, 0xdd, 0x5e, 0xa1, 0x57, 0x44, 0xe3, 0xd6, 0x07, 0xb4, 0xd8, 0xcf, 0x1c, 0xec, 0x0f, 0x09,
-	0x07, 0xfc, 0x00, 0x55, 0x73, 0x4b, 0xa7, 0xae, 0x47, 0xc5, 0x5e, 0xca, 0xe3, 0x37, 0x7a, 0x07,
-	0x7e, 0x6a, 0xa8, 0xba, 0x0d, 0x9c, 0x32, 0xcf, 0x86, 0x77, 0x84, 0x7b, 0x5d, 0x22, 0x08, 0x7e,
-	0x82, 0xe6, 0xf3, 0x66, 0x69, 0xf7, 0xf4, 0x94, 0xf7, 0x7e, 0x3f, 0xe5, 0x94, 0x6c, 0xfb, 0x22,
-	0x1f, 0x6f, 0xa0, 0x19, 0xe5, 0xfe, 0x35, 0x54, 0xa9, 0x4a, 0xfc, 0x12, 0x2d, 0x72, 0xa9, 0xc6,
-	0xc9, 0x0e, 0x58, 0x92, 0x54, 0x0f, 0x33, 0xaa, 0xbb, 0x97, 0xa9, 0x9e, 0x81, 0x4f, 0xdc, 0xfd,
-	0x2e, 0xb8, 0x13, 0x84, 0x5d, 0x70, 0xed, 0x8a, 0xe2, 0xd9, 0x90, 0x34, 0x18, 0xa3, 0xf2, 0x90,
-	0xc4, 0x43, 0x79, 0x2f, 0x2a, 0xb6, 0x5c, 0xb7, 0x3e, 0x15, 0xd1, 0x4a, 0x97, 0xc6, 0x82, 0xd3,
-	0x41, 0x92, 0xce, 0xe4, 0x79, 0x02, 0x09, 0xf4, 0x04, 0x84, 0x7f, 0xfc, 0xbc, 0x4c, 0x39, 0x54,
-	0xbc, 0xae, 0x43, 0xa5, 0x9b, 0x73, 0xa8, 0x7c, 0x23, 0x0e, 0xb5, 0x3a, 0x48, 0xbf, 0x64, 0x86,
-	0x7c, 0xc1, 0x80, 0x4b, 0xf7, 0x80, 0x78, 0xd2, 0x8b, 0xb2, 0x2d, 0xd7, 0x69, 0x4c, 0x10, 0xaa,
-	0x66, 0x5d, 0xb6, 0xe5, 0xba, 0xb3, 0x75, 0x74, 0x66, 0x68, 0xc7, 0x67, 0x86, 0xf6, 0xe3, 0xcc,
-	0xd0, 0x0e, 0xce, 0x8d, 0xc2, 0xf1, 0xb9, 0x51, 0xf8, 0x7a, 0x6e, 0x14, 0x5e, 0xaf, 0xfa, 0x54,
-	0x0c, 0x93, 0x81, 0xe9, 0xb2, 0xd0, 0x12, 0x10, 0x04, 0x8c, 0xaf, 0x51, 0x66, 0xa9, 0x1f, 0xcd,
-	0xfb, 0x8b, 0x5f, 0x8d, 0xd8, 0x1f, 0x41, 0x3c, 0x98, 0x95, 0x5f, 0x8b, 0x47, 0xbf, 0x02, 0x00,
-	0x00, 0xff, 0xff, 0x03, 0x84, 0x93, 0x85, 0x89, 0x06, 0x00, 0x00,
+	// 846 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x56, 0xcf, 0x6e, 0xe3, 0x44,
+	0x18, 0x8f, 0x93, 0xb4, 0x6a, 0x27, 0xc9, 0x6e, 0x32, 0xa4, 0xc8, 0x0d, 0xda, 0x24, 0x44, 0x20,
+	0x05, 0x55, 0xb5, 0xc5, 0xc2, 0x8d, 0x0b, 0xcd, 0xa6, 0x88, 0x48, 0x8b, 0x28, 0xce, 0xee, 0x6a,
+	0x05, 0x07, 0x6b, 0x62, 0x0f, 0xce, 0x68, 0xed, 0x99, 0x68, 0x3c, 0xde, 0x25, 0x27, 0x1e, 0x80,
+	0xcb, 0x3e, 0x03, 0xcf, 0xb0, 0x0f, 0xc0, 0x71, 0xb9, 0x55, 0x3d, 0x55, 0x1c, 0x0a, 0x6a, 0xdf,
+	0x03, 0xa1, 0x99, 0xb1, 0x9d, 0xb8, 0x2d, 0xa0, 0x96, 0x4a, 0x5c, 0xa2, 0xf9, 0xfe, 0xfd, 0x7e,
+	0x9f, 0x7f, 0xdf, 0x7c, 0x8e, 0x41, 0x37, 0x44, 0x4b, 0xcc, 0x6d, 0x8e, 0x17, 0x8c, 0x0b, 0xcc,
+	0xed, 0x18, 0x87, 0xd8, 0x13, 0x84, 0x51, 0x6b, 0xc1, 0x99, 0x60, 0xf0, 0x9e, 0x8a, 0x5b, 0x59,
+	0xbc, 0xd3, 0x42, 0x11, 0xa1, 0xcc, 0x56, 0xbf, 0x3a, 0xa5, 0xb3, 0xeb, 0xb1, 0x38, 0x62, 0xb1,
+	0xab, 0x2c, 0x5b, 0x1b, 0x69, 0xa8, 0x1d, 0xb0, 0x80, 0x69, 0xbf, 0x3c, 0xa5, 0xde, 0x5e, 0xc0,
+	0x58, 0x10, 0x62, 0x5b, 0x59, 0xb3, 0xe4, 0x7b, 0x5b, 0x90, 0x08, 0xc7, 0x02, 0x45, 0x0b, 0x9d,
+	0x30, 0xf8, 0xa5, 0x0c, 0xb6, 0xa7, 0x59, 0x23, 0xb0, 0x03, 0xb6, 0x32, 0x7a, 0xd3, 0xe8, 0x1b,
+	0xc3, 0xba, 0x93, 0xdb, 0xf0, 0x08, 0xb4, 0x42, 0xe6, 0xbd, 0xc0, 0xbe, 0x9b, 0x50, 0x41, 0x42,
+	0x57, 0x22, 0x99, 0xe5, 0xbe, 0x31, 0xac, 0x3d, 0xec, 0x58, 0x9a, 0xc6, 0xca, 0x68, 0xac, 0x27,
+	0x19, 0xcd, 0x68, 0xeb, 0xed, 0x59, 0xaf, 0xf4, 0xfa, 0xf7, 0x9e, 0xe1, 0xdc, 0xd7, 0xe5, 0x4f,
+	0x65, 0xb5, 0x8c, 0xc3, 0x3d, 0xd0, 0xf2, 0x71, 0x88, 0x03, 0x24, 0xb9, 0x63, 0xd7, 0x63, 0x09,
+	0x15, 0x66, 0xa5, 0x6f, 0x0c, 0xab, 0x4e, 0x73, 0x2d, 0xf0, 0x48, 0xfa, 0xe1, 0xe7, 0xe0, 0x41,
+	0xfc, 0x8a, 0x08, 0x6f, 0xee, 0xb2, 0x44, 0xb8, 0x85, 0x4e, 0x66, 0xd2, 0x32, 0xab, 0xaa, 0x70,
+	0x57, 0x27, 0x7d, 0x9d, 0x88, 0xc7, 0x2b, 0xb6, 0x91, 0x4c, 0x80, 0xcf, 0x40, 0xdb, 0x27, 0xf1,
+	0x22, 0x11, 0xb8, 0x50, 0x6e, 0x6e, 0xdc, 0xe0, 0x19, 0x60, 0x8a, 0xb0, 0x06, 0x3e, 0x78, 0x0e,
+	0xe0, 0x11, 0xa6, 0x3e, 0xa1, 0xc1, 0x54, 0x71, 0x1f, 0x52, 0xc1, 0x97, 0xb0, 0x07, 0x6a, 0x82,
+	0xb9, 0x97, 0xd4, 0x04, 0x82, 0x39, 0x99, 0x9e, 0xef, 0x83, 0x7a, 0x42, 0x65, 0x23, 0x69, 0xff,
+	0x65, 0xd5, 0x7f, 0x4d, 0xfb, 0x54, 0xc7, 0x83, 0x5f, 0x0d, 0xb0, 0x9b, 0xe5, 0x17, 0x28, 0xbe,
+	0xc4, 0xc8, 0x87, 0x1f, 0x82, 0x7b, 0x2c, 0x11, 0x01, 0x23, 0x34, 0x48, 0xb5, 0x93, 0x24, 0x0d,
+	0xa7, 0x91, 0x79, 0xb5, 0x70, 0x16, 0x78, 0x27, 0x4f, 0x8b, 0x08, 0x75, 0x35, 0x41, 0x4a, 0xd7,
+	0xca, 0x42, 0x5f, 0x11, 0xfa, 0x54, 0x05, 0x24, 0x2c, 0xa1, 0x1e, 0x8b, 0x56, 0xb0, 0x15, 0x0d,
+	0x9b, 0x79, 0x73, 0xd8, 0x3c, 0x6d, 0x0d, 0x56, 0x4f, 0xa1, 0x95, 0x85, 0x72, 0xd8, 0xc1, 0xcf,
+	0x06, 0x68, 0x4f, 0xa8, 0x4f, 0x5e, 0x12, 0x3f, 0x41, 0xe1, 0x38, 0x1f, 0x2f, 0x3c, 0x04, 0xad,
+	0x97, 0x28, 0x24, 0x3e, 0x12, 0x8c, 0xbb, 0xc8, 0xf7, 0x39, 0x8e, 0x63, 0xf5, 0x24, 0xdb, 0x23,
+	0xf3, 0xe4, 0xcd, 0x7e, 0x3b, 0xbd, 0xe5, 0x07, 0x3a, 0x32, 0x15, 0x9c, 0xd0, 0xc0, 0x69, 0xe6,
+	0x25, 0xa9, 0x1f, 0x3e, 0x02, 0x9b, 0x28, 0x52, 0xed, 0x96, 0x55, 0xed, 0x9e, 0x9c, 0xd9, 0x6f,
+	0x67, 0xbd, 0x1d, 0x5d, 0x1f, 0xfb, 0x2f, 0x2c, 0xc2, 0xec, 0x08, 0x89, 0xb9, 0x35, 0xa1, 0xe2,
+	0xe4, 0xcd, 0x3e, 0x48, 0x81, 0x27, 0x54, 0x38, 0x69, 0xe9, 0xe0, 0xb4, 0x02, 0xe0, 0x17, 0x8c,
+	0x47, 0x48, 0x08, 0xec, 0xaf, 0xd6, 0xe2, 0x53, 0xb0, 0xa5, 0x97, 0x95, 0xf1, 0x7f, 0xed, 0x2c,
+	0xcf, 0xfc, 0xbf, 0x17, 0xe6, 0x79, 0x31, 0x59, 0x30, 0x81, 0x42, 0x35, 0x9e, 0x1b, 0x6a, 0xb3,
+	0x8e, 0xfc, 0x44, 0x82, 0xc0, 0xef, 0xc0, 0xbb, 0x24, 0x9f, 0xa4, 0xbb, 0x16, 0x36, 0x37, 0xfa,
+	0x95, 0x61, 0xed, 0xe1, 0x07, 0x56, 0xf1, 0x4d, 0x66, 0x5d, 0x37, 0x77, 0x67, 0x87, 0x5c, 0xe3,
+	0x8d, 0xff, 0x76, 0x4b, 0x37, 0xff, 0xe3, 0x96, 0xfe, 0x08, 0x1a, 0xd3, 0x74, 0x32, 0xd3, 0x39,
+	0xe2, 0x18, 0x7e, 0x04, 0x9a, 0xd9, 0xa8, 0x0a, 0xd7, 0xae, 0xee, 0xdc, 0xcf, 0xfc, 0x77, 0x7a,
+	0xb7, 0xfe, 0x34, 0x40, 0xf3, 0x08, 0x73, 0xc2, 0x7c, 0x07, 0xbf, 0x42, 0xdc, 0x1f, 0x23, 0x81,
+	0xe0, 0x67, 0x60, 0x3b, 0x23, 0x93, 0xec, 0x52, 0xbd, 0x07, 0x97, 0xd5, 0x2b, 0xb4, 0xed, 0xac,
+	0xf2, 0xe1, 0x01, 0xd8, 0xd0, 0x53, 0xbd, 0x45, 0x57, 0xba, 0x12, 0x3e, 0x03, 0x0d, 0xae, 0xba,
+	0x71, 0xd3, 0x07, 0xac, 0x28, 0xa8, 0x8f, 0x53, 0xa8, 0xf7, 0xae, 0x42, 0x3d, 0xc6, 0x01, 0xf2,
+	0x96, 0x63, 0xec, 0xad, 0x01, 0x8e, 0xb1, 0xe7, 0xd4, 0x35, 0xce, 0x81, 0x82, 0x81, 0x10, 0x54,
+	0xe7, 0x28, 0x9e, 0xab, 0xfb, 0x56, 0x77, 0xd4, 0x79, 0xf0, 0x53, 0x19, 0xec, 0x8c, 0x49, 0x2c,
+	0x38, 0x99, 0x25, 0x72, 0xd6, 0xdf, 0x24, 0x38, 0xc1, 0x13, 0x81, 0xa3, 0x7f, 0xfc, 0xdb, 0x29,
+	0x28, 0x54, 0xbe, 0xad, 0x42, 0x95, 0xbb, 0x53, 0xa8, 0x7a, 0x27, 0x0a, 0x0d, 0x46, 0xc0, 0xbc,
+	0x22, 0x86, 0x5a, 0x5c, 0xcc, 0x95, 0x7a, 0x18, 0xf9, 0x4a, 0x8b, 0xaa, 0xa3, 0xce, 0xd2, 0x27,
+	0x10, 0x09, 0xd3, 0xf7, 0xb6, 0x3a, 0x8f, 0x0e, 0xdf, 0x9e, 0x77, 0x8d, 0xe3, 0xf3, 0xae, 0xf1,
+	0xc7, 0x79, 0xd7, 0x78, 0x7d, 0xd1, 0x2d, 0x1d, 0x5f, 0x74, 0x4b, 0xa7, 0x17, 0xdd, 0xd2, 0xb7,
+	0x7b, 0x01, 0x11, 0xf3, 0x64, 0x66, 0x79, 0x2c, 0xb2, 0x05, 0x0e, 0x43, 0xc6, 0xf7, 0x09, 0xb3,
+	0xf5, 0x07, 0xc8, 0x0f, 0xab, 0x4f, 0x10, 0xb1, 0x5c, 0xe0, 0x78, 0xb6, 0xa9, 0x96, 0xe9, 0x93,
+	0xbf, 0x02, 0x00, 0x00, 0xff, 0xff, 0xe6, 0x62, 0x24, 0x1f, 0xa1, 0x08, 0x00, 0x00,
 }
 
 func (m *Selection) Marshal() (dAtA []byte, err error) {
@@ -502,17 +667,30 @@ func (m *Selection) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
-	if m.DelegationsCount != 0 {
-		i = encodeVarintSelection(dAtA, i, uint64(m.DelegationsCount))
-		i--
-		dAtA[i] = 0x18
-	}
-	n1, err1 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.LockedUntilTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.LockedUntilTime):])
+	n1, err1 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.DisputeLockedUntil, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.DisputeLockedUntil):])
 	if err1 != nil {
 		return 0, err1
 	}
 	i -= n1
 	i = encodeVarintSelection(dAtA, i, uint64(n1))
+	i--
+	dAtA[i] = 0x2a
+	if m.SwitchOutLockedUntilBlock != 0 {
+		i = encodeVarintSelection(dAtA, i, uint64(m.SwitchOutLockedUntilBlock))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.DelegationsCount != 0 {
+		i = encodeVarintSelection(dAtA, i, uint64(m.DelegationsCount))
+		i--
+		dAtA[i] = 0x18
+	}
+	n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.LockedUntilTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.LockedUntilTime):])
+	if err2 != nil {
+		return 0, err2
+	}
+	i -= n2
+	i = encodeVarintSelection(dAtA, i, uint64(n2))
 	i--
 	dAtA[i] = 0x12
 	if len(m.Reporter) > 0 {
@@ -521,6 +699,84 @@ func (m *Selection) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i = encodeVarintSelection(dAtA, i, uint64(len(m.Reporter)))
 		i--
 		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PendingSwitchEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PendingSwitchEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PendingSwitchEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.UnlockBlock != 0 {
+		i = encodeVarintSelection(dAtA, i, uint64(m.UnlockBlock))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.ToReporter) > 0 {
+		i -= len(m.ToReporter)
+		copy(dAtA[i:], m.ToReporter)
+		i = encodeVarintSelection(dAtA, i, uint64(len(m.ToReporter)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ReporterPendingSwitchHead) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ReporterPendingSwitchHead) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ReporterPendingSwitchHead) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.IncomingMinUnlock != 0 {
+		i = encodeVarintSelection(dAtA, i, uint64(m.IncomingMinUnlock))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.IncomingCount != 0 {
+		i = encodeVarintSelection(dAtA, i, uint64(m.IncomingCount))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.OutgoingMinUnlock != 0 {
+		i = encodeVarintSelection(dAtA, i, uint64(m.OutgoingMinUnlock))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.OutgoingCount != 0 {
+		i = encodeVarintSelection(dAtA, i, uint64(m.OutgoingCount))
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -585,6 +841,14 @@ func (m *FormattedSelection) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	n3, err3 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.DisputeLockedUntil, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.DisputeLockedUntil):])
+	if err3 != nil {
+		return 0, err3
+	}
+	i -= n3
+	i = encodeVarintSelection(dAtA, i, uint64(n3))
+	i--
+	dAtA[i] = 0x32
 	if len(m.IndividualDelegations) > 0 {
 		for iNdEx := len(m.IndividualDelegations) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -614,12 +878,12 @@ func (m *FormattedSelection) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x18
 	}
-	n2, err2 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.LockedUntilTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.LockedUntilTime):])
-	if err2 != nil {
-		return 0, err2
+	n4, err4 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.LockedUntilTime, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.LockedUntilTime):])
+	if err4 != nil {
+		return 0, err4
 	}
-	i -= n2
-	i = encodeVarintSelection(dAtA, i, uint64(n2))
+	i -= n4
+	i = encodeVarintSelection(dAtA, i, uint64(n4))
 	i--
 	dAtA[i] = 0x12
 	if len(m.Selector) > 0 {
@@ -859,6 +1123,48 @@ func (m *Selection) Size() (n int) {
 	if m.DelegationsCount != 0 {
 		n += 1 + sovSelection(uint64(m.DelegationsCount))
 	}
+	if m.SwitchOutLockedUntilBlock != 0 {
+		n += 1 + sovSelection(uint64(m.SwitchOutLockedUntilBlock))
+	}
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.DisputeLockedUntil)
+	n += 1 + l + sovSelection(uint64(l))
+	return n
+}
+
+func (m *PendingSwitchEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ToReporter)
+	if l > 0 {
+		n += 1 + l + sovSelection(uint64(l))
+	}
+	if m.UnlockBlock != 0 {
+		n += 1 + sovSelection(uint64(m.UnlockBlock))
+	}
+	return n
+}
+
+func (m *ReporterPendingSwitchHead) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.OutgoingCount != 0 {
+		n += 1 + sovSelection(uint64(m.OutgoingCount))
+	}
+	if m.OutgoingMinUnlock != 0 {
+		n += 1 + sovSelection(uint64(m.OutgoingMinUnlock))
+	}
+	if m.IncomingCount != 0 {
+		n += 1 + sovSelection(uint64(m.IncomingCount))
+	}
+	if m.IncomingMinUnlock != 0 {
+		n += 1 + sovSelection(uint64(m.IncomingMinUnlock))
+	}
 	return n
 }
 
@@ -900,6 +1206,8 @@ func (m *FormattedSelection) Size() (n int) {
 			n += 1 + l + sovSelection(uint64(l))
 		}
 	}
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.DisputeLockedUntil)
+	n += 1 + l + sovSelection(uint64(l))
 	return n
 }
 
@@ -1096,6 +1404,287 @@ func (m *Selection) Unmarshal(dAtA []byte) error {
 				b := dAtA[iNdEx]
 				iNdEx++
 				m.DelegationsCount |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SwitchOutLockedUntilBlock", wireType)
+			}
+			m.SwitchOutLockedUntilBlock = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSelection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.SwitchOutLockedUntilBlock |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DisputeLockedUntil", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSelection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSelection
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthSelection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.DisputeLockedUntil, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSelection(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthSelection
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PendingSwitchEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSelection
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PendingSwitchEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PendingSwitchEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ToReporter", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSelection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthSelection
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthSelection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ToReporter = append(m.ToReporter[:0], dAtA[iNdEx:postIndex]...)
+			if m.ToReporter == nil {
+				m.ToReporter = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UnlockBlock", wireType)
+			}
+			m.UnlockBlock = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSelection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.UnlockBlock |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSelection(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthSelection
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ReporterPendingSwitchHead) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSelection
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ReporterPendingSwitchHead: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ReporterPendingSwitchHead: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OutgoingCount", wireType)
+			}
+			m.OutgoingCount = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSelection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.OutgoingCount |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OutgoingMinUnlock", wireType)
+			}
+			m.OutgoingMinUnlock = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSelection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.OutgoingMinUnlock |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IncomingCount", wireType)
+			}
+			m.IncomingCount = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSelection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.IncomingCount |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field IncomingMinUnlock", wireType)
+			}
+			m.IncomingMinUnlock = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSelection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.IncomingMinUnlock |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1415,6 +2004,39 @@ func (m *FormattedSelection) Unmarshal(dAtA []byte) error {
 			}
 			m.IndividualDelegations = append(m.IndividualDelegations, &IndividualDelegation{})
 			if err := m.IndividualDelegations[len(m.IndividualDelegations)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DisputeLockedUntil", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSelection
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSelection
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthSelection
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.DisputeLockedUntil, dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

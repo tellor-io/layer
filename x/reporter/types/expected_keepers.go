@@ -80,4 +80,5 @@ type RegistryKeeper interface {
 type OracleKeeper interface {
 	GetLastReportedAtTimestamp(ctx context.Context, reporter []byte) (uint64, error)
 	GetBlockHeightFromTimestamp(ctx context.Context, timestamp time.Time) (uint64, error)
+	GetMaxOpenCommitmentForReporter(ctx context.Context, reporter []byte) (uint64, error)
 }

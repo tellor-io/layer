@@ -235,6 +235,7 @@ func (s *IntegrationTestSuite) TestProposeDisputeFromBond() {
 
 	reporterServer := reporterKeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	req := &reportertypes.MsgUnjailReporter{
+		SignerAddress:   repAddr.String(),
 		ReporterAddress: repAddr.String(),
 	}
 	_, err = reporterServer.UnjailReporter(s.Setup.Ctx, req)
@@ -367,6 +368,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 
 	reporterServer := reporterKeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
 	req := &reportertypes.MsgUnjailReporter{
+		SignerAddress:   repAddr.String(),
 		ReporterAddress: repAddr.String(),
 	}
 	_, err = reporterServer.UnjailReporter(s.Setup.Ctx, req)

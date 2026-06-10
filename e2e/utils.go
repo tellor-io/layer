@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"os"
 	"path/filepath"
+	"strconv"
 	"testing"
 	"time"
 
@@ -357,6 +358,30 @@ type QueryReportersResponse struct {
 	Pagination struct {
 		Total string `json:"total"`
 	} `json:"pagination"`
+}
+
+type QueryReporterResponse struct {
+	Reporter *Reporter `json:"reporter"`
+}
+
+// QueryReporterPower returns reporting power (bonded stake / PowerReduction) for a reporter.
+func QueryReporterPower(ctx context.Context, node *cosmos.ChainNode, reporterAddr string) (uint64, error) {
+	res, _, err := QueryWithTimeout(ctx, node, "reporter", "reporter", reporterAddr)
+	if err != nil {
+		return 0, err
+	}
+	var repRes QueryReporterResponse
+	if err := json.Unmarshal(res, &repRes); err != nil {
+		return 0, err
+	}
+	if repRes.Reporter == nil || repRes.Reporter.Power == "" {
+		return 0, fmt.Errorf("reporter %s: missing power in query response", reporterAddr)
+	}
+	power, err := strconv.ParseUint(repRes.Reporter.Power, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("reporter %s: parse power %q: %w", reporterAddr, repRes.Reporter.Power, err)
+	}
+	return power, nil
 }
 
 type ReportersResponse struct {

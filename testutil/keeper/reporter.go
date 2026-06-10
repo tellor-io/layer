@@ -5,6 +5,7 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/mocks"
@@ -51,6 +52,11 @@ func ReporterKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.
 		bk,
 		rk,
 	)
+
+	// Wire up a default OracleKeeper mock: no deferred switch lock from oracle.
+	ok := new(mocks.OracleKeeper)
+	ok.On("GetMaxOpenCommitmentForReporter", mock.Anything, mock.Anything).Return(uint64(0), nil).Maybe()
+	k.SetOracleKeeper(ok)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())
 
