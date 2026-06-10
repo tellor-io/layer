@@ -25,7 +25,11 @@ import (
 const (
 	stakeCacheCommissRate = "0.1"
 	moniker               = "reporter_0"
-	stakeCacheTxFee       = "500loya"
+	// Shared fee for stake-cache txs; keep this high enough to avoid fee-related flakes.
+	stakeCacheTxFee = "7loya"
+	// submit-value with stake recalc (e.g. after switch-reporter) can exceed the 200k default gas.
+	stakeCacheSubmitGas  = "500000"
+	stakeCacheSubmitFees = "25loya" // must cover 500k * min gas price (~13.75 loya with adjustment)
 )
 
 func stakeCacheSetupConfig() e2e.SetupConfig {
@@ -68,16 +72,6 @@ func waitForStakeCacheCycleListQuery(t *testing.T, ctx context.Context, node *co
 
 	require.FailNow(t, "timed out waiting for cyclelist query with enough remaining report blocks")
 	return e2e.QueryCurrentCyclelistQueryResponse{}
-}
-
-func submitStakeCacheValue(t *testing.T, ctx context.Context, node *cosmos.ChainNode, queryData, value string) string {
-	t.Helper()
-
-	txBytes, _, err := node.Exec(ctx, node.TxCommand("validator", "oracle", "submit-value", queryData, value, "--fees", stakeCacheTxFee, "--keyring-dir", node.HomeDir()), node.Chain.Config().Env)
-	require.NoError(t, err)
-	txHash, err := e2e.GetTxHashFromExec(txBytes)
-	require.NoError(t, err)
-	return txHash
 }
 
 func waitForStakeCacheAggregatePower(t *testing.T, ctx context.Context, node *cosmos.ChainNode, queryData, expectedMetaID string) uint64 {
@@ -150,7 +144,7 @@ func TestStakingHooksTriggered(t *testing.T) {
 	user := interchaintest.GetAndFundTestUsers(t, ctx, "selector", fundAmt, chain)[0]
 	fmt.Println("=== Step 2: Selector address:", user.FormattedAddress())
 
-	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, initialDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", stakeCacheTxFee)
+	txHash, err = validators[0].Node.ExecTx(ctx, user.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, initialDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--fees", "5loya")
 	require.NoError(err)
 	fmt.Println("=== Step 2: Initial delegation txHash:", txHash)
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
@@ -179,7 +173,8 @@ func TestStakingHooksTriggered(t *testing.T) {
 	firstQueryMetaID := currentCycleList.QueryMeta.Id
 
 	value := layerutil.EncodeValue(500.0)
-	submitStakeCacheValue(t, ctx, validators[0].Node, currentCycleList.QueryData, value)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	require.NoError(err)
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
 	// Get first report power
@@ -210,7 +205,8 @@ func TestStakingHooksTriggered(t *testing.T) {
 	// and ReporterStake will recalculate instead of using cache
 	currentCycleList = waitForStakeCacheCycleListQuery(t, ctx, validators[0].Node, firstQueryMetaID)
 
-	submitStakeCacheValue(t, ctx, validators[0].Node, currentCycleList.QueryData, value)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	require.NoError(err)
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
 	// Get second report power
@@ -261,7 +257,9 @@ func TestStakeCacheValSetUpdate(t *testing.T) {
 
 	// Validator 0 becomes a reporter
 	minStakeAmt := "1000000"
-	txHash, err := validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "reporter", "create-reporter", stakeCacheCommissRate, minStakeAmt, moniker, "--keyring-dir", validators[0].Node.HomeDir())
+	highGas := stakeCacheSubmitGas
+	highFees := stakeCacheSubmitFees
+	txHash, err := validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "reporter", "create-reporter", stakeCacheCommissRate, minStakeAmt, moniker, "--keyring-dir", validators[0].Node.HomeDir(), "--gas", highGas, "--fees", highFees)
 	require.NoError(err)
 	fmt.Println("TX HASH (validator 0 becomes reporter):", txHash)
 
@@ -271,7 +269,8 @@ func TestStakeCacheValSetUpdate(t *testing.T) {
 
 	// First report
 	value := layerutil.EncodeValue(100.0)
-	submitStakeCacheValue(t, ctx, validators[0].Node, currentCycleList.QueryData, value)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	require.NoError(err)
 	fmt.Println("First report submitted")
 
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
@@ -291,18 +290,18 @@ func TestStakeCacheValSetUpdate(t *testing.T) {
 	}))
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
 
-	txHash, err = validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "staking", "delegate", validators[0].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "500000", "--fees", stakeCacheTxFee)
+	txHash, err = validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "staking", "delegate", validators[0].ValAddr, delegateAmt.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", highGas, "--fees", highFees)
 	require.NoError(err)
 	fmt.Println("TX HASH (validator 0 self-delegates more):", txHash)
 
 	tooMuchSelfDelegate := sdk.NewCoin("loya", math.NewInt(2_000_000*1e6))
-	_, err = validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "staking", "delegate", validators[0].ValAddr, tooMuchSelfDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "500000", "--fees", stakeCacheTxFee)
+	_, err = validators[0].Node.ExecTx(ctx, validators[0].AccAddr, "staking", "delegate", validators[0].ValAddr, tooMuchSelfDelegate.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", highGas, "--fees", highFees)
 	require.Error(err)
 	require.ErrorContains(err, "total stake increase exceeds the allowed 5% threshold within a twelve-hour period")
 
 	overLimitDelegator := interchaintest.GetAndFundTestUsers(t, ctx, "stake-share-over-limit", math.NewInt(10_000_000*1e6), chain)[0]
 	tooMuchDelegatorStake := sdk.NewCoin("loya", math.NewInt(9_000_000*1e6))
-	_, err = validators[0].Node.ExecTx(ctx, overLimitDelegator.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, tooMuchDelegatorStake.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", "500000", "--fees", stakeCacheTxFee)
+	_, err = validators[0].Node.ExecTx(ctx, overLimitDelegator.FormattedAddress(), "staking", "delegate", validators[0].ValAddr, tooMuchDelegatorStake.String(), "--keyring-dir", validators[0].Node.HomeDir(), "--gas", highGas, "--fees", highFees)
 	require.Error(err)
 	require.ErrorContains(err, "total stake increase exceeds the allowed 5% threshold within a twelve-hour period")
 
@@ -311,7 +310,8 @@ func TestStakeCacheValSetUpdate(t *testing.T) {
 	// Second report - should trigger recalculation due to validator set update
 	currentCycleList = waitForStakeCacheCycleListQuery(t, ctx, validators[0].Node, firstQueryMetaID)
 
-	submitStakeCacheValue(t, ctx, validators[0].Node, currentCycleList.QueryData, value)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	require.NoError(err)
 	fmt.Println("Second report submitted")
 
 	require.NoError(testutil.WaitForBlocks(ctx, 3, validators[0].Node))
@@ -368,7 +368,8 @@ func TestStakeCacheSelectorJoin(t *testing.T) {
 	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
 
 	value := layerutil.EncodeValue(200.0)
-	submitStakeCacheValue(t, ctx, validators[0].Node, currentCycleList.QueryData, value)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	require.NoError(err)
 	fmt.Println("First report submitted")
 
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
@@ -398,7 +399,8 @@ func TestStakeCacheSelectorJoin(t *testing.T) {
 	require.NoError(err)
 	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
 
-	submitStakeCacheValue(t, ctx, validators[0].Node, currentCycleList.QueryData, value)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	require.NoError(err)
 	fmt.Println("Second report submitted")
 
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
@@ -473,7 +475,8 @@ func TestStakeCacheSelectorSwitch(t *testing.T) {
 
 	value := layerutil.EncodeValue(300.0)
 	for i := range validators {
-		submitStakeCacheValue(t, ctx, validators[i].Node, currentCycleList.QueryData, value)
+		_, _, err = validators[i].Node.Exec(ctx, validators[i].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[i].Node.HomeDir()), validators[i].Node.Chain.Config().Env)
+		require.NoError(err)
 		fmt.Printf("Validator %d first report submitted\n", i)
 	}
 
@@ -511,7 +514,8 @@ func TestStakeCacheSelectorSwitch(t *testing.T) {
 	currentCycleList = waitForStakeCacheCycleListQuery(t, ctx, validators[0].Node, firstQueryMetaID)
 
 	for i := range validators {
-		submitStakeCacheValue(t, ctx, validators[i].Node, currentCycleList.QueryData, value)
+		_, _, err = validators[i].Node.Exec(ctx, validators[i].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[i].Node.HomeDir()), validators[i].Node.Chain.Config().Env)
+		require.NoError(err)
 		fmt.Printf("Validator %d second report submitted\n", i)
 	}
 
@@ -537,14 +541,12 @@ func TestStakeCacheSelectorSwitch(t *testing.T) {
 		fmt.Printf("Validator %d power after switch: %d\n", i, power)
 	}
 
-	// After switch: reporter 0 should lose selector's stake.
-	// Reporter 1 does NOT gain the selector's stake yet because the selector is locked
-	// for the unbonding period after switching reporters (LockedUntilTime is set in SwitchReporter).
-	// GetReporterStake skips selectors whose LockedUntilTime is after the current block time.
+	// After switch: reporter 0 loses selector stake immediately (pending switch away).
+	// Reporter 1 gains stake on the next submit when unlock_block < height (often 0 after cyclelist).
 	fmt.Printf("Reporter 0: %d -> %d\n", reporter0PowerBefore, reporter0PowerAfter)
 	fmt.Printf("Reporter 1: %d -> %d\n", reporter1PowerBefore, reporter1PowerAfter)
 	require.Less(reporter0PowerAfter, reporter0PowerBefore, "Reporter 0 should lose power after selector switches away")
-	require.Equal(reporter1PowerAfter, reporter1PowerBefore, "Reporter 1 should not gain power yet (selector is locked for unbonding period)")
+	require.Greater(reporter1PowerAfter, reporter1PowerBefore, "Reporter 1 should gain power after pending switch finalizes")
 }
 
 // TestStakeCacheDelegationChange tests that reporter stake is recalculated after delegation change
@@ -598,7 +600,8 @@ func TestStakeCacheDelegationChange(t *testing.T) {
 	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
 
 	value := layerutil.EncodeValue(400.0)
-	submitStakeCacheValue(t, ctx, validators[0].Node, currentCycleList.QueryData, value)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	require.NoError(err)
 	fmt.Println("First report submitted")
 
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))
@@ -629,7 +632,8 @@ func TestStakeCacheDelegationChange(t *testing.T) {
 	require.NoError(err)
 	require.NoError(json.Unmarshal(currentCycleListRes, &currentCycleList))
 
-	submitStakeCacheValue(t, ctx, validators[0].Node, currentCycleList.QueryData, value)
+	_, _, err = validators[0].Node.Exec(ctx, validators[0].Node.TxCommand("validator", "oracle", "submit-value", currentCycleList.QueryData, value, "--gas", stakeCacheSubmitGas, "--fees", stakeCacheSubmitFees, "--keyring-dir", validators[0].Node.HomeDir()), validators[0].Node.Chain.Config().Env)
+	require.NoError(err)
 	fmt.Println("Second report submitted")
 
 	require.NoError(testutil.WaitForBlocks(ctx, 2, validators[0].Node))

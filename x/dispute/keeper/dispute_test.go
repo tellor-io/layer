@@ -160,15 +160,15 @@ func (s *KeeperTestSuite) TestSlashAndJailReporter() {
 	dispute := s.dispute(s.ctx)
 	reporterAcc := sdk.MustAccAddressFromBech32(report.Reporter)
 	s.reporterKeeper.On("EscrowReporterStake", s.ctx, reporterAcc, report.Power, uint64(1), math.NewInt(10000), dispute.InitialEvidence.QueryId, dispute.HashId).Return(nil)
-	s.reporterKeeper.On("JailReporter", s.ctx, reporterAcc, uint64(0)).Return(nil)
+	s.reporterKeeper.On("JailReporter", s.ctx, reporterAcc, uint64(0), report.BlockNumber, dispute.HashId).Return(nil)
 	s.oracleKeeper.On("FlagAggregateReport", s.ctx, report).Return(nil)
 	s.NoError(s.disputeKeeper.SlashAndJailReporter(s.ctx, report, dispute.DisputeCategory, dispute.HashId))
 }
 
 func (s *KeeperTestSuite) TestJailReporter() {
 	reporterAcc := sample.AccAddressBytes()
-	s.reporterKeeper.On("JailReporter", s.ctx, reporterAcc, uint64(0)).Return(nil)
-	s.NoError(s.disputeKeeper.JailReporter(s.ctx, reporterAcc, uint64(0)))
+	s.reporterKeeper.On("JailReporter", s.ctx, reporterAcc, uint64(0), uint64(0), mock.Anything).Return(nil)
+	s.NoError(s.disputeKeeper.JailReporter(s.ctx, reporterAcc, uint64(0), uint64(0), nil))
 }
 
 func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {

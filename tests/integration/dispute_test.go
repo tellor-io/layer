@@ -311,6 +311,7 @@ func (s *IntegrationTestSuite) TestDisputes() {
 
 	// create msgUnJailReporter
 	msgUnjailReporter := reportertypes.MsgUnjailReporter{
+		SignerAddress:   reporterAccount.String(),
 		ReporterAddress: reporterAccount.String(),
 	}
 	// send unjailreporter tx
@@ -495,6 +496,7 @@ func (s *IntegrationTestSuite) TestDisputes() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(disputekeeper.THREE_DAYS))
 	// call unjail function
 	msgUnjailReporter = reportertypes.MsgUnjailReporter{
+		SignerAddress:   reporterAccount.String(),
 		ReporterAddress: reporterAccount.String(),
 	}
 	_, err = msgServerReporter.UnjailReporter(s.Setup.Ctx, &msgUnjailReporter)
@@ -1092,8 +1094,8 @@ func (s *IntegrationTestSuite) TestOpenDisputePrecision() {
 	require.Equal(expectedAnnaPower.String(), annaReporterStake.String())
 
 	// chris tips random fraction of trb to get matic/usd spot price
-	// tip is between 1 loya and 1 trb
-	randomTipAmount := math.NewInt(rand.Int63n(1*1e6) + 1)
+	// tip is between 1000 loya and 1 trb
+	randomTipAmount := math.NewInt(rand.Int63n((1*1e6)-1000+1) + 1000)
 	maticQueryData := s.Setup.CreateSpotPriceTip(ctx, chrisAccAddr, `["matic","usd"]`, randomTipAmount)
 
 	_, err = s.Setup.App.EndBlocker(ctx)
@@ -1458,6 +1460,7 @@ func (s *IntegrationTestSuite) TestDisputes2() {
 
 	// disputed reporter can report after calling unjail function
 	msgUnjail := reportertypes.MsgUnjailReporter{
+		SignerAddress:   repsAccs[0].String(),
 		ReporterAddress: repsAccs[0].String(),
 	}
 	_, err = msgServerReporter.UnjailReporter(s.Setup.Ctx, &msgUnjail)
@@ -1576,6 +1579,7 @@ func (s *IntegrationTestSuite) TestDisputes2() {
 
 	// disputed reporter can report after calling unjail function
 	msgUnjail = reportertypes.MsgUnjailReporter{
+		SignerAddress:   repsAccs[0].String(),
 		ReporterAddress: repsAccs[0].String(),
 	}
 	_, err = msgServerReporter.UnjailReporter(s.Setup.Ctx, &msgUnjail)

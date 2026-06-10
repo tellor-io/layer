@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"bytes"
 	"fmt"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/tellor-io/layer/utils"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
@@ -122,15 +124,126 @@ func (s *IntegrationTestSuite) TestSwitchReporterMsg() {
 	// valrep1 should have more tokens than valrep2
 	s.True(validatorReporter1.GT(validatorReporter2))
 
-	// change reporter
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	// Bridge deposit (TRBBridgeV2) uses a long open commitment (expiration height
+	// recorded as max open commitment on the outgoing reporter), deferring switch
+	// finalization until that height is passed.
+	spec := registrytypes.DataSpec{
+		AbiComponents: []*registrytypes.ABIComponent{
+			{Name: "tolayer", FieldType: "bool"},
+			{Name: "depositId", FieldType: "uint256"},
+		},
+	}
+	bridgeQueryData, err := spec.EncodeData("TRBBridgeV2", `["true","4242"]`)
+	s.NoError(err)
+	queryID := utils.QueryIDFromData(bridgeQueryData)
+	oracleMsgServer := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+
+	bridgeHeight := int64(10)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(bridgeHeight).WithBlockTime(time.Now())
+	_, err = oracleMsgServer.SubmitValue(s.Setup.Ctx, &oracletypes.MsgSubmitValue{
+		Creator:   valAccs[0].String(),
+		QueryData: bridgeQueryData,
+		Value:     bridgeTestValue,
+	})
+	s.NoError(err)
+
+	maxCommit, err := s.Setup.Oraclekeeper.GetMaxOpenCommitmentForReporter(s.Setup.Ctx, valAccs[0].Bytes())
+	s.NoError(err)
+	s.Equal(uint64(bridgeHeight)+2000, maxCommit)
+
+	qMeta, err := s.Setup.Oraclekeeper.CurrentQuery(s.Setup.Ctx, queryID)
+	s.NoError(err)
+	rep1PowerExpect := validatorReporter1.Quo(layertypes.PowerReduction).Uint64()
+	rep1Report, err := s.Setup.Oraclekeeper.Reports.Get(s.Setup.Ctx, collections.Join3(queryID, valAccs[0].Bytes(), qMeta.Id))
+	s.NoError(err)
+	s.Equal(rep1PowerExpect, rep1Report.Power, "first reporter should report with selector stake included")
+
+	// Next block, then deferred switch.
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(bridgeHeight + 1).WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Second))
 	_, err = msgServer.SwitchReporter(s.Setup.Ctx, &reportertypes.MsgSwitchReporter{SelectorAddress: newDelegator.String(), ReporterAddress: valAccs[1].String()})
 	s.NoError(err)
-	// forward time to bypass the lock time that the delegator has
 
+	sel, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, newDelegator.Bytes())
 	s.NoError(err)
-	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(1814400 * time.Second).Add(1))
+	s.True(bytes.Equal(sel.Reporter, valAccs[0].Bytes()), "assignment must not flip until pending switch is applied")
+
+	outPK := collections.Join(valAccs[0].Bytes(), newDelegator.Bytes())
+	pendingOut, err := s.Setup.Reporterkeeper.OutgoingPendingSwitches.Get(s.Setup.Ctx, outPK)
+	s.NoError(err)
+	s.True(bytes.Equal(pendingOut.ToReporter, valAccs[1].Bytes()))
+	s.Equal(sel.SwitchOutLockedUntilBlock, pendingOut.UnlockBlock)
+	s.Equal(maxCommit, pendingOut.UnlockBlock)
+
+	inPK := collections.Join(valAccs[1].Bytes(), newDelegator.Bytes())
+	fromB, err := s.Setup.Reporterkeeper.IncomingPendingSwitchIdx.Get(s.Setup.Ctx, inPK)
+	s.NoError(err)
+	s.True(bytes.Equal(fromB, valAccs[0].Bytes()))
+
+	// A few blocks later the bridge window is still open, but the selector handoff
+	// is not done — the incoming reporter must not count the selector's stake.
+	postSwitchH := bridgeHeight + 1 + 2
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(postSwitchH).WithBlockTime(s.Setup.Ctx.BlockTime().Add(2 * time.Second))
+	s.True(uint64(postSwitchH) < maxCommit, "reporting window for the first report must still be open")
+
+	rep2Stake, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[1], queryID)
+	s.NoError(err)
+	s.True(rep2Stake.Equal(validatorReporter2), "selector power must not count toward incoming reporter before finalization")
+	expectedRep2Power := rep2Stake.Quo(layertypes.PowerReduction).Uint64()
+
+	_, err = oracleMsgServer.SubmitValue(s.Setup.Ctx, &oracletypes.MsgSubmitValue{
+		Creator:   valAccs[1].String(),
+		QueryData: bridgeQueryData,
+		Value:     bridgeTestValue,
+	})
+	s.NoError(err)
+
+	rep2Report, err := s.Setup.Oraclekeeper.Reports.Get(s.Setup.Ctx, collections.Join3(queryID, valAccs[1].Bytes(), qMeta.Id))
+	s.NoError(err)
+	s.Equal(expectedRep2Power, rep2Report.Power)
+	s.True(rep2Report.Power < rep1Report.Power, "second reporter must not include the selector's stake while switch is pending")
+
+	// Past the open commitment height so ReporterStake on the outgoing reporter can finalize.
+	finalizeHeight := int64(maxCommit) + 1
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(finalizeHeight).WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Hour))
+	_, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[0], queryID)
+	s.NoError(err)
+
+	hasPending, err := s.Setup.Reporterkeeper.OutgoingPendingSwitches.Has(s.Setup.Ctx, outPK)
+	s.NoError(err)
+	s.False(hasPending, "pending row must be removed after finalization")
+
+	sel, err = s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, newDelegator.Bytes())
+	s.NoError(err)
+	s.True(bytes.Equal(sel.Reporter, valAccs[1].Bytes()))
+
+	// Different bridge deposit after handoff: reporter 1's oracle power must not include the
+	// selector, who now belongs to reporter 2.
+	bridgeQueryDataPost, err := spec.EncodeData("TRBBridgeV2", `["true","4243"]`)
+	s.NoError(err)
+	queryIDPost := utils.QueryIDFromData(bridgeQueryDataPost)
+
+	postFinalizeH := finalizeHeight + 1
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(postFinalizeH).WithBlockTime(s.Setup.Ctx.BlockTime().Add(time.Minute))
+
+	rep1StakePostSwitch, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[0], queryIDPost)
+	s.NoError(err)
+	s.True(rep1StakePostSwitch.LT(val1.Tokens), "reporter1 must no longer count the selector's bonded stake")
+	expectedRep1PowerPost := rep1StakePostSwitch.Quo(layertypes.PowerReduction).Uint64()
+
+	_, err = oracleMsgServer.SubmitValue(s.Setup.Ctx, &oracletypes.MsgSubmitValue{
+		Creator:   valAccs[0].String(),
+		QueryData: bridgeQueryDataPost,
+		Value:     bridgeTestValue,
+	})
+	s.NoError(err)
+
+	qMetaPost, err := s.Setup.Oraclekeeper.CurrentQuery(s.Setup.Ctx, queryIDPost)
+	s.NoError(err)
+	rep1PostReport, err := s.Setup.Oraclekeeper.Reports.Get(s.Setup.Ctx, collections.Join3(queryIDPost, valAccs[0].Bytes(), qMetaPost.Id))
+	s.NoError(err)
+	s.Equal(expectedRep1PowerPost, rep1PostReport.Power, "post-switch report must use stake without former selector")
+	s.True(rep1PostReport.Power < rep1Report.Power, "reporter1 power on new query should be below pre-switch report that included selector")
+
 	// check validator reporting tokens after delegator has moved
 	validatorReporter1, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[0], []byte{})
 	s.NoError(err)
@@ -141,6 +254,90 @@ func (s *IntegrationTestSuite) TestSwitchReporterMsg() {
 	s.True(validatorReporter2.GT(val2.Tokens))
 	// valrep2 should have more tokens than valrep1
 	s.True(validatorReporter2.GT(validatorReporter1))
+}
+
+// TestSwitchReporterReplacesPendingTargetIntegration checks that a second
+// SwitchReporter while a row is still pending replaces ToReporter and incoming
+// index without bumping UnlockBlock (replace path in scheduleReporterSwitch).
+func (s *IntegrationTestSuite) TestSwitchReporterReplacesPendingTargetIntegration() {
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
+	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	valAccs, valAddrs, _ := s.createValidatorAccs([]uint64{100, 200, 300})
+
+	newDelegator := sample.AccAddressBytes()
+	s.Setup.MintTokens(newDelegator, math.NewInt(1000*1e6))
+	msgDelegate := stakingtypes.NewMsgDelegate(
+		newDelegator.String(),
+		valAddrs[0].String(),
+		sdk.NewInt64Coin(s.Setup.Denom, 1000*1e6),
+	)
+
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
+	_, err := stakingMsgServer.Delegate(s.Setup.Ctx, msgDelegate)
+	s.NoError(err)
+
+	for i := 0; i < 3; i++ {
+		_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{
+			ReporterAddress:   valAccs[i].String(),
+			CommissionRate:    reportertypes.DefaultMinCommissionRate,
+			MinTokensRequired: math.NewIntWithDecimal(1, 6),
+			Moniker:           fmt.Sprintf("rep%d", i),
+		})
+		s.NoError(err)
+	}
+
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(2)
+	_, err = msgServer.SelectReporter(s.Setup.Ctx, &reportertypes.MsgSelectReporter{
+		SelectorAddress: newDelegator.String(),
+		ReporterAddress: valAccs[0].String(),
+	})
+	s.NoError(err)
+
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	_, err = msgServer.SwitchReporter(s.Setup.Ctx, &reportertypes.MsgSwitchReporter{
+		SelectorAddress: newDelegator.String(),
+		ReporterAddress: valAccs[1].String(),
+	})
+	s.NoError(err)
+
+	outPK := collections.Join(valAccs[0].Bytes(), newDelegator.Bytes())
+	first, err := s.Setup.Reporterkeeper.OutgoingPendingSwitches.Get(s.Setup.Ctx, outPK)
+	s.NoError(err)
+	s.True(bytes.Equal(first.ToReporter, valAccs[1].Bytes()))
+	unlockAfterFirst := first.UnlockBlock
+
+	// Replace target before outgoing reporter runs ReporterStake: same unlock, new ToReporter.
+	_, err = msgServer.SwitchReporter(s.Setup.Ctx, &reportertypes.MsgSwitchReporter{
+		SelectorAddress: newDelegator.String(),
+		ReporterAddress: valAccs[2].String(),
+	})
+	s.NoError(err)
+
+	second, err := s.Setup.Reporterkeeper.OutgoingPendingSwitches.Get(s.Setup.Ctx, outPK)
+	s.NoError(err)
+	s.Equal(unlockAfterFirst, second.UnlockBlock, "replace must not re-query oracle / bump unlock")
+	s.True(bytes.Equal(second.ToReporter, valAccs[2].Bytes()))
+
+	hasIn1, err := s.Setup.Reporterkeeper.IncomingPendingSwitchIdx.Has(s.Setup.Ctx, collections.Join(valAccs[1].Bytes(), newDelegator.Bytes()))
+	s.NoError(err)
+	s.False(hasIn1, "stale incoming index for replaced target must be removed")
+
+	fromB, err := s.Setup.Reporterkeeper.IncomingPendingSwitchIdx.Get(s.Setup.Ctx, collections.Join(valAccs[2].Bytes(), newDelegator.Bytes()))
+	s.NoError(err)
+	s.True(bytes.Equal(fromB, valAccs[0].Bytes()))
+
+	sel, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, newDelegator.Bytes())
+	s.NoError(err)
+	s.True(bytes.Equal(sel.Reporter, valAccs[0].Bytes()))
+
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
+	_, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[0], []byte{})
+	s.NoError(err)
+
+	sel, err = s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, newDelegator.Bytes())
+	s.NoError(err)
+	s.True(bytes.Equal(sel.Reporter, valAccs[2].Bytes()))
 }
 
 func (s *IntegrationTestSuite) TestAddAmountToStake() {
@@ -540,9 +737,6 @@ func (s *IntegrationTestSuite) TestCreateAndSwitchReporterMsg() {
 	msStaking := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 	require.NotNil(msStaking)
 
-	msOracle := oraclekeeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
-	require.NotNil(msOracle)
-
 	valAccs, valAddrs, _ := s.createValidatorAccs([]uint64{100, 200})
 	newDelegator := sample.AccAddressBytes()
 	s.Setup.MintTokens(newDelegator, math.NewInt(1000*1e6))
@@ -597,8 +791,37 @@ func (s *IntegrationTestSuite) TestCreateAndSwitchReporterMsg() {
 	})
 	s.NoError(err)
 
-	// check delegator reporter in selectors collections
+	// Pending self-promotion: outgoing reporter stays active until ReporterStake applies it.
 	formerSelector, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, newDelegator)
+	s.NoError(err)
+	s.Equal(formerSelector.Reporter, valAccs[0].Bytes())
+	pk := collections.Join(valAccs[0].Bytes(), newDelegator.Bytes())
+	has, err := s.Setup.Reporterkeeper.OutgoingPendingSwitches.Has(s.Setup.Ctx, pk)
+	s.NoError(err)
+	s.True(has)
+
+	promoteEnt, err := s.Setup.Reporterkeeper.OutgoingPendingSwitches.Get(s.Setup.Ctx, pk)
+	s.NoError(err)
+	s.True(bytes.Equal(promoteEnt.ToReporter, newDelegator.Bytes()))
+	s.Equal(formerSelector.SwitchOutLockedUntilBlock, promoteEnt.UnlockBlock)
+
+	inPromotePK := collections.Join(newDelegator.Bytes(), newDelegator.Bytes())
+	fromReporter, err := s.Setup.Reporterkeeper.IncomingPendingSwitchIdx.Get(s.Setup.Ctx, inPromotePK)
+	s.NoError(err)
+	s.True(bytes.Equal(fromReporter, valAccs[0].Bytes()))
+
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
+	_, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[0], []byte{})
+	s.NoError(err)
+
+	has, err = s.Setup.Reporterkeeper.OutgoingPendingSwitches.Has(s.Setup.Ctx, pk)
+	s.NoError(err)
+	s.False(has)
+	hasIn, err := s.Setup.Reporterkeeper.IncomingPendingSwitchIdx.Has(s.Setup.Ctx, inPromotePK)
+	s.NoError(err)
+	s.False(hasIn)
+
+	formerSelector, err = s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, newDelegator)
 	s.NoError(err)
 	s.Equal(formerSelector.Reporter, newDelegator.Bytes())
 	// check delegator reporter exists in reporters collections
@@ -606,20 +829,49 @@ func (s *IntegrationTestSuite) TestCreateAndSwitchReporterMsg() {
 	s.NoError(err)
 	s.True(reporterExists)
 
-	// delegator reporter decides to go back to delegator selector
+	// A second switch request within 21 days of the last request is rejected unless
+	// a pending row already exists; advance wall-clock so the next attempt clears the gate.
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(22 * 24 * time.Hour))
+
+	// delegator reporter decides to go back to delegator selector (pending demotion
+	// until ReporterStake on the outgoing self-reporter).
 	_, err = msReporter.SwitchReporter(s.Setup.Ctx, &reportertypes.MsgSwitchReporter{SelectorAddress: newDelegator.String(), ReporterAddress: valAccs[0].String()})
 	s.NoError(err)
 
-	// check delegator reporter in selectors collections
-	formerSelector, err = s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, newDelegator)
+	demotePK := collections.Join(newDelegator.Bytes(), newDelegator.Bytes())
+	hasDem, err := s.Setup.Reporterkeeper.OutgoingPendingSwitches.Has(s.Setup.Ctx, demotePK)
 	s.NoError(err)
-	s.Equal(formerSelector.Reporter, valAccs[0].Bytes())
+	s.True(hasDem)
+	demEnt, err := s.Setup.Reporterkeeper.OutgoingPendingSwitches.Get(s.Setup.Ctx, demotePK)
+	s.NoError(err)
+	s.True(bytes.Equal(demEnt.ToReporter, valAccs[0].Bytes()))
+
+	selDem, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, newDelegator.Bytes())
+	s.NoError(err)
+	s.True(bytes.Equal(selDem.Reporter, newDelegator.Bytes()), "still self-reporter until pending demotion finalizes")
+	s.Equal(selDem.SwitchOutLockedUntilBlock, demEnt.UnlockBlock)
+
+	inDemPK := collections.Join(valAccs[0].Bytes(), newDelegator.Bytes())
+	fromSelf, err := s.Setup.Reporterkeeper.IncomingPendingSwitchIdx.Get(s.Setup.Ctx, inDemPK)
+	s.NoError(err)
+	s.True(bytes.Equal(fromSelf, newDelegator.Bytes()))
+
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
+	_, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[0], []byte{})
+	s.NoError(err)
+
+	hasDem, err = s.Setup.Reporterkeeper.OutgoingPendingSwitches.Has(s.Setup.Ctx, demotePK)
+	s.NoError(err)
+	s.False(hasDem)
 	// check delegator reporter does not exist in reporters collections
 	reporterExists, err = s.Setup.Reporterkeeper.Reporters.Has(s.Setup.Ctx, newDelegator)
 	s.NoError(err)
 	s.False(reporterExists)
 
-	// delegator becomes reporter again
+	// Advance wall-clock again past the 21-day switch-request gate before the next self-promotion.
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(22 * 24 * time.Hour))
+
+	// delegator becomes reporter again (second pending self-promotion from val0)
 	_, err = msReporter.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{
 		ReporterAddress:   newDelegator.String(),
 		CommissionRate:    reportertypes.DefaultMinCommissionRate,
@@ -627,6 +879,22 @@ func (s *IntegrationTestSuite) TestCreateAndSwitchReporterMsg() {
 		Moniker:           "back_again_to_report_and_then_leave",
 	})
 	s.NoError(err)
+
+	pk2 := collections.Join(valAccs[0].Bytes(), newDelegator.Bytes())
+	has2, err := s.Setup.Reporterkeeper.OutgoingPendingSwitches.Has(s.Setup.Ctx, pk2)
+	s.NoError(err)
+	s.True(has2)
+	secEnt, err := s.Setup.Reporterkeeper.OutgoingPendingSwitches.Get(s.Setup.Ctx, pk2)
+	s.NoError(err)
+	s.True(bytes.Equal(secEnt.ToReporter, newDelegator.Bytes()))
+
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(s.Setup.Ctx.BlockHeight() + 1)
+	_, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, valAccs[0], []byte{})
+	s.NoError(err)
+
+	has2, err = s.Setup.Reporterkeeper.OutgoingPendingSwitches.Has(s.Setup.Ctx, pk2)
+	s.NoError(err)
+	s.False(has2)
 
 	// check delegator reporter in selectors collections
 	formerSelector, err = s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, newDelegator)

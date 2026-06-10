@@ -79,7 +79,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		if err != nil {
 			return err
 		}
-		if err := k.reporterKeeper.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr); err != nil {
+		if err := k.reporterKeeper.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, dispute.InitialEvidence.BlockNumber, dispute.HashId); err != nil {
 			return err
 		}
 		vote.Executed = true
@@ -116,7 +116,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		if err != nil {
 			return err
 		}
-		if err := k.reporterKeeper.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr); err != nil {
+		if err := k.reporterKeeper.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, dispute.InitialEvidence.BlockNumber, dispute.HashId); err != nil {
 			return err
 		}
 		vote.Executed = true
