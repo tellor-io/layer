@@ -269,7 +269,8 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 	}
 
 	prevDisputeId := dispute.DisputeId
-	dispute.BurnAmount = dispute.BurnAmount.Add(fivePercent) // burnAmt = 5 % of fee total
+	dispute.BurnAmount = dispute.BurnAmount.Add(roundFee)
+	// FeeTotal is informationl only, tracks total fees paid across rounds.
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Fee.Amount)
 	disputeId := k.NextDisputeId(ctx)
 	dispute.DisputeId = disputeId

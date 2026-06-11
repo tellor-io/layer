@@ -153,8 +153,8 @@ func (k Keeper) RefundFailedDisputeFee(ctx context.Context, feePayer sdk.AccAddr
 	return k.ReturnFeetoStake(ctx, hashId, fee)
 }
 
-func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, disputeFeeTotal math.Int, hashId []byte, slashAmt math.Int) (math.Int, error) {
-	amtFixed6, remainder := CalculateRefundAmount(payerInfo.Amount, slashAmt, disputeFeeTotal)
+func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeeRd1 math.Int, hashId []byte) (math.Int, error) {
+	amtFixed6, remainder := CalculateRefundAmount(payerInfo.Amount, totalFeeRd1)
 
 	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amtFixed6))
 	if !payerInfo.FromBond {

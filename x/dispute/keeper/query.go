@@ -416,14 +416,14 @@ func (k Querier) ClaimableDisputeRewards(ctx context.Context, req *types.QueryCl
 			if err == nil && vote.Executed {
 				switch vote.VoteResult {
 				case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
-					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount, dispute.FeeTotal)
+					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount)
 					feeRefundAmount = feeRefundAmount.Add(refund)
 
 				case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
-					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount, dispute.FeeTotal)
+					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount)
 					feeRefundAmount = feeRefundAmount.Add(refund)
 
-					reward, _ := CalculateReporterBondRewardAmount(payerInfo.Amount, dispute.FeeTotal, dispute.SlashAmount)
+					reward, _ := CalculateReporterBondRewardAmount(payerInfo.Amount, dispute.SlashAmount, dispute.SlashAmount)
 					feeRefundAmount = feeRefundAmount.Add(reward)
 				}
 			}

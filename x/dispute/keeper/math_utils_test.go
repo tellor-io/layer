@@ -12,54 +12,48 @@ import (
 
 func TestCalculateRefundAmount(t *testing.T) {
 	tests := []struct {
-		name            string
-		payerFee        math.Int
-		totalFeeRd1     math.Int
-		disputeFeeTotal math.Int
-		expectedAmt     math.Int
-		expectedDust    math.Int
+		name         string
+		payerFee     math.Int
+		totalFeeRd1  math.Int
+		expectedAmt  math.Int
+		expectedDust math.Int
 	}{
 		{
-			name:            "full refund, single payer",
-			payerFee:        math.NewInt(1000),
-			totalFeeRd1:     math.NewInt(1000),
-			disputeFeeTotal: math.NewInt(1000),
+			name:        "full refund, single payer",
+			payerFee:    math.NewInt(1000),
+			totalFeeRd1: math.NewInt(1000),
 			// Pot = 1000 - 50 = 950
 			// Share = 1.0 * 950 = 950
 			expectedAmt:  math.NewInt(950),
 			expectedDust: math.ZeroInt(),
 		},
 		{
-			name:            "2 even payers",
-			payerFee:        math.NewInt(500),
-			totalFeeRd1:     math.NewInt(1000),
-			disputeFeeTotal: math.NewInt(1000),
+			name:        "2 even payers",
+			payerFee:    math.NewInt(500),
+			totalFeeRd1: math.NewInt(1000),
 			// 95% of (500/1000) of 1000 = 475
 			expectedAmt:  math.NewInt(475),
 			expectedDust: math.ZeroInt(),
 		},
 		{
-			name:            "zero fee",
-			payerFee:        math.ZeroInt(),
-			totalFeeRd1:     math.NewInt(100),
-			disputeFeeTotal: math.NewInt(100),
-			expectedAmt:     math.ZeroInt(),
-			expectedDust:    math.ZeroInt(),
+			name:         "zero fee",
+			payerFee:     math.ZeroInt(),
+			totalFeeRd1:  math.NewInt(100),
+			expectedAmt:  math.ZeroInt(),
+			expectedDust: math.ZeroInt(),
 		},
 		{
-			name:            "large numbers",
-			payerFee:        math.NewInt(123456789000000), // 123,456,789 trb
-			totalFeeRd1:     math.NewInt(987654321000000), // 987,654,321 trb
-			disputeFeeTotal: math.NewInt(987654321000000), // 987,654,321 trb
+			name:        "large numbers",
+			payerFee:    math.NewInt(123456789000000), // 123,456,789 trb
+			totalFeeRd1: math.NewInt(987654321000000), // 987,654,321 trb
 			// 95% of 12.5% of 987654321000000 = 117283949550000
 			expectedAmt:  math.NewInt(117283949550000),
 			expectedDust: math.ZeroInt(),
 		},
 		{
-			name:            "dust",
-			payerFee:        math.NewInt(333),
-			totalFeeRd1:     math.NewInt(1000),
-			disputeFeeTotal: math.NewInt(1000),
+			name:        "dust",
+			payerFee:    math.NewInt(333),
+			totalFeeRd1: math.NewInt(1000),
 			// 95% of (333/1000) of 1000 = 316.35
 			expectedAmt:  math.NewInt(316),
 			expectedDust: math.NewInt(350000), // 0.35 loya * 1e6
@@ -69,7 +63,7 @@ func TestCalculateRefundAmount(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			fmt.Println(tc.name)
-			amt, dust := keeper.CalculateRefundAmount(tc.payerFee, tc.totalFeeRd1, tc.disputeFeeTotal)
+			amt, dust := keeper.CalculateRefundAmount(tc.payerFee, tc.totalFeeRd1)
 			require.True(t, tc.expectedAmt.Equal(amt), "expected amount %s, got %s", tc.expectedAmt, amt)
 			require.True(t, tc.expectedDust.Equal(dust), "expected dust %s, got %s", tc.expectedDust, dust)
 		})
