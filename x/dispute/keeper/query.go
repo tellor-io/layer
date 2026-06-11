@@ -403,8 +403,13 @@ func (k Querier) ClaimableDisputeRewards(ctx context.Context, req *types.QueryCl
 	}
 
 	// Calculate Fee Refund
-	// Check if they are a fee payer for the first round
-	payerInfo, err := k.Keeper.DisputeFeePayer.Get(ctx, collections.Join(req.DisputeId, addr.Bytes()))
+	// Fee payer records are stored under the first-round dispute id only; resolve it the
+	// same way WithdrawFeeRefund does so queries for a final round still find the payer
+	firstRoundDisputeId := req.DisputeId
+	if len(dispute.PrevDisputeIds) > 0 {
+		firstRoundDisputeId = dispute.PrevDisputeIds[0]
+	}
+	payerInfo, err := k.Keeper.DisputeFeePayer.Get(ctx, collections.Join(firstRoundDisputeId, addr.Bytes()))
 	if err == nil {
 		// Address is a fee payer
 		switch dispute.DisputeStatus {

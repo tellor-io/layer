@@ -469,3 +469,35 @@ func (s *IntegrationTestSuite) TestWorstCaseTeamOnlyMaxRoundDoesNotStrandEscalat
 	modBalance := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputeModAddr, s.Setup.Denom)
 	s.True(modBalance.Amount.IsZero(), "escalation fees must be fully consumed rather than stranded in the dispute module")
 }
+
+// TestClaimableDisputeRewardsUsesFirstRoundFeePayerForFinalRound: fee payer records
+// live under the first-round dispute id, but wallets query the final resolved round id.
+// The query must resolve the round-1 payer the same way WithdrawFeeRefund does.
+func (s *IntegrationTestSuite) TestClaimableDisputeRewardsUsesFirstRoundFeePayerForFinalRound() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	_, report, disputeFee := s.setupDisputedReporter(100)
+	teamAddr, err := s.Setup.Disputekeeper.GetTeamAddress(s.Setup.Ctx)
+	s.NoError(err)
+
+	disputer1 := s.fundedDisputer()
+	s.startNoQuorumRound1(msgServer, report, disputeFee, disputer1, false, teamAddr)
+
+	disputer2 := s.fundedDisputer()
+	s.proposeRound(msgServer, disputer2, report, disputeFee, false)
+	s.voteAndTally(msgServer, 2, teamAddr, types.VoteEnum_VOTE_SUPPORT)
+	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 2))
+
+	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 2)
+	s.NoError(err)
+	refund, _ := keeper.CalculateRefundAmount(dispute.SlashAmount, dispute.SlashAmount)
+	expectedClaimable := refund.Add(dispute.SlashAmount)
+
+	queryServer := keeper.NewQuerier(s.Setup.Disputekeeper)
+	resp, err := queryServer.ClaimableDisputeRewards(s.Setup.Ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 2,
+		Address:   disputer1.String(),
+	})
+	s.NoError(err)
+	s.Equal(expectedClaimable, resp.ClaimableAmount.FeeRefundAmount, "final-round query should report the round-1 payer's fee refund plus reporter bond reward")
+}
