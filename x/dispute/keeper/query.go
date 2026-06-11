@@ -386,18 +386,19 @@ func (k Querier) ClaimableDisputeRewards(ctx context.Context, req *types.QueryCl
 
 	// Calculate Voter Reward
 	if dispute.DisputeStatus == types.Resolved {
-		// Check if they voted
+		// Mirror ClaimReward: the final-round Voter record only tracks claim status
+		// (ClaimReward stores RewardClaimed under the final round id), while
+		// CalculateReward scans every round, so an address that voted only in a
+		// previous round is still eligible without a final-round Voter record
 		voterInfo, err := k.Keeper.Voter.Get(ctx, collections.Join(req.DisputeId, addr.Bytes()))
 		if err == nil {
-			// Found voter info
 			rewardClaimed = voterInfo.RewardClaimed
-			if !voterInfo.RewardClaimed {
-				// They voted and haven't claimed yet
-				// CalculateReward checks if vote.Executed and other conditions
-				reward, err := k.Keeper.CalculateReward(sdkCtx, addr, req.DisputeId)
-				if err == nil {
-					rewardAmount = reward
-				}
+		}
+		if !rewardClaimed {
+			// CalculateReward checks vote.Executed and returns zero for non-voters
+			reward, err := k.Keeper.CalculateReward(sdkCtx, addr, req.DisputeId)
+			if err == nil {
+				rewardAmount = reward
 			}
 		}
 	}

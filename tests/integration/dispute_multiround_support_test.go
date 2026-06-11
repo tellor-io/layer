@@ -501,3 +501,84 @@ func (s *IntegrationTestSuite) TestClaimableDisputeRewardsUsesFirstRoundFeePayer
 	s.NoError(err)
 	s.Equal(expectedClaimable, resp.ClaimableAmount.FeeRefundAmount, "final-round query should report the round-1 payer's fee refund plus reporter bond reward")
 }
+
+// TestClaimableDisputeRewardsIncludesPreviousRoundOnlyVoter: ClaimReward pays voters
+// from any round by scanning PrevDisputeIds, so the query must not require a Voter
+// record under the final round id before reporting the reward.
+func (s *IntegrationTestSuite) TestClaimableDisputeRewardsIncludesPreviousRoundOnlyVoter() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	_, report, disputeFee := s.setupDisputedReporter(100)
+	teamAddr, err := s.Setup.Disputekeeper.GetTeamAddress(s.Setup.Ctx)
+	s.NoError(err)
+
+	previousRoundOnlyVoter := s.fundedDisputer()
+	s.seedTipper(previousRoundOnlyVoter, report)
+
+	// round 1 is voted on (and left unresolved) by the tipper, not the team
+	roundOnePayer := s.fundedDisputer()
+	s.startNoQuorumRound1(msgServer, report, disputeFee, roundOnePayer, false, previousRoundOnlyVoter)
+
+	// the tipper does not vote in round 2; the team resolves it
+	disputer2 := s.fundedDisputer()
+	s.proposeRound(msgServer, disputer2, report, disputeFee, false)
+	s.voteAndTally(msgServer, 2, teamAddr, types.VoteEnum_VOTE_SUPPORT)
+	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 2))
+
+	expectedReward, err := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, previousRoundOnlyVoter, 2)
+	s.NoError(err)
+	s.True(expectedReward.IsPositive(), "the previous-round-only voter should have a real claimable reward")
+
+	queryServer := keeper.NewQuerier(s.Setup.Disputekeeper)
+	resp, err := queryServer.ClaimableDisputeRewards(s.Setup.Ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 2,
+		Address:   previousRoundOnlyVoter.String(),
+	})
+	s.NoError(err)
+	s.Equal(expectedReward, resp.ClaimableAmount.RewardAmount, "the query should report rewards for voters who only participated in previous rounds")
+}
+
+// TestWorstCaseClaimableDisputeRewardsShowsCombinedPreviousRoundClaims: one address is
+// both the round-1 fee payer and a previous-round-only voter, and the user queries the
+// final dispute id. The query must report both the fee refund and the voter reward, and
+// both amounts must actually be withdrawable through the transaction paths.
+func (s *IntegrationTestSuite) TestWorstCaseClaimableDisputeRewardsShowsCombinedPreviousRoundClaims() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	_, report, disputeFee := s.setupDisputedReporter(100)
+	teamAddr, err := s.Setup.Disputekeeper.GetTeamAddress(s.Setup.Ctx)
+	s.NoError(err)
+
+	// the claimant pays the round-1 fee and is the only round-1 voter
+	claimant := s.fundedDisputer()
+	s.seedTipper(claimant, report)
+	s.startNoQuorumRound1(msgServer, report, disputeFee, claimant, false, claimant)
+
+	roundTwoPayer := s.fundedDisputer()
+	s.proposeRound(msgServer, roundTwoPayer, report, disputeFee, false)
+	s.voteAndTally(msgServer, 2, teamAddr, types.VoteEnum_VOTE_SUPPORT)
+	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 2))
+
+	finalDispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 2)
+	s.NoError(err)
+	expectedReward, err := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, claimant, 2)
+	s.NoError(err)
+	s.True(expectedReward.IsPositive(), "the claimant should have a real previous-round-only voter reward")
+	expectedRefund, _ := keeper.CalculateRefundAmount(finalDispute.SlashAmount, finalDispute.SlashAmount)
+	expectedFeeRefund := expectedRefund.Add(finalDispute.SlashAmount)
+
+	queryServer := keeper.NewQuerier(s.Setup.Disputekeeper)
+	resp, err := queryServer.ClaimableDisputeRewards(s.Setup.Ctx, &types.QueryClaimableDisputeRewardsRequest{
+		DisputeId: 2,
+		Address:   claimant.String(),
+	})
+	s.NoError(err)
+	s.Equal(expectedFeeRefund, resp.ClaimableAmount.FeeRefundAmount, "final-id query must show the round-1 fee refund plus reporter bond reward")
+	s.Equal(expectedReward, resp.ClaimableAmount.RewardAmount, "final-id query must show the previous-round-only voter reward")
+
+	// the amounts the query reports are really withdrawable through the tx paths
+	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &types.MsgWithdrawFeeRefund{Id: 2, PayerAddress: claimant.String(), CallerAddress: claimant.String()})
+	s.NoError(err)
+	_, err = msgServer.ClaimReward(s.Setup.Ctx, &types.MsgClaimReward{CallerAddress: claimant.String(), DisputeId: 2})
+	s.NoError(err)
+}
