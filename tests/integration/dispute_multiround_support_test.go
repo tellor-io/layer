@@ -275,3 +275,133 @@ func (s *IntegrationTestSuite) TestMultiRoundAgainstReporterGetsRoundOneStakeOnl
 	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &types.MsgWithdrawFeeRefund{Id: 2, PayerAddress: disputer2.String(), CallerAddress: disputer2.String()})
 	s.Error(err)
 }
+
+// TestMultiRoundPayFromBondDoesNotTrackLaterRoundAsRefundableStake: the
+// FeePaidFromStake tracker exists so FeeRefund can restake the refundable round-1 fee.
+// With round 1 funded from an account there is no tracker, and a later round paid from
+// bond must not create one: escalation-round fees are fully consumed.
+func (s *IntegrationTestSuite) TestMultiRoundPayFromBondDoesNotTrackLaterRoundAsRefundableStake() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	reporters, report, disputeFee := s.setupDisputedReporterWithBondPayers(100, 100)
+	roundTwoBondPayer := reporters[1]
+	teamAddr, err := s.Setup.Disputekeeper.GetTeamAddress(s.Setup.Ctx)
+	s.NoError(err)
+
+	roundOnePayer := s.fundedDisputer()
+	s.startNoQuorumRound1(msgServer, report, disputeFee, roundOnePayer, false, teamAddr)
+
+	firstRoundDispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	hasTrackedStakeFee, err := s.Setup.Reporterkeeper.FeePaidFromStake.Has(s.Setup.Ctx, firstRoundDispute.HashId)
+	s.NoError(err)
+	s.False(hasTrackedStakeFee, "round 1 was account-funded, so no stake-fee refund tracker should exist before later rounds")
+
+	s.proposeRound(msgServer, roundTwoBondPayer, report, disputeFee, true)
+
+	hasTrackedStakeFee, err = s.Setup.Reporterkeeper.FeePaidFromStake.Has(s.Setup.Ctx, firstRoundDispute.HashId)
+	s.NoError(err)
+	s.False(hasTrackedStakeFee, "later-round fees paid from bond are non-refundable and must not be tracked as refundable round-1 stake")
+}
+
+// TestMultiRoundPayFromBondDoesNotAppendToFirstRoundStakeRefundTracker: when round 1
+// itself was paid from bond, FeePaidFromStake holds a snapshot of the round-1 stake
+// origins. Opening a later round from bond must leave that snapshot untouched.
+func (s *IntegrationTestSuite) TestMultiRoundPayFromBondDoesNotAppendToFirstRoundStakeRefundTracker() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	reporters, report, disputeFee := s.setupDisputedReporterWithBondPayers(100, 100, 100)
+	roundOneBondPayer := reporters[1]
+	roundTwoBondPayer := reporters[2]
+	teamAddr, err := s.Setup.Disputekeeper.GetTeamAddress(s.Setup.Ctx)
+	s.NoError(err)
+
+	s.startNoQuorumRound1(msgServer, report, disputeFee, roundOneBondPayer, true, teamAddr)
+	firstRoundDispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	trackerBeforeRound2, err := s.Setup.Reporterkeeper.FeePaidFromStake.Get(s.Setup.Ctx, firstRoundDispute.HashId)
+	s.NoError(err)
+	s.Equal(disputeFee, trackerBeforeRound2.Total, "round 1 paid from bond should track exactly the refundable round-1 fee")
+	s.True(feeTrackerContainsDelegator(trackerBeforeRound2, roundOneBondPayer))
+	s.False(feeTrackerContainsDelegator(trackerBeforeRound2, roundTwoBondPayer))
+
+	s.proposeRound(msgServer, roundTwoBondPayer, report, disputeFee, true)
+
+	trackerAfterRound2, err := s.Setup.Reporterkeeper.FeePaidFromStake.Get(s.Setup.Ctx, firstRoundDispute.HashId)
+	s.NoError(err)
+	s.Equal(trackerBeforeRound2.Total, trackerAfterRound2.Total, "later-round fees paid from bond must not increase the refundable round-1 total")
+	s.Equal(len(trackerBeforeRound2.TokenOrigins), len(trackerAfterRound2.TokenOrigins), "later-round fees paid from bond must not append token origins to the round-1 refund tracker")
+	s.False(feeTrackerContainsDelegator(trackerAfterRound2, roundTwoBondPayer), "a later-round bond payer must not become a refund-tracker delegator")
+}
+
+// TestMultiRoundPayFromBondRefundDoesNotRestakeLaterRoundBondPayer: when the round-1
+// payer withdraws an INVALID-resolution refund, only round-1 stake origins are restored.
+// A later-round bond payer's fee was consumed by escalation and must not be restaked
+// from the round-1 refund.
+func (s *IntegrationTestSuite) TestMultiRoundPayFromBondRefundDoesNotRestakeLaterRoundBondPayer() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	reporters, report, disputeFee := s.setupDisputedReporterWithBondPayers(100, 100, 100)
+	roundOneBondPayer := reporters[1]
+	roundTwoBondPayer := reporters[2]
+	teamAddr, err := s.Setup.Disputekeeper.GetTeamAddress(s.Setup.Ctx)
+	s.NoError(err)
+
+	s.startNoQuorumRound1(msgServer, report, disputeFee, roundOneBondPayer, true, teamAddr)
+	s.proposeRound(msgServer, roundTwoBondPayer, report, disputeFee, true)
+
+	// resolve the final round INVALID: the round-1 fee is refunded to stake without
+	// adding the disputed reporter's slashed bond, isolating the refund split across
+	// FeePaidFromStake origins
+	s.voteAndTally(msgServer, 2, teamAddr, types.VoteEnum_VOTE_INVALID)
+	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 2))
+
+	roundOneStakeBefore, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, roundOneBondPayer, report.QueryId)
+	s.NoError(err)
+	roundTwoStakeBefore, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, roundTwoBondPayer, report.QueryId)
+	s.NoError(err)
+	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &types.MsgWithdrawFeeRefund{Id: 2, PayerAddress: roundOneBondPayer.String(), CallerAddress: roundOneBondPayer.String()})
+	s.NoError(err)
+	roundOneStakeAfter, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, roundOneBondPayer, report.QueryId)
+	s.NoError(err)
+	roundTwoStakeAfter, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, roundTwoBondPayer, report.QueryId)
+	s.NoError(err)
+
+	s.True(roundOneStakeAfter.GT(roundOneStakeBefore), "the round-1 bond payer should receive a stake refund")
+	s.Equal(roundTwoStakeBefore, roundTwoStakeAfter, "a later-round bond payer must not receive stake from the round-1 fee refund")
+}
+
+// TestWorstCaseMultiRoundPayFromBondMaxRoundsDoesNotDiluteFirstRoundStakeRefund: round 1
+// is paid from bond, then every later round up to the round cap is opened by a different
+// bond payer. The round-1 refund tracker must still contain only the original round-1
+// payer and amount.
+func (s *IntegrationTestSuite) TestWorstCaseMultiRoundPayFromBondMaxRoundsDoesNotDiluteFirstRoundStakeRefund() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	reporters, report, disputeFee := s.setupDisputedReporterWithBondPayers(100, 100, 100, 100, 100, 100)
+	roundOneBondPayer := reporters[1]
+	laterRoundBondPayers := reporters[2:]
+	teamAddr, err := s.Setup.Disputekeeper.GetTeamAddress(s.Setup.Ctx)
+	s.NoError(err)
+
+	s.startNoQuorumRound1(msgServer, report, disputeFee, roundOneBondPayer, true, teamAddr)
+	firstRoundDispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 1)
+	s.NoError(err)
+	trackerBeforeEscalation, err := s.Setup.Reporterkeeper.FeePaidFromStake.Get(s.Setup.Ctx, firstRoundDispute.HashId)
+	s.NoError(err)
+
+	for roundId := uint64(2); roundId <= 5; roundId++ {
+		s.proposeRound(msgServer, laterRoundBondPayers[roundId-2], report, disputeFee, true)
+		if roundId < 5 {
+			s.markRoundUnresolved(msgServer, roundId, teamAddr)
+		}
+	}
+
+	trackerAfterMaxEscalation, err := s.Setup.Reporterkeeper.FeePaidFromStake.Get(s.Setup.Ctx, firstRoundDispute.HashId)
+	s.NoError(err)
+	s.Equal(trackerBeforeEscalation.Total, trackerAfterMaxEscalation.Total, "max escalation from bond must not dilute the refundable round-1 total")
+	s.Equal(len(trackerBeforeEscalation.TokenOrigins), len(trackerAfterMaxEscalation.TokenOrigins), "max escalation from bond must not add refund recipients")
+	for _, payer := range laterRoundBondPayers {
+		s.False(feeTrackerContainsDelegator(trackerAfterMaxEscalation, payer), "later-round bond payer %s must not be in the round-1 refund tracker", payer.String())
+	}
+}
