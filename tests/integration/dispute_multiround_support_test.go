@@ -405,3 +405,67 @@ func (s *IntegrationTestSuite) TestWorstCaseMultiRoundPayFromBondMaxRoundsDoesNo
 		s.False(feeTrackerContainsDelegator(trackerAfterMaxEscalation, payer), "later-round bond payer %s must not be in the round-1 refund tracker", payer.String())
 	}
 }
+
+// TestMultiRoundTeamOnlyFinalRoundDoesNotCreateUnclaimableVoterReward: team votes can
+// decide a dispute but cannot claim voter rewards, so a team-only resolution must burn
+// the entire consumed fee pool instead of reserving an unclaimable voter half in the
+// dispute module.
+func (s *IntegrationTestSuite) TestMultiRoundTeamOnlyFinalRoundDoesNotCreateUnclaimableVoterReward() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	_, report, disputeFee := s.setupDisputedReporter(100)
+	teamAddr, err := s.Setup.Disputekeeper.GetTeamAddress(s.Setup.Ctx)
+	s.NoError(err)
+
+	disputer1 := s.fundedDisputer()
+	s.startNoQuorumRound1(msgServer, report, disputeFee, disputer1, false, teamAddr)
+
+	// round 2 is account-funded and resolved by a team-only vote
+	disputer2 := s.fundedDisputer()
+	s.proposeRound(msgServer, disputer2, report, disputeFee, false)
+	s.voteAndTally(msgServer, 2, teamAddr, types.VoteEnum_VOTE_AGAINST)
+	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 2))
+
+	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 2)
+	s.NoError(err)
+	s.Equal(types.Resolved, dispute.DisputeStatus)
+	s.True(dispute.VoterReward.IsZero(), "team-only resolutions have no claimable voters, so no voter reward should be reserved")
+
+	disputeModAddr := authtypes.NewModuleAddress(types.ModuleName)
+	modBalance := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputeModAddr, s.Setup.Denom)
+	s.True(modBalance.Amount.IsZero(), "later-round fees should be fully consumed rather than stranded in the dispute module")
+}
+
+// TestWorstCaseTeamOnlyMaxRoundDoesNotStrandEscalatedVoterRewards: after several
+// escalation rounds the consumed fee pool is large. If the final round resolves with
+// only a team vote, the whole pool must be burned; none of it may stay stranded in the
+// dispute module as an unclaimable voter reward.
+func (s *IntegrationTestSuite) TestWorstCaseTeamOnlyMaxRoundDoesNotStrandEscalatedVoterRewards() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	_, report, disputeFee := s.setupDisputedReporter(100)
+	teamAddr, err := s.Setup.Disputekeeper.GetTeamAddress(s.Setup.Ctx)
+	s.NoError(err)
+
+	roundOnePayer := s.fundedDisputer()
+	s.startNoQuorumRound1(msgServer, report, disputeFee, roundOnePayer, false, teamAddr)
+
+	for roundId := uint64(2); roundId <= 5; roundId++ {
+		s.proposeRound(msgServer, s.fundedDisputer(), report, disputeFee, false)
+		if roundId < 5 {
+			s.markRoundUnresolved(msgServer, roundId, teamAddr)
+		}
+	}
+
+	s.voteAndTally(msgServer, 5, teamAddr, types.VoteEnum_VOTE_AGAINST)
+	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 5))
+
+	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 5)
+	s.NoError(err)
+	s.Equal(types.Resolved, dispute.DisputeStatus)
+	s.True(dispute.VoterReward.IsZero(), "team-only resolutions have no claimable voters, so no voter reward should be reserved")
+
+	disputeModAddr := authtypes.NewModuleAddress(types.ModuleName)
+	modBalance := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputeModAddr, s.Setup.Denom)
+	s.True(modBalance.Amount.IsZero(), "escalation fees must be fully consumed rather than stranded in the dispute module")
+}

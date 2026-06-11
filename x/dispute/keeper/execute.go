@@ -48,17 +48,20 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		return errors.New("vote already executed")
 	}
 
-	// the burnAmount starts at %5 of disputeFee, half of which is burned and the other half is distributed to the voters
+	// the burnAmount is round 1's 5% of the dispute fee plus all later-round fees, half
+	// of which is burned and the other half is distributed to the voters
 	disputeBurnAmountDec := math.LegacyNewDecFromInt(dispute.BurnAmount)
 	halfBurnAmountDec := disputeBurnAmountDec.Quo(math.LegacyNewDec(2))
 	halfBurnAmount := halfBurnAmountDec.TruncateInt()
 	voterReward := halfBurnAmount
-	totalVoterPower, err := k.GetSumOfAllGroupVotesAllRounds(ctx, id)
+	// only user and reporter votes can claim through CalculateReward; team votes decide
+	// outcomes but earn nothing, so they must not cause a voter reward to be reserved
+	totalVoterPower, err := k.GetSumOfUserAndReporterVotesAllRounds(ctx, id)
 	if err != nil {
 		return err
 	}
 	if totalVoterPower.IsZero() {
-		// if no voters, burn the entire burnAmount
+		// if no claim-eligible voters, burn the entire burnAmount
 		halfBurnAmount = dispute.BurnAmount
 		// non voters get nothing
 		voterReward = math.ZeroInt()
@@ -173,7 +176,10 @@ func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.
 	return remainder, k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amtFixed6)))
 }
 
-func (k Keeper) GetSumOfAllGroupVotesAllRounds(ctx context.Context, id uint64) (math.Int, error) {
+// GetSumOfUserAndReporterVotesAllRounds sums claim-eligible (user and reporter) vote
+// power across all rounds of a dispute. Team votes are excluded because they cannot
+// claim voter rewards.
+func (k Keeper) GetSumOfUserAndReporterVotesAllRounds(ctx context.Context, id uint64) (math.Int, error) {
 	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
 		return math.Int{}, err
@@ -181,13 +187,11 @@ func (k Keeper) GetSumOfAllGroupVotesAllRounds(ctx context.Context, id uint64) (
 
 	sumUsers := uint64(0)
 	sumReporters := uint64(0)
-	sumTeam := uint64(0)
 
 	// process vote counts function
 	processVoteCounts := func(voteCounts types.StakeholderVoteCounts) {
 		sumUsers += voteCounts.Users.Support + voteCounts.Users.Against + voteCounts.Users.Invalid
 		sumReporters += voteCounts.Reporters.Support + voteCounts.Reporters.Against + voteCounts.Reporters.Invalid
-		sumTeam += voteCounts.Team.Support + voteCounts.Team.Against + voteCounts.Team.Invalid
 	}
 
 	// process current dispute
@@ -211,8 +215,7 @@ func (k Keeper) GetSumOfAllGroupVotesAllRounds(ctx context.Context, id uint64) (
 	}
 
 	totalSum := math.NewInt(int64(sumUsers)).
-		Add(math.NewInt(int64(sumReporters))).
-		Add(math.NewInt(int64(sumTeam)))
+		Add(math.NewInt(int64(sumReporters)))
 
 	return totalSum, nil
 }
