@@ -44,7 +44,7 @@ type OracleKeeper interface {
 
 type ReporterKeeper interface {
 	EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height uint64, amt math.Int, queryId, hashId []byte) error
-	JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration uint64) error
+	JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration, reportBlockNumber uint64, disputeHashID []byte) error
 	TotalReporterPower(ctx context.Context) (math.Int, error)
 	FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte, isFirstRound bool) error
 	ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) (string, error)
@@ -53,6 +53,6 @@ type ReporterKeeper interface {
 	GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber uint64) (math.Int, error)
 	GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber uint64) (math.Int, error)
 	FeeRefund(ctx context.Context, hashId []byte, amt math.Int) error
-	UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr sdk.AccAddress) error
-	GetSelector(ctx context.Context, selectorAddr sdk.AccAddress) (reportertypes.Selection, error)
+	UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr sdk.AccAddress, reportBlockNumber uint64, disputeHashID []byte) error
+	GetSelectorForStake(ctx context.Context, selectorAddr sdk.AccAddress) (reportertypes.Selection, error)
 }

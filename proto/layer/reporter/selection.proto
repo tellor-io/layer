@@ -12,14 +12,38 @@ option go_package = "github.com/tellor-io/layer/x/reporter/types";
 message Selection {
   // reporter is the address of the reporter being delegated to
   bytes reporter = 1;
-  // locked_until_time is the time until which the tokens are locked before they
-  // can be used for reporting again
+  // locked_until_time — non-dispute / legacy stake exclusion only (e.g. pre-upgrade switch locks).
   google.protobuf.Timestamp locked_until_time = 2 [
     (gogoproto.nullable) = false,
     (gogoproto.stdtime) = true
   ];
   // delegations_count is the number of delegations to the reporter
   uint64 delegations_count = 3;
+  // switch_out_locked_until_block is the block height until which this selector
+  // cannot initiate another reporter switch while a handoff is incomplete: it
+  // stores the oracle snapshot (max open query expiration for the outgoing
+  // reporter at schedule time). Cleared when the pending switch is finalized.
+  uint64 switch_out_locked_until_block = 4;
+  // dispute_locked_until — dispute jail only; max on set; never copied to locked_until_time.
+  google.protobuf.Timestamp dispute_locked_until = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
+  ];
+}
+
+// Pending switch keyed by (outgoing_reporter, selector) in keeper collections.
+message PendingSwitchEntry {
+  bytes to_reporter = 1;
+  uint64 unlock_block = 2;
+}
+
+// Single-reporter summary for O(1) checks in ReporterStake: one Get per reporter
+// to see if any pending switch involving this reporter may be ready at height.
+message ReporterPendingSwitchHead {
+  uint32 outgoing_count = 1;
+  uint64 outgoing_min_unlock = 2;
+  uint32 incoming_count = 3;
+  uint64 incoming_min_unlock = 4;
 }
 
 // IndividualDelegation represents a single delegation to a validator
@@ -54,6 +78,11 @@ message FormattedSelection {
   ];
   // individual_delegations contains details of each delegation (only populated when delegations_count > 1)
   repeated IndividualDelegation individual_delegations = 5;
+  // dispute_locked_until — dispute jail only (query surface).
+  google.protobuf.Timestamp dispute_locked_until = 6 [
+    (gogoproto.nullable) = false,
+    (gogoproto.stdtime) = true
+  ];
 }
 
 message SelectorShare {

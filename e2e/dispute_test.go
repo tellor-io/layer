@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
 	layerutil "github.com/tellor-io/layer/testutil"
+	layertypes "github.com/tellor-io/layer/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 
 	"cosmossdk.io/math"
@@ -46,6 +47,14 @@ const (
 
 	notFromBond = "false"
 )
+
+// minorDisputeFeeFromReportPower matches x/dispute keeper GetDisputeFee for minor disputes (5% of report bond).
+func minorDisputeFeeFromReportPower(reportPower uint64) math.Int {
+	stake := layertypes.PowerReduction.MulRaw(int64(reportPower))
+	stakeDec := math.LegacyNewDecFromInt(stake)
+	feeDec := stakeDec.Mul(math.LegacyNewDec(5)).Quo(math.LegacyNewDec(100))
+	return feeDec.TruncateInt()
+}
 
 type QueryData struct {
 	QueryData string
@@ -1045,17 +1054,17 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.Error(err)
 	fmt.Println("TX HASH (user1 tries to remove self as selector): ", txHash)
 
-	// user1 tries to become a selector, cant because of reporting in the last 21 days
+	// user1 switches reporter to user0 (solo reporter: no 21-day block; pending switch until finalize)
 	txHash, err = val1.ExecTx(ctx, user1Addr, "reporter", "switch-reporter", user0Addr, "--keyring-dir", val1.HomeDir())
-	require.Error(err)
-	fmt.Println("TX HASH (user1 tries to become a selector): ", txHash)
+	require.NoError(err)
+	fmt.Println("TX HASH (user1 switches reporter to user0): ", txHash)
 
 	// check reporter module
 	res, _, err = e2e.QueryWithTimeout(ctx, val1, "reporter", "reporters")
 	require.NoError(err)
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
-	require.Equal(len(reportersRes.Reporters), numReporters+1) // 2 reporters + 1 validator reporter
+	require.Equal(len(reportersRes.Reporters), numReporters) // 2 reporters (the third reporter was deleted )
 	fmt.Println("reportersRes: ", reportersRes)
 
 	// user1 redelegates to val2
@@ -1261,17 +1270,7 @@ func TestEscalatingDispute(t *testing.T) {
 	require.Equal(disputes.Disputes[0].Metadata.FeeTotal, "10000000") // 10 * 1e6 is 1% of 1000
 	fmt.Println("open dispute: ", disputes.Disputes[0])
 
-	// try to open minor dispute on same report, errors with cannot jail already jailed reporter
-	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "minor", "1000000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
-	require.Error(err)
-	fmt.Println("TX HASH (user0 opens minor dispute): ", txHash)
-
-	// user1 unjails reporter
-	txHash, err = val1.Node.ExecTx(ctx, user1Addr, "reporter", "unjail-reporter", "--keyring-dir", val1.Node.HomeDir())
-	require.NoError(err)
-	fmt.Println("TX HASH (user1 unjails reporter): ", txHash)
-
-	// user0 opens minor dispute on same report
+	// user0 opens minor dispute on same report (jailed reporter can be jailed again; idempotent jail)
 	txHash, err = val1.Node.ExecTx(ctx, user0Addr, "dispute", "propose-dispute", reports.MicroReports[0].Reporter, reports.MicroReports[0].MetaId, reports.MicroReports[0].QueryID, "minor", "1000000000loya", "true", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 	fmt.Println("TX HASH (user0 opens minor dispute): ", txHash)
@@ -1894,7 +1893,7 @@ func TestEverybodyDisputed_NotConsensus_Consensus(t *testing.T) {
 
 	// unjail reporters
 	for i, usr := range userReports {
-		txHash, err = val1.Node.ExecTx(ctx, usr.UserReport.MicroReports[0].Reporter, "reporter", "unjail-reporter", "--keyring-dir", val1.Node.HomeDir())
+		txHash, err = val1.Node.ExecTx(ctx, usr.UserReport.MicroReports[0].Reporter, "reporter", "unjail-reporter", usr.UserReport.MicroReports[0].Reporter, "--keyring-dir", val1.Node.HomeDir())
 		require.NoError(err)
 		fmt.Println("TX HASH (user", i, "unjails reporter): ", txHash)
 	}
@@ -2376,8 +2375,14 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 
 	cosmos.SetSDKConfig("tellor")
 
-	// Use standard configuration
-	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	// Short SpotPrice commitment window so self-demotion can proceed after a few blocks.
+	config := e2e.DefaultSetupConfig()
+	config.NumValidators = 2
+	config.NumFullNodes = 0
+	config.ModifyGenesis = append(config.ModifyGenesis,
+		cosmos.NewGenesisKV("app_state.registry.dataspec.0.report_block_window", "5"),
+	)
+	chain, ic, ctx := e2e.SetupChainWithCustomConfig(t, config)
 	defer ic.Close()
 
 	// Get validators using the helper
@@ -2431,10 +2436,13 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	fmt.Println("reports from val2: ", reportsRes)
 	require.NotEmpty(reportsRes.MicroReports, "val2 should have reports after aggregation")
 
-	// val2 tries to become a selector for val1 instead of a reporter, shouldnt be allowed because of reporting in the last 21 days
+	// Wait until val2's max open commitment height has passed before self-demotion.
+	require.NoError(testutil.WaitForBlocks(ctx, 8, val1.Node))
+
+	// val2 switches reporter to val1 (solo reporter: pending switch; selector stays on val2 until finalize)
 	txHash, err := val2.Node.ExecTx(ctx, val2.AccAddr, "reporter", "switch-reporter", val1.AccAddr, "--keyring-dir", val2.Node.HomeDir())
-	require.Error(err)
-	fmt.Println("TX HASH (val2 fails to become a selector): ", txHash)
+	require.NoError(err)
+	fmt.Println("TX HASH (val2 switches reporter to val1): ", txHash)
 
 	// verify val2 is still a selector for themselves (default reporter state)
 	res, _, err := e2e.QueryWithTimeout(ctx, val1.Node, "reporter", "selector-reporter", val2.AccAddr)
@@ -2446,10 +2454,10 @@ func TestReporterShuffleAndDispute(t *testing.T) {
 	require.Equal(selectorRes.Reporter, val2.AccAddr)
 
 	// make third party user to dispute
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
 	keyname := "user1"
 	fundAmt := math.NewInt(100_000 * 1e6)
 	user := interchaintest.GetAndFundTestUsers(t, ctx, keyname, fundAmt, chain)[0]
-	fmt.Println("user: ", user)
 	userAddr := user.FormattedAddress()
 
 	// user1 disputes val1's report
@@ -2779,4 +2787,213 @@ func TestGroupPowers(t *testing.T) {
 	err = json.Unmarshal(disRes, &disputes)
 	require.NoError(err)
 	require.Equal(disputes.Disputes[0].Metadata.DisputeStatus, "DISPUTE_STATUS_RESOLVED") // executed
+}
+
+// TestReporterSwitchDisputeSelectorStakeE2E exercises fast SpotPrice switch finalization, then a minor
+// dispute on reporter A's pre-switch report. Selector oracle power on B must exclude/include around jail.
+//
+// 1. Two validators + external selector on val0; SpotPrice report on val0 (record meta/query)
+// 2. Baseline: val0 report power includes selector; val1 reporter query power does not
+// 3. Selector switch-reporter val1; val1 SpotPrice submit-value finalizes switch (report power + reporter query)
+// 4. Full minor dispute fee on val0's pre-switch report → voting + selector dispute lock
+// 5. While dispute-locked: val1 reporter query and report power exclude selector vs step 3
+// 6. Wall-clock sleep 601s (minor jail duration is 600s of chain block time; blocks must advance)
+// 7. val1 reports again; reporter query and report power regain selector stake
+func TestReporterSwitchDisputeSelectorStakeE2E(t *testing.T) {
+	require := require.New(t)
+
+	cosmos.SetSDKConfig("tellor")
+
+	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	defer ic.Close()
+
+	validators, err := e2e.GetValidators(ctx, chain)
+	require.NoError(err)
+	val0, val1 := validators[0], validators[1]
+
+	require.NoError(e2e.TurnOnMinting(ctx, chain, val0.Node))
+	require.NoError(testutil.WaitForBlocks(ctx, 7, val0.Node))
+
+	for i, val := range validators {
+		_, err := val.Node.ExecTx(ctx, val.AccAddr, "reporter", "create-reporter", commissRate, "1000000", fmt.Sprintf("switch_e2e_%d", i), "--keyring-dir", val.Node.HomeDir())
+		require.NoError(err)
+	}
+
+	fundAmt := math.NewInt(5_000 * 1e6)
+	delegateAmt := sdk.NewCoin("loya", math.NewInt(1000*1e6))
+	selector := interchaintest.GetAndFundTestUsers(t, ctx, "switch_selector", fundAmt, chain)[0]
+	selectorAddr := selector.FormattedAddress()
+
+	_, err = val0.Node.ExecTx(ctx, selectorAddr, "staking", "delegate", val0.ValAddr, delegateAmt.String(), "--keyring-dir", val0.Node.HomeDir(), "--fees", "10loya")
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	_, err = val0.Node.ExecTx(ctx, selectorAddr, "reporter", "select-reporter", val0.AccAddr, "--keyring-dir", val0.Node.HomeDir(), "--fees", "5loya")
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	spotValue := layerutil.EncodeValue(50000.99)
+	tip := sdk.NewCoin("loya", math.NewInt(1*1e6))
+
+	// SpotPrice on val0 (reporter A) — report disputed later.
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val0.Node))
+	_, _, err = val0.Node.Exec(ctx, val0.Node.TxCommand(val0.AccAddr, "oracle", "tip", bnbQData, tip.String(), "--fees", "25loya", "--keyring-dir", val0.Node.HomeDir()), val0.Node.Chain.Config().Env)
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val0.Node))
+	_, err = val0.Node.ExecTx(ctx, val0.AccAddr, "oracle", "submit-value", bnbQData, spotValue, "--keyring-dir", val0.Node.HomeDir(), "--gas", "500000", "--fees", "25loya")
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	reportsA, _, err := e2e.QueryWithTimeout(ctx, val0.Node, "oracle", "get-reportsby-reporter", val0.AccAddr, "--page-limit", "1")
+	require.NoError(err)
+	var reportsARes e2e.QueryMicroReportsResponse
+	require.NoError(json.Unmarshal(reportsA, &reportsARes))
+	require.NotEmpty(reportsARes.MicroReports)
+	disputedReport := reportsARes.MicroReports[0]
+	require.Equal("SpotPrice", disputedReport.QueryType)
+	powerA0, err := strconv.ParseUint(disputedReport.Power, 10, 64)
+	require.NoError(err)
+
+	stakeBBase, err := e2e.QueryReporterPower(ctx, val1.Node, val1.AccAddr)
+	require.NoError(err)
+	require.Greater(powerA0, stakeBBase, "val0 report power should include selector stake; val1 reporter query should not")
+
+	_, err = val0.Node.ExecTx(ctx, selectorAddr, "reporter", "switch-reporter", val1.AccAddr, "--keyring-dir", val0.Node.HomeDir(), "--fees", "5loya")
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	// Pending switch stays on val0 until ReporterStake runs after height > open commitment
+	// (SpotPrice report_block_window is 2). val1's submit-value triggers finalize.
+	resPending, _, err := e2e.QueryWithTimeout(ctx, val0.Node, "reporter", "selector-reporter", selectorAddr)
+	require.NoError(err)
+	var selectorPending e2e.QuerySelectorReporterResponse
+	require.NoError(json.Unmarshal(resPending, &selectorPending))
+	require.Equal(val0.AccAddr, selectorPending.Reporter,
+		"switch must not be finalized before val1 SpotPrice report (selector still on outgoing reporter)")
+
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
+	_, _, err = val1.Node.Exec(ctx, val1.Node.TxCommand(val1.AccAddr, "oracle", "tip", xrpQData, tip.String(), "--fees", "25loya", "--keyring-dir", val1.Node.HomeDir()), val1.Node.Chain.Config().Env)
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
+	_, err = val1.Node.ExecTx(ctx, val1.AccAddr, "oracle", "submit-value", xrpQData, spotValue, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "25loya")
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val1.Node))
+
+	res, _, err := e2e.QueryWithTimeout(ctx, val0.Node, "reporter", "selector-reporter", selectorAddr)
+	require.NoError(err)
+	var selectorRes e2e.QuerySelectorReporterResponse
+	require.NoError(json.Unmarshal(res, &selectorRes))
+	require.Equal(val1.AccAddr, selectorRes.Reporter,
+		"switch must finalize on val1 submit-value after SpotPrice open commitment")
+	require.NotEqual(val0.AccAddr, selectorRes.Reporter,
+		"selector must not remain on val0 after finalize")
+
+	stakeBAfterSwitch, err := e2e.QueryReporterPower(ctx, val1.Node, val1.AccAddr)
+	require.NoError(err)
+	require.Greater(stakeBAfterSwitch, stakeBBase, "val1 reporter query should include selector stake after switch finalize")
+
+	reportsB1, _, err := e2e.QueryWithTimeout(ctx, val1.Node, "oracle", "get-reportsby-reporter", val1.AccAddr, "--page-limit", "5")
+	require.NoError(err)
+	var reportsB1Res e2e.QueryMicroReportsResponse
+	require.NoError(json.Unmarshal(reportsB1, &reportsB1Res))
+	var switchReport *e2e.MicroReport
+	for i := range reportsB1Res.MicroReports {
+		if reportsB1Res.MicroReports[i].QueryID == xrpQId {
+			switchReport = &reportsB1Res.MicroReports[i]
+			break
+		}
+	}
+	require.NotNil(switchReport, "val1 XRP SpotPrice report must exist after switch finalize")
+	powerBSwitchReport, err := strconv.ParseUint(switchReport.Power, 10, 64)
+	require.NoError(err)
+	require.Equal(stakeBAfterSwitch, powerBSwitchReport,
+		"switch-finalize report power must match reporter stake query")
+
+	// Pay the full minor fee in one propose (triggers jail + voting), same as integration proposeFullMinorDispute.
+	minorFeeAmt := minorDisputeFeeFromReportPower(powerA0)
+	minorFeeCoin := sdk.NewCoin("loya", minorFeeAmt)
+	disputerFund := minorFeeAmt.Add(math.NewInt(100_000 * 1e6)) // fee + gas headroom
+	disputer := interchaintest.GetAndFundTestUsers(t, ctx, "disputer", disputerFund, chain)[0]
+	disputerAddr := disputer.FormattedAddress()
+	_, err = val0.Node.ExecTx(ctx, disputerAddr, "dispute", "propose-dispute",
+		disputedReport.Reporter, disputedReport.MetaId, disputedReport.QueryID,
+		"minor", minorFeeCoin.String(), notFromBond,
+		"--keyring-dir", val0.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	disRes, _, err := e2e.QueryWithTimeout(ctx, val0.Node, "dispute", "disputes")
+	require.NoError(err)
+	var disputes e2e.Disputes2
+	require.NoError(json.Unmarshal(disRes, &disputes))
+	require.Len(disputes.Disputes, 1)
+	disputeMeta := disputes.Disputes[0].Metadata
+	require.Equal("DISPUTE_STATUS_VOTING", disputeMeta.DisputeStatus, "full minor fee must jail reporter and open voting")
+	require.Equal(minorFeeAmt.String(), disputeMeta.FeeTotal)
+	require.Equal(disputeMeta.FeeTotal, disputeMeta.SlashAmount)
+	require.Equal(disputeMeta.DisputeFee, disputeMeta.FeeTotal)
+
+	// val1 reports again while selector is dispute-locked.
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
+	_, _, err = val1.Node.Exec(ctx, val1.Node.TxCommand(val1.AccAddr, "oracle", "tip", solQData, tip.String(), "--fees", "25loya", "--keyring-dir", val1.Node.HomeDir()), val1.Node.Chain.Config().Env)
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
+	_, err = val1.Node.ExecTx(ctx, val1.AccAddr, "oracle", "submit-value", solQData, spotValue, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "25loya")
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val1.Node))
+
+	stakeBLocked, err := e2e.QueryReporterPower(ctx, val1.Node, val1.AccAddr)
+	require.NoError(err)
+	require.Equal(stakeBBase, stakeBLocked, "dispute-locked selector must not count toward val1 reporter query power")
+
+	reportsBLocked, _, err := e2e.QueryWithTimeout(ctx, val1.Node, "oracle", "get-reportsby-reporter", val1.AccAddr, "--page-limit", "10")
+	require.NoError(err)
+	var reportsBLockedRes e2e.QueryMicroReportsResponse
+	require.NoError(json.Unmarshal(reportsBLocked, &reportsBLockedRes))
+	var lockedReport *e2e.MicroReport
+	for i := range reportsBLockedRes.MicroReports {
+		if reportsBLockedRes.MicroReports[i].QueryID == solQId {
+			lockedReport = &reportsBLockedRes.MicroReports[i]
+			break
+		}
+	}
+	require.NotNil(lockedReport, "val1 SOL SpotPrice report must exist while dispute-locked")
+	powerBLocked, err := strconv.ParseUint(lockedReport.Power, 10, 64)
+	require.NoError(err)
+	require.Equal(stakeBLocked, powerBLocked, "dispute-locked report power must match reporter stake query")
+	require.Less(powerBLocked, powerBSwitchReport, "dispute-locked selector must not count toward val1 report power")
+
+	// Minor jail uses 600s wall clock; integration tests advance BlockTime, e2e uses real sleep.
+	time.Sleep(601 * time.Second)
+
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
+	_, _, err = val1.Node.Exec(ctx, val1.Node.TxCommand(val1.AccAddr, "oracle", "tip", dotQData, tip.String(), "--fees", "25loya", "--keyring-dir", val1.Node.HomeDir()), val1.Node.Chain.Config().Env)
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
+	_, err = val1.Node.ExecTx(ctx, val1.AccAddr, "oracle", "submit-value", dotQData, spotValue, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "25loya")
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val1.Node))
+
+	stakeBUnlocked, err := e2e.QueryReporterPower(ctx, val1.Node, val1.AccAddr)
+	require.NoError(err)
+	require.Greater(stakeBUnlocked, stakeBBase, "val1 reporter query should regain selector stake after dispute lock expiry")
+	require.Greater(stakeBUnlocked, stakeBLocked)
+
+	reportsBUnlocked, _, err := e2e.QueryWithTimeout(ctx, val1.Node, "oracle", "get-reportsby-reporter", val1.AccAddr, "--page-limit", "15")
+	require.NoError(err)
+	var reportsBUnlockedRes e2e.QueryMicroReportsResponse
+	require.NoError(json.Unmarshal(reportsBUnlocked, &reportsBUnlockedRes))
+	var unlockedReport *e2e.MicroReport
+	for i := range reportsBUnlockedRes.MicroReports {
+		if reportsBUnlockedRes.MicroReports[i].QueryID == dotQId {
+			unlockedReport = &reportsBUnlockedRes.MicroReports[i]
+			break
+		}
+	}
+	require.NotNil(unlockedReport, "val1 DOT SpotPrice report must exist after dispute lock expiry")
+	powerBUnlocked, err := strconv.ParseUint(unlockedReport.Power, 10, 64)
+	require.NoError(err)
+	require.Equal(stakeBUnlocked, powerBUnlocked,
+		"post-unlock report power must match reporter stake query")
+	require.Greater(powerBUnlocked, powerBLocked, "val1 report power should regain selector stake after dispute lock expiry")
 }

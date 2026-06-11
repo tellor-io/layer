@@ -108,6 +108,7 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		if err != nil {
 			return err
 		}
+
 		// cleanup aggregation data that is no longer needed
 		if err = k.cleanupAggregationData(ctx, query.Id); err != nil {
 			return err
