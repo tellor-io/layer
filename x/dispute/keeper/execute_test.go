@@ -93,12 +93,12 @@ func (k *KeeperTestSuite) TestRefundDisputeFee() {
 
 	k.reporterKeeper.On("FeeRefund", k.ctx, []byte("hash"), math.NewInt(760)).Return(nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(760)))).Return(nil)
-	dust, err := k.disputeKeeper.RefundDisputeFee(k.ctx, feepayer1, feePayers[0], math.NewInt(1000), []byte("hash"), math.NewInt(1000))
+	dust, err := k.disputeKeeper.RefundDisputeFee(k.ctx, feepayer1, feePayers[0], math.NewInt(1000), []byte("hash"))
 	k.NoError(err)
 	k.True(math.ZeroInt().Equal(dust))
 
 	k.bankKeeper.On("SendCoinsFromModuleToAccount", k.ctx, types.ModuleName, feepayer2, sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(190)))).Return(nil)
-	dust, err = k.disputeKeeper.RefundDisputeFee(k.ctx, feepayer2, feePayers[1], math.NewInt(1000), []byte("hash"), math.NewInt(1000))
+	dust, err = k.disputeKeeper.RefundDisputeFee(k.ctx, feepayer2, feePayers[1], math.NewInt(1000), []byte("hash"))
 	k.NoError(err)
 	k.True(math.ZeroInt().Equal(dust))
 }
@@ -155,23 +155,22 @@ func (k *KeeperTestSuite) TestRewardReporterBondToFeePayers() {
 	k.Equal(shareFixed12.Mod(layertypes.PowerReduction), dust)
 }
 
-func (k *KeeperTestSuite) TestGetSumOfAllGroupVotesAllRounds() {
+func (k *KeeperTestSuite) TestGetSumOfUserAndReporterVotesAllRounds() {
 	k.ctx = k.ctx.WithBlockTime(time.Now())
 	dispute := k.dispute(k.ctx)
 	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, dispute.DisputeId, dispute))
 
-	// set vote counts for current dispute
+	// set vote counts for current dispute; team votes are set but must not be counted
 	currentVoteCounts := types.StakeholderVoteCounts{
 		Users:     types.VoteCounts{Support: 10, Against: 5, Invalid: 2}, // 17
 		Reporters: types.VoteCounts{Support: 8, Against: 3, Invalid: 1},  // 12
-		// Tokenholders: types.VoteCounts{Support: 15, Against: 7, Invalid: 3}, // 25
-		Team: types.VoteCounts{Support: 5, Against: 2, Invalid: 1}, // 8 total=37
+		Team:      types.VoteCounts{Support: 5, Against: 2, Invalid: 1},  // excluded, total=29
 	}
 	k.NoError(k.disputeKeeper.VoteCountsByGroup.Set(k.ctx, dispute.DisputeId, currentVoteCounts))
 
 	// test no previous disputes
-	expectedTotalSum := math.NewInt(37)
-	totalSum, err := k.disputeKeeper.GetSumOfAllGroupVotesAllRounds(k.ctx, dispute.DisputeId)
+	expectedTotalSum := math.NewInt(29)
+	totalSum, err := k.disputeKeeper.GetSumOfUserAndReporterVotesAllRounds(k.ctx, dispute.DisputeId)
 	k.NoError(err)
 	k.True(expectedTotalSum.Equal(totalSum))
 
@@ -181,20 +180,17 @@ func (k *KeeperTestSuite) TestGetSumOfAllGroupVotesAllRounds() {
 		{
 			Users:     types.VoteCounts{Support: 5, Against: 3, Invalid: 1}, // 9
 			Reporters: types.VoteCounts{Support: 4, Against: 2, Invalid: 0}, // 6
-			// Tokenholders: types.VoteCounts{Support: 8, Against: 4, Invalid: 2}, // 14
-			Team: types.VoteCounts{Support: 3, Against: 1, Invalid: 0}, // 4 total=19
+			Team:      types.VoteCounts{Support: 3, Against: 1, Invalid: 0}, // excluded, total=15
 		},
 		{
 			Users:     types.VoteCounts{Support: 7, Against: 4, Invalid: 2}, // 13
 			Reporters: types.VoteCounts{Support: 6, Against: 3, Invalid: 1}, // 10
-			// Tokenholders: types.VoteCounts{Support: 10, Against: 5, Invalid: 2}, // 17
-			Team: types.VoteCounts{Support: 4, Against: 2, Invalid: 1}, // 7 total=30
+			Team:      types.VoteCounts{Support: 4, Against: 2, Invalid: 1}, // excluded, total=23
 		},
 		{
 			Users:     types.VoteCounts{Support: 3, Against: 2, Invalid: 0}, // 5
 			Reporters: types.VoteCounts{Support: 2, Against: 1, Invalid: 0}, // 3
-			// Tokenholders: types.VoteCounts{Support: 5, Against: 3, Invalid: 1}, // 9
-			Team: types.VoteCounts{Support: 2, Against: 1, Invalid: 0}, // 3 total=11
+			Team:      types.VoteCounts{Support: 2, Against: 1, Invalid: 0}, // excluded, total=8
 		},
 	}
 
@@ -205,15 +201,15 @@ func (k *KeeperTestSuite) TestGetSumOfAllGroupVotesAllRounds() {
 
 	k.NoError(k.disputeKeeper.Disputes.Set(k.ctx, dispute.DisputeId, dispute))
 
-	// Calculate the expected total sum
+	// Calculate the expected total sum (team votes excluded)
 	expectedTotalSum = math.NewInt(0).
-		Add(math.NewInt(int64(17 + 12 + 8))). // Current dispute
-		Add(math.NewInt(int64(9 + 6 + 4))).   // Previous dispute 1
-		Add(math.NewInt(int64(13 + 10 + 7))). // Previous dispute 2
-		Add(math.NewInt(int64(5 + 3 + 3)))    // Previous dispute 3
+		Add(math.NewInt(int64(17 + 12))). // Current dispute
+		Add(math.NewInt(int64(9 + 6))).   // Previous dispute 1
+		Add(math.NewInt(int64(13 + 10))). // Previous dispute 2
+		Add(math.NewInt(int64(5 + 3)))    // Previous dispute 3
 
 	// Call the function and check the result
-	totalSum, err = k.disputeKeeper.GetSumOfAllGroupVotesAllRounds(k.ctx, dispute.DisputeId)
+	totalSum, err = k.disputeKeeper.GetSumOfUserAndReporterVotesAllRounds(k.ctx, dispute.DisputeId)
 	k.NoError(err)
 	k.True(expectedTotalSum.Equal(totalSum))
 }

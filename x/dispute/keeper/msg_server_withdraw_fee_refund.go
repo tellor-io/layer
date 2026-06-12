@@ -32,10 +32,8 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 
 	// get previous disputes
 	prevDisputes := dispute.PrevDisputeIds
-	var firstRoundDisputeId uint64
-	if len(prevDisputes) == 0 {
-		firstRoundDisputeId = msg.Id
-	} else {
+	firstRoundDisputeId := msg.Id
+	if len(prevDisputes) > 0 {
 		firstRoundDisputeId = prevDisputes[0]
 	}
 
@@ -68,20 +66,20 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 
 		switch vote.VoteResult {
 		case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
-			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.FeeTotal, dispute.HashId, dispute.SlashAmount)
+			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.SlashAmount, dispute.HashId)
 			if err != nil {
 				return nil, err
 			}
 			remainder = remainder.Add(fraction)
 		case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
-			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.FeeTotal, dispute.HashId, dispute.SlashAmount)
+			fraction, err := k.RefundDisputeFee(ctx, feePayer, payerInfo, dispute.SlashAmount, dispute.HashId)
 			if err != nil {
 				return nil, err
 			}
 
 			remainder = remainder.Add(fraction)
 
-			fraction, err = k.RewardReporterBondToFeePayers(ctx, feePayer, payerInfo, dispute.FeeTotal, dispute.SlashAmount)
+			fraction, err = k.RewardReporterBondToFeePayers(ctx, feePayer, payerInfo, dispute.SlashAmount, dispute.SlashAmount)
 			if err != nil {
 				return nil, err
 			}
