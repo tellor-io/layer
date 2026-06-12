@@ -7,6 +7,7 @@
 ## Changelog
 
 - 2026-06-12: initial version
+- 2026-06-12: disable interchain accounts (host and controller) in the same upgrade after finding mainnet's ICA host allowlist set to `["*"]`; only interchain queries remain supported
 
 ## Context
 
@@ -53,6 +54,8 @@ The delegator cap is hardcoded; this one cannot be, for a practical reason: the 
 
 Handler checks see authoritative state and are simpler to write, but they split the concentration limits across two mechanisms (staking messages can only be intercepted in ante), they burn the user's fee on failure instead of rejecting at the mempool, and they cannot see the combined effect of multiple messages in one transaction the way the existing projection tracker does. Keeping everything in the one decorator that already owns stake-concentration policy was judged clearer.
 
+Ante-only enforcement is sound only if no execution path runs messages without the ante chain. The one such path in the app was the ICA host, which executes ICA-relayed messages straight through the `MsgServiceRouter` — and mainnet's ICA host allowlist was found set to `["*"]` (verified against `mainnet.tellorlayer.com`), meaning ICA could bypass not just this cap but the pre-existing delegator cap and 5% tracker. Rather than duplicating every ante check into handlers, the v6.1.7 upgrade disables interchain accounts entirely (see Issues).
+
 ### Maintain a materialized per-reporter power total in state
 
 A running tally updated by staking hooks would make the cap check O(1). It was rejected because reporter power is not an additive function of delegation events: it changes when validators enter or leave the bonded set, when selector locks expire, when switches finalize, and when reporters are jailed. The module already chose lazy recomputation with recalc flags (`ReporterStake`) instead of incremental maintenance for exactly this reason; a second, parallel incremental tally would be a standing source of consensus-risk bugs. The cap check instead recomputes the affected reporter's potential stake on demand, bounded by `max_selectors × max_num_of_delegations` (≤ ~1,000 store reads) and paid for by the transaction's gas.
@@ -67,6 +70,7 @@ Breaks chain bootstrap and most of the existing test infrastructure, as describe
 
 ## Issues / Notes on Implementation
 
+- **Interchain accounts are disabled; interchain queries stay.** ICA-executed messages reach module handlers through the `MsgServiceRouter` without the ante chain, so an enabled ICA host with a permissive allowlist (mainnet had `allow_messages: ["*"]`) bypasses every ante-enforced limit: the 5% stake tracker, the 30% delegator cap, max delegations, and this reporter power cap. The v6.1.7 upgrade sets `host_enabled: false` with an empty allowlist and `controller_enabled: false`, and the app's default genesis ships both disabled, so new chains start safe. The async-ICQ module (used to serve oracle data to counterparty chains) does not execute messages and remains enabled. If ICA is ever wanted again, re-enabling via governance must come with a strict `allow_messages` list that excludes staking and reporter messages — or with these limits duplicated in message handlers.
 - **Passive drift is not blocked.** A reporter's share can still reach 30% without any blockable transaction: total bonded stake shrinking (bounded by the existing 5%-per-12h tracker), validators entering/leaving the bonded set at end-block (jailing, slashing), dispute resolutions re-delegating returned stake, selectors' dispute locks expiring, and tip withdrawals delegating small amounts (`MsgWithdrawTip` performs a delegation outside the tracked staking messages — a pre-existing gap shared with the delegator cap, negligible in magnitude). Under the activation assumption (nobody at/over cap) plus the acquisition checks, drift past the cap requires the denominator to move against an already-near-cap reporter. If observed, phase 2 (report-time clamping) closes it.
 - **Conservative overcounting is accepted.** Counting dispute-locked selectors and pending incoming switches means the check can reject a transaction even though the reporter's instantaneous reporting power is below the cap. This errs on the side of the invariant and avoids time-dependent loopholes (jail/lock windows as accumulation vehicles). Jailed reporters are checked the same as active ones for the same reason.
 - **Gas cost.** Selecting to or delegating under a reporter with many selectors now performs a bounded selector scan in ante (comparable to what `SubmitValue` already does on every report). The scan consumes gas through normal store reads plus an explicit per-selector charge, mirroring the active-set scan precedent in the same decorator, so it cannot be used as a free-compute DoS vector.
