@@ -386,25 +386,31 @@ func (k Querier) ClaimableDisputeRewards(ctx context.Context, req *types.QueryCl
 
 	// Calculate Voter Reward
 	if dispute.DisputeStatus == types.Resolved {
-		// Check if they voted
+		// Mirror ClaimReward: the final-round Voter record only tracks claim status
+		// (ClaimReward stores RewardClaimed under the final round id), while
+		// CalculateReward scans every round, so an address that voted only in a
+		// previous round is still eligible without a final-round Voter record
 		voterInfo, err := k.Keeper.Voter.Get(ctx, collections.Join(req.DisputeId, addr.Bytes()))
 		if err == nil {
-			// Found voter info
 			rewardClaimed = voterInfo.RewardClaimed
-			if !voterInfo.RewardClaimed {
-				// They voted and haven't claimed yet
-				// CalculateReward checks if vote.Executed and other conditions
-				reward, err := k.Keeper.CalculateReward(sdkCtx, addr, req.DisputeId)
-				if err == nil {
-					rewardAmount = reward
-				}
+		}
+		if !rewardClaimed {
+			// CalculateReward checks vote.Executed and returns zero for non-voters
+			reward, err := k.Keeper.CalculateReward(sdkCtx, addr, req.DisputeId)
+			if err == nil {
+				rewardAmount = reward
 			}
 		}
 	}
 
 	// Calculate Fee Refund
-	// Check if they are a fee payer for the first round
-	payerInfo, err := k.Keeper.DisputeFeePayer.Get(ctx, collections.Join(req.DisputeId, addr.Bytes()))
+	// Fee payer records are stored under the first-round dispute id only; resolve it the
+	// same way WithdrawFeeRefund does so queries for a final round still find the payer
+	firstRoundDisputeId := req.DisputeId
+	if len(dispute.PrevDisputeIds) > 0 {
+		firstRoundDisputeId = dispute.PrevDisputeIds[0]
+	}
+	payerInfo, err := k.Keeper.DisputeFeePayer.Get(ctx, collections.Join(firstRoundDisputeId, addr.Bytes()))
 	if err == nil {
 		// Address is a fee payer
 		switch dispute.DisputeStatus {
@@ -416,14 +422,14 @@ func (k Querier) ClaimableDisputeRewards(ctx context.Context, req *types.QueryCl
 			if err == nil && vote.Executed {
 				switch vote.VoteResult {
 				case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
-					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount, dispute.FeeTotal)
+					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount)
 					feeRefundAmount = feeRefundAmount.Add(refund)
 
 				case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
-					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount, dispute.FeeTotal)
+					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount)
 					feeRefundAmount = feeRefundAmount.Add(refund)
 
-					reward, _ := CalculateReporterBondRewardAmount(payerInfo.Amount, dispute.FeeTotal, dispute.SlashAmount)
+					reward, _ := CalculateReporterBondRewardAmount(payerInfo.Amount, dispute.SlashAmount, dispute.SlashAmount)
 					feeRefundAmount = feeRefundAmount.Add(reward)
 				}
 			}

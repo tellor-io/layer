@@ -1154,7 +1154,7 @@ func (s *IntegrationTestSuite) TestDisputeFiveRounds5thRdNewPayer() {
 	s.NoError(err)
 	s.Equal(types.Resolved, dispute.DisputeStatus)
 	fmt.Println("DISPUTE FEE TOTAL", dispute.FeeTotal.String())
-	expectedClaimAmount := dispute.FeeTotal.MulRaw(95).QuoRaw(100)
+	expectedClaimAmount := dispute.DisputeFee.MulRaw(95).QuoRaw(100)
 	fmt.Println("EXPECTED CLAIM AMOUNT", expectedClaimAmount)
 
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
@@ -1535,7 +1535,7 @@ func (s *IntegrationTestSuite) TestDisputeFiveRounds1Payer() {
 	s.NoError(err)
 	s.Equal(types.Resolved, dispute.DisputeStatus)
 	fmt.Println("DISPUTE FEE TOTAL", dispute.FeeTotal.String())
-	expectedClaimAmount := dispute.FeeTotal.MulRaw(95).QuoRaw(100)
+	expectedClaimAmount := dispute.SlashAmount.MulRaw(95).QuoRaw(100)
 	fmt.Println("EXPECTED CLAIM AMOUNT", expectedClaimAmount)
 
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
@@ -1945,7 +1945,7 @@ func (s *IntegrationTestSuite) TestDisputeFiveRoundsTwoFeePayers() {
 	s.NoError(err)
 	s.Equal(types.Resolved, dispute.DisputeStatus)
 	fmt.Println("DISPUTE FEE TOTAL", dispute.FeeTotal.String())
-	expectedClaimAmountTotal := dispute.FeeTotal.MulRaw(95).QuoRaw(100)
+	expectedClaimAmountTotal := dispute.DisputeFee.MulRaw(95).QuoRaw(100)
 	fmt.Println("EXPECTED CLAIM AMOUNT TOTAL", expectedClaimAmountTotal)
 
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
