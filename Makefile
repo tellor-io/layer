@@ -80,6 +80,7 @@ build-with-checksum: build-linux-with-checksum build-darwin-with-checksum
 ###############################################################################
 # Golangci-lint version
 golangci_version=v1.64.0
+golangci_toolchain=go1.24.13
 
 #? setup-pre-commit: Set pre-commit git hook
 setup-pre-commit:
@@ -91,7 +92,7 @@ setup-pre-commit:
 #? lint-install: Install golangci-lint
 lint-install:
 	@echo "--> Installing golangci-lint $(golangci_version)"
-	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
+	@GOTOOLCHAIN=$(golangci_toolchain) go install github.com/golangci/golangci-lint/cmd/golangci-lint@$(golangci_version)
 
 #? lint: Run golangci-lint
 lint:
@@ -295,7 +296,7 @@ local-image:
 ifeq (,$(shell which heighliner))
 	echo 'heighliner' binary not found. Consider running `make get-heighliner`
 else
-	heighliner build -c layer --local --dockerfile cosmos --go-version "1.23.2-alpine3.20" --build-target "make install" --binaries "/go/bin/layerd"
+	heighliner build -c layer --local --dockerfile cosmos --go-version "1.24.13-alpine3.20" --build-target "make install" --binaries "/go/bin/layerd"
 endif
 
 get-localic:

@@ -38,7 +38,7 @@ func DecodeValue(value, datatype string) ([]interface{}, error) {
 
 		for i, element := range types {
 			_comp.Components = append(_comp.Components, abi.ArgumentMarshaling{
-				Type: element, Name: "Value" + fmt.Sprintf("%d", i),
+				Type: strings.TrimSpace(element), Name: "Value" + fmt.Sprintf("%d", i),
 			})
 		}
 		comp = append(comp, _comp)
@@ -47,6 +47,20 @@ func DecodeValue(value, datatype string) ([]interface{}, error) {
 			return nil, fmt.Errorf("failed to make arguments for tuple type: %w", err)
 		}
 
+		return args.Unpack(valueBytes)
+	}
+
+	if strings.Contains(datatype, ",") {
+		types := strings.Split(datatype, ",")
+		for i, element := range types {
+			comp = append(comp, abi.ArgumentMarshaling{
+				Type: strings.TrimSpace(element), Name: "Value" + fmt.Sprintf("%d", i),
+			})
+		}
+		args, err := MakeArguments(comp)
+		if err != nil {
+			return nil, fmt.Errorf("failed to make arguments for multi-type value: %w", err)
+		}
 		return args.Unpack(valueBytes)
 	}
 
