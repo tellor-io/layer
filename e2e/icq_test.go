@@ -21,7 +21,6 @@ import (
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestIbcInterchainQuery(t *testing.T) {
@@ -38,14 +37,16 @@ func TestIbcInterchainQuery(t *testing.T) {
 
 	client, network := interchaintest.DockerSetup(t)
 
-	modifyGenesis := []cosmos.GenesisKV{
-		cosmos.NewGenesisKV("app_state.dispute.params.team_address", sdk.MustAccAddressFromBech32("tellor14ncp4jg0d087l54pwnp8p036s0dc580xy4gavf").Bytes()),
-		cosmos.NewGenesisKV("consensus.params.abci.vote_extensions_enable_height", "1"),
-		cosmos.NewGenesisKV("app_state.gov.params.voting_period", "15s"),
-		cosmos.NewGenesisKV("app_state.gov.params.max_deposit_period", "10s"),
-		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
-		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
+	modifyGenesis := append(e2e.CreateStandardGenesis(),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+	)
+	// the layer-icq image is built from the ibc branch, whose layerd predates
+	// max_reporter_power_share and panics on unknown genesis fields at InitGenesis;
+	icqGenesis := make([]cosmos.GenesisKV, 0, len(modifyGenesis))
+	for _, kv := range modifyGenesis {
+		if kv.Key != e2e.MaxReporterPowerShareGenesisKey {
+			icqGenesis = append(icqGenesis, kv)
+		}
 	}
 	nv := 1
 	nf := 0
@@ -73,7 +74,7 @@ func TestIbcInterchainQuery(t *testing.T) {
 					},
 				},
 				EncodingConfig:      e2e.LayerEncoding(),
-				ModifyGenesis:       cosmos.ModifyGenesis(modifyGenesis),
+				ModifyGenesis:       cosmos.ModifyGenesis(icqGenesis),
 				AdditionalStartArgs: []string{"--key-name", "validator"},
 			},
 		},

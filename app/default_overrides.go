@@ -6,6 +6,10 @@ import (
 
 	icq "github.com/cosmos/ibc-apps/modules/async-icq/v8"
 	icqtypes "github.com/cosmos/ibc-apps/modules/async-icq/v8/types"
+	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	icagenesistypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/genesis/types"
+	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
 	"github.com/strangelove-ventures/globalfee/x/globalfee"
 	globalfeetypes "github.com/strangelove-ventures/globalfee/x/globalfee/types"
 
@@ -115,6 +119,22 @@ type icqcustomModule struct {
 func (icqcustomModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	genState := icqtypes.DefaultGenesis()
 	genState.Params.AllowQueries = []string{"/layer.oracle.Query/GetCurrentAggregateReport"}
+
+	return cdc.MustMarshalJSON(genState)
+}
+
+type icaModule struct {
+	ica.AppModule
+}
+
+// DefaultGenesis disables interchain accounts entirely (host and controller).
+// ICA-executed messages go through the MsgServiceRouter without the ante chain,
+// bypassing the stake and reporter power limits; only interchain queries are
+// supported on Layer.
+func (icaModule) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	genState := icagenesistypes.DefaultGenesis()
+	genState.HostGenesisState.Params = icahosttypes.Params{HostEnabled: false, AllowMessages: []string{}}
+	genState.ControllerGenesisState.Params = icacontrollertypes.Params{ControllerEnabled: false}
 
 	return cdc.MustMarshalJSON(genState)
 }
