@@ -8,6 +8,7 @@ import (
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -197,7 +198,10 @@ func (k Keeper) GetSumOfUserAndReporterVotesAllRounds(ctx context.Context, id ui
 	// process current dispute
 	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
 	if err != nil {
-		return math.ZeroInt(), nil
+		if !errors.Is(err, collections.ErrNotFound) {
+			return math.Int{}, err
+		}
+		voteCounts = types.StakeholderVoteCounts{}
 	}
 	processVoteCounts(voteCounts)
 
@@ -205,11 +209,10 @@ func (k Keeper) GetSumOfUserAndReporterVotesAllRounds(ctx context.Context, id ui
 	for _, roundId := range dispute.PrevDisputeIds {
 		voteCounts, err := k.VoteCountsByGroup.Get(ctx, roundId)
 		if err != nil {
-			voteCounts = types.StakeholderVoteCounts{
-				Users:     types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
-				Reporters: types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
-				Team:      types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
+			if !errors.Is(err, collections.ErrNotFound) {
+				return math.Int{}, err
 			}
+			voteCounts = types.StakeholderVoteCounts{}
 		}
 		processVoteCounts(voteCounts)
 	}

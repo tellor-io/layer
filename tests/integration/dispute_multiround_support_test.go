@@ -470,6 +470,47 @@ func (s *IntegrationTestSuite) TestWorstCaseTeamOnlyMaxRoundDoesNotStrandEscalat
 	s.True(modBalance.Amount.IsZero(), "escalation fees must be fully consumed rather than stranded in the dispute module")
 }
 
+// TestMultiRoundFinalRoundNoVotesStillRewardsPreviousRoundVoters: if the final round
+// expires with no votes, previous-round user/reporter voters are still claim-eligible,
+// so the voter half of the consumed fee pool must be reserved and claimable.
+func (s *IntegrationTestSuite) TestMultiRoundFinalRoundNoVotesStillRewardsPreviousRoundVoters() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(time.Now())
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	_, report, disputeFee := s.setupDisputedReporter(100)
+
+	previousRoundVoter := s.fundedDisputer()
+	s.seedTipper(previousRoundVoter, report)
+
+	roundOnePayer := s.fundedDisputer()
+	s.startNoQuorumRound1(msgServer, report, disputeFee, roundOnePayer, false, previousRoundVoter)
+
+	roundTwoPayer := s.fundedDisputer()
+	s.proposeRound(msgServer, roundTwoPayer, report, disputeFee, false)
+
+	hasFinalRoundVoteCounts, err := s.Setup.Disputekeeper.VoteCountsByGroup.Has(s.Setup.Ctx, 2)
+	s.NoError(err)
+	s.False(hasFinalRoundVoteCounts, "final round must have no vote counts for this regression")
+
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
+	s.NoError(s.Setup.Disputekeeper.TallyVote(s.Setup.Ctx, 2))
+	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 2))
+
+	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, 2)
+	s.NoError(err)
+	s.Equal(types.Resolved, dispute.DisputeStatus)
+	s.Equal(dispute.BurnAmount.QuoRaw(2), dispute.VoterReward, "previous-round voters should keep the voter reward claimable")
+
+	expectedReward, err := s.Setup.Disputekeeper.CalculateReward(s.Setup.Ctx, previousRoundVoter, 2)
+	s.Require().NoError(err)
+	s.True(expectedReward.IsPositive(), "previous-round voter should have a claimable reward")
+
+	balBefore := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, previousRoundVoter, s.Setup.Denom)
+	_, err = msgServer.ClaimReward(s.Setup.Ctx, &types.MsgClaimReward{CallerAddress: previousRoundVoter.String(), DisputeId: 2})
+	s.NoError(err)
+	balAfter := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, previousRoundVoter, s.Setup.Denom)
+	s.Equal(expectedReward, balAfter.Amount.Sub(balBefore.Amount))
+}
+
 // TestClaimableDisputeRewardsUsesFirstRoundFeePayerForFinalRound: fee payer records
 // live under the first-round dispute id, but wallets query the final resolved round id.
 // The query must resolve the round-1 payer the same way WithdrawFeeRefund does.
