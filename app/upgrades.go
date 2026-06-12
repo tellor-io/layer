@@ -5,7 +5,6 @@ import (
 
 	"github.com/tellor-io/layer/app/upgrades"
 	v_6_1_6 "github.com/tellor-io/layer/app/upgrades/v6.1.6"
-	v_6_1_7 "github.com/tellor-io/layer/app/upgrades/v6.1.7"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
@@ -15,7 +14,6 @@ var (
 	// New upgrades should be added to this slice after they are implemented.
 	Upgrades = []*upgrades.Upgrade{
 		&v_6_1_6.Upgrade,
-		&v_6_1_7.Upgrade,
 	}
 	Forks = []upgrades.Fork{}
 )
@@ -29,17 +27,6 @@ func (app *App) setupUpgradeHandlers() {
 	app.UpgradeKeeper.SetUpgradeHandler(
 		v_6_1_6.UpgradeName,
 		v_6_1_6.CreateUpgradeHandler(
-			app.ModuleManager(),
-			app.configurator,
-			app.ReporterKeeper,
-		),
-	)
-	if app.UpgradeKeeper.HasHandler(v_6_1_7.UpgradeName) {
-		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v_6_1_7.UpgradeName))
-	}
-	app.UpgradeKeeper.SetUpgradeHandler(
-		v_6_1_7.UpgradeName,
-		v_6_1_7.CreateUpgradeHandler(
 			app.ModuleManager(),
 			app.configurator,
 			app.ReporterKeeper,

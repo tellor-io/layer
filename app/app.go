@@ -503,7 +503,7 @@ func New(
 	// keeper's gRPC query router must be set explicitly or NewMsgServerImpl panics
 	// with "query router must not be nil".
 	app.ICAHostKeeper.WithQueryRouter(bApp.GRPCQueryRouter())
-	icaControllerKeeper := icacontrollerkeeper.NewKeeper(
+	app.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
 		appCodec, keys[icacontrollertypes.StoreKey],
 		nil,
 		app.IBCKeeper.ChannelKeeper, // may be replaced with middleware such as ics29 fee
