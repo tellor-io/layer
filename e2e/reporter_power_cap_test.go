@@ -24,7 +24,7 @@ func setupPowerCapChain(t *testing.T) (*cosmos.CosmosChain, *interchaintest.Inte
 	config := e2e.DefaultSetupConfig()
 	config.NumValidators = 4
 	config.ModifyGenesis = append(e2e.CreateStandardGenesis(),
-		cosmos.NewGenesisKV("app_state.reporter.params.max_reporter_power_share", "0.300000000000000000"),
+		cosmos.NewGenesisKV(e2e.MaxReporterPowerShareGenesisKey, "0.300000000000000000"),
 	)
 	return e2e.SetupChainWithCustomConfig(t, config)
 }
