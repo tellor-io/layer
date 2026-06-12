@@ -499,7 +499,11 @@ func New(
 		app.MsgServiceRouter(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	app.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
+	// ibc-go v8.3.0 (PR #5785) added a host-side query message, so the ICA host
+	// keeper's gRPC query router must be set explicitly or NewMsgServerImpl panics
+	// with "query router must not be nil".
+	app.ICAHostKeeper.WithQueryRouter(bApp.GRPCQueryRouter())
+	icaControllerKeeper := icacontrollerkeeper.NewKeeper(
 		appCodec, keys[icacontrollertypes.StoreKey],
 		nil,
 		app.IBCKeeper.ChannelKeeper, // may be replaced with middleware such as ics29 fee
