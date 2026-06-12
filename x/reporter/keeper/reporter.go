@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -174,6 +175,85 @@ func (k Keeper) CheckSelectorsDelegations(ctx context.Context, addr sdk.AccAddre
 func (k Keeper) TotalReporterPower(ctx context.Context) (math.Int, error) {
 	valSet := k.stakingKeeper.GetValidatorSet()
 	return valSet.TotalBondedTokens(ctx)
+}
+
+// PotentialStakeSelectorGas makes the power-cap selector expansion visible to gas
+// accounting on top of normal store-read costs, mirroring the active-set scan
+// precedent in the ante decorator.
+const PotentialStakeSelectorGas = storetypes.Gas(10_000)
+
+const potentialStakeSelectorGasMessage = "reporter power cap selector check"
+
+// ReporterPotentialStake returns a conservative upper bound on a reporter's
+// reporting power, used by the power-cap check: the bonded tokens of every
+// selector currently selecting the reporter — including dispute-locked selectors
+// (their stake returns when the lock expires) and regardless of reporter jail
+// status — excluding selectors with a pending switch away (that stake already
+// stopped counting and is committed elsewhere), plus the bonded tokens of
+// selectors with a pending switch into the reporter (booked against the cap as
+// soon as the switch is scheduled). Read-only: never mutates state.
+func (k Keeper) ReporterPotentialStake(ctx context.Context, repAddr sdk.AccAddress) (math.Int, error) {
+	gasMeter := sdk.UnwrapSDKContext(ctx).GasMeter()
+	total := math.ZeroInt()
+	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr.Bytes())
+	if err != nil {
+		return math.Int{}, err
+	}
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		selectorAddr, err := iter.PrimaryKey()
+		if err != nil {
+			return math.Int{}, err
+		}
+		hasPending, err := k.hasOutgoingPendingSwitch(ctx, repAddr.Bytes(), selectorAddr)
+		if err != nil {
+			return math.Int{}, err
+		}
+		if hasPending {
+			continue
+		}
+		gasMeter.ConsumeGas(PotentialStakeSelectorGas, potentialStakeSelectorGasMessage)
+		bonded, _, err := k.CheckSelectorsDelegations(ctx, sdk.AccAddress(selectorAddr))
+		if err != nil {
+			return math.Int{}, err
+		}
+		total = total.Add(bonded)
+	}
+
+	inRange := collections.NewPrefixedPairRange[[]byte, []byte](repAddr.Bytes())
+	inIter, err := k.IncomingPendingSwitchIdx.Iterate(ctx, inRange)
+	if err != nil {
+		return math.Int{}, err
+	}
+	defer inIter.Close()
+	for ; inIter.Valid(); inIter.Next() {
+		pk, err := inIter.Key()
+		if err != nil {
+			return math.Int{}, err
+		}
+		gasMeter.ConsumeGas(PotentialStakeSelectorGas, potentialStakeSelectorGasMessage)
+		bonded, _, err := k.CheckSelectorsDelegations(ctx, sdk.AccAddress(pk.K2()))
+		if err != nil {
+			return math.Int{}, err
+		}
+		total = total.Add(bonded)
+	}
+	return total, nil
+}
+
+// PendingSwitchTarget returns the reporter a selector's scheduled pending switch
+// is headed to, if any. Callers use it to attribute the selector's stake to the
+// reporter that will actually receive it and to avoid double-booking re-sent
+// switches against the power cap.
+func (k Keeper) PendingSwitchTarget(ctx context.Context, selectorAddr sdk.AccAddress) (bool, []byte, error) {
+	selection, err := k.Selectors.Get(ctx, selectorAddr.Bytes())
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return false, nil, nil
+		}
+		return false, nil, err
+	}
+	return k.pendingSwitchToReporter(ctx, sdk.AccAddress(selection.Reporter), selectorAddr)
 }
 
 // Delegation returns a selector's reporter, delegations count, and locked time information

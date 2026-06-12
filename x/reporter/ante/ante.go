@@ -11,6 +11,7 @@ import (
 	"github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -48,6 +49,16 @@ func newValidatorAddressKey(addr sdk.ValAddress) validatorAddressKey {
 	return validatorAddressKey(addr.String())
 }
 
+type reporterAddressKey string
+
+func newReporterAddressKey(addr sdk.AccAddress) reporterAddressKey {
+	return reporterAddressKey(addr.String())
+}
+
+func (k reporterAddressKey) address() (sdk.AccAddress, error) {
+	return sdk.AccAddressFromBech32(string(k))
+}
+
 type stakeChangeTracker struct {
 	totalBondedDelta     math.Int
 	delegatorBondedDelta map[delegatorAddressKey]math.LegacyDec
@@ -58,6 +69,11 @@ type stakeChangeTracker struct {
 	pendingValidators map[validatorAddressKey]prospectiveValidator
 	// activeSetDelta is true when a tx can change which validators are bonded.
 	activeSetDelta bool
+	// selectionChanges records selectors whose selected reporter changes within
+	// this tx (CreateReporter/SelectReporter/SwitchReporter), so the reporter
+	// power cap books their full stake against the new reporter and later
+	// staking deltas in the same tx attribute to the right reporter.
+	selectionChanges map[delegatorAddressKey]reporterAddressKey
 }
 
 type prospectiveValidator struct {
@@ -87,6 +103,7 @@ func newStakeChangeTracker() *stakeChangeTracker {
 		delegationShareDelta: make(map[validatorAddressKey]map[delegatorAddressKey]math.LegacyDec),
 		validatorProjections: make(map[validatorAddressKey]prospectiveValidator),
 		pendingValidators:    make(map[validatorAddressKey]prospectiveValidator),
+		selectionChanges:     make(map[delegatorAddressKey]reporterAddressKey),
 	}
 }
 
@@ -147,6 +164,13 @@ func (t *stakeChangeTracker) markActiveSetDelta(activeSetDelta bool) {
 	if activeSetDelta {
 		t.activeSetDelta = true
 	}
+}
+
+func (t *stakeChangeTracker) setSelection(selector, reporter sdk.AccAddress) {
+	if selector == nil || reporter == nil {
+		return
+	}
+	t.selectionChanges[newDelegatorAddressKey(selector)] = newReporterAddressKey(reporter)
 }
 
 func (t *stakeChangeTracker) addDelegationShareDelta(validator sdk.ValAddress, delegator sdk.AccAddress, shares math.LegacyDec) {
@@ -255,7 +279,10 @@ func (t TrackStakeChangesDecorator) finalizeStakeChanges(ctx sdk.Context, stakeC
 			return err
 		}
 	}
-	return t.checkDelegatorStakeShares(ctx, stakeChanges)
+	if err := t.checkDelegatorStakeShares(ctx, stakeChanges); err != nil {
+		return err
+	}
+	return t.checkReporterPowerShares(ctx, stakeChanges)
 }
 
 func (t TrackStakeChangesDecorator) processMessage(ctx sdk.Context, msg sdk.Msg, nestedMsgCount int64, stakeChanges *stakeChangeTracker) error {
@@ -286,6 +313,43 @@ func (t TrackStakeChangesDecorator) processMessage(ctx sdk.Context, msg sdk.Msg,
 
 func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Msg, stakeChanges *stakeChangeTracker) error {
 	switch msg := msg.(type) {
+	case *types.MsgCreateReporter:
+		addr, err := sdk.AccAddressFromBech32(msg.ReporterAddress)
+		if err != nil {
+			return err
+		}
+		// the creator's own bonded stake becomes the new reporter's power (both
+		// the fresh-create and selector-conversion paths)
+		stakeChanges.setSelection(addr, addr)
+	case *types.MsgSelectReporter:
+		selectorAddr, err := sdk.AccAddressFromBech32(msg.SelectorAddress)
+		if err != nil {
+			return err
+		}
+		reporterAddr, err := sdk.AccAddressFromBech32(msg.ReporterAddress)
+		if err != nil {
+			return err
+		}
+		stakeChanges.setSelection(selectorAddr, reporterAddr)
+	case *types.MsgSwitchReporter:
+		selectorAddr, err := sdk.AccAddressFromBech32(msg.SelectorAddress)
+		if err != nil {
+			return err
+		}
+		reporterAddr, err := sdk.AccAddressFromBech32(msg.ReporterAddress)
+		if err != nil {
+			return err
+		}
+		// a switch already pending to this reporter is a handler no-op and its
+		// stake is already booked against the destination's potential stake
+		pending, pendingTo, err := t.reporterKeeper.PendingSwitchTarget(ctx, selectorAddr)
+		if err != nil {
+			return err
+		}
+		if pending && bytes.Equal(pendingTo, reporterAddr.Bytes()) {
+			return nil
+		}
+		stakeChanges.setSelection(selectorAddr, reporterAddr)
 	case *stakingtypes.MsgCreateValidator:
 		valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
 		if err != nil {
@@ -734,6 +798,118 @@ func (t TrackStakeChangesDecorator) delegatorBondedTokens(ctx sdk.Context, deleg
 		return math.LegacyDec{}, err
 	}
 	return tokens, iterError
+}
+
+// checkReporterPowerShares enforces the reporter power cap: no reporter's
+// projected potential stake may reach the max_reporter_power_share fraction of
+// projected total bonded stake. Only reporters gaining stake in this tx are
+// checked; decreases are never blocked, so an over-cap reporter can always
+// shed stake.
+func (t TrackStakeChangesDecorator) checkReporterPowerShares(ctx sdk.Context, stakeChanges *stakeChangeTracker) error {
+	if stakeChanges == nil || (len(stakeChanges.selectionChanges) == 0 && len(stakeChanges.delegatorBondedDelta) == 0) {
+		return nil
+	}
+	params, err := t.reporterKeeper.Params.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil
+		}
+		return err
+	}
+	maxShare := params.MaxReporterPowerShare
+	// nil/zero is pre-migration state and shares >= 1 are explicitly disabled;
+	// both must not be read as "cap everything at zero"
+	if maxShare.IsNil() || !maxShare.IsPositive() || maxShare.GTE(math.LegacyOneDec()) {
+		return nil
+	}
+
+	reporterAdditions := make(map[reporterAddressKey]math.LegacyDec)
+	// selectors changing reporter bring their whole projected bonded stake to
+	// the destination reporter
+	for _, selectorKey := range sortedKeys(stakeChanges.selectionChanges) {
+		selector, err := selectorKey.address()
+		if err != nil {
+			return err
+		}
+		bonded, err := t.delegatorBondedTokens(ctx, selector)
+		if err != nil {
+			return err
+		}
+		contribution := bonded.Add(decFromMap(stakeChanges.delegatorBondedDelta, selectorKey))
+		if contribution.IsPositive() {
+			addDec(reporterAdditions, stakeChanges.selectionChanges[selectorKey], contribution)
+		}
+	}
+	// stake increases by existing selectors attribute to their selected reporter
+	for _, delegatorKey := range sortedKeys(stakeChanges.delegatorBondedDelta) {
+		if _, changed := stakeChanges.selectionChanges[delegatorKey]; changed {
+			continue // already counted above with the selector's full stake
+		}
+		delta := stakeChanges.delegatorBondedDelta[delegatorKey]
+		if !delta.IsPositive() {
+			continue
+		}
+		delegator, err := delegatorKey.address()
+		if err != nil {
+			return err
+		}
+		reporter, found, err := t.selectedReporter(ctx, delegator)
+		if err != nil {
+			return err
+		}
+		if !found {
+			continue
+		}
+		addDec(reporterAdditions, newReporterAddressKey(reporter), delta)
+	}
+	if len(reporterAdditions) == 0 {
+		return nil
+	}
+
+	currentTotalBonded, err := t.stakingKeeper.TotalBondedTokens(ctx)
+	if err != nil {
+		return err
+	}
+	totalBondedAfter := currentTotalBonded.Add(stakeChanges.totalBondedDelta)
+	if !totalBondedAfter.IsPositive() {
+		return nil
+	}
+	maxAllowed := maxShare.MulInt(totalBondedAfter)
+	for _, reporterKey := range sortedKeys(reporterAdditions) {
+		reporter, err := reporterKey.address()
+		if err != nil {
+			return err
+		}
+		potential, err := t.reporterKeeper.ReporterPotentialStake(ctx, reporter)
+		if err != nil {
+			return err
+		}
+		if potential.ToLegacyDec().Add(reporterAdditions[reporterKey]).GTE(maxAllowed) {
+			return errorsmod.Wrapf(types.ErrExceedsMaxReporterPower, "reporter %s", reporter.String())
+		}
+	}
+	return nil
+}
+
+// selectedReporter resolves the reporter a delegator's stake counts toward: the
+// pending switch destination when one is scheduled, otherwise the stored
+// selection. Returns found=false for delegators who are not selectors.
+func (t TrackStakeChangesDecorator) selectedReporter(ctx sdk.Context, delegator sdk.AccAddress) (sdk.AccAddress, bool, error) {
+	selection, err := t.reporterKeeper.GetSelector(ctx, delegator)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, false, nil
+		}
+		return nil, false, err
+	}
+	pending, to, err := t.reporterKeeper.PendingSwitchTarget(ctx, delegator)
+	if err != nil {
+		return nil, false, err
+	}
+	if pending {
+		return sdk.AccAddress(to), true, nil
+	}
+	return sdk.AccAddress(selection.Reporter), true, nil
 }
 
 func (t TrackStakeChangesDecorator) checkAmountOfDelegationsByAddressDoesNotExceedMax(ctx sdk.Context, msg sdk.Msg) (bool, error) {
