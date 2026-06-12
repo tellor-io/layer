@@ -34,6 +34,15 @@ message Params {
   // max pending reporter switches involving a reporter as outgoing or incoming
   // (each side capped separately when scheduling a switch).
   uint64 max_pending_switches_per_reporter = 5;
+  // max share of total bonded tokens a single reporter's potential stake may
+  // hold; transactions that would put a reporter at or above this share are
+  // rejected. Values >= 1 (or unset) disable the check.
+  string max_reporter_power_share = 6 [
+    (gogoproto.moretags) = "yaml:\"max_reporter_power_share\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false,
+    (cosmos_proto.scalar) = "cosmos.Dec"
+  ];
 }
 
 message StakeTracker {

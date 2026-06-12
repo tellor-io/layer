@@ -528,6 +528,10 @@ func CreateStandardGenesis() []cosmos.GenesisKV {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
+		// most fixtures run 2-3 validators whose accounts hold well over 30% of
+		// bonded stake, so the reporter power cap (ADR 1012) is disabled here;
+		// dedicated cap tests opt back in with an explicit 0.30 override
+		cosmos.NewGenesisKV("app_state.reporter.params.max_reporter_power_share", "1.000000000000000000"),
 	}
 }
 
@@ -807,6 +811,8 @@ func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
+		// reporter power cap disabled for the same reason as CreateStandardGenesis
+		cosmos.NewGenesisKV("app_state.reporter.params.max_reporter_power_share", "1.000000000000000000"),
 	}
 	return &interchaintest.ChainSpec{
 		NumValidators: &nv,

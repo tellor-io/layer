@@ -23,6 +23,7 @@ var (
 	fd_Params_max_selectors                     protoreflect.FieldDescriptor
 	fd_Params_max_num_of_delegations            protoreflect.FieldDescriptor
 	fd_Params_max_pending_switches_per_reporter protoreflect.FieldDescriptor
+	fd_Params_max_reporter_power_share          protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -33,6 +34,7 @@ func init() {
 	fd_Params_max_selectors = md_Params.Fields().ByName("max_selectors")
 	fd_Params_max_num_of_delegations = md_Params.Fields().ByName("max_num_of_delegations")
 	fd_Params_max_pending_switches_per_reporter = md_Params.Fields().ByName("max_pending_switches_per_reporter")
+	fd_Params_max_reporter_power_share = md_Params.Fields().ByName("max_reporter_power_share")
 }
 
 var _ protoreflect.Message = (*fastReflection_Params)(nil)
@@ -130,6 +132,12 @@ func (x *fastReflection_Params) Range(f func(protoreflect.FieldDescriptor, proto
 			return
 		}
 	}
+	if x.MaxReporterPowerShare != "" {
+		value := protoreflect.ValueOfString(x.MaxReporterPowerShare)
+		if !f(fd_Params_max_reporter_power_share, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -155,6 +163,8 @@ func (x *fastReflection_Params) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.MaxNumOfDelegations != uint64(0)
 	case "layer.reporter.Params.max_pending_switches_per_reporter":
 		return x.MaxPendingSwitchesPerReporter != uint64(0)
+	case "layer.reporter.Params.max_reporter_power_share":
+		return x.MaxReporterPowerShare != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.Params"))
@@ -181,6 +191,8 @@ func (x *fastReflection_Params) Clear(fd protoreflect.FieldDescriptor) {
 		x.MaxNumOfDelegations = uint64(0)
 	case "layer.reporter.Params.max_pending_switches_per_reporter":
 		x.MaxPendingSwitchesPerReporter = uint64(0)
+	case "layer.reporter.Params.max_reporter_power_share":
+		x.MaxReporterPowerShare = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.Params"))
@@ -212,6 +224,9 @@ func (x *fastReflection_Params) Get(descriptor protoreflect.FieldDescriptor) pro
 	case "layer.reporter.Params.max_pending_switches_per_reporter":
 		value := x.MaxPendingSwitchesPerReporter
 		return protoreflect.ValueOfUint64(value)
+	case "layer.reporter.Params.max_reporter_power_share":
+		value := x.MaxReporterPowerShare
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.Params"))
@@ -242,6 +257,8 @@ func (x *fastReflection_Params) Set(fd protoreflect.FieldDescriptor, value proto
 		x.MaxNumOfDelegations = value.Uint()
 	case "layer.reporter.Params.max_pending_switches_per_reporter":
 		x.MaxPendingSwitchesPerReporter = value.Uint()
+	case "layer.reporter.Params.max_reporter_power_share":
+		x.MaxReporterPowerShare = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.Params"))
@@ -272,6 +289,8 @@ func (x *fastReflection_Params) Mutable(fd protoreflect.FieldDescriptor) protore
 		panic(fmt.Errorf("field max_num_of_delegations of message layer.reporter.Params is not mutable"))
 	case "layer.reporter.Params.max_pending_switches_per_reporter":
 		panic(fmt.Errorf("field max_pending_switches_per_reporter of message layer.reporter.Params is not mutable"))
+	case "layer.reporter.Params.max_reporter_power_share":
+		panic(fmt.Errorf("field max_reporter_power_share of message layer.reporter.Params is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.Params"))
@@ -295,6 +314,8 @@ func (x *fastReflection_Params) NewField(fd protoreflect.FieldDescriptor) protor
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "layer.reporter.Params.max_pending_switches_per_reporter":
 		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.reporter.Params.max_reporter_power_share":
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.Params"))
@@ -381,6 +402,10 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.MaxPendingSwitchesPerReporter != 0 {
 			n += 1 + runtime.Sov(uint64(x.MaxPendingSwitchesPerReporter))
 		}
+		l = len(x.MaxReporterPowerShare)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -409,6 +434,13 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.MaxReporterPowerShare) > 0 {
+			i -= len(x.MaxReporterPowerShare)
+			copy(dAtA[i:], x.MaxReporterPowerShare)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MaxReporterPowerShare)))
+			i--
+			dAtA[i] = 0x32
 		}
 		if x.MaxPendingSwitchesPerReporter != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.MaxPendingSwitchesPerReporter))
@@ -609,6 +641,38 @@ func (x *fastReflection_Params) ProtoMethods() *protoiface.Methods {
 						break
 					}
 				}
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MaxReporterPowerShare", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MaxReporterPowerShare = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1173,6 +1237,10 @@ type Params struct {
 	// max pending reporter switches involving a reporter as outgoing or incoming
 	// (each side capped separately when scheduling a switch).
 	MaxPendingSwitchesPerReporter uint64 `protobuf:"varint,5,opt,name=max_pending_switches_per_reporter,json=maxPendingSwitchesPerReporter,proto3" json:"max_pending_switches_per_reporter,omitempty"`
+	// max share of total bonded tokens a single reporter's potential stake may
+	// hold; transactions that would put a reporter at or above this share are
+	// rejected. Values >= 1 (or unset) disable the check.
+	MaxReporterPowerShare string `protobuf:"bytes,6,opt,name=max_reporter_power_share,json=maxReporterPowerShare,proto3" json:"max_reporter_power_share,omitempty"`
 }
 
 func (x *Params) Reset() {
@@ -1230,6 +1298,13 @@ func (x *Params) GetMaxPendingSwitchesPerReporter() uint64 {
 	return 0
 }
 
+func (x *Params) GetMaxReporterPowerShare() string {
+	if x != nil {
+		return x.MaxReporterPowerShare
+	}
+	return ""
+}
+
 type StakeTracker struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1285,7 +1360,7 @@ var file_layer_reporter_params_proto_rawDesc = []byte{
 	0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
 	0x75, 0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x22, 0xaa, 0x03, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x7f, 0x0a,
+	0x74, 0x6f, 0x22, 0xba, 0x04, 0x0a, 0x06, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x7f, 0x0a,
 	0x13, 0x6d, 0x69, 0x6e, 0x5f, 0x63, 0x6f, 0x6d, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f,
 	0x72, 0x61, 0x74, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x4f, 0xc8, 0xde, 0x1f, 0x00,
 	0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f,
@@ -1309,7 +1384,16 @@ var file_layer_reporter_params_proto_rawDesc = []byte{
 	0x6e, 0x67, 0x5f, 0x73, 0x77, 0x69, 0x74, 0x63, 0x68, 0x65, 0x73, 0x5f, 0x70, 0x65, 0x72, 0x5f,
 	0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x18, 0x05, 0x20, 0x01, 0x28, 0x04, 0x52, 0x1d,
 	0x6d, 0x61, 0x78, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x69, 0x74, 0x63, 0x68,
-	0x65, 0x73, 0x50, 0x65, 0x72, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x3a, 0x20, 0xe8,
+	0x65, 0x73, 0x50, 0x65, 0x72, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x8d, 0x01,
+	0x0a, 0x18, 0x6d, 0x61, 0x78, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5f, 0x70,
+	0x6f, 0x77, 0x65, 0x72, 0x5f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09,
+	0x42, 0x54, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x1b, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x4c, 0x65, 0x67, 0x61,
+	0x63, 0x79, 0x44, 0x65, 0x63, 0xf2, 0xde, 0x1f, 0x1f, 0x79, 0x61, 0x6d, 0x6c, 0x3a, 0x22, 0x6d,
+	0x61, 0x78, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5f, 0x70, 0x6f, 0x77, 0x65,
+	0x72, 0x5f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x22, 0xd2, 0xb4, 0x2d, 0x0a, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x52, 0x15, 0x6d, 0x61, 0x78, 0x52, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x53, 0x68, 0x61, 0x72, 0x65, 0x3a, 0x20, 0xe8,
 	0xa0, 0x1f, 0x01, 0x8a, 0xe7, 0xb0, 0x2a, 0x17, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x78, 0x2f,
 	0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2f, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x22,
 	0xa6, 0x01, 0x0a, 0x0c, 0x53, 0x74, 0x61, 0x6b, 0x65, 0x54, 0x72, 0x61, 0x63, 0x6b, 0x65, 0x72,
