@@ -695,8 +695,9 @@ func (s *KeeperTestSuite) TestClaimableDisputeRewardsQuery() {
 		RewardClaimed: false,
 	}))
 
-	// Setup Fee Payer for Dispute 5
-	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(5), addr.Bytes()), types.PayerInfo{
+	// Setup Fee Payer under Dispute 5's first round (dispute 1) — payer records are only
+	// ever stored under the round-1 dispute id
+	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(1), addr.Bytes()), types.PayerInfo{
 		Amount: math.NewInt(500),
 	}))
 
