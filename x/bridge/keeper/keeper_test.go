@@ -708,17 +708,12 @@ func TestEVMAddressFromSignatures(t *testing.T) {
 
 	msgA := fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddr)
 	msgB := fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddr)
-	msgBytesA := []byte(msgA)
-	msgBytesB := []byte(msgB)
 
-	// hash messages
-	msgHashBytes32A := sha256.Sum256(msgBytesA)
-	msgHashBytesA := msgHashBytes32A[:]
+	// hash messages with Keccak256 (matching updated EVMAddressFromSignatures)
+	msgHashBytesA := crypto.Keccak256([]byte(msgA))
+	msgHashBytesB := crypto.Keccak256([]byte(msgB))
 
-	msgHashBytes32B := sha256.Sum256(msgBytesB)
-	msgHashBytesB := msgHashBytes32B[:]
-
-	// hash the hash, since the keyring signer automatically hashes the message
+	// hash the hash to simulate keyring auto-hash with SHA256
 	msgDoubleHashBytes32A := sha256.Sum256(msgHashBytesA)
 	msgDoubleHashBytesA := msgDoubleHashBytes32A[:]
 
@@ -768,17 +763,12 @@ func TestTryRecoverAddressWithBothIDs(t *testing.T) {
 
 	msgA := "TellorLayer: Initial bridge signature A"
 	msgB := "TellorLayer: Initial bridge signature B"
-	msgBytesA := []byte(msgA)
-	msgBytesB := []byte(msgB)
 
-	// hash messages
-	msgHashBytes32A := sha256.Sum256(msgBytesA)
-	msgHashBytesA := msgHashBytes32A[:]
+	// hash messages with Keccak256 (matching updated TryRecoverAddressWithBothIDs usage)
+	msgHashBytesA := crypto.Keccak256([]byte(msgA))
+	msgHashBytesB := crypto.Keccak256([]byte(msgB))
 
-	msgHashBytes32B := sha256.Sum256(msgBytesB)
-	msgHashBytesB := msgHashBytes32B[:]
-
-	// hash the hash, since the keyring signer automatically hashes the message
+	// hash the hash to simulate keyring auto-hash with SHA256
 	msgDoubleHashBytes32A := sha256.Sum256(msgHashBytesA)
 	msgDoubleHashBytesA := msgDoubleHashBytes32A[:]
 

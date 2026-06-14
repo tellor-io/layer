@@ -634,18 +634,12 @@ func (k Keeper) EVMAddressFromSignatures(ctx context.Context, sigA, sigB []byte,
 	msgA := fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddress)
 	msgB := fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddress)
 
-	// convert messages to bytes
-	msgBytesA := []byte(msgA)
-	msgBytesB := []byte(msgB)
+	// hash messages with Keccak256 (Ethereum standard convention)
+	msgHashBytesA := crypto.Keccak256([]byte(msgA))
+	msgHashBytesB := crypto.Keccak256([]byte(msgB))
 
-	// hash messages
-	msgHashBytes32A := sha256.Sum256(msgBytesA)
-	msgHashBytesA := msgHashBytes32A[:]
-
-	msgHashBytes32B := sha256.Sum256(msgBytesB)
-	msgHashBytesB := msgHashBytes32B[:]
-
-	// hash the hash, since the keyring signer automatically hashes the message
+	// hash the hash, since the keyring signer automatically hashes the message with SHA256,
+	// producing the signed content as SHA256(Keccak256(message))
 	msgDoubleHashBytes32A := sha256.Sum256(msgHashBytesA)
 	msgDoubleHashBytesA := msgDoubleHashBytes32A[:]
 
@@ -816,6 +810,32 @@ func (k Keeper) SetOracleAttestation(ctx context.Context, operatorAddress string
 		k.Logger(ctx).Info("Error getting EVM address from operator address", "error", err)
 		return err
 	}
+
+	// verify the signature: the keyring auto-hashes the snapshot with SHA256 before signing,
+	// so the signed content is SHA256(snapshot). recover the signer's EVM address and
+	// compare against the registered address.
+	if len(sig) != 64 {
+		return fmt.Errorf("invalid signature length: expected 64, got %d", len(sig))
+	}
+	snapshotHash := sha256.Sum256(snapshot)
+	sigMatches := false
+	for _, id := range []byte{0, 1} {
+		sigWithID := append(sig[:64], id)
+		pubKey, err := crypto.SigToPub(snapshotHash[:], sigWithID)
+		if err != nil {
+			continue
+		}
+		recoveredAddr := crypto.PubkeyToAddress(*pubKey)
+		if bytes.Equal(recoveredAddr.Bytes(), ethAddress.EVMAddress) {
+			sigMatches = true
+			break
+		}
+	}
+	if !sigMatches {
+		k.Logger(ctx).Info("Oracle attestation signature does not match validator's EVM address")
+		return fmt.Errorf("oracle attestation signature verification failed for operator %s", operatorAddress)
+	}
+
 	// get the last saved bridge validator set
 	lastSavedBridgeValidators, err := k.BridgeValset.Get(ctx)
 	if err != nil {

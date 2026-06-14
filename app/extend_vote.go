@@ -3,7 +3,6 @@ package app
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -15,6 +14,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/spf13/viper"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
@@ -283,19 +283,11 @@ func (h *VoteExtHandler) SignInitialMessage(operatorAddress string) ([]byte, []b
 	messageA := fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddress)
 	messageB := fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddress)
 
-	// convert message to bytes
-	msgBytesA := []byte(messageA)
-	msgBytesB := []byte(messageB)
+	// hash messages with Keccak256 (Ethereum standard) then keyring auto-hashes with SHA256
+	// producing SHA256(Keccak256(message)) to match the bridge contract's _verifySig scheme
+	msgHashABytes := crypto.Keccak256([]byte(messageA))
+	msgHashBBytes := crypto.Keccak256([]byte(messageB))
 
-	// hash message
-	msgHashABytes32 := sha256.Sum256(msgBytesA)
-	msgHashBBytes32 := sha256.Sum256(msgBytesB)
-
-	// convert [32]byte to []byte
-	msgHashABytes := msgHashABytes32[:]
-	msgHashBBytes := msgHashBBytes32[:]
-
-	// sign message
 	sigA, err := h.SignMessage(msgHashABytes)
 	if err != nil {
 		return nil, nil, err

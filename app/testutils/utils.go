@@ -96,17 +96,12 @@ func GenerateSignatures(t *testing.T) (sigA, sigB []byte, evmAddr common.Address
 
 	msgA := "TellorLayer: Initial bridge signature A"
 	msgB := "TellorLayer: Initial bridge signature B"
-	msgBytesA := []byte(msgA)
-	msgBytesB := []byte(msgB)
 
-	// hash messages
-	msgHashBytes32A := sha256.Sum256(msgBytesA)
-	msgHashBytesA := msgHashBytes32A[:]
+	// hash messages with Keccak256 (matching the updated EVMAddressFromSignatures)
+	msgHashBytesA := crypto.Keccak256([]byte(msgA))
+	msgHashBytesB := crypto.Keccak256([]byte(msgB))
 
-	msgHashBytes32B := sha256.Sum256(msgBytesB)
-	msgHashBytesB := msgHashBytes32B[:]
-
-	// hash the hash, since the keyring signer automatically hashes the message
+	// hash the hash to simulate the keyring signer's auto-hash with SHA256
 	msgDoubleHashBytes32A := sha256.Sum256(msgHashBytesA)
 	msgDoubleHashBytesA := msgDoubleHashBytes32A[:]
 

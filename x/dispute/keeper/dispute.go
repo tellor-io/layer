@@ -280,7 +280,7 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 	dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
 	dispute.DisputeStartBlock = uint64(ctx.BlockHeight())
 	dispute.DisputeRound++
-	dispute.PrevDisputeIds = append(dispute.PrevDisputeIds, disputeId)
+	dispute.PrevDisputeIds = append(dispute.PrevDisputeIds, prevDisputeId)
 
 	err := k.Disputes.Set(ctx, dispute.DisputeId, dispute)
 	if err != nil {
