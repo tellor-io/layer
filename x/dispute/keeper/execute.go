@@ -8,6 +8,7 @@ import (
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -48,17 +49,20 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		return errors.New("vote already executed")
 	}
 
-	// the burnAmount starts at %5 of disputeFee, half of which is burned and the other half is distributed to the voters
+	// the burnAmount is round 1's 5% of the dispute fee plus all later-round fees, half
+	// of which is burned and the other half is distributed to the voters
 	disputeBurnAmountDec := math.LegacyNewDecFromInt(dispute.BurnAmount)
 	halfBurnAmountDec := disputeBurnAmountDec.Quo(math.LegacyNewDec(2))
 	halfBurnAmount := halfBurnAmountDec.TruncateInt()
 	voterReward := halfBurnAmount
-	totalVoterPower, err := k.GetSumOfAllGroupVotesAllRounds(ctx, id)
+	// only user and reporter votes can claim through CalculateReward; team votes decide
+	// outcomes but earn nothing, so they must not cause a voter reward to be reserved
+	totalVoterPower, err := k.GetSumOfUserAndReporterVotesAllRounds(ctx, id)
 	if err != nil {
 		return err
 	}
 	if totalVoterPower.IsZero() {
-		// if no voters, burn the entire burnAmount
+		// if no claim-eligible voters, burn the entire burnAmount
 		halfBurnAmount = dispute.BurnAmount
 		// non voters get nothing
 		voterReward = math.ZeroInt()
@@ -79,7 +83,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		if err != nil {
 			return err
 		}
-		if err := k.reporterKeeper.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr); err != nil {
+		if err := k.reporterKeeper.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, dispute.InitialEvidence.BlockNumber, dispute.HashId); err != nil {
 			return err
 		}
 		vote.Executed = true
@@ -116,7 +120,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		if err != nil {
 			return err
 		}
-		if err := k.reporterKeeper.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr); err != nil {
+		if err := k.reporterKeeper.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, dispute.InitialEvidence.BlockNumber, dispute.HashId); err != nil {
 			return err
 		}
 		vote.Executed = true
@@ -153,8 +157,8 @@ func (k Keeper) RefundFailedDisputeFee(ctx context.Context, feePayer sdk.AccAddr
 	return k.ReturnFeetoStake(ctx, hashId, fee)
 }
 
-func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, disputeFeeTotal math.Int, hashId []byte, slashAmt math.Int) (math.Int, error) {
-	amtFixed6, remainder := CalculateRefundAmount(payerInfo.Amount, slashAmt, disputeFeeTotal)
+func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeeRd1 math.Int, hashId []byte) (math.Int, error) {
+	amtFixed6, remainder := CalculateRefundAmount(payerInfo.Amount, totalFeeRd1)
 
 	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amtFixed6))
 	if !payerInfo.FromBond {
@@ -173,7 +177,10 @@ func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.
 	return remainder, k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amtFixed6)))
 }
 
-func (k Keeper) GetSumOfAllGroupVotesAllRounds(ctx context.Context, id uint64) (math.Int, error) {
+// GetSumOfUserAndReporterVotesAllRounds sums claim-eligible (user and reporter) vote
+// power across all rounds of a dispute. Team votes are excluded because they cannot
+// claim voter rewards.
+func (k Keeper) GetSumOfUserAndReporterVotesAllRounds(ctx context.Context, id uint64) (math.Int, error) {
 	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
 		return math.Int{}, err
@@ -181,19 +188,20 @@ func (k Keeper) GetSumOfAllGroupVotesAllRounds(ctx context.Context, id uint64) (
 
 	sumUsers := uint64(0)
 	sumReporters := uint64(0)
-	sumTeam := uint64(0)
 
 	// process vote counts function
 	processVoteCounts := func(voteCounts types.StakeholderVoteCounts) {
 		sumUsers += voteCounts.Users.Support + voteCounts.Users.Against + voteCounts.Users.Invalid
 		sumReporters += voteCounts.Reporters.Support + voteCounts.Reporters.Against + voteCounts.Reporters.Invalid
-		sumTeam += voteCounts.Team.Support + voteCounts.Team.Against + voteCounts.Team.Invalid
 	}
 
 	// process current dispute
 	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
 	if err != nil {
-		return math.ZeroInt(), nil
+		if !errors.Is(err, collections.ErrNotFound) {
+			return math.Int{}, err
+		}
+		voteCounts = types.StakeholderVoteCounts{}
 	}
 	processVoteCounts(voteCounts)
 
@@ -201,18 +209,16 @@ func (k Keeper) GetSumOfAllGroupVotesAllRounds(ctx context.Context, id uint64) (
 	for _, roundId := range dispute.PrevDisputeIds {
 		voteCounts, err := k.VoteCountsByGroup.Get(ctx, roundId)
 		if err != nil {
-			voteCounts = types.StakeholderVoteCounts{
-				Users:     types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
-				Reporters: types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
-				Team:      types.VoteCounts{Support: 0, Against: 0, Invalid: 0},
+			if !errors.Is(err, collections.ErrNotFound) {
+				return math.Int{}, err
 			}
+			voteCounts = types.StakeholderVoteCounts{}
 		}
 		processVoteCounts(voteCounts)
 	}
 
 	totalSum := math.NewInt(int64(sumUsers)).
-		Add(math.NewInt(int64(sumReporters))).
-		Add(math.NewInt(int64(sumTeam)))
+		Add(math.NewInt(int64(sumReporters)))
 
 	return totalSum, nil
 }

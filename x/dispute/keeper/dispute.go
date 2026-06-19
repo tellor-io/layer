@@ -175,12 +175,11 @@ func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroRe
 	if err != nil {
 		return err
 	}
-	return k.JailReporter(ctx, reporterAddr, jailDuration)
+	return k.reporterKeeper.JailReporter(ctx, reporterAddr, jailDuration, report.BlockNumber, hashId)
 }
 
-func (k Keeper) JailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDuration uint64) error {
-	// noop for major duration, reporter is removed from store so no need to jail
-	return k.reporterKeeper.JailReporter(ctx, repAddr, jailDuration)
+func (k Keeper) JailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDuration, reportBlockNumber uint64, disputeHashID []byte) error {
+	return k.reporterKeeper.JailReporter(ctx, repAddr, jailDuration, reportBlockNumber, disputeHashID)
 }
 
 // Get percentage of slash amount based on category, returned as fixed6
@@ -259,8 +258,9 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 		msg.Fee.Amount = roundFee
 	}
 
-	// Pay the dispute fee
-	if err := k.PayDisputeFee(ctx, sender, msg.Fee, msg.PayFromBond, dispute.HashId, true); err != nil {
+	// Pay the dispute fee. Later-round fees are fully consumed (never refunded), so they
+	// must not be tracked as refundable first-round stake.
+	if err := k.PayDisputeFee(ctx, sender, msg.Fee, msg.PayFromBond, dispute.HashId, false); err != nil {
 		return err
 	}
 
@@ -269,7 +269,8 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 	}
 
 	prevDisputeId := dispute.DisputeId
-	dispute.BurnAmount = dispute.BurnAmount.Add(fivePercent) // burnAmt = 5 % of fee total
+	dispute.BurnAmount = dispute.BurnAmount.Add(roundFee)
+	// FeeTotal is informationl only, tracks total fees paid across rounds.
 	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Fee.Amount)
 	disputeId := k.NextDisputeId(ctx)
 	dispute.DisputeId = disputeId

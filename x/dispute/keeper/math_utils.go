@@ -8,20 +8,20 @@ import (
 
 // CalculateRefundAmount calculates the amount of the fee to be refunded to the payer
 // returns the amount to be refunded (amtFixed6) and the remainder (dust)
-func CalculateRefundAmount(payerFee, totalFeeRd1, disputeFeeTotal math.Int) (math.Int, math.Int) {
+func CalculateRefundAmount(payerFee, totalFeeRd1 math.Int) (math.Int, math.Int) {
 	payerFeeDec := payerFee.ToLegacyDec()
 	totalFeeRd1Dec := math.LegacyNewDecFromInt(totalFeeRd1)
 
-	// fivePercent = disputeFeeTotal / 20
-	fivePercentDec := disputeFeeTotal.ToLegacyDec().Quo(math.LegacyNewDec(20))
+	// fivePercent = totalFeeRd1 / 20
+	fivePercentDec := totalFeeRd1.ToLegacyDec().Quo(math.LegacyNewDec(20))
 	fivePercent := fivePercentDec.TruncateInt()
 
-	// totalFeeMinusBurn = disputeFeeTotal - fivePercent
-	totalFeeMinusBurnDec := disputeFeeTotal.Sub(fivePercent).ToLegacyDec()
+	// totalFeeMinusBurn = totalFeeRd1 - fivePercent
+	totalFeeMinusBurnDec := totalFeeRd1.Sub(fivePercent).ToLegacyDec()
 
 	powerReductionDec := math.LegacyNewDecFromInt(layertypes.PowerReduction)
 
-	// (fee paid in rd1 / total fee rd 1) * (total fee all rounds - burn)
+	// (payerFee / totalFeeRd1) * (totalFeeRd1 - burn)
 	// result scaled by PowerReduction
 	amtFixed12Dec := payerFeeDec.Mul(totalFeeMinusBurnDec).Mul(powerReductionDec).Quo(totalFeeRd1Dec)
 

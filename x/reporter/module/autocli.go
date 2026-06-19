@@ -117,9 +117,9 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod:      "UnjailReporter",
-					Use:            "unjail-reporter",
+					Use:            "unjail-reporter [reporter-address]",
 					Short:          "Execute the UnjailReporter RPC method",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
 				},
 				{
 					RpcMethod: "WithdrawTip",

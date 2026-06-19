@@ -79,6 +79,16 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 	globalUserPower := math.ZeroInt()
 
 	for _, pastId := range dispute.PrevDisputeIds {
+		// Get global vote counts for the past dispute. A missing row means that
+		// round had no user/reporter votes to reward.
+		pastVoteCounts, err := k.VoteCountsByGroup.Get(ctx, pastId)
+		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				continue
+			}
+			return math.Int{}, err
+		}
+
 		pastVoterInfo, err := k.Voter.Get(ctx, collections.Join(pastId, addr.Bytes()))
 		if err == nil {
 			// Voter info exists for this past dispute
@@ -88,13 +98,10 @@ func (k Keeper) CalculateReward(ctx sdk.Context, addr sdk.AccAddress, id uint64)
 				return math.Int{}, err
 			}
 			addrUserPower = addrUserPower.Add(userTips)
-		}
-
-		// Get global vote counts for the past dispute
-		pastVoteCounts, err := k.VoteCountsByGroup.Get(ctx, pastId)
-		if err != nil {
+		} else if !errors.Is(err, collections.ErrNotFound) {
 			return math.Int{}, err
 		}
+
 		// Add up the global power for each group
 		globalReporterPower = globalReporterPower.Add(math.NewIntFromUint64(pastVoteCounts.Reporters.Support)).
 			Add(math.NewIntFromUint64(pastVoteCounts.Reporters.Against)).Add(math.NewIntFromUint64(pastVoteCounts.Reporters.Invalid))

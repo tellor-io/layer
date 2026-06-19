@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -51,7 +52,12 @@ func (k Keeper) HasMin(ctx context.Context, addr sdk.AccAddress, minRequired mat
 // the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties.
 // It also tracks period data for reward distribution - when delegation state changes,
 // the previous period is queued for distribution.
+// Ready pending reporter switches involving this reporter are finalized first (same entry path as MsgSubmitValue).
 func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, queryId []byte) (math.Int, error) {
+	if err := k.applyReadyPendingSwitchesForReporter(ctx, repAddr); err != nil {
+		return math.Int{}, err
+	}
+
 	needsRecalc, err := k.needsStakeRecalc(ctx, repAddr)
 	if err != nil {
 		return math.Int{}, err
@@ -171,6 +177,85 @@ func (k Keeper) TotalReporterPower(ctx context.Context) (math.Int, error) {
 	return valSet.TotalBondedTokens(ctx)
 }
 
+// PotentialStakeSelectorGas makes the power-cap selector expansion visible to gas
+// accounting on top of normal store-read costs, mirroring the active-set scan
+// precedent in the ante decorator.
+const PotentialStakeSelectorGas = storetypes.Gas(10_000)
+
+const potentialStakeSelectorGasMessage = "reporter power cap selector check"
+
+// ReporterPotentialStake returns a conservative upper bound on a reporter's
+// reporting power, used by the power-cap check: the bonded tokens of every
+// selector currently selecting the reporter — including dispute-locked selectors
+// (their stake returns when the lock expires) and regardless of reporter jail
+// status — excluding selectors with a pending switch away (that stake already
+// stopped counting and is committed elsewhere), plus the bonded tokens of
+// selectors with a pending switch into the reporter (booked against the cap as
+// soon as the switch is scheduled). Read-only: never mutates state.
+func (k Keeper) ReporterPotentialStake(ctx context.Context, repAddr sdk.AccAddress) (math.Int, error) {
+	gasMeter := sdk.UnwrapSDKContext(ctx).GasMeter()
+	total := math.ZeroInt()
+	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr.Bytes())
+	if err != nil {
+		return math.Int{}, err
+	}
+	defer iter.Close()
+	for ; iter.Valid(); iter.Next() {
+		selectorAddr, err := iter.PrimaryKey()
+		if err != nil {
+			return math.Int{}, err
+		}
+		hasPending, err := k.hasOutgoingPendingSwitch(ctx, repAddr.Bytes(), selectorAddr)
+		if err != nil {
+			return math.Int{}, err
+		}
+		if hasPending {
+			continue
+		}
+		gasMeter.ConsumeGas(PotentialStakeSelectorGas, potentialStakeSelectorGasMessage)
+		bonded, _, err := k.CheckSelectorsDelegations(ctx, sdk.AccAddress(selectorAddr))
+		if err != nil {
+			return math.Int{}, err
+		}
+		total = total.Add(bonded)
+	}
+
+	inRange := collections.NewPrefixedPairRange[[]byte, []byte](repAddr.Bytes())
+	inIter, err := k.IncomingPendingSwitchIdx.Iterate(ctx, inRange)
+	if err != nil {
+		return math.Int{}, err
+	}
+	defer inIter.Close()
+	for ; inIter.Valid(); inIter.Next() {
+		pk, err := inIter.Key()
+		if err != nil {
+			return math.Int{}, err
+		}
+		gasMeter.ConsumeGas(PotentialStakeSelectorGas, potentialStakeSelectorGasMessage)
+		bonded, _, err := k.CheckSelectorsDelegations(ctx, sdk.AccAddress(pk.K2()))
+		if err != nil {
+			return math.Int{}, err
+		}
+		total = total.Add(bonded)
+	}
+	return total, nil
+}
+
+// PendingSwitchTarget returns the reporter a selector's scheduled pending switch
+// is headed to, if any. Callers use it to attribute the selector's stake to the
+// reporter that will actually receive it and to avoid double-booking re-sent
+// switches against the power cap.
+func (k Keeper) PendingSwitchTarget(ctx context.Context, selectorAddr sdk.AccAddress) (bool, []byte, error) {
+	selection, err := k.Selectors.Get(ctx, selectorAddr.Bytes())
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return false, nil, nil
+		}
+		return false, nil, err
+	}
+	return k.pendingSwitchToReporter(ctx, sdk.AccAddress(selection.Reporter), selectorAddr)
+}
+
 // Delegation returns a selector's reporter, delegations count, and locked time information
 func (k Keeper) Delegation(ctx context.Context, delegator sdk.AccAddress) (types.Selection, error) {
 	return k.Selectors.Get(ctx, delegator)
@@ -194,15 +279,77 @@ func (k Keeper) GetNumOfSelectors(ctx context.Context, repAddr sdk.AccAddress) (
 	return len(keys), nil
 }
 
-func (k Keeper) GetSelector(ctx context.Context, selectorAddr sdk.AccAddress) (types.Selection, error) {
-	return k.Selectors.Get(ctx, selectorAddr)
+// GetNumOfSelectorsIncludingPendingIncoming returns active selectors plus selectors
+// with a pending switch into this reporter that has not yet been finalized.
+func (k Keeper) GetNumOfSelectorsIncludingPendingIncoming(ctx context.Context, repAddr sdk.AccAddress) (int, error) {
+	count, err := k.GetNumOfSelectors(ctx, repAddr)
+	if err != nil {
+		return 0, err
+	}
+	head, err := k.reporterPendingSwitchHeadOrZero(ctx, repAddr.Bytes())
+	if err != nil {
+		return 0, err
+	}
+	return count + int(head.IncomingCount), nil
 }
 
-// GetReporterStake counts the total amount of BONDED tokens for a given reporter's selectors
-// at the time of reporting and returns the total amount plus stores
-// the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties.
-// Also returns aggregated selector shares and a hash of the delegation state for reward distribution.
+// CountSelectorsDelegatingToReporterExcludingSelf counts selector accounts whose
+// Selection.reporter is repAddr, excluding repAddr itself (the self-reporter row).
+func (k Keeper) CountSelectorsDelegatingToReporterExcludingSelf(ctx context.Context, repAddr sdk.AccAddress) (int, error) {
+	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr.Bytes())
+	if err != nil {
+		return 0, err
+	}
+	keys, err := iter.PrimaryKeys()
+	if err != nil {
+		return 0, err
+	}
+	n := 0
+	for _, selAddr := range keys {
+		if !bytes.Equal(selAddr, repAddr.Bytes()) {
+			n++
+		}
+	}
+	return n, nil
+}
+
+// GetSelector returns the stored selection row without mutating state (safe for queries).
+func (k Keeper) GetSelector(ctx context.Context, selectorAddr sdk.AccAddress) (types.Selection, error) {
+	return k.Selectors.Get(ctx, selectorAddr.Bytes())
+}
+
+// GetSelectorForStake returns the selection row and clears expired dispute-jail before
+// stake counting or dispute voting (mutates state when the sentence has ended).
+func (k Keeper) GetSelectorForStake(ctx context.Context, selectorAddr sdk.AccAddress) (types.Selection, error) {
+	sel, err := k.Selectors.Get(ctx, selectorAddr.Bytes())
+	if err != nil {
+		return types.Selection{}, err
+	}
+	if err := k.lazyClearSelectorLocksIfExpired(ctx, selectorAddr, &sel); err != nil {
+		return types.Selection{}, err
+	}
+	return sel, nil
+}
+
+// GetReporterStake counts bonded selector stake for reporting paths. It finalizes ready
+// pending switches, may lazy-unjail expired selector rows, and update RecalcAtTime when
+// locks are still active.
 func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math.Int, []*types.TokenOriginInfo, []*types.SelectorShare, []byte, error) {
+	return k.getReporterStake(ctx, repAddr, true)
+}
+
+// GetReporterStakeView is the read-only stake snapshot used by gRPC queries.
+func (k Keeper) GetReporterStakeView(ctx context.Context, repAddr sdk.AccAddress) (math.Int, []*types.TokenOriginInfo, []*types.SelectorShare, []byte, error) {
+	return k.getReporterStake(ctx, repAddr, false)
+}
+
+func (k Keeper) getReporterStake(ctx context.Context, repAddr sdk.AccAddress, mutate bool) (math.Int, []*types.TokenOriginInfo, []*types.SelectorShare, []byte, error) {
+	if mutate {
+		if err := k.applyReadyPendingSwitchesForReporter(ctx, repAddr); err != nil {
+			return math.Int{}, nil, nil, nil, err
+		}
+	}
+
 	reporter, err := k.Reporters.Get(ctx, repAddr.Bytes())
 	if err != nil {
 		return math.Int{}, nil, nil, nil, err
@@ -232,16 +379,37 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (m
 		if err != nil {
 			return math.Int{}, nil, nil, nil, err
 		}
-		// get delegator count
-		selector, err := k.Selectors.Get(ctx, selectorAddr)
+		var selector types.Selection
+		if mutate {
+			selector, err = k.GetSelectorForStake(ctx, sdk.AccAddress(selectorAddr))
+		} else {
+			selector, err = k.GetSelector(ctx, sdk.AccAddress(selectorAddr))
+		}
 		if err != nil {
 			return math.Int{}, nil, nil, nil, err
 		}
-		// skip selectors that are locked out for switching reporters
-		if selector.LockedUntilTime.After(sdk.UnwrapSDKContext(ctx).BlockTime()) {
-			lockUnix := selector.LockedUntilTime.Unix()
-			if earliestFutureLock == 0 || lockUnix < earliestFutureLock {
-				earliestFutureLock = lockUnix
+		// Skip selectors with a pending switch away from this reporter: their
+		// stake no longer counts toward the outgoing reporter until ReporterStake
+		// finalizes the handoff after unlock height.
+		hasPending, err := k.hasOutgoingPendingSwitch(ctx, repAddr.Bytes(), selectorAddr)
+		if err != nil {
+			return math.Int{}, nil, nil, nil, err
+		}
+		if hasPending && bytes.Equal(selector.Reporter, repAddr.Bytes()) {
+			continue
+		}
+		// skip dispute-locked selectors (locked_until_time and/or jailed)
+		now := sdk.UnwrapSDKContext(ctx).BlockTime()
+		if selectorStakeLocked(selector, now) {
+			lockUntil := selector.LockedUntilTime
+			if selector.DisputeLockedUntil.After(lockUntil) {
+				lockUntil = selector.DisputeLockedUntil
+			}
+			if lockUntil.After(now) {
+				lockUnix := lockUntil.Unix()
+				if earliestFutureLock == 0 || lockUnix < earliestFutureLock {
+					earliestFutureLock = lockUnix
+				}
 			}
 			continue
 		}
@@ -312,15 +480,16 @@ func (k Keeper) GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (m
 			hasher.Write(selectorTotal.BigInt().Bytes())
 		}
 	}
-	// Update RecalcAtTime: if there are still-locked selectors, set the earliest expiry
-	// so needsStakeRecalc triggers when it expires. If none are locked, clean up.
-	if earliestFutureLock == 0 {
-		err = k.RecalcAtTime.Remove(ctx, repAddr.Bytes())
-	} else {
-		err = k.RecalcAtTime.Set(ctx, repAddr.Bytes(), earliestFutureLock)
-	}
-	if err != nil {
-		return math.Int{}, nil, nil, nil, err
+	// Update RecalcAtTime on write paths only (queries must not mutate store).
+	if mutate {
+		if earliestFutureLock == 0 {
+			err = k.RecalcAtTime.Remove(ctx, repAddr.Bytes())
+		} else {
+			err = k.RecalcAtTime.Set(ctx, repAddr.Bytes(), earliestFutureLock)
+		}
+		if err != nil {
+			return math.Int{}, nil, nil, nil, err
+		}
 	}
 
 	// Finalize hash with total

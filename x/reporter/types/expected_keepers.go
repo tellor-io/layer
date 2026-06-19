@@ -30,10 +30,13 @@ type StakingKeeper interface {
 	) (amount math.Int, err error)
 	ValidatorsPowerStoreIterator(ctx context.Context) (store.Iterator, error)
 	TotalBondedTokens(context.Context) (math.Int, error)
+	MaxValidators(ctx context.Context) (uint32, error)
+	PowerReduction(ctx context.Context) math.Int
 	GetValidatorSet() stakingtypes.ValidatorSet
 	IterateDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress, cb func(delegation stakingtypes.Delegation) (stop bool)) error
 	IterateDelegatorUnbondingDelegations(ctx context.Context, delegator sdk.AccAddress, cb func(ubd stakingtypes.UnbondingDelegation) (stop bool)) error
 	GetAllDelegatorDelegations(ctx context.Context, delegator sdk.AccAddress) ([]stakingtypes.Delegation, error)
+	GetValidatorDelegations(ctx context.Context, valAddr sdk.ValAddress) ([]stakingtypes.Delegation, error)
 	// Methods imported from account should be defined here
 }
 
@@ -77,4 +80,5 @@ type RegistryKeeper interface {
 type OracleKeeper interface {
 	GetLastReportedAtTimestamp(ctx context.Context, reporter []byte) (uint64, error)
 	GetBlockHeightFromTimestamp(ctx context.Context, timestamp time.Time) (uint64, error)
+	GetMaxOpenCommitmentForReporter(ctx context.Context, reporter []byte) (uint64, error)
 }

@@ -265,6 +265,14 @@ paths:
                     type: string
                     format: uint64
                     title: max number of validators a user can delegate too
+                  max_pending_switches_per_reporter:
+                    type: string
+                    format: uint64
+                    description: >-
+                      max pending reporter switches involving a reporter as
+                      outgoing or incoming
+
+                      (each side capped separately when scheduling a switch).
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -566,6 +574,12 @@ paths:
                       title: >-
                         individual_delegations contains details of each
                         delegation (only populated when delegations_count > 1)
+                    dispute_locked_until:
+                      type: string
+                      format: date-time
+                      description: >-
+                        dispute_locked_until — dispute jail only (query
+                        surface).
                   title: >-
                     FormattedSelection is a type that represents a selector's
                     information for the SelectionsTo query
@@ -1775,138 +1789,6 @@ paths:
           format: uint64
       tags:
         - Query
-  /tellor-io/layer/oracle/get_no_stake_reports_by_qid/{query_id}:
-    get:
-      summary: Queries a list of no stake reports by query id
-      operationId: GetNoStakeReportsByQueryId
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              no_stake_reports:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    reporter:
-                      type: string
-                      title: reporter is the address of the reporter
-                    value:
-                      type: string
-                      title: hex string of the response value
-                    timestamp:
-                      type: string
-                      format: uint64
-                      title: timestamp of when the report was created
-                    block_number:
-                      type: string
-                      format: uint64
-                      title: block number of when the report was created
-                  title: MicroReports but with strings to return for queries
-                description: no_stake_reports defines the no stake reports.
-              pagination:
-                description: pagination defines the pagination in the response.
-                type: object
-                properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    description: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently. It will be empty if
-                      there are no more results.
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-            description: >-
-              QueryGetNoStakeReportsByQueryIdResponse is the response type for
-              the Query/GetNoStakeReportsByQueryId RPC method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: query_id
-          description: query_id defines the query id hex string.
-          in: path
-          required: true
-          type: string
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-          in: query
-          required: false
-          type: boolean
-      tags:
-        - Query
   /tellor-io/layer/oracle/get_query/{query_id}/{id}:
     get:
       summary: Queries a query by query id and id
@@ -2084,138 +1966,6 @@ paths:
           in: path
           required: true
           type: string
-      tags:
-        - Query
-  /tellor-io/layer/oracle/get_reporters_no_stake_reports/{reporter}:
-    get:
-      summary: Queries a list of no stake reports by reporter
-      operationId: GetReportersNoStakeReports
-      responses:
-        '200':
-          description: A successful response.
-          schema:
-            type: object
-            properties:
-              no_stake_reports:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    reporter:
-                      type: string
-                      title: reporter is the address of the reporter
-                    value:
-                      type: string
-                      title: hex string of the response value
-                    timestamp:
-                      type: string
-                      format: uint64
-                      title: timestamp of when the report was created
-                    block_number:
-                      type: string
-                      format: uint64
-                      title: block number of when the report was created
-                  title: MicroReports but with strings to return for queries
-                description: no_stake_reports defines the no stake reports.
-              pagination:
-                description: pagination defines the pagination in the response.
-                type: object
-                properties:
-                  next_key:
-                    type: string
-                    format: byte
-                    description: |-
-                      next_key is the key to be passed to PageRequest.key to
-                      query the next page most efficiently. It will be empty if
-                      there are no more results.
-                  total:
-                    type: string
-                    format: uint64
-                    title: >-
-                      total is total number of results available if
-                      PageRequest.count_total
-
-                      was set, its value is undefined otherwise
-            description: >-
-              QueryGetReportersNoStakeReportsResponse is the response type for
-              the Query/GetReportersNoStakeReports RPC method.
-        default:
-          description: An unexpected error response.
-          schema:
-            type: object
-            properties:
-              code:
-                type: integer
-                format: int32
-              message:
-                type: string
-              details:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    '@type':
-                      type: string
-                  additionalProperties: {}
-      parameters:
-        - name: reporter
-          description: reporter defines the reporter address.
-          in: path
-          required: true
-          type: string
-        - name: pagination.key
-          description: |-
-            key is a value returned in PageResponse.next_key to begin
-            querying the next page most efficiently. Only one of offset or key
-            should be set.
-          in: query
-          required: false
-          type: string
-          format: byte
-        - name: pagination.offset
-          description: >-
-            offset is a numeric offset that can be used when key is unavailable.
-
-            It is less efficient than using key. Only one of offset or key
-            should
-
-            be set.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.limit
-          description: >-
-            limit is the total number of results to be returned in the result
-            page.
-
-            If left empty it will default to a value to be set by each app.
-          in: query
-          required: false
-          type: string
-          format: uint64
-        - name: pagination.count_total
-          description: >-
-            count_total is set to true  to indicate that the result set should
-            include
-
-            a count of the total number of items available for pagination in
-            UIs.
-
-            count_total is only respected when offset is used. It is ignored
-            when key
-
-            is set.
-          in: query
-          required: false
-          type: boolean
-        - name: pagination.reverse
-          description: >-
-            reverse is set to true if results are to be returned in the
-            descending order.
-          in: query
-          required: false
-          type: boolean
       tags:
         - Query
   /tellor-io/layer/oracle/get_reports_by_aggregate/{query_id}/{timestamp}:
@@ -2565,7 +2315,7 @@ paths:
           schema:
             type: object
             properties:
-              queries:
+              active_queries:
                 type: array
                 items:
                   type: object
@@ -2602,7 +2352,48 @@ paths:
                   title: >-
                     QueryMetaButString is QueryMeta but with the query_data as a
                     string for query display purposes
-                title: querymeta but string query data
+                title: querymeta but string query data for active queries
+              expired_queries:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uint64
+                      title: >-
+                        unique id of the query that changes after query's
+                        lifecycle ends
+                    amount:
+                      type: string
+                      title: amount of tokens that was tipped
+                    expiration:
+                      type: string
+                      format: uint64
+                      title: expiration time of the query
+                    registry_spec_block_window:
+                      type: string
+                      format: uint64
+                      title: timeframe of the query according to the data spec
+                    has_revealed_reports:
+                      type: boolean
+                      title: indicates whether query has revealed reports
+                    query_data:
+                      type: string
+                      title: decoded hex string of the query_data
+                    query_type:
+                      type: string
+                      title: string identifier of the data spec
+                    cycle_list:
+                      type: boolean
+                      title: bool cycle list query
+                  title: >-
+                    QueryMetaButString is QueryMeta but with the query_data as a
+                    string for query display purposes
+                title: querymeta but string query data for expired queries with tips
+              available_tips_total:
+                type: string
+                description: available_tips_total defines the total available tips.
               pagination:
                 description: pagination defines the pagination in the response.
                 type: object

@@ -57,7 +57,7 @@ func (k *KeeperTestSuite) TestMsgServerAddFeeToDispute() {
 	k.bankKeeper.On("SendCoinsFromAccountToModule", k.ctx, creator, types.ModuleName, sdk.NewCoins(fee)).Return(nil)
 	k.reporterKeeper.On("EscrowReporterStake", k.ctx, sdk.MustAccAddressFromBech32(dispute.InitialEvidence.Reporter), dispute.InitialEvidence.Power, uint64(1), dispute.SlashAmount, dispute.InitialEvidence.QueryId, dispute.HashId).Return(nil)
 	// jail duration is 0
-	k.reporterKeeper.On("JailReporter", k.ctx, sdk.MustAccAddressFromBech32(dispute.InitialEvidence.Reporter), uint64(0)).Return(nil)
+	k.reporterKeeper.On("JailReporter", k.ctx, sdk.MustAccAddressFromBech32(dispute.InitialEvidence.Reporter), uint64(0), dispute.InitialEvidence.BlockNumber, dispute.HashId).Return(nil)
 
 	res, err = k.msgServer.AddFeeToDispute(k.ctx, &msg)
 	k.NoError(err)
@@ -128,7 +128,7 @@ func BenchmarkAddFeeToDispute(b *testing.B) {
 		dispute.HashId).Return(nil).Maybe()
 	rk.On("JailReporter", ctx,
 		sdk.MustAccAddressFromBech32(dispute.InitialEvidence.Reporter),
-		uint64(0)).Return(nil).Maybe()
+		uint64(0), dispute.InitialEvidence.BlockNumber, dispute.HashId).Return(nil).Maybe()
 
 	// reset timer before the benchmark loop
 	b.ResetTimer()

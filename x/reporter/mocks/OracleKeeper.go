@@ -62,6 +62,30 @@ func (_m *OracleKeeper) GetLastReportedAtTimestamp(ctx context.Context, reporter
 	return r0, r1
 }
 
+// GetMaxOpenCommitmentForReporter provides a mock function with given fields: ctx, reporter
+func (_m *OracleKeeper) GetMaxOpenCommitmentForReporter(ctx context.Context, reporter []byte) (uint64, error) {
+	ret := _m.Called(ctx, reporter)
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) (uint64, error)); ok {
+		return rf(ctx, reporter)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) uint64); ok {
+		r0 = rf(ctx, reporter)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []byte) error); ok {
+		r1 = rf(ctx, reporter)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewOracleKeeper interface {
 	mock.TestingT
 	Cleanup(func())

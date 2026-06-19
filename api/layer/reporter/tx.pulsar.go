@@ -4363,12 +4363,14 @@ func (x *fastReflection_MsgRemoveSelectorResponse) ProtoMethods() *protoiface.Me
 
 var (
 	md_MsgUnjailReporter                  protoreflect.MessageDescriptor
+	fd_MsgUnjailReporter_signer_address   protoreflect.FieldDescriptor
 	fd_MsgUnjailReporter_reporter_address protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_layer_reporter_tx_proto_init()
 	md_MsgUnjailReporter = File_layer_reporter_tx_proto.Messages().ByName("MsgUnjailReporter")
+	fd_MsgUnjailReporter_signer_address = md_MsgUnjailReporter.Fields().ByName("signer_address")
 	fd_MsgUnjailReporter_reporter_address = md_MsgUnjailReporter.Fields().ByName("reporter_address")
 }
 
@@ -4437,6 +4439,12 @@ func (x *fastReflection_MsgUnjailReporter) Interface() protoreflect.ProtoMessage
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_MsgUnjailReporter) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.SignerAddress != "" {
+		value := protoreflect.ValueOfString(x.SignerAddress)
+		if !f(fd_MsgUnjailReporter_signer_address, value) {
+			return
+		}
+	}
 	if x.ReporterAddress != "" {
 		value := protoreflect.ValueOfString(x.ReporterAddress)
 		if !f(fd_MsgUnjailReporter_reporter_address, value) {
@@ -4458,6 +4466,8 @@ func (x *fastReflection_MsgUnjailReporter) Range(f func(protoreflect.FieldDescri
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_MsgUnjailReporter) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
+	case "layer.reporter.MsgUnjailReporter.signer_address":
+		return x.SignerAddress != ""
 	case "layer.reporter.MsgUnjailReporter.reporter_address":
 		return x.ReporterAddress != ""
 	default:
@@ -4476,6 +4486,8 @@ func (x *fastReflection_MsgUnjailReporter) Has(fd protoreflect.FieldDescriptor) 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgUnjailReporter) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
+	case "layer.reporter.MsgUnjailReporter.signer_address":
+		x.SignerAddress = ""
 	case "layer.reporter.MsgUnjailReporter.reporter_address":
 		x.ReporterAddress = ""
 	default:
@@ -4494,6 +4506,9 @@ func (x *fastReflection_MsgUnjailReporter) Clear(fd protoreflect.FieldDescriptor
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_MsgUnjailReporter) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
+	case "layer.reporter.MsgUnjailReporter.signer_address":
+		value := x.SignerAddress
+		return protoreflect.ValueOfString(value)
 	case "layer.reporter.MsgUnjailReporter.reporter_address":
 		value := x.ReporterAddress
 		return protoreflect.ValueOfString(value)
@@ -4517,6 +4532,8 @@ func (x *fastReflection_MsgUnjailReporter) Get(descriptor protoreflect.FieldDesc
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgUnjailReporter) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
+	case "layer.reporter.MsgUnjailReporter.signer_address":
+		x.SignerAddress = value.Interface().(string)
 	case "layer.reporter.MsgUnjailReporter.reporter_address":
 		x.ReporterAddress = value.Interface().(string)
 	default:
@@ -4539,6 +4556,8 @@ func (x *fastReflection_MsgUnjailReporter) Set(fd protoreflect.FieldDescriptor, 
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgUnjailReporter) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "layer.reporter.MsgUnjailReporter.signer_address":
+		panic(fmt.Errorf("field signer_address of message layer.reporter.MsgUnjailReporter is not mutable"))
 	case "layer.reporter.MsgUnjailReporter.reporter_address":
 		panic(fmt.Errorf("field reporter_address of message layer.reporter.MsgUnjailReporter is not mutable"))
 	default:
@@ -4554,6 +4573,8 @@ func (x *fastReflection_MsgUnjailReporter) Mutable(fd protoreflect.FieldDescript
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_MsgUnjailReporter) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "layer.reporter.MsgUnjailReporter.signer_address":
+		return protoreflect.ValueOfString("")
 	case "layer.reporter.MsgUnjailReporter.reporter_address":
 		return protoreflect.ValueOfString("")
 	default:
@@ -4625,6 +4646,10 @@ func (x *fastReflection_MsgUnjailReporter) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
+		l = len(x.SignerAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		l = len(x.ReporterAddress)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
@@ -4662,6 +4687,13 @@ func (x *fastReflection_MsgUnjailReporter) ProtoMethods() *protoiface.Methods {
 			i -= len(x.ReporterAddress)
 			copy(dAtA[i:], x.ReporterAddress)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ReporterAddress)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.SignerAddress) > 0 {
+			i -= len(x.SignerAddress)
+			copy(dAtA[i:], x.SignerAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.SignerAddress)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -4715,6 +4747,38 @@ func (x *fastReflection_MsgUnjailReporter) ProtoMethods() *protoiface.Methods {
 			}
 			switch fieldNum {
 			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SignerAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.SignerAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ReporterAddress", wireType)
 				}
@@ -7347,7 +7411,10 @@ type MsgUnjailReporter struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ReporterAddress string `protobuf:"bytes,1,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
+	// signer_address is the transaction signer (self-unjail when equal to reporter_address).
+	SignerAddress string `protobuf:"bytes,1,opt,name=signer_address,json=signerAddress,proto3" json:"signer_address,omitempty"`
+	// reporter_address is the jailed reporter or selector to unjail.
+	ReporterAddress string `protobuf:"bytes,2,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
 }
 
 func (x *MsgUnjailReporter) Reset() {
@@ -7368,6 +7435,13 @@ func (*MsgUnjailReporter) ProtoMessage() {}
 // Deprecated: Use MsgUnjailReporter.ProtoReflect.Descriptor instead.
 func (*MsgUnjailReporter) Descriptor() ([]byte, []int) {
 	return file_layer_reporter_tx_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *MsgUnjailReporter) GetSignerAddress() string {
+	if x != nil {
+		return x.SignerAddress
+	}
+	return ""
 }
 
 func (x *MsgUnjailReporter) GetReporterAddress() string {
@@ -7658,14 +7732,18 @@ var file_layer_reporter_tx_proto_rawDesc = []byte{
 	0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x3a, 0x10, 0x82, 0xe7, 0xb0, 0x2a, 0x0b, 0x61,
 	0x6e, 0x79, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x1b, 0x0a, 0x19, 0x4d, 0x73,
 	0x67, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x77, 0x0a, 0x11, 0x4d, 0x73, 0x67, 0x55, 0x6e,
-	0x6a, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x43, 0x0a, 0x10,
-	0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
-	0x52, 0x0f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x3a, 0x1d, 0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x82, 0xe7, 0xb0, 0x2a, 0x10,
-	0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xb6, 0x01, 0x0a, 0x11, 0x4d, 0x73, 0x67, 0x55,
+	0x6e, 0x6a, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x3f, 0x0a,
+	0x0e, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
+	0x0d, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x43,
+	0x0a, 0x10, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x52, 0x0f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x3a, 0x1b, 0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x82, 0xe7, 0xb0,
+	0x2a, 0x0e, 0x73, 0x69, 0x67, 0x6e, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
 	0x22, 0x1b, 0x0a, 0x19, 0x4d, 0x73, 0x67, 0x55, 0x6e, 0x6a, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x70,
 	0x6f, 0x72, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xbc, 0x01,
 	0x0a, 0x0e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x69, 0x70,

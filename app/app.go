@@ -219,6 +219,7 @@ type App struct {
 	EvidenceKeeper        evidencekeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
 	ICAHostKeeper         icahostkeeper.Keeper
+	ICAControllerKeeper   icacontrollerkeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	GroupKeeper           groupkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
@@ -498,7 +499,11 @@ func New(
 		app.MsgServiceRouter(),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	icaControllerKeeper := icacontrollerkeeper.NewKeeper(
+	// ibc-go v8.3.0 (PR #5785) added a host-side query message, so the ICA host
+	// keeper's gRPC query router must be set explicitly or NewMsgServerImpl panics
+	// with "query router must not be nil".
+	app.ICAHostKeeper.WithQueryRouter(bApp.GRPCQueryRouter())
+	app.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
 		appCodec, keys[icacontrollertypes.StoreKey],
 		nil,
 		app.IBCKeeper.ChannelKeeper, // may be replaced with middleware such as ics29 fee
@@ -694,7 +699,7 @@ func New(
 		ibctm.AppModule{},
 		ibc.NewAppModule(app.IBCKeeper),
 		transfer.NewAppModule(app.TransferKeeper),
-		ica.NewAppModule(&icaControllerKeeper, &app.ICAHostKeeper),
+		icaModule{ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper)},
 		icqcustomModule{icq.NewAppModule(app.ICQKeeper, nil)},
 		// this line is used by starport scaffolding # stargate/app/appModule
 	)
