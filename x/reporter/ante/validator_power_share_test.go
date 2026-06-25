@@ -261,26 +261,55 @@ func TestValidatorPowerShareDelegateToJailed(t *testing.T) {
 	// Delegating to a jailed validator does not unjail it; the active-set
 	// projection skips jailed validators, so the jailed validator is never
 	// treated as an entrant and the delegate must not be rejected by the cap.
-	_, sk, ctx, decorator := setupPowerCapDecorator(t, 100)
+	testCases := []struct {
+		name         string
+		status       stakingtypes.BondStatus
+		tokens       int64
+		amount       int64
+		mockDelegate bool
+	}{
+		{
+			name:   "unbonded jailed validator stays inactive",
+			status: stakingtypes.Unbonded,
+			tokens: 50,
+			amount: 1,
+		},
+		{
+			name:         "bonded jailed validator stays inactive",
+			status:       stakingtypes.Bonded,
+			tokens:       29,
+			amount:       2,
+			mockDelegate: true,
+		},
+	}
 
-	bondedVal := sdk.ValAddress(sample.AccAddressBytes())
-	jailedVal := sdk.ValAddress(sample.AccAddressBytes())
-	mockValidator(sk, ctx, validator(bondedVal, stakingtypes.Bonded, math.NewInt(100)))
-	jailed := validator(jailedVal, stakingtypes.Unbonded, math.NewInt(50))
-	jailed.Jailed = true
-	mockValidator(sk, ctx, jailed)
-	mockPowerStore(sk, ctx, 1, bondedVal)
-	del := sample.AccAddressBytes()
-	sk.On("GetAllDelegatorDelegations", ctx, del).Return([]stakingtypes.Delegation{}, nil)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, sk, ctx, decorator := setupPowerCapDecorator(t, 100)
 
-	tx := buildTx(t, &stakingtypes.MsgDelegate{
-		DelegatorAddress: del.String(),
-		ValidatorAddress: jailedVal.String(),
-		Amount:           coin(1),
-	})
+			bondedVal := sdk.ValAddress(sample.AccAddressBytes())
+			jailedVal := sdk.ValAddress(sample.AccAddressBytes())
+			mockValidator(sk, ctx, validator(bondedVal, stakingtypes.Bonded, math.NewInt(100)))
+			jailed := validator(jailedVal, tc.status, math.NewInt(tc.tokens))
+			jailed.Jailed = true
+			mockValidator(sk, ctx, jailed)
+			mockPowerStore(sk, ctx, 1, bondedVal)
+			del := sample.AccAddressBytes()
+			sk.On("GetAllDelegatorDelegations", ctx, del).Return([]stakingtypes.Delegation{}, nil)
+			if tc.mockDelegate {
+				mockIterateDelegations(sk, ctx, del, []stakingtypes.Delegation{})
+			}
 
-	_, err := decorator.AnteHandle(ctx, tx, false, noopNext)
-	require.NoError(t, err)
+			tx := buildTx(t, &stakingtypes.MsgDelegate{
+				DelegatorAddress: del.String(),
+				ValidatorAddress: jailedVal.String(),
+				Amount:           coin(tc.amount),
+			})
+
+			_, err := decorator.AnteHandle(ctx, tx, false, noopNext)
+			require.NoError(t, err)
+		})
+	}
 }
 
 func TestValidatorPowerShareUnjail(t *testing.T) {

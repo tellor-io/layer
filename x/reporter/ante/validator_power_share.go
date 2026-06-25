@@ -14,7 +14,7 @@ import (
 
 type validatorCapCandidate struct {
 	validator    prospectiveValidator
-	bondedAfter  bool
+	activeAfter  bool
 	beforeActive math.Int
 	afterActive  math.Int
 }
@@ -30,8 +30,12 @@ func validatorCapBeforeActive(validator prospectiveValidator) math.Int {
 	return math.ZeroInt()
 }
 
-func validatorCapAfterActive(validator prospectiveValidator, bondedAfter bool) math.Int {
-	if bondedAfter {
+func validatorCapActiveAfter(validator prospectiveValidator) bool {
+	return validator.validator.IsBonded() && !validator.validator.IsJailed()
+}
+
+func validatorCapAfterActive(validator prospectiveValidator, activeAfter bool) math.Int {
+	if activeAfter {
 		return validator.postTokens
 	}
 	return math.ZeroInt()
@@ -41,17 +45,17 @@ func (t TrackStakeChangesDecorator) upsertValidatorCapCandidate(
 	candidates map[validatorAddressKey]validatorCapCandidate,
 	validatorKey validatorAddressKey,
 	validator prospectiveValidator,
-	bondedAfter bool,
+	activeAfter bool,
 ) {
 	entry, ok := candidates[validatorKey]
 	if !ok {
-		entry = validatorCapCandidate{validator: validator, bondedAfter: bondedAfter}
+		entry = validatorCapCandidate{validator: validator, activeAfter: activeAfter}
 	} else {
 		entry.validator = validator
-		entry.bondedAfter = bondedAfter
+		entry.activeAfter = activeAfter
 	}
 	entry.beforeActive = validatorCapBeforeActive(entry.validator)
-	entry.afterActive = validatorCapAfterActive(entry.validator, entry.bondedAfter)
+	entry.afterActive = validatorCapAfterActive(entry.validator, entry.activeAfter)
 	candidates[validatorKey] = entry
 }
 
@@ -86,7 +90,7 @@ func (t TrackStakeChangesDecorator) checkValidatorPowerShares(ctx sdk.Context, s
 
 	for _, validatorKey := range sortedKeys(stakeChanges.validatorProjections) {
 		validator := stakeChanges.validatorProjections[validatorKey]
-		t.upsertValidatorCapCandidate(candidates, validatorKey, validator, validator.validator.IsBonded())
+		t.upsertValidatorCapCandidate(candidates, validatorKey, validator, validatorCapActiveAfter(validator))
 	}
 	for _, validator := range bondedChanges.entering {
 		validatorKey := newValidatorAddressKey(validator.addr)

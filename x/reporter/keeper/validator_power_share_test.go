@@ -224,14 +224,14 @@ func TestWithdrawTipValidatorPowerShare(t *testing.T) {
 	val := bondedVal(valAddr, 29)
 	sk.On("GetValidator", ctx, valAddr).Return(val, nil)
 	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100), nil)
-	sk.On("Delegate", ctx, selector, math.NewInt(2), stakingtypes.Bonded, val, false).Return(math.LegacyZeroDec(), nil).Maybe()
-	bk.On("DelegateCoinsFromAccountToModule", ctx, mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
-	ak.On("GetModuleAddress", types.TipsEscrowPool).Return(sample.AccAddressBytes()).Maybe()
 
 	_, err := msg.WithdrawTip(ctx, &types.MsgWithdrawTip{
 		SelectorAddress: selector.String(), ValidatorAddress: valAddr.String(),
 	})
 	require.ErrorIs(t, err, types.ErrExceedsMaxValidatorPowerShare)
+	sk.AssertNotCalled(t, "Delegate", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	bk.AssertNotCalled(t, "DelegateCoinsFromAccountToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	ak.AssertNotCalled(t, "GetModuleAddress", mock.Anything)
 	tips, err := k.SelectorTips.Get(ctx, selector)
 	require.NoError(t, err)
 	require.Equal(t, math.LegacyNewDec(2), tips)
@@ -272,12 +272,12 @@ func TestReturnSlashedTokensScansFallback(t *testing.T) {
 }
 
 func TestReturnSlashedTokensUnbondedOriginalRefundsUnbonded(t *testing.T) {
-	// M4: an existing but not-bonded original validator is refunded to itself
-	// with tokenSrc=Unbonded. No bonded fallback scan occurs, the validator cap
-	// is intentionally not enforced (no immediate active bonded stake is
-	// created), and the amount is returned through the unbonded pool so the
-	// dispute caller routes it to NotBondedPoolName. This holds even when every
-	// bonded validator would be over the cap.
+	// An existing but not-bonded original validator is refunded to itself with
+	// tokenSrc=Unbonded. No bonded fallback scan occurs, the validator cap is
+	// intentionally not enforced (no immediate active bonded stake is created),
+	// and the amount is returned through the unbonded pool so the dispute caller
+	// routes it to NotBondedPoolName. This holds even when every bonded
+	// validator would be over the cap.
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 	delAddr := sample.AccAddressBytes()
 	origAddr := sdk.ValAddress(sample.AccAddressBytes())
@@ -363,9 +363,9 @@ func TestAddAmountToStakeNoBondedDelegationScans(t *testing.T) {
 	require.NoError(t, k.AddAmountToStake(ctx, acc, amt))
 }
 
-// TestAddAmountToStakeCallbackErrors covers M3: the iterator callback must
-// propagate cap, validator-lookup, and Delegate errors instead of swallowing
-// them and silently succeeding.
+// TestAddAmountToStakeCallbackErrors covers iterator callback failure handling:
+// cap, validator-lookup, and Delegate errors must propagate instead of being
+// swallowed while iteration silently succeeds.
 func TestAddAmountToStakeCallbackErrors(t *testing.T) {
 	amt := math.NewInt(2)
 	delCall := func(acc sdk.AccAddress, valAddr sdk.ValAddress) func(mock.Arguments) {
@@ -415,11 +415,11 @@ func TestAddAmountToStakeCallbackErrors(t *testing.T) {
 
 // --- cumulative enforcement ---
 
-// TestReturnSlashedTokensCumulativeEnforcement (E5) refunds two origins to the
-// same bonded validator. The first preserves the original (under cap); the
-// second, re-fetched against the now-larger validator state, exceeds the cap
-// and scans to the under-cap fallback. Guards both the per-origin GetValidator
-// re-fetch (numerator) and the projected bonded delta (denominator).
+// TestReturnSlashedTokensCumulativeEnforcement refunds two origins to the same
+// bonded validator. The first preserves the original (under cap); the second,
+// re-fetched against the now-larger validator state, exceeds the cap and scans
+// to the under-cap fallback. Guards both the per-origin GetValidator re-fetch
+// (numerator) and the projected bonded delta (denominator).
 func TestReturnSlashedTokensCumulativeEnforcement(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 	delAddr1, delAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()

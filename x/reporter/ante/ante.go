@@ -72,7 +72,7 @@ type stakeChangeTracker struct {
 	activeSetDelta bool
 	// unjailOccurred records whether any MsgUnjail occurred in this tx so the
 	// validator cap can project active-set re-entry without routing it through
-	// the 5% tracker, delegator cap, or reporter cap (M2 unjail isolation).
+	// the 5% tracker, delegator cap, or reporter cap.
 	unjailOccurred bool
 	// selectionChanges records selectors whose selected reporter changes within
 	// this tx (CreateReporter/SelectReporter/SwitchReporter), so the reporter
@@ -500,7 +500,7 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 		}
 		// A pure unjail only clears Jailed; the active-set re-entry is projected
 		// for the validator cap only. Do not route through the 5% tracker,
-		// delegator cap, or reporter cap (M2 isolation).
+		// delegator cap, or reporter cap.
 		validator.validator.Jailed = false
 		stakeChanges.setProjectedValidator(validator)
 		stakeChanges.markUnjail()

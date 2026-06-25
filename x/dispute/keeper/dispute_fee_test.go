@@ -59,9 +59,10 @@ func (k *KeeperTestSuite) TestReturnFeetoStake() {
 	k.NoError(k.disputeKeeper.ReturnFeetoStake(k.ctx, []byte("hash"), math.OneInt()))
 }
 
-// TestReturnSlashedTokensMixedPools guards Finding 3: when the reporter keeper
-// returns both bonded and unbonded refund amounts, the dispute caller must route
-// each to its own pool instead of sending the full slash amount to a single pool.
+// TestReturnSlashedTokensMixedPools guards mixed-pool routing: when the
+// reporter keeper returns both bonded and unbonded refund amounts, the dispute
+// caller must route each to its own pool instead of sending the full slash
+// amount to a single pool.
 func (k *KeeperTestSuite) TestReturnSlashedTokensMixedPools() {
 	k.ctx = k.ctx.WithBlockTime(time.Now())
 	dispute := k.dispute(k.ctx)
