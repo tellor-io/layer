@@ -522,7 +522,7 @@ func DefaultSetupConfig() SetupConfig {
 const MaxReporterPowerShareGenesisKey = "app_state.reporter.params.max_reporter_power_share"
 
 // MaxValidatorPowerShareGenesisKey is the genesis path of the validator power
-// cap param (ADR 1013). Exported for the same pre-cap-binary stripping reason.
+// cap param (ADR 1012). Exported for the same pre-cap-binary stripping reason.
 const MaxValidatorPowerShareGenesisKey = "app_state.reporter.params.max_validator_power_share"
 
 // CreateStandardGenesis creates a standard genesis configuration
@@ -538,9 +538,8 @@ func CreateStandardGenesis() []cosmos.GenesisKV {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
 		// most fixtures run 2-3 validators whose accounts hold well over 30% of
-		// bonded stake, so the reporter power cap (ADR 1012) and validator power
-		// cap (ADR 1013) are disabled here; dedicated cap tests opt back in with
-		// an explicit 0.30 override
+		// bonded stake, so the reporter and validator power caps (ADR 1012) are
+		// disabled here; dedicated cap tests opt back in with an explicit 0.30 override
 		cosmos.NewGenesisKV(MaxReporterPowerShareGenesisKey, "1.000000000000000000"),
 		cosmos.NewGenesisKV(MaxValidatorPowerShareGenesisKey, "1.000000000000000000"),
 	}

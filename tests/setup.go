@@ -359,7 +359,7 @@ func (s *SharedSetup) SetupTest(tb testing.TB) {
 
 	// Integration fixtures use small validator sets where a single validator
 	// holds well over 30% of bonded stake, so disable the validator power cap
-	// (ADR 1013) by default. Dedicated cap tests opt back in with 0.30.
+	// (ADR 1012) by default. Dedicated cap tests opt back in with 0.30.
 	reporterParams, err := s.Reporterkeeper.Params.Get(s.Ctx)
 	require.NoError(tb, err)
 	reporterParams.MaxValidatorPowerShare = math.LegacyOneDec()

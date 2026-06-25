@@ -79,7 +79,7 @@ jq '.app_state.gov.params.voting_period = "5m"' ~/.layer/config/genesis.json > t
 jq '.app_state.gov.params.max_deposit_period = "1m"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].denom = "loya"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
-# single/dual validator devnets exceed the 30% reporter power cap (ADR 1012), so disable it
+# single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012), so disable both
 jq '.app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
 jq '.app_state.reporter.params.max_validator_power_share = "1.000000000000000000"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
 jq '.app_state.gov.params.expedited_voting_period = "3m"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
@@ -89,7 +89,7 @@ jq '.app_state.gov.params.voting_period = "5m"' ~/.layer/$KEY_NAME/config/genesi
 jq '.app_state.gov.params.max_deposit_period = "1m"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].denom = "loya"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
-# single/dual validator devnets exceed the 30% reporter power cap (ADR 1012), so disable it
+# single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012), so disable both
 jq '.app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
 jq '.app_state.reporter.params.max_validator_power_share = "1.000000000000000000"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
 jq '.app_state.gov.params.expedited_voting_period = "3m"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
@@ -99,7 +99,7 @@ jq '.app_state.gov.params.voting_period = "5m"' ~/.layer/bill/config/genesis.jso
 jq '.app_state.gov.params.max_deposit_period = "1m"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].denom = "loya"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
-# single/dual validator devnets exceed the 30% reporter power cap (ADR 1012), so disable it
+# single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012), so disable both
 jq '.app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
 jq '.app_state.reporter.params.max_validator_power_share = "1.000000000000000000"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
 jq '.app_state.gov.params.expedited_voting_period = "3m"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json

@@ -32,7 +32,7 @@ Upgrade to v6.1.6:
   increase a selector's bonded stake. The param deserializes as nil for existing
   chains, which the ante treats as disabled; this handler sets the 0.30 default so
   the cap activates at upgrade.
-- Validator power cap (ADR 1013): new reporter module param
+- Validator power cap (ADR 1012): new reporter module param
   max_validator_power_share caps a single bonded validator's active bonded stake
   below a share of total bonded tokens (default 30%). Enforcement is
   acquisition-only and covers staking/authz messages in the
