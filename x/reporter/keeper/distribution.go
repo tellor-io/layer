@@ -104,41 +104,18 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []
 		}
 		bondAmt := shareAmt.TruncateInt()
 
-		original, getErr := k.stakingKeeper.GetValidator(ctx, valAddr)
-		var (
-			tokenSrc stakingtypes.BondStatus
-			val      stakingtypes.Validator
-		)
-		switch {
-		case getErr != nil && !errors.Is(getErr, stakingtypes.ErrNoValidatorFound):
-			return math.ZeroInt(), math.ZeroInt(), getErr
-		case errors.Is(getErr, stakingtypes.ErrNoValidatorFound):
-			// missing original: scan for an under-cap bonded validator
-			val, err = k.pickUnderCapBondedValidator(ctx, bondAmt, maxShare, projectedBondedDelta)
-			if err != nil {
-				return math.ZeroInt(), math.ZeroInt(), err
-			}
-			tokenSrc = stakingtypes.Bonded
-			bondedReturn = bondedReturn.Add(bondAmt)
-		case !original.IsBonded():
-			// not-bonded original: refund as unbonded (no active bonded acquisition)
-			val = original
-			tokenSrc = stakingtypes.Unbonded
-			unbondedReturn = unbondedReturn.Add(bondAmt)
-		default:
-			// bonded original: preserve when under cap, otherwise scan
-			val, err = k.bondedValidatorForDelegation(ctx, original, bondAmt, maxShare, projectedBondedDelta)
-			if err != nil {
-				return math.ZeroInt(), math.ZeroInt(), err
-			}
-			tokenSrc = stakingtypes.Bonded
-			bondedReturn = bondedReturn.Add(bondAmt)
-		}
-		if _, err := k.delegateToStakeAndEmit(ctx, delAddr, bondAmt, tokenSrc, val); err != nil {
+		dest, err := k.resolveDelegationDestination(ctx, valAddr, bondAmt, maxShare, projectedBondedDelta, routingPreserveOriginalPool)
+		if err != nil {
 			return math.ZeroInt(), math.ZeroInt(), err
 		}
-		if tokenSrc == stakingtypes.Bonded {
+		if _, err := k.delegateToStakeAndEmit(ctx, delAddr, bondAmt, dest.TokenSrc, dest.Validator); err != nil {
+			return math.ZeroInt(), math.ZeroInt(), err
+		}
+		if dest.TokenSrc == stakingtypes.Bonded {
+			bondedReturn = bondedReturn.Add(bondAmt)
 			projectedBondedDelta = projectedBondedDelta.Add(bondAmt)
+		} else {
+			unbondedReturn = unbondedReturn.Add(bondAmt)
 		}
 	}
 	// route truncation dust to the bonded pool so callers never own dust policy
@@ -182,25 +159,11 @@ func (k Keeper) FeeRefund(ctx context.Context, hashId []byte, amt math.Int) erro
 	for _, source := range trackedFees.TokenOrigins {
 		shareAmt := math.LegacyNewDecFromInt(source.Amount).Mul(math.LegacyNewDecFromInt(amt)).Quo(math.LegacyNewDecFromInt(trackedFees.Total)).TruncateInt()
 
-		original, getErr := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(source.ValidatorAddress))
-		var val stakingtypes.Validator
-		switch {
-		case getErr != nil && !errors.Is(getErr, stakingtypes.ErrNoValidatorFound):
-			return getErr
-		case errors.Is(getErr, stakingtypes.ErrNoValidatorFound) || !original.IsBonded():
-			// missing or not-bonded original: scan for an under-cap bonded validator
-			val, err = k.pickUnderCapBondedValidator(ctx, shareAmt, maxShare, projectedBondedDelta)
-			if err != nil {
-				return err
-			}
-		default:
-			// bonded original: preserve when under cap, otherwise scan
-			val, err = k.bondedValidatorForDelegation(ctx, original, shareAmt, maxShare, projectedBondedDelta)
-			if err != nil {
-				return err
-			}
+		dest, err := k.resolveDelegationDestination(ctx, sdk.ValAddress(source.ValidatorAddress), shareAmt, maxShare, projectedBondedDelta, routingForceBonded)
+		if err != nil {
+			return err
 		}
-		if _, err := k.delegateToStakeAndEmit(ctx, sdk.AccAddress(source.DelegatorAddress), shareAmt, stakingtypes.Bonded, val); err != nil {
+		if _, err := k.delegateToStakeAndEmit(ctx, sdk.AccAddress(source.DelegatorAddress), shareAmt, dest.TokenSrc, dest.Validator); err != nil {
 			return err
 		}
 		projectedBondedDelta = projectedBondedDelta.Add(shareAmt)
@@ -270,7 +233,8 @@ func (k Keeper) AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt ma
 			return false
 		}
 
-		// bonded delegation found: preserve when under cap, otherwise scan
+		// Single delegation per call; iterator stops at first bonded match, so no
+		// cross-origin projectedBondedDelta accumulation is needed here.
 		dst, err := k.bondedValidatorForDelegation(ctx, val, amt, maxShare, math.ZeroInt())
 		if err != nil {
 			callbackErr = err

@@ -71,7 +71,12 @@ func (k Keeper) checkValidatorPowerShareDelegation(
 	// validator.Tokens is re-fetched per origin by the callers, so it already
 	// reflects earlier refunds in this call; no per-validator projection here.
 	validatorAfter := validator.Tokens.Add(amount)
-	if types.ExceedsPowerShare(validatorAfter, totalBondedAfter, maxShare) {
+	check := types.ValidatorCapCheck{
+		ValidatorTokensAfter: validatorAfter,
+		TotalBondedAfter:     totalBondedAfter,
+		MaxShare:             maxShare,
+	}
+	if check.Exceeds() {
 		valAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
 		if err != nil {
 			return err
@@ -140,4 +145,77 @@ func (k Keeper) bondedValidatorForDelegation(ctx context.Context, preferred stak
 	}
 
 	return k.pickUnderCapBondedValidator(ctx, amount, maxShare, projectedBondedDelta)
+}
+
+// delegationRouting selects how resolveDelegationDestination picks a validator
+// and bond status when the original destination is missing or not bonded.
+type delegationRouting int
+
+const (
+	// routingPreserveOriginalPool keeps not-bonded originals on the unbonded
+	// pool without cap checking (ReturnSlashedTokens; ADR accepted residual risk).
+	routingPreserveOriginalPool delegationRouting = iota
+	// routingForceBonded scans for an under-cap bonded validator (FeeRefund).
+	routingForceBonded
+)
+
+type delegationDestination struct {
+	Validator             stakingtypes.Validator
+	TokenSrc              stakingtypes.BondStatus
+	CountsTowardBondedCap bool
+}
+
+// resolveDelegationDestination picks where to delegate amount for dispute/refund
+// paths. Policy divergence between routingPreserveOriginalPool and
+// routingForceBonded is intentional; see ADR 1012 ReturnSlashedTokens gap.
+func (k Keeper) resolveDelegationDestination(
+	ctx context.Context,
+	originalValAddr sdk.ValAddress,
+	amount math.Int,
+	maxShare math.LegacyDec,
+	projectedBondedDelta math.Int,
+	routing delegationRouting,
+) (delegationDestination, error) {
+	original, getErr := k.stakingKeeper.GetValidator(ctx, originalValAddr)
+	switch {
+	case getErr != nil && !errors.Is(getErr, stakingtypes.ErrNoValidatorFound):
+		return delegationDestination{}, getErr
+	case errors.Is(getErr, stakingtypes.ErrNoValidatorFound):
+		val, err := k.pickUnderCapBondedValidator(ctx, amount, maxShare, projectedBondedDelta)
+		if err != nil {
+			return delegationDestination{}, err
+		}
+		return delegationDestination{
+			Validator:             val,
+			TokenSrc:              stakingtypes.Bonded,
+			CountsTowardBondedCap: true,
+		}, nil
+	case !original.IsBonded():
+		if routing == routingPreserveOriginalPool {
+			return delegationDestination{
+				Validator:             original,
+				TokenSrc:              stakingtypes.Unbonded,
+				CountsTowardBondedCap: false,
+			}, nil
+		}
+		val, err := k.pickUnderCapBondedValidator(ctx, amount, maxShare, projectedBondedDelta)
+		if err != nil {
+			return delegationDestination{}, err
+		}
+		return delegationDestination{
+			Validator:             val,
+			TokenSrc:              stakingtypes.Bonded,
+			CountsTowardBondedCap: true,
+		}, nil
+	default:
+		val, err := k.bondedValidatorForDelegation(ctx, original, amount, maxShare, projectedBondedDelta)
+		if err != nil {
+			return delegationDestination{}, err
+		}
+		return delegationDestination{
+			Validator:             val,
+			TokenSrc:              stakingtypes.Bonded,
+			CountsTowardBondedCap: true,
+		}, nil
+	}
 }
