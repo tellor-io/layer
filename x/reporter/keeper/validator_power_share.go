@@ -20,71 +20,40 @@ import (
 // cap validator found is chosen. Amounts are never split.
 const ValidatorPowerFallbackScanLimit uint32 = 32
 
-// validatorPowerCapState carries the projected bonded-token delta accumulated
-// across multiple origins in a single ReturnSlashedTokens/FeeRefund call.
-//
-// stakingKeeper.Delegate with tokenSrc=Bonded and a bonded destination updates
-// the validator's Tokens in the staking store immediately (via
-// AddValidatorTokensAndShares) and each origin re-fetches GetValidator, so the
-// cap's numerator (validator tokens) already reflects earlier refunds in the
-// same call. The denominator, TotalBondedTokens, is the bonded pool's bank
-// balance and is NOT updated by Delegate (tokenSrc=Bonded&&IsBonded performs no
-// pool transfer); the dispute caller moves those coins only after the reporter
-// keeper returns. Without projecting the bonded delta into the denominator,
-// later origins are checked against a stale, too-small total and a destination's
-// real post-refund share is under-counted. Only the denominator is projected
-// here; the numerator is left to the fresh per-origin GetValidator read.
-type validatorPowerCapState struct {
-	bondedDelta math.Int
-}
-
-func newValidatorPowerCapState() *validatorPowerCapState {
-	return &validatorPowerCapState{bondedDelta: math.ZeroInt()}
-}
-
-// applyBondedDelegation records a bonded-pool delegation of amount so later
-// origins in the same call are checked against the projected total bonded.
-func (s *validatorPowerCapState) applyBondedDelegation(amount math.Int) {
-	if amount.IsNil() || !amount.IsPositive() {
-		return
+// maxValidatorPowerShare reads the governance param once per high-level keeper
+// operation. Returns nil (cap disabled) if params are unset.
+func (k Keeper) maxValidatorPowerShare(ctx context.Context) (math.LegacyDec, error) {
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return math.LegacyDec{}, nil
+		}
+		return math.LegacyDec{}, err
 	}
-	s.bondedDelta = s.bondedDelta.Add(amount)
+	return params.MaxValidatorPowerShare, nil
 }
 
-// checkValidatorPowerShareDelegationWithProjection is the cumulative-aware core
-// of the validator acquisition cap. It rejects a bonded delegation when the
-// validator's post-delegation share of projected total bonded stake is strictly
-// above max_validator_power_share. A nil/zero amount, a non-bonded destination,
-// and nil/zero/>=1 params all short-circuit. Callers that must preserve the
-// validator acquisition invariant should choose a bonded destination before
-// calling this helper. capState may be nil, in which case no cross-origin
-// projection is applied (single-call semantics).
-func (k Keeper) checkValidatorPowerShareDelegationWithProjection(
+// checkValidatorPowerShareDelegation is the core of the validator acquisition
+// cap. It rejects a bonded delegation when the validator's post-delegation share
+// of projected total bonded stake is strictly above max_validator_power_share.
+// A nil/zero amount, a non-bonded destination, and nil/zero/>=1 maxShare all
+// short-circuit. projectedBondedDelta carries the cumulative bonded delta across
+// origins in the same call so the denominator reflects in-flight refunds.
+func (k Keeper) checkValidatorPowerShareDelegation(
 	ctx context.Context,
 	validator stakingtypes.Validator,
 	amount math.Int,
-	capState *validatorPowerCapState,
+	maxShare math.LegacyDec,
+	projectedBondedDelta math.Int,
 ) error {
 	if amount.IsNil() || !amount.IsPositive() {
 		return nil
 	}
-
-	params, err := k.Params.Get(ctx)
-	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return nil
-		}
-		return err
-	}
-
-	maxShare := params.MaxValidatorPowerShare
-	if maxShare.IsNil() || !maxShare.IsPositive() || maxShare.GTE(math.LegacyOneDec()) {
+	if !types.PowerShareEnabled(maxShare) {
 		return nil
 	}
 
-	// Direct keeper enforcement only checks immediate active bonded acquisition.
-	// Callers that redirect not-bonded originals must do so before this point
-	// by selecting a bonded fallback destination.
+	// direct keeper enforcement only checks immediate active bonded acquisition
 	if !validator.IsBonded() {
 		return nil
 	}
@@ -94,10 +63,6 @@ func (k Keeper) checkValidatorPowerShareDelegationWithProjection(
 		return err
 	}
 
-	projectedBondedDelta := math.ZeroInt()
-	if capState != nil {
-		projectedBondedDelta = capState.bondedDelta
-	}
 	totalBondedAfter := currentTotalBonded.Add(projectedBondedDelta).Add(amount)
 	if !totalBondedAfter.IsPositive() {
 		return nil
@@ -106,8 +71,7 @@ func (k Keeper) checkValidatorPowerShareDelegationWithProjection(
 	// validator.Tokens is re-fetched per origin by the callers, so it already
 	// reflects earlier refunds in this call; no per-validator projection here.
 	validatorAfter := validator.Tokens.Add(amount)
-	maxAllowed := maxShare.MulInt(totalBondedAfter)
-	if validatorAfter.ToLegacyDec().GT(maxAllowed) {
+	if types.ExceedsPowerShare(validatorAfter, totalBondedAfter, maxShare) {
 		valAddr, err := sdk.ValAddressFromBech32(validator.OperatorAddress)
 		if err != nil {
 			return err
@@ -120,21 +84,22 @@ func (k Keeper) checkValidatorPowerShareDelegationWithProjection(
 
 // CheckValidatorPowerShareDelegation enforces the validator acquisition cap for
 // keeper paths that call stakingKeeper.Delegate directly, bypassing the ante
-// stake-change tracker. It is the single-call entry point with no cross-origin
-// projection (used by WithdrawTip and external callers). Looping callers
-// (ReturnSlashedTokens/FeeRefund) thread a capState through the unexported
-// helpers so the denominator reflects all in-flight bonded refunds.
+// stake-change tracker. It is the single-call entry point (no cross-origin
+// projection) used by WithdrawTip and external callers.
 func (k Keeper) CheckValidatorPowerShareDelegation(ctx context.Context, validator stakingtypes.Validator, amount math.Int) error {
-	return k.checkValidatorPowerShareDelegationWithProjection(ctx, validator, amount, nil)
+	maxShare, err := k.maxValidatorPowerShare(ctx)
+	if err != nil {
+		return err
+	}
+	return k.checkValidatorPowerShareDelegation(ctx, validator, amount, maxShare, math.ZeroInt())
 }
 
 // pickUnderCapBondedValidator scans a bounded list of bonded validators in
 // staking power-store order and returns the first one that can accept the
 // delegation under the validator cap. It never splits amounts and never indexes
 // an empty result. If every scanned validator fails the cap, it returns
-// ErrExceedsMaxValidatorPowerShare; other errors propagate. capState threads
-// the projected bonded delta across origins in the same call.
-func (k Keeper) pickUnderCapBondedValidator(ctx context.Context, amount math.Int, capState *validatorPowerCapState) (stakingtypes.Validator, error) {
+// ErrExceedsMaxValidatorPowerShare; other errors propagate.
+func (k Keeper) pickUnderCapBondedValidator(ctx context.Context, amount math.Int, maxShare math.LegacyDec, projectedBondedDelta math.Int) (stakingtypes.Validator, error) {
 	vals, err := k.GetBondedValidators(ctx, ValidatorPowerFallbackScanLimit)
 	if err != nil {
 		return stakingtypes.Validator{}, err
@@ -144,7 +109,7 @@ func (k Keeper) pickUnderCapBondedValidator(ctx context.Context, amount math.Int
 	}
 
 	for _, val := range vals {
-		err := k.checkValidatorPowerShareDelegationWithProjection(ctx, val, amount, capState)
+		err := k.checkValidatorPowerShareDelegation(ctx, val, amount, maxShare, projectedBondedDelta)
 		if err == nil {
 			return val, nil
 		}
@@ -162,11 +127,10 @@ func (k Keeper) pickUnderCapBondedValidator(ctx context.Context, amount math.Int
 
 // bondedValidatorForDelegation preserves a preferred bonded destination when it
 // is under the cap, and otherwise falls back to a bounded scan for an under-cap
-// bonded validator. Non-validator-cap errors propagate. capState threads the
-// projected bonded delta across origins in the same call.
-func (k Keeper) bondedValidatorForDelegation(ctx context.Context, preferred stakingtypes.Validator, amount math.Int, capState *validatorPowerCapState) (stakingtypes.Validator, error) {
+// bonded validator. Non-validator-cap errors propagate.
+func (k Keeper) bondedValidatorForDelegation(ctx context.Context, preferred stakingtypes.Validator, amount math.Int, maxShare math.LegacyDec, projectedBondedDelta math.Int) (stakingtypes.Validator, error) {
 	if preferred.IsBonded() {
-		err := k.checkValidatorPowerShareDelegationWithProjection(ctx, preferred, amount, capState)
+		err := k.checkValidatorPowerShareDelegation(ctx, preferred, amount, maxShare, projectedBondedDelta)
 		if err == nil {
 			return preferred, nil
 		}
@@ -175,5 +139,5 @@ func (k Keeper) bondedValidatorForDelegation(ctx context.Context, preferred stak
 		}
 	}
 
-	return k.pickUnderCapBondedValidator(ctx, amount, capState)
+	return k.pickUnderCapBondedValidator(ctx, amount, maxShare, projectedBondedDelta)
 }
