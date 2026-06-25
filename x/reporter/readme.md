@@ -51,7 +51,7 @@ Allows selectors to directly withdraw reporting rewards and stake them with a BO
 - `./layerd tx reporter withdraw-tip [selector-address] [validator-address]`
 
 ### UpdateParams
-Update module parameters through governance. Params include the minimum comission rate for reporters, the minimum loya required to be a reporter, the maximum number of selectors for a reporter, and the maximum number of validators a user can delegate too.
+Update module parameters through governance. Params include the minimum comission rate for reporters, the minimum loya required to be a reporter, the maximum number of selectors for a reporter, the maximum number of validators a user can delegate too, `max_reporter_power_share` (max share of total bonded tokens a single reporter's potential stake may hold; ADR 1012), and `max_validator_power_share` (max share of total bonded tokens a single bonded validator may hold after an execution path increases its active bonded stake; ADR 1013). Values >= 1 disable each check.
 
 ## Getters
 
