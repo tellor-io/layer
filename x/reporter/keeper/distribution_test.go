@@ -52,6 +52,9 @@ func TestDivvyingTips(t *testing.T) {
 
 func TestReturnSlashedTokens(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	params := types.DefaultParams()
+	params.MaxValidatorPowerShare = math.LegacyOneDec()
+	require.NoError(t, k.Params.Set(ctx, params))
 
 	delAddr1, delAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
 	val1Address, val2Address := sdk.ValAddress(sample.AccAddressBytes()), sdk.ValAddress(sample.AccAddressBytes())
@@ -78,14 +81,18 @@ func TestReturnSlashedTokens(t *testing.T) {
 	sk.On("Delegate", ctx, delAddr1, tokenOrigin1.Amount, stakingtypes.Bonded, validator1, false).Return(math.LegacyZeroDec(), nil)
 	sk.On("Delegate", ctx, delAddr2, tokenOrigin2.Amount, stakingtypes.Bonded, validator2, false).Return(math.LegacyZeroDec(), nil)
 
-	pool, err := k.ReturnSlashedTokens(ctx, math.NewIntWithDecimal(2000, 6), []byte("hashId"))
+	bondedAmt, unbondedAmt, err := k.ReturnSlashedTokens(ctx, math.NewIntWithDecimal(2000, 6), []byte("hashId"))
 	require.NoError(t, err)
-	require.Equal(t, stakingtypes.BondedPoolName, pool)
+	require.Equal(t, math.NewIntWithDecimal(2000, 6), bondedAmt)
+	require.True(t, unbondedAmt.IsZero())
 }
 
 func TestFeeRefund(t *testing.T) {
 	// set fee refund
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	params := types.DefaultParams()
+	params.MaxValidatorPowerShare = math.LegacyOneDec()
+	require.NoError(t, k.Params.Set(ctx, params))
 	delAddr1, delAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
 	valAddr1, valAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
 	tokenOrigin1 := &types.TokenOriginInfo{
@@ -150,24 +157,30 @@ func TestGetBondedValidators(t *testing.T) {
 }
 
 func TestAddAmountToStake(t *testing.T) {
-	k, sk, _, _, _, ctx, kvstore := setupKeeper(t)
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	params := types.DefaultParams()
+	params.MaxValidatorPowerShare = math.LegacyOneDec()
+	require.NoError(t, k.Params.Set(ctx, params))
 
 	acc := sample.AccAddressBytes()
 	valAddr := sdk.ValAddress(sample.AccAddressBytes())
 	amt := math.NewInt(1000 * 1e6)
 
-	store := kvstore.OpenKVStore(ctx)
-	require.NoError(t, store.Set([]byte("key"), valAddr))
-	iterator, err := store.Iterator(nil, nil)
-	require.NoError(t, err)
-
 	validator := stakingtypes.Validator{OperatorAddress: valAddr.String(), Status: stakingtypes.Bonded}
 
-	sk.On("ValidatorsPowerStoreIterator", ctx).Return(iterator, nil)
 	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
 	sk.On("Delegate", ctx, acc, amt, stakingtypes.Bonded, validator, false).Return(math.LegacyZeroDec(), nil)
-	sk.On("IterateDelegatorDelegations", ctx, acc, mock.Anything).Return(nil)
+	// the account has an existing bonded delegation, so winnings go to that
+	// validator and the fallback scan is not reached.
+	sk.On("IterateDelegatorDelegations", ctx, acc, mock.Anything).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		fn(stakingtypes.Delegation{
+			DelegatorAddress: acc.String(),
+			ValidatorAddress: valAddr.String(),
+			Shares:           amt.ToLegacyDec(),
+		})
+	})
 
-	err = k.AddAmountToStake(ctx, acc, amt)
+	err := k.AddAmountToStake(ctx, acc, amt)
 	require.NoError(t, err)
 }
