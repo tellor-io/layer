@@ -44,6 +44,13 @@ func bondedVal(addr sdk.ValAddress, tokens int64) stakingtypes.Validator {
 	}
 }
 
+func disableValidatorPowerCap(t *testing.T, k keeper.Keeper, ctx sdk.Context) {
+	t.Helper()
+	params := types.DefaultParams()
+	params.MaxValidatorPowerShare = math.LegacyOneDec()
+	require.NoError(t, k.Params.Set(ctx, params))
+}
+
 // origin builds a single TokenOriginInfo for the refund-snapshot helpers.
 func origin(del sdk.AccAddress, val sdk.ValAddress, amount int64) *types.TokenOriginInfo {
 	return &types.TokenOriginInfo{DelegatorAddress: del, ValidatorAddress: val, Amount: math.NewInt(amount)}
@@ -116,9 +123,7 @@ func TestCheckValidatorPowerShareDelegation(t *testing.T) {
 func TestCheckValidatorPowerShareDelegationDisabled(t *testing.T) {
 	// share >= 1 disables the check, so no TotalBondedTokens call is needed.
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
-	params := types.DefaultParams()
-	params.MaxValidatorPowerShare = math.LegacyOneDec()
-	require.NoError(t, k.Params.Set(ctx, params))
+	disableValidatorPowerCap(t, k, ctx)
 	val := bondedVal(sdk.ValAddress(sample.AccAddressBytes()), 100)
 	require.NoError(t, k.CheckValidatorPowerShareDelegation(ctx, val, math.NewInt(100)))
 }
@@ -258,10 +263,10 @@ func TestReturnSlashedTokensScansFallback(t *testing.T) {
 			sk.On("GetValidator", ctx, origAddr).Return(tc.origLookup(origAddr))
 			mockBondedScan(sk, ctx, 100, other)
 			delegateMock(sk, ctx, delAddr, math.NewInt(2), stakingtypes.Bonded, other)
-			bondedAmt, unbondedAmt, err := k.ReturnSlashedTokens(ctx, math.NewInt(2), []byte("hashId"))
+			bondedReturn, unbondedReturn, err := k.ReturnSlashedTokens(ctx, math.NewInt(2), []byte("hashId"))
 			require.NoError(t, err)
-			require.Equal(t, math.NewInt(2), bondedAmt)
-			require.True(t, unbondedAmt.IsZero())
+			require.Equal(t, math.NewInt(2), bondedReturn)
+			require.True(t, unbondedReturn.IsZero())
 		})
 	}
 }
@@ -282,18 +287,19 @@ func TestReturnSlashedTokensUnbondedOriginalRefundsUnbonded(t *testing.T) {
 	sk.On("GetValidator", ctx, origAddr).Return(orig, nil)
 	delegateMock(sk, ctx, delAddr, math.NewInt(2), stakingtypes.Unbonded, orig)
 
-	bondedAmt, unbondedAmt, err := k.ReturnSlashedTokens(ctx, math.NewInt(2), []byte("hashId"))
+	bondedReturn, unbondedReturn, err := k.ReturnSlashedTokens(ctx, math.NewInt(2), []byte("hashId"))
 	require.NoError(t, err)
-	require.True(t, bondedAmt.IsZero())
-	require.Equal(t, math.NewInt(2), unbondedAmt)
+	require.True(t, bondedReturn.IsZero())
+	require.Equal(t, math.NewInt(2), unbondedReturn)
 	sk.AssertNotCalled(t, "ValidatorsPowerStoreIterator", mock.Anything)
 	sk.AssertNotCalled(t, "TotalBondedTokens", mock.Anything)
 }
 
 // --- FeeRefund scan paths ---
 
-// TestFeeRefundScansFallback covers both FeeRefund branches that trigger a
-// bonded fallback scan: an over-cap bonded original and a missing original.
+// TestFeeRefundScansFallback covers FeeRefund branches that trigger a bonded
+// fallback scan: an over-cap bonded original, a missing original, and a
+// not-bonded original.
 func TestFeeRefundScansFallback(t *testing.T) {
 	origAddr, otherAddr := sdk.ValAddress(sample.AccAddressBytes()), sdk.ValAddress(sample.AccAddressBytes())
 	other := bondedVal(otherAddr, 0)
@@ -302,6 +308,11 @@ func TestFeeRefundScansFallback(t *testing.T) {
 		origLookup func(sdk.ValAddress) (stakingtypes.Validator, error)
 	}{
 		{"bonded original over cap scans", func(a sdk.ValAddress) (stakingtypes.Validator, error) { return bondedVal(a, 29), nil }},
+		{"not-bonded original scans", func(a sdk.ValAddress) (stakingtypes.Validator, error) {
+			val := bondedVal(a, 29)
+			val.Status = stakingtypes.Unbonded
+			return val, nil
+		}},
 		{"missing original scans", func(sdk.ValAddress) (stakingtypes.Validator, error) {
 			return stakingtypes.Validator{}, stakingtypes.ErrNoValidatorFound
 		}},
@@ -425,10 +436,10 @@ func TestReturnSlashedTokensCumulativeEnforcement(t *testing.T) {
 	delegateMock(sk, ctx, delAddr1, math.NewInt(2), stakingtypes.Bonded, orig)
 	delegateMock(sk, ctx, delAddr2, math.NewInt(2), stakingtypes.Bonded, other)
 
-	bondedAmt, unbondedAmt, err := k.ReturnSlashedTokens(ctx, math.NewInt(4), []byte("hashId"))
+	bondedReturn, unbondedReturn, err := k.ReturnSlashedTokens(ctx, math.NewInt(4), []byte("hashId"))
 	require.NoError(t, err)
-	require.Equal(t, math.NewInt(4), bondedAmt)
-	require.True(t, unbondedAmt.IsZero())
+	require.Equal(t, math.NewInt(4), bondedReturn)
+	require.True(t, unbondedReturn.IsZero())
 }
 
 // TestReturnSlashedTokensCumulativeDenominatorProjection guards the denominator
@@ -450,10 +461,10 @@ func TestReturnSlashedTokensCumulativeDenominatorProjection(t *testing.T) {
 	delegateMock(sk, ctx, delAddr1, math.NewInt(3), stakingtypes.Bonded, orig1)
 	delegateMock(sk, ctx, delAddr2, math.NewInt(1), stakingtypes.Bonded, orig2)
 
-	bondedAmt, unbondedAmt, err := k.ReturnSlashedTokens(ctx, math.NewInt(4), []byte("hashId"))
+	bondedReturn, unbondedReturn, err := k.ReturnSlashedTokens(ctx, math.NewInt(4), []byte("hashId"))
 	require.NoError(t, err)
-	require.Equal(t, math.NewInt(4), bondedAmt)
-	require.True(t, unbondedAmt.IsZero())
+	require.Equal(t, math.NewInt(4), bondedReturn)
+	require.True(t, unbondedReturn.IsZero())
 }
 
 // TestReturnSlashedTokensMixedPoolReturn guards that a bonded origin returns
@@ -475,10 +486,10 @@ func TestReturnSlashedTokensMixedPoolReturn(t *testing.T) {
 	delegateMock(sk, ctx, bondedDel, math.NewInt(2), stakingtypes.Bonded, bondedOrig)
 	delegateMock(sk, ctx, unbondedDel, math.NewInt(2), stakingtypes.Unbonded, unbondedOrig)
 
-	bondedAmt, unbondedAmt, err := k.ReturnSlashedTokens(ctx, math.NewInt(4), []byte("hashId"))
+	bondedReturn, unbondedReturn, err := k.ReturnSlashedTokens(ctx, math.NewInt(4), []byte("hashId"))
 	require.NoError(t, err)
-	require.Equal(t, math.NewInt(2), bondedAmt)
-	require.Equal(t, math.NewInt(2), unbondedAmt)
+	require.Equal(t, math.NewInt(2), bondedReturn)
+	require.Equal(t, math.NewInt(2), unbondedReturn)
 	// no bonded fallback scan is needed for the unbonded original
 	sk.AssertNotCalled(t, "ValidatorsPowerStoreIterator", mock.Anything)
 }

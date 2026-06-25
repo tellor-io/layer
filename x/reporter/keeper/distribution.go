@@ -76,67 +76,34 @@ func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, r
 	return nil
 }
 
-// ReturnSlashedTokens returns the slashed tokens to the delegators,
-// called in dispute module after dispute is resolved with result invalid or reporter wins.
-// It returns the per-pool amounts (bonded, unbonded) the dispute caller must move
-// out of the dispute module so the bonded and not-bonded pools each receive exactly
-// what was delegated into them. A single pool name was previously returned, which
-// mis-routed the full slash amount to the last-selected pool when origins mixed bonded
-// and unbonded destinations.
-//
-// Per-origin destination selection:
-//   - missing original validator: scan for an under-cap bonded fallback (bonded pool,
-//     cap-checked, contributes to bondedReturn);
-//   - existing but not-bonded original (M4): refund to the original validator with
-//     tokenSrc=Unbonded (not-bonded pool, not cap-checked, contributes to
-//     unbondedReturn) — this does not create immediate active bonded stake;
-//   - bonded original: preserve when under cap, otherwise scan to an under-cap
-//     bonded fallback (bonded pool, cap-checked, contributes to bondedReturn).
+// ReturnSlashedTokens returns slashed tokens to delegators after a dispute resolves
+// invalid or in the reporter's favor. Returns per-pool amounts (bonded, unbonded)
+// the dispute caller must move out of the dispute module.
 func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) (math.Int, math.Int, error) {
 	bondedReturn := math.ZeroInt()
 	unbondedReturn := math.ZeroInt()
-	// get the snapshot of the metadata of the tokens that were slashed ie selectors' shares amounts and validator they were delegated to
 	snapshot, err := k.DisputedDelegationAmounts.Get(ctx, hashId)
 	if err != nil {
 		return math.ZeroInt(), math.ZeroInt(), err
 	}
 
-	// capState threads projected bonded and per-validator deltas across origins.
-	// The dispute caller moves bonded-pool coins only after this keeper returns, so
-	// TotalBondedTokens and each validator.Tokens would otherwise drift apart
-	// across origins and under-count a destination's post-refund share.
-	capState := newValidatorPowerCapState()
+	maxShare, err := k.maxValidatorPowerShare(ctx)
+	if err != nil {
+		return math.ZeroInt(), math.ZeroInt(), err
+	}
+	projectedBondedDelta := math.ZeroInt()
 
-	// winningpurse represents the amount of tokens that a disputed reporter possibly receives for winning a dispute
 	winningpurse := amt.Sub(snapshot.Total)
-	// for each selector-validator pair, bond the tokens back to the validator, if the validator still exists
-	// if not, then find a bonded validator to bond the tokens to
 	for _, source := range snapshot.TokenOrigins {
 		valAddr := sdk.ValAddress(source.ValidatorAddress)
 		delAddr := sdk.AccAddress(source.DelegatorAddress)
 
-		// the refund amount is either the amount of tokens that were slashed
-		// or the proportion of the slashed tokens plus the winning purse
 		shareAmt := math.LegacyNewDecFromInt(source.Amount)
 		if winningpurse.IsPositive() {
-			// convert args needed for calculations to legacy decimals
 			shareAmt = shareAmt.Quo(math.LegacyNewDecFromInt(snapshot.Total)).Mul(math.LegacyNewDecFromInt(amt))
 		}
 		bondAmt := shareAmt.TruncateInt()
 
-		// Choose a refund destination per origin. Three cases:
-		//   - missing original validator (ErrNoValidatorFound): the original is
-		//     gone, so scan for an under-cap bonded fallback and refund through the
-		//     bonded pool. This is the only path that creates immediate active
-		//     bonded stake, so it is cap-checked.
-		//   - existing but not-bonded original (M4): refund to the original
-		//     validator itself with tokenSrc=Unbonded. This restores the
-		//     not-bonded pool's coins to the not-bonded pool and does not create
-		//     immediate active bonded stake, so the validator cap is intentionally
-		//     not enforced here. unbondedReturn is incremented so the dispute
-		//     caller routes these coins to the NotBondedPoolName.
-		//   - bonded original: preserve when under cap, otherwise scan to an
-		//     under-cap bonded fallback; refund through the bonded pool.
 		original, getErr := k.stakingKeeper.GetValidator(ctx, valAddr)
 		var (
 			tokenSrc stakingtypes.BondStatus
@@ -147,79 +114,73 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []
 			return math.ZeroInt(), math.ZeroInt(), getErr
 		case errors.Is(getErr, stakingtypes.ErrNoValidatorFound):
 			// missing original: scan for an under-cap bonded validator
-			val, err = k.pickUnderCapBondedValidator(ctx, bondAmt, capState)
+			val, err = k.pickUnderCapBondedValidator(ctx, bondAmt, maxShare, projectedBondedDelta)
 			if err != nil {
 				return math.ZeroInt(), math.ZeroInt(), err
 			}
 			tokenSrc = stakingtypes.Bonded
 			bondedReturn = bondedReturn.Add(bondAmt)
 		case !original.IsBonded():
-			// M4: existing but not-bonded original. Refund to the original
-			// validator with tokenSrc=Unbonded so the not-bonded pool receives
-			// exactly what was delegated into it. The validator cap is not
-			// enforced because this does not create immediate active bonded
-			// stake. capState is not touched because no bonded-pool acquisition
-			// happens.
+			// not-bonded original: refund as unbonded (no active bonded acquisition)
 			val = original
 			tokenSrc = stakingtypes.Unbonded
 			unbondedReturn = unbondedReturn.Add(bondAmt)
 		default:
-			// bonded original: preserve when under cap, otherwise scan.
-			val, err = k.bondedValidatorForDelegation(ctx, original, bondAmt, capState)
+			// bonded original: preserve when under cap, otherwise scan
+			val, err = k.bondedValidatorForDelegation(ctx, original, bondAmt, maxShare, projectedBondedDelta)
 			if err != nil {
 				return math.ZeroInt(), math.ZeroInt(), err
 			}
 			tokenSrc = stakingtypes.Bonded
 			bondedReturn = bondedReturn.Add(bondAmt)
 		}
-		newShares, err := k.stakingKeeper.Delegate(ctx, delAddr, bondAmt, tokenSrc, val, false) // false means to not subtract tokens from an account
-		if err != nil {
+		if _, err := k.delegateToStakeAndEmit(ctx, delAddr, bondAmt, tokenSrc, val); err != nil {
 			return math.ZeroInt(), math.ZeroInt(), err
 		}
-		// record the bonded-pool acquisition so later origins in this call are
-		// checked against the projected post-refund totals. Unbonded refunds do
-		// not touch the bonded pool and are intentionally excluded here.
 		if tokenSrc == stakingtypes.Bonded {
-			capState.applyBondedDelegation(bondAmt)
+			projectedBondedDelta = projectedBondedDelta.Add(bondAmt)
 		}
-		sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
-			sdk.NewEvent(
-				"tokens_added_to_stake",
-				sdk.NewAttribute("delegator", delAddr.String()),
-				sdk.NewAttribute("validator", val.OperatorAddress),
-				sdk.NewAttribute("shares", newShares.String()),
-				sdk.NewAttribute("amount", shareAmt.String()),
-			),
-		})
-
+	}
+	// route truncation dust to the bonded pool so callers never own dust policy
+	if dust := amt.Sub(bondedReturn).Sub(unbondedReturn); dust.IsPositive() {
+		bondedReturn = bondedReturn.Add(dust)
 	}
 	return bondedReturn, unbondedReturn, k.DisputedDelegationAmounts.Remove(ctx, hashId)
 }
 
-// called in dispute module after dispute is resolved
-// returns the fee to the selectors that passively paid minus the burn amount
-// refunds the fee paid (minus the burned amount) from the stake to the selectors.
-// It retrieves the tracked fees using the provided hashId and calculates the share
-// of the amount to be refunded to each selector based on their contribution.
-// If the validator associated with the selector is not found or not bonded, it
-// selects a bonded validator to delegate the refund amount to.
+// delegateToStakeAndEmit delegates amount to validator and emits a tokens_added_to_stake event.
+func (k Keeper) delegateToStakeAndEmit(ctx context.Context, delegator sdk.AccAddress, amount math.Int, tokenSrc stakingtypes.BondStatus, validator stakingtypes.Validator) (math.LegacyDec, error) {
+	newShares, err := k.stakingKeeper.Delegate(ctx, delegator, amount, tokenSrc, validator, false)
+	if err != nil {
+		return math.LegacyZeroDec(), err
+	}
+	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"tokens_added_to_stake",
+			sdk.NewAttribute("delegator", delegator.String()),
+			sdk.NewAttribute("validator", validator.OperatorAddress),
+			sdk.NewAttribute("shares", newShares.String()),
+			sdk.NewAttribute("amount", amount.String()),
+		),
+	})
+	return newShares, nil
+}
+
+// FeeRefund refunds the fee paid (minus the burned amount) from the stake to selectors.
 func (k Keeper) FeeRefund(ctx context.Context, hashId []byte, amt math.Int) error {
 	trackedFees, err := k.FeePaidFromStake.Get(ctx, hashId)
 	if err != nil {
 		return err
 	}
 
-	// capState threads projected bonded and per-validator deltas across origins;
-	// see ReturnSlashedTokens for why the denominator must be projected.
-	capState := newValidatorPowerCapState()
+	maxShare, err := k.maxValidatorPowerShare(ctx)
+	if err != nil {
+		return err
+	}
+	projectedBondedDelta := math.ZeroInt()
 
 	for _, source := range trackedFees.TokenOrigins {
-		// since fee paid is returned minus the voter/burned amount, calculate by accordingly
-		// convert args needed for calculations to legacy decimals
-		sourceAmountDec := math.LegacyNewDecFromInt(source.Amount)
-		trackedFeesTotalDec := math.LegacyNewDecFromInt(trackedFees.Total)
-		amtDec := math.LegacyNewDecFromInt(amt)
-		shareAmt := sourceAmountDec.Mul(amtDec).Quo(trackedFeesTotalDec).TruncateInt()
+		shareAmt := math.LegacyNewDecFromInt(source.Amount).Mul(math.LegacyNewDecFromInt(amt)).Quo(math.LegacyNewDecFromInt(trackedFees.Total)).TruncateInt()
 
 		original, getErr := k.stakingKeeper.GetValidator(ctx, sdk.ValAddress(source.ValidatorAddress))
 		var val stakingtypes.Validator
@@ -228,31 +189,21 @@ func (k Keeper) FeeRefund(ctx context.Context, hashId []byte, amt math.Int) erro
 			return getErr
 		case errors.Is(getErr, stakingtypes.ErrNoValidatorFound) || !original.IsBonded():
 			// missing or not-bonded original: scan for an under-cap bonded validator
-			val, err = k.pickUnderCapBondedValidator(ctx, shareAmt, capState)
+			val, err = k.pickUnderCapBondedValidator(ctx, shareAmt, maxShare, projectedBondedDelta)
 			if err != nil {
 				return err
 			}
 		default:
 			// bonded original: preserve when under cap, otherwise scan
-			val, err = k.bondedValidatorForDelegation(ctx, original, shareAmt, capState)
+			val, err = k.bondedValidatorForDelegation(ctx, original, shareAmt, maxShare, projectedBondedDelta)
 			if err != nil {
 				return err
 			}
 		}
-		newShares, err := k.stakingKeeper.Delegate(ctx, sdk.AccAddress(source.DelegatorAddress), shareAmt, stakingtypes.Bonded, val, false)
-		if err != nil {
+		if _, err := k.delegateToStakeAndEmit(ctx, sdk.AccAddress(source.DelegatorAddress), shareAmt, stakingtypes.Bonded, val); err != nil {
 			return err
 		}
-		capState.applyBondedDelegation(shareAmt)
-		sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
-			sdk.NewEvent(
-				"tokens_added_to_stake",
-				sdk.NewAttribute("delegator", sdk.AccAddress(source.DelegatorAddress).String()),
-				sdk.NewAttribute("validator", val.OperatorAddress),
-				sdk.NewAttribute("shares", newShares.String()),
-				sdk.NewAttribute("amount", shareAmt.String()),
-			),
-		})
+		projectedBondedDelta = projectedBondedDelta.Add(shareAmt)
 	}
 	return k.FeePaidFromStake.Remove(ctx, hashId)
 }
@@ -284,21 +235,21 @@ func (k Keeper) GetBondedValidators(ctx context.Context, max uint32) ([]stakingt
 	return validators[:i], nil // trim
 }
 
-// TODO: this should be in dispute module, no reason for it to be in reporter module
-// Stakes a given amount of tokens to a BONDED validator from a given address
-// first looks up if given acount is delegated to a validator
-// if they are delgated, then delegate winnings to that validator
-// if not, then delegate winnings to a bonded validator
+// AddAmountToStake stakes amt to a bonded validator for acc. If acc is already
+// delegated to a bonded validator, winnings go there; otherwise scan for one.
 func (k Keeper) AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt math.Int) error {
+	maxShare, err := k.maxValidatorPowerShare(ctx)
+	if err != nil {
+		return err
+	}
+
 	var (
 		delegated   bool
 		callbackErr error
 	)
 
-	// iterate through delegations to find if account is delegated to a bonded
-	// validator; the iterator callback returns only stop, so capture the first
-	// error in callbackErr (M3) and never swallow it.
-	err := k.stakingKeeper.IterateDelegatorDelegations(ctx, acc, func(delegation stakingtypes.Delegation) (stop bool) {
+	// capture the first error in callbackErr since the iterator callback returns only stop
+	err = k.stakingKeeper.IterateDelegatorDelegations(ctx, acc, func(delegation stakingtypes.Delegation) (stop bool) {
 		if callbackErr != nil {
 			return true
 		}
@@ -316,33 +267,19 @@ func (k Keeper) AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt ma
 		}
 
 		if !val.IsBonded() {
-			return false // continue iteration if not bonded
+			return false
 		}
 
-		// bonded delegation found: preserve when under cap, otherwise scan.
-		// AddAmountToStake delegates at most once (the iterator returns on the
-		// first bonded delegation), so a fresh capState with no cross-origin
-		// projection is correct here.
-		dst, err := k.bondedValidatorForDelegation(ctx, val, amt, newValidatorPowerCapState())
+		// bonded delegation found: preserve when under cap, otherwise scan
+		dst, err := k.bondedValidatorForDelegation(ctx, val, amt, maxShare, math.ZeroInt())
 		if err != nil {
 			callbackErr = err
 			return true
 		}
-
-		newShares, err := k.stakingKeeper.Delegate(ctx, acc, amt, stakingtypes.Bonded, dst, false)
-		if err != nil {
+		if _, err := k.delegateToStakeAndEmit(ctx, acc, amt, stakingtypes.Bonded, dst); err != nil {
 			callbackErr = err
 			return true
 		}
-		sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
-			sdk.NewEvent(
-				"tokens_added_to_stake",
-				sdk.NewAttribute("delegator", acc.String()),
-				sdk.NewAttribute("validator", dst.OperatorAddress),
-				sdk.NewAttribute("amount", amt.String()),
-				sdk.NewAttribute("shares", newShares.String()),
-			),
-		})
 		delegated = true
 		return true
 	})
@@ -356,30 +293,13 @@ func (k Keeper) AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt ma
 		return nil
 	}
 
-	// no bonded delegation found: scan for an under-cap bonded validator.
-	// capState is fresh because AddAmountToStake makes a single decision for
-	// one account; a projected delta across the iterator's earlier bonded
-	// delegations is not needed (the iterator returns on the first bonded hit).
-	capState := newValidatorPowerCapState()
-	dst, err := k.pickUnderCapBondedValidator(ctx, amt, capState)
+	// no bonded delegation found: scan for an under-cap bonded validator
+	dst, err := k.pickUnderCapBondedValidator(ctx, amt, maxShare, math.ZeroInt())
 	if err != nil {
 		return err
 	}
-	newShares, err := k.stakingKeeper.Delegate(ctx, acc, amt, stakingtypes.Bonded, dst, false)
-	if err != nil {
-		return err
-	}
-	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
-		sdk.NewEvent(
-			"tokens_added_to_stake",
-			sdk.NewAttribute("delegator", acc.String()),
-			sdk.NewAttribute("validator", dst.OperatorAddress),
-			sdk.NewAttribute("amount", amt.String()),
-			sdk.NewAttribute("shares", newShares.String()),
-		),
-	})
-
-	return nil
+	_, err = k.delegateToStakeAndEmit(ctx, acc, amt, stakingtypes.Bonded, dst)
+	return err
 }
 
 // ProcessDistributionQueue processes up to maxItems from the distribution queue.

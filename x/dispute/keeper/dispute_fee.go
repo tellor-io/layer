@@ -46,17 +46,14 @@ func (k Keeper) PayDisputeFee(ctx sdk.Context, proposer sdk.AccAddress, fee sdk.
 	return nil
 }
 
-// return slashed tokens when reporter either wins dispute or dispute is invalid
+// ReturnSlashedTokens returns slashed tokens when a reporter wins or a dispute is invalid.
 func (k Keeper) ReturnSlashedTokens(ctx context.Context, dispute types.Dispute) error {
 	bondedAmt, unbondedAmt, err := k.reporterKeeper.ReturnSlashedTokens(ctx, dispute.SlashAmount, dispute.HashId)
 	if err != nil {
 		return err
 	}
 
-	// Route the dispute-module coins to each pool separately. stakingKeeper.Delegate
-	// with tokenSrc=Bonded&&validator.IsBonded() or tokenSrc=Unbonded&&!IsBonded() performs
-	// no pool transfer itself, so the bonded and not-bonded pools each receive exactly
-	// what was delegated into them across possibly mixed bonded/unbonded origins.
+	// route each pool separately; the reporter keeper balances truncation dust into bondedAmt
 	if bondedAmt.IsPositive() {
 		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, bondedAmt))); err != nil {
 			return err
@@ -64,18 +61,6 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, dispute types.Dispute) 
 	}
 	if unbondedAmt.IsPositive() {
 		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, unbondedAmt))); err != nil {
-			return err
-		}
-	}
-	// The reporter keeper refunds each origin as a truncated integer share of
-	// dispute.SlashAmount (and, when the reporter wins, a proportional winning
-	// purse), so bondAmt across origins can sum to slightly less than
-	// dispute.SlashAmount. Route the truncation dust to the bonded pool so no
-	// coins are stranded in the dispute module; this matches the prior
-	// single-pool behavior where the full slash amount moved to one (bonded)
-	// pool.
-	if dust := dispute.SlashAmount.Sub(bondedAmt).Sub(unbondedAmt); dust.IsPositive() {
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, dust))); err != nil {
 			return err
 		}
 	}

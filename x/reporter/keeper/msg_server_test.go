@@ -642,9 +642,7 @@ func TestUnjailReporter(t *testing.T) {
 
 func TestWithdrawTip(t *testing.T) {
 	k, sk, bk, _, ak, msg, ctx := setupMsgServer(t)
-	params := types.DefaultParams()
-	params.MaxValidatorPowerShare = math.LegacyOneDec()
-	require.NoError(t, k.Params.Set(ctx, params))
+	disableValidatorPowerCap(t, k, ctx)
 	selector, valAddr := sample.AccAddressBytes(), sdk.ValAddress(sample.AccAddressBytes())
 
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(selector, 1)))

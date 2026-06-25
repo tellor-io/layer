@@ -52,9 +52,7 @@ func TestDivvyingTips(t *testing.T) {
 
 func TestReturnSlashedTokens(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
-	params := types.DefaultParams()
-	params.MaxValidatorPowerShare = math.LegacyOneDec()
-	require.NoError(t, k.Params.Set(ctx, params))
+	disableValidatorPowerCap(t, k, ctx)
 
 	delAddr1, delAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
 	val1Address, val2Address := sdk.ValAddress(sample.AccAddressBytes()), sdk.ValAddress(sample.AccAddressBytes())
@@ -81,18 +79,16 @@ func TestReturnSlashedTokens(t *testing.T) {
 	sk.On("Delegate", ctx, delAddr1, tokenOrigin1.Amount, stakingtypes.Bonded, validator1, false).Return(math.LegacyZeroDec(), nil)
 	sk.On("Delegate", ctx, delAddr2, tokenOrigin2.Amount, stakingtypes.Bonded, validator2, false).Return(math.LegacyZeroDec(), nil)
 
-	bondedAmt, unbondedAmt, err := k.ReturnSlashedTokens(ctx, math.NewIntWithDecimal(2000, 6), []byte("hashId"))
+	bondedReturn, unbondedReturn, err := k.ReturnSlashedTokens(ctx, math.NewIntWithDecimal(2000, 6), []byte("hashId"))
 	require.NoError(t, err)
-	require.Equal(t, math.NewIntWithDecimal(2000, 6), bondedAmt)
-	require.True(t, unbondedAmt.IsZero())
+	require.Equal(t, math.NewIntWithDecimal(2000, 6), bondedReturn)
+	require.True(t, unbondedReturn.IsZero())
 }
 
 func TestFeeRefund(t *testing.T) {
 	// set fee refund
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
-	params := types.DefaultParams()
-	params.MaxValidatorPowerShare = math.LegacyOneDec()
-	require.NoError(t, k.Params.Set(ctx, params))
+	disableValidatorPowerCap(t, k, ctx)
 	delAddr1, delAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
 	valAddr1, valAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
 	tokenOrigin1 := &types.TokenOriginInfo{
@@ -158,9 +154,7 @@ func TestGetBondedValidators(t *testing.T) {
 
 func TestAddAmountToStake(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
-	params := types.DefaultParams()
-	params.MaxValidatorPowerShare = math.LegacyOneDec()
-	require.NoError(t, k.Params.Set(ctx, params))
+	disableValidatorPowerCap(t, k, ctx)
 
 	acc := sample.AccAddressBytes()
 	valAddr := sdk.ValAddress(sample.AccAddressBytes())
