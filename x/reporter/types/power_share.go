@@ -29,7 +29,7 @@ func PowerShareEnabled(share math.LegacyDec) bool {
 	return !share.IsNil() && share.IsPositive() && !share.GTE(math.LegacyOneDec())
 }
 
-func ExceedsPowerShare(held math.Int, total math.Int, maxShare math.LegacyDec) bool {
+func ExceedsPowerShare(held, total math.Int, maxShare math.LegacyDec) bool {
 	if !PowerShareEnabled(maxShare) || held.IsNil() || total.IsNil() || !total.IsPositive() {
 		return false
 	}
@@ -47,7 +47,7 @@ func ExceedsDelegatorStakeShare(held math.LegacyDec, total math.Int) bool {
 
 // ExceedsReporterPowerShare reports whether potential plus addition reaches or
 // exceeds maxShare of total bonded stake (reporter cap uses >=).
-func ExceedsReporterPowerShare(potential math.LegacyDec, addition math.LegacyDec, total math.Int, maxShare math.LegacyDec) bool {
+func ExceedsReporterPowerShare(potential, addition math.LegacyDec, total math.Int, maxShare math.LegacyDec) bool {
 	if !PowerShareEnabled(maxShare) || total.IsNil() || !total.IsPositive() {
 		return false
 	}
