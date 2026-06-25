@@ -210,6 +210,11 @@ func TestReporterPowerCapDelegateBySelector(t *testing.T) {
 			k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
 			ctx = ctx.WithBlockHeight(1)
 			decorator := NewTrackStakeChangesDecorator(k, sk)
+			// the bonded validator holds 1000 of 100 total bonded; this test targets
+			// the reporter cap, so disable the validator cap.
+			params := types.DefaultParams()
+			params.MaxValidatorPowerShare = math.LegacyOneDec()
+			require.NoError(t, k.Params.Set(ctx, params))
 
 			valAddr := sdk.ValAddress(sample.AccAddressBytes())
 			val := validator(valAddr, stakingtypes.Bonded, math.NewInt(1000))
@@ -245,6 +250,11 @@ func TestReporterPowerCapSelectPlusDelegate(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
 	ctx = ctx.WithBlockHeight(1)
 	decorator := NewTrackStakeChangesDecorator(k, sk)
+	// the bonded validator holds 1000 of 100 total bonded; this test targets the
+	// reporter cap, so disable the validator cap.
+	params := types.DefaultParams()
+	params.MaxValidatorPowerShare = math.LegacyOneDec()
+	require.NoError(t, k.Params.Set(ctx, params))
 
 	valAddr := sdk.ValAddress(sample.AccAddressBytes())
 	val := validator(valAddr, stakingtypes.Bonded, math.NewInt(1000))
