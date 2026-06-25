@@ -90,7 +90,7 @@ func TestParams_Validate(t *testing.T) {
 	require.NoError(params.Validate())
 
 	params.MaxReporterPowerShare = math.LegacyNewDec(-1)
-	require.Error(params.Validate())
+	require.ErrorContains(params.Validate(), "max reporter power share")
 
 	// nil (pre-migration) and >= 1 (disabled) are both valid
 	params.MaxReporterPowerShare = math.LegacyDec{}
@@ -101,11 +101,85 @@ func TestParams_Validate(t *testing.T) {
 	// validator power share mirrors the reporter share validation
 	params = DefaultParams()
 	params.MaxValidatorPowerShare = math.LegacyNewDec(-1)
-	require.Error(params.Validate())
+	require.ErrorContains(params.Validate(), "max validator power share")
 	params.MaxValidatorPowerShare = math.LegacyDec{}
 	require.NoError(params.Validate())
 	params.MaxValidatorPowerShare = math.LegacyZeroDec()
 	require.NoError(params.Validate())
 	params.MaxValidatorPowerShare = math.LegacyOneDec()
 	require.NoError(params.Validate())
+}
+
+func TestValidatePowerShareParam(t *testing.T) {
+	tests := []struct {
+		name    string
+		value   interface{}
+		wantErr string
+	}{
+		{"nil legacy dec", math.LegacyDec{}, ""},
+		{"zero", math.LegacyZeroDec(), ""},
+		{"positive", math.LegacyNewDecWithPrec(30, 2), ""},
+		{"one", math.LegacyOneDec(), ""},
+		{"greater than one", math.LegacyNewDec(2), ""},
+		{"negative", math.LegacyNewDec(-1), "test power share"},
+		{"wrong type", uint64(1), "invalid parameter type"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidatePowerShareParam("test power share", tt.value)
+			if tt.wantErr == "" {
+				require.NoError(t, err)
+				return
+			}
+			require.ErrorContains(t, err, tt.wantErr)
+		})
+	}
+}
+
+func TestPowerShareEnabled(t *testing.T) {
+	tests := []struct {
+		name  string
+		share math.LegacyDec
+		want  bool
+	}{
+		{"nil", math.LegacyDec{}, false},
+		{"zero", math.LegacyZeroDec(), false},
+		{"negative", math.LegacyNewDec(-1), false},
+		{"positive below one", math.LegacyNewDecWithPrec(30, 2), true},
+		{"one", math.LegacyOneDec(), false},
+		{"greater than one", math.LegacyNewDec(2), false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, PowerShareEnabled(tt.share))
+		})
+	}
+}
+
+func TestExceedsPowerShare(t *testing.T) {
+	maxShare := math.LegacyNewDecWithPrec(30, 2)
+
+	tests := []struct {
+		name     string
+		held     math.Int
+		total    math.Int
+		maxShare math.LegacyDec
+		want     bool
+	}{
+		{"below cap", math.NewInt(29), math.NewInt(100), maxShare, false},
+		{"at cap", math.NewInt(30), math.NewInt(100), maxShare, false},
+		{"above cap", math.NewInt(31), math.NewInt(100), maxShare, true},
+		{"nil share disabled", math.NewInt(31), math.NewInt(100), math.LegacyDec{}, false},
+		{"zero share disabled", math.NewInt(31), math.NewInt(100), math.LegacyZeroDec(), false},
+		{"one share disabled", math.NewInt(101), math.NewInt(100), math.LegacyOneDec(), false},
+		{"non-positive total", math.NewInt(31), math.ZeroInt(), maxShare, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			require.Equal(t, tt.want, ExceedsPowerShare(tt.held, tt.total, tt.maxShare))
+		})
+	}
 }

@@ -162,32 +162,12 @@ func validateMaxPendingSwitchesPerReporter(v interface{}) error {
 // validateMaxReporterPowerShare allows nil (pre-migration state, check disabled)
 // and any positive share; shares >= 1 disable the check.
 func validateMaxReporterPowerShare(v interface{}) error {
-	share, ok := v.(math.LegacyDec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", v)
-	}
-	if share.IsNil() {
-		return nil
-	}
-	if share.IsNegative() {
-		return fmt.Errorf("max reporter power share cannot be negative")
-	}
-	return nil
+	return ValidatePowerShareParam("max reporter power share", v)
 }
 
 // validateMaxValidatorPowerShare mirrors validateMaxReporterPowerShare: nil is
 // accepted (pre-migration/malformed state disables the check), negative is
 // rejected, and zero and values >= 1 disable the check at enforcement.
 func validateMaxValidatorPowerShare(v interface{}) error {
-	share, ok := v.(math.LegacyDec)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", v)
-	}
-	if share.IsNil() {
-		return nil
-	}
-	if share.IsNegative() {
-		return fmt.Errorf("max validator power share cannot be negative")
-	}
-	return nil
+	return ValidatePowerShareParam("max validator power share", v)
 }
