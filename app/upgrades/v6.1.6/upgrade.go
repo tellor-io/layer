@@ -32,6 +32,14 @@ Upgrade to v6.1.6:
   increase a selector's bonded stake. The param deserializes as nil for existing
   chains, which the ante treats as disabled; this handler sets the 0.30 default so
   the cap activates at upgrade.
+- Validator power cap (ADR 1013): new reporter module param
+  max_validator_power_share caps a single bonded validator's active bonded stake
+  below a share of total bonded tokens (default 30%). Enforcement is
+  acquisition-only and covers staking/authz messages in the
+  TrackStakeChangesDecorator ante handler (including MsgUnjail active-set
+  re-entry) and reporter keeper direct delegations (WithdrawTip,
+  ReturnSlashedTokens, FeeRefund, AddAmountToStake). This handler sets the 0.30
+  default so the cap activates at upgrade.
 - Interchain accounts are disabled entirely (host and controller). Mainnet's
   ICA host allowed all messages, and ICA-executed messages go through the
   MsgServiceRouter without the ante chain, bypassing the stake and reporter
@@ -76,6 +84,14 @@ func CreateUpgradeHandler(
 			sdkCtx.Logger().Info(
 				"set reporter max_reporter_power_share",
 				"value", params.MaxReporterPowerShare.String(),
+			)
+		}
+		if params.MaxValidatorPowerShare.IsNil() || params.MaxValidatorPowerShare.IsZero() {
+			params.MaxValidatorPowerShare = reportertypes.DefaultMaxValidatorPowerShare
+			changed = true
+			sdkCtx.Logger().Info(
+				"set reporter max_validator_power_share",
+				"value", params.MaxValidatorPowerShare.String(),
 			)
 		}
 		if changed {
