@@ -48,13 +48,38 @@ func (k Keeper) PayDisputeFee(ctx sdk.Context, proposer sdk.AccAddress, fee sdk.
 
 // return slashed tokens when reporter either wins dispute or dispute is invalid
 func (k Keeper) ReturnSlashedTokens(ctx context.Context, dispute types.Dispute) error {
-	pool, err := k.reporterKeeper.ReturnSlashedTokens(ctx, dispute.SlashAmount, dispute.HashId)
+	bondedAmt, unbondedAmt, err := k.reporterKeeper.ReturnSlashedTokens(ctx, dispute.SlashAmount, dispute.HashId)
 	if err != nil {
 		return err
 	}
 
-	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, dispute.SlashAmount))
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, pool, coins)
+	// Route the dispute-module coins to each pool separately. stakingKeeper.Delegate
+	// with tokenSrc=Bonded&&validator.IsBonded() or tokenSrc=Unbonded&&!IsBonded() performs
+	// no pool transfer itself, so the bonded and not-bonded pools each receive exactly
+	// what was delegated into them across possibly mixed bonded/unbonded origins.
+	if bondedAmt.IsPositive() {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, bondedAmt))); err != nil {
+			return err
+		}
+	}
+	if unbondedAmt.IsPositive() {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, unbondedAmt))); err != nil {
+			return err
+		}
+	}
+	// The reporter keeper refunds each origin as a truncated integer share of
+	// dispute.SlashAmount (and, when the reporter wins, a proportional winning
+	// purse), so bondAmt across origins can sum to slightly less than
+	// dispute.SlashAmount. Route the truncation dust to the bonded pool so no
+	// coins are stranded in the dispute module; this matches the prior
+	// single-pool behavior where the full slash amount moved to one (bonded)
+	// pool.
+	if dust := dispute.SlashAmount.Sub(bondedAmt).Sub(unbondedAmt); dust.IsPositive() {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, dust))); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (k Keeper) ReturnFeetoStake(ctx context.Context, hashId []byte, remainingAmt math.Int) error {

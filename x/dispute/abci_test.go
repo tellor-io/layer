@@ -237,7 +237,7 @@ func BenchmarkDisputeBeginBlocker(b *testing.B) {
 
 	// mocks
 	bk.On("BurnCoins", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	rk.On("ReturnSlashedTokens", mock.Anything, mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	rk.On("ReturnSlashedTokens", mock.Anything, mock.Anything, mock.Anything).Return(math.ZeroInt(), math.ZeroInt(), nil)
 	bk.On("SendCoinsFromModuleToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	rk.On("UpdateJailedUntilOnFailedDispute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 

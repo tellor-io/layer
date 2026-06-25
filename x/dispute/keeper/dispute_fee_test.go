@@ -47,7 +47,8 @@ func (s *KeeperTestSuite) TestPayDisputeFee() {
 func (k *KeeperTestSuite) TestReturnSlashedTokens() {
 	k.ctx = k.ctx.WithBlockTime(time.Now())
 	dispute := k.dispute(k.ctx)
-	k.reporterKeeper.On("ReturnSlashedTokens", k.ctx, dispute.SlashAmount, dispute.HashId).Return(stakingtypes.BondedPoolName, nil)
+	// reporter keeper returns per-pool amounts: full slash amount is bonded here.
+	k.reporterKeeper.On("ReturnSlashedTokens", k.ctx, dispute.SlashAmount, dispute.HashId).Return(dispute.SlashAmount, math.ZeroInt(), nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, dispute.SlashAmount))).Return(nil)
 	k.NoError(k.disputeKeeper.ReturnSlashedTokens(k.ctx, dispute))
 }
@@ -56,4 +57,35 @@ func (k *KeeperTestSuite) TestReturnFeetoStake() {
 	k.reporterKeeper.On("FeeRefund", k.ctx, []byte("hash"), math.OneInt()).Return(nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, math.OneInt()))).Return(nil)
 	k.NoError(k.disputeKeeper.ReturnFeetoStake(k.ctx, []byte("hash"), math.OneInt()))
+}
+
+// TestReturnSlashedTokensMixedPools guards Finding 3: when the reporter keeper
+// returns both bonded and unbonded refund amounts, the dispute caller must route
+// each to its own pool instead of sending the full slash amount to a single pool.
+func (k *KeeperTestSuite) TestReturnSlashedTokensMixedPools() {
+	k.ctx = k.ctx.WithBlockTime(time.Now())
+	dispute := k.dispute(k.ctx)
+	bondedPortion := math.NewInt(6000)
+	unbondedPortion := dispute.SlashAmount.Sub(bondedPortion) // 4000
+	k.reporterKeeper.On("ReturnSlashedTokens", k.ctx, dispute.SlashAmount, dispute.HashId).Return(bondedPortion, unbondedPortion, nil)
+	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, bondedPortion))).Return(nil)
+	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, unbondedPortion))).Return(nil)
+	k.NoError(k.disputeKeeper.ReturnSlashedTokens(k.ctx, dispute))
+}
+
+// TestReturnSlashedTokensDustRouting guards the truncation-dust path: when the
+// reporter keeper's per-origin truncated refunds sum to less than the slash
+// amount, the remainder is routed to the bonded pool so no coins are stranded
+// in the dispute module.
+func (k *KeeperTestSuite) TestReturnSlashedTokensDustRouting() {
+	k.ctx = k.ctx.WithBlockTime(time.Now())
+	dispute := k.dispute(k.ctx)
+	bondedPortion := math.NewInt(5999)
+	unbondedPortion := math.NewInt(3999)
+	dust := dispute.SlashAmount.Sub(bondedPortion).Sub(unbondedPortion) // 2
+	k.reporterKeeper.On("ReturnSlashedTokens", k.ctx, dispute.SlashAmount, dispute.HashId).Return(bondedPortion, unbondedPortion, nil)
+	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, bondedPortion))).Return(nil)
+	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, unbondedPortion))).Return(nil)
+	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, dust))).Return(nil)
+	k.NoError(k.disputeKeeper.ReturnSlashedTokens(k.ctx, dispute))
 }

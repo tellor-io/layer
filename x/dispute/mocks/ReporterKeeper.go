@@ -186,27 +186,34 @@ func (_m *ReporterKeeper) JailReporter(ctx context.Context, reporterAddr types.A
 }
 
 // ReturnSlashedTokens provides a mock function with given fields: ctx, amt, hashId
-func (_m *ReporterKeeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) (string, error) {
+func (_m *ReporterKeeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) (math.Int, math.Int, error) {
 	ret := _m.Called(ctx, amt, hashId)
 
-	var r0 string
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, math.Int, []byte) (string, error)); ok {
+	var r0 math.Int
+	var r1 math.Int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, math.Int, []byte) (math.Int, math.Int, error)); ok {
 		return rf(ctx, amt, hashId)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, math.Int, []byte) string); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, math.Int, []byte) math.Int); ok {
 		r0 = rf(ctx, amt, hashId)
 	} else {
-		r0 = ret.Get(0).(string)
+		r0 = ret.Get(0).(math.Int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, math.Int, []byte) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, math.Int, []byte) math.Int); ok {
 		r1 = rf(ctx, amt, hashId)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(math.Int)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, math.Int, []byte) error); ok {
+		r2 = rf(ctx, amt, hashId)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // TotalReporterPower provides a mock function with given fields: ctx
