@@ -39,6 +39,11 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     CGO_ENABLED=${CGO_ENABLED} GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
     make build
 
+# Install Cosmovisor (pinned) for automated, governance-driven binary upgrades.
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.7.0
+
 # Stage 2: Create a minimal image to run the layerd binary
 # Ignore hadolint rule because hadolint can't parse the variable.
 # See https://github.com/hadolint/hadolint/issues/339
@@ -63,6 +68,17 @@ RUN apk update && apk add --no-cache \
     -u ${UID}
 # Copy the layerd binary from the builder into the final image.
 COPY --from=builder /layer/build/layerd /bin/layerd
+# Copy Cosmovisor (swaps the layerd binary at the on-chain upgrade height).
+COPY --from=builder /go/bin/cosmovisor /bin/cosmovisor
+# Cosmovisor settings. DAEMON_HOME is derived from --home at runtime (entrypoint.sh).
+# Auto-download is OFF for safety: upgrade binaries are pre-staged per release.
+# UNSAFE_SKIP_BACKUP is ON: backing up the full data dir before an upgrade is
+# impractical on a live node (large data dir -> slow / can fill the disk and stall
+# the upgrade). We rely on external snapshots instead. Matches the install script.
+ENV DAEMON_NAME=layerd \
+    DAEMON_RESTART_AFTER_UPGRADE=true \
+    DAEMON_ALLOW_DOWNLOAD_BINARIES=false \
+    UNSAFE_SKIP_BACKUP=true
 # Copy the entrypoint script into the final image.
 COPY --chown=${USER_NAME}:${USER_NAME} docker/entrypoint.sh /opt/entrypoint.sh
 # Set the user to layerdevnet.
