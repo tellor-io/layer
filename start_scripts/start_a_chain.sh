@@ -79,8 +79,9 @@ jq '.app_state.gov.params.max_deposit_period = "45s"' $HOME_DIR/config/genesis.j
 jq '.app_state.gov.params.min_deposit[0].denom = "loya"' $HOME_DIR/config/genesis.json > temp.json && mv temp.json $HOME_DIR/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' $HOME_DIR/config/genesis.json > temp.json && mv temp.json $HOME_DIR/config/genesis.json
 jq '.app_state.gov.params.expedited_voting_period = "30s"' $HOME_DIR/config/genesis.json > temp.json && mv temp.json $HOME_DIR/config/genesis.json
-# single/dual validator devnets exceed the 30% reporter power cap (ADR 1012), so disable it
+# single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012/1013), so disable both
 jq '.app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' $HOME_DIR/config/genesis.json > temp.json && mv temp.json $HOME_DIR/config/genesis.json
+jq '.app_state.reporter.params.max_validator_power_share = "1.000000000000000000"' $HOME_DIR/config/genesis.json > temp.json && mv temp.json $HOME_DIR/config/genesis.json
 
 echo "$KEY_NAME..."
 jq '.app_state.gov.params.voting_period = "1m"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
@@ -88,8 +89,9 @@ jq '.app_state.gov.params.max_deposit_period = "45s"' $HOME_DIR/$KEY_NAME/config
 jq '.app_state.gov.params.min_deposit[0].denom = "loya"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
 jq '.app_state.gov.params.expedited_voting_period = "30s"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
-# single/dual validator devnets exceed the 30% reporter power cap (ADR 1012), so disable it
+# single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012/1013), so disable both
 jq '.app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
+jq '.app_state.reporter.params.max_validator_power_share = "1.000000000000000000"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
 
 echo "bill..."
 jq '.app_state.gov.params.voting_period = "1m"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
@@ -97,8 +99,9 @@ jq '.app_state.gov.params.max_deposit_period = "45s"' $HOME_DIR/bill/config/gene
 jq '.app_state.gov.params.min_deposit[0].denom = "loya"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
 jq '.app_state.gov.params.expedited_voting_period = "30s"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
-# single/dual validator devnets exceed the 30% reporter power cap (ADR 1012), so disable it
+# single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012/1013), so disable both
 jq '.app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
+jq '.app_state.reporter.params.max_validator_power_share = "1.000000000000000000"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
 
 # Add TRBBridgeV2 data spec to genesis so local bridge tests work without runtime registration
 echo "Adding TRBBridgeV2 data spec to genesis..."
