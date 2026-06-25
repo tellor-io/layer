@@ -26,6 +26,10 @@ var (
 	// DefaultMaxReporterPowerShare caps a single reporter's potential stake below
 	// 30% of total bonded tokens; values >= 1 disable the check (small networks).
 	DefaultMaxReporterPowerShare = math.LegacyNewDecWithPrec(30, 2)
+	KeyMaxValidatorPowerShare    = []byte("MaxValidatorPowerShare")
+	// DefaultMaxValidatorPowerShare caps a single validator's active bonded stake
+	// at 30% of total bonded tokens. Values >= 1 disable the check at enforcement.
+	DefaultMaxValidatorPowerShare = math.LegacyNewDecWithPrec(30, 2)
 )
 
 // ParamKeyTable the param key table for launch module
@@ -41,6 +45,7 @@ func NewParams(
 	maxNumOfDelegations uint64,
 	maxPendingSwitchesPerReporter uint64,
 	maxReporterPowerShare math.LegacyDec,
+	maxValidatorPowerShare math.LegacyDec,
 ) Params {
 	return Params{
 		MinCommissionRate:             minCommissionRate,
@@ -49,6 +54,7 @@ func NewParams(
 		MaxNumOfDelegations:           maxNumOfDelegations,
 		MaxPendingSwitchesPerReporter: maxPendingSwitchesPerReporter,
 		MaxReporterPowerShare:         maxReporterPowerShare,
+		MaxValidatorPowerShare:        maxValidatorPowerShare,
 	}
 }
 
@@ -61,6 +67,7 @@ func DefaultParams() Params {
 		DefaultMaxNumOfDelegations,
 		DefaultMaxPendingSwitchesPerReporter,
 		DefaultMaxReporterPowerShare,
+		DefaultMaxValidatorPowerShare,
 	)
 }
 
@@ -73,6 +80,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyMaxNumOfDelegations, &p.MaxNumOfDelegations, validateMaxNumOfDelegations),
 		paramtypes.NewParamSetPair(KeyMaxPendingSwitchesPerReporter, &p.MaxPendingSwitchesPerReporter, validateMaxPendingSwitchesPerReporter),
 		paramtypes.NewParamSetPair(KeyMaxReporterPowerShare, &p.MaxReporterPowerShare, validateMaxReporterPowerShare),
+		paramtypes.NewParamSetPair(KeyMaxValidatorPowerShare, &p.MaxValidatorPowerShare, validateMaxValidatorPowerShare),
 	}
 }
 
@@ -94,6 +102,9 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateMaxReporterPowerShare(p.MaxReporterPowerShare); err != nil {
+		return err
+	}
+	if err := validateMaxValidatorPowerShare(p.MaxValidatorPowerShare); err != nil {
 		return err
 	}
 
@@ -160,6 +171,23 @@ func validateMaxReporterPowerShare(v interface{}) error {
 	}
 	if share.IsNegative() {
 		return fmt.Errorf("max reporter power share cannot be negative")
+	}
+	return nil
+}
+
+// validateMaxValidatorPowerShare mirrors validateMaxReporterPowerShare: nil is
+// accepted (pre-migration/malformed state disables the check), negative is
+// rejected, and zero and values >= 1 disable the check at enforcement.
+func validateMaxValidatorPowerShare(v interface{}) error {
+	share, ok := v.(math.LegacyDec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", v)
+	}
+	if share.IsNil() {
+		return nil
+	}
+	if share.IsNegative() {
+		return fmt.Errorf("max validator power share cannot be negative")
 	}
 	return nil
 }
