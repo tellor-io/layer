@@ -70,10 +70,10 @@ type stakeChangeTracker struct {
 	pendingValidators map[validatorAddressKey]prospectiveValidator
 	// activeSetDelta is true when a tx can change which validators are bonded.
 	activeSetDelta bool
-	// unjailed records validators unjailed in this tx so the validator cap can
-	// evaluate their active-set re-entry without routing them through the 5%
-	// tracker, delegator cap, or reporter cap (M2 unjail isolation).
-	unjailed map[validatorAddressKey]bool
+	// unjailOccurred records whether any MsgUnjail occurred in this tx so the
+	// validator cap can project active-set re-entry without routing it through
+	// the 5% tracker, delegator cap, or reporter cap (M2 unjail isolation).
+	unjailOccurred bool
 	// selectionChanges records selectors whose selected reporter changes within
 	// this tx (CreateReporter/SelectReporter/SwitchReporter), so the reporter
 	// power cap books their full stake against the new reporter and later
@@ -97,11 +97,6 @@ type prospectiveValidator struct {
 	wasActive bool
 }
 
-type activeSetChanges struct {
-	entering []prospectiveValidator
-	leaving  []prospectiveValidator
-}
-
 func NewTrackStakeChangesDecorator(rk keeper.Keeper, sk types.StakingKeeper) TrackStakeChangesDecorator {
 	return TrackStakeChangesDecorator{
 		reporterKeeper: rk,
@@ -117,7 +112,6 @@ func newStakeChangeTracker() *stakeChangeTracker {
 		validatorProjections: make(map[validatorAddressKey]prospectiveValidator),
 		pendingValidators:    make(map[validatorAddressKey]prospectiveValidator),
 		selectionChanges:     make(map[delegatorAddressKey]reporterAddressKey),
-		unjailed:             make(map[validatorAddressKey]bool),
 	}
 }
 
@@ -180,12 +174,10 @@ func (t *stakeChangeTracker) markActiveSetDelta(activeSetDelta bool) {
 	}
 }
 
-// markUnjail records a validator unjailed in this tx. A pure MsgUnjail leaves
-// totalBondedDelta at zero and activeSetDelta false; the unjailed marker lets
-// checkValidatorPowerShares lazily project the active-set re-entry for the
-// validator cap only.
-func (s *stakeChangeTracker) markUnjail(valAddr sdk.ValAddress) {
-	s.unjailed[newValidatorAddressKey(valAddr)] = true
+// markUnjail records that a MsgUnjail occurred in this tx so the validator cap
+// can project the active-set re-entry.
+func (s *stakeChangeTracker) markUnjail() {
+	s.unjailOccurred = true
 }
 
 func (t *stakeChangeTracker) setSelection(selector, reporter sdk.AccAddress) {
@@ -293,23 +285,34 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 
 // finalizeStakeChanges runs the stake limits once against the final projected tx state. This avoids false failures for atomic txs that temporarily cross a threshold and then offset before handlers finish.
 func (t TrackStakeChangesDecorator) finalizeStakeChanges(ctx sdk.Context, stakeChanges *stakeChangeTracker) error {
-	bondedChanges := activeSetChanges{}
-	if stakeChanges.activeSetDelta {
-		changes, err := t.applyProspectiveBondedValidatorChanges(ctx, stakeChanges)
+	projection := newActiveSetProjection(activeSetChanges{})
+	if stakeChanges.activeSetDelta || stakeChanges.unjailOccurred {
+		changes, err := t.prospectiveActiveSetChanges(ctx, stakeChanges)
 		if err != nil {
 			return err
 		}
-		bondedChanges = changes
+		projection = newActiveSetProjection(changes)
+	}
+
+	effectiveBondedDelta := stakeChanges.totalBondedDelta
+	if stakeChanges.activeSetDelta {
+		if err := t.applyProspectiveBondedValidatorChanges(ctx, stakeChanges, projection); err != nil {
+			return err
+		}
+		effectiveBondedDelta = stakeChanges.totalBondedDelta
 	} else {
 		if err := t.checkTotalStakeChange(ctx, stakeChanges.totalBondedDelta); err != nil {
 			return err
+		}
+		if stakeChanges.unjailOccurred {
+			effectiveBondedDelta = effectiveBondedDelta.Add(projection.bondedDelta)
 		}
 	}
 
 	if err := t.checkDelegatorStakeShares(ctx, stakeChanges); err != nil {
 		return err
 	}
-	if err := t.checkValidatorPowerShares(ctx, stakeChanges, bondedChanges); err != nil {
+	if err := t.checkValidatorPowerShares(ctx, stakeChanges, projection.changes, effectiveBondedDelta); err != nil {
 		return err
 	}
 	return t.checkReporterPowerShares(ctx, stakeChanges)
@@ -515,13 +518,12 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 		if err != nil {
 			return err
 		}
-		// A pure unjail only clears Jailed; the unbonded/unbonding-to-bonded
-		// transition happens later in EndBlocker and is projected for the
-		// validator cap by prospectiveActiveSetChanges. Do not call
-		// markActiveSetDelta or add to totalBondedDelta here (M2 isolation).
+		// A pure unjail only clears Jailed; the active-set re-entry is projected
+		// for the validator cap only. Do not route through the 5% tracker,
+		// delegator cap, or reporter cap (M2 isolation).
 		validator.validator.Jailed = false
 		stakeChanges.setProjectedValidator(validator)
-		stakeChanges.markUnjail(valAddr)
+		stakeChanges.markUnjail()
 	default:
 		return nil
 	}
@@ -572,200 +574,6 @@ func (t TrackStakeChangesDecorator) projectedDelegationShares(ctx sdk.Context, s
 		return math.LegacyDec{}, fmt.Errorf("projected delegation shares cannot be negative")
 	}
 	return shares, nil
-}
-
-// applyProspectiveBondedValidatorChanges accounts for validators entering or
-// leaving the active set after tx handlers run, then folds those stake changes
-// into the final total and per-delegator checks. The computed active-set
-// changes are returned so the validator cap can evaluate entering/leaving
-// validators without re-scanning.
-func (t TrackStakeChangesDecorator) applyProspectiveBondedValidatorChanges(ctx sdk.Context, stakeChanges *stakeChangeTracker) (activeSetChanges, error) {
-	if stakeChanges == nil || !stakeChanges.activeSetDelta {
-		return activeSetChanges{}, nil
-	}
-	changes, err := t.prospectiveActiveSetChanges(ctx, stakeChanges)
-	if err != nil {
-		return activeSetChanges{}, err
-	}
-	if len(changes.entering) == 0 && len(changes.leaving) == 0 {
-		return changes, t.checkTotalStakeChange(ctx, stakeChanges.totalBondedDelta)
-	}
-
-	// Replacement changes include both sides: entrants add their post-change
-	// stake, while leavers remove the stake they would still have after the tx.
-	prospectiveBondedDelta := math.ZeroInt()
-	for _, validator := range changes.entering {
-		prospectiveBondedDelta = prospectiveBondedDelta.Add(validator.postTokens)
-	}
-	for _, validator := range changes.leaving {
-		prospectiveBondedDelta = prospectiveBondedDelta.Sub(validator.postTokens)
-	}
-	stakeChanges.addTotalDelta(prospectiveBondedDelta)
-	if err := t.checkTotalStakeChange(ctx, stakeChanges.totalBondedDelta); err != nil {
-		return changes, err
-	}
-	for _, validator := range changes.entering {
-		if err := t.addActiveSetValidatorDelegatorDeltas(ctx, stakeChanges, validator, math.LegacyOneDec()); err != nil {
-			return changes, err
-		}
-	}
-	for _, validator := range changes.leaving {
-		if err := t.addActiveSetValidatorDelegatorDeltas(ctx, stakeChanges, validator, math.LegacyNewDec(-1)); err != nil {
-			return changes, err
-		}
-	}
-	return changes, nil
-}
-
-// prospectiveActiveSetChanges projects staking's next active set from the
-// current top validators plus validators touched by this tx. It keeps the scan
-// bounded and sorts candidates to preserve deterministic behavior.
-func (t TrackStakeChangesDecorator) prospectiveActiveSetChanges(ctx sdk.Context, stakeChanges *stakeChangeTracker) (activeSetChanges, error) {
-	maxValidators, err := t.stakingKeeper.MaxValidators(ctx)
-	if err != nil {
-		return activeSetChanges{}, err
-	}
-	if maxValidators == 0 {
-		return activeSetChanges{}, nil
-	}
-	powerReduction := t.stakingKeeper.PowerReduction(ctx)
-	validators := make(map[validatorAddressKey]prospectiveValidator)
-	iterator, err := t.stakingKeeper.ValidatorsPowerStoreIterator(ctx)
-	if err != nil {
-		return activeSetChanges{}, err
-	}
-	defer iterator.Close()
-
-	// Scan the current top set plus enough replacement candidates to cover each
-	// validator touched by this transaction.
-	scanLimit := int(maxValidators) + len(stakeChanges.validatorProjections)
-	for count := 0; iterator.Valid() && count < scanLimit; iterator.Next() {
-		valAddr := sdk.ValAddress(iterator.Value())
-		validatorKey := newValidatorAddressKey(valAddr)
-		if _, ok := validators[validatorKey]; ok {
-			continue
-		}
-		validator, ok := stakeChanges.validatorProjections[validatorKey]
-		if !ok {
-			current, err := t.stakingKeeper.GetValidator(ctx, valAddr)
-			if err != nil {
-				return activeSetChanges{}, err
-			}
-			validator = prospectiveValidator{
-				addr:       valAddr,
-				validator:  current,
-				postTokens: current.Tokens,
-				postShares: current.DelegatorShares,
-				wasActive:  current.IsBonded() && !current.IsJailed(),
-			}
-		}
-		validators[validatorKey] = validator
-		count++
-	}
-
-	// Add validators touched by this tx that were not present in the power
-	// index scan, including validators created by MsgCreateValidator.
-	for _, validatorKey := range sortedKeys(stakeChanges.validatorProjections) {
-		if _, ok := validators[validatorKey]; ok {
-			continue
-		}
-		validators[validatorKey] = stakeChanges.validatorProjections[validatorKey]
-	}
-
-	ordered := make([]prospectiveValidator, 0, len(validators))
-	for _, validatorKey := range sortedKeys(validators) {
-		validator := validators[validatorKey]
-		// Jailed validators cannot enter the active set until EndBlocker clears
-		// Jailed. A same-tx MsgUnjail projection has already set Jailed=false, so
-		// an unjailed candidate is still considered here.
-		if validator.validator.Jailed {
-			continue
-		}
-		if sdk.TokensToConsensusPower(validator.postTokens, powerReduction) == 0 {
-			continue
-		}
-		ordered = append(ordered, validator)
-	}
-	// Match staking's active-set ranking: consensus power first, then operator
-	// address to make ties deterministic.
-	sort.Slice(ordered, func(i, j int) bool {
-		iPower := sdk.TokensToConsensusPower(ordered[i].postTokens, powerReduction)
-		jPower := sdk.TokensToConsensusPower(ordered[j].postTokens, powerReduction)
-		if iPower == jPower {
-			return bytes.Compare(ordered[i].addr, ordered[j].addr) < 0
-		}
-		return iPower > jPower
-	})
-
-	limit := int(maxValidators)
-	if len(ordered) < limit {
-		limit = len(ordered)
-	}
-	nextSet := make(map[validatorAddressKey]struct{}, limit)
-	for _, validator := range ordered[:limit] {
-		nextSet[newValidatorAddressKey(validator.addr)] = struct{}{}
-	}
-
-	changes := activeSetChanges{}
-	for _, validatorKey := range sortedKeys(validators) {
-		validator := validators[validatorKey]
-		_, inNextSet := nextSet[validatorKey]
-		// Note: entering/leaving is detected via IsBonded(). A validator that was
-		// jailed but kept Status=Bonded and is unjailed in this tx has IsBonded()==true,
-		// so it is NOT classified as entering here even though it re-joins the active
-		// set. checkValidatorPowerShares handles that case via the wasActive field
-		// (before=0 for a validator that was jailed at tx start), so the cap is still
-		// enforced; this entering/leaving set simply does not contribute its tokens to
-		// the effectiveBondedDelta, which is correct because those tokens are already
-		// in the bonded pool.
-		switch {
-		case inNextSet && !validator.validator.IsBonded():
-			changes.entering = append(changes.entering, validator)
-		case !inNextSet && validator.validator.IsBonded():
-			changes.leaving = append(changes.leaving, validator)
-		}
-	}
-	return changes, nil
-}
-
-// addActiveSetValidatorDelegatorDeltas adds the per-delegator bonded stake that
-// appears or disappears when a validator enters or leaves the active set.
-func (t TrackStakeChangesDecorator) addActiveSetValidatorDelegatorDeltas(ctx sdk.Context, stakeChanges *stakeChangeTracker, validator prospectiveValidator, sign math.LegacyDec) error {
-	delegatorShares := make(map[delegatorAddressKey]math.LegacyDec)
-	validatorKey := newValidatorAddressKey(validator.addr)
-	// Pending validators have no stored delegations yet; their self-delegation
-	// is already represented in delegationShareDelta.
-	if _, pending := stakeChanges.pendingValidators[validatorKey]; !pending {
-		delegations, err := t.stakingKeeper.GetValidatorDelegations(ctx, validator.addr)
-		if err != nil {
-			return err
-		}
-		for _, delegation := range delegations {
-			ctx.GasMeter().ConsumeGas(ActiveSetDelegationCheckGas, activeSetDelegationGasMessage)
-			delegator, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
-			if err != nil {
-				return err
-			}
-			addDec(delegatorShares, newDelegatorAddressKey(delegator), delegation.Shares)
-		}
-	}
-	for _, delegatorKey := range sortedKeys(stakeChanges.delegationShareDelta[validatorKey]) {
-		delta := stakeChanges.delegationShareDelta[validatorKey][delegatorKey]
-		addDec(delegatorShares, delegatorKey, delta)
-	}
-	postValidator := validator.postState()
-	for _, delegatorKey := range sortedKeys(delegatorShares) {
-		shares := delegatorShares[delegatorKey]
-		if shares.IsPositive() {
-			delegator, err := delegatorKey.address()
-			if err != nil {
-				return err
-			}
-			amount := postValidator.TokensFromShares(shares)
-			stakeChanges.addDelegatorDelta(delegator, amount.Mul(sign))
-		}
-	}
-	return nil
 }
 
 // checkTotalStakeChange enforces the 5% total bonded-token movement limit using
@@ -863,131 +671,6 @@ func (t TrackStakeChangesDecorator) delegatorBondedTokens(ctx sdk.Context, deleg
 	return tokens, iterError
 }
 
-// activeSetBondedDelta returns the net bonded-token delta implied by a set of
-// active-set changes. It is only used to compute the validator-cap denominator
-// for the lazy unjail projection and must not feed into the 5% tracker,
-// delegator cap, or reporter cap.
-func activeSetBondedDelta(changes activeSetChanges) math.Int {
-	delta := math.ZeroInt()
-	for _, validator := range changes.entering {
-		delta = delta.Add(validator.postTokens)
-	}
-	for _, validator := range changes.leaving {
-		delta = delta.Sub(validator.postTokens)
-	}
-	return delta
-}
-
-// checkValidatorPowerShares enforces the validator acquisition cap: a validator
-// may not gain active bonded stake while the resulting share of total bonded
-// stake is strictly above max_validator_power_share. Already-bonded validators
-// whose tokens do not increase (including passive denominator drift) and
-// validators leaving the active set are never rejected. Entering validators are
-// checked as before=0, after=postTokens.
-func (t TrackStakeChangesDecorator) checkValidatorPowerShares(ctx sdk.Context, stakeChanges *stakeChangeTracker, bondedChanges activeSetChanges) error {
-	if stakeChanges == nil {
-		return nil
-	}
-	if len(stakeChanges.validatorProjections) == 0 && len(bondedChanges.entering) == 0 && len(bondedChanges.leaving) == 0 && len(stakeChanges.unjailed) == 0 {
-		return nil
-	}
-
-	params, err := t.reporterKeeper.Params.Get(ctx)
-	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return nil
-		}
-		return err
-	}
-	maxShare := params.MaxValidatorPowerShare
-	if maxShare.IsNil() || !maxShare.IsPositive() || maxShare.GTE(math.LegacyOneDec()) {
-		return nil
-	}
-
-	effectiveBondedDelta := stakeChanges.totalBondedDelta
-
-	// M2: a pure MsgUnjail does not set activeSetDelta, so no active-set
-	// changes were computed by applyProspectiveBondedValidatorChanges.
-	// Compute them lazily for the validator cap only and fold their net bonded
-	// delta into the denominator. Do not mutate totalBondedDelta or route the
-	// unjail through the 5% tracker, delegator cap, or reporter cap.
-	if len(stakeChanges.unjailed) > 0 && !stakeChanges.activeSetDelta {
-		unjailChanges, err := t.prospectiveActiveSetChanges(ctx, stakeChanges)
-		if err != nil {
-			return err
-		}
-		bondedChanges = unjailChanges
-		effectiveBondedDelta = effectiveBondedDelta.Add(activeSetBondedDelta(unjailChanges))
-	}
-
-	candidates := make(map[validatorAddressKey]prospectiveValidator)
-	projectedBonded := make(map[validatorAddressKey]bool)
-
-	for _, validatorKey := range sortedKeys(stakeChanges.validatorProjections) {
-		validator := stakeChanges.validatorProjections[validatorKey]
-		candidates[validatorKey] = validator
-		projectedBonded[validatorKey] = validator.validator.IsBonded()
-	}
-	for _, validator := range bondedChanges.entering {
-		validatorKey := newValidatorAddressKey(validator.addr)
-		candidates[validatorKey] = validator
-		projectedBonded[validatorKey] = true
-	}
-	for _, validator := range bondedChanges.leaving {
-		validatorKey := newValidatorAddressKey(validator.addr)
-		candidates[validatorKey] = validator
-		projectedBonded[validatorKey] = false
-	}
-
-	// Acquisition-only enforcement: compute each candidate's before/after and
-	// skip the denominator fetch entirely when no validator is gaining active
-	// bonded stake (e.g. a delegate to an inactive validator that stays
-	// inactive, or pure passive denominator drift).
-	acquisitions := make([]validatorAddressKey, 0)
-	for _, validatorKey := range sortedKeys(candidates) {
-		validator := candidates[validatorKey]
-
-		// before is the validator's pre-tx active bonded stake. Use wasActive
-		// (bonded && not jailed at tx start) rather than IsBonded(): a jailed
-		// validator is not in the active set even if its Status is still Bonded,
-		// so unjailing it is an acquisition from 0.
-		before := math.ZeroInt()
-		if validator.wasActive {
-			before = validator.validator.Tokens
-		}
-
-		after := math.ZeroInt()
-		if projectedBonded[validatorKey] {
-			after = validator.postTokens
-		}
-
-		if after.GT(before) {
-			acquisitions = append(acquisitions, validatorKey)
-		}
-	}
-	if len(acquisitions) == 0 {
-		return nil
-	}
-
-	currentTotalBonded, err := t.stakingKeeper.TotalBondedTokens(ctx)
-	if err != nil {
-		return err
-	}
-	totalBondedAfter := currentTotalBonded.Add(effectiveBondedDelta)
-	if !totalBondedAfter.IsPositive() {
-		return nil
-	}
-
-	maxAllowed := maxShare.MulInt(totalBondedAfter)
-	for _, validatorKey := range acquisitions {
-		validator := candidates[validatorKey]
-		if validator.postTokens.ToLegacyDec().GT(maxAllowed) {
-			return errorsmod.Wrapf(types.ErrExceedsMaxValidatorPowerShare, "validator %s", validator.addr.String())
-		}
-	}
-	return nil
-}
-
 // checkReporterPowerShares enforces the reporter power cap: no reporter's
 // projected potential stake may reach the max_reporter_power_share fraction of
 // projected total bonded stake. Only reporters gaining stake in this tx are
@@ -1007,7 +690,7 @@ func (t TrackStakeChangesDecorator) checkReporterPowerShares(ctx sdk.Context, st
 	maxShare := params.MaxReporterPowerShare
 	// nil/zero is pre-migration state and shares >= 1 are explicitly disabled;
 	// both must not be read as "cap everything at zero"
-	if maxShare.IsNil() || !maxShare.IsPositive() || maxShare.GTE(math.LegacyOneDec()) {
+	if !types.PowerShareEnabled(maxShare) {
 		return nil
 	}
 

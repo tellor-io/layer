@@ -239,9 +239,7 @@ func TestTrackStakeChanges(t *testing.T) {
 			// This suite isolates the 5% rule and delegation-count limits with
 			// single-validator fixtures that hold 100% of bonded stake; disable
 			// the validator power cap so it does not fire first.
-			params := types.DefaultParams()
-			params.MaxValidatorPowerShare = math.LegacyOneDec()
-			require.NoError(t, k.Params.Set(ctx, params))
+			disableValidatorPowerCap(t, k, ctx)
 			sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100), nil)
 			if tc.setup != nil {
 				tc.setup(sk, ctx)

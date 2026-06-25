@@ -32,6 +32,13 @@ func setupPowerCapDecorator(t *testing.T, trackerTotal int64) (k keeper.Keeper, 
 	return
 }
 
+func disableValidatorPowerCap(t *testing.T, k keeper.Keeper, ctx sdk.Context) {
+	t.Helper()
+	params := types.DefaultParams()
+	params.MaxValidatorPowerShare = math.LegacyOneDec()
+	require.NoError(t, k.Params.Set(ctx, params))
+}
+
 // mockRedelegatePair wires two 25-token bonded validators (src, dst), the power
 // store over them, and a 25-token delegation del->src. Shared by the redelegate,
 // disabled, and authz cap tests.
@@ -44,6 +51,18 @@ func mockRedelegatePair(sk *mocks.StakingKeeper, ctx sdk.Context) (srcVal, dstVa
 	mockDelegation(sk, ctx, del, srcVal, math.NewInt(25))
 	sk.On("GetAllDelegatorDelegations", ctx, del).Return([]stakingtypes.Delegation{delegation(del, srcVal, math.NewInt(25))}, nil)
 	return
+}
+
+func TestActiveSetProjectionBondedDelta(t *testing.T) {
+	changes := activeSetChanges{
+		entering: []prospectiveValidator{{postTokens: math.NewInt(15)}},
+		leaving:  []prospectiveValidator{{postTokens: math.NewInt(4)}},
+	}
+
+	projection := newActiveSetProjection(changes)
+
+	require.Equal(t, changes, projection.changes)
+	require.Equal(t, math.NewInt(11), projection.bondedDelta)
 }
 
 func TestValidatorPowerShareRedelegate(t *testing.T) {
@@ -363,9 +382,7 @@ func TestValidatorPowerShareUnjailBonded(t *testing.T) {
 
 func TestValidatorPowerShareDisabled(t *testing.T) {
 	k, sk, ctx, decorator := setupPowerCapDecorator(t, 100)
-	params := types.DefaultParams()
-	params.MaxValidatorPowerShare = math.LegacyOneDec()
-	require.NoError(t, k.Params.Set(ctx, params))
+	disableValidatorPowerCap(t, k, ctx)
 	srcVal, dstVal, del := mockRedelegatePair(sk, ctx)
 
 	// 31/100 would be over the cap when enabled; with share >= 1 it is allowed.
