@@ -3,7 +3,7 @@
 This guide will walk you through how to export the state of a running node and then use that state to start a forked chain with an entirely new validator set.
 
 Prerequisites:
-    - A node synced up with the chain (please refer to our docs on how to do that: https://docs.tellor.io/layer-docs/running-tellor-layer/node-setup)
+    - A node synced up with the chain (please refer to our docs on how to do that: https://docs.tellor.io/tellor/running-tellor-layer/node-setup)
     - Docker installed and running locally
     - Packages:
         - git
