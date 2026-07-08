@@ -216,12 +216,12 @@ func (t TrackStakeChangesDecorator) prospectiveActiveSetChanges(ctx sdk.Context,
 	for _, validatorKey := range sortedKeys(validators) {
 		validator := validators[validatorKey]
 		_, inNextSet := nextSet[validatorKey]
-		// entering/leaving is detected via IsBonded(); a jailed validator unjailed in this tx is handled by
-		// checkValidatorPowerShares via wasActive (before=0), not as an entrant, so its tokens are not double-counted
+		// Leaving is based on pre-tx active membership; jailed bonded validators
+		// still report IsBonded()==true while absent from staking's power index.
 		switch {
 		case inNextSet && !validator.validator.IsBonded():
 			changes.entering = append(changes.entering, validator)
-		case !inNextSet && validator.validator.IsBonded():
+		case !inNextSet && validator.wasActive:
 			changes.leaving = append(changes.leaving, validator)
 		}
 	}

@@ -312,6 +312,35 @@ func TestValidatorPowerShareDelegateToJailed(t *testing.T) {
 	}
 }
 
+func TestRedelegateFromJailedBondedSourceDoesNotProjectLeaver(t *testing.T) {
+	k, sk, ctx, decorator := setupPowerCapDecorator(t, 100)
+	disableValidatorPowerCap(t, k, ctx)
+
+	dstVal := sdk.ValAddress(sample.AccAddressBytes())
+	srcVal := sdk.ValAddress(sample.AccAddressBytes())
+	mockValidator(sk, ctx, validator(dstVal, stakingtypes.Bonded, math.NewInt(71)))
+	jailed := validator(srcVal, stakingtypes.Bonded, math.NewInt(29))
+	jailed.Jailed = true
+	mockValidator(sk, ctx, jailed)
+	mockPowerStore(sk, ctx, 1, dstVal)
+
+	del := sample.AccAddressBytes()
+	srcDelegations := []stakingtypes.Delegation{delegation(del, srcVal, math.NewInt(29))}
+	sk.On("GetAllDelegatorDelegations", ctx, del).Return(srcDelegations, nil)
+	mockDelegation(sk, ctx, del, srcVal, math.NewInt(29))
+	sk.On("GetValidatorDelegations", ctx, srcVal).Return(srcDelegations, nil)
+
+	tx := buildTx(t, &stakingtypes.MsgBeginRedelegate{
+		DelegatorAddress:    del.String(),
+		ValidatorSrcAddress: srcVal.String(),
+		ValidatorDstAddress: dstVal.String(),
+		Amount:              coin(1),
+	})
+
+	_, err := decorator.AnteHandle(ctx, tx, false, noopNext)
+	require.NoError(t, err)
+}
+
 func TestValidatorPowerShareUnjail(t *testing.T) {
 	// Two bonded validators at 100 each (total 200); a jailed unbonded validator
 	// would enter the active set when unjailed (top 2). 30% of (200 + entering -
