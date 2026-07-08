@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type VoterInfo struct {
@@ -76,7 +75,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			}
 		}
 		// stake the slashed tokens back into the bonded pool for the reporter
-		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
+		if err := k.ReturnSlashedTokens(ctx, dispute, math.ZeroInt()); err != nil {
 			return err
 		}
 		reporterAddr, err := sdk.AccAddressFromBech32(dispute.InitialEvidence.GetReporter())
@@ -108,12 +107,13 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 				return err
 			}
 		}
-		// refund the reporters bond to the reporter plus the remaining disputeFee; goes to bonded pool
-		ogSlashAmount := dispute.SlashAmount
+		// refund the reporter's escrowed bond plus the dispute fee minus its 5% burn.
+		// The fee upside is passed explicitly as extraReturn; SlashAmount is no longer
+		// mutated (it stays equal to the escrowed principal, so an under-collected
+		// snapshot can never be scaled up into fee funds).
 		fivePercentDec := dispute.DisputeFee.ToLegacyDec().Quo(math.LegacyNewDec(20))
 		disputeFeeMinusFivePercent := dispute.DisputeFee.Sub(fivePercentDec.TruncateInt())
-		dispute.SlashAmount = dispute.SlashAmount.Add(disputeFeeMinusFivePercent)
-		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
+		if err := k.ReturnSlashedTokens(ctx, dispute, disputeFeeMinusFivePercent); err != nil {
 			return err
 		}
 		reporterAddr, err := sdk.AccAddressFromBech32(dispute.InitialEvidence.GetReporter())
@@ -127,7 +127,6 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		if err := k.Votes.Set(ctx, id, vote); err != nil {
 			return err
 		}
-		dispute.SlashAmount = ogSlashAmount
 	case types.VoteResult_NO_TALLY:
 		return errors.New("vote hasn't been tallied yet")
 	}
@@ -171,19 +170,39 @@ func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, p
 func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeesPaid, reporterBond math.Int) (math.Int, error) {
 	amtFixed6, remainder := CalculateReporterBondRewardAmount(payerInfo.Amount, totalFeesPaid, reporterBond)
 
-	if err := k.reporterKeeper.AddAmountToStake(ctx, feePayer, amtFixed6); err != nil {
+	bondedAmt, unbondedAmt, err := k.reporterKeeper.AddAmountToStake(ctx, feePayer, amtFixed6)
+	if err != nil {
 		return math.Int{}, err
 	}
-	return remainder, k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amtFixed6)))
+	return remainder, k.sendStakeReturnsToPools(ctx, bondedAmt, unbondedAmt)
 }
 
 // GetSumOfUserAndReporterVotesAllRounds sums claim-eligible (user and reporter) vote
 // power across all rounds of a dispute. Team votes are excluded because they cannot
-// claim voter rewards.
+// claim voter rewards. Round ids are de-duplicated: PrevDisputeIds already tracks
+// the dispute family, so a round id appearing in both the current dispute and
+// PrevDisputeIds is counted once.
 func (k Keeper) GetSumOfUserAndReporterVotesAllRounds(ctx context.Context, id uint64) (math.Int, error) {
 	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
 		return math.Int{}, err
+	}
+
+	// De-duplicate round ids. Start from PrevDisputeIds (legacy/custom fixtures
+	// may leave this empty); append the current id only if it is not already
+	// present, which handles the normal case where round-N PrevDisputeIds ends
+	// with the current id.
+	roundIds := make([]uint64, 0, len(dispute.PrevDisputeIds)+1)
+	seen := make(map[uint64]struct{})
+	for _, roundId := range dispute.PrevDisputeIds {
+		if _, ok := seen[roundId]; ok {
+			continue
+		}
+		seen[roundId] = struct{}{}
+		roundIds = append(roundIds, roundId)
+	}
+	if _, ok := seen[id]; !ok {
+		roundIds = append(roundIds, id)
 	}
 
 	sumUsers := uint64(0)
@@ -195,18 +214,7 @@ func (k Keeper) GetSumOfUserAndReporterVotesAllRounds(ctx context.Context, id ui
 		sumReporters += voteCounts.Reporters.Support + voteCounts.Reporters.Against + voteCounts.Reporters.Invalid
 	}
 
-	// process current dispute
-	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return math.Int{}, err
-		}
-		voteCounts = types.StakeholderVoteCounts{}
-	}
-	processVoteCounts(voteCounts)
-
-	// process previous disputes
-	for _, roundId := range dispute.PrevDisputeIds {
+	for _, roundId := range roundIds {
 		voteCounts, err := k.VoteCountsByGroup.Get(ctx, roundId)
 		if err != nil {
 			if !errors.Is(err, collections.ErrNotFound) {

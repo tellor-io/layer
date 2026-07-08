@@ -251,6 +251,9 @@ func (s *IntegrationTestSuite) TestMultiRoundAgainstReporterGetsRoundOneStakeOnl
 	disputeModAddr := authtypes.NewModuleAddress(types.ModuleName)
 	bondedBefore, err := s.Setup.Stakingkeeper.TotalBondedTokens(s.Setup.Ctx)
 	s.NoError(err)
+	reporterAddr, err := sdk.AccAddressFromBech32(report.Reporter)
+	s.NoError(err)
+	reporterUbdBefore := s.unbondingBalance(reporterAddr)
 
 	s.NoError(s.Setup.Disputekeeper.ExecuteVote(s.Setup.Ctx, 2))
 
@@ -264,7 +267,8 @@ func (s *IntegrationTestSuite) TestMultiRoundAgainstReporterGetsRoundOneStakeOnl
 
 	// reporter gets bond back + 95% of the round-1 fee
 	expectedReporterGain := dispute.SlashAmount.Add(dispute.DisputeFee.Sub(dispute.DisputeFee.QuoRaw(20)))
-	s.Equal(expectedReporterGain, bondedAfter.Sub(bondedBefore))
+	reporterUbdAfter := s.unbondingBalance(reporterAddr)
+	s.Equal(expectedReporterGain, bondedAfter.Sub(bondedBefore).Add(reporterUbdAfter.Sub(reporterUbdBefore)))
 
 	// only the reserved voter reward remains in the dispute module
 	s.Equal(dispute.VoterReward, s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputeModAddr, s.Setup.Denom).Amount)
@@ -360,15 +364,20 @@ func (s *IntegrationTestSuite) TestMultiRoundPayFromBondRefundDoesNotRestakeLate
 	s.NoError(err)
 	roundTwoStakeBefore, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, roundTwoBondPayer, report.QueryId)
 	s.NoError(err)
+	roundOneUbdBefore := s.unbondingBalance(roundOneBondPayer)
+	roundTwoUbdBefore := s.unbondingBalance(roundTwoBondPayer)
 	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &types.MsgWithdrawFeeRefund{Id: 2, PayerAddress: roundOneBondPayer.String(), CallerAddress: roundOneBondPayer.String()})
 	s.NoError(err)
 	roundOneStakeAfter, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, roundOneBondPayer, report.QueryId)
 	s.NoError(err)
 	roundTwoStakeAfter, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, roundTwoBondPayer, report.QueryId)
 	s.NoError(err)
+	roundOneUbdAfter := s.unbondingBalance(roundOneBondPayer)
+	roundTwoUbdAfter := s.unbondingBalance(roundTwoBondPayer)
 
-	s.True(roundOneStakeAfter.GT(roundOneStakeBefore), "the round-1 bond payer should receive a stake refund")
+	s.True(roundOneStakeAfter.Add(roundOneUbdAfter.Sub(roundOneUbdBefore)).GT(roundOneStakeBefore), "the round-1 bond payer should receive a stake refund")
 	s.Equal(roundTwoStakeBefore, roundTwoStakeAfter, "a later-round bond payer must not receive stake from the round-1 fee refund")
+	s.Equal(roundTwoUbdBefore, roundTwoUbdAfter, "a later-round bond payer must not receive unbonding overflow from the round-1 fee refund")
 }
 
 // TestWorstCaseMultiRoundPayFromBondMaxRoundsDoesNotDiluteFirstRoundStakeRefund: round 1

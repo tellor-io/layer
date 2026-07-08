@@ -348,47 +348,81 @@ func (s *IntegrationTestSuite) TestAddAmountToStake() {
 	s.NoError(err)
 	s.True(delbefore.IsZero())
 	delAmount := math.NewInt(1000)
-	s.NoError(s.Setup.Reporterkeeper.AddAmountToStake(s.Setup.Ctx, addr, delAmount))
+	_, _, err = s.Setup.Reporterkeeper.AddAmountToStake(s.Setup.Ctx, addr, delAmount)
+	s.NoError(err)
 	delAfter, err := s.Setup.Stakingkeeper.GetDelegatorBonded(s.Setup.Ctx, addr)
 	s.NoError(err)
 	s.True(delAfter.Equal(delAmount))
 }
 
-func (s *IntegrationTestSuite) TestGetBondedValidators() {
+func (s *IntegrationTestSuite) TestGetBondedValidatorsByPower() {
+	// CreateValidators(5) plus the genesis validator gives six bonded validators.
 	s.Setup.CreateValidators(5)
-	testCases := []struct {
-		name        string
-		num         uint32
-		expectedlen int
-	}{
-		{
-			name:        "one bonded validator",
-			num:         1,
-			expectedlen: 1,
-		},
-		{
-			name:        "two bonded validators",
-			num:         2,
-			expectedlen: 2,
-		},
-		{
-			name:        "five bonded validators",
-			num:         5,
-			expectedlen: 5,
-		},
-		{
-			name:        "ten bonded validators",
-			num:         10,
-			expectedlen: 5 + 1, // 1 for genesis validator
-		},
+
+	vals, err := s.Setup.Stakingkeeper.GetBondedValidatorsByPower(s.Setup.Ctx)
+	s.NoError(err)
+	maxValidators, err := s.Setup.Stakingkeeper.MaxValidators(s.Setup.Ctx)
+	s.NoError(err)
+	// GetBondedValidatorsByPower returns the full active bonded set (bounded by
+	// MaxValidators), not an arbitrary cap. The genesis validator is always present.
+	expected := 6
+	if uint32(expected) > maxValidators {
+		expected = int(maxValidators)
 	}
-	for _, tc := range testCases {
-		s.Run(tc.name, func() {
-			vals, err := s.Setup.Reporterkeeper.GetBondedValidators(s.Setup.Ctx, tc.num)
-			s.NoError(err)
-			s.Equal(tc.expectedlen, len(vals))
-		})
+	s.Equal(expected, len(vals))
+}
+
+func (s *IntegrationTestSuite) TestEscrowReporterStakePartialRedelegationCollectionStoresCollectedTotal() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
+	ctx := s.Setup.Ctx
+	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{100, 100})
+
+	reporterAddr := sample.AccAddressBytes()
+	delegated := math.NewInt(400)
+	s.Setup.MintTokens(reporterAddr, delegated)
+	_, err := stakingMsgServer.Delegate(ctx, stakingtypes.NewMsgDelegate(
+		reporterAddr.String(),
+		valAddrs[0].String(),
+		sdk.NewCoin(s.Setup.Denom, delegated),
+	))
+	s.NoError(err)
+
+	_, err = stakingMsgServer.BeginRedelegate(ctx, stakingtypes.NewMsgBeginRedelegate(
+		reporterAddr.String(),
+		valAddrs[0].String(),
+		valAddrs[1].String(),
+		sdk.NewCoin(s.Setup.Denom, delegated),
+	))
+	s.NoError(err)
+
+	reportHeight := uint64(ctx.BlockHeight())
+	hashId := []byte("partial-redelegation-shortfall")
+	totalPowerTokens := layertypes.PowerReduction
+	s.NoError(s.Setup.Reporterkeeper.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporterAddr.Bytes(), reportHeight)), reportertypes.DelegationsAmounts{
+		TokenOrigins: []*reportertypes.TokenOriginInfo{
+			{
+				DelegatorAddress: reporterAddr.Bytes(),
+				ValidatorAddress: valAddrs[0],
+				Amount:           totalPowerTokens,
+			},
+		},
+		Total: totalPowerTokens,
+	}))
+
+	intendedSlash := math.NewInt(1000)
+	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, reporterAddr, 1, reportHeight, intendedSlash, []byte{}, hashId))
+
+	stored, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(ctx, hashId)
+	s.NoError(err)
+	s.Equal(delegated, stored.Total)
+	s.True(stored.Total.LT(intendedSlash))
+
+	sum := math.ZeroInt()
+	for _, origin := range stored.TokenOrigins {
+		sum = sum.Add(origin.Amount)
 	}
+	s.Equal(stored.Total, sum)
 }
 
 // one delegator stakes with multiple validators, check the delegation count
