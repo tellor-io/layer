@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	interchaintest "github.com/strangelove-ventures/interchaintest/v8"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
@@ -142,6 +143,15 @@ func TestDisputeCapOverflowReturnsAndRefundsViaUnbonding(t *testing.T) {
 	var reporter e2e.QueryReporterResponse
 	require.NoError(json.Unmarshal(reporterRes, &reporter))
 	require.NotNil(reporter.Reporter)
+	require.True(reporter.Reporter.Metadata.Jailed, "reporter row stays jailed until MsgUnjailReporter")
+	require.True(reporter.Reporter.Metadata.JailedUntil.Before(time.Now()), "INVALID resolution should allow immediate self-unjail")
+	_, err = val1.Node.ExecTx(ctx, val1.AccAddr, "reporter", "unjail-reporter", val1.AccAddr,
+		"--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya",
+	)
+	require.NoError(err)
+	reporterRes, _, err = e2e.QueryWithTimeout(ctx, val0.Node, "reporter", "reporter", val1.AccAddr)
+	require.NoError(err)
+	require.NoError(json.Unmarshal(reporterRes, &reporter))
 	require.False(reporter.Reporter.Metadata.Jailed)
 
 	_, err = val0.Node.ExecTx(ctx, val0.AccAddr,
