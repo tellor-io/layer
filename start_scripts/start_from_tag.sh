@@ -21,6 +21,15 @@ TAG="v6.0.0"
 export HOME_DIR="$HOME/.layer-chains/devnet/layer"
 export LAYERD_NODE_HOME_1="$HOME_DIR/$KEY_NAME"
 
+# single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012)
+disable_power_caps() {
+  local genesis_file=$1
+  jq '.app_state.reporter.params.max_validator_power_share = "1.000000000000000000" |
+      .app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' \
+    "$genesis_file" > temp.json
+  mv temp.json "$genesis_file"
+}
+
 # Checkout the specific tag
 echo "Checking out tag $TAG..."
 if ! git show-ref --tags --quiet --verify -- "refs/tags/$TAG"; then
@@ -91,8 +100,7 @@ jq '.app_state.gov.params.max_deposit_period = "1m"' $HOME_DIR/config/genesis.js
 jq '.app_state.gov.params.min_deposit[0].denom = "loya"' $HOME_DIR/config/genesis.json > temp.json && mv temp.json $HOME_DIR/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' $HOME_DIR/config/genesis.json > temp.json && mv temp.json $HOME_DIR/config/genesis.json
 # single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012), so disable both
-jq '.app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' $HOME_DIR/config/genesis.json > temp.json && mv temp.json $HOME_DIR/config/genesis.json
-jq '.app_state.reporter.params.max_validator_power_share = "1.000000000000000000"' $HOME_DIR/config/genesis.json > temp.json && mv temp.json $HOME_DIR/config/genesis.json
+disable_power_caps "$HOME_DIR/config/genesis.json"
 jq '.app_state.gov.params.expedited_voting_period = "3m"' $HOME_DIR/config/genesis.json > temp.json && mv temp.json $HOME_DIR/config/genesis.json
 
 echo "$KEY_NAME..."
@@ -101,8 +109,7 @@ jq '.app_state.gov.params.max_deposit_period = "1m"' $HOME_DIR/$KEY_NAME/config/
 jq '.app_state.gov.params.min_deposit[0].denom = "loya"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
 # single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012), so disable both
-jq '.app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
-jq '.app_state.reporter.params.max_validator_power_share = "1.000000000000000000"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
+disable_power_caps "$HOME_DIR/$KEY_NAME/config/genesis.json"
 jq '.app_state.gov.params.expedited_voting_period = "3m"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
 
 echo "bill..."
@@ -111,8 +118,7 @@ jq '.app_state.gov.params.max_deposit_period = "1m"' $HOME_DIR/bill/config/genes
 jq '.app_state.gov.params.min_deposit[0].denom = "loya"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
 # single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012), so disable both
-jq '.app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
-jq '.app_state.reporter.params.max_validator_power_share = "1.000000000000000000"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
+disable_power_caps "$HOME_DIR/bill/config/genesis.json"
 jq '.app_state.gov.params.expedited_voting_period = "3m"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
 
 # Create a tx to give alice loyas to stake
