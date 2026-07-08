@@ -198,6 +198,7 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 
 	totalTokens := layertypes.PowerReduction.MulRaw(int64(power))
 	disputeTokens := make([]*types.TokenOriginInfo, 0)
+	collected := math.ZeroInt()
 	leftover := amt
 	// loop through the selectors' tokens (validator, amount) that were part of the report and remove tokens from relevant delegations
 	// amount should be proportional to the total tokens the reporter had at the time of the report
@@ -225,45 +226,69 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 				ValidatorAddress: del.ValidatorAddress,
 				Amount:           storedAmount,
 			})
+			collected = collected.Add(storedAmount)
 		}
 
 		if !remaining.IsZero() {
-			dstVAl, err := k.getDstValidator(ctx, delAddr, valAddr)
+			dstVal, err := k.getDstValidator(ctx, delAddr, valAddr)
 			if err != nil {
 				return err
 			}
-			_, err = k.undelegate(ctx, delAddr, dstVAl, math.LegacyNewDecFromInt(remaining))
+			secondRemaining, err := k.undelegate(ctx, delAddr, dstVal, math.LegacyNewDecFromInt(remaining))
 			if err != nil {
 				return err
 			}
-			disputeTokens = append(disputeTokens, &types.TokenOriginInfo{
-				DelegatorAddress: del.DelegatorAddress,
-				ValidatorAddress: dstVAl,
-				Amount:           remaining,
-			})
+			collectedSecond := remaining.Sub(secondRemaining)
+			if collectedSecond.IsPositive() {
+				disputeTokens = append(disputeTokens, &types.TokenOriginInfo{
+					DelegatorAddress: del.DelegatorAddress,
+					ValidatorAddress: dstVal,
+					Amount:           collectedSecond,
+				})
+				collected = collected.Add(collectedSecond)
+			}
 		}
 	}
 
-	// store the disputed amounts information to be used after dispute resolution
-	return k.DisputedDelegationAmounts.Set(ctx, hashId, types.DelegationsAmounts{TokenOrigins: disputeTokens, Total: amt})
+	// Total is the coins actually escrowed (sum of origin amounts), not intended slash amt.
+	return k.DisputedDelegationAmounts.Set(ctx, hashId, types.DelegationsAmounts{TokenOrigins: disputeTokens, Total: collected})
 }
 
-// get the destination validator for a redelegated delegator, used for chasing after tokens that were redelegated to a different validator
+const maxRedelegationHops = 7
+
 func (k Keeper) getDstValidator(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.ValAddress, error) {
-	reds, err := k.stakingKeeper.GetRedelegationsFromSrcValidator(ctx, valAddr)
-	if err != nil {
-		return nil, err
-	}
-	for _, red := range reds {
-		if strings.EqualFold(red.DelegatorAddress, delAddr.String()) {
-			valAddr, err := sdk.ValAddressFromBech32(red.ValidatorDstAddress)
-			if err != nil {
-				return nil, err
-			}
-			return valAddr, nil
+	current := valAddr
+	seen := make(map[string]struct{})
+	for hop := 0; hop < maxRedelegationHops; hop++ {
+		reds, err := k.stakingKeeper.GetRedelegationsFromSrcValidator(ctx, current)
+		if err != nil {
+			return nil, err
 		}
+		var next sdk.ValAddress
+		found := false
+		for _, red := range reds {
+			if strings.EqualFold(red.DelegatorAddress, delAddr.String()) {
+				next, err = sdk.ValAddressFromBech32(red.ValidatorDstAddress)
+				if err != nil {
+					return nil, err
+				}
+				found = true
+				break
+			}
+		}
+		if !found {
+			if hop == 0 {
+				return nil, errors.New("redelegation to destination validator not found")
+			}
+			return current, nil
+		}
+		if _, ok := seen[next.String()]; ok {
+			return nil, errors.New("redelegation cycle detected")
+		}
+		seen[current.String()] = struct{}{}
+		current = next
 	}
-	return nil, errors.New("redelegation to destination validator not found")
+	return nil, errors.New("redelegation hop limit exceeded")
 }
 
 // chases after unbonding delegations in order to get tokens that are part a new dispute

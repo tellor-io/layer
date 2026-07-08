@@ -201,6 +201,159 @@ func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
 			},
 		},
 	}, nil)
+	// the multi-hop chase checks for further redelegations from the destination
+	// validator and stops when there are none.
+	sk.On("GetRedelegationsFromSrcValidator", ctx, sdk.ValAddress(valAddr2)).Return([]stakingtypes.Redelegation{}, nil)
 
 	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 3000, uint64(ctx.BlockHeight()), math.NewIntWithDecimal(1500, 6), []byte{}, []byte("hashId")))
+}
+
+// TestEscrowReporterStakePartialCollection asserts that when the redelegation
+// chase collects less than the intended slash, DisputedDelegationAmounts.Total
+// equals the coins actually escrowed (sum of appended origin amounts) and is
+// strictly less than `amt`. ReturnSlashedTokens relies on Total == coins-held so
+// it never scales an under-collected snapshot up into dispute-fee funds.
+func TestEscrowReporterStakePartialCollection(t *testing.T) {
+	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
+	reporterAddr := sample.AccAddressBytes()
+	valAddr1, valAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
+	// power=1 -> totalTokens = PowerReduction (1e9). origin.Amount == totalTokens
+	// so the single selector's proportional share == amt (1000), leftover 0.
+	originAmount := math.NewInt(1_000_000_000)
+	amt := math.NewInt(1000)
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporterAddr.Bytes(), uint64(ctx.BlockHeight()))), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{
+			{DelegatorAddress: reporterAddr, ValidatorAddress: sdk.ValAddress(valAddr1), Amount: originAmount},
+		},
+		Total: originAmount,
+	}))
+
+	// first undelegate on valAddr1: no live delegation and no unbonding -> full
+	// `remaining` (1000), nothing collected on the first hop.
+	sk.On("GetDelegation", ctx, reporterAddr, sdk.ValAddress(valAddr1)).Return(stakingtypes.Delegation{}, stakingtypes.ErrNoDelegation)
+	sk.On("GetUnbondingDelegation", ctx, reporterAddr, sdk.ValAddress(valAddr1)).Return(stakingtypes.UnbondingDelegation{}, stakingtypes.ErrNoUnbondingDelegation)
+
+	// the selector redelegated valAddr1 -> valAddr2; chase lands on valAddr2.
+	sk.On("GetRedelegationsFromSrcValidator", ctx, sdk.ValAddress(valAddr1)).Return([]stakingtypes.Redelegation{
+		{
+			DelegatorAddress:    reporterAddr.String(),
+			ValidatorSrcAddress: sdk.ValAddress(valAddr1).String(),
+			ValidatorDstAddress: sdk.ValAddress(valAddr2).String(),
+			Entries: []stakingtypes.RedelegationEntry{
+				{CreationHeight: ctx.BlockHeight(), InitialBalance: amt, SharesDst: math.LegacyDec(amt)},
+			},
+		},
+	}, nil)
+	// the multi-hop chase verifies there are no further redelegations from valAddr2.
+	sk.On("GetRedelegationsFromSrcValidator", ctx, sdk.ValAddress(valAddr2)).Return([]stakingtypes.Redelegation{}, nil)
+
+	// second undelegate on valAddr2: a partial delegation covers only 400 of the
+	// 1000 remaining, and there is no unbonding entry to cover the rest -> the
+	// chase collects 400 and returns a 600 shortfall.
+	validator2 := stakingtypes.Validator{Tokens: math.NewInt(1000), DelegatorShares: math.LegacyNewDec(1000), Status: stakingtypes.Bonded}
+	sk.On("GetDelegation", ctx, reporterAddr, sdk.ValAddress(valAddr2)).Return(stakingtypes.Delegation{
+		DelegatorAddress: reporterAddr.String(), ValidatorAddress: sdk.ValAddress(valAddr2).String(), Shares: math.LegacyNewDec(400),
+	}, nil)
+	sk.On("GetValidator", ctx, sdk.ValAddress(valAddr2)).Return(validator2, nil)
+	sk.On("Unbond", ctx, reporterAddr, sdk.ValAddress(valAddr2), math.LegacyNewDec(400)).Return(math.NewInt(400), nil)
+	sk.On("GetUnbondingDelegation", ctx, reporterAddr, sdk.ValAddress(valAddr2)).Return(stakingtypes.UnbondingDelegation{}, stakingtypes.ErrNoUnbondingDelegation)
+	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(400)))).Return(nil)
+
+	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 1, uint64(ctx.BlockHeight()), amt, []byte{}, []byte("hashId")))
+
+	stored, err := k.DisputedDelegationAmounts.Get(ctx, []byte("hashId"))
+	require.NoError(t, err)
+	require.True(t, stored.Total.LT(amt), "Total (%s) must be less than intended slash amt (%s)", stored.Total, amt)
+	require.Equal(t, math.NewInt(400), stored.Total)
+	sum := math.ZeroInt()
+	for _, o := range stored.TokenOrigins {
+		sum = sum.Add(o.Amount)
+	}
+	require.Equal(t, stored.Total, sum, "Total must equal sum of appended origin amounts")
+}
+
+// TestGetDstValidatorMultiHop verifies that getDstValidator follows a chain of
+// redelegations. With a val1 -> val2 -> val3 chain, it must return val3.
+func TestGetDstValidatorMultiHop(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	delAddr := sample.AccAddressBytes()
+	val1 := sdk.ValAddress(sample.AccAddressBytes())
+	val2 := sdk.ValAddress(sample.AccAddressBytes())
+	val3 := sdk.ValAddress(sample.AccAddressBytes())
+
+	amt := math.NewInt(1000)
+	sk.On("GetRedelegationsFromSrcValidator", ctx, val1).Return([]stakingtypes.Redelegation{
+		{
+			DelegatorAddress:    delAddr.String(),
+			ValidatorSrcAddress: val1.String(),
+			ValidatorDstAddress: val2.String(),
+			Entries:             []stakingtypes.RedelegationEntry{{CreationHeight: ctx.BlockHeight(), InitialBalance: amt, SharesDst: amt.ToLegacyDec()}},
+		},
+	}, nil)
+	sk.On("GetRedelegationsFromSrcValidator", ctx, val2).Return([]stakingtypes.Redelegation{
+		{
+			DelegatorAddress:    delAddr.String(),
+			ValidatorSrcAddress: val2.String(),
+			ValidatorDstAddress: val3.String(),
+			Entries:             []stakingtypes.RedelegationEntry{{CreationHeight: ctx.BlockHeight(), InitialBalance: amt, SharesDst: amt.ToLegacyDec()}},
+		},
+	}, nil)
+	sk.On("GetRedelegationsFromSrcValidator", ctx, val3).Return([]stakingtypes.Redelegation{}, nil)
+
+	got, err := k.GetDstValidatorExported(ctx, delAddr, val1)
+	require.NoError(t, err)
+	require.Equal(t, val3, got)
+}
+
+// TestGetDstValidatorCycleDetected verifies that a redelegation cycle is rejected.
+func TestGetDstValidatorCycleDetected(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	delAddr := sample.AccAddressBytes()
+	val1 := sdk.ValAddress(sample.AccAddressBytes())
+	val2 := sdk.ValAddress(sample.AccAddressBytes())
+	amt := math.NewInt(1000)
+
+	red := func(src, dst sdk.ValAddress) []stakingtypes.Redelegation {
+		return []stakingtypes.Redelegation{{
+			DelegatorAddress:    delAddr.String(),
+			ValidatorSrcAddress: src.String(),
+			ValidatorDstAddress: dst.String(),
+			Entries:             []stakingtypes.RedelegationEntry{{CreationHeight: ctx.BlockHeight(), InitialBalance: amt, SharesDst: amt.ToLegacyDec()}},
+		}}
+	}
+	sk.On("GetRedelegationsFromSrcValidator", ctx, val1).Return(red(val1, val2), nil)
+	sk.On("GetRedelegationsFromSrcValidator", ctx, val2).Return(red(val2, val1), nil)
+
+	_, err := k.GetDstValidatorExported(ctx, delAddr, val1)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "cycle")
+}
+
+// TestGetDstValidatorHopLimitExceeded verifies the hop bound rejects chains longer
+// than maxRedelegationHops lookups (7).
+func TestGetDstValidatorHopLimitExceeded(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	delAddr := sample.AccAddressBytes()
+	amt := math.NewInt(1000)
+
+	vals := make([]sdk.ValAddress, 8)
+	for i := range vals {
+		vals[i] = sdk.ValAddress(sample.AccAddressBytes())
+	}
+
+	red := func(src, dst sdk.ValAddress) []stakingtypes.Redelegation {
+		return []stakingtypes.Redelegation{{
+			DelegatorAddress:    delAddr.String(),
+			ValidatorSrcAddress: src.String(),
+			ValidatorDstAddress: dst.String(),
+			Entries:             []stakingtypes.RedelegationEntry{{CreationHeight: ctx.BlockHeight(), InitialBalance: amt, SharesDst: amt.ToLegacyDec()}},
+		}}
+	}
+	for i := 0; i < len(vals)-1; i++ {
+		sk.On("GetRedelegationsFromSrcValidator", ctx, vals[i]).Return(red(vals[i], vals[i+1]), nil)
+	}
+
+	_, err := k.GetDstValidatorExported(ctx, delAddr, vals[0])
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "hop limit exceeded")
 }
