@@ -152,8 +152,10 @@ func TestDisputeCapOverflowReturnsAndRefundsViaUnbonding(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 1, val0.Node))
 	reporterRes, _, err = e2e.QueryWithTimeout(ctx, val0.Node, "reporter", "reporter", val1.AccAddr)
 	require.NoError(err)
-	require.NoError(json.Unmarshal(reporterRes, &reporter))
-	require.False(reporter.Reporter.Metadata.Jailed)
+	var unjailedReporter e2e.QueryReporterResponse
+	require.NoError(json.Unmarshal(reporterRes, &unjailedReporter))
+	require.NotNil(unjailedReporter.Reporter)
+	require.False(unjailedReporter.Reporter.Metadata.Jailed)
 
 	_, err = val0.Node.ExecTx(ctx, val0.AccAddr,
 		"dispute", "withdraw-fee-refund", val0.AccAddr, "1",
