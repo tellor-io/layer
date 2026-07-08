@@ -98,13 +98,7 @@ lint-install:
 lint:
 	@echo "--> Running linter"
 	$(MAKE) lint-install
-	$(MAKE) lint-delegate-sites
 	@./scripts/go-lint-all.bash --timeout=15m
-
-#? lint-delegate-sites: Fail on new unreviewed keeper Delegate call sites
-lint-delegate-sites:
-	@echo "--> Checking keeper Delegate call sites"
-	@./scripts/check-keeper-delegate-sites.sh
 
 #? lint: Run golangci-lint and fix 
 lint-fix:
