@@ -68,6 +68,56 @@ func (_m *StakingKeeper) GetAllDelegatorDelegations(ctx context.Context, delegat
 	return r0, r1
 }
 
+// GetBondedValidatorsByPower provides a mock function with given fields: ctx
+func (_m *StakingKeeper) GetBondedValidatorsByPower(ctx context.Context) ([]stakingtypes.Validator, error) {
+	ret := _m.Called(ctx)
+
+	var r0 []stakingtypes.Validator
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]stakingtypes.Validator, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []stakingtypes.Validator); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]stakingtypes.Validator)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// HasMaxUnbondingDelegationEntries provides a mock function with given fields: ctx, delegatorAddr, validatorAddr
+func (_m *StakingKeeper) HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (bool, error) {
+	ret := _m.Called(ctx, delegatorAddr, validatorAddr)
+
+	var r0 bool
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, sdk.AccAddress, sdk.ValAddress) (bool, error)); ok {
+		return rf(ctx, delegatorAddr, validatorAddr)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, sdk.AccAddress, sdk.ValAddress) bool); ok {
+		r0 = rf(ctx, delegatorAddr, validatorAddr)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, sdk.AccAddress, sdk.ValAddress) error); ok {
+		r1 = rf(ctx, delegatorAddr, validatorAddr)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetDelegation provides a mock function with given fields: ctx, delAddr, valAddr
 func (_m *StakingKeeper) GetDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (stakingtypes.Delegation, error) {
 	ret := _m.Called(ctx, delAddr, valAddr)
@@ -398,6 +448,44 @@ func (_m *StakingKeeper) ValidatorsPowerStoreIterator(ctx context.Context) (stor
 	}
 
 	return r0, r1
+}
+
+// SetUnbondingDelegationEntry provides a mock function with given fields: ctx, delegatorAddr, validatorAddr, creationHeight, minTime, balance
+func (_m *StakingKeeper) SetUnbondingDelegationEntry(ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, creationHeight int64, minTime time.Time, balance math.Int) (stakingtypes.UnbondingDelegation, error) {
+	ret := _m.Called(ctx, delegatorAddr, validatorAddr, creationHeight, minTime, balance)
+
+	var r0 stakingtypes.UnbondingDelegation
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, sdk.AccAddress, sdk.ValAddress, int64, time.Time, math.Int) (stakingtypes.UnbondingDelegation, error)); ok {
+		return rf(ctx, delegatorAddr, validatorAddr, creationHeight, minTime, balance)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, sdk.AccAddress, sdk.ValAddress, int64, time.Time, math.Int) stakingtypes.UnbondingDelegation); ok {
+		r0 = rf(ctx, delegatorAddr, validatorAddr, creationHeight, minTime, balance)
+	} else {
+		r0 = ret.Get(0).(stakingtypes.UnbondingDelegation)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, sdk.AccAddress, sdk.ValAddress, int64, time.Time, math.Int) error); ok {
+		r1 = rf(ctx, delegatorAddr, validatorAddr, creationHeight, minTime, balance)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// InsertUBDQueue provides a mock function with given fields: ctx, ubd, completionTime
+func (_m *StakingKeeper) InsertUBDQueue(ctx context.Context, ubd stakingtypes.UnbondingDelegation, completionTime time.Time) error {
+	ret := _m.Called(ctx, ubd, completionTime)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, stakingtypes.UnbondingDelegation, time.Time) error); ok {
+		r0 = rf(ctx, ubd, completionTime)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 type mockConstructorTestingTNewStakingKeeper interface {
