@@ -59,12 +59,7 @@ func (t TrackStakeChangesDecorator) upsertValidatorCapCandidate(
 	candidates[validatorKey] = entry
 }
 
-// checkValidatorPowerShares enforces the validator acquisition cap: a validator
-// may not gain active bonded stake while the resulting share of total bonded
-// stake is strictly above max_validator_power_share. Already-bonded validators
-// whose tokens do not increase (including passive denominator drift) and
-// validators leaving the active set are never rejected. Entering validators are
-// checked as before=0, after=postTokens.
+// checkValidatorPowerShares rejects validator stake acquisitions above max_validator_power_share.
 func (t TrackStakeChangesDecorator) checkValidatorPowerShares(ctx sdk.Context, stakeChanges *stakeChangeTracker, capCtx stakeCapContext) error {
 	bondedChanges := capCtx.activeSet.changes
 	if stakeChanges == nil {

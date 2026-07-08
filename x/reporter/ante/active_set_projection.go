@@ -19,11 +19,6 @@ type activeSetProjection struct {
 	bondedDelta math.Int
 }
 
-// stakeCapContext holds projected total-bonded denominators for concentration-cap
-// checks after a tx's stake-change side effects are applied. Delegator and
-// reporter caps share delegatorDelta; the validator cap uses validatorDelta,
-// which includes unjail-only active-set re-entry without affecting the other
-// caps.
 type stakeCapContext struct {
 	currentTotalBonded math.Int
 	activeSet          activeSetProjection
