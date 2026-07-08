@@ -5,25 +5,21 @@ import (
 
 	"cosmossdk.io/math"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// PickUnderCapBondedValidatorExported exposes the unexported validator-cap
-// scan helper to the external keeper_test package for direct unit testing.
-func (k Keeper) PickUnderCapBondedValidatorExported(ctx context.Context, amount math.Int) (stakingtypes.Validator, error) {
-	maxShare, err := k.maxValidatorPowerShare(ctx)
-	if err != nil {
-		return stakingtypes.Validator{}, err
-	}
-	return k.pickUnderCapBondedValidator(ctx, amount, maxShare, math.ZeroInt())
+func (k Keeper) MaxBondableAmountExported(
+	ctx context.Context,
+	delAddr sdk.AccAddress,
+	validator stakingtypes.Validator,
+	maxValidatorShare math.LegacyDec,
+	maxReporterShare math.LegacyDec,
+	projectedBondedDelta math.Int,
+) (math.Int, error) {
+	return k.maxBondableAmount(ctx, delAddr, validator, maxValidatorShare, maxReporterShare, projectedBondedDelta)
 }
 
-// BondedValidatorForDelegationExported exposes the unexported preferred-or-scan
-// helper to the external keeper_test package for direct unit testing.
-func (k Keeper) BondedValidatorForDelegationExported(ctx context.Context, preferred stakingtypes.Validator, amount math.Int) (stakingtypes.Validator, error) {
-	maxShare, err := k.maxValidatorPowerShare(ctx)
-	if err != nil {
-		return stakingtypes.Validator{}, err
-	}
-	return k.bondedValidatorForDelegation(ctx, preferred, amount, maxShare, math.ZeroInt())
+func (k Keeper) GetDstValidatorExported(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.ValAddress, error) {
+	return k.getDstValidator(ctx, delAddr, valAddr)
 }

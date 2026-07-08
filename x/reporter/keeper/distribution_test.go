@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -52,7 +53,7 @@ func TestDivvyingTips(t *testing.T) {
 
 func TestReturnSlashedTokens(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
-	disableValidatorPowerCap(t, k, ctx)
+	disablePowerCaps(t, k, ctx)
 
 	delAddr1, delAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
 	val1Address, val2Address := sdk.ValAddress(sample.AccAddressBytes()), sdk.ValAddress(sample.AccAddressBytes())
@@ -79,16 +80,156 @@ func TestReturnSlashedTokens(t *testing.T) {
 	sk.On("Delegate", ctx, delAddr1, tokenOrigin1.Amount, stakingtypes.Bonded, validator1, false).Return(math.LegacyZeroDec(), nil)
 	sk.On("Delegate", ctx, delAddr2, tokenOrigin2.Amount, stakingtypes.Bonded, validator2, false).Return(math.LegacyZeroDec(), nil)
 
-	bondedReturn, unbondedReturn, err := k.ReturnSlashedTokens(ctx, math.NewIntWithDecimal(2000, 6), []byte("hashId"))
+	bondedReturn, unbondedReturn, err := k.ReturnSlashedTokens(ctx, []byte("hashId"), math.ZeroInt())
 	require.NoError(t, err)
 	require.Equal(t, math.NewIntWithDecimal(2000, 6), bondedReturn)
 	require.True(t, unbondedReturn.IsZero())
 }
 
+// TestReturnSlashedTokensExtraReturnScaled guards the AGAINST/winning-purse path:
+// extraReturn (reporter-win fee upside) is distributed proportionally across the
+// collected principal origins, and snapshot.Total remains the denominator. With a
+// single origin equal to Total there is no truncation, so the bonded return is
+// exactly Total + extraReturn.
+func TestReturnSlashedTokensExtraReturnScaled(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	disablePowerCaps(t, k, ctx)
+	delAddr := sample.AccAddressBytes()
+	valAddr := sdk.ValAddress(sample.AccAddressBytes())
+	principal := math.NewInt(1000)
+	extra := math.NewInt(200)
+	require.NoError(t, k.DisputedDelegationAmounts.Set(ctx, []byte("hashId"), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{
+			{DelegatorAddress: delAddr, ValidatorAddress: valAddr, Amount: principal},
+		},
+		Total: principal,
+	}))
+	validator := stakingtypes.Validator{OperatorAddress: valAddr.String(), Status: stakingtypes.Bonded}
+	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
+	sk.On("Delegate", ctx, delAddr, principal.Add(extra), stakingtypes.Bonded, validator, false).Return(math.LegacyZeroDec(), nil)
+
+	bondedReturn, unbondedReturn, err := k.ReturnSlashedTokens(ctx, []byte("hashId"), extra)
+	require.NoError(t, err)
+	require.Equal(t, principal.Add(extra), bondedReturn)
+	require.True(t, unbondedReturn.IsZero())
+}
+
+func TestReturnSlashedTokensExtraReturnDustDelegatedToOrigin(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	disablePowerCaps(t, k, ctx)
+	delAddr1, delAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
+	valAddr1, valAddr2 := sdk.ValAddress(sample.AccAddressBytes()), sdk.ValAddress(sample.AccAddressBytes())
+	extra := math.OneInt()
+	require.NoError(t, k.DisputedDelegationAmounts.Set(ctx, []byte("hashId"), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{
+			{DelegatorAddress: delAddr1, ValidatorAddress: valAddr1, Amount: math.OneInt()},
+			{DelegatorAddress: delAddr2, ValidatorAddress: valAddr2, Amount: math.NewInt(2)},
+		},
+		Total: math.NewInt(3),
+	}))
+	validator1 := stakingtypes.Validator{OperatorAddress: valAddr1.String(), Status: stakingtypes.Bonded}
+	validator2 := stakingtypes.Validator{OperatorAddress: valAddr2.String(), Status: stakingtypes.Bonded}
+	sk.On("GetValidator", ctx, valAddr1).Return(validator1, nil).Once()
+	sk.On("GetValidator", ctx, valAddr2).Return(validator2, nil).Once()
+	sk.On("Delegate", ctx, delAddr1, math.OneInt(), stakingtypes.Bonded, validator1, false).Return(math.LegacyZeroDec(), nil).Once()
+	sk.On("Delegate", ctx, delAddr2, math.NewInt(3), stakingtypes.Bonded, validator2, false).Return(math.LegacyZeroDec(), nil).Once()
+
+	bondedReturn, unbondedReturn, err := k.ReturnSlashedTokens(ctx, []byte("hashId"), extra)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(4), bondedReturn)
+	require.True(t, unbondedReturn.IsZero())
+	sk.AssertExpectations(t)
+}
+
+// TestReturnSlashedTokensExtraReturnWithoutPrincipal guards the zero-collected
+// edge: with no principal origins to distribute across, a positive extraReturn
+// is refused with a distinct sentinel error (so the P1-2 guard pages operators
+// via dispute_execution_failed rather than silently deferring). The snapshot is
+// NOT removed on this error path so the retry under P1-2 can roll it back.
+func TestReturnSlashedTokensExtraReturnWithoutPrincipal(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	disablePowerCaps(t, k, ctx)
+	require.NoError(t, k.DisputedDelegationAmounts.Set(ctx, []byte("hashId"), types.DelegationsAmounts{
+		TokenOrigins: nil,
+		Total:        math.ZeroInt(),
+	}))
+
+	_, _, err := k.ReturnSlashedTokens(ctx, []byte("hashId"), math.NewInt(100))
+	require.ErrorIs(t, err, types.ErrReturnExtraWithoutPrincipal)
+
+	// snapshot must still be present (error path does not remove it)
+	_, err = k.DisputedDelegationAmounts.Get(ctx, []byte("hashId"))
+	require.NoError(t, err)
+
+	// zero principal + zero extra returns success and removes the empty snapshot
+	bondedReturn, unbondedReturn, err := k.ReturnSlashedTokens(ctx, []byte("hashId"), math.ZeroInt())
+	require.NoError(t, err)
+	require.True(t, bondedReturn.IsZero())
+	require.True(t, unbondedReturn.IsZero())
+	_, err = k.DisputedDelegationAmounts.Get(ctx, []byte("hashId"))
+	require.ErrorIs(t, err, collections.ErrNotFound)
+}
+
+// TestReturnSlashedTokensRoutesToUnbondingWhenNoBondedDestination verifies the
+// escape hatch in PR3: when the original validator is gone and every bonded
+// fallback is over the cap, the origin's tokens are placed in the unbonding
+// queue against the original validator address rather than deferring execution.
+func TestReturnSlashedTokensRoutesToUnbondingWhenNoBondedDestination(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	delAddr := sample.AccAddressBytes()
+	valAddr := sdk.ValAddress(sample.AccAddressBytes())
+	require.NoError(t, k.DisputedDelegationAmounts.Set(ctx, []byte("hashId"), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{
+			{DelegatorAddress: delAddr, ValidatorAddress: valAddr, Amount: math.NewInt(10)},
+		},
+		Total: math.NewInt(10),
+	}))
+
+	// original validator no longer exists -> cannot preserve-to-original
+	sk.On("GetValidator", ctx, valAddr).Return(stakingtypes.Validator{}, stakingtypes.ErrNoValidatorFound).Once()
+
+	// all bonded fallbacks are over the validator cap (40/100 and 50/100 both > 30%)
+	overCap1 := bondedVal(sdk.ValAddress(sample.AccAddressBytes()), 40)
+	overCap2 := bondedVal(sdk.ValAddress(sample.AccAddressBytes()), 50)
+	mockBondedScan(sk, ctx, 100, overCap1, overCap2)
+	noDelegations(sk, ctx, delAddr)
+
+	// unbonding queue escape hatch
+	sk.On("UnbondingTime", ctx).Return(21*24*time.Hour, nil).Once()
+	sk.On("SetUnbondingDelegationEntry", ctx, delAddr, valAddr, ctx.BlockHeight(), mock.Anything, math.NewInt(10)).Return(stakingtypes.UnbondingDelegation{}, nil).Once()
+	sk.On("InsertUBDQueue", ctx, stakingtypes.UnbondingDelegation{}, mock.Anything).Return(nil).Once()
+
+	bondedReturn, unbondedReturn, err := k.ReturnSlashedTokens(ctx, []byte("hashId"), math.ZeroInt())
+	require.NoError(t, err)
+	require.True(t, bondedReturn.IsZero())
+	require.Equal(t, math.NewInt(10), unbondedReturn)
+
+	// snapshot removed after successful return
+	_, err = k.DisputedDelegationAmounts.Get(ctx, []byte("hashId"))
+	require.ErrorIs(t, err, collections.ErrNotFound)
+}
+
+// TestReturnSlashedTokensPositiveTotalWithoutOrigins rejects malformed snapshots
+// where Total is positive but there are no origins to distribute across.
+func TestReturnSlashedTokensPositiveTotalWithoutOrigins(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	disablePowerCaps(t, k, ctx)
+	require.NoError(t, k.DisputedDelegationAmounts.Set(ctx, []byte("hashId"), types.DelegationsAmounts{
+		TokenOrigins: nil,
+		Total:        math.NewInt(100),
+	}))
+
+	_, _, err := k.ReturnSlashedTokens(ctx, []byte("hashId"), math.ZeroInt())
+	require.ErrorIs(t, err, types.ErrMalformedDelegationSnapshot)
+
+	_, err = k.DisputedDelegationAmounts.Get(ctx, []byte("hashId"))
+	require.NoError(t, err)
+}
+
 func TestFeeRefund(t *testing.T) {
 	// set fee refund
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
-	disableValidatorPowerCap(t, k, ctx)
+	disablePowerCaps(t, k, ctx)
 	delAddr1, delAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
 	valAddr1, valAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
 	tokenOrigin1 := &types.TokenOriginInfo{
@@ -115,46 +256,15 @@ func TestFeeRefund(t *testing.T) {
 	sk.On("GetValidator", ctx, sdk.ValAddress(valAddr2)).Return(validator2, nil)
 	sk.On("Delegate", ctx, delAddr1, sharesperrefund, stakingtypes.Bonded, validator1, false).Return(math.LegacyZeroDec(), nil)
 	sk.On("Delegate", ctx, delAddr2, sharesperrefund, stakingtypes.Bonded, validator2, false).Return(math.LegacyZeroDec(), nil)
-	require.NoError(t, k.FeeRefund(ctx, []byte("hashId"), amtminusburn))
-}
-
-func TestGetBondedValidators(t *testing.T) {
-	k, sk, _, _, _, ctx, kvstore := setupKeeper(t)
-
-	valAddr := sdk.ValAddress(sample.AccAddressBytes())
-
-	store := kvstore.OpenKVStore(ctx)
-	require.NoError(t, store.Set([]byte("p_reporter"), valAddr))
-	iterator, err := store.Iterator(nil, nil)
+	bondedReturn, unbondedReturn, err := k.FeeRefund(ctx, []byte("hashId"), amtminusburn)
 	require.NoError(t, err)
-
-	validator := stakingtypes.Validator{OperatorAddress: valAddr.String(), Status: stakingtypes.Unbonding}
-
-	sk.On("ValidatorsPowerStoreIterator", ctx).Return(iterator, nil)
-	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
-
-	vals, err := k.GetBondedValidators(ctx, 1)
-	require.NoError(t, err)
-	require.Equal(t, 0, len(vals))
-
-	ctx = ctx.WithBlockHeight(1)
-	valAddr2 := sdk.ValAddress(sample.AccAddressBytes())
-	require.NoError(t, store.Set([]byte("bonded"), valAddr2))
-	iterator, err = store.Iterator(nil, nil)
-	require.NoError(t, err)
-
-	sk.On("ValidatorsPowerStoreIterator", ctx).Return(iterator, nil)
-	validator.Status = stakingtypes.Bonded
-	sk.On("GetValidator", ctx, valAddr2).Return(validator, nil)
-
-	vals, err = k.GetBondedValidators(ctx, 1)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(vals))
+	require.Equal(t, amtminusburn, bondedReturn)
+	require.True(t, unbondedReturn.IsZero())
 }
 
 func TestAddAmountToStake(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
-	disableValidatorPowerCap(t, k, ctx)
+	disablePowerCaps(t, k, ctx)
 
 	acc := sample.AccAddressBytes()
 	valAddr := sdk.ValAddress(sample.AccAddressBytes())
@@ -175,6 +285,8 @@ func TestAddAmountToStake(t *testing.T) {
 		})
 	})
 
-	err := k.AddAmountToStake(ctx, acc, amt)
+	bondedReturn, unbondedReturn, err := k.AddAmountToStake(ctx, acc, amt)
 	require.NoError(t, err)
+	require.Equal(t, amt, bondedReturn)
+	require.True(t, unbondedReturn.IsZero())
 }
