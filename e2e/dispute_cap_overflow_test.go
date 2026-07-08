@@ -149,6 +149,7 @@ func TestDisputeCapOverflowReturnsAndRefundsViaUnbonding(t *testing.T) {
 		"--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya",
 	)
 	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 1, val0.Node))
 	reporterRes, _, err = e2e.QueryWithTimeout(ctx, val0.Node, "reporter", "reporter", val1.AccAddr)
 	require.NoError(err)
 	require.NoError(json.Unmarshal(reporterRes, &reporter))
