@@ -37,6 +37,11 @@ const (
 	delegatorStakeShareDenominator int64 = 10
 )
 
+// DelegatorStakeShare is the hardcoded 30% bonded-stake cap for a single delegator.
+func DelegatorStakeShare() math.LegacyDec {
+	return math.LegacyNewDecWithPrec(30, 2)
+}
+
 // ParamKeyTable the param key table for launch module
 func ParamKeyTable() paramtypes.KeyTable {
 	return paramtypes.NewKeyTable().RegisterParamSet(&Params{})

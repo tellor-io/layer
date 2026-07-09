@@ -163,10 +163,6 @@ func linearCapHeadroomStrict(held math.LegacyDec, base math.Int, maxShare math.L
 	return inclusive
 }
 
-func delegatorCapShare() math.LegacyDec {
-	return math.LegacyNewDecWithPrec(30, 2)
-}
-
 func (k Keeper) maxBondableAmount(
 	ctx context.Context,
 	delAddr sdk.AccAddress,
@@ -204,7 +200,7 @@ func (k Keeper) maxBondableAmount(
 	if err != nil {
 		return math.Int{}, err
 	}
-	delegatorHeadroom := linearCapHeadroomInclusive(delegatorBonded, base, delegatorCapShare())
+	delegatorHeadroom := linearCapHeadroomInclusive(delegatorBonded, base, types.DelegatorStakeShare())
 	if delegatorHeadroom.LT(max) {
 		max = delegatorHeadroom
 	}
