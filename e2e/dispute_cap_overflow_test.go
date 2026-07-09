@@ -2,6 +2,7 @@ package e2e_test
 
 import (
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"testing"
@@ -13,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
 	layerutil "github.com/tellor-io/layer/testutil"
+	"github.com/tellor-io/layer/utils"
 
 	"cosmossdk.io/math"
 
@@ -59,12 +61,16 @@ func submitCapOverflowSpotReport(t *testing.T, ctx context.Context, tipper, repo
 	require.NoError(t, err)
 	require.NoError(t, testutil.WaitForBlocks(ctx, 3, tipper.Node))
 
-	res, _, err := e2e.QueryWithTimeout(ctx, tipper.Node, "oracle", "get-reportsby-reporter", reporter.AccAddr, "--page-limit", "1")
+	queryIDBytes, err := utils.QueryIDFromDataString(queryData)
+	require.NoError(t, err)
+	queryID := hex.EncodeToString(queryIDBytes)
+	res, _, err := e2e.QueryWithTimeout(ctx, tipper.Node, "oracle", "get-reportsby-reporter-qid", reporter.AccAddr, queryID, "--page-limit", "1", "--page-reverse")
 	require.NoError(t, err)
 	var reports e2e.QueryMicroReportsResponse
 	require.NoError(t, json.Unmarshal(res, &reports))
 	require.NotEmpty(t, reports.MicroReports)
 	require.Equal(t, reporter.AccAddr, reports.MicroReports[0].Reporter)
+	require.Equal(t, queryID, reports.MicroReports[0].QueryID)
 	require.Equal(t, value, reports.MicroReports[0].Value)
 	return reports.MicroReports[0]
 }
