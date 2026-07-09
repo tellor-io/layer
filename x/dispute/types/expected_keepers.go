@@ -47,12 +47,14 @@ type ReporterKeeper interface {
 	JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration, reportBlockNumber uint64, disputeHashID []byte) error
 	TotalReporterPower(ctx context.Context) (math.Int, error)
 	FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte, isFirstRound bool) error
+	DisputedDelegationTotal(ctx context.Context, hashId []byte) (math.Int, error)
 	ReturnSlashedTokens(ctx context.Context, hashId []byte, extraReturn math.Int) (math.Int, math.Int, error)
 	AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt math.Int) (math.Int, math.Int, error)
 	Delegation(ctx context.Context, delegator sdk.AccAddress) (reportertypes.Selection, error)
 	GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber uint64) (math.Int, error)
 	GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber uint64) (math.Int, error)
-	FeeRefund(ctx context.Context, hashId []byte, amt math.Int) (math.Int, math.Int, error)
+	FeePaidFromStakeTotalByPayer(ctx context.Context, hashId []byte, payer sdk.AccAddress) (math.Int, error)
+	FeeRefund(ctx context.Context, hashId []byte, payer sdk.AccAddress, amt math.Int) (math.Int, math.Int, error)
 	UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr sdk.AccAddress, reportBlockNumber uint64, disputeHashID []byte) error
 	GetSelectorForStake(ctx context.Context, selectorAddr sdk.AccAddress) (reportertypes.Selection, error)
 }

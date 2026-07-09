@@ -46,7 +46,7 @@ func (k Keeper) PayDisputeFee(ctx sdk.Context, proposer sdk.AccAddress, fee sdk.
 	return nil
 }
 
-// ReturnSlashedTokens returns slashed tokens when a reporter wins or a dispute is invalid.
+// return slashed tokens when reporter either wins dispute or dispute is invalid
 func (k Keeper) ReturnSlashedTokens(ctx context.Context, dispute types.Dispute, extraReturn math.Int) error {
 	bondedAmt, unbondedAmt, err := k.reporterKeeper.ReturnSlashedTokens(ctx, dispute.HashId, extraReturn)
 	if err != nil {
@@ -70,8 +70,8 @@ func (k Keeper) sendStakeReturnsToPools(ctx context.Context, bondedAmt, unbonded
 	return nil
 }
 
-func (k Keeper) ReturnFeetoStake(ctx context.Context, hashId []byte, remainingAmt math.Int) error {
-	bondedAmt, unbondedAmt, err := k.reporterKeeper.FeeRefund(ctx, hashId, remainingAmt)
+func (k Keeper) ReturnFeetoStake(ctx context.Context, hashId []byte, feePayer sdk.AccAddress, remainingAmt math.Int) error {
+	bondedAmt, unbondedAmt, err := k.reporterKeeper.FeeRefund(ctx, hashId, feePayer, remainingAmt)
 	if err != nil {
 		return err
 	}

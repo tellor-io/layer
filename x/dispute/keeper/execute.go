@@ -107,10 +107,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 				return err
 			}
 		}
-		// refund the reporter's escrowed bond plus the dispute fee minus its 5% burn.
-		// The fee upside is passed explicitly as extraReturn; SlashAmount is no longer
-		// mutated (it stays equal to the escrowed principal, so an under-collected
-		// snapshot can never be scaled up into fee funds).
+		// refund the reporter's escrowed bond plus the dispute fee minus its 5% burn
 		fivePercentDec := dispute.DisputeFee.ToLegacyDec().Quo(math.LegacyNewDec(20))
 		disputeFeeMinusFivePercent := dispute.DisputeFee.Sub(fivePercentDec.TruncateInt())
 		if err := k.ReturnSlashedTokens(ctx, dispute, disputeFeeMinusFivePercent); err != nil {
@@ -153,7 +150,7 @@ func (k Keeper) RefundFailedDisputeFee(ctx context.Context, feePayer sdk.AccAddr
 		return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, feePayer, coins)
 	}
 
-	return k.ReturnFeetoStake(ctx, hashId, fee)
+	return k.ReturnFeetoStake(ctx, hashId, feePayer, fee)
 }
 
 func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeeRd1 math.Int, hashId []byte) (math.Int, error) {
@@ -164,7 +161,12 @@ func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, p
 		return remainder, k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, feePayer, coins)
 	}
 
-	return remainder, k.ReturnFeetoStake(ctx, hashId, amtFixed6)
+	actualFee, err := k.reporterKeeper.FeePaidFromStakeTotalByPayer(ctx, hashId, feePayer)
+	if err != nil {
+		return math.Int{}, err
+	}
+	amtFixed6 = CalculateActualStakeFeeRefundAmount(actualFee, payerInfo.Amount, amtFixed6)
+	return remainder, k.ReturnFeetoStake(ctx, hashId, feePayer, amtFixed6)
 }
 
 func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeesPaid, reporterBond math.Int) (math.Int, error) {
@@ -179,19 +181,14 @@ func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.
 
 // GetSumOfUserAndReporterVotesAllRounds sums claim-eligible (user and reporter) vote
 // power across all rounds of a dispute. Team votes are excluded because they cannot
-// claim voter rewards. Round ids are de-duplicated: PrevDisputeIds already tracks
-// the dispute family, so a round id appearing in both the current dispute and
-// PrevDisputeIds is counted once.
+// claim voter rewards.
 func (k Keeper) GetSumOfUserAndReporterVotesAllRounds(ctx context.Context, id uint64) (math.Int, error) {
 	dispute, err := k.Disputes.Get(ctx, id)
 	if err != nil {
 		return math.Int{}, err
 	}
 
-	// De-duplicate round ids. Start from PrevDisputeIds (legacy/custom fixtures
-	// may leave this empty); append the current id only if it is not already
-	// present, which handles the normal case where round-N PrevDisputeIds ends
-	// with the current id.
+	// de-duplicate round ids (current id may already appear in PrevDisputeIds)
 	roundIds := make([]uint64, 0, len(dispute.PrevDisputeIds)+1)
 	seen := make(map[uint64]struct{})
 	for _, roundId := range dispute.PrevDisputeIds {

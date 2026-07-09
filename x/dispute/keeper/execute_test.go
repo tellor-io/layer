@@ -66,8 +66,10 @@ func (k *KeeperTestSuite) TestExecuteVote() {
 	k.NoError(k.disputeKeeper.DisputeFeePayer.Set(k.ctx, collections.Join(dispute.DisputeId, feepayer1.Bytes()), feePayers[0]))
 	k.NoError(k.disputeKeeper.DisputeFeePayer.Set(k.ctx, collections.Join(dispute.DisputeId, feepayer2.Bytes()), feePayers[1]))
 	msg := &types.MsgWithdrawFeeRefund{CallerAddress: sample.AccAddressBytes().String(), Id: dispute.DisputeId, PayerAddress: feepayer1.String()}
-	k.reporterKeeper.On("FeeRefund", k.ctx, dispute.HashId, math.NewInt(7600)).Return(math.NewInt(7600), math.ZeroInt(), nil).Once()
+	k.reporterKeeper.On("FeePaidFromStakeTotalByPayer", k.ctx, dispute.HashId, feepayer1).Return(math.NewInt(8000), nil).Once()
+	k.reporterKeeper.On("FeeRefund", k.ctx, dispute.HashId, feepayer1, math.NewInt(7600)).Return(math.NewInt(7600), math.ZeroInt(), nil).Once()
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(7600)))).Return(nil).Once()
+	k.reporterKeeper.On("DisputedDelegationTotal", k.ctx, dispute.HashId).Return(dispute.SlashAmount, nil).Once()
 	k.reporterKeeper.On("AddAmountToStake", k.ctx, feepayer1, math.NewInt(8000)).Return(math.NewInt(8000), math.ZeroInt(), nil).Once()
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(8000)))).Return(nil).Once()
 	_, err := k.msgServer.WithdrawFeeRefund(k.ctx, msg)
@@ -76,6 +78,7 @@ func (k *KeeperTestSuite) TestExecuteVote() {
 	// wqithdraw fee refund for feepayer2
 	msg = &types.MsgWithdrawFeeRefund{CallerAddress: sample.AccAddressBytes().String(), Id: dispute.DisputeId, PayerAddress: feepayer2.String()}
 	k.bankKeeper.On("SendCoinsFromModuleToAccount", k.ctx, types.ModuleName, feepayer2, sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(1900)))).Return(nil).Once()
+	k.reporterKeeper.On("DisputedDelegationTotal", k.ctx, dispute.HashId).Return(dispute.SlashAmount, nil).Once()
 	k.reporterKeeper.On("AddAmountToStake", k.ctx, feepayer2, math.NewInt(2000)).Return(math.NewInt(2000), math.ZeroInt(), nil).Once()
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(2000)))).Return(nil).Once()
 	_, err = k.msgServer.WithdrawFeeRefund(k.ctx, msg)
@@ -91,9 +94,18 @@ func (k *KeeperTestSuite) TestRefundDisputeFee() {
 		{Amount: math.NewInt(200), FromBond: false},
 	}
 
-	k.reporterKeeper.On("FeeRefund", k.ctx, []byte("hash"), math.NewInt(760)).Return(math.NewInt(760), math.ZeroInt(), nil)
+	k.reporterKeeper.On("FeePaidFromStakeTotalByPayer", k.ctx, []byte("hash"), feepayer1).Return(math.NewInt(800), nil)
+	k.reporterKeeper.On("FeeRefund", k.ctx, []byte("hash"), feepayer1, math.NewInt(760)).Return(math.NewInt(760), math.ZeroInt(), nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(760)))).Return(nil)
 	dust, err := k.disputeKeeper.RefundDisputeFee(k.ctx, feepayer1, feePayers[0], math.NewInt(1000), []byte("hash"))
+	k.NoError(err)
+	k.True(math.ZeroInt().Equal(dust))
+
+	shortPayer := sample.AccAddressBytes()
+	k.reporterKeeper.On("FeePaidFromStakeTotalByPayer", k.ctx, []byte("short-hash"), shortPayer).Return(math.NewInt(799), nil)
+	k.reporterKeeper.On("FeeRefund", k.ctx, []byte("short-hash"), shortPayer, math.NewInt(759)).Return(math.NewInt(759), math.ZeroInt(), nil)
+	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(759)))).Return(nil)
+	dust, err = k.disputeKeeper.RefundDisputeFee(k.ctx, shortPayer, feePayers[0], math.NewInt(1000), []byte("short-hash"))
 	k.NoError(err)
 	k.True(math.ZeroInt().Equal(dust))
 

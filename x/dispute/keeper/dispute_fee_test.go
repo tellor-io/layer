@@ -54,9 +54,10 @@ func (k *KeeperTestSuite) TestReturnSlashedTokens() {
 }
 
 func (k *KeeperTestSuite) TestReturnFeetoStake() {
-	k.reporterKeeper.On("FeeRefund", k.ctx, []byte("hash"), math.OneInt()).Return(math.OneInt(), math.ZeroInt(), nil)
+	feePayer := sample.AccAddressBytes()
+	k.reporterKeeper.On("FeeRefund", k.ctx, []byte("hash"), feePayer, math.OneInt()).Return(math.OneInt(), math.ZeroInt(), nil)
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layer.BondDenom, math.OneInt()))).Return(nil)
-	k.NoError(k.disputeKeeper.ReturnFeetoStake(k.ctx, []byte("hash"), math.OneInt()))
+	k.NoError(k.disputeKeeper.ReturnFeetoStake(k.ctx, []byte("hash"), feePayer, math.OneInt()))
 }
 
 // TestReturnSlashedTokensMixedPools guards mixed-pool routing: when the
