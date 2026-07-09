@@ -382,7 +382,7 @@ func TestValidatorPowerShareUnjailBonded(t *testing.T) {
 	// so a jailed validator can still report IsBonded()==true (the EndBlocker
 	// that would move it to Unbonding has not run yet). Such a validator is NOT
 	// in the active set, so unjailing it is an acquisition from 0 and must be
-	// cap-checked. Before the wasActive fix, before==after==Tokens and an
+	// cap-checked. Before the preTxActive fix, before==after==Tokens and an
 	// over-cap re-entry bypassed the cap.
 	testCases := []struct {
 		name    string

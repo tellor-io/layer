@@ -24,7 +24,7 @@ func (c validatorCapCandidate) isAcquisition() bool {
 }
 
 func validatorCapBeforeActive(validator prospectiveValidator) math.Int {
-	if validator.wasActive {
+	if validator.preTxActive {
 		return validator.validator.Tokens
 	}
 	return math.ZeroInt()
@@ -65,7 +65,7 @@ func (t TrackStakeChangesDecorator) checkValidatorPowerShares(ctx sdk.Context, s
 	if stakeChanges == nil {
 		return nil
 	}
-	if len(stakeChanges.validatorProjections) == 0 && len(bondedChanges.entering) == 0 && len(bondedChanges.leaving) == 0 && !stakeChanges.unjailOccurred {
+	if len(stakeChanges.validatorProjections) == 0 && len(bondedChanges.entering) == 0 && len(bondedChanges.leaving) == 0 {
 		return nil
 	}
 

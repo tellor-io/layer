@@ -70,10 +70,6 @@ type stakeChangeTracker struct {
 	pendingValidators map[validatorAddressKey]prospectiveValidator
 	// activeSetDelta is true when a tx can change which validators are bonded.
 	activeSetDelta bool
-	// unjailOccurred records whether any MsgUnjail occurred in this tx so the
-	// validator cap can project active-set re-entry without routing it through
-	// the 5% tracker, delegator cap, or reporter cap.
-	unjailOccurred bool
 	// selectionChanges records selectors whose selected reporter changes within
 	// this tx (CreateReporter/SelectReporter/SwitchReporter), so the reporter
 	// power cap books their full stake against the new reporter and later
@@ -87,14 +83,13 @@ type prospectiveValidator struct {
 	postTokens math.Int
 	postShares math.LegacyDec
 	pending    bool
-	// wasActive records whether the validator was in the active bonded set
-	// (bonded and not jailed) before this tx. SDK jail removes a validator
-	// from the power index without changing Status, so a jailed validator can
-	// still report IsBonded()==true while not being in the active set. The
-	// validator cap must treat a jailed validator's pre-tx active stake as 0;
-	// wasActive captures that at projection load time (before the MsgUnjail
-	// handler clears Jailed on the projection) so before != after on re-entry.
-	wasActive bool
+	// preTxActive is pre-tx active membership (bonded and not jailed). SDK jail
+	// can leave IsBonded() true while removing the validator from the power
+	// index; the validator cap treats that pre-tx active stake as 0.
+	preTxActive bool
+	// jailCleared is set by MsgUnjail so validator-cap projection can run
+	// without folding entrant/leaver stake into 5%/delegator/reporter paths.
+	jailCleared bool
 }
 
 func NewTrackStakeChangesDecorator(rk keeper.Keeper, sk types.StakingKeeper) TrackStakeChangesDecorator {
@@ -174,10 +169,13 @@ func (t *stakeChangeTracker) markActiveSetDelta(activeSetDelta bool) {
 	}
 }
 
-// markUnjail records that a MsgUnjail occurred in this tx so the validator cap
-// can project the active-set re-entry.
-func (s *stakeChangeTracker) markUnjail() {
-	s.unjailOccurred = true
+func (t *stakeChangeTracker) jailCleared() bool {
+	for _, validator := range t.validatorProjections {
+		if validator.jailCleared {
+			return true
+		}
+	}
+	return false
 }
 
 func (t *stakeChangeTracker) setSelection(selector, reporter sdk.AccAddress) {
@@ -239,11 +237,11 @@ func (t *stakeChangeTracker) projectedValidator(ctx sdk.Context, stakingKeeper t
 		return prospectiveValidator{}, err
 	}
 	projected := prospectiveValidator{
-		addr:       valAddr,
-		validator:  validator,
-		postTokens: validator.Tokens,
-		postShares: validator.DelegatorShares,
-		wasActive:  validator.IsBonded() && !validator.IsJailed(),
+		addr:        valAddr,
+		validator:   validator,
+		postTokens:  validator.Tokens,
+		postShares:  validator.DelegatorShares,
+		preTxActive: validator.IsBonded() && !validator.IsJailed(),
 	}
 	t.validatorProjections[validatorKey] = projected
 	return projected, nil
@@ -498,12 +496,10 @@ func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Ms
 		if err != nil {
 			return err
 		}
-		// A pure unjail only clears Jailed; the active-set re-entry is projected
-		// for the validator cap only. Do not route through the 5% tracker,
-		// delegator cap, or reporter cap.
+		// pure unjail: project active-set re-entry for the validator cap only
 		validator.validator.Jailed = false
+		validator.jailCleared = true
 		stakeChanges.setProjectedValidator(validator)
-		stakeChanges.markUnjail()
 	default:
 		return nil
 	}
