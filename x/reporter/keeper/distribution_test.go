@@ -256,10 +256,71 @@ func TestFeeRefund(t *testing.T) {
 	sk.On("GetValidator", ctx, sdk.ValAddress(valAddr2)).Return(validator2, nil)
 	sk.On("Delegate", ctx, delAddr1, sharesperrefund, stakingtypes.Bonded, validator1, false).Return(math.LegacyZeroDec(), nil)
 	sk.On("Delegate", ctx, delAddr2, sharesperrefund, stakingtypes.Bonded, validator2, false).Return(math.LegacyZeroDec(), nil)
-	bondedReturn, unbondedReturn, err := k.FeeRefund(ctx, []byte("hashId"), amtminusburn)
+	bondedReturn, unbondedReturn, err := k.FeeRefund(ctx, []byte("hashId"), delAddr1, amtminusburn)
 	require.NoError(t, err)
 	require.Equal(t, amtminusburn, bondedReturn)
 	require.True(t, unbondedReturn.IsZero())
+}
+
+func TestFeeRefundAssignsRoundingDust(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	disablePowerCaps(t, k, ctx)
+	delAddr1, delAddr2 := sample.AccAddressBytes(), sample.AccAddressBytes()
+	valAddr1, valAddr2 := sdk.ValAddress(sample.AccAddressBytes()), sdk.ValAddress(sample.AccAddressBytes())
+	require.NoError(t, k.FeePaidFromStake.Set(ctx, []byte("hashId"), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{
+			{DelegatorAddress: delAddr1, ValidatorAddress: valAddr1, Amount: math.OneInt()},
+			{DelegatorAddress: delAddr2, ValidatorAddress: valAddr2, Amount: math.OneInt()},
+		},
+		Total: math.NewInt(2),
+	}))
+
+	validator1 := stakingtypes.Validator{OperatorAddress: valAddr1.String(), Status: stakingtypes.Bonded}
+	sk.On("GetValidator", ctx, valAddr1).Return(validator1, nil)
+	sk.On("Delegate", ctx, delAddr1, math.OneInt(), stakingtypes.Bonded, validator1, false).Return(math.LegacyZeroDec(), nil)
+
+	bondedReturn, unbondedReturn, err := k.FeeRefund(ctx, []byte("hashId"), delAddr1, math.OneInt())
+	require.NoError(t, err)
+	require.Equal(t, math.OneInt(), bondedReturn)
+	require.True(t, unbondedReturn.IsZero())
+	sk.AssertExpectations(t)
+}
+
+func TestFeeRefundRejectsMalformedPositiveTotalWithoutOrigins(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	hashId := []byte("hashId")
+	payer := sample.AccAddressBytes()
+	require.NoError(t, k.FeePaidFromStake.Set(ctx, hashId, types.DelegationsAmounts{
+		Total: math.OneInt(),
+	}))
+
+	_, _, err := k.FeeRefund(ctx, hashId, payer, math.OneInt())
+	require.ErrorIs(t, err, types.ErrMalformedDelegationSnapshot)
+	has, hasErr := k.FeePaidFromStake.Has(ctx, hashId)
+	require.NoError(t, hasErr)
+	require.True(t, has)
+}
+
+func TestFeeRefundRejectsMalformedOriginTotalMismatch(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	hashId := []byte("hashId")
+	payer := sample.AccAddressBytes()
+	require.NoError(t, k.FeePaidFromStake.Set(ctx, hashId, types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{
+			{
+				DelegatorAddress: payer,
+				ValidatorAddress: sdk.ValAddress(sample.AccAddressBytes()),
+				Amount:           math.NewInt(1000),
+			},
+		},
+		Total: math.NewInt(999),
+	}))
+
+	_, _, err := k.FeeRefund(ctx, hashId, payer, math.NewInt(999))
+	require.ErrorIs(t, err, types.ErrMalformedDelegationSnapshot)
+	has, hasErr := k.FeePaidFromStake.Has(ctx, hashId)
+	require.NoError(t, hasErr)
+	require.True(t, has)
 }
 
 func TestAddAmountToStake(t *testing.T) {

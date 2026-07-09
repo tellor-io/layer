@@ -317,7 +317,7 @@ func TestBondHeadroomAndUnbondOverflow(t *testing.T) {
 				setupCapSplitUnbond(t, sk, ctx, delAddr, origAddr)
 				noDelegations(sk, ctx, delAddr)
 				return k, sk, ctx, func(k keeper.Keeper, ctx sdk.Context, hashId []byte) (math.Int, math.Int, error) {
-					return k.FeeRefund(ctx, hashId, math.NewInt(2))
+					return k.FeeRefund(ctx, hashId, delAddr, math.NewInt(2))
 				}
 			},
 		},
@@ -384,7 +384,7 @@ func TestScanFallbackFullBond(t *testing.T) {
 			name: "FeeRefund bonded original at cap",
 			load: loadFeeSnapshot,
 			run: func(k keeper.Keeper, ctx sdk.Context, hashId []byte) (math.Int, math.Int, error) {
-				return k.FeeRefund(ctx, hashId, math.NewInt(2))
+				return k.FeeRefund(ctx, hashId, sample.AccAddressBytes(), math.NewInt(2))
 			},
 			origLookup: func(a sdk.ValAddress) (stakingtypes.Validator, error) { return bondedVal(a, 30), nil },
 		},
@@ -392,7 +392,7 @@ func TestScanFallbackFullBond(t *testing.T) {
 			name: "FeeRefund not-bonded original",
 			load: loadFeeSnapshot,
 			run: func(k keeper.Keeper, ctx sdk.Context, hashId []byte) (math.Int, math.Int, error) {
-				return k.FeeRefund(ctx, hashId, math.NewInt(2))
+				return k.FeeRefund(ctx, hashId, sample.AccAddressBytes(), math.NewInt(2))
 			},
 			origLookup: func(a sdk.ValAddress) (stakingtypes.Validator, error) {
 				val := bondedVal(a, 29)
@@ -404,7 +404,7 @@ func TestScanFallbackFullBond(t *testing.T) {
 			name: "FeeRefund missing original",
 			load: loadFeeSnapshot,
 			run: func(k keeper.Keeper, ctx sdk.Context, hashId []byte) (math.Int, math.Int, error) {
-				return k.FeeRefund(ctx, hashId, math.NewInt(2))
+				return k.FeeRefund(ctx, hashId, sample.AccAddressBytes(), math.NewInt(2))
 			},
 			origLookup: missingOrig,
 		},
@@ -451,7 +451,7 @@ func TestUserTxOverflowHonorsMaxUnbondingEntries(t *testing.T) {
 				setupCapSplitBond(t, sk, ctx, delAddr, origAddr)
 				noDelegations(sk, ctx, delAddr)
 				sk.On("HasMaxUnbondingDelegationEntries", ctx, delAddr, origAddr).Return(true, nil)
-				_, _, err := k.FeeRefund(ctx, hashId, math.NewInt(2))
+				_, _, err := k.FeeRefund(ctx, hashId, delAddr, math.NewInt(2))
 				return err
 			},
 		},

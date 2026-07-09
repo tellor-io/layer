@@ -7,27 +7,35 @@ import (
 
 	"github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-type stakeReturnRequest struct {
-	delAddr                  sdk.AccAddress
-	overflowValAddr          sdk.ValAddress
-	amount                   math.Int
-	preferred                *stakingtypes.Validator
-	maxValidatorShare        math.LegacyDec
-	maxReporterShare         math.LegacyDec
-	projectedBondedDelta     math.Int
+type stakeReturnPolicy struct {
 	preserveUnbondedOriginal bool
 	enforceUBDMaxEntries     bool
 }
 
+var (
+	slashReturnPolicy = stakeReturnPolicy{preserveUnbondedOriginal: true}
+	feeReturnPolicy   = stakeReturnPolicy{enforceUBDMaxEntries: true}
+)
+
+type stakeReturnRequest struct {
+	delAddr              sdk.AccAddress
+	overflowValAddr      sdk.ValAddress
+	amount               math.Int
+	preferred            *stakingtypes.Validator
+	maxValidatorShare    math.LegacyDec
+	maxReporterShare     math.LegacyDec
+	projectedBondedDelta math.Int
+	policy               stakeReturnPolicy
+}
+
 func (k Keeper) ReturnSlashedTokens(ctx context.Context, hashId []byte, extraReturn math.Int) (math.Int, math.Int, error) {
-	bondedReturn := math.ZeroInt()
-	unbondedReturn := math.ZeroInt()
 	snapshot, err := k.DisputedDelegationAmounts.Get(ctx, hashId)
 	if err != nil {
 		return math.ZeroInt(), math.ZeroInt(), err
@@ -46,45 +54,54 @@ func (k Keeper) ReturnSlashedTokens(ctx context.Context, hashId []byte, extraRet
 			fmt.Errorf("%w (hashId %x, total %s)", types.ErrMalformedDelegationSnapshot, hashId, snapshot.Total)
 	}
 
+	bondedReturn, unbondedReturn, err := k.returnOrigins(ctx, snapshot.TokenOrigins, snapshot.Total, snapshot.Total.Add(extraReturn), slashReturnPolicy)
+	if err != nil {
+		return math.ZeroInt(), math.ZeroInt(), err
+	}
+	return bondedReturn, unbondedReturn, k.DisputedDelegationAmounts.Remove(ctx, hashId)
+}
+
+func (k Keeper) returnOrigins(ctx context.Context, origins []*types.TokenOriginInfo, total, returnAmt math.Int, policy stakeReturnPolicy) (bonded, unbonded math.Int, err error) {
+	bonded = math.ZeroInt()
+	unbonded = math.ZeroInt()
 	maxShare, maxReporterShare, err := k.maxPowerShares(ctx)
 	if err != nil {
 		return math.ZeroInt(), math.ZeroInt(), err
 	}
-	projectedBondedDelta := math.ZeroInt()
 
-	returnTotal := snapshot.Total.Add(extraReturn)
-	returnAmounts := make([]math.Int, len(snapshot.TokenOrigins))
-	if extraReturn.IsPositive() {
-		returnAmounts = proportionalReturnAmounts(snapshot.TokenOrigins, snapshot.Total, returnTotal)
-	} else {
-		for i, source := range snapshot.TokenOrigins {
+	returnAmounts := make([]math.Int, len(origins))
+	if returnAmt.Equal(total) {
+		for i, source := range origins {
 			returnAmounts[i] = source.Amount
 		}
+	} else {
+		returnAmounts = proportionalReturnAmounts(origins, total, returnAmt)
 	}
-	for i, source := range snapshot.TokenOrigins {
+
+	projectedBondedDelta := math.ZeroInt()
+	for i, source := range origins {
 		valAddr := sdk.ValAddress(source.ValidatorAddress)
-		delAddr := sdk.AccAddress(source.DelegatorAddress)
-		bonded, unbonded, nextProjected, err := k.returnStakeAmount(
+		bondedPart, unbondedPart, nextProjected, err := k.returnStakeAmount(
 			ctx,
 			stakeReturnRequest{
-				delAddr:                  delAddr,
-				overflowValAddr:          valAddr,
-				amount:                   returnAmounts[i],
-				maxValidatorShare:        maxShare,
-				maxReporterShare:         maxReporterShare,
-				projectedBondedDelta:     projectedBondedDelta,
-				preserveUnbondedOriginal: true,
+				delAddr:              sdk.AccAddress(source.DelegatorAddress),
+				overflowValAddr:      valAddr,
+				amount:               returnAmounts[i],
+				maxValidatorShare:    maxShare,
+				maxReporterShare:     maxReporterShare,
+				projectedBondedDelta: projectedBondedDelta,
+				policy:               policy,
 			},
 			valAddr,
 		)
 		if err != nil {
 			return math.ZeroInt(), math.ZeroInt(), err
 		}
-		bondedReturn = bondedReturn.Add(bonded)
-		unbondedReturn = unbondedReturn.Add(unbonded)
+		bonded = bonded.Add(bondedPart)
+		unbonded = unbonded.Add(unbondedPart)
 		projectedBondedDelta = nextProjected
 	}
-	return bondedReturn, unbondedReturn, k.DisputedDelegationAmounts.Remove(ctx, hashId)
+	return bonded, unbonded, nil
 }
 
 func proportionalReturnAmounts(origins []*types.TokenOriginInfo, total, returnTotal math.Int) []math.Int {
@@ -184,7 +201,7 @@ func (k Keeper) bondValidatorUpToHeadroom(
 		projected = projected.Add(headroom)
 	}
 	if overflow := req.amount.Sub(headroom); overflow.IsPositive() {
-		if err := k.returnViaUnbonding(ctx, req.delAddr, ubdKey, overflow, req.enforceUBDMaxEntries); err != nil {
+		if err := k.returnViaUnbonding(ctx, req.delAddr, ubdKey, overflow, req.policy.enforceUBDMaxEntries); err != nil {
 			return math.ZeroInt(), math.ZeroInt(), math.Int{}, err
 		}
 		unbonded = overflow
@@ -218,7 +235,7 @@ func (k Keeper) delegateBondedWithOverflow(ctx context.Context, req stakeReturnR
 	scan, err := k.scanBondedHeadroom(ctx, req)
 	if err != nil {
 		if errors.Is(err, types.ErrExceedsMaxValidatorPowerShare) && len(req.overflowValAddr) > 0 {
-			if err := k.returnViaUnbonding(ctx, req.delAddr, req.overflowValAddr, req.amount, req.enforceUBDMaxEntries); err != nil {
+			if err := k.returnViaUnbonding(ctx, req.delAddr, req.overflowValAddr, req.amount, req.policy.enforceUBDMaxEntries); err != nil {
 				return math.ZeroInt(), math.ZeroInt(), math.Int{}, err
 			}
 			return math.ZeroInt(), req.amount, projected, nil
@@ -242,7 +259,7 @@ func (k Keeper) returnStakeAmount(ctx context.Context, req stakeReturnRequest, o
 	switch {
 	case getErr != nil && !errors.Is(getErr, stakingtypes.ErrNoValidatorFound):
 		return math.ZeroInt(), math.ZeroInt(), math.Int{}, getErr
-	case getErr == nil && !original.IsBonded() && req.preserveUnbondedOriginal && !hasInvalidExchangeRate(original):
+	case getErr == nil && !original.IsBonded() && req.policy.preserveUnbondedOriginal && !hasInvalidExchangeRate(original):
 		if _, err := k.delegateToStakeAndEmit(ctx, req.delAddr, req.amount, stakingtypes.Unbonded, original); err != nil {
 			return math.ZeroInt(), math.ZeroInt(), math.Int{}, err
 		}
@@ -272,44 +289,62 @@ func (k Keeper) delegateToStakeAndEmit(ctx context.Context, delegator sdk.AccAdd
 	return newShares, nil
 }
 
-func (k Keeper) FeeRefund(ctx context.Context, hashId []byte, amt math.Int) (math.Int, math.Int, error) {
-	bondedReturn := math.ZeroInt()
-	unbondedReturn := math.ZeroInt()
-	trackedFees, err := k.FeePaidFromStake.Get(ctx, hashId)
+func (k Keeper) feePaidFromStakeRefundSnapshot(ctx context.Context, hashId []byte, payer sdk.AccAddress) ([]byte, types.DelegationsAmounts, error) {
+	payerKey := feePaidFromStakePayerKey(hashId, payer)
+	trackedFees, err := k.FeePaidFromStake.Get(ctx, payerKey)
+	if err == nil {
+		return payerKey, trackedFees, nil
+	}
+	if !errors.Is(err, collections.ErrNotFound) {
+		return nil, types.DelegationsAmounts{}, err
+	}
+
+	trackedFees, err = k.FeePaidFromStake.Get(ctx, hashId)
+	if err != nil {
+		return nil, types.DelegationsAmounts{}, err
+	}
+	return hashId, trackedFees, nil
+}
+
+func (k Keeper) FeePaidFromStakeTotalByPayer(ctx context.Context, hashId []byte, payer sdk.AccAddress) (math.Int, error) {
+	_, trackedFees, err := k.feePaidFromStakeRefundSnapshot(ctx, hashId, payer)
+	if err != nil {
+		return math.ZeroInt(), err
+	}
+	return trackedFees.Total, nil
+}
+
+func (k Keeper) FeeRefund(ctx context.Context, hashId []byte, payer sdk.AccAddress, amt math.Int) (math.Int, math.Int, error) {
+	trackerKey, trackedFees, err := k.feePaidFromStakeRefundSnapshot(ctx, hashId, payer)
 	if err != nil {
 		return math.ZeroInt(), math.ZeroInt(), err
 	}
 
-	maxShare, maxReporterShare, err := k.maxPowerShares(ctx)
-	if err != nil {
-		return math.ZeroInt(), math.ZeroInt(), err
+	originTotal := math.ZeroInt()
+	for _, origin := range trackedFees.TokenOrigins {
+		originTotal = originTotal.Add(origin.Amount)
 	}
-	projectedBondedDelta := math.ZeroInt()
+	if !originTotal.Equal(trackedFees.Total) {
+		return math.ZeroInt(), math.ZeroInt(),
+			fmt.Errorf("%w (hashId %x, payer %s, total %s, originTotal %s)", types.ErrMalformedDelegationSnapshot, hashId, payer.String(), trackedFees.Total, originTotal)
+	}
 
-	for _, source := range trackedFees.TokenOrigins {
-		shareAmt := math.LegacyNewDecFromInt(source.Amount).Mul(math.LegacyNewDecFromInt(amt)).Quo(math.LegacyNewDecFromInt(trackedFees.Total)).TruncateInt()
-		valAddr := sdk.ValAddress(source.ValidatorAddress)
-		bonded, unbonded, nextProjected, err := k.returnStakeAmount(
-			ctx,
-			stakeReturnRequest{
-				delAddr:              sdk.AccAddress(source.DelegatorAddress),
-				overflowValAddr:      valAddr,
-				amount:               shareAmt,
-				maxValidatorShare:    maxShare,
-				maxReporterShare:     maxReporterShare,
-				projectedBondedDelta: projectedBondedDelta,
-				enforceUBDMaxEntries: true,
-			},
-			valAddr,
-		)
-		if err != nil {
+	refundAmt := amt
+	if trackedFees.Total.LT(refundAmt) {
+		refundAmt = trackedFees.Total
+	}
+	if !trackedFees.Total.IsPositive() || !refundAmt.IsPositive() {
+		if err := k.FeePaidFromStake.Remove(ctx, trackerKey); err != nil {
 			return math.ZeroInt(), math.ZeroInt(), err
 		}
-		bondedReturn = bondedReturn.Add(bonded)
-		unbondedReturn = unbondedReturn.Add(unbonded)
-		projectedBondedDelta = nextProjected
+		return math.ZeroInt(), math.ZeroInt(), nil
 	}
-	if err := k.FeePaidFromStake.Remove(ctx, hashId); err != nil {
+
+	bondedReturn, unbondedReturn, err := k.returnOrigins(ctx, trackedFees.TokenOrigins, trackedFees.Total, refundAmt, feeReturnPolicy)
+	if err != nil {
+		return math.ZeroInt(), math.ZeroInt(), err
+	}
+	if err := k.FeePaidFromStake.Remove(ctx, trackerKey); err != nil {
 		return math.ZeroInt(), math.ZeroInt(), err
 	}
 	return bondedReturn, unbondedReturn, nil
@@ -327,7 +362,7 @@ func (k Keeper) AddAmountToStake(ctx context.Context, acc sdk.AccAddress, amt ma
 		maxValidatorShare:    maxShare,
 		maxReporterShare:     maxReporterShare,
 		projectedBondedDelta: math.ZeroInt(),
-		enforceUBDMaxEntries: true,
+		policy:               feeReturnPolicy,
 	}
 
 	var (

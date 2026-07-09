@@ -425,6 +425,107 @@ func (s *IntegrationTestSuite) TestEscrowReporterStakePartialRedelegationCollect
 	s.Equal(stored.Total, sum)
 }
 
+// TestEscrowReporterStakeRedelegationBreadcrumbDoesNotSkipBulkStake covers the
+// case where a selector leaves a dust trail (val2→val3) and then moves their
+// bulk stake (val1→val2). Dispute escrow must still capture the bulk at val2,
+// not only the dust that remains at the end of the redelegation breadcrumb.
+func (s *IntegrationTestSuite) TestEscrowReporterStakeRedelegationBreadcrumbDoesNotSkipBulkStake() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
+	ctx := s.Setup.Ctx
+	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{100, 100, 100})
+	val1, val2, val3 := valAddrs[0], valAddrs[1], valAddrs[2]
+
+	selector := sample.AccAddressBytes()
+	bulk := math.NewInt(1_000_000)
+	dust := math.NewInt(100)
+	s.Setup.MintTokens(selector, bulk.Add(dust))
+
+	_, err := stakingMsgServer.Delegate(ctx, stakingtypes.NewMsgDelegate(
+		selector.String(),
+		val1.String(),
+		sdk.NewCoin(s.Setup.Denom, bulk),
+	))
+	s.NoError(err)
+	_, err = stakingMsgServer.Delegate(ctx, stakingtypes.NewMsgDelegate(
+		selector.String(),
+		val2.String(),
+		sdk.NewCoin(s.Setup.Denom, dust),
+	))
+	s.NoError(err)
+
+	reportHeight := uint64(ctx.BlockHeight())
+	hashId := []byte("redelegation-breadcrumb-bulk")
+	totalPowerTokens := layertypes.PowerReduction
+	// Snapshot only the bulk origin at val1 — the dust at val2 is just a
+	// breadcrumb that must not redirect the chase away from the bulk.
+	s.NoError(s.Setup.Reporterkeeper.Report.Set(ctx, collections.Join([]byte{}, collections.Join(selector.Bytes(), reportHeight)), reportertypes.DelegationsAmounts{
+		TokenOrigins: []*reportertypes.TokenOriginInfo{
+			{
+				DelegatorAddress: selector.Bytes(),
+				ValidatorAddress: val1,
+				Amount:           totalPowerTokens,
+			},
+		},
+		Total: totalPowerTokens,
+	}))
+
+	// Dust trail first, then move the bulk onto the same validator the dust left.
+	_, err = stakingMsgServer.BeginRedelegate(ctx, stakingtypes.NewMsgBeginRedelegate(
+		selector.String(),
+		val2.String(),
+		val3.String(),
+		sdk.NewCoin(s.Setup.Denom, dust),
+	))
+	s.NoError(err)
+	_, err = stakingMsgServer.BeginRedelegate(ctx, stakingtypes.NewMsgBeginRedelegate(
+		selector.String(),
+		val1.String(),
+		val2.String(),
+		sdk.NewCoin(s.Setup.Denom, bulk),
+	))
+	s.NoError(err)
+
+	delVal2, err := s.Setup.Stakingkeeper.GetDelegation(ctx, selector, val2)
+	s.NoError(err)
+	val2Before, err := s.Setup.Stakingkeeper.GetValidator(ctx, val2)
+	s.NoError(err)
+	s.Equal(bulk, val2Before.TokensFromShares(delVal2.Shares).TruncateInt())
+
+	delVal3, err := s.Setup.Stakingkeeper.GetDelegation(ctx, selector, val3)
+	s.NoError(err)
+	val3Before, err := s.Setup.Stakingkeeper.GetValidator(ctx, val3)
+	s.NoError(err)
+	s.Equal(dust, val3Before.TokensFromShares(delVal3.Shares).TruncateInt())
+
+	disputeBefore := s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress("dispute"), s.Setup.Denom)
+
+	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, selector, 1, reportHeight, bulk, []byte{}, hashId))
+
+	stored, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(ctx, hashId)
+	s.NoError(err)
+	s.Equal(bulk, stored.Total, "escrow must capture the bulk at val2, not only the dust breadcrumb at val3")
+
+	sum := math.ZeroInt()
+	for _, origin := range stored.TokenOrigins {
+		sum = sum.Add(origin.Amount)
+	}
+	s.Equal(stored.Total, sum)
+
+	disputeAfter := s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress("dispute"), s.Setup.Denom)
+	s.Equal(bulk, disputeAfter.Amount.Sub(disputeBefore.Amount))
+
+	_, err = s.Setup.Stakingkeeper.GetDelegation(ctx, selector, val2)
+	s.ErrorIs(err, stakingtypes.ErrNoDelegation, "bulk stake at val2 must be escrowed")
+
+	delVal3After, err := s.Setup.Stakingkeeper.GetDelegation(ctx, selector, val3)
+	if s.NoError(err, "unrelated dust at val3 must remain untouched") {
+		val3After, err := s.Setup.Stakingkeeper.GetValidator(ctx, val3)
+		s.NoError(err)
+		s.Equal(dust, val3After.TokensFromShares(delVal3After.Shares).TruncateInt(), "unrelated dust at val3 must remain untouched")
+	}
+}
+
 // one delegator stakes with multiple validators, check the delegation count
 func (s *IntegrationTestSuite) TestDelegatorCount() {
 	_, valAddrs, _ := s.Setup.CreateValidators(5)

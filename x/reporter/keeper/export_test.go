@@ -20,6 +20,6 @@ func (k Keeper) MaxBondableAmountExported(
 	return k.maxBondableAmount(ctx, delAddr, validator, maxValidatorShare, maxReporterShare, projectedBondedDelta)
 }
 
-func (k Keeper) GetDstValidatorExported(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.ValAddress, error) {
-	return k.getDstValidator(ctx, delAddr, valAddr)
+func (k Keeper) GetRedelegationPathExported(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) ([]sdk.ValAddress, error) {
+	return k.getRedelegationPath(ctx, delAddr, valAddr)
 }
