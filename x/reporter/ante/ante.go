@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -74,7 +75,9 @@ type stakeChangeTracker struct {
 	// this tx (CreateReporter/SelectReporter/SwitchReporter), so the reporter
 	// power cap books their full stake against the new reporter and later
 	// staking deltas in the same tx attribute to the right reporter.
-	selectionChanges map[delegatorAddressKey]reporterAddressKey
+	selectionChanges             map[delegatorAddressKey]reporterAddressKey
+	hasDirectStakeAcquisition    bool
+	hasProjectedPowerAcquisition bool
 }
 
 type prospectiveValidator struct {
@@ -271,6 +274,13 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			return ctx, err
 		}
 	}
+	// This is intentionally an order-independent composition ban. Some orderings
+	// would be safe because the direct keeper check observes earlier staking
+	// state, but treating them differently would make safety depend on handler
+	// order and on whether a refund ultimately bonds or pays liquid coins.
+	if stakeChanges.hasDirectStakeAcquisition && stakeChanges.hasProjectedPowerAcquisition {
+		return ctx, types.ErrMixedStakeAcquisitionPaths
+	}
 	// Allows multi-validator genesis
 	if ctx.BlockHeight() > 0 {
 		if err := t.finalizeStakeChanges(ctx, stakeChanges); err != nil {
@@ -322,7 +332,44 @@ func (t TrackStakeChangesDecorator) processMessage(ctx sdk.Context, msg sdk.Msg,
 	return nil
 }
 
+func isDirectStakeAcquisitionMessage(msg sdk.Msg) bool {
+	// These claim messages can acquire delegated tokens through keeper calls
+	// outside ante's transaction projection. Classification is intentionally by
+	// message type because ante cannot know the eventual claim/refund amount.
+	switch msg.(type) {
+	case *types.MsgWithdrawTip, *disputetypes.MsgWithdrawFeeRefund:
+		return true
+	default:
+		return false
+	}
+}
+
+func isProjectedPowerAcquisitionMessage(msg sdk.Msg) bool {
+	// These messages acquire validator tokens or reporter-attributed power through
+	// ante projection. Token removal, unjailing, and metadata-only messages are
+	// intentionally excluded.
+	switch msg.(type) {
+	case *types.MsgCreateReporter,
+		*types.MsgSelectReporter,
+		*types.MsgSwitchReporter,
+		*stakingtypes.MsgCreateValidator,
+		*stakingtypes.MsgDelegate,
+		*stakingtypes.MsgBeginRedelegate,
+		*stakingtypes.MsgCancelUnbondingDelegation:
+		return true
+	default:
+		return false
+	}
+}
+
 func (t TrackStakeChangesDecorator) checkStakeChange(ctx sdk.Context, msg sdk.Msg, stakeChanges *stakeChangeTracker) error {
+	if isDirectStakeAcquisitionMessage(msg) {
+		stakeChanges.hasDirectStakeAcquisition = true
+	}
+	if isProjectedPowerAcquisitionMessage(msg) {
+		stakeChanges.hasProjectedPowerAcquisition = true
+	}
+
 	switch msg := msg.(type) {
 	case *types.MsgCreateReporter:
 		addr, err := sdk.AccAddressFromBech32(msg.ReporterAddress)

@@ -30,4 +30,5 @@ var (
 	ErrExceedsMaxValidatorPowerShare = sdkerrors.Register(ModuleName, 1119, "validator bonded stake exceeds the max share of total bonded stake")
 	ErrReturnExtraWithoutPrincipal   = sdkerrors.Register(ModuleName, 1120, "reporter-win extra return has no collected principal or origins to distribute across")
 	ErrMalformedDelegationSnapshot   = sdkerrors.Register(ModuleName, 1121, "delegation snapshot has positive total but no token origins")
+	ErrMixedStakeAcquisitionPaths    = sdkerrors.Register(ModuleName, 1122, "transactions cannot combine direct stake acquisition with other power acquisition messages")
 )
