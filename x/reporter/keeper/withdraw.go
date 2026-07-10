@@ -5,13 +5,13 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"strings"
 
 	layertypes "github.com/tellor-io/layer/types"
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -226,21 +226,17 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 		return err
 	}
 
-	totalTokens := layertypes.PowerReduction.MulRaw(int64(power))
+	allocations, err := reporterSlashAmounts(report, amt)
+	if err != nil {
+		return err
+	}
+
 	disputeTokens := make([]*types.TokenOriginInfo, 0)
 	collected := math.ZeroInt()
-	leftover := amt
 	// loop through the selectors' tokens (validator, amount) that were part of the report and remove tokens from relevant delegations
 	// amount should be proportional to the total tokens the reporter had at the time of the report
 	for i, del := range report.TokenOrigins {
-		delegatorShare := math.LegacyNewDecFromInt(del.Amount).Quo(math.LegacyNewDecFromInt(totalTokens)).Mul(math.LegacyNewDecFromInt(amt)).RoundInt()
-		leftover = leftover.Sub(delegatorShare)
-
-		// leftover amount is taken from the last selector in the iteration
-		if i == len(report.TokenOrigins)-1 {
-			delegatorShare = delegatorShare.Add(leftover)
-		}
-
+		delegatorShare := allocations[i]
 		delAddr := sdk.AccAddress(del.DelegatorAddress)
 		valAddr := sdk.ValAddress(del.ValidatorAddress)
 
@@ -259,7 +255,7 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 		}
 
 		remaining := delegatorShare.Sub(collectedFirst)
-		if !remaining.IsZero() {
+		if remaining.IsPositive() {
 			// collect at every redelegation hop; trails record destinations, not residual amounts
 			path, err := k.getRedelegationPath(ctx, delAddr, valAddr)
 			if err != nil {
@@ -290,47 +286,96 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 	return k.DisputedDelegationAmounts.Set(ctx, hashId, types.DelegationsAmounts{TokenOrigins: disputeTokens, Total: collected})
 }
 
-const maxRedelegationHops = 7
-
-// getRedelegationPath returns reachable redelegation destinations from valAddr (bounded, cycle-safe).
-func (k Keeper) getRedelegationPath(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) ([]sdk.ValAddress, error) {
-	type queueNode struct {
-		valAddr sdk.ValAddress
-		depth   int
+func reporterSlashAmounts(report types.DelegationsAmounts, amt math.Int) ([]math.Int, error) {
+	if amt.IsNil() || amt.IsNegative() {
+		return nil, fmt.Errorf("reporter slash amount must be nonnegative")
 	}
-	queue := []queueNode{{valAddr: valAddr}}
+	if report.Total.IsNil() || report.Total.IsNegative() {
+		return nil, fmt.Errorf("%w: reporter snapshot total must be nonnegative", types.ErrMalformedDelegationSnapshot)
+	}
+
+	originTotal := math.ZeroInt()
+	for i, origin := range report.TokenOrigins {
+		if origin == nil || origin.Amount.IsNil() || origin.Amount.IsNegative() {
+			return nil, fmt.Errorf("%w: invalid token origin at index %d", types.ErrMalformedDelegationSnapshot, i)
+		}
+		originTotal = originTotal.Add(origin.Amount)
+	}
+	if !originTotal.Equal(report.Total) {
+		return nil, fmt.Errorf("%w: reporter snapshot total %s does not match token origin total %s", types.ErrMalformedDelegationSnapshot, report.Total, originTotal)
+	}
+	if amt.IsPositive() && !report.Total.IsPositive() {
+		return nil, fmt.Errorf("%w: cannot allocate positive slash from empty reporter snapshot", types.ErrMalformedDelegationSnapshot)
+	}
+	if amt.IsZero() {
+		return make([]math.Int, len(report.TokenOrigins)), nil
+	}
+
+	// Use the same largest-remainder integer allocation as stake returns. It is
+	// deterministic in token-origin order and assigns every unit without ever
+	// producing a negative share.
+	allocations := proportionalReturnAmounts(report.TokenOrigins, report.Total, amt)
+	allocated := math.ZeroInt()
+	for i, allocation := range allocations {
+		if allocation.IsNil() || allocation.IsNegative() {
+			return nil, fmt.Errorf("negative reporter slash allocation at index %d", i)
+		}
+		allocated = allocated.Add(allocation)
+	}
+	if !allocated.Equal(amt) {
+		return nil, fmt.Errorf("reporter slash allocations %s do not equal requested amount %s", allocated, amt)
+	}
+	return allocations, nil
+}
+
+// RedelegationRecordGas charges the explicit CPU work needed to filter and
+// decode each redelegation record returned by the staking keeper.
+const RedelegationRecordGas = storetypes.Gas(10_000)
+
+const redelegationRecordGasMessage = "reporter escrow redelegation record check"
+
+// getRedelegationPath returns reachable redelegation destinations from valAddr
+// in deterministic BFS order. One delegator-scoped staking-store pass builds
+// source adjacency in iterator order; cycles are skipped in memory.
+func (k Keeper) getRedelegationPath(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) ([]sdk.ValAddress, error) {
+	adjacency := make(map[string][]sdk.ValAddress)
+	gasMeter := sdk.UnwrapSDKContext(ctx).GasMeter()
+	var callbackErr error
+	err := k.stakingKeeper.IterateDelegatorRedelegations(ctx, delAddr, func(red stakingtypes.Redelegation) bool {
+		gasMeter.ConsumeGas(RedelegationRecordGas, redelegationRecordGasMessage)
+		src, err := sdk.ValAddressFromBech32(red.ValidatorSrcAddress)
+		if err != nil {
+			callbackErr = err
+			return true
+		}
+		dst, err := sdk.ValAddressFromBech32(red.ValidatorDstAddress)
+		if err != nil {
+			callbackErr = err
+			return true
+		}
+		adjacency[src.String()] = append(adjacency[src.String()], dst)
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+	if callbackErr != nil {
+		return nil, callbackErr
+	}
+
+	queue := []sdk.ValAddress{valAddr}
 	seen := map[string]struct{}{valAddr.String(): {}}
 	path := make([]sdk.ValAddress, 0)
-	lookups := 0
-	for len(queue) > 0 && lookups < maxRedelegationHops && len(path) < maxRedelegationHops {
+	for len(queue) > 0 {
 		current := queue[0]
 		queue = queue[1:]
-
-		reds, err := k.stakingKeeper.GetRedelegationsFromSrcValidator(ctx, current.valAddr)
-		if err != nil {
-			return nil, err
-		}
-		lookups++
-		for _, red := range reds {
-			if len(path) >= maxRedelegationHops {
-				break
+		for _, next := range adjacency[current.String()] {
+			if _, ok := seen[next.String()]; ok {
+				continue
 			}
-			if strings.EqualFold(red.DelegatorAddress, delAddr.String()) {
-				nextDepth := current.depth + 1
-				if nextDepth > maxRedelegationHops {
-					continue
-				}
-				next, err := sdk.ValAddressFromBech32(red.ValidatorDstAddress)
-				if err != nil {
-					return nil, err
-				}
-				if _, ok := seen[next.String()]; ok {
-					continue
-				}
-				seen[next.String()] = struct{}{}
-				path = append(path, next)
-				queue = append(queue, queueNode{valAddr: next, depth: nextDepth})
-			}
+			seen[next.String()] = struct{}{}
+			path = append(path, next)
+			queue = append(queue, next)
 		}
 	}
 	return path, nil

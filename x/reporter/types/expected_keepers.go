@@ -22,7 +22,7 @@ type StakingKeeper interface {
 	) (newShares math.LegacyDec, err error)
 	HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (bool, error)
 	GetUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (ubd stakingtypes.UnbondingDelegation, err error)
-	GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sdk.ValAddress) (reds []stakingtypes.Redelegation, err error)
+	IterateDelegatorRedelegations(ctx context.Context, delegator sdk.AccAddress, cb func(red stakingtypes.Redelegation) (stop bool)) error
 	RemoveUnbondingDelegation(ctx context.Context, ubd stakingtypes.UnbondingDelegation) error
 	SetUnbondingDelegation(ctx context.Context, ubd stakingtypes.UnbondingDelegation) error
 	GetDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (stakingtypes.Delegation, error)

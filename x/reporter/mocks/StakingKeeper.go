@@ -142,32 +142,6 @@ func (_m *StakingKeeper) GetDelegation(ctx context.Context, delAddr sdk.AccAddre
 	return r0, r1
 }
 
-// GetRedelegationsFromSrcValidator provides a mock function with given fields: ctx, valAddr
-func (_m *StakingKeeper) GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sdk.ValAddress) ([]stakingtypes.Redelegation, error) {
-	ret := _m.Called(ctx, valAddr)
-
-	var r0 []stakingtypes.Redelegation
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, sdk.ValAddress) ([]stakingtypes.Redelegation, error)); ok {
-		return rf(ctx, valAddr)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, sdk.ValAddress) []stakingtypes.Redelegation); ok {
-		r0 = rf(ctx, valAddr)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]stakingtypes.Redelegation)
-		}
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, sdk.ValAddress) error); ok {
-		r1 = rf(ctx, valAddr)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetUnbondingDelegation provides a mock function with given fields: ctx, delAddr, valAddr
 func (_m *StakingKeeper) GetUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (stakingtypes.UnbondingDelegation, error) {
 	ret := _m.Called(ctx, delAddr, valAddr)
@@ -302,6 +276,20 @@ func (_m *StakingKeeper) IterateDelegatorDelegations(ctx context.Context, delega
 
 	var r0 error
 	if rf, ok := ret.Get(0).(func(context.Context, sdk.AccAddress, func(stakingtypes.Delegation) bool) error); ok {
+		r0 = rf(ctx, delegator, cb)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// IterateDelegatorRedelegations provides a mock function with given fields: ctx, delegator, cb
+func (_m *StakingKeeper) IterateDelegatorRedelegations(ctx context.Context, delegator sdk.AccAddress, cb func(stakingtypes.Redelegation) bool) error {
+	ret := _m.Called(ctx, delegator, cb)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, sdk.AccAddress, func(stakingtypes.Redelegation) bool) error); ok {
 		r0 = rf(ctx, delegator, cb)
 	} else {
 		r0 = ret.Error(0)
