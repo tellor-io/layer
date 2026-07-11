@@ -14,16 +14,17 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	signerv1 "github.com/tellor-io/bridge-remote-signer/api/gen/signer/v1"
+	bridgetls "github.com/tellor-io/bridge-remote-signer/api/tls"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cosmossecp "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	signerv1 "github.com/tellor-io/bridge-remote-signer/api/gen/signer/v1"
-	bridgetls "github.com/tellor-io/bridge-remote-signer/api/tls"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // remoteSignerKeyring implements keyring.Keyring backed by a remote gRPC signer.
@@ -74,25 +75,34 @@ func (r *remoteSignerKeyring) KeyByAddress(address sdk.Address) (*keyring.Record
 	return r.Key(r.keyName)
 }
 
-func (r *remoteSignerKeyring) Delete(_ string) error { return fmt.Errorf("remotesigner: Delete not supported") }
+func (r *remoteSignerKeyring) Delete(_ string) error {
+	return fmt.Errorf("remotesigner: Delete not supported")
+}
+
 func (r *remoteSignerKeyring) DeleteByAddress(_ sdk.Address) error {
 	return fmt.Errorf("remotesigner: DeleteByAddress not supported")
 }
+
 func (r *remoteSignerKeyring) Rename(_, _ string) error {
 	return fmt.Errorf("remotesigner: Rename not supported")
 }
+
 func (r *remoteSignerKeyring) NewMnemonic(_ string, _ keyring.Language, _, _ string, _ keyring.SignatureAlgo) (*keyring.Record, string, error) {
 	return nil, "", fmt.Errorf("remotesigner: NewMnemonic not supported")
 }
+
 func (r *remoteSignerKeyring) NewAccount(_, _, _, _ string, _ keyring.SignatureAlgo) (*keyring.Record, error) {
 	return nil, fmt.Errorf("remotesigner: NewAccount not supported")
 }
+
 func (r *remoteSignerKeyring) SaveLedgerKey(_ string, _ keyring.SignatureAlgo, _ string, _, _, _ uint32) (*keyring.Record, error) {
 	return nil, fmt.Errorf("remotesigner: SaveLedgerKey not supported")
 }
+
 func (r *remoteSignerKeyring) SaveOfflineKey(_ string, _ cryptotypes.PubKey) (*keyring.Record, error) {
 	return nil, fmt.Errorf("remotesigner: SaveOfflineKey not supported")
 }
+
 func (r *remoteSignerKeyring) SaveMultisig(_ string, _ cryptotypes.PubKey) (*keyring.Record, error) {
 	return nil, fmt.Errorf("remotesigner: SaveMultisig not supported")
 }
@@ -121,24 +131,31 @@ func (r *remoteSignerKeyring) SignByAddress(address sdk.Address, msg []byte, sig
 func (r *remoteSignerKeyring) ImportPrivKey(_, _, _ string) error {
 	return fmt.Errorf("remotesigner: ImportPrivKey not supported")
 }
+
 func (r *remoteSignerKeyring) ImportPrivKeyHex(_, _, _ string) error {
 	return fmt.Errorf("remotesigner: ImportPrivKeyHex not supported")
 }
+
 func (r *remoteSignerKeyring) ImportPubKey(_, _ string) error {
 	return fmt.Errorf("remotesigner: ImportPubKey not supported")
 }
+
 func (r *remoteSignerKeyring) MigrateAll() ([]*keyring.Record, error) {
 	return nil, fmt.Errorf("remotesigner: MigrateAll not supported")
 }
+
 func (r *remoteSignerKeyring) ExportPubKeyArmor(_ string) (string, error) {
 	return "", fmt.Errorf("remotesigner: ExportPubKeyArmor not supported")
 }
+
 func (r *remoteSignerKeyring) ExportPubKeyArmorByAddress(_ sdk.Address) (string, error) {
 	return "", fmt.Errorf("remotesigner: ExportPubKeyArmorByAddress not supported")
 }
+
 func (r *remoteSignerKeyring) ExportPrivKeyArmor(_, _ string) (string, error) {
 	return "", fmt.Errorf("remotesigner: ExportPrivKeyArmor not supported")
 }
+
 func (r *remoteSignerKeyring) ExportPrivKeyArmorByAddress(_ sdk.Address, _ string) (string, error) {
 	return "", fmt.Errorf("remotesigner: ExportPrivKeyArmorByAddress not supported")
 }
@@ -189,8 +206,10 @@ func (r *remoteSignerKeyring) SignOracleAttestation(ctx context.Context, req *si
 	return resp.Signature, nil
 }
 
-var _ keyring.Keyring = (*remoteSignerKeyring)(nil)
-var _ BridgeRemoteSigner = (*remoteSignerKeyring)(nil)
+var (
+	_ keyring.Keyring    = (*remoteSignerKeyring)(nil)
+	_ BridgeRemoteSigner = (*remoteSignerKeyring)(nil)
+)
 
 // NewKeyring dials the remote signer at addr, fetches its public key, and returns
 // a keyring.Keyring backed by it. When caCert/clientCert/clientKey are all set,

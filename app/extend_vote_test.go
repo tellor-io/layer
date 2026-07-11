@@ -432,6 +432,11 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 					},
 				}
 				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil)
+				// Local (non-remote) keyring so SignSnapshot falls back to the
+				// blind SignMessage path.
+				patches.ApplyMethod(reflect.TypeOf(h), "GetKeyring", func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
+					return mocks.NewKeyring(s.T()), nil
+				})
 				patches.ApplyMethod(reflect.TypeOf(h), "SignMessage", func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
 					return []byte("signedMsg"), nil
 				})
@@ -472,6 +477,11 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 				// 3.
 				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(&attReq, nil)
 				// 4.
+				// Local (non-remote) keyring so SignSnapshot falls back to the
+				// blind SignMessage path.
+				patches.ApplyMethod(reflect.TypeOf(h), "GetKeyring", func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
+					return mocks.NewKeyring(s.T()), nil
+				})
 				patches.ApplyMethod(reflect.TypeOf(h), "SignMessage",
 					func(_ *app.VoteExtHandler, msg []byte) ([]byte, error) {
 						return []byte("signedMsg"), nil
@@ -777,6 +787,11 @@ func (s *VoteExtensionTestSuite) TestCheckAndSignValidatorCheckpoint() {
 				bk.On("GetValidatorCheckpointParamsFromStorage", ctx, uint64(10)).Return(bridgetypes.ValidatorCheckpointParams{
 					Checkpoint: []byte("checkpoint"),
 				}, nil).Once()
+				// Local (non-remote) keyring so the checkpoint takes the blind
+				// EncodeAndSignMessage path.
+				patches.ApplyMethod(reflect.TypeOf(h), "GetKeyring", func(_ *app.VoteExtHandler) (keyring.Keyring, error) {
+					return mocks.NewKeyring(s.T()), nil
+				})
 				patches.ApplyMethod(reflect.TypeOf(h), "EncodeAndSignMessage", func(_ *app.VoteExtHandler, msg string) ([]byte, error) {
 					return []byte("signedMsg"), nil
 				})

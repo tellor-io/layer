@@ -16,6 +16,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/viper"
+	signerv1 "github.com/tellor-io/bridge-remote-signer/api/gen/signer/v1"
 	"github.com/tellor-io/layer/app/remotesigner"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
@@ -28,7 +29,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	signerv1 "github.com/tellor-io/bridge-remote-signer/api/gen/signer/v1"
 )
 
 type OracleKeeper interface {
