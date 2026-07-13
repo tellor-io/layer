@@ -86,12 +86,10 @@ type prospectiveValidator struct {
 	postTokens math.Int
 	postShares math.LegacyDec
 	pending    bool
-	// preTxActive is pre-tx active membership (bonded and not jailed). SDK jail
-	// can leave IsBonded() true while removing the validator from the power
-	// index; the validator cap treats that pre-tx active stake as 0.
+	// preTxActive: bonded and not jailed before the tx. Jail can leave IsBonded()
+	// true while dropping the power index; the validator cap treats that as 0.
 	preTxActive bool
-	// jailCleared is set by MsgUnjail so validator-cap projection can run
-	// without folding entrant/leaver stake into 5%/delegator/reporter paths.
+	// jailCleared: MsgUnjail; validator-cap only, not 5%/delegator/reporter paths.
 	jailCleared bool
 }
 
@@ -274,10 +272,7 @@ func (t TrackStakeChangesDecorator) AnteHandle(ctx sdk.Context, tx sdk.Tx, simul
 			return ctx, err
 		}
 	}
-	// This is intentionally an order-independent composition ban. Some orderings
-	// would be safe because the direct keeper check observes earlier staking
-	// state, but treating them differently would make safety depend on handler
-	// order and on whether a refund ultimately bonds or pays liquid coins.
+	// Reject mixing keeper-direct and ante-projected stake acquisition in one tx.
 	if stakeChanges.hasDirectStakeAcquisition && stakeChanges.hasProjectedPowerAcquisition {
 		return ctx, types.ErrMixedStakeAcquisitionPaths
 	}
@@ -333,9 +328,7 @@ func (t TrackStakeChangesDecorator) processMessage(ctx sdk.Context, msg sdk.Msg,
 }
 
 func isDirectStakeAcquisitionMessage(msg sdk.Msg) bool {
-	// These claim messages can acquire delegated tokens through keeper calls
-	// outside ante's transaction projection. Classification is intentionally by
-	// message type because ante cannot know the eventual claim/refund amount.
+	// Keeper-path claims; ante cannot project the eventual amount.
 	switch msg.(type) {
 	case *types.MsgWithdrawTip, *disputetypes.MsgWithdrawFeeRefund:
 		return true
@@ -345,9 +338,7 @@ func isDirectStakeAcquisitionMessage(msg sdk.Msg) bool {
 }
 
 func isProjectedPowerAcquisitionMessage(msg sdk.Msg) bool {
-	// These messages acquire validator tokens or reporter-attributed power through
-	// ante projection. Token removal, unjailing, and metadata-only messages are
-	// intentionally excluded.
+	// Ante-projected validator/reporter power acquisitions.
 	switch msg.(type) {
 	case *types.MsgCreateReporter,
 		*types.MsgSelectReporter,

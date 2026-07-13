@@ -75,7 +75,7 @@ func (t TrackStakeChangesDecorator) buildStakeCapContext(ctx sdk.Context, stakeC
 			return stakeCapContext{}, err
 		}
 		if jailCleared {
-			// pure unjail: adjust validator-cap denominator only
+			// Unjail: adjust validator-cap denominator only.
 			validatorDelta = validatorDelta.Add(projection.bondedDelta)
 		}
 	}
@@ -100,7 +100,7 @@ func (t TrackStakeChangesDecorator) buildStakeCapContext(ctx sdk.Context, stakeC
 	}, nil
 }
 
-// applyProspectiveBondedValidatorChanges folds active-set enter/leave stake into the final checks.
+// applyProspectiveBondedValidatorChanges folds active-set enter/leave stake into final checks.
 func (t TrackStakeChangesDecorator) applyProspectiveBondedValidatorChanges(ctx sdk.Context, stakeChanges *stakeChangeTracker, projection activeSetProjection) error {
 	if stakeChanges == nil || !stakeChanges.activeSetDelta {
 		return nil

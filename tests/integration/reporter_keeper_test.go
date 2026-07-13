@@ -356,15 +356,13 @@ func (s *IntegrationTestSuite) TestAddAmountToStake() {
 }
 
 func (s *IntegrationTestSuite) TestGetBondedValidatorsByPower() {
-	// CreateValidators(5) plus the genesis validator gives six bonded validators.
 	s.Setup.CreateValidators(5)
 
 	vals, err := s.Setup.Stakingkeeper.GetBondedValidatorsByPower(s.Setup.Ctx)
 	s.NoError(err)
 	maxValidators, err := s.Setup.Stakingkeeper.MaxValidators(s.Setup.Ctx)
 	s.NoError(err)
-	// GetBondedValidatorsByPower returns the full active bonded set (bounded by
-	// MaxValidators), not an arbitrary cap. The genesis validator is always present.
+	// CreateValidators(5) + genesis validator; bounded by MaxValidators.
 	expected := 6
 	if uint32(expected) > maxValidators {
 		expected = int(maxValidators)
@@ -425,10 +423,6 @@ func (s *IntegrationTestSuite) TestEscrowReporterStakePartialRedelegationCollect
 	s.Equal(stored.Total, sum)
 }
 
-// TestEscrowReporterStakeRedelegationBreadcrumbDoesNotSkipBulkStake covers the
-// case where a selector leaves a dust trail (val2→val3) and then moves their
-// bulk stake (val1→val2). Dispute escrow must still capture the bulk at val2,
-// not only the dust that remains at the end of the redelegation breadcrumb.
 func (s *IntegrationTestSuite) TestEscrowReporterStakeRedelegationBreadcrumbDoesNotSkipBulkStake() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	ctx := s.Setup.Ctx
@@ -457,8 +451,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStakeRedelegationBreadcrumbDoes
 	reportHeight := uint64(ctx.BlockHeight())
 	hashId := []byte("redelegation-breadcrumb-bulk")
 	totalPowerTokens := layertypes.PowerReduction
-	// Snapshot only the bulk origin at val1 — the dust at val2 is just a
-	// breadcrumb that must not redirect the chase away from the bulk.
+	// Snapshot bulk at val1; dust at val2 must not redirect escrow away from bulk.
 	s.NoError(s.Setup.Reporterkeeper.Report.Set(ctx, collections.Join([]byte{}, collections.Join(selector.Bytes(), reportHeight)), reportertypes.DelegationsAmounts{
 		TokenOrigins: []*reportertypes.TokenOriginInfo{
 			{
@@ -470,7 +463,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStakeRedelegationBreadcrumbDoes
 		Total: totalPowerTokens,
 	}))
 
-	// Dust trail first, then move the bulk onto the same validator the dust left.
+	// Dust trail, then move bulk onto the validator the dust left.
 	_, err = stakingMsgServer.BeginRedelegate(ctx, stakingtypes.NewMsgBeginRedelegate(
 		selector.String(),
 		val2.String(),

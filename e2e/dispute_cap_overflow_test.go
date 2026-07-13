@@ -120,9 +120,7 @@ func TestDisputeCapOverflowReturnsAndRefundsViaUnbonding(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 6, val0.Node))
 	createCapOverflowValidatorReporters(t, ctx, validators)
 
-	// INVALID restoration: val1's self-delegation starts over the 30% cap.
-	// The INVALID result must execute and return the slashed stake through UBD
-	// overflow instead of bonding back to the over-cap original validator.
+	// INVALID restoration: original validator is over cap; overflow goes to UBD.
 	firstReport := submitCapOverflowSpotReport(t, ctx, val0, val1, bchQData)
 	reporterUbdBefore := capOverflowUnbondingBalance(t, ctx, chain, val1.AccAddr)
 	_, err = val0.Node.ExecTx(ctx, val0.AccAddr,
@@ -171,8 +169,7 @@ func TestDisputeCapOverflowReturnsAndRefundsViaUnbonding(t *testing.T) {
 	_, err = val0.Node.ExecTx(ctx, val0.AccAddr, "dispute", "claim-reward", "1", "--keyring-dir", val0.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
 
-	// SUPPORT refund: fee payer val0 is also over the 30% validator cap. The
-	// withdraw path must bond only cap headroom and put overflow in the UBD queue.
+	// SUPPORT refund: fee payer is over cap; headroom bonds, overflow to UBD.
 	secondReport := submitCapOverflowSpotReport(t, ctx, val0, val1, ltcQData)
 	_, err = val0.Node.ExecTx(ctx, val0.AccAddr,
 		"dispute", "propose-dispute", secondReport.Reporter, secondReport.MetaId, secondReport.QueryID,

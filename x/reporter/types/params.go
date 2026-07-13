@@ -23,12 +23,10 @@ var (
 	KeyMaxPendingSwitchesPerReporter     = []byte("MaxPendingSwitchesPerReporter")
 	DefaultMaxPendingSwitchesPerReporter = uint64(10)
 	KeyMaxReporterPowerShare             = []byte("MaxReporterPowerShare")
-	// DefaultMaxReporterPowerShare caps a single reporter's potential stake below
-	// 30% of total bonded tokens; values >= 1 disable the check (small networks).
+	// DefaultMaxReporterPowerShare: 30%; values >= 1 disable the check.
 	DefaultMaxReporterPowerShare = math.LegacyNewDecWithPrec(30, 2)
 	KeyMaxValidatorPowerShare    = []byte("MaxValidatorPowerShare")
-	// DefaultMaxValidatorPowerShare caps a single validator's active bonded stake
-	// at 30% of total bonded tokens. Values >= 1 disable the check at enforcement.
+	// DefaultMaxValidatorPowerShare: 30%; values >= 1 disable the check.
 	DefaultMaxValidatorPowerShare = math.LegacyNewDecWithPrec(30, 2)
 )
 
@@ -169,15 +167,12 @@ func validateMaxPendingSwitchesPerReporter(v interface{}) error {
 	return nil
 }
 
-// validateMaxReporterPowerShare allows nil (pre-migration state, check disabled)
-// and any positive share; shares >= 1 disable the check.
+// validateMaxReporterPowerShare allows nil (disabled) and any non-negative share;
+// shares >= 1 disable the check at enforcement.
 func validateMaxReporterPowerShare(v interface{}) error {
 	return ValidatePowerShareParam("max reporter power share", v)
 }
 
-// validateMaxValidatorPowerShare mirrors validateMaxReporterPowerShare: nil is
-// accepted (pre-migration/malformed state disables the check), negative is
-// rejected, and zero and values >= 1 disable the check at enforcement.
 func validateMaxValidatorPowerShare(v interface{}) error {
 	return ValidatePowerShareParam("max validator power share", v)
 }
@@ -207,8 +202,6 @@ func ExceedsPowerShare(held, total math.Int, maxShare math.LegacyDec) bool {
 	return held.ToLegacyDec().GT(maxShare.MulInt(total))
 }
 
-// ExceedsDelegatorStakeShare reports whether held strictly exceeds 30% of total
-// bonded stake (hardcoded delegator cap boundary).
 func ExceedsDelegatorStakeShare(held math.LegacyDec, total math.Int) bool {
 	if held.IsNil() || total.IsNil() || !total.IsPositive() {
 		return false
@@ -216,8 +209,6 @@ func ExceedsDelegatorStakeShare(held math.LegacyDec, total math.Int) bool {
 	return held.MulInt64(delegatorStakeShareDenominator).GT(total.ToLegacyDec().MulInt64(delegatorStakeShareNumerator))
 }
 
-// ExceedsReporterPowerShare reports whether potential plus addition reaches or
-// exceeds maxShare of total bonded stake (reporter cap uses >=).
 func ExceedsReporterPowerShare(potential, addition math.LegacyDec, total math.Int, maxShare math.LegacyDec) bool {
 	if !PowerShareEnabled(maxShare) || total.IsNil() || !total.IsPositive() {
 		return false
@@ -226,8 +217,7 @@ func ExceedsReporterPowerShare(potential, addition math.LegacyDec, total math.In
 	return potential.Add(addition).GTE(maxAllowed)
 }
 
-// ValidatorCapCheck is the shared validator acquisition cap comparison used by
-// ante and keeper enforcement paths.
+// ValidatorCapCheck is shared by ante and keeper validator-cap enforcement.
 type ValidatorCapCheck struct {
 	ValidatorTokensAfter math.Int
 	TotalBondedAfter     math.Int

@@ -44,6 +44,9 @@ Upgrade to v6.1.6:
   ICA host allowed all messages, and ICA-executed messages go through the
   MsgServiceRouter without the ante chain, bypassing the stake and reporter
   power limits. Only interchain queries remain supported.
+- x/group is removed (module and store). Group proposal execution bypasses ante
+  the same way ICA did. Store data is deleted via StoreUpgrades; the store key
+  stays mounted this release and is dropped in the next upgrade.
 
 No custom state migration is required beyond RunMigrations: new collections and
 proto fields deserialize to empty / zero for existing chains.
@@ -104,6 +107,7 @@ func CreateUpgradeHandler(
 		sdkCtx.Logger().Info("disabled interchain accounts host")
 		ick.SetParams(sdkCtx, icacontrollertypes.Params{ControllerEnabled: false})
 		sdkCtx.Logger().Info("disabled interchain accounts controller")
+		sdkCtx.Logger().Info("removed x/group module")
 
 		return vm, nil
 	}

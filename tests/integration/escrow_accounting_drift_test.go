@@ -1,23 +1,6 @@
+// This file pins escrow accounting invariants: recorded amounts must match
+// coins actually moved by Unbond, not theoretical share math.
 package integration_test
-
-// This file pins a family of x/reporter escrow accounting invariants that once
-// drifted when recorded amounts were derived from share math instead of measured
-// from the coins actually moved.
-//
-// Root cause (x/reporter/keeper/withdraw.go): the coins that actually move to
-// the dispute module are the SDK-truncated amounts returned by Unbond
-// (Validator.RemoveDelShares truncates whenever other delegators remain), but
-// the recorded amounts are derived from theoretical LegacyDec share math:
-//   1. deductFromdelegation's full-removal branch subtracts the Dec value
-//      TokensFromShares(del.Shares) from the owed amount instead of the actual
-//      Unbond return value;
-//   2. deductFromdelegation's partial (GTE) branch reports the owed amount
-//      fully satisfied while Unbond moves the truncated round-trip value;
-//   3. undelegate truncates the fractional remainder a second time before the
-//      unbonding-delegation chase.
-// The drift needs a validator whose exchange rate is not exactly 1.0 (any
-// slashing history) plus at least one other delegator — routine mainnet
-// conditions, no redelegation and no adversary required.
 
 import (
 	"time"
@@ -38,12 +21,8 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// escrowAgainstSkewedValidator delegates `delegation` from a fresh selector to
-// the first validator created with `powers`, knocks that validator's exchange
-// rate off 1.0 by removing `removeTokens` tokens (what routine slashing does:
-// tokens drop, shares stay), snapshots a 1-power report for the selector, and
-// runs EscrowReporterStake for `owed`. Returns the selector, the validator,
-// the coins the dispute module actually received, and the stored snapshot.
+// escrowAgainstSkewedValidator escrows against a validator whose exchange rate
+// is off 1.0 (tokens removed, shares unchanged).
 func (s *IntegrationTestSuite) escrowAgainstSkewedValidator(powers []uint64, delegation, owed math.Int, removeTokens int64, hashId []byte) (sdk.AccAddress, sdk.ValAddress, math.Int, reportertypes.DelegationsAmounts) {
 	ctx := s.Setup.Ctx
 	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
@@ -88,11 +67,6 @@ func (s *IntegrationTestSuite) escrowAgainstSkewedValidator(powers []uint64, del
 	return selector, val1, received, stored
 }
 
-// TestEscrowRecordedTotalExceedsCoinsReceivedFullRemoval proves drift point 1
-// (plus 3): the selector's whole delegation is consumed, the SDK moves the
-// truncated 999_999, but the snapshot records 1_000_000 as collected because
-// the owed amount was decremented by the theoretical Dec value and the
-// fractional remainder was truncated away instead of being reported.
 func (s *IntegrationTestSuite) TestEscrowRecordedTotalExceedsCoinsReceivedFullRemoval() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	hashId := []byte("drift-full-removal")
@@ -106,17 +80,10 @@ func (s *IntegrationTestSuite) TestEscrowRecordedTotalExceedsCoinsReceivedFullRe
 	}
 	s.Equal(stored.Total, sum, "origins must sum to Total")
 
-	// ReturnSlashedTokens later sends stored.Total back out of the dispute
-	// module, so Total must equal the coins the module actually received.
 	s.Equal(stored.Total, received,
 		"DisputedDelegationAmounts.Total must equal the coins the dispute module actually received")
 }
 
-// TestEscrowRecordedTotalExceedsCoinsReceivedPartialDeduction proves drift
-// point 2: the delegation is worth ~2x the owed amount, deductFromdelegation
-// takes the partial (GTE) branch and reports the owed 1_000_000 fully
-// satisfied, but the SharesFromTokens -> Unbond round trip truncates and only
-// 999_999 coins actually move.
 func (s *IntegrationTestSuite) TestEscrowRecordedTotalExceedsCoinsReceivedPartialDeduction() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	hashId := []byte("drift-partial-deduction")
@@ -124,7 +91,6 @@ func (s *IntegrationTestSuite) TestEscrowRecordedTotalExceedsCoinsReceivedPartia
 	selector, val1, received, stored := s.escrowAgainstSkewedValidator(
 		[]uint64{100}, math.NewInt(2_000_000), math.NewInt(1_000_000), 1, hashId)
 
-	// The partial branch was taken: the rest of the delegation is still there.
 	_, err := s.Setup.Stakingkeeper.GetDelegation(s.Setup.Ctx, selector, val1)
 	s.NoError(err, "partial deduction must leave the remainder of the delegation in place")
 
@@ -132,12 +98,6 @@ func (s *IntegrationTestSuite) TestEscrowRecordedTotalExceedsCoinsReceivedPartia
 		"DisputedDelegationAmounts.Total must equal the coins the dispute module actually received")
 }
 
-// TestFeeFromReporterStakeOriginsSumExceedsTotal proves the same defect class
-// in FeefromReporterStake: its fully-covered branch records the theoretical
-// unbondAmt.TruncateInt() in the FeePaidFromStake origin entry while Total
-// accumulates the actual Unbond return value. FeeRefund scales each origin by
-// Amount*refund/Total with no sum check, so an origins sum above Total makes
-// the dispute module over-send on refund (ReturnFeetoStake -> insufficient funds).
 func (s *IntegrationTestSuite) TestFeeFromReporterStakeOriginsSumExceedsTotal() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	ctx := s.Setup.Ctx
@@ -173,11 +133,8 @@ func (s *IntegrationTestSuite) TestFeeFromReporterStakeOriginsSumExceedsTotal() 
 	tracked, err := s.Setup.Reporterkeeper.FeePaidFromStakeByPayer(ctx, hashId, reporter)
 	s.NoError(err)
 
-	// On the fee path Total is the honest side (it accumulates actual Unbond
-	// returns and matches the coins moved) ...
 	s.Equal(tracked.Total, received, "fee tracker Total must equal coins the dispute module received")
 
-	// ... the origin entries are the inflated side.
 	sum := math.ZeroInt()
 	for _, origin := range tracked.TokenOrigins {
 		sum = sum.Add(origin.Amount)
@@ -186,15 +143,11 @@ func (s *IntegrationTestSuite) TestFeeFromReporterStakeOriginsSumExceedsTotal() 
 		"FeePaidFromStake origins must sum to Total; FeeRefund distributes Amount*refund/Total per origin, so an inflated origins sum over-sends from the dispute module")
 }
 
-// TestInvalidVoteReturnSucceedsAgainstHonestSnapshot proves the downstream
-// invalid-vote return succeeds when the escrow snapshot records only coins
-// actually held by the dispute module.
 func (s *IntegrationTestSuite) TestInvalidVoteReturnSucceedsAgainstHonestSnapshot() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	hashId := []byte("drift-invalid-vote-return")
 
-	// Extra validators keep val1 far below the validator power cap so the
-	// stake return itself is not capped away from the insufficient-funds path.
+	// Extra validators keep val1 under the validator power cap during return.
 	_, _, received, stored := s.escrowAgainstSkewedValidator(
 		[]uint64{100, 300, 300}, math.NewInt(1_000_000), math.NewInt(1_000_000), 1, hashId)
 	s.Equal(stored.Total, received, "precondition: snapshot must match the module's holdings")
@@ -204,9 +157,6 @@ func (s *IntegrationTestSuite) TestInvalidVoteReturnSucceedsAgainstHonestSnapsho
 		"returning slashed tokens for an invalid dispute must succeed against an honest snapshot")
 }
 
-// TestPendingExecutionCompletesAgainstHonestSnapshot proves the full escrow to
-// invalid-vote execution path clears once the snapshot matches the dispute
-// module's holdings.
 func (s *IntegrationTestSuite) TestPendingExecutionCompletesAgainstHonestSnapshot() {
 	blockTime := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1).WithBlockTime(blockTime)
@@ -340,9 +290,7 @@ func (s *IntegrationTestSuite) TestReturnFeeToStakeWithIntendedAmountExceedsActu
 
 	s.Setup.MintTokens(payer, actualFromBond)
 	s.NoError(s.Setup.Bankkeeper.SendCoinsFromAccountToModule(ctx, payer, disputetypes.ModuleName, sdk.NewCoins(sdk.NewCoin(s.Setup.Denom, actualFromBond))))
-	// This is the post-P2-1 tracker shape: origins and Total both reflect the
-	// actual bond-funded amount collected, while dispute-side payer state may
-	// still ask to refund the intended fee amount.
+	// Tracker records actual bond-funded amount; payer may still claim intended fee.
 	s.NoError(s.Setup.Reporterkeeper.FeePaidFromStake.Set(ctx, hashId, reportertypes.DelegationsAmounts{
 		TokenOrigins: []*reportertypes.TokenOriginInfo{
 			{

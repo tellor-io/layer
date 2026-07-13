@@ -282,7 +282,7 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 		}
 	}
 
-	// Total is coins actually escrowed, not the intended slash amount
+	// Total is coins actually escrowed, not the intended slash amount.
 	return k.DisputedDelegationAmounts.Set(ctx, hashId, types.DelegationsAmounts{TokenOrigins: disputeTokens, Total: collected})
 }
 
@@ -311,9 +311,7 @@ func reporterSlashAmounts(report types.DelegationsAmounts, amt math.Int) ([]math
 		return make([]math.Int, len(report.TokenOrigins)), nil
 	}
 
-	// Use the same largest-remainder integer allocation as stake returns. It is
-	// deterministic in token-origin order and assigns every unit without ever
-	// producing a negative share.
+	// Same largest-remainder allocation as stake returns.
 	allocations := proportionalReturnAmounts(report.TokenOrigins, report.Total, amt)
 	allocated := math.ZeroInt()
 	for i, allocation := range allocations {
@@ -328,15 +326,12 @@ func reporterSlashAmounts(report types.DelegationsAmounts, amt math.Int) ([]math
 	return allocations, nil
 }
 
-// RedelegationRecordGas charges the explicit CPU work needed to filter and
-// decode each redelegation record returned by the staking keeper.
+// RedelegationRecordGas is charged per staking redelegation record inspected during escrow.
 const RedelegationRecordGas = storetypes.Gas(10_000)
 
 const redelegationRecordGasMessage = "reporter escrow redelegation record check"
 
-// getRedelegationPath returns reachable redelegation destinations from valAddr
-// in deterministic BFS order. One delegator-scoped staking-store pass builds
-// source adjacency in iterator order; cycles are skipped in memory.
+// getRedelegationPath returns redelegation destinations from valAddr in deterministic BFS order.
 func (k Keeper) getRedelegationPath(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) ([]sdk.ValAddress, error) {
 	adjacency := make(map[string][]sdk.ValAddress)
 	gasMeter := sdk.UnwrapSDKContext(ctx).GasMeter()

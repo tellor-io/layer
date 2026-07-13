@@ -15,9 +15,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// setupValidatorPowerCapChain runs four equal genesis validators (25% of bonded
-// stake each, under the 30% cap) and re-enables the validator power cap that the
-// standard e2e genesis disables.
+// setupValidatorPowerCapChain runs four equal genesis validators under a 30% cap.
 func setupValidatorPowerCapChain(t *testing.T) (*cosmos.CosmosChain, *interchaintest.Interchain, context.Context) {
 	t.Helper()
 
@@ -29,10 +27,6 @@ func setupValidatorPowerCapChain(t *testing.T) (*cosmos.CosmosChain, *interchain
 	return e2e.SetupChainWithCustomConfig(t, config)
 }
 
-// TestValidatorPowerCap verifies the validator bonded-stake cap end to end.
-// Each genesis validator holds 25% of bonded stake. A tiny bonded-to-bonded
-// redelegation to validator 0 succeeds, while a redelegation large enough to
-// push validator 0 above 30% is rejected with the validator power-share error.
 func TestValidatorPowerCap(t *testing.T) {
 	require := require.New(t)
 
@@ -54,10 +48,7 @@ func TestValidatorPowerCap(t *testing.T) {
 		totalBonded = totalBonded.Add(validator.Tokens)
 	}
 
-	// A tiny bonded-to-bonded redelegation from validator 1 to validator 0
-	// keeps validator 0 under 30% and is committed after one block. The
-	// redelegator is validator 1's own operator (its self-delegation), so the
-	// per-delegator bonded delta is zero and only the validator cap applies.
+	// Under-cap redelegation (self-delegation keeps per-delegator delta at zero).
 	_, err = validators[1].Node.ExecTx(ctx, validators[1].AccAddr,
 		"staking", "redelegate", validators[1].ValAddr, validators[0].ValAddr, "1loya",
 		"--keyring-dir", validators[1].Node.HomeDir(),
@@ -66,8 +57,7 @@ func TestValidatorPowerCap(t *testing.T) {
 	require.NoError(err)
 	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[1].Node))
 
-	// Redelegating ~10% of total bonded from validator 1 to validator 0 pushes
-	// validator 0 from 25% to ~35%, strictly above the 30% cap, and is rejected.
+	// ~10% of bonded would push destination above 30%.
 	overCapAmount := totalBonded.QuoRaw(10)
 	require.True(overCapAmount.GT(totalBonded.QuoRaw(20)),
 		"over-cap amount must exceed the 5%% total stake-change threshold headroom")

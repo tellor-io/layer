@@ -183,10 +183,7 @@ func BenchmarkDisputeEndBlocker(b *testing.B) {
 }
 
 func (s *TestSuite) TestCheckClosedDisputesForExecutionCompletesViaUnbondedReturn() {
-	// When the reporter keeper cannot place restored slashed stake on a bonded
-	// validator, the unbonding escape hatch returns it through the unbonding
-	// queue. The dispute wrapper routes the unbonded portion to the NotBonded
-	// pool and execution completes (not deferred).
+	// Unbonded escape hatch completes execution instead of deferring.
 	require := require.New(s.T())
 	k := s.disputeKeeper
 	ctx := s.ctx.WithBlockHeight(10).WithBlockTime(time.Now())
@@ -221,9 +218,7 @@ func (s *TestSuite) TestCheckClosedDisputesForExecutionCompletesViaUnbondedRetur
 }
 
 func (s *TestSuite) TestCheckClosedDisputesForExecutionNonDeferrableErrorDoesNotHalt() {
-	// Any ExecuteVote error that is NOT a known retryable stake-distribution
-	// condition must be rolled back and alerted, NOT propagated out of BeginBlock:
-	// a propagated error would halt the chain.
+	// Non-retryable ExecuteVote errors must not propagate out of BeginBlock.
 	require := require.New(s.T())
 	k := s.disputeKeeper
 	ctx := s.ctx.WithBlockHeight(10).WithBlockTime(time.Now())
@@ -235,7 +230,6 @@ func (s *TestSuite) TestCheckClosedDisputesForExecutionNonDeferrableErrorDoesNot
 
 	require.NoError(dispute.CheckClosedDisputesForExecution(ctx, k))
 
-	// the dispute stays pending so operators can investigate and retry
 	d, err := k.Disputes.Get(ctx, 1)
 	require.NoError(err)
 	require.True(d.PendingExecution)
