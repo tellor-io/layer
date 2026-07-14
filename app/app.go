@@ -122,7 +122,6 @@ import (
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/cosmos/cosmos-sdk/x/group"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
@@ -294,8 +293,6 @@ func New(
 		govtypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey,
 		feegrant.StoreKey, evidencetypes.StoreKey, ibctransfertypes.StoreKey, icahosttypes.StoreKey,
 		capabilitytypes.StoreKey, icacontrollertypes.StoreKey, consensusparamtypes.StoreKey,
-		// Keep group.StoreKey mounted until the next upgrade so StoreUpgrades.Deleted can purge it.
-		group.StoreKey,
 		oraclemoduletypes.StoreKey,
 		registrymoduletypes.StoreKey,
 		disputemoduletypes.StoreKey,

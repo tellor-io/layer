@@ -17,7 +17,7 @@ import (
 )
 
 // TestGroupDisabled asserts x/group is removed from the app (no handlers, registry
-// types, or module). Group proposals would otherwise bypass ante stake caps.
+// types, store key, or module). Group proposals would otherwise bypass ante stake caps.
 func TestGroupDisabled(t *testing.T) {
 	appOptions := make(simtestutil.AppOptionsMap, 0)
 	appOptions[flags.FlagHome] = app.DefaultNodeHome
@@ -55,8 +55,7 @@ func TestGroupDisabled(t *testing.T) {
 		require.Errorf(t, err, "group message %s must not be resolvable", url)
 	}
 
-	// Store key stays mounted this release for StoreUpgrades.Deleted; drop it next upgrade.
 	_, ok = bApp.ModuleManager().Modules[group.ModuleName]
 	require.False(t, ok)
-	require.NotNil(t, bApp.GetKey(group.StoreKey))
+	require.Nil(t, bApp.GetKey(group.StoreKey))
 }
