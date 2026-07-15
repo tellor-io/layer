@@ -135,14 +135,6 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/layer/tmp/group/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "GroupParams"
-        }
-      }
-    },
-    {
       "url": "./tmp-swagger-gen/layer/tmp/consensus/query.swagger.json",
       "operationIds": {
         "rename": {

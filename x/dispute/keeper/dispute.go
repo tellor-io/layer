@@ -286,6 +286,10 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 	if err != nil {
 		return err
 	}
+	// re-snapshot the vote denominator for the new round (BlockInfo is keyed by HashId)
+	if err := k.SetBlockInfo(ctx, dispute.HashId); err != nil {
+		return err
+	}
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			"added_dispute_round",

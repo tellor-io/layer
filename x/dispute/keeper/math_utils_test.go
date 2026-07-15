@@ -70,6 +70,45 @@ func TestCalculateRefundAmount(t *testing.T) {
 	}
 }
 
+func TestCalculateActualStakeFeeRefundAmount(t *testing.T) {
+	tests := []struct {
+		name           string
+		actualFee      math.Int
+		intendedFee    math.Int
+		intendedRefund math.Int
+		expected       math.Int
+	}{
+		{
+			name:           "actual equals intended",
+			actualFee:      math.NewInt(800),
+			intendedFee:    math.NewInt(800),
+			intendedRefund: math.NewInt(760),
+			expected:       math.NewInt(760),
+		},
+		{
+			name:           "one unit short keeps burn share fixed",
+			actualFee:      math.NewInt(799),
+			intendedFee:    math.NewInt(800),
+			intendedRefund: math.NewInt(760),
+			expected:       math.NewInt(759),
+		},
+		{
+			name:           "burn share can consume actual fee",
+			actualFee:      math.NewInt(39),
+			intendedFee:    math.NewInt(800),
+			intendedRefund: math.NewInt(760),
+			expected:       math.ZeroInt(),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := keeper.CalculateActualStakeFeeRefundAmount(tc.actualFee, tc.intendedFee, tc.intendedRefund)
+			require.True(t, tc.expected.Equal(got), "expected amount %s, got %s", tc.expected, got)
+		})
+	}
+}
+
 func TestCalculateReporterBondRewardAmount(t *testing.T) {
 	tests := []struct {
 		name          string

@@ -33,9 +33,6 @@ wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto
 mkdir -p ./layer/tmp/feegrant
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/feegrant/v1beta1/query.proto -O ./layer/tmp/feegrant/query.proto
 
-mkdir -p ./layer/tmp/group
-wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/group/v1/query.proto -O ./layer/tmp/group/query.proto
-
 mkdir -p ./layer/tmp/consensus
 wget https://raw.githubusercontent.com/cosmos/cosmos-sdk/refs/tags/v0.53.4/proto/cosmos/consensus/v1/query.proto -O ./layer/tmp/consensus/query.proto
 
