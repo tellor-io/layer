@@ -661,13 +661,14 @@ func (s *KeeperTestSuite) TestClaimableDisputeRewardsQuery() {
 	require.NoError(k.DisputeFeePayer.Set(ctx, collections.Join(uint64(4), addr.Bytes()), types.PayerInfo{
 		Amount: math.NewInt(500),
 	}))
+	s.reporterKeeper.On("DisputedDelegationTotal", ctx, dispute4.HashId).Return(math.NewInt(999), nil).Once()
 
 	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
 		DisputeId: 4,
 		Address:   addr.String(),
 	})
 	require.NoError(err)
-	require.True(resp.ClaimableAmount.FeeRefundAmount.IsPositive())
+	require.Equal(math.NewInt(974), resp.ClaimableAmount.FeeRefundAmount)
 
 	// 7. Combined - Voter Reward + Fee Refund
 	// Reuse Dispute 1 as past dispute. Reuse addr as voter and payer.
@@ -703,6 +704,7 @@ func (s *KeeperTestSuite) TestClaimableDisputeRewardsQuery() {
 
 	// Mock GetUserTotalTips for CalculateReward (block 200)
 	s.oracleKeeper.On("GetTipsAtBlockForTipper", ctx, uint64(200), addr).Return(math.NewInt(10), nil).Once()
+	s.reporterKeeper.On("DisputedDelegationTotal", ctx, dispute5.HashId).Return(dispute5.SlashAmount, nil).Once()
 
 	resp, err = q.ClaimableDisputeRewards(ctx, &types.QueryClaimableDisputeRewardsRequest{
 		DisputeId: 5,

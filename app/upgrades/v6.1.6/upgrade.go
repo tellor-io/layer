@@ -32,10 +32,21 @@ Upgrade to v6.1.6:
   increase a selector's bonded stake. The param deserializes as nil for existing
   chains, which the ante treats as disabled; this handler sets the 0.30 default so
   the cap activates at upgrade.
+- Validator power cap (ADR 1012): new reporter module param
+  max_validator_power_share caps a single bonded validator's active bonded stake
+  below a share of total bonded tokens (default 30%). Enforcement is
+  acquisition-only and covers staking/authz messages in the
+  TrackStakeChangesDecorator ante handler (including MsgUnjail active-set
+  re-entry) and reporter keeper direct delegations (WithdrawTip,
+  ReturnSlashedTokens, FeeRefund, AddAmountToStake). This handler sets the 0.30
+  default so the cap activates at upgrade.
 - Interchain accounts are disabled entirely (host and controller). Mainnet's
   ICA host allowed all messages, and ICA-executed messages go through the
   MsgServiceRouter without the ante chain, bypassing the stake and reporter
   power limits. Only interchain queries remain supported.
+- x/group is removed (module and store key). Group proposal execution bypasses
+  ante the same way ICA did. The old store is omitted from committed state; no
+  deletion migration is configured, and the upgraded app does not mount its key.
 
 No custom state migration is required beyond RunMigrations: new collections and
 proto fields deserialize to empty / zero for existing chains.
@@ -78,6 +89,14 @@ func CreateUpgradeHandler(
 				"value", params.MaxReporterPowerShare.String(),
 			)
 		}
+		if params.MaxValidatorPowerShare.IsNil() || params.MaxValidatorPowerShare.IsZero() {
+			params.MaxValidatorPowerShare = reportertypes.DefaultMaxValidatorPowerShare
+			changed = true
+			sdkCtx.Logger().Info(
+				"set reporter max_validator_power_share",
+				"value", params.MaxValidatorPowerShare.String(),
+			)
+		}
 		if changed {
 			if err := rk.Params.Set(ctx, params); err != nil {
 				return vm, fmt.Errorf("set reporter params: %w", err)
@@ -88,6 +107,7 @@ func CreateUpgradeHandler(
 		sdkCtx.Logger().Info("disabled interchain accounts host")
 		ick.SetParams(sdkCtx, icacontrollertypes.Params{ControllerEnabled: false})
 		sdkCtx.Logger().Info("disabled interchain accounts controller")
+		sdkCtx.Logger().Info("removed x/group module")
 
 		return vm, nil
 	}

@@ -23,10 +23,22 @@ var (
 	KeyMaxPendingSwitchesPerReporter     = []byte("MaxPendingSwitchesPerReporter")
 	DefaultMaxPendingSwitchesPerReporter = uint64(10)
 	KeyMaxReporterPowerShare             = []byte("MaxReporterPowerShare")
-	// DefaultMaxReporterPowerShare caps a single reporter's potential stake below
-	// 30% of total bonded tokens; values >= 1 disable the check (small networks).
+	// DefaultMaxReporterPowerShare: 30%; values >= 1 disable the check.
 	DefaultMaxReporterPowerShare = math.LegacyNewDecWithPrec(30, 2)
+	KeyMaxValidatorPowerShare    = []byte("MaxValidatorPowerShare")
+	// DefaultMaxValidatorPowerShare: 30%; values >= 1 disable the check.
+	DefaultMaxValidatorPowerShare = math.LegacyNewDecWithPrec(30, 2)
 )
+
+const (
+	delegatorStakeShareNumerator   int64 = 3
+	delegatorStakeShareDenominator int64 = 10
+)
+
+// DelegatorStakeShare is the hardcoded 30% bonded-stake cap for a single delegator.
+func DelegatorStakeShare() math.LegacyDec {
+	return math.LegacyNewDecWithPrec(30, 2)
+}
 
 // ParamKeyTable the param key table for launch module
 func ParamKeyTable() paramtypes.KeyTable {
@@ -41,6 +53,7 @@ func NewParams(
 	maxNumOfDelegations uint64,
 	maxPendingSwitchesPerReporter uint64,
 	maxReporterPowerShare math.LegacyDec,
+	maxValidatorPowerShare math.LegacyDec,
 ) Params {
 	return Params{
 		MinCommissionRate:             minCommissionRate,
@@ -49,6 +62,7 @@ func NewParams(
 		MaxNumOfDelegations:           maxNumOfDelegations,
 		MaxPendingSwitchesPerReporter: maxPendingSwitchesPerReporter,
 		MaxReporterPowerShare:         maxReporterPowerShare,
+		MaxValidatorPowerShare:        maxValidatorPowerShare,
 	}
 }
 
@@ -61,6 +75,7 @@ func DefaultParams() Params {
 		DefaultMaxNumOfDelegations,
 		DefaultMaxPendingSwitchesPerReporter,
 		DefaultMaxReporterPowerShare,
+		DefaultMaxValidatorPowerShare,
 	)
 }
 
@@ -73,6 +88,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyMaxNumOfDelegations, &p.MaxNumOfDelegations, validateMaxNumOfDelegations),
 		paramtypes.NewParamSetPair(KeyMaxPendingSwitchesPerReporter, &p.MaxPendingSwitchesPerReporter, validateMaxPendingSwitchesPerReporter),
 		paramtypes.NewParamSetPair(KeyMaxReporterPowerShare, &p.MaxReporterPowerShare, validateMaxReporterPowerShare),
+		paramtypes.NewParamSetPair(KeyMaxValidatorPowerShare, &p.MaxValidatorPowerShare, validateMaxValidatorPowerShare),
 	}
 }
 
@@ -94,6 +110,9 @@ func (p Params) Validate() error {
 		return err
 	}
 	if err := validateMaxReporterPowerShare(p.MaxReporterPowerShare); err != nil {
+		return err
+	}
+	if err := validateMaxValidatorPowerShare(p.MaxValidatorPowerShare); err != nil {
 		return err
 	}
 
@@ -148,9 +167,17 @@ func validateMaxPendingSwitchesPerReporter(v interface{}) error {
 	return nil
 }
 
-// validateMaxReporterPowerShare allows nil (pre-migration state, check disabled)
-// and any positive share; shares >= 1 disable the check.
+// validateMaxReporterPowerShare allows nil (disabled) and any non-negative share;
+// shares >= 1 disable the check at enforcement.
 func validateMaxReporterPowerShare(v interface{}) error {
+	return ValidatePowerShareParam("max reporter power share", v)
+}
+
+func validateMaxValidatorPowerShare(v interface{}) error {
+	return ValidatePowerShareParam("max validator power share", v)
+}
+
+func ValidatePowerShareParam(name string, v interface{}) error {
 	share, ok := v.(math.LegacyDec)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", v)
@@ -159,7 +186,44 @@ func validateMaxReporterPowerShare(v interface{}) error {
 		return nil
 	}
 	if share.IsNegative() {
-		return fmt.Errorf("max reporter power share cannot be negative")
+		return fmt.Errorf("%s cannot be negative", name)
 	}
 	return nil
+}
+
+func PowerShareEnabled(share math.LegacyDec) bool {
+	return !share.IsNil() && share.IsPositive() && !share.GTE(math.LegacyOneDec())
+}
+
+func ExceedsPowerShare(held, total math.Int, maxShare math.LegacyDec) bool {
+	if !PowerShareEnabled(maxShare) || held.IsNil() || total.IsNil() || !total.IsPositive() {
+		return false
+	}
+	return held.ToLegacyDec().GT(maxShare.MulInt(total))
+}
+
+func ExceedsDelegatorStakeShare(held math.LegacyDec, total math.Int) bool {
+	if held.IsNil() || total.IsNil() || !total.IsPositive() {
+		return false
+	}
+	return held.MulInt64(delegatorStakeShareDenominator).GT(total.ToLegacyDec().MulInt64(delegatorStakeShareNumerator))
+}
+
+func ExceedsReporterPowerShare(potential, addition math.LegacyDec, total math.Int, maxShare math.LegacyDec) bool {
+	if !PowerShareEnabled(maxShare) || total.IsNil() || !total.IsPositive() {
+		return false
+	}
+	maxAllowed := maxShare.MulInt(total)
+	return potential.Add(addition).GTE(maxAllowed)
+}
+
+// ValidatorCapCheck is shared by ante and keeper validator-cap enforcement.
+type ValidatorCapCheck struct {
+	ValidatorTokensAfter math.Int
+	TotalBondedAfter     math.Int
+	MaxShare             math.LegacyDec
+}
+
+func (c ValidatorCapCheck) Exceeds() bool {
+	return ExceedsPowerShare(c.ValidatorTokensAfter, c.TotalBondedAfter, c.MaxShare)
 }

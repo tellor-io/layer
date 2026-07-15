@@ -17,6 +17,15 @@ PRIVATE_KEY_2="e40bf75172f36cb722a6db1042999f7e7b78b92b0d181cdd3a2dfb323595304a"
 export HOME_DIR="$HOME/.layer-chains/testnet/layer"
 export LAYERD_NODE_HOME_1="$HOME_DIR/$KEY_NAME"
 
+# single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012)
+disable_power_caps() {
+  local genesis_file=$1
+  jq '.app_state.reporter.params.max_validator_power_share = "1.000000000000000000" |
+      .app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' \
+    "$genesis_file" > temp.json
+  mv temp.json "$genesis_file"
+}
+
 # Remove old test chains (if present)
 echo "Removing old test chain data..."
 rm -rf $HOME_DIR
@@ -79,8 +88,8 @@ jq '.app_state.gov.params.max_deposit_period = "45s"' $HOME_DIR/config/genesis.j
 jq '.app_state.gov.params.min_deposit[0].denom = "loya"' $HOME_DIR/config/genesis.json > temp.json && mv temp.json $HOME_DIR/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' $HOME_DIR/config/genesis.json > temp.json && mv temp.json $HOME_DIR/config/genesis.json
 jq '.app_state.gov.params.expedited_voting_period = "30s"' $HOME_DIR/config/genesis.json > temp.json && mv temp.json $HOME_DIR/config/genesis.json
-# single/dual validator devnets exceed the 30% reporter power cap (ADR 1012), so disable it
-jq '.app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' $HOME_DIR/config/genesis.json > temp.json && mv temp.json $HOME_DIR/config/genesis.json
+# single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012), so disable both
+disable_power_caps "$HOME_DIR/config/genesis.json"
 
 echo "$KEY_NAME..."
 jq '.app_state.gov.params.voting_period = "1m"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
@@ -88,8 +97,8 @@ jq '.app_state.gov.params.max_deposit_period = "45s"' $HOME_DIR/$KEY_NAME/config
 jq '.app_state.gov.params.min_deposit[0].denom = "loya"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
 jq '.app_state.gov.params.expedited_voting_period = "30s"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
-# single/dual validator devnets exceed the 30% reporter power cap (ADR 1012), so disable it
-jq '.app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' $HOME_DIR/$KEY_NAME/config/genesis.json > temp.json && mv temp.json $HOME_DIR/$KEY_NAME/config/genesis.json
+# single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012), so disable both
+disable_power_caps "$HOME_DIR/$KEY_NAME/config/genesis.json"
 
 echo "bill..."
 jq '.app_state.gov.params.voting_period = "1m"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
@@ -97,8 +106,8 @@ jq '.app_state.gov.params.max_deposit_period = "45s"' $HOME_DIR/bill/config/gene
 jq '.app_state.gov.params.min_deposit[0].denom = "loya"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
 jq '.app_state.gov.params.expedited_voting_period = "30s"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
-# single/dual validator devnets exceed the 30% reporter power cap (ADR 1012), so disable it
-jq '.app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' $HOME_DIR/bill/config/genesis.json > temp.json && mv temp.json $HOME_DIR/bill/config/genesis.json
+# single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012), so disable both
+disable_power_caps "$HOME_DIR/bill/config/genesis.json"
 
 # Add TRBBridgeV2 data spec to genesis so local bridge tests work without runtime registration
 echo "Adding TRBBridgeV2 data spec to genesis..."

@@ -2,12 +2,17 @@ package dispute
 
 import (
 	"context"
+	"errors"
+	"strconv"
+	"time"
 
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func BeginBlocker(ctx context.Context, k keeper.Keeper) error {
@@ -103,7 +108,16 @@ func CheckClosedDisputesForExecution(ctx context.Context, k keeper.Keeper) error
 		return err
 	}
 	defer iter.Close()
+	i := 1000
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	blockTime := sdkCtx.BlockTime()
+	processed := 0
+	maxAge := time.Duration(0)
 	for ; iter.Valid(); iter.Next() {
+		if i == 0 {
+			break
+		}
+		i--
 		key, err := iter.PrimaryKey()
 		if err != nil {
 			return err
@@ -112,11 +126,39 @@ func CheckClosedDisputesForExecution(ctx context.Context, k keeper.Keeper) error
 		if err != nil {
 			return err
 		}
-		if sdk.UnwrapSDKContext(ctx).BlockTime().After(dispute.DisputeEndTime) || dispute.DisputeStatus == types.Resolved {
-			if err := k.ExecuteVote(ctx, key); err != nil {
-				return err
-			}
+		if age := blockTime.Sub(dispute.DisputeEndTime); age > maxAge {
+			maxAge = age
 		}
+		processed++
+		if blockTime.After(dispute.DisputeEndTime) || dispute.DisputeStatus == types.Resolved {
+			cacheCtx, writeCache := sdkCtx.CacheContext()
+			if err := k.ExecuteVote(cacheCtx, key); err != nil {
+				if errors.Is(err, reportertypes.ErrExceedsMaxValidatorPowerShare) ||
+					errors.Is(err, stakingtypes.ErrDelegatorShareExRateInvalid) {
+					sdkCtx.Logger().Info("dispute execution deferred", "dispute_id", key, "err", err)
+					sdkCtx.EventManager().EmitEvent(sdk.NewEvent(
+						"dispute_execution_deferred",
+						sdk.NewAttribute("dispute_id", strconv.FormatUint(key, 10)),
+						sdk.NewAttribute("reason", err.Error()),
+					))
+					telemetry.IncrCounter(1, "dispute", "execution", "deferred")
+					continue
+				}
+				sdkCtx.Logger().Error("dispute execution failed", "dispute_id", key, "err", err)
+				sdkCtx.EventManager().EmitEvent(sdk.NewEvent(
+					"dispute_execution_failed",
+					sdk.NewAttribute("dispute_id", strconv.FormatUint(key, 10)),
+					sdk.NewAttribute("reason", err.Error()),
+				))
+				telemetry.IncrCounter(1, "dispute", "execution", "failed")
+				continue
+			}
+			writeCache()
+		}
+	}
+	if processed > 0 {
+		telemetry.SetGauge(float32(processed), "dispute", "execution", "processed_count")
+		telemetry.SetGauge(float32(maxAge.Seconds()), "dispute", "execution", "max_deferral_age_seconds")
 	}
 	return nil
 }
