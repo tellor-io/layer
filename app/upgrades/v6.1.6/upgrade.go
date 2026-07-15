@@ -15,6 +15,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 /*
@@ -36,14 +38,18 @@ Upgrade to v6.1.6:
   ICA host allowed all messages, and ICA-executed messages go through the
   MsgServiceRouter without the ante chain, bypassing the stake and reporter
   power limits. Only interchain queries remain supported.
+- Tip unlock-to-balance: create tips_unlock_pool module account for timed withdraw
+  of tip rewards to free-floating balance (existing tip collections stay empty).
 
-No custom state migration is required beyond RunMigrations: new collections and
-proto fields deserialize to empty / zero for existing chains.
+No custom state migration is required beyond RunMigrations and module-account
+creation: new collections and proto fields deserialize to empty / zero for
+existing chains.
 */
 
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
+	ak authkeeper.AccountKeeper,
 	rk reporterkeeper.Keeper,
 	ick icacontrollerkeeper.Keeper,
 	ihk icahostkeeper.Keeper,
@@ -51,6 +57,17 @@ func CreateUpgradeHandler(
 	return func(ctx context.Context, _ upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 		sdkCtx.Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
+
+		if acc := ak.GetModuleAccount(sdkCtx, reportertypes.TipsUnlockPool); acc == nil {
+			sdkCtx.Logger().Info("Creating tips_unlock_pool module account")
+			ak.SetModuleAccount(sdkCtx, authtypes.NewEmptyModuleAccount(reportertypes.TipsUnlockPool))
+			sdkCtx.Logger().Info(
+				"Created tips_unlock_pool module account",
+				"address", authtypes.NewModuleAddress(reportertypes.TipsUnlockPool).String(),
+			)
+		} else {
+			sdkCtx.Logger().Info("tips_unlock_pool module account already exists")
+		}
 
 		vm, err := mm.RunMigrations(ctx, configurator, vm)
 		if err != nil {

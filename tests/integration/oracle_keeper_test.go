@@ -976,6 +976,132 @@ func (s *IntegrationTestSuite) TestTipQueryNotInCycleListSingleDelegator() {
 	s.True(escrowBalance.IsZero())
 }
 
+func (s *IntegrationTestSuite) TestWithdrawTipToBalanceAndCancel() {
+	ctx := s.Setup.Ctx
+	require := s.Require()
+	ctx = ctx.WithBlockTime(time.Now())
+	oracleMsgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
+	reporterMsgServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
+	querier := reporterkeeper.NewQuerier(s.Setup.Reporterkeeper)
+
+	repAccs, valAddrs, _ := s.createValidatorAccs([]uint64{1000})
+	s.NoError(s.Setup.Reporterkeeper.Reporters.Set(ctx, repAccs[0], reportertypes.NewReporter(reportertypes.DefaultMinCommissionRate, math.OneInt(), "reporter_moniker1")))
+	s.NoError(s.Setup.Reporterkeeper.Selectors.Set(ctx, repAccs[0], reportertypes.NewSelection(repAccs[0], 1)))
+
+	queryData, _ := utils.QueryBytesFromString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000366696C000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
+	queryId := utils.QueryIDFromData(queryData)
+
+	_, err := s.Setup.Reporterkeeper.ReporterStake(ctx, repAccs[0], queryId)
+	require.NoError(err)
+
+	tipAmount := math.NewInt(100_000)
+	tipper := s.newKeysWithTokens()
+	_, err = oracleMsgServer.Tip(ctx, &types.MsgTip{
+		Tipper:    tipper.String(),
+		QueryData: queryData,
+		Amount:    sdk.NewCoin(s.Setup.Denom, tipAmount),
+	})
+	require.NoError(err)
+
+	reporterPower := uint64(1)
+	value := []string{"000001"}
+	reports := testutil.GenerateReports(repAccs, value, []uint64{reporterPower}, queryId)
+	query, err := s.Setup.Oraclekeeper.CurrentQuery(ctx, queryId)
+	require.NoError(err)
+	query.HasRevealedReports = true
+	require.NoError(s.Setup.Oraclekeeper.Query.Set(ctx, collections.Join(queryId, query.Id), query))
+	require.NoError(s.Setup.Oraclekeeper.Reports.Set(ctx, collections.Join3(queryId, repAccs[0].Bytes(), query.Id), reports[0]))
+	require.NoError(s.Setup.Oraclekeeper.AddReport(ctx, query.Id, reports[0]))
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	require.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
+
+	twoPercent := tipAmount.Mul(math.NewInt(2)).Quo(math.NewInt(100))
+	netTip := tipAmount.Sub(twoPercent)
+
+	escrowAcct := s.Setup.Accountkeeper.GetModuleAddress(reportertypes.TipsEscrowPool)
+	unlockAcct := s.Setup.Accountkeeper.GetModuleAddress(reportertypes.TipsUnlockPool)
+	require.Equal(netTip, s.Setup.Bankkeeper.GetBalance(ctx, escrowAcct, s.Setup.Denom).Amount)
+
+	balBefore := s.Setup.Bankkeeper.GetBalance(ctx, repAccs[0], s.Setup.Denom)
+
+	// start unlock-to-balance
+	startRes, err := reporterMsgServer.WithdrawTipToBalance(ctx, &reportertypes.MsgWithdrawTipToBalance{
+		SelectorAddress: repAccs[0].String(),
+	})
+	require.NoError(err)
+
+	require.True(s.Setup.Bankkeeper.GetBalance(ctx, escrowAcct, s.Setup.Denom).IsZero())
+	require.Equal(netTip, s.Setup.Bankkeeper.GetBalance(ctx, unlockAcct, s.Setup.Denom).Amount)
+
+	pending, err := querier.TipUnlocks(ctx, &reportertypes.QueryTipUnlocksRequest{SelectorAddress: repAccs[0].String()})
+	require.NoError(err)
+	require.Len(pending.Unlocks, 1)
+	require.Equal(startRes.UnlockId, pending.Unlocks[0].UnlockId)
+	require.True(pending.Unlocks[0].Amount.Equal(netTip))
+
+	// cancel path: back to escrow, then withdraw to stake still works
+	_, err = reporterMsgServer.CancelTipUnlock(ctx, &reportertypes.MsgCancelTipUnlock{
+		SelectorAddress: repAccs[0].String(),
+		UnlockId:        startRes.UnlockId,
+	})
+	require.NoError(err)
+	require.True(s.Setup.Bankkeeper.GetBalance(ctx, unlockAcct, s.Setup.Denom).IsZero())
+	require.Equal(netTip, s.Setup.Bankkeeper.GetBalance(ctx, escrowAcct, s.Setup.Denom).Amount)
+
+	pending, err = querier.TipUnlocks(ctx, &reportertypes.QueryTipUnlocksRequest{SelectorAddress: repAccs[0].String()})
+	require.NoError(err)
+	require.Empty(pending.Unlocks)
+
+	// cancel restored tips to escrow — stake withdraw still works
+	_, err = reporterMsgServer.WithdrawTip(ctx, &reportertypes.MsgWithdrawTip{
+		SelectorAddress:  repAccs[0].String(),
+		ValidatorAddress: valAddrs[0].String(),
+	})
+	require.NoError(err)
+	require.True(s.Setup.Bankkeeper.GetBalance(ctx, escrowAcct, s.Setup.Denom).IsZero())
+
+	// tip again for maturity path
+	_, err = oracleMsgServer.Tip(ctx, &types.MsgTip{
+		Tipper:    tipper.String(),
+		QueryData: queryData,
+		Amount:    sdk.NewCoin(s.Setup.Denom, tipAmount),
+	})
+	require.NoError(err)
+	query, err = s.Setup.Oraclekeeper.CurrentQuery(ctx, queryId)
+	require.NoError(err)
+	query.HasRevealedReports = true
+	require.NoError(s.Setup.Oraclekeeper.Query.Set(ctx, collections.Join(queryId, query.Id), query))
+	reports = testutil.GenerateReports(repAccs, value, []uint64{reporterPower}, queryId)
+	require.NoError(s.Setup.Oraclekeeper.Reports.Set(ctx, collections.Join3(queryId, repAccs[0].Bytes(), query.Id), reports[0]))
+	require.NoError(s.Setup.Oraclekeeper.AddReport(ctx, query.Id, reports[0]))
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
+	require.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
+	require.Equal(netTip, s.Setup.Bankkeeper.GetBalance(ctx, escrowAcct, s.Setup.Denom).Amount)
+
+	balBefore = s.Setup.Bankkeeper.GetBalance(ctx, repAccs[0], s.Setup.Denom)
+
+	// start unlock again for maturity path
+	startRes, err = reporterMsgServer.WithdrawTipToBalance(ctx, &reportertypes.MsgWithdrawTipToBalance{
+		SelectorAddress: repAccs[0].String(),
+	})
+	require.NoError(err)
+	require.Equal(netTip, s.Setup.Bankkeeper.GetBalance(ctx, unlockAcct, s.Setup.Denom).Amount)
+
+	unbondingTime, err := s.Setup.Stakingkeeper.UnbondingTime(ctx)
+	require.NoError(err)
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(unbondingTime))
+	s.Setup.Ctx = ctx
+	require.NoError(s.Setup.Reporterkeeper.ProcessMatureTipUnlocks(ctx))
+
+	require.True(s.Setup.Bankkeeper.GetBalance(ctx, unlockAcct, s.Setup.Denom).IsZero())
+	balAfter := s.Setup.Bankkeeper.GetBalance(ctx, repAccs[0], s.Setup.Denom)
+	require.Equal(balBefore.Amount.Add(netTip), balAfter.Amount)
+
+	pending, err = querier.TipUnlocks(ctx, &reportertypes.QueryTipUnlocksRequest{SelectorAddress: repAccs[0].String()})
+	require.NoError(err)
+	require.Empty(pending.Unlocks)
+}
+
 func (s *IntegrationTestSuite) TestTipQueryNotInCycleListTwoDelegators() {
 	require := s.Require()
 	ctx := s.Setup.Ctx

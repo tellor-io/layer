@@ -152,6 +152,11 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (am AppModule) EndBlock(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
 
+	// Process mature tip unlocks (withdraw-to-balance timed escrow)
+	if err := am.keeper.ProcessMatureTipUnlocks(ctx); err != nil {
+		return err
+	}
+
 	// Process distribution queue with bounded iteration
 	// 10 items * 100 selectors max = 1000 operations max per block
 	if err := am.keeper.ProcessDistributionQueue(ctx, 10); err != nil {
