@@ -114,17 +114,53 @@ func TestProcessMatureTipUnlocks(t *testing.T) {
 	require.NoError(t, err)
 
 	// before maturity: no payout
-	require.NoError(t, k.ProcessMatureTipUnlocks(ctx))
+	require.NoError(t, k.ProcessMatureTipUnlocks(ctx, 100))
 	_, err = k.TipUnlocks.Get(ctx, collections.Join(selector.Bytes(), res.UnlockId))
 	require.NoError(t, err)
 
 	matureCtx := ctx.WithBlockTime(start.Add(unbondingTime))
 	bk.On("SendCoinsFromModuleToAccount", matureCtx, types.TipsUnlockPool, selector, sdk.NewCoins(sdk.NewCoin("loya", amount))).Return(nil)
 
-	require.NoError(t, k.ProcessMatureTipUnlocks(matureCtx))
+	require.NoError(t, k.ProcessMatureTipUnlocks(matureCtx, 100))
 	_, err = k.TipUnlocks.Get(matureCtx, collections.Join(selector.Bytes(), res.UnlockId))
 	require.ErrorIs(t, err, collections.ErrNotFound)
 	_, err = k.TipUnlockQueue.Get(matureCtx, collections.Join(start.Add(unbondingTime).Unix(), res.UnlockId))
+	require.ErrorIs(t, err, collections.ErrNotFound)
+}
+
+func TestProcessMatureTipUnlocks_BoundedFIFO(t *testing.T) {
+	k, sk, bk, _, _, msg, ctx := setupMsgServer(t)
+	selector := sample.AccAddressBytes()
+	amount := math.NewInt(1e6)
+	unbondingTime := 21 * 24 * time.Hour
+	start := time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC)
+	ctx = ctx.WithBlockTime(start)
+	sk.On("UnbondingTime", ctx).Return(unbondingTime, nil).Times(3)
+	bk.On("SendCoinsFromModuleToModule", ctx, types.TipsEscrowPool, types.TipsUnlockPool, sdk.NewCoins(sdk.NewCoin("loya", amount))).Return(nil).Times(3)
+
+	var unlockIDs []uint64
+	for i := 0; i < 3; i++ {
+		require.NoError(t, k.SelectorTips.Set(ctx, selector, math.LegacyNewDecFromInt(amount)))
+		res, err := msg.WithdrawTipToBalance(ctx, &types.MsgWithdrawTipToBalance{SelectorAddress: selector.String()})
+		require.NoError(t, err)
+		unlockIDs = append(unlockIDs, res.UnlockId)
+	}
+
+	matureCtx := ctx.WithBlockTime(start.Add(unbondingTime))
+	bk.On("SendCoinsFromModuleToAccount", matureCtx, types.TipsUnlockPool, selector, sdk.NewCoins(sdk.NewCoin("loya", amount))).Return(nil).Twice()
+
+	// first block: only 2 of 3 mature unlocks
+	require.NoError(t, k.ProcessMatureTipUnlocks(matureCtx, 2))
+	_, err := k.TipUnlocks.Get(matureCtx, collections.Join(selector.Bytes(), unlockIDs[0]))
+	require.ErrorIs(t, err, collections.ErrNotFound)
+	_, err = k.TipUnlocks.Get(matureCtx, collections.Join(selector.Bytes(), unlockIDs[1]))
+	require.ErrorIs(t, err, collections.ErrNotFound)
+	_, err = k.TipUnlocks.Get(matureCtx, collections.Join(selector.Bytes(), unlockIDs[2]))
+	require.NoError(t, err)
+
+	bk.On("SendCoinsFromModuleToAccount", matureCtx, types.TipsUnlockPool, selector, sdk.NewCoins(sdk.NewCoin("loya", amount))).Return(nil).Once()
+	require.NoError(t, k.ProcessMatureTipUnlocks(matureCtx, 2))
+	_, err = k.TipUnlocks.Get(matureCtx, collections.Join(selector.Bytes(), unlockIDs[2]))
 	require.ErrorIs(t, err, collections.ErrNotFound)
 }
 

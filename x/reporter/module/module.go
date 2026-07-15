@@ -152,8 +152,8 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (am AppModule) EndBlock(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, telemetry.Now(), telemetry.MetricKeyEndBlocker)
 
-	// Process mature tip unlocks (withdraw-to-balance timed escrow)
-	if err := am.keeper.ProcessMatureTipUnlocks(ctx); err != nil {
+	// Process mature tip unlocks (FIFO by completion time, bounded per block)
+	if err := am.keeper.ProcessMatureTipUnlocks(ctx, 100); err != nil {
 		return err
 	}
 

@@ -18,9 +18,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// ProcessMatureTipUnlocks pays out tip unlocks whose completion_time has been reached.
-// Walks TipUnlockQueue for all entries with completion_unix <= block time, like staking UBD dequeue.
-func (k Keeper) ProcessMatureTipUnlocks(ctx context.Context) error {
+// ProcessMatureTipUnlocks pays out up to maxItems mature tip unlocks (FIFO by
+// completion time, then unlock_id). Remaining mature entries are processed in
+// later blocks — same bounded-queue pattern as ProcessDistributionQueue.
+func (k Keeper) ProcessMatureTipUnlocks(ctx context.Context, maxItems int) error {
+	if maxItems <= 0 {
+		return nil
+	}
+
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	endUnix := sdkCtx.BlockTime().Unix()
 	rng := collections.NewPrefixUntilPairRange[int64, uint64](endUnix)
@@ -28,7 +33,7 @@ func (k Keeper) ProcessMatureTipUnlocks(ctx context.Context) error {
 	var toProcess []collections.Pair[int64, uint64]
 	err := k.TipUnlockQueue.Walk(ctx, rng, func(key collections.Pair[int64, uint64], _ []byte) (stop bool, err error) {
 		toProcess = append(toProcess, key)
-		return false, nil
+		return len(toProcess) >= maxItems, nil
 	})
 	if err != nil {
 		return err
@@ -38,12 +43,20 @@ func (k Keeper) ProcessMatureTipUnlocks(ctx context.Context) error {
 		unlockID := queueKey.K2()
 		selectorBytes, err := k.TipUnlockQueue.Get(ctx, queueKey)
 		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				continue
+			}
 			return err
 		}
 		selector := sdk.AccAddress(selectorBytes)
 
 		entry, err := k.TipUnlocks.Get(ctx, collections.Join(selector.Bytes(), unlockID))
 		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				// Queue row without TipUnlocks entry — drop the stale queue key.
+				_ = k.TipUnlockQueue.Remove(ctx, queueKey)
+				continue
+			}
 			return err
 		}
 

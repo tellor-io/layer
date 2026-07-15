@@ -1091,7 +1091,7 @@ func (s *IntegrationTestSuite) TestWithdrawTipToBalanceAndCancel() {
 	require.NoError(err)
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(unbondingTime))
 	s.Setup.Ctx = ctx
-	require.NoError(s.Setup.Reporterkeeper.ProcessMatureTipUnlocks(ctx))
+	require.NoError(s.Setup.Reporterkeeper.ProcessMatureTipUnlocks(ctx, 100))
 
 	require.True(s.Setup.Bankkeeper.GetBalance(ctx, unlockAcct, s.Setup.Denom).IsZero())
 	balAfter := s.Setup.Bankkeeper.GetBalance(ctx, repAccs[0], s.Setup.Denom)
