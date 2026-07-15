@@ -18,6 +18,15 @@ PRIVATE_KEY_3="a6f6364de568b6a3ecfbf7d494852fc8114d52ef9a94faac987858efec3b1124"
 
 export LAYERD_NODE_HOME_1="$HOME/.layer/$KEY_NAME"
 
+# single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012)
+disable_power_caps() {
+  local genesis_file=$1
+  jq '.app_state.reporter.params.max_validator_power_share = "1.000000000000000000" |
+      .app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' \
+    "$genesis_file" > temp.json
+  mv temp.json "$genesis_file"
+}
+
 # Remove old test chains (if present)
 echo "Removing old test chain data..."
 rm -rf ~/.layer
@@ -79,8 +88,8 @@ jq '.app_state.gov.params.voting_period = "5m"' ~/.layer/config/genesis.json > t
 jq '.app_state.gov.params.max_deposit_period = "1m"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].denom = "loya"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
-# single/dual validator devnets exceed the 30% reporter power cap (ADR 1012), so disable it
-jq '.app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
+# single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012), so disable both
+disable_power_caps "$HOME/.layer/config/genesis.json"
 jq '.app_state.gov.params.expedited_voting_period = "3m"' ~/.layer/config/genesis.json > temp.json && mv temp.json ~/.layer/config/genesis.json
 
 echo "$KEY_NAME..."
@@ -88,8 +97,8 @@ jq '.app_state.gov.params.voting_period = "5m"' ~/.layer/$KEY_NAME/config/genesi
 jq '.app_state.gov.params.max_deposit_period = "1m"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].denom = "loya"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
-# single/dual validator devnets exceed the 30% reporter power cap (ADR 1012), so disable it
-jq '.app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
+# single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012), so disable both
+disable_power_caps "$HOME/.layer/$KEY_NAME/config/genesis.json"
 jq '.app_state.gov.params.expedited_voting_period = "3m"' ~/.layer/$KEY_NAME/config/genesis.json > temp.json && mv temp.json ~/.layer/$KEY_NAME/config/genesis.json
 
 echo "bill..."
@@ -97,8 +106,8 @@ jq '.app_state.gov.params.voting_period = "5m"' ~/.layer/bill/config/genesis.jso
 jq '.app_state.gov.params.max_deposit_period = "1m"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].denom = "loya"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
 jq '.app_state.gov.params.min_deposit[0].amount = "100"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
-# single/dual validator devnets exceed the 30% reporter power cap (ADR 1012), so disable it
-jq '.app_state.reporter.params.max_reporter_power_share = "1.000000000000000000"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
+# single/dual validator devnets exceed the 30% reporter and validator power caps (ADR 1012), so disable both
+disable_power_caps "$HOME/.layer/bill/config/genesis.json"
 jq '.app_state.gov.params.expedited_voting_period = "3m"' ~/.layer/bill/config/genesis.json > temp.json && mv temp.json ~/.layer/bill/config/genesis.json
 
 # Create a tx to give alice loyas to stake

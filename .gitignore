@@ -19,6 +19,10 @@ secrets.yaml
 .env
 /layerd_new
 .cursor
+docs/plans/
+docs/research/
+docs/reviews/
+docs/sessions/
 .pi/
 *.code-workspace
 e2e/dbfile/*
