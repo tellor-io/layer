@@ -263,6 +263,10 @@ func (s *KeeperTestSuite) TestAddDisputeRound() {
 	s.bankKeeper.On("HasBalance", s.ctx, sender, fee).Return(true)
 	s.bankKeeper.On("SendCoinsFromAccountToModule", s.ctx, sender, types.ModuleName, sdk.NewCoins(fee)).Return(nil)
 	s.oracleKeeper.On("FlagAggregateReport", s.ctx, report(s.ctx)).Return(nil)
+	// AddDisputeRound re-snapshots BlockInfo for the stable HashId as a voter
+	// denominator for the new round.
+	s.reporterKeeper.On("TotalReporterPower", s.ctx).Return(math.NewInt(1), nil)
+	s.oracleKeeper.On("GetTotalTips", s.ctx).Return(math.NewInt(1), nil)
 	s.NoError(s.disputeKeeper.AddDisputeRound(s.ctx, sender, dispute, msg))
 
 	dispute1, err := s.disputeKeeper.Disputes.Get(s.ctx, 1)
@@ -279,6 +283,11 @@ func (s *KeeperTestSuite) TestAddDisputeRound() {
 	s.Equal(dispute1.HashId, dispute2.HashId)
 	s.True(dispute2.Open)
 	s.Equal(uint64(2), dispute2.DisputeRound)
+
+	blockInfo, err := s.disputeKeeper.BlockInfo.Get(s.ctx, dispute2.HashId)
+	s.NoError(err)
+	s.Equal(math.NewInt(1), blockInfo.TotalReporterPower)
+	s.Equal(math.NewInt(1), blockInfo.TotalUserTips)
 }
 
 func (s *KeeperTestSuite) TestSetBlockInfo() {

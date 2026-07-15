@@ -358,6 +358,12 @@ func (s *SharedSetup) SetupTest(tb testing.TB) {
 	s.Oraclekeeper.SetBridgeKeeper(s.Bridgekeeper)
 	s.Reporterkeeper.SetOracleKeeper(s.Oraclekeeper)
 
+	// Small fixtures exceed 30%; dedicated cap tests opt back in with 0.30.
+	reporterParams, err := s.Reporterkeeper.Params.Get(s.Ctx)
+	require.NoError(tb, err)
+	reporterParams.MaxValidatorPowerShare = math.LegacyOneDec()
+	require.NoError(tb, s.Reporterkeeper.Params.Set(s.Ctx, reporterParams))
+
 	s.fetchStoreKey = app.UnsafeFindStoreKey
 
 	s.queryHelper = baseapp.NewQueryServerTestHelper(s.Ctx, s.interfaceRegistry)

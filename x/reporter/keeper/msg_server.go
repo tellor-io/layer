@@ -545,6 +545,9 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	if amtToDelegate.IsZero() {
 		return nil, errors.New("no tips to withdraw")
 	}
+	if err := k.Keeper.CheckValidatorPowerShareDelegation(ctx, val, amtToDelegate); err != nil {
+		return nil, err
+	}
 	newShares, err := k.Keeper.stakingKeeper.Delegate(ctx, selectorAddr, amtToDelegate, val.Status, val, false)
 	if err != nil {
 		return nil, err

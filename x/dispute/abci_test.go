@@ -182,6 +182,70 @@ func BenchmarkDisputeEndBlocker(b *testing.B) {
 	}
 }
 
+func (s *TestSuite) TestCheckClosedDisputesForExecutionCompletesViaUnbondedReturn() {
+	// Unbonded escape hatch completes execution instead of deferring.
+	require := require.New(s.T())
+	k := s.disputeKeeper
+	ctx := s.ctx.WithBlockHeight(10).WithBlockTime(time.Now())
+
+	createClosedDisputeForExecution(ctx, k, 1)
+
+	disp, err := k.Disputes.Get(ctx, 1)
+	require.NoError(err)
+	unbondedReturn := math.NewInt(500)
+
+	s.bankKeeper.On("BurnCoins", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+	s.reporterKeeper.On("ReturnSlashedTokens", mock.Anything, disp.HashId, math.ZeroInt()).Return(math.ZeroInt(), unbondedReturn, nil).Once()
+	s.bankKeeper.On("SendCoinsFromModuleToModule", mock.Anything, types.ModuleName, "not_bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", unbondedReturn))).Return(nil).Once()
+	s.reporterKeeper.On("UpdateJailedUntilOnFailedDispute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+	require.NoError(dispute.CheckClosedDisputesForExecution(ctx, k))
+
+	d, err := k.Disputes.Get(ctx, 1)
+	require.NoError(err)
+	require.False(d.PendingExecution)
+	vote, err := k.Votes.Get(ctx, 1)
+	require.NoError(err)
+	require.True(vote.Executed)
+
+	completed := false
+	for _, event := range ctx.EventManager().Events() {
+		if event.Type == "dispute_executed" {
+			completed = true
+		}
+	}
+	require.True(completed)
+}
+
+func (s *TestSuite) TestCheckClosedDisputesForExecutionNonDeferrableErrorDoesNotHalt() {
+	// Non-retryable ExecuteVote errors must not propagate out of BeginBlock.
+	require := require.New(s.T())
+	k := s.disputeKeeper
+	ctx := s.ctx.WithBlockHeight(10).WithBlockTime(time.Now())
+
+	createClosedDisputeForExecution(ctx, k, 1)
+
+	bankErr := fmt.Errorf("simulated bank failure")
+	s.bankKeeper.On("BurnCoins", mock.Anything, mock.Anything, mock.Anything).Return(bankErr).Once()
+
+	require.NoError(dispute.CheckClosedDisputesForExecution(ctx, k))
+
+	d, err := k.Disputes.Get(ctx, 1)
+	require.NoError(err)
+	require.True(d.PendingExecution)
+	vote, err := k.Votes.Get(ctx, 1)
+	require.NoError(err)
+	require.False(vote.Executed)
+
+	failed := false
+	for _, event := range ctx.EventManager().Events() {
+		if event.Type == "dispute_execution_failed" {
+			failed = true
+		}
+	}
+	require.True(failed)
+}
+
 func BenchmarkDisputeBeginBlocker(b *testing.B) {
 	disputeKeeper, _, rk, _, bk, ctx := keepertest.DisputeKeeper(b)
 
@@ -237,7 +301,7 @@ func BenchmarkDisputeBeginBlocker(b *testing.B) {
 
 	// mocks
 	bk.On("BurnCoins", mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	rk.On("ReturnSlashedTokens", mock.Anything, mock.Anything, mock.Anything).Return(mock.Anything, nil)
+	rk.On("ReturnSlashedTokens", mock.Anything, mock.Anything, mock.Anything).Return(math.ZeroInt(), math.ZeroInt(), nil)
 	bk.On("SendCoinsFromModuleToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	rk.On("UpdateJailedUntilOnFailedDispute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 

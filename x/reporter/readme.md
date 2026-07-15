@@ -61,7 +61,7 @@ Cancels a **specific** in-flight tip unlock by `unlock-id`, returning that entry
 - `./layerd tx reporter cancel-tip-unlock [selector-address] [unlock-id]`
 
 ### UpdateParams
-Update module parameters through governance. Params include the minimum comission rate for reporters, the minimum loya required to be a reporter, the maximum number of selectors for a reporter, and the maximum number of validators a user can delegate too.
+Update module parameters through governance. Params include the minimum comission rate for reporters, the minimum loya required to be a reporter, the maximum number of selectors for a reporter, the maximum number of validators a user can delegate too, `max_reporter_power_share` and `max_validator_power_share` (max share of total bonded tokens a single reporter's potential stake or a single bonded validator's active bonded stake may hold after an execution path increases it; ADR 1012). Values >= 1 disable each check.
 
 ## Getters
 
