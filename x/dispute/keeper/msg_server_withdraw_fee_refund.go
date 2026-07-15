@@ -79,7 +79,11 @@ func (k msgServer) WithdrawFeeRefund(ctx context.Context, msg *types.MsgWithdraw
 
 			remainder = remainder.Add(fraction)
 
-			fraction, err = k.RewardReporterBondToFeePayers(ctx, feePayer, payerInfo, dispute.SlashAmount, dispute.SlashAmount)
+			actualReporterBond, err := k.reporterKeeper.DisputedDelegationTotal(ctx, dispute.HashId)
+			if err != nil {
+				return nil, err
+			}
+			fraction, err = k.RewardReporterBondToFeePayers(ctx, feePayer, payerInfo, dispute.SlashAmount, actualReporterBond)
 			if err != nil {
 				return nil, err
 			}

@@ -516,10 +516,11 @@ func DefaultSetupConfig() SetupConfig {
 	}
 }
 
-// MaxReporterPowerShareGenesisKey is the genesis path of the reporter power cap
-// param (ADR 1012). Exported so tests that run pre-cap binaries (the ibc-branch
-// layer-icq image) can strip it
+// MaxReporterPowerShareGenesisKey is the reporter power-cap genesis path (ADR 1012).
 const MaxReporterPowerShareGenesisKey = "app_state.reporter.params.max_reporter_power_share"
+
+// MaxValidatorPowerShareGenesisKey is the validator power-cap genesis path (ADR 1012).
+const MaxValidatorPowerShareGenesisKey = "app_state.reporter.params.max_validator_power_share"
 
 // CreateStandardGenesis creates a standard genesis configuration
 func CreateStandardGenesis() []cosmos.GenesisKV {
@@ -533,10 +534,9 @@ func CreateStandardGenesis() []cosmos.GenesisKV {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.000025000000000000"),
-		// most fixtures run 2-3 validators whose accounts hold well over 30% of
-		// bonded stake, so the reporter power cap (ADR 1012) is disabled here;
-		// dedicated cap tests opt back in with an explicit 0.30 override
+		// Small fixtures exceed 30%; disable caps unless a test opts back in.
 		cosmos.NewGenesisKV(MaxReporterPowerShareGenesisKey, "1.000000000000000000"),
+		cosmos.NewGenesisKV(MaxValidatorPowerShareGenesisKey, "1.000000000000000000"),
 	}
 }
 
@@ -816,8 +816,9 @@ func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.denom", "loya"),
 		cosmos.NewGenesisKV("app_state.gov.params.min_deposit.0.amount", "1"),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
-		// reporter power cap disabled for the same reason as CreateStandardGenesis
+		// Caps disabled; same reason as CreateStandardGenesis.
 		cosmos.NewGenesisKV(MaxReporterPowerShareGenesisKey, "1.000000000000000000"),
+		cosmos.NewGenesisKV(MaxValidatorPowerShareGenesisKey, "1.000000000000000000"),
 	}
 	return &interchaintest.ChainSpec{
 		NumValidators: &nv,

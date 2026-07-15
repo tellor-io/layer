@@ -354,6 +354,7 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	s.NoError(err)
 	fmt.Println("voteInfo before time skip: ", voteInfo)
 	s.False(voteInfo.Executed)
+	reporterUbdBefore := s.unbondingBalance(repAddr)
 	// only 25 percent of the total power voted so vote should not be tallied unless it's expired
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(keeper.THREE_DAYS + 1))
 	_, err = s.Setup.App.BeginBlocker(s.Setup.Ctx)
@@ -375,10 +376,11 @@ func (s *IntegrationTestSuite) TestExecuteVoteInvalid() {
 	s.NoError(err)
 	repTokensAfterExecuteVote, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, repAddr, []byte{})
 	s.NoError(err)
-	s.True(repTokensBeforePropose.Equal(repTokensAfterExecuteVote))
+	reporterUbdAfter := s.unbondingBalance(repAddr)
+	s.Equal(repTokensBeforePropose, repTokensAfterExecuteVote.Add(reporterUbdAfter.Sub(reporterUbdBefore)))
 	valTokensAfterExecuteVote, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddr)
 	s.NoError(err)
-	s.True(valTokensAfterExecuteVote.Tokens.GT(valTokensBeforeExecuteVote.Tokens))
+	s.Equal(valTokensBeforeExecuteVote.Tokens, valTokensAfterExecuteVote.Tokens)
 	disputerBalanceAfterExecuteVote := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputer, s.Setup.Denom)
 	iter, err := s.Setup.Disputekeeper.Voter.Indexes.VotersById.MatchExact(s.Setup.Ctx, uint64(1))
 	s.NoError(err)
@@ -473,6 +475,9 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 	s.NoError(err)
 
 	bond := sdk.DefaultPowerReduction.MulRaw(int64(report.Power))
+	valBeforeExecute, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddr)
+	s.NoError(err)
+	reporterUbdBefore := s.unbondingBalance(repAddr)
 	// execute vote
 	s.NoError(s.Setup.Disputekeeper.ExecuteVote(ctx, 1))
 
@@ -482,7 +487,9 @@ func (s *IntegrationTestSuite) TestExecuteVoteNoQuorumInvalid() {
 
 	val, err := s.Setup.Stakingkeeper.GetValidator(s.Setup.Ctx, valAddr)
 	s.NoError(err)
-	s.True(val.Tokens.Equal(bond))
+	reporterUbdAfter := s.unbondingBalance(repAddr)
+	s.Equal(bond, val.Tokens.Add(reporterUbdAfter.Sub(reporterUbdBefore)))
+	s.Equal(valBeforeExecute.Tokens, val.Tokens)
 }
 
 func (s *IntegrationTestSuite) TestExecuteVoteSupport() {
@@ -2208,6 +2215,7 @@ func (s *IntegrationTestSuite) TestDisputeTwoDelegations() {
 	fmt.Println("VAL3 STAKE AFTER EXECUTED", val3StakeAfterExecuted.Tokens.String())
 	s.Equal(val3StakeBeforeDispute.Tokens, val3StakeAfterExecuted.Tokens)
 
+	disputerUbdBefore := s.unbondingBalance(disputer)
 	// claim fee refund
 	res, err := msgServer.WithdrawFeeRefund(s.Setup.Ctx, &types.MsgWithdrawFeeRefund{
 		Id:            1,
@@ -2228,11 +2236,16 @@ func (s *IntegrationTestSuite) TestDisputeTwoDelegations() {
 	s.NoError(err)
 	fmt.Println("VAL3 STAKE AFTER REFUND", val3StakeAfterRefund.Tokens.String())
 
-	// Check that either val2 OR val3 increased by 200000
-	val2Increased := val2StakeAfterRefund.Tokens.Equal(val2StakeAfterExecuted.Tokens.Add(math.NewInt(200000)))
-	val3Increased := val3StakeAfterRefund.Tokens.Equal(val3StakeAfterExecuted.Tokens.Add(math.NewInt(200000)))
-	s.True(val2Increased != val3Increased, "exactly one validator should have increased stake")
-	s.True(val2Increased || val3Increased, "either val2 or val3 should have increased stake by 200000")
+	activeRefund := math.ZeroInt()
+	if val2StakeAfterRefund.Tokens.GT(val2StakeAfterExecuted.Tokens) {
+		activeRefund = activeRefund.Add(val2StakeAfterRefund.Tokens.Sub(val2StakeAfterExecuted.Tokens))
+	}
+	if val3StakeAfterRefund.Tokens.GT(val3StakeAfterExecuted.Tokens) {
+		activeRefund = activeRefund.Add(val3StakeAfterRefund.Tokens.Sub(val3StakeAfterExecuted.Tokens))
+	}
+	disputerUbdAfter := s.unbondingBalance(disputer)
+	s.Equal(dispute.SlashAmount, activeRefund.Add(disputerUbdAfter.Sub(disputerUbdBefore)))
+	s.True(disputerUbdAfter.GT(disputerUbdBefore), "over-cap fee-payer reward should create unbonding overflow")
 }
 
 func (s *IntegrationTestSuite) TestNoQorumSingleRound() {

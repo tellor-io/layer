@@ -20,15 +20,19 @@ type StakingKeeper interface {
 		ctx context.Context, delAddr sdk.AccAddress, bondAmt math.Int, tokenSrc stakingtypes.BondStatus,
 		validator stakingtypes.Validator, subtractAccount bool,
 	) (newShares math.LegacyDec, err error)
+	HasMaxUnbondingDelegationEntries(ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (bool, error)
 	GetUnbondingDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (ubd stakingtypes.UnbondingDelegation, err error)
-	GetRedelegationsFromSrcValidator(ctx context.Context, valAddr sdk.ValAddress) (reds []stakingtypes.Redelegation, err error)
+	IterateDelegatorRedelegations(ctx context.Context, delegator sdk.AccAddress, cb func(red stakingtypes.Redelegation) (stop bool)) error
 	RemoveUnbondingDelegation(ctx context.Context, ubd stakingtypes.UnbondingDelegation) error
 	SetUnbondingDelegation(ctx context.Context, ubd stakingtypes.UnbondingDelegation) error
 	GetDelegation(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (stakingtypes.Delegation, error)
 	Unbond(
 		ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares math.LegacyDec,
 	) (amount math.Int, err error)
+	GetBondedValidatorsByPower(ctx context.Context) ([]stakingtypes.Validator, error)
 	ValidatorsPowerStoreIterator(ctx context.Context) (store.Iterator, error)
+	SetUnbondingDelegationEntry(ctx context.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, creationHeight int64, minTime time.Time, balance math.Int) (stakingtypes.UnbondingDelegation, error)
+	InsertUBDQueue(ctx context.Context, ubd stakingtypes.UnbondingDelegation, completionTime time.Time) error
 	TotalBondedTokens(context.Context) (math.Int, error)
 	MaxValidators(ctx context.Context) (uint32, error)
 	PowerReduction(ctx context.Context) math.Int

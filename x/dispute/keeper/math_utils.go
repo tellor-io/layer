@@ -32,6 +32,17 @@ func CalculateRefundAmount(payerFee, totalFeeRd1 math.Int) (math.Int, math.Int) 
 	return amtFixed6, remainder
 }
 
+func CalculateActualStakeFeeRefundAmount(actualFee, intendedFee, intendedRefund math.Int) math.Int {
+	burnShare := intendedFee.Sub(intendedRefund)
+	if !burnShare.IsPositive() {
+		return actualFee
+	}
+	if actualFee.LTE(burnShare) {
+		return math.ZeroInt()
+	}
+	return actualFee.Sub(burnShare)
+}
+
 // CalculateReporterBondRewardAmount calculates the portion of the reporter's bond to be rewarded to the payer
 // returns the amount to be rewarded (amtFixed6) and the remainder (dust)
 func CalculateReporterBondRewardAmount(payerFee, totalFeesPaid, reporterBond math.Int) (math.Int, math.Int) {

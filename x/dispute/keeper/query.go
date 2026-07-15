@@ -417,19 +417,44 @@ func (k Querier) ClaimableDisputeRewards(ctx context.Context, req *types.QueryCl
 		case types.Failed:
 			// Failed dispute (underfunded) - full refund
 			feeRefundAmount = payerInfo.Amount
+			if payerInfo.FromBond {
+				actualFee, err := k.Keeper.reporterKeeper.FeePaidFromStakeTotalByPayer(ctx, dispute.HashId, addr)
+				if err != nil {
+					return nil, err
+				}
+				feeRefundAmount = actualFee
+			}
 		case types.Resolved:
 			vote, err := k.Keeper.Votes.Get(ctx, req.DisputeId)
 			if err == nil && vote.Executed {
 				switch vote.VoteResult {
 				case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
 					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount)
+					if payerInfo.FromBond {
+						actualFee, err := k.Keeper.reporterKeeper.FeePaidFromStakeTotalByPayer(ctx, dispute.HashId, addr)
+						if err != nil {
+							return nil, err
+						}
+						refund = CalculateActualStakeFeeRefundAmount(actualFee, payerInfo.Amount, refund)
+					}
 					feeRefundAmount = feeRefundAmount.Add(refund)
 
 				case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
 					refund, _ := CalculateRefundAmount(payerInfo.Amount, dispute.SlashAmount)
+					if payerInfo.FromBond {
+						actualFee, err := k.Keeper.reporterKeeper.FeePaidFromStakeTotalByPayer(ctx, dispute.HashId, addr)
+						if err != nil {
+							return nil, err
+						}
+						refund = CalculateActualStakeFeeRefundAmount(actualFee, payerInfo.Amount, refund)
+					}
 					feeRefundAmount = feeRefundAmount.Add(refund)
 
-					reward, _ := CalculateReporterBondRewardAmount(payerInfo.Amount, dispute.SlashAmount, dispute.SlashAmount)
+					actualReporterBond, err := k.Keeper.reporterKeeper.DisputedDelegationTotal(ctx, dispute.HashId)
+					if err != nil {
+						return nil, err
+					}
+					reward, _ := CalculateReporterBondRewardAmount(payerInfo.Amount, dispute.SlashAmount, actualReporterBond)
 					feeRefundAmount = feeRefundAmount.Add(reward)
 				}
 			}

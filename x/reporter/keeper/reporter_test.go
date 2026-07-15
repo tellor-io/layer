@@ -195,6 +195,65 @@ func TestReporterStake(t *testing.T) {
 	}
 }
 
+func TestReporterStakeSnapshotTotalIsSelectedReporterStake(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	ctx = ctx.WithBlockHeight(11)
+
+	reporterAddr := sample.AccAddressBytes()
+	otherReporterAddr := sample.AccAddressBytes()
+	selectorAddr := sample.AccAddressBytes()
+	otherSelectorAddr := sample.AccAddressBytes()
+	valAddr := sdk.ValAddress(sample.AccAddressBytes())
+	selectedStake := math.NewInt(100_999_999)
+	networkStake := math.NewInt(1_000_000_000)
+	queryID := []byte("selected-stake-snapshot")
+
+	reporter := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, reporter))
+	require.NoError(t, k.Reporters.Set(ctx, otherReporterAddr, reporter))
+	require.NoError(t, k.Selectors.Set(ctx, selectorAddr, types.NewSelection(reporterAddr, 1)))
+	require.NoError(t, k.Selectors.Set(ctx, otherSelectorAddr, types.NewSelection(otherReporterAddr, 1)))
+
+	validatorSet := new(mocks.ValidatorSet)
+	sk.On("GetValidatorSet").Return(validatorSet)
+	validatorSet.On("MaxValidators", ctx).Return(uint32(100), nil).Once()
+	validatorSet.On("TotalBondedTokens", ctx).Return(networkStake, nil).Once()
+
+	delegation := stakingtypes.Delegation{
+		DelegatorAddress: selectorAddr.String(),
+		ValidatorAddress: valAddr.String(),
+		Shares:           selectedStake.ToLegacyDec(),
+	}
+	validator := stakingtypes.Validator{
+		OperatorAddress: valAddr.String(),
+		Status:          stakingtypes.Bonded,
+		Tokens:          selectedStake,
+		DelegatorShares: selectedStake.ToLegacyDec(),
+	}
+	sk.On("IterateDelegatorDelegations", ctx, selectorAddr, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		fn(delegation)
+	}).Once()
+	sk.On("GetValidator", ctx, valAddr).Return(validator, nil).Once()
+
+	stake, err := k.ReporterStake(ctx, reporterAddr, queryID)
+	require.NoError(t, err)
+	require.Equal(t, selectedStake, stake)
+
+	snapshot, err := k.ReportByBlock.Get(ctx, collections.Join3(reporterAddr.Bytes(), uint64(ctx.BlockHeight()), queryID))
+	require.NoError(t, err)
+	require.Equal(t, selectedStake, snapshot.Total)
+	require.Len(t, snapshot.TokenOrigins, 1)
+	require.Equal(t, selectorAddr.Bytes(), snapshot.TokenOrigins[0].DelegatorAddress)
+
+	totalReporterPower, err := k.TotalReporterPower(ctx)
+	require.NoError(t, err)
+	require.Equal(t, networkStake, totalReporterPower)
+	require.True(t, snapshot.Total.LT(totalReporterPower), "the report snapshot is this reporter's selected stake, not network-wide reporter power")
+	sk.AssertExpectations(t)
+	validatorSet.AssertExpectations(t)
+}
+
 func TestCheckSelectorsDelegations(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 	addr := sample.AccAddressBytes()
