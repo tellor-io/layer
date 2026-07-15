@@ -692,7 +692,7 @@ func (k msgServer) CancelTipUnlock(goCtx context.Context, msg *types.MsgCancelTi
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
-			"tip_unlock_cancelled",
+			"tip_unlock_canceled",
 			sdk.NewAttribute("selector", msg.SelectorAddress),
 			sdk.NewAttribute("unlock_id", strconv.FormatUint(msg.UnlockId, 10)),
 			sdk.NewAttribute("amount", entry.Amount.String()),

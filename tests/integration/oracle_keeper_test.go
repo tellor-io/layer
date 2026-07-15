@@ -1022,7 +1022,7 @@ func (s *IntegrationTestSuite) TestWithdrawTipToBalanceAndCancel() {
 	unlockAcct := s.Setup.Accountkeeper.GetModuleAddress(reportertypes.TipsUnlockPool)
 	require.Equal(netTip, s.Setup.Bankkeeper.GetBalance(ctx, escrowAcct, s.Setup.Denom).Amount)
 
-	balBefore := s.Setup.Bankkeeper.GetBalance(ctx, repAccs[0], s.Setup.Denom)
+	//balBefore := s.Setup.Bankkeeper.GetBalance(ctx, repAccs[0], s.Setup.Denom)
 
 	// start unlock-to-balance
 	startRes, err := reporterMsgServer.WithdrawTipToBalance(ctx, &reportertypes.MsgWithdrawTipToBalance{
@@ -1078,10 +1078,10 @@ func (s *IntegrationTestSuite) TestWithdrawTipToBalanceAndCancel() {
 	require.NoError(s.Setup.Oraclekeeper.SetAggregatedReport(ctx))
 	require.Equal(netTip, s.Setup.Bankkeeper.GetBalance(ctx, escrowAcct, s.Setup.Denom).Amount)
 
-	balBefore = s.Setup.Bankkeeper.GetBalance(ctx, repAccs[0], s.Setup.Denom)
+	balBefore := s.Setup.Bankkeeper.GetBalance(ctx, repAccs[0], s.Setup.Denom)
 
 	// start unlock again for maturity path
-	startRes, err = reporterMsgServer.WithdrawTipToBalance(ctx, &reportertypes.MsgWithdrawTipToBalance{
+	_, err = reporterMsgServer.WithdrawTipToBalance(ctx, &reportertypes.MsgWithdrawTipToBalance{
 		SelectorAddress: repAccs[0].String(),
 	})
 	require.NoError(err)
