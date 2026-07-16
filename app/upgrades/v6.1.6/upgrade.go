@@ -131,11 +131,10 @@ func CreateUpgradeHandler(
 // panics with "account is not a module account", which is unrecovered in the
 // upgrade BeginBlocker.
 func EnsureTipsUnlockPoolModuleAccount(sdkCtx sdk.Context, ak authkeeper.AccountKeeper) {
-	name := reportertypes.TipsUnlockPool
-	addr := authtypes.NewModuleAddress(name)
+	addr := authtypes.NewModuleAddress(reportertypes.TipsUnlockPool)
 	acc := ak.GetAccount(sdkCtx, addr)
 	if acc == nil {
-		macc := authtypes.NewEmptyModuleAccount(name)
+		macc := authtypes.NewEmptyModuleAccount(reportertypes.TipsUnlockPool)
 		maccI := ak.NewAccount(sdkCtx, macc).(sdk.ModuleAccountI)
 		ak.SetModuleAccount(sdkCtx, maccI)
 		sdkCtx.Logger().Info(
@@ -152,7 +151,7 @@ func EnsureTipsUnlockPoolModuleAccount(sdkCtx sdk.Context, ak authkeeper.Account
 	// Preserve account number (and sequence). Clear pubkey — module accounts
 	// do not support signing keys.
 	baseAcc := authtypes.NewBaseAccount(acc.GetAddress(), nil, acc.GetAccountNumber(), acc.GetSequence())
-	macc := authtypes.NewModuleAccount(baseAcc, name)
+	macc := authtypes.NewModuleAccount(baseAcc, reportertypes.TipsUnlockPool)
 	ak.SetModuleAccount(sdkCtx, macc)
 	sdkCtx.Logger().Info(
 		"Converted existing account to tips_unlock_pool module account",
