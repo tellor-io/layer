@@ -43,6 +43,15 @@ message Params {
     (gogoproto.nullable) = false,
     (cosmos_proto.scalar) = "cosmos.Dec"
   ];
+  // max share of total bonded tokens a single bonded validator may hold after
+  // an execution path increases its active bonded stake. Values >= 1 disable
+  // the check.
+  string max_validator_power_share = 7 [
+    (gogoproto.moretags) = "yaml:\"max_validator_power_share\"",
+    (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",
+    (gogoproto.nullable) = false,
+    (cosmos_proto.scalar) = "cosmos.Dec"
+  ];
 }
 
 message StakeTracker {

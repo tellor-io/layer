@@ -40,11 +40,10 @@ func TestIbcInterchainQuery(t *testing.T) {
 	modifyGenesis := append(e2e.CreateStandardGenesis(),
 		cosmos.NewGenesisKV("app_state.globalfee.params.minimum_gas_prices.0.amount", "0.0"),
 	)
-	// the layer-icq image is built from the ibc branch, whose layerd predates
-	// max_reporter_power_share and panics on unknown genesis fields at InitGenesis;
+	// layer-icq image predates these params and panics on unknown genesis fields.
 	icqGenesis := make([]cosmos.GenesisKV, 0, len(modifyGenesis))
 	for _, kv := range modifyGenesis {
-		if kv.Key != e2e.MaxReporterPowerShareGenesisKey {
+		if kv.Key != e2e.MaxReporterPowerShareGenesisKey && kv.Key != e2e.MaxValidatorPowerShareGenesisKey {
 			icqGenesis = append(icqGenesis, kv)
 		}
 	}

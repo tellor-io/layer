@@ -58,6 +58,18 @@ func (s *IntegrationTestSuite) newKeysWithTokens() sdk.AccAddress {
 	return Addr
 }
 
+func (s *IntegrationTestSuite) unbondingBalance(addr sdk.AccAddress) math.Int {
+	ubds, err := s.Setup.Stakingkeeper.GetAllUnbondingDelegations(s.Setup.Ctx, addr)
+	s.NoError(err)
+	total := math.ZeroInt()
+	for _, ubd := range ubds {
+		for _, entry := range ubd.Entries {
+			total = total.Add(entry.Balance)
+		}
+	}
+	return total
+}
+
 func CreateRandomPrivateKeys(accNum int) []ed25519.PrivKey {
 	testAddrs := make([]ed25519.PrivKey, accNum)
 	for i := 0; i < accNum; i++ {

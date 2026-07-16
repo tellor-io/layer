@@ -47,22 +47,34 @@ func (k Keeper) PayDisputeFee(ctx sdk.Context, proposer sdk.AccAddress, fee sdk.
 }
 
 // return slashed tokens when reporter either wins dispute or dispute is invalid
-func (k Keeper) ReturnSlashedTokens(ctx context.Context, dispute types.Dispute) error {
-	pool, err := k.reporterKeeper.ReturnSlashedTokens(ctx, dispute.SlashAmount, dispute.HashId)
+func (k Keeper) ReturnSlashedTokens(ctx context.Context, dispute types.Dispute, extraReturn math.Int) error {
+	bondedAmt, unbondedAmt, err := k.reporterKeeper.ReturnSlashedTokens(ctx, dispute.HashId, extraReturn)
 	if err != nil {
 		return err
 	}
 
-	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, dispute.SlashAmount))
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, pool, coins)
+	return k.sendStakeReturnsToPools(ctx, bondedAmt, unbondedAmt)
 }
 
-func (k Keeper) ReturnFeetoStake(ctx context.Context, hashId []byte, remainingAmt math.Int) error {
-	err := k.reporterKeeper.FeeRefund(ctx, hashId, remainingAmt)
+func (k Keeper) sendStakeReturnsToPools(ctx context.Context, bondedAmt, unbondedAmt math.Int) error {
+	if bondedAmt.IsPositive() {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, bondedAmt))); err != nil {
+			return err
+		}
+	}
+	if unbondedAmt.IsPositive() {
+		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.NotBondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, unbondedAmt))); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (k Keeper) ReturnFeetoStake(ctx context.Context, hashId []byte, feePayer sdk.AccAddress, remainingAmt math.Int) error {
+	bondedAmt, unbondedAmt, err := k.reporterKeeper.FeeRefund(ctx, hashId, feePayer, remainingAmt)
 	if err != nil {
 		return err
 	}
 
-	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, remainingAmt))
-	return k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, coins)
+	return k.sendStakeReturnsToPools(ctx, bondedAmt, unbondedAmt)
 }

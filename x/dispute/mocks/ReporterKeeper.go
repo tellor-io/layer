@@ -20,17 +20,34 @@ type ReporterKeeper struct {
 }
 
 // AddAmountToStake provides a mock function with given fields: ctx, acc, amt
-func (_m *ReporterKeeper) AddAmountToStake(ctx context.Context, acc types.AccAddress, amt math.Int) error {
+func (_m *ReporterKeeper) AddAmountToStake(ctx context.Context, acc types.AccAddress, amt math.Int) (math.Int, math.Int, error) {
 	ret := _m.Called(ctx, acc, amt)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, math.Int) error); ok {
+	var r0 math.Int
+	var r1 math.Int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, math.Int) (math.Int, math.Int, error)); ok {
+		return rf(ctx, acc, amt)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, math.Int) math.Int); ok {
 		r0 = rf(ctx, acc, amt)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(math.Int)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, types.AccAddress, math.Int) math.Int); ok {
+		r1 = rf(ctx, acc, amt)
+	} else {
+		r1 = ret.Get(1).(math.Int)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, types.AccAddress, math.Int) error); ok {
+		r2 = rf(ctx, acc, amt)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // Delegation provides a mock function with given fields: ctx, delegator
@@ -71,18 +88,83 @@ func (_m *ReporterKeeper) EscrowReporterStake(ctx context.Context, reporterAddr 
 	return r0
 }
 
-// FeeRefund provides a mock function with given fields: ctx, hashId, amt
-func (_m *ReporterKeeper) FeeRefund(ctx context.Context, hashId []byte, amt math.Int) error {
-	ret := _m.Called(ctx, hashId, amt)
+// DisputedDelegationTotal provides a mock function with given fields: ctx, hashId
+func (_m *ReporterKeeper) DisputedDelegationTotal(ctx context.Context, hashId []byte) (math.Int, error) {
+	ret := _m.Called(ctx, hashId)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, []byte, math.Int) error); ok {
-		r0 = rf(ctx, hashId, amt)
+	var r0 math.Int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) (math.Int, error)); ok {
+		return rf(ctx, hashId)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) math.Int); ok {
+		r0 = rf(ctx, hashId)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(math.Int)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, []byte) error); ok {
+		r1 = rf(ctx, hashId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// FeeRefund provides a mock function with given fields: ctx, hashId, payer, amt
+func (_m *ReporterKeeper) FeeRefund(ctx context.Context, hashId []byte, payer types.AccAddress, amt math.Int) (math.Int, math.Int, error) {
+	ret := _m.Called(ctx, hashId, payer, amt)
+
+	var r0 math.Int
+	var r1 math.Int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, types.AccAddress, math.Int) (math.Int, math.Int, error)); ok {
+		return rf(ctx, hashId, payer, amt)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, types.AccAddress, math.Int) math.Int); ok {
+		r0 = rf(ctx, hashId, payer, amt)
+	} else {
+		r0 = ret.Get(0).(math.Int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []byte, types.AccAddress, math.Int) math.Int); ok {
+		r1 = rf(ctx, hashId, payer, amt)
+	} else {
+		r1 = ret.Get(1).(math.Int)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, []byte, types.AccAddress, math.Int) error); ok {
+		r2 = rf(ctx, hashId, payer, amt)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// FeePaidFromStakeTotalByPayer provides a mock function with given fields: ctx, hashId, payer
+func (_m *ReporterKeeper) FeePaidFromStakeTotalByPayer(ctx context.Context, hashId []byte, payer types.AccAddress) (math.Int, error) {
+	ret := _m.Called(ctx, hashId, payer)
+
+	var r0 math.Int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, types.AccAddress) (math.Int, error)); ok {
+		return rf(ctx, hashId, payer)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, types.AccAddress) math.Int); ok {
+		r0 = rf(ctx, hashId, payer)
+	} else {
+		r0 = ret.Get(0).(math.Int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []byte, types.AccAddress) error); ok {
+		r1 = rf(ctx, hashId, payer)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // FeefromReporterStake provides a mock function with given fields: ctx, reporterAddr, amt, hashId, isFirstRound
@@ -185,28 +267,35 @@ func (_m *ReporterKeeper) JailReporter(ctx context.Context, reporterAddr types.A
 	return r0
 }
 
-// ReturnSlashedTokens provides a mock function with given fields: ctx, amt, hashId
-func (_m *ReporterKeeper) ReturnSlashedTokens(ctx context.Context, amt math.Int, hashId []byte) (string, error) {
-	ret := _m.Called(ctx, amt, hashId)
+// ReturnSlashedTokens provides a mock function with given fields: ctx, hashId, extraReturn
+func (_m *ReporterKeeper) ReturnSlashedTokens(ctx context.Context, hashId []byte, extraReturn math.Int) (math.Int, math.Int, error) {
+	ret := _m.Called(ctx, hashId, extraReturn)
 
-	var r0 string
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, math.Int, []byte) (string, error)); ok {
-		return rf(ctx, amt, hashId)
+	var r0 math.Int
+	var r1 math.Int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, math.Int) (math.Int, math.Int, error)); ok {
+		return rf(ctx, hashId, extraReturn)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, math.Int, []byte) string); ok {
-		r0 = rf(ctx, amt, hashId)
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, math.Int) math.Int); ok {
+		r0 = rf(ctx, hashId, extraReturn)
 	} else {
-		r0 = ret.Get(0).(string)
+		r0 = ret.Get(0).(math.Int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, math.Int, []byte) error); ok {
-		r1 = rf(ctx, amt, hashId)
+	if rf, ok := ret.Get(1).(func(context.Context, []byte, math.Int) math.Int); ok {
+		r1 = rf(ctx, hashId, extraReturn)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(math.Int)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, []byte, math.Int) error); ok {
+		r2 = rf(ctx, hashId, extraReturn)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // TotalReporterPower provides a mock function with given fields: ctx

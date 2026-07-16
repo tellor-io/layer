@@ -423,6 +423,7 @@ func TestShareCapStillUnbonded(t *testing.T) {
 	sk.On("MaxValidators", ctx).Return(uint32(1), nil)
 	sk.On("PowerReduction", ctx).Return(math.OneInt())
 	sk.On("ValidatorsPowerStoreIterator", ctx).Return(&validatorPowerIterator{values: [][]byte{bondedValAddr}}, nil)
+	sk.On("TotalBondedTokens", ctx).Return(currentTotal, nil)
 
 	// The candidate grows from 29 to 30 tokens, but max validators is 1 and the
 	// bonded validator still has 100. Since the candidate remains inactive,
