@@ -46,8 +46,10 @@ Upgrade to v6.1.6:
   ICA host allowed all messages, and ICA-executed messages go through the
   MsgServiceRouter without the ante chain, bypassing the stake and reporter
   power limits. Only interchain queries remain supported.
-- Tip unlock-to-balance: create tips_unlock_pool module account for timed withdraw
+- Tip unlock-to-balance: ensure tips_unlock_pool module account for timed withdraw
   of tip rewards to free-floating balance (existing tip collections stay empty).
+  Uses GetAccount + convert-or-create so a pre-upgrade BaseAccount at the
+  deterministic module address cannot panic GetModuleAccount and halt consensus.
 - x/group is removed (module and store key). Group proposal execution bypasses
   ante the same way ICA did. The old store is omitted from committed state; no
   deletion migration is configured, and the upgraded app does not mount its key.
@@ -69,16 +71,7 @@ func CreateUpgradeHandler(
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 		sdkCtx.Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
 
-		if acc := ak.GetModuleAccount(sdkCtx, reportertypes.TipsUnlockPool); acc == nil {
-			sdkCtx.Logger().Info("Creating tips_unlock_pool module account")
-			ak.SetModuleAccount(sdkCtx, authtypes.NewEmptyModuleAccount(reportertypes.TipsUnlockPool))
-			sdkCtx.Logger().Info(
-				"Created tips_unlock_pool module account",
-				"address", authtypes.NewModuleAddress(reportertypes.TipsUnlockPool).String(),
-			)
-		} else {
-			sdkCtx.Logger().Info("tips_unlock_pool module account already exists")
-		}
+		EnsureTipsUnlockPoolModuleAccount(sdkCtx, ak)
 
 		vm, err := mm.RunMigrations(ctx, configurator, vm)
 		if err != nil {
@@ -128,4 +121,42 @@ func CreateUpgradeHandler(
 
 		return vm, nil
 	}
+}
+
+// EnsureTipsUnlockPoolModuleAccount creates tips_unlock_pool as a module account,
+// or converts a non-module account already occupying that address (e.g. from a
+// dust send on the pre-upgrade binary, when the address was unblocked).
+//
+// Do not call GetModuleAccount here: if a BaseAccount exists at the address it
+// panics with "account is not a module account", which is unrecovered in the
+// upgrade BeginBlocker.
+func EnsureTipsUnlockPoolModuleAccount(sdkCtx sdk.Context, ak authkeeper.AccountKeeper) {
+	name := reportertypes.TipsUnlockPool
+	addr := authtypes.NewModuleAddress(name)
+	acc := ak.GetAccount(sdkCtx, addr)
+	if acc == nil {
+		macc := authtypes.NewEmptyModuleAccount(name)
+		maccI := ak.NewAccount(sdkCtx, macc).(sdk.ModuleAccountI)
+		ak.SetModuleAccount(sdkCtx, maccI)
+		sdkCtx.Logger().Info(
+			"Created tips_unlock_pool module account",
+			"address", addr.String(),
+		)
+		return
+	}
+	if _, ok := acc.(sdk.ModuleAccountI); ok {
+		sdkCtx.Logger().Info("tips_unlock_pool module account already exists")
+		return
+	}
+
+	// Preserve account number (and sequence). Clear pubkey — module accounts
+	// do not support signing keys.
+	baseAcc := authtypes.NewBaseAccount(acc.GetAddress(), nil, acc.GetAccountNumber(), acc.GetSequence())
+	macc := authtypes.NewModuleAccount(baseAcc, name)
+	ak.SetModuleAccount(sdkCtx, macc)
+	sdkCtx.Logger().Info(
+		"Converted existing account to tips_unlock_pool module account",
+		"address", addr.String(),
+		"account_number", acc.GetAccountNumber(),
+	)
 }
