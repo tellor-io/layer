@@ -8,6 +8,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 
@@ -296,6 +297,37 @@ func (k Querier) JailedReporters(ctx context.Context, req *types.QueryJailedRepo
 	}
 
 	return &types.QueryJailedReportersResponse{Reporters: reporters}, nil
+}
+
+// TipUnlocks queries pending tip unlocks for a selector (with unlock_ids for cancel).
+func (k Querier) TipUnlocks(ctx context.Context, req *types.QueryTipUnlocksRequest) (*types.QueryTipUnlocksResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	if req.SelectorAddress == "" {
+		return nil, status.Error(codes.InvalidArgument, "selector address cannot be empty")
+	}
+
+	selectorAcc, err := sdk.AccAddressFromBech32(req.SelectorAddress)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid selector address")
+	}
+
+	unlocks := make([]types.TipUnlockInfo, 0)
+	rng := collections.NewPrefixedPairRange[[]byte, uint64](selectorAcc.Bytes())
+	err = k.Keeper.TipUnlocks.Walk(ctx, rng, func(key collections.Pair[[]byte, uint64], entry types.TipUnlockEntry) (stop bool, err error) {
+		unlocks = append(unlocks, types.TipUnlockInfo{
+			UnlockId:       key.K2(),
+			Amount:         entry.Amount,
+			CompletionTime: entry.CompletionTime,
+		})
+		return false, nil
+	})
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryTipUnlocksResponse{Unlocks: unlocks}, nil
 }
 
 // Reporter queries a specific reporter by address

@@ -15,6 +15,7 @@ const (
 	Denom = "loya"
 
 	TipsEscrowPool = "tips_escrow_pool"
+	TipsUnlockPool = "tips_unlock_pool"
 )
 
 var (
@@ -44,6 +45,12 @@ var (
 	ReporterPendingSwitchHeadPrefix = collections.NewPrefix(34)
 	// SelectorDisputeLockPrefix stores per-(selector, dispute_hash_id) jail-until unix seconds.
 	SelectorDisputeLockPrefix = collections.NewPrefix(35)
+	// TipUnlocksPrefix stores in-flight tip unlocks: (selector, unlock_id) -> TipUnlockEntry.
+	TipUnlocksPrefix = collections.NewPrefix(36)
+	// TipUnlockQueuePrefix is the maturity queue: (completion_unix, unlock_id) -> selector address.
+	TipUnlockQueuePrefix = collections.NewPrefix(37)
+	// TipUnlockIDPrefix is the next unlock id sequence.
+	TipUnlockIDPrefix = collections.NewPrefix(38)
 )
 
 // ReporterJailDisputeLockKey keys selector dispute locks copied from OracleReporter.JailedUntil
