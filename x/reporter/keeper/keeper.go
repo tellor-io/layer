@@ -50,6 +50,11 @@ type (
 		// Per-dispute selector jail: (selector, dispute_hash_id) -> unix seconds (lock until).
 		SelectorDisputeLocks collections.Map[collections.Pair[[]byte, []byte], int64]
 
+		// Tip unlock-to-balance: mid-unbonding tips awaiting maturity payout.
+		TipUnlocks     collections.Map[collections.Pair[[]byte, uint64], types.TipUnlockEntry] // (selector, unlock_id)
+		TipUnlockQueue collections.Map[collections.Pair[int64, uint64], []byte]                // (completion_unix, unlock_id) -> selector
+		TipUnlockID    collections.Sequence
+
 		Schema collections.Schema
 		logger log.Logger
 
@@ -130,6 +135,19 @@ func NewKeeper(
 			collections.PairKeyCodec(collections.BytesKey, collections.BytesKey),
 			collections.Int64Value,
 		),
+		TipUnlocks: collections.NewMap(sb,
+			types.TipUnlocksPrefix,
+			"tip_unlocks",
+			collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key),
+			codec.CollValue[types.TipUnlockEntry](cdc),
+		),
+		TipUnlockQueue: collections.NewMap(sb,
+			types.TipUnlockQueuePrefix,
+			"tip_unlock_queue",
+			collections.PairKeyCodec(collections.Int64Key, collections.Uint64Key),
+			collections.BytesValue,
+		),
+		TipUnlockID:    collections.NewSequence(sb, types.TipUnlockIDPrefix, "tip_unlock_id"),
 		authority:      authority,
 		logger:         logger,
 		accountKeeper:  accountKeeper,

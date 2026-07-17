@@ -14,6 +14,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgRemoveSelector{},
 		&MsgUpdateParams{},
 		&MsgWithdrawTip{},
+		&MsgWithdrawTipToBalance{},
+		&MsgCancelTipUnlock{},
+		&MsgEditReporter{},
 	)
 	// this line is used by starport scaffolding # 3
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
