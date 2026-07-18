@@ -102,6 +102,7 @@ func AuthModule() configurator.ModuleOption {
 					{Account: "nft"},
 					{Account: "reporter"},
 					{Account: "tips_escrow_pool"},
+					{Account: "tips_unlock_pool"},
 					{Account: "bridge", Permissions: []string{"minter"}},
 				},
 			}),

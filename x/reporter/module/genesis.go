@@ -54,6 +54,23 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			panic(err)
 		}
 	}
+
+	// restore tip unlocks and rebuild maturity queue
+	for _, data := range genState.TipUnlocks {
+		err = k.TipUnlocks.Set(ctx, collections.Join(data.SelectorAddress, data.UnlockId), data.Entry)
+		if err != nil {
+			panic(err)
+		}
+		err = k.TipUnlockQueue.Set(ctx, collections.Join(data.Entry.CompletionTime.Unix(), data.UnlockId), data.SelectorAddress)
+		if err != nil {
+			panic(err)
+		}
+	}
+	if genState.TipUnlockId > 0 {
+		if err := k.TipUnlockID.Set(ctx, genState.TipUnlockId); err != nil {
+			panic(err)
+		}
+	}
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -118,6 +135,32 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		}
 		genesis.FeePaidFromStake = append(genesis.FeePaidFromStake, &types.FeePaidFromStakeStateEntry{HashId: disputeHashId, DelegationAmount: &delAmount})
 	}
+
+	iterTipUnlocks, err := k.TipUnlocks.IterateRaw(ctx, nil, nil, collections.OrderAscending)
+	if err != nil {
+		panic(err)
+	}
+	defer iterTipUnlocks.Close()
+	for ; iterTipUnlocks.Valid(); iterTipUnlocks.Next() {
+		key, err := iterTipUnlocks.Key()
+		if err != nil {
+			panic(err)
+		}
+		entry, err := iterTipUnlocks.Value()
+		if err != nil {
+			panic(err)
+		}
+		genesis.TipUnlocks = append(genesis.TipUnlocks, &types.TipUnlockStateEntry{
+			SelectorAddress: key.K1(),
+			UnlockId:        key.K2(),
+			Entry:           entry,
+		})
+	}
+	nextUnlockID, err := k.TipUnlockID.Peek(ctx)
+	if err != nil {
+		panic(err)
+	}
+	genesis.TipUnlockId = nextUnlockID
 
 	exportModuleData(ctx, k)
 	// this line is used by starport scaffolding # genesis/module/export

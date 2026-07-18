@@ -6,6 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "layer/reporter/params.proto";
 import "layer/reporter/selection.proto";
+import "layer/reporter/tip_unlock.proto";
 import "layer/reporter/token_origin.proto";
 
 option go_package = "github.com/tellor-io/layer/x/reporter/types";
@@ -20,6 +21,15 @@ message GenesisState {
   repeated SelectorTipsStateEntry selectorTips = 2;
   repeated DisputedDelegationAmountStateEntry disputed_delegation_amounts = 3;
   repeated FeePaidFromStakeStateEntry fee_paid_from_stake = 4;
+  repeated TipUnlockStateEntry tip_unlocks = 5;
+  // tip_unlock_id is the next unlock id to allocate (TipUnlockID sequence peek value).
+  uint64 tip_unlock_id = 6;
+}
+
+message TipUnlockStateEntry {
+  bytes selector_address = 1;
+  uint64 unlock_id = 2;
+  TipUnlockEntry entry = 3 [(gogoproto.nullable) = false];
 }
 
 message SelectorTipsStateEntry {

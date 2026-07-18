@@ -164,6 +164,7 @@ var (
 		bridgemoduletypes.ModuleName:       {authtypes.Minter, authtypes.Burner},
 		reportermoduletypes.ModuleName:     nil,
 		reportermoduletypes.TipsEscrowPool: nil,
+		reportermoduletypes.TipsUnlockPool: nil,
 		// this line is used by starport scaffolding # stargate/app/maccPerms
 	}
 )
