@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/tellor-io/layer/lib/metrics"
 	layertypes "github.com/tellor-io/layer/types"
@@ -544,6 +545,9 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 	if amtToDelegate.IsZero() {
 		return nil, errors.New("no tips to withdraw")
 	}
+	if err := k.Keeper.CheckValidatorPowerShareDelegation(ctx, val, amtToDelegate); err != nil {
+		return nil, err
+	}
 	newShares, err := k.Keeper.stakingKeeper.Delegate(ctx, selectorAddr, amtToDelegate, val.Status, val, false)
 	if err != nil {
 		return nil, err
@@ -584,6 +588,121 @@ func (k msgServer) WithdrawTip(goCtx context.Context, msg *types.MsgWithdrawTip)
 }
 
 func validateWithdrawTip(msg *types.MsgWithdrawTip) (selector sdk.AccAddress, err error) {
+	selector, err = sdk.AccAddressFromBech32(msg.SelectorAddress)
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid selector address (%s)", err)
+	}
+	return selector, nil
+}
+
+// Msg: WithdrawTipToBalance moves all claimable tips into tips_unlock_pool for UnbondingTime,
+// then payouts to free-floating balance via EndBlocker maturity processing.
+func (k msgServer) WithdrawTipToBalance(goCtx context.Context, msg *types.MsgWithdrawTipToBalance) (*types.MsgWithdrawTipToBalanceResponse, error) {
+	selectorAddr, err := validateWithdrawTipToBalance(msg)
+	if err != nil {
+		return nil, err
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := k.Keeper.settleSelectorReporter(ctx, selectorAddr); err != nil {
+		return nil, err
+	}
+
+	shares, err := k.Keeper.SelectorTips.Get(ctx, selectorAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	amtToUnlock := shares.TruncateInt()
+	if amtToUnlock.IsZero() {
+		return nil, errors.New("no tips to withdraw")
+	}
+
+	if err := k.Keeper.clearSelectorTipsAmount(ctx, selectorAddr, shares); err != nil {
+		return nil, err
+	}
+
+	unbondingTime, err := k.Keeper.stakingKeeper.UnbondingTime(ctx)
+	if err != nil {
+		return nil, err
+	}
+	completionTime := ctx.BlockTime().Add(unbondingTime)
+
+	unlockID, err := k.Keeper.startTipUnlock(ctx, selectorAddr, amtToUnlock, completionTime)
+	if err != nil {
+		return nil, err
+	}
+
+	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amtToUnlock))
+	if err := k.Keeper.bankKeeper.SendCoinsFromModuleToModule(ctx, types.TipsEscrowPool, types.TipsUnlockPool, coins); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"tip_unlock_started",
+			sdk.NewAttribute("selector", msg.SelectorAddress),
+			sdk.NewAttribute("amount", amtToUnlock.String()),
+			sdk.NewAttribute("completion_time", completionTime.UTC().Format(time.RFC3339)),
+			sdk.NewAttribute("unlock_id", strconv.FormatUint(unlockID, 10)),
+		),
+	})
+	telemetry.IncrCounterWithLabels(
+		[]string{"tip_unlock_started_amount"},
+		float32(amtToUnlock.Int64()),
+		[]metrics.Label{{Name: "chain_id", Value: ctx.ChainID()}, {Name: "selector", Value: hex.EncodeToString(selectorAddr.Bytes())}},
+	)
+
+	return &types.MsgWithdrawTipToBalanceResponse{UnlockId: unlockID}, nil
+}
+
+func validateWithdrawTipToBalance(msg *types.MsgWithdrawTipToBalance) (selector sdk.AccAddress, err error) {
+	selector, err = sdk.AccAddressFromBech32(msg.SelectorAddress)
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid selector address (%s)", err)
+	}
+	return selector, nil
+}
+
+// Msg: CancelTipUnlock cancels one in-flight tip unlock by unlock_id, returning tokens to escrow.
+func (k msgServer) CancelTipUnlock(goCtx context.Context, msg *types.MsgCancelTipUnlock) (*types.MsgCancelTipUnlockResponse, error) {
+	selectorAddr, err := validateCancelTipUnlock(msg)
+	if err != nil {
+		return nil, err
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	entry, err := k.Keeper.TipUnlocks.Get(ctx, collections.Join(selectorAddr.Bytes(), msg.UnlockId))
+	if err != nil {
+		return nil, err
+	}
+
+	if err := k.Keeper.removeTipUnlock(ctx, selectorAddr, msg.UnlockId, entry.CompletionTime.Unix()); err != nil {
+		return nil, err
+	}
+
+	coins := sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, entry.Amount))
+	if err := k.Keeper.bankKeeper.SendCoinsFromModuleToModule(ctx, types.TipsUnlockPool, types.TipsEscrowPool, coins); err != nil {
+		return nil, err
+	}
+
+	if err := k.Keeper.creditSelectorTips(ctx, selectorAddr, entry.Amount); err != nil {
+		return nil, err
+	}
+
+	ctx.EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			"tip_unlock_canceled",
+			sdk.NewAttribute("selector", msg.SelectorAddress),
+			sdk.NewAttribute("unlock_id", strconv.FormatUint(msg.UnlockId, 10)),
+			sdk.NewAttribute("amount", entry.Amount.String()),
+		),
+	})
+
+	return &types.MsgCancelTipUnlockResponse{}, nil
+}
+
+func validateCancelTipUnlock(msg *types.MsgCancelTipUnlock) (selector sdk.AccAddress, err error) {
 	selector, err = sdk.AccAddressFromBech32(msg.SelectorAddress)
 	if err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid selector address (%s)", err)

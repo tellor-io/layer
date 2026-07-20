@@ -50,8 +50,18 @@ Allows selectors to directly withdraw reporting rewards and stake them with a BO
 
 - `./layerd tx reporter withdraw-tip [selector-address] [validator-address]`
 
+### WithdrawTipToBalance
+Withdraws **all** claimable tip rewards into a timed unlock (duration = staking unbonding period). Tokens sit in `tips_unlock_pool` until maturity, then credit free-floating balance.
+
+- `./layerd tx reporter withdraw-tip-to-balance [selector-address]`
+
+### CancelTipUnlock
+Cancels a **specific** in-flight tip unlock by `unlock-id`, returning that entry’s full amount to tip escrow (`SelectorTips`). Use `query tip-unlocks` to list pending ids.
+
+- `./layerd tx reporter cancel-tip-unlock [selector-address] [unlock-id]`
+
 ### UpdateParams
-Update module parameters through governance. Params include the minimum comission rate for reporters, the minimum loya required to be a reporter, the maximum number of selectors for a reporter, and the maximum number of validators a user can delegate too.
+Update module parameters through governance. Params include the minimum comission rate for reporters, the minimum loya required to be a reporter, the maximum number of selectors for a reporter, the maximum number of validators a user can delegate too, `max_reporter_power_share` and `max_validator_power_share` (max share of total bonded tokens a single reporter's potential stake or a single bonded validator's active bonded stake may hold after an execution path increases it; ADR 1012). Values >= 1 disable each check.
 
 ## Getters
 
@@ -83,6 +93,12 @@ Update module parameters through governance. Params include the minimum comissio
 
 - `./layerd query reporter available-tips [selector-address]`
 
+### TipUnlocks
+
+Lists pending tip unlocks for a selector, including each `unlock_id` (for cancel) and completion time.
+
+- `./layerd query reporter tip-unlocks [selector-address]`
+
 ## Mocks
 
 `make mock-gen-reporter`
@@ -97,6 +113,9 @@ Update module parameters through governance. Params include the minimum comissio
 | selector_removed | RemoveSelector |
 | unjailed_reporter | UnjailReporter |
 | tip_withdrawn | WithdrawTip |
+| tip_unlock_started | WithdrawTipToBalance |
+| tip_unlock_cancelled | CancelTipUnlock |
+| tip_unlock_completed | ProcessMatureTipUnlocks (EndBlocker) |
 | params_updated_by_authority | UpdateParams |
 
 ### Example Commands

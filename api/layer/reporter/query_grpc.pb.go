@@ -30,6 +30,7 @@ const (
 	Query_AvailableTips_FullMethodName            = "/layer.reporter.Query/AvailableTips"
 	Query_SelectionsTo_FullMethodName             = "/layer.reporter.Query/SelectionsTo"
 	Query_JailedReporters_FullMethodName          = "/layer.reporter.Query/JailedReporters"
+	Query_TipUnlocks_FullMethodName               = "/layer.reporter.Query/TipUnlocks"
 )
 
 // QueryClient is the client API for Query service.
@@ -59,6 +60,8 @@ type QueryClient interface {
 	SelectionsTo(ctx context.Context, in *QuerySelectionsToRequest, opts ...grpc.CallOption) (*QuerySelectionsToResponse, error)
 	// JailedReporters queries all jailed reporters.
 	JailedReporters(ctx context.Context, in *QueryJailedReportersRequest, opts ...grpc.CallOption) (*QueryJailedReportersResponse, error)
+	// TipUnlocks queries pending tip unlocks (escrowed withdraw-to-balance) for a selector.
+	TipUnlocks(ctx context.Context, in *QueryTipUnlocksRequest, opts ...grpc.CallOption) (*QueryTipUnlocksResponse, error)
 }
 
 type queryClient struct {
@@ -179,6 +182,16 @@ func (c *queryClient) JailedReporters(ctx context.Context, in *QueryJailedReport
 	return out, nil
 }
 
+func (c *queryClient) TipUnlocks(ctx context.Context, in *QueryTipUnlocksRequest, opts ...grpc.CallOption) (*QueryTipUnlocksResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryTipUnlocksResponse)
+	err := c.cc.Invoke(ctx, Query_TipUnlocks_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility.
@@ -206,6 +219,8 @@ type QueryServer interface {
 	SelectionsTo(context.Context, *QuerySelectionsToRequest) (*QuerySelectionsToResponse, error)
 	// JailedReporters queries all jailed reporters.
 	JailedReporters(context.Context, *QueryJailedReportersRequest) (*QueryJailedReportersResponse, error)
+	// TipUnlocks queries pending tip unlocks (escrowed withdraw-to-balance) for a selector.
+	TipUnlocks(context.Context, *QueryTipUnlocksRequest) (*QueryTipUnlocksResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -248,6 +263,9 @@ func (UnimplementedQueryServer) SelectionsTo(context.Context, *QuerySelectionsTo
 }
 func (UnimplementedQueryServer) JailedReporters(context.Context, *QueryJailedReportersRequest) (*QueryJailedReportersResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method JailedReporters not implemented")
+}
+func (UnimplementedQueryServer) TipUnlocks(context.Context, *QueryTipUnlocksRequest) (*QueryTipUnlocksResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TipUnlocks not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 func (UnimplementedQueryServer) testEmbeddedByValue()               {}
@@ -468,6 +486,24 @@ func _Query_JailedReporters_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_TipUnlocks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTipUnlocksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TipUnlocks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_TipUnlocks_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TipUnlocks(ctx, req.(*QueryTipUnlocksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -518,6 +554,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "JailedReporters",
 			Handler:    _Query_JailedReporters_Handler,
+		},
+		{
+			MethodName: "TipUnlocks",
+			Handler:    _Query_TipUnlocks_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

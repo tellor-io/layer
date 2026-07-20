@@ -102,6 +102,7 @@ func AuthModule() configurator.ModuleOption {
 					{Account: "nft"},
 					{Account: "reporter"},
 					{Account: "tips_escrow_pool"},
+					{Account: "tips_unlock_pool"},
 					{Account: "bridge", Permissions: []string{"minter"}},
 				},
 			}),
@@ -356,6 +357,12 @@ func (s *SharedSetup) SetupTest(tb testing.TB) {
 	s.require.NotNil(s.Bridgekeeper)
 	s.Oraclekeeper.SetBridgeKeeper(s.Bridgekeeper)
 	s.Reporterkeeper.SetOracleKeeper(s.Oraclekeeper)
+
+	// Small fixtures exceed 30%; dedicated cap tests opt back in with 0.30.
+	reporterParams, err := s.Reporterkeeper.Params.Get(s.Ctx)
+	require.NoError(tb, err)
+	reporterParams.MaxValidatorPowerShare = math.LegacyOneDec()
+	require.NoError(tb, s.Reporterkeeper.Params.Set(s.Ctx, reporterParams))
 
 	s.fetchStoreKey = app.UnsafeFindStoreKey
 

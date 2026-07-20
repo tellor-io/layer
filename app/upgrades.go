@@ -29,6 +29,7 @@ func (app *App) setupUpgradeHandlers() {
 		v_6_1_6.CreateUpgradeHandler(
 			app.ModuleManager(),
 			app.configurator,
+			app.AccountKeeper,
 			app.ReporterKeeper,
 			app.ICAControllerKeeper,
 			app.ICAHostKeeper,

@@ -7,9 +7,11 @@ import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
 import "layer/reporter/oracle_reporter.proto";
 import "layer/reporter/params.proto";
 import "layer/reporter/selection.proto";
+import "layer/reporter/tip_unlock.proto";
 
 option go_package = "github.com/tellor-io/layer/x/reporter/types";
 
@@ -59,6 +61,10 @@ service Query {
   // JailedReporters queries all jailed reporters.
   rpc JailedReporters(QueryJailedReportersRequest) returns (QueryJailedReportersResponse) {
     option (google.api.http).get = "/tellor-io/layer/reporter/jailed-reporters";
+  }
+  // TipUnlocks queries pending tip unlocks (escrowed withdraw-to-balance) for a selector.
+  rpc TipUnlocks(QueryTipUnlocksRequest) returns (QueryTipUnlocksResponse) {
+    option (google.api.http).get = "/tellor-io/layer/reporter/tip-unlocks/{selector_address}";
   }
 }
 
@@ -214,4 +220,31 @@ message QueryJailedReportersRequest {}
 message QueryJailedReportersResponse {
   // all the jailed reporters.
   repeated reporter reporters = 1;
+}
+
+// QueryTipUnlocksRequest is the request type for the Query/TipUnlocks RPC method.
+message QueryTipUnlocksRequest {
+  // selector_address defines the selector whose pending tip unlocks to query.
+  string selector_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// TipUnlockInfo is a pending tip unlock with its id for cancel targeting.
+message TipUnlockInfo {
+  uint64 unlock_id = 1;
+  string amount = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  google.protobuf.Timestamp completion_time = 3 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
+
+// QueryTipUnlocksResponse is the response type for the Query/TipUnlocks RPC method.
+message QueryTipUnlocksResponse {
+  // unlocks lists all in-flight tip unlocks for the selector (with unlock_id).
+  repeated TipUnlockInfo unlocks = 1 [(gogoproto.nullable) = false];
 }

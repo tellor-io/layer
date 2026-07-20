@@ -55,6 +55,14 @@ func (s *IntegrationTestSuite) runStakingMsgsOnCache(msgs ...sdk.Msg) (sdk.Conte
 			if _, err := stakingServer.Undelegate(cacheCtx, msg); err != nil {
 				return cacheCtx, err
 			}
+		case *stakingtypes.MsgBeginRedelegate:
+			if _, err := stakingServer.BeginRedelegate(cacheCtx, msg); err != nil {
+				return cacheCtx, err
+			}
+		case *stakingtypes.MsgCancelUnbondingDelegation:
+			if _, err := stakingServer.CancelUnbondingDelegation(cacheCtx, msg); err != nil {
+				return cacheCtx, err
+			}
 		default:
 			return cacheCtx, fmt.Errorf("unsupported staking msg type %T", msg)
 		}

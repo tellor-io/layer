@@ -19,14 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Msg_UpdateParams_FullMethodName   = "/layer.reporter.Msg/UpdateParams"
-	Msg_CreateReporter_FullMethodName = "/layer.reporter.Msg/CreateReporter"
-	Msg_SelectReporter_FullMethodName = "/layer.reporter.Msg/SelectReporter"
-	Msg_SwitchReporter_FullMethodName = "/layer.reporter.Msg/SwitchReporter"
-	Msg_RemoveSelector_FullMethodName = "/layer.reporter.Msg/RemoveSelector"
-	Msg_UnjailReporter_FullMethodName = "/layer.reporter.Msg/UnjailReporter"
-	Msg_WithdrawTip_FullMethodName    = "/layer.reporter.Msg/WithdrawTip"
-	Msg_EditReporter_FullMethodName   = "/layer.reporter.Msg/EditReporter"
+	Msg_UpdateParams_FullMethodName         = "/layer.reporter.Msg/UpdateParams"
+	Msg_CreateReporter_FullMethodName       = "/layer.reporter.Msg/CreateReporter"
+	Msg_SelectReporter_FullMethodName       = "/layer.reporter.Msg/SelectReporter"
+	Msg_SwitchReporter_FullMethodName       = "/layer.reporter.Msg/SwitchReporter"
+	Msg_RemoveSelector_FullMethodName       = "/layer.reporter.Msg/RemoveSelector"
+	Msg_UnjailReporter_FullMethodName       = "/layer.reporter.Msg/UnjailReporter"
+	Msg_WithdrawTip_FullMethodName          = "/layer.reporter.Msg/WithdrawTip"
+	Msg_WithdrawTipToBalance_FullMethodName = "/layer.reporter.Msg/WithdrawTipToBalance"
+	Msg_CancelTipUnlock_FullMethodName      = "/layer.reporter.Msg/CancelTipUnlock"
+	Msg_EditReporter_FullMethodName         = "/layer.reporter.Msg/EditReporter"
 )
 
 // MsgClient is the client API for Msg service.
@@ -51,6 +53,12 @@ type MsgClient interface {
 	UnjailReporter(ctx context.Context, in *MsgUnjailReporter, opts ...grpc.CallOption) (*MsgUnjailReporterResponse, error)
 	// WithdrawTip defines a method to withdraw tip from a reporter module.
 	WithdrawTip(ctx context.Context, in *MsgWithdrawTip, opts ...grpc.CallOption) (*MsgWithdrawTipResponse, error)
+	// WithdrawTipToBalance starts an unbonding-period unlock of all claimable tips
+	// into free-floating balance (tips_unlock_pool until maturity).
+	WithdrawTipToBalance(ctx context.Context, in *MsgWithdrawTipToBalance, opts ...grpc.CallOption) (*MsgWithdrawTipToBalanceResponse, error)
+	// CancelTipUnlock cancels a specific in-flight tip unlock by unlock_id,
+	// returning tokens to tips_escrow_pool / SelectorTips.
+	CancelTipUnlock(ctx context.Context, in *MsgCancelTipUnlock, opts ...grpc.CallOption) (*MsgCancelTipUnlockResponse, error)
 	// EditReporter defines a method to edit a reporter object
 	EditReporter(ctx context.Context, in *MsgEditReporter, opts ...grpc.CallOption) (*MsgEditReporterResponse, error)
 }
@@ -133,6 +141,26 @@ func (c *msgClient) WithdrawTip(ctx context.Context, in *MsgWithdrawTip, opts ..
 	return out, nil
 }
 
+func (c *msgClient) WithdrawTipToBalance(ctx context.Context, in *MsgWithdrawTipToBalance, opts ...grpc.CallOption) (*MsgWithdrawTipToBalanceResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgWithdrawTipToBalanceResponse)
+	err := c.cc.Invoke(ctx, Msg_WithdrawTipToBalance_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) CancelTipUnlock(ctx context.Context, in *MsgCancelTipUnlock, opts ...grpc.CallOption) (*MsgCancelTipUnlockResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgCancelTipUnlockResponse)
+	err := c.cc.Invoke(ctx, Msg_CancelTipUnlock_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) EditReporter(ctx context.Context, in *MsgEditReporter, opts ...grpc.CallOption) (*MsgEditReporterResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MsgEditReporterResponse)
@@ -165,6 +193,12 @@ type MsgServer interface {
 	UnjailReporter(context.Context, *MsgUnjailReporter) (*MsgUnjailReporterResponse, error)
 	// WithdrawTip defines a method to withdraw tip from a reporter module.
 	WithdrawTip(context.Context, *MsgWithdrawTip) (*MsgWithdrawTipResponse, error)
+	// WithdrawTipToBalance starts an unbonding-period unlock of all claimable tips
+	// into free-floating balance (tips_unlock_pool until maturity).
+	WithdrawTipToBalance(context.Context, *MsgWithdrawTipToBalance) (*MsgWithdrawTipToBalanceResponse, error)
+	// CancelTipUnlock cancels a specific in-flight tip unlock by unlock_id,
+	// returning tokens to tips_escrow_pool / SelectorTips.
+	CancelTipUnlock(context.Context, *MsgCancelTipUnlock) (*MsgCancelTipUnlockResponse, error)
 	// EditReporter defines a method to edit a reporter object
 	EditReporter(context.Context, *MsgEditReporter) (*MsgEditReporterResponse, error)
 	mustEmbedUnimplementedMsgServer()
@@ -197,6 +231,12 @@ func (UnimplementedMsgServer) UnjailReporter(context.Context, *MsgUnjailReporter
 }
 func (UnimplementedMsgServer) WithdrawTip(context.Context, *MsgWithdrawTip) (*MsgWithdrawTipResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawTip not implemented")
+}
+func (UnimplementedMsgServer) WithdrawTipToBalance(context.Context, *MsgWithdrawTipToBalance) (*MsgWithdrawTipToBalanceResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawTipToBalance not implemented")
+}
+func (UnimplementedMsgServer) CancelTipUnlock(context.Context, *MsgCancelTipUnlock) (*MsgCancelTipUnlockResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CancelTipUnlock not implemented")
 }
 func (UnimplementedMsgServer) EditReporter(context.Context, *MsgEditReporter) (*MsgEditReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EditReporter not implemented")
@@ -348,6 +388,42 @@ func _Msg_WithdrawTip_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_WithdrawTipToBalance_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawTipToBalance)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawTipToBalance(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_WithdrawTipToBalance_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawTipToBalance(ctx, req.(*MsgWithdrawTipToBalance))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_CancelTipUnlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCancelTipUnlock)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CancelTipUnlock(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CancelTipUnlock_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CancelTipUnlock(ctx, req.(*MsgCancelTipUnlock))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_EditReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgEditReporter)
 	if err := dec(in); err != nil {
@@ -400,6 +476,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WithdrawTip",
 			Handler:    _Msg_WithdrawTip_Handler,
+		},
+		{
+			MethodName: "WithdrawTipToBalance",
+			Handler:    _Msg_WithdrawTipToBalance_Handler,
+		},
+		{
+			MethodName: "CancelTipUnlock",
+			Handler:    _Msg_CancelTipUnlock_Handler,
 		},
 		{
 			MethodName: "EditReporter",

@@ -12,7 +12,6 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 type VoterInfo struct {
@@ -76,7 +75,7 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			}
 		}
 		// stake the slashed tokens back into the bonded pool for the reporter
-		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
+		if err := k.ReturnSlashedTokens(ctx, dispute, math.ZeroInt()); err != nil {
 			return err
 		}
 		reporterAddr, err := sdk.AccAddressFromBech32(dispute.InitialEvidence.GetReporter())
@@ -108,12 +107,10 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 				return err
 			}
 		}
-		// refund the reporters bond to the reporter plus the remaining disputeFee; goes to bonded pool
-		ogSlashAmount := dispute.SlashAmount
+		// refund the reporter's escrowed bond plus the dispute fee minus its 5% burn
 		fivePercentDec := dispute.DisputeFee.ToLegacyDec().Quo(math.LegacyNewDec(20))
 		disputeFeeMinusFivePercent := dispute.DisputeFee.Sub(fivePercentDec.TruncateInt())
-		dispute.SlashAmount = dispute.SlashAmount.Add(disputeFeeMinusFivePercent)
-		if err := k.ReturnSlashedTokens(ctx, dispute); err != nil {
+		if err := k.ReturnSlashedTokens(ctx, dispute, disputeFeeMinusFivePercent); err != nil {
 			return err
 		}
 		reporterAddr, err := sdk.AccAddressFromBech32(dispute.InitialEvidence.GetReporter())
@@ -127,7 +124,6 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 		if err := k.Votes.Set(ctx, id, vote); err != nil {
 			return err
 		}
-		dispute.SlashAmount = ogSlashAmount
 	case types.VoteResult_NO_TALLY:
 		return errors.New("vote hasn't been tallied yet")
 	}
@@ -154,7 +150,7 @@ func (k Keeper) RefundFailedDisputeFee(ctx context.Context, feePayer sdk.AccAddr
 		return k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, feePayer, coins)
 	}
 
-	return k.ReturnFeetoStake(ctx, hashId, fee)
+	return k.ReturnFeetoStake(ctx, hashId, feePayer, fee)
 }
 
 func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeeRd1 math.Int, hashId []byte) (math.Int, error) {
@@ -165,16 +161,22 @@ func (k Keeper) RefundDisputeFee(ctx context.Context, feePayer sdk.AccAddress, p
 		return remainder, k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, feePayer, coins)
 	}
 
-	return remainder, k.ReturnFeetoStake(ctx, hashId, amtFixed6)
+	actualFee, err := k.reporterKeeper.FeePaidFromStakeTotalByPayer(ctx, hashId, feePayer)
+	if err != nil {
+		return math.Int{}, err
+	}
+	amtFixed6 = CalculateActualStakeFeeRefundAmount(actualFee, payerInfo.Amount, amtFixed6)
+	return remainder, k.ReturnFeetoStake(ctx, hashId, feePayer, amtFixed6)
 }
 
 func (k Keeper) RewardReporterBondToFeePayers(ctx context.Context, feePayer sdk.AccAddress, payerInfo types.PayerInfo, totalFeesPaid, reporterBond math.Int) (math.Int, error) {
 	amtFixed6, remainder := CalculateReporterBondRewardAmount(payerInfo.Amount, totalFeesPaid, reporterBond)
 
-	if err := k.reporterKeeper.AddAmountToStake(ctx, feePayer, amtFixed6); err != nil {
+	bondedAmt, unbondedAmt, err := k.reporterKeeper.AddAmountToStake(ctx, feePayer, amtFixed6)
+	if err != nil {
 		return math.Int{}, err
 	}
-	return remainder, k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.ModuleName, stakingtypes.BondedPoolName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, amtFixed6)))
+	return remainder, k.sendStakeReturnsToPools(ctx, bondedAmt, unbondedAmt)
 }
 
 // GetSumOfUserAndReporterVotesAllRounds sums claim-eligible (user and reporter) vote
@@ -186,6 +188,20 @@ func (k Keeper) GetSumOfUserAndReporterVotesAllRounds(ctx context.Context, id ui
 		return math.Int{}, err
 	}
 
+	// de-duplicate round ids (current id may already appear in PrevDisputeIds)
+	roundIds := make([]uint64, 0, len(dispute.PrevDisputeIds)+1)
+	seen := make(map[uint64]struct{})
+	for _, roundId := range dispute.PrevDisputeIds {
+		if _, ok := seen[roundId]; ok {
+			continue
+		}
+		seen[roundId] = struct{}{}
+		roundIds = append(roundIds, roundId)
+	}
+	if _, ok := seen[id]; !ok {
+		roundIds = append(roundIds, id)
+	}
+
 	sumUsers := uint64(0)
 	sumReporters := uint64(0)
 
@@ -195,18 +211,7 @@ func (k Keeper) GetSumOfUserAndReporterVotesAllRounds(ctx context.Context, id ui
 		sumReporters += voteCounts.Reporters.Support + voteCounts.Reporters.Against + voteCounts.Reporters.Invalid
 	}
 
-	// process current dispute
-	voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return math.Int{}, err
-		}
-		voteCounts = types.StakeholderVoteCounts{}
-	}
-	processVoteCounts(voteCounts)
-
-	// process previous disputes
-	for _, roundId := range dispute.PrevDisputeIds {
+	for _, roundId := range roundIds {
 		voteCounts, err := k.VoteCountsByGroup.Get(ctx, roundId)
 		if err != nil {
 			if !errors.Is(err, collections.ErrNotFound) {

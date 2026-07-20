@@ -348,46 +348,174 @@ func (s *IntegrationTestSuite) TestAddAmountToStake() {
 	s.NoError(err)
 	s.True(delbefore.IsZero())
 	delAmount := math.NewInt(1000)
-	s.NoError(s.Setup.Reporterkeeper.AddAmountToStake(s.Setup.Ctx, addr, delAmount))
+	_, _, err = s.Setup.Reporterkeeper.AddAmountToStake(s.Setup.Ctx, addr, delAmount)
+	s.NoError(err)
 	delAfter, err := s.Setup.Stakingkeeper.GetDelegatorBonded(s.Setup.Ctx, addr)
 	s.NoError(err)
 	s.True(delAfter.Equal(delAmount))
 }
 
-func (s *IntegrationTestSuite) TestGetBondedValidators() {
+func (s *IntegrationTestSuite) TestGetBondedValidatorsByPower() {
 	s.Setup.CreateValidators(5)
-	testCases := []struct {
-		name        string
-		num         uint32
-		expectedlen int
-	}{
-		{
-			name:        "one bonded validator",
-			num:         1,
-			expectedlen: 1,
-		},
-		{
-			name:        "two bonded validators",
-			num:         2,
-			expectedlen: 2,
-		},
-		{
-			name:        "five bonded validators",
-			num:         5,
-			expectedlen: 5,
-		},
-		{
-			name:        "ten bonded validators",
-			num:         10,
-			expectedlen: 5 + 1, // 1 for genesis validator
-		},
+
+	vals, err := s.Setup.Stakingkeeper.GetBondedValidatorsByPower(s.Setup.Ctx)
+	s.NoError(err)
+	maxValidators, err := s.Setup.Stakingkeeper.MaxValidators(s.Setup.Ctx)
+	s.NoError(err)
+	// CreateValidators(5) + genesis validator; bounded by MaxValidators.
+	expected := 6
+	if uint32(expected) > maxValidators {
+		expected = int(maxValidators)
 	}
-	for _, tc := range testCases {
-		s.Run(tc.name, func() {
-			vals, err := s.Setup.Reporterkeeper.GetBondedValidators(s.Setup.Ctx, tc.num)
-			s.NoError(err)
-			s.Equal(tc.expectedlen, len(vals))
-		})
+	s.Equal(expected, len(vals))
+}
+
+func (s *IntegrationTestSuite) TestEscrowReporterStakePartialRedelegationCollectionStoresCollectedTotal() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
+	ctx := s.Setup.Ctx
+	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{100, 100})
+
+	reporterAddr := sample.AccAddressBytes()
+	delegated := math.NewInt(400)
+	s.Setup.MintTokens(reporterAddr, delegated)
+	_, err := stakingMsgServer.Delegate(ctx, stakingtypes.NewMsgDelegate(
+		reporterAddr.String(),
+		valAddrs[0].String(),
+		sdk.NewCoin(s.Setup.Denom, delegated),
+	))
+	s.NoError(err)
+
+	_, err = stakingMsgServer.BeginRedelegate(ctx, stakingtypes.NewMsgBeginRedelegate(
+		reporterAddr.String(),
+		valAddrs[0].String(),
+		valAddrs[1].String(),
+		sdk.NewCoin(s.Setup.Denom, delegated),
+	))
+	s.NoError(err)
+
+	reportHeight := uint64(ctx.BlockHeight())
+	hashId := []byte("partial-redelegation-shortfall")
+	totalPowerTokens := layertypes.PowerReduction
+	s.NoError(s.Setup.Reporterkeeper.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporterAddr.Bytes(), reportHeight)), reportertypes.DelegationsAmounts{
+		TokenOrigins: []*reportertypes.TokenOriginInfo{
+			{
+				DelegatorAddress: reporterAddr.Bytes(),
+				ValidatorAddress: valAddrs[0],
+				Amount:           totalPowerTokens,
+			},
+		},
+		Total: totalPowerTokens,
+	}))
+
+	intendedSlash := math.NewInt(1000)
+	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, reporterAddr, 1, reportHeight, intendedSlash, []byte{}, hashId))
+
+	stored, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(ctx, hashId)
+	s.NoError(err)
+	s.Equal(delegated, stored.Total)
+	s.True(stored.Total.LT(intendedSlash))
+
+	sum := math.ZeroInt()
+	for _, origin := range stored.TokenOrigins {
+		sum = sum.Add(origin.Amount)
+	}
+	s.Equal(stored.Total, sum)
+}
+
+func (s *IntegrationTestSuite) TestEscrowReporterStakeRedelegationBreadcrumbDoesNotSkipBulkStake() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
+	ctx := s.Setup.Ctx
+	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{100, 100, 100})
+	val1, val2, val3 := valAddrs[0], valAddrs[1], valAddrs[2]
+
+	selector := sample.AccAddressBytes()
+	bulk := math.NewInt(1_000_000)
+	dust := math.NewInt(100)
+	s.Setup.MintTokens(selector, bulk.Add(dust))
+
+	_, err := stakingMsgServer.Delegate(ctx, stakingtypes.NewMsgDelegate(
+		selector.String(),
+		val1.String(),
+		sdk.NewCoin(s.Setup.Denom, bulk),
+	))
+	s.NoError(err)
+	_, err = stakingMsgServer.Delegate(ctx, stakingtypes.NewMsgDelegate(
+		selector.String(),
+		val2.String(),
+		sdk.NewCoin(s.Setup.Denom, dust),
+	))
+	s.NoError(err)
+
+	reportHeight := uint64(ctx.BlockHeight())
+	hashId := []byte("redelegation-breadcrumb-bulk")
+	totalPowerTokens := layertypes.PowerReduction
+	// Snapshot bulk at val1; dust at val2 must not redirect escrow away from bulk.
+	s.NoError(s.Setup.Reporterkeeper.Report.Set(ctx, collections.Join([]byte{}, collections.Join(selector.Bytes(), reportHeight)), reportertypes.DelegationsAmounts{
+		TokenOrigins: []*reportertypes.TokenOriginInfo{
+			{
+				DelegatorAddress: selector.Bytes(),
+				ValidatorAddress: val1,
+				Amount:           totalPowerTokens,
+			},
+		},
+		Total: totalPowerTokens,
+	}))
+
+	// Dust trail, then move bulk onto the validator the dust left.
+	_, err = stakingMsgServer.BeginRedelegate(ctx, stakingtypes.NewMsgBeginRedelegate(
+		selector.String(),
+		val2.String(),
+		val3.String(),
+		sdk.NewCoin(s.Setup.Denom, dust),
+	))
+	s.NoError(err)
+	_, err = stakingMsgServer.BeginRedelegate(ctx, stakingtypes.NewMsgBeginRedelegate(
+		selector.String(),
+		val1.String(),
+		val2.String(),
+		sdk.NewCoin(s.Setup.Denom, bulk),
+	))
+	s.NoError(err)
+
+	delVal2, err := s.Setup.Stakingkeeper.GetDelegation(ctx, selector, val2)
+	s.NoError(err)
+	val2Before, err := s.Setup.Stakingkeeper.GetValidator(ctx, val2)
+	s.NoError(err)
+	s.Equal(bulk, val2Before.TokensFromShares(delVal2.Shares).TruncateInt())
+
+	delVal3, err := s.Setup.Stakingkeeper.GetDelegation(ctx, selector, val3)
+	s.NoError(err)
+	val3Before, err := s.Setup.Stakingkeeper.GetValidator(ctx, val3)
+	s.NoError(err)
+	s.Equal(dust, val3Before.TokensFromShares(delVal3.Shares).TruncateInt())
+
+	disputeBefore := s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress("dispute"), s.Setup.Denom)
+
+	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, selector, 1, reportHeight, bulk, []byte{}, hashId))
+
+	stored, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(ctx, hashId)
+	s.NoError(err)
+	s.Equal(bulk, stored.Total, "escrow must capture the bulk at val2, not only the dust breadcrumb at val3")
+
+	sum := math.ZeroInt()
+	for _, origin := range stored.TokenOrigins {
+		sum = sum.Add(origin.Amount)
+	}
+	s.Equal(stored.Total, sum)
+
+	disputeAfter := s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress("dispute"), s.Setup.Denom)
+	s.Equal(bulk, disputeAfter.Amount.Sub(disputeBefore.Amount))
+
+	_, err = s.Setup.Stakingkeeper.GetDelegation(ctx, selector, val2)
+	s.ErrorIs(err, stakingtypes.ErrNoDelegation, "bulk stake at val2 must be escrowed")
+
+	delVal3After, err := s.Setup.Stakingkeeper.GetDelegation(ctx, selector, val3)
+	if s.NoError(err, "unrelated dust at val3 must remain untouched") {
+		val3After, err := s.Setup.Stakingkeeper.GetValidator(ctx, val3)
+		s.NoError(err)
+		s.Equal(dust, val3After.TokensFromShares(delVal3After.Shares).TruncateInt(), "unrelated dust at val3 must remain untouched")
 	}
 }
 

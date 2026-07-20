@@ -236,6 +236,10 @@ func TestTrackStakeChanges(t *testing.T) {
 			ctx = ctx.WithBlockHeight(1)
 			decorator := NewTrackStakeChangesDecorator(k, sk)
 			require.NoError(t, k.Tracker.Set(ctx, types.StakeTracker{Amount: math.NewInt(100)}))
+			// This suite isolates the 5% rule and delegation-count limits with
+			// single-validator fixtures that hold 100% of bonded stake; disable
+			// the validator power cap so it does not fire first.
+			disableValidatorPowerCap(t, k, ctx)
 			sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100), nil)
 			if tc.setup != nil {
 				tc.setup(sk, ctx)

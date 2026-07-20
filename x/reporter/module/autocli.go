@@ -75,6 +75,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{},
 				},
 				{
+					RpcMethod:      "TipUnlocks",
+					Use:            "tip-unlocks [selector-address]",
+					Short:          "Query pending tip unlocks (escrowed withdraw-to-balance) for a selector",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "selector_address"}},
+				},
+				{
 					RpcMethod:      "Reporter",
 					Use:            "reporter [reporter-address]",
 					Short:          "Query a specific reporter by address",
@@ -128,6 +134,23 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "selector_address"},
 						{ProtoField: "validator_address"},
+					},
+				},
+				{
+					RpcMethod: "WithdrawTipToBalance",
+					Use:       "withdraw-tip-to-balance [selector-address]",
+					Short:     "Start unlocking all tip rewards to free-floating balance after unbonding period",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "selector_address"},
+					},
+				},
+				{
+					RpcMethod: "CancelTipUnlock",
+					Use:       "cancel-tip-unlock [selector-address] [unlock-id]",
+					Short:     "Cancel a specific in-flight tip unlock (returns tokens to tip escrow)",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "selector_address"},
+						{ProtoField: "unlock_id"},
 					},
 				},
 				{

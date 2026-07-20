@@ -40,6 +40,14 @@ service Msg {
   // WithdrawTip defines a method to withdraw tip from a reporter module.
   rpc WithdrawTip(MsgWithdrawTip) returns (MsgWithdrawTipResponse);
 
+  // WithdrawTipToBalance starts an unbonding-period unlock of all claimable tips
+  // into free-floating balance (tips_unlock_pool until maturity).
+  rpc WithdrawTipToBalance(MsgWithdrawTipToBalance) returns (MsgWithdrawTipToBalanceResponse);
+
+  // CancelTipUnlock cancels a specific in-flight tip unlock by unlock_id,
+  // returning tokens to tips_escrow_pool / SelectorTips.
+  rpc CancelTipUnlock(MsgCancelTipUnlock) returns (MsgCancelTipUnlockResponse);
+
   // EditReporter defines a method to edit a reporter object
   rpc EditReporter(MsgEditReporter) returns (MsgEditReporterResponse);
 
@@ -149,6 +157,27 @@ message MsgWithdrawTip {
 
 // MsgWithdrawTipResponse defines the Msg/WithdrawTip response type.
 message MsgWithdrawTipResponse {}
+
+// MsgWithdrawTipToBalance defines the Msg/WithdrawTipToBalance request type.
+message MsgWithdrawTipToBalance {
+  option (cosmos.msg.v1.signer) = "selector_address";
+  string selector_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgWithdrawTipToBalanceResponse defines the Msg/WithdrawTipToBalance response type.
+message MsgWithdrawTipToBalanceResponse {
+  uint64 unlock_id = 1;
+}
+
+// MsgCancelTipUnlock defines the Msg/CancelTipUnlock request type.
+message MsgCancelTipUnlock {
+  option (cosmos.msg.v1.signer) = "selector_address";
+  string selector_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  uint64 unlock_id = 2;
+}
+
+// MsgCancelTipUnlockResponse defines the Msg/CancelTipUnlock response type.
+message MsgCancelTipUnlockResponse {}
 
 message MsgEditReporter {
   option (cosmos.msg.v1.signer) = "reporter_address";
