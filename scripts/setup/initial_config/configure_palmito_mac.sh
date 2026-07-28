@@ -81,8 +81,9 @@ echo "Set Chain Id to layer in client config file..."
 sed -i '' 's/^chain-id = .*$/chain-id = "layertest-5"/g' $LAYER_HOME/config/client.toml
 
 # Modify timeout_commit in config.toml for node
+# layerd init writes "3s" (see cmd/layerd/cmd/root.go initTendermintConfig); older binaries wrote "5s"
 echo "Modifying timeout_commit in config.toml for node..."
-sed -i '' 's/timeout_commit = "5s"/timeout_commit = "1s"/' $LAYER_HOME/config/config.toml
+sed -i '' 's/^timeout_commit = .*/timeout_commit = "1s"/' $LAYER_HOME/config/config.toml
 
 # Rate at which packets can be sent, in bytes/second
 sed -i '' 's/^send_rate = .*/send_rate = 10240000/' $LAYER_HOME/config/config.toml
