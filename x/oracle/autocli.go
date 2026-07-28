@@ -149,6 +149,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query liveness for a reporter",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter"}},
 				},
+				{
+					RpcMethod:      "GetCrossChainEscrow",
+					Use:            "get-cross-chain-escrow [escrow_chain_id] [escrow_contract] [escrow_id]",
+					Short:          "Query a cross-chain escrow record by its Ethereum coordinates",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "escrow_chain_id"}, {ProtoField: "escrow_contract"}, {ProtoField: "escrow_id"}},
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
@@ -184,6 +190,20 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:            "tip [query_data] [amount]",
 					Short:          "Execute the Tip RPC method",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "query_data"}, {ProtoField: "amount"}},
+				},
+				{
+					RpcMethod: "CrossChainTip",
+					Use:       "cross-chain-tip [query_data] [amount] [escrow_total] [escrow_chain_id] [escrow_contract] [escrow_id] [eth_payout_address]",
+					Short:     "Front a tip on behalf of an Ethereum escrow, recording an ETH payout address for settlement",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "query_data"},
+						{ProtoField: "amount"},
+						{ProtoField: "escrow_total"},
+						{ProtoField: "escrow_chain_id"},
+						{ProtoField: "escrow_contract"},
+						{ProtoField: "escrow_id"},
+						{ProtoField: "eth_payout_address"},
+					},
 				},
 				{
 					RpcMethod: "UpdateCyclelist",

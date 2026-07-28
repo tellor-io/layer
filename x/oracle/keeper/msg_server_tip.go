@@ -42,94 +42,8 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 		return nil, err
 	}
 
-	params, err := k.keeper.GetParams(ctx)
+	tip, queryId, query, err := k.keeper.processTipCore(ctx, tipper, msg.QueryData, msg.Amount)
 	if err != nil {
-		return nil, err
-	}
-	if msg.Amount.Amount.LT(params.MinTipAmount) {
-		return nil, types.ErrNotEnoughTip
-	} else if msg.Amount.Amount.GT(params.MaxTipAmount) {
-		return nil, types.ErrTipExceedsMax
-	}
-
-	// get query id bytes hash from query data
-	queryId := utils.QueryIDFromData(msg.QueryData)
-
-	// get query info for the query id
-	query, err := k.keeper.CurrentQuery(ctx, queryId)
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return nil, err
-		}
-		// initialize query tip first time
-		query, err = k.keeper.InitializeQuery(ctx, msg.QueryData)
-		if err != nil {
-			return nil, err
-		}
-
-		query.Amount = math.ZeroInt()
-		query.Expiration = uint64(ctx.BlockHeight()) + query.RegistrySpecBlockWindow
-	}
-
-	// if an additional tip exceeds max tip, return an error
-	if query.Amount.Add(msg.Amount.Amount).GT(types.DefaultMaxTipAmount) {
-		return nil, types.ErrTipExceedsMax
-	}
-
-	// transfer the tip amount to the module account after burning 2% of the tip
-	tip, err := k.keeper.transfer(ctx, tipper, msg.Amount)
-	if err != nil {
-		return nil, err
-	}
-
-	query.Amount = query.Amount.Add(tip.Amount)
-
-	// expired submission window
-	if query.Expiration < uint64(ctx.BlockHeight()) {
-		// query expired, create new expiration time
-		query.Expiration = uint64(ctx.BlockHeight()) + query.RegistrySpecBlockWindow
-
-		// check if this is a cyclelist query being tipped out-of-turn
-		isCyclelistQuery, _ := k.keeper.Cyclelist.Has(ctx, queryId)
-		if isCyclelistQuery {
-			// keep CycleList = true for liveness tracking
-			query.CycleList = true
-			// Demote query to non-standard (out-of-turn tip creates extra opportunity)
-			// This moves existing shares from standard to non-standard tracking
-			if err := k.keeper.DemoteQueryToNonStandard(ctx, queryId); err != nil {
-				return nil, err
-			}
-			// increment query opportunities (creates extra opportunity)
-			if err := k.keeper.IncrementQueryOpportunities(ctx, queryId); err != nil {
-				return nil, err
-			}
-		} else {
-			// non-cyclelist query, not tracked for liveness
-			query.CycleList = false
-		}
-
-		id, err := k.keeper.QuerySequencer.Next(ctx)
-		if err != nil {
-			return nil, err
-		}
-		// remove old query with old ID before creating new one with new ID
-		oldId := query.Id
-		err = k.keeper.Query.Remove(ctx, collections.Join(queryId, oldId))
-		if err != nil {
-			return nil, err
-		}
-		query.Id = id
-	}
-	err = k.keeper.Query.Set(ctx, collections.Join(queryId, query.Id), query)
-	if err != nil {
-		return nil, err
-	}
-
-	// update totals
-	if err := k.keeper.AddToTipperTotal(ctx, tipper, tip.Amount); err != nil {
-		return nil, err
-	}
-	if err := k.keeper.AddtoTotalTips(ctx, tip.Amount); err != nil {
 		return nil, err
 	}
 
@@ -151,18 +65,120 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	return &types.MsgTipResponse{}, nil
 }
 
+func (k Keeper) processTipCore(ctx sdk.Context, tipper sdk.AccAddress, queryData []byte, amount sdk.Coin) (sdk.Coin, []byte, types.QueryMeta, error) {
+	params, err := k.GetParams(ctx)
+	if err != nil {
+		return sdk.Coin{}, nil, types.QueryMeta{}, err
+	}
+	if amount.Amount.LT(params.MinTipAmount) {
+		return sdk.Coin{}, nil, types.QueryMeta{}, types.ErrNotEnoughTip
+	} else if amount.Amount.GT(params.MaxTipAmount) {
+		return sdk.Coin{}, nil, types.QueryMeta{}, types.ErrTipExceedsMax
+	}
+
+	// get query id bytes hash from query data
+	queryId := utils.QueryIDFromData(queryData)
+
+	// get query info for the query id
+	query, err := k.CurrentQuery(ctx, queryId)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return sdk.Coin{}, nil, types.QueryMeta{}, err
+		}
+		// initialize query tip first time
+		query, err = k.InitializeQuery(ctx, queryData)
+		if err != nil {
+			return sdk.Coin{}, nil, types.QueryMeta{}, err
+		}
+
+		query.Amount = math.ZeroInt()
+		query.Expiration = uint64(ctx.BlockHeight()) + query.RegistrySpecBlockWindow
+	}
+
+	// if an additional tip exceeds max tip, return an error
+	if query.Amount.Add(amount.Amount).GT(types.DefaultMaxTipAmount) {
+		return sdk.Coin{}, nil, types.QueryMeta{}, types.ErrTipExceedsMax
+	}
+
+	// transfer the tip amount to the module account after burning 2% of the tip
+	tip, err := k.transfer(ctx, tipper, amount)
+	if err != nil {
+		return sdk.Coin{}, nil, types.QueryMeta{}, err
+	}
+
+	query.Amount = query.Amount.Add(tip.Amount)
+
+	// expired submission window
+	if query.Expiration < uint64(ctx.BlockHeight()) {
+		// query expired, create new expiration time
+		query.Expiration = uint64(ctx.BlockHeight()) + query.RegistrySpecBlockWindow
+
+		// check if this is a cyclelist query being tipped out-of-turn
+		isCyclelistQuery, _ := k.Cyclelist.Has(ctx, queryId)
+		if isCyclelistQuery {
+			// keep CycleList = true for liveness tracking
+			query.CycleList = true
+			// Demote query to non-standard (out-of-turn tip creates extra opportunity)
+			// This moves existing shares from standard to non-standard tracking
+			if err := k.DemoteQueryToNonStandard(ctx, queryId); err != nil {
+				return sdk.Coin{}, nil, types.QueryMeta{}, err
+			}
+			// increment query opportunities (creates extra opportunity)
+			if err := k.IncrementQueryOpportunities(ctx, queryId); err != nil {
+				return sdk.Coin{}, nil, types.QueryMeta{}, err
+			}
+		} else {
+			// non-cyclelist query, not tracked for liveness
+			query.CycleList = false
+		}
+
+		id, err := k.QuerySequencer.Next(ctx)
+		if err != nil {
+			return sdk.Coin{}, nil, types.QueryMeta{}, err
+		}
+		// remove old query with old ID before creating new one with new ID
+		oldId := query.Id
+		err = k.Query.Remove(ctx, collections.Join(queryId, oldId))
+		if err != nil {
+			return sdk.Coin{}, nil, types.QueryMeta{}, err
+		}
+		query.Id = id
+	}
+	err = k.Query.Set(ctx, collections.Join(queryId, query.Id), query)
+	if err != nil {
+		return sdk.Coin{}, nil, types.QueryMeta{}, err
+	}
+
+	// update totals
+	if err := k.AddToTipperTotal(ctx, tipper, tip.Amount); err != nil {
+		return sdk.Coin{}, nil, types.QueryMeta{}, err
+	}
+	if err := k.AddtoTotalTips(ctx, tip.Amount); err != nil {
+		return sdk.Coin{}, nil, types.QueryMeta{}, err
+	}
+
+	return tip, queryId, query, nil
+}
+
 func validateTip(msg *types.MsgTip) (tipper sdk.AccAddress, err error) {
 	tipper, err = sdk.AccAddressFromBech32(msg.Tipper)
 	if err != nil {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid tipper address (%s)", err)
 	}
-	// ensure that the msg.Amount.Denom matches the layer.BondDenom and the amount is a positive number
-	if msg.Amount.Denom != layer.BondDenom || msg.Amount.Amount.IsZero() || msg.Amount.Amount.IsNegative() {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid tip amount (%s)", msg.Amount.String())
-	}
-	// ensure that the queryData is not empty
-	if len(msg.QueryData) == 0 {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "query data is empty")
+	if err := validateTipFields(msg.Amount, msg.QueryData); err != nil {
+		return nil, err
 	}
 	return tipper, nil
+}
+
+func validateTipFields(amount sdk.Coin, queryData []byte) error {
+	// ensure that the amount denom matches the layer.BondDenom and the amount is a positive number
+	if amount.Denom != layer.BondDenom || amount.Amount.IsZero() || amount.Amount.IsNegative() {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "invalid tip amount (%s)", amount.String())
+	}
+	// ensure that the queryData is not empty
+	if len(queryData) == 0 {
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "query data is empty")
+	}
+	return nil
 }

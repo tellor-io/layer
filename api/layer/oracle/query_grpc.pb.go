@@ -45,6 +45,7 @@ const (
 	Query_GetTippedQueries_FullMethodName             = "/layer.oracle.Query/GetTippedQueries"
 	Query_GetTipTotal_FullMethodName                  = "/layer.oracle.Query/GetTipTotal"
 	Query_GetReporterLiveness_FullMethodName          = "/layer.oracle.Query/GetReporterLiveness"
+	Query_GetCrossChainEscrow_FullMethodName          = "/layer.oracle.Query/GetCrossChainEscrow"
 )
 
 // QueryClient is the client API for Query service.
@@ -105,6 +106,8 @@ type QueryClient interface {
 	GetTipTotal(ctx context.Context, in *QueryGetTipTotalRequest, opts ...grpc.CallOption) (*QueryGetTipTotalResponse, error)
 	// Queries the percent liveness for a reporter (lifetime participation rate)
 	GetReporterLiveness(ctx context.Context, in *QueryGetReporterLivenessRequest, opts ...grpc.CallOption) (*QueryGetReporterLivenessResponse, error)
+	// Queries a cross-chain escrow record by its Ethereum coordinates
+	GetCrossChainEscrow(ctx context.Context, in *QueryGetCrossChainEscrowRequest, opts ...grpc.CallOption) (*QueryGetCrossChainEscrowResponse, error)
 }
 
 type queryClient struct {
@@ -375,6 +378,16 @@ func (c *queryClient) GetReporterLiveness(ctx context.Context, in *QueryGetRepor
 	return out, nil
 }
 
+func (c *queryClient) GetCrossChainEscrow(ctx context.Context, in *QueryGetCrossChainEscrowRequest, opts ...grpc.CallOption) (*QueryGetCrossChainEscrowResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryGetCrossChainEscrowResponse)
+	err := c.cc.Invoke(ctx, Query_GetCrossChainEscrow_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility.
@@ -433,6 +446,8 @@ type QueryServer interface {
 	GetTipTotal(context.Context, *QueryGetTipTotalRequest) (*QueryGetTipTotalResponse, error)
 	// Queries the percent liveness for a reporter (lifetime participation rate)
 	GetReporterLiveness(context.Context, *QueryGetReporterLivenessRequest) (*QueryGetReporterLivenessResponse, error)
+	// Queries a cross-chain escrow record by its Ethereum coordinates
+	GetCrossChainEscrow(context.Context, *QueryGetCrossChainEscrowRequest) (*QueryGetCrossChainEscrowResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -520,6 +535,9 @@ func (UnimplementedQueryServer) GetTipTotal(context.Context, *QueryGetTipTotalRe
 }
 func (UnimplementedQueryServer) GetReporterLiveness(context.Context, *QueryGetReporterLivenessRequest) (*QueryGetReporterLivenessResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReporterLiveness not implemented")
+}
+func (UnimplementedQueryServer) GetCrossChainEscrow(context.Context, *QueryGetCrossChainEscrowRequest) (*QueryGetCrossChainEscrowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCrossChainEscrow not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 func (UnimplementedQueryServer) testEmbeddedByValue()               {}
@@ -1010,6 +1028,24 @@ func _Query_GetReporterLiveness_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_GetCrossChainEscrow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryGetCrossChainEscrowRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).GetCrossChainEscrow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_GetCrossChainEscrow_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).GetCrossChainEscrow(ctx, req.(*QueryGetCrossChainEscrowRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1120,6 +1156,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetReporterLiveness",
 			Handler:    _Query_GetReporterLiveness_Handler,
+		},
+		{
+			MethodName: "GetCrossChainEscrow",
+			Handler:    _Query_GetCrossChainEscrow_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package layer.oracle;
+
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/tellor-io/layer/x/oracle/types";
+
+// CrossChainFunder is one Layer-side funder of an Ethereum escrow tip.
+message CrossChainFunder {
+  // 20-byte Ethereum address to repay on the escrow chain
+  bytes eth_payout_address = 1;
+  // gross amount of loya the funder tipped on Layer (pre-burn)
+  string amount = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// CrossChainEscrow tracks an Ethereum-side tip escrow being fronted on Layer.
+message CrossChainEscrow {
+  // queryId (keccak256 of query_data) the escrow pays for
+  bytes query_id = 1;
+  // EVM chain id of the escrow contract
+  uint64 escrow_chain_id = 2;
+  // 20-byte escrow contract address
+  bytes escrow_contract = 3;
+  // escrow id (nonce) inside the escrow contract
+  uint64 escrow_id = 4;
+  // total escrow amount in loya declared by the first funder; funding cap
+  string declared_total = 5 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // funders in tip order (first funder first)
+  repeated CrossChainFunder funders = 6 [(gogoproto.nullable) = false];
+  // true once a settlement aggregate has been produced
+  bool settled = 7;
+  // block time (unix ms) of the settlement aggregate, 0 if unsettled
+  uint64 settlement_timestamp = 8;
+}

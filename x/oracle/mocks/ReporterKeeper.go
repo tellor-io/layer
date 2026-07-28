@@ -146,6 +146,30 @@ func (_m *ReporterKeeper) SetReporterStakeByQueryId(ctx context.Context, repAddr
 	return r0
 }
 
+// TotalReporterPower provides a mock function with given fields: ctx
+func (_m *ReporterKeeper) TotalReporterPower(ctx context.Context) (math.Int, error) {
+	ret := _m.Called(ctx)
+
+	var r0 math.Int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (math.Int, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) math.Int); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(math.Int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewReporterKeeper interface {
 	mock.TestingT
 	Cleanup(func())

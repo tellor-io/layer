@@ -11,6 +11,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgSubmitValue{}, "oracle/SubmitValue", nil)
 	cdc.RegisterConcrete(&MsgBatchSubmitValue{}, "oracle/BatchSubmitValue", nil)
 	cdc.RegisterConcrete(&MsgTip{}, "oracle/Tip", nil)
+	cdc.RegisterConcrete(&MsgCrossChainTip{}, "oracle/CrossChainTip", nil)
 	cdc.RegisterConcrete(&MsgUpdateParams{}, "oracle/UpdateParams", nil)
 	cdc.RegisterConcrete(&MsgUpdateCyclelist{}, "oracle/UpdateCyclelist", nil)
 	// this line is used by starport scaffolding # 2
@@ -25,6 +26,9 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgTip{},
+	)
+	registry.RegisterImplementations((*sdk.Msg)(nil),
+		&MsgCrossChainTip{},
 	)
 	registry.RegisterImplementations((*sdk.Msg)(nil),
 		&MsgUpdateParams{},

@@ -74,6 +74,10 @@ var (
 	// MaxOpenCommitmentByReporter maps reporter address -> monotonic max query
 	// Expiration height from reports submitted by that reporter (updated on SubmitValue).
 	MaxOpenCommitmentByReporterPrefix = collections.NewPrefix(46)
+
+	// Cross-chain tipping (Ethereum escrow fronting)
+	CrossChainEscrowsPrefix          = collections.NewPrefix(47)
+	CrossChainEscrowsByQueryIdPrefix = collections.NewPrefix(48)
 )
 
 func KeyPrefix(p string) []byte {

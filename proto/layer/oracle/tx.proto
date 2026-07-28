@@ -23,6 +23,7 @@ service Msg {
   rpc UpdateQueryDataLimit(MsgUpdateQueryDataLimit) returns (MsgUpdateQueryDataLimitResponse);
   rpc BatchSubmitValue(MsgBatchSubmitValue) returns (MsgBatchSubmitValueResponse);
   rpc UpdateMaxBatchSize(MsgUpdateMaxBatchSize) returns (MsgUpdateMaxBatchSizeResponse);
+  rpc CrossChainTip(MsgCrossChainTip) returns (MsgCrossChainTipResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -61,6 +62,36 @@ message MsgTip {
 }
 
 message MsgTipResponse {}
+
+// MsgCrossChainTip fronts a tip on Layer on behalf of an Ethereum escrow tip,
+// recording the funder's Ethereum payout address for later settlement.
+message MsgCrossChainTip {
+  option (cosmos.msg.v1.signer) = "tipper";
+  string tipper = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  bytes query_data = 2;
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  // total escrow amount in loya (gross); first funder's value is stored as the
+  // funding cap, later funders must match it exactly
+  // should be confirmed by later funders before adding additional funds
+  string escrow_total = 4 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // EVM chain id hosting the escrow contract
+  uint64 escrow_chain_id = 5;
+  // 20-byte escrow contract address
+  bytes escrow_contract = 6;
+  // escrow id (nonce) inside the escrow contract
+  uint64 escrow_id = 7;
+  // 20-byte Ethereum address to be repaid from the escrow
+  bytes eth_payout_address = 8;
+}
+
+message MsgCrossChainTipResponse {
+  // hex settlement query id (= escrow key on Layer)
+  string settlement_query_id = 1;
+}
 
 // MsgUpdateCycleRequest is the Msg/UpdateCycle request type.
 message MsgUpdateCyclelist {

@@ -26,6 +26,7 @@ const (
 	Msg_UpdateQueryDataLimit_FullMethodName = "/layer.oracle.Msg/UpdateQueryDataLimit"
 	Msg_BatchSubmitValue_FullMethodName     = "/layer.oracle.Msg/BatchSubmitValue"
 	Msg_UpdateMaxBatchSize_FullMethodName   = "/layer.oracle.Msg/UpdateMaxBatchSize"
+	Msg_CrossChainTip_FullMethodName        = "/layer.oracle.Msg/CrossChainTip"
 )
 
 // MsgClient is the client API for Msg service.
@@ -43,6 +44,7 @@ type MsgClient interface {
 	UpdateQueryDataLimit(ctx context.Context, in *MsgUpdateQueryDataLimit, opts ...grpc.CallOption) (*MsgUpdateQueryDataLimitResponse, error)
 	BatchSubmitValue(ctx context.Context, in *MsgBatchSubmitValue, opts ...grpc.CallOption) (*MsgBatchSubmitValueResponse, error)
 	UpdateMaxBatchSize(ctx context.Context, in *MsgUpdateMaxBatchSize, opts ...grpc.CallOption) (*MsgUpdateMaxBatchSizeResponse, error)
+	CrossChainTip(ctx context.Context, in *MsgCrossChainTip, opts ...grpc.CallOption) (*MsgCrossChainTipResponse, error)
 }
 
 type msgClient struct {
@@ -123,6 +125,16 @@ func (c *msgClient) UpdateMaxBatchSize(ctx context.Context, in *MsgUpdateMaxBatc
 	return out, nil
 }
 
+func (c *msgClient) CrossChainTip(ctx context.Context, in *MsgCrossChainTip, opts ...grpc.CallOption) (*MsgCrossChainTipResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgCrossChainTipResponse)
+	err := c.cc.Invoke(ctx, Msg_CrossChainTip_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
@@ -138,6 +150,7 @@ type MsgServer interface {
 	UpdateQueryDataLimit(context.Context, *MsgUpdateQueryDataLimit) (*MsgUpdateQueryDataLimitResponse, error)
 	BatchSubmitValue(context.Context, *MsgBatchSubmitValue) (*MsgBatchSubmitValueResponse, error)
 	UpdateMaxBatchSize(context.Context, *MsgUpdateMaxBatchSize) (*MsgUpdateMaxBatchSizeResponse, error)
+	CrossChainTip(context.Context, *MsgCrossChainTip) (*MsgCrossChainTipResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -168,6 +181,9 @@ func (UnimplementedMsgServer) BatchSubmitValue(context.Context, *MsgBatchSubmitV
 }
 func (UnimplementedMsgServer) UpdateMaxBatchSize(context.Context, *MsgUpdateMaxBatchSize) (*MsgUpdateMaxBatchSizeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateMaxBatchSize not implemented")
+}
+func (UnimplementedMsgServer) CrossChainTip(context.Context, *MsgCrossChainTip) (*MsgCrossChainTipResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CrossChainTip not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -316,6 +332,24 @@ func _Msg_UpdateMaxBatchSize_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CrossChainTip_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCrossChainTip)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CrossChainTip(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CrossChainTip_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CrossChainTip(ctx, req.(*MsgCrossChainTip))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -350,6 +384,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateMaxBatchSize",
 			Handler:    _Msg_UpdateMaxBatchSize_Handler,
+		},
+		{
+			MethodName: "CrossChainTip",
+			Handler:    _Msg_CrossChainTip_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

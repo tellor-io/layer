@@ -9,6 +9,7 @@ import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "layer/oracle/aggregate.proto";
+import "layer/oracle/cross_chain_escrow.proto";
 import "layer/oracle/micro_report.proto";
 import "layer/oracle/params.proto";
 import "layer/oracle/query_meta.proto";
@@ -148,6 +149,11 @@ service Query {
   // Queries the percent liveness for a reporter (lifetime participation rate)
   rpc GetReporterLiveness(QueryGetReporterLivenessRequest) returns (QueryGetReporterLivenessResponse) {
     option (google.api.http).get = "/tellor-io/layer/oracle/get_reporter_liveness/{reporter}";
+  }
+
+  // Queries a cross-chain escrow record by its Ethereum coordinates
+  rpc GetCrossChainEscrow(QueryGetCrossChainEscrowRequest) returns (QueryGetCrossChainEscrowResponse) {
+    option (google.api.http).get = "/tellor-io/layer/oracle/get_cross_chain_escrow/{escrow_chain_id}/{escrow_contract}/{escrow_id}";
   }
 }
 
@@ -468,4 +474,22 @@ message QueryGetReporterLivenessResponse {
   ];
   // last_report_time is the timestamp of the reporter's last report
   int64 last_report_time = 4;
+}
+
+// QueryGetCrossChainEscrowRequest is the request type for the Query/GetCrossChainEscrow RPC method.
+message QueryGetCrossChainEscrowRequest {
+  // EVM chain id of the escrow contract
+  uint64 escrow_chain_id = 1;
+  // hex-encoded 20-byte escrow contract address (no 0x prefix)
+  string escrow_contract = 2;
+  // escrow id (nonce) inside the escrow contract
+  uint64 escrow_id = 3;
+}
+
+// QueryGetCrossChainEscrowResponse is the response type for the Query/GetCrossChainEscrow RPC method.
+message QueryGetCrossChainEscrowResponse {
+  // the escrow record
+  CrossChainEscrow escrow = 1 [(gogoproto.nullable) = false];
+  // hex settlement query id (fetch aggregate/snapshots under this id)
+  string settlement_query_id = 2;
 }

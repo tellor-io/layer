@@ -90,6 +90,11 @@ type (
 		// reporter on each successful SubmitValue; read when scheduling a pending
 		// reporter switch (unlock height snapshot on the outgoing reporter).
 		MaxOpenCommitmentByReporter collections.Map[[]byte, uint64]
+
+		// CrossChainEscrows maps settlementQueryId ("escrow key") -> escrow record for Ethereum escrows fronted on Layer
+		CrossChainEscrows collections.Map[[]byte, types.CrossChainEscrow]
+		// CrossChainEscrowsByQueryId indexes pending (unsettled) escrows by (data queryId, escrow key) for the EndBlocker settlement
+		CrossChainEscrowsByQueryId collections.KeySet[collections.Pair[[]byte, []byte]]
 	}
 )
 
@@ -203,6 +208,14 @@ func NewKeeper(
 			"max_open_commitment_by_reporter",
 			collections.BytesKey,
 			collections.Uint64Value,
+		),
+
+		// Cross-chain tipping
+		CrossChainEscrows: collections.NewMap(sb, types.CrossChainEscrowsPrefix, "cross_chain_escrows", collections.BytesKey, codec.CollValue[types.CrossChainEscrow](cdc)),
+		CrossChainEscrowsByQueryId: collections.NewKeySet(sb,
+			types.CrossChainEscrowsByQueryIdPrefix,
+			"cross_chain_escrows_by_query_id",
+			collections.PairKeyCodec(collections.BytesKey, collections.BytesKey),
 		),
 	}
 

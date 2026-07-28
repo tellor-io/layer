@@ -45,6 +45,7 @@ type ReporterKeeper interface {
 	GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math.Int, []*reportertypes.TokenOriginInfo, []*reportertypes.SelectorShare, []byte, error)
 	DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.LegacyDec) error
 	GetLastReportedAtBlock(ctx context.Context, reporter []byte) (uint64, error)
+	TotalReporterPower(ctx context.Context) (math.Int, error)
 }
 
 type RegistryHooks interface {

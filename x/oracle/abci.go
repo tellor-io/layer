@@ -17,6 +17,13 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 		return err
 	}
 
+	// create settlement aggregates for cross-chain escrows whose data
+	// query aggregated this block; must run after SetAggregatedReport and
+	// before the bridge EndBlocker snapshots this block's aggregates
+	if err := k.SettleCrossChainEscrows(ctx); err != nil {
+		return err
+	}
+
 	// call claim deposit on oldest aggregate in queue if > 12 hrs old
 	if err := k.AutoClaimDeposits(ctx); err != nil {
 		return err
