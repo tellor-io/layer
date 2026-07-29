@@ -227,8 +227,8 @@ else
 fi
 
 # init variables for mainnet and palmito
-LAYERD_TAG_MAINNET="v6.1.5"
-LAYERD_TAG_PALMITO="v6.1.5"
+LAYERD_TAG_MAINNET="v6.1.6"
+LAYERD_TAG_PALMITO="v6.1.6"
 MAINNET_LAYER_NODE_URL=https://mainnet.tellorlayer.com/rpc/
 PALMITO_LAYER_NODE_URL=https://node-palmito.tellorlayer.com/rpc/
 MAINNET_RPC_NODE_ID=cbb94e01df344fdfdee1fdf2f9bb481712e7ef8d
@@ -466,7 +466,8 @@ sleep 1
 echo "Changing configs for $NETWORK..."
 sed_inplace 's/[0-9]\+stake/0loya/g' $LAYER_HOME/config/app.toml
 sed_inplace 's/^chain-id = .*$/chain-id = "'$CHAIN_ID'"/g' $LAYER_HOME/config/client.toml
-sed_inplace 's/timeout_commit = "5s"/timeout_commit = "1s"/' $LAYER_HOME/config/config.toml
+# layerd init writes "3s" (see cmd/layerd/cmd/root.go initTendermintConfig); older binaries wrote "5s"
+sed_inplace 's/^timeout_commit = .*/timeout_commit = "1s"/' $LAYER_HOME/config/config.toml
 sed_inplace 's/^cors_allowed_origins = \[\]/cors_allowed_origins = \["\*"\]/g' $LAYER_HOME/config/config.toml
 sed_inplace 's/^keyring-backend = "os"/keyring-backend = "'$KEYRING_BACKEND'"/g' $LAYER_HOME/config/client.toml
 sed_inplace 's/persistent_peers = ""/persistent_peers = "'$PEERS'"/g' $LAYER_HOME/config/config.toml
