@@ -116,8 +116,8 @@ EOF
 }
 
 # Define version tags
-LAYERD_TAG_MAINNET="v6.1.5"
-LAYERD_TAG_PALMITO="v6.1.5"
+LAYERD_TAG_MAINNET="v6.1.6"
+LAYERD_TAG_PALMITO="v6.1.6"
 MAINNET_TOKEN_BRIDGE_V2_ADDRESS="0x6ec401744008f4B018Ed9A36f76e6629799Ee50E"
 PALMITO_TOKEN_BRIDGE_V2_ADDRESS="0x55355157703A44f7516FBB831333317E98944e32"
 
@@ -423,7 +423,8 @@ sleep 1
 echo "Changing configs for $NETWORK..."
 sed -i 's/[0-9]\+stake/0loya/g' $LAYER_SNAPSHOT_HOME/config/app.toml
 sed -i 's/^chain-id = .*$/chain-id = "'$CHAIN_ID'"/g' $LAYER_SNAPSHOT_HOME/config/client.toml
-sed -i 's/timeout_commit = "5s"/timeout_commit = "1s"/' $LAYER_SNAPSHOT_HOME/config/config.toml
+# layerd init writes "3s" (see cmd/layerd/cmd/root.go initTendermintConfig); older binaries wrote "5s"
+sed -i 's/^timeout_commit = .*/timeout_commit = "1s"/' $LAYER_SNAPSHOT_HOME/config/config.toml
 sed -i 's/^cors_allowed_origins = \[\]/cors_allowed_origins = \["\*"\]/g' $LAYER_SNAPSHOT_HOME/config/config.toml
 sed -i 's/^keyring-backend = "os"/keyring-backend = "test"/g' $LAYER_SNAPSHOT_HOME/config/client.toml
 sed -i 's/persistent_peers = ""/persistent_peers = "'$PEERS'"/g' $LAYER_SNAPSHOT_HOME/config/config.toml
