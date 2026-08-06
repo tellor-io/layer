@@ -1,0 +1,41 @@
+name: weak_aggregate_below_threshold
+description: aggregate_power below 2/3 of validator power fires
+validator_power: 1000
+block:
+  height: 100
+  time: "2026-08-05T12:00:00Z"
+  events:
+    - type: aggregate_report
+      source: finalize_block
+      attrs:
+        aggregate_power: "500"
+        query_id: abc123
+        value: "0xdead"
+rules:
+  - id: weak_aggregate
+    channel: oracle
+    match:
+      event_type: aggregate_report
+    when:
+      attr_uint_lt_ratio:
+        attr: aggregate_power
+        ratio: 0.666
+        against: validator_power
+    embed:
+      title: "📊 Aggregate Below 2/3 Power"
+      color: 0xE67E22
+      fields:
+        - { attr: aggregate_power, name: "⚡ Aggregate Power", inline: true, format: code }
+        - { attr: _power_pct, name: "📉 Power %", inline: true }
+        - { attr: _validator_power, name: "🛡️ Total Validator Power", inline: true, format: code }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+expect:
+  alert_count: 1
+  alerts:
+    - rule_id: weak_aggregate
+      channel: oracle
+      title: "📊 Aggregate Below 2/3 Power"
+      fields:
+        "⚡ Aggregate Power": "`500`"
+        "📉 Power %": "50.00%"
+        "🛡️ Total Validator Power": "`1000`"

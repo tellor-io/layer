@@ -1,0 +1,37 @@
+name: new_dispute
+description: dispute event matches and builds embed fields
+block:
+  height: 200
+  time: "2026-08-05T13:00:00Z"
+  events:
+    - type: new_dispute
+      source: tx
+      attrs:
+        dispute_id: "42"
+        reporter: tellor1reporter
+        disputer: tellor1disputer
+        query_id: qid1
+rules:
+  - id: new_dispute
+    channel: disputes
+    match:
+      event_type: new_dispute
+    embed:
+      content: "🚨 **New Dispute Detected!**"
+      title: "⚖️ New Dispute"
+      color: 0xE74C3C
+      fields:
+        - { attr: dispute_id, name: "📍 Dispute ID", inline: true, format: code }
+        - { attr: reporter, name: "👤 Reporter", inline: false, format: code }
+        - { attr: disputer, name: "🥊 Disputer", inline: false, format: code }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+expect:
+  alert_count: 1
+  alerts:
+    - rule_id: new_dispute
+      channel: disputes
+      title: "⚖️ New Dispute"
+      fields:
+        "📍 Dispute ID": "`42`"
+        "👤 Reporter": "`tellor1reporter`"
+        "🥊 Disputer": "`tellor1disputer`"

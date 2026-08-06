@@ -1,0 +1,339 @@
+# Phase 4 example — event rules, embeds, weak-aggregate, infra signals, valset schedule.
+# Set dry_run: true (or pass -dry-run) to log alerts without calling Discord.
+# Logging: -log-level=debug|info|warn|error  -log-format=text|json
+# Metrics: GET /metrics on health.listen
+
+node_name: "local-monitor"
+dry_run: true
+
+rpc:
+  urls:
+    - "http://127.0.0.1:26657"
+  timeout: 30s
+  min_interval: 250ms
+
+state:
+  cursor_path: "./data/cursor.json"
+  valset_timestamps_path: "./data/valset_timestamps.json"
+
+health:
+  listen: ":8080"
+
+start_from:
+  tip: true
+
+enrichment:
+  query_ids_map: "../../supported_query_ids_map.json"
+  reload_interval: 1h
+
+power:
+  refresh_interval: 10m
+
+channels:
+  disputes:
+    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+  bridge:
+    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+  oracle:
+    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+  gov:
+    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+  staking:
+    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+  infra:
+    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+  tips:
+    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+
+defaults:
+  # Discord delivery throttle (per rule)
+  rate_limit:
+    max: 10
+    window: 10m
+    cooldown: 1h
+  # Full alert bodies in journald. max: 0 = log every match (even when Discord
+  # is deduped/rate-limited). Set max > 0 as a safety valve, e.g. max: 200 / 1m.
+  log_rate_limit:
+    max: 0
+    window: 1m
+
+rules:
+  - id: new_dispute
+    channel: disputes
+    match:
+      event_type: new_dispute
+    enrich: [asset_pair]
+    embed:
+      content: "🚨 **New Dispute Detected!**"
+      title: "⚖️ New Dispute"
+      color: 0xE74C3C
+      fields:
+        - { attr: dispute_id, name: "📍 Dispute ID", inline: true, format: code }
+        - { attr: _time, name: "⏰ Timestamp", inline: true }
+        - { attr: reporter, name: "👤 Reporter", inline: false, format: code }
+        - { attr: disputer, name: "🥊 Disputer", inline: false, format: code }
+        - { attr: _asset_pair, name: "📊 Asset Pair", inline: true }
+        - { attr: query_id, name: "🔑 Query ID", inline: false, format: code }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+
+  - id: added_dispute_round
+    channel: disputes
+    match:
+      event_type: added_dispute_round
+    embed:
+      content: "⚠️ **Dispute Round Added**"
+      title: "⚖️ Dispute Round Added"
+      color: 0xE67E22
+      fields:
+        - { attr: dispute_id, name: "📍 Dispute ID", inline: true, format: code }
+        - { attr: prev_dispute_id, name: "↩️ Previous ID", inline: true, format: code }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+
+  - id: dispute_executed
+    channel: disputes
+    match:
+      event_type: dispute_executed
+    embed:
+      content: "✅ **Dispute Executed**"
+      title: "⚖️ Dispute Executed"
+      color: 0x27AE60
+      fields:
+        - { attr: dispute_id, name: "📍 Dispute ID", inline: true, format: code }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+      include_remaining: true
+
+  - id: deposit_claimed
+    channel: bridge
+    match:
+      event_type: deposit_claimed
+    embed:
+      content: "🚨 **New Bridge Deposit Detected!**"
+      title: "🌉 New Bridge Deposit"
+      color: 0x2ECC71
+      fields:
+        - { attr: deposit_id, name: "📍 Deposit ID", inline: true, format: code }
+        - { attr: _time, name: "⏰ Timestamp", inline: true }
+        - { attr: recipient, name: "🎯 Recipient", inline: false, format: code }
+        - { attr: amount, name: "💰 Amount", inline: true, format: amount_trb }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+
+  - id: tokens_withdrawn
+    channel: bridge
+    match:
+      event_type: tokens_withdrawn
+    embed:
+      content: "💸 **Withdrawal Initiated**"
+      title: "🌉 Tokens Withdrawn"
+      color: 0x3498DB
+      fields:
+        - { attr: withdraw_id, name: "📍 Withdraw ID", inline: true, format: code }
+        - { attr: _time, name: "⏰ Timestamp", inline: true }
+        - { attr: sender, name: "👤 Sender", inline: false, format: code }
+        - { attr: recipient_evm_address, name: "🎯 Recipient (EVM)", inline: false, format: code }
+        - { attr: amount, name: "💰 Amount", inline: true, format: amount_trb }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+
+  - id: tip_added
+    channel: tips
+    match:
+      event_type: tip_added
+    enrich: [asset_pair]
+    embed:
+      content: "💡 **Tip Added**"
+      title: "🪙 Tip Added"
+      color: 0x9B59B6
+      fields:
+        - { attr: _asset_pair, name: "📊 Asset Pair", inline: true }
+        - { attr: _time, name: "⏰ Timestamp", inline: true }
+        - { attr: query_id, name: "🔑 Query ID", inline: false, format: code }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+      include_remaining: true
+
+  - id: submit_proposal
+    channel: gov
+    match:
+      event_type: submit_proposal
+    embed:
+      content: "📜 **New Governance Proposal**"
+      title: "🏛️ Proposal Submitted"
+      color: 0xF1C40F
+      fields:
+        - { attr: proposal_id, name: "📍 Proposal ID", inline: true, format: code }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+      include_remaining: true
+
+  - id: inactive_proposal
+    channel: gov
+    match:
+      event_type: inactive_proposal
+    embed:
+      content: "📭 **Proposal Inactive**"
+      title: "🏛️ Proposal Finished (Inactive)"
+      color: 0x95A5A6
+      fields:
+        - { attr: proposal_id, name: "📍 Proposal ID", inline: true, format: code }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+
+  - id: active_proposal
+    channel: gov
+    match:
+      event_type: active_proposal
+    embed:
+      content: "📬 **Proposal Active**"
+      title: "🏛️ Proposal Finished (Active)"
+      color: 0x27AE60
+      fields:
+        - { attr: proposal_id, name: "📍 Proposal ID", inline: true, format: code }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+
+  - id: create_validator
+    channel: staking
+    match:
+      event_type: create_validator
+    embed:
+      content: "🆕 **New Validator Created**"
+      title: "🛡️ Create Validator"
+      color: 0x3498DB
+      fields:
+        - { attr: validator, name: "👤 Validator", inline: false, format: code }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+      include_remaining: true
+
+  - id: slash
+    channel: staking
+    match:
+      event_type: slash
+    embed:
+      content: "⚔️ **Slash Event**"
+      title: "🛡️ Slash"
+      color: 0xC0392B
+      fields:
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+      include_remaining: true
+
+  - id: new_bridge_validator_set
+    channel: bridge
+    match:
+      event_type: new_bridge_validator_set
+    side_effects:
+      - record_attr_as_timestamp: timestamp
+    embed:
+      content: "🆕 **New Bridge Validator Set**"
+      title: "🌉 Bridge Validator Set Update"
+      color: 0x1ABC9C
+      fields:
+        - { attr: timestamp, name: "⏰ Valset Timestamp", inline: true, format: code }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+      include_remaining: true
+
+  - id: weak_aggregate
+    channel: oracle
+    match:
+      event_type: aggregate_report
+    when:
+      attr_uint_lt_ratio:
+        attr: aggregate_power
+        ratio: 0.666
+        against: validator_power
+    enrich: [asset_pair]
+    rate_limit:
+      max: 10
+      window: 10m
+      cooldown: 2h
+    embed:
+      content: "⚠️ **Weak Aggregate Report**"
+      title: "📊 Aggregate Below 2/3 Power"
+      color: 0xE67E22
+      fields:
+        - { attr: _asset_pair, name: "📊 Asset Pair", inline: true }
+        - { attr: _power_pct, name: "📉 Power %", inline: true }
+        - { attr: aggregate_power, name: "⚡ Aggregate Power", inline: true, format: code }
+        - { attr: _validator_power, name: "🛡️ Total Validator Power", inline: true, format: code }
+        - { attr: query_id, name: "🔑 Query ID", inline: false, format: code }
+        - { attr: value, name: "💾 Value", inline: false, format: code }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+
+  - id: slow_blocks
+    channel: infra
+    match:
+      kind: block_interval
+    when:
+      max_interval: 5m
+    rate_limit:
+      max: 3
+      window: 30m
+      cooldown: 1h
+    embed:
+      content: "🐢 **Abnormally Long Block Time**"
+      title: "⏱️ Slow Blocks"
+      color: 0xE74C3C
+      fields:
+        - { attr: normalized_interval, name: "⏱️ Normalized Interval", inline: true, format: code }
+        - { attr: max_interval, name: "🚨 Threshold", inline: true, format: code }
+        - { attr: interval, name: "⌛ Wall Interval", inline: true, format: code }
+        - { attr: prev_height, name: "↩️ Prev Height", inline: true, format: code }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+        - { attr: _node, name: "🖥️ Node", inline: true }
+
+  - id: rpc_unhealthy
+    channel: infra
+    match:
+      kind: rpc_unhealthy
+    when:
+      fail_threshold: 3
+      check_every: 30s
+    rate_limit:
+      max: 2
+      window: 30m
+      cooldown: 1h
+    embed:
+      content: "🔴 **Node RPC Unhealthy**"
+      title: "💀 RPC Failures"
+      color: 0xC0392B
+      fields:
+        - { attr: consecutive_fails, name: "📉 Consecutive Fails", inline: true, format: code }
+        - { attr: fail_threshold, name: "🚨 Threshold", inline: true, format: code }
+        - { attr: last_error, name: "💥 Last Error", inline: false, format: code }
+        - { attr: _node, name: "🖥️ Node", inline: true }
+
+  - id: ingest_lag
+    channel: infra
+    match:
+      kind: ingest_lag
+    when:
+      max_lag: 50
+      check_every: 30s
+    rate_limit:
+      max: 2
+      window: 30m
+      cooldown: 1h
+    embed:
+      content: "📡 **Monitor Falling Behind Tip**"
+      title: "🐢 Ingest Lag"
+      color: 0xD35400
+      fields:
+        - { attr: lag, name: "📏 Lag (heights)", inline: true, format: code }
+        - { attr: max_lag, name: "🚨 Max Lag", inline: true, format: code }
+        - { attr: cursor, name: "📍 Cursor", inline: true, format: code }
+        - { attr: tip, name: "🎯 Tip", inline: true, format: code }
+        - { attr: _node, name: "🖥️ Node", inline: true }
+
+  - id: valset_daily
+    channel: bridge
+    match:
+      kind: schedule
+    when:
+      daily_at: "09:00"
+      lookback: 336h   # 14 days
+    embed:
+      content: "📅 **Daily Validator Set Update Analysis**"
+      title: "🌉 Valset Frequency Report"
+      color: 0x1ABC9C
+      fields:
+        - { attr: status, name: "📌 Status", inline: false }
+        - { attr: count, name: "#️⃣ Updates", inline: true, format: code }
+        - { attr: lookback, name: "🔭 Lookback", inline: true, format: code }
+        - { attr: latest, name: "🕐 Latest Update", inline: false, format: code }
+        - { attr: average_frequency, name: "📈 Average Frequency", inline: true, format: code }
+        - { attr: median_frequency, name: "📊 Median Frequency", inline: true, format: code }
+        - { attr: _node, name: "🖥️ Node", inline: true }

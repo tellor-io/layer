@@ -1,0 +1,34 @@
+[Unit]
+Description=Layer chain-monitor (RPC block alerts)
+Documentation=https://github.com/tellor-io/layer/tree/main/scripts/chain-monitor
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=chain-monitor
+Group=chain-monitor
+WorkingDirectory=/opt/chain-monitor
+ExecStart=/opt/chain-monitor/chain-monitor -config=/etc/chain-monitor/config.yml -log-format=json -log-level=info
+Restart=on-failure
+RestartSec=5
+# Finish current height then exit on SIGTERM.
+TimeoutStopSec=60
+KillSignal=SIGTERM
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/chain-monitor
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+Environment=HOME=/var/lib/chain-monitor
+
+[Install]
+WantedBy=multi-user.target

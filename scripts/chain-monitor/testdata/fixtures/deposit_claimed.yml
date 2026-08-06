@@ -1,0 +1,38 @@
+name: deposit_claimed
+description: Bridge deposit produces a formatted TRB amount embed
+block:
+  height: 25669427
+  time: "2026-08-02T15:59:45Z"
+  chain_id: layertest-4
+  events:
+    - type: deposit_claimed
+      source: finalize_block
+      attrs:
+        deposit_id: "206"
+        recipient: tellor128m9knt3039k5rmaeu50q0g7y608g2w5etj2ra
+        amount: 5092440000loya
+rules:
+  - id: deposit_claimed
+    channel: bridge
+    match:
+      event_type: deposit_claimed
+    embed:
+      content: "🚨 **New Bridge Deposit Detected!**"
+      title: "🌉 New Bridge Deposit"
+      color: 0x2ECC71
+      fields:
+        - { attr: deposit_id, name: "📍 Deposit ID", inline: true, format: code }
+        - { attr: _time, name: "⏰ Timestamp", inline: true }
+        - { attr: recipient, name: "🎯 Recipient", inline: false, format: code }
+        - { attr: amount, name: "💰 Amount", inline: true, format: amount_trb }
+        - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
+expect:
+  alert_count: 1
+  alerts:
+    - rule_id: deposit_claimed
+      channel: bridge
+      title: "🌉 New Bridge Deposit"
+      fields:
+        "📍 Deposit ID": "`206`"
+        "💰 Amount": "5092.440000 TRB"
+        "🧱 Block Height": "`25669427`"

@@ -1,0 +1,30 @@
+name: weak_aggregate_no_power
+description: ratio rule skipped when validator power unknown
+validator_power: 0
+power_known: false
+block:
+  height: 102
+  time: "2026-08-05T12:00:02Z"
+  events:
+    - type: aggregate_report
+      source: finalize_block
+      attrs:
+        aggregate_power: "1"
+        query_id: abc123
+rules:
+  - id: weak_aggregate
+    channel: oracle
+    match:
+      event_type: aggregate_report
+    when:
+      attr_uint_lt_ratio:
+        attr: aggregate_power
+        ratio: 0.666
+        against: validator_power
+    embed:
+      title: Weak Aggregate
+      fields:
+        - { attr: aggregate_power, name: Power }
+expect:
+  alert_count: 0
+  alerts: []

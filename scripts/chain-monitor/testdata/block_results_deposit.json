@@ -1,0 +1,16 @@
+{
+  "height": 25669427,
+  "time": "2026-08-02T15:59:45.000000000Z",
+  "chain_id": "layertest-4",
+  "finalize_block_events": [
+    {
+      "type": "deposit_claimed",
+      "attributes": [
+        { "key": "deposit_id", "value": "206" },
+        { "key": "recipient", "value": "tellor128m9knt3039k5rmaeu50q0g7y608g2w5etj2ra" },
+        { "key": "amount", "value": "5092440000loya" }
+      ]
+    }
+  ],
+  "txs_results": []
+}
