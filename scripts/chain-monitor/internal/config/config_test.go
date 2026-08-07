@@ -90,6 +90,32 @@ func TestValidateRequiresWebhookUnlessDryRun(t *testing.T) {
 	}
 }
 
+func TestValidateBridgeDepositEnrichRequiresBridgeChannel(t *testing.T) {
+	cfg := &config.Config{
+		NodeName:  "x",
+		DryRun:    true,
+		State:     config.StateConfig{CursorPath: "./c.json"},
+		StartFrom: config.StartFromConfig{Tip: true},
+		Channels:  map[string]config.Channel{"oracle": {}},
+		Rules: []config.RuleConfig{{
+			ID:      "weak_aggregate",
+			Channel: "oracle",
+			Match:   config.MatchConfig{EventType: "aggregate_report"},
+			Enrich:  []string{"bridge_deposit"},
+			Embed:   config.EmbedConfig{Title: "T"},
+		}},
+	}
+	cfg.RPC.URLs = []string{"http://127.0.0.1:26657"}
+	cfg.RPC.Timeout = time.Second
+	if err := cfg.Validate(); err == nil {
+		t.Fatal("expected bridge channel required error")
+	}
+	cfg.Channels["bridge"] = config.Channel{}
+	if err := cfg.Validate(); err != nil {
+		t.Fatalf("validate with bridge channel: %v", err)
+	}
+}
+
 func TestValidateRequiresRPC(t *testing.T) {
 	cfg := &config.Config{
 		NodeName:  "x",

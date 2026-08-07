@@ -113,7 +113,7 @@ func runFixture(t *testing.T, path string) {
 		}
 	}
 
-	engine := rules.NewEngine(cfg, nil, cache, nil)
+	engine := rules.NewEngine(cfg, rules.EngineOpts{Power: cache})
 	block := toBlockView(t, fx.Block)
 	alerts := engine.Evaluate(block)
 
@@ -248,7 +248,7 @@ func TestSignalRules(t *testing.T) {
 			},
 		},
 	}
-	engine := rules.NewEngine(cfg, nil, nil, nil)
+	engine := rules.NewEngine(cfg, rules.EngineOpts{})
 
 	t0 := time.Date(2026, 8, 5, 12, 0, 0, 0, time.UTC)
 	if got := engine.EvaluateBlockInterval(10, 11, t0, t0.Add(2*time.Minute)); len(got) != 1 {

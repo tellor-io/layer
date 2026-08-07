@@ -13,6 +13,7 @@ See [PLAN.md](./PLAN.md) for the full design.
 - Durable cursor file — restart resumes at last height + 1
 - YAML rules → Discord embeds
 - **Weak aggregate** alerts when `aggregate_power < ratio × validator voting power`
+- **Missing important reporters** on every aggregate (structured log for AI review) via `IMPORTANT_REPORTERS` + LCD `get_reports_by_aggregate`; optional Discord field on weak aggregates via `enrich: [missing_reporters]` (monikers from `reporters_map.json`)
 - **Block interval**, **RPC unhealthy**, and **ingest lag** signal rules
 - Valset timestamp recording + daily schedule report
 - Named channels, rate limits, dedupe, query-id enrichment
@@ -58,9 +59,35 @@ when:
 
 If validator power has never been fetched or is stale, weak-aggregate alerts are **skipped** (no fake default).
 
+### Missing important reporters
+
+Set env `IMPORTANT_REPORTERS` to a comma-separated list of reporter bech32 addresses.
+
+On **every** `aggregate_report` event the monitor queries Cosmos REST (`api.url` or `LAYER_API_URL`) for reports in that aggregate. If any configured reporters did not submit, it logs:
+
+```text
+important reporters missing from aggregate  query_id=... missing_reporters=[...] query_type=SpotPrice
+```
+
+`query_type` is included when it can be decoded from event `query_data`. Reporter addresses are replaced with monikers from `enrichment.reporters_map` when available.
+
+Weak-aggregate Discord alerts can also set `enrich: [missing_reporters]` to show the same gap in the embed (`_missing_reporters`).
+
+`api.url` must be LCD / gRPC-gateway (often `:1317`), **not** Tendermint RPC (`:26657`).
+
+Example map (`example-reporters-map.json`):
+
+```json
+{
+  "addressToMonikerMap": {
+    "tellor1...": "palmito-reporter-1"
+  }
+}
+```
+
 ### Synthetic embed attrs
 
-`_height`, `_time`, `_node`, `_source`, `_asset_pair`, `_validator_power`, `_power_pct`
+`_height`, `_time`, `_node`, `_source`, `_asset_pair`, `_validator_power`, `_power_pct`, `_missing_reporters`
 
 ## Health & metrics
 

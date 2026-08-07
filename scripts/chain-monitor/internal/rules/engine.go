@@ -1,7 +1,9 @@
 package rules
 
 import (
+	"context"
 	"fmt"
+	"log/slog"
 	"math/big"
 	"regexp"
 	"sort"
@@ -52,13 +54,33 @@ type Alert struct {
 	Height    uint64
 }
 
+// ReportsByAggregateQuerier fetches reporters that submitted for an aggregate.
+type ReportsByAggregateQuerier interface {
+	ReportsByAggregate(ctx context.Context, queryID string, timestamp uint64) ([]string, error)
+}
+
+// EngineOpts configures optional engine dependencies.
+type EngineOpts struct {
+	QueryIDs  *enrich.QueryIDMap
+	Reporters *enrich.ReporterMap
+	Important []string
+	Oracle    ReportsByAggregateQuerier
+	Power     *power.Cache
+	Valset    *state.ValsetStore
+	Log       *slog.Logger
+}
+
 // Engine evaluates configured rules.
 type Engine struct {
-	nodeName string
-	rules    []compiledRule
-	enricher *enrich.QueryIDMap
-	power    *power.Cache
-	valset   *state.ValsetStore
+	nodeName  string
+	rules     []compiledRule
+	enricher  *enrich.QueryIDMap
+	reporters *enrich.ReporterMap
+	important []string
+	oracle    ReportsByAggregateQuerier
+	power     *power.Cache
+	valset    *state.ValsetStore
+	log       *slog.Logger
 }
 
 type compiledRule struct {
@@ -66,8 +88,8 @@ type compiledRule struct {
 	rateLimit config.RateLimitConfig
 }
 
-// NewEngine builds an engine from config.
-func NewEngine(cfg *config.Config, enricher *enrich.QueryIDMap, powerCache *power.Cache, valset *state.ValsetStore) *Engine {
+// NewEngine builds an engine from config and optional deps.
+func NewEngine(cfg *config.Config, opts EngineOpts) *Engine {
 	rules := make([]compiledRule, 0, len(cfg.Rules))
 	for _, r := range cfg.Rules {
 		rules = append(rules, compiledRule{
@@ -75,12 +97,20 @@ func NewEngine(cfg *config.Config, enricher *enrich.QueryIDMap, powerCache *powe
 			rateLimit: cfg.RateLimitFor(r),
 		})
 	}
+	log := opts.Log
+	if log == nil {
+		log = slog.Default()
+	}
 	return &Engine{
-		nodeName: cfg.NodeName,
-		rules:    rules,
-		enricher: enricher,
-		power:    powerCache,
-		valset:   valset,
+		nodeName:  cfg.NodeName,
+		rules:     rules,
+		enricher:  opts.QueryIDs,
+		reporters: opts.Reporters,
+		important: append([]string(nil), opts.Important...),
+		oracle:    opts.Oracle,
+		power:     opts.Power,
+		valset:    opts.Valset,
+		log:       log,
 	}
 }
 
@@ -106,10 +136,22 @@ func (e *Engine) RulesByKind(kind string) []config.RuleConfig {
 	return out
 }
 
+// reportsCache memoizes LCD get_reports_by_aggregate lookups within one Evaluate.
+type reportsCache map[string]reportsCacheEntry
+
+type reportsCacheEntry struct {
+	reporters []string
+	err       error
+}
+
 // Evaluate runs event rules against a block (including when predicates + side effects).
+// When IMPORTANT_REPORTERS is configured, every aggregate_report is checked and
+// missing reporters are logged for AI log review (independent of Discord alerts).
 func (e *Engine) Evaluate(block BlockView) []Alert {
+	cache := reportsCache{}
 	var alerts []Alert
 	for _, ev := range block.Events {
+		e.logMissingImportantReporters(ev, cache)
 		for _, rule := range e.rules {
 			if !rule.cfg.IsEventRule() {
 				continue
@@ -121,7 +163,7 @@ func (e *Engine) Evaluate(block BlockView) []Alert {
 				continue
 			}
 			e.applySideEffects(rule.cfg, ev)
-			alert, ok := e.buildAlert(rule.cfg, block.Height, block.Time, ev)
+			alert, ok := e.buildAlert(rule.cfg, block.Height, block.Time, block.ChainID, ev, cache)
 			if ok {
 				alerts = append(alerts, alert)
 			}
@@ -157,7 +199,7 @@ func (e *Engine) EvaluateBlockInterval(prevHeight, height uint64, prevTime, curr
 			},
 			TxIndex: -1,
 		}
-		if alert, ok := e.buildAlert(rule, height, currTime, ev); ok {
+		if alert, ok := e.buildAlert(rule, height, currTime, "", ev, nil); ok {
 			alerts = append(alerts, alert)
 		}
 	}
@@ -181,7 +223,7 @@ func (e *Engine) EvaluateRPCUnhealthy(consecutiveFails int, lastErr string) []Al
 			},
 			TxIndex: -1,
 		}
-		if alert, ok := e.buildAlert(rule, 0, time.Now().UTC(), ev); ok {
+		if alert, ok := e.buildAlert(rule, 0, time.Now().UTC(), "", ev, nil); ok {
 			alerts = append(alerts, alert)
 		}
 	}
@@ -210,7 +252,7 @@ func (e *Engine) EvaluateIngestLag(cursor, tip uint64) []Alert {
 			},
 			TxIndex: -1,
 		}
-		if alert, ok := e.buildAlert(rule, cursor, time.Now().UTC(), ev); ok {
+		if alert, ok := e.buildAlert(rule, cursor, time.Now().UTC(), "", ev, nil); ok {
 			alerts = append(alerts, alert)
 		}
 	}
@@ -229,7 +271,7 @@ func (e *Engine) BuildValsetReport(rule config.RuleConfig) (Alert, bool) {
 			},
 			TxIndex: -1,
 		}
-		return e.buildAlert(rule, 0, time.Now().UTC(), ev)
+		return e.buildAlert(rule, 0, time.Now().UTC(), "", ev, nil)
 	}
 	timestamps, err := e.valset.Recent(rule.When.Lookback)
 	if err != nil {
@@ -242,7 +284,7 @@ func (e *Engine) BuildValsetReport(rule config.RuleConfig) (Alert, bool) {
 			},
 			TxIndex: -1,
 		}
-		return e.buildAlert(rule, 0, time.Now().UTC(), ev)
+		return e.buildAlert(rule, 0, time.Now().UTC(), "", ev, nil)
 	}
 	count, avg, median, latest := state.AnalyzeFrequency(timestamps)
 	attrs := map[string]string{
@@ -262,7 +304,7 @@ func (e *Engine) BuildValsetReport(rule config.RuleConfig) (Alert, bool) {
 		attrs["median_frequency"] = formatDuration(median)
 	}
 	ev := EventView{Type: config.KindSchedule, Source: SourceSignal, Attrs: attrs, TxIndex: -1}
-	return e.buildAlert(rule, 0, time.Now().UTC(), ev)
+	return e.buildAlert(rule, 0, time.Now().UTC(), "", ev, nil)
 }
 
 func (e *Engine) passesWhen(rule config.RuleConfig, ev EventView) bool {
@@ -318,24 +360,45 @@ func matchEvent(m config.MatchConfig, ev EventView) bool {
 	return true
 }
 
-func (e *Engine) buildAlert(rule config.RuleConfig, height uint64, blockTime time.Time, ev EventView) (Alert, bool) {
+func (e *Engine) buildAlert(rule config.RuleConfig, height uint64, blockTime time.Time, chainID string, ev EventView, cache reportsCache) (Alert, bool) {
 	assetPair := ""
-	if e.enricher != nil {
-		for _, kind := range rule.Enrich {
-			if kind == "asset_pair" {
-				if qid := ev.Attrs["query_id"]; qid != "" {
-					assetPair = e.enricher.AssetPair(qid)
+	extra := map[string]string{}
+	channel := rule.Channel
+	for _, kind := range rule.Enrich {
+		switch kind {
+		case "asset_pair":
+			if e.enricher == nil {
+				continue
+			}
+			if qid := ev.Attrs["query_id"]; qid != "" {
+				assetPair = e.enricher.AssetPair(qid)
+			}
+			if assetPair == "" {
+				if qd := ev.Attrs["query_data"]; qd != "" {
+					assetPair = e.enricher.AssetPairFromQueryData(qd)
 				}
-				if assetPair == "" {
-					if qd := ev.Attrs["query_data"]; qd != "" {
-						assetPair = e.enricher.AssetPairFromQueryData(qd)
-					}
-				}
+			}
+		case "missing_reporters":
+			if missing := e.resolveMissingReporters(ev, cache); missing != "" {
+				extra["_missing_reporters"] = missing
+			}
+		case "bridge_deposit":
+			dep, ok := enrich.DecodeBridgeDepositQueryData(ev.Attrs["query_data"])
+			if !ok {
+				continue
+			}
+			extra["_deposit_id"] = strconv.FormatUint(dep.DepositID, 10)
+			extra["_query_type"] = dep.QueryType
+			if tip := enrich.TipCommand(ev.Attrs["query_data"], chainID); tip != "" {
+				extra["_tip_cmd"] = tip
+			}
+			channel = enrich.BridgeChannel
+			if assetPair == "" {
+				assetPair = "TRB Bridge Deposit"
 			}
 		}
 	}
 
-	extra := map[string]string{}
 	if e.power != nil {
 		if p, ok := e.power.Get(); ok {
 			extra["_validator_power"] = strconv.FormatUint(p, 10)
@@ -401,7 +464,7 @@ func (e *Engine) buildAlert(rule config.RuleConfig, height uint64, blockTime tim
 
 	return Alert{
 		RuleID:    rule.ID,
-		Channel:   rule.Channel,
+		Channel:   channel,
 		Content:   rule.Embed.Content,
 		Embed:     embed,
 		DedupeKey: dedupeKey(rule, height, ev),
@@ -429,6 +492,81 @@ type fieldContext struct {
 	assetPair string
 }
 
+// logMissingImportantReporters checks every aggregate_report against IMPORTANT_REPORTERS
+// and emits a structured log when any are absent (for AI log review).
+func (e *Engine) logMissingImportantReporters(ev EventView, cache reportsCache) {
+	if ev.Type != "aggregate_report" || len(e.important) == 0 || e.oracle == nil {
+		return
+	}
+	missing := e.missingImportantReporters(ev, cache)
+	if len(missing) == 0 {
+		return
+	}
+	queryID := strings.TrimSpace(ev.Attrs["query_id"])
+	attrs := []any{
+		"query_id", queryID,
+		"missing_reporters", missing,
+	}
+	if qt := enrich.QueryTypeFromQueryData(ev.Attrs["query_data"]); qt != "" {
+		attrs = append(attrs, "query_type", qt)
+	}
+	e.log.Info("important reporters missing from aggregate", attrs...)
+}
+
+func (e *Engine) resolveMissingReporters(ev EventView, cache reportsCache) string {
+	return strings.Join(e.missingImportantReporters(ev, cache), ", ")
+}
+
+func (e *Engine) missingImportantReporters(ev EventView, cache reportsCache) []string {
+	if len(e.important) == 0 || e.oracle == nil {
+		return nil
+	}
+	submitted, ok := e.reportsByAggregate(ev, cache)
+	if !ok {
+		return nil
+	}
+	return enrich.MissingReporters(e.important, submitted, e.reporters)
+}
+
+func (e *Engine) reportsByAggregate(ev EventView, cache reportsCache) ([]string, bool) {
+	queryID := strings.TrimSpace(ev.Attrs["query_id"])
+	timestampStr := strings.TrimSpace(ev.Attrs["timestamp"])
+	if queryID == "" || timestampStr == "" {
+		e.log.Warn("important reporters check skipped: aggregate event missing query_id or timestamp",
+			"query_id", queryID != "",
+			"timestamp", timestampStr != "",
+		)
+		return nil, false
+	}
+	timestamp, err := strconv.ParseUint(timestampStr, 10, 64)
+	if err != nil {
+		e.log.Warn("important reporters check skipped: bad timestamp", "timestamp", timestampStr, "err", err)
+		return nil, false
+	}
+
+	key := queryID + "|" + timestampStr
+	if cache != nil {
+		if entry, hit := cache[key]; hit {
+			if entry.err != nil {
+				return nil, false
+			}
+			return entry.reporters, true
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	submitted, err := e.oracle.ReportsByAggregate(ctx, queryID, timestamp)
+	if cache != nil {
+		cache[key] = reportsCacheEntry{reporters: submitted, err: err}
+	}
+	if err != nil {
+		e.log.Warn("important reporters check failed", "query_id", queryID, "timestamp", timestamp, "err", err)
+		return nil, false
+	}
+	return submitted, true
+}
+
 func resolveAttr(attr string, ctx fieldContext) (string, bool) {
 	switch attr {
 	case "_height":
@@ -450,7 +588,7 @@ func resolveAttr(attr string, ctx fieldContext) (string, bool) {
 			return "Unknown", true
 		}
 		return ctx.assetPair, true
-	case "_validator_power", "_power_pct":
+	case "_validator_power", "_power_pct", "_missing_reporters", "_deposit_id", "_tip_cmd", "_query_type":
 		v, ok := ctx.attrs[attr]
 		return v, ok && v != ""
 	default:

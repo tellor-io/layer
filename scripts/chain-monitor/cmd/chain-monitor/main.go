@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/tellor-io/layer/scripts/chain-monitor/internal/api"
 	"github.com/tellor-io/layer/scripts/chain-monitor/internal/config"
 	"github.com/tellor-io/layer/scripts/chain-monitor/internal/enrich"
 	"github.com/tellor-io/layer/scripts/chain-monitor/internal/health"
@@ -62,6 +63,38 @@ func main() {
 		os.Exit(1)
 	}
 
+	reporterMap, err := enrich.NewReporterMap(cfg.Enrichment.ReportersMap, log)
+	if err != nil {
+		log.Error("load reporters map failed", "err", err)
+		os.Exit(1)
+	}
+
+	important := enrich.ParseImportantReporters(os.Getenv("IMPORTANT_REPORTERS"))
+	apiURL := strings.TrimSpace(cfg.API.URL)
+	if apiURL == "" {
+		apiURL = strings.TrimSpace(os.Getenv("LAYER_API_URL"))
+	}
+	oracleClient, err := api.NewClient(apiURL, cfg.RPC.Timeout)
+	if err != nil {
+		log.Error("create api client failed", "err", err)
+		os.Exit(1)
+	}
+	if len(important) > 0 {
+		log.Info("loaded IMPORTANT_REPORTERS", "count", len(important))
+		base := ""
+		if oracleClient != nil {
+			base = oracleClient.BaseURL()
+		}
+		if base == "" {
+			log.Warn("IMPORTANT_REPORTERS is set but api.url / LAYER_API_URL is empty; per-aggregate missing-reporter checks will be skipped")
+		} else if api.LooksLikeTendermint(base) {
+			log.Warn("IMPORTANT_REPORTERS is set but REST base looks like Tendermint (:26657); set api.url or LAYER_API_URL to LCD (e.g. :1317)",
+				"api_url", base)
+		} else {
+			log.Info("REST base for oracle queries", "api_url", base)
+		}
+	}
+
 	reg := metrics.New()
 	powerCache := power.NewCache(client, cfg.Power.RefreshInterval, reg, log)
 	valset := state.NewValsetStore(cfg.State.ValsetTimestampsPath)
@@ -69,7 +102,18 @@ func main() {
 	cursor := state.NewCursorFile(cfg.State.CursorPath)
 	tracker := health.NewTracker(cfg.NodeName)
 	healthServer := health.NewServer(cfg.Health.Listen, tracker, reg, log)
-	engine := rules.NewEngine(cfg, queryMap, powerCache, valset)
+	engineOpts := rules.EngineOpts{
+		QueryIDs:  queryMap,
+		Reporters: reporterMap,
+		Important: important,
+		Power:     powerCache,
+		Valset:    valset,
+		Log:       log,
+	}
+	if oracleClient != nil {
+		engineOpts.Oracle = oracleClient
+	}
+	engine := rules.NewEngine(cfg, engineOpts)
 
 	var sender notify.Sender
 	if cfg.DryRun {
@@ -85,6 +129,7 @@ func main() {
 	stopReload := make(chan struct{})
 	defer close(stopReload)
 	queryMap.StartReloader(stopReload, cfg.Enrichment.ReloadInterval)
+	reporterMap.StartReloader(stopReload, cfg.Enrichment.ReloadInterval)
 
 	go powerCache.Start(ctx)
 

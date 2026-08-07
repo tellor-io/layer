@@ -2,6 +2,7 @@ package rules
 
 import (
 	"context"
+	"log/slog"
 	"os"
 	"testing"
 	"time"
@@ -46,7 +47,7 @@ func TestEvaluateDepositClaimed(t *testing.T) {
 	cfg.Defaults.RateLimit.Window = time.Minute
 	cfg.Defaults.RateLimit.Cooldown = time.Hour
 
-	engine := NewEngine(cfg, nil, nil, nil)
+	engine := NewEngine(cfg, EngineOpts{})
 	block := BlockView{
 		Height: 25669427,
 		Time:   time.Date(2026, 8, 2, 15, 59, 45, 0, time.UTC),
@@ -114,7 +115,7 @@ func TestWeakAggregateRatio(t *testing.T) {
 			},
 		}},
 	}
-	engine := NewEngine(cfg, nil, cache, nil)
+	engine := NewEngine(cfg, EngineOpts{Power: cache})
 
 	// 500 < 666.7 → alert
 	alerts := engine.Evaluate(BlockView{
@@ -141,6 +142,102 @@ func TestWeakAggregateRatio(t *testing.T) {
 	}
 }
 
+func TestWeakAggregateBridgeDepositRoutesToBridge(t *testing.T) {
+	cache := power.NewCache(staticPower{p: 1000}, time.Minute, nil, nil)
+	if err := cache.Refresh(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	const queryData = "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000b54524242726964676556320000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000ce"
+
+	cfg := &config.Config{
+		NodeName: "n",
+		Channels: map[string]config.Channel{
+			"oracle": {WebhookURL: "http://x"},
+			"bridge": {WebhookURL: "http://y"},
+		},
+		Rules: []config.RuleConfig{{
+			ID:      "weak_aggregate",
+			Channel: "oracle",
+			Match:   config.MatchConfig{EventType: "aggregate_report"},
+			When: config.WhenConfig{
+				AttrUintLtRatio: &config.AttrUintLtRatio{
+					Attr: "aggregate_power", Ratio: 0.666, Against: "validator_power",
+				},
+			},
+			Enrich: []string{"bridge_deposit"},
+			Embed: config.EmbedConfig{
+				Title: "Weak Aggregate",
+				Fields: []config.FieldConfig{
+					{Attr: "_asset_pair", Name: "Asset"},
+					{Attr: "_deposit_id", Name: "Deposit ID", Format: "code"},
+					{Attr: "_tip_cmd", Name: "Tip", Format: "code"},
+					{Attr: "aggregate_power", Name: "Power"},
+				},
+			},
+		}},
+	}
+	engine := NewEngine(cfg, EngineOpts{Power: cache})
+
+	alerts := engine.Evaluate(BlockView{
+		Height:  42,
+		ChainID: "layertest-4",
+		Events: []EventView{{
+			Type: "aggregate_report",
+			Attrs: map[string]string{
+				"aggregate_power":   "500",
+				"query_data":        queryData,
+				"micro_report_type": "TRBBridgeV2",
+			},
+		}},
+	})
+	if len(alerts) != 1 {
+		t.Fatalf("expected 1 alert, got %d", len(alerts))
+	}
+	a := alerts[0]
+	if a.Channel != "bridge" {
+		t.Fatalf("channel = %q want bridge", a.Channel)
+	}
+	fields := map[string]string{}
+	for _, f := range a.Embed.Fields {
+		fields[f.Name] = f.Value
+	}
+	if fields["Deposit ID"] != "`206`" {
+		t.Fatalf("deposit id = %q", fields["Deposit ID"])
+	}
+	if fields["Asset"] != "TRB Bridge Deposit" {
+		t.Fatalf("asset = %q", fields["Asset"])
+	}
+	wantTip := "`./layerd tx oracle tip " + queryData + " 1500loya --chain-id layertest-4`"
+	if fields["Tip"] != wantTip {
+		t.Fatalf("tip =\n%q\nwant\n%q", fields["Tip"], wantTip)
+	}
+
+	// Non-bridge weak aggregate stays on oracle and omits deposit/tip fields.
+	alerts = engine.Evaluate(BlockView{
+		Height:  43,
+		ChainID: "layertest-4",
+		Events: []EventView{{
+			Type: "aggregate_report",
+			Attrs: map[string]string{
+				"aggregate_power": "500",
+				"query_data":      "aabbcc",
+			},
+		}},
+	})
+	if len(alerts) != 1 {
+		t.Fatalf("expected spotprice alert, got %d", len(alerts))
+	}
+	if alerts[0].Channel != "oracle" {
+		t.Fatalf("channel = %q want oracle", alerts[0].Channel)
+	}
+	for _, f := range alerts[0].Embed.Fields {
+		if f.Name == "Deposit ID" || f.Name == "Tip" {
+			t.Fatalf("unexpected bridge field %q on non-bridge alert", f.Name)
+		}
+	}
+}
+
 func TestWeakAggregateSkippedWithoutPower(t *testing.T) {
 	cfg := &config.Config{
 		NodeName: "n",
@@ -157,7 +254,7 @@ func TestWeakAggregateSkippedWithoutPower(t *testing.T) {
 			Embed: config.EmbedConfig{Title: "Weak"},
 		}},
 	}
-	engine := NewEngine(cfg, nil, nil, nil) // no power cache
+	engine := NewEngine(cfg, EngineOpts{}) // no power cache
 	alerts := engine.Evaluate(BlockView{
 		Height: 1,
 		Events: []EventView{{Type: "aggregate_report", Attrs: map[string]string{"aggregate_power": "1"}}},
@@ -165,6 +262,219 @@ func TestWeakAggregateSkippedWithoutPower(t *testing.T) {
 	if len(alerts) != 0 {
 		t.Fatalf("expected skip without power, got %d", len(alerts))
 	}
+}
+
+type stubOracle struct {
+	reporters []string
+	err       error
+	calls     int
+}
+
+func (s *stubOracle) ReportsByAggregate(context.Context, string, uint64) ([]string, error) {
+	s.calls++
+	return s.reporters, s.err
+}
+
+func TestMissingReportersEnrich(t *testing.T) {
+	cache := power.NewCache(staticPower{p: 1000}, time.Minute, nil, nil)
+	if err := cache.Refresh(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+
+	dir := t.TempDir()
+	path := dir + "/reporters.json"
+	if err := os.WriteFile(path, []byte(`{"addressToMonikerMap":{"tellor1a":"Alice","tellor1b":"Bob"}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	rm, err := enrich.NewReporterMap(path, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := &config.Config{
+		NodeName: "n",
+		Channels: map[string]config.Channel{"oracle": {WebhookURL: "http://x"}},
+		Rules: []config.RuleConfig{{
+			ID:      "weak_aggregate",
+			Channel: "oracle",
+			Match:   config.MatchConfig{EventType: "aggregate_report"},
+			When: config.WhenConfig{
+				AttrUintLtRatio: &config.AttrUintLtRatio{
+					Attr: "aggregate_power", Ratio: 0.666, Against: "validator_power",
+				},
+			},
+			Enrich: []string{"missing_reporters"},
+			Embed: config.EmbedConfig{
+				Title: "Weak Aggregate",
+				Fields: []config.FieldConfig{
+					{Attr: "aggregate_power", Name: "Power"},
+					{Attr: "_missing_reporters", Name: "Missing"},
+				},
+			},
+		}},
+	}
+
+	oracle := &stubOracle{reporters: []string{"tellor1a"}}
+	engine := NewEngine(cfg, EngineOpts{
+		Power:     cache,
+		Reporters: rm,
+		Important: []string{"tellor1a", "tellor1b"},
+		Oracle:    oracle,
+	})
+	alerts := engine.Evaluate(BlockView{
+		Height: 1,
+		Events: []EventView{{
+			Type: "aggregate_report",
+			Attrs: map[string]string{
+				"aggregate_power": "500",
+				"query_id":        "abc",
+				"timestamp":       "12345",
+			},
+		}},
+	})
+	if len(alerts) != 1 {
+		t.Fatalf("expected 1 alert, got %d", len(alerts))
+	}
+	var missing string
+	for _, f := range alerts[0].Embed.Fields {
+		if f.Name == "Missing" {
+			missing = f.Value
+		}
+	}
+	if missing != "Bob" {
+		t.Fatalf("missing field = %q want Bob", missing)
+	}
+	// Log check + enrich share one LCD fetch.
+	if oracle.calls != 1 {
+		t.Fatalf("oracle calls = %d want 1", oracle.calls)
+	}
+
+	// LCD error: alert still fires, missing field omitted.
+	oracle = &stubOracle{err: context.DeadlineExceeded}
+	engine = NewEngine(cfg, EngineOpts{
+		Power:     cache,
+		Reporters: rm,
+		Important: []string{"tellor1a"},
+		Oracle:    oracle,
+	})
+	alerts = engine.Evaluate(BlockView{
+		Height: 2,
+		Events: []EventView{{
+			Type: "aggregate_report",
+			Attrs: map[string]string{
+				"aggregate_power": "500",
+				"query_id":        "abc",
+				"timestamp":       "12345",
+			},
+		}},
+	})
+	if len(alerts) != 1 {
+		t.Fatalf("expected alert despite oracle error, got %d", len(alerts))
+	}
+	for _, f := range alerts[0].Embed.Fields {
+		if f.Name == "Missing" {
+			t.Fatalf("expected no Missing field, got %q", f.Value)
+		}
+	}
+}
+
+func TestImportantReportersLoggedOnEveryAggregate(t *testing.T) {
+	var records []map[string]any
+	handler := &captureHandler{records: &records}
+	log := slog.New(handler)
+
+	oracle := &stubOracle{reporters: []string{"tellor1a"}}
+	// No weak_aggregate rule — still check every aggregate for logging.
+	cfg := &config.Config{
+		NodeName: "n",
+		Channels: map[string]config.Channel{"oracle": {WebhookURL: "http://x"}},
+		Rules:    nil,
+	}
+	engine := NewEngine(cfg, EngineOpts{
+		Important: []string{"tellor1a", "tellor1b"},
+		Oracle:    oracle,
+		Log:       log,
+	})
+	queryData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000b54524242726964676556320000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000ce"
+	alerts := engine.Evaluate(BlockView{
+		Height: 10,
+		Events: []EventView{{
+			Type: "aggregate_report",
+			Attrs: map[string]string{
+				"aggregate_power": "900",
+				"query_id":        "qid1",
+				"timestamp":       "99",
+				"query_data":      queryData,
+			},
+		}},
+	})
+	if len(alerts) != 0 {
+		t.Fatalf("expected no alerts, got %d", len(alerts))
+	}
+	if oracle.calls != 1 {
+		t.Fatalf("oracle calls = %d", oracle.calls)
+	}
+	found := false
+	for _, rec := range records {
+		if rec["msg"] != "important reporters missing from aggregate" {
+			continue
+		}
+		found = true
+		if rec["query_id"] != "qid1" {
+			t.Fatalf("query_id = %v", rec["query_id"])
+		}
+		if rec["query_type"] != "TRBBridgeV2" {
+			t.Fatalf("query_type = %v", rec["query_type"])
+		}
+		missing, ok := rec["missing_reporters"].([]string)
+		if !ok || len(missing) != 1 || missing[0] != "tellor1b" {
+			t.Fatalf("missing_reporters = %#v", rec["missing_reporters"])
+		}
+	}
+	if !found {
+		t.Fatalf("expected missing-reporters log, got %#v", records)
+	}
+
+	// All important reporters present → no log.
+	records = nil
+	oracle = &stubOracle{reporters: []string{"tellor1a", "tellor1b"}}
+	engine = NewEngine(cfg, EngineOpts{
+		Important: []string{"tellor1a", "tellor1b"},
+		Oracle:    oracle,
+		Log:       slog.New(&captureHandler{records: &records}),
+	})
+	_ = engine.Evaluate(BlockView{
+		Height: 11,
+		Events: []EventView{{
+			Type: "aggregate_report",
+			Attrs: map[string]string{
+				"query_id":  "qid2",
+				"timestamp": "100",
+			},
+		}},
+	})
+	for _, rec := range records {
+		if rec["msg"] == "important reporters missing from aggregate" {
+			t.Fatal("expected no missing-reporters log when all present")
+		}
+	}
+}
+
+type captureHandler struct {
+	records *[]map[string]any
+}
+
+func (h *captureHandler) Enabled(context.Context, slog.Level) bool { return true }
+func (h *captureHandler) WithAttrs([]slog.Attr) slog.Handler       { return h }
+func (h *captureHandler) WithGroup(string) slog.Handler            { return h }
+func (h *captureHandler) Handle(_ context.Context, r slog.Record) error {
+	m := map[string]any{"msg": r.Message, "level": r.Level.String()}
+	r.Attrs(func(a slog.Attr) bool {
+		m[a.Key] = a.Value.Any()
+		return true
+	})
+	*h.records = append(*h.records, m)
+	return nil
 }
 
 func TestBlockInterval(t *testing.T) {
@@ -182,7 +492,7 @@ func TestBlockInterval(t *testing.T) {
 			},
 		}},
 	}
-	engine := NewEngine(cfg, nil, nil, nil)
+	engine := NewEngine(cfg, EngineOpts{})
 	t0 := time.Now()
 	alerts := engine.EvaluateBlockInterval(10, 11, t0, t0.Add(2*time.Minute))
 	if len(alerts) != 1 {
@@ -237,7 +547,7 @@ func TestAssetPairEnrichment(t *testing.T) {
 			},
 		}},
 	}
-	engine := NewEngine(cfg, qm, nil, nil)
+	engine := NewEngine(cfg, EngineOpts{QueryIDs: qm})
 	alerts := engine.Evaluate(BlockView{
 		Height: 1,
 		Events: []EventView{{

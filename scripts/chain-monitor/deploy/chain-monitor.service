@@ -8,27 +8,19 @@ Wants=network-online.target
 Type=simple
 User=chain-monitor
 Group=chain-monitor
-WorkingDirectory=/opt/chain-monitor
-ExecStart=/opt/chain-monitor/chain-monitor -config=/etc/chain-monitor/config.yml -log-format=json -log-level=info
+WorkingDirectory=/home/ubuntu/chain-monitor
+ExecStart=/home/ubuntu/chain-monitor/chain-monitor -config=/home/ubuntu/chain-monitor/config.yml -log-format=json -log-level=info
 Restart=on-failure
 RestartSec=5
 # Finish current height then exit on SIGTERM.
-TimeoutStopSec=60
+TimeoutStopSec=30
 KillSignal=SIGTERM
-
-# Hardening
-NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=strict
-ProtectHome=true
-ReadWritePaths=/var/lib/chain-monitor
-ProtectKernelTunables=true
-ProtectKernelModules=true
-ProtectControlGroups=true
-RestrictSUIDSGID=true
-LockPersonality=true
-
-Environment=HOME=/var/lib/chain-monitor
+Environment=GOMEMLIMIT=756MiB
+# Comma-separated reporter addresses watched on weak aggregates (missing_reporters enrich).
+# Environment=IMPORTANT_REPORTERS=tellor1abc...,tellor1def...
+# Optional LCD base if not set in config api.url:
+# Environment=LAYER_API_URL=http://127.0.0.1:1317
+MemoryMax=800M
 
 [Install]
 WantedBy=multi-user.target

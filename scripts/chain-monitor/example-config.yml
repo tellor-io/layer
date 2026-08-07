@@ -3,8 +3,8 @@
 # Logging: -log-level=debug|info|warn|error  -log-format=text|json
 # Metrics: GET /metrics on health.listen
 
-node_name: "local-monitor"
-dry_run: true
+node_name: "palmito-monitor"
+dry_run: false
 
 rpc:
   urls:
@@ -23,28 +23,41 @@ start_from:
   tip: true
 
 enrichment:
-  query_ids_map: "../../supported_query_ids_map.json"
+  query_ids_map: "./supported_query_ids_map.json"
+  reporters_map: "./reporters_map.json"
   reload_interval: 1h
+
+# Cosmos REST / LCD for module queries (get_reports_by_aggregate).
+# Tendermint RPC (:26657) does not serve these routes.
+# Falls back to LAYER_API_URL env if unset.
+api:
+  url: "http://127.0.0.1:1317"
 
 power:
   refresh_interval: 10m
 
 channels:
   disputes:
-    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+    webhook_url: "https://discord.com/api/webhooks/1380626376671100928/YrIWOL6p-PGtuO6Gd1VtcwdINj3Kl5oLP9AbjZvimw6KuHExmD_SrsKfNWBS1IvCqGtE"
   bridge:
-    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+    webhook_url: "https://discord.com/api/webhooks/1380626604061098004/N2J-8SMh0KTQb0xRlRAy70fUDRG6Q2K4zV1uN6S6TR9wCnhhMW9wYGhc-lqfKhZwhunm"
   oracle:
-    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+    webhook_url: "https://discord.com/api/webhooks/1380626762651795486/1hPTUdJXN-wfywA59bLXA2eK0Y1RszDufPaCX-mN2qOJr4JP1DrIZnIdQyZji6Ixd2l2"
   gov:
-    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+    webhook_url: "https://discord.com/api/webhooks/1380626880440565841/txqbHs1ivemapzU8Nu8AezX52KpwSpp-4HDTBOziIkpDMOy_kYtwatV0RMsInKrCu0D9"
   staking:
-    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
-  infra:
-    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+    webhook_url: "https://discord.com/api/webhooks/1380627018399350815/3Jqt_nIbOiD1dh3jwpRQa_AvpKZW9lGxgmYJwF5SfBsLRwBpZX_vyhFkO8-wQQ5vlzWG"
+  liveness:
+    webhook_url: "https://discord.com/api/webhooks/1275539999235768390/doH7Q0Ayvp4k5ax2M-vmkH6hc0E6_eM8vws49yzg07fGiJCvkwIU-mjJf410G5kt5sLX"
   tips:
-    webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_URL"
+    webhook_url: "https://discord.com/api/webhooks/1534982573078483199/x2GOQhq61aswDd9TGBw3HSV_fUMbkq86KPpC-XNEGMOtFGQPEKtgbyMJRHH6iZueHfww"
+  infra:
+    webhook_url: "https://discord.com/api/webhooks/1534983768362713248/NB3DireQ1V8VlHPJJpXBMQnjORebBWO6Sn9mWPhj0OpaFtb8vm7YpNbU8Lii5OLDnSaJ"
 
+# Set the GOMEMLIMIT environment variable to 756MiB to limit the memory usage of the chain-monitor process.
+env:
+  - name: GOMEMLIMIT
+    value: "756MiB"
 defaults:
   # Discord delivery throttle (per rule)
   rate_limit:
@@ -226,6 +239,9 @@ rules:
         - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
       include_remaining: true
 
+  # Bridge deposit weak aggregates (TRBBridge / TRBBridgeV2 toLayer=true) are
+  # re-routed to the bridge channel and include a tip CLI. SpotPrice aggregates
+  # stay on oracle.
   - id: weak_aggregate
     channel: oracle
     match:
@@ -235,7 +251,7 @@ rules:
         attr: aggregate_power
         ratio: 0.666
         against: validator_power
-    enrich: [asset_pair]
+    enrich: [asset_pair, missing_reporters, bridge_deposit]
     rate_limit:
       max: 10
       window: 10m
@@ -246,11 +262,14 @@ rules:
       color: 0xE67E22
       fields:
         - { attr: _asset_pair, name: "📊 Asset Pair", inline: true }
+        - { attr: _deposit_id, name: "📍 Deposit ID", inline: true, format: code }
         - { attr: _power_pct, name: "📉 Power %", inline: true }
         - { attr: aggregate_power, name: "⚡ Aggregate Power", inline: true, format: code }
         - { attr: _validator_power, name: "🛡️ Total Validator Power", inline: true, format: code }
+        - { attr: _missing_reporters, name: "👤 Missing Reporters", inline: false }
         - { attr: query_id, name: "🔑 Query ID", inline: false, format: code }
         - { attr: value, name: "💾 Value", inline: false, format: code }
+        - { attr: _tip_cmd, name: "💡 Tip command", inline: false, format: code }
         - { attr: _height, name: "🧱 Block Height", inline: true, format: code }
 
   - id: slow_blocks
@@ -276,7 +295,7 @@ rules:
         - { attr: _node, name: "🖥️ Node", inline: true }
 
   - id: rpc_unhealthy
-    channel: infra
+    channel: liveness
     match:
       kind: rpc_unhealthy
     when:
@@ -301,7 +320,7 @@ rules:
     match:
       kind: ingest_lag
     when:
-      max_lag: 50
+      max_lag: 30
       check_every: 30s
     rate_limit:
       max: 2

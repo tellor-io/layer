@@ -22,6 +22,7 @@ const (
 type Config struct {
 	NodeName    string             `yaml:"node_name"`
 	RPC         RPCConfig          `yaml:"rpc"`
+	API         APIConfig          `yaml:"api"`
 	State       StateConfig        `yaml:"state"`
 	Health      HealthConfig       `yaml:"health"`
 	StartFrom   StartFromConfig    `yaml:"start_from"`
@@ -32,6 +33,12 @@ type Config struct {
 	Rules       []RuleConfig       `yaml:"rules"`
 	DryRun      bool               `yaml:"dry_run"`
 	WatchEvents []string           `yaml:"watch_events"`
+}
+
+// APIConfig is the Cosmos REST / gRPC-gateway (LCD) base for module queries.
+// Tendermint RPC (:26657) does not serve these routes.
+type APIConfig struct {
+	URL string `yaml:"url"`
 }
 
 type RPCConfig struct {
@@ -56,6 +63,7 @@ type StartFromConfig struct {
 
 type EnrichmentConfig struct {
 	QueryIDsMap    string        `yaml:"query_ids_map"`
+	ReportersMap   string        `yaml:"reporters_map"`
 	ReloadInterval time.Duration `yaml:"reload_interval"`
 }
 
@@ -99,8 +107,8 @@ type RuleConfig struct {
 }
 
 type MatchConfig struct {
-	Kind      string   `yaml:"kind"` // empty/event | block_interval | rpc_unhealthy | ingest_lag | schedule
-	EventType string   `yaml:"event_type"`
+	Kind       string   `yaml:"kind"` // empty/event | block_interval | rpc_unhealthy | ingest_lag | schedule
+	EventType  string   `yaml:"event_type"`
 	AttrExists []string `yaml:"attr_exists"`
 }
 
@@ -257,6 +265,9 @@ func (c *Config) Validate() error {
 	if c.RPC.MinInterval < 0 {
 		return fmt.Errorf("rpc.min_interval must be non-negative")
 	}
+	if s := strings.TrimSpace(c.API.URL); s != "" {
+		c.API.URL = normalizeRPCURL(s)
+	}
 	if strings.TrimSpace(c.State.CursorPath) == "" {
 		return fmt.Errorf("state.cursor_path is required")
 	}
@@ -341,7 +352,17 @@ func (c *Config) Validate() error {
 			}
 		}
 		for _, e := range rule.Enrich {
-			if e != "asset_pair" {
+			switch e {
+			case "asset_pair", "missing_reporters":
+			case "bridge_deposit":
+				ch, ok := c.Channels["bridge"]
+				if !ok {
+					return fmt.Errorf("rules[%d] (%s): enrich bridge_deposit requires channels.bridge", i, rule.ID)
+				}
+				if !c.DryRun && strings.TrimSpace(ch.WebhookURL) == "" {
+					return fmt.Errorf("channels.bridge.webhook_url is required for enrich bridge_deposit (or set dry_run: true)")
+				}
+			default:
 				return fmt.Errorf("rules[%d] (%s): unknown enrich %q", i, rule.ID, e)
 			}
 		}
