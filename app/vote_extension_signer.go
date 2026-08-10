@@ -19,8 +19,8 @@ type VoteExtensionSigner interface {
 	// SignOracleAttestation signs an oracle-attestation snapshot and returns a 64-byte secp256k1 signature.
 	SignOracleAttestation(ctx context.Context, req *signerv1.SignOracleAttestationRequest) ([]byte, error)
 
-	// SignInitial signs a 32-byte initial-registration digest; the signature is over sha256(msg).
-	SignInitial(ctx context.Context, msg []byte) ([]byte, error)
+	// SignInitial returns the two one time registration signatures for operatorAddress, each over sha256(sha256(message)).
+	SignInitial(ctx context.Context, operatorAddress string) ([]byte, []byte, error)
 
 	// GetOperatorAddress returns the bech32 validator operator address.
 	GetOperatorAddress(ctx context.Context) (string, error)

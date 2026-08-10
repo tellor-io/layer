@@ -3,7 +3,6 @@ package app
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -318,24 +317,7 @@ func (h *VoteExtHandler) SignSnapshot(ctx context.Context, snapshot []byte) ([]b
 }
 
 func (h *VoteExtHandler) SignInitialMessage(ctx context.Context, operatorAddress string) ([]byte, []byte, error) {
-	messageA := fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddress)
-	messageB := fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddress)
-
-	// hash messages
-	msgHashABytes32 := sha256.Sum256([]byte(messageA))
-	msgHashBBytes32 := sha256.Sum256([]byte(messageB))
-
-	// sign messages
-	sigA, err := h.signer.SignInitial(ctx, msgHashABytes32[:])
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to sign message A: %w", err)
-	}
-
-	sigB, err := h.signer.SignInitial(ctx, msgHashBBytes32[:])
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to sign message B: %w", err)
-	}
-	return sigA, sigB, nil
+	return h.signer.SignInitial(ctx, operatorAddress)
 }
 
 func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx context.Context) (signature []byte, timestamp uint64, err error) {

@@ -3,7 +3,6 @@ package app
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"fmt"
 	"time"
 
@@ -160,25 +159,22 @@ func (s *GRPCRemoteSigner) SignOracleAttestation(ctx context.Context, req *signe
 	return resp.Signature, nil
 }
 
-// SignInitial signs sha256(msg) via the SignRaw RPC, matching the digest
-// scheme of a local cosmos secp256k1 key.
-func (s *GRPCRemoteSigner) SignInitial(ctx context.Context, msg []byte) ([]byte, error) {
-	hash := sha256.Sum256(msg)
-
+// SignInitial delegates to the SignInitial RPC, the signer rebuilds the two fixed registration messages itself and refuses a foreign operator address.
+func (s *GRPCRemoteSigner) SignInitial(ctx context.Context, operatorAddress string) ([]byte, []byte, error) {
 	rpcCtx, cancel := context.WithTimeout(ctx, s.cfg.RequestTimeout)
 	defer cancel()
 
-	resp, err := s.client.SignRaw(rpcCtx, &signerv1.SignRawRequest{
-		Msg:       hash[:],
-		RequestId: voteExtRequestID,
+	resp, err := s.client.SignInitial(rpcCtx, &signerv1.SignInitialRequest{
+		OperatorAddress: operatorAddress,
+		RequestId:       voteExtRequestID,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("SignRaw RPC failed: %w", err)
+		return nil, nil, fmt.Errorf("SignInitial RPC failed: %w", err)
 	}
-	if len(resp.Signature) != 64 {
-		return nil, fmt.Errorf("SignRaw: expected 64-byte signature, got %d", len(resp.Signature))
+	if len(resp.SignatureA) != 64 || len(resp.SignatureB) != 64 {
+		return nil, nil, fmt.Errorf("SignInitial: expected two 64 byte signatures, got %d and %d", len(resp.SignatureA), len(resp.SignatureB))
 	}
-	return resp.Signature, nil
+	return resp.SignatureA, resp.SignatureB, nil
 }
 
 // GetOperatorAddress returns the cached operator address derived from the signer's public key.

@@ -59,4 +59,4 @@ sed -i '' 's/keyring-backend = "os"/keyring-backend = "test"/' ~/.layer/config/c
 
 
 echo "Starting chain for alice..."
-./layerd start --home  ~/.layer/alice --api.enable --api.swagger
+./layerd start --home  ~/.layer/alice --api.enable --api.swagger --key-name alice
