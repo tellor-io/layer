@@ -42,7 +42,7 @@ require (
 	github.com/spf13/viper v1.20.1
 	github.com/strangelove-ventures/globalfee v0.50.1
 	github.com/stretchr/testify v1.11.1
-	github.com/tellor-io/bridge-remote-signer/api v0.0.0-20260625110956-a0eb13ebf52a
+	github.com/tellor-io/bridge-remote-signer/api v0.0.0-20260720085754-c9bb3da6b8e4
 	github.com/vektra/mockery/v2 v2.23.1
 	go.uber.org/mock v0.5.2
 	golang.org/x/text v0.32.0

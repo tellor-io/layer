@@ -1790,6 +1790,8 @@ github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7 h1:epCh84lMvA70
 github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7/go.mod h1:q4W45IWZaF22tdD+VEXcAWRA037jwmWEB5VWYORlTpc=
 github.com/tellor-io/bridge-remote-signer/api v0.0.0-20260625110956-a0eb13ebf52a h1:nHVLvV46wW7YTQXD8T4J7JdrgRgIKZVni9x5V6Ly65A=
 github.com/tellor-io/bridge-remote-signer/api v0.0.0-20260625110956-a0eb13ebf52a/go.mod h1:ydgNfQx2Xj6kNW57SuZafRPjWH47jL0Z+F2lCl8quDY=
+github.com/tellor-io/bridge-remote-signer/api v0.0.0-20260720085754-c9bb3da6b8e4 h1:kdvjmLl61Vq14R8nDhsYWn+Gy5Mqn4JhyZZtVlqlzCI=
+github.com/tellor-io/bridge-remote-signer/api v0.0.0-20260720085754-c9bb3da6b8e4/go.mod h1:hkVexbxMzIkBrKx7r1GOjt/Fjt4pap43QzWzcFs9zG8=
 github.com/tendermint/go-amino v0.16.0 h1:GyhmgQKvqF82e2oZeuMSp9JTN0N09emoSZlb2lyGa2E=
 github.com/tendermint/go-amino v0.16.0/go.mod h1:TQU0M1i/ImAo+tYpZi73AU3V/dKeCoMC9Sphe2ZwGME=
 github.com/tidwall/btree v1.7.0 h1:L1fkJH/AuEh5zBnnBbmTwQ5Lt+bRJ5A8EWecslvo9iI=

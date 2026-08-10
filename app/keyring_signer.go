@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"os"
@@ -85,9 +86,19 @@ func (s *KeyringSigner) SignOracleAttestation(_ context.Context, req *signerv1.S
 	return s.sign(req.ExpectedSnapshot)
 }
 
-// SignInitial signs the 32-byte initial-registration digest with the local key.
-func (s *KeyringSigner) SignInitial(_ context.Context, msg []byte) ([]byte, error) {
-	return s.sign(msg)
+// SignInitial builds the two fixed registration messages for operatorAddress and signs each with the local key.
+func (s *KeyringSigner) SignInitial(_ context.Context, operatorAddress string) ([]byte, []byte, error) {
+	hashA := sha256.Sum256([]byte(fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddress)))
+	hashB := sha256.Sum256([]byte(fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddress)))
+	sigA, err := s.sign(hashA[:])
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to sign message A: %w", err)
+	}
+	sigB, err := s.sign(hashB[:])
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to sign message B: %w", err)
+	}
+	return sigA, sigB, nil
 }
 
 // GetOperatorAddress returns the cached bech32 validator operator address.
