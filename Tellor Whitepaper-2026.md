@@ -160,7 +160,8 @@ The validator set can only change by a maximum of 5% per 12 hours including tip 
 Tendermint uses a delegated proof-of-stake(dPoS) model where there is a set number of validators, but all token holders can delegate to validators to increase security and share in rewards. Tellor uses this delegation but adds a second delegation for reporting duties, which we refer to as **selecting**. Each token can be used as a stake for reporting and for validating. Parties can delegate both the reporting and validating to the same party, to different parties, or even to themselves. The same token is subject to slashing by either method (reporting data or failing to honestly validate the chain) and the stake balance for both delegations is reduced immediately upon either consequence, so great caution should be taken when delegating and/or selecting.
 
 Figure B: Dual delegation
- ![ Delegation](./adr/graphics/TellorWhitepaperFigureBDualDelegation.png)
+
+ ![ Delegation](./adr/graphics/TellorWhitepaperFigureBDualDelegation.jpg)
 
 
 _Note: The delegated validator and the selected reporter can be different(A), the same(B), mix of yourself and others(C)._
@@ -226,7 +227,7 @@ We know that some parties already have existing bridge solutions that they prefe
 In the future, it is likely that native or zero-knowledge bridges will be used to verify signatures, consensus, as well as inclusion of values. Tellor will be leaning on other teams currently specializing in cryptography research, but we fully expect that all bridges will be cheaper and faster using this method and should be operational within the next cycle.
 
 Figure C: Tellor process of aggregation, attestation, and relaying data to other chains.
-![Aggregation to relay](./adr/graphics/TellorWhitepaperFigureCAggtoRelay.png)
+![Aggregation to relay](./adr/graphics/TellorWhitepaperFIgureCAggtoRelay.png)
 
 Note: Staked reporters, staked validators, users and relayers, and data monitors are all permissionless roles.
 
