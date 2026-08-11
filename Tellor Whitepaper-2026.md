@@ -70,7 +70,7 @@ Table of Contents
 
 # Introduction
 
-From the initial deployment in August 2019, Tellor has been designed so that no trusted party can prevent users from requesting, reporting or disputing data. Today we continue with the same principles: permissionless validators, reporters, disputers, relayers and users. Anyone can become a validator or reporter via staking, dispute for a fee, get any data by tipping it, and relay the openly available data attestations on Tellor, without the team's intervention. Crypto economic incentives have been in place since inception as we have focused our efforts on being decentralized and secure. Tellor's design supports data liveness guarantee which is only possible because the design allows the protocol to survive even if the team disappears<sup>[\[^1\]](#footnote-1)</sup>.
+From the initial deployment in August 2019, Tellor has been designed so that no trusted party can prevent users from requesting, reporting or disputing data. Today we continue with the same principles: permissionless validators, reporters, disputers, relayers and users. Anyone can become a validator or reporter via staking, dispute for a fee, get any data by tipping it, and relay the openly available data attestations on Tellor, without the team's intervention. Crypto economic incentives have been in place since inception as we have focused our efforts on being decentralized and secure. Tellor's design supports data liveness guarantee which is only possible because the design allows the protocol to survive even if the team disappears[^footnote-1].
 
 Every aspect of Tellor is open source including consensus, bridging, reporting, and relaying so that everyone can audit and participate in the network as validators, reporters, users, and holders.
 
@@ -85,12 +85,12 @@ Tellor is a stand alone L1 built for the purpose of coming to consensus on any s
 
 Any staked reporter can submit a value for a given query (i.e. data request, e.g. BTC/USD price). All queries have a report time frame. For that given time period, reporters can add their value to the array of submissions. At the end of the time period, the official value is determined by a weighted aggregation of all the values submitted.
 
-All queries have an aggregation type associated with it (e.g. median, mode, average, etc.)<sup>[\[2\]](#footnote-2)</sup>. Once the time frame ends, the reports are subject to weighted aggregation. For this reason, larger reporters contribute more to the official value than smaller ones. Each official value takes a minimum of three blocks (target time 2s per block). The first block is the tip (e.g. "I request BTC/USD"). The second block is the reporting and the third is more reporting and aggregation phase, where all values are submitted and then aggregated, at which point an official value is determined for the query. Tips are distributed to all reporters for a given query using their weighted contribution.
+All queries have an aggregation type associated with it (e.g. median, mode, average, etc.)[^footnote-2]. Once the time frame ends, the reports are subject to weighted aggregation. For this reason, larger reporters contribute more to the official value than smaller ones. Each official value takes a minimum of three blocks (target time 2s per block). The first block is the tip (e.g. "I request BTC/USD"). The second block is the reporting and the third is more reporting and aggregation phase, where all values are submitted and then aggregated, at which point an official value is determined for the query. Tips are distributed to all reporters for a given query using their weighted contribution.
 
 Figure A: Tellor process from Tip to Data Aggregation.
  ![ Tip to Agg](./adr/graphics/TellorWhitepaperFigureATiptoAggregation.png)
 
-The reporting time frame begins once a queryId is tipped. All reporters can add their value to the submission array for inclusion in the aggregation and for distribution of the rewards.<sup><sup>[\[3\]](#footnote-3)</sup></sup> Tips received within the time frame are added to the initial tip. If no reports are submitted during the time frame, the time frame is restarted upon the next tip and the original tip is added to the new tip for that queryId.
+The reporting time frame begins once a queryId is tipped. All reporters can add their value to the submission array for inclusion in the aggregation and for distribution of the rewards.[^footnote-3] Tips received within the time frame are added to the initial tip. If no reports are submitted during the time frame, the time frame is restarted upon the next tip and the original tip is added to the new tip for that queryId.
 
 ## Cycle List
 
@@ -102,11 +102,11 @@ To incentivize consistent reporting across **all** cycle list queries, TBR distr
 
 There are some differences in disputes from legacy Tellor but what has not changed is that the entire dispute and resolution mechanism is done on chain with transparent slashing and with earning successful disputers earning the majority of the slash amount. This mechanism continues to incentivize everyone to run a disputable values monitor and to compete to be the first to dispute. Also, the user does not have to wait for resolution, instead if the value was the median the value is flagged and removed, and they can use the next available value. Similar to the old Tellor system too, is the idea that since you can censor a party by disputing, disputes can be seen as a wager on who is correct (the reporter or the accuser).
 
-What is different is that reporter stakes are not tied to specific values, but rather to a given reporter. For instance, a reporter can submit ETH/USD once every second with their same stake. If they submitted a bad value 2 days ago<sup>[\[4\]](#footnote-4)</sup>, they can still be subject to a slashing event. Any party can raise a dispute with free floating TRB, but unlike the old system, reporters and validators can use their stake (or part of it) to begin a dispute. Once initiated, the dispute fee and the potential slash amount (from the accused reporter) are put in escrow and removed from corresponding staking powers.
+What is different is that reporter stakes are not tied to specific values, but rather to a given reporter. For instance, a reporter can submit ETH/USD once every second with their same stake. If they submitted a bad value 2 days ago[^footnote-4], they can still be subject to a slashing event. Any party can raise a dispute with free floating TRB, but unlike the old system, reporters and validators can use their stake (or part of it) to begin a dispute. Once initiated, the dispute fee and the potential slash amount (from the accused reporter) are put in escrow and removed from corresponding staking powers.
 
 To initiate a dispute, the disputing party submits a dispute against a given reporter for one of three categories:
 
-- Warning (dispute fee is 1% of stake) - jail<sup><sup>[\[5\]](#footnote-5)</sup></sup> with no minimum time lock, can call a function to be released from jail and begin reporting again
+- Warning (dispute fee is 1% of stake) - jail[^footnote-5] with no minimum time lock, can call a function to be released from jail and begin reporting again
 - Minor Infraction (dispute fee is 5% of stake) - jailed for 10 minutes and out when they call the release from jail function
 - Major Infraction (dispute fee is 100% of stake) - jail until dispute over (since 100% of stake).
 
@@ -114,7 +114,7 @@ A release function has to be called after a warning or minor infraction to ensur
 
 After specifying the dispute category, the disputer submits an amount of TRB up to the minimum slashing amount before the dispute can initiate. If they don't have enough funds themselves, for up to one day, others can add to the pot until they hit the slashing amount (i.e. 1, 5, or 100 percent depending on the slashing category). Once the amount is hit (could be hit instantly upon proposing the dispute, or could take up to a day), the potential slashing amount will be taken from the disputed validator and placed into a locked stake.
 
-For up to two days, stakeholders will vote on which side of the dispute they support. Tellor uses a different voting distribution<sup>[\[6\]](#footnote-6)</sup> from the legacy Tellor governance. Previously, voting power was evenly distributed among users, reporters, token holders and the team. However, because most TRB on Tellor is expected to be either staked or used for tips, the voting distribution is split among these three groups:
+For up to two days, stakeholders will vote on which side of the dispute they support. Tellor uses a different voting distribution[^footnote-6] from the legacy Tellor governance. Previously, voting power was evenly distributed among users, reporters, token holders and the team. However, because most TRB on Tellor is expected to be either staked or used for tips, the voting distribution is split among these three groups:
 
 33.3% users (tips)
 
@@ -145,7 +145,7 @@ Validators have normal cometBFT liveness and double-signing penalties, which are
 
 ## Tipping
 
-All tips are done in TRB. Each query can be tipped directly and its tip will increase as more users tip it<sup>[\[7\]](#footnote-7)</sup>. Once a report is submitted and aggregated, 98% of the tip is split amongst reporters for that query in that given block. There is a 2% fee on the tips (to prevent vote farming/ spamming). This 2% fee is burned. Tips are distributed as locked TRB. Once locked, parties can run functions to claim the tip, in which the tips are unlocked and added to their stake or to tip balance ('MsgWithdrawTipToBalance') which will start the clock to unbound these in 21 days. This is to ensure that parties cannot bypass validator deposit limits through tipping, as well as to prevent farming vote power via the tipping mechanism.
+All tips are done in TRB. Each query can be tipped directly and its tip will increase as more users tip it[^footnote-7]. Once a report is submitted and aggregated, 98% of the tip is split amongst reporters for that query in that given block. There is a 2% fee on the tips (to prevent vote farming/ spamming). This 2% fee is burned. Tips are distributed as locked TRB. Once locked, parties can run functions to claim the tip, in which the tips are unlocked and added to their stake or to tip balance ('MsgWithdrawTipToBalance') which will start the clock to unbound these in 21 days. This is to ensure that parties cannot bypass validator deposit limits through tipping, as well as to prevent farming vote power via the tipping mechanism.
 
 Note that tipping consists of only one time tips. There is no built-in heartbeats or price thresholds because the complexity added is unnecessary and better handled off-chain (e.g. AI agents, or tip bots like the autoTipper and relayer handle this functionality already).
 
@@ -153,7 +153,7 @@ Note that tipping consists of only one time tips. There is no built-in heartbeat
 
 Chains using the tendermint consensus mechanism have a limited number of validators. By setting the number of validators, this allows for efficient interconnectedness between chains as well as faster throughput. The tradeoff that any chain must consider is that more validators leads to slower blocktimes and more expensive bridging costs. Tellor has started with a limit of 100 validators but will move to a larger set as technological advances or market conditions allow (e.g. if no one needs sub-2 second blocks).
 
-The validator set can only change by a maximum of 5% per 12 hours including tip claims. This is for purposes of maintaining a stable validator set for bridging efficiency. Once the 5% change is hit, new validators will need to wait until the rolling percent change per 12 hours is under the cap. This 5% is a parameter that can be changed via governance.<sup><sup>[\[8\]](#footnote-8)</sup></sup>
+The validator set can only change by a maximum of 5% per 12 hours including tip claims. This is for purposes of maintaining a stable validator set for bridging efficiency. Once the 5% change is hit, new validators will need to wait until the rolling percent change per 12 hours is under the cap. This 5% is a parameter that can be changed via governance.[^footnote-8]
 
 ## Dual Delegation - Reporting vs Validating
 
@@ -249,9 +249,9 @@ Similar to robust data usage, parties request signatures and relay data from Tel
 
 ## Dispute Monitoring
 
-Dispute monitoring is beneficial for both robust and edge data. However, this is especially important when parties are using edge data; they must be cognizant that the system is only as secure as the monitoring for disputes. If, for instance, a party requests an obscure piece of data that only one validator reports for, and their stake is low, there will likely be few parties checking this query for disputes. This is why if using an edge value, adding extra security is essential<sup>[\[9\]](#footnote-9)</sup>. Running your own dispute monitor, educating more reporters to support it, or even more secure measures such as using only if the median is within x% of a given (e.g. their own team's) reporter.
+Dispute monitoring is beneficial for both robust and edge data. However, this is especially important when parties are using edge data; they must be cognizant that the system is only as secure as the monitoring for disputes. If, for instance, a party requests an obscure piece of data that only one validator reports for, and their stake is low, there will likely be few parties checking this query for disputes. This is why if using an edge value, adding extra security is essential[^footnote-9]. Running your own dispute monitor, educating more reporters to support it, or even more secure measures such as using only if the median is within x% of a given (e.g. their own team's) reporter.
 
-Successful disputes earn the majority of the slashed amount of the disputed party so there is also an economic incentive for anyone to run a monitor<sup>[\[10\]](#footnote-10)</sup>.
+Successful disputes earn the majority of the slashed amount of the disputed party so there is also an economic incentive for anyone to run a monitor[^footnote-10].
 
 ## Optimistic as Fallback
 
@@ -259,15 +259,15 @@ If consensus fails on certain values that are typically robust, parties have two
 
 ## Additional Self-Driven Security and Fallbacks
 
-Although security is at the center of Tellor's design, consumers of Tellor data can add custom additional security. Manipulation attacks should always be considered by users. There are many examples where using the oracle value immediately has led to exploits or unintended consequences.<sup>[\[11\]](#footnote-11)</sup> **Data manipulation attacks are oracle agnostic** and have occurred even when the oracle was centralized. But users can implement user level controls to mitigate losses and even dissuade attackers. One of the bigger players<sup>[\[12\]](#footnote-12)</sup> in the crypto space includes pauses, delays throughout their system, a one hour delay before using the oracle value, debt ceilings and other governance delays. They are proof that you can become a big player and be responsible.
+Although security is at the center of Tellor's design, consumers of Tellor data can add custom additional security. Manipulation attacks should always be considered by users. There are many examples where using the oracle value immediately has led to exploits or unintended consequences.[^footnote-11] **Data manipulation attacks are oracle agnostic** and have occurred even when the oracle was centralized. But users can implement user level controls to mitigate losses and even dissuade attackers. One of the bigger players[^footnote-12] in the crypto space includes pauses, delays throughout their system, a one hour delay before using the oracle value, debt ceilings and other governance delays. They are proof that you can become a big player and be responsible.
 
 Monitors, delays and pauses are useful because if the oracle is compromised in any way it allows users to react: overwrite, update the databank address, get a governance vote in, etc... However unlikely the scenario, users can implement controls to protect themselves and their users if the data is manipulated directly or by compromising the data provider/node, validator or reporter set.
 
 One way is to simply limit who can push prices/ state updates on the consumer chain. By adding validation at this level, chains could use either their own validators or stakers to push over the prices after validating them. This would be an excellent option for users with this level of ownership over their protocol.
 
-An option for non-chains via the low latency model would be to add validation before a trusted party (e.g. the app's dao) pushes the data. It gives the trusted party an option to censor, but they would be unable to change what the price is, something that would work similarly to a multisig having pause authority/control over a protocol. Users can also do OEV limits this way (relayer is a known party or even auction off the right for OEV<sup><sup>[\[13\]](#footnote-13)</sup></sup> each day/month).
+An option for non-chains via the low latency model would be to add validation before a trusted party (e.g. the app's dao) pushes the data. It gives the trusted party an option to censor, but they would be unable to change what the price is, something that would work similarly to a multisig having pause authority/control over a protocol. Users can also do OEV limits this way (relayer is a known party or even auction off the right for OEV[^footnote-13] each day/month).
 
-Another option to increase security is consumer side pauses and delays. Pausing the system could be similar to the Maker design, where token holders of their own system can freeze the system in the case of a bad value<sup><sup>[\[14\]](#footnote-14)</sup></sup> or trust a curator or committee (multisig) to do it for them. For delays, parties could just design a system where the oracle value is used after X amount of time or it costs X dollars (a large amount) to delay the use of a reported value. While delayed, they could initiate a dispute on the Tellor system to remove a reporter or evaluate the situation. This would work well for systems that can handle delays (e.g. a prediction market delaying payouts). Just note that this would be on a per-user basis and custom as the cost to dispute/pause is also the cost to censor if it freezes the system for certain protocols.
+Another option to increase security is consumer side pauses and delays. Pausing the system could be similar to the Maker design, where token holders of their own system can freeze the system in the case of a bad value[^footnote-14] or trust a curator or committee (multisig) to do it for them. For delays, parties could just design a system where the oracle value is used after X amount of time or it costs X dollars (a large amount) to delay the use of a reported value. While delayed, they could initiate a dispute on the Tellor system to remove a reporter or evaluate the situation. This would work well for systems that can handle delays (e.g. a prediction market delaying payouts). Just note that this would be on a per-user basis and custom as the cost to dispute/pause is also the cost to censor if it freezes the system for certain protocols.
 
 Users can also add disputes directly in their protocol similar to Tellor's disputing system, but can be handled by their governance. This would work well if coupled with custom staking requirements for reporters and could also be added as the "trusted" party that the Tellor value must match. A user side based dispute mechanism could also allow falling back to a more robust data feed such as going from a VWAP to TWAP before a governance vote. This works well if the protocol allows a grace period for their users to challenge data and they have a payout delay, since disputes are only useful before settlement.
 
@@ -275,7 +275,7 @@ For numeric data, implementing caps or thresholds on changes between the previou
 
 Users can use multiple oracle feeds and use the median of these similar to how Ampleforth architecture uses Tellor or as fallback similar to how Liquity V1uses a primary and Tello as a fallback oracle.
 
-Multiple oracles, oracle fallbacks, data feed fallbacks, pauses, payout delays, oracle use delay, thresholds caps for changes, overwriting the oracle value<sup>[\[15\]](#footnote-15)</sup> or updating the oracle address are options that provide a high level of control and can be modularly implemented at the users' discretion. Many of these options are used and/or have been used by protocols. Determining what level of control is right for your protocol, if these should be controlled via governance, a curator, or mutlisig is up to you, the user (and always provide proper disclosures of these levels of controls to your users).
+Multiple oracles, oracle fallbacks, data feed fallbacks, pauses, payout delays, oracle use delay, thresholds caps for changes, overwriting the oracle value[^footnote-15] or updating the oracle address are options that provide a high level of control and can be modularly implemented at the users' discretion. Many of these options are used and/or have been used by protocols. Determining what level of control is right for your protocol, if these should be controlled via governance, a curator, or mutlisig is up to you, the user (and always provide proper disclosures of these levels of controls to your users).
 
 These options require a higher level of control and are optional. They add layers of security that is user driven based on their desired or required level of control and level of ownership over their protocol. Some of these controls are preventive while others allow users to be proactive in the event of a hack or manipulation event. Most of the blue chip crypto we see today was made possible because they grew in proportion with the industry. Bitcoin's and Ethereum's market caps were very low when they first launched and could have been easily captured and manipulated too. However, incentives to capture or hack a protocol will always exist when the cost of attack is lower than the gain. Newer protocols need an environment in which they can thrive and grow securely. They need to be treated differently than blue chip crypto assets. Blue chips are harder to manipulate and capture than low liquidity and emerging assets/protocols. Additionally, the user can choose to implement these guardrails temporarily or not(for most of these, removing the control could be as easy as throwing the controlling address or removing it automatically if a market cap, liquidity, stake amount threshold or a combination of these is surpassed).
 
@@ -289,7 +289,7 @@ For each chain using the Tellor protocol, we can have a mapping of chainID to a 
 
 ## Hard Forks
 
-For hard forks, you will also have a way to update this proxy address for verification of the consensus mechanism. The issue here is that time is of the essence. If the validator set is compromised or a bug is found, parties will want to very quickly switch off the oracle and upgrade. Unfortunately, the switch cannot happen quickly, but freezing should be possible.<sup><sup>[\[16\]](#footnote-16)</sup></sup>
+For hard forks, you will also have a way to update this proxy address for verification of the consensus mechanism. The issue here is that time is of the essence. If the validator set is compromised or a bug is found, parties will want to very quickly switch off the oracle and upgrade. Unfortunately, the switch cannot happen quickly, but freezing should be possible.[^footnote-16]
 
 # Plan for legacy Tellor contracts
 
@@ -303,7 +303,7 @@ The reason the oracle tokens are given to the bridge is to allow a two way bridg
 
 # Conclusion
 
-Tellor is an open network where anyone can validate, report data, request any data, dispute data, and help settle disputes via staking and fees. These properties uniquely position Tellor for no friction integrations by users or AI agents alike<sup>[\[17\]](#footnote-17)</sup>. Tellor is crypto-economically secure with measurable security and users can layer additional security controls. There is one way make protocols 100% immune to manipulation or capture but security can be layered to meet each users' needs.  
+Tellor is an open network where anyone can validate, report data, request any data, dispute data, and help settle disputes via staking and fees. These properties uniquely position Tellor for no friction integrations by users or AI agents alike[^footnote-17]. Tellor is crypto-economically secure with measurable security and users can layer additional security controls. There is one way make protocols 100% immune to manipulation or capture but security can be layered to meet each users' needs.  
 <br/>Tellor's architecture aims to remain permissionless and censorship resistant but applications using it can choose to embody the same properties or add controls on top of it. This is similar to how applications on Ethereum can implement higher levels of control over their system without compromising Ethereum's properties.
 
 ## Glossary
@@ -328,36 +328,36 @@ Tellor is an open network where anyone can validate, report data, request any da
 
 ## Footnotes
 
-1. This is an ultimate test of decentralization. But team and community contributors help ensure protocols evolve with the times and improve as new technology becomes available. [↑](#footnote-ref-1)
+[^footnote-1]: This is an ultimate test of decentralization. But team and community contributors help ensure protocols evolve with the times and improve as new technology becomes available. 
 
-2. For prices and most numeric data feeds the aggregation method is the median this makes it more difficult and costly to manipulate and this can be customizable per users' specification. Additionally, off chain computation of more robust methods such as TWAPs or VWAPS can be done before submitting to aggregate on chain for the official value. [↑](#footnote-ref-2)
+[^footnote-2]: For prices and most numeric data feeds the aggregation method is the median this makes it more difficult and costly to manipulate and this can be customizable per users' specification. Additionally, off chain computation of more robust methods such as TWAPs or VWAPS can be done before submitting to aggregate on chain for the official value.
 
-3. The reason for this is that some queries are not automatic, e.g. "let's type in an answer manually", so we want to give room for non-time sensitive queries to get more reports. Spot prices and automated queries will have a report time frame of 1 or 2 blocks. [↑](#footnote-ref-3)
+[^footnote-3]: The reason for this is that some queries are not automatic, e.g. "let's type in an answer manually", so we want to give room for non-time sensitive queries to get more reports. Spot prices and automated queries will have a report time frame of 1 or 2 blocks.
 
-4. Because of the competitive forces in Tellor, validators, reporters, users, and disputable value monitors(many of which are other validators and reporters) a reporter and bad value would be disputed almost immediately. Users and monitors can observe data real time on-chain for Tellor and dispute before it has the chance to get to their mempool and be subject to MEV and OEV. Transparency helps prevent our users from ingesting bad data because it does not wait until after the fact for disputes and slashing and has direct bounty to incentivize watchdogs/monitors. [↑](#footnote-ref-4)
+[^footnote-4]: Because of the competitive forces in Tellor, validators, reporters, users, and disputable value monitors(many of which are other validators and reporters) a reporter and bad value would be disputed almost immediately. Users and monitors can observe data real time on-chain for Tellor and dispute before it has the chance to get to their mempool and be subject to MEV and OEV. Transparency helps prevent our users from ingesting bad data because it does not wait until after the fact for disputes and slashing and has direct bounty to incentivize watchdogs/monitors.
 
-5. "Jail" is a concept in the tendermint system where the validator (or reporter in this case) is locked out of participating for a certain period of time [↑](#footnote-ref-5)
+[^footnote-5]: "Jail" is a concept in the tendermint system where the validator (or reporter in this case) is locked out of participating for a certain period of time
 
-6. Checkout our ADR 1008 on voting power by group for more information on why validators are not part of it <https://github.com/tellor-io/layer/blob/main/adr/adr1008%20-%20voting%20power%20by%20group.md> [↑](#footnote-ref-6)
+[^footnote-6]: Checkout our ADR 1008 on voting power by group for more information on why validators are not part of it <https://github.com/tellor-io/layer/blob/main/adr/adr1008%20-%20voting%20power%20by%20group.md>
 
-7. Users that need the same data feeds can crowdsource tips. On-chain tips make costs transparent and AI agents can interact with Tellor easily as they can request support for new data without needing humans to sign a contract. [↑](#footnote-ref-7)
+[^footnote-7]: Users that need the same data feeds can crowdsource tips. On-chain tips make costs transparent and AI agents can interact with Tellor easily as they can request support for new data without needing humans to sign a contract.
 
-8. There is also a delay (21 days) to exit (the unbonding period). [↑](#footnote-ref-8)
+[^footnote-8]: There is also a delay (21 days) to exit (the unbonding period).
 
-9. More information on Tellor's security can be found here: <https://tellor.io/blog/layer-security-201/> [↑](#footnote-ref-9)
+[^footnote-9]: More information on Tellor's security can be found here: <https://tellor.io/blog/layer-security-201/>
 
-10. An open-source disputable values monitor is available [↑](#footnote-ref-10)
+[^footnote-10]: An open-source disputable values monitor is available
 
-11. Take for example Elixir protocol, now defunct, in 2025 jaredfromsubway.eth made a trade in a Curve pool on Ethereum of 210K USDT for deUSD, the oracle was providing a VWAP and this trade caused a change and the new value was reported to Euler on Avalanche where it caused a \$532K liquidation. Unfortunatley neither the user or the oracle had any data checks or variance thresholds check in place. This was a reminder that when data that is collected and attested off-chain in subseconds without visibility or dispute mechanism will still end up in the mempool subject to MEV or OEV and the user has no ability to stop it. That was the tradeoff made, speed over risk mitigation. This was the beginning of the end for Elixir. More information <https://rekt.news/house-of-cards> and <https://x.com/omeragoldberg/status/1928149178862952604> [↑](#footnote-ref-11)
+[^footnote-11]: Take for example Elixir protocol, now defunct, in 2025 jaredfromsubway.eth made a trade in a Curve pool on Ethereum of 210K USDT for deUSD, the oracle was providing a VWAP and this trade caused a change and the new value was reported to Euler on Avalanche where it caused a \$532K liquidation. Unfortunatley neither the user or the oracle had any data checks or variance thresholds check in place. This was a reminder that when data that is collected and attested off-chain in subseconds without visibility or dispute mechanism will still end up in the mempool subject to MEV or OEV and the user has no ability to stop it. That was the tradeoff made, speed over risk mitigation. This was the beginning of the end for Elixir. More information <https://rekt.news/house-of-cards> and <https://x.com/omeragoldberg/status/1928149178862952604>(#footnote-ref-11)
 
-12. Sky (formerly MakerDAO) is one of the longest running DeFi apps and they still employ a one hour delay on their oracle updates. <https://developers.skyeco.com/security/security-measures/security-mechanisms/#oracle-price-delay> [↑](#footnote-ref-12)
+[^footnote-12]: Sky (formerly MakerDAO) is one of the longest running DeFi apps and they still employ a one hour delay on their oracle updates. <https://developers.skyeco.com/security/security-measures/security-mechanisms/#oracle-price-delay>
 
-13. Oracle extractable value [↑](#footnote-ref-13)
+[^footnote-13]: Oracle extractable value
 
-14. Depending on the type of data, this is a best practice for any system using an oracle [↑](#footnote-ref-14)
+[^footnote-14]: Depending on the type of data, this is a best practice for any system using an oracle 
 
-15. Hyperliquid validators overwrote and delisted \$JELLY when attacked last year. This works well for protocols with this level of ownership and fair disclosure to their users <https://rekt.news/hyperliquidate2> [↑](#footnote-ref-15)
+[^footnote-15]: Hyperliquid validators overwrote and delisted \$JELLY when attacked last year. This works well for protocols with this level of ownership and fair disclosure to their users <https://rekt.news/hyperliquidate2> 
 
-16. A library such as: <https://github.com/RealityETH/subjectivocracy> can be used as a dispute resolution mechanism for freezing and then voting on the results of the fork (all very costly to initiate to prevent censoring). Ultimately, you want this to be decided by the users on the chain itself and it might be a good choice to have a permissioned set (w/ a high cost still) or even a re-staking situation. [↑](#footnote-ref-16)
+[^footnote-16]: A library such as: <https://github.com/RealityETH/subjectivocracy> can be used as a dispute resolution mechanism for freezing and then voting on the results of the fork (all very costly to initiate to prevent censoring). Ultimately, you want this to be decided by the users on the chain itself and it might be a good choice to have a permissioned set (w/ a high cost still) or even a re-staking situation. 
 
-17. Unlike other oracles, the team does not have to approve new data feeds or whitelist users or data reporters, instead AI agents can handle submitting a data specification to the community and tip to start getting data without the team intervention. [↑](#footnote-ref-17)
+[^footnote-17]: Unlike other oracles, the team does not have to approve new data feeds or whitelist users or data reporters, instead AI agents can handle submitting a data specification to the community and tip to start getting data without the team intervention. 
