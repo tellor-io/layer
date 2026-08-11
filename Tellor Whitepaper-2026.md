@@ -88,7 +88,7 @@ Any staked reporter can submit a value for a given query (i.e. data request, e.g
 All queries have an aggregation type associated with it (e.g. median, mode, average, etc.)<sup>[\[2\]](#footnote-2)</sup>. Once the time frame ends, the reports are subject to weighted aggregation. For this reason, larger reporters contribute more to the official value than smaller ones. Each official value takes a minimum of three blocks (target time 2s per block). The first block is the tip (e.g. "I request BTC/USD"). The second block is the reporting and the third is more reporting and aggregation phase, where all values are submitted and then aggregated, at which point an official value is determined for the query. Tips are distributed to all reporters for a given query using their weighted contribution.
 
 Figure A: Tellor process from Tip to Data Aggregation.
-
+ ![ Tip to Agg](./adr/graphics/TellorWhitepaperFigureATiptoAggregation.png)
 
 The reporting time frame begins once a queryId is tipped. All reporters can add their value to the submission array for inclusion in the aggregation and for distribution of the rewards.<sup><sup>[\[3\]](#footnote-3)</sup></sup> Tips received within the time frame are added to the initial tip. If no reports are submitted during the time frame, the time frame is restarted upon the next tip and the original tip is added to the new tip for that queryId.
 
@@ -159,6 +159,9 @@ The validator set can only change by a maximum of 5% per 12 hours including tip 
 
 Tendermint uses a delegated proof-of-stake(dPoS) model where there is a set number of validators, but all token holders can delegate to validators to increase security and share in rewards. Tellor uses this delegation but adds a second delegation for reporting duties, which we refer to as **selecting**. Each token can be used as a stake for reporting and for validating. Parties can delegate both the reporting and validating to the same party, to different parties, or even to themselves. The same token is subject to slashing by either method (reporting data or failing to honestly validate the chain) and the stake balance for both delegations is reduced immediately upon either consequence, so great caution should be taken when delegating and/or selecting.
 
+Figure B: Dual delegation
+ ![ Delegation](./adr/graphics/TellorWhitepaperFigureBDualDelegation.png)
+
 
 _Note: The delegated validator and the selected reporter can be different(A), the same(B), mix of yourself and others(C)._
 
@@ -223,9 +226,7 @@ We know that some parties already have existing bridge solutions that they prefe
 In the future, it is likely that native or zero-knowledge bridges will be used to verify signatures, consensus, as well as inclusion of values. Tellor will be leaning on other teams currently specializing in cryptography research, but we fully expect that all bridges will be cheaper and faster using this method and should be operational within the next cycle.
 
 Figure C: Tellor process of aggregation, attestation, and relaying data to other chains.
-
-
-
+![Aggregation to relay](./adr/graphics/TellorWhitepaperFigureCAggtoRelay.png)
 
 Note: Staked reporters, staked validators, users and relayers, and data monitors are all permissionless roles.
 
@@ -326,7 +327,7 @@ Tellor is an open network where anyone can validate, report data, request any da
 
 ## Footnotes
 
-[^1]: This is an ultimate test of decentralization. But team and community contributors help ensure protocols evolve with the times and improve as new technology becomes available. [↑](#footnote-ref-1)
+1. This is an ultimate test of decentralization. But team and community contributors help ensure protocols evolve with the times and improve as new technology becomes available. [↑](#footnote-ref-1)
 
 2. For prices and most numeric data feeds the aggregation method is the median this makes it more difficult and costly to manipulate and this can be customizable per users' specification. Additionally, off chain computation of more robust methods such as TWAPs or VWAPS can be done before submitting to aggregate on chain for the official value. [↑](#footnote-ref-2)
 
