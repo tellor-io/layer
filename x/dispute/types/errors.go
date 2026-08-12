@@ -23,4 +23,5 @@ var (
 	ErrNoQuorumStillVoting        = sdkerrors.Register(ModuleName, 14, "vote period not ended and quorum not reached")
 	ErrSelfDisputeFromBond        = sdkerrors.Register(ModuleName, 15, "proposer cannot pay from their bond when creating a dispute on themselves")
 	ErrDisputedReportDoesNotExist = sdkerrors.Register(ModuleName, 16, "the report passed into the dispute does not exist")
+	ErrInvalidVoteChoice          = sdkerrors.Register(ModuleName, 17, "invalid vote choice")
 )

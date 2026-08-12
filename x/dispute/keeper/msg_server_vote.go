@@ -15,6 +15,9 @@ import (
 
 // Vote on a given dispute. 33% of power is given to users (tippers), 33% is given to reporters, and 33% is given to the team address.
 func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVoteResponse, error) {
+	if err := validateVote(msg.Vote); err != nil {
+		return nil, err
+	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	voterAcc, err := sdk.AccAddressFromBech32(msg.Voter)
 	if err != nil {
@@ -98,4 +101,16 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 		),
 	})
 	return &types.MsgVoteResponse{}, nil
+}
+
+func validateVote(vote types.VoteEnum) error {
+	switch vote {
+	case types.VoteEnum_VOTE_SUPPORT:
+		return nil
+	case types.VoteEnum_VOTE_AGAINST:
+		return nil
+	case types.VoteEnum_VOTE_INVALID:
+		return nil
+	}
+	return types.ErrInvalidVoteChoice
 }
