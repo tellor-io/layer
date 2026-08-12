@@ -303,7 +303,7 @@ The reason the oracle tokens are given to the bridge is to allow a two way bridg
 
 # Conclusion
 
-Tellor is an open network where anyone can validate, report data, request any data, dispute data, and help settle disputes via staking and fees. These properties uniquely position Tellor for no friction integrations by users or AI agents alike[^footnote-17]. Tellor is crypto-economically secure with measurable security and users can layer additional security controls. There is one way make protocols 100% immune to manipulation or capture but security can be layered to meet each users' needs.  
+Tellor is an open network where anyone can validate, report data, request any data, dispute data, and help settle disputes via staking and fees. These properties uniquely position Tellor for no friction integrations by users or AI agents alike[^footnote-17]. Tellor is crypto-economically secure with measurable security and users can layer additional security controls. There is no one way make protocols 100% immune to manipulation or capture but security can be layered to meet each users' needs.  
 <br/>Tellor's architecture aims to remain permissionless and censorship resistant but applications using it can choose to embody the same properties or add controls on top of it. This is similar to how applications on Ethereum can implement higher levels of control over their system without compromising Ethereum's properties.
 
 ## Glossary
