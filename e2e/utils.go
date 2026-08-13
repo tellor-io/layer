@@ -579,7 +579,6 @@ func SetupChainWithCustomConfig(t *testing.T, config SetupConfig) (*cosmos.Cosmo
 		t.Skip("skipping in short mode")
 	}
 
-	t.Parallel()
 	time.Sleep(1 * time.Second)
 
 	// Use the genesis configuration from config, or default if empty
@@ -760,7 +759,6 @@ func LayerSpinup(t *testing.T) *cosmos.CosmosChain {
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
-	t.Parallel()
 
 	cosmos.SetSDKConfig(baseBech32)
 

@@ -196,8 +196,11 @@ proto-update-deps:
 test:
 	@go test -v ./... -short
 
+#? e2e: Run the full e2e suite serially, one test per process (interchaintest
+#? cleanup prunes docker globally, so concurrent chain lifecycles destroy each
+#? other). TIMEOUT=<dur> sets the per-test timeout; E2E_RACE=1 enables -race.
 e2e:
-	@cd e2e && go test -v -race ./... -timeout 30m
+	@./e2e/run-all-sequential.sh
 
 benchmark:
 	@echo "Cleaning up benchmark results..."

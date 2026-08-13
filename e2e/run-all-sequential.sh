@@ -27,10 +27,21 @@ if ! command -v go >/dev/null 2>&1; then
 fi
 
 # Discover test names from source (fast; no compile needed).
+# TestMain is the flock guard in main_test.go, not a test — exclude it.
 tests=()
 while IFS= read -r name; do
   [[ -n "$name" ]] && tests+=("$name")
-done < <(grep -h '^func Test' *_test.go | sed -E 's/^func (Test[^ (]+).*/\1/' | sort -u)
+done < <(grep -h '^func Test' *_test.go | sed -E 's/^func (Test[^ (]+).*/\1/' | sort -u | grep -vx 'TestMain')
+
+# interchaintest's own cleanup is not always complete, and leftover containers,
+# dangling volumes/networks, and build-cache growth eventually fault chain
+# startup ("set volume owner: ... No such container"). Wipe between tests.
+cleanup_docker() {
+  command -v docker >/dev/null 2>&1 || return 0
+  docker ps -aq --filter label=ibc-test | xargs -r docker rm -f >/dev/null 2>&1 || true
+  docker volume prune -f >/dev/null 2>&1 || true
+  docker network prune -f >/dev/null 2>&1 || true
+}
 
 if [[ ${#tests[@]} -eq 0 ]]; then
   echo "error: no tests found in ${SCRIPT_DIR}" >&2
@@ -85,7 +96,6 @@ for i in "${!tests[@]}"; do
   set +e
   go test -v -count=1 "${RACE_FLAG[@]}" -run "^${test_name}\$" -timeout "$TIMEOUT" . 2>&1 | sed "s/^/  /"
   exit_code=${PIPESTATUS[0]}
-  set -e
 
   test_secs=$((SECONDS - test_start))
   results_name+=("$test_name")
@@ -100,6 +110,12 @@ for i in "${!tests[@]}"; do
     results_status+=("FAIL")
     failed_names+=("$test_name")
     echo "  ${RED}FAIL${RESET} ${DIM}($(format_duration "$test_secs"), exit ${exit_code})${RESET}"
+  fi
+
+  cleanup_docker
+  # Build-cache growth causes the same startup faults ~1.5h in; trim periodically.
+  if (( n % 10 == 0 )) && command -v docker >/dev/null 2>&1; then
+    docker builder prune -f --filter until=2h >/dev/null 2>&1 || true
   fi
   echo
 done
