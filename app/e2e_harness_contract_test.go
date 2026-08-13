@@ -33,3 +33,9 @@ func TestSequentialRunner_DoesNotGloballyPruneDocker(t *testing.T) {
 	require.NotContains(t, body, "docker volume prune", "volume prune is host-global and deletes unrelated unused volumes")
 	require.NotContains(t, body, "docker network prune", "network prune is host-global and deletes unrelated unused networks")
 }
+
+func TestSequentialRunner_UsesGoTestList(t *testing.T) {
+	body := readRepoFile(t, "e2e/run-all-sequential.sh")
+	require.Contains(t, body, "go test -list", "runner must use the same discovery as CI prepare")
+	require.NotContains(t, body, "grep -h '^func Test'", "grep discovery is not compilation-aware and needs a TestMain special case")
+}

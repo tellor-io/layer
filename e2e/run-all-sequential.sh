@@ -26,12 +26,15 @@ if ! command -v go >/dev/null 2>&1; then
   exit 1
 fi
 
-# Discover test names from source (fast; no compile needed).
-# TestMain is the flock guard in main_test.go, not a test — exclude it.
+# Discover tests the same way CI prepare does.
 tests=()
+list_out="$(go test -list '^Test' .)" || {
+  echo "error: go test -list failed in ${SCRIPT_DIR}" >&2
+  exit 1
+}
 while IFS= read -r name; do
   [[ -n "$name" ]] && tests+=("$name")
-done < <(grep -h '^func Test' *_test.go | sed -E 's/^func (Test[^ (]+).*/\1/' | sort -u | grep -vx 'TestMain')
+done < <(printf '%s\n' "$list_out" | grep '^Test' || true)
 
 # Remove leftover interchaintest resources by label. Do not prune unlabeled docker state.
 cleanup_docker() {
