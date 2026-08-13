@@ -159,13 +159,13 @@ func (s *GRPCRemoteSigner) SignOracleAttestation(ctx context.Context, req *signe
 	return resp.Signature, nil
 }
 
-// SignInitial delegates to the SignInitial RPC, the signer rebuilds the two fixed registration messages itself and refuses a foreign operator address.
-func (s *GRPCRemoteSigner) SignInitial(ctx context.Context, operatorAddress string) ([]byte, []byte, error) {
+// SignInitial calls the SignInitial RPC with the operator identity cached at construction.
+func (s *GRPCRemoteSigner) SignInitial(ctx context.Context) ([]byte, []byte, error) {
 	rpcCtx, cancel := context.WithTimeout(ctx, s.cfg.RequestTimeout)
 	defer cancel()
 
 	resp, err := s.client.SignInitial(rpcCtx, &signerv1.SignInitialRequest{
-		OperatorAddress: operatorAddress,
+		OperatorAddress: s.operatorAddress,
 		RequestId:       voteExtRequestID,
 	})
 	if err != nil {

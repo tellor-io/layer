@@ -383,11 +383,11 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 
 	testCases := []testCase{
 		{
-			name: "err on SignInitialMessage",
+			name: "err on SignInitial",
 			setupMocks: func(ok *mocks.OracleKeeper, bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, h *app.VoteExtHandler, patches *gomonkey.Patches) {
 				signer.On("GetOperatorAddress", mock.Anything).Return(oppAddr, nil)
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound)
-				signer.On("SignInitial", mock.Anything, mock.Anything).Return(nil, nil, errors.New("error!")).Once()
+				signer.On("SignInitial", mock.Anything).Return(nil, nil, errors.New("error!")).Once()
 			},
 			expectedPanic: false,
 			validateResponse: func(resp *abci.ResponseExtendVote) {
@@ -409,7 +409,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			setupMocks: func(ok *mocks.OracleKeeper, bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, h *app.VoteExtHandler, patches *gomonkey.Patches) {
 				signer.On("GetOperatorAddress", mock.Anything).Return(oppAddr, nil)
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound)
-				signer.On("SignInitial", mock.Anything, mock.Anything).Return([]byte("signature"), []byte("signature"), nil).Once()
+				signer.On("SignInitial", mock.Anything).Return([]byte("signature"), []byte("signature"), nil).Once()
 				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return((*bridgetypes.AttestationRequests)(nil), errors.New("error!"))
 			},
 			expectedPanic: false,
@@ -418,12 +418,11 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			},
 		},
 		{
-			name: "no EVM address, real SignInitialMessage succeeds, no attestations",
+			name: "no EVM address, SignInitial succeeds, no attestations",
 			setupMocks: func(ok *mocks.OracleKeeper, bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, h *app.VoteExtHandler, patches *gomonkey.Patches) {
 				signer.On("GetOperatorAddress", mock.Anything).Return(oppAddr, nil)
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound)
-				// Let the real SignInitialMessage run and mock the signer pair call with the exact operator address.
-				signer.On("SignInitial", mock.Anything, oppAddr).Return([]byte("sigA"), []byte("sigB"), nil).Once()
+				signer.On("SignInitial", mock.Anything).Return([]byte("sigA"), []byte("sigB"), nil).Once()
 				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(nil, collections.ErrNotFound)
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(0), errors.New("no checkpoint"))
 			},
@@ -550,53 +549,6 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			}
 
 			bk.AssertExpectations(s.T())
-		})
-	}
-}
-
-func (s *VoteExtensionTestSuite) TestSignInitialMessage() {
-	require := s.Require()
-
-	operatorAddr := "operatorAddr1"
-
-	testCases := []struct {
-		name          string
-		setupSigner   func(signer *mocks.VoteExtensionSigner)
-		expectedSigA  []byte
-		expectedSigB  []byte
-		expectedError string
-	}{
-		{
-			name: "success",
-			setupSigner: func(signer *mocks.VoteExtensionSigner) {
-				signer.On("SignInitial", mock.Anything, operatorAddr).Return([]byte("signedMsgA"), []byte("signedMsgB"), nil).Once()
-			},
-			expectedSigA: []byte("signedMsgA"),
-			expectedSigB: []byte("signedMsgB"),
-		},
-		{
-			name: "error signing",
-			setupSigner: func(signer *mocks.VoteExtensionSigner) {
-				signer.On("SignInitial", mock.Anything, operatorAddr).Return(nil, nil, errors.New("sign failed")).Once()
-			},
-			expectedError: "sign failed",
-		},
-	}
-
-	for _, tc := range testCases {
-		s.Run(tc.name, func() {
-			h, _, _, signer := s.CreateHandlerAndMocks()
-			tc.setupSigner(signer)
-
-			sigA, sigB, err := h.SignInitialMessage(s.ctx, operatorAddr)
-			if tc.expectedError != "" {
-				require.Error(err)
-				require.Contains(err.Error(), tc.expectedError)
-			} else {
-				require.NoError(err)
-				require.Equal(tc.expectedSigA, sigA)
-				require.Equal(tc.expectedSigB, sigB)
-			}
 		})
 	}
 }

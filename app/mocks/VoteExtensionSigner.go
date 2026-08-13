@@ -64,34 +64,34 @@ func (_m *VoteExtensionSigner) SignCheckpoint(ctx context.Context, req *signerv1
 	return r0, r1
 }
 
-// SignInitial provides a mock function with given fields: ctx, operatorAddress
-func (_m *VoteExtensionSigner) SignInitial(ctx context.Context, operatorAddress string) ([]byte, []byte, error) {
-	ret := _m.Called(ctx, operatorAddress)
+// SignInitial provides a mock function with given fields: ctx
+func (_m *VoteExtensionSigner) SignInitial(ctx context.Context) ([]byte, []byte, error) {
+	ret := _m.Called(ctx)
 
 	var r0 []byte
 	var r1 []byte
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) ([]byte, []byte, error)); ok {
-		return rf(ctx, operatorAddress)
+	if rf, ok := ret.Get(0).(func(context.Context) ([]byte, []byte, error)); ok {
+		return rf(ctx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) []byte); ok {
-		r0 = rf(ctx, operatorAddress)
+	if rf, ok := ret.Get(0).(func(context.Context) []byte); ok {
+		r0 = rf(ctx)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]byte)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) []byte); ok {
-		r1 = rf(ctx, operatorAddress)
+	if rf, ok := ret.Get(1).(func(context.Context) []byte); ok {
+		r1 = rf(ctx)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).([]byte)
 		}
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, string) error); ok {
-		r2 = rf(ctx, operatorAddress)
+	if rf, ok := ret.Get(2).(func(context.Context) error); ok {
+		r2 = rf(ctx)
 	} else {
 		r2 = ret.Error(2)
 	}

@@ -154,7 +154,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	_, err := h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
 		h.logger.Info("ExtendVoteHandler: EVM address not found for operator address, registering evm address", "operatorAddress", operatorAddress)
-		initialSigA, initialSigB, err := h.SignInitialMessage(ctx, operatorAddress)
+		initialSigA, initialSigB, err := h.signer.SignInitial(ctx)
 		if err != nil {
 			h.logger.Info("ExtendVoteHandler: failed to sign initial message", "error", err)
 			return h.marshalVoteExt(voteExt)
@@ -314,10 +314,6 @@ func (h *VoteExtHandler) SignSnapshot(ctx context.Context, snapshot []byte) ([]b
 		return nil, err
 	}
 	return sig, nil
-}
-
-func (h *VoteExtHandler) SignInitialMessage(ctx context.Context, operatorAddress string) ([]byte, []byte, error) {
-	return h.signer.SignInitial(ctx, operatorAddress)
 }
 
 func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx context.Context) (signature []byte, timestamp uint64, err error) {

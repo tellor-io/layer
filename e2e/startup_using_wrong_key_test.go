@@ -93,18 +93,8 @@ func TestStartupUsingWrongKey(t *testing.T) {
 		fmt.Printf("Validator %d - Original private key loaded\n", i)
 	}
 
-	// Now we need to create a scenario where validator 0 has a different key than what it was created with
-	// This simulates the real-world scenario where:
-	// 1. Validator was created with Key A (stored in consensus key, used for block signing)
-	// 2. Validator is running with --key-name "validator" but that key is now Key B (wrong key)
-	// 3. Validator can still sign blocks with consensus key (Key A)
-	// Since #1046 the vote-extension signer resolves and caches its operator identity
-	// once at startup, so the swap plays out in two phases:
-	// 4. While the daemon keeps running, the swap is invisible (cached identity) and
-	//    the validator must NOT be jailed
-	// 5. After a restart the signer derives its identity from the wrong key, emits an
-	//    initial registration signature that fails EVM-address recovery in the
-	//    proposer's PreBlocker, and the validator must be jailed
+	// Mid-run keyring swap must not jail (operator identity is cached at signer
+	// construction). Restart with the wrong key named "validator" must jail.
 
 	fmt.Println("Setting up validator 0 with mismatched key scenario...")
 
@@ -163,15 +153,8 @@ func TestStartupUsingWrongKey(t *testing.T) {
 	require.NoError(getNewKeyErr)
 	fmt.Println("new-validator: ", string(stdout))
 
-	fmt.Println("✅ Validator 0 now uses wrong key for vote extensions")
-	fmt.Println("✅ Original key is preserved as 'original-validator' in the keyring")
-	fmt.Println("✅ Wrong key is now named 'validator' (what the daemon uses for vote extensions)")
-	fmt.Println("✅ This simulates the real-world scenario where validator uses wrong key for vote extensions")
+	fmt.Println("validator keyring now names the wrong key 'validator'")
 
-	// Phase 1: with the daemon still running, the swap must NOT jail. The
-	// vote-extension signer cached the true operator identity at startup, so the
-	// node keeps claiming its registered identity and never re-emits an initial
-	// registration signature (the only automatic jail trigger).
 	fmt.Println("\n=== Phase 1: mid-run key swap must not jail ===")
 	err = testutil.WaitForBlocks(ctx, 3, validators[0].Node)
 	require.NoError(err)
@@ -180,21 +163,13 @@ func TestStartupUsingWrongKey(t *testing.T) {
 	require.NoError(err)
 	require.False(val0Info.Jailed, "mid-run key swap must not jail: operator identity is cached at signer construction")
 
-	// Phase 2: restart the node so the signer re-derives its identity from the
-	// wrong key now named "validator" (the keyring lives on the node's home
-	// volume, so the swap survives the restart). The wrong valoper has no
-	// registered EVM address, so the daemon emits an initial registration
-	// signature that fails EVM-address recovery in the proposer's PreBlocker,
-	// which jails validator 0.
 	fmt.Println("\n=== Phase 2: restart with wrong key must jail ===")
 	err = validators[0].Node.StopContainer(ctx)
 	require.NoError(err)
 	err = validators[0].Node.StartContainer(ctx)
 	require.NoError(err)
 
-	// Use validator 1 as the height source: validator 0 is briefly down while
-	// restarting and leaves the active set once jailed. Jailing lands within ~2
-	// blocks of validator 0 rejoining consensus.
+	// Height from validator 1: validator 0 is down during restart and leaves the set once jailed.
 	err = testutil.WaitForBlocks(ctx, 5, validators[1].Node)
 	require.NoError(err)
 

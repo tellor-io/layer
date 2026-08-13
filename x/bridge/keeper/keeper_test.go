@@ -5,7 +5,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/sha256"
 	"encoding/hex"
-	"fmt"
 	"strconv"
 	"testing"
 	"time"
@@ -706,8 +705,7 @@ func TestEVMAddressFromSignatures(t *testing.T) {
 	addressExpected := crypto.PubkeyToAddress(*pkCoord).Hex()
 	operatorAddr := "operatorAddr1"
 
-	msgA := fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddr)
-	msgB := fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddr)
+	msgA, msgB := types.InitialRegistrationMessages(operatorAddr)
 	msgBytesA := []byte(msgA)
 	msgBytesB := []byte(msgB)
 

@@ -631,8 +631,7 @@ func absInt64(x int64) int64 {
 }
 
 func (k Keeper) EVMAddressFromSignatures(ctx context.Context, sigA, sigB []byte, operatorAddress string) (common.Address, error) {
-	msgA := fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddress)
-	msgB := fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddress)
+	msgA, msgB := types.InitialRegistrationMessages(operatorAddress)
 
 	// convert messages to bytes
 	msgBytesA := []byte(msgA)

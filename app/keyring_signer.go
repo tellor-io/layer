@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/viper"
 	signerv1 "github.com/tellor-io/bridge-remote-signer/api/gen/signer/v1"
+	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -86,10 +87,14 @@ func (s *KeyringSigner) SignOracleAttestation(_ context.Context, req *signerv1.S
 	return s.sign(req.ExpectedSnapshot)
 }
 
-// SignInitial builds the two fixed registration messages for operatorAddress and signs each with the local key.
-func (s *KeyringSigner) SignInitial(_ context.Context, operatorAddress string) ([]byte, []byte, error) {
-	hashA := sha256.Sum256([]byte(fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddress)))
-	hashB := sha256.Sum256([]byte(fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddress)))
+// SignInitial signs the two registration messages for the cached operator.
+func (s *KeyringSigner) SignInitial(_ context.Context) ([]byte, []byte, error) {
+	if s.operatorAddress == "" {
+		return nil, nil, errors.New("operator address not initialized")
+	}
+	msgA, msgB := bridgetypes.InitialRegistrationMessages(s.operatorAddress)
+	hashA := sha256.Sum256([]byte(msgA))
+	hashB := sha256.Sum256([]byte(msgB))
 	sigA, err := s.sign(hashA[:])
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to sign message A: %w", err)
