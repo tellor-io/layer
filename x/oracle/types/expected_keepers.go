@@ -4,7 +4,6 @@ import (
 	context "context"
 
 	rktypes "github.com/tellor-io/layer/x/registry/types"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/math"
 
@@ -41,8 +40,6 @@ type RegistryKeeper interface {
 type ReporterKeeper interface {
 	// Methods imported from reporter should be defined here
 	ReporterStake(ctx context.Context, repAddress sdk.AccAddress, queryId []byte) (math.Int, error)
-	SetReporterStakeByQueryId(ctx context.Context, repAddr sdk.AccAddress, delegates []*reportertypes.TokenOriginInfo, totalTokens math.Int, queryId []byte) error
-	GetReporterStake(ctx context.Context, repAddr sdk.AccAddress) (math.Int, []*reportertypes.TokenOriginInfo, []*reportertypes.SelectorShare, []byte, error)
 	DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.LegacyDec) error
 	GetLastReportedAtBlock(ctx context.Context, reporter []byte) (uint64, error)
 }

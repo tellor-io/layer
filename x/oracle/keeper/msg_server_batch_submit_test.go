@@ -4,11 +4,9 @@ import (
 	"encoding/hex"
 	"errors"
 
-	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
-	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -23,7 +21,6 @@ func (s *KeeperTestSuite) TestBatchSubmitValue() {
 	// Setup test data
 	addr := sample.AccAddressBytes()
 	addr2 := sample.AccAddressBytes()
-	addr3 := sample.AccAddressBytes()
 	qDataBz, err := utils.QueryBytesFromString(qData)
 	require.NoError(err)
 	queryId := utils.QueryIDFromData(qDataBz)
@@ -72,19 +69,10 @@ func (s *KeeperTestSuite) TestBatchSubmitValue() {
 
 	// Test 1: Successful batch submission
 	s.Run("Successful batch submission", func() {
-		delegations := []*reportertypes.TokenOriginInfo{
-			{
-				DelegatorAddress: addr.Bytes(),
-				Amount:           math.NewInt(1_000_000),
-			},
-		}
-
 		// Mock registry keeper for spec lookups
 		s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(spotSpec, nil).Times(2)
 
-		rk.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil, nil, nil).Once()
-		rk.On("SetReporterStakeByQueryId", s.ctx, addr, delegations, minStakeAmt.Add(math.NewInt(100)), queryId).Return(nil).Once()
-		rk.On("SetReporterStakeByQueryId", s.ctx, addr, delegations, minStakeAmt.Add(math.NewInt(100)), queryId2).Return(nil).Once()
+		rk.On("ReporterStake", s.ctx, addr, queryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
 
 		msg := &types.MsgBatchSubmitValue{
 			Creator: addr.String(),
@@ -147,15 +135,6 @@ func (s *KeeperTestSuite) TestBatchSubmitValue() {
 			}
 		}
 
-		delegations := []*reportertypes.TokenOriginInfo{
-			{
-				DelegatorAddress: addr.Bytes(),
-				Amount:           math.NewInt(1_000_000),
-			},
-		}
-
-		rk.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil, nil, nil).Once()
-
 		msg := &types.MsgBatchSubmitValue{
 			Creator: addr.String(),
 			Values:  values,
@@ -168,14 +147,7 @@ func (s *KeeperTestSuite) TestBatchSubmitValue() {
 
 	// Test 4: Insufficient reporter stake
 	s.Run("Insufficient reporter stake", func() {
-		delegations := []*reportertypes.TokenOriginInfo{
-			{
-				DelegatorAddress: addr.Bytes(),
-				Amount:           math.NewInt(100),
-			},
-		}
-
-		rk.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Sub(math.NewInt(100)), delegations, nil, nil, nil).Once()
+		rk.On("ReporterStake", s.ctx, addr, queryId).Return(minStakeAmt.Sub(math.NewInt(100)), nil).Once()
 
 		msg := &types.MsgBatchSubmitValue{
 			Creator: addr.String(),
@@ -194,21 +166,13 @@ func (s *KeeperTestSuite) TestBatchSubmitValue() {
 
 	// Test 5: Partial failures - some reports fail, others succeed
 	s.Run("Partial failures", func() {
-		delegations := []*reportertypes.TokenOriginInfo{
-			{
-				DelegatorAddress: addr.Bytes(),
-				Amount:           math.NewInt(1_000_000),
-			},
-		}
-
 		// Create an invalid query data
 		invalidQueryData := []byte("invalid")
 
 		// Mock registry keeper for the successful query
 		s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(spotSpec, nil).Once()
 
-		rk.On("GetReporterStake", s.ctx, addr2).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil, nil, nil).Once()
-		rk.On("SetReporterStakeByQueryId", s.ctx, addr2, delegations, minStakeAmt.Add(math.NewInt(100)), queryId).Return(nil).Once()
+		rk.On("ReporterStake", s.ctx, addr2, queryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
 
 		msg := &types.MsgBatchSubmitValue{
 			Creator: addr2.String(),
@@ -241,9 +205,9 @@ func (s *KeeperTestSuite) TestBatchSubmitValue() {
 		require.Contains(res.FailedIndices, uint32(3))
 	})
 
-	// Test 6: GetReporterStake error
-	s.Run("GetReporterStake error", func() {
-		rk.On("GetReporterStake", s.ctx, addr).Return(math.ZeroInt(), nil, nil, nil, errors.New("reporter error")).Once()
+	// Test 6: ReporterStake error
+	s.Run("ReporterStake error", func() {
+		rk.On("ReporterStake", s.ctx, addr, queryId).Return(math.ZeroInt(), errors.New("reporter error")).Once()
 
 		msg := &types.MsgBatchSubmitValue{
 			Creator: addr.String(),
@@ -260,50 +224,15 @@ func (s *KeeperTestSuite) TestBatchSubmitValue() {
 		require.Contains(err.Error(), "reporter error")
 	})
 
-	// Test 7: SetReporterStakeByQueryId error
-	s.Run("SetReporterStakeByQueryId error", func() {
-		delegations := []*reportertypes.TokenOriginInfo{
-			{
-				DelegatorAddress: addr3.Bytes(),
-				Amount:           math.NewInt(1_000_000),
-			},
-		}
-
-		rk.On("GetReporterStake", s.ctx, addr3).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil, nil, nil).Once()
-		s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(spotSpec, nil).Once()
-		rk.On("SetReporterStakeByQueryId", s.ctx, addr3, delegations, minStakeAmt.Add(math.NewInt(100)), queryId).Return(errors.New("set stake error")).Once()
-
-		msg := &types.MsgBatchSubmitValue{
-			Creator: addr3.String(),
-			Values: []*types.SubmitValueItem{
-				{
-					QueryData: qDataBz,
-					Value:     "000000000000000000000000000000000000000000000000000000000000001e",
-				},
-			},
-		}
-
-		_, err := s.msgServer.BatchSubmitValue(s.ctx, msg)
-		require.Error(err)
-		require.Contains(err.Error(), "set stake error")
-	})
-
-	// Test 8: Token bridge deposit handling
+	// Test 7: Token bridge deposit handling
 	s.Run("Token bridge deposit", func() {
 		// Setup bridge deposit query data
 		bridgeQueryData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000b54524242726964676556320000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000003e8"
 		bridgeQueryDataBz, err := hex.DecodeString(bridgeQueryData)
 		require.NoError(err)
+		bridgeQueryId := utils.QueryIDFromData(bridgeQueryDataBz)
 
-		delegations := []*reportertypes.TokenOriginInfo{
-			{
-				DelegatorAddress: addr.Bytes(),
-				Amount:           math.NewInt(1_000_000),
-			},
-		}
-
-		rk.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil, nil, nil).Once()
-		rk.On("SetReporterStakeByQueryId", s.ctx, addr, delegations, minStakeAmt.Add(math.NewInt(100)), mock.Anything).Return(nil).Once()
+		rk.On("ReporterStake", s.ctx, addr, bridgeQueryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
 
 		// Mock registry keeper for bridge spec
 		s.registryKeeper.On("GetSpec", s.ctx, "TRBBridgeV2").Return(bridgeSpec, nil).Once()
@@ -330,18 +259,11 @@ func (s *KeeperTestSuite) TestBatchSubmitValue_EmptyBatch() {
 	require := s.Require()
 	addr := sample.AccAddressBytes()
 
-	delegations := []*reportertypes.TokenOriginInfo{
-		{
-			DelegatorAddress: addr.Bytes(),
-			Amount:           math.NewInt(1_000_000),
-		},
-	}
-
 	params, err := s.oracleKeeper.Params.Get(s.ctx)
 	require.NoError(err)
 	minStakeAmt := params.MinStakeAmount
 
-	s.reporterKeeper.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil, nil, nil).Once()
+	s.reporterKeeper.On("ReporterStake", s.ctx, addr, []byte(nil)).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
 
 	msg := &types.MsgBatchSubmitValue{
 		Creator: addr.String(),
@@ -358,18 +280,13 @@ func (s *KeeperTestSuite) TestBatchSubmitValue_AllFailures() {
 	require := s.Require()
 	addr := sample.AccAddressBytes()
 
-	delegations := []*reportertypes.TokenOriginInfo{
-		{
-			DelegatorAddress: addr.Bytes(),
-			Amount:           math.NewInt(1_000_000),
-		},
-	}
-
 	params, err := s.oracleKeeper.Params.Get(s.ctx)
 	require.NoError(err)
 	minStakeAmt := params.MinStakeAmount
 
-	s.reporterKeeper.On("GetReporterStake", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), delegations, nil, nil, nil).Once()
+	// First item has empty query data; QueryIDFromData still produces a hash used for ReporterStake.
+	stakeQueryId := utils.QueryIDFromData([]byte{})
+	s.reporterKeeper.On("ReporterStake", s.ctx, addr, stakeQueryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
 
 	msg := &types.MsgBatchSubmitValue{
 		Creator: addr.String(),

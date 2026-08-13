@@ -24,19 +24,6 @@ func (k msgServer) BatchSubmitValue(ctx context.Context, msg *types.MsgBatchSubm
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
-	params, err := k.keeper.Params.Get(ctx)
-	if err != nil {
-		return nil, err
-	}
-	reporterStake, delegationsUsed, _, _, err := k.keeper.reporterKeeper.GetReporterStake(ctx, reporterAddr)
-	if err != nil {
-		return nil, err
-	}
-	if reporterStake.LT(params.MinStakeAmount) {
-		return nil, errorsmod.Wrapf(types.ErrNotEnoughStake, "reporter has %s, required %s", reporterStake, params.MinStakeAmount)
-	}
-	reportingPower := reporterStake.Quo(layertypes.PowerReduction).Uint64()
-
 	maxBatchSize, err := k.keeper.GetMaxBatchSize(ctx)
 	if err != nil {
 		return nil, err
@@ -49,6 +36,30 @@ func (k msgServer) BatchSubmitValue(ctx context.Context, msg *types.MsgBatchSubm
 	if len(msg.Values) > int(maxBatchSize) {
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "too many reports in batch, max is %d", maxBatchSize)
 	}
+
+	params, err := k.keeper.Params.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Same stake/period lifecycle as MsgSubmitValue: pending switches, recalc flag,
+	// handlePeriodTracking, and ReportByBlock only when stake composition changes.
+	// One call covers the whole batch; dispute lookups use latest snapshot <= height.
+	var stakeQueryId []byte
+	if len(msg.Values) > 0 {
+		stakeQueryId = utils.QueryIDFromData(msg.Values[0].QueryData)
+	} else {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "no values in batch")
+	}
+	reporterStake, err := k.keeper.reporterKeeper.ReporterStake(ctx, reporterAddr, stakeQueryId)
+	if err != nil {
+		return nil, err
+	}
+	if reporterStake.LT(params.MinStakeAmount) {
+		return nil, errorsmod.Wrapf(types.ErrNotEnoughStake, "reporter has %s, required %s", reporterStake, params.MinStakeAmount)
+	}
+	reportingPower := reporterStake.Quo(layertypes.PowerReduction).Uint64()
+
 	failedIndices := []uint32{}
 	for i, singleValue := range msg.Values {
 		// validate each individual report
@@ -97,14 +108,6 @@ func (k msgServer) BatchSubmitValue(ctx context.Context, msg *types.MsgBatchSubm
 				failedIndices = append(failedIndices, uint32(i))
 				continue
 			}
-		}
-		// sets to storage if no error
-		// fails transaction if error happens at this point since the above operations are setting to storage
-		// and we should revert if this fails.
-		// plus this should never fail since we all it does is set the reporter stake for the given queryId
-		err = k.keeper.reporterKeeper.SetReporterStakeByQueryId(ctx, reporterAddr, delegationsUsed, reporterStake, queryId)
-		if err != nil {
-			return nil, err
 		}
 	}
 
