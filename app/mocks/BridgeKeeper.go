@@ -97,6 +97,56 @@ func (_m *BridgeKeeper) GetBridgeValsetByTimestamp(ctx context.Context, timestam
 	return r0, r1
 }
 
+// GetAttestationSnapshotDataBySnapshot provides a mock function with given fields: ctx, snapshot
+func (_m *BridgeKeeper) GetAttestationSnapshotDataBySnapshot(ctx context.Context, snapshot []byte) (types.AttestationSnapshotData, error) {
+	ret := _m.Called(ctx, snapshot)
+
+	var r0 types.AttestationSnapshotData
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) (types.AttestationSnapshotData, error)); ok {
+		return rf(ctx, snapshot)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []byte) types.AttestationSnapshotData); ok {
+		r0 = rf(ctx, snapshot)
+	} else {
+		r0 = ret.Get(0).(types.AttestationSnapshotData)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []byte) error); ok {
+		r1 = rf(ctx, snapshot)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetValsetCheckpointDomainSeparator provides a mock function with given fields: ctx
+func (_m *BridgeKeeper) GetValsetCheckpointDomainSeparator(ctx context.Context) ([]byte, error) {
+	ret := _m.Called(ctx)
+
+	var r0 []byte
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]byte, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []byte); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetEVMAddressByOperator provides a mock function with given fields: ctx, operatorAddress
 func (_m *BridgeKeeper) GetEVMAddressByOperator(ctx context.Context, operatorAddress string) ([]byte, error) {
 	ret := _m.Called(ctx, operatorAddress)
