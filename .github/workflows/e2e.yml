@@ -93,9 +93,6 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    needs:
-      - build-primary
-      - build-ibc
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
@@ -118,7 +115,7 @@ jobs:
             # -list also prints package status lines (ok/FAIL). We only want test names.
             go test -list '^Test' . | tee "${OUT}" >/dev/null
           )
-          TESTS="$(grep '^Test' "${OUT}" | jq -R -s -c 'split("\n")[:-1]')"
+          TESTS="$(grep '^Test' "${OUT}" | grep -vx 'TestIbcInterchainQuery' | jq -R -s -c 'split("\n")[:-1]')"
           echo "matrix=${TESTS}" >> "${GITHUB_OUTPUT}"
 
   test:
@@ -126,6 +123,7 @@ jobs:
     timeout-minutes: 30
     needs:
       - prepare
+      - build-primary
     strategy:
       matrix:
         test: ${{ fromJson(needs.prepare.outputs.matrix) }}
@@ -149,18 +147,42 @@ jobs:
       - name: Load Primary Docker Image
         run: docker image load -i ${{ env.TAR_PATH }}
 
-      # Only the interchain-query test uses the layer-icq image.
+      - name: Run Tests
+        env:
+          E2E_TEST: ${{ matrix.test }}
+        run: cd e2e && go test -race -v -timeout 15m -run "^${E2E_TEST}$" .
+
+  test-ibc:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs:
+      - build-primary
+      - build-ibc
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Install Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+        with:
+          go-version: '1.24'
+          cache-dependency-path: e2e/go.sum
+
+      - name: Download Primary Tarball
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: layer-docker-image
+
+      - name: Load Primary Docker Image
+        run: docker image load -i ${{ env.TAR_PATH }}
+
       - name: Download IBC Tarball
-        if: matrix.test == 'TestIbcInterchainQuery'
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: layer-icq-docker-image
 
       - name: Load IBC Docker Image
-        if: matrix.test == 'TestIbcInterchainQuery'
         run: docker image load -i ${{ env.IBC_TAR_PATH }}
 
-      - name: Run Tests
-        env:
-          E2E_TEST: ${{ matrix.test }}
-        run: cd e2e && go test -race -v -timeout 15m -run "^${E2E_TEST}$" .
+      - name: Run IBC Test
+        run: cd e2e && go test -race -v -timeout 15m -run "^TestIbcInterchainQuery$" .
