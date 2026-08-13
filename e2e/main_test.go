@@ -11,11 +11,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// TestMain enforces the one-e2e-process-per-docker-daemon invariant.
-// interchaintest's per-test cleanup prunes docker volumes/networks globally, so
-// two concurrent e2e processes destroy each other's chains mid-startup with
-// errors like "set volume owner: ... No such container". Failing fast here
-// beats diagnosing those minutes-later. See e2e/run-all-sequential.sh.
+// TestMain fails fast if another e2e process already holds the docker daemon.
 func TestMain(m *testing.M) {
 	os.Exit(run(m))
 }

@@ -33,14 +33,25 @@ while IFS= read -r name; do
   [[ -n "$name" ]] && tests+=("$name")
 done < <(grep -h '^func Test' *_test.go | sed -E 's/^func (Test[^ (]+).*/\1/' | sort -u | grep -vx 'TestMain')
 
-# interchaintest's own cleanup is not always complete, and leftover containers,
-# dangling volumes/networks, and build-cache growth eventually fault chain
-# startup ("set volume owner: ... No such container"). Wipe between tests.
+# Remove leftover interchaintest resources by label. Do not prune unlabeled docker state.
 cleanup_docker() {
   command -v docker >/dev/null 2>&1 || return 0
-  docker ps -aq --filter label=ibc-test | xargs -r docker rm -f >/dev/null 2>&1 || true
-  docker volume prune -f >/dev/null 2>&1 || true
-  docker network prune -f >/dev/null 2>&1 || true
+  local ids vols nets
+  ids="$(docker ps -aq --filter label=ibc-test 2>/dev/null || true)"
+  if [[ -n "$ids" ]]; then
+    # shellcheck disable=SC2086
+    docker rm -f $ids >/dev/null 2>&1 || true
+  fi
+  vols="$(docker volume ls -q --filter label=ibc-test 2>/dev/null || true)"
+  if [[ -n "$vols" ]]; then
+    # shellcheck disable=SC2086
+    docker volume rm $vols >/dev/null 2>&1 || true
+  fi
+  nets="$(docker network ls -q --filter label=ibc-test 2>/dev/null || true)"
+  if [[ -n "$nets" ]]; then
+    # shellcheck disable=SC2086
+    docker network rm $nets >/dev/null 2>&1 || true
+  fi
 }
 
 if [[ ${#tests[@]} -eq 0 ]]; then
@@ -93,7 +104,6 @@ for i in "${!tests[@]}"; do
   echo "${BOLD}[${n}/${total}]${RESET} ${test_name}"
   test_start=$SECONDS
 
-  set +e
   go test -v -count=1 "${RACE_FLAG[@]}" -run "^${test_name}\$" -timeout "$TIMEOUT" . 2>&1 | sed "s/^/  /"
   exit_code=${PIPESTATUS[0]}
 
