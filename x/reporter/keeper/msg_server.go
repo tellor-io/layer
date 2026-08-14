@@ -296,6 +296,8 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 			return nil, errors.New("cannot self-demote while reporter has open query commitments; wait until block height exceeds max open commitment height")
 		}
 
+		// Keep Reporters[self] until the pending switch finalizes so liveness/tip
+		// distribution can still credit this address. Removal happens in finalizePendingSwitch.
 		selfRep, selfErr := k.Keeper.Reporters.Get(goCtx, selectorAddr.Bytes())
 		if selfErr == nil && selfRep.Jailed {
 			if err := k.Keeper.copyReporterJailToSelection(goCtx, selectorAddr, selfRep); err != nil {
@@ -303,9 +305,6 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 			}
 		} else if selfErr != nil && !errors.Is(selfErr, collections.ErrNotFound) {
 			return nil, selfErr
-		}
-		if err := k.Keeper.Reporters.Remove(goCtx, selectorAddr.Bytes()); err != nil {
-			return nil, err
 		}
 	}
 	// check if reporter is capped at max selectors (include incoming pending switches)

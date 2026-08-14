@@ -140,6 +140,15 @@ func (k Keeper) finalizePendingSwitch(ctx context.Context, from, selector []byte
 		return k.removeOutgoingPendingSwitch(ctx, from, selector, to)
 	}
 
+	hasTo, err := k.Reporters.Has(ctx, to)
+	if err != nil {
+		return err
+	}
+	if !hasTo {
+		// Target self-demoted or was removed; drop the pending row instead of orphaning Selection.
+		return k.removeOutgoingPendingSwitch(ctx, from, selector, to)
+	}
+
 	sel.Reporter = append([]byte(nil), to...)
 	sel.SwitchOutLockedUntilBlock = 0
 	if err := k.Selectors.Set(ctx, selector, sel); err != nil {
@@ -157,6 +166,17 @@ func (k Keeper) finalizePendingSwitch(ctx context.Context, from, selector []byte
 	if err := k.recomputeReporterPendingSwitchHead(ctx, to); err != nil {
 		return err
 	}
+
+	// Self-demotion: settle tip period then delete the reporter row now that Selection moved off self.
+	if bytes.Equal(from, selector) {
+		if err := k.SettleReporter(ctx, sdk.AccAddress(from)); err != nil {
+			return err
+		}
+		if err := k.Reporters.Remove(ctx, from); err != nil && !errors.Is(err, collections.ErrNotFound) {
+			return err
+		}
+	}
+
 	if err := k.FlagStakeRecalc(ctx, sdk.AccAddress(from)); err != nil {
 		return err
 	}

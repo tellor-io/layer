@@ -2,10 +2,12 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	layer "github.com/tellor-io/layer/types"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -48,6 +50,9 @@ func (k Keeper) DistributeTip(ctx context.Context, aggregateReport types.Aggrega
 		amount := math.LegacyNewDec(int64(report.Power)).Quo(math.LegacyNewDec(int64(aggregateReport.AggregatePower))).Mul(reward)
 		err = k.reporterKeeper.DivvyingTips(ctx, reporter, amount)
 		if err != nil {
+			if errors.Is(err, reportertypes.ErrReporterDoesNotExist) {
+				continue
+			}
 			return err
 		}
 	}

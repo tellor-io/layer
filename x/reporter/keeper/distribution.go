@@ -23,6 +23,10 @@ import (
 func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.LegacyDec) error {
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err != nil {
+		// Reporter removed (e.g. self-demotion finalized before payout): skip rather than halt EndBlock.
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.ErrReporterDoesNotExist
+		}
 		return err
 	}
 
