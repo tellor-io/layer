@@ -269,6 +269,15 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	if pending && bytes.Equal(toB, reporterAddr.Bytes()) {
 		return &types.MsgSwitchReporterResponse{}, nil
 	}
+	// Reject newly targeting a reporter mid self-demotion (avoids Selection landing
+	// on an address that is about to be deleted). Idempotent same-target pending above is allowed.
+	demoting, err := k.Keeper.hasPendingSelfDemotion(goCtx, reporterAddr.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	if demoting {
+		return nil, types.ErrReporterSelfDemoting.Wrapf("cannot switch to reporter %s while it has a pending self-demotion", reporterAddr.String())
+	}
 	// check if reporter is trying to become a selector of another reporter: if they
 	// still have other selectors, require 21 days since their last oracle report.
 	if bytes.Equal(selector.Reporter, selectorAddr.Bytes()) {

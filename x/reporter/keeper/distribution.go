@@ -120,9 +120,15 @@ func (k Keeper) ProcessDistributionQueue(ctx context.Context, maxItems int) erro
 }
 
 // distributeQueueItem distributes rewards from a queued period to its selectors.
+// If RewardAmount > 0 but Total is zero (no selector snapshot — e.g. a period
+// rewritten after pending self-demotion stake exclusion), credit the full net
+// reward to the reporter address so TipsEscrowPool liabilities are conserved.
 func (k Keeper) distributeQueueItem(ctx context.Context, item types.DistributionQueueItem) error {
-	if item.RewardAmount.IsZero() || item.Total.IsZero() {
+	if item.RewardAmount.IsZero() {
 		return nil
+	}
+	if item.Total.IsZero() {
+		return k.creditSelectorTipsDec(ctx, item.Reporter, item.RewardAmount, "rewards_distributed_fallback")
 	}
 
 	for _, sel := range item.Selectors {
@@ -134,31 +140,38 @@ func (k Keeper) distributeQueueItem(ctx context.Context, item types.Distribution
 			continue
 		}
 
-		// Add to selector's tips
-		oldTips, err := k.SelectorTips.Get(ctx, sel.SelectorAddress)
-		if err != nil {
-			if !errors.Is(err, collections.ErrNotFound) {
-				return err
-			}
-			oldTips = math.LegacyZeroDec()
-		}
-
-		newTips := oldTips.Add(selectorReward)
-		if err := k.SelectorTips.Set(ctx, sel.SelectorAddress, newTips); err != nil {
+		if err := k.creditSelectorTipsDec(ctx, sel.SelectorAddress, selectorReward, "rewards_distributed"); err != nil {
 			return err
 		}
-
-		// Emit event
-		sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
-			sdk.NewEvent(
-				"rewards_distributed",
-				sdk.NewAttribute("selector", sdk.AccAddress(sel.SelectorAddress).String()),
-				sdk.NewAttribute("amount", selectorReward.String()),
-				sdk.NewAttribute("total_tips", newTips.String()),
-			),
-		})
 	}
 
+	return nil
+}
+
+// creditSelectorTipsDec adds amount to SelectorTips and emits eventName.
+func (k Keeper) creditSelectorTipsDec(ctx context.Context, addr []byte, amount math.LegacyDec, eventName string) error {
+	if !amount.IsPositive() {
+		return nil
+	}
+	oldTips, err := k.SelectorTips.Get(ctx, addr)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return err
+		}
+		oldTips = math.LegacyZeroDec()
+	}
+	newTips := oldTips.Add(amount)
+	if err := k.SelectorTips.Set(ctx, addr, newTips); err != nil {
+		return err
+	}
+	sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
+		sdk.NewEvent(
+			eventName,
+			sdk.NewAttribute("selector", sdk.AccAddress(addr).String()),
+			sdk.NewAttribute("amount", amount.String()),
+			sdk.NewAttribute("total_tips", newTips.String()),
+		),
+	})
 	return nil
 }
 

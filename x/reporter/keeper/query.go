@@ -166,15 +166,22 @@ func (k Querier) AvailableTips(ctx context.Context, req *types.QueryAvailableTip
 		// Selector exists, get their reporter's period data
 		reporterAddr := sdk.AccAddress(selector.GetReporter())
 		periodData, err := k.Keeper.ReporterPeriodData.Get(ctx, reporterAddr)
-		if err == nil && periodData.RewardAmount.IsPositive() && !periodData.Total.IsZero() {
-			// Find this selector's share in the period data
-			for _, sel := range periodData.Selectors {
-				if sdk.AccAddress(sel.SelectorAddress).Equals(selectorAcc) {
-					// Calculate pending: (selector_amount / total) * reward_amount
-					shareRatio := sel.Amount.ToLegacyDec().Quo(periodData.Total.ToLegacyDec())
-					pendingReward := periodData.RewardAmount.Mul(shareRatio)
-					rewards = rewards.Add(pendingReward)
-					break
+		if err == nil && periodData.RewardAmount.IsPositive() {
+			if periodData.Total.IsZero() {
+				// No selector snapshot: full net reward falls back to the reporter address on settle.
+				if selectorAcc.Equals(reporterAddr) {
+					rewards = rewards.Add(periodData.RewardAmount)
+				}
+			} else {
+				// Find this selector's share in the period data
+				for _, sel := range periodData.Selectors {
+					if sdk.AccAddress(sel.SelectorAddress).Equals(selectorAcc) {
+						// Calculate pending: (selector_amount / total) * reward_amount
+						shareRatio := sel.Amount.ToLegacyDec().Quo(periodData.Total.ToLegacyDec())
+						pendingReward := periodData.RewardAmount.Mul(shareRatio)
+						rewards = rewards.Add(pendingReward)
+						break
+					}
 				}
 			}
 		}

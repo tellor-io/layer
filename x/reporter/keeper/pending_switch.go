@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -167,8 +168,12 @@ func (k Keeper) finalizePendingSwitch(ctx context.Context, from, selector []byte
 		return err
 	}
 
-	// Self-demotion: settle tip period then delete the reporter row now that Selection moved off self.
+	// Self-demotion: cancel in-flight joins to this reporter (selectors stay on
+	// their current Selection.Reporter), settle tip period, then delete the row.
 	if bytes.Equal(from, selector) {
+		if err := k.cancelIncomingPendingSwitchesOnSelfDemotion(ctx, from); err != nil {
+			return err
+		}
 		if err := k.SettleReporter(ctx, sdk.AccAddress(from)); err != nil {
 			return err
 		}
@@ -181,6 +186,79 @@ func (k Keeper) finalizePendingSwitch(ctx context.Context, from, selector []byte
 		return err
 	}
 	return k.FlagStakeRecalc(ctx, sdk.AccAddress(to))
+}
+
+// cancelIncomingPendingSwitchesOnSelfDemotion drops every pending switch targeting
+// demoting. Selection.Reporter is left on the outgoing reporter; SwitchOutLockedUntilBlock
+// is cleared so selectors can re-schedule immediately. Emits one event per cancel for alerts.
+func (k Keeper) cancelIncomingPendingSwitchesOnSelfDemotion(ctx context.Context, demoting []byte) error {
+	rng := collections.NewPrefixedPairRange[[]byte, []byte](demoting)
+	iter, err := k.IncomingPendingSwitchIdx.Iterate(ctx, rng)
+	if err != nil {
+		return err
+	}
+
+	type cancel struct {
+		from, selector []byte
+		unlockBlock    uint64
+	}
+	var cancels []cancel
+	for ; iter.Valid(); iter.Next() {
+		pk, err := iter.Key()
+		if err != nil {
+			iter.Close()
+			return err
+		}
+		from, err := iter.Value()
+		if err != nil {
+			iter.Close()
+			return err
+		}
+		selector := pk.K2()
+		entry, err := k.OutgoingPendingSwitches.Get(ctx, collections.Join(from, selector))
+		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				continue
+			}
+			iter.Close()
+			return err
+		}
+		cancels = append(cancels, cancel{from: from, selector: selector, unlockBlock: entry.UnlockBlock})
+	}
+	if err := iter.Close(); err != nil {
+		return err
+	}
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	for _, c := range cancels {
+		if err := k.removeOutgoingPendingSwitch(ctx, c.from, c.selector, demoting); err != nil {
+			return err
+		}
+		sel, err := k.Selectors.Get(ctx, c.selector)
+		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				continue
+			}
+			return err
+		}
+		if sel.SwitchOutLockedUntilBlock != 0 {
+			sel.SwitchOutLockedUntilBlock = 0
+			if err := k.Selectors.Set(ctx, c.selector, sel); err != nil {
+				return err
+			}
+		}
+		if err := k.FlagStakeRecalc(ctx, sdk.AccAddress(c.from)); err != nil {
+			return err
+		}
+		sdkCtx.EventManager().EmitEvent(sdk.NewEvent(
+			"pending_switch_cancelled_self_demotion",
+			sdk.NewAttribute("selector", sdk.AccAddress(c.selector).String()),
+			sdk.NewAttribute("from_reporter", sdk.AccAddress(c.from).String()),
+			sdk.NewAttribute("cancelled_to_reporter", sdk.AccAddress(demoting).String()),
+			sdk.NewAttribute("unlock_block", strconv.FormatUint(c.unlockBlock, 10)),
+		))
+	}
+	return nil
 }
 
 // removeOutgoingPendingSwitch deletes a scheduled switch (from, selector) → oldTo
@@ -393,6 +471,12 @@ func (k Keeper) mergeReporterPendingSwitchHeadIncomingAdd(ctx context.Context, r
 // from repAddr (stake must not count toward that reporter).
 func (k Keeper) hasOutgoingPendingSwitch(ctx context.Context, repAddr, selectorAddr []byte) (bool, error) {
 	return k.OutgoingPendingSwitches.Has(ctx, collections.Join(repAddr, selectorAddr))
+}
+
+// hasPendingSelfDemotion returns true when the reporter address itself has an
+// outgoing pending switch (from == selector == reporter), i.e. self-demotion in flight.
+func (k Keeper) hasPendingSelfDemotion(ctx context.Context, repAddr []byte) (bool, error) {
+	return k.hasOutgoingPendingSwitch(ctx, repAddr, repAddr)
 }
 
 // maybeFinalizePendingSwitchForRemoveSelector applies a ready pending switch before

@@ -37,6 +37,7 @@ func (k Keeper) DistributeTip(ctx context.Context, aggregateReport types.Aggrega
 
 	defer iter.Close()
 
+	skipped := math.LegacyZeroDec()
 	for ; iter.Valid(); iter.Next() {
 		reportKey, err := iter.PrimaryKey()
 		if err != nil {
@@ -50,11 +51,24 @@ func (k Keeper) DistributeTip(ctx context.Context, aggregateReport types.Aggrega
 		amount := math.LegacyNewDec(int64(report.Power)).Quo(math.LegacyNewDec(int64(aggregateReport.AggregatePower))).Mul(reward)
 		err = k.reporterKeeper.DivvyingTips(ctx, reporter, amount)
 		if err != nil {
+			// Missing reporter: tip already escrowed with the aggregate transfer — roll
+			// the share into Dust so the next liveness period can redistribute it.
 			if errors.Is(err, reportertypes.ErrReporterDoesNotExist) {
+				skipped = skipped.Add(amount)
 				continue
 			}
 			return err
 		}
+	}
+	if skipped.IsPositive() {
+		dust, err := k.Dust.Get(ctx)
+		if err != nil {
+			if !errors.Is(err, collections.ErrNotFound) {
+				return err
+			}
+			dust = math.ZeroInt()
+		}
+		return k.Dust.Set(ctx, dust.Add(skipped.TruncateInt()))
 	}
 	return nil
 }
