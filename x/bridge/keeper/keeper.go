@@ -1302,3 +1302,17 @@ func (k Keeper) GetCheckpointParamsByCheckpoint(ctx context.Context, checkpoint 
 
 	return params, nil
 }
+
+// GetValsetCheckpointDomainSeparator returns the stored valset-checkpoint domain
+// separator. Used by the vote-extension handler to build the structured
+// SignBridgeCheckpoint request for the remote signer.
+func (k Keeper) GetValsetCheckpointDomainSeparator(ctx context.Context) ([]byte, error) {
+	return k.ValsetCheckpointDomainSeparator.Get(ctx)
+}
+
+// GetAttestationSnapshotDataBySnapshot returns the stored attestation snapshot
+// data for the given snapshot. Used by the vote-extension handler to build the
+// structured SignOracleAttestation request for the remote signer.
+func (k Keeper) GetAttestationSnapshotDataBySnapshot(ctx context.Context, snapshot []byte) (types.AttestationSnapshotData, error) {
+	return k.AttestSnapshotDataMap.Get(ctx, snapshot)
+}
