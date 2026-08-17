@@ -23,6 +23,9 @@ import (
 func (k Keeper) DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.LegacyDec) error {
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil
+		}
 		return err
 	}
 
