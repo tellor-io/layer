@@ -6,8 +6,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
 	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
@@ -50,42 +48,6 @@ func newTestKeyringSigner(t *testing.T) *KeyringSigner {
 	return s
 }
 
-func recoverRegistration(sigA, sigB []byte, operatorAddress string) (common.Address, error) {
-	msgA, msgB := bridgetypes.InitialRegistrationMessages(operatorAddress)
-	hashA := sha256.Sum256([]byte(msgA))
-	hashB := sha256.Sum256([]byte(msgB))
-	digestA := sha256.Sum256(hashA[:])
-	digestB := sha256.Sum256(hashB[:])
-	addrsA, err := recoverBothIDs(sigA, digestA[:])
-	if err != nil {
-		return common.Address{}, err
-	}
-	addrsB, err := recoverBothIDs(sigB, digestB[:])
-	if err != nil {
-		return common.Address{}, err
-	}
-	if addrsA[0] == addrsB[0] || addrsA[0] == addrsB[1] {
-		return addrsA[0], nil
-	}
-	if addrsA[1] == addrsB[0] || addrsA[1] == addrsB[1] {
-		return addrsA[1], nil
-	}
-	return common.Address{}, errors.New("EVM addresses do not match")
-}
-
-func recoverBothIDs(sig, msgHash []byte) ([]common.Address, error) {
-	addrs := make([]common.Address, 0, 2)
-	for _, id := range []byte{0, 1} {
-		sigWithID := append(append([]byte{}, sig[:64]...), id)
-		pubKey, err := crypto.SigToPub(msgHash, sigWithID)
-		if err != nil {
-			return nil, err
-		}
-		addrs = append(addrs, crypto.PubkeyToAddress(*pubKey))
-	}
-	return addrs, nil
-}
-
 func TestKeyringSigner_SignInitialUsesCachedOperator(t *testing.T) {
 	s := newTestKeyringSigner(t)
 	cached, err := s.GetOperatorAddress(context.Background())
@@ -96,12 +58,20 @@ func TestKeyringSigner_SignInitialUsesCachedOperator(t *testing.T) {
 	require.Len(t, sigA, 64)
 	require.Len(t, sigB, 64)
 
-	_, err = recoverRegistration(sigA, sigB, "tellorvaloper1foreignoperator000000000000000")
-	require.Error(t, err)
-
-	recovered, err := recoverRegistration(sigA, sigB, cached)
+	record, err := s.kr.Key(s.cfg.KeyName)
 	require.NoError(t, err)
-	require.NotEqual(t, common.Address{}, recovered)
+	pubKey, err := record.GetPubKey()
+	require.NoError(t, err)
+
+	msgA, msgB := bridgetypes.InitialRegistrationMessages(cached)
+	hashA := sha256.Sum256([]byte(msgA))
+	hashB := sha256.Sum256([]byte(msgB))
+	require.True(t, pubKey.VerifySignature(hashA[:], sigA))
+	require.True(t, pubKey.VerifySignature(hashB[:], sigB))
+
+	foreignA, _ := bridgetypes.InitialRegistrationMessages("tellorvaloper1foreignoperator000000000000000")
+	foreignHashA := sha256.Sum256([]byte(foreignA))
+	require.False(t, pubKey.VerifySignature(foreignHashA[:], sigA))
 }
 
 func TestKeyringSigner_SignInitialRequiresCachedOperator(t *testing.T) {

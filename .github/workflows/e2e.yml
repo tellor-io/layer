@@ -29,8 +29,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      # `local: "true"` builds the checked-out merge commit, so PRs from forks
-      # build without heighliner re-cloning the base repo by branch name.
+      # local: "true" builds the checked-out merge commit (fork-safe; no re-clone by branch).
       - name: Build Primary Docker Image
         uses: strangelove-ventures/heighliner-build-action@7f75f09bb485ad90b0ed00f2bd40dfb196d212af # v1.0.3
         with:
@@ -55,8 +54,7 @@ jobs:
           path: ${{ env.TAR_PATH }}
           retention-days: 3
 
-  # Builds the in-org ibc branch; independent of build-primary, so no `needs` —
-  # both images build in parallel.
+  # Independent of build-primary so both images build in parallel.
   build-ibc:
     runs-on: ubuntu-latest
     timeout-minutes: 45

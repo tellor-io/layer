@@ -26,7 +26,6 @@ if ! command -v go >/dev/null 2>&1; then
   exit 1
 fi
 
-# Fail-fast: docker and the layer:local image are required for e2e.
 if ! command -v docker >/dev/null 2>&1; then
   echo "error: docker is not on PATH" >&2
   exit 1
@@ -38,9 +37,7 @@ fi
 
 icq_skipped=0
 
-# Discover tests matching CI prepare (go test -list '^Test').
-# CI always excludes TestIbcInterchainQuery (.github/workflows/e2e.yml:118);
-# this script includes it only when the layer-icq:local image is present.
+# Discover tests with go test -list (same as CI prepare). Skip ICQ when the image is missing.
 tests=()
 list_out="$(go test -list '^Test' .)" || {
   echo "error: go test -list failed in ${SCRIPT_DIR}" >&2

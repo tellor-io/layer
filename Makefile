@@ -196,9 +196,7 @@ proto-update-deps:
 test:
 	@go test -v ./... -short
 
-#? e2e: Run the full e2e suite serially, one test per process (interchaintest
-#? cleanup prunes docker globally, so concurrent chain lifecycles destroy each
-#? other). TIMEOUT=<dur> sets the per-test timeout; E2E_RACE=1 enables -race.
+#? e2e: Run e2e tests serially, one process at a time. TIMEOUT=<dur> E2E_RACE=1
 e2e:
 	@./e2e/run-all-sequential.sh
 
@@ -285,8 +283,7 @@ docker-image:
 	docker build -t layer:local -f Dockerfile .
 	@echo "✅ Docker image built: layer:local"
 
-# Builds the ICQ image directly from origin/ibc (no checkout required).
-# Note: needs network access and Docker BuildKit; the binary gets empty version stamps.
+# Builds the ICQ image from origin/ibc without checking out the branch.
 docker-image-ibc:
 	@echo "Building IBC Docker image from origin/ibc..."
 	git fetch origin ibc || true

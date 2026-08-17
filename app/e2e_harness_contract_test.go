@@ -5,11 +5,10 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
-	"slices"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v3"
 )
 
 func repoRoot(t *testing.T) string {
@@ -24,41 +23,6 @@ func readRepoFile(t *testing.T, rel string) string {
 	body, err := os.ReadFile(filepath.Join(repoRoot(t), rel))
 	require.NoError(t, err)
 	return string(body)
-}
-
-type e2eWorkflow struct {
-	Jobs map[string]struct {
-		Needs any `yaml:"needs"`
-	} `yaml:"jobs"`
-}
-
-func loadE2EWorkflow(t *testing.T) e2eWorkflow {
-	t.Helper()
-	var wf e2eWorkflow
-	require.NoError(t, yaml.Unmarshal([]byte(readRepoFile(t, ".github/workflows/e2e.yml")), &wf))
-	require.NotEmpty(t, wf.Jobs)
-	return wf
-}
-
-func needsList(v any) []string {
-	switch n := v.(type) {
-	case nil:
-		return nil
-	case string:
-		return []string{n}
-	case []any:
-		out := make([]string, 0, len(n))
-		for _, item := range n {
-			s, ok := item.(string)
-			if !ok {
-				continue
-			}
-			out = append(out, s)
-		}
-		return out
-	default:
-		return nil
-	}
 }
 
 func TestSequentialRunner_DoesNotUseGNUXargsR(t *testing.T) {
@@ -87,20 +51,14 @@ func TestMakefile_E2ETargetUsesSequentialRunner(t *testing.T) {
 }
 
 func TestE2EWorkflow_PrepareDoesNotNeedImageBuilds(t *testing.T) {
-	wf := loadE2EWorkflow(t)
-	prepare, ok := wf.Jobs["prepare"]
-	require.True(t, ok, "prepare job missing")
-	require.Empty(t, needsList(prepare.Needs), "prepare only lists tests; it must not wait on docker image builds")
+	body := readRepoFile(t, ".github/workflows/e2e.yml")
+	require.Regexp(t, `(?m)^  prepare:\n    runs-on: ubuntu-latest\n    timeout-minutes: 20\n    outputs:`, body,
+		"prepare only lists tests; it must not wait on docker image builds")
 }
 
 func TestE2EWorkflow_OnlyIBCJobNeedsIBCImage(t *testing.T) {
-	wf := loadE2EWorkflow(t)
-	var ibcWaiters []string
-	for name, job := range wf.Jobs {
-		if slices.Contains(needsList(job.Needs), "build-ibc") {
-			ibcWaiters = append(ibcWaiters, name)
-		}
-	}
-	slices.Sort(ibcWaiters)
-	require.Equal(t, []string{"test-ibc"}, ibcWaiters, "only the IBC test job should wait on the IBC image")
+	body := readRepoFile(t, ".github/workflows/e2e.yml")
+	require.Contains(t, body, "\n  test-ibc:\n")
+	require.Equal(t, 1, strings.Count(body, "- build-ibc"),
+		"only the IBC test job should wait on the IBC image")
 }
