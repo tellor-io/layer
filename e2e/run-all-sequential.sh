@@ -26,36 +26,34 @@ if ! command -v go >/dev/null 2>&1; then
   exit 1
 fi
 
-# Discover tests the same way CI prepare does.
+# Fail-fast: docker and the layer:local image are required for e2e.
+if ! command -v docker >/dev/null 2>&1; then
+  echo "error: docker is not on PATH" >&2
+  exit 1
+fi
+if ! docker image inspect layer:local >/dev/null 2>&1; then
+  echo "error: layer:local docker image not found (is the docker daemon running?); run 'make local-image' first" >&2
+  exit 1
+fi
+
+icq_skipped=0
+
+# Discover tests matching CI prepare (go test -list '^Test').
+# CI always excludes TestIbcInterchainQuery (.github/workflows/e2e.yml:118);
+# this script includes it only when the layer-icq:local image is present.
 tests=()
 list_out="$(go test -list '^Test' .)" || {
   echo "error: go test -list failed in ${SCRIPT_DIR}" >&2
   exit 1
 }
 while IFS= read -r name; do
-  [[ -n "$name" ]] && tests+=("$name")
+  [[ -n "$name" ]] || continue
+  if [[ "$name" == "TestIbcInterchainQuery" ]] && ! docker image inspect layer-icq:local >/dev/null 2>&1; then
+    icq_skipped=1
+    continue
+  fi
+  tests+=("$name")
 done < <(printf '%s\n' "$list_out" | grep '^Test' || true)
-
-# Remove leftover interchaintest resources by label. Do not prune unlabeled docker state.
-cleanup_docker() {
-  command -v docker >/dev/null 2>&1 || return 0
-  local ids vols nets
-  ids="$(docker ps -aq --filter label=ibc-test 2>/dev/null || true)"
-  if [[ -n "$ids" ]]; then
-    # shellcheck disable=SC2086
-    docker rm -f $ids >/dev/null 2>&1 || true
-  fi
-  vols="$(docker volume ls -q --filter label=ibc-test 2>/dev/null || true)"
-  if [[ -n "$vols" ]]; then
-    # shellcheck disable=SC2086
-    docker volume rm $vols >/dev/null 2>&1 || true
-  fi
-  nets="$(docker network ls -q --filter label=ibc-test 2>/dev/null || true)"
-  if [[ -n "$nets" ]]; then
-    # shellcheck disable=SC2086
-    docker network rm $nets >/dev/null 2>&1 || true
-  fi
-}
 
 if [[ ${#tests[@]} -eq 0 ]]; then
   echo "error: no tests found in ${SCRIPT_DIR}" >&2
@@ -74,6 +72,10 @@ else
   GREEN="" RED="" YELLOW="" DIM="" BOLD="" RESET=""
 fi
 
+if [[ "$icq_skipped" == "1" ]]; then
+  echo "${YELLOW}SKIP${RESET} TestIbcInterchainQuery: layer-icq:local image not found (build with 'make local-image-ibc' or 'make docker-image-ibc')"
+fi
+
 format_duration() {
   local secs=$1
   if (( secs >= 3600 )); then
@@ -90,6 +92,7 @@ suite_start=$SECONDS
 
 passed=0
 failed=0
+skipped=0
 
 declare -a results_name=()
 declare -a results_status=()
@@ -107,7 +110,7 @@ for i in "${!tests[@]}"; do
   echo "${BOLD}[${n}/${total}]${RESET} ${test_name}"
   test_start=$SECONDS
 
-  go test -v -count=1 "${RACE_FLAG[@]}" -run "^${test_name}\$" -timeout "$TIMEOUT" . 2>&1 | sed "s/^/  /"
+  go test -v -count=1 ${RACE_FLAG[@]+"${RACE_FLAG[@]}"} -run "^${test_name}\$" -timeout "$TIMEOUT" . 2>&1 | sed "s/^/  /"
   exit_code=${PIPESTATUS[0]}
 
   test_secs=$((SECONDS - test_start))
@@ -125,13 +128,19 @@ for i in "${!tests[@]}"; do
     echo "  ${RED}FAIL${RESET} ${DIM}($(format_duration "$test_secs"), exit ${exit_code})${RESET}"
   fi
 
-  cleanup_docker
   # Build-cache growth causes the same startup faults ~1.5h in; trim periodically.
   if (( n % 10 == 0 )) && command -v docker >/dev/null 2>&1; then
     docker builder prune -f --filter until=2h >/dev/null 2>&1 || true
   fi
   echo
 done
+
+if [[ "$icq_skipped" == "1" ]]; then
+  results_name+=("TestIbcInterchainQuery")
+  results_status+=("SKIP")
+  results_secs+=(0)
+  skipped=$((skipped + 1))
+fi
 
 suite_secs=$((SECONDS - suite_start))
 width=52
@@ -149,6 +158,8 @@ for i in "${!results_name[@]}"; do
 
   if [[ "$status" == "PASS" ]]; then
     mark="${GREEN}PASS${RESET}"
+  elif [[ "$status" == "SKIP" ]]; then
+    mark="${YELLOW}SKIP${RESET}"
   else
     mark="${RED}FAIL${RESET}"
   fi
@@ -162,9 +173,10 @@ done
 
 echo
 echo "${BOLD}----------------------------------------------------------------${RESET}"
-printf "  Total:   %d\n" "${#tests[@]}"
+printf "  Total:   %d\n" "${#results_name[@]}"
 printf "  ${GREEN}Passed:${RESET}  %d\n" "$passed"
 printf "  ${RED}Failed:${RESET}  %d\n" "$failed"
+printf "  Skipped: %d\n" "$skipped"
 printf "  Elapsed: %s\n" "$(format_duration "$suite_secs")"
 echo "${BOLD}----------------------------------------------------------------${RESET}"
 

@@ -161,6 +161,10 @@ func (s *GRPCRemoteSigner) SignOracleAttestation(ctx context.Context, req *signe
 
 // SignInitial calls the SignInitial RPC with the operator identity cached at construction.
 func (s *GRPCRemoteSigner) SignInitial(ctx context.Context) ([]byte, []byte, error) {
+	if s.operatorAddress == "" {
+		return nil, nil, fmt.Errorf("operator address not initialized")
+	}
+
 	rpcCtx, cancel := context.WithTimeout(ctx, s.cfg.RequestTimeout)
 	defer cancel()
 

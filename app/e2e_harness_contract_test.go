@@ -3,6 +3,7 @@ package app_test
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"slices"
 	"testing"
@@ -75,6 +76,14 @@ func TestSequentialRunner_UsesGoTestList(t *testing.T) {
 	body := readRepoFile(t, "e2e/run-all-sequential.sh")
 	require.Contains(t, body, "go test -list", "runner must use the same discovery as CI prepare")
 	require.NotContains(t, body, "grep -h '^func Test'", "grep discovery is not compilation-aware and needs a TestMain special case")
+}
+
+func TestMakefile_E2ETargetUsesSequentialRunner(t *testing.T) {
+	body := readRepoFile(t, "Makefile")
+	m := regexp.MustCompile(`(?m)^e2e:[^\n]*\n((?:\t[^\n]*\n?)*)`).FindStringSubmatch(body)
+	require.NotNil(t, m, "Makefile must define an e2e target")
+	require.Contains(t, m[1], "run-all-sequential.sh",
+		"make e2e must invoke the serial runner; concurrent e2e go test processes destroy each other's containers")
 }
 
 func TestE2EWorkflow_PrepareDoesNotNeedImageBuilds(t *testing.T) {

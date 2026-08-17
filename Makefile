@@ -266,6 +266,7 @@ mock-gen-app:
 	@go run github.com/vektra/mockery/v2 --name=BridgeKeeper --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
 	@go run github.com/vektra/mockery/v2 --name=OracleKeeper --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
 	@go run github.com/vektra/mockery/v2 --name=Keyring --dir=$(GOPATH)/pkg/mod/github.com/cosmos/cosmos-sdk@$(COSMOS_VERSION)/crypto/keyring --recursive --output=./app/mocks
+	@go run github.com/vektra/mockery/v2 --name=VoteExtensionSigner --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
 
 mock-gen:
 	$(MAKE) mock-gen-bridge
@@ -274,8 +275,9 @@ mock-gen:
 	$(MAKE) mock-gen-oracle
 	$(MAKE) mock-gen-registry
 	$(MAKE) mock-gen-reporter
+	$(MAKE) mock-gen-app
 
-.PHONY: mock-gen mock-gen-bridge mock-gen-dispute mock-gen-mint mock-gen-oracle mock-gen-registry mock-gen-reporter
+.PHONY: mock-gen mock-gen-app mock-gen-bridge mock-gen-dispute mock-gen-mint mock-gen-oracle mock-gen-registry mock-gen-reporter
 
 # Docker image building targets
 docker-image:
@@ -283,10 +285,13 @@ docker-image:
 	docker build -t layer:local -f Dockerfile .
 	@echo "✅ Docker image built: layer:local"
 
+# Builds the ICQ image directly from origin/ibc (no checkout required).
+# Note: needs network access and Docker BuildKit; the binary gets empty version stamps.
 docker-image-ibc:
-	@echo "Building IBC Docker image using Dockerfile..."
-	@echo "Note: This requires checking out the ibc branch first"
-	docker build -t layer-icq:local -f Dockerfile .
+	@echo "Building IBC Docker image from origin/ibc..."
+	git fetch origin ibc || true
+	@git rev-parse --verify --quiet origin/ibc^{commit} >/dev/null || { echo "error: origin/ibc not found (fetch failed?)"; exit 1; }
+	git archive --format=tar origin/ibc | docker build -t layer-icq:local -
 	@echo "✅ IBC Docker image built: layer-icq:local"
 
 get-heighliner:
@@ -300,6 +305,20 @@ ifeq (,$(shell which heighliner))
 	echo 'heighliner' binary not found. Consider running `make get-heighliner`
 else
 	heighliner build -c layer --local --dockerfile cosmos --go-version 1.24.13 --alpine-version 3.22 --build-target "make install" --binaries "/go/bin/layerd"
+endif
+
+local-image-ibc:
+ifeq (,$(shell which heighliner))
+	echo 'heighliner' binary not found. Consider running `make get-heighliner`
+else
+	git fetch origin ibc || true; \
+	git rev-parse --verify --quiet origin/ibc^{commit} >/dev/null || { echo "error: origin/ibc not found (fetch failed?)"; exit 1; }; \
+	tmpdir=$$(mktemp -d) || exit 1; \
+	git archive origin/ibc | tar -x -C "$$tmpdir"; \
+	cd "$$tmpdir" && heighliner build -c layer-icq --local --dockerfile cosmos --build-target "make install" --binaries "/go/bin/layerd" --go-version 1.24.13 --alpine-version 3.22; \
+	status=$$?; \
+	rm -rf "$$tmpdir"; \
+	exit $$status
 endif
 
 get-localic:
@@ -318,4 +337,4 @@ else
 	cd local_devnet && ICTEST_HOME=. local-ic start layer.json
 	
 endif
-.PHONY: docker-image docker-image-ibc get-heighliner local-image get-localic local-devnet
+.PHONY: docker-image docker-image-ibc get-heighliner local-image local-image-ibc get-localic local-devnet

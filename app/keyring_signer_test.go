@@ -16,7 +16,9 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	signing "github.com/cosmos/cosmos-sdk/types/tx/signing"
 )
 
 func newTestKeyringSigner(t *testing.T) *KeyringSigner {
@@ -107,4 +109,34 @@ func TestKeyringSigner_SignInitialRequiresCachedOperator(t *testing.T) {
 	s.operatorAddress = ""
 	_, _, err := s.SignInitial(context.Background())
 	require.Error(t, err)
+}
+
+// failNthKeyring wraps a real keyring and fails the Nth Sign call (1-based).
+type failNthKeyring struct {
+	keyring.Keyring
+	failOn int
+	calls  int
+	err    error
+}
+
+func (f *failNthKeyring) Sign(uid string, msg []byte, signMode signing.SignMode) ([]byte, cryptotypes.PubKey, error) {
+	f.calls++
+	if f.calls == f.failOn {
+		return nil, nil, f.err
+	}
+	return f.Keyring.Sign(uid, msg, signMode)
+}
+
+func TestKeyringSigner_SignInitialFailsMessageA(t *testing.T) {
+	s := newTestKeyringSigner(t)
+	s.kr = &failNthKeyring{Keyring: s.kr, failOn: 1, err: errors.New("boom")}
+	_, _, err := s.SignInitial(context.Background())
+	require.ErrorContains(t, err, "failed to sign message A")
+}
+
+func TestKeyringSigner_SignInitialFailsMessageB(t *testing.T) {
+	s := newTestKeyringSigner(t)
+	s.kr = &failNthKeyring{Keyring: s.kr, failOn: 2, err: errors.New("boom")}
+	_, _, err := s.SignInitial(context.Background())
+	require.ErrorContains(t, err, "failed to sign message B")
 }

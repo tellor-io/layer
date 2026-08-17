@@ -15,6 +15,30 @@ make get-heighliner
 make local-image
 ```
 
+The ICQ test (`TestIbcInterchainQuery`) additionally needs:
+
+```sh
+make local-image-ibc
+```
+
+or
+
+```sh
+make docker-image-ibc
+```
+
+## RUN THE WHOLE SUITE
+
+```sh
+make e2e
+```
+
+This runs `e2e/run-all-sequential.sh`, which executes each test one at a time.
+
+> **Important:** E2E tests must never run concurrently. The interchaintest framework performs a global Docker prune after each test, so parallel `go test` processes destroy each other's containers.
+
+Without the `layer-icq:local` Docker image, `run-all-sequential.sh` skips `TestIbcInterchainQuery` and reports it as `SKIP`.
+
 ## RUN TESTS
 ```
 Run an individual test:
