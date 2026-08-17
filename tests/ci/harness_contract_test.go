@@ -1,4 +1,4 @@
-package app_test
+package ci_test
 
 import (
 	"os"
@@ -15,7 +15,7 @@ func repoRoot(t *testing.T) string {
 	t.Helper()
 	_, thisFile, _, ok := runtime.Caller(0)
 	require.True(t, ok)
-	return filepath.Clean(filepath.Join(filepath.Dir(thisFile), ".."))
+	return filepath.Clean(filepath.Join(filepath.Dir(thisFile), "..", ".."))
 }
 
 func readRepoFile(t *testing.T, rel string) string {
@@ -42,12 +42,25 @@ func TestSequentialRunner_UsesGoTestList(t *testing.T) {
 	require.NotContains(t, body, "grep -h '^func Test'", "grep discovery is not compilation-aware and needs a TestMain special case")
 }
 
+func TestSequentialRunner_DoesNotSpecialCaseICQ(t *testing.T) {
+	body := readRepoFile(t, "e2e/run-all-sequential.sh")
+	require.NotContains(t, body, "TestIbcInterchainQuery",
+		"ICQ image-missing skip belongs in TestIbcInterchainQuery, not the shared runner")
+}
+
 func TestMakefile_E2ETargetUsesSequentialRunner(t *testing.T) {
 	body := readRepoFile(t, "Makefile")
 	m := regexp.MustCompile(`(?m)^e2e:[^\n]*\n((?:\t[^\n]*\n?)*)`).FindStringSubmatch(body)
 	require.NotNil(t, m, "Makefile must define an e2e target")
 	require.Contains(t, m[1], "run-all-sequential.sh",
 		"make e2e must invoke the serial runner; concurrent e2e go test processes destroy each other's containers")
+}
+
+func TestMakefile_IBCImageTargetsRequireFreshOriginIBC(t *testing.T) {
+	body := readRepoFile(t, "Makefile")
+	require.Contains(t, body, "ensure-origin-ibc", "IBC image targets must share a fetch of origin/ibc")
+	require.NotContains(t, body, "git fetch origin ibc || true",
+		"fetch must fail closed so a stale origin/ibc is not built")
 }
 
 func TestE2EWorkflow_PrepareDoesNotNeedImageBuilds(t *testing.T) {

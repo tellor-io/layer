@@ -283,11 +283,12 @@ docker-image:
 	docker build -t layer:local -f Dockerfile .
 	@echo "✅ Docker image built: layer:local"
 
-# Builds the ICQ image from origin/ibc without checking out the branch.
-docker-image-ibc:
+ensure-origin-ibc:
+	git fetch origin ibc
+	@git rev-parse --verify --quiet origin/ibc^{commit} >/dev/null || { echo "error: origin/ibc not found after fetch"; exit 1; }
+
+docker-image-ibc: ensure-origin-ibc
 	@echo "Building IBC Docker image from origin/ibc..."
-	git fetch origin ibc || true
-	@git rev-parse --verify --quiet origin/ibc^{commit} >/dev/null || { echo "error: origin/ibc not found (fetch failed?)"; exit 1; }
 	git archive --format=tar origin/ibc | docker build -t layer-icq:local -
 	@echo "✅ IBC Docker image built: layer-icq:local"
 
@@ -304,12 +305,10 @@ else
 	heighliner build -c layer --local --dockerfile cosmos --go-version 1.24.13 --alpine-version 3.22 --build-target "make install" --binaries "/go/bin/layerd"
 endif
 
-local-image-ibc:
+local-image-ibc: ensure-origin-ibc
 ifeq (,$(shell which heighliner))
 	echo 'heighliner' binary not found. Consider running `make get-heighliner`
 else
-	git fetch origin ibc || true; \
-	git rev-parse --verify --quiet origin/ibc^{commit} >/dev/null || { echo "error: origin/ibc not found (fetch failed?)"; exit 1; }; \
 	tmpdir=$$(mktemp -d) || exit 1; \
 	git archive origin/ibc | tar -x -C "$$tmpdir"; \
 	cd "$$tmpdir" && heighliner build -c layer-icq --local --dockerfile cosmos --build-target "make install" --binaries "/go/bin/layerd" --go-version 1.24.13 --alpine-version 3.22; \
@@ -334,4 +333,4 @@ else
 	cd local_devnet && ICTEST_HOME=. local-ic start layer.json
 	
 endif
-.PHONY: docker-image docker-image-ibc get-heighliner local-image local-image-ibc get-localic local-devnet
+.PHONY: docker-image docker-image-ibc ensure-origin-ibc get-heighliner local-image local-image-ibc get-localic local-devnet
