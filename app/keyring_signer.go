@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"os"
@@ -92,9 +91,7 @@ func (s *KeyringSigner) SignInitial(_ context.Context) ([]byte, []byte, error) {
 	if s.operatorAddress == "" {
 		return nil, nil, errors.New("operator address not initialized")
 	}
-	msgA, msgB := bridgetypes.InitialRegistrationMessages(s.operatorAddress)
-	hashA := sha256.Sum256([]byte(msgA))
-	hashB := sha256.Sum256([]byte(msgB))
+	hashA, hashB := bridgetypes.InitialRegistrationDigests(s.operatorAddress)
 	sigA, err := s.sign(hashA[:])
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to sign message A: %w", err)

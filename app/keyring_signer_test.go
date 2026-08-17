@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"crypto/sha256"
 	"errors"
 	"testing"
 
@@ -63,15 +62,12 @@ func TestKeyringSigner_SignInitialUsesCachedOperator(t *testing.T) {
 	pubKey, err := record.GetPubKey()
 	require.NoError(t, err)
 
-	msgA, msgB := bridgetypes.InitialRegistrationMessages(cached)
-	hashA := sha256.Sum256([]byte(msgA))
-	hashB := sha256.Sum256([]byte(msgB))
+	hashA, hashB := bridgetypes.InitialRegistrationDigests(cached)
 	require.True(t, pubKey.VerifySignature(hashA[:], sigA))
 	require.True(t, pubKey.VerifySignature(hashB[:], sigB))
 
-	foreignA, _ := bridgetypes.InitialRegistrationMessages("tellorvaloper1foreignoperator000000000000000")
-	foreignHashA := sha256.Sum256([]byte(foreignA))
-	require.False(t, pubKey.VerifySignature(foreignHashA[:], sigA))
+	foreignA, _ := bridgetypes.InitialRegistrationDigests("tellorvaloper1foreignoperator000000000000000")
+	require.False(t, pubKey.VerifySignature(foreignA[:], sigA))
 }
 
 func TestKeyringSigner_SignInitialRequiresCachedOperator(t *testing.T) {

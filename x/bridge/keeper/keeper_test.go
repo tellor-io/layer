@@ -705,29 +705,15 @@ func TestEVMAddressFromSignatures(t *testing.T) {
 	addressExpected := crypto.PubkeyToAddress(*pkCoord).Hex()
 	operatorAddr := "operatorAddr1"
 
-	msgA, msgB := types.InitialRegistrationMessages(operatorAddr)
-	msgBytesA := []byte(msgA)
-	msgBytesB := []byte(msgB)
+	hashA, hashB := types.InitialRegistrationDigests(operatorAddr)
+	msgDoubleHashBytesA := sha256.Sum256(hashA[:])
+	msgDoubleHashBytesB := sha256.Sum256(hashB[:])
 
-	// hash messages
-	msgHashBytes32A := sha256.Sum256(msgBytesA)
-	msgHashBytesA := msgHashBytes32A[:]
-
-	msgHashBytes32B := sha256.Sum256(msgBytesB)
-	msgHashBytesB := msgHashBytes32B[:]
-
-	// hash the hash, since the keyring signer automatically hashes the message
-	msgDoubleHashBytes32A := sha256.Sum256(msgHashBytesA)
-	msgDoubleHashBytesA := msgDoubleHashBytes32A[:]
-
-	msgDoubleHashBytes32B := sha256.Sum256(msgHashBytesB)
-	msgDoubleHashBytesB := msgDoubleHashBytes32B[:]
-
-	sigA, err := crypto.Sign(msgDoubleHashBytesA, privateKey)
+	sigA, err := crypto.Sign(msgDoubleHashBytesA[:], privateKey)
 	require.NoError(t, err)
 	require.NotNil(t, sigA)
 
-	sigB, err := crypto.Sign(msgDoubleHashBytesB, privateKey)
+	sigB, err := crypto.Sign(msgDoubleHashBytesB[:], privateKey)
 	require.NoError(t, err)
 	require.NotNil(t, sigB)
 
