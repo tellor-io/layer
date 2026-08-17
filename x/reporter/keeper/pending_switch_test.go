@@ -177,7 +177,7 @@ func TestSelfDemotionCancelsIncomingPendingSwitches(t *testing.T) {
 	_, err := k.ReporterStake(ctx, target, []byte{})
 	require.NoError(t, err)
 
-	// Incoming join cancelled: selector stays on source, lock cleared, pending gone.
+	// Incoming join canceled: selector stays on source, lock cleared, pending gone.
 	selAfter, err := k.Selectors.Get(ctx, selector.Bytes())
 	require.NoError(t, err)
 	require.True(t, bytes.Equal(selAfter.Reporter, source.Bytes()))
@@ -196,7 +196,7 @@ func TestSelfDemotionCancelsIncomingPendingSwitches(t *testing.T) {
 
 	found := false
 	for _, ev := range ctx.EventManager().Events() {
-		if ev.Type != "pending_switch_cancelled_self_demotion" {
+		if ev.Type != "pending_switch_canceled_self_demotion" {
 			continue
 		}
 		attrs := map[string]string{}
@@ -205,9 +205,9 @@ func TestSelfDemotionCancelsIncomingPendingSwitches(t *testing.T) {
 		}
 		require.Equal(t, selector.String(), attrs["selector"])
 		require.Equal(t, source.String(), attrs["from_reporter"])
-		require.Equal(t, demoting.String(), attrs["cancelled_to_reporter"])
+		require.Equal(t, demoting.String(), attrs["canceled_to_reporter"])
 		require.Equal(t, "50", attrs["unlock_block"])
 		found = true
 	}
-	require.True(t, found, "expected pending_switch_cancelled_self_demotion event")
+	require.True(t, found, "expected pending_switch_canceled_self_demotion event")
 }

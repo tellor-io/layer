@@ -357,6 +357,18 @@ func (k Keeper) getReporterStake(ctx context.Context, repAddr sdk.AccAddress, mu
 	if reporter.Jailed {
 		return math.Int{}, nil, nil, nil, errorsmod.Wrapf(types.ErrReporterJailed, "reporter %s is in jail", repAddr.String())
 	}
+	// Self-demotion still pending after applyReadyPendingSwitchesForReporter (i.e. not yet
+	// unlocked): refuse reporting so period tracking cannot rewrite PeriodRewardData to
+	// Total=0 while this reporter's own stake is excluded. Read-only views are unaffected.
+	if mutate {
+		demoting, err := k.hasPendingSelfDemotion(ctx, repAddr.Bytes())
+		if err != nil {
+			return math.Int{}, nil, nil, nil, err
+		}
+		if demoting {
+			return math.Int{}, nil, nil, nil, errorsmod.Wrapf(types.ErrReporterSelfDemoting, "reporter %s has a pending self-demotion", repAddr.String())
+		}
+	}
 
 	totalTokens := math.ZeroInt()
 	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, repAddr)

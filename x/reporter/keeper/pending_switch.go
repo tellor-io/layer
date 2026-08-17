@@ -251,10 +251,10 @@ func (k Keeper) cancelIncomingPendingSwitchesOnSelfDemotion(ctx context.Context,
 			return err
 		}
 		sdkCtx.EventManager().EmitEvent(sdk.NewEvent(
-			"pending_switch_cancelled_self_demotion",
+			"pending_switch_canceled_self_demotion",
 			sdk.NewAttribute("selector", sdk.AccAddress(c.selector).String()),
 			sdk.NewAttribute("from_reporter", sdk.AccAddress(c.from).String()),
-			sdk.NewAttribute("cancelled_to_reporter", sdk.AccAddress(demoting).String()),
+			sdk.NewAttribute("canceled_to_reporter", sdk.AccAddress(demoting).String()),
 			sdk.NewAttribute("unlock_block", strconv.FormatUint(c.unlockBlock, 10)),
 		))
 	}
