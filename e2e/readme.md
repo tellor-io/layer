@@ -37,7 +37,7 @@ This runs `e2e/run-all-sequential.sh`, which executes each test one at a time.
 
 > **Important:** E2E tests must never run concurrently. The interchaintest framework performs a global Docker prune after each test, so parallel `go test` processes destroy each other's containers.
 
-Without the `layer-icq:local` Docker image, `run-all-sequential.sh` skips `TestIbcInterchainQuery` and reports it as `SKIP`.
+Without the `layer-icq:local` Docker image, `TestIbcInterchainQuery` skips. CI runs it in a dedicated `test-ibc` job that loads that image.
 
 ## RUN TESTS
 ```

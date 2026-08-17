@@ -35,9 +35,7 @@ if ! docker image inspect layer:local >/dev/null 2>&1; then
   exit 1
 fi
 
-icq_skipped=0
-
-# Discover tests with go test -list (same as CI prepare). Skip ICQ when the image is missing.
+# Discover tests with go test -list (same as CI prepare).
 tests=()
 list_out="$(go test -list '^Test' .)" || {
   echo "error: go test -list failed in ${SCRIPT_DIR}" >&2
@@ -45,10 +43,6 @@ list_out="$(go test -list '^Test' .)" || {
 }
 while IFS= read -r name; do
   [[ -n "$name" ]] || continue
-  if [[ "$name" == "TestIbcInterchainQuery" ]] && ! docker image inspect layer-icq:local >/dev/null 2>&1; then
-    icq_skipped=1
-    continue
-  fi
   tests+=("$name")
 done < <(printf '%s\n' "$list_out" | grep '^Test' || true)
 
@@ -61,16 +55,11 @@ fi
 if [[ -t 1 ]]; then
   GREEN=$'\033[32m'
   RED=$'\033[31m'
-  YELLOW=$'\033[33m'
   DIM=$'\033[2m'
   BOLD=$'\033[1m'
   RESET=$'\033[0m'
 else
-  GREEN="" RED="" YELLOW="" DIM="" BOLD="" RESET=""
-fi
-
-if [[ "$icq_skipped" == "1" ]]; then
-  echo "${YELLOW}SKIP${RESET} TestIbcInterchainQuery: layer-icq:local image not found (build with 'make local-image-ibc' or 'make docker-image-ibc')"
+  GREEN="" RED="" DIM="" BOLD="" RESET=""
 fi
 
 format_duration() {
@@ -89,7 +78,6 @@ suite_start=$SECONDS
 
 passed=0
 failed=0
-skipped=0
 
 declare -a results_name=()
 declare -a results_status=()
@@ -132,13 +120,6 @@ for i in "${!tests[@]}"; do
   echo
 done
 
-if [[ "$icq_skipped" == "1" ]]; then
-  results_name+=("TestIbcInterchainQuery")
-  results_status+=("SKIP")
-  results_secs+=(0)
-  skipped=$((skipped + 1))
-fi
-
 suite_secs=$((SECONDS - suite_start))
 width=52
 
@@ -155,8 +136,6 @@ for i in "${!results_name[@]}"; do
 
   if [[ "$status" == "PASS" ]]; then
     mark="${GREEN}PASS${RESET}"
-  elif [[ "$status" == "SKIP" ]]; then
-    mark="${YELLOW}SKIP${RESET}"
   else
     mark="${RED}FAIL${RESET}"
   fi
@@ -173,7 +152,6 @@ echo "${BOLD}----------------------------------------------------------------${R
 printf "  Total:   %d\n" "${#results_name[@]}"
 printf "  ${GREEN}Passed:${RESET}  %d\n" "$passed"
 printf "  ${RED}Failed:${RESET}  %d\n" "$failed"
-printf "  Skipped: %d\n" "$skipped"
 printf "  Elapsed: %s\n" "$(format_duration "$suite_secs")"
 echo "${BOLD}----------------------------------------------------------------${RESET}"
 
