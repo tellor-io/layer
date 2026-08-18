@@ -1064,7 +1064,7 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.NoError(err)
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
-	require.Equal(len(reportersRes.Reporters), numReporters+1) // 2 reporters (the third reporter was deleted )
+	require.Equal(len(reportersRes.Reporters), numReporters) // user1 hidden while self-demotion is pending
 	fmt.Println("reportersRes: ", reportersRes)
 
 	// user1 redelegates to val2

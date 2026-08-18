@@ -184,6 +184,16 @@ func (k msgServer) SelectReporter(goCtx context.Context, msg *types.MsgSelectRep
 	if err != nil {
 		return nil, err
 	}
+	// Reject joining a reporter mid self-demotion. The reporter row survives until
+	// finalize, so Reporters.Get succeeds, but a Selection written here has no
+	// incoming-idx row and would orphan after Reporters.Remove.
+	demoting, err := k.Keeper.hasPendingSelfDemotion(goCtx, reporterAddr.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	if demoting {
+		return nil, types.ErrReporterSelfDemoting.Wrapf("cannot select reporter %s while it has a pending self-demotion", reporterAddr.String())
+	}
 	// check if reporter is capped at max selectors (include incoming pending switches)
 	params, err := k.Keeper.Params.Get(goCtx)
 	if err != nil {

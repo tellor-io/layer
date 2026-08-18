@@ -130,6 +130,32 @@ func TestSelectReporter(t *testing.T) {
 	require.True(t, bytes.Equal(reporter.Bytes(), selection.Reporter))
 }
 
+func TestSelectReporterRejectsDemotingTarget(t *testing.T) {
+	k, _, _, _, _, ms, ctx := setupMsgServer(t)
+	selector, demoting, dest := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	require.NoError(t, k.Reporters.Set(ctx, demoting, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "demoting")))
+	require.NoError(t, k.Selectors.Set(ctx, demoting, types.NewSelection(demoting, 1)))
+
+	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(demoting.Bytes(), demoting.Bytes()), types.PendingSwitchEntry{
+		ToReporter:  dest.Bytes(),
+		UnlockBlock: 100,
+	}))
+	require.NoError(t, k.IncomingPendingSwitchIdx.Set(ctx, collections.Join(dest.Bytes(), demoting.Bytes()), demoting.Bytes()))
+	require.NoError(t, k.ReporterPendingSwitchHeads.Set(ctx, demoting.Bytes(), types.ReporterPendingSwitchHead{
+		OutgoingCount:     1,
+		OutgoingMinUnlock: 100,
+	}))
+
+	_, err := ms.SelectReporter(ctx, &types.MsgSelectReporter{
+		SelectorAddress: selector.String(),
+		ReporterAddress: demoting.String(),
+	})
+	require.ErrorIs(t, err, types.ErrReporterSelfDemoting)
+	has, err := k.Selectors.Has(ctx, selector)
+	require.NoError(t, err)
+	require.False(t, has, "SelectReporter must not write a Selection onto a demoting reporter")
+}
+
 func TestSelectReporterRejectsWhenIncomingPendingWouldExceedMaxSelectors(t *testing.T) {
 	k, sk, _, _, _, ms, ctx := setupMsgServer(t)
 	ctx = ctx.WithBlockHeight(1)

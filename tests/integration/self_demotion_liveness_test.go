@@ -7,7 +7,6 @@ import (
 	reporterkeeper "github.com/tellor-io/layer/x/reporter/keeper"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -73,11 +72,18 @@ func (s *IntegrationTestSuite) TestSelfDemotionThenLivenessDistributionEndBlocke
 	// EndBlocker itself must also remain healthy after the demotion.
 	require.NoError(oracle.EndBlocker(ctx, s.Setup.Oraclekeeper))
 
-	// A's next stake call finalizes the demotion (settle + remove) instead of reporting.
+	// A's next stake call fails fast; the demotion stays pending until B mutates stake.
 	_, _, _, _, err = s.Setup.Reporterkeeper.GetReporterStake(ctx, reporterA)
-	require.ErrorIs(err, collections.ErrNotFound)
+	require.ErrorIs(err, reportertypes.ErrReporterSelfDemoting)
 
 	hasA, err := s.Setup.Reporterkeeper.Reporters.Has(ctx, reporterA.Bytes())
+	require.NoError(err)
+	require.True(hasA, "Reporters[A] retained until the target finalizes the self-demotion")
+
+	_, err = s.Setup.Reporterkeeper.ReporterStake(ctx, reporterB, []byte{})
+	require.NoError(err)
+
+	hasA, err = s.Setup.Reporterkeeper.Reporters.Has(ctx, reporterA.Bytes())
 	require.NoError(err)
 	require.False(hasA, "Reporters[A] removed once the self-demotion finalizes")
 }

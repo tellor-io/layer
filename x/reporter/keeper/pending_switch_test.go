@@ -12,6 +12,7 @@ import (
 	"github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -125,6 +126,145 @@ func TestGetReporterStakeRejectsPendingSelfDemotion(t *testing.T) {
 	require.ErrorIs(t, err, collections.ErrNotFound)
 }
 
+func TestGetReporterStakeDoesNotFinalizeOwnReadySelfDemotion(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(100)
+
+	reporter, target := sample.AccAddressBytes(), sample.AccAddressBytes()
+	rep := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "r")
+	require.NoError(t, k.Reporters.Set(ctx, reporter.Bytes(), rep))
+	require.NoError(t, k.Reporters.Set(ctx, target.Bytes(), rep))
+	require.NoError(t, k.Selectors.Set(ctx, reporter.Bytes(), types.NewSelection(reporter, 1)))
+
+	// Self-demotion is already past unlock — mutating stake on the demoter must fail
+	// fast without applying (which would remove the row then not-found the Get).
+	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(reporter.Bytes(), reporter.Bytes()), types.PendingSwitchEntry{
+		ToReporter:  target.Bytes(),
+		UnlockBlock: 1,
+	}))
+	require.NoError(t, k.IncomingPendingSwitchIdx.Set(ctx, collections.Join(target.Bytes(), reporter.Bytes()), reporter.Bytes()))
+	require.NoError(t, k.ReporterPendingSwitchHeads.Set(ctx, reporter.Bytes(), types.ReporterPendingSwitchHead{
+		OutgoingCount:     1,
+		OutgoingMinUnlock: 1,
+	}))
+	require.NoError(t, k.ReporterPendingSwitchHeads.Set(ctx, target.Bytes(), types.ReporterPendingSwitchHead{
+		IncomingCount:     1,
+		IncomingMinUnlock: 1,
+	}))
+
+	_, _, _, _, err := k.GetReporterStake(ctx, reporter)
+	require.ErrorIs(t, err, types.ErrReporterSelfDemoting)
+
+	_, err = k.ReporterStake(ctx, reporter, []byte("qid"))
+	require.ErrorIs(t, err, types.ErrReporterSelfDemoting)
+
+	has, err := k.Reporters.Has(ctx, reporter.Bytes())
+	require.NoError(t, err)
+	require.True(t, has, "demoter row must remain until the target mutates stake")
+
+	hasOut, err := k.OutgoingPendingSwitches.Has(ctx, collections.Join(reporter.Bytes(), reporter.Bytes()))
+	require.NoError(t, err)
+	require.True(t, hasOut)
+}
+
+func TestFinalizePendingSwitchDropsWhenTargetSelfDemoting(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(100)
+
+	source, demoting, dest, selector := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	rep := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "r")
+	require.NoError(t, k.Reporters.Set(ctx, source.Bytes(), rep))
+	require.NoError(t, k.Reporters.Set(ctx, demoting.Bytes(), rep))
+	require.NoError(t, k.Reporters.Set(ctx, dest.Bytes(), rep))
+	require.NoError(t, k.Selectors.Set(ctx, demoting.Bytes(), types.NewSelection(demoting, 1)))
+	sel := types.NewSelection(source, 1)
+	sel.SwitchOutLockedUntilBlock = 50
+	require.NoError(t, k.Selectors.Set(ctx, selector.Bytes(), sel))
+
+	// Selector scheduled source → demoting while demoting was healthy; unlock is ready.
+	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(source.Bytes(), selector.Bytes()), types.PendingSwitchEntry{
+		ToReporter:  demoting.Bytes(),
+		UnlockBlock: 50,
+	}))
+	require.NoError(t, k.IncomingPendingSwitchIdx.Set(ctx, collections.Join(demoting.Bytes(), selector.Bytes()), source.Bytes()))
+
+	// Demoting reporter then scheduled self-demotion (not yet applied).
+	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(demoting.Bytes(), demoting.Bytes()), types.PendingSwitchEntry{
+		ToReporter:  dest.Bytes(),
+		UnlockBlock: 200,
+	}))
+	require.NoError(t, k.IncomingPendingSwitchIdx.Set(ctx, collections.Join(dest.Bytes(), demoting.Bytes()), demoting.Bytes()))
+	require.NoError(t, k.ReporterPendingSwitchHeads.Set(ctx, source.Bytes(), types.ReporterPendingSwitchHead{
+		OutgoingCount:     1,
+		OutgoingMinUnlock: 50,
+	}))
+	require.NoError(t, k.ReporterPendingSwitchHeads.Set(ctx, demoting.Bytes(), types.ReporterPendingSwitchHead{
+		OutgoingCount:     1,
+		OutgoingMinUnlock: 200,
+		IncomingCount:     1,
+		IncomingMinUnlock: 50,
+	}))
+
+	validatorSet := new(mocks.ValidatorSet)
+	sk.On("GetValidatorSet").Return(validatorSet)
+	validatorSet.On("MaxValidators", mock.Anything).Return(uint32(100), nil)
+	sk.On("IterateDelegatorDelegations", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+	_, err := k.ReporterStake(ctx, source, []byte{})
+	require.NoError(t, err)
+
+	selAfter, err := k.Selectors.Get(ctx, selector.Bytes())
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(selAfter.Reporter, source.Bytes()), "selection must stay on source, not land on demoting reporter")
+	require.Equal(t, uint64(0), selAfter.SwitchOutLockedUntilBlock)
+
+	hasOut, err := k.OutgoingPendingSwitches.Has(ctx, collections.Join(source.Bytes(), selector.Bytes()))
+	require.NoError(t, err)
+	require.False(t, hasOut)
+	hasIn, err := k.IncomingPendingSwitchIdx.Has(ctx, collections.Join(demoting.Bytes(), selector.Bytes()))
+	require.NoError(t, err)
+	require.False(t, hasIn)
+
+	hasDemoting, err := k.Reporters.Has(ctx, demoting.Bytes())
+	require.NoError(t, err)
+	require.True(t, hasDemoting)
+}
+
+func TestFinalizePendingSwitchClearsLockWhenTargetGone(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(100)
+
+	source, selector, missing := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	rep := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "r")
+	require.NoError(t, k.Reporters.Set(ctx, source.Bytes(), rep))
+	sel := types.NewSelection(source, 1)
+	sel.SwitchOutLockedUntilBlock = 50
+	require.NoError(t, k.Selectors.Set(ctx, selector.Bytes(), sel))
+
+	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(source.Bytes(), selector.Bytes()), types.PendingSwitchEntry{
+		ToReporter:  missing.Bytes(),
+		UnlockBlock: 50,
+	}))
+	require.NoError(t, k.IncomingPendingSwitchIdx.Set(ctx, collections.Join(missing.Bytes(), selector.Bytes()), source.Bytes()))
+	require.NoError(t, k.ReporterPendingSwitchHeads.Set(ctx, source.Bytes(), types.ReporterPendingSwitchHead{
+		OutgoingCount:     1,
+		OutgoingMinUnlock: 50,
+	}))
+
+	validatorSet := new(mocks.ValidatorSet)
+	sk.On("GetValidatorSet").Return(validatorSet)
+	validatorSet.On("MaxValidators", mock.Anything).Return(uint32(100), nil)
+	sk.On("IterateDelegatorDelegations", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+	_, err := k.ReporterStake(ctx, source, []byte{})
+	require.NoError(t, err)
+
+	selAfter, err := k.Selectors.Get(ctx, selector.Bytes())
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(selAfter.Reporter, source.Bytes()))
+	require.Equal(t, uint64(0), selAfter.SwitchOutLockedUntilBlock)
+}
+
 func TestSelfDemotionCancelsIncomingPendingSwitches(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(100)
@@ -138,6 +278,11 @@ func TestSelfDemotionCancelsIncomingPendingSwitches(t *testing.T) {
 	sel := types.NewSelection(source, 1)
 	sel.SwitchOutLockedUntilBlock = 50
 	require.NoError(t, k.Selectors.Set(ctx, selector.Bytes(), sel))
+	require.NoError(t, k.ReporterPeriodData.Set(ctx, demoting, types.PeriodRewardData{
+		Total:        math.ZeroInt(),
+		RewardAmount: math.LegacyZeroDec(),
+		Hash:         []byte("stale"),
+	}))
 
 	// Selector is mid-switch from source → demoting (not yet finalized).
 	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(source.Bytes(), selector.Bytes()), types.PendingSwitchEntry{
@@ -193,6 +338,9 @@ func TestSelfDemotionCancelsIncomingPendingSwitches(t *testing.T) {
 	hasDemoting, err := k.Reporters.Has(ctx, demoting.Bytes())
 	require.NoError(t, err)
 	require.False(t, hasDemoting)
+
+	_, err = k.ReporterPeriodData.Get(ctx, demoting)
+	require.ErrorIs(t, err, collections.ErrNotFound)
 
 	found := false
 	for _, ev := range ctx.EventManager().Events() {

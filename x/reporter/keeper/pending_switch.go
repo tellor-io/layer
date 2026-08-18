@@ -10,6 +10,7 @@ import (
 	"github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -145,9 +146,18 @@ func (k Keeper) finalizePendingSwitch(ctx context.Context, from, selector []byte
 	if err != nil {
 		return err
 	}
-	if !hasTo {
-		// Target self-demoted or was removed; drop the pending row instead of orphaning Selection.
-		return k.removeOutgoingPendingSwitch(ctx, from, selector, to)
+	targetDemoting := false
+	if hasTo {
+		targetDemoting, err = k.hasPendingSelfDemotion(ctx, to)
+		if err != nil {
+			return err
+		}
+	}
+	if !hasTo || targetDemoting {
+		// Target is gone or mid self-demotion: drop the pending row, leave Selection
+		// on from, and clear the switch lock so the selector is not serving a
+		// cooldown for a handoff that never happened.
+		return k.dropPendingSwitchLeaveSelection(ctx, from, selector, to, sel)
 	}
 
 	sel.Reporter = append([]byte(nil), to...)
@@ -178,6 +188,9 @@ func (k Keeper) finalizePendingSwitch(ctx context.Context, from, selector []byte
 			return err
 		}
 		if err := k.Reporters.Remove(ctx, from); err != nil && !errors.Is(err, collections.ErrNotFound) {
+			return err
+		}
+		if err := k.ReporterPeriodData.Remove(ctx, from); err != nil && !errors.Is(err, collections.ErrNotFound) {
 			return err
 		}
 	}
@@ -259,6 +272,23 @@ func (k Keeper) cancelIncomingPendingSwitchesOnSelfDemotion(ctx context.Context,
 		))
 	}
 	return nil
+}
+
+// dropPendingSwitchLeaveSelection removes a scheduled switch whose target is gone
+// or mid self-demotion. Selection stays on from; SwitchOutLockedUntilBlock is
+// cleared and from is flagged for stake recalc so the selector's power counts
+// toward the outgoing reporter again.
+func (k Keeper) dropPendingSwitchLeaveSelection(ctx context.Context, from, selector, to []byte, sel types.Selection) error {
+	if err := k.removeOutgoingPendingSwitch(ctx, from, selector, to); err != nil {
+		return err
+	}
+	if sel.SwitchOutLockedUntilBlock != 0 {
+		sel.SwitchOutLockedUntilBlock = 0
+		if err := k.Selectors.Set(ctx, selector, sel); err != nil {
+			return err
+		}
+	}
+	return k.FlagStakeRecalc(ctx, sdk.AccAddress(from))
 }
 
 // removeOutgoingPendingSwitch deletes a scheduled switch (from, selector) → oldTo
@@ -477,6 +507,21 @@ func (k Keeper) hasOutgoingPendingSwitch(ctx context.Context, repAddr, selectorA
 // outgoing pending switch (from == selector == reporter), i.e. self-demotion in flight.
 func (k Keeper) hasPendingSelfDemotion(ctx context.Context, repAddr []byte) (bool, error) {
 	return k.hasOutgoingPendingSwitch(ctx, repAddr, repAddr)
+}
+
+// errIfPendingSelfDemotion returns ErrReporterSelfDemoting when repAddr has a
+// self-demotion in flight. Callers that would otherwise finalize that demotion
+// (ReporterStake / GetReporterStake) use this to fail fast instead of applying
+// then hitting a not-found on the removed reporter row.
+func (k Keeper) errIfPendingSelfDemotion(ctx context.Context, repAddr sdk.AccAddress) error {
+	demoting, err := k.hasPendingSelfDemotion(ctx, repAddr.Bytes())
+	if err != nil {
+		return err
+	}
+	if demoting {
+		return errorsmod.Wrapf(types.ErrReporterSelfDemoting, "reporter %s has a pending self-demotion", repAddr.String())
+	}
+	return nil
 }
 
 // maybeFinalizePendingSwitchForRemoveSelector applies a ready pending switch before
