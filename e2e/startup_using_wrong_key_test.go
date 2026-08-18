@@ -3,9 +3,11 @@ package e2e_test
 import (
 	"crypto/ecdsa"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/strangelove-ventures/interchaintest/v8/chain/cosmos"
@@ -93,6 +95,45 @@ func TestStartupUsingWrongKey(t *testing.T) {
 		fmt.Printf("Validator %d - Original private key loaded\n", i)
 	}
 
+	queryEVMAddr := func(valAddr string) (string, error) {
+		cmd := []string{
+			"layerd", "query", "bridge", "get-evm-address-by-validator-address", valAddr,
+			"--node", validators[0].Node.Chain.GetRPCAddress(),
+			"--home", validators[0].Node.HomeDir(),
+			"--chain-id", validators[0].Node.Chain.Config().ChainID,
+			"--output", "json",
+		}
+		stdout, _, execErr := validators[0].Node.Exec(ctx, cmd, nil)
+		if execErr != nil {
+			return "", execErr
+		}
+		var resp struct {
+			EvmAddress string `json:"evm_address"`
+		}
+		if jsonErr := json.Unmarshal(stdout, &resp); jsonErr != nil {
+			return "", jsonErr
+		}
+		return resp.EvmAddress, nil
+	}
+
+	// Anchor the premise of both phases: validator 0's initial registration must have
+	// landed, mapping its operator to the EVM address of the key it was created with.
+	originalEVMAddr := crypto.PubkeyToAddress(validators[0].EVMPriv.PublicKey).Hex()
+	var registeredEVMAddr string
+	err = testutil.WaitForCondition(1*time.Minute, 2*time.Second, func() (bool, error) {
+		addr, qErr := queryEVMAddr(validators[0].ValAddr)
+		if qErr != nil {
+			// not registered yet; WaitForCondition aborts on fn error, so keep polling
+			return false, nil
+		}
+		registeredEVMAddr = addr
+		return true, nil
+	})
+	require.NoError(err, "validator 0's initial EVM address registration never landed")
+	// the query returns unprefixed lowercase hex (common.Bytes2Hex)
+	require.True(strings.EqualFold(registeredEVMAddr, strings.TrimPrefix(originalEVMAddr, "0x")),
+		"registered EVM address %s should match the original key's address %s", registeredEVMAddr, originalEVMAddr)
+
 	// Mid-run keyring swap must not jail (operator identity is cached at signer
 	// construction). Restart with the wrong key named "validator" must jail.
 
@@ -120,12 +161,23 @@ func TestStartupUsingWrongKey(t *testing.T) {
 	require.NoError(addKeyErr)
 
 	getOriginalKeyCmd := []string{
-		"sh", "-c", fmt.Sprintf("layerd keys show validator --bech val --keyring-backend test --home %s",
+		"sh", "-c", fmt.Sprintf("layerd keys show validator --bech val -a --keyring-backend test --home %s",
 			validators[0].Node.HomeDir()),
 	}
 	stdout, _, getOriginalKeyErr := validators[0].Node.Exec(ctx, getOriginalKeyCmd, validators[0].Node.Chain.Config().Env)
 	require.NoError(getOriginalKeyErr)
-	fmt.Println("original-validator: ", string(stdout))
+	originalValAddr := strings.TrimSpace(string(stdout))
+	require.NotEmpty(originalValAddr)
+	fmt.Println("original-validator: ", originalValAddr)
+
+	getWrongKeyCmd := []string{
+		"sh", "-c", fmt.Sprintf("layerd keys show wrong-validator --bech val -a --keyring-backend test --home %s",
+			validators[0].Node.HomeDir()),
+	}
+	stdout, _, getWrongKeyErr := validators[0].Node.Exec(ctx, getWrongKeyCmd, validators[0].Node.Chain.Config().Env)
+	require.NoError(getWrongKeyErr)
+	wrongValAddr := strings.TrimSpace(string(stdout))
+	require.NotEmpty(wrongValAddr)
 
 	// Step 3: Modify the keyring to make "wrong-validator" the default key for vote extensions
 	// We do this by renaming the keys in the keyring
@@ -134,7 +186,8 @@ func TestStartupUsingWrongKey(t *testing.T) {
 		"sh", "-c", fmt.Sprintf("echo 'y' | layerd keys rename validator original-validator --keyring-backend test --home %s",
 			validators[0].Node.HomeDir()),
 	}
-	_, _, _ = validators[0].Node.Exec(ctx, renameOriginalCmd, validators[0].Node.Chain.Config().Env)
+	_, _, renameOrigErr := validators[0].Node.Exec(ctx, renameOriginalCmd, validators[0].Node.Chain.Config().Env)
+	require.NoError(renameOrigErr)
 
 	// Then rename "wrong-validator" to "validator" (this is what the daemon will use)
 	renameWrongCmd := []string{
@@ -146,12 +199,18 @@ func TestStartupUsingWrongKey(t *testing.T) {
 	require.NoError(renameErr)
 
 	getNewKeyCmd := []string{
-		"sh", "-c", fmt.Sprintf("layerd keys show validator --bech val --keyring-backend test --home %s",
+		"sh", "-c", fmt.Sprintf("layerd keys show validator --bech val -a --keyring-backend test --home %s",
 			validators[0].Node.HomeDir()),
 	}
 	stdout, _, getNewKeyErr := validators[0].Node.Exec(ctx, getNewKeyCmd, validators[0].Node.Chain.Config().Env)
 	require.NoError(getNewKeyErr)
-	fmt.Println("new-validator: ", string(stdout))
+	swappedValAddr := strings.TrimSpace(string(stdout))
+	fmt.Println("new-validator: ", swappedValAddr)
+
+	// Both phases assume the swap took effect: "validator" must now resolve to the
+	// wrong key, not the original.
+	require.Equal(wrongValAddr, swappedValAddr, "keyring swap did not take effect: 'validator' should resolve to the wrong key")
+	require.NotEqual(originalValAddr, swappedValAddr, "keyring swap did not take effect: 'validator' still resolves to the original key")
 
 	fmt.Println("validator keyring now names the wrong key 'validator'")
 
@@ -163,15 +222,31 @@ func TestStartupUsingWrongKey(t *testing.T) {
 	require.NoError(err)
 	require.False(val0Info.Jailed, "mid-run key swap must not jail: operator identity is cached at signer construction")
 
+	// Positive anchor: the live signer kept the original identity, so the registered
+	// EVM address must be unchanged (not merely "not jailed yet").
+	midSwapEVMAddr, err := queryEVMAddr(validators[0].ValAddr)
+	require.NoError(err)
+	require.True(strings.EqualFold(midSwapEVMAddr, strings.TrimPrefix(originalEVMAddr, "0x")),
+		"mid-run key swap must not change the registered EVM address: got %s, want %s", midSwapEVMAddr, originalEVMAddr)
+
 	fmt.Println("\n=== Phase 2: restart with wrong key must jail ===")
 	err = validators[0].Node.StopContainer(ctx)
 	require.NoError(err)
 	err = validators[0].Node.StartContainer(ctx)
 	require.NoError(err)
 
-	// Height from validator 1: validator 0 is down during restart and leaves the set once jailed.
-	err = testutil.WaitForBlocks(ctx, 5, validators[1].Node)
-	require.NoError(err)
+	// StartContainer returning does not mean validator 0 has caught up, produced a
+	// commit vote carrying its InitialSignature, and been jailed by PreBlocker — poll
+	// until the jail lands instead of sleeping a fixed number of blocks. Queries can
+	// transiently fail while the node restarts, so treat errors as "not yet".
+	err = testutil.WaitForCondition(3*time.Minute, 2*time.Second, func() (bool, error) {
+		info, qErr := chain.StakingQueryValidator(ctx, validators[0].ValAddr)
+		if qErr != nil {
+			return false, nil
+		}
+		return info.Jailed, nil
+	})
+	require.NoError(err, "timed out waiting for validator 0 to be jailed after restarting with the wrong key")
 
 	val0Info, err = chain.StakingQueryValidator(ctx, validators[0].ValAddr)
 	require.NoError(err)
