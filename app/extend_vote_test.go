@@ -1,7 +1,6 @@
 package app_test
 
 import (
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -384,11 +383,11 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 
 	testCases := []testCase{
 		{
-			name: "err on SignInitialMessage",
+			name: "err on SignInitial",
 			setupMocks: func(ok *mocks.OracleKeeper, bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, h *app.VoteExtHandler, patches *gomonkey.Patches) {
 				signer.On("GetOperatorAddress", mock.Anything).Return(oppAddr, nil)
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound)
-				signer.On("SignInitial", mock.Anything, mock.Anything).Return(nil, errors.New("error!")).Once()
+				signer.On("SignInitial", mock.Anything).Return(nil, nil, errors.New("error!")).Once()
 			},
 			expectedPanic: false,
 			validateResponse: func(resp *abci.ResponseExtendVote) {
@@ -410,7 +409,7 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			setupMocks: func(ok *mocks.OracleKeeper, bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, h *app.VoteExtHandler, patches *gomonkey.Patches) {
 				signer.On("GetOperatorAddress", mock.Anything).Return(oppAddr, nil)
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound)
-				signer.On("SignInitial", mock.Anything, mock.Anything).Return([]byte("signature"), nil).Twice()
+				signer.On("SignInitial", mock.Anything).Return([]byte("signature"), []byte("signature"), nil).Once()
 				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return((*bridgetypes.AttestationRequests)(nil), errors.New("error!"))
 			},
 			expectedPanic: false,
@@ -419,15 +418,11 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			},
 		},
 		{
-			name: "no EVM address, real SignInitialMessage succeeds, no attestations",
+			name: "no EVM address, SignInitial succeeds, no attestations",
 			setupMocks: func(ok *mocks.OracleKeeper, bk *mocks.BridgeKeeper, signer *mocks.VoteExtensionSigner, h *app.VoteExtHandler, patches *gomonkey.Patches) {
 				signer.On("GetOperatorAddress", mock.Anything).Return(oppAddr, nil)
 				bk.On("GetEVMAddressByOperator", ctx, oppAddr).Return(nil, collections.ErrNotFound)
-				// Let real SignInitialMessage run — mock signer.SignInitial with exact expected hashes
-				hashA := sha256.Sum256([]byte(fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", oppAddr)))
-				hashB := sha256.Sum256([]byte(fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", oppAddr)))
-				signer.On("SignInitial", mock.Anything, hashA[:]).Return([]byte("sigA"), nil).Once()
-				signer.On("SignInitial", mock.Anything, hashB[:]).Return([]byte("sigB"), nil).Once()
+				signer.On("SignInitial", mock.Anything).Return([]byte("sigA"), []byte("sigB"), nil).Once()
 				bk.On("GetAttestationRequestsByHeight", ctx, uint64(2)).Return(nil, collections.ErrNotFound)
 				bk.On("GetLatestCheckpointIndex", ctx).Return(uint64(0), errors.New("no checkpoint"))
 			},
@@ -554,64 +549,6 @@ func (s *VoteExtensionTestSuite) TestExtendVoteHandler() {
 			}
 
 			bk.AssertExpectations(s.T())
-		})
-	}
-}
-
-func (s *VoteExtensionTestSuite) TestSignInitialMessage() {
-	require := s.Require()
-
-	operatorAddr := "operatorAddr1"
-	expectedHashA := sha256.Sum256([]byte(fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddr)))
-	expectedHashB := sha256.Sum256([]byte(fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddr)))
-
-	testCases := []struct {
-		name          string
-		setupSigner   func(signer *mocks.VoteExtensionSigner)
-		expectedSigA  []byte
-		expectedSigB  []byte
-		expectedError string
-	}{
-		{
-			name: "success",
-			setupSigner: func(signer *mocks.VoteExtensionSigner) {
-				signer.On("SignInitial", mock.Anything, expectedHashA[:]).Return([]byte("signedMsgA"), nil).Once()
-				signer.On("SignInitial", mock.Anything, expectedHashB[:]).Return([]byte("signedMsgB"), nil).Once()
-			},
-			expectedSigA: []byte("signedMsgA"),
-			expectedSigB: []byte("signedMsgB"),
-		},
-		{
-			name: "error signing message A",
-			setupSigner: func(signer *mocks.VoteExtensionSigner) {
-				signer.On("SignInitial", mock.Anything, expectedHashA[:]).Return(nil, errors.New("sign A failed")).Once()
-			},
-			expectedError: "failed to sign message A",
-		},
-		{
-			name: "error signing message B",
-			setupSigner: func(signer *mocks.VoteExtensionSigner) {
-				signer.On("SignInitial", mock.Anything, expectedHashA[:]).Return([]byte("signedMsgA"), nil).Once()
-				signer.On("SignInitial", mock.Anything, expectedHashB[:]).Return(nil, errors.New("sign B failed")).Once()
-			},
-			expectedError: "failed to sign message B",
-		},
-	}
-
-	for _, tc := range testCases {
-		s.Run(tc.name, func() {
-			h, _, _, signer := s.CreateHandlerAndMocks()
-			tc.setupSigner(signer)
-
-			sigA, sigB, err := h.SignInitialMessage(s.ctx, operatorAddr)
-			if tc.expectedError != "" {
-				require.Error(err)
-				require.Contains(err.Error(), tc.expectedError)
-			} else {
-				require.NoError(err)
-				require.Equal(tc.expectedSigA, sigA)
-				require.Equal(tc.expectedSigB, sigB)
-			}
 		})
 	}
 }
