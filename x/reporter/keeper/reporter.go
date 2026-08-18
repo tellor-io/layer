@@ -54,6 +54,9 @@ func (k Keeper) HasMin(ctx context.Context, addr sdk.AccAddress, minRequired mat
 // the previous period is queued for distribution.
 // Ready pending reporter switches involving this reporter are finalized first (same entry path as MsgSubmitValue).
 func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, queryId []byte) (math.Int, error) {
+	if err := k.errIfPendingSelfDemotion(ctx, repAddr); err != nil {
+		return math.Int{}, err
+	}
 	if err := k.applyReadyPendingSwitchesForReporter(ctx, repAddr); err != nil {
 		return math.Int{}, err
 	}
@@ -345,6 +348,13 @@ func (k Keeper) GetReporterStakeView(ctx context.Context, repAddr sdk.AccAddress
 
 func (k Keeper) getReporterStake(ctx context.Context, repAddr sdk.AccAddress, mutate bool) (math.Int, []*types.TokenOriginInfo, []*types.SelectorShare, []byte, error) {
 	if mutate {
+		// Fail closed before applyReadyPendingSwitchesForReporter: self-demotion is
+		// ready immediately (unlock = maxCommit), so applying first would remove the
+		// reporter row and the subsequent Get would roll the whole tx back with a
+		// raw not-found. Read-only views are unaffected.
+		if err := k.errIfPendingSelfDemotion(ctx, repAddr); err != nil {
+			return math.Int{}, nil, nil, nil, err
+		}
 		if err := k.applyReadyPendingSwitchesForReporter(ctx, repAddr); err != nil {
 			return math.Int{}, nil, nil, nil, err
 		}

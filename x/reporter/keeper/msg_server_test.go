@@ -130,6 +130,32 @@ func TestSelectReporter(t *testing.T) {
 	require.True(t, bytes.Equal(reporter.Bytes(), selection.Reporter))
 }
 
+func TestSelectReporterRejectsDemotingTarget(t *testing.T) {
+	k, _, _, _, _, ms, ctx := setupMsgServer(t)
+	selector, demoting, dest := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	require.NoError(t, k.Reporters.Set(ctx, demoting, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "demoting")))
+	require.NoError(t, k.Selectors.Set(ctx, demoting, types.NewSelection(demoting, 1)))
+
+	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(demoting.Bytes(), demoting.Bytes()), types.PendingSwitchEntry{
+		ToReporter:  dest.Bytes(),
+		UnlockBlock: 100,
+	}))
+	require.NoError(t, k.IncomingPendingSwitchIdx.Set(ctx, collections.Join(dest.Bytes(), demoting.Bytes()), demoting.Bytes()))
+	require.NoError(t, k.ReporterPendingSwitchHeads.Set(ctx, demoting.Bytes(), types.ReporterPendingSwitchHead{
+		OutgoingCount:     1,
+		OutgoingMinUnlock: 100,
+	}))
+
+	_, err := ms.SelectReporter(ctx, &types.MsgSelectReporter{
+		SelectorAddress: selector.String(),
+		ReporterAddress: demoting.String(),
+	})
+	require.ErrorIs(t, err, types.ErrReporterSelfDemoting)
+	has, err := k.Selectors.Has(ctx, selector)
+	require.NoError(t, err)
+	require.False(t, has, "SelectReporter must not write a Selection onto a demoting reporter")
+}
+
 func TestSelectReporterRejectsWhenIncomingPendingWouldExceedMaxSelectors(t *testing.T) {
 	k, sk, _, _, _, ms, ctx := setupMsgServer(t)
 	ctx = ctx.WithBlockHeight(1)
@@ -302,6 +328,58 @@ func TestSwitchReporterRejectsWhenIncomingPendingWouldExceedMaxSelectors(t *test
 
 	_, err := ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: selNew.String(), ReporterAddress: target.String()})
 	require.ErrorContains(t, err, "reporter has reached max selectors")
+}
+
+func TestSwitchReporterRejectsDemotingTarget(t *testing.T) {
+	k, sk, _, _, _, ms, ctx := setupMsgServer(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(10)
+
+	selector, demoting, source := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	require.NoError(t, k.Reporters.Set(ctx, demoting, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "demoting")))
+	require.NoError(t, k.Reporters.Set(ctx, source, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "source")))
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(source, 1)))
+	require.NoError(t, k.Selectors.Set(ctx, demoting, types.NewSelection(demoting, 1)))
+	require.NoError(t, k.Params.Set(ctx, types.Params{MaxSelectors: 10, MaxPendingSwitchesPerReporter: 10}))
+
+	// Target is mid self-demotion (not yet finalized).
+	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(demoting.Bytes(), demoting.Bytes()), types.PendingSwitchEntry{
+		ToReporter:  source.Bytes(),
+		UnlockBlock: 100,
+	}))
+	require.NoError(t, k.IncomingPendingSwitchIdx.Set(ctx, collections.Join(source.Bytes(), demoting.Bytes()), demoting.Bytes()))
+	require.NoError(t, k.ReporterPendingSwitchHeads.Set(ctx, demoting.Bytes(), types.ReporterPendingSwitchHead{
+		OutgoingCount:     1,
+		OutgoingMinUnlock: 100,
+	}))
+
+	sk.On("IterateDelegatorDelegations", ctx, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Maybe().Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		delegations := []stakingtypes.Delegation{
+			{
+				DelegatorAddress: selector.String(),
+				ValidatorAddress: sdk.ValAddress(selector).String(),
+				Shares:           math.LegacyNewDec(1000),
+			},
+		}
+		for _, delegation := range delegations {
+			val := stakingtypes.Validator{
+				OperatorAddress: sdk.ValAddress(selector).String(),
+				Status:          stakingtypes.Bonded,
+				Tokens:          math.NewInt(1_000_000),
+				DelegatorShares: math.LegacyNewDec(1_000),
+			}
+			sk.On("GetValidator", ctx, sdk.ValAddress(selector)).Return(val, nil)
+			if fn(delegation) {
+				break
+			}
+		}
+	})
+
+	_, err := ms.SwitchReporter(ctx, &types.MsgSwitchReporter{
+		SelectorAddress: selector.String(),
+		ReporterAddress: demoting.String(),
+	})
+	require.ErrorIs(t, err, types.ErrReporterSelfDemoting)
 }
 
 func TestSwitchReporterReplacesPendingTargetKeepsUnlock(t *testing.T) {

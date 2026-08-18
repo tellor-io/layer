@@ -7,12 +7,13 @@ on:
 jobs:
   label:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       issues: write
       pull-requests: write
     steps:
       - name: Check State Change Labels
-        uses: mheap/github-action-required-labels@v5
+        uses: mheap/github-action-required-labels@23e10fde7e062233401931a0eece796cd9bf3177 # v5.6.0
         with:
           mode: exactly
           count: 1
@@ -21,7 +22,7 @@ jobs:
             noStateChange
       
       - name: Check Backport Labels
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         with:
           script: |
             const { data: labels } = await github.rest.issues.listLabelsOnIssue({
