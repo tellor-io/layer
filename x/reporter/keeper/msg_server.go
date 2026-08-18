@@ -184,6 +184,16 @@ func (k msgServer) SelectReporter(goCtx context.Context, msg *types.MsgSelectRep
 	if err != nil {
 		return nil, err
 	}
+	// Reject joining a reporter mid self-demotion. The reporter row survives until
+	// finalize, so Reporters.Get succeeds, but a Selection written here has no
+	// incoming-idx row and would orphan after Reporters.Remove.
+	demoting, err := k.Keeper.hasPendingSelfDemotion(goCtx, reporterAddr.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	if demoting {
+		return nil, types.ErrReporterSelfDemoting.Wrapf("cannot select reporter %s while it has a pending self-demotion", reporterAddr.String())
+	}
 	// check if reporter is capped at max selectors (include incoming pending switches)
 	params, err := k.Keeper.Params.Get(goCtx)
 	if err != nil {
@@ -269,6 +279,15 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 	if pending && bytes.Equal(toB, reporterAddr.Bytes()) {
 		return &types.MsgSwitchReporterResponse{}, nil
 	}
+	// Reject newly targeting a reporter mid self-demotion (avoids Selection landing
+	// on an address that is about to be deleted). Idempotent same-target pending above is allowed.
+	demoting, err := k.Keeper.hasPendingSelfDemotion(goCtx, reporterAddr.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	if demoting {
+		return nil, types.ErrReporterSelfDemoting.Wrapf("cannot switch to reporter %s while it has a pending self-demotion", reporterAddr.String())
+	}
 	// check if reporter is trying to become a selector of another reporter: if they
 	// still have other selectors, require 21 days since their last oracle report.
 	if bytes.Equal(selector.Reporter, selectorAddr.Bytes()) {
@@ -296,6 +315,8 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 			return nil, errors.New("cannot self-demote while reporter has open query commitments; wait until block height exceeds max open commitment height")
 		}
 
+		// Keep Reporters[self] until the pending switch finalizes so liveness/tip
+		// distribution can still credit this address. Removal happens in finalizePendingSwitch.
 		selfRep, selfErr := k.Keeper.Reporters.Get(goCtx, selectorAddr.Bytes())
 		if selfErr == nil && selfRep.Jailed {
 			if err := k.Keeper.copyReporterJailToSelection(goCtx, selectorAddr, selfRep); err != nil {
@@ -303,9 +324,6 @@ func (k msgServer) SwitchReporter(goCtx context.Context, msg *types.MsgSwitchRep
 			}
 		} else if selfErr != nil && !errors.Is(selfErr, collections.ErrNotFound) {
 			return nil, selfErr
-		}
-		if err := k.Keeper.Reporters.Remove(goCtx, selectorAddr.Bytes()); err != nil {
-			return nil, err
 		}
 	}
 	// check if reporter is capped at max selectors (include incoming pending switches)

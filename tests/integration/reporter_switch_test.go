@@ -971,7 +971,7 @@ func (s *IntegrationTestSuite) TestReporterSwitchFailedDisputePreservesLegacyLoc
 // to selection, removes the reporter row, and B excludes their stake until unlock.
 //
 // 1. Self-reporter A and reporter B; A bridge report + minor dispute
-// 2. SwitchReporter A→B; Reporters.Has(A) false; selection jail copied
+// 2. SwitchReporter A→B; Reporters[A] retained until finalize; selection jail copied
 // 3. Pending switch; B stake = solo base through finalize
 // 4. After disputeTime+601s, B stake and report power include self delegation
 func (s *IntegrationTestSuite) TestReporterSwitchSelfDemotionWhileJailed() {
@@ -1008,7 +1008,7 @@ func (s *IntegrationTestSuite) TestReporterSwitchSelfDemotionWhileJailed() {
 
 	hasA, err := s.Setup.Reporterkeeper.Reporters.Has(s.Setup.Ctx, reporterA.Bytes())
 	s.NoError(err)
-	s.False(hasA)
+	s.True(hasA, "Reporters[A] retained until pending self-demotion finalizes")
 
 	sel, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, reporterA.Bytes())
 	s.NoError(err)
@@ -1028,6 +1028,10 @@ func (s *IntegrationTestSuite) TestReporterSwitchSelfDemotionWhileJailed() {
 	stakeBAfterFinalize, err := s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterB, queryID)
 	s.NoError(err)
 	s.Equal(stakeBBase, stakeBAfterFinalize)
+
+	hasA, err = s.Setup.Reporterkeeper.Reporters.Has(s.Setup.Ctx, reporterA.Bytes())
+	s.NoError(err)
+	s.False(hasA, "Reporters[A] removed when self-demotion finalizes")
 
 	selFinal, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, reporterA.Bytes())
 	s.NoError(err)
