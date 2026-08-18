@@ -38,7 +38,6 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 		t.Skip("skipping in short mode")
 	}
 
-	t.Parallel()
 	cosmos.SetSDKConfig("tellor")
 
 	modifyGenesis := []cosmos.GenesisKV{

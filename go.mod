@@ -42,7 +42,7 @@ require (
 	github.com/spf13/viper v1.20.1
 	github.com/strangelove-ventures/globalfee v0.50.1
 	github.com/stretchr/testify v1.11.1
-	github.com/tellor-io/bridge-remote-signer/api v0.0.0-20260625110956-a0eb13ebf52a
+	github.com/tellor-io/bridge-remote-signer/api v0.0.0-20260720085754-c9bb3da6b8e4
 	github.com/vektra/mockery/v2 v2.23.1
 	go.uber.org/mock v0.5.2
 	golang.org/x/text v0.32.0
@@ -289,17 +289,3 @@ replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
 )
-
-// Pin grpc/protobuf to the versions this module already uses, so the vendored
-// api dependency cannot pull them up to incompatible versions.
-replace google.golang.org/grpc => google.golang.org/grpc v1.72.2
-
-replace google.golang.org/protobuf => google.golang.org/protobuf v1.36.6
-
-replace golang.org/x/net => golang.org/x/net v0.40.0
-
-replace golang.org/x/sys => golang.org/x/sys v0.33.0
-
-replace golang.org/x/text => golang.org/x/text v0.25.0
-
-replace google.golang.org/genproto/googleapis/rpc => google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a
