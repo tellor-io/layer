@@ -7,8 +7,10 @@
 #   E2E_RACE=1 ./e2e/run-all-sequential.sh
 #
 # Options via environment:
-#   TIMEOUT   Per-test timeout (default: 15m)
-#   E2E_RACE  Set to 1 to pass -race to go test (slower)
+#   TIMEOUT           Per-test timeout (default: 15m)
+#   E2E_RACE          Set to 1 to pass -race to go test (slower)
+#   E2E_DOCKER_SWEEP  Set to "" to skip the daemon-wide ibc-test docker sweep
+#                     TestMain runs around each test process (default: 1)
 
 set -uo pipefail
 
@@ -16,6 +18,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 TIMEOUT="${TIMEOUT:-15m}"
+# The sweep removes every docker object with interchaintest's ibc-test label,
+# from any repo sharing the daemon — see main_test.go. Serial suite runs want
+# it; ad-hoc `go test -run` invocations leave it off unless exported.
+export E2E_DOCKER_SWEEP="${E2E_DOCKER_SWEEP-1}"
 RACE_FLAG=()
 if [[ "${E2E_RACE:-}" == "1" ]]; then
   RACE_FLAG=(-race)

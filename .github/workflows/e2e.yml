@@ -148,6 +148,7 @@ jobs:
       - name: Run Tests
         env:
           E2E_TEST: ${{ matrix.test }}
+          E2E_DOCKER_SWEEP: 1
         run: cd e2e && go test -race -v -timeout 15m -run "^${E2E_TEST}$" .
 
   test-ibc:
@@ -183,4 +184,6 @@ jobs:
         run: docker image load -i ${{ env.IBC_TAR_PATH }}
 
       - name: Run IBC Test
+        env:
+          E2E_DOCKER_SWEEP: 1
         run: cd e2e && go test -race -v -timeout 15m -run "^TestIbcInterchainQuery$" .
