@@ -10,9 +10,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
-	"cosmossdk.io/store/prefix"
 
-	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -28,34 +26,39 @@ func NewQuerier(keeper Keeper) Querier {
 	return Querier{Keeper: keeper}
 }
 
-// Reporters queries all the reporters
+// Reporters queries all the reporters, omitting any with a pending self-demotion.
 func (k Querier) Reporters(ctx context.Context, req *types.QueryReportersRequest) (*types.QueryReportersResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	store := runtime.KVStoreAdapter(k.storeService.OpenKVStore(ctx))
-	repStore := prefix.NewStore(store, types.ReportersKey)
-	reporters := make([]*types.Reporter, 0)
-	pageRes, err := query.Paginate(repStore, req.Pagination, func(repAddr, value []byte) error {
-		var reporterMeta types.OracleReporter
-		err := k.cdc.Unmarshal(value, &reporterMeta)
-		if err != nil {
-			return err
-		}
-		stake, _, _, _, err := k.GetReporterStakeView(ctx, sdk.AccAddress(repAddr))
-		if err != nil {
-			stake = math.ZeroInt()
-		}
-		reportingPower := stake.Quo(layertypes.PowerReduction).Uint64()
-		reporters = append(reporters, &types.Reporter{
-			Address:  sdk.AccAddress(repAddr).String(),
-			Metadata: &reporterMeta,
-			Power:    reportingPower,
-		})
-		return nil
-	})
+	reporters, pageRes, err := query.CollectionFilteredPaginate(
+		ctx,
+		k.Keeper.Reporters,
+		req.Pagination,
+		func(repAddr []byte, _ types.OracleReporter) (bool, error) {
+			demoting, err := k.hasPendingSelfDemotion(ctx, repAddr)
+			if err != nil {
+				return false, err
+			}
+			return !demoting, nil
+		},
+		func(repAddr []byte, reporterMeta types.OracleReporter) (*types.Reporter, error) {
+			stake, _, _, _, err := k.GetReporterStakeView(ctx, sdk.AccAddress(repAddr))
+			if err != nil {
+				stake = math.ZeroInt()
+			}
+			return &types.Reporter{
+				Address:  sdk.AccAddress(repAddr).String(),
+				Metadata: &reporterMeta,
+				Power:    stake.Quo(layertypes.PowerReduction).Uint64(),
+			}, nil
+		},
+	)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if reporters == nil {
+		reporters = []*types.Reporter{}
 	}
 
 	return &types.QueryReportersResponse{Reporters: reporters, Pagination: pageRes}, nil
@@ -346,6 +349,13 @@ func (k Querier) Reporter(ctx context.Context, req *types.QueryReporterRequest) 
 	repAddr := sdk.MustAccAddressFromBech32(req.ReporterAddress)
 	reporterMeta, err := k.Keeper.Reporters.Get(ctx, repAddr)
 	if err != nil {
+		return nil, status.Error(codes.NotFound, "reporter not found")
+	}
+	demoting, err := k.hasPendingSelfDemotion(ctx, repAddr)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if demoting {
 		return nil, status.Error(codes.NotFound, "reporter not found")
 	}
 

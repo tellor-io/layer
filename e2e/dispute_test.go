@@ -1064,7 +1064,10 @@ func TestReportDelegateMoreMajorDispute(t *testing.T) {
 	require.NoError(err)
 	err = json.Unmarshal(res, &reportersRes)
 	require.NoError(err)
-	require.Equal(len(reportersRes.Reporters), numReporters) // user1 hidden while self-demotion is pending
+	require.Equal(numReporters, len(reportersRes.Reporters), "user1 should be hidden while self-demotion is pending, got %+v", reportersRes.Reporters)
+	for _, reporter := range reportersRes.Reporters {
+		require.NotEqual(user1Addr, reporter.Address)
+	}
 	fmt.Println("reportersRes: ", reportersRes)
 
 	// user1 redelegates to val2
