@@ -11,6 +11,7 @@ import (
 	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -90,6 +91,33 @@ func TestReporterQuery(t *testing.T) {
 	nonExistentAddr := sample.AccAddressBytes()
 	_, err = querier.Reporter(ctx, &types.QueryReporterRequest{ReporterAddress: nonExistentAddr.String()})
 	require.Error(t, err)
+}
+
+func TestReportersQueryHidesSelfDemoting(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	querier := keeper.NewQuerier(k)
+
+	active := sample.AccAddressBytes()
+	demoting := sample.AccAddressBytes()
+	dest := sample.AccAddressBytes()
+	require.NoError(t, k.Reporters.Set(ctx, active, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "active")))
+	require.NoError(t, k.Reporters.Set(ctx, demoting, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "demoting")))
+	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(demoting.Bytes(), demoting.Bytes()), types.PendingSwitchEntry{
+		ToReporter:  dest.Bytes(),
+		UnlockBlock: 100,
+	}))
+
+	res, err := querier.Reporters(ctx, &types.QueryReportersRequest{})
+	require.NoError(t, err)
+	require.Len(t, res.Reporters, 1)
+	require.Equal(t, active.String(), res.Reporters[0].Address)
+
+	_, err = querier.Reporter(ctx, &types.QueryReporterRequest{ReporterAddress: demoting.String()})
+	require.Error(t, err)
+
+	got, err := querier.Reporter(ctx, &types.QueryReporterRequest{ReporterAddress: active.String()})
+	require.NoError(t, err)
+	require.Equal(t, active.String(), got.Reporter.Address)
 }
 
 func TestSelectorReporterQuery(t *testing.T) {
