@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/stretchr/testify/require"
+
+	cosmossecp256k1 "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 )
 
 // TestGoldenVector_OracleAttestation produces a byte-exact golden vector for the
@@ -43,11 +44,11 @@ func TestGoldenVector_OracleAttestation(t *testing.T) {
 
 	// 6 uint256 scalars (timestamps are UNIX MILLISECONDS; power is a count).
 	const timestamp uint64 = 1700000000000              // report aggregate timestamp (ms)
-	const aggregatePower uint64 = 175                    // total reporter power
-	const previousTimestamp uint64 = 1699999000000       // ms
-	const nextTimestamp uint64 = 1700001000000           // ms
-	const attestationTimestamp uint64 = 1700000500000    // ms
-	const lastConsensusTimestamp uint64 = 1699998000000  // ms
+	const aggregatePower uint64 = 175                   // total reporter power
+	const previousTimestamp uint64 = 1699999000000      // ms
+	const nextTimestamp uint64 = 1700001000000          // ms
+	const attestationTimestamp uint64 = 1700000500000   // ms
+	const lastConsensusTimestamp uint64 = 1699998000000 // ms
 
 	// valsetCheckpoint: 32 bytes. Fixed literal so signer can reuse verbatim.
 	const valsetCheckpointHex = "5c3d8e1f0a9b7c6d4e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b1c0d"

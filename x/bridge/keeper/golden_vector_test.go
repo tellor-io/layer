@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/tellor-io/layer/x/bridge/types"
-
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/tellor-io/layer/x/bridge/types"
 )
 
 // TestGoldenVector_BridgeCheckpoint produces a byte-exact golden vector for the
@@ -35,7 +34,7 @@ func TestGoldenVector_BridgeCheckpoint(t *testing.T) {
 		},
 	}
 
-	const powerThreshold uint64 = 116          // (100+50+25)*2/3 = 116
+	const powerThreshold uint64 = 116               // (100+50+25)*2/3 = 116
 	const validatorTimestamp uint64 = 1700000000000 // UNIX MILLISECONDS
 
 	fmt.Println("=================== GOLDEN VECTOR INPUTS ===================")

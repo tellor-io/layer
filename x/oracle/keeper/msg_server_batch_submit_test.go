@@ -259,21 +259,14 @@ func (s *KeeperTestSuite) TestBatchSubmitValue_EmptyBatch() {
 	require := s.Require()
 	addr := sample.AccAddressBytes()
 
-	params, err := s.oracleKeeper.Params.Get(s.ctx)
-	require.NoError(err)
-	minStakeAmt := params.MinStakeAmount
-
-	s.reporterKeeper.On("ReporterStake", s.ctx, addr, []byte(nil)).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
-
 	msg := &types.MsgBatchSubmitValue{
 		Creator: addr.String(),
 		Values:  []*types.SubmitValueItem{}, // Empty batch
 	}
 
-	res, err := s.msgServer.BatchSubmitValue(s.ctx, msg)
-	require.NoError(err)
-	require.NotNil(res)
-	require.Empty(res.FailedIndices)
+	_, err := s.msgServer.BatchSubmitValue(s.ctx, msg)
+	require.Error(err)
+	require.Contains(err.Error(), "no values in batch")
 }
 
 func (s *KeeperTestSuite) TestBatchSubmitValue_AllFailures() {
