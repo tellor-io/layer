@@ -631,33 +631,17 @@ func absInt64(x int64) int64 {
 }
 
 func (k Keeper) EVMAddressFromSignatures(ctx context.Context, sigA, sigB []byte, operatorAddress string) (common.Address, error) {
-	msgA := fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddress)
-	msgB := fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddress)
+	hashA, hashB := types.InitialRegistrationDigests(operatorAddress)
+	// cosmos secp256k1 signs sha256(payload); recover over the second hash.
+	msgDoubleHashBytesA := sha256.Sum256(hashA[:])
+	msgDoubleHashBytesB := sha256.Sum256(hashB[:])
 
-	// convert messages to bytes
-	msgBytesA := []byte(msgA)
-	msgBytesB := []byte(msgB)
-
-	// hash messages
-	msgHashBytes32A := sha256.Sum256(msgBytesA)
-	msgHashBytesA := msgHashBytes32A[:]
-
-	msgHashBytes32B := sha256.Sum256(msgBytesB)
-	msgHashBytesB := msgHashBytes32B[:]
-
-	// hash the hash, since the keyring signer automatically hashes the message
-	msgDoubleHashBytes32A := sha256.Sum256(msgHashBytesA)
-	msgDoubleHashBytesA := msgDoubleHashBytes32A[:]
-
-	msgDoubleHashBytes32B := sha256.Sum256(msgHashBytesB)
-	msgDoubleHashBytesB := msgDoubleHashBytes32B[:]
-
-	addressesA, err := k.TryRecoverAddressWithBothIDs(sigA, msgDoubleHashBytesA)
+	addressesA, err := k.TryRecoverAddressWithBothIDs(sigA, msgDoubleHashBytesA[:])
 	if err != nil {
 		k.Logger(ctx).Warn("Error trying to recover address with both IDs", "error", err)
 		return common.Address{}, err
 	}
-	addressesB, err := k.TryRecoverAddressWithBothIDs(sigB, msgDoubleHashBytesB)
+	addressesB, err := k.TryRecoverAddressWithBothIDs(sigB, msgDoubleHashBytesB[:])
 	if err != nil {
 		k.Logger(ctx).Warn("Error trying to recover address with both IDs", "error", err)
 		return common.Address{}, err
@@ -1301,4 +1285,18 @@ func (k Keeper) GetCheckpointParamsByCheckpoint(ctx context.Context, checkpoint 
 	}
 
 	return params, nil
+}
+
+// GetValsetCheckpointDomainSeparator returns the stored valset-checkpoint domain
+// separator. Used by the vote-extension handler to build the structured
+// SignBridgeCheckpoint request for the remote signer.
+func (k Keeper) GetValsetCheckpointDomainSeparator(ctx context.Context) ([]byte, error) {
+	return k.ValsetCheckpointDomainSeparator.Get(ctx)
+}
+
+// GetAttestationSnapshotDataBySnapshot returns the stored attestation snapshot
+// data for the given snapshot. Used by the vote-extension handler to build the
+// structured SignOracleAttestation request for the remote signer.
+func (k Keeper) GetAttestationSnapshotDataBySnapshot(ctx context.Context, snapshot []byte) (types.AttestationSnapshotData, error) {
+	return k.AttestSnapshotDataMap.Get(ctx, snapshot)
 }
