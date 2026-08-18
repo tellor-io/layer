@@ -3,7 +3,6 @@ package app
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -155,7 +154,7 @@ func (h *VoteExtHandler) ExtendVoteHandler(ctx sdk.Context, req *abci.RequestExt
 	_, err := h.bridgeKeeper.GetEVMAddressByOperator(ctx, operatorAddress)
 	if err != nil {
 		h.logger.Info("ExtendVoteHandler: EVM address not found for operator address, registering evm address", "operatorAddress", operatorAddress)
-		initialSigA, initialSigB, err := h.SignInitialMessage(ctx, operatorAddress)
+		initialSigA, initialSigB, err := h.signer.SignInitial(ctx)
 		if err != nil {
 			h.logger.Info("ExtendVoteHandler: failed to sign initial message", "error", err)
 			return h.marshalVoteExt(voteExt)
@@ -315,27 +314,6 @@ func (h *VoteExtHandler) SignSnapshot(ctx context.Context, snapshot []byte) ([]b
 		return nil, err
 	}
 	return sig, nil
-}
-
-func (h *VoteExtHandler) SignInitialMessage(ctx context.Context, operatorAddress string) ([]byte, []byte, error) {
-	messageA := fmt.Sprintf("TellorLayer: Initial bridge signature A for operator %s", operatorAddress)
-	messageB := fmt.Sprintf("TellorLayer: Initial bridge signature B for operator %s", operatorAddress)
-
-	// hash messages
-	msgHashABytes32 := sha256.Sum256([]byte(messageA))
-	msgHashBBytes32 := sha256.Sum256([]byte(messageB))
-
-	// sign messages
-	sigA, err := h.signer.SignInitial(ctx, msgHashABytes32[:])
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to sign message A: %w", err)
-	}
-
-	sigB, err := h.signer.SignInitial(ctx, msgHashBBytes32[:])
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to sign message B: %w", err)
-	}
-	return sigA, sigB, nil
 }
 
 func (h *VoteExtHandler) CheckAndSignValidatorCheckpoint(ctx context.Context) (signature []byte, timestamp uint64, err error) {

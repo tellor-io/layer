@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/viper"
 	signerv1 "github.com/tellor-io/bridge-remote-signer/api/gen/signer/v1"
+	bridgetypes "github.com/tellor-io/layer/x/bridge/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
@@ -85,9 +86,21 @@ func (s *KeyringSigner) SignOracleAttestation(_ context.Context, req *signerv1.S
 	return s.sign(req.ExpectedSnapshot)
 }
 
-// SignInitial signs the 32-byte initial-registration digest with the local key.
-func (s *KeyringSigner) SignInitial(_ context.Context, msg []byte) ([]byte, error) {
-	return s.sign(msg)
+// SignInitial signs the two registration messages for the cached operator.
+func (s *KeyringSigner) SignInitial(_ context.Context) ([]byte, []byte, error) {
+	if s.operatorAddress == "" {
+		return nil, nil, errors.New("operator address not initialized")
+	}
+	hashA, hashB := bridgetypes.InitialRegistrationDigests(s.operatorAddress)
+	sigA, err := s.sign(hashA[:])
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to sign message A: %w", err)
+	}
+	sigB, err := s.sign(hashB[:])
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to sign message B: %w", err)
+	}
+	return sigA, sigB, nil
 }
 
 // GetOperatorAddress returns the cached bech32 validator operator address.

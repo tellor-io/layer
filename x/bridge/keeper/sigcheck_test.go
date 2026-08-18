@@ -5,8 +5,9 @@ import (
 	"encoding/hex"
 	"testing"
 
-	cosmossecp "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	gethcrypto "github.com/ethereum/go-ethereum/crypto"
+
+	cosmossecp "github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 )
 
 func TestSigCheck_CosmosVsGeth(t *testing.T) {
@@ -15,13 +16,19 @@ func TestSigCheck_CosmosVsGeth(t *testing.T) {
 
 	cosmosPriv := &cosmossecp.PrivKey{Key: keyBytes}
 	cosmosSig, err := cosmosPriv.Sign(checkpoint)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	digest := sha256.Sum256(checkpoint)
 	gethPriv, err := gethcrypto.ToECDSA(keyBytes)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	gethSig, err := gethcrypto.Sign(digest[:], gethPriv)
-	if err != nil { t.Fatal(err) }
+	if err != nil {
+		t.Fatal(err)
+	}
 	gethRS := gethSig[:64]
 
 	t.Logf("digest sha256(checkpoint) = %s", hex.EncodeToString(digest[:]))
