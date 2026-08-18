@@ -7,8 +7,10 @@
 #   E2E_RACE=1 ./e2e/run-all-sequential.sh
 #
 # Options via environment:
-#   TIMEOUT   Per-test timeout (default: 15m)
-#   E2E_RACE  Set to 1 to pass -race to go test (slower)
+#   TIMEOUT           Per-test timeout (default: 15m)
+#   E2E_RACE          Set to 1 to pass -race to go test (slower)
+#   E2E_DOCKER_SWEEP  Set to "" to skip the daemon-wide ibc-test docker sweep
+#                     TestMain runs around each test process (default: 1)
 
 set -uo pipefail
 
@@ -16,6 +18,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 TIMEOUT="${TIMEOUT:-15m}"
+# The sweep removes every docker object with interchaintest's ibc-test label,
+# from any repo sharing the daemon — see main_test.go. Serial suite runs want
+# it; ad-hoc `go test -run` invocations leave it off unless exported.
+export E2E_DOCKER_SWEEP="${E2E_DOCKER_SWEEP-1}"
 RACE_FLAG=()
 if [[ "${E2E_RACE:-}" == "1" ]]; then
   RACE_FLAG=(-race)
@@ -26,11 +32,25 @@ if ! command -v go >/dev/null 2>&1; then
   exit 1
 fi
 
-# Discover test names from source (fast; no compile needed).
+if ! command -v docker >/dev/null 2>&1; then
+  echo "error: docker is not on PATH" >&2
+  exit 1
+fi
+if ! docker image inspect layer:local >/dev/null 2>&1; then
+  echo "error: layer:local docker image not found (is the docker daemon running?); run 'make local-image' first" >&2
+  exit 1
+fi
+
+# Discover tests with go test -list (same as CI prepare).
 tests=()
+list_out="$(go test -list '^Test' .)" || {
+  echo "error: go test -list failed in ${SCRIPT_DIR}" >&2
+  exit 1
+}
 while IFS= read -r name; do
-  [[ -n "$name" ]] && tests+=("$name")
-done < <(grep -h '^func Test' *_test.go | sed -E 's/^func (Test[^ (]+).*/\1/' | sort -u)
+  [[ -n "$name" ]] || continue
+  tests+=("$name")
+done < <(printf '%s\n' "$list_out" | grep '^Test' || true)
 
 if [[ ${#tests[@]} -eq 0 ]]; then
   echo "error: no tests found in ${SCRIPT_DIR}" >&2
@@ -41,12 +61,11 @@ fi
 if [[ -t 1 ]]; then
   GREEN=$'\033[32m'
   RED=$'\033[31m'
-  YELLOW=$'\033[33m'
   DIM=$'\033[2m'
   BOLD=$'\033[1m'
   RESET=$'\033[0m'
 else
-  GREEN="" RED="" YELLOW="" DIM="" BOLD="" RESET=""
+  GREEN="" RED="" DIM="" BOLD="" RESET=""
 fi
 
 format_duration() {
@@ -82,10 +101,8 @@ for i in "${!tests[@]}"; do
   echo "${BOLD}[${n}/${total}]${RESET} ${test_name}"
   test_start=$SECONDS
 
-  set +e
-  go test -v -count=1 "${RACE_FLAG[@]}" -run "^${test_name}\$" -timeout "$TIMEOUT" . 2>&1 | sed "s/^/  /"
+  go test -v -count=1 ${RACE_FLAG[@]+"${RACE_FLAG[@]}"} -run "^${test_name}\$" -timeout "$TIMEOUT" . 2>&1 | sed "s/^/  /"
   exit_code=${PIPESTATUS[0]}
-  set -e
 
   test_secs=$((SECONDS - test_start))
   results_name+=("$test_name")
@@ -100,6 +117,11 @@ for i in "${!tests[@]}"; do
     results_status+=("FAIL")
     failed_names+=("$test_name")
     echo "  ${RED}FAIL${RESET} ${DIM}($(format_duration "$test_secs"), exit ${exit_code})${RESET}"
+  fi
+
+  # Build-cache growth causes the same startup faults ~1.5h in; trim periodically.
+  if (( n % 10 == 0 )) && command -v docker >/dev/null 2>&1; then
+    docker builder prune -f --filter until=2h >/dev/null 2>&1 || true
   fi
   echo
 done
@@ -133,7 +155,7 @@ done
 
 echo
 echo "${BOLD}----------------------------------------------------------------${RESET}"
-printf "  Total:   %d\n" "${#tests[@]}"
+printf "  Total:   %d\n" "${#results_name[@]}"
 printf "  ${GREEN}Passed:${RESET}  %d\n" "$passed"
 printf "  ${RED}Failed:${RESET}  %d\n" "$failed"
 printf "  Elapsed: %s\n" "$(format_duration "$suite_secs")"
