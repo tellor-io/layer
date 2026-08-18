@@ -51,6 +51,53 @@ func TestDivvyingTips(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestSettleReporterZeroTotalCreditsReporter(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter := sample.AccAddressBytes()
+	reward := math.LegacyNewDec(1_000_000)
+
+	require.NoError(t, k.ReporterPeriodData.Set(ctx, reporter, types.PeriodRewardData{
+		Selectors:    nil,
+		Total:        math.ZeroInt(),
+		RewardAmount: reward,
+		Hash:         []byte("empty"),
+	}))
+
+	require.NoError(t, k.SettleReporter(ctx, reporter))
+
+	tips, err := k.SelectorTips.Get(ctx, reporter)
+	require.NoError(t, err)
+	require.True(t, tips.Equal(reward))
+
+	period, err := k.ReporterPeriodData.Get(ctx, reporter)
+	require.NoError(t, err)
+	require.True(t, period.RewardAmount.IsZero())
+}
+
+func TestDistributeQueueItemZeroTotalCreditsReporter(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporter := sample.AccAddressBytes()
+	reward := math.LegacyNewDec(500_000)
+
+	require.NoError(t, k.DistributionQueue.Set(ctx, 0, types.DistributionQueueItem{
+		Reporter:     reporter,
+		Selectors:    nil,
+		Total:        math.ZeroInt(),
+		RewardAmount: reward,
+	}))
+	require.NoError(t, k.DistributionQueueCounter.Set(ctx, types.DistributionQueueCounter{Head: 0, Tail: 1}))
+
+	require.NoError(t, k.ProcessDistributionQueue(ctx, 10))
+
+	tips, err := k.SelectorTips.Get(ctx, reporter)
+	require.NoError(t, err)
+	require.True(t, tips.Equal(reward))
+
+	counter, err := k.DistributionQueueCounter.Get(ctx)
+	require.NoError(t, err)
+	require.Equal(t, uint64(1), counter.Head)
+}
+
 func TestReturnSlashedTokens(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 	disablePowerCaps(t, k, ctx)
