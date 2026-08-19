@@ -83,6 +83,69 @@ func (s *KeeperTestSuite) TestVote() {
 	s.Equal(vote.Id, uint64(1))
 }
 
+// TestVote_RejectsInvalidVoteChoice proves finding 4 item 1: MsgVote must reject
+// any VoteEnum other than INVALID/SUPPORT/AGAINST before writing Voter or
+// VoteCountsByGroup. ValidateBasic still returns nil, so this belongs on the
+// keeper handler, not in TestMsgVote_ValidateBasic.
+//
+// Valid 0/1/2 must still succeed — proto3 unset is INVALID (0), not a rejected field.
+func (s *KeeperTestSuite) TestVote_RejectsInvalidVoteChoice() {
+	require := s.Require()
+	_, dispute := s.TestMsgProposeDisputeFromAccount()
+	require.NoError(s.disputeKeeper.SetBlockInfo(s.ctx, dispute.HashId))
+
+	// Keep turnout well below quorum so three successful votes stay in Voting.
+	info, err := s.disputeKeeper.BlockInfo.Get(s.ctx, dispute.HashId)
+	require.NoError(err)
+	info.TotalReporterPower = math.NewInt(1_000_000)
+	info.TotalUserTips = math.NewInt(1_000_000)
+	require.NoError(s.disputeKeeper.BlockInfo.Set(s.ctx, dispute.HashId, info))
+
+	rejected := sample.AccAddressBytes()
+	for _, choice := range []types.VoteEnum{types.VoteEnum(3), types.VoteEnum(99), types.VoteEnum(-1)} {
+		_, err := s.msgServer.Vote(s.ctx, &types.MsgVote{
+			Voter: rejected.String(),
+			Id:    1,
+			Vote:  choice,
+		})
+		require.ErrorIs(err, types.ErrInvalidVoteChoice, "choice %d must be rejected", choice)
+
+		has, err := s.disputeKeeper.Voter.Has(s.ctx, collections.Join(uint64(1), rejected.Bytes()))
+		require.NoError(err)
+		require.False(has, "rejected VoteEnum(%d) must not write a Voter row", choice)
+	}
+	_, err = s.disputeKeeper.VoteCountsByGroup.Get(s.ctx, 1)
+	require.ErrorIs(err, collections.ErrNotFound, "rejected votes must not create VoteCountsByGroup")
+
+	for _, tc := range []struct {
+		choice types.VoteEnum
+		voter  sdk.AccAddress
+	}{
+		{types.VoteEnum_VOTE_INVALID, sample.AccAddressBytes()},
+		{types.VoteEnum_VOTE_SUPPORT, sample.AccAddressBytes()},
+		{types.VoteEnum_VOTE_AGAINST, sample.AccAddressBytes()},
+	} {
+		s.oracleKeeper.On("GetTipsAtBlockForTipper", s.ctx, dispute.BlockNumber, tc.voter).Return(math.ZeroInt(), nil)
+		s.reporterKeeper.On("Delegation", s.ctx, tc.voter).Return(reportertypes.Selection{
+			Reporter:         tc.voter,
+			LockedUntilTime:  time.Now().Add(-time.Hour),
+			DelegationsCount: 1,
+		}, nil)
+		s.reporterKeeper.On("GetReporterTokensAtBlock", s.ctx, tc.voter.Bytes(), dispute.BlockNumber).Return(math.NewInt(10), nil)
+
+		_, err := s.msgServer.Vote(s.ctx, &types.MsgVote{
+			Voter: tc.voter.String(),
+			Id:    1,
+			Vote:  tc.choice,
+		})
+		require.NoError(err, "VoteEnum(%d) is a real choice and must succeed", tc.choice)
+
+		row, err := s.disputeKeeper.Voter.Get(s.ctx, collections.Join(uint64(1), tc.voter.Bytes()))
+		require.NoError(err)
+		require.Equal(tc.choice, row.Vote)
+	}
+}
+
 func BenchmarkMsgVote(b *testing.B) {
 	// setup keepers
 	disputeKeeper, oracleKeeper, reporterKeeper, _, bankKeeper, ctx := keepertest.DisputeKeeper(b)
