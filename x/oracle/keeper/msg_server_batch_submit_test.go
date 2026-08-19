@@ -273,14 +273,6 @@ func (s *KeeperTestSuite) TestBatchSubmitValue_AllFailures() {
 	require := s.Require()
 	addr := sample.AccAddressBytes()
 
-	params, err := s.oracleKeeper.Params.Get(s.ctx)
-	require.NoError(err)
-	minStakeAmt := params.MinStakeAmount
-
-	// First item has empty query data; QueryIDFromData still produces a hash used for ReporterStake.
-	stakeQueryId := utils.QueryIDFromData([]byte{})
-	s.reporterKeeper.On("ReporterStake", s.ctx, addr, stakeQueryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
-
 	msg := &types.MsgBatchSubmitValue{
 		Creator: addr.String(),
 		Values: []*types.SubmitValueItem{
@@ -299,9 +291,62 @@ func (s *KeeperTestSuite) TestBatchSubmitValue_AllFailures() {
 		},
 	}
 
+	_, err := s.msgServer.BatchSubmitValue(s.ctx, msg)
+	require.Error(err)
+	require.Contains(err.Error(), "all reports in batch failed")
+}
+
+func (s *KeeperTestSuite) TestBatchSubmitValue_StakeUsesFirstViableReport() {
+	require := s.Require()
+	k := s.oracleKeeper
+	rk := s.reporterKeeper
+	addr := sample.AccAddressBytes()
+
+	qDataBz, err := utils.QueryBytesFromString(qData)
+	require.NoError(err)
+	queryId := utils.QueryIDFromData(qDataBz)
+
+	query := types.QueryMeta{
+		Id:                      1,
+		Amount:                  math.NewInt(100_000),
+		Expiration:              20,
+		RegistrySpecBlockWindow: 10,
+		HasRevealedReports:      false,
+		QueryData:               qDataBz,
+		QueryType:               "SpotPrice",
+		CycleList:               true,
+	}
+	require.NoError(k.Query.Set(s.ctx, collections.Join(queryId, query.Id), query))
+	require.NoError(k.QueryDataLimit.Set(s.ctx, types.QueryDataLimit{Limit: types.InitialQueryDataLimit()}))
+
+	params, err := k.Params.Get(s.ctx)
+	require.NoError(err)
+	minStakeAmt := params.MinStakeAmount
+
+	s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(spotSpec, nil).Once()
+	// ReporterStake must use the first viable report's query id (index 2), not the invalid entries before it.
+	rk.On("ReporterStake", s.ctx, addr, queryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
+
+	msg := &types.MsgBatchSubmitValue{
+		Creator: addr.String(),
+		Values: []*types.SubmitValueItem{
+			{
+				QueryData: []byte{},
+				Value:     "000000000000000000000000000000000000000000000000000000000000001e",
+			},
+			{
+				QueryData: []byte("invalid"),
+				Value:     "",
+			},
+			{
+				QueryData: qDataBz,
+				Value:     "000000000000000000000000000000000000000000000000000000000000001e",
+			},
+		},
+	}
+
 	res, err := s.msgServer.BatchSubmitValue(s.ctx, msg)
 	require.NoError(err)
 	require.NotNil(res)
-	require.Len(res.FailedIndices, 3) // All should fail
-	require.Equal([]uint32{0, 1, 2}, res.FailedIndices)
+	require.Equal([]uint32{0, 1}, res.FailedIndices)
 }

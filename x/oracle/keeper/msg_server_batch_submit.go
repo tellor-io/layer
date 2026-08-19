@@ -37,32 +37,23 @@ func (k msgServer) BatchSubmitValue(ctx context.Context, msg *types.MsgBatchSubm
 		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "too many reports in batch, max is %d", maxBatchSize)
 	}
 
+	if len(msg.Values) == 0 {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "no values in batch")
+	}
+
 	params, err := k.keeper.Params.Get(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	// Same stake/period lifecycle as MsgSubmitValue: pending switches, recalc flag,
-	// handlePeriodTracking, and ReportByBlock only when stake composition changes.
-	// One call covers the whole batch; dispute lookups use latest snapshot <= height.
-	var stakeQueryId []byte
-	if len(msg.Values) > 0 {
-		stakeQueryId = utils.QueryIDFromData(msg.Values[0].QueryData)
-	} else {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "no values in batch")
-	}
-	reporterStake, err := k.keeper.reporterKeeper.ReporterStake(ctx, reporterAddr, stakeQueryId)
-	if err != nil {
-		return nil, err
-	}
-	if reporterStake.LT(params.MinStakeAmount) {
-		return nil, errorsmod.Wrapf(types.ErrNotEnoughStake, "reporter has %s, required %s", reporterStake, params.MinStakeAmount)
-	}
-	reportingPower := reporterStake.Quo(layertypes.PowerReduction).Uint64()
-
+	// ReporterStake runs once on the first report that passes pre-reveal validation,
+	// using that report's query id. Same stake/period lifecycle as MsgSubmitValue.
+	var (
+		reportingPower   uint64
+		stakeInitialized bool
+	)
 	failedIndices := []uint32{}
 	for i, singleValue := range msg.Values {
-		// validate each individual report
 		queryDataBz := singleValue.QueryData
 		valueBytes, err := hex.DecodeString(registrytypes.Remove0xPrefix(singleValue.Value))
 		if err != nil {
@@ -82,6 +73,7 @@ func (k msgServer) BatchSubmitValue(ctx context.Context, msg *types.MsgBatchSubm
 		queryId := utils.QueryIDFromData(queryDataBz)
 		query, err := k.keeper.CurrentQuery(ctx, queryId)
 
+		bridgeDepositPath := false
 		if err != nil {
 			if !errors.Is(err, collections.ErrNotFound) {
 				failedIndices = append(failedIndices, uint32(i))
@@ -96,19 +88,37 @@ func (k msgServer) BatchSubmitValue(ctx context.Context, msg *types.MsgBatchSubm
 				failedIndices = append(failedIndices, uint32(i))
 				continue
 			}
-			// sets to storage if no error
+			bridgeDepositPath = true
+		}
+
+		if !stakeInitialized {
+			reporterStake, err := k.keeper.reporterKeeper.ReporterStake(ctx, reporterAddr, queryId)
+			if err != nil {
+				return nil, err
+			}
+			if reporterStake.LT(params.MinStakeAmount) {
+				return nil, errorsmod.Wrapf(types.ErrNotEnoughStake, "reporter has %s, required %s", reporterStake, params.MinStakeAmount)
+			}
+			reportingPower = reporterStake.Quo(layertypes.PowerReduction).Uint64()
+			stakeInitialized = true
+		}
+
+		if bridgeDepositPath {
 			err = k.keeper.HandleBridgeDepositDirectReveal(ctx, query, queryDataBz, reporterAddr, value, reportingPower)
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			// sets to storage if no error
 			err = k.keeper.DirectReveal(ctx, query, queryDataBz, value, reporterAddr, reportingPower, isTokenBridgeDeposit)
 			if err != nil {
 				failedIndices = append(failedIndices, uint32(i))
 				continue
 			}
 		}
+	}
+
+	if len(failedIndices) == len(msg.Values) {
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "all reports in batch failed")
 	}
 
 	return &types.MsgBatchSubmitValueResponse{

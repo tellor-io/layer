@@ -507,11 +507,6 @@ func (k Keeper) getReporterStake(ctx context.Context, repAddr sdk.AccAddress, mu
 	return totalTokens, delegates, selectorShares, hasher.Sum(nil), nil
 }
 
-// Stores the token origins for each selector which is needed during a dispute for slashing/returning tokens to appropriate parties
-func (k Keeper) SetReporterStakeByQueryId(ctx context.Context, repAddr sdk.AccAddress, delegates []*types.TokenOriginInfo, totalTokens math.Int, queryId []byte) error {
-	return k.ReportByBlock.Set(ctx, collections.Join3(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()), queryId), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
-}
-
 // handlePeriodTracking manages reward period tracking for a reporter.
 // When delegation state changes (hash differs), it queues the previous period for distribution
 // and stores the new period data.
