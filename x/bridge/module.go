@@ -21,6 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var (
@@ -202,6 +204,10 @@ type BridgeOutputs struct {
 }
 
 func ProvideModule(in BridgeInputs) BridgeOutputs {
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
@@ -210,7 +216,7 @@ func ProvideModule(in BridgeInputs) BridgeOutputs {
 		in.BankKeeper,
 		in.ReporterKeeper,
 		in.DisputeKeeper,
-		"gov",
+		authority.String(),
 	)
 	m := NewAppModule(
 		in.Cdc,
