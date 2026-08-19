@@ -77,17 +77,15 @@ func TestBatchSubmitValue(t *testing.T) {
 	// Create report data
 	reports := []string{value1, value2, value3}
 
-	// Execute batch submit using new helper
+	// Without tips these queries are not submittable, so the whole batch must fail.
 	txHash1, err := e2e.SubmitBatchReport(ctx, val1, reports, "25loya")
-	require.NoError(err)
-
-	// Wait for transaction to be included in a block
-	require.NoError(testutil.WaitForBlocks(ctx, 1, val1))
-
-	// Query the transaction result to see which ones failed
-	txRes, _, err := e2e.QueryWithTimeout(ctx, val1, "tx", txHash1)
-	require.NoError(err)
-	fmt.Println("Transaction result for first submission:", string(txRes))
+	if err != nil {
+		require.Contains(err.Error(), "all reports in batch failed")
+	} else {
+		require.NoError(testutil.WaitForBlocks(ctx, 1, val1))
+		e2e.RequireTxFailed(t, ctx, val1, txHash1, "all reports in batch failed")
+	}
+	fmt.Println("Initial untipped batch submit failed as expected")
 
 	// ======================================================================================
 	// Now tip all three queries to make them submittable
@@ -203,9 +201,9 @@ func TestBatchSubmitValue(t *testing.T) {
 	)
 	require.NoError(err)
 	fmt.Println("TX HASH (dispute on ", microReports[0].Reporter, "): ", txHash)
-	txRes, _, err = e2e.QueryWithTimeout(ctx, val2, "tx", txHash)
+	txRes, _, err := e2e.QueryWithTimeout(ctx, val2, "tx", txHash)
 	require.NoError(err)
-	fmt.Println("Transaction result for first submission:", string(txRes))
+	fmt.Println("Transaction result for dispute:", string(txRes))
 
 	val1StakingAfter, err := chain.StakingQueryValidator(ctx, val1valAddr)
 	require.NoError(err)
