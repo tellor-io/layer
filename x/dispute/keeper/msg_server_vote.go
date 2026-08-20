@@ -66,7 +66,14 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 	if err != nil {
 		return nil, err
 	}
-	repP, err := k.SetVoterReporterStake(ctx, msg.Id, voterAcc, dispute.BlockNumber, msg.Vote, oldVote)
+	var evidenceReporter sdk.AccAddress
+	if dispute.InitialEvidence.Reporter != "" {
+		evidenceReporter, err = sdk.AccAddressFromBech32(dispute.InitialEvidence.Reporter)
+		if err != nil {
+			return nil, err
+		}
+	}
+	repP, err := k.SetVoterReporterStake(ctx, msg.Id, voterAcc, dispute.BlockNumber, msg.Vote, oldVote, evidenceReporter)
 	if err != nil {
 		return nil, err
 	}

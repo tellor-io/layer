@@ -6,7 +6,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/x/dispute/types"
-	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
@@ -48,16 +47,57 @@ func (s *KeeperTestSuite) requireNoUint64Wrap(bucket uint64, label string) {
 		"%s looks like an unsigned wrap (got %d); a bucket subtraction went past zero", label, bucket)
 }
 
+// TestSelectorVotedBeforeReporterWritesReserve is the positive counterpart to
+// "peel must not write reserve": when the selector votes first, stake is
+// reserved so the reporter's later first vote cannot reclaim those tokens.
+func (s *KeeperTestSuite) TestSelectorVotedBeforeReporterWritesReserve() {
+	require := s.Require()
+	k := s.disputeKeeper
+	rk := s.reporterKeeper
+	ctx := s.ctx.WithBlockHeight(10)
+	s.ctx = ctx
+
+	disputeID := uint64(7)
+	blockNum := uint64(10)
+	reporter := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+
+	rk.On("Delegation", ctx, selector).Return(reportertypes.Selection{Reporter: reporter}, nil)
+	rk.On("GetSelectorForStake", ctx, selector).Return(unlockedSelection(reporter), nil)
+	rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).
+		Return(math.NewIntFromUint64(pr1061SelectorTokens), nil)
+
+	moved, err := k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_SUPPORT, nil, nil)
+	require.NoError(err)
+	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), moved)
+	require.Equal(types.VoteCounts{Support: pr1061SelectorTokens}, s.reporterVoteCounts(disputeID))
+
+	reserve, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), disputeID))
+	require.NoError(err)
+	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), reserve,
+		"selector-before-reporter must reserve tokens against the owner")
+
+	rk.On("Delegation", ctx, reporter).Return(reportertypes.Selection{Reporter: reporter}, nil)
+	rk.On("GetReporterTokensAtBlock", ctx, reporter.Bytes(), blockNum).
+		Return(math.NewIntFromUint64(pr1061ReporterTokens), nil)
+
+	reporterPower, err := k.SetVoterReporterStake(ctx, disputeID, reporter, blockNum, types.VoteEnum_VOTE_AGAINST, nil, nil)
+	require.NoError(err)
+	require.Equal(math.NewInt(70), reporterPower,
+		"reporter first vote must subtract the selector-before reserve (100-30)")
+	require.Equal(types.VoteCounts{Support: 30, Against: 70}, s.reporterVoteCounts(disputeID))
+}
+
 // TestFinding1_ReporterRevoteAfterSelectorPeelDoesNotWrap proves finding 1.
 //
 // Reporter R holds 100 tokens, of which selector S holds 30.
 //  1. R votes SUPPORT        → Reporters 100 / 0 / 0, ReporterPower 100, reserve 0
-//  2. S votes AGAINST (peel) → Reporters  70 / 30 / 0, ReporterPower  70, reserve 30
+//  2. S votes AGAINST (peel) → Reporters  70 / 30 / 0, ReporterPower  70, reserve untouched
 //  3. R revotes INVALID
 //
 // Correct end state is 0 / 30 / 70: the selector keeps 30 AGAINST, the reporter
-// moves only the remaining 70 to INVALID (via stored ReporterPower; reserve also
-// tracks the peeled 30).
+// moves only the remaining 70 to INVALID via stored ReporterPower. Peel does
+// not dual-write reserve.
 func (s *KeeperTestSuite) TestFinding1_ReporterRevoteAfterSelectorPeelDoesNotWrap() {
 	require := s.Require()
 	k := s.disputeKeeper
@@ -78,7 +118,7 @@ func (s *KeeperTestSuite) TestFinding1_ReporterRevoteAfterSelectorPeelDoesNotWra
 	rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).Return(math.NewIntFromUint64(pr1061SelectorTokens), nil)
 
 	// 1. Reporter first-votes SUPPORT with the full snapshot.
-	reporterPower, err := k.SetVoterReporterStake(ctx, disputeID, reporter, blockNum, types.VoteEnum_VOTE_SUPPORT, nil)
+	reporterPower, err := k.SetVoterReporterStake(ctx, disputeID, reporter, blockNum, types.VoteEnum_VOTE_SUPPORT, nil, nil)
 	require.NoError(err)
 	require.Equal(math.NewIntFromUint64(pr1061ReporterTokens), reporterPower)
 	require.NoError(k.Voter.Set(ctx, collections.Join(disputeID, reporter.Bytes()), types.Voter{
@@ -88,7 +128,7 @@ func (s *KeeperTestSuite) TestFinding1_ReporterRevoteAfterSelectorPeelDoesNotWra
 	}))
 
 	// 2. Selector peels 30 out of the reporter's SUPPORT into AGAINST.
-	selectorPower, err := k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_AGAINST, nil)
+	selectorPower, err := k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_AGAINST, nil, nil)
 	require.NoError(err)
 	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), selectorPower)
 
@@ -97,16 +137,15 @@ func (s *KeeperTestSuite) TestFinding1_ReporterRevoteAfterSelectorPeelDoesNotWra
 	require.Equal(uint64(30), afterPeel.Against)
 	require.Equal(uint64(0), afterPeel.Invalid)
 
-	reserve, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), disputeID))
-	require.NoError(err)
-	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), reserve,
-		"peel must add selector stake to the reserve")
+	_, err = k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), disputeID))
+	require.ErrorIs(err, collections.ErrNotFound,
+		"peel must not write reserve; remaining power lives on the Voter row")
 
 	reporterRow, err := k.Voter.Get(ctx, collections.Join(disputeID, reporter.Bytes()))
 	require.NoError(err)
 
 	// 3. Reporter revotes INVALID. Amount must be the remaining 70, not 100.
-	moved, err := k.SetVoterReporterStake(ctx, disputeID, reporter, blockNum, types.VoteEnum_VOTE_INVALID, &reporterRow)
+	moved, err := k.SetVoterReporterStake(ctx, disputeID, reporter, blockNum, types.VoteEnum_VOTE_INVALID, &reporterRow, nil)
 	require.NoError(err)
 
 	final := s.reporterVoteCounts(disputeID)
@@ -166,7 +205,7 @@ func (s *KeeperTestSuite) TestReporterRevoteAfterFullPeelMovesZero() {
 	rk.On("GetSelectorForStake", ctx, selector).Return(unlockedSelection(reporter), nil)
 	rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).Return(math.NewIntFromUint64(pr1061SelectorTokens), nil)
 
-	reporterPower, err := k.SetVoterReporterStake(ctx, disputeID, reporter, blockNum, types.VoteEnum_VOTE_SUPPORT, nil)
+	reporterPower, err := k.SetVoterReporterStake(ctx, disputeID, reporter, blockNum, types.VoteEnum_VOTE_SUPPORT, nil, nil)
 	require.NoError(err)
 	require.NoError(k.Voter.Set(ctx, collections.Join(disputeID, reporter.Bytes()), types.Voter{
 		Vote:          types.VoteEnum_VOTE_SUPPORT,
@@ -174,18 +213,18 @@ func (s *KeeperTestSuite) TestReporterRevoteAfterFullPeelMovesZero() {
 		ReporterPower: reporterPower,
 	}))
 
-	_, err = k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_AGAINST, nil)
+	_, err = k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_AGAINST, nil, nil)
 	require.NoError(err)
 
 	reporterRow, err := k.Voter.Get(ctx, collections.Join(disputeID, reporter.Bytes()))
 	require.NoError(err)
 	require.True(reporterRow.ReporterPower.IsZero())
 
-	reserve, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), disputeID))
-	require.NoError(err)
-	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), reserve)
+	_, err = k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), disputeID))
+	require.ErrorIs(err, collections.ErrNotFound,
+		"full peel must not write reserve")
 
-	moved, err := k.SetVoterReporterStake(ctx, disputeID, reporter, blockNum, types.VoteEnum_VOTE_INVALID, &reporterRow)
+	moved, err := k.SetVoterReporterStake(ctx, disputeID, reporter, blockNum, types.VoteEnum_VOTE_INVALID, &reporterRow, nil)
 	require.NoError(err)
 	require.True(moved.IsZero(), "full peel leaves no reporter power to move on revote")
 
@@ -242,7 +281,7 @@ func (s *KeeperTestSuite) TestFinding2_LockedFirstVoteThenRevoteDoesNotWrap() {
 	rk.On("GetDelegatorTokensAtBlock", mock.Anything, selector.Bytes(), blockNum).Return(math.NewIntFromUint64(pr1061SelectorTokens), nil)
 
 	// Locked first vote: no reporter buckets, no reserve.
-	lockedPower, err := k.SetVoterReporterStake(lockedCtx, disputeID, selector, blockNum, types.VoteEnum_VOTE_SUPPORT, nil)
+	lockedPower, err := k.SetVoterReporterStake(lockedCtx, disputeID, selector, blockNum, types.VoteEnum_VOTE_SUPPORT, nil, nil)
 	require.NoError(err)
 	require.True(lockedPower.IsZero())
 
@@ -261,7 +300,7 @@ func (s *KeeperTestSuite) TestFinding2_LockedFirstVoteThenRevoteDoesNotWrap() {
 
 	// Lock expired. This must peel 30 off the reporter's AGAINST into INVALID,
 	// not subtract 30 from SUPPORT (which never held the selector's tokens).
-	moved, err := k.SetVoterReporterStake(unlockedCtx, disputeID, selector, blockNum, types.VoteEnum_VOTE_INVALID, &oldVote)
+	moved, err := k.SetVoterReporterStake(unlockedCtx, disputeID, selector, blockNum, types.VoteEnum_VOTE_INVALID, &oldVote, nil)
 	require.NoError(err)
 	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), moved)
 
@@ -298,12 +337,6 @@ func (s *KeeperTestSuite) TestFinding2b_SwitchedSelectorUnlockPeelsFromEvidenceR
 	newReporter := sample.AccAddressBytes()
 	selector := sample.AccAddressBytes()
 
-	require.NoError(k.Disputes.Set(lockedCtx, disputeID, types.Dispute{
-		DisputeId: disputeID,
-		InitialEvidence: oracletypes.MicroReport{
-			Reporter: evidenceReporter.String(),
-		},
-	}))
 	require.NoError(k.VoteCountsByGroup.Set(lockedCtx, disputeID, types.StakeholderVoteCounts{
 		Reporters: types.VoteCounts{Against: pr1061ReporterTokens},
 	}))
@@ -334,7 +367,7 @@ func (s *KeeperTestSuite) TestFinding2b_SwitchedSelectorUnlockPeelsFromEvidenceR
 	oldVote, err := k.Voter.Get(unlockedCtx, collections.Join(disputeID, selector.Bytes()))
 	require.NoError(err)
 
-	moved, err := k.SetVoterReporterStake(unlockedCtx, disputeID, selector, blockNum, types.VoteEnum_VOTE_INVALID, &oldVote)
+	moved, err := k.SetVoterReporterStake(unlockedCtx, disputeID, selector, blockNum, types.VoteEnum_VOTE_INVALID, &oldVote, evidenceReporter)
 	require.NoError(err)
 	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), moved)
 
@@ -352,6 +385,64 @@ func (s *KeeperTestSuite) TestFinding2b_SwitchedSelectorUnlockPeelsFromEvidenceR
 	require.False(hasNew)
 	_, err = k.ReportersWithDelegatorsVotedBefore.Get(unlockedCtx, collections.Join(newReporter.Bytes(), disputeID))
 	require.ErrorIs(err, collections.ErrNotFound)
+}
+
+// TestLiveReporterVotedEvidenceSnapshotStillHoldsTokens peels the evidence
+// reporter when the live selection has already voted but the selector's
+// dispute-block tokens still sit on the evidence snapshot. The old
+// !peelReporterVoted gate missed this ordering.
+func (s *KeeperTestSuite) TestLiveReporterVotedEvidenceSnapshotStillHoldsTokens() {
+	require := s.Require()
+	k := s.disputeKeeper
+	rk := s.reporterKeeper
+	ctx := s.ctx.WithBlockHeight(10)
+	s.ctx = ctx
+
+	disputeID := uint64(23)
+	blockNum := uint64(10)
+	evidenceReporter := sample.AccAddressBytes()
+	liveReporter := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+
+	require.NoError(k.VoteCountsByGroup.Set(ctx, disputeID, types.StakeholderVoteCounts{
+		Reporters: types.VoteCounts{
+			Against: pr1061ReporterTokens, // evidence reporter
+			Support: 50,                   // live reporter already voted
+		},
+	}))
+	require.NoError(k.Voter.Set(ctx, collections.Join(disputeID, evidenceReporter.Bytes()), types.Voter{
+		Vote:          types.VoteEnum_VOTE_AGAINST,
+		VoterPower:    math.NewIntFromUint64(pr1061ReporterTokens),
+		ReporterPower: math.NewIntFromUint64(pr1061ReporterTokens),
+	}))
+	require.NoError(k.Voter.Set(ctx, collections.Join(disputeID, liveReporter.Bytes()), types.Voter{
+		Vote:          types.VoteEnum_VOTE_SUPPORT,
+		VoterPower:    math.NewInt(50),
+		ReporterPower: math.NewInt(50),
+	}))
+
+	rk.On("Delegation", ctx, selector).Return(reportertypes.Selection{Reporter: liveReporter}, nil)
+	rk.On("GetSelectorForStake", ctx, selector).Return(unlockedSelection(liveReporter), nil)
+	rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).Return(math.ZeroInt(), nil)
+	rk.On("GetDelegatorTokensFromReporterAtBlock", ctx, selector.Bytes(), evidenceReporter.Bytes(), blockNum).
+		Return(math.NewIntFromUint64(pr1061SelectorTokens), nil)
+
+	moved, err := k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_INVALID, nil, evidenceReporter)
+	require.NoError(err)
+	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), moved)
+
+	final := s.reporterVoteCounts(disputeID)
+	require.Equal(types.VoteCounts{Support: 50, Against: 70, Invalid: 30}, final,
+		"must peel evidence reporter, not live reporter (whose live tokens are 0)")
+
+	evidenceRow, err := k.Voter.Get(ctx, collections.Join(disputeID, evidenceReporter.Bytes()))
+	require.NoError(err)
+	require.Equal(math.NewInt(70), evidenceRow.ReporterPower)
+
+	liveRow, err := k.Voter.Get(ctx, collections.Join(disputeID, liveReporter.Bytes()))
+	require.NoError(err)
+	require.Equal(math.NewInt(50), liveRow.ReporterPower,
+		"live reporter must not be peeled when tokens sit on evidence snapshot")
 }
 
 func (s *KeeperTestSuite) reporterVoteCountsAt(ctx sdk.Context, disputeID uint64) types.VoteCounts {
@@ -409,7 +500,7 @@ func (s *KeeperTestSuite) TestFinding3_SubtractOutOfRangeOptionLeavesInvalid() {
 	rk.On("GetSelectorForStake", ctx, selector).Return(unlockedSelection(reporter), nil).Once()
 	rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).Return(math.NewInt(30), nil).Once()
 
-	_, err = k.SetVoterReporterStake(ctx, peelID, selector, blockNum, types.VoteEnum_VOTE_SUPPORT, nil)
+	_, err = k.SetVoterReporterStake(ctx, peelID, selector, blockNum, types.VoteEnum_VOTE_SUPPORT, nil, nil)
 	require.NoError(err)
 
 	peeled := s.reporterVoteCountsAt(ctx, peelID)
@@ -420,8 +511,8 @@ func (s *KeeperTestSuite) TestFinding3_SubtractOutOfRangeOptionLeavesInvalid() {
 // TestFinding4_SelectorRevoteDoesNotDoublePeel is the coverage the PR claimed
 // to add (finding 4, item 2). Reporter is already AGAINST; selector first
 // votes SUPPORT (peel once), then revotes AGAINST. Reporter power must be
-// subtracted exactly once; buckets move Support→Against; reserve gains the
-// peeled amount once and is unchanged on revote.
+// subtracted exactly once; buckets move Support→Against; reserve from a
+// prior selector-before-reporter stays unchanged on peel and revote.
 func (s *KeeperTestSuite) TestFinding4_SelectorRevoteDoesNotDoublePeel() {
 	require := s.Require()
 	k := s.disputeKeeper
@@ -442,14 +533,14 @@ func (s *KeeperTestSuite) TestFinding4_SelectorRevoteDoesNotDoublePeel() {
 		VoterPower:    math.NewInt(150),
 		ReporterPower: math.NewInt(150),
 	}))
-	// A leftover reserve from some other selector; peel must add onto it.
+	// A leftover reserve from some other selector who voted before the reporter.
 	require.NoError(k.ReportersWithDelegatorsVotedBefore.Set(ctx, collections.Join(reporter.Bytes(), disputeID), math.NewInt(50)))
 
 	rk.On("Delegation", ctx, selector).Return(reportertypes.Selection{Reporter: reporter}, nil)
 	rk.On("GetSelectorForStake", ctx, selector).Return(unlockedSelection(reporter), nil)
 	rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).Return(math.NewInt(100), nil)
 
-	_, err := k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_SUPPORT, nil)
+	_, err := k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_SUPPORT, nil, nil)
 	require.NoError(err)
 	afterPeel := s.reporterVoteCounts(disputeID)
 	require.Equal(types.VoteCounts{Support: 100, Against: 50, Invalid: 0}, afterPeel)
@@ -460,14 +551,15 @@ func (s *KeeperTestSuite) TestFinding4_SelectorRevoteDoesNotDoublePeel() {
 
 	reserve, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), disputeID))
 	require.NoError(err)
-	require.Equal(math.NewInt(150), reserve, "peel must SafeAdd selector tokens onto existing reserve")
+	require.Equal(math.NewInt(50), reserve,
+		"peel must leave the pre-existing selector-before-reporter reserve alone")
 
 	oldVote := &types.Voter{
 		Vote:          types.VoteEnum_VOTE_SUPPORT,
 		VoterPower:    math.NewInt(100),
 		ReporterPower: math.NewInt(100),
 	}
-	_, err = k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_AGAINST, oldVote)
+	_, err = k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_AGAINST, oldVote, nil)
 	require.NoError(err)
 
 	final := s.reporterVoteCounts(disputeID)
@@ -480,15 +572,13 @@ func (s *KeeperTestSuite) TestFinding4_SelectorRevoteDoesNotDoublePeel() {
 
 	reserve, err = k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), disputeID))
 	require.NoError(err)
-	require.Equal(math.NewInt(150), reserve, "revote must not change the reserve")
+	require.Equal(math.NewInt(50), reserve, "revote must not change the reserve")
 }
 
 // TestVoteThenSwitchThenRevoteConservesAndDoesNotTouchNewReporter covers:
 // selector peels from evidenceReporter, switches Selection to newReporter, then
 // revotes. Stored ReporterPower must move buckets only; no peel/add against the
-// new reporter and no second peel of the evidence reporter. Switch finalization
-// needs no open-dispute housekeeping for this path — accounting is keyed off
-// stored power + the evidence-reporter reserve.
+// new reporter and no second peel of the evidence reporter.
 func (s *KeeperTestSuite) TestVoteThenSwitchThenRevoteConservesAndDoesNotTouchNewReporter() {
 	require := s.Require()
 	k := s.disputeKeeper
@@ -502,12 +592,6 @@ func (s *KeeperTestSuite) TestVoteThenSwitchThenRevoteConservesAndDoesNotTouchNe
 	newReporter := sample.AccAddressBytes()
 	selector := sample.AccAddressBytes()
 
-	require.NoError(k.Disputes.Set(ctx, disputeID, types.Dispute{
-		DisputeId: disputeID,
-		InitialEvidence: oracletypes.MicroReport{
-			Reporter: evidenceReporter.String(),
-		},
-	}))
 	require.NoError(k.VoteCountsByGroup.Set(ctx, disputeID, types.StakeholderVoteCounts{
 		Reporters: types.VoteCounts{Against: pr1061ReporterTokens},
 	}))
@@ -523,7 +607,7 @@ func (s *KeeperTestSuite) TestVoteThenSwitchThenRevoteConservesAndDoesNotTouchNe
 	rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).
 		Return(math.NewIntFromUint64(pr1061SelectorTokens), nil).Once()
 
-	moved, err := k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_SUPPORT, nil)
+	moved, err := k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_SUPPORT, nil, evidenceReporter)
 	require.NoError(err)
 	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), moved)
 
@@ -534,9 +618,9 @@ func (s *KeeperTestSuite) TestVoteThenSwitchThenRevoteConservesAndDoesNotTouchNe
 	require.NoError(err)
 	require.Equal(math.NewInt(70), evidenceRow.ReporterPower)
 
-	reserve, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(evidenceReporter.Bytes(), disputeID))
-	require.NoError(err)
-	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), reserve)
+	_, err = k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(evidenceReporter.Bytes(), disputeID))
+	require.ErrorIs(err, collections.ErrNotFound,
+		"peel must not write reserve; remaining power lives on the evidence reporter Voter row")
 
 	// Post-switch: current Selection is newReporter (has not voted). Revote must
 	// use stored ReporterPower and must not call a first-vote peel/add path.
@@ -548,7 +632,7 @@ func (s *KeeperTestSuite) TestVoteThenSwitchThenRevoteConservesAndDoesNotTouchNe
 	rk.On("Delegation", ctx, selector).Return(reportertypes.Selection{Reporter: newReporter}, nil).Once()
 	rk.On("GetSelectorForStake", ctx, selector).Return(unlockedSelection(newReporter), nil).Once()
 
-	moved, err = k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_INVALID, oldVote)
+	moved, err = k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_INVALID, oldVote, evidenceReporter)
 	require.NoError(err)
 	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), moved)
 
@@ -560,11 +644,6 @@ func (s *KeeperTestSuite) TestVoteThenSwitchThenRevoteConservesAndDoesNotTouchNe
 	require.NoError(err)
 	require.Equal(math.NewInt(70), evidenceRow.ReporterPower,
 		"evidence reporter must not be peeled again on post-switch revote")
-
-	reserve, err = k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(evidenceReporter.Bytes(), disputeID))
-	require.NoError(err)
-	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), reserve,
-		"reserve stays on the evidence reporter; switch finalize must not relocate it")
 
 	hasNew, err := k.Voter.Has(ctx, collections.Join(disputeID, newReporter.Bytes()))
 	require.NoError(err)
@@ -616,7 +695,7 @@ func (s *KeeperTestSuite) TestCountedVoteThenLockedTipRevoteMovesBucketsWithoutW
 		Return(math.NewIntFromUint64(pr1061SelectorTokens), nil).Once()
 
 	// Unlocked first vote peels 30 into SUPPORT.
-	moved, err := k.SetVoterReporterStake(unlockedCtx, disputeID, selector, blockNum, types.VoteEnum_VOTE_SUPPORT, nil)
+	moved, err := k.SetVoterReporterStake(unlockedCtx, disputeID, selector, blockNum, types.VoteEnum_VOTE_SUPPORT, nil, nil)
 	require.NoError(err)
 	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), moved)
 	require.Equal(types.VoteCounts{Support: 30, Against: 70}, s.reporterVoteCountsAt(unlockedCtx, disputeID))
@@ -629,7 +708,7 @@ func (s *KeeperTestSuite) TestCountedVoteThenLockedTipRevoteMovesBucketsWithoutW
 
 	// Locked revote must still move the counted 30 and return that power (so
 	// MsgVote does not overwrite ReporterPower with 0).
-	moved, err = k.SetVoterReporterStake(lockedCtx, disputeID, selector, blockNum, types.VoteEnum_VOTE_INVALID, oldVote)
+	moved, err = k.SetVoterReporterStake(lockedCtx, disputeID, selector, blockNum, types.VoteEnum_VOTE_INVALID, oldVote, nil)
 	require.NoError(err)
 	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), moved,
 		"locked revote of already-counted stake must return stored ReporterPower")

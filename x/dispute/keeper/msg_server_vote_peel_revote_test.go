@@ -115,10 +115,9 @@ func (s *KeeperTestSuite) TestMsgVote_PeelThenReporterRevote() {
 	require.Equal(math.NewInt(70), reporterRow.ReporterPower,
 		"peel via MsgVote must decrement the reporter's stored ReporterPower")
 
-	reserve, err := s.disputeKeeper.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), disputeID))
-	require.NoError(err)
-	require.Equal(math.NewIntFromUint64(msgVotePeelSelectorTokens), reserve,
-		"peel via MsgVote must add selector stake to the reserve")
+	_, err = s.disputeKeeper.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), disputeID))
+	require.ErrorIs(err, collections.ErrNotFound,
+		"peel via MsgVote must not write reserve; remaining power lives on the Voter row")
 
 	selectorRow, err := s.disputeKeeper.Voter.Get(ctx, collections.Join(disputeID, selector.Bytes()))
 	require.NoError(err)
@@ -374,4 +373,194 @@ func (s *KeeperTestSuite) TestMsgVote_CountedThenLockedTipRevotePreservesReporte
 	require.Equal(math.NewIntFromUint64(msgVotePeelSelectorTokens), selectorRow.ReporterPower,
 		"locked tip revote must not wipe already-counted ReporterPower")
 	require.Equal(tipPower.Add(math.NewIntFromUint64(msgVotePeelSelectorTokens)), selectorRow.VoterPower)
+}
+
+// TestMsgVote_SwitchedSelectorUnlockPeelsFromEvidenceReporter is the MsgVote twin
+// of Finding2b: MsgVote must parse InitialEvidence.Reporter and peel that owner
+// after unlock, not ADD against the unvoted live selection.
+func (s *KeeperTestSuite) TestMsgVote_SwitchedSelectorUnlockPeelsFromEvidenceReporter() {
+	require := s.Require()
+	now := time.Now().UTC().Truncate(time.Second)
+	lockedCtx := s.ctx.WithBlockHeight(10).WithBlockTime(now)
+	unlockedCtx := lockedCtx.WithBlockTime(now.Add(2 * time.Hour))
+	lockUntil := now.Add(time.Hour)
+	s.ctx = lockedCtx
+
+	disputeID := uint64(55)
+	blockNum := uint64(10)
+	hashID := []byte("msgvote-finding2b")
+	evidenceReporter := sample.AccAddressBytes()
+	newReporter := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	tipPower := math.NewInt(10)
+
+	s.setupMsgVoteDispute(disputeID, blockNum, hashID)
+	require.NoError(s.disputeKeeper.Disputes.Set(lockedCtx, disputeID, types.Dispute{
+		HashId:        hashID,
+		DisputeId:     disputeID,
+		BlockNumber:   blockNum,
+		Open:          true,
+		DisputeStatus: types.Voting,
+		InitialEvidence: oracletypes.MicroReport{
+			Reporter: evidenceReporter.String(),
+		},
+	}))
+
+	s.reporterKeeper.On("Delegation", mock.Anything, evidenceReporter).
+		Return(reportertypes.Selection{Reporter: evidenceReporter}, nil)
+	s.reporterKeeper.On("GetReporterTokensAtBlock", mock.Anything, evidenceReporter.Bytes(), blockNum).
+		Return(math.NewIntFromUint64(msgVotePeelReporterTokens), nil)
+	s.mockNoTips(evidenceReporter, blockNum)
+
+	_, err := s.msgServer.Vote(lockedCtx, &types.MsgVote{
+		Voter: evidenceReporter.String(),
+		Id:    disputeID,
+		Vote:  types.VoteEnum_VOTE_AGAINST,
+	})
+	s.requireNotVoteCountUnderflow(err)
+	require.Equal(types.VoteCounts{Against: msgVotePeelReporterTokens}, s.reporterVoteCounts(disputeID))
+
+	// Post-switch: live selection is newReporter; selector is dispute-locked.
+	s.reporterKeeper.On("Delegation", mock.Anything, selector).
+		Return(reportertypes.Selection{Reporter: newReporter}, nil)
+	s.reporterKeeper.On("GetSelectorForStake", lockedCtx, selector).Return(reportertypes.Selection{
+		Reporter:           newReporter,
+		DisputeLockedUntil: lockUntil,
+		DelegationsCount:   1,
+	}, nil).Once()
+	s.oracleKeeper.On("GetTipsAtBlockForTipper", mock.Anything, blockNum, selector).
+		Return(tipPower, nil)
+
+	_, err = s.msgServer.Vote(lockedCtx, &types.MsgVote{
+		Voter: selector.String(),
+		Id:    disputeID,
+		Vote:  types.VoteEnum_VOTE_SUPPORT,
+	})
+	s.requireNotVoteCountUnderflow(err)
+
+	afterLock := s.reporterVoteCounts(disputeID)
+	require.Equal(types.VoteCounts{Against: msgVotePeelReporterTokens}, afterLock,
+		"locked tip-only vote must not move reporter buckets")
+	selectorRow, err := s.disputeKeeper.Voter.Get(lockedCtx, collections.Join(disputeID, selector.Bytes()))
+	require.NoError(err)
+	require.True(selectorRow.ReporterPower.IsZero())
+	require.Equal(tipPower, selectorRow.VoterPower)
+
+	s.reporterKeeper.On("GetSelectorForStake", unlockedCtx, selector).
+		Return(unlockedSelection(newReporter), nil).Once()
+	s.reporterKeeper.On("GetDelegatorTokensAtBlock", mock.Anything, selector.Bytes(), blockNum).
+		Return(math.ZeroInt(), nil)
+	s.reporterKeeper.On("GetDelegatorTokensFromReporterAtBlock", mock.Anything, selector.Bytes(), evidenceReporter.Bytes(), blockNum).
+		Return(math.NewIntFromUint64(msgVotePeelSelectorTokens), nil)
+
+	_, err = s.msgServer.Vote(unlockedCtx, &types.MsgVote{
+		Voter: selector.String(),
+		Id:    disputeID,
+		Vote:  types.VoteEnum_VOTE_INVALID,
+	})
+	s.requireNotVoteCountUnderflow(err)
+
+	final := s.reporterVoteCounts(disputeID)
+	require.Equal(types.VoteCounts{Support: 0, Against: 70, Invalid: 30}, final,
+		"MsgVote must peel evidence reporter via parsed InitialEvidence, not inflate totals")
+
+	evidenceRow, err := s.disputeKeeper.Voter.Get(unlockedCtx, collections.Join(disputeID, evidenceReporter.Bytes()))
+	require.NoError(err)
+	require.Equal(math.NewInt(70), evidenceRow.ReporterPower)
+
+	hasNew, err := s.disputeKeeper.Voter.Has(unlockedCtx, collections.Join(disputeID, newReporter.Bytes()))
+	require.NoError(err)
+	require.False(hasNew)
+	_, err = s.disputeKeeper.ReportersWithDelegatorsVotedBefore.Get(unlockedCtx, collections.Join(newReporter.Bytes(), disputeID))
+	require.ErrorIs(err, collections.ErrNotFound)
+
+	selectorRow, err = s.disputeKeeper.Voter.Get(unlockedCtx, collections.Join(disputeID, selector.Bytes()))
+	require.NoError(err)
+	require.Equal(types.VoteEnum_VOTE_INVALID, selectorRow.Vote)
+	require.Equal(math.NewIntFromUint64(msgVotePeelSelectorTokens), selectorRow.ReporterPower)
+}
+
+// TestMsgVote_LiveReporterVotedEvidenceSnapshotStillHoldsTokens is the MsgVote
+// twin of the ownership-helper case the old !peelReporterVoted gate missed:
+// live reporter has already voted, but selector tokens still sit on the
+// evidence snapshot — peel evidence, leave live untouched.
+func (s *KeeperTestSuite) TestMsgVote_LiveReporterVotedEvidenceSnapshotStillHoldsTokens() {
+	require := s.Require()
+	ctx := s.ctx
+	disputeID := uint64(56)
+	blockNum := uint64(10)
+	hashID := []byte("msgvote-live-voted-evidence")
+	evidenceReporter := sample.AccAddressBytes()
+	liveReporter := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+
+	s.setupMsgVoteDispute(disputeID, blockNum, hashID)
+	require.NoError(s.disputeKeeper.Disputes.Set(ctx, disputeID, types.Dispute{
+		HashId:        hashID,
+		DisputeId:     disputeID,
+		BlockNumber:   blockNum,
+		Open:          true,
+		DisputeStatus: types.Voting,
+		InitialEvidence: oracletypes.MicroReport{
+			Reporter: evidenceReporter.String(),
+		},
+	}))
+
+	s.reporterKeeper.On("Delegation", mock.Anything, evidenceReporter).
+		Return(reportertypes.Selection{Reporter: evidenceReporter}, nil)
+	s.reporterKeeper.On("GetReporterTokensAtBlock", mock.Anything, evidenceReporter.Bytes(), blockNum).
+		Return(math.NewIntFromUint64(msgVotePeelReporterTokens), nil)
+	s.mockNoTips(evidenceReporter, blockNum)
+
+	_, err := s.msgServer.Vote(ctx, &types.MsgVote{
+		Voter: evidenceReporter.String(),
+		Id:    disputeID,
+		Vote:  types.VoteEnum_VOTE_AGAINST,
+	})
+	s.requireNotVoteCountUnderflow(err)
+
+	s.reporterKeeper.On("Delegation", mock.Anything, liveReporter).
+		Return(reportertypes.Selection{Reporter: liveReporter}, nil)
+	s.reporterKeeper.On("GetReporterTokensAtBlock", mock.Anything, liveReporter.Bytes(), blockNum).
+		Return(math.NewInt(50), nil)
+	s.mockNoTips(liveReporter, blockNum)
+
+	_, err = s.msgServer.Vote(ctx, &types.MsgVote{
+		Voter: liveReporter.String(),
+		Id:    disputeID,
+		Vote:  types.VoteEnum_VOTE_SUPPORT,
+	})
+	s.requireNotVoteCountUnderflow(err)
+	require.Equal(types.VoteCounts{Support: 50, Against: msgVotePeelReporterTokens}, s.reporterVoteCounts(disputeID))
+
+	s.reporterKeeper.On("Delegation", mock.Anything, selector).
+		Return(reportertypes.Selection{Reporter: liveReporter}, nil)
+	s.reporterKeeper.On("GetSelectorForStake", mock.Anything, selector).
+		Return(unlockedSelection(liveReporter), nil)
+	s.reporterKeeper.On("GetDelegatorTokensAtBlock", mock.Anything, selector.Bytes(), blockNum).
+		Return(math.ZeroInt(), nil)
+	s.reporterKeeper.On("GetDelegatorTokensFromReporterAtBlock", mock.Anything, selector.Bytes(), evidenceReporter.Bytes(), blockNum).
+		Return(math.NewIntFromUint64(msgVotePeelSelectorTokens), nil)
+	s.mockNoTips(selector, blockNum)
+
+	_, err = s.msgServer.Vote(ctx, &types.MsgVote{
+		Voter: selector.String(),
+		Id:    disputeID,
+		Vote:  types.VoteEnum_VOTE_INVALID,
+	})
+	s.requireNotVoteCountUnderflow(err)
+
+	final := s.reporterVoteCounts(disputeID)
+	require.Equal(types.VoteCounts{Support: 50, Against: 70, Invalid: 30}, final,
+		"MsgVote must peel evidence reporter even when live selection has already voted")
+
+	evidenceRow, err := s.disputeKeeper.Voter.Get(ctx, collections.Join(disputeID, evidenceReporter.Bytes()))
+	require.NoError(err)
+	require.Equal(math.NewInt(70), evidenceRow.ReporterPower)
+
+	liveRow, err := s.disputeKeeper.Voter.Get(ctx, collections.Join(disputeID, liveReporter.Bytes()))
+	require.NoError(err)
+	require.Equal(math.NewInt(50), liveRow.ReporterPower,
+		"live reporter must not be peeled when tokens sit on evidence snapshot")
+	require.Equal(types.VoteEnum_VOTE_SUPPORT, liveRow.Vote)
 }

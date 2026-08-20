@@ -313,6 +313,10 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 				},
 			},
 			teardown: func() {
+				reserve, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), disputeId))
+				require.NoError(err)
+				require.Equal(math.NewInt(100), reserve,
+					"selector-before-reporter must write reserve against the live reporter")
 				require.NoError(k.VoteCountsByGroup.Remove(ctx, disputeId))
 				require.NoError(k.ReportersWithDelegatorsVotedBefore.Remove(ctx, collections.Join(reporter.Bytes(), disputeId)))
 			},
@@ -425,7 +429,7 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 				ReporterPower: math.NewInt(100),
 			}
 		}
-		tokensVoted, err := k.SetVoterReporterStake(ctx, disputeId, tc.voter, blockNum, types.VoteEnum_VOTE_SUPPORT, oldVote)
+		tokensVoted, err := k.SetVoterReporterStake(ctx, disputeId, tc.voter, blockNum, types.VoteEnum_VOTE_SUPPORT, oldVote, nil)
 		if tc.expectedError {
 			require.Error(err)
 		} else {
