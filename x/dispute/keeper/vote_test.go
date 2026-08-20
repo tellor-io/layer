@@ -390,14 +390,13 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 					},
 				}))
 				require.NoError(k.Voter.Set(ctx, collections.Join(disputeId, reporter.Bytes()), types.Voter{
-					Vote:       types.VoteEnum_VOTE_AGAINST,
-					VoterPower: math.NewInt(100),
+					Vote:          types.VoteEnum_VOTE_AGAINST,
+					VoterPower:    math.NewInt(100),
+					ReporterPower: math.NewInt(100),
 				}))
 				rk.On("Delegation", ctx, reporter).Return(reportertypes.Selection{
 					Reporter: reporter,
 				}, nil).Twice()
-				// reporter has 100 tokens, hasnt voted with any of them
-				rk.On("GetReporterTokensAtBlock", ctx, reporter.Bytes(), blockNum).Return(math.NewInt(100), nil).Once()
 			},
 			expectedError:  false,
 			expectedTokens: math.NewInt(100),
@@ -421,8 +420,9 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 		var oldVote *types.Voter
 		if tc.name == "voter is reporter who has already voted before and is now changing vote" {
 			oldVote = &types.Voter{
-				Vote:       types.VoteEnum_VOTE_AGAINST,
-				VoterPower: math.NewInt(100),
+				Vote:          types.VoteEnum_VOTE_AGAINST,
+				VoterPower:    math.NewInt(100),
+				ReporterPower: math.NewInt(100),
 			}
 		}
 		tokensVoted, err := k.SetVoterReporterStake(ctx, disputeId, tc.voter, blockNum, types.VoteEnum_VOTE_SUPPORT, oldVote)

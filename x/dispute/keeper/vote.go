@@ -22,6 +22,62 @@ func (k Keeper) InitVoterClasses() *types.VoterClasses {
 	}
 }
 
+// subtractUserVoteBucket removes amount from the bucket for choice. Out-of-range
+// choices are treated as INVALID to match legacy increment behavior.
+func subtractUserVoteBucket(counts *types.VoteCounts, choice types.VoteEnum, amount uint64) error {
+	switch choice {
+	case types.VoteEnum_VOTE_SUPPORT:
+		if counts.Support < amount {
+			return types.ErrVoteCountUnderflow
+		}
+		counts.Support -= amount
+	case types.VoteEnum_VOTE_AGAINST:
+		if counts.Against < amount {
+			return types.ErrVoteCountUnderflow
+		}
+		counts.Against -= amount
+	case types.VoteEnum_VOTE_INVALID:
+		if counts.Invalid < amount {
+			return types.ErrVoteCountUnderflow
+		}
+		counts.Invalid -= amount
+	default:
+		if counts.Invalid < amount {
+			return types.ErrVoteCountUnderflow
+		}
+		counts.Invalid -= amount
+	}
+	return nil
+}
+
+// subtractReporterVoteBucket removes amount from the bucket for choice. Out-of-range
+// choices are treated as INVALID to match legacy increment behavior.
+func subtractReporterVoteBucket(counts *types.VoteCounts, choice types.VoteEnum, amount uint64) error {
+	switch choice {
+	case types.VoteEnum_VOTE_SUPPORT:
+		if counts.Support < amount {
+			return types.ErrVoteCountUnderflow
+		}
+		counts.Support -= amount
+	case types.VoteEnum_VOTE_AGAINST:
+		if counts.Against < amount {
+			return types.ErrVoteCountUnderflow
+		}
+		counts.Against -= amount
+	case types.VoteEnum_VOTE_INVALID:
+		if counts.Invalid < amount {
+			return types.ErrVoteCountUnderflow
+		}
+		counts.Invalid -= amount
+	default:
+		if counts.Invalid < amount {
+			return types.ErrVoteCountUnderflow
+		}
+		counts.Invalid -= amount
+	}
+	return nil
+}
+
 // Set vote start info for a dispute
 func (k Keeper) SetStartVote(ctx sdk.Context, id uint64) error {
 	vote := types.Vote{
@@ -120,13 +176,8 @@ func (k Keeper) SetVoterTips(ctx context.Context, id uint64, voter sdk.AccAddres
 		}
 		if oldVote != nil {
 			if oldVote.Vote != choice {
-				switch oldVote.Vote {
-				case types.VoteEnum_VOTE_SUPPORT:
-					voteCounts.Users.Support -= tips.Uint64()
-				case types.VoteEnum_VOTE_AGAINST:
-					voteCounts.Users.Against -= tips.Uint64()
-				case types.VoteEnum_VOTE_INVALID:
-					voteCounts.Users.Invalid -= tips.Uint64()
+				if err := subtractUserVoteBucket(&voteCounts.Users, oldVote.Vote, tips.Uint64()); err != nil {
+					return math.Int{}, err
 				}
 			}
 		}
@@ -156,22 +207,33 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 	}
 	// voter is reporter
 	if voterIsReporter {
-		reporterTokens, err := k.reporterKeeper.GetReporterTokensAtBlock(ctx, reporter, blockNumber)
-		if err != nil {
-			return math.Int{}, err
-		}
-		tokensVotedBefore, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), id))
-		if err != nil {
-			if !errors.Is(err, collections.ErrNotFound) {
+		var reporterPower math.Int
+		if oldVote != nil {
+			// Revote: use remaining power after peels (including zero after a full peel).
+			if oldVote.ReporterPower.IsNil() {
+				reporterPower = math.ZeroInt()
+			} else {
+				reporterPower = oldVote.ReporterPower
+			}
+		} else {
+			reporterTokens, err := k.reporterKeeper.GetReporterTokensAtBlock(ctx, reporter, blockNumber)
+			if err != nil {
 				return math.Int{}, err
 			}
-			tokensVotedBefore = math.ZeroInt()
+			tokensVotedBefore, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), id))
+			if err != nil {
+				if !errors.Is(err, collections.ErrNotFound) {
+					return math.Int{}, err
+				}
+				tokensVotedBefore = math.ZeroInt()
+			}
+			reporterTokens, err = reporterTokens.SafeSub(tokensVotedBefore)
+			if err != nil {
+				return math.Int{}, err
+			}
+			reporterPower = reporterTokens
 		}
-		reporterTokens, err = reporterTokens.SafeSub(tokensVotedBefore)
-		if err != nil {
-			return math.Int{}, err
-		}
-		return reporterTokens, k.AddReporterVoteCount(ctx, id, reporterTokens.Uint64(), choice, oldVote)
+		return reporterPower, k.AddReporterVoteCount(ctx, id, reporterPower.Uint64(), choice, oldVote)
 	}
 	// voter is non-reporter selector
 	// skip selectors that are locked from switching reporters
@@ -185,17 +247,58 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 	if reportertypes.SelectorStakeLocked(selector, sdk.UnwrapSDKContext(ctx).BlockTime()) {
 		return math.ZeroInt(), nil
 	}
+	// Revote: only move power between choices when reporter stake was counted on the prior vote.
+	// Use stored ReporterPower so a post-switch snapshot cannot desync bucket moves.
+	if oldVote != nil && !oldVote.ReporterPower.IsNil() && oldVote.ReporterPower.IsPositive() {
+		return oldVote.ReporterPower, k.AddReporterVoteCount(ctx, id, oldVote.ReporterPower.Uint64(), choice, oldVote)
+	}
+
+	// First counted reporter vote (including unlock after a locked tip-only vote).
+	// Prefer peeling from the reporter who already voted with these tokens. After a
+	// selector switch, current Selection.reporter may differ from the disputed
+	// report's reporter — peeling against the current reporter would ADD stake and
+	// double-count what the evidence reporter already voted.
+	peelReporter := reporter
+	peelReporterVoted := reporterHasVoted
 	selectorTokens, err := k.reporterKeeper.GetDelegatorTokensAtBlock(ctx, voter, blockNumber)
 	if err != nil {
 		return math.Int{}, err
 	}
-	// Revote: only move power between choices. First-vote side effects already applied.
-	if oldVote != nil {
-		return selectorTokens, k.AddReporterVoteCount(ctx, id, selectorTokens.Uint64(), choice, oldVote)
+	if !peelReporterVoted {
+		dispute, digErr := k.Disputes.Get(ctx, id)
+		if digErr != nil {
+			if !errors.Is(digErr, collections.ErrNotFound) {
+				return math.Int{}, digErr
+			}
+		} else {
+			evidenceReporter, addrErr := sdk.AccAddressFromBech32(dispute.InitialEvidence.Reporter)
+			if addrErr != nil {
+				return math.Int{}, addrErr
+			}
+			if !bytes.Equal(evidenceReporter, peelReporter) {
+				evidenceVoted, hasErr := k.Voter.Has(ctx, collections.Join(id, evidenceReporter.Bytes()))
+				if hasErr != nil {
+					return math.Int{}, hasErr
+				}
+				if evidenceVoted {
+					evidenceTokens, tokErr := k.reporterKeeper.GetDelegatorTokensFromReporterAtBlock(
+						ctx, voter.Bytes(), evidenceReporter.Bytes(), blockNumber)
+					if tokErr != nil {
+						return math.Int{}, tokErr
+					}
+					if evidenceTokens.IsPositive() {
+						peelReporter = evidenceReporter
+						peelReporterVoted = true
+						selectorTokens = evidenceTokens
+					}
+				}
+			}
+		}
 	}
-	// First vote, and reporter already cast — peel selector power out of reporter's vote.
-	if reporterHasVoted {
-		reporterVote, err := k.Voter.Get(ctx, collections.Join(id, reporter.Bytes()))
+
+	// First vote, and peel target already cast — peel selector power out of that vote.
+	if peelReporterVoted {
+		reporterVote, err := k.Voter.Get(ctx, collections.Join(id, peelReporter.Bytes()))
 		if err != nil {
 			return math.Int{}, err
 		}
@@ -212,29 +315,39 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		if err != nil {
 			return math.Int{}, err
 		}
-		err = k.Voter.Set(ctx, collections.Join(id, reporter.Bytes()), reporterVote)
+		err = k.Voter.Set(ctx, collections.Join(id, peelReporter.Bytes()), reporterVote)
 		if err != nil {
+			return math.Int{}, err
+		}
+		// Keep reserve in sync with peeled stake so snapshot-reserve stays consistent.
+		if err := k.addReporterDelegatorTokensVoted(ctx, peelReporter, id, selectorTokens); err != nil {
 			return math.Int{}, err
 		}
 		return selectorTokens, k.AddReporterVoteCount(ctx, id, selectorTokens.Uint64(), choice, nil)
 	}
-	// First vote, reporter hasn't voted — reserve these tokens so reporter can't vote them later.
-	delegatorTokensVoted, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), id))
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return math.Int{}, err
-		}
-		delegatorTokensVoted = math.ZeroInt()
-	}
-	delegatorTokensVoted, err = delegatorTokensVoted.SafeAdd(selectorTokens)
-	if err != nil {
-		return math.Int{}, err
-	}
-	err = k.ReportersWithDelegatorsVotedBefore.Set(ctx, collections.Join(reporter.Bytes(), id), delegatorTokensVoted)
-	if err != nil {
+	// First vote, no reporter has voted with these tokens yet — reserve so the
+	// current selection reporter can't vote them later.
+	if err := k.addReporterDelegatorTokensVoted(ctx, reporter, id, selectorTokens); err != nil {
 		return math.Int{}, err
 	}
 	return selectorTokens, k.AddReporterVoteCount(ctx, id, selectorTokens.Uint64(), choice, nil)
+}
+
+// addReporterDelegatorTokensVoted adds amount to the per-dispute reserve of selector
+// stake already counted separately from the reporter's remaining vote power.
+func (k Keeper) addReporterDelegatorTokensVoted(ctx context.Context, reporter sdk.AccAddress, id uint64, amount math.Int) error {
+	delegatorTokensVoted, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), id))
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return err
+		}
+		delegatorTokensVoted = math.ZeroInt()
+	}
+	delegatorTokensVoted, err = delegatorTokensVoted.SafeAdd(amount)
+	if err != nil {
+		return err
+	}
+	return k.ReportersWithDelegatorsVotedBefore.Set(ctx, collections.Join(reporter.Bytes(), id), delegatorTokensVoted)
 }
 
 func (k Keeper) AddReporterVoteCount(ctx context.Context, id, amount uint64, choice types.VoteEnum, oldVote *types.Voter) error {
@@ -257,13 +370,8 @@ func (k Keeper) AddReporterVoteCount(ctx context.Context, id, amount uint64, cho
 	}
 	if oldVote != nil {
 		if oldVote.Vote != choice {
-			switch oldVote.Vote {
-			case types.VoteEnum_VOTE_SUPPORT:
-				voteCounts.Reporters.Support -= amount
-			case types.VoteEnum_VOTE_AGAINST:
-				voteCounts.Reporters.Against -= amount
-			case types.VoteEnum_VOTE_INVALID:
-				voteCounts.Reporters.Invalid -= amount
+			if err := subtractReporterVoteBucket(&voteCounts.Reporters, oldVote.Vote, amount); err != nil {
+				return err
 			}
 		}
 	}
@@ -276,13 +384,8 @@ func (k Keeper) SubtractReporterVoteCount(ctx context.Context, id, amount uint64
 	if err != nil {
 		return err
 	}
-	switch choice {
-	case types.VoteEnum_VOTE_SUPPORT:
-		voteCounts.Reporters.Support -= amount
-	case types.VoteEnum_VOTE_AGAINST:
-		voteCounts.Reporters.Against -= amount
-	case types.VoteEnum_VOTE_INVALID:
-		voteCounts.Reporters.Invalid -= amount
+	if err := subtractReporterVoteBucket(&voteCounts.Reporters, choice, amount); err != nil {
+		return err
 	}
 	return k.VoteCountsByGroup.Set(ctx, id, voteCounts)
 }

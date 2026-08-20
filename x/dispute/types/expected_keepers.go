@@ -53,6 +53,7 @@ type ReporterKeeper interface {
 	Delegation(ctx context.Context, delegator sdk.AccAddress) (reportertypes.Selection, error)
 	GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber uint64) (math.Int, error)
 	GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber uint64) (math.Int, error)
+	GetDelegatorTokensFromReporterAtBlock(ctx context.Context, delegator, reporter []byte, blockNumber uint64) (math.Int, error)
 	FeePaidFromStakeTotalByPayer(ctx context.Context, hashId []byte, payer sdk.AccAddress) (math.Int, error)
 	FeeRefund(ctx context.Context, hashId []byte, payer sdk.AccAddress, amt math.Int) (math.Int, math.Int, error)
 	UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr sdk.AccAddress, reportBlockNumber uint64, disputeHashID []byte) error
