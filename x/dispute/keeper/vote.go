@@ -236,7 +236,6 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		return reporterPower, k.AddReporterVoteCount(ctx, id, reporterPower.Uint64(), choice, oldVote)
 	}
 	// voter is non-reporter selector
-	// skip selectors that are locked from switching reporters
 	selector, err := k.reporterKeeper.GetSelectorForStake(ctx, voter)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
@@ -244,13 +243,15 @@ func (k Keeper) SetVoterReporterStake(ctx context.Context, id uint64, voter sdk.
 		}
 		return math.ZeroInt(), nil
 	}
-	if reportertypes.SelectorStakeLocked(selector, sdk.UnwrapSDKContext(ctx).BlockTime()) {
-		return math.ZeroInt(), nil
-	}
-	// Revote: only move power between choices when reporter stake was counted on the prior vote.
-	// Use stored ReporterPower so a post-switch snapshot cannot desync bucket moves.
+	// Revote of already-counted stake must run even while dispute-/switch-locked.
+	// Lock only blocks first acquisition of reporter stake into the tally; skipping
+	// a counted revote (and letting MsgVote store ReporterPower=0) orphans power in
+	// the old bucket and makes a later unlock look like a first vote (double-peel).
 	if oldVote != nil && !oldVote.ReporterPower.IsNil() && oldVote.ReporterPower.IsPositive() {
 		return oldVote.ReporterPower, k.AddReporterVoteCount(ctx, id, oldVote.ReporterPower.Uint64(), choice, oldVote)
+	}
+	if reportertypes.SelectorStakeLocked(selector, sdk.UnwrapSDKContext(ctx).BlockTime()) {
+		return math.ZeroInt(), nil
 	}
 
 	// First counted reporter vote (including unlock after a locked tip-only vote).

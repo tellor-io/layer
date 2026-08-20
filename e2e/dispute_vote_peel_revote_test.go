@@ -431,3 +431,63 @@ func TestDisputeVotePeelRevoteSwitchLockE2E(t *testing.T) {
 
 	requireDisputeVoting(t, ctx, val0.Node, disputeID)
 }
+
+// TestDisputeVoteThenSwitchThenRevoteE2E covers selector peel while on the
+// evidence reporter, switch finalization to another reporter, then selector
+// revote. Reporter-group totals must stay conserved with no phantom add against
+// the new reporter — proving switch finalize needs no open-dispute housekeeping
+// beyond the stored-power revote path.
+func TestDisputeVoteThenSwitchThenRevoteE2E(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping vote-then-switch-then-revote e2e in short mode")
+	}
+
+	require := require.New(t)
+	cosmos.SetSDKConfig("tellor")
+
+	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	defer ic.Close()
+
+	val0, val1 := setupPeelRevoteValidators(t, ctx, chain)
+	selectorAddr := fundSelectorOnReporter(t, ctx, val0)
+	tip := sdk.NewCoin("loya", peelRevoteTipAmt)
+
+	submitSpotPriceReport(t, ctx, val0, bnbQData, tip)
+	disputedReport := latestReporterReport(t, ctx, val0.Node, val0.AccAddr)
+	disputeID := proposeFullDispute(t, ctx, val0.Node, val0.AccAddr, disputedReport, "warning", warningDisputeFeeFromReportPower)
+
+	require.NoError(execDisputeVote(ctx, val0.Node, val0.AccAddr, disputeID, "vote-support"))
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	afterReporter, err := fetchReporterTally(ctx, val0.Node, disputeID)
+	require.NoError(err)
+	require.Greater(afterReporter.totalPowerVoted, uint64(0))
+
+	require.NoError(execDisputeVote(ctx, val0.Node, selectorAddr, disputeID, "vote-against"))
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	afterPeel, err := fetchReporterTally(ctx, val0.Node, disputeID)
+	require.NoError(err)
+	require.Equal(afterReporter.totalPowerVoted, afterPeel.totalPowerVoted,
+		"selector peel must conserve reporter-group token totals")
+
+	finalizeSwitchToReporter(t, ctx, val0, val1, selectorAddr)
+
+	require.NoError(execDisputeVote(ctx, val0.Node, selectorAddr, disputeID, "vote-invalid"))
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	final, err := fetchReporterTally(ctx, val0.Node, disputeID)
+	require.NoError(err)
+	// Authoritative check: a buggy post-switch first-vote path would ADD against
+	// the new reporter and inflate TotalPowerVoted. Conservation proves the
+	// stored-power revote path ran instead.
+	require.Equal(afterPeel.totalPowerVoted, final.totalPowerVoted,
+		"post-switch selector revote must conserve reporter-group token totals")
+	require.InDelta(afterPeel.supportPct, final.supportPct, 0.05,
+		"evidence reporter SUPPORT must be unchanged by selector's post-switch revote")
+	// %-display uses (choice / TotalReporterPower) * 100/3; a ~1e9 peel can round
+	// to 0.00% in both AGAINST and INVALID, so bucket movement is covered by
+	// conservation above plus keeper TestVoteThenSwitchThenRevote / MsgVote twin.
+
+	requireDisputeVoting(t, ctx, val0.Node, disputeID)
+}

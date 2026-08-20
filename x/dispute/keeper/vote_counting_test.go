@@ -482,3 +482,164 @@ func (s *KeeperTestSuite) TestFinding4_SelectorRevoteDoesNotDoublePeel() {
 	require.NoError(err)
 	require.Equal(math.NewInt(150), reserve, "revote must not change the reserve")
 }
+
+// TestVoteThenSwitchThenRevoteConservesAndDoesNotTouchNewReporter covers:
+// selector peels from evidenceReporter, switches Selection to newReporter, then
+// revotes. Stored ReporterPower must move buckets only; no peel/add against the
+// new reporter and no second peel of the evidence reporter. Switch finalization
+// needs no open-dispute housekeeping for this path — accounting is keyed off
+// stored power + the evidence-reporter reserve.
+func (s *KeeperTestSuite) TestVoteThenSwitchThenRevoteConservesAndDoesNotTouchNewReporter() {
+	require := s.Require()
+	k := s.disputeKeeper
+	rk := s.reporterKeeper
+	ctx := s.ctx.WithBlockHeight(10)
+	s.ctx = ctx
+
+	disputeID := uint64(5)
+	blockNum := uint64(10)
+	evidenceReporter := sample.AccAddressBytes()
+	newReporter := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+
+	require.NoError(k.Disputes.Set(ctx, disputeID, types.Dispute{
+		DisputeId: disputeID,
+		InitialEvidence: oracletypes.MicroReport{
+			Reporter: evidenceReporter.String(),
+		},
+	}))
+	require.NoError(k.VoteCountsByGroup.Set(ctx, disputeID, types.StakeholderVoteCounts{
+		Reporters: types.VoteCounts{Against: pr1061ReporterTokens},
+	}))
+	require.NoError(k.Voter.Set(ctx, collections.Join(disputeID, evidenceReporter.Bytes()), types.Voter{
+		Vote:          types.VoteEnum_VOTE_AGAINST,
+		VoterPower:    math.NewIntFromUint64(pr1061ReporterTokens),
+		ReporterPower: math.NewIntFromUint64(pr1061ReporterTokens),
+	}))
+
+	// First vote while still selected to the evidence reporter: peel 30.
+	rk.On("Delegation", ctx, selector).Return(reportertypes.Selection{Reporter: evidenceReporter}, nil).Once()
+	rk.On("GetSelectorForStake", ctx, selector).Return(unlockedSelection(evidenceReporter), nil).Once()
+	rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).
+		Return(math.NewIntFromUint64(pr1061SelectorTokens), nil).Once()
+
+	moved, err := k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_SUPPORT, nil)
+	require.NoError(err)
+	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), moved)
+
+	afterPeel := s.reporterVoteCounts(disputeID)
+	require.Equal(types.VoteCounts{Support: 30, Against: 70}, afterPeel)
+
+	evidenceRow, err := k.Voter.Get(ctx, collections.Join(disputeID, evidenceReporter.Bytes()))
+	require.NoError(err)
+	require.Equal(math.NewInt(70), evidenceRow.ReporterPower)
+
+	reserve, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(evidenceReporter.Bytes(), disputeID))
+	require.NoError(err)
+	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), reserve)
+
+	// Post-switch: current Selection is newReporter (has not voted). Revote must
+	// use stored ReporterPower and must not call a first-vote peel/add path.
+	oldVote := &types.Voter{
+		Vote:          types.VoteEnum_VOTE_SUPPORT,
+		VoterPower:    math.NewIntFromUint64(pr1061SelectorTokens),
+		ReporterPower: math.NewIntFromUint64(pr1061SelectorTokens),
+	}
+	rk.On("Delegation", ctx, selector).Return(reportertypes.Selection{Reporter: newReporter}, nil).Once()
+	rk.On("GetSelectorForStake", ctx, selector).Return(unlockedSelection(newReporter), nil).Once()
+
+	moved, err = k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_INVALID, oldVote)
+	require.NoError(err)
+	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), moved)
+
+	final := s.reporterVoteCounts(disputeID)
+	require.Equal(types.VoteCounts{Support: 0, Against: 70, Invalid: 30}, final,
+		"post-switch revote must only move the selector's stored 30 Support→Invalid")
+
+	evidenceRow, err = k.Voter.Get(ctx, collections.Join(disputeID, evidenceReporter.Bytes()))
+	require.NoError(err)
+	require.Equal(math.NewInt(70), evidenceRow.ReporterPower,
+		"evidence reporter must not be peeled again on post-switch revote")
+
+	reserve, err = k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(evidenceReporter.Bytes(), disputeID))
+	require.NoError(err)
+	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), reserve,
+		"reserve stays on the evidence reporter; switch finalize must not relocate it")
+
+	hasNew, err := k.Voter.Has(ctx, collections.Join(disputeID, newReporter.Bytes()))
+	require.NoError(err)
+	require.False(hasNew, "new reporter must not receive a phantom voter row")
+	_, err = k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(newReporter.Bytes(), disputeID))
+	require.ErrorIs(err, collections.ErrNotFound,
+		"new reporter must not receive a first-vote reserve after switch")
+}
+
+// TestCountedVoteThenLockedTipRevoteMovesBucketsWithoutWipingPower covers the
+// failure mode where lock used to short-circuit before the counted-revote path,
+// returning ZeroInt so MsgVote could store ReporterPower=0 while leaving power
+// in the old reporter bucket. After unlock that looked like a first vote and
+// double-peeled. Correct: already-counted stake still moves while locked.
+func (s *KeeperTestSuite) TestCountedVoteThenLockedTipRevoteMovesBucketsWithoutWipingPower() {
+	require := s.Require()
+	k := s.disputeKeeper
+	rk := s.reporterKeeper
+
+	now := time.Now().UTC().Truncate(time.Second)
+	unlockedCtx := s.ctx.WithBlockHeight(10).WithBlockTime(now)
+	lockUntil := now.Add(time.Hour)
+	lockedCtx := unlockedCtx.WithBlockTime(now.Add(30 * time.Minute))
+	s.ctx = unlockedCtx
+
+	disputeID := uint64(6)
+	blockNum := uint64(10)
+	reporter := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+
+	require.NoError(k.VoteCountsByGroup.Set(unlockedCtx, disputeID, types.StakeholderVoteCounts{
+		Reporters: types.VoteCounts{Against: pr1061ReporterTokens},
+	}))
+	require.NoError(k.Voter.Set(unlockedCtx, collections.Join(disputeID, reporter.Bytes()), types.Voter{
+		Vote:          types.VoteEnum_VOTE_AGAINST,
+		VoterPower:    math.NewIntFromUint64(pr1061ReporterTokens),
+		ReporterPower: math.NewIntFromUint64(pr1061ReporterTokens),
+	}))
+
+	rk.On("Delegation", mock.Anything, selector).Return(reportertypes.Selection{Reporter: reporter}, nil)
+	// Unlocked for the first counted peel; locked afterward for the tip-funded revote.
+	rk.On("GetSelectorForStake", unlockedCtx, selector).Return(unlockedSelection(reporter), nil).Once()
+	rk.On("GetSelectorForStake", lockedCtx, selector).Return(reportertypes.Selection{
+		Reporter:           reporter,
+		DisputeLockedUntil: lockUntil,
+		DelegationsCount:   1,
+	}, nil).Once()
+	rk.On("GetDelegatorTokensAtBlock", mock.Anything, selector.Bytes(), blockNum).
+		Return(math.NewIntFromUint64(pr1061SelectorTokens), nil).Once()
+
+	// Unlocked first vote peels 30 into SUPPORT.
+	moved, err := k.SetVoterReporterStake(unlockedCtx, disputeID, selector, blockNum, types.VoteEnum_VOTE_SUPPORT, nil)
+	require.NoError(err)
+	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), moved)
+	require.Equal(types.VoteCounts{Support: 30, Against: 70}, s.reporterVoteCountsAt(unlockedCtx, disputeID))
+
+	oldVote := &types.Voter{
+		Vote:          types.VoteEnum_VOTE_SUPPORT,
+		VoterPower:    math.NewIntFromUint64(pr1061SelectorTokens).AddRaw(10), // stake + tip
+		ReporterPower: math.NewIntFromUint64(pr1061SelectorTokens),
+	}
+
+	// Locked revote must still move the counted 30 and return that power (so
+	// MsgVote does not overwrite ReporterPower with 0).
+	moved, err = k.SetVoterReporterStake(lockedCtx, disputeID, selector, blockNum, types.VoteEnum_VOTE_INVALID, oldVote)
+	require.NoError(err)
+	require.Equal(math.NewIntFromUint64(pr1061SelectorTokens), moved,
+		"locked revote of already-counted stake must return stored ReporterPower")
+
+	final := s.reporterVoteCountsAt(lockedCtx, disputeID)
+	require.Equal(types.VoteCounts{Support: 0, Against: 70, Invalid: 30}, final,
+		"locked counted revote must move Support→Invalid, not leave orphaned SUPPORT")
+
+	reporterRow, err := k.Voter.Get(lockedCtx, collections.Join(disputeID, reporter.Bytes()))
+	require.NoError(err)
+	require.Equal(math.NewInt(70), reporterRow.ReporterPower,
+		"must not double-peel the reporter during a locked revote")
+}
