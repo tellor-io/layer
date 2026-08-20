@@ -47,40 +47,29 @@ func (k Keeper) SetTeamVote(ctx context.Context, id uint64, voter sdk.AccAddress
 	}
 
 	if bytes.Equal(voter, teamAddr) {
-		voteCounts, err := k.VoteCountsByGroup.Get(ctx, id)
-		if err != nil {
-			if !errors.Is(err, collections.ErrNotFound) {
-				return math.Int{}, err
-			}
-			voteCounts = types.StakeholderVoteCounts{}
-		}
-		switch choice {
-		case types.VoteEnum_VOTE_SUPPORT:
-			voteCounts.Team.Support = 1
-		case types.VoteEnum_VOTE_AGAINST:
-			voteCounts.Team.Against = 1
-		default:
-			voteCounts.Team.Invalid = 1
-		}
-		if oldVote != nil {
-			if oldVote.Vote != choice {
-				switch oldVote.Vote {
-				case types.VoteEnum_VOTE_SUPPORT:
-					voteCounts.Team.Support = 0
-				case types.VoteEnum_VOTE_AGAINST:
-					voteCounts.Team.Against = 0
-				case types.VoteEnum_VOTE_INVALID:
-					voteCounts.Team.Invalid = 0
-				}
-			}
-		}
-		err = k.VoteCountsByGroup.Set(ctx, id, voteCounts)
-		if err != nil {
-			return math.Int{}, err
-		}
 		// return doesnt get used in dispute calculations
 		// just gets set in Voter collection as the team's voter.VoterPower which doesnt matter for tally calculations
 		power := math.NewInt(100000000).Quo(math.NewInt(3))
+		// Same choice: buckets already hold the unit flag; skip to avoid double-count.
+		if oldVote != nil && oldVote.Vote == choice {
+			return power, nil
+		}
+		voteCounts, err := k.getVoteCounts(ctx, id)
+		if err != nil {
+			return math.Int{}, err
+		}
+		if err := voteCounts.Team.Add(choice, 1); err != nil {
+			return math.Int{}, err
+		}
+		if oldVote != nil {
+			// Subtract clears prior choice, including legacy Vote=3 parked in Invalid.
+			if err := voteCounts.Team.Subtract(oldVote.Vote, 1); err != nil {
+				return math.Int{}, err
+			}
+		}
+		if err := k.VoteCountsByGroup.Set(ctx, id, voteCounts); err != nil {
+			return math.Int{}, err
+		}
 		return power, nil
 	}
 	return math.ZeroInt(), nil
@@ -103,6 +92,10 @@ func (k Keeper) SetVoterTips(ctx context.Context, id uint64, voter sdk.AccAddres
 		return math.Int{}, err
 	}
 	if !tips.IsZero() {
+		// Same choice: tips already counted; return power without mutating buckets.
+		if oldVote != nil && oldVote.Vote == choice {
+			return tips, nil
+		}
 		voteCounts, err := k.getVoteCounts(ctx, id)
 		if err != nil {
 			return math.Int{}, err
@@ -110,7 +103,7 @@ func (k Keeper) SetVoterTips(ctx context.Context, id uint64, voter sdk.AccAddres
 		if err := voteCounts.Users.Add(choice, tips.Uint64()); err != nil {
 			return math.Int{}, err
 		}
-		if oldVote != nil && oldVote.Vote != choice {
+		if oldVote != nil {
 			if err := voteCounts.Users.Subtract(oldVote.Vote, tips.Uint64()); err != nil {
 				return math.Int{}, err
 			}
@@ -303,6 +296,10 @@ func (k Keeper) getVoteCounts(ctx context.Context, id uint64) (types.Stakeholder
 }
 
 func (k Keeper) AddReporterVoteCount(ctx context.Context, id, amount uint64, choice types.VoteEnum, oldVote *types.Voter) error {
+	// Same choice: amount already sits in the bucket; skip to avoid double-count.
+	if oldVote != nil && oldVote.Vote == choice {
+		return nil
+	}
 	voteCounts, err := k.getVoteCounts(ctx, id)
 	if err != nil {
 		return err
@@ -310,7 +307,7 @@ func (k Keeper) AddReporterVoteCount(ctx context.Context, id, amount uint64, cho
 	if err := voteCounts.Reporters.Add(choice, amount); err != nil {
 		return err
 	}
-	if oldVote != nil && oldVote.Vote != choice {
+	if oldVote != nil {
 		if err := voteCounts.Reporters.Subtract(oldVote.Vote, amount); err != nil {
 			return err
 		}

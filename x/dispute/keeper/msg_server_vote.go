@@ -49,7 +49,12 @@ func (k msgServer) Vote(goCtx context.Context, msg *types.MsgVote) (*types.MsgVo
 			return nil, err
 		}
 		if voteData.Vote == msg.Vote {
-			return nil, types.ErrVoterHasAlreadyVoted
+			// Tip-only / locked first vote stores ReporterPower=0. Allow same-choice
+			// re-entry after unlock so stake can be peeled without forcing a flip.
+			// Counted stake (ReporterPower > 0) still rejects same-choice spam.
+			if !voteData.ReporterPower.IsNil() && voteData.ReporterPower.IsPositive() {
+				return nil, types.ErrVoterHasAlreadyVoted
+			}
 		}
 		oldVote = &voteData
 	}

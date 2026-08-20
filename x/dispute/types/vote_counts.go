@@ -14,10 +14,14 @@ func (c *VoteCounts) bucket(choice VoteEnum) *uint64 {
 }
 
 // Add increments the bucket for choice. Unknown choices are rejected.
+// Overflow fails closed with ErrVoteCountOverflow (mirrors Subtract underflow).
 func (c *VoteCounts) Add(choice VoteEnum, amount uint64) error {
 	b := c.bucket(choice)
 	if b == nil {
 		return ErrInvalidVoteChoice
+	}
+	if amount > 0 && *b > ^uint64(0)-amount {
+		return ErrVoteCountOverflow
 	}
 	*b += amount
 	return nil

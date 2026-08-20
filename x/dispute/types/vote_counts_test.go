@@ -40,3 +40,17 @@ func TestVoteCountsSubtractUnderflow(t *testing.T) {
 	require.ErrorIs(t, err, types.ErrVoteCountUnderflow)
 	require.Equal(t, uint64(5), c.Support)
 }
+
+func TestVoteCountsAddOverflow(t *testing.T) {
+	c := &types.VoteCounts{Support: ^uint64(0)}
+	err := c.Add(types.VoteEnum_VOTE_SUPPORT, 1)
+	require.ErrorIs(t, err, types.ErrVoteCountOverflow)
+	require.Equal(t, ^uint64(0), c.Support)
+
+	c = &types.VoteCounts{Against: ^uint64(0) - 5}
+	require.NoError(t, c.Add(types.VoteEnum_VOTE_AGAINST, 5))
+	require.Equal(t, ^uint64(0), c.Against)
+	err = c.Add(types.VoteEnum_VOTE_AGAINST, 1)
+	require.ErrorIs(t, err, types.ErrVoteCountOverflow)
+	require.Equal(t, ^uint64(0), c.Against)
+}

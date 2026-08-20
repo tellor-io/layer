@@ -90,12 +90,35 @@ func (s *KeeperTestSuite) TestTeamVote_SetTeamVote() {
 	require.Equal(votesByGroup.Team.Invalid, uint64(0))
 	require.NoError(err)
 
+	// Legacy Vote=3 parked in Invalid must clear when revoting via VoteCounts.Subtract.
+	require.NoError(k.VoteCountsByGroup.Set(ctx, disputeId, types.StakeholderVoteCounts{
+		Team: types.VoteCounts{Invalid: 1},
+	}))
+	teamVote, err = k.SetTeamVote(ctx, disputeId, teamAddr, types.VoteEnum_VOTE_SUPPORT, &types.Voter{
+		Vote:       types.VoteEnum(3),
+		VoterPower: math.NewInt(100000000).Quo(math.NewInt(3)),
+	})
+	require.NoError(err)
+	require.Equal(teamVote, math.NewInt(100000000).Quo(math.NewInt(3)))
+	votesByGroup, err = k.VoteCountsByGroup.Get(ctx, disputeId)
+	require.NoError(err)
+	require.Equal(types.VoteCounts{Support: 1, Against: 0, Invalid: 0}, votesByGroup.Team,
+		"Vote=3 revote must clear Invalid via Subtract, not leave dual Support+Invalid")
+
+	// Same-choice re-entry must not double the unit flag.
+	teamVote, err = k.SetTeamVote(ctx, disputeId, teamAddr, types.VoteEnum_VOTE_SUPPORT, &types.Voter{
+		Vote:       types.VoteEnum_VOTE_SUPPORT,
+		VoterPower: math.NewInt(100000000).Quo(math.NewInt(3)),
+	})
+	require.NoError(err)
+	votesByGroup, err = k.VoteCountsByGroup.Get(ctx, disputeId)
+	require.NoError(err)
+	require.Equal(types.VoteCounts{Support: 1, Against: 0, Invalid: 0}, votesByGroup.Team)
+
 	// vote from bad account, expect return 0
 	badTeamVote, err := k.SetTeamVote(ctx, disputeId, sample.AccAddressBytes(), types.VoteEnum_VOTE_SUPPORT, nil)
 	require.NoError(err)
 	require.Equal(badTeamVote, math.NewInt(0))
-
-	// note: voters can only vote once
 }
 
 func (s *KeeperTestSuite) TestGetUserTotalTips() {

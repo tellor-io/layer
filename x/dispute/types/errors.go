@@ -25,4 +25,5 @@ var (
 	ErrDisputedReportDoesNotExist = sdkerrors.Register(ModuleName, 16, "the report passed into the dispute does not exist")
 	ErrInvalidVoteChoice          = sdkerrors.Register(ModuleName, 17, "invalid vote choice")
 	ErrVoteCountUnderflow         = sdkerrors.Register(ModuleName, 18, "vote count underflow")
+	ErrVoteCountOverflow          = sdkerrors.Register(ModuleName, 19, "vote count overflow")
 )

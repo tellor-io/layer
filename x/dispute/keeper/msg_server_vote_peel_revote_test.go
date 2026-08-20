@@ -564,3 +564,124 @@ func (s *KeeperTestSuite) TestMsgVote_LiveReporterVotedEvidenceSnapshotStillHold
 		"live reporter must not be peeled when tokens sit on evidence snapshot")
 	require.Equal(types.VoteEnum_VOTE_SUPPORT, liveRow.Vote)
 }
+
+// TestMsgVote_SameChoiceAfterUnlockPeelsStake allows re-submitting the same
+// choice when ReporterPower==0 (tip-only locked vote) so unlock can peel stake
+// without forcing a flip-flop. Tips must not double-count.
+func (s *KeeperTestSuite) TestMsgVote_SameChoiceAfterUnlockPeelsStake() {
+	require := s.Require()
+	now := time.Now().UTC().Truncate(time.Second)
+	lockedCtx := s.ctx.WithBlockHeight(10).WithBlockTime(now)
+	unlockedCtx := lockedCtx.WithBlockTime(now.Add(2 * time.Hour))
+	lockUntil := now.Add(time.Hour)
+	s.ctx = lockedCtx
+
+	disputeID := uint64(57)
+	blockNum := uint64(10)
+	hashID := []byte("msgvote-same-choice-unlock")
+	reporter := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	tipPower := math.NewInt(10)
+
+	s.setupMsgVoteDispute(disputeID, blockNum, hashID)
+
+	s.reporterKeeper.On("Delegation", mock.Anything, reporter).
+		Return(reportertypes.Selection{Reporter: reporter}, nil)
+	s.reporterKeeper.On("GetReporterTokensAtBlock", mock.Anything, reporter.Bytes(), blockNum).
+		Return(math.NewIntFromUint64(msgVotePeelReporterTokens), nil)
+	s.mockNoTips(reporter, blockNum)
+
+	_, err := s.msgServer.Vote(lockedCtx, &types.MsgVote{
+		Voter: reporter.String(),
+		Id:    disputeID,
+		Vote:  types.VoteEnum_VOTE_AGAINST,
+	})
+	s.requireNotVoteCountUnderflow(err)
+
+	s.reporterKeeper.On("Delegation", mock.Anything, selector).
+		Return(reportertypes.Selection{Reporter: reporter}, nil)
+	s.reporterKeeper.On("GetSelectorForStake", lockedCtx, selector).Return(reportertypes.Selection{
+		Reporter:           reporter,
+		DisputeLockedUntil: lockUntil,
+		DelegationsCount:   1,
+	}, nil).Once()
+	s.oracleKeeper.On("GetTipsAtBlockForTipper", mock.Anything, blockNum, selector).
+		Return(tipPower, nil)
+
+	_, err = s.msgServer.Vote(lockedCtx, &types.MsgVote{
+		Voter: selector.String(),
+		Id:    disputeID,
+		Vote:  types.VoteEnum_VOTE_SUPPORT,
+	})
+	s.requireNotVoteCountUnderflow(err)
+
+	selectorRow, err := s.disputeKeeper.Voter.Get(lockedCtx, collections.Join(disputeID, selector.Bytes()))
+	require.NoError(err)
+	require.True(selectorRow.ReporterPower.IsZero())
+	require.Equal(tipPower, selectorRow.VoterPower)
+
+	usersAfterLock, err := s.disputeKeeper.VoteCountsByGroup.Get(lockedCtx, disputeID)
+	require.NoError(err)
+	require.Equal(tipPower.Uint64(), usersAfterLock.Users.Support)
+
+	s.reporterKeeper.On("GetSelectorForStake", unlockedCtx, selector).
+		Return(unlockedSelection(reporter), nil).Once()
+	s.reporterKeeper.On("GetDelegatorTokensAtBlock", mock.Anything, selector.Bytes(), blockNum).
+		Return(math.NewIntFromUint64(msgVotePeelSelectorTokens), nil).Once()
+
+	_, err = s.msgServer.Vote(unlockedCtx, &types.MsgVote{
+		Voter: selector.String(),
+		Id:    disputeID,
+		Vote:  types.VoteEnum_VOTE_SUPPORT, // same choice
+	})
+	s.requireNotVoteCountUnderflow(err)
+
+	final := s.reporterVoteCounts(disputeID)
+	require.Equal(types.VoteCounts{Support: 30, Against: 70, Invalid: 0}, final,
+		"same-choice unlock must peel stake into the existing SUPPORT choice")
+
+	usersAfterUnlock, err := s.disputeKeeper.VoteCountsByGroup.Get(unlockedCtx, disputeID)
+	require.NoError(err)
+	require.Equal(tipPower.Uint64(), usersAfterUnlock.Users.Support,
+		"same-choice re-entry must not double-count tip power")
+
+	selectorRow, err = s.disputeKeeper.Voter.Get(unlockedCtx, collections.Join(disputeID, selector.Bytes()))
+	require.NoError(err)
+	require.Equal(types.VoteEnum_VOTE_SUPPORT, selectorRow.Vote)
+	require.Equal(math.NewIntFromUint64(msgVotePeelSelectorTokens), selectorRow.ReporterPower)
+	require.Equal(tipPower.Add(math.NewIntFromUint64(msgVotePeelSelectorTokens)), selectorRow.VoterPower)
+}
+
+// TestMsgVote_SameChoiceWithCountedStakeStillRejected keeps ErrVoterHasAlreadyVoted
+// when ReporterPower > 0 (no unlock/peel work remaining).
+func (s *KeeperTestSuite) TestMsgVote_SameChoiceWithCountedStakeStillRejected() {
+	require := s.Require()
+	ctx := s.ctx
+	disputeID := uint64(58)
+	blockNum := uint64(10)
+	hashID := []byte("msgvote-same-choice-blocked")
+	reporter := sample.AccAddressBytes()
+
+	s.setupMsgVoteDispute(disputeID, blockNum, hashID)
+
+	s.reporterKeeper.On("Delegation", mock.Anything, reporter).
+		Return(reportertypes.Selection{Reporter: reporter}, nil)
+	s.reporterKeeper.On("GetReporterTokensAtBlock", mock.Anything, reporter.Bytes(), blockNum).
+		Return(math.NewIntFromUint64(msgVotePeelReporterTokens), nil)
+	s.mockNoTips(reporter, blockNum)
+
+	_, err := s.msgServer.Vote(ctx, &types.MsgVote{
+		Voter: reporter.String(),
+		Id:    disputeID,
+		Vote:  types.VoteEnum_VOTE_SUPPORT,
+	})
+	s.requireNotVoteCountUnderflow(err)
+
+	_, err = s.msgServer.Vote(ctx, &types.MsgVote{
+		Voter: reporter.String(),
+		Id:    disputeID,
+		Vote:  types.VoteEnum_VOTE_SUPPORT,
+	})
+	require.ErrorIs(err, types.ErrVoterHasAlreadyVoted)
+	require.Equal(types.VoteCounts{Support: msgVotePeelReporterTokens}, s.reporterVoteCounts(disputeID))
+}
