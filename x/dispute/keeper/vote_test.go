@@ -106,7 +106,7 @@ func (s *KeeperTestSuite) TestTeamVote_SetTeamVote() {
 		"Vote=3 revote must clear Invalid via Subtract, not leave dual Support+Invalid")
 
 	// Same-choice re-entry must not double the unit flag.
-	teamVote, err = k.SetTeamVote(ctx, disputeId, teamAddr, types.VoteEnum_VOTE_SUPPORT, &types.Voter{
+	_, err = k.SetTeamVote(ctx, disputeId, teamAddr, types.VoteEnum_VOTE_SUPPORT, &types.Voter{
 		Vote:       types.VoteEnum_VOTE_SUPPORT,
 		VoterPower: math.NewInt(100000000).Quo(math.NewInt(3)),
 	})
