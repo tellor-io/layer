@@ -1082,9 +1082,9 @@ func GetTxHashFromExec(stdout []byte) (string, error) {
 }
 
 type txResultJSON struct {
-	TxHash     string `json:"txhash"`
-	Code       uint32 `json:"code"`
-	RawLog     string `json:"raw_log"`
+	TxHash     string        `json:"txhash"`
+	Code       uint32        `json:"code"`
+	RawLog     string        `json:"raw_log"`
 	TxResponse *txResultJSON `json:"tx_response"`
 }
 

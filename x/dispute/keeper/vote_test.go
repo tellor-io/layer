@@ -90,12 +90,35 @@ func (s *KeeperTestSuite) TestTeamVote_SetTeamVote() {
 	require.Equal(votesByGroup.Team.Invalid, uint64(0))
 	require.NoError(err)
 
+	// Legacy Vote=3 parked in Invalid must clear when revoting via VoteCounts.Subtract.
+	require.NoError(k.VoteCountsByGroup.Set(ctx, disputeId, types.StakeholderVoteCounts{
+		Team: types.VoteCounts{Invalid: 1},
+	}))
+	teamVote, err = k.SetTeamVote(ctx, disputeId, teamAddr, types.VoteEnum_VOTE_SUPPORT, &types.Voter{
+		Vote:       types.VoteEnum(3),
+		VoterPower: math.NewInt(100000000).Quo(math.NewInt(3)),
+	})
+	require.NoError(err)
+	require.Equal(teamVote, math.NewInt(100000000).Quo(math.NewInt(3)))
+	votesByGroup, err = k.VoteCountsByGroup.Get(ctx, disputeId)
+	require.NoError(err)
+	require.Equal(types.VoteCounts{Support: 1, Against: 0, Invalid: 0}, votesByGroup.Team,
+		"Vote=3 revote must clear Invalid via Subtract, not leave dual Support+Invalid")
+
+	// Same-choice re-entry must not double the unit flag.
+	_, err = k.SetTeamVote(ctx, disputeId, teamAddr, types.VoteEnum_VOTE_SUPPORT, &types.Voter{
+		Vote:       types.VoteEnum_VOTE_SUPPORT,
+		VoterPower: math.NewInt(100000000).Quo(math.NewInt(3)),
+	})
+	require.NoError(err)
+	votesByGroup, err = k.VoteCountsByGroup.Get(ctx, disputeId)
+	require.NoError(err)
+	require.Equal(types.VoteCounts{Support: 1, Against: 0, Invalid: 0}, votesByGroup.Team)
+
 	// vote from bad account, expect return 0
 	badTeamVote, err := k.SetTeamVote(ctx, disputeId, sample.AccAddressBytes(), types.VoteEnum_VOTE_SUPPORT, nil)
 	require.NoError(err)
 	require.Equal(badTeamVote, math.NewInt(0))
-
-	// note: voters can only vote once
 }
 
 func (s *KeeperTestSuite) TestGetUserTotalTips() {
@@ -313,6 +336,10 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 				},
 			},
 			teardown: func() {
+				reserve, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), disputeId))
+				require.NoError(err)
+				require.Equal(math.NewInt(100), reserve,
+					"selector-before-reporter must write reserve against the live reporter")
 				require.NoError(k.VoteCountsByGroup.Remove(ctx, disputeId))
 				require.NoError(k.ReportersWithDelegatorsVotedBefore.Remove(ctx, collections.Join(reporter.Bytes(), disputeId)))
 			},
@@ -390,14 +417,13 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 					},
 				}))
 				require.NoError(k.Voter.Set(ctx, collections.Join(disputeId, reporter.Bytes()), types.Voter{
-					Vote:       types.VoteEnum_VOTE_AGAINST,
-					VoterPower: math.NewInt(100),
+					Vote:          types.VoteEnum_VOTE_AGAINST,
+					VoterPower:    math.NewInt(100),
+					ReporterPower: math.NewInt(100),
 				}))
 				rk.On("Delegation", ctx, reporter).Return(reportertypes.Selection{
 					Reporter: reporter,
 				}, nil).Twice()
-				// reporter has 100 tokens, hasnt voted with any of them
-				rk.On("GetReporterTokensAtBlock", ctx, reporter.Bytes(), blockNum).Return(math.NewInt(100), nil).Once()
 			},
 			expectedError:  false,
 			expectedTokens: math.NewInt(100),
@@ -421,11 +447,12 @@ func (s *KeeperTestSuite) TestSetVoterReportStake() {
 		var oldVote *types.Voter
 		if tc.name == "voter is reporter who has already voted before and is now changing vote" {
 			oldVote = &types.Voter{
-				Vote:       types.VoteEnum_VOTE_AGAINST,
-				VoterPower: math.NewInt(100),
+				Vote:          types.VoteEnum_VOTE_AGAINST,
+				VoterPower:    math.NewInt(100),
+				ReporterPower: math.NewInt(100),
 			}
 		}
-		tokensVoted, err := k.SetVoterReporterStake(ctx, disputeId, tc.voter, blockNum, types.VoteEnum_VOTE_SUPPORT, oldVote)
+		tokensVoted, err := k.SetVoterReporterStake(ctx, disputeId, tc.voter, blockNum, types.VoteEnum_VOTE_SUPPORT, oldVote, nil)
 		if tc.expectedError {
 			require.Error(err)
 		} else {

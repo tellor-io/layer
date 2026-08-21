@@ -1158,7 +1158,7 @@ func (s *IntegrationTestSuite) TestDisputeVoteSkipsLockedSelectorPendingSwitch()
 
 		repP, err := s.Setup.Disputekeeper.SetVoterReporterStake(
 			s.Setup.Ctx, disputeID, selector, d.BlockNumber,
-			disputetypes.VoteEnum_VOTE_SUPPORT, nil,
+			disputetypes.VoteEnum_VOTE_SUPPORT, nil, nil,
 		)
 		s.NoError(err)
 		s.True(repP.IsZero(), "locked selector must not contribute reporter-group stake")
@@ -1302,7 +1302,7 @@ func (s *IntegrationTestSuite) TestDisputeVoteSkipsLockedSelectorPendingSwitch()
 
 		repP, err := s.Setup.Disputekeeper.SetVoterReporterStake(
 			s.Setup.Ctx, disputeID, selector, d.BlockNumber,
-			disputetypes.VoteEnum_VOTE_SUPPORT, nil,
+			disputetypes.VoteEnum_VOTE_SUPPORT, nil, nil,
 		)
 		s.NoError(err)
 		s.True(repP.IsPositive(), "unlocked selector must contribute reporter-group stake")
