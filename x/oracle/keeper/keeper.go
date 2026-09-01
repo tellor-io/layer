@@ -42,7 +42,6 @@ type (
 		cdc                codec.BinaryCodec
 		storeService       store.KVStoreService
 		Params             collections.Item[types.Params]
-		MaxBatchSize       collections.Item[uint32]
 		accountKeeper      types.AccountKeeper
 		bankKeeper         types.BankKeeper
 		bridgeKeeper       types.BridgeKeeper
@@ -113,7 +112,6 @@ func NewKeeper(
 		storeService: storeService,
 
 		Params:         collections.NewItem(sb, types.ParamsKeyPrefix(), "params", codec.CollValue[types.Params](cdc)),
-		MaxBatchSize:   collections.NewItem(sb, types.MaxBatchSizePrefix, "max_batch_size", collections.Uint32Value),
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		registryKeeper: registryKeeper,
@@ -441,15 +439,6 @@ func (k Keeper) GetLastReportedAtTimestamp(ctx context.Context, reporter []byte)
 	}
 
 	return timestamp, nil
-}
-
-func (k Keeper) GetMaxBatchSize(ctx context.Context) (uint32, error) {
-	maxBatchSize, err := k.MaxBatchSize.Get(ctx)
-	// gets error only if not found, so just return 0
-	if err != nil {
-		return 0, nil
-	}
-	return maxBatchSize, nil
 }
 
 // GetTimestampForBlockHeight returns the timestamp of aggregates at a given block height.

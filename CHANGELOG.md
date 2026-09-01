@@ -27,6 +27,14 @@ Ref: https://keepachangelog.com/en/1.0.0/ and https://github.com/cosmos/cosmos-s
 
 ## [Unreleased]
 
+### State Machine Breaking
+
+* (x/oracle) Remove `MsgBatchSubmitValue`, `SubmitValueItem`, `MsgUpdateMaxBatchSize`, and the unused `MaxBatchSize` store. Reporters submit values with `MsgSubmitValue` only (v6.1.7).
+
+### Client Breaking
+
+* (x/oracle) Remove the `batch-submit-value` CLI/gRPC method. After v6.1.7, batch-submit txs are unknown messages.
+
 <!-- ### Features
 
 ### Improvements

@@ -55,7 +55,6 @@ var (
 	QueryByExpirationPrefix          = collections.NewPrefix(29)
 	BridgeDepositQueuePrefix         = collections.NewPrefix(30)
 	ReporterIndexPrefix              = collections.NewPrefix(32)
-	MaxBatchSizePrefix               = collections.NewPrefix(34)
 
 	// Liveness reward storage prefixes
 	LivenessRecordsPrefix          = collections.NewPrefix(35)

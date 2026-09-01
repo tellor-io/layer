@@ -17,9 +17,10 @@ Upgrade to v6.1.7 includes (since v6.1.6):
     re-peel, or re-reserve); lock only blocks first acquisition of reporter stake;
     peels target evidence-reporter ownership after a switch when needed; fail-closed
     bucket underflow/overflow; same safeguards applied to team votes.
-  - MsgBatchSubmitValue correctness (#1064): align with MsgSubmitValue power caching,
-    call ReporterStake on the first verified valid report, and return an error when
-    all reports in the batch fail.
+  - Remove MsgBatchSubmitValue: drop the batch submit transaction, SubmitValueItem,
+    MsgUpdateMaxBatchSize, and the unused MaxBatchSize store. Reporters submit
+    via MsgSubmitValue only. After upgrade, batch-submit txs are rejected as
+    unknown messages.
   - Reporter self-demotion hardening (#1065): safer demotion lifecycle (reporter not
     deleted immediately), block pending switches onto a demoting reporter, and handle
     rewards/liveness after demotion when the reporter object is gone.
@@ -31,7 +32,8 @@ Upgrade to v6.1.7 includes (since v6.1.6):
 
 No custom state migration is required beyond RunMigrations: dispute vote store
 layout and protos are unchanged. In-flight disputes keep existing tallies;
-subsequent votes use the corrected accounting.
+subsequent votes use the corrected accounting. Leftover MaxBatchSize bytes at
+the old oracle prefix are unused and ignored.
 */
 
 func CreateUpgradeHandler(
