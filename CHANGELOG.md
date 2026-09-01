@@ -29,7 +29,7 @@ Ref: https://keepachangelog.com/en/1.0.0/ and https://github.com/cosmos/cosmos-s
 
 ### State Machine Breaking
 
-* (x/oracle) Remove `MsgBatchSubmitValue`, `SubmitValueItem`, `MsgUpdateMaxBatchSize`, and the unused `MaxBatchSize` store. Reporters submit values with `MsgSubmitValue` only (v6.1.7).
+* (x/oracle) Remove `MsgBatchSubmitValue`, `SubmitValueItem`, and `MsgUpdateMaxBatchSize`. Oracle consensus version 5 deletes leftover `MaxBatchSize` store bytes. Reporters submit values with `MsgSubmitValue` only (v6.1.7).
 
 ### Client Breaking
 
