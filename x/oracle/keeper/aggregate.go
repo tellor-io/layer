@@ -63,6 +63,21 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 
 		aggregateReport, err := k.AggregateReport(ctx, query.Id, query.QueryData)
 		if err != nil {
+			// Hotfix: a failed BatchSubmitValue item can commit HasRevealedReports=true
+			// without a RunningAggregate. Returning that ErrNotFound from EndBlocker
+			// would prevent the block from committing. Treat it as unreaveled and skip.
+			if errors.Is(err, collections.ErrNotFound) {
+				sdkCtx.Logger().Error("skipping query with missing running aggregate",
+					"query_meta_id", query.Id,
+					"query_type", query.QueryType,
+					"err", err,
+				)
+				query.HasRevealedReports = false
+				if err := k.Query.Set(ctx, fullKey.K2(), query); err != nil {
+					return err
+				}
+				continue
+			}
 			return err
 		}
 

@@ -168,6 +168,56 @@ func (s *KeeperTestSuite) TestSetAggregatedReport() {
 	s.NotEqual("", aggregate.AggregateValue)
 }
 
+func (s *KeeperTestSuite) TestSetAggregatedReport_MissingRunningAggregateDoesNotHalt() {
+	poisonedQueryId := []byte("poisoned-query-id")
+	tipAmount := math.NewInt(1 * 1e6)
+	poisoned := types.QueryMeta{
+		Id:                      42,
+		Amount:                  tipAmount,
+		Expiration:              3,
+		RegistrySpecBlockWindow: 2,
+		HasRevealedReports:      true,
+		QueryData:               ethQueryData,
+		QueryType:               "batchpoisonhalt",
+	}
+	s.NoError(s.oracleKeeper.Query.Set(s.ctx, collections.Join(poisonedQueryId, poisoned.Id), poisoned))
+
+	validQueryId := []byte("0x5c13cd9c97dbb98f2429c101a2a8150e6c7a0ddaff6124ee176a3a411067ded0")
+	valid := types.QueryMeta{
+		Id:                      7,
+		Expiration:              3,
+		RegistrySpecBlockWindow: 2,
+		HasRevealedReports:      true,
+		QueryData:               ethQueryData,
+		QueryType:               "SpotPrice",
+	}
+	s.NoError(s.oracleKeeper.Query.Set(s.ctx, collections.Join(validQueryId, valid.Id), valid))
+	report := createMicroReportForQuery(sample.AccAddressBytes().String(), "weighted-median", encodeValue(1.00), 1000000000, time.Now())
+	s.NoError(s.oracleKeeper.AddReport(s.ctx, valid.Id, report))
+
+	ctx := s.ctx.WithBlockHeight(3)
+	s.NoError(s.oracleKeeper.SetAggregatedReport(ctx))
+
+	got, err := s.oracleKeeper.Query.Get(ctx, collections.Join(poisonedQueryId, poisoned.Id))
+	s.NoError(err)
+	s.False(got.HasRevealedReports)
+	s.True(got.Amount.Equal(tipAmount))
+
+	_, _, err = s.oracleKeeper.GetCurrentAggregateReport(ctx, poisonedQueryId)
+	s.Error(err)
+
+	_, err = s.oracleKeeper.Query.Get(ctx, collections.Join(validQueryId, valid.Id))
+	s.ErrorIs(err, collections.ErrNotFound)
+	agg, _, err := s.oracleKeeper.GetCurrentAggregateReport(ctx, validQueryId)
+	s.NoError(err)
+	s.NotEqual("", agg.AggregateValue)
+
+	s.NoError(s.oracleKeeper.SetAggregatedReport(ctx.WithBlockHeight(4)))
+	got, err = s.oracleKeeper.Query.Get(ctx, collections.Join(poisonedQueryId, poisoned.Id))
+	s.NoError(err)
+	s.False(got.HasRevealedReports)
+}
+
 func (s *KeeperTestSuite) TestSetAggregate() {
 	bridgeQueryData, _ := hex.DecodeString("0000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000095452424272696467650000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001")
 	testCases := []struct {
