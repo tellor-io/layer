@@ -702,27 +702,6 @@ func TipQuery(ctx context.Context, validator *cosmos.ChainNode, queryData string
 	return output.TxHash, nil
 }
 
-// SubmitBatchReport submits a batch of reports
-func SubmitBatchReport(ctx context.Context, validator *cosmos.ChainNode, reports []string, fees string) (string, error) {
-	args := []string{"oracle", "batch-submit-value"}
-	for _, report := range reports {
-		args = append(args, "--values", report)
-	}
-	args = append(args, "--gas", "1000000", "--fees", fees, "--broadcast-mode", "sync", "--keyring-dir", validator.HomeDir())
-
-	stdout, _, err := validator.Exec(ctx, validator.TxCommand("validator", args...), validator.Chain.Config().Env)
-	if err != nil {
-		return "", err
-	}
-
-	txHash, err := GetTxHashFromExec(stdout)
-	if err != nil {
-		return "", err
-	}
-
-	return txHash, nil
-}
-
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
