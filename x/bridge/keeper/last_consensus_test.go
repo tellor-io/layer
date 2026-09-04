@@ -190,7 +190,7 @@ func TestRequestAttestations_DoesNotRewindLastConsensusMap(t *testing.T) {
 	require.Equal(t, latestConsensus, snapshotData.LastConsensusTimestamp)
 }
 
-func TestCreateNewReportSnapshots_GetTimestampBeforeFailureReturns(t *testing.T) {
+func TestCreateNewReportSnapshots_GetTimestampBeforeErrorContinues(t *testing.T) {
 	k, _, _, ok, _, _, _, ctx := setupKeeper(t)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	timestamp := sdkCtx.BlockTime()
@@ -203,6 +203,14 @@ func TestCreateNewReportSnapshots_GetTimestampBeforeFailureReturns(t *testing.T)
 		{Height: 0, QueryId: queryId2, AggregateValue: "5000", AggregatePower: uint64(100)},
 	}, nil)
 	ok.On("GetTimestampBefore", sdkCtx, queryId1, timestampPlus1).Return(time.Time{}, errors.New("no data")).Once()
+	ok.On("GetTimestampBefore", sdkCtx, queryId2, timestampPlus1).Return(timestamp, nil).Once()
+	ok.On("GetTimestampBefore", sdkCtx, queryId2, timestamp).Return(time.Time{}, errors.New("no data"))
+	ok.On("GetTimestampAfter", ctx, queryId2, timestamp).Return(time.Time{}, errors.New("no data"))
+	ok.On("GetAggregateByTimestamp", ctx, queryId2, uint64(timestamp.UnixMilli())).Return(oracletypes.Aggregate{
+		QueryId:        queryId2,
+		AggregateValue: "5000",
+		AggregatePower: uint64(100),
+	}, nil)
 
 	require.NoError(t, k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{Checkpoint: []byte("checkpoint")}))
 	require.NoError(t, k.BridgeValset.Set(ctx, types.BridgeValidatorSet{
@@ -211,8 +219,18 @@ func TestCreateNewReportSnapshots_GetTimestampBeforeFailureReturns(t *testing.T)
 	seedPowerThreshold(t, k, sdkCtx, 100)
 
 	err := k.CreateNewReportSnapshots(ctx)
-	require.Error(t, err)
-	ok.AssertNotCalled(t, "GetTimestampBefore", mock.Anything, queryId2, mock.Anything)
+	require.NoError(t, err)
+
+	attReq, err := k.AttestRequestsByHeightMap.Get(ctx, uint64(sdkCtx.BlockHeight()))
+	require.NoError(t, err)
+	require.Len(t, attReq.Requests, 1)
+	ok.AssertNotCalled(t, "GetAggregateByTimestamp", mock.Anything, queryId1, mock.Anything)
+
+	_, err = k.LastConsensusTimestampByQueryId.Get(sdkCtx, queryId1)
+	require.ErrorIs(t, err, collections.ErrNotFound)
+	got, err := k.LastConsensusTimestampByQueryId.Get(sdkCtx, queryId2)
+	require.NoError(t, err)
+	require.Equal(t, uint64(timestamp.UnixMilli()), got)
 }
 
 func TestCreateNewReportSnapshots_UpdatesMapPastSnapshotLimit(t *testing.T) {
