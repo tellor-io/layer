@@ -1151,13 +1151,6 @@ func TestCreateSnapshot(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// set last consensus timestamp
-	err = k.AttestSnapshotDataMap.Set(sdkCtx, qId, types.AttestationSnapshotData{
-		LastConsensusTimestamp: 100,
-	})
-	require.NoError(t, err)
-
-	// set GetCurrentValidatorSetTimestamp
 	err = k.LatestCheckpointIdx.Set(sdkCtx, types.CheckpointIdx{
 		Index: 1,
 	})
@@ -1244,13 +1237,6 @@ func TestCreateNewReportSnapshots(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	// set last consensus timestamp
-	err = k.AttestSnapshotDataMap.Set(sdkCtx, queryId, types.AttestationSnapshotData{
-		LastConsensusTimestamp: 100,
-	})
-	require.NoError(t, err)
-
-	// set GetCurrentValidatorSetTimestamp
 	err = k.LatestCheckpointIdx.Set(sdkCtx, types.CheckpointIdx{
 		Index: 1,
 	})
@@ -1271,12 +1257,19 @@ func TestCreateNewReportSnapshots(t *testing.T) {
 
 	err = k.CreateNewReportSnapshots(ctx)
 	require.NoError(t, err)
+
+	got, err := k.LastConsensusTimestampByQueryId.Get(ctx, queryId)
+	require.NoError(t, err)
+	require.Equal(t, uint64(timestamp.UnixMilli()), got)
 }
 
 func TestCreateNewReportSnapshotsZeroLimitDoesNoSnapshotWork(t *testing.T) {
 	k, _, _, ok, _, _, _, ctx := setupKeeper(t)
 	require.NotNil(t, k)
 	require.NotNil(t, ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	timestamp := sdkCtx.BlockTime()
+	timestampPlus1 := timestamp.Add(time.Second)
 
 	err := k.SnapshotLimit.Set(ctx, types.SnapshotLimit{Limit: 0})
 	require.NoError(t, err)
@@ -1290,11 +1283,24 @@ func TestCreateNewReportSnapshotsZeroLimitDoesNoSnapshotWork(t *testing.T) {
 			AggregatePower: uint64(100),
 		},
 	}, nil).Once()
+	ok.On("GetTimestampBefore", sdkCtx, queryId, timestampPlus1).Return(timestamp, nil).Once()
+
+	require.NoError(t, k.LatestCheckpointIdx.Set(sdkCtx, types.CheckpointIdx{Index: 1}))
+	require.NoError(t, k.ValidatorCheckpointIdxMap.Set(sdkCtx, 1, types.CheckpointTimestamp{Timestamp: 100}))
+	require.NoError(t, k.ValidatorCheckpointParamsMap.Set(sdkCtx, 100, types.ValidatorCheckpointParams{
+		Checkpoint:     []byte("checkpoint"),
+		ValsetHash:     []byte("valsetHash"),
+		Timestamp:      100,
+		PowerThreshold: 100,
+	}))
 
 	err = k.CreateNewReportSnapshots(ctx)
 	require.NoError(t, err)
-	ok.AssertNotCalled(t, "GetTimestampBefore", mock.Anything, mock.Anything, mock.Anything)
 	ok.AssertNotCalled(t, "GetAggregateByTimestamp", mock.Anything, mock.Anything, mock.Anything)
+
+	got, err := k.LastConsensusTimestampByQueryId.Get(ctx, queryId)
+	require.NoError(t, err)
+	require.Equal(t, uint64(timestamp.UnixMilli()), got)
 }
 
 func TestCreateSnapshotDisputedReport(t *testing.T) {

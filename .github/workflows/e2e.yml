@@ -15,6 +15,9 @@ permissions:
 env:
   TAR_PATH: heighliner.tar
   IBC_TAR_PATH: heighliner-ibc.tar
+  # Multi-arch index digest for amygdala-labs/infra-toolkit:v0.1.12
+  # (strangelove-ventures org rename; old GHCR path returns 403).
+  INFRA_TOOLKIT_IMAGE: ghcr.io/amygdala-labs/infra-toolkit:v0.1.12@sha256:ccdefb2074ddd060dd4db06ccc126e32a6a5a10bd04adadb6d9f46c571964c97
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,6 +31,19 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Use relocated heighliner infra-toolkit image
+        run: |
+          set -euo pipefail
+          # Heighliner's embedded cosmos/localcross.Dockerfile pulls
+          # ghcr.io/strangelove-ventures/infra-toolkit:v0.1.12. That GitHub org
+          # was renamed to amygdala-labs and the old GHCR path now returns 403.
+          # Linux runners can keep Dockerfile and dockerfile/ side by side;
+          # heighliner then prefers this local overlay.
+          mkdir -p dockerfile/cosmos
+          curl -fsSL "https://raw.githubusercontent.com/strangelove-ventures/heighliner/v1.7.5/dockerfile/cosmos/localcross.Dockerfile" \
+            | sed "s|ghcr.io/strangelove-ventures/infra-toolkit:v0.1.12|${INFRA_TOOLKIT_IMAGE}|" \
+            > dockerfile/cosmos/localcross.Dockerfile
 
       # local: "true" builds the checked-out merge commit (fork-safe; no re-clone by branch).
       - name: Build Primary Docker Image
@@ -63,6 +79,16 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ibc
+
+      - name: Use relocated heighliner infra-toolkit image
+        run: |
+          set -euo pipefail
+          # Same overlay as build-primary. Must be generated here because this
+          # job checks out the ibc branch, not the PR.
+          mkdir -p dockerfile/cosmos
+          curl -fsSL "https://raw.githubusercontent.com/strangelove-ventures/heighliner/v1.7.5/dockerfile/cosmos/localcross.Dockerfile" \
+            | sed "s|ghcr.io/strangelove-ventures/infra-toolkit:v0.1.12|${INFRA_TOOLKIT_IMAGE}|" \
+            > dockerfile/cosmos/localcross.Dockerfile
 
       - name: Build IBC Docker Image
         uses: strangelove-ventures/heighliner-build-action@7f75f09bb485ad90b0ed00f2bd40dfb196d212af # v1.0.3
