@@ -7,6 +7,7 @@ import (
 	"github.com/tellor-io/layer/x/oracle/migrations/fork"
 	v4 "github.com/tellor-io/layer/x/oracle/migrations/v4"
 	v5 "github.com/tellor-io/layer/x/oracle/migrations/v5"
+	v6 "github.com/tellor-io/layer/x/oracle/migrations/v6"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -48,4 +49,11 @@ func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 // This deletes the unused MaxBatchSize store item after MsgBatchSubmitValue removal.
 func (m Migrator) Migrate4to5(ctx sdk.Context) error {
 	return v5.MigrateStore(ctx, m.keeper.storeService)
+}
+
+// Migrate5to6 migrates from version 5 to 6.
+// This backfills CurrentCycleListQuery from CyclelistSequencer.Peek() with a wrap
+// when the sequencer is past the cycle-list length.
+func (m Migrator) Migrate5to6(ctx sdk.Context) error {
+	return v6.MigrateStore(ctx, m.keeper.storeService)
 }
