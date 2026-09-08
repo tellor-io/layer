@@ -15,6 +15,9 @@ permissions:
 env:
   TAR_PATH: heighliner.tar
   IBC_TAR_PATH: heighliner-ibc.tar
+  # Multi-arch index digest for amygdala-labs/infra-toolkit:v0.1.12
+  # (strangelove-ventures org rename; old GHCR path returns 403).
+  INFRA_TOOLKIT_IMAGE: ghcr.io/amygdala-labs/infra-toolkit:v0.1.12@sha256:ccdefb2074ddd060dd4db06ccc126e32a6a5a10bd04adadb6d9f46c571964c97
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -39,7 +42,7 @@ jobs:
           # heighliner then prefers this local overlay.
           mkdir -p dockerfile/cosmos
           curl -fsSL "https://raw.githubusercontent.com/strangelove-ventures/heighliner/v1.7.5/dockerfile/cosmos/localcross.Dockerfile" \
-            | sed 's|ghcr.io/strangelove-ventures/infra-toolkit|ghcr.io/amygdala-labs/infra-toolkit|' \
+            | sed "s|ghcr.io/strangelove-ventures/infra-toolkit:v0.1.12|${INFRA_TOOLKIT_IMAGE}|" \
             > dockerfile/cosmos/localcross.Dockerfile
 
       # local: "true" builds the checked-out merge commit (fork-safe; no re-clone by branch).
@@ -84,7 +87,7 @@ jobs:
           # job checks out the ibc branch, not the PR.
           mkdir -p dockerfile/cosmos
           curl -fsSL "https://raw.githubusercontent.com/strangelove-ventures/heighliner/v1.7.5/dockerfile/cosmos/localcross.Dockerfile" \
-            | sed 's|ghcr.io/strangelove-ventures/infra-toolkit|ghcr.io/amygdala-labs/infra-toolkit|' \
+            | sed "s|ghcr.io/strangelove-ventures/infra-toolkit:v0.1.12|${INFRA_TOOLKIT_IMAGE}|" \
             > dockerfile/cosmos/localcross.Dockerfile
 
       - name: Build IBC Docker Image
