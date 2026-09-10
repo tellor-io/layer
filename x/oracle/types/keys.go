@@ -76,6 +76,8 @@ var (
 	// MaxOpenCommitmentByReporter maps reporter address -> monotonic max query
 	// Expiration height from reports submitted by that reporter (updated on SubmitValue).
 	MaxOpenCommitmentByReporterPrefix = collections.NewPrefix(46)
+	// CurrentCycleListQueryPrefix stores the query data of the live cycle-list query.
+	CurrentCycleListQueryPrefix = collections.NewPrefix(47)
 )
 
 func KeyPrefix(p string) []byte {
