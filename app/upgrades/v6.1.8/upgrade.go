@@ -20,7 +20,10 @@ Upgrade to v6.1.8 includes (since v6.1.7):
   - The last-consensus map is backfilled by bridge 5→6 from the latest
     consensus aggregate per queryId (current PowerThreshold, flagged included);
     live writes are in CreateNewReportSnapshots; prefix 24; StoreUpgrades empty.
-
+  - Oracle cycle-list: persist the live query data in CurrentCycleListQuery (prefix 47)
+    so GetCurrentQueryInCycleList no longer indexes GetCyclelist()[Peek()]. Oracle
+    consensus version 5→6 backfills the item from the sequencer with a wrap on OOB.
+    StoreUpgrades stays empty (new prefix in the existing oracle store).
 No other custom state migration is required beyond RunMigrations.
 */
 
