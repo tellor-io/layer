@@ -11,7 +11,6 @@ import (
 	"math/big"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
@@ -57,6 +56,7 @@ type (
 		AttestationEvidenceSubmitted     collections.Map[collections.Pair[[]byte, uint64], bool] // key: operator address, timestamp
 		ValsetSignatureEvidenceSubmitted collections.Map[collections.Pair[[]byte, uint64], bool] // key: operator address, valset timestamp
 		ValsetCheckpointDomainSeparator  collections.Item[[]byte]                                // key: chain ID, value: domain separator
+		LastConsensusTimestampByQueryId  collections.Map[[]byte, uint64]                         // queryId → last consensus aggregate timestamp (unix millis)
 
 		stakingKeeper  types.StakingKeeper
 		oracleKeeper   types.OracleKeeper
@@ -113,6 +113,7 @@ func NewKeeper(
 		disputeKeeper:                    disputeKeeper,
 		authority:                        authority,
 		ValsetCheckpointDomainSeparator:  collections.NewItem(sb, types.ValsetCheckpointDomainSeparatorKey, "valset_checkpoint_domain_separator", collections.BytesValue),
+		LastConsensusTimestampByQueryId:  collections.NewMap(sb, types.LastConsensusTimestampByQueryIdKey, "last_consensus_timestamp_by_query_id", collections.BytesKey, collections.Uint64Value),
 	}
 
 	schema, err := sb.Build()
@@ -914,15 +915,31 @@ func (k Keeper) CreateNewReportSnapshots(ctx context.Context) error {
 		k.Logger(ctx).Info("Error getting aggregated reports by height", "error", err)
 		return err
 	}
+	if len(reports) == 0 {
+		return nil
+	}
+	// Read threshold after CompareAndSetBridgeValidators so last-consensus
+	// matches the valset used when encoding snapshots in this EndBlock.
+	threshold, err := k.GetPowerThreshold(ctx)
+	if err != nil {
+		k.Logger(ctx).Info("Error getting power threshold", "error", err)
+		return err
+	}
+	timeNow := sdkCtx.BlockTime().Add(time.Second)
 	for _, report := range reports {
-		if snapshotlimit.Limit == 0 {
-			break
-		}
 		queryId := report.QueryId
-		timeNow := sdkCtx.BlockTime().Add(time.Second)
 		reportTime, err := k.oracleKeeper.GetTimestampBefore(ctx, queryId, timeNow)
 		if err != nil {
-			return nil
+			k.Logger(ctx).Info("Error getting timestamp before for report snapshot", "error", err)
+			continue
+		}
+		if report.AggregatePower >= threshold {
+			if err := k.SetLastConsensusTimestamp(ctx, queryId, uint64(reportTime.UnixMilli())); err != nil {
+				return err
+			}
+		}
+		if snapshotlimit.Limit == 0 {
+			continue
 		}
 		err = k.CreateSnapshot(ctx, queryId, reportTime, false)
 		if err != nil {
@@ -965,7 +982,7 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	attestationTimestamp := sdkCtx.BlockTime()
 
-	lastConsensusTimestamp, err := k.GetLastConsensusTimestamp(ctx, queryId, timestamp, aggReport.AggregatePower, isExternalRequest)
+	lastConsensusTimestamp, err := k.GetLastConsensusTimestamp(ctx, queryId)
 	if err != nil {
 		k.Logger(ctx).Info("Error getting last consensus timestamp", "error", err)
 		return err
@@ -1084,53 +1101,31 @@ func (k Keeper) CreateSnapshot(ctx context.Context, queryId []byte, timestamp ti
 	return k.AttestRequestsByHeightMap.Set(ctx, blockHeight, attestRequests)
 }
 
-func (k Keeper) GetLastConsensusTimestamp(ctx context.Context, queryId []byte, timestamp time.Time, aggregatePower uint64, isExternalRequest bool) (uint64, error) {
-	var pastReportTimestamp time.Time
-	// handle new report
-	if !isExternalRequest {
-		currentValsetTimestamp, err := k.GetCurrentValidatorSetTimestamp(ctx)
-		if err != nil {
-			return 0, err
-		}
-		valsetParams, err := k.ValidatorCheckpointParamsMap.Get(ctx, currentValsetTimestamp)
-		if err != nil {
-			return 0, err
-		}
-		// handle consensus report
-		if aggregatePower >= valsetParams.PowerThreshold {
-			return uint64(timestamp.UnixMilli()), nil
-			// handle non-consensus report
-		} else {
-			pastReportTimestamp, err = k.oracleKeeper.GetTimestampBefore(ctx, queryId, timestamp)
-			if err != nil {
-				if strings.Contains(err.Error(), "no data before timestamp") {
-					return 0, nil
-				}
-				return 0, err
-			}
-		}
-		// handle external request
-	} else {
-		var err error
-		_, pastReportTimestamp, err = k.oracleKeeper.GetCurrentAggregateReport(ctx, queryId)
-		if err != nil {
-			return 0, err
-		}
-	}
-	snapshotKey := crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(pastReportTimestamp.UnixMilli())))
-	snapshots, err := k.AttestSnapshotsByReportMap.Get(ctx, snapshotKey)
+func (k Keeper) GetPowerThreshold(ctx context.Context) (uint64, error) {
+	currentValsetTimestamp, err := k.GetCurrentValidatorSetTimestamp(ctx)
 	if err != nil {
 		return 0, err
 	}
-	if len(snapshots.Snapshots) == 0 {
+	valsetParams, err := k.ValidatorCheckpointParamsMap.Get(ctx, currentValsetTimestamp)
+	if err != nil {
+		return 0, err
+	}
+	return valsetParams.PowerThreshold, nil
+}
+
+func (k Keeper) SetLastConsensusTimestamp(ctx context.Context, queryId []byte, timestamp uint64) error {
+	return k.LastConsensusTimestampByQueryId.Set(ctx, queryId, timestamp)
+}
+
+func (k Keeper) GetLastConsensusTimestamp(ctx context.Context, queryId []byte) (uint64, error) {
+	ts, err := k.LastConsensusTimestampByQueryId.Get(ctx, queryId)
+	if errors.Is(err, collections.ErrNotFound) {
 		return 0, nil
 	}
-	snapshot := snapshots.Snapshots[0]
-	snapshotData, err := k.AttestSnapshotDataMap.Get(ctx, snapshot)
 	if err != nil {
 		return 0, err
 	}
-	return snapshotData.LastConsensusTimestamp, nil
+	return ts, nil
 }
 
 func (k Keeper) EncodeOracleAttestationData(

@@ -105,24 +105,8 @@ func TestMsgRequestAttestations(t *testing.T) {
 
 	ok.On("GetTimestampBefore", ctx, queryId, timestampTime).Return(timestampTime.Add(-1*time.Hour), nil)
 	ok.On("GetTimestampAfter", ctx, queryId, timestampTime).Return(timestampTime.Add(1*time.Hour), nil)
-	ok.On("GetCurrentAggregateReport", ctx, queryId).Return(&aggReport, timestampTime, nil)
-	snapshotKey := crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(timestampTime.UnixMilli())))
-	snapshot := []byte("snapshot")
-	err = k.AttestSnapshotsByReportMap.Set(ctx, snapshotKey, types.AttestationSnapshots{
-		Snapshots: [][]byte{snapshot},
-	})
-	require.NoError(t, err)
-	snapshotData := types.AttestationSnapshotData{
-		ValidatorCheckpoint:    []byte("checkpoint"),
-		AttestationTimestamp:   uint64(timestampTime.UnixMilli()),
-		PrevReportTimestamp:    uint64(timestampTime.Add(-1 * time.Hour).UnixMilli()),
-		NextReportTimestamp:    uint64(0),
-		QueryId:                queryId,
-		Timestamp:              uint64(timestampTime.UnixMilli()),
-		LastConsensusTimestamp: uint64(timestampTime.Add(-2 * time.Hour).UnixMilli()),
-	}
-	err = k.AttestSnapshotDataMap.Set(ctx, snapshot, snapshotData)
-	require.NoError(t, err)
+	lastConsensusTs := uint64(timestampTime.Add(-2 * time.Hour).UnixMilli())
+	require.NoError(t, k.SetLastConsensusTimestamp(ctx, queryId, lastConsensusTs))
 
 	response, err = msgServer.RequestAttestations(ctx, &types.MsgRequestAttestations{
 		Creator:   creatorAddr.String(),
@@ -134,15 +118,13 @@ func TestMsgRequestAttestations(t *testing.T) {
 
 	expectedAttestationTimestamp := sdkCtx.BlockTime()
 
-	// retrieve newly created snapshot & data
+	snapshotKey := crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(timestampTime.UnixMilli())))
 	snapshots, err := k.AttestSnapshotsByReportMap.Get(ctx, snapshotKey)
 	require.NoError(t, err)
-	require.Equal(t, len(snapshots.Snapshots), 2)
-	require.Equal(t, snapshots.Snapshots[0], snapshot)
-	snapshot2 := snapshots.Snapshots[1]
-	snapshotData2, err := k.AttestSnapshotDataMap.Get(ctx, snapshot2)
+	require.Len(t, snapshots.Snapshots, 1)
+	snapshotData2, err := k.AttestSnapshotDataMap.Get(ctx, snapshots.Snapshots[0])
 	require.NoError(t, err)
-	require.Equal(t, snapshotData2.LastConsensusTimestamp, uint64(timestampTime.Add(-2*time.Hour).UnixMilli()))
+	require.Equal(t, snapshotData2.LastConsensusTimestamp, lastConsensusTs)
 	require.Equal(t, snapshotData2.PrevReportTimestamp, uint64(timestampTime.Add(-1*time.Hour).UnixMilli()))
 	require.Equal(t, snapshotData2.NextReportTimestamp, uint64(timestampTime.Add(1*time.Hour).UnixMilli()))
 	require.Equal(t, snapshotData2.QueryId, queryId)
@@ -200,26 +182,8 @@ func TestMsgRequestAttestations_DedupesDuplicateSnapshotAtSameHeight(t *testing.
 	ok.On("GetAggregateByTimestamp", ctx, queryId, uint64(timestampTime.UnixMilli())).Return(aggReport, nil)
 	ok.On("GetTimestampBefore", ctx, queryId, timestampTime).Return(timestampTime.Add(-1*time.Hour), nil)
 	ok.On("GetTimestampAfter", ctx, queryId, timestampTime).Return(timestampTime.Add(1*time.Hour), nil)
-	ok.On("GetCurrentAggregateReport", ctx, queryId).Return(&aggReport, timestampTime, nil)
 	err = k.ValidatorCheckpoint.Set(ctx, types.ValidatorCheckpoint{
 		Checkpoint: []byte("checkpoint"),
-	})
-	require.NoError(t, err)
-
-	snapshotKey := crypto.Keccak256([]byte(hex.EncodeToString(queryId) + fmt.Sprint(timestampTime.UnixMilli())))
-	snapshot := []byte("snapshot")
-	err = k.AttestSnapshotsByReportMap.Set(ctx, snapshotKey, types.AttestationSnapshots{
-		Snapshots: [][]byte{snapshot},
-	})
-	require.NoError(t, err)
-	err = k.AttestSnapshotDataMap.Set(ctx, snapshot, types.AttestationSnapshotData{
-		ValidatorCheckpoint:    []byte("checkpoint"),
-		AttestationTimestamp:   uint64(timestampTime.UnixMilli()),
-		PrevReportTimestamp:    uint64(timestampTime.Add(-1 * time.Hour).UnixMilli()),
-		NextReportTimestamp:    uint64(0),
-		QueryId:                queryId,
-		Timestamp:              uint64(timestampTime.UnixMilli()),
-		LastConsensusTimestamp: uint64(timestampTime.Add(-2 * time.Hour).UnixMilli()),
 	})
 	require.NoError(t, err)
 
@@ -293,23 +257,6 @@ func TestMsgRequestAttestations_EnforcesExactSnapshotLimit(t *testing.T) {
 	ok.On("GetAggregateByTimestamp", ctx, queryId1, uint64(timestampTime.UnixMilli())).Return(aggReport1, nil)
 	ok.On("GetTimestampBefore", ctx, queryId1, timestampTime).Return(timestampTime.Add(-1*time.Hour), nil)
 	ok.On("GetTimestampAfter", ctx, queryId1, timestampTime).Return(timestampTime.Add(1*time.Hour), nil)
-	ok.On("GetCurrentAggregateReport", ctx, queryId1).Return(&aggReport1, timestampTime, nil)
-	snapshotKey1 := crypto.Keccak256([]byte(hex.EncodeToString(queryId1) + fmt.Sprint(timestampTime.UnixMilli())))
-	snapshot1 := []byte("snapshot-1")
-	err = k.AttestSnapshotsByReportMap.Set(ctx, snapshotKey1, types.AttestationSnapshots{
-		Snapshots: [][]byte{snapshot1},
-	})
-	require.NoError(t, err)
-	err = k.AttestSnapshotDataMap.Set(ctx, snapshot1, types.AttestationSnapshotData{
-		ValidatorCheckpoint:    []byte("checkpoint"),
-		AttestationTimestamp:   uint64(timestampTime.UnixMilli()),
-		PrevReportTimestamp:    uint64(timestampTime.Add(-1 * time.Hour).UnixMilli()),
-		NextReportTimestamp:    uint64(0),
-		QueryId:                queryId1,
-		Timestamp:              uint64(timestampTime.UnixMilli()),
-		LastConsensusTimestamp: uint64(timestampTime.Add(-2 * time.Hour).UnixMilli()),
-	})
-	require.NoError(t, err)
 
 	queryId2 := []byte("f7ac7f444de4e3f6378896b232ce4f97f104725f3d95f1790f6ac8af0e3fcf88")
 	aggReport2 := oracletypes.Aggregate{
@@ -321,23 +268,6 @@ func TestMsgRequestAttestations_EnforcesExactSnapshotLimit(t *testing.T) {
 	ok.On("GetAggregateByTimestamp", ctx, queryId2, uint64(timestampTime.UnixMilli())).Return(aggReport2, nil)
 	ok.On("GetTimestampBefore", ctx, queryId2, timestampTime).Return(timestampTime.Add(-1*time.Hour), nil)
 	ok.On("GetTimestampAfter", ctx, queryId2, timestampTime).Return(timestampTime.Add(1*time.Hour), nil)
-	ok.On("GetCurrentAggregateReport", ctx, queryId2).Return(&aggReport2, timestampTime, nil)
-	snapshotKey2 := crypto.Keccak256([]byte(hex.EncodeToString(queryId2) + fmt.Sprint(timestampTime.UnixMilli())))
-	snapshot2 := []byte("snapshot-2")
-	err = k.AttestSnapshotsByReportMap.Set(ctx, snapshotKey2, types.AttestationSnapshots{
-		Snapshots: [][]byte{snapshot2},
-	})
-	require.NoError(t, err)
-	err = k.AttestSnapshotDataMap.Set(ctx, snapshot2, types.AttestationSnapshotData{
-		ValidatorCheckpoint:    []byte("checkpoint"),
-		AttestationTimestamp:   uint64(timestampTime.UnixMilli()),
-		PrevReportTimestamp:    uint64(timestampTime.Add(-1 * time.Hour).UnixMilli()),
-		NextReportTimestamp:    uint64(0),
-		QueryId:                queryId2,
-		Timestamp:              uint64(timestampTime.UnixMilli()),
-		LastConsensusTimestamp: uint64(timestampTime.Add(-2 * time.Hour).UnixMilli()),
-	})
-	require.NoError(t, err)
 
 	_, err = msgServer.RequestAttestations(ctx, &types.MsgRequestAttestations{
 		Creator:   creatorAddr.String(),
