@@ -664,9 +664,14 @@ func (s *IntegrationTestSuite) TestPerAggregatePowerShareNaturalFlow() {
 	// Advance block height so any old queries are clearly expired
 	ctx = ctx.WithBlockHeight(5)
 
-	// Reset cycle to start fresh: set sequencer to 2, run EndBlocker which wraps to 0
+	cyclelist, err := s.Setup.Oraclekeeper.GetCyclelist(ctx)
+	s.NoError(err)
+	require.Equal(len(cyclelist), 3, "Need at least 3 queries in cyclelist")
+
+	// Reset cycle to start fresh: put the live item on the last query with a
+	// matching sequencer, then EndBlocker wraps to q[0] and initializes QueryMeta.
+	s.NoError(s.Setup.Oraclekeeper.CurrentCycleListQuery.Set(ctx, cyclelist[2]))
 	s.NoError(s.Setup.Oraclekeeper.CyclelistSequencer.Set(ctx, 2))
-	// Run EndBlocker to properly rotate and set up Q1 with fresh expiration
 	_, err = s.Setup.App.EndBlocker(ctx)
 	s.NoError(err)
 
@@ -694,11 +699,6 @@ func (s *IntegrationTestSuite) TestPerAggregatePowerShareNaturalFlow() {
 	s.T().Logf("Initial tips: alice=%s, bob=%s, charlie=%s", initialTips[0], initialTips[1], initialTips[2])
 
 	oracleMsgServer := keeper.NewMsgServerImpl(s.Setup.Oraclekeeper)
-
-	// Get cyclelist for comparison
-	cyclelist, err := s.Setup.Oraclekeeper.GetCyclelist(ctx)
-	s.NoError(err)
-	require.Equal(len(cyclelist), 3, "Need at least 3 queries in cyclelist")
 
 	// Track queries
 	queryCount := 0
