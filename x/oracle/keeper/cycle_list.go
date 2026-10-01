@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/tellor-io/layer/utils"
@@ -53,6 +54,9 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 		return err
 	}
 	max := len(q)
+	if max == 0 {
+		return fmt.Errorf("cycle list is empty")
+	}
 
 	switch {
 	case n >= uint64(max-1): // n could be gt if the cycle list is updated, otherwise n == max-1
@@ -71,6 +75,9 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	}
 	// next query
 	queryId = utils.QueryIDFromData(q[n])
+	if err := k.CurrentCycleListQuery.Set(ctx, q[n]); err != nil {
+		return err
+	}
 
 	// increment query opportunities for liveness tracking
 	if err := k.IncrementQueryOpportunities(ctx, queryId); err != nil {
@@ -159,17 +166,7 @@ func emitRotateQueriesEvent(sdkCtx sdk.Context, queryId, nextId string) {
 }
 
 func (k Keeper) GetCurrentQueryInCycleList(ctx context.Context) ([]byte, error) {
-	idx, err := k.CyclelistSequencer.Peek(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	q, err := k.GetCyclelist(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return q[idx], nil
+	return k.CurrentCycleListQuery.Get(ctx)
 }
 
 func (k Keeper) GetNextCurrentQueryInCycleList(ctx context.Context) ([]byte, error) {
@@ -209,5 +206,13 @@ func (k Keeper) GenesisCycleList(ctx context.Context, cyclelist [][]byte) error 
 			return err
 		}
 	}
-	return nil
+	q, err := k.GetCyclelist(ctx)
+	if err != nil {
+		return err
+	}
+	if len(q) == 0 {
+		return fmt.Errorf("cycle list is empty")
+	}
+	// Map iteration order (keyed by queryId), not the input slice order.
+	return k.CurrentCycleListQuery.Set(ctx, q[0])
 }

@@ -42,3 +42,34 @@ func (s *KeeperTestSuite) TestMsgUpdateCycleList() {
 	_, err = s.msgServer.UpdateCyclelist(ctx, &req)
 	require.ErrorContains(err, "cyclelist is empty")
 }
+
+func (s *KeeperTestSuite) TestMsgUpdateCycleListLeavesCurrentAndSequencer() {
+	require := s.Require()
+	ctx := s.ctx
+	k := s.oracleKeeper
+	regK := s.registryKeeper
+
+	q, err := k.GetCyclelist(ctx)
+	require.NoError(err)
+	require.GreaterOrEqual(len(q), 2)
+
+	live := q[1]
+	require.NoError(k.CurrentCycleListQuery.Set(ctx, live))
+	require.NoError(k.CyclelistSequencer.Set(ctx, 1))
+
+	matic, _ := hex.DecodeString("00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706F745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000C00000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000008000000000000000000000000000000000000000000000000000000000000000056D6174696300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000")
+	regK.On("GetSpec", ctx, "SpotPrice").Return(regtypes.DataSpec{}, nil)
+	_, err = s.msgServer.UpdateCyclelist(ctx, &types.MsgUpdateCyclelist{
+		Authority: k.GetAuthority(),
+		Cyclelist: [][]byte{matic},
+	})
+	require.NoError(err)
+
+	current, err := k.GetCurrentQueryInCycleList(ctx)
+	require.NoError(err)
+	require.Equal(live, current)
+
+	idx, err := k.CyclelistSequencer.Peek(ctx)
+	require.NoError(err)
+	require.Equal(uint64(1), idx)
+}

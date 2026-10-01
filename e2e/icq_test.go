@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"os/exec"
 	"testing"
 
 	"github.com/strangelove-ventures/interchaintest/v8"
@@ -26,6 +27,9 @@ import (
 func TestIbcInterchainQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping in short mode")
+	}
+	if err := exec.Command("docker", "image", "inspect", "layer-icq:local").Run(); err != nil {
+		t.Skip("layer-icq:local image not found; build with 'make local-image-ibc' or 'make docker-image-ibc'")
 	}
 
 	cosmos.SetSDKConfig("tellor")

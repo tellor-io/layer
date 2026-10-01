@@ -29,7 +29,7 @@ const (
 )
 
 func TestLayerUpgrade(t *testing.T) {
-	ChainUpgradeTest(t, "layer", "layer", "local", "v6.1.6")
+	ChainUpgradeTest(t, "layer", "layer", "local", "v6.1.8")
 }
 
 func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVersion, upgradeName string) {
@@ -38,7 +38,6 @@ func ChainUpgradeTest(t *testing.T, chainName, upgradeContainerRepo, upgradeVers
 		t.Skip("skipping in short mode")
 	}
 
-	t.Parallel()
 	cosmos.SetSDKConfig("tellor")
 
 	modifyGenesis := []cosmos.GenesisKV{

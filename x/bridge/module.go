@@ -21,6 +21,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
 var (
@@ -126,6 +128,9 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration("bridge", 4, m.Migrate4to5); err != nil {
 		panic(fmt.Sprintf("Could not migrate store from v4 to v5: %v", err))
 	}
+	if err := cfg.RegisterMigration("bridge", 5, m.Migrate5to6); err != nil {
+		panic(fmt.Sprintf("Could not migrate store from v5 to v6: %v", err))
+	}
 }
 
 // RegisterInvariants registers the invariants of the module. If an invariant deviates from its predicted value, the InvariantRegistry triggers appropriate logic (most often the chain will be halted)
@@ -151,7 +156,7 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 }
 
 // ConsensusVersion is a sequence number for state-breaking change of the module. It should be incremented on each consensus-breaking change introduced by the module. To avoid wrong/empty versions, the initial version should be set to 1
-func (AppModule) ConsensusVersion() uint64 { return 5 }
+func (AppModule) ConsensusVersion() uint64 { return 6 }
 
 // EndBlock contains the logic that is automatically triggered at the end of each block
 func (am AppModule) EndBlock(ctx context.Context) error {
@@ -202,6 +207,10 @@ type BridgeOutputs struct {
 }
 
 func ProvideModule(in BridgeInputs) BridgeOutputs {
+	authority := authtypes.NewModuleAddress(govtypes.ModuleName)
+	if in.Config.Authority != "" {
+		authority = authtypes.NewModuleAddressOrBech32Address(in.Config.Authority)
+	}
 	k := keeper.NewKeeper(
 		in.Cdc,
 		in.StoreService,
@@ -210,7 +219,7 @@ func ProvideModule(in BridgeInputs) BridgeOutputs {
 		in.BankKeeper,
 		in.ReporterKeeper,
 		in.DisputeKeeper,
-		"gov",
+		authority.String(),
 	)
 	m := NewAppModule(
 		in.Cdc,

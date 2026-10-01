@@ -579,7 +579,6 @@ func SetupChainWithCustomConfig(t *testing.T, config SetupConfig) (*cosmos.Cosmo
 		t.Skip("skipping in short mode")
 	}
 
-	t.Parallel()
 	time.Sleep(1 * time.Second)
 
 	// Use the genesis configuration from config, or default if empty
@@ -703,27 +702,6 @@ func TipQuery(ctx context.Context, validator *cosmos.ChainNode, queryData string
 	return output.TxHash, nil
 }
 
-// SubmitBatchReport submits a batch of reports
-func SubmitBatchReport(ctx context.Context, validator *cosmos.ChainNode, reports []string, fees string) (string, error) {
-	args := []string{"oracle", "batch-submit-value"}
-	for _, report := range reports {
-		args = append(args, "--values", report)
-	}
-	args = append(args, "--gas", "1000000", "--fees", fees, "--keyring-dir", validator.HomeDir())
-
-	stdout, _, err := validator.Exec(ctx, validator.TxCommand("validator", args...), validator.Chain.Config().Env)
-	if err != nil {
-		return "", err
-	}
-
-	txHash, err := GetTxHashFromExec(stdout)
-	if err != nil {
-		return "", err
-	}
-
-	return txHash, nil
-}
-
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
@@ -760,7 +738,6 @@ func LayerSpinup(t *testing.T) *cosmos.CosmosChain {
 	if testing.Short() {
 		t.Skip("skipping in short mode")
 	}
-	t.Parallel()
 
 	cosmos.SetSDKConfig(baseBech32)
 
@@ -1072,16 +1049,58 @@ func GetValAddresses(ctx context.Context, layer *cosmos.CosmosChain) (validators
 }
 
 func GetTxHashFromExec(stdout []byte) (string, error) {
-	output := cosmos.CosmosTx{}
-	err := json.Unmarshal(stdout, &output)
+	code, rawLog, txHash, err := parseTxResult(stdout)
 	if err != nil {
 		panic("error unmarshalling stdout")
 	}
-	fmt.Println("RawLog: ", output.RawLog)
-	if output.Code != 0 {
-		return output.TxHash, fmt.Errorf("transaction failed with code %d: %s", output.Code, output.RawLog)
+	fmt.Println("RawLog: ", rawLog)
+	if code != 0 {
+		return txHash, fmt.Errorf("transaction failed with code %d: %s", code, rawLog)
 	}
-	return output.TxHash, nil
+	return txHash, nil
+}
+
+type txResultJSON struct {
+	TxHash     string        `json:"txhash"`
+	Code       uint32        `json:"code"`
+	RawLog     string        `json:"raw_log"`
+	TxResponse *txResultJSON `json:"tx_response"`
+}
+
+func parseTxResult(data []byte) (code uint32, rawLog, txHash string, err error) {
+	var resp txResultJSON
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return 0, "", "", err
+	}
+	if resp.TxResponse != nil {
+		return resp.TxResponse.Code, resp.TxResponse.RawLog, firstNonEmpty(resp.TxResponse.TxHash, resp.TxHash), nil
+	}
+	return resp.Code, resp.RawLog, resp.TxHash, nil
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+// RequireTxFailed waits for the tx to be included, queries it, and asserts it failed on-chain.
+func RequireTxFailed(t *testing.T, ctx context.Context, validator *cosmos.ChainNode, txHash string, msgContains ...string) {
+	t.Helper()
+	require := require.New(t)
+
+	txRes, _, err := QueryWithTimeout(ctx, validator, "tx", txHash)
+	require.NoError(err)
+
+	code, rawLog, _, err := parseTxResult(txRes)
+	require.NoError(err)
+	require.NotZero(code, "expected tx %s to fail on chain: %s", txHash, string(txRes))
+	for _, fragment := range msgContains {
+		require.Contains(rawLog, fragment)
+	}
 }
 
 // ============================================================================

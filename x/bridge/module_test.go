@@ -23,6 +23,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -55,7 +57,7 @@ func SetupBridgeApp(t *testing.T) (AppModule, keeper.Keeper, sdk.Context, *mocks
 		bk,
 		rk,
 		dk,
-		"gov",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	app := NewAppModule(
@@ -102,7 +104,7 @@ func SetupBridgeAppBenchmark(b *testing.B) (AppModule, keeper.Keeper, sdk.Contex
 		bk,
 		rk,
 		dk,
-		"gov",
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 
 	app := NewAppModule(

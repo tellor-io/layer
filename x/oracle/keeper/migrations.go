@@ -6,6 +6,8 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tellor-io/layer/x/oracle/migrations/fork"
 	v4 "github.com/tellor-io/layer/x/oracle/migrations/v4"
+	v5 "github.com/tellor-io/layer/x/oracle/migrations/v5"
+	v6 "github.com/tellor-io/layer/x/oracle/migrations/v6"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -41,4 +43,17 @@ func (m Migrator) MigrateFork(ctx sdk.Context) error {
 // This adds the LivenessCycles parameter for liveness-weighted TBR distribution.
 func (m Migrator) Migrate3to4(ctx sdk.Context) error {
 	return v4.MigrateStore(ctx, m.keeper.storeService, m.keeper.cdc)
+}
+
+// Migrate4to5 migrates from version 4 to 5.
+// This deletes the unused MaxBatchSize store item after MsgBatchSubmitValue removal.
+func (m Migrator) Migrate4to5(ctx sdk.Context) error {
+	return v5.MigrateStore(ctx, m.keeper.storeService)
+}
+
+// Migrate5to6 migrates from version 5 to 6.
+// This backfills CurrentCycleListQuery from CyclelistSequencer.Peek() with a wrap
+// when the sequencer is past the cycle-list length.
+func (m Migrator) Migrate5to6(ctx sdk.Context) error {
+	return v6.MigrateStore(ctx, m.keeper.storeService)
 }

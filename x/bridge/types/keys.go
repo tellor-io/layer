@@ -41,4 +41,5 @@ var (
 	ValidatorCheckpointByCheckpointIndexPrefix = collections.NewPrefix(21) // validator_checkpoint_by_checkpoint_index
 	ValsetSignatureEvidenceSubmittedKey        = collections.NewPrefix(22) // valset_signature_evidence_submitted_map
 	ValsetCheckpointDomainSeparatorKey         = collections.NewPrefix(23) // valset_checkpoint_domain_separator
+	LastConsensusTimestampByQueryIdKey         = collections.NewPrefix(24) // last_consensus_timestamp_by_query_id
 )

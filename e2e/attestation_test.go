@@ -153,51 +153,73 @@ func TestConsensusAttestation(t *testing.T) {
 		require.Equal(attestationDataRes.LastConsensusTimestamp, timestamp) // lastConsTs should equal report1 timestamp
 	}
 
-	// sleep until cycle list query data is the same as the previous report
+	// Wait until the same cycle-list query is live again, then report from only
+	// one validator (non-consensus). SpotPrice windows are 2 blocks and the
+	// cycle list has only 3 queries, so SubmitCycleList's re-query can miss the
+	// window and land on a different query — leaving get-current-aggregate on
+	// the first 100% report. Submit the matched QueryData directly and retry
+	// if the window already expired.
+	prevTimestamp := timestamp
 	var success bool
+	deadline := time.Now().Add(2 * time.Minute)
 	for !success {
+		require.True(time.Now().Before(deadline), "timed out waiting for non-consensus second report")
+
 		cycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
 		require.NoError(err)
 		var cycleList e2e.QueryCurrentCyclelistQueryResponse
 		err = json.Unmarshal(cycleListRes, &cycleList)
 		require.NoError(err)
-		if cycleList.QueryData == currentCycleList.QueryData {
-			success = true
-			// Report for the cycle list from 1 val so not a consensus report
-			txHash, err := e2e.SubmitCycleList(ctx, validators[0].Node, validators[0].AccAddr, value, "5loya")
-			require.NoError(err)
-			fmt.Println("validator [ 0 ] reported at tx:", txHash)
-
-			// Wait 1 block for report to be included, then 1 for aggregation
-			err = testutil.WaitForBlocks(ctx, 2, validators[0].Node)
-			require.NoError(err)
-		} else {
+		if cycleList.QueryData != currentCycleList.QueryData {
 			time.Sleep(500 * time.Millisecond)
+			continue
+		}
+
+		txHashBytes, _, err := validators[0].Node.Exec(ctx,
+			validators[0].Node.TxCommand(validators[0].AccAddr, "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[0].Node.HomeDir()),
+			validators[0].Node.Chain.Config().Env)
+		if err != nil {
+			fmt.Println("second-round submit failed (likely window expired), retrying:", err)
+			time.Sleep(500 * time.Millisecond)
+			continue
+		}
+		txHash, err := e2e.GetTxHashFromExec(txHashBytes)
+		if err != nil {
+			fmt.Println("second-round submit tx failed, retrying:", err)
+			time.Sleep(500 * time.Millisecond)
+			continue
+		}
+		fmt.Println("validator [ 0 ] reported at tx:", txHash)
+
+		// Wait for inclusion + aggregation, then confirm current aggregate moved
+		// to a new timestamp with 50% power before continuing.
+		require.NoError(testutil.WaitForBlocks(ctx, 3, validators[0].Node))
+		for i := 0; i < 10; i++ {
+			res, _, err = e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "get-current-aggregate-report", queryId1)
+			require.NoError(err)
+			err = json.Unmarshal(res, &currentAggRes)
+			require.NoError(err)
+			if currentAggRes.Timestamp != prevTimestamp && currentAggRes.Aggregate != nil && currentAggRes.Aggregate.AggregatePower == "5000000" {
+				success = true
+				break
+			}
+			require.NoError(testutil.WaitForBlocks(ctx, 1, validators[0].Node))
+		}
+		if !success {
+			fmt.Println("current aggregate not yet non-consensus for queryId1; waiting for next cycle")
 		}
 	}
 
-	// wait 1 more block
-	err = testutil.WaitForBlocks(ctx, 1, validators[0].Node)
-	require.NoError(err)
-
-	// get reports by reporter
-	var queryId3 string
-	reports, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "get-reportsby-reporter", validators[0].AccAddr, "--page-limit", "2")
+	// Newest report must be for the same queryId as the first consensus report.
+	reports, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "get-reportsby-reporter", validators[0].AccAddr, "--page-limit", "1", "--page-reverse")
 	require.NoError(err)
 	var reportsRes e2e.QueryMicroReportsResponse
 	err = json.Unmarshal(reports, &reportsRes)
 	require.NoError(err)
-	fmt.Println("reports from: ", validators[0].AccAddr, ": ", reportsRes)
-	require.Equal(len(reportsRes.MicroReports), 2) // val0 should have two reports now
-	queryId3 = reportsRes.MicroReports[0].QueryID
-	require.Equal(queryId1, queryId3) // make sure query is same as first report, then we can reuse the decoded queryId from earlier
+	fmt.Println("newest report from: ", validators[0].AccAddr, ": ", reportsRes)
+	require.Equal(len(reportsRes.MicroReports), 1)
+	require.Equal(reportsRes.MicroReports[0].QueryID, queryId1)
 
-	// query GetCurrentAggregateReport to get aggregate timestamp
-	res, _, err = e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "get-current-aggregate-report", queryId1)
-	require.NoError(err)
-	err = json.Unmarshal(res, &currentAggRes)
-	require.NoError(err)
-	prevTimestamp := timestamp
 	timestamp = currentAggRes.Timestamp
 	fmt.Println("timestamp: ", timestamp)
 	fmt.Println("currentAggRes: ", currentAggRes)

@@ -430,6 +430,10 @@ func (k Keeper) DistributeLivenessRewards(ctx context.Context) error {
 		if reward.IsPositive() {
 			err = k.AllocateTBR(ctx, reporter, reward)
 			if err != nil {
+				// Missing reporter: leave amount as dust instead of failing EndBlock.
+				if errors.Is(err, reportertypes.ErrReporterDoesNotExist) {
+					continue
+				}
 				return err
 			}
 			distributed = distributed.Add(reward)

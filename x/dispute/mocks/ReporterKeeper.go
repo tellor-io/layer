@@ -205,6 +205,30 @@ func (_m *ReporterKeeper) GetDelegatorTokensAtBlock(ctx context.Context, delegat
 	return r0, r1
 }
 
+// GetDelegatorTokensFromReporterAtBlock provides a mock function with given fields: ctx, delegator, reporter, blockNumber
+func (_m *ReporterKeeper) GetDelegatorTokensFromReporterAtBlock(ctx context.Context, delegator []byte, reporter []byte, blockNumber uint64) (math.Int, error) {
+	ret := _m.Called(ctx, delegator, reporter, blockNumber)
+
+	var r0 math.Int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, []byte, uint64) (math.Int, error)); ok {
+		return rf(ctx, delegator, reporter, blockNumber)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []byte, []byte, uint64) math.Int); ok {
+		r0 = rf(ctx, delegator, reporter, blockNumber)
+	} else {
+		r0 = ret.Get(0).(math.Int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []byte, []byte, uint64) error); ok {
+		r1 = rf(ctx, delegator, reporter, blockNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetReporterTokensAtBlock provides a mock function with given fields: ctx, reporter, blockNumber
 func (_m *ReporterKeeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber uint64) (math.Int, error) {
 	ret := _m.Called(ctx, reporter, blockNumber)

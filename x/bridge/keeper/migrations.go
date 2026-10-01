@@ -1,12 +1,15 @@
 package keeper
 
 import (
+	"fmt"
 	"strings"
 
 	v3 "github.com/tellor-io/layer/x/bridge/migrations/v3"
 	v4 "github.com/tellor-io/layer/x/bridge/migrations/v4"
 	v5 "github.com/tellor-io/layer/x/bridge/migrations/v5"
+	v6 "github.com/tellor-io/layer/x/bridge/migrations/v6"
 	"github.com/tellor-io/layer/x/bridge/types"
+	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -78,4 +81,13 @@ func (m Migrator) Migrate4to5(ctx sdk.Context) error {
 	}
 
 	return nil
+}
+
+// Migrate5to6 migrates from version 5 to 6.
+func (m Migrator) Migrate5to6(ctx sdk.Context) error {
+	ok, okCast := m.keeper.oracleKeeper.(oraclekeeper.Keeper)
+	if !okCast {
+		return fmt.Errorf("bridge oracle keeper is not the concrete oracle keeper")
+	}
+	return v6.MigrateStore(ctx, m.keeper, ok)
 }

@@ -39,26 +39,26 @@ var ethUsdQueryId, _ = hex.DecodeString("83a7f3d48786ac2667503a61e8c415438ed2922
 
 type (
 	Keeper struct {
-		cdc                codec.BinaryCodec
-		storeService       store.KVStoreService
-		Params             collections.Item[types.Params]
-		MaxBatchSize       collections.Item[uint32]
-		accountKeeper      types.AccountKeeper
-		bankKeeper         types.BankKeeper
-		bridgeKeeper       types.BridgeKeeper
-		registryKeeper     types.RegistryKeeper
-		reporterKeeper     types.ReporterKeeper
-		Schema             collections.Schema
-		CyclelistSequencer collections.Sequence                                                                                       // key: queryId, tipper
-		TipperTotal        collections.Map[collections.Pair[[]byte, uint64], math.Int]                                                // key: tipperAcc, blockNumber
-		TotalTips          collections.Map[uint64, math.Int]                                                                          // key: blockNumber
-		Nonces             collections.Map[[]byte, uint64]                                                                            // key: queryId
-		Reports            *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, types.ReportsIndex] // key: queryId, reporter, queryMeta.id
-		QuerySequencer     collections.Sequence
-		Query              *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, types.QueryMetaIndex]  // key: queryId, id
-		Aggregates         *collections.IndexedMap[collections.Pair[[]byte, uint64], types.Aggregate, types.AggregatesIndex] // key: queryId, timestamp
-		Cyclelist          collections.Map[[]byte, []byte]                                                                   // key: queryId
-		QueryDataLimit     collections.Item[types.QueryDataLimit]                                                            // query data bytes limit
+		cdc                   codec.BinaryCodec
+		storeService          store.KVStoreService
+		Params                collections.Item[types.Params]
+		accountKeeper         types.AccountKeeper
+		bankKeeper            types.BankKeeper
+		bridgeKeeper          types.BridgeKeeper
+		registryKeeper        types.RegistryKeeper
+		reporterKeeper        types.ReporterKeeper
+		Schema                collections.Schema
+		CyclelistSequencer    collections.Sequence                                                                                       // key: queryId, tipper
+		TipperTotal           collections.Map[collections.Pair[[]byte, uint64], math.Int]                                                // key: tipperAcc, blockNumber
+		TotalTips             collections.Map[uint64, math.Int]                                                                          // key: blockNumber
+		Nonces                collections.Map[[]byte, uint64]                                                                            // key: queryId
+		Reports               *collections.IndexedMap[collections.Triple[[]byte, []byte, uint64], types.MicroReport, types.ReportsIndex] // key: queryId, reporter, queryMeta.id
+		QuerySequencer        collections.Sequence
+		Query                 *collections.IndexedMap[collections.Pair[[]byte, uint64], types.QueryMeta, types.QueryMetaIndex]  // key: queryId, id
+		Aggregates            *collections.IndexedMap[collections.Pair[[]byte, uint64], types.Aggregate, types.AggregatesIndex] // key: queryId, timestamp
+		Cyclelist             collections.Map[[]byte, []byte]                                                                   // key: queryId
+		CurrentCycleListQuery collections.Item[[]byte]                                                                          // query data of the live cycle-list query
+		QueryDataLimit        collections.Item[types.QueryDataLimit]                                                            // query data bytes limit
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		authority      string
@@ -113,7 +113,6 @@ func NewKeeper(
 		storeService: storeService,
 
 		Params:         collections.NewItem(sb, types.ParamsKeyPrefix(), "params", codec.CollValue[types.Params](cdc)),
-		MaxBatchSize:   collections.NewItem(sb, types.MaxBatchSizePrefix, "max_batch_size", collections.Uint32Value),
 		accountKeeper:  accountKeeper,
 		bankKeeper:     bankKeeper,
 		registryKeeper: registryKeeper,
@@ -164,6 +163,9 @@ func NewKeeper(
 		),
 		// Cyclelist maps the queryId (hash of the query data) to the queryData for queries that are in the cycle list
 		Cyclelist: collections.NewMap(sb, types.CyclelistPrefix, "cyclelist", collections.BytesKey, collections.BytesValue),
+		// CurrentCycleListQuery is the query data of the live cycle-list query. GetCurrentQueryInCycleList
+		// reads this item rather than indexing GetCyclelist() by CyclelistSequencer.Peek().
+		CurrentCycleListQuery: collections.NewItem(sb, types.CurrentCycleListQueryPrefix, "current_cycle_list_query", collections.BytesValue),
 		// CyclelistSequencer is an id generator for cycle list queries that increments when called until the max of len(cycleListQueries) is reached
 		// then it resets.
 		CyclelistSequencer: collections.NewSequence(sb, types.CycleSeqPrefix, "cycle_sequencer"),
@@ -441,15 +443,6 @@ func (k Keeper) GetLastReportedAtTimestamp(ctx context.Context, reporter []byte)
 	}
 
 	return timestamp, nil
-}
-
-func (k Keeper) GetMaxBatchSize(ctx context.Context) (uint32, error) {
-	maxBatchSize, err := k.MaxBatchSize.Get(ctx)
-	// gets error only if not found, so just return 0
-	if err != nil {
-		return 0, nil
-	}
-	return maxBatchSize, nil
 }
 
 // GetTimestampForBlockHeight returns the timestamp of aggregates at a given block height.

@@ -962,7 +962,7 @@ func (s *IntegrationTestSuite) TestCreateAndSwitchReporterMsg() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockTime(s.Setup.Ctx.BlockTime().Add(22 * 24 * time.Hour))
 
 	// delegator reporter decides to go back to delegator selector (pending demotion
-	// until ReporterStake on the outgoing self-reporter).
+	// until ReporterStake on the target reporter).
 	_, err = msReporter.SwitchReporter(s.Setup.Ctx, &reportertypes.MsgSwitchReporter{SelectorAddress: newDelegator.String(), ReporterAddress: valAccs[0].String()})
 	s.NoError(err)
 

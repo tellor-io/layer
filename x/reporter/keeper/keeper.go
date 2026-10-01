@@ -173,19 +173,25 @@ func (k Keeper) Logger() log.Logger {
 	return k.logger.With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-// GetDelegatorTokensAtBlock returns the total amount of tokens a selector had when part of reporting to the nearest given block Number.
+// GetDelegatorTokensAtBlock returns the total amount of tokens a selector had when
+// part of reporting for their current Selection.reporter, nearest to blockNumber.
 func (k Keeper) GetDelegatorTokensAtBlock(ctx context.Context, delegator []byte, blockNumber uint64) (math.Int, error) {
 	del, err := k.Selectors.Get(ctx, delegator)
 	if err != nil {
 		return math.Int{}, err
 	}
-	rep, err := k.GetDelegationsAmount(ctx, del.Reporter, blockNumber)
+	return k.GetDelegatorTokensFromReporterAtBlock(ctx, delegator, del.Reporter, blockNumber)
+}
+
+// GetDelegatorTokensFromReporterAtBlock returns the tokens attributed to delegator
+// in reporter's nearest stake snapshot at or before blockNumber. Used when a
+// selector has switched reporters but must peel from a prior reporter's vote.
+func (k Keeper) GetDelegatorTokensFromReporterAtBlock(ctx context.Context, delegator, reporter []byte, blockNumber uint64) (math.Int, error) {
+	rep, err := k.GetDelegationsAmount(ctx, reporter, blockNumber)
 	if err != nil {
 		return math.Int{}, err
 	}
 	delegatorTokens := math.ZeroInt()
-	// token origins {selector, validator, amount}
-	// loop through token origins and sum up the amount for the selector
 	for _, r := range rep.TokenOrigins {
 		if bytes.Equal(r.DelegatorAddress, delegator) {
 			delegatorTokens = delegatorTokens.Add(r.Amount)

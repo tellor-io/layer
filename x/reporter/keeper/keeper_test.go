@@ -70,6 +70,15 @@ func TestGetDelegatorTokensAtBlock(t *testing.T) {
 	tokens, err := k.GetDelegatorTokensAtBlock(ctx, delAddr, uint64(ctx.BlockHeight()))
 	require.NoError(t, err)
 	require.Equal(t, math.NewIntWithDecimal(2000, 6), tokens)
+
+	otherReporter := sample.AccAddressBytes()
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(otherReporter.Bytes(), uint64(ctx.BlockHeight()))), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{tokenOrigin1},
+		Total:        tokenOrigin1.Amount,
+	}))
+	fromOther, err := k.GetDelegatorTokensFromReporterAtBlock(ctx, delAddr, otherReporter, uint64(ctx.BlockHeight()))
+	require.NoError(t, err)
+	require.Equal(t, math.NewIntWithDecimal(1000, 6), fromOther)
 }
 
 func TestGetReporterTokensAtBlock(t *testing.T) {

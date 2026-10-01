@@ -55,7 +55,9 @@ var (
 	QueryByExpirationPrefix          = collections.NewPrefix(29)
 	BridgeDepositQueuePrefix         = collections.NewPrefix(30)
 	ReporterIndexPrefix              = collections.NewPrefix(32)
-	MaxBatchSizePrefix               = collections.NewPrefix(34)
+	// DeprecatedMaxBatchSizePrefix stored the MsgBatchSubmitValue size cap.
+	// Reserved so it is not reused. Cleared in the oracle v4→v5 store migration.
+	DeprecatedMaxBatchSizePrefix = collections.NewPrefix(34)
 
 	// Liveness reward storage prefixes
 	LivenessRecordsPrefix          = collections.NewPrefix(35)
@@ -74,6 +76,8 @@ var (
 	// MaxOpenCommitmentByReporter maps reporter address -> monotonic max query
 	// Expiration height from reports submitted by that reporter (updated on SubmitValue).
 	MaxOpenCommitmentByReporterPrefix = collections.NewPrefix(46)
+	// CurrentCycleListQueryPrefix stores the query data of the live cycle-list query.
+	CurrentCycleListQueryPrefix = collections.NewPrefix(47)
 )
 
 func KeyPrefix(p string) []byte {
