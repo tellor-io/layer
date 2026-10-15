@@ -96,6 +96,17 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 				}
 			}
 		} else if query.CycleList {
+			if query.OutOfTurn {
+				// Out-of-turn window of a cyclelist query: demote the query to
+				// non-standard tracking and count the extra opportunity now, in
+				// the liveness period this window actually aggregates in.
+				if err := k.DemoteQueryToNonStandard(ctx, aggregateReport.QueryId); err != nil {
+					return err
+				}
+				if err := k.IncrementQueryOpportunities(ctx, aggregateReport.QueryId); err != nil {
+					return err
+				}
+			}
 			// Regular cyclelist queries - track with actual queryId
 			err = k.TrackLivenessForAggregate(ctx, aggregateReport)
 			if err != nil {

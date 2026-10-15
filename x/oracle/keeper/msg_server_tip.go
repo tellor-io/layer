@@ -92,20 +92,15 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 		// check if this is a cyclelist query being tipped out-of-turn
 		isCyclelistQuery, _ := k.keeper.Cyclelist.Has(ctx, queryId)
 		if isCyclelistQuery {
-			// keep CycleList = true for liveness tracking
+			// keep CycleList = true for liveness tracking and mark the window as
+			// out-of-turn. Demotion to non-standard and the extra opportunity are
+			// applied when this window aggregates (SetAggregatedReport), not here.
 			query.CycleList = true
-			// Demote query to non-standard (out-of-turn tip creates extra opportunity)
-			// This moves existing shares from standard to non-standard tracking
-			if err := k.keeper.DemoteQueryToNonStandard(ctx, queryId); err != nil {
-				return nil, err
-			}
-			// increment query opportunities (creates extra opportunity)
-			if err := k.keeper.IncrementQueryOpportunities(ctx, queryId); err != nil {
-				return nil, err
-			}
+			query.OutOfTurn = true
 		} else {
 			// non-cyclelist query, not tracked for liveness
 			query.CycleList = false
+			query.OutOfTurn = false
 		}
 
 		id, err := k.keeper.QuerySequencer.Next(ctx)
