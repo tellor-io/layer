@@ -320,6 +320,33 @@ func TestJailDisputeLockSchedulesRecalc(t *testing.T) {
 	require.Equal(t, got.DisputeLockedUntil.Unix(), recalcAt)
 }
 
+// A jailed reporter must be flagged for recalc even when nothing else in the jail
+// flow reaches it.
+func TestJailReporterFlagsJailedReporterWhenSnapshotSelectorsMovedOn(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporterA := sample.AccAddressBytes()
+	reporterB := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	reportBlock := uint64(3)
+
+	require.NoError(t, k.Reporters.Set(ctx, reporterA, types.NewReporter(types.DefaultMinCommissionRate, math.OneInt(), "a")))
+	require.NoError(t, k.Reporters.Set(ctx, reporterB, types.NewReporter(types.DefaultMinCommissionRate, math.OneInt(), "b")))
+	// The selector backed A's disputed report but now selects B (switch already finalized).
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterB, 1)))
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(reporterA.Bytes(), reportBlock, []byte("q1")), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selector}},
+	}))
+
+	require.NoError(t, k.JailReporter(ctx, reporterA, 600, reportBlock, testDisputeHashID('a')))
+
+	hasA, err := k.StakeRecalcFlag.Has(ctx, reporterA.Bytes())
+	require.NoError(t, err)
+	require.True(t, hasA, "jailing must flag the jailed reporter itself")
+	hasB, err := k.StakeRecalcFlag.Has(ctx, reporterB.Bytes())
+	require.NoError(t, err)
+	require.True(t, hasB, "the lock on the moved selector still flags its current reporter")
+}
+
 func TestLazyClearSelectorLocksIfExpired(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	selector := sample.AccAddressBytes()
