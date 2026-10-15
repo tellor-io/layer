@@ -30,6 +30,7 @@ type BankKeeper interface {
 type BridgeKeeper interface {
 	GetDepositStatus(ctx context.Context, depositId uint64) (bool, error)
 	ClaimDeposit(ctx context.Context, depositId, timestamp uint64) error
+	GetPowerThreshold(ctx context.Context) (uint64, error)
 }
 
 type RegistryKeeper interface {

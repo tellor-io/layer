@@ -418,7 +418,7 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistributionMultipleAggregates() 
 	trbBridgeOpportunities, err := s.Setup.Oraclekeeper.QueryOpportunities.Get(ctx, keeper.TRBBridgeMarkerQueryId)
 	s.NoError(err)
 	s.T().Logf("TRBBridgeV2 opportunities: %d", trbBridgeOpportunities)
-	require.Equal(uint64(2), trbBridgeOpportunities, "TRBBridgeV2 should have 2 opportunities (2 aggregates)")
+	require.Equal(uint64(1), trbBridgeOpportunities, "only the aggregate at or above the bridge power threshold counts as an opportunity")
 
 	// Manually trigger distribution
 	s.T().Logf("Triggering TBR distribution...")
@@ -436,34 +436,16 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistributionMultipleAggregates() 
 
 	s.T().Logf("Tip deltas: [%s, %s]", tipDeltas[0], tipDeltas[1])
 
-	// With 3 cyclelist queries (0 opportunities since we didn't submit) + 1 TRBBridgeV2 slot (2 opportunities):
-	// Actually, we only have TRBBridgeV2 queries in this test, no cyclelist submissions
-	// So total slots = 3 cyclelist (with 0 opportunities) + 1 TRBBridgeV2 (with 2 opportunities)
-	//
-	// Wait, the distribution formula uses opportunities per queryId.
-	// For TRBBridgeV2: 2 opportunities, reporter0 submitted to both, reporter1 submitted to 1
-	// rewardPerSlot = 400,000 / 4 = 100,000 (if there are no cyclelist opportunities, this might be different)
-	//
-	// Actually let's think about this more carefully:
-	// - numSlots = numCyclelistQueries (3) + hasTRBBridge (1 if opportunities > 0) = 4
-	// - rewardPerSlot = 400,000 / 4 = 100,000
-	// - For TRBBridgeV2 with 2 opportunities:
-	//   - Reporter 0: share in agg1 (1/2) + share in agg2 (1/1) = 0.5 + 1.0 = 1.5 total shares
-	//   - Reporter 1: share in agg1 (1/2) = 0.5 total shares
-	//   - Average share for reporter 0: 1.5 / 2 opportunities = 0.75
-	//   - Average share for reporter 1: 0.5 / 2 opportunities = 0.25
-	//   - Reporter 0 TRBBridgeV2 reward: 0.75 * 100,000 = 75,000
-	//   - Reporter 1 TRBBridgeV2 reward: 0.25 * 100,000 = 25,000
-
-	// Reporter 0 should have received more than reporter 1
-	require.True(tipDeltas[0].GT(tipDeltas[1]),
-		"Reporter 0 should have received more than reporter 1 (participated in both TRBBridgeV2)")
-
-	// The ratio should be about 3:1 (0.75/0.25 = 3)
+	// Each validator-reporter has 200 power, so the bridge threshold is 400*2/3 = 266.
+	// Query 1 (both reporters, 400 power) counts toward the slot; query 2 (reporter 0
+	// alone, 200 power) is below the threshold and earns nothing, so the single
+	// opportunity is split 0.5 / 0.5.
+	require.True(tipDeltas[0].IsPositive())
+	require.True(tipDeltas[1].IsPositive())
 	ratio := tipDeltas[0].Quo(tipDeltas[1])
-	s.T().Logf("Ratio reporter0/reporter1: %.2f (expected ~3.0)", ratio.MustFloat64())
-	require.True(ratio.GT(math.LegacyMustNewDecFromStr("2.5")) && ratio.LT(math.LegacyMustNewDecFromStr("3.5")),
-		"Reporter 0 should have ~3x more rewards than reporter 1")
+	s.T().Logf("Ratio reporter0/reporter1: %.2f (expected ~1.0)", ratio.MustFloat64())
+	require.True(ratio.GT(math.LegacyMustNewDecFromStr("0.99")) && ratio.LT(math.LegacyMustNewDecFromStr("1.01")),
+		"the sub-threshold solo aggregate must not change the split of the bridge slot")
 
 	s.T().Logf("SUCCESS: Multiple TRBBridgeV2 aggregates share the slot correctly!")
 }

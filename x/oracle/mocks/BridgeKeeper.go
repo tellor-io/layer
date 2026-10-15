@@ -51,6 +51,29 @@ func (_m *BridgeKeeper) GetDepositStatus(ctx context.Context, depositId uint64) 
 	return r0, r1
 }
 
+func (_m *BridgeKeeper) GetPowerThreshold(ctx context.Context) (uint64, error) {
+	ret := _m.Called(ctx)
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (uint64, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) uint64); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewBridgeKeeper interface {
 	mock.TestingT
 	Cleanup(func())

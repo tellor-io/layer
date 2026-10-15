@@ -77,16 +77,23 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		// Check for TRBBridge queries first - they have CycleList=true in QueryMeta
 		// but need separate tracking since they share one TBR slot for all TRBBridge reports
 		if strings.EqualFold(query.QueryType, TRBBridgeV2QueryType) || strings.EqualFold(query.QueryType, TRBBridgeQueryType) {
-			// Track TRBBridge queries under the marker queryId
-			// All TRBBridge aggregates share a single "slot" in TBR distribution
-			err = k.TrackLivenessForTRBBridge(ctx, aggregateReport)
+			// Deposit reports that never gather enough power to be claimable do not earn time-based rewards.
+			eligible, err := k.bridgeAggregateEligibleForTBR(ctx, aggregateReport)
 			if err != nil {
 				return err
 			}
-			// Increment TRBBridge opportunity count (each aggregate is an opportunity)
-			err = k.IncrementQueryOpportunities(ctx, TRBBridgeMarkerQueryId)
-			if err != nil {
-				return err
+			if eligible {
+				// Track TRBBridge queries under the marker queryId
+				// All TRBBridge aggregates share a single "slot" in TBR distribution
+				err = k.TrackLivenessForTRBBridge(ctx, aggregateReport)
+				if err != nil {
+					return err
+				}
+				// Increment TRBBridge opportunity count (each aggregate is an opportunity)
+				err = k.IncrementQueryOpportunities(ctx, TRBBridgeMarkerQueryId)
+				if err != nil {
+					return err
+				}
 			}
 		} else if query.CycleList {
 			// Regular cyclelist queries - track with actual queryId
@@ -129,6 +136,17 @@ func (k Keeper) SetAggregatedReport(ctx context.Context) (err error) {
 		}
 	}
 	return nil
+}
+
+func (k Keeper) bridgeAggregateEligibleForTBR(ctx context.Context, aggregate types.Aggregate) (bool, error) {
+	threshold, err := k.bridgeKeeper.GetPowerThreshold(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return false, nil
+		}
+		return false, err
+	}
+	return aggregate.AggregatePower >= threshold, nil
 }
 
 // SetAggregate increments the queryId's report index plus sets the timestamp and blockHeight and stores the aggregate report
