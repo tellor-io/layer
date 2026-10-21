@@ -88,16 +88,20 @@ func (h Hooks) BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddre
 	return h.k.Selectors.Set(ctx, delAddr.Bytes(), selector)
 }
 
-// decrement a selector's delegations count when a delegation is removed
-func (h Hooks) BeforeDelegationRemoved(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
+// BeforeDelegationRemoved decrements a selector's delegation count when a delegation
+// is removed. Cosmos SDK calls this instead of AfterDelegationModified when the
+// remaining shares hit zero, so this is also what flags the reporter to recalculate.
+func (h Hooks) BeforeDelegationRemoved(ctx context.Context, delAddr sdk.AccAddress, _ sdk.ValAddress) error {
 	selector, err := h.k.Selectors.Get(ctx, delAddr.Bytes())
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
 			return nil
-		} else {
-			return err
 		}
+		return err
 	}
 	selector.DelegationsCount--
-	return h.k.Selectors.Set(ctx, delAddr.Bytes(), selector)
+	if err := h.k.Selectors.Set(ctx, delAddr.Bytes(), selector); err != nil {
+		return err
+	}
+	return h.k.FlagStakeRecalc(ctx, sdk.AccAddress(selector.Reporter))
 }

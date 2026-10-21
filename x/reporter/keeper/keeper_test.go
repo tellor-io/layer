@@ -500,6 +500,27 @@ func TestStakeRecalcFlag(t *testing.T) {
 	require.False(t, has)
 }
 
+// TestFlagAllReportersForStakeRecalc covers the v6.1.9 upgrade helper.
+// Remove it with FlagAllReportersForStakeRecalc in the following upgrade.
+func TestFlagAllReportersForStakeRecalc(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	rep := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "r")
+	first := sample.AccAddressBytes()
+	second := sample.AccAddressBytes()
+	require.NoError(t, k.Reporters.Set(ctx, first.Bytes(), rep))
+	require.NoError(t, k.Reporters.Set(ctx, second.Bytes(), rep))
+
+	n, err := k.FlagAllReportersForStakeRecalc(ctx)
+	require.NoError(t, err)
+	require.Equal(t, 2, n)
+
+	for _, addr := range []sdk.AccAddress{first, second} {
+		has, err := k.StakeRecalcFlag.Has(ctx, addr.Bytes())
+		require.NoError(t, err)
+		require.True(t, has)
+	}
+}
+
 func TestLastValSetUpdateHeight(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 

@@ -36,12 +36,17 @@ func TestBeforeDelegationRemoved(t *testing.T) {
 	_, err := k.Selectors.Get(ctx, delAddr.Bytes())
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
-	require.NoError(t, k.Selectors.Set(ctx, delAddr, types.NewSelection(delAddr, 1)))
+	reporterAddr := sample.AccAddressBytes()
+	require.NoError(t, k.Selectors.Set(ctx, delAddr, types.NewSelection(reporterAddr, 1)))
 	require.NoError(t, k.Hooks().BeforeDelegationRemoved(ctx, delAddr, valAddr))
 
 	selector, err := k.Selectors.Get(ctx, delAddr)
 	require.NoError(t, err)
 	require.Equal(t, uint64(0), selector.DelegationsCount)
+
+	has, err := k.StakeRecalcFlag.Has(ctx, reporterAddr.Bytes())
+	require.NoError(t, err)
+	require.True(t, has)
 }
 
 func TestAfterValidatorBonded_SetsLastValSetUpdateHeight(t *testing.T) {

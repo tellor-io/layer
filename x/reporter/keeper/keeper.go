@@ -292,6 +292,25 @@ func (k *Keeper) FlagStakeRecalc(ctx context.Context, reporter sdk.AccAddress) e
 	return k.StakeRecalcFlag.Set(ctx, reporter.Bytes(), true)
 }
 
+// FlagAllReportersForStakeRecalc is only used by the v6.1.9 upgrade handler.
+// Remove this function, and its test, in the upgrade that follows v6.1.9.
+//
+// It marks every reporter so the next ReporterStake walks current delegations.
+// A full undelegation before BeforeDelegationRemoved set this flag left no record
+// of which cached totals are stale, so the upgrade flags everyone. The flag is
+// cleared after that one recalculation.
+func (k Keeper) FlagAllReportersForStakeRecalc(ctx context.Context) (int, error) {
+	n := 0
+	err := k.Reporters.Walk(ctx, nil, func(repAddr []byte, _ types.OracleReporter) (bool, error) {
+		if err := k.FlagStakeRecalc(ctx, sdk.AccAddress(repAddr)); err != nil {
+			return true, err
+		}
+		n++
+		return false, nil
+	})
+	return n, err
+}
+
 func (k *Keeper) SetOracleKeeper(ok types.OracleKeeper) {
 	k.oracleKeeper = ok
 }
