@@ -10,7 +10,6 @@ import (
 	"cosmossdk.io/collections"
 	storetypes "cosmossdk.io/core/store"
 	"cosmossdk.io/log"
-	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -191,10 +190,9 @@ func (k Keeper) SendExtraRewards(ctx context.Context) error {
 		k.Logger(ctx).Error("extra rewards time elapsed is negative", "time_elapsed", timeElapsed)
 		return nil
 	}
-	rewardAmount := dailyExtraRewardRate * timeElapsed / types.MillisecondsInDay
-	rewardAmountInt := math.NewInt(rewardAmount)
+	rewardAmountInt := types.AmountForDailyRate(dailyExtraRewardRate, timeElapsed)
 	// only send if we have enough balance so the minimum/rate is the the TBR mint rate
-	if rewardAmountInt.IsZero() || balance.Amount.LT(rewardAmountInt) {
+	if !rewardAmountInt.IsPositive() || balance.Amount.LT(rewardAmountInt) {
 		return nil
 	}
 

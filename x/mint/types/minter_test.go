@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	stdmath "math"
 	"testing"
 	time "time"
 
@@ -67,4 +68,35 @@ func TestCalculateBlockProvision(t *testing.T) {
 	blockProvision, err = minter.CalculateBlockProvision(time.Unix(1000, 0), time.Unix(1010, 0))
 	require.ErrorContains(err, "cannot be before previous time")
 	require.Equal(blockProvision.Amount, sdk.Coin{}.Amount)
+
+	// Gaps past the int64 product limit must mint the real pro-rata amount.
+	// The first window wraps negative; the next wraps to a small positive.
+	rate := int64(types.DailyMintRate)
+	quot := stdmath.MaxInt64 / rate
+	for _, elapsed := range []int64{quot + 1, 2 * (quot + 1)} {
+		wrapped := math.NewInt(rate * elapsed / types.MillisecondsInDay)
+		expected := types.AmountForDailyRate(rate, elapsed)
+		require.True(expected.IsPositive())
+		require.False(expected.Equal(wrapped))
+
+		current := time.Unix(0, 0).Add(time.Duration(elapsed) * time.Millisecond)
+		blockProvision, err = minter.CalculateBlockProvision(current, time.Unix(0, 0))
+		require.NoError(err)
+		require.Equal(expected, blockProvision.Amount)
+	}
+}
+
+func TestAmountForDailyRate(t *testing.T) {
+	require := require.New(t)
+
+	require.True(types.AmountForDailyRate(0, 1_000).IsZero())
+	require.True(types.AmountForDailyRate(-1, types.MillisecondsInDay).IsZero())
+	require.True(types.AmountForDailyRate(types.DailyMintRate, 0).IsZero())
+	require.True(types.AmountForDailyRate(types.DailyMintRate, -1).IsZero())
+
+	elapsed := int64(10 * 1000)
+	require.Equal(
+		math.NewInt(types.DailyMintRate*elapsed/types.MillisecondsInDay),
+		types.AmountForDailyRate(types.DailyMintRate, elapsed),
+	)
 }
