@@ -164,9 +164,15 @@ func (k Keeper) IncrementStandardOpportunities(ctx context.Context) error {
 	return k.StandardOpportunities.Set(ctx, current+1)
 }
 
-// DemoteQueryToNonStandard moves a query from standard to non-standard
-// This is called when an out-of-turn tip happens for a cyclelist query
-// It moves all existing shares for this query from ReporterStandardShareSum to ReporterQueryShareSum
+// DemoteQueryToNonStandard moves a query from standard to non-standard tracking.
+// Called when a cyclelist query is tipped out of turn.
+//
+// The query's opportunity count is left as RotateQueries recorded it. Each
+// rotation already consumed is stored on the query; the caller adds one more
+// for the tip. Replacing that count with StandardOpportunities drops in-progress
+// rotations, because the global counter stays at 0 until the cycle completes.
+// A query that already reported its rotation and then reports the tip would
+// then hold two shares against one opportunity and be paid two slots.
 func (k Keeper) DemoteQueryToNonStandard(ctx context.Context, queryId []byte) error {
 	// Check if already non-standard
 	isNonStandard, err := k.NonStandardQueries.Has(ctx, queryId)
@@ -178,22 +184,6 @@ func (k Keeper) DemoteQueryToNonStandard(ctx context.Context, queryId []byte) er
 	}
 
 	if err := k.NonStandardQueries.Set(ctx, queryId, true); err != nil {
-		return err
-	}
-
-	// Get current standard opportunities to set as the query's base opportunities
-	standardOpp, err := k.StandardOpportunities.Get(ctx)
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return err
-		}
-		standardOpp = 0
-	}
-
-	// Set the query's opportunities to current standard + 1 (for this new tip)
-	// Note: The caller (msg_server_tip) will also call IncrementQueryOpportunities,
-	// so we set to standardOpp here, and it will become standardOpp+1 after
-	if err := k.QueryOpportunities.Set(ctx, queryId, standardOpp); err != nil {
 		return err
 	}
 

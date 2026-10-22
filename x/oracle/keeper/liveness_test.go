@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/stretchr/testify/mock"
 	"github.com/tellor-io/layer/testutil/sample"
 	minttypes "github.com/tellor-io/layer/x/mint/types"
 	"github.com/tellor-io/layer/x/oracle/types"
@@ -359,8 +360,9 @@ func (s *KeeperTestSuite) TestDemoteQueryToNonStandard() {
 	require.NoError(k.ReporterStandardShareSum.Set(ctx, reporter1, share1.Add(share1))) // queryId + otherQueryId
 	require.NoError(k.ReporterStandardShareSum.Set(ctx, reporter2, share2))             // only queryId
 
-	// Set standard opportunities
-	require.NoError(k.StandardOpportunities.Set(ctx, 2))
+	// Rotation already consumed. The global counter is still 0 until the cycle ends.
+	require.NoError(k.QueryOpportunities.Set(ctx, queryId, 1))
+	require.NoError(k.StandardOpportunities.Set(ctx, 0))
 
 	// Demote queryId to non-standard
 	err := k.DemoteQueryToNonStandard(ctx, queryId)
@@ -371,10 +373,10 @@ func (s *KeeperTestSuite) TestDemoteQueryToNonStandard() {
 	require.NoError(err)
 	require.True(isNonStandard)
 
-	// Verify query opportunities is set
+	// The consumed rotation stays on the books. The tip caller adds the extra window.
 	opp, err := k.QueryOpportunities.Get(ctx, queryId)
 	require.NoError(err)
-	require.Equal(uint64(2), opp) // Should be set to current standard opportunities
+	require.Equal(uint64(1), opp)
 
 	// Verify reporter1's standard share sum is reduced (only otherQueryId remains)
 	r1Standard, err := k.ReporterStandardShareSum.Get(ctx, reporter1)
@@ -391,7 +393,71 @@ func (s *KeeperTestSuite) TestDemoteQueryToNonStandard() {
 	require.NoError(err)
 	require.Equal(share1, r1QueryShare)
 
-	// Second demotion should be a no-op
+	// Second demotion should be a no-op and must not touch the preserved count
 	err = k.DemoteQueryToNonStandard(ctx, queryId)
 	require.NoError(err)
+	opp, err = k.QueryOpportunities.Get(ctx, queryId)
+	require.NoError(err)
+	require.Equal(uint64(1), opp)
+}
+
+// A rotation window plus the out-of-turn tip are two opportunities. Paying the
+// tip's reporter as if both windows were one credits two slots and, once the
+// other cyclelist slots are also fully claimed, more than the TBR moved into escrow.
+func (s *KeeperTestSuite) TestDemotePreservesRotationSoDistributionPaysOneSlot() {
+	require := s.Require()
+	k := s.oracleKeeper
+	ctx := s.ctx
+
+	tipped := sample.AccAddressBytes()
+	otherA := sample.AccAddressBytes()
+	otherB := sample.AccAddressBytes()
+	queryId := []byte("tipped_cycle_query")
+
+	// One full-power report on the rotation this query already consumed.
+	require.NoError(k.QueryOpportunities.Set(ctx, queryId, 1))
+	require.NoError(k.StandardOpportunities.Set(ctx, 0))
+	require.NoError(k.ReporterQueryShareSum.Set(ctx, collections.Join(queryId, []byte(tipped)), math.LegacyOneDec()))
+	require.NoError(k.ReporterStandardShareSum.Set(ctx, tipped, math.LegacyOneDec()))
+	// The other two cyclelist slots were fully reported on the standard path.
+	require.NoError(k.ReporterStandardShareSum.Set(ctx, otherA, math.LegacyOneDec()))
+	require.NoError(k.ReporterStandardShareSum.Set(ctx, otherB, math.LegacyOneDec()))
+
+	require.NoError(k.DemoteQueryToNonStandard(ctx, queryId))
+	// The tip is the extra window. The rotation count must still be there.
+	require.NoError(k.IncrementQueryOpportunities(ctx, queryId))
+	opp, err := k.QueryOpportunities.Get(ctx, queryId)
+	require.NoError(err)
+	require.Equal(uint64(2), opp)
+
+	// Second report, on the tipped window. Non-standard, so only the per-query sum grows.
+	require.NoError(k.AddReporterQueryShareSum(ctx, tipped, queryId, 100, 100))
+
+	// Cycle then completes: standard queries have one opportunity. TBR covers 3 slots.
+	require.NoError(k.StandardOpportunities.Set(ctx, 1))
+	tbr := math.NewInt(3000)
+	rewardPerSlot := math.LegacyNewDec(1000)
+
+	add := sample.AccAddressBytes()
+	baseAccount := authtypes.NewBaseAccountWithAddress(add)
+	testModuleAccount := authtypes.NewModuleAccount(baseAccount, "time_based_rewards", []string{authtypes.Minter, authtypes.Burner, authtypes.Staking}...)
+	s.accountKeeper.On("GetModuleAccount", ctx, minttypes.TimeBasedRewards).Return(sdk.ModuleAccountI(testModuleAccount))
+	s.bankKeeper.On("GetBalance", ctx, testModuleAccount.GetAddress(), "loya").Return(sdk.Coin{Amount: tbr, Denom: "loya"}).Once()
+	s.bankKeeper.On("SendCoinsFromModuleToModule", ctx, minttypes.TimeBasedRewards, "tips_escrow_pool", sdk.NewCoins(sdk.NewCoin("loya", tbr))).Return(nil).Once()
+
+	paid := make(map[string]math.LegacyDec)
+	s.reporterKeeper.On("DivvyingTips", mock.Anything, mock.Anything, mock.Anything).
+		Run(func(args mock.Arguments) {
+			addr := args.Get(1).(sdk.AccAddress)
+			paid[addr.String()] = args.Get(2).(math.LegacyDec)
+		}).Return(nil)
+
+	require.NoError(k.DistributeLivenessRewards(ctx))
+
+	require.True(rewardPerSlot.Equal(paid[sdk.AccAddress(tipped).String()]), "tipped reporter paid %s, want one slot %s", paid[sdk.AccAddress(tipped).String()], rewardPerSlot)
+	total := math.LegacyZeroDec()
+	for _, amount := range paid {
+		total = total.Add(amount)
+	}
+	require.True(tbr.ToLegacyDec().Equal(total), "credits %s exceed the %s moved into escrow", total, tbr)
 }
