@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	stdmath "math"
 	"testing"
 	"time"
 
@@ -207,6 +208,66 @@ func (s *KeeperTestSuite) TestSendExtraRewards() {
 
 	err = k.SendExtraRewards(s.ctx)
 	require.NoError(err)
+}
+
+func (s *KeeperTestSuite) TestSendExtraRewardsLongGapDoesNotOverflow() {
+	require := s.Require()
+	k := s.mintKeeper
+	bk := s.bankKeeper
+	ak := s.accountKeeper
+
+	extraRewardsAddr := authtypes.NewModuleAddress(types.ExtraRewardsPool)
+	ak.On("GetModuleAddress", types.ExtraRewardsPool).Return(extraRewardsAddr)
+
+	rate := int64(types.DailyMintRate)
+	quot := stdmath.MaxInt64 / rate
+	// First gap wraps the int64 product negative. The next wraps it positive
+	// and far below the real payout.
+	currentTime := time.Unix(1_700_000_000, 0).UTC()
+	s.ctx = s.ctx.WithBlockTime(currentTime)
+
+	for _, elapsed := range []int64{quot + 1, 2 * (quot + 1)} {
+		expected := types.AmountForDailyRate(rate, elapsed)
+		require.True(expected.IsPositive())
+		require.False(expected.Equal(math.NewInt(rate * elapsed / types.MillisecondsInDay)))
+
+		previousTime := currentTime.Add(-time.Duration(elapsed) * time.Millisecond)
+		require.Equal(elapsed, currentTime.Sub(previousTime).Milliseconds())
+		require.NoError(k.ExtraRewardParams.Set(s.ctx, types.ExtraRewardParams{
+			DailyExtraRewards: rate,
+			PreviousBlockTime: &previousTime,
+			BondDenom:         types.DefaultBondDenom,
+		}))
+
+		bk.On("GetBalance", s.ctx, extraRewardsAddr, types.DefaultBondDenom).
+			Return(sdk.NewCoin(types.DefaultBondDenom, expected)).Once()
+
+		quarter := expected.QuoRaw(4)
+		threequarters := expected.Sub(quarter)
+		bk.On("InputOutputCoins", s.ctx, banktypes.NewInput(extraRewardsAddr, sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, expected))), []banktypes.Output{
+			{
+				Address: authtypes.NewModuleAddressOrBech32Address(types.TimeBasedRewards).String(),
+				Coins:   sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, threequarters)),
+			},
+			{
+				Address: authtypes.NewModuleAddressOrBech32Address(authtypes.FeeCollectorName).String(),
+				Coins:   sdk.NewCoins(sdk.NewCoin(types.DefaultBondDenom, quarter)),
+			},
+		}).Return(nil).Once()
+
+		require.NoError(k.SendExtraRewards(s.ctx))
+	}
+
+	// A negative stored rate skips the payout instead of building a negative coin.
+	previousTime := currentTime.Add(-24 * time.Hour)
+	require.NoError(k.ExtraRewardParams.Set(s.ctx, types.ExtraRewardParams{
+		DailyExtraRewards: -1,
+		PreviousBlockTime: &previousTime,
+		BondDenom:         types.DefaultBondDenom,
+	}))
+	bk.On("GetBalance", s.ctx, extraRewardsAddr, types.DefaultBondDenom).
+		Return(sdk.NewCoin(types.DefaultBondDenom, math.NewInt(types.DailyMintRate))).Once()
+	require.NoError(k.SendExtraRewards(s.ctx))
 }
 
 func (s *KeeperTestSuite) TestGetExtraRewardRateParams() {
