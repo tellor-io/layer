@@ -72,7 +72,7 @@ func (k msgServer) Tip(goCtx context.Context, msg *types.MsgTip) (*types.MsgTipR
 	}
 
 	// if an additional tip exceeds max tip, return an error
-	if query.Amount.Add(msg.Amount.Amount).GT(types.DefaultMaxTipAmount) {
+	if query.Amount.Add(msg.Amount.Amount).GT(params.MaxTipAmount) {
 		return nil, types.ErrTipExceedsMax
 	}
 
