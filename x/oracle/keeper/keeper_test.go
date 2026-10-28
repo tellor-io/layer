@@ -184,6 +184,9 @@ func (s *KeeperTestSuite) TestFlagAggregateReport() {
 		QueryId:     queryId,
 		Reporter:    reporter1,
 	}
+	isAggregate, err := k.IsAggregateReport(ctx, report)
+	require.NoError(err)
+	require.True(isAggregate)
 	// flag report
 	require.NoError(k.FlagAggregateReport(ctx, report))
 
