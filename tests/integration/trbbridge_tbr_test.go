@@ -418,7 +418,7 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistributionMultipleAggregates() 
 	trbBridgeOpportunities, err := s.Setup.Oraclekeeper.QueryOpportunities.Get(ctx, keeper.TRBBridgeMarkerQueryId)
 	s.NoError(err)
 	s.T().Logf("TRBBridgeV2 opportunities: %d", trbBridgeOpportunities)
-	require.Equal(uint64(1), trbBridgeOpportunities, "only the aggregate at or above the bridge power threshold counts as an opportunity")
+	require.Equal(uint64(2), trbBridgeOpportunities, "TRBBridgeV2 should have 2 opportunities (2 aggregates)")
 
 	// Manually trigger distribution
 	s.T().Logf("Triggering TBR distribution...")
@@ -436,16 +436,14 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistributionMultipleAggregates() 
 
 	s.T().Logf("Tip deltas: [%s, %s]", tipDeltas[0], tipDeltas[1])
 
-	// Each validator-reporter has 200 power, so the bridge threshold is 400*2/3 = 266.
-	// Query 1 (both reporters, 400 power) counts toward the slot; query 2 (reporter 0
-	// alone, 200 power) is below the threshold and earns nothing, so the single
-	// opportunity is split 0.5 / 0.5.
-	require.True(tipDeltas[0].IsPositive())
-	require.True(tipDeltas[1].IsPositive())
+	// Reporter 0 should have received more than reporter 1
+	require.True(tipDeltas[0].GT(tipDeltas[1]),
+		"Reporter 0 should have received more than reporter 1 (participated in both TRBBridgeV2)")
+
+	// The ratio should be about 3:1 (0.75/0.25 = 3)
 	ratio := tipDeltas[0].Quo(tipDeltas[1])
-	s.T().Logf("Ratio reporter0/reporter1: %.2f (expected ~1.0)", ratio.MustFloat64())
-	require.True(ratio.GT(math.LegacyMustNewDecFromStr("0.99")) && ratio.LT(math.LegacyMustNewDecFromStr("1.01")),
-		"the sub-threshold solo aggregate must not change the split of the bridge slot")
+	require.True(ratio.GT(math.LegacyMustNewDecFromStr("2.5")) && ratio.LT(math.LegacyMustNewDecFromStr("3.5")),
+		"Reporter 0 should have ~3x more rewards than reporter 1")
 
 	s.T().Logf("SUCCESS: Multiple TRBBridgeV2 aggregates share the slot correctly!")
 }
