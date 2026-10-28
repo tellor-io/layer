@@ -68,6 +68,11 @@ curl -H "X-API-Key: admin123" http://localhost:8080/api/prices/exchange/binance
 
 # Date range
 curl -H "X-API-Key: admin123" "http://localhost:8080/api/prices/range?start=2024-01-01&end=2024-01-31"
+
+# Freeform read-only SQL
+curl -H "X-API-Key: admin123" -H "Content-Type: application/json" \
+  -d '{"sql":"SELECT market_id, COUNT(*) FROM price_data GROUP BY 1"}' \
+  http://localhost:8080/api/query
 ```
 
 ---
@@ -111,14 +116,25 @@ curl -H "X-API-Key: admin123" \
 
 ## Configuration
 
-Default values (set in `config.env`):
+Defaults / template: see `config.env.example`. Local secrets go in `config.env` (gitignored).
 
 ```bash
+# Write DB (collector only)
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
 DB_PASSWORD=password
 DB_NAME=pricefeed
+
+# Read-only DB (all API handlers — required for API/combined mode)
+DB_READONLY_HOST=localhost
+DB_READONLY_PORT=5432
+DB_READONLY_USER=readonly_user
+DB_READONLY_PASSWORD=your_readonly_password
+DB_READONLY_NAME=pricefeed
+
+QUERY_TIMEOUT_SECONDS=120
+QUERY_MAX_ROWS=500000
 
 API_PASSWORD=admin123
 API_PORT=8080

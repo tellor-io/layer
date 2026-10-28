@@ -47,13 +47,22 @@ type PriceData struct {
 // Config holds application configuration
 type Config struct {
 	PrometheusURL string
-	DBHost        string
-	DBPort        string
-	DBUser        string
-	DBPassword    string
-	DBName        string
-	APIPassword   string
-	APIPort       string
+	// Write DB (collector / DDL only)
+	DBHost     string
+	DBPort     string
+	DBUser     string
+	DBPassword string
+	DBName     string
+	// Read-only DB (all API handlers)
+	DBReadonlyHost     string
+	DBReadonlyPort     string
+	DBReadonlyUser     string
+	DBReadonlyPassword string
+	DBReadonlyName     string
+	QueryTimeoutSeconds int
+	QueryMaxRows        int
+	APIPassword         string
+	APIPort             string
 }
 
 // Constants for repeated string literals
@@ -69,6 +78,16 @@ type APIResponse struct {
 	Data    interface{} `json:"data,omitempty"`
 	Error   string      `json:"error,omitempty"`
 	Count   int         `json:"count,omitempty"`
+}
+
+// QueryAPIResponse is the response shape for POST /api/query
+type QueryAPIResponse struct {
+	Success   bool                     `json:"success"`
+	Columns   []string                 `json:"columns,omitempty"`
+	Data      []map[string]interface{} `json:"data,omitempty"`
+	Count     int                      `json:"count,omitempty"`
+	Truncated bool                     `json:"truncated,omitempty"`
+	Error     string                   `json:"error,omitempty"`
 }
 
 // writeCSVResponse writes price data as CSV to the response writer
@@ -126,12 +145,51 @@ func getEnv(key, defaultValue string) string {
 	return defaultValue
 }
 
-func initDB(config Config) (*sql.DB, error) {
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		config.DBHost, config.DBPort, config.DBUser, config.DBPassword, config.DBName)
+func getEnvInt(key string, defaultValue int) int {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	n, err := strconv.Atoi(value)
+	if err != nil || n <= 0 {
+		log.Printf("Invalid %s=%q, using default %d", key, value, defaultValue)
+		return defaultValue
+	}
+	return n
+}
 
-	log.Printf("Connecting to database: host=%s port=%s user=%s dbname=%s",
-		config.DBHost, config.DBPort, config.DBUser, config.DBName)
+func loadConfig() Config {
+	dbHost := getEnv("DB_HOST", "localhost")
+	dbPort := getEnv("DB_PORT", "5432")
+	dbName := getEnv("DB_NAME", "pricefeed")
+
+	return Config{
+		PrometheusURL:       getEnv("PROMETHEUS_URL", "http://54.160.217.166:9090"),
+		DBHost:              dbHost,
+		DBPort:              dbPort,
+		DBUser:              getEnv("DB_USER", "postgres"),
+		DBPassword:          getEnv("DB_PASSWORD", "password"),
+		DBName:              dbName,
+		DBReadonlyHost:      getEnv("DB_READONLY_HOST", dbHost),
+		DBReadonlyPort:      getEnv("DB_READONLY_PORT", dbPort),
+		DBReadonlyUser:      getEnv("DB_READONLY_USER", "readonly_user"),
+		DBReadonlyPassword:  os.Getenv("DB_READONLY_PASSWORD"),
+		DBReadonlyName:      getEnv("DB_READONLY_NAME", dbName),
+		QueryTimeoutSeconds: getEnvInt("QUERY_TIMEOUT_SECONDS", 120),
+		QueryMaxRows:        getEnvInt("QUERY_MAX_ROWS", 500000),
+		APIPassword:         getEnv("API_PASSWORD", "admin123"),
+		APIPort:             getEnv("API_PORT", DefaultPort),
+	}
+}
+
+func openPostgres(host, port, user, password, dbName, options string) (*sql.DB, error) {
+	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbName)
+	if options != "" {
+		dsn += " options='" + options + "'"
+	}
+
+	log.Printf("Connecting to database: host=%s port=%s user=%s dbname=%s", host, port, user, dbName)
 
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
@@ -139,11 +197,61 @@ func initDB(config Config) (*sql.DB, error) {
 	}
 
 	if err := db.Ping(); err != nil {
+		_ = db.Close()
 		return nil, err
 	}
 
 	log.Println("Database connection successful")
 	return db, nil
+}
+
+// initWriteDB opens the write pool used for collection and schema setup.
+func initWriteDB(config Config) (*sql.DB, error) {
+	return openPostgres(config.DBHost, config.DBPort, config.DBUser, config.DBPassword, config.DBName, "")
+}
+
+// initReadonlyDB opens the read-only pool for all API handlers. Fails closed if creds are missing.
+func initReadonlyDB(config Config) (*sql.DB, error) {
+	if strings.TrimSpace(config.DBReadonlyUser) == "" || config.DBReadonlyPassword == "" {
+		return nil, fmt.Errorf("DB_READONLY_USER and DB_READONLY_PASSWORD are required for API mode (fail closed; will not use write credentials)")
+	}
+
+	options := fmt.Sprintf("-c default_transaction_read_only=on -c statement_timeout=%ds", config.QueryTimeoutSeconds)
+	return openPostgres(
+		config.DBReadonlyHost,
+		config.DBReadonlyPort,
+		config.DBReadonlyUser,
+		config.DBReadonlyPassword,
+		config.DBReadonlyName,
+		options,
+	)
+}
+
+// initDB is kept for collection paths; it uses the write credentials.
+func initDB(config Config) (*sql.DB, error) {
+	return initWriteDB(config)
+}
+
+func registerAPIRoutes(readonlyDB *sql.DB, config Config) {
+	http.HandleFunc("/api/health", healthHandler)
+	http.HandleFunc("/api/prices", authMiddleware(getPricesHandler(readonlyDB)))
+	http.HandleFunc("/api/prices/latest", authMiddleware(getLatestPricesHandler(readonlyDB)))
+	http.HandleFunc("/api/prices/market/", authMiddleware(getPricesByMarketHandler(readonlyDB)))
+	http.HandleFunc("/api/prices/exchange/", authMiddleware(getPricesByExchangeHandler(readonlyDB)))
+	http.HandleFunc("/api/prices/range", authMiddleware(getPricesByRangeHandler(readonlyDB)))
+	http.HandleFunc("/api/query", authMiddleware(queryHandler(readonlyDB, config)))
+}
+
+func newAPIServer(config Config) *http.Server {
+	// Allow long-running analytical queries; buffer past statement_timeout.
+	writeTimeout := time.Duration(config.QueryTimeoutSeconds+30) * time.Second
+	return &http.Server{
+		Addr:         ":" + config.APIPort,
+		Handler:      nil,
+		ReadTimeout:  60 * time.Second,
+		WriteTimeout: writeTimeout,
+		IdleTimeout:  120 * time.Second,
+	}
 }
 
 func createTable(db *sql.DB) error {
@@ -173,31 +281,21 @@ func createTable(db *sql.DB) error {
 
 // runDataCollection runs a one-time data collection
 func runDataCollection() {
-	config := Config{
-		PrometheusURL: getEnv("PROMETHEUS_URL", "http://54.160.217.166:9090"),
-		DBHost:        getEnv("DB_HOST", "localhost"),
-		DBPort:        getEnv("DB_PORT", "5432"),
-		DBUser:        getEnv("DB_USER", "postgres"),
-		DBPassword:    getEnv("DB_PASSWORD", "password"),
-		DBName:        getEnv("DB_NAME", "pricefeed"),
-	}
+	config := loadConfig()
 
 	log.Printf("Configuration: PrometheusURL=%s, DBHost=%s, DBPort=%s, DBUser=%s, DBName=%s",
 		config.PrometheusURL, config.DBHost, config.DBPort, config.DBUser, config.DBName)
 
-	// Initialize database connection
-	db, err := initDB(config)
+	db, err := initWriteDB(config)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to connect to database: %v", err))
+		panic(fmt.Sprintf("Failed to connect to write database: %v", err))
 	}
 	defer db.Close()
 
-	// Create table if it doesn't exist
 	if err := createTable(db); err != nil {
 		panic(fmt.Sprintf("Failed to create table: %v", err))
 	}
 
-	// Run data collection
 	log.Println("Starting data collection...")
 	if err := collectAndStoreData(config, db); err != nil {
 		panic(fmt.Sprintf("Data collection failed: %v", err))
@@ -207,28 +305,18 @@ func runDataCollection() {
 
 // runScheduler runs the data collection on a schedule
 func runScheduler() {
-	config := Config{
-		PrometheusURL: getEnv("PROMETHEUS_URL", "http://54.160.217.166:9090"),
-		DBHost:        getEnv("DB_HOST", "localhost"),
-		DBPort:        getEnv("DB_PORT", "5432"),
-		DBUser:        getEnv("DB_USER", "postgres"),
-		DBPassword:    getEnv("DB_PASSWORD", "password"),
-		DBName:        getEnv("DB_NAME", "pricefeed"),
-	}
+	config := loadConfig()
 
-	// Initialize database connection
-	db, err := initDB(config)
+	db, err := initWriteDB(config)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to connect to database: %v", err))
+		panic(fmt.Sprintf("Failed to connect to write database: %v", err))
 	}
 	defer db.Close()
 
-	// Create table if it doesn't exist
 	if err := createTable(db); err != nil {
 		panic(fmt.Sprintf("Failed to create table: %v", err))
 	}
 
-	// Run initial data collection
 	log.Println("Running initial data collection...")
 	if err := collectAndStoreData(config, db); err != nil {
 		log.Printf("Initial data collection failed: %v", err)
@@ -236,7 +324,6 @@ func runScheduler() {
 		log.Println("Initial data collection completed successfully")
 	}
 
-	// Start scheduler
 	ticker := time.NewTicker(24 * time.Hour) // Run daily
 	defer ticker.Stop()
 
@@ -439,74 +526,41 @@ func storePriceData(db *sql.DB, data *PrometheusResponse) error {
 	return nil
 }
 
-// runAPIServer starts the HTTP API server
+// runAPIServer starts the HTTP API server (read-only DB only)
 func runAPIServer() {
-	config := Config{
-		PrometheusURL: getEnv("PROMETHEUS_URL", "http://54.160.217.166:9090"),
-		DBHost:        getEnv("DB_HOST", "localhost"),
-		DBPort:        getEnv("DB_PORT", "5432"),
-		DBUser:        getEnv("DB_USER", "postgres"),
-		DBPassword:    getEnv("DB_PASSWORD", "password"),
-		DBName:        getEnv("DB_NAME", "pricefeed"),
-		APIPassword:   getEnv("API_PASSWORD", "admin123"),
-		APIPort:       getEnv("API_PORT", "8080"),
-	}
+	config := loadConfig()
 
-	// Initialize database connection
-	db, err := initDB(config)
+	readonlyDB, err := initReadonlyDB(config)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to connect to database: %v", err))
+		panic(fmt.Sprintf("Failed to connect to read-only database: %v", err))
 	}
-	defer db.Close()
+	defer readonlyDB.Close()
 
-	// Create table if it doesn't exist
-	if err := createTable(db); err != nil {
-		panic(fmt.Sprintf("Failed to create table: %v", err))
-	}
+	registerAPIRoutes(readonlyDB, config)
 
-	// Setup routes
-	http.HandleFunc("/api/health", healthHandler)
-	http.HandleFunc("/api/prices", authMiddleware(getPricesHandler(db)))
-	http.HandleFunc("/api/prices/latest", authMiddleware(getLatestPricesHandler(db)))
-	http.HandleFunc("/api/prices/market/", authMiddleware(getPricesByMarketHandler(db)))
-	http.HandleFunc("/api/prices/exchange/", authMiddleware(getPricesByExchangeHandler(db)))
-	http.HandleFunc("/api/prices/range", authMiddleware(getPricesByRangeHandler(db)))
-
-	// Create HTTP server with timeouts
-	server := &http.Server{
-		Addr:         ":" + config.APIPort,
-		Handler:      nil,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
-
-	log.Printf("API server starting on port %s", config.APIPort)
+	server := newAPIServer(config)
+	log.Printf("API server starting on port %s (read-only user=%s, timeout=%ds, max_rows=%d)",
+		config.APIPort, config.DBReadonlyUser, config.QueryTimeoutSeconds, config.QueryMaxRows)
 	panic(server.ListenAndServe())
 }
 
 // runCombinedMode starts both API server and data collection
 func runCombinedMode() {
-	config := Config{
-		PrometheusURL: getEnv("PROMETHEUS_URL", "http://54.160.217.166:9090"),
-		DBHost:        getEnv("DB_HOST", "localhost"),
-		DBPort:        getEnv("DB_PORT", "5432"),
-		DBUser:        getEnv("DB_USER", "postgres"),
-		DBPassword:    getEnv("DB_PASSWORD", "password"),
-		DBName:        getEnv("DB_NAME", "pricefeed"),
-		APIPassword:   getEnv("API_PASSWORD", "admin123"),
-		APIPort:       getEnv("API_PORT", "8080"),
-	}
+	config := loadConfig()
 
-	// Initialize database connection
-	db, err := initDB(config)
+	writeDB, err := initWriteDB(config)
 	if err != nil {
-		panic(fmt.Sprintf("Failed to connect to database: %v", err))
+		panic(fmt.Sprintf("Failed to connect to write database: %v", err))
 	}
-	defer db.Close()
+	defer writeDB.Close()
 
-	// Create table if it doesn't exist
-	if err := createTable(db); err != nil {
+	readonlyDB, err := initReadonlyDB(config)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to connect to read-only database: %v", err))
+	}
+	defer readonlyDB.Close()
+
+	if err := createTable(writeDB); err != nil {
 		panic(fmt.Sprintf("Failed to create table: %v", err))
 	}
 
@@ -515,29 +569,22 @@ func runCombinedMode() {
 		log.Println("Skipping initial data collection (restart mode)")
 	} else {
 		log.Println("Running initial data collection...")
-		if err := collectAndStoreData(config, db); err != nil {
+		if err := collectAndStoreData(config, writeDB); err != nil {
 			log.Printf("Initial data collection failed: %v", err)
 		} else {
 			log.Println("Initial data collection completed successfully")
 		}
 	}
 
-	// Setup API routes
-	http.HandleFunc("/api/health", healthHandler)
-	http.HandleFunc("/api/prices", authMiddleware(getPricesHandler(db)))
-	http.HandleFunc("/api/prices/latest", authMiddleware(getLatestPricesHandler(db)))
-	http.HandleFunc("/api/prices/market/", authMiddleware(getPricesByMarketHandler(db)))
-	http.HandleFunc("/api/prices/exchange/", authMiddleware(getPricesByExchangeHandler(db)))
-	http.HandleFunc("/api/prices/range", authMiddleware(getPricesByRangeHandler(db)))
+	registerAPIRoutes(readonlyDB, config)
 
-	// Start data collection in a goroutine
 	go func() {
 		ticker := time.NewTicker(24 * time.Hour) // Run daily
 		defer ticker.Stop()
 
 		for range ticker.C {
 			log.Println("Running scheduled data collection...")
-			if err := collectAndStoreData(config, db); err != nil {
+			if err := collectAndStoreData(config, writeDB); err != nil {
 				log.Printf("Scheduled data collection failed: %v", err)
 			} else {
 				log.Println("Scheduled data collection completed successfully")
@@ -545,16 +592,9 @@ func runCombinedMode() {
 		}
 	}()
 
-	// Create HTTP server with timeouts
-	server := &http.Server{
-		Addr:         ":" + config.APIPort,
-		Handler:      nil,
-		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
-
-	log.Printf("Combined mode: API server starting on port %s with daily data collection", config.APIPort)
+	server := newAPIServer(config)
+	log.Printf("Combined mode: API on port %s (read-only user=%s, timeout=%ds, max_rows=%d) + daily collection",
+		config.APIPort, config.DBReadonlyUser, config.QueryTimeoutSeconds, config.QueryMaxRows)
 	panic(server.ListenAndServe())
 }
 

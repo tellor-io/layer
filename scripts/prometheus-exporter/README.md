@@ -45,16 +45,25 @@ The application uses environment variables for configuration:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PROMETHEUS_URL` | `http://54.160.217.166:9090` | Prometheus server URL |
-| `DB_HOST` | `localhost` | Database host |
-| `DB_PORT` | `5432` | Database port |
-| `DB_USER` | `postgres` | Database username |
-| `DB_PASSWORD` | `password` | Database password |
-| `DB_NAME` | `pricefeed` | Database name |
+| `DB_HOST` | `localhost` | Write DB host (collector / DDL) |
+| `DB_PORT` | `5432` | Write DB port |
+| `DB_USER` | `postgres` | Write DB username |
+| `DB_PASSWORD` | `password` | Write DB password |
+| `DB_NAME` | `pricefeed` | Write DB name |
+| `DB_READONLY_HOST` | *(falls back to `DB_HOST`)* | Read-only DB host (all API handlers) |
+| `DB_READONLY_PORT` | *(falls back to `DB_PORT`)* | Read-only DB port |
+| `DB_READONLY_USER` | `readonly_user` | Read-only DB username |
+| `DB_READONLY_PASSWORD` | *(required for API)* | Read-only DB password — API fails closed if unset |
+| `DB_READONLY_NAME` | *(falls back to `DB_NAME`)* | Read-only DB name |
+| `QUERY_TIMEOUT_SECONDS` | `120` | Statement timeout for API DB work |
+| `QUERY_MAX_ROWS` | `500000` | Max rows returned by freeform SQL endpoint |
 | `SCHEDULER_MODE` | `false` | Run in daily scheduler mode |
 | `API_MODE` | `false` | Run as HTTP API server |
 | `COMBINED_MODE` | `false` | Run API server + daily data collection |
 | `API_PASSWORD` | `admin123` | Password for API authentication |
 | `API_PORT` | `8080` | Port for API server |
+
+Copy `config.env.example` to `config.env` and fill in secrets before running as a service. Write credentials are for collection only; every API request uses the read-only connection.
 
 ## Usage
 
@@ -112,6 +121,24 @@ curl -H "X-API-Key: admin123" http://localhost:8080/api/health
 - **GET** `/api/prices/market/{market_id}` - Get prices for a specific market
 - **GET** `/api/prices/exchange/{exchange_id}` - Get prices for a specific exchange
 - **GET** `/api/prices/range` - Get prices within a date range
+- **POST** `/api/query` - Run a single read-only SQL statement (`SELECT` / `WITH … SELECT`)
+
+All API data endpoints use the **read-only** DB user. Collection uses the write user only.
+
+#### Freeform SQL (`POST /api/query`)
+
+```bash
+curl -H "X-API-Key: admin123" -H "Content-Type: application/json" \
+  -d '{"sql":"SELECT market_id, COUNT(*) FROM price_data GROUP BY 1 ORDER BY 1"}' \
+  http://localhost:8080/api/query
+
+# CSV
+curl -H "X-API-Key: admin123" -H "Content-Type: application/json" \
+  -d '{"sql":"SELECT * FROM price_data LIMIT 10","format":"csv"}' \
+  http://localhost:8080/api/query -o out.csv
+```
+
+Limits: `QUERY_TIMEOUT_SECONDS` (default 120), `QUERY_MAX_ROWS` (default 500000). Multi-statement and non-SELECT SQL are rejected; the DB role enforces read-only.
 
 ### Query Parameters
 

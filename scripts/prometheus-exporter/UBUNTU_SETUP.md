@@ -64,18 +64,29 @@ sudo ./install-service.sh
 sudo nano /opt/prometheus-exporter/config.env
 ```
 
-Update the configuration file with your settings:
+Update the configuration file with your settings (start from `config.env.example` if needed):
 
 ```bash
 # Prometheus Configuration
 PROMETHEUS_URL=http://54.160.217.166:9090
 
-# Database Configuration
+# Write database (collector / table creation only)
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=prometheus_exporter
 DB_PASSWORD=your_secure_password
 DB_NAME=pricefeed
+
+# Read-only database (ALL API handlers — required; API fails closed without these)
+DB_READONLY_HOST=localhost
+DB_READONLY_PORT=5432
+DB_READONLY_USER=readonly_user
+DB_READONLY_PASSWORD=your_readonly_password
+DB_READONLY_NAME=pricefeed
+
+# Query limits
+QUERY_TIMEOUT_SECONDS=120
+QUERY_MAX_ROWS=500000
 
 # API Configuration
 API_PASSWORD=your_api_password
@@ -189,11 +200,18 @@ The service uses these environment variables (set in `/opt/prometheus-exporter/c
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PROMETHEUS_URL` | `http://54.160.217.166:9090` | Prometheus server URL |
-| `DB_HOST` | `localhost` | Database host |
-| `DB_PORT` | `5432` | Database port |
-| `DB_USER` | `prometheus_exporter` | Database username |
-| `DB_PASSWORD` | `password` | Database password |
-| `DB_NAME` | `pricefeed` | Database name |
+| `DB_HOST` | `localhost` | Write DB host (collector / DDL) |
+| `DB_PORT` | `5432` | Write DB port |
+| `DB_USER` | `prometheus_exporter` | Write DB username |
+| `DB_PASSWORD` | `password` | Write DB password |
+| `DB_NAME` | `pricefeed` | Write DB name |
+| `DB_READONLY_HOST` | *(falls back to `DB_HOST`)* | Read-only DB host (all API handlers) |
+| `DB_READONLY_PORT` | *(falls back to `DB_PORT`)* | Read-only DB port |
+| `DB_READONLY_USER` | `readonly_user` | Read-only DB username |
+| `DB_READONLY_PASSWORD` | *(required for API)* | Read-only DB password |
+| `DB_READONLY_NAME` | *(falls back to `DB_NAME`)* | Read-only DB name |
+| `QUERY_TIMEOUT_SECONDS` | `120` | Statement timeout for API DB work |
+| `QUERY_MAX_ROWS` | `500000` | Max rows for freeform SQL endpoint |
 | `API_PASSWORD` | `admin123` | API authentication password |
 | `API_PORT` | `8080` | API server port |
 | `COMBINED_MODE` | `true` | Run API server + daily data collection |

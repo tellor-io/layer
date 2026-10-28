@@ -49,9 +49,18 @@ chmod +x "$INSTALL_DIR/prometheus-exporter"
 echo "Installing systemd service file..."
 cp "$CURRENT_DIR/prometheus-exporter.service" "$SERVICE_FILE"
 
-# Copy config file
+# Copy config file (prefer local config.env; fall back to example template)
 echo "Installing configuration file..."
-cp "$CURRENT_DIR/config.env" "$INSTALL_DIR/config.env"
+if [ -f "$CURRENT_DIR/config.env" ]; then
+    cp "$CURRENT_DIR/config.env" "$INSTALL_DIR/config.env"
+elif [ -f "$CURRENT_DIR/config.env.example" ]; then
+    echo "config.env not found; installing from config.env.example"
+    echo "Edit $INSTALL_DIR/config.env and set DB_READONLY_PASSWORD (and other secrets) before starting"
+    cp "$CURRENT_DIR/config.env.example" "$INSTALL_DIR/config.env"
+else
+    echo "ERROR: Neither config.env nor config.env.example found in $CURRENT_DIR"
+    exit 1
+fi
 chown "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR/config.env"
 chmod 600 "$INSTALL_DIR/config.env"
 

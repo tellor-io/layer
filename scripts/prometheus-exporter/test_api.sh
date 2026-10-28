@@ -46,4 +46,35 @@ echo "7. Testing authentication failure..."
 curl -s -H "X-API-Key: wrongpassword" "$API_URL/api/prices" | jq .
 echo ""
 
+# Freeform SQL query endpoint
+echo "8. Testing POST /api/query (happy path)..."
+curl -s -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+  -d '{"sql":"SELECT market_id, COUNT(*) FROM price_data GROUP BY 1 ORDER BY 1 LIMIT 20"}' \
+  "$API_URL/api/query" | jq .
+echo ""
+
+echo "9. Testing POST /api/query (CTE)..."
+curl -s -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+  -d '{"sql":"WITH t AS (SELECT * FROM price_data LIMIT 100) SELECT exchange_id, AVG(price) FROM t GROUP BY 1"}' \
+  "$API_URL/api/query" | jq .
+echo ""
+
+echo "10. Testing POST /api/query (should fail validation)..."
+curl -s -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+  -d '{"sql":"DELETE FROM price_data"}' \
+  "$API_URL/api/query" | jq .
+echo ""
+
+echo "11. Testing POST /api/query (CSV)..."
+curl -s -H "X-API-Key: $API_KEY" -H "Content-Type: application/json" \
+  -d '{"sql":"SELECT * FROM price_data LIMIT 10","format":"csv"}' \
+  "$API_URL/api/query" | head -n 5
+echo ""
+
+echo "12. Testing POST /api/query (missing auth)..."
+curl -s -H "Content-Type: application/json" \
+  -d '{"sql":"SELECT 1"}' \
+  "$API_URL/api/query" | jq .
+echo ""
+
 echo "API testing completed!"

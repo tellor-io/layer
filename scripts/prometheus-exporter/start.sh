@@ -12,6 +12,17 @@ export DB_PORT="${DB_PORT:-5432}"
 export DB_USER="${DB_USER:-postgres}"
 export DB_PASSWORD="${DB_PASSWORD:-password}"
 export DB_NAME="${DB_NAME:-pricefeed}"
+
+# Read-only DB (all API handlers). Host/port/name fall back to write DB_*.
+export DB_READONLY_HOST="${DB_READONLY_HOST:-$DB_HOST}"
+export DB_READONLY_PORT="${DB_READONLY_PORT:-$DB_PORT}"
+export DB_READONLY_USER="${DB_READONLY_USER:-readonly_user}"
+export DB_READONLY_PASSWORD="${DB_READONLY_PASSWORD:-}"
+export DB_READONLY_NAME="${DB_READONLY_NAME:-$DB_NAME}"
+
+export QUERY_TIMEOUT_SECONDS="${QUERY_TIMEOUT_SECONDS:-120}"
+export QUERY_MAX_ROWS="${QUERY_MAX_ROWS:-500000}"
+
 export API_PASSWORD="${API_PASSWORD:-admin123}"
 export API_PORT="${API_PORT:-8080}"
 
@@ -23,9 +34,14 @@ fi
 
 echo "Configuration:"
 echo "  Prometheus URL: $PROMETHEUS_URL"
-echo "  Database: $DB_USER@$DB_HOST:$DB_PORT/$DB_NAME"
+echo "  Write DB: $DB_USER@$DB_HOST:$DB_PORT/$DB_NAME"
+echo "  Read-only DB: $DB_READONLY_USER@$DB_READONLY_HOST:$DB_READONLY_PORT/$DB_READONLY_NAME"
+echo "  Query timeout: ${QUERY_TIMEOUT_SECONDS}s  max rows: $QUERY_MAX_ROWS"
 echo "  API Port: $API_PORT"
 echo "  API Password: $API_PASSWORD"
+if [ -z "$DB_READONLY_PASSWORD" ]; then
+    echo "  WARNING: DB_READONLY_PASSWORD is unset — API/combined mode will fail closed until set"
+fi
 echo ""
 
 if [ "$COMBINED_MODE" = "true" ]; then
