@@ -38,6 +38,16 @@ func (m Minter) Validate() error {
 	return nil
 }
 
+// AmountForDailyRate returns dailyRate * elapsedMillis / MillisecondsInDay.
+// The multiply is arbitrary-precision, so a long block gap cannot wrap the
+// product. A non-positive rate or elapsed time yields zero.
+func AmountForDailyRate(dailyRate, elapsedMillis int64) cosmosmath.Int {
+	if dailyRate <= 0 || elapsedMillis <= 0 {
+		return cosmosmath.ZeroInt()
+	}
+	return cosmosmath.NewInt(dailyRate).MulRaw(elapsedMillis).QuoRaw(MillisecondsInDay)
+}
+
 // CalculateBlockProvision returns the total number of coins that should be
 // minted due to time elapsed for the current block.
 func (m Minter) CalculateBlockProvision(current, previous time.Time) (sdk.Coin, error) {
@@ -45,7 +55,6 @@ func (m Minter) CalculateBlockProvision(current, previous time.Time) (sdk.Coin, 
 		return sdk.Coin{}, fmt.Errorf("current time %v cannot be before previous time %v", current, previous)
 	}
 	timeElapsed := current.Sub(previous).Milliseconds()
-	mintAmount := DailyMintRate * timeElapsed / MillisecondsInDay
 	bondDenom := m.BondDenom
-	return sdk.NewCoin(bondDenom, cosmosmath.NewInt(mintAmount)), nil
+	return sdk.NewCoin(bondDenom, AmountForDailyRate(DailyMintRate, timeElapsed)), nil
 }
