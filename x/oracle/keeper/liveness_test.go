@@ -207,6 +207,10 @@ func (s *KeeperTestSuite) TestDistributeLivenessRewards_NoReporters() {
 	// Mock the SendCoinsFromModuleToModule call (TBR is still transferred even with no reporters)
 	s.bankKeeper.On("SendCoinsFromModuleToModule", ctx, minttypes.TimeBasedRewards, "tips_escrow_pool", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(1000)))).Return(nil).Once()
 
+	// A cycle ran: one query had a reporting window (slots are counted from
+	// windows that happened), but nobody reported it
+	require.NoError(k.IncrementQueryOpportunities(ctx, []byte("query_with_window")))
+
 	// Distribute
 	err := k.DistributeLivenessRewards(ctx)
 	require.NoError(err)
@@ -359,8 +363,10 @@ func (s *KeeperTestSuite) TestDemoteQueryToNonStandard() {
 	require.NoError(k.ReporterStandardShareSum.Set(ctx, reporter1, share1.Add(share1))) // queryId + otherQueryId
 	require.NoError(k.ReporterStandardShareSum.Set(ctx, reporter2, share2))             // only queryId
 
-	// Set standard opportunities
+	// Set standard opportunities, and a per-query count that already includes
+	// rotations consumed this period (RotateQueries increments it each turn)
 	require.NoError(k.StandardOpportunities.Set(ctx, 2))
+	require.NoError(k.QueryOpportunities.Set(ctx, queryId, 3))
 
 	// Demote queryId to non-standard
 	err := k.DemoteQueryToNonStandard(ctx, queryId)
@@ -371,10 +377,12 @@ func (s *KeeperTestSuite) TestDemoteQueryToNonStandard() {
 	require.NoError(err)
 	require.True(isNonStandard)
 
-	// Verify query opportunities is set
+	// Verify the query's opportunity count is preserved, not overwritten with
+	// StandardOpportunities: overwriting erased rotations already counted this
+	// period and double-paid the query's slot
 	opp, err := k.QueryOpportunities.Get(ctx, queryId)
 	require.NoError(err)
-	require.Equal(uint64(2), opp) // Should be set to current standard opportunities
+	require.Equal(uint64(3), opp)
 
 	// Verify reporter1's standard share sum is reduced (only otherQueryId remains)
 	r1Standard, err := k.ReporterStandardShareSum.Get(ctx, reporter1)
