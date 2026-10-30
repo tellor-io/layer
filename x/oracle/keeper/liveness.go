@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -165,7 +166,7 @@ func (k Keeper) IncrementStandardOpportunities(ctx context.Context) error {
 }
 
 // DemoteQueryToNonStandard moves a query from standard to non-standard
-// This is called when an out-of-turn tip happens for a cyclelist query
+// This is called when an out-of-turn window of a cyclelist query aggregates
 // It moves all existing shares for this query from ReporterStandardShareSum to ReporterQueryShareSum
 func (k Keeper) DemoteQueryToNonStandard(ctx context.Context, queryId []byte) error {
 	// Check if already non-standard
@@ -178,22 +179,6 @@ func (k Keeper) DemoteQueryToNonStandard(ctx context.Context, queryId []byte) er
 	}
 
 	if err := k.NonStandardQueries.Set(ctx, queryId, true); err != nil {
-		return err
-	}
-
-	// Get current standard opportunities to set as the query's base opportunities
-	standardOpp, err := k.StandardOpportunities.Get(ctx)
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return err
-		}
-		standardOpp = 0
-	}
-
-	// Set the query's opportunities to current standard + 1 (for this new tip)
-	// Note: The caller (msg_server_tip) will also call IncrementQueryOpportunities,
-	// so we set to standardOpp here, and it will become standardOpp+1 after
-	if err := k.QueryOpportunities.Set(ctx, queryId, standardOpp); err != nil {
 		return err
 	}
 
@@ -279,17 +264,34 @@ func (k Keeper) DistributeLivenessRewards(ctx context.Context) error {
 		return k.ResetLivenessData(ctx)
 	}
 
-	cyclelist, err := k.GetCyclelist(ctx)
-	if err != nil {
-		return err
-	}
-
 	// Check if TRBBridge has opportunities (gets 1 slot if there are any TRBBridge reports)
 	trbBridgeOpportunities, err := k.QueryOpportunities.Get(ctx, TRBBridgeMarkerQueryId)
 	hasTRBBridge := err == nil && trbBridgeOpportunities > 0
 
-	// Calculate total slots: cyclelist queries + TRBBridge (if active)
-	numSlots := int64(len(cyclelist))
+	// Count one slot per query that actually had a reporting window this period
+	// (a rotation or an aggregated out-of-turn window), plus TRBBridge if active.
+	// The live cyclelist length is not used: governance can change the list
+	// mid-period, and slots must match the windows that earned shares, or the
+	// credited total drifts from the pool that is transferred to escrow.
+	numSlots := int64(0)
+	oppIter, err := k.QueryOpportunities.Iterate(ctx, nil)
+	if err != nil {
+		return err
+	}
+	for ; oppIter.Valid(); oppIter.Next() {
+		kv, err := oppIter.KeyValue()
+		if err != nil {
+			oppIter.Close()
+			return err
+		}
+		if bytes.Equal(kv.Key, TRBBridgeMarkerQueryId) {
+			continue
+		}
+		if kv.Value > 0 {
+			numSlots++
+		}
+	}
+	oppIter.Close()
 	if hasTRBBridge {
 		numSlots++
 	}
