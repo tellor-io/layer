@@ -312,6 +312,10 @@ func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, j
 		if err := k.Reporters.Set(ctx, reporterAddr, reporter); err != nil {
 			return err
 		}
+
+		if err := k.FlagStakeRecalc(ctx, reporterAddr); err != nil {
+			return err
+		}
 		if !wasJailed {
 			sdkctx.EventManager().EmitEvent(sdk.NewEvent(
 				"jailed_reporter",

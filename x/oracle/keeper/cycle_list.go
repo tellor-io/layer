@@ -130,6 +130,10 @@ func (k Keeper) RotateQueries(ctx context.Context) error {
 	// only increments the tip amount for a query that is ongoing.
 	if !querymeta.Amount.IsZero() {
 		querymeta.CycleList = true
+		// This tipped window is now the query's rotation window. Clear the
+		// out-of-turn mark so its aggregation is not also counted as an extra
+		// opportunity on top of the rotation increment above.
+		querymeta.OutOfTurn = false
 		expired := querymeta.Expiration <= uint64(blockHeight)
 		// this should not be required since SetAggregate happens before rotation which should clear any query that is expired and has revealed reports
 		// noRevealedReports := !querymeta.HasRevealedReports

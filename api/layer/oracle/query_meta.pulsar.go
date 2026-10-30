@@ -27,6 +27,7 @@ var (
 	fd_QueryMeta_query_data                 protoreflect.FieldDescriptor
 	fd_QueryMeta_query_type                 protoreflect.FieldDescriptor
 	fd_QueryMeta_cycle_list                 protoreflect.FieldDescriptor
+	fd_QueryMeta_out_of_turn                protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -40,6 +41,7 @@ func init() {
 	fd_QueryMeta_query_data = md_QueryMeta.Fields().ByName("query_data")
 	fd_QueryMeta_query_type = md_QueryMeta.Fields().ByName("query_type")
 	fd_QueryMeta_cycle_list = md_QueryMeta.Fields().ByName("cycle_list")
+	fd_QueryMeta_out_of_turn = md_QueryMeta.Fields().ByName("out_of_turn")
 }
 
 var _ protoreflect.Message = (*fastReflection_QueryMeta)(nil)
@@ -155,6 +157,12 @@ func (x *fastReflection_QueryMeta) Range(f func(protoreflect.FieldDescriptor, pr
 			return
 		}
 	}
+	if x.OutOfTurn != false {
+		value := protoreflect.ValueOfBool(x.OutOfTurn)
+		if !f(fd_QueryMeta_out_of_turn, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -186,6 +194,8 @@ func (x *fastReflection_QueryMeta) Has(fd protoreflect.FieldDescriptor) bool {
 		return x.QueryType != ""
 	case "layer.oracle.QueryMeta.cycle_list":
 		return x.CycleList != false
+	case "layer.oracle.QueryMeta.out_of_turn":
+		return x.OutOfTurn != false
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryMeta"))
@@ -218,6 +228,8 @@ func (x *fastReflection_QueryMeta) Clear(fd protoreflect.FieldDescriptor) {
 		x.QueryType = ""
 	case "layer.oracle.QueryMeta.cycle_list":
 		x.CycleList = false
+	case "layer.oracle.QueryMeta.out_of_turn":
+		x.OutOfTurn = false
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryMeta"))
@@ -258,6 +270,9 @@ func (x *fastReflection_QueryMeta) Get(descriptor protoreflect.FieldDescriptor) 
 	case "layer.oracle.QueryMeta.cycle_list":
 		value := x.CycleList
 		return protoreflect.ValueOfBool(value)
+	case "layer.oracle.QueryMeta.out_of_turn":
+		value := x.OutOfTurn
+		return protoreflect.ValueOfBool(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryMeta"))
@@ -294,6 +309,8 @@ func (x *fastReflection_QueryMeta) Set(fd protoreflect.FieldDescriptor, value pr
 		x.QueryType = value.Interface().(string)
 	case "layer.oracle.QueryMeta.cycle_list":
 		x.CycleList = value.Bool()
+	case "layer.oracle.QueryMeta.out_of_turn":
+		x.OutOfTurn = value.Bool()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryMeta"))
@@ -330,6 +347,8 @@ func (x *fastReflection_QueryMeta) Mutable(fd protoreflect.FieldDescriptor) prot
 		panic(fmt.Errorf("field query_type of message layer.oracle.QueryMeta is not mutable"))
 	case "layer.oracle.QueryMeta.cycle_list":
 		panic(fmt.Errorf("field cycle_list of message layer.oracle.QueryMeta is not mutable"))
+	case "layer.oracle.QueryMeta.out_of_turn":
+		panic(fmt.Errorf("field out_of_turn of message layer.oracle.QueryMeta is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.oracle.QueryMeta"))
@@ -358,6 +377,8 @@ func (x *fastReflection_QueryMeta) NewField(fd protoreflect.FieldDescriptor) pro
 	case "layer.oracle.QueryMeta.query_type":
 		return protoreflect.ValueOfString("")
 	case "layer.oracle.QueryMeta.cycle_list":
+		return protoreflect.ValueOfBool(false)
+	case "layer.oracle.QueryMeta.out_of_turn":
 		return protoreflect.ValueOfBool(false)
 	default:
 		if fd.IsExtension() {
@@ -455,6 +476,9 @@ func (x *fastReflection_QueryMeta) ProtoMethods() *protoiface.Methods {
 		if x.CycleList {
 			n += 2
 		}
+		if x.OutOfTurn {
+			n += 2
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -483,6 +507,16 @@ func (x *fastReflection_QueryMeta) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.OutOfTurn {
+			i--
+			if x.OutOfTurn {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+			i--
+			dAtA[i] = 0x48
 		}
 		if x.CycleList {
 			i--
@@ -784,6 +818,26 @@ func (x *fastReflection_QueryMeta) ProtoMethods() *protoiface.Methods {
 					}
 				}
 				x.CycleList = bool(v != 0)
+			case 9:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OutOfTurn", wireType)
+				}
+				var v int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				x.OutOfTurn = bool(v != 0)
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2352,6 +2406,10 @@ type QueryMeta struct {
 	QueryType string `protobuf:"bytes,7,opt,name=query_type,json=queryType,proto3" json:"query_type,omitempty"`
 	// bool cycle list query
 	CycleList bool `protobuf:"varint,8,opt,name=cycle_list,json=cycleList,proto3" json:"cycle_list,omitempty"`
+	// out_of_turn marks a window created by tipping a cyclelist query outside its
+	// rotation. Liveness demotion and the extra opportunity are applied when this
+	// window aggregates, so the accounting lands in the period the window is in.
+	OutOfTurn bool `protobuf:"varint,9,opt,name=out_of_turn,json=outOfTurn,proto3" json:"out_of_turn,omitempty"`
 }
 
 func (x *QueryMeta) Reset() {
@@ -2426,6 +2484,13 @@ func (x *QueryMeta) GetQueryType() string {
 func (x *QueryMeta) GetCycleList() bool {
 	if x != nil {
 		return x.CycleList
+	}
+	return false
+}
+
+func (x *QueryMeta) GetOutOfTurn() bool {
+	if x != nil {
+		return x.OutOfTurn
 	}
 	return false
 }
@@ -2621,7 +2686,7 @@ var file_layer_oracle_query_meta_proto_rawDesc = []byte{
 	0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2f,
 	0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a,
 	0x11, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2f, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x22, 0xcc, 0x02, 0x0a, 0x09, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4d, 0x65, 0x74, 0x61,
+	0x74, 0x6f, 0x22, 0xec, 0x02, 0x0a, 0x09, 0x51, 0x75, 0x65, 0x72, 0x79, 0x4d, 0x65, 0x74, 0x61,
 	0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64,
 	0x12, 0x43, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
 	0x42, 0x2b, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
@@ -2642,7 +2707,9 @@ var file_layer_oracle_query_meta_proto_rawDesc = []byte{
 	0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x54, 0x79,
 	0x70, 0x65, 0x12, 0x1d, 0x0a, 0x0a, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x5f, 0x6c, 0x69, 0x73, 0x74,
 	0x18, 0x08, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x63, 0x79, 0x63, 0x6c, 0x65, 0x4c, 0x69, 0x73,
-	0x74, 0x22, 0xe9, 0x02, 0x0a, 0x06, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x12, 0x1e, 0x0a, 0x0a,
+	0x74, 0x12, 0x1e, 0x0a, 0x0b, 0x6f, 0x75, 0x74, 0x5f, 0x6f, 0x66, 0x5f, 0x74, 0x75, 0x72, 0x6e,
+	0x18, 0x09, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x6f, 0x75, 0x74, 0x4f, 0x66, 0x54, 0x75, 0x72,
+	0x6e, 0x22, 0xe9, 0x02, 0x0a, 0x06, 0x72, 0x65, 0x77, 0x61, 0x72, 0x64, 0x12, 0x1e, 0x0a, 0x0a,
 	0x74, 0x6f, 0x74, 0x61, 0x6c, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04,
 	0x52, 0x0a, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x50, 0x6f, 0x77, 0x65, 0x72, 0x12, 0x49, 0x0a, 0x06,
 	0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x31, 0xc8, 0xde,

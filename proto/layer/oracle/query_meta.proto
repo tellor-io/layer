@@ -32,6 +32,10 @@ message QueryMeta {
   string query_type = 7;
   // bool cycle list query
   bool cycle_list = 8;
+  // out_of_turn marks a window created by tipping a cyclelist query outside its
+  // rotation. Liveness demotion and the extra opportunity are applied when this
+  // window aggregates, so the accounting lands in the period the window is in.
+  bool out_of_turn = 9;
 }
 
 message reward {

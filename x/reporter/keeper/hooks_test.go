@@ -31,17 +31,31 @@ func TestBeforeDelegationCreated(t *testing.T) {
 func TestBeforeDelegationRemoved(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	delAddr, valAddr := sample.AccAddressBytes(), sdk.ValAddress(sample.AccAddressBytes())
+	reporterAddr := sample.AccAddressBytes()
 	require.NoError(t, k.Hooks().BeforeDelegationRemoved(ctx, delAddr, valAddr))
 
 	_, err := k.Selectors.Get(ctx, delAddr.Bytes())
 	require.ErrorIs(t, err, collections.ErrNotFound)
+	// Non-selector removal must not flag anyone
+	has, err := k.StakeRecalcFlag.Has(ctx, reporterAddr.Bytes())
+	require.NoError(t, err)
+	require.False(t, has)
 
-	require.NoError(t, k.Selectors.Set(ctx, delAddr, types.NewSelection(delAddr, 1)))
+	require.NoError(t, k.Selectors.Set(ctx, delAddr, types.NewSelection(reporterAddr, 1)))
 	require.NoError(t, k.Hooks().BeforeDelegationRemoved(ctx, delAddr, valAddr))
 
 	selector, err := k.Selectors.Get(ctx, delAddr)
 	require.NoError(t, err)
 	require.Equal(t, uint64(0), selector.DelegationsCount)
+
+	// A full undelegation only fires this hook, so it must invalidate the
+	// reporter's cached stake the same way AfterDelegationModified does.
+	has, err = k.StakeRecalcFlag.Has(ctx, reporterAddr.Bytes())
+	require.NoError(t, err)
+	require.True(t, has)
+	has, err = k.StakeRecalcFlag.Has(ctx, delAddr.Bytes())
+	require.NoError(t, err)
+	require.False(t, has, "flag belongs to the reporter, not the selector")
 }
 
 func TestAfterValidatorBonded_SetsLastValSetUpdateHeight(t *testing.T) {

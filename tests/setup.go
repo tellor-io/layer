@@ -30,7 +30,7 @@ import (
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	_ "github.com/tellor-io/layer/x/mint"
 	mintkeeper "github.com/tellor-io/layer/x/mint/keeper"
-	_ "github.com/tellor-io/layer/x/oracle"
+	oraclemodule "github.com/tellor-io/layer/x/oracle"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	registrykeeper "github.com/tellor-io/layer/x/registry/keeper"
@@ -357,6 +357,7 @@ func (s *SharedSetup) SetupTest(tb testing.TB) {
 	s.require.NotNil(s.Bridgekeeper)
 	s.Oraclekeeper.SetBridgeKeeper(s.Bridgekeeper)
 	s.Reporterkeeper.SetOracleKeeper(s.Oraclekeeper)
+	app.ModuleManager.Modules[oracletypes.ModuleName] = oraclemodule.NewAppModule(s.appCodec, s.Oraclekeeper, s.Accountkeeper, s.Bankkeeper)
 
 	// Small fixtures exceed 30%; dedicated cap tests opt back in with 0.30.
 	reporterParams, err := s.Reporterkeeper.Params.Get(s.Ctx)

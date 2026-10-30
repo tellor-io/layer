@@ -88,7 +88,8 @@ func (h Hooks) BeforeDelegationCreated(ctx context.Context, delAddr sdk.AccAddre
 	return h.k.Selectors.Set(ctx, delAddr.Bytes(), selector)
 }
 
-// decrement a selector's delegations count when a delegation is removed
+// BeforeDelegationRemoved decrements a selector's delegations count when a delegation is removed
+// and flags the selector's reporter for a stake recalculation.
 func (h Hooks) BeforeDelegationRemoved(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) error {
 	selector, err := h.k.Selectors.Get(ctx, delAddr.Bytes())
 	if err != nil {
@@ -99,5 +100,8 @@ func (h Hooks) BeforeDelegationRemoved(ctx context.Context, delAddr sdk.AccAddre
 		}
 	}
 	selector.DelegationsCount--
-	return h.k.Selectors.Set(ctx, delAddr.Bytes(), selector)
+	if err := h.k.Selectors.Set(ctx, delAddr.Bytes(), selector); err != nil {
+		return err
+	}
+	return h.k.FlagStakeRecalc(ctx, sdk.AccAddress(selector.Reporter))
 }
