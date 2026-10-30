@@ -20,6 +20,8 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v8/ibc"
 	interchaintestutil "github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
+	disputetypes "github.com/tellor-io/layer/x/dispute/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	"go.uber.org/zap/zaptest"
 
@@ -823,6 +825,8 @@ func LayerChainSpec(nv, nf int, chainId string) *interchaintest.ChainSpec {
 
 func LayerEncoding() *testutil.TestEncodingConfig {
 	cfg := cosmos.DefaultEncoding()
+	disputetypes.RegisterInterfaces(cfg.InterfaceRegistry)
+	oracletypes.RegisterInterfaces(cfg.InterfaceRegistry)
 	return &cfg
 }
 

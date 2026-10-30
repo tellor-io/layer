@@ -4,13 +4,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	keepertest "github.com/tellor-io/layer/testutil/keeper"
 	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
-	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 )
 
@@ -43,7 +43,8 @@ func (s *KeeperTestSuite) TestAddEvidence() {
 		BlockNumber:     uint64(s.ctx.BlockHeight()),
 	}
 	evidence := []*oracletypes.MicroReport{&addtlReport}
-	ok.On("FlagAggregateReport", s.ctx, addtlReport).Return(collections.ErrNotFound).Once()
+	ok.On("IsAggregateReport", s.ctx, addtlReport).Return(false, nil).Once()
+	ok.On("FlagAggregateReport", s.ctx, addtlReport).Return(nil).Once()
 	_, err = s.msgServer.AddEvidence(s.ctx, &types.MsgAddEvidence{
 		DisputeId: dispute.DisputeId,
 		Reports:   evidence,
@@ -54,8 +55,8 @@ func (s *KeeperTestSuite) TestAddEvidence() {
 	require.NoError(err)
 	require.Equal(len(dispute.AdditionalEvidence), 1)
 
-	// add evidence that is an aggregate
-	addtlReport = oracletypes.MicroReport{
+	// warning disputes cannot add aggregate reports as evidence
+	aggReport := oracletypes.MicroReport{
 		Reporter:        disputedReporter,
 		Power:           100,
 		QueryType:       dispute.InitialEvidence.QueryType,
@@ -66,18 +67,121 @@ func (s *KeeperTestSuite) TestAddEvidence() {
 		Cyclelist:       dispute.InitialEvidence.Cyclelist,
 		BlockNumber:     uint64(s.ctx.BlockHeight()),
 	}
-	evidence = append(evidence, &addtlReport)
-	ok.On("FlagAggregateReport", s.ctx, *evidence[0]).Return(collections.ErrNotFound).Once()
-	ok.On("FlagAggregateReport", s.ctx, *evidence[1]).Return(nil).Once()
+	ok.On("IsAggregateReport", s.ctx, aggReport).Return(true, nil).Once()
 	_, err = s.msgServer.AddEvidence(s.ctx, &types.MsgAddEvidence{
 		DisputeId: dispute.DisputeId,
-		Reports:   evidence,
+		Reports:   []*oracletypes.MicroReport{&aggReport},
 	})
-	require.NoError(err)
-	// check dispute to see if report is in additional evidence
+	require.ErrorIs(err, types.ErrWarningAggregateEvidence)
 	dispute, err = s.disputeKeeper.Disputes.Get(s.ctx, dispute.DisputeId)
 	require.NoError(err)
-	require.Equal(len(dispute.AdditionalEvidence), 3) // first + 2 additional
+	require.Equal(len(dispute.AdditionalEvidence), 1) // unchanged
+}
+
+func (s *KeeperTestSuite) TestAddEvidence_MinorAggregateLimit() {
+	require := s.Require()
+	ok := s.oracleKeeper
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+	s.ctx = s.ctx.WithBlockHeight(10)
+
+	dispute := s.dispute(s.ctx)
+	dispute.DisputeCategory = types.Minor
+	s.NoError(s.disputeKeeper.Disputes.Set(s.ctx, dispute.DisputeId, dispute))
+	dispute, err := s.disputeKeeper.Disputes.Get(s.ctx, dispute.DisputeId)
+	require.NoError(err)
+	disputedReporter := dispute.InitialEvidence.Reporter
+
+	aggReport := oracletypes.MicroReport{
+		Reporter:    disputedReporter,
+		Power:       100,
+		QueryType:   dispute.InitialEvidence.QueryType,
+		QueryId:     dispute.InitialEvidence.QueryId,
+		Value:       "200",
+		Timestamp:   s.ctx.BlockTime(),
+		Cyclelist:   dispute.InitialEvidence.Cyclelist,
+		BlockNumber: uint64(s.ctx.BlockHeight()),
+	}
+	nonAggReport := oracletypes.MicroReport{
+		Reporter:    disputedReporter,
+		Power:       100,
+		QueryType:   dispute.InitialEvidence.QueryType,
+		QueryId:     dispute.InitialEvidence.QueryId,
+		Value:       "100",
+		Timestamp:   s.ctx.BlockTime().Add(-1 * 24 * time.Hour),
+		Cyclelist:   dispute.InitialEvidence.Cyclelist,
+		BlockNumber: uint64(s.ctx.BlockHeight()) + 1,
+	}
+
+	// initial evidence is not an aggregate; first aggregate evidence is allowed
+	ok.On("IsAggregateReport", mock.Anything, dispute.InitialEvidence).Return(false, nil).Once()
+	ok.On("IsAggregateReport", mock.Anything, aggReport).Return(true, nil).Once()
+	ok.On("FlagAggregateReport", mock.Anything, aggReport).Return(nil).Once()
+	_, err = s.msgServer.AddEvidence(s.ctx, &types.MsgAddEvidence{
+		DisputeId: dispute.DisputeId,
+		Reports:   []*oracletypes.MicroReport{&aggReport},
+	})
+	require.NoError(err)
+
+	dispute, err = s.disputeKeeper.Disputes.Get(s.ctx, dispute.DisputeId)
+	require.NoError(err)
+	require.Equal(1, len(dispute.AdditionalEvidence))
+
+	// second aggregate evidence is rejected
+	secondAgg := aggReport
+	secondAgg.Value = "300"
+	secondAgg.BlockNumber = uint64(s.ctx.BlockHeight()) + 2
+	ok.On("IsAggregateReport", mock.Anything, dispute.InitialEvidence).Return(false, nil).Once()
+	ok.On("IsAggregateReport", mock.Anything, *dispute.AdditionalEvidence[0]).Return(true, nil).Once()
+	ok.On("IsAggregateReport", mock.Anything, secondAgg).Return(true, nil).Once()
+	_, err = s.msgServer.AddEvidence(s.ctx, &types.MsgAddEvidence{
+		DisputeId: dispute.DisputeId,
+		Reports:   []*oracletypes.MicroReport{&secondAgg},
+	})
+	require.ErrorIs(err, types.ErrMinorAggregateEvidenceLimit)
+
+	// non-aggregate evidence is still allowed
+	ok.On("IsAggregateReport", mock.Anything, dispute.InitialEvidence).Return(false, nil).Once()
+	ok.On("IsAggregateReport", mock.Anything, *dispute.AdditionalEvidence[0]).Return(true, nil).Once()
+	ok.On("IsAggregateReport", mock.Anything, nonAggReport).Return(false, nil).Once()
+	ok.On("FlagAggregateReport", mock.Anything, nonAggReport).Return(nil).Once()
+	_, err = s.msgServer.AddEvidence(s.ctx, &types.MsgAddEvidence{
+		DisputeId: dispute.DisputeId,
+		Reports:   []*oracletypes.MicroReport{&nonAggReport},
+	})
+	require.NoError(err)
+}
+
+func (s *KeeperTestSuite) TestAddEvidence_MinorInitialEvidenceIsAggregate() {
+	require := s.Require()
+	ok := s.oracleKeeper
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+	s.ctx = s.ctx.WithBlockHeight(10)
+
+	dispute := s.dispute(s.ctx)
+	dispute.DisputeCategory = types.Minor
+	s.NoError(s.disputeKeeper.Disputes.Set(s.ctx, dispute.DisputeId, dispute))
+	dispute, err := s.disputeKeeper.Disputes.Get(s.ctx, dispute.DisputeId)
+	require.NoError(err)
+
+	aggReport := oracletypes.MicroReport{
+		Reporter:    dispute.InitialEvidence.Reporter,
+		Power:       100,
+		QueryType:   dispute.InitialEvidence.QueryType,
+		QueryId:     dispute.InitialEvidence.QueryId,
+		Value:       "200",
+		Timestamp:   s.ctx.BlockTime(),
+		Cyclelist:   dispute.InitialEvidence.Cyclelist,
+		BlockNumber: uint64(s.ctx.BlockHeight()),
+	}
+
+	// initial evidence already counts as the one allowed aggregate
+	ok.On("IsAggregateReport", mock.Anything, dispute.InitialEvidence).Return(true, nil).Once()
+	ok.On("IsAggregateReport", mock.Anything, aggReport).Return(true, nil).Once()
+	_, err = s.msgServer.AddEvidence(s.ctx, &types.MsgAddEvidence{
+		DisputeId: dispute.DisputeId,
+		Reports:   []*oracletypes.MicroReport{&aggReport},
+	})
+	require.ErrorIs(err, types.ErrMinorAggregateEvidenceLimit)
 }
 
 func BenchmarkAddEvidence(b *testing.B) {
@@ -134,7 +238,8 @@ func BenchmarkAddEvidence(b *testing.B) {
 
 	// run the benchmark
 	for i := 0; i < b.N; i++ {
-		ok.On("FlagAggregateReport", ctx, addtlReport).Return(nil)
+		ok.On("IsAggregateReport", mock.Anything, addtlReport).Return(false, nil)
+		ok.On("FlagAggregateReport", mock.Anything, addtlReport).Return(nil)
 		_, err := msgServer.AddEvidence(ctx, &types.MsgAddEvidence{
 			DisputeId: dispute.DisputeId,
 			Reports:   evidence,

@@ -13,6 +13,7 @@ func RegisterCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgVote{}, "dispute/Vote", nil)
 	cdc.RegisterConcrete(&MsgWithdrawFeeRefund{}, "dispute/WithdrawFeeRefund", nil)
 	cdc.RegisterConcrete(&MsgClaimReward{}, "dispute/ClaimReward", nil)
+	cdc.RegisterConcrete(&MsgAddEvidence{}, "dispute/AddEvidence", nil)
 	// this line is used by starport scaffolding # 2
 }
 
@@ -24,6 +25,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgUpdateTeam{},
 		&MsgWithdrawFeeRefund{},
 		&MsgClaimReward{},
+		&MsgAddEvidence{},
 	)
 	// this line is used by starport scaffolding # 3
 
