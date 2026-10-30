@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/tellor-io/layer/x/dispute/types"
+	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 
 	"cosmossdk.io/collections"
 
@@ -38,6 +39,10 @@ func (k msgServer) AddEvidence(goCtx context.Context, msg *types.MsgAddEvidence)
 			return nil, errors.New("additional evidence must be less than 21 days old")
 		}
 	}
+	// enforce category-specific aggregate evidence limits before mutating state
+	if err := k.validateAggregateEvidenceLimits(ctx, dispute, msg.Reports); err != nil {
+		return nil, err
+	}
 	// append submitted evidence to dispute
 	dispute.AdditionalEvidence = append(dispute.AdditionalEvidence, msg.Reports...)
 	// set updated dispute
@@ -55,4 +60,53 @@ func (k msgServer) AddEvidence(goCtx context.Context, msg *types.MsgAddEvidence)
 		}
 	}
 	return &types.MsgAddEvidenceResponse{}, nil
+}
+
+// validateAggregateEvidenceLimits enforces:
+//   - Warning: no aggregate reports may be added via MsgAddEvidence
+//   - Minor: at most one aggregate report may be flagged across initial + additional evidence
+func (k msgServer) validateAggregateEvidenceLimits(ctx sdk.Context, dispute types.Dispute, reports []*oracletypes.MicroReport) error {
+	switch dispute.DisputeCategory {
+	case types.Warning:
+		for _, report := range reports {
+			isAggregate, err := k.oracleKeeper.IsAggregateReport(ctx, *report)
+			if err != nil {
+				return err
+			}
+			if isAggregate {
+				return types.ErrWarningAggregateEvidence
+			}
+		}
+	case types.Minor:
+		aggregateCount := 0
+		isAggregate, err := k.oracleKeeper.IsAggregateReport(ctx, dispute.InitialEvidence)
+		if err != nil {
+			return err
+		}
+		if isAggregate {
+			aggregateCount++
+		}
+		for _, report := range dispute.AdditionalEvidence {
+			isAggregate, err := k.oracleKeeper.IsAggregateReport(ctx, *report)
+			if err != nil {
+				return err
+			}
+			if isAggregate {
+				aggregateCount++
+			}
+		}
+		for _, report := range reports {
+			isAggregate, err := k.oracleKeeper.IsAggregateReport(ctx, *report)
+			if err != nil {
+				return err
+			}
+			if isAggregate {
+				aggregateCount++
+			}
+		}
+		if aggregateCount > 1 {
+			return types.ErrMinorAggregateEvidenceLimit
+		}
+	}
+	return nil
 }

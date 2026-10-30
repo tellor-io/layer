@@ -33,6 +33,30 @@ func (_m *OracleKeeper) FlagAggregateReport(ctx context.Context, report types.Mi
 	return r0
 }
 
+// IsAggregateReport provides a mock function with given fields: ctx, report
+func (_m *OracleKeeper) IsAggregateReport(ctx context.Context, report types.MicroReport) (bool, error) {
+	ret := _m.Called(ctx, report)
+
+	var r0 bool
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.MicroReport) (bool, error)); ok {
+		return rf(ctx, report)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, types.MicroReport) bool); ok {
+		r0 = rf(ctx, report)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, types.MicroReport) error); ok {
+		r1 = rf(ctx, report)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTipsAtBlockForTipper provides a mock function with given fields: ctx, blockNumber, tipper
 func (_m *OracleKeeper) GetTipsAtBlockForTipper(ctx context.Context, blockNumber uint64, tipper cosmos_sdktypes.AccAddress) (math.Int, error) {
 	ret := _m.Called(ctx, blockNumber, tipper)
