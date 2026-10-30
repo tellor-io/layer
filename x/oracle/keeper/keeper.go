@@ -294,6 +294,18 @@ func (k Keeper) UpdateQuery(ctx context.Context, queryType string, newBlockWindo
 	return nil
 }
 
+// IsAggregateReport returns true if the microreport is also the aggregate reporter
+// for that query id and block number.
+func (k Keeper) IsAggregateReport(ctx context.Context, report types.MicroReport) (bool, error) {
+	reporter := sdk.MustAccAddressFromBech32(report.Reporter)
+	iter, err := k.Aggregates.Indexes.Reporter.MatchExact(ctx, collections.Join3(reporter.Bytes(), report.QueryId, report.BlockNumber))
+	if err != nil {
+		return false, err
+	}
+	defer iter.Close()
+	return iter.Valid(), nil
+}
+
 func (k Keeper) FlagAggregateReport(ctx context.Context, report types.MicroReport) error {
 	reporter := sdk.MustAccAddressFromBech32(report.Reporter)
 	iter, err := k.Aggregates.Indexes.Reporter.MatchExact(ctx, collections.Join3(reporter.Bytes(), report.QueryId, report.BlockNumber))

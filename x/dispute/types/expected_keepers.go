@@ -39,6 +39,7 @@ type OracleKeeper interface {
 	GetTotalTipsAtBlock(ctx context.Context, blockNumber uint64) (math.Int, error)
 	GetTipsAtBlockForTipper(ctx context.Context, blockNumber uint64, tipper sdk.AccAddress) (math.Int, error)
 	FlagAggregateReport(ctx context.Context, report oracletypes.MicroReport) error
+	IsAggregateReport(ctx context.Context, report oracletypes.MicroReport) (bool, error)
 	ValidateMicroReportExists(ctx context.Context, reporter sdk.AccAddress, meta_id uint64, query_id []byte) (*oracletypes.MicroReport, bool, error)
 }
 
