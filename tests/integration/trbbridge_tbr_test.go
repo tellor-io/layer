@@ -436,32 +436,12 @@ func (s *IntegrationTestSuite) TestTRBBridgeTBRDistributionMultipleAggregates() 
 
 	s.T().Logf("Tip deltas: [%s, %s]", tipDeltas[0], tipDeltas[1])
 
-	// With 3 cyclelist queries (0 opportunities since we didn't submit) + 1 TRBBridgeV2 slot (2 opportunities):
-	// Actually, we only have TRBBridgeV2 queries in this test, no cyclelist submissions
-	// So total slots = 3 cyclelist (with 0 opportunities) + 1 TRBBridgeV2 (with 2 opportunities)
-	//
-	// Wait, the distribution formula uses opportunities per queryId.
-	// For TRBBridgeV2: 2 opportunities, reporter0 submitted to both, reporter1 submitted to 1
-	// rewardPerSlot = 400,000 / 4 = 100,000 (if there are no cyclelist opportunities, this might be different)
-	//
-	// Actually let's think about this more carefully:
-	// - numSlots = numCyclelistQueries (3) + hasTRBBridge (1 if opportunities > 0) = 4
-	// - rewardPerSlot = 400,000 / 4 = 100,000
-	// - For TRBBridgeV2 with 2 opportunities:
-	//   - Reporter 0: share in agg1 (1/2) + share in agg2 (1/1) = 0.5 + 1.0 = 1.5 total shares
-	//   - Reporter 1: share in agg1 (1/2) = 0.5 total shares
-	//   - Average share for reporter 0: 1.5 / 2 opportunities = 0.75
-	//   - Average share for reporter 1: 0.5 / 2 opportunities = 0.25
-	//   - Reporter 0 TRBBridgeV2 reward: 0.75 * 100,000 = 75,000
-	//   - Reporter 1 TRBBridgeV2 reward: 0.25 * 100,000 = 25,000
-
 	// Reporter 0 should have received more than reporter 1
 	require.True(tipDeltas[0].GT(tipDeltas[1]),
 		"Reporter 0 should have received more than reporter 1 (participated in both TRBBridgeV2)")
 
 	// The ratio should be about 3:1 (0.75/0.25 = 3)
 	ratio := tipDeltas[0].Quo(tipDeltas[1])
-	s.T().Logf("Ratio reporter0/reporter1: %.2f (expected ~3.0)", ratio.MustFloat64())
 	require.True(ratio.GT(math.LegacyMustNewDecFromStr("2.5")) && ratio.LT(math.LegacyMustNewDecFromStr("3.5")),
 		"Reporter 0 should have ~3x more rewards than reporter 1")
 

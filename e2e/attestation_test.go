@@ -1,6 +1,7 @@
 package e2e_test
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -11,6 +12,7 @@ import (
 	"github.com/strangelove-ventures/interchaintest/v8/testutil"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
+	"github.com/tellor-io/layer/utils"
 
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
@@ -60,16 +62,13 @@ func TestConsensusAttestation(t *testing.T) {
 	require.Contains(reportersRes.Reporters[1].Metadata.Moniker, "reporter_moniker")
 	require.NotEqual(reportersRes.Reporters[0].Metadata.Moniker, reportersRes.Reporters[1].Metadata.Moniker)
 
-	currentCycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
-	require.NoError(err)
-	var currentCycleList e2e.QueryCurrentCyclelistQueryResponse
-	err = json.Unmarshal(currentCycleListRes, &currentCycleList)
-	require.NoError(err)
-
 	// wait 1 block
 	require.NoError(testutil.WaitForBlocks(ctx, 1, validators[0].Node))
 
-	// validators' reporters report for the cycle list
+	// validators' reporters report for the cycle list.
+	// SubmitCycleList re-queries the live cycle entry at submit time (2-block
+	// SpotPrice windows), so do not capture QueryData beforehand — use the
+	// QueryData that matches the reported queryId for the second round below.
 	var txHash1, txHash2 string
 	var err1, err2 error
 
@@ -109,6 +108,27 @@ func TestConsensusAttestation(t *testing.T) {
 	require.Equal(queryId1, queryId2) // make sure both reporters reported for the same query
 	fmt.Println("queryId1: ", queryId1)
 	fmt.Println("queryId2: ", queryId2)
+
+	// Resolve QueryData for the query that was actually reported. A pre-captured
+	// current-cyclelist value can diverge from SubmitCycleList when the window
+	// rotates between an early capture and submit.
+	cycleListBz, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "get-cycle-list")
+	require.NoError(err)
+	var cycleListRes struct {
+		CycleList []string `json:"cycle_list"`
+	}
+	require.NoError(json.Unmarshal(cycleListBz, &cycleListRes))
+	var reportedQueryData string
+	for _, qd := range cycleListRes.CycleList {
+		qdBz, decodeErr := hex.DecodeString(qd)
+		require.NoError(decodeErr)
+		if hex.EncodeToString(utils.QueryIDFromData(qdBz)) == queryId1 {
+			reportedQueryData = qd
+			break
+		}
+	}
+	require.NotEmpty(reportedQueryData, "reported queryId not found in cycle list")
+	fmt.Println("reportedQueryData for queryId1: ", reportedQueryData)
 
 	// query GetCurrentAggregateReport to get aggregate timestamp
 	res, _, err = e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "get-current-aggregate-report", queryId1)
@@ -153,30 +173,28 @@ func TestConsensusAttestation(t *testing.T) {
 		require.Equal(attestationDataRes.LastConsensusTimestamp, timestamp) // lastConsTs should equal report1 timestamp
 	}
 
-	// Wait until the same cycle-list query is live again, then report from only
-	// one validator (non-consensus). SpotPrice windows are 2 blocks and the
-	// cycle list has only 3 queries, so SubmitCycleList's re-query can miss the
-	// window and land on a different query — leaving get-current-aggregate on
-	// the first 100% report. Submit the matched QueryData directly and retry
-	// if the window already expired.
+	// Wait until the same cycle-list query (the one from the first consensus
+	// report) is live again, then report from only one validator (non-consensus).
+	// SpotPrice windows are 2 blocks; submit the matched QueryData directly and
+	// retry if the window already expired.
 	prevTimestamp := timestamp
 	var success bool
 	deadline := time.Now().Add(2 * time.Minute)
 	for !success {
 		require.True(time.Now().Before(deadline), "timed out waiting for non-consensus second report")
 
-		cycleListRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
+		currentRes, _, err := e2e.QueryWithTimeout(ctx, validators[0].Node, "oracle", "current-cyclelist-query")
 		require.NoError(err)
 		var cycleList e2e.QueryCurrentCyclelistQueryResponse
-		err = json.Unmarshal(cycleListRes, &cycleList)
+		err = json.Unmarshal(currentRes, &cycleList)
 		require.NoError(err)
-		if cycleList.QueryData != currentCycleList.QueryData {
+		if cycleList.QueryData != reportedQueryData {
 			time.Sleep(500 * time.Millisecond)
 			continue
 		}
 
 		txHashBytes, _, err := validators[0].Node.Exec(ctx,
-			validators[0].Node.TxCommand(validators[0].AccAddr, "oracle", "submit-value", currentCycleList.QueryData, value, "--fees", "5loya", "--keyring-dir", validators[0].Node.HomeDir()),
+			validators[0].Node.TxCommand(validators[0].AccAddr, "oracle", "submit-value", reportedQueryData, value, "--fees", "5loya", "--keyring-dir", validators[0].Node.HomeDir()),
 			validators[0].Node.Chain.Config().Env)
 		if err != nil {
 			fmt.Println("second-round submit failed (likely window expired), retrying:", err)
