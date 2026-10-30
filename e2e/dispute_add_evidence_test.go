@@ -49,21 +49,30 @@ func setupAddEvidenceChain(t *testing.T) (*cosmos.CosmosChain, *interchaintest.I
 func tipAndSubmit(t *testing.T, ctx context.Context, tipper e2e.ValidatorInfo, reporters []e2e.ValidatorInfo, queryData string) {
 	t.Helper()
 	// SpotPrice ReportBlockWindow is 2; sequential ExecTx submits can straddle aggregation
-	// and hit ErrNotTokenDeposit. Tip with ExecTx, then broadcast all submits via Exec so
-	// they land in the same window (same pattern as dispute_test multi-reporter submits).
+	// and hit ErrNotTokenDeposit. Tip with ExecTx, then broadcast multi-reporter submits via
+	// Exec so they land in the same window (same pattern as dispute_test). Single-reporter
+	// submits use ExecTx so on-chain failures surface instead of looking like empty reports.
+	// Prefer non-cyclelist queryData (not eth/btc/trb): tipping an active cyclelist query
+	// does not refresh Expiration, so submits can miss the short window.
 	tip := sdk.NewCoin("loya", math.NewInt(1_000_000))
 	_, err := tipper.Node.ExecTx(ctx, tipper.AccAddr, "oracle", "tip", queryData, tip.String(),
 		"--keyring-dir", tipper.Node.HomeDir())
 	require.NoError(t, err)
 
 	value := layerutil.EncodeValue(10000000.99)
-	for _, reporter := range reporters {
-		_, _, err = reporter.Node.Exec(ctx,
-			reporter.Node.TxCommand(reporter.AccAddr, "oracle", "submit-value", queryData, value,
-				"--keyring-dir", reporter.Node.HomeDir()),
-			reporter.Node.Chain.Config().Env,
-		)
+	if len(reporters) == 1 {
+		_, err = reporters[0].Node.ExecTx(ctx, reporters[0].AccAddr, "oracle", "submit-value", queryData, value,
+			"--keyring-dir", reporters[0].Node.HomeDir())
 		require.NoError(t, err)
+	} else {
+		for _, reporter := range reporters {
+			_, _, err = reporter.Node.Exec(ctx,
+				reporter.Node.TxCommand(reporter.AccAddr, "oracle", "submit-value", queryData, value,
+					"--keyring-dir", reporter.Node.HomeDir()),
+				reporter.Node.Chain.Config().Env,
+			)
+			require.NoError(t, err)
+		}
 	}
 	require.NoError(t, testutil.WaitForBlocks(ctx, 3, tipper.Node))
 }
@@ -231,10 +240,10 @@ func TestAddEvidence_MinorAggregateLimit(t *testing.T) {
 	disputes = queryDisputes(t, ctx, val0.Node)
 	require.Len(disputes.Disputes[0].Metadata.AdditionalEvidence, 1)
 
-	// second aggregate evidence is rejected
-	ethQData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000003657468000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
-	tipAndSubmit(t, ctx, val0, []e2e.ValidatorInfo{nonAggReporter}, ethQData)
-	secondAgg := microReportFromQuery(t, latestReportForReporter(t, ctx, val0.Node, nonAggReporter.AccAddr, ethQData))
+	// second aggregate evidence is rejected (usdc is not in InitialCycleList; eth/btc/trb are)
+	usdcQData := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000953706f745072696365000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000004757364630000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000037573640000000000000000000000000000000000000000000000000000000000"
+	tipAndSubmit(t, ctx, val0, []e2e.ValidatorInfo{nonAggReporter}, usdcQData)
+	secondAgg := microReportFromQuery(t, latestReportForReporter(t, ctx, val0.Node, nonAggReporter.AccAddr, usdcQData))
 	err = broadcastAddEvidence(t, ctx, chain, disputer, disputeID, secondAgg)
 	require.Error(err)
 	require.Contains(err.Error(), "minor disputes can flag at most one aggregate report")
