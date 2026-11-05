@@ -159,6 +159,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "edit commission rate, moniker, and MinTokensRequired for your reporter",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "commission_rate"}, {ProtoField: "min_tokens_required"}, {ProtoField: "moniker"}},
 				},
+				{
+					RpcMethod:      "RegisterTwoBitReporter",
+					Use:            "register-two-bit-reporter [two-bit-address]",
+					Short:          "Register or replace the account that can submit 2bitAgentic reports. Pass an empty string to clear.",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "two_bit_address"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},

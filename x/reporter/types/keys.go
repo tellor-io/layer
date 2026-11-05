@@ -51,6 +51,10 @@ var (
 	TipUnlockQueuePrefix = collections.NewPrefix(37)
 	// TipUnlockIDPrefix is the next unlock id sequence.
 	TipUnlockIDPrefix = collections.NewPrefix(38)
+	// TwoBitAgentToReporterPrefix maps a 2bit agent account to the reporter it reports for.
+	TwoBitAgentToReporterPrefix = collections.NewPrefix(39)
+	// TwoBitReporterToAgentPrefix maps a reporter to its current 2bit agent account.
+	TwoBitReporterToAgentPrefix = collections.NewPrefix(40)
 )
 
 // ReporterJailDisputeLockKey keys selector dispute locks copied from OracleReporter.JailedUntil

@@ -19,16 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Msg_UpdateParams_FullMethodName         = "/layer.reporter.Msg/UpdateParams"
-	Msg_CreateReporter_FullMethodName       = "/layer.reporter.Msg/CreateReporter"
-	Msg_SelectReporter_FullMethodName       = "/layer.reporter.Msg/SelectReporter"
-	Msg_SwitchReporter_FullMethodName       = "/layer.reporter.Msg/SwitchReporter"
-	Msg_RemoveSelector_FullMethodName       = "/layer.reporter.Msg/RemoveSelector"
-	Msg_UnjailReporter_FullMethodName       = "/layer.reporter.Msg/UnjailReporter"
-	Msg_WithdrawTip_FullMethodName          = "/layer.reporter.Msg/WithdrawTip"
-	Msg_WithdrawTipToBalance_FullMethodName = "/layer.reporter.Msg/WithdrawTipToBalance"
-	Msg_CancelTipUnlock_FullMethodName      = "/layer.reporter.Msg/CancelTipUnlock"
-	Msg_EditReporter_FullMethodName         = "/layer.reporter.Msg/EditReporter"
+	Msg_UpdateParams_FullMethodName           = "/layer.reporter.Msg/UpdateParams"
+	Msg_CreateReporter_FullMethodName         = "/layer.reporter.Msg/CreateReporter"
+	Msg_SelectReporter_FullMethodName         = "/layer.reporter.Msg/SelectReporter"
+	Msg_SwitchReporter_FullMethodName         = "/layer.reporter.Msg/SwitchReporter"
+	Msg_RemoveSelector_FullMethodName         = "/layer.reporter.Msg/RemoveSelector"
+	Msg_UnjailReporter_FullMethodName         = "/layer.reporter.Msg/UnjailReporter"
+	Msg_WithdrawTip_FullMethodName            = "/layer.reporter.Msg/WithdrawTip"
+	Msg_WithdrawTipToBalance_FullMethodName   = "/layer.reporter.Msg/WithdrawTipToBalance"
+	Msg_CancelTipUnlock_FullMethodName        = "/layer.reporter.Msg/CancelTipUnlock"
+	Msg_EditReporter_FullMethodName           = "/layer.reporter.Msg/EditReporter"
+	Msg_RegisterTwoBitReporter_FullMethodName = "/layer.reporter.Msg/RegisterTwoBitReporter"
 )
 
 // MsgClient is the client API for Msg service.
@@ -61,6 +62,9 @@ type MsgClient interface {
 	CancelTipUnlock(ctx context.Context, in *MsgCancelTipUnlock, opts ...grpc.CallOption) (*MsgCancelTipUnlockResponse, error)
 	// EditReporter defines a method to edit a reporter object
 	EditReporter(ctx context.Context, in *MsgEditReporter, opts ...grpc.CallOption) (*MsgEditReporterResponse, error)
+	// RegisterTwoBitReporter registers, replaces, or clears the address that may
+	// submit 2bitAgentic reports for this reporter. An empty two_bit_address clears it.
+	RegisterTwoBitReporter(ctx context.Context, in *MsgRegisterTwoBitReporter, opts ...grpc.CallOption) (*MsgRegisterTwoBitReporterResponse, error)
 }
 
 type msgClient struct {
@@ -171,6 +175,16 @@ func (c *msgClient) EditReporter(ctx context.Context, in *MsgEditReporter, opts 
 	return out, nil
 }
 
+func (c *msgClient) RegisterTwoBitReporter(ctx context.Context, in *MsgRegisterTwoBitReporter, opts ...grpc.CallOption) (*MsgRegisterTwoBitReporterResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgRegisterTwoBitReporterResponse)
+	err := c.cc.Invoke(ctx, Msg_RegisterTwoBitReporter_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
@@ -201,6 +215,9 @@ type MsgServer interface {
 	CancelTipUnlock(context.Context, *MsgCancelTipUnlock) (*MsgCancelTipUnlockResponse, error)
 	// EditReporter defines a method to edit a reporter object
 	EditReporter(context.Context, *MsgEditReporter) (*MsgEditReporterResponse, error)
+	// RegisterTwoBitReporter registers, replaces, or clears the address that may
+	// submit 2bitAgentic reports for this reporter. An empty two_bit_address clears it.
+	RegisterTwoBitReporter(context.Context, *MsgRegisterTwoBitReporter) (*MsgRegisterTwoBitReporterResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -240,6 +257,9 @@ func (UnimplementedMsgServer) CancelTipUnlock(context.Context, *MsgCancelTipUnlo
 }
 func (UnimplementedMsgServer) EditReporter(context.Context, *MsgEditReporter) (*MsgEditReporterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EditReporter not implemented")
+}
+func (UnimplementedMsgServer) RegisterTwoBitReporter(context.Context, *MsgRegisterTwoBitReporter) (*MsgRegisterTwoBitReporterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterTwoBitReporter not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -442,6 +462,24 @@ func _Msg_EditReporter_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_RegisterTwoBitReporter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRegisterTwoBitReporter)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RegisterTwoBitReporter(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_RegisterTwoBitReporter_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RegisterTwoBitReporter(ctx, req.(*MsgRegisterTwoBitReporter))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -488,6 +526,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "EditReporter",
 			Handler:    _Msg_EditReporter_Handler,
+		},
+		{
+			MethodName: "RegisterTwoBitReporter",
+			Handler:    _Msg_RegisterTwoBitReporter_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

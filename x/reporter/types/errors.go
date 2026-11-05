@@ -32,4 +32,7 @@ var (
 	ErrMalformedDelegationSnapshot   = sdkerrors.Register(ModuleName, 1121, "delegation snapshot has positive total but no token origins")
 	ErrMixedStakeAcquisitionPaths    = sdkerrors.Register(ModuleName, 1122, "transactions cannot combine direct stake acquisition with other power acquisition messages")
 	ErrReporterSelfDemoting          = sdkerrors.Register(ModuleName, 1123, "reporter has a pending self-demotion")
+	ErrTwoBitAgentIsReporter         = sdkerrors.Register(ModuleName, 1124, "2bit address is a reporter")
+	ErrTwoBitAgentTaken              = sdkerrors.Register(ModuleName, 1125, "2bit address is already registered")
+	ErrAddressIsTwoBitAgent          = sdkerrors.Register(ModuleName, 1126, "address is registered as a 2bit agent")
 )

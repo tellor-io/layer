@@ -24,6 +24,13 @@ message GenesisState {
   repeated TipUnlockStateEntry tip_unlocks = 5;
   // tip_unlock_id is the next unlock id to allocate (TipUnlockID sequence peek value).
   uint64 tip_unlock_id = 6;
+  // two_bit_reporters maps an agent account to the reporter it reports for.
+  repeated TwoBitReporterStateEntry two_bit_reporters = 7;
+}
+
+message TwoBitReporterStateEntry {
+  bytes agent_address = 1;
+  bytes reporter_address = 2;
 }
 
 message TipUnlockStateEntry {

@@ -55,6 +55,11 @@ type (
 		TipUnlockQueue collections.Map[collections.Pair[int64, uint64], []byte]                // (completion_unix, unlock_id) -> selector
 		TipUnlockID    collections.Sequence
 
+		// 2bit agent account -> reporter it reports as. Submit only reads this map.
+		TwoBitAgentToReporter collections.Map[[]byte, []byte]
+		// reporter -> its current 2bit agent, so a new registration can delete the previous key.
+		TwoBitReporterToAgent collections.Map[[]byte, []byte]
+
 		Schema collections.Schema
 		logger log.Logger
 
@@ -147,7 +152,19 @@ func NewKeeper(
 			collections.PairKeyCodec(collections.Int64Key, collections.Uint64Key),
 			collections.BytesValue,
 		),
-		TipUnlockID:    collections.NewSequence(sb, types.TipUnlockIDPrefix, "tip_unlock_id"),
+		TipUnlockID: collections.NewSequence(sb, types.TipUnlockIDPrefix, "tip_unlock_id"),
+		TwoBitAgentToReporter: collections.NewMap(sb,
+			types.TwoBitAgentToReporterPrefix,
+			"two_bit_agent_to_reporter",
+			collections.BytesKey,
+			collections.BytesValue,
+		),
+		TwoBitReporterToAgent: collections.NewMap(sb,
+			types.TwoBitReporterToAgentPrefix,
+			"two_bit_reporter_to_agent",
+			collections.BytesKey,
+			collections.BytesValue,
+		),
 		authority:      authority,
 		logger:         logger,
 		accountKeeper:  accountKeeper,

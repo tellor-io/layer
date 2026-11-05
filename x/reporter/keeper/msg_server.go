@@ -44,6 +44,15 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if err != nil {
 		return nil, err
 	}
+	// An agent account only pays gas for 2bitAgentic reports. It cannot also be a reporter,
+	// or submit would use this row and never follow the alias.
+	isTwoBitAgent, err := k.Keeper.TwoBitAgentToReporter.Has(goCtx, addr.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	if isTwoBitAgent {
+		return nil, types.ErrAddressIsTwoBitAgent.Wrapf("%s is registered as a 2bit agent", addr.String())
+	}
 	// check if reporter has min bonded tokens
 	params, err := k.Keeper.Params.Get(goCtx)
 	if err != nil {
