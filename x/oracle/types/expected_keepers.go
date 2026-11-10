@@ -41,6 +41,8 @@ type RegistryKeeper interface {
 type ReporterKeeper interface {
 	// Methods imported from reporter should be defined here
 	ReporterStake(ctx context.Context, repAddress sdk.AccAddress, queryId []byte) (math.Int, error)
+	// TwoBitReporter returns the reporter registered for a 2bit agent account.
+	TwoBitReporter(ctx context.Context, agent sdk.AccAddress) (sdk.AccAddress, error)
 	DivvyingTips(ctx context.Context, reporterAddr sdk.AccAddress, reward math.LegacyDec) error
 	GetLastReportedAtBlock(ctx context.Context, reporter []byte) (uint64, error)
 }

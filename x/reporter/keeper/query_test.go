@@ -28,14 +28,18 @@ func TestReportersQuery(t *testing.T) {
 	res, err := querier.Reporters(ctx, &types.QueryReportersRequest{})
 	require.NoError(t, err)
 	require.Len(t, res.Reporters, 10)
+	for _, reporter := range res.Reporters {
+		require.Empty(t, reporter.TwoBitAddress)
+	}
 }
 
 func TestJailedReportersQuery(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
 	querier := keeper.NewQuerier(k)
 
-	// Create 5 jailed reporters
+	// Create 5 jailed reporters. The first has a registered 2bit agent.
 	jailedReporters := make([]sdk.AccAddress, 5)
+	jailedAgent := sample.AccAddressBytes()
 	for i := 0; i < 5; i++ {
 		jailedReporters[i] = sample.AccAddressBytes()
 		reporter := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, fmt.Sprintf("jailed_reporter_%d", i))
@@ -43,6 +47,7 @@ func TestJailedReportersQuery(t *testing.T) {
 		err := k.Reporters.Set(ctx, jailedReporters[i], reporter)
 		require.NoError(t, err)
 	}
+	require.NoError(t, k.SetTwoBitMapping(ctx, jailedReporters[0].Bytes(), jailedAgent.Bytes()))
 
 	// Create 5 non-jailed reporters
 	for i := 0; i < 5; i++ {
@@ -62,9 +67,21 @@ func TestJailedReportersQuery(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, reportersRes.Reporters, 10)
 
-	// Verify all returned reporters are jailed
+	// Verify all returned reporters are jailed, and the registered agent is included.
 	for _, reporter := range res.Reporters {
 		require.True(t, reporter.Metadata.Jailed)
+		if reporter.Address == jailedReporters[0].String() {
+			require.Equal(t, jailedAgent.String(), reporter.TwoBitAddress)
+			continue
+		}
+		require.Empty(t, reporter.TwoBitAddress)
+	}
+	for _, reporter := range reportersRes.Reporters {
+		if reporter.Address == jailedReporters[0].String() {
+			require.Equal(t, jailedAgent.String(), reporter.TwoBitAddress)
+			continue
+		}
+		require.Empty(t, reporter.TwoBitAddress)
 	}
 }
 
@@ -86,11 +103,112 @@ func TestReporterQuery(t *testing.T) {
 	require.Equal(t, reporterAddr.String(), res.Reporter.Address)
 	require.Equal(t, "test_reporter", res.Reporter.Metadata.Moniker)
 	require.False(t, res.Reporter.Metadata.Jailed)
+	require.Empty(t, res.Reporter.TwoBitAddress)
 
 	// Query non-existent reporter
 	nonExistentAddr := sample.AccAddressBytes()
 	_, err = querier.Reporter(ctx, &types.QueryReporterRequest{ReporterAddress: nonExistentAddr.String()})
 	require.Error(t, err)
+}
+
+func TestReporterQueryIncludesTwoBitAddress(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	querier := keeper.NewQuerier(k)
+
+	reporterAddr := sample.AccAddressBytes()
+	other := sample.AccAddressBytes()
+	agent := sample.AccAddressBytes()
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "with_agent")))
+	require.NoError(t, k.Reporters.Set(ctx, other, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "without_agent")))
+	require.NoError(t, k.SetTwoBitMapping(ctx, reporterAddr.Bytes(), agent.Bytes()))
+
+	res, err := querier.Reporter(ctx, &types.QueryReporterRequest{ReporterAddress: reporterAddr.String()})
+	require.NoError(t, err)
+	require.Equal(t, agent.String(), res.Reporter.TwoBitAddress)
+
+	otherRes, err := querier.Reporter(ctx, &types.QueryReporterRequest{ReporterAddress: other.String()})
+	require.NoError(t, err)
+	require.Empty(t, otherRes.Reporter.TwoBitAddress)
+
+	list, err := querier.Reporters(ctx, &types.QueryReportersRequest{})
+	require.NoError(t, err)
+	require.Len(t, list.Reporters, 2)
+	got := map[string]string{}
+	for _, reporter := range list.Reporters {
+		got[reporter.Address] = reporter.TwoBitAddress
+	}
+	require.Equal(t, agent.String(), got[reporterAddr.String()])
+	require.Empty(t, got[other.String()])
+}
+
+func TestTwoBitPendingRequestsQuery(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	querier := keeper.NewQuerier(k)
+
+	reporterA := sample.AccAddressBytes()
+	reporterB := sample.AccAddressBytes()
+	reporterC := sample.AccAddressBytes()
+	agentX := sample.AccAddressBytes()
+	agentY := sample.AccAddressBytes()
+	rep := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "moniker")
+	require.NoError(t, k.Reporters.Set(ctx, reporterA, rep))
+	require.NoError(t, k.Reporters.Set(ctx, reporterB, rep))
+	require.NoError(t, k.Reporters.Set(ctx, reporterC, rep))
+	require.NoError(t, k.SetTwoBitReporter(ctx, reporterA, agentX))
+	require.NoError(t, k.SetTwoBitReporter(ctx, reporterB, agentY))
+	require.NoError(t, k.SetTwoBitReporter(ctx, reporterC, agentX))
+	expiry := uint64(ctx.BlockHeight()) + types.TwoBitPendingRequestExpiryBlocks
+
+	all, err := querier.TwoBitPendingRequests(ctx, &types.QueryTwoBitPendingRequestsRequest{})
+	require.NoError(t, err)
+	require.ElementsMatch(t, []*types.TwoBitPendingRequestInfo{
+		{Reporter: reporterA.String(), TwoBitAddress: agentX.String(), ExpiryHeight: expiry},
+		{Reporter: reporterB.String(), TwoBitAddress: agentY.String(), ExpiryHeight: expiry},
+		{Reporter: reporterC.String(), TwoBitAddress: agentX.String(), ExpiryHeight: expiry},
+	}, all.Requests)
+
+	toX, err := querier.TwoBitPendingRequests(ctx, &types.QueryTwoBitPendingRequestsRequest{TwoBitAddress: agentX.String()})
+	require.NoError(t, err)
+	require.ElementsMatch(t, []*types.TwoBitPendingRequestInfo{
+		{Reporter: reporterA.String(), TwoBitAddress: agentX.String(), ExpiryHeight: expiry},
+		{Reporter: reporterC.String(), TwoBitAddress: agentX.String(), ExpiryHeight: expiry},
+	}, toX.Requests)
+
+	fromA, err := querier.TwoBitPendingRequests(ctx, &types.QueryTwoBitPendingRequestsRequest{ReporterAddress: reporterA.String()})
+	require.NoError(t, err)
+	require.Equal(t, []*types.TwoBitPendingRequestInfo{
+		{Reporter: reporterA.String(), TwoBitAddress: agentX.String(), ExpiryHeight: expiry},
+	}, fromA.Requests)
+
+	toY, err := querier.TwoBitPendingRequests(ctx, &types.QueryTwoBitPendingRequestsRequest{TwoBitAddress: agentY.String()})
+	require.NoError(t, err)
+	require.Equal(t, []*types.TwoBitPendingRequestInfo{
+		{Reporter: reporterB.String(), TwoBitAddress: agentY.String(), ExpiryHeight: expiry},
+	}, toY.Requests)
+
+	both, err := querier.TwoBitPendingRequests(ctx, &types.QueryTwoBitPendingRequestsRequest{
+		ReporterAddress: reporterA.String(),
+		TwoBitAddress:   agentY.String(),
+	})
+	require.NoError(t, err)
+	require.Empty(t, both.Requests)
+
+	none, err := querier.TwoBitPendingRequests(ctx, &types.QueryTwoBitPendingRequestsRequest{ReporterAddress: sample.AccAddressBytes().String()})
+	require.NoError(t, err)
+	require.Empty(t, none.Requests)
+
+	_, err = querier.TwoBitPendingRequests(ctx, &types.QueryTwoBitPendingRequestsRequest{ReporterAddress: "not-an-address"})
+	require.Error(t, err)
+	_, err = querier.TwoBitPendingRequests(ctx, &types.QueryTwoBitPendingRequestsRequest{TwoBitAddress: "not-an-address"})
+	require.Error(t, err)
+
+	require.NoError(t, k.AcceptTwoBitRegistration(ctx, reporterA, agentX))
+	afterAccept, err := querier.TwoBitPendingRequests(ctx, &types.QueryTwoBitPendingRequestsRequest{ReporterAddress: reporterA.String()})
+	require.NoError(t, err)
+	require.Empty(t, afterAccept.Requests)
+	registered, err := querier.Reporter(ctx, &types.QueryReporterRequest{ReporterAddress: reporterA.String()})
+	require.NoError(t, err)
+	require.Equal(t, agentX.String(), registered.Reporter.TwoBitAddress)
 }
 
 func TestReportersQueryHidesSelfDemoting(t *testing.T) {
@@ -100,8 +218,10 @@ func TestReportersQueryHidesSelfDemoting(t *testing.T) {
 	active := sample.AccAddressBytes()
 	demoting := sample.AccAddressBytes()
 	dest := sample.AccAddressBytes()
+	agent := sample.AccAddressBytes()
 	require.NoError(t, k.Reporters.Set(ctx, active, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "active")))
 	require.NoError(t, k.Reporters.Set(ctx, demoting, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "demoting")))
+	require.NoError(t, k.SetTwoBitMapping(ctx, active.Bytes(), agent.Bytes()))
 	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(demoting.Bytes(), demoting.Bytes()), types.PendingSwitchEntry{
 		ToReporter:  dest.Bytes(),
 		UnlockBlock: 100,
@@ -111,6 +231,7 @@ func TestReportersQueryHidesSelfDemoting(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, res.Reporters, 1)
 	require.Equal(t, active.String(), res.Reporters[0].Address)
+	require.Equal(t, agent.String(), res.Reporters[0].TwoBitAddress)
 
 	_, err = querier.Reporter(ctx, &types.QueryReporterRequest{ReporterAddress: demoting.String()})
 	require.Error(t, err)
@@ -118,6 +239,7 @@ func TestReportersQueryHidesSelfDemoting(t *testing.T) {
 	got, err := querier.Reporter(ctx, &types.QueryReporterRequest{ReporterAddress: active.String()})
 	require.NoError(t, err)
 	require.Equal(t, active.String(), got.Reporter.Address)
+	require.Equal(t, agent.String(), got.Reporter.TwoBitAddress)
 }
 
 func TestSelectorReporterQuery(t *testing.T) {

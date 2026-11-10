@@ -1,7 +1,9 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
+	"errors"
 
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/reporter/types"
@@ -43,15 +45,7 @@ func (k Querier) Reporters(ctx context.Context, req *types.QueryReportersRequest
 			return !demoting, nil
 		},
 		func(repAddr []byte, reporterMeta types.OracleReporter) (*types.Reporter, error) {
-			stake, _, _, _, err := k.GetReporterStakeView(ctx, sdk.AccAddress(repAddr))
-			if err != nil {
-				stake = math.ZeroInt()
-			}
-			return &types.Reporter{
-				Address:  sdk.AccAddress(repAddr).String(),
-				Metadata: &reporterMeta,
-				Power:    stake.Quo(layertypes.PowerReduction).Uint64(),
-			}, nil
+			return k.reporterResponse(ctx, repAddr, reporterMeta)
 		},
 	)
 	if err != nil {
@@ -290,16 +284,11 @@ func (k Querier) JailedReporters(ctx context.Context, req *types.QueryJailedRepo
 		if !reporterMeta.Jailed {
 			return false, nil
 		}
-		stake, _, _, _, err := k.GetReporterStakeView(ctx, sdk.AccAddress(repAddr))
+		reporter, err := k.reporterResponse(ctx, repAddr, reporterMeta)
 		if err != nil {
-			stake = math.ZeroInt()
+			return true, err
 		}
-		reportingPower := stake.Quo(layertypes.PowerReduction).Uint64()
-		reporters = append(reporters, &types.Reporter{
-			Address:  sdk.AccAddress(repAddr).String(),
-			Metadata: &reporterMeta,
-			Power:    reportingPower,
-		})
+		reporters = append(reporters, reporter)
 		return false, nil
 	})
 	if err != nil {
@@ -359,17 +348,113 @@ func (k Querier) Reporter(ctx context.Context, req *types.QueryReporterRequest) 
 		return nil, status.Error(codes.NotFound, "reporter not found")
 	}
 
-	stake, _, _, _, err := k.GetReporterStakeView(ctx, repAddr)
+	reporter, err := k.reporterResponse(ctx, repAddr, reporterMeta)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryReporterResponse{Reporter: reporter}, nil
+}
+
+// TwoBitPendingRequests lists outstanding 2bit registration requests.
+// A reporter address returns that reporter's request. A 2bit address returns
+// every request naming that agent. Both empty returns every request.
+func (k Querier) TwoBitPendingRequests(ctx context.Context, req *types.QueryTwoBitPendingRequestsRequest) (*types.QueryTwoBitPendingRequestsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	var reporterFilter, agentFilter []byte
+	if req.ReporterAddress != "" {
+		reporter, err := sdk.AccAddressFromBech32(req.ReporterAddress)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid reporter address")
+		}
+		reporterFilter = reporter.Bytes()
+	}
+	if req.TwoBitAddress != "" {
+		agent, err := sdk.AccAddressFromBech32(req.TwoBitAddress)
+		if err != nil {
+			return nil, status.Error(codes.InvalidArgument, "invalid 2bit address")
+		}
+		agentFilter = agent.Bytes()
+	}
+
+	// One request per reporter, so a reporter filter is a single key lookup.
+	if reporterFilter != nil {
+		pending, err := k.Keeper.TwoBitPendingRequests.Get(ctx, reporterFilter)
+		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				return &types.QueryTwoBitPendingRequestsResponse{Requests: []*types.TwoBitPendingRequestInfo{}}, nil
+			}
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+		if agentFilter != nil && !bytes.Equal(pending.TwoBitReporter, agentFilter) {
+			return &types.QueryTwoBitPendingRequestsResponse{Requests: []*types.TwoBitPendingRequestInfo{}}, nil
+		}
+		return &types.QueryTwoBitPendingRequestsResponse{
+			Requests: []*types.TwoBitPendingRequestInfo{twoBitPendingRequestInfo(reporterFilter, pending)},
+		}, nil
+	}
+
+	requests, pageRes, err := query.CollectionFilteredPaginate(
+		ctx,
+		k.Keeper.TwoBitPendingRequests,
+		req.Pagination,
+		func(_ []byte, pending types.TwoBitPendingRequest) (bool, error) {
+			if agentFilter != nil && !bytes.Equal(pending.TwoBitReporter, agentFilter) {
+				return false, nil
+			}
+			return true, nil
+		},
+		func(repAddr []byte, pending types.TwoBitPendingRequest) (*types.TwoBitPendingRequestInfo, error) {
+			return twoBitPendingRequestInfo(repAddr, pending), nil
+		},
+	)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+	if requests == nil {
+		requests = []*types.TwoBitPendingRequestInfo{}
+	}
+	return &types.QueryTwoBitPendingRequestsResponse{Requests: requests, Pagination: pageRes}, nil
+}
+
+func (k Querier) reporterResponse(ctx context.Context, repAddr []byte, reporterMeta types.OracleReporter) (*types.Reporter, error) {
+	stake, _, _, _, err := k.GetReporterStakeView(ctx, sdk.AccAddress(repAddr))
 	if err != nil {
 		stake = math.ZeroInt()
 	}
-	reportingPower := stake.Quo(layertypes.PowerReduction).Uint64()
-
-	return &types.QueryReporterResponse{
-		Reporter: &types.Reporter{
-			Address:  repAddr.String(),
-			Metadata: &reporterMeta,
-			Power:    reportingPower,
-		},
+	twoBitAddress, err := k.registeredTwoBitAddress(ctx, repAddr)
+	if err != nil {
+		return nil, err
+	}
+	return &types.Reporter{
+		Address:       sdk.AccAddress(repAddr).String(),
+		Metadata:      &reporterMeta,
+		Power:         stake.Quo(layertypes.PowerReduction).Uint64(),
+		TwoBitAddress: twoBitAddress,
 	}, nil
+}
+
+func (k Querier) registeredTwoBitAddress(ctx context.Context, reporter []byte) (string, error) {
+	agent, err := k.Keeper.TwoBitReporterToAgent.Get(ctx, reporter)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return "", nil
+		}
+		return "", err
+	}
+	if len(agent) == 0 {
+		return "", nil
+	}
+	return sdk.AccAddress(agent).String(), nil
+}
+
+func twoBitPendingRequestInfo(reporter []byte, pending types.TwoBitPendingRequest) *types.TwoBitPendingRequestInfo {
+	return &types.TwoBitPendingRequestInfo{
+		Reporter:      sdk.AccAddress(reporter).String(),
+		TwoBitAddress: sdk.AccAddress(pending.TwoBitReporter).String(),
+		ExpiryHeight:  pending.ExpiryHeight,
+	}
 }

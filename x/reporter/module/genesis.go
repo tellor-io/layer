@@ -71,6 +71,12 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			panic(err)
 		}
 	}
+
+	for _, entry := range genState.TwoBitReporters {
+		if err := k.SetTwoBitMapping(ctx, entry.ReporterAddress, entry.AgentAddress); err != nil {
+			panic(err)
+		}
+	}
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -161,6 +167,16 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		panic(err)
 	}
 	genesis.TipUnlockId = nextUnlockID
+
+	if err := k.TwoBitAgentToReporter.Walk(ctx, nil, func(agent, reporter []byte) (bool, error) {
+		genesis.TwoBitReporters = append(genesis.TwoBitReporters, &types.TwoBitReporterStateEntry{
+			AgentAddress:    append([]byte(nil), agent...),
+			ReporterAddress: append([]byte(nil), reporter...),
+		})
+		return false, nil
+	}); err != nil {
+		panic(err)
+	}
 
 	exportModuleData(ctx, k)
 	// this line is used by starport scaffolding # genesis/module/export
@@ -352,6 +368,29 @@ func exportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		numFeePaidFromStake++
 	}
 	err = writer.EndArraySection(numFeePaidFromStake)
+	if err != nil {
+		panic(err)
+	}
+
+	err = writer.StartArraySection("two_bit_reporters", false)
+	if err != nil {
+		panic(err)
+	}
+	numTwoBit := 0
+	err = k.TwoBitAgentToReporter.Walk(ctx, nil, func(agent, reporter []byte) (bool, error) {
+		if err := writer.WriteArrayItem(types.TwoBitReporterStateEntry{
+			AgentAddress:    append([]byte(nil), agent...),
+			ReporterAddress: append([]byte(nil), reporter...),
+		}); err != nil {
+			return true, err
+		}
+		numTwoBit++
+		return false, nil
+	})
+	if err != nil {
+		panic(err)
+	}
+	err = writer.EndArraySection(numTwoBit)
 	if err != nil {
 		panic(err)
 	}

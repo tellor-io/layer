@@ -23,3 +23,7 @@ func (k Keeper) MaxBondableAmountExported(
 func (k Keeper) GetRedelegationPathExported(ctx context.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) ([]sdk.ValAddress, error) {
 	return k.getRedelegationPath(ctx, delAddr, valAddr)
 }
+
+func (k Keeper) RemoveReporterForTest(ctx context.Context, reporter []byte) error {
+	return k.removeReporter(ctx, reporter)
+}

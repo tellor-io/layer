@@ -66,6 +66,12 @@ service Query {
   rpc TipUnlocks(QueryTipUnlocksRequest) returns (QueryTipUnlocksResponse) {
     option (google.api.http).get = "/tellor-io/layer/reporter/tip-unlocks/{selector_address}";
   }
+  // TwoBitPendingRequests queries outstanding 2bit registration requests.
+  // Omit both addresses to list every request. Set reporter_address for the
+  // request from that reporter, or two_bit_address for every request to that agent.
+  rpc TwoBitPendingRequests(QueryTwoBitPendingRequestsRequest) returns (QueryTwoBitPendingRequestsResponse) {
+    option (google.api.http).get = "/tellor-io/layer/reporter/two-bit-pending-requests";
+  }
 }
 
 // QueryParamsRequest is request type for the Query/Params RPC method.
@@ -89,6 +95,9 @@ message reporter {
   string address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   OracleReporter metadata = 2;
   uint64 power = 3;
+  // two_bit_address is the account registered to submit 2bitAgentic reports for this reporter.
+  // Empty when no agent is registered.
+  string two_bit_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // QueryReportersResponse is the response type for the Query/Reporters RPC method.
@@ -247,4 +256,29 @@ message TipUnlockInfo {
 message QueryTipUnlocksResponse {
   // unlocks lists all in-flight tip unlocks for the selector (with unlock_id).
   repeated TipUnlockInfo unlocks = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryTwoBitPendingRequestsRequest is the request type for the Query/TwoBitPendingRequests RPC method.
+message QueryTwoBitPendingRequestsRequest {
+  // reporter_address limits the result to the request from this reporter.
+  string reporter_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // two_bit_address limits the result to requests naming this agent.
+  string two_bit_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+// TwoBitPendingRequestInfo is one outstanding invite from a reporter to an agent.
+message TwoBitPendingRequestInfo {
+  string reporter = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string two_bit_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // expiry_height is the last block height at which the agent can accept.
+  uint64 expiry_height = 3;
+}
+
+// QueryTwoBitPendingRequestsResponse is the response type for the Query/TwoBitPendingRequests RPC method.
+message QueryTwoBitPendingRequestsResponse {
+  repeated TwoBitPendingRequestInfo requests = 1;
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
