@@ -15,7 +15,7 @@ import (
 const TwoBitPendingRequestExpiryBlocks uint64 = 2000
 
 // TwoBitPendingRequest is the one outstanding invite from a reporter.
-// Replacing or cancelling it removes this value, so the previous address can no longer accept.
+// Replacing or canceling it removes this value, so the previous address can no longer accept.
 type TwoBitPendingRequest struct {
 	TwoBitReporter []byte
 	ExpiryHeight   uint64

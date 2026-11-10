@@ -195,7 +195,7 @@ func TestMigrateForkTwoBitReporters(t *testing.T) {
 	}
 	bz, err := json.Marshal(payload)
 	require.NoError(t, err)
-	require.NoError(t, os.WriteFile(filepath.Join(dir, "reporter_module_state.json"), bz, 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "reporter_module_state.json"), bz, 0o600))
 
 	require.NoError(t, fork.MigrateFork(sdk.UnwrapSDKContext(ctx), storeService, cdc, dir))
 

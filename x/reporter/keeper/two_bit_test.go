@@ -344,7 +344,7 @@ func TestTwoBitPendingRequestExpiresAndReplacementDeletesIt(t *testing.T) {
 	_, err = k.TwoBitReporter(replacedAt, first)
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
-	// Cancelling with the reporter's own address deletes the invite.
+	// Canceling with the reporter's own address deletes the invite.
 	_, err = ms.RegisterTwoBitReporter(replacedAt, &types.MsgRegisterTwoBitReporter{
 		ReporterAddress: other.String(),
 		TwoBitAddress:   other.String(),
