@@ -86,6 +86,27 @@ func (s *IntegrationTestSuite) TestTwoBitAgentReportCreditsReporter() {
 	})
 	require.NoError(err)
 
+	reporterQuery := reporterkeeper.NewQuerier(s.Setup.Reporterkeeper)
+	expiry := uint64(ctx.BlockHeight()) + reportertypes.TwoBitPendingRequestExpiryBlocks
+	pending := &reportertypes.TwoBitPendingRequestInfo{
+		Reporter:      reporter.String(),
+		TwoBitAddress: agent.String(),
+		ExpiryHeight:  expiry,
+	}
+	fromReporter, err := reporterQuery.TwoBitPendingRequests(ctx, &reportertypes.QueryTwoBitPendingRequestsRequest{
+		ReporterAddress: reporter.String(),
+	})
+	require.NoError(err)
+	require.Equal([]*reportertypes.TwoBitPendingRequestInfo{pending}, fromReporter.Requests)
+	toAgent, err := reporterQuery.TwoBitPendingRequests(ctx, &reportertypes.QueryTwoBitPendingRequestsRequest{
+		TwoBitAddress: agent.String(),
+	})
+	require.NoError(err)
+	require.Equal([]*reportertypes.TwoBitPendingRequestInfo{pending}, toAgent.Requests)
+	beforeAccept, err := reporterQuery.Reporter(ctx, &reportertypes.QueryReporterRequest{ReporterAddress: reporter.String()})
+	require.NoError(err)
+	require.Empty(beforeAccept.Reporter.TwoBitAddress)
+
 	submit := &oracletypes.MsgSubmitValue{Creator: agent.String(), QueryData: queryData, Value: value}
 	_, err = oracleMsg.SubmitValue(ctx, submit)
 	require.ErrorIs(err, collections.ErrNotFound)
@@ -98,6 +119,20 @@ func (s *IntegrationTestSuite) TestTwoBitAgentReportCreditsReporter() {
 		ReporterAddress: reporter.String(),
 	})
 	require.NoError(err)
+
+	accepted, err := reporterQuery.Reporter(ctx, &reportertypes.QueryReporterRequest{ReporterAddress: reporter.String()})
+	require.NoError(err)
+	require.Equal(agent.String(), accepted.Reporter.TwoBitAddress)
+	listed, err := reporterQuery.Reporters(ctx, &reportertypes.QueryReportersRequest{})
+	require.NoError(err)
+	require.Len(listed.Reporters, 1)
+	require.Equal(reporter.String(), listed.Reporters[0].Address)
+	require.Equal(agent.String(), listed.Reporters[0].TwoBitAddress)
+	afterAccept, err := reporterQuery.TwoBitPendingRequests(ctx, &reportertypes.QueryTwoBitPendingRequestsRequest{
+		ReporterAddress: reporter.String(),
+	})
+	require.NoError(err)
+	require.Empty(afterAccept.Requests)
 
 	// Accepting does not let the agent report any other query type.
 	_, err = oracleMsg.SubmitValue(ctx, &oracletypes.MsgSubmitValue{Creator: agent.String(), QueryData: ethQueryData, Value: value})
@@ -143,6 +178,14 @@ func (s *IntegrationTestSuite) TestTwoBitAgentReportCreditsReporter() {
 		TwoBitAddress:   reporter.String(),
 	})
 	require.NoError(err)
+	cleared, err := reporterQuery.Reporter(aggregateCtx, &reportertypes.QueryReporterRequest{ReporterAddress: reporter.String()})
+	require.NoError(err)
+	require.Empty(cleared.Reporter.TwoBitAddress)
+	clearedPending, err := reporterQuery.TwoBitPendingRequests(aggregateCtx, &reportertypes.QueryTwoBitPendingRequestsRequest{
+		ReporterAddress: reporter.String(),
+	})
+	require.NoError(err)
+	require.Empty(clearedPending.Requests)
 	_, err = oracleMsg.SubmitValue(aggregateCtx, submit)
 	require.ErrorIs(err, collections.ErrNotFound)
 }

@@ -86,6 +86,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query a specific reporter by address",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
 				},
+				{
+					RpcMethod: "TwoBitPendingRequests",
+					Use:       "two-bit-pending-requests",
+					Short:     "Query outstanding 2bit registration requests",
+					Long:      "Lists requests that have not been accepted yet, including the last height at which each can be accepted. Use --reporter-address for the request from one reporter, --two-bit-address for every request to one agent, or neither to list them all.",
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
