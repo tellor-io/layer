@@ -162,8 +162,14 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod:      "RegisterTwoBitReporter",
 					Use:            "register-two-bit-reporter [two-bit-address]",
-					Short:          "Register or replace the account that can submit 2bitAgentic reports. Pass an empty string to clear.",
+					Short:          "Ask an account to submit 2bitAgentic reports for you. That account must accept within 2000 blocks. Pass your own reporter address to clear.",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "two_bit_address"}},
+				},
+				{
+					RpcMethod:      "AcceptTwoBitRegistration",
+					Use:            "accept-two-bit-registration [reporter-address]",
+					Short:          "Accept a reporter's request to submit 2bitAgentic reports for them. The request expires 2000 blocks after it was made.",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},

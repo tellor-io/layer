@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"testing"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -166,4 +167,47 @@ func TestMigrateFork(t *testing.T) {
 		require.NoError(t, err)
 		require.Equal(t, entry.DelegationAmount, feePaidFromStake)
 	}
+}
+
+func TestMigrateForkTwoBitReporters(t *testing.T) {
+	ctx, storeService, cdc, k := setupTest(t)
+	agent := []byte("agent-address")
+	reporter := []byte("reporter-address")
+
+	dir := t.TempDir()
+	payload := struct {
+		Reporters                 []ReporterStateEntry                 `json:"reporters"`
+		Selectors                 []SelectorStateEntry                 `json:"selectors"`
+		SelectorTips              []SelectorTipsStateEntry             `json:"selector_tips"`
+		DisputedDelegationAmounts []DisputedDelegationAmountStateEntry `json:"disputed_delegation_amounts"`
+		FeePaidFromStake          []FeePaidFromStakeStateEntry         `json:"fee_paid_from_stake"`
+		TwoBitReporters           []twoBitReporterJSON                 `json:"two_bit_reporters"`
+	}{
+		Reporters:                 []ReporterStateEntry{},
+		Selectors:                 []SelectorStateEntry{},
+		SelectorTips:              []SelectorTipsStateEntry{},
+		DisputedDelegationAmounts: []DisputedDelegationAmountStateEntry{},
+		FeePaidFromStake:          []FeePaidFromStakeStateEntry{},
+		TwoBitReporters: []twoBitReporterJSON{{
+			AgentAddress:    agent,
+			ReporterAddress: reporter,
+		}},
+	}
+	bz, err := json.Marshal(payload)
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(filepath.Join(dir, "reporter_module_state.json"), bz, 0o644))
+
+	require.NoError(t, fork.MigrateFork(sdk.UnwrapSDKContext(ctx), storeService, cdc, dir))
+
+	gotReporter, err := k.TwoBitAgentToReporter.Get(ctx, agent)
+	require.NoError(t, err)
+	require.Equal(t, reporter, gotReporter)
+	gotAgent, err := k.TwoBitReporterToAgent.Get(ctx, reporter)
+	require.NoError(t, err)
+	require.Equal(t, agent, gotAgent)
+}
+
+type twoBitReporterJSON struct {
+	AgentAddress    []byte `json:"agent_address"`
+	ReporterAddress []byte `json:"reporter_address"`
 }

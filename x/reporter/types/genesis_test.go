@@ -47,6 +47,47 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			valid: false,
 		},
+		{
+			desc: "duplicate two bit reporter",
+			genState: &types.GenesisState{
+				Params: types.DefaultParams(),
+				TwoBitReporters: []*types.TwoBitReporterStateEntry{
+					{AgentAddress: []byte("agent-a"), ReporterAddress: []byte("reporter")},
+					{AgentAddress: []byte("agent-b"), ReporterAddress: []byte("reporter")},
+				},
+			},
+			valid: false,
+		},
+		{
+			desc: "two bit agent equals reporter",
+			genState: &types.GenesisState{
+				Params: types.DefaultParams(),
+				TwoBitReporters: []*types.TwoBitReporterStateEntry{{
+					AgentAddress:    []byte("same"),
+					ReporterAddress: []byte("same"),
+				}},
+			},
+			valid: false,
+		},
+		{
+			desc: "empty two bit address",
+			genState: &types.GenesisState{
+				Params: types.DefaultParams(),
+				TwoBitReporters: []*types.TwoBitReporterStateEntry{{
+					AgentAddress:    []byte{},
+					ReporterAddress: []byte("reporter"),
+				}},
+			},
+			valid: false,
+		},
+		{
+			desc: "nil two bit entry",
+			genState: &types.GenesisState{
+				Params:          types.DefaultParams(),
+				TwoBitReporters: []*types.TwoBitReporterStateEntry{nil},
+			},
+			valid: false,
+		},
 		// this line is used by starport scaffolding # types/genesis/testcase
 	}
 	for _, tc := range tests {

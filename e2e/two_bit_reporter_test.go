@@ -19,9 +19,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// TestTwoBitAgentReportCreditsReporter registers an agent for a reporter, tips a
-// 2bitAgentic query, and submits the report from the agent. The stored report
-// and the tip both belong to the reporter, not the agent.
+// TestTwoBitAgentReportCreditsReporter asks an agent to report for a reporter.
+// The agent cannot submit until it accepts. After it accepts, a 2bitAgentic
+// report and its tip belong to the reporter. Any other query type still fails.
 func TestTwoBitAgentReportCreditsReporter(t *testing.T) {
 	require := require.New(t)
 
@@ -84,6 +84,24 @@ func TestTwoBitAgentReportCreditsReporter(t *testing.T) {
 	require.NoError(testutil.WaitForBlocks(ctx, 1, reporterNode))
 
 	value := layerutil.EncodeValue(123.45)
+	// A request is not a registration. The agent cannot report until it accepts.
+	_, err = reporterNode.ExecTx(ctx, agentAddr, "oracle", "submit-value", queryData.QueryData, value,
+		"--keyring-dir", reporterNode.HomeDir(), "--gas", "1000000", "--fees", "50loya")
+	require.Error(err)
+
+	txHash, err = reporterNode.ExecTx(ctx, agentAddr, "reporter", "accept-two-bit-registration", reporterAddr,
+		"--keyring-dir", reporterNode.HomeDir(), "--gas", "400000", "--fees", "50loya")
+	require.NoError(err)
+	fmt.Println("TX HASH (accept 2bit registration): ", txHash)
+
+	spotBz, _, err := e2e.QueryWithTimeout(ctx, reporterNode, "registry", "generate-querydata", "spotprice", `["eth","usd"]`)
+	require.NoError(err)
+	var spotData e2e.QueryGenerateQuerydataResponse
+	require.NoError(json.Unmarshal(spotBz, &spotData))
+	_, err = reporterNode.ExecTx(ctx, agentAddr, "oracle", "submit-value", spotData.QueryData, value,
+		"--keyring-dir", reporterNode.HomeDir(), "--gas", "1000000", "--fees", "50loya")
+	require.Error(err)
+
 	txHash, err = reporterNode.ExecTx(ctx, agentAddr, "oracle", "submit-value", queryData.QueryData, value,
 		"--keyring-dir", reporterNode.HomeDir(), "--gas", "1000000", "--fees", "50loya")
 	require.NoError(err)

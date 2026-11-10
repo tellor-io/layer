@@ -51,9 +51,14 @@ service Msg {
   // EditReporter defines a method to edit a reporter object
   rpc EditReporter(MsgEditReporter) returns (MsgEditReporterResponse);
 
-  // RegisterTwoBitReporter registers, replaces, or clears the address that may
-  // submit 2bitAgentic reports for this reporter. An empty two_bit_address clears it.
+  // RegisterTwoBitReporter asks two_bit_address to submit 2bitAgentic reports
+  // for this reporter. The mapping is created only when that address accepts.
+  // The reporter's own address clears the registration and any pending request.
   rpc RegisterTwoBitReporter(MsgRegisterTwoBitReporter) returns (MsgRegisterTwoBitReporterResponse);
+
+  // AcceptTwoBitRegistration accepts a reporter's 2bit registration request
+  // and creates the agent mapping. The signer is the agent account.
+  rpc AcceptTwoBitRegistration(MsgAcceptTwoBitRegistration) returns (MsgAcceptTwoBitRegistrationResponse);
 
 }
 
@@ -209,11 +214,23 @@ message MsgEditReporterResponse {}
 // MsgRegisterTwoBitReporter defines the Msg/RegisterTwoBitReporter request type.
 message MsgRegisterTwoBitReporter {
   option (cosmos.msg.v1.signer) = "reporter_address";
-  // reporter_address is the reporter registering the agent account.
+  // reporter_address is the reporter requesting the agent account.
   string reporter_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // two_bit_address is the agent account. Empty clears the registration.
+  // two_bit_address is the agent account. The reporter's own address clears the registration.
   string two_bit_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgRegisterTwoBitReporterResponse defines the Msg/RegisterTwoBitReporter response type.
 message MsgRegisterTwoBitReporterResponse {}
+
+// MsgAcceptTwoBitRegistration defines the Msg/AcceptTwoBitRegistration request type.
+message MsgAcceptTwoBitRegistration {
+  option (cosmos.msg.v1.signer) = "two_bit_address";
+  // two_bit_address is the agent account accepting the request.
+  string two_bit_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // reporter_address is the reporter whose request is being accepted.
+  string reporter_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgAcceptTwoBitRegistrationResponse defines the Msg/AcceptTwoBitRegistration response type.
+message MsgAcceptTwoBitRegistrationResponse {}

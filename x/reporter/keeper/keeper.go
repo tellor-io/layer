@@ -56,9 +56,12 @@ type (
 		TipUnlockID    collections.Sequence
 
 		// 2bit agent account -> reporter it reports as. Submit only reads this map.
+		// A pending request is not written here until the agent accepts.
 		TwoBitAgentToReporter collections.Map[[]byte, []byte]
-		// reporter -> its current 2bit agent, so a new registration can delete the previous key.
+		// reporter -> its current 2bit agent, so accepting a new agent can delete the previous key.
 		TwoBitReporterToAgent collections.Map[[]byte, []byte]
+		// reporter -> the one agent that has been asked to accept, and the height through which that request can be accepted.
+		TwoBitPendingRequests collections.Map[[]byte, types.TwoBitPendingRequest]
 
 		Schema collections.Schema
 		logger log.Logger
@@ -164,6 +167,12 @@ func NewKeeper(
 			"two_bit_reporter_to_agent",
 			collections.BytesKey,
 			collections.BytesValue,
+		),
+		TwoBitPendingRequests: collections.NewMap(sb,
+			types.TwoBitPendingRequestPrefix,
+			"two_bit_pending_request",
+			collections.BytesKey,
+			types.TwoBitPendingRequestValue,
 		),
 		authority:      authority,
 		logger:         logger,

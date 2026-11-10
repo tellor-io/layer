@@ -138,12 +138,24 @@ func TestSubmitValueTwoBitAgentUsesRealReporter(t *testing.T) {
 	_, err = msgServer.SubmitValue(ctx, msg)
 	require.ErrorIs(err, collections.ErrNotFound)
 
+	// A pending request does not authorize reports. The mapping is written on accept.
 	require.NoError(reporterKeeper.SetTwoBitReporter(ctx, owner, agent))
-	registryKeeper.On("GetSpec", mock.Anything, oraclekeeper.TwoBitAgenticQueryType).Return(registrytypes.DataSpec{
+	_, err = msgServer.SubmitValue(ctx, msg)
+	require.ErrorIs(err, collections.ErrNotFound)
+
+	require.NoError(reporterKeeper.AcceptTwoBitRegistration(ctx, owner, agent))
+
+	// The alias applies only to 2bitAgentic. Another query type keeps the original
+	// reporter-not-found error.
+	_, err = msgServer.SubmitValue(ctx, &oracletypes.MsgSubmitValue{Creator: agent.String(), QueryData: mustQueryData(t, "SpotPrice"), Value: value})
+	require.ErrorIs(err, collections.ErrNotFound)
+
+	spec := registrytypes.DataSpec{
 		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
 		QueryType:         oraclekeeper.TwoBitAgenticQueryType,
-	}, nil).Once()
+	}
+	registryKeeper.On("GetSpec", mock.Anything, oraclekeeper.TwoBitAgenticQueryType).Return(spec, nil).Once()
 
 	res, err := msgServer.SubmitValue(ctx, msg)
 	require.NoError(err)
@@ -155,5 +167,25 @@ func TestSubmitValueTwoBitAgentUsesRealReporter(t *testing.T) {
 	require.Equal(stake.Quo(layertypes.PowerReduction).Uint64(), report.Power)
 	require.Equal(oraclekeeper.TwoBitAgenticQueryType, report.QueryType)
 	_, err = oracleKeeper.Reports.Get(ctx, collections.Join3(queryId, agent.Bytes(), query.Id))
+	require.ErrorIs(err, collections.ErrNotFound)
+
+	// Query type matching ignores case. This is a different query id from the one above.
+	foldedData := mustQueryData(t, "2BITAGENTIC")
+	foldedID := utils.QueryIDFromData(foldedData)
+	folded := query
+	folded.Id = 2
+	folded.QueryData = foldedData
+	require.NoError(oracleKeeper.Query.Set(ctx, collections.Join(foldedID, folded.Id), folded))
+	registryKeeper.On("GetSpec", mock.Anything, "2BITAGENTIC").Return(spec, nil).Once()
+	res, err = msgServer.SubmitValue(ctx, &oracletypes.MsgSubmitValue{Creator: agent.String(), QueryData: foldedData, Value: value})
+	require.NoError(err)
+	require.Equal(&oracletypes.MsgSubmitValueResponse{Id: folded.Id}, res)
+	foldedReport, err := oracleKeeper.Reports.Get(ctx, collections.Join3(foldedID, owner.Bytes(), folded.Id))
+	require.NoError(err)
+	require.Equal(owner.String(), foldedReport.Reporter)
+
+	// Clearing the registration stops the agent. The stored reports stay with the owner.
+	require.NoError(reporterKeeper.SetTwoBitReporter(ctx, owner, owner))
+	_, err = msgServer.SubmitValue(ctx, &oracletypes.MsgSubmitValue{Creator: agent.String(), QueryData: foldedData, Value: value})
 	require.ErrorIs(err, collections.ErrNotFound)
 }

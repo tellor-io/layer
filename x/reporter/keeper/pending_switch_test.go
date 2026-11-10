@@ -315,6 +315,8 @@ func TestSelfDemotionCancelsIncomingPendingSwitches(t *testing.T) {
 	agent := sample.AccAddressBytes()
 	require.NoError(t, k.TwoBitAgentToReporter.Set(ctx, agent.Bytes(), demoting.Bytes()))
 	require.NoError(t, k.TwoBitReporterToAgent.Set(ctx, demoting.Bytes(), agent.Bytes()))
+	pendingAgent := sample.AccAddressBytes()
+	require.NoError(t, k.SetTwoBitReporter(ctx, demoting, pendingAgent))
 
 	// After finalize, demoting becomes a selector of target — stake iteration needs staking mocks.
 	validatorSet := new(mocks.ValidatorSet)
@@ -352,6 +354,8 @@ func TestSelfDemotionCancelsIncomingPendingSwitches(t *testing.T) {
 	hasTwoBit, err := k.TwoBitReporterToAgent.Has(ctx, demoting.Bytes())
 	require.NoError(t, err)
 	require.False(t, hasTwoBit)
+	_, err = k.TwoBitPendingRequests.Get(ctx, demoting.Bytes())
+	require.ErrorIs(t, err, collections.ErrNotFound)
 
 	found := false
 	for _, ev := range ctx.EventManager().Events() {
@@ -381,8 +385,8 @@ func TestNormalPendingSwitchKeepsTwoBitRegistration(t *testing.T) {
 	require.NoError(t, k.Reporters.Set(ctx, outgoing.Bytes(), rep))
 	require.NoError(t, k.Reporters.Set(ctx, incoming.Bytes(), rep))
 	require.NoError(t, k.Selectors.Set(ctx, selector.Bytes(), types.NewSelection(outgoing.Bytes(), 1)))
-	require.NoError(t, k.SetTwoBitReporter(ctx, outgoing, outgoingAgent))
-	require.NoError(t, k.SetTwoBitReporter(ctx, incoming, incomingAgent))
+	require.NoError(t, k.SetTwoBitMapping(ctx, outgoing.Bytes(), outgoingAgent.Bytes()))
+	require.NoError(t, k.SetTwoBitMapping(ctx, incoming.Bytes(), incomingAgent.Bytes()))
 
 	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(outgoing.Bytes(), selector.Bytes()), types.PendingSwitchEntry{
 		ToReporter:  incoming.Bytes(),

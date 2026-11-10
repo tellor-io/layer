@@ -55,6 +55,8 @@ var (
 	TwoBitAgentToReporterPrefix = collections.NewPrefix(39)
 	// TwoBitReporterToAgentPrefix maps a reporter to its current 2bit agent account.
 	TwoBitReporterToAgentPrefix = collections.NewPrefix(40)
+	// TwoBitPendingRequestPrefix maps a reporter to the agent that has not yet accepted.
+	TwoBitPendingRequestPrefix = collections.NewPrefix(41)
 )
 
 // ReporterJailDisputeLockKey keys selector dispute locks copied from OracleReporter.JailedUntil

@@ -18,6 +18,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgCancelTipUnlock{},
 		&MsgEditReporter{},
 		&MsgRegisterTwoBitReporter{},
+		&MsgAcceptTwoBitRegistration{},
 	)
 	// this line is used by starport scaffolding # 3
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
