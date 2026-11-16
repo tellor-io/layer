@@ -20,7 +20,7 @@ import (
 )
 
 // TestTwoBitAgentReportCreditsReporter asks an agent to report for a reporter.
-// The agent cannot submit until it accepts. After it accepts, a 2bitAgentic
+// The agent cannot submit until it accepts. After it accepts, a 2bitAgentic5000
 // report and its tip belong to the reporter. Any other query type still fails.
 func TestTwoBitAgentReportCreditsReporter(t *testing.T) {
 	require := require.New(t)
@@ -59,17 +59,17 @@ func TestTwoBitAgentReportCreditsReporter(t *testing.T) {
 			NestedComponent: []*registrytypes.ABIComponent{},
 		}},
 		Registrar:         reporterAddr,
-		QueryType:         "2bitAgentic",
+		QueryType:         "2bitAgentic5000",
 		ReportBlockWindow: "20",
 	}
 	specBz, err := json.Marshal(spec)
 	require.NoError(err)
-	txHash, err = reporterNode.ExecTx(ctx, reporterAddr, "registry", "register-spec", "2bitAgentic", string(specBz),
+	txHash, err = reporterNode.ExecTx(ctx, reporterAddr, "registry", "register-spec", "2bitAgentic5000", string(specBz),
 		"--keyring-dir", reporterNode.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
-	fmt.Println("TX HASH (register 2bitAgentic spec): ", txHash)
+	fmt.Println("TX HASH (register 2bitAgentic5000 spec): ", txHash)
 
-	queryBz, _, err := e2e.QueryWithTimeout(ctx, reporterNode, "registry", "generate-querydata", "2bitAgentic", `["report"]`)
+	queryBz, _, err := e2e.QueryWithTimeout(ctx, reporterNode, "registry", "generate-querydata", "2bitAgentic5000", `["report"]`)
 	require.NoError(err)
 	var queryData e2e.QueryGenerateQuerydataResponse
 	require.NoError(json.Unmarshal(queryBz, &queryData))
@@ -79,7 +79,7 @@ func TestTwoBitAgentReportCreditsReporter(t *testing.T) {
 	txHash, err = reporterNode.ExecTx(ctx, reporterAddr, "oracle", "tip", queryData.QueryData, tip.String(),
 		"--keyring-dir", reporterNode.HomeDir(), "--gas", "500000", "--fees", "50loya")
 	require.NoError(err)
-	fmt.Println("TX HASH (tip 2bitAgentic query): ", txHash)
+	fmt.Println("TX HASH (tip 2bitAgentic5000 query): ", txHash)
 
 	require.NoError(testutil.WaitForBlocks(ctx, 1, reporterNode))
 
@@ -114,7 +114,7 @@ func TestTwoBitAgentReportCreditsReporter(t *testing.T) {
 	require.Len(reporterReports.MicroReports, 1)
 	report := reporterReports.MicroReports[0]
 	require.Equal(reporterAddr, report.Reporter)
-	require.Equal("2bitAgentic", report.QueryType)
+	require.Equal("2bitAgentic5000", report.QueryType)
 	require.Equal(value, report.Value)
 	require.NotEmpty(report.Power)
 

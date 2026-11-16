@@ -21,8 +21,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// A 2bit agent reports only after accepting, and only for 2bitAgentic queries.
-// The report, its power, and the tip all belong to the reporter.
+// A 2bit agent reports only after accepting, and only for query types that start
+// with 2bitAgentic. The report, its power, and the tip all belong to the reporter.
 func (s *IntegrationTestSuite) TestTwoBitAgentReportCreditsReporter() {
 	require := s.Require()
 	ctx := s.Setup.Ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
@@ -54,17 +54,17 @@ func (s *IntegrationTestSuite) TestTwoBitAgentReportCreditsReporter() {
 			NestedComponent: []*registrytypes.ABIComponent{},
 		}},
 		Registrar:         reporter.String(),
-		QueryType:         "2bitAgentic",
+		QueryType:         "2bitAgentic5000",
 		ReportBlockWindow: 2,
 	}
 	_, err = registryMsg.RegisterSpec(ctx, &registrytypes.MsgRegisterSpec{
 		Registrar: reporter.String(),
-		QueryType: "2bitAgentic",
+		QueryType: "2bitAgentic5000",
 		Spec:      dataspec,
 	})
 	require.NoError(err)
 
-	queryData, err := dataspec.EncodeData("2bitAgentic", `["report"]`)
+	queryData, err := dataspec.EncodeData("2bitAgentic5000", `["report"]`)
 	require.NoError(err)
 	queryID := utils.QueryIDFromData(queryData)
 	value := testutil.EncodeValue(123.45)
@@ -146,7 +146,7 @@ func (s *IntegrationTestSuite) TestTwoBitAgentReportCreditsReporter() {
 	report, err := s.Setup.Oraclekeeper.Reports.Get(ctx, collections.Join3(queryID, reporter.Bytes(), query.Id))
 	require.NoError(err)
 	require.Equal(reporter.String(), report.Reporter)
-	require.Equal("2bitAgentic", report.QueryType)
+	require.Equal("2bitAgentic5000", report.QueryType)
 	require.Equal(value, report.Value)
 	require.Equal(stake.Quo(layertypes.PowerReduction).Uint64(), report.Power)
 	hasAgentReport, err := s.Setup.Oraclekeeper.Reports.Has(ctx, collections.Join3(queryID, agent.Bytes(), query.Id))

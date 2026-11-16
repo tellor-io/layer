@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/cosmos-db"
+	db "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/app/config"
@@ -118,14 +118,16 @@ func TestSubmitValueTwoBitAgentUsesRealReporter(t *testing.T) {
 	})
 	stakingKeeper.On("GetValidator", mock.Anything, valAddr).Return(validator, nil)
 
-	queryData := mustQueryData(t, oraclekeeper.TwoBitAgenticQueryType)
+	// Longer than the 2bitAgentic prefix, so this fails if matching becomes exact.
+	queryType := oraclekeeper.TwoBitAgenticQueryType + "5000"
+	queryData := mustQueryData(t, queryType)
 	queryId := utils.QueryIDFromData(queryData)
 	query := oracletypes.QueryMeta{
 		Id:         1,
 		Amount:     math.NewInt(100_000),
 		Expiration: uint64(ctx.BlockHeight()) + 50,
 		QueryData:  queryData,
-		QueryType:  oraclekeeper.TwoBitAgenticQueryType,
+		QueryType:  queryType,
 		CycleList:  true,
 	}
 	require.NoError(oracleKeeper.Query.Set(ctx, collections.Join(queryId, query.Id), query))
@@ -145,17 +147,20 @@ func TestSubmitValueTwoBitAgentUsesRealReporter(t *testing.T) {
 
 	require.NoError(reporterKeeper.AcceptTwoBitRegistration(ctx, owner, agent))
 
-	// The alias applies only to 2bitAgentic. Another query type keeps the original
+	// The alias applies only to query types that start with 2bitAgentic. Another
+	// query type, including one that shares a shorter prefix, keeps the original
 	// reporter-not-found error.
 	_, err = msgServer.SubmitValue(ctx, &oracletypes.MsgSubmitValue{Creator: agent.String(), QueryData: mustQueryData(t, "SpotPrice"), Value: value})
+	require.ErrorIs(err, collections.ErrNotFound)
+	_, err = msgServer.SubmitValue(ctx, &oracletypes.MsgSubmitValue{Creator: agent.String(), QueryData: mustQueryData(t, "2bitOther"), Value: value})
 	require.ErrorIs(err, collections.ErrNotFound)
 
 	spec := registrytypes.DataSpec{
 		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
-		QueryType:         oraclekeeper.TwoBitAgenticQueryType,
+		QueryType:         queryType,
 	}
-	registryKeeper.On("GetSpec", mock.Anything, oraclekeeper.TwoBitAgenticQueryType).Return(spec, nil).Once()
+	registryKeeper.On("GetSpec", mock.Anything, queryType).Return(spec, nil).Once()
 
 	res, err := msgServer.SubmitValue(ctx, msg)
 	require.NoError(err)
@@ -165,24 +170,27 @@ func TestSubmitValueTwoBitAgentUsesRealReporter(t *testing.T) {
 	require.NoError(err)
 	require.Equal(owner.String(), report.Reporter)
 	require.Equal(stake.Quo(layertypes.PowerReduction).Uint64(), report.Power)
-	require.Equal(oraclekeeper.TwoBitAgenticQueryType, report.QueryType)
+	require.Equal(queryType, report.QueryType)
 	_, err = oracleKeeper.Reports.Get(ctx, collections.Join3(queryId, agent.Bytes(), query.Id))
 	require.ErrorIs(err, collections.ErrNotFound)
 
-	// Query type matching ignores case. This is a different query id from the one above.
-	foldedData := mustQueryData(t, "2BITAGENTIC")
+	// Query type matching ignores case, including the window suffix.
+	foldedType := "2BITAGENTIC5000"
+	foldedData := mustQueryData(t, foldedType)
 	foldedID := utils.QueryIDFromData(foldedData)
 	folded := query
 	folded.Id = 2
 	folded.QueryData = foldedData
+	folded.QueryType = foldedType
 	require.NoError(oracleKeeper.Query.Set(ctx, collections.Join(foldedID, folded.Id), folded))
-	registryKeeper.On("GetSpec", mock.Anything, "2BITAGENTIC").Return(spec, nil).Once()
+	registryKeeper.On("GetSpec", mock.Anything, foldedType).Return(spec, nil).Once()
 	res, err = msgServer.SubmitValue(ctx, &oracletypes.MsgSubmitValue{Creator: agent.String(), QueryData: foldedData, Value: value})
 	require.NoError(err)
 	require.Equal(&oracletypes.MsgSubmitValueResponse{Id: folded.Id}, res)
 	foldedReport, err := oracleKeeper.Reports.Get(ctx, collections.Join3(foldedID, owner.Bytes(), folded.Id))
 	require.NoError(err)
 	require.Equal(owner.String(), foldedReport.Reporter)
+	require.Equal(foldedType, foldedReport.QueryType)
 
 	// Clearing the registration stops the agent. The stored reports stay with the owner.
 	require.NoError(reporterKeeper.SetTwoBitReporter(ctx, owner, owner))

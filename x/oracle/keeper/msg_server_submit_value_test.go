@@ -434,14 +434,16 @@ func (s *KeeperTestSuite) TestSubmitValueTwoBitAgent() {
 	s.ctx = s.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	ctx := s.ctx
 
-	queryData := mustQueryData(s.T(), keeper.TwoBitAgenticQueryType)
+	// Longer than the 2bitAgentic prefix, so this fails if matching becomes exact.
+	queryType := keeper.TwoBitAgenticQueryType + "5000"
+	queryData := mustQueryData(s.T(), queryType)
 	queryId := utils.QueryIDFromData(queryData)
 	query := types.QueryMeta{
 		Id:         1,
 		Amount:     math.NewInt(100_000),
 		Expiration: uint64(ctx.BlockHeight()) + 50,
 		QueryData:  queryData,
-		QueryType:  keeper.TwoBitAgenticQueryType,
+		QueryType:  queryType,
 		CycleList:  true,
 	}
 	require.NoError(k.Query.Set(ctx, collections.Join(queryId, query.Id), query))
@@ -455,7 +457,7 @@ func (s *KeeperTestSuite) TestSubmitValueTwoBitAgent() {
 	spec := registrytypes.DataSpec{
 		ResponseValueType: "uint256",
 		AggregationMethod: "weighted-median",
-		QueryType:         keeper.TwoBitAgenticQueryType,
+		QueryType:         queryType,
 	}
 	msg := &types.MsgSubmitValue{Creator: agent.String(), QueryData: queryData, Value: value}
 
@@ -496,7 +498,7 @@ func (s *KeeperTestSuite) TestSubmitValueTwoBitAgent() {
 	rk.On("ReporterStake", ctx, agent, queryId).Return(math.Int{}, collections.ErrNotFound).Once()
 	rk.On("TwoBitReporter", ctx, agent).Return(owner, nil).Once()
 	rk.On("ReporterStake", ctx, owner, queryId).Return(stake, nil).Once()
-	s.registryKeeper.On("GetSpec", ctx, keeper.TwoBitAgenticQueryType).Return(spec, nil).Once()
+	s.registryKeeper.On("GetSpec", ctx, queryType).Return(spec, nil).Once()
 	res, err := s.msgServer.SubmitValue(ctx, msg)
 	require.NoError(err)
 	require.Equal(&types.MsgSubmitValueResponse{Id: query.Id}, res)
@@ -505,7 +507,7 @@ func (s *KeeperTestSuite) TestSubmitValueTwoBitAgent() {
 	require.NoError(err)
 	require.Equal(owner.String(), report.Reporter)
 	require.Equal(stake.Quo(layertypes.PowerReduction).Uint64(), report.Power)
-	require.Equal(keeper.TwoBitAgenticQueryType, report.QueryType)
+	require.Equal(queryType, report.QueryType)
 	_, err = k.Reports.Get(ctx, collections.Join3(queryId, agent.Bytes(), query.Id))
 	require.ErrorIs(err, collections.ErrNotFound)
 }
