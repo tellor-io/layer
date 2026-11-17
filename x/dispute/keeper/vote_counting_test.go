@@ -722,3 +722,130 @@ func (s *KeeperTestSuite) TestCountedVoteThenLockedTipRevoteMovesBucketsWithoutW
 	require.Equal(math.NewInt(70), reporterRow.ReporterPower,
 		"must not double-peel the reporter during a locked revote")
 }
+
+func (s *KeeperTestSuite) TestReporterVoteMarksGroupPower() {
+	require := s.Require()
+	k := s.disputeKeeper
+	rk := s.reporterKeeper
+	ctx := s.ctx
+	disputeID := uint64(41)
+	blockNum := uint64(100)
+	reporter := sample.AccAddressBytes()
+
+	rk.On("Delegation", ctx, reporter).Return(reportertypes.Selection{Reporter: reporter}, nil)
+	rk.On("GetReporterTokensAtBlock", ctx, reporter.Bytes(), blockNum).Return(math.NewInt(300), nil)
+
+	moved, err := k.SetVoterReporterStake(ctx, disputeID, reporter, blockNum, types.VoteEnum_VOTE_SUPPORT, nil, reporter)
+	require.NoError(err)
+	require.Equal(math.NewInt(300), moved)
+
+	marked, err := k.ReporterGroupPowerVotes.Has(ctx, collections.Join(disputeID, reporter.Bytes()))
+	require.NoError(err)
+	require.True(marked)
+}
+
+func (s *KeeperTestSuite) TestSelfDemotedReporterOwnStakeIsNotPeeled() {
+	require := s.Require()
+	k := s.disputeKeeper
+	rk := s.reporterKeeper
+	ctx := s.ctx
+	disputeID := uint64(42)
+	blockNum := uint64(500)
+	reporterA := sample.AccAddressBytes()
+	selector1 := sample.AccAddressBytes()
+	selector2 := sample.AccAddressBytes()
+
+	require.NoError(k.VoteCountsByGroup.Set(ctx, disputeID, types.StakeholderVoteCounts{
+		Reporters: types.VoteCounts{Support: 100},
+	}))
+	require.NoError(k.Voter.Set(ctx, collections.Join(disputeID, reporterA.Bytes()), types.Voter{
+		Vote:          types.VoteEnum_VOTE_SUPPORT,
+		VoterPower:    math.NewInt(100),
+		ReporterPower: math.NewInt(100),
+	}))
+
+	for _, selector := range []sdk.AccAddress{selector1, selector2} {
+		rk.On("Delegation", ctx, selector).Return(reportertypes.Selection{Reporter: reporterA}, nil).Once()
+		rk.On("GetSelectorForStake", ctx, selector).Return(unlockedSelection(reporterA), nil).Once()
+		rk.On("ReporterAtHeight", ctx, selector, blockNum).Return(reporterA, true, nil).Once()
+		rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).Return(math.NewInt(100), nil).Once()
+		rk.On("ReporterSelfDemoted", ctx, reporterA).Return(true, nil).Once()
+
+		moved, err := k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_AGAINST, nil, reporterA)
+		require.NoError(err)
+		require.Equal(math.NewInt(100), moved)
+	}
+
+	require.Equal(types.VoteCounts{Support: 100, Against: 200}, s.reporterVoteCounts(disputeID))
+	owner, err := k.Voter.Get(ctx, collections.Join(disputeID, reporterA.Bytes()))
+	require.NoError(err)
+	require.Equal(math.NewInt(100), owner.ReporterPower)
+	require.Equal(types.VoteEnum_VOTE_SUPPORT, owner.Vote)
+}
+
+func (s *KeeperTestSuite) TestSelfDemotedReporterGroupVoteStillPeels() {
+	require := s.Require()
+	k := s.disputeKeeper
+	rk := s.reporterKeeper
+	ctx := s.ctx
+	disputeID := uint64(43)
+	blockNum := uint64(500)
+	reporterA := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+
+	require.NoError(k.ReporterGroupPowerVotes.Set(ctx, collections.Join(disputeID, reporterA.Bytes())))
+	require.NoError(k.VoteCountsByGroup.Set(ctx, disputeID, types.StakeholderVoteCounts{
+		Reporters: types.VoteCounts{Support: 200},
+	}))
+	require.NoError(k.Voter.Set(ctx, collections.Join(disputeID, reporterA.Bytes()), types.Voter{
+		Vote:          types.VoteEnum_VOTE_SUPPORT,
+		VoterPower:    math.NewInt(200),
+		ReporterPower: math.NewInt(200),
+	}))
+
+	rk.On("Delegation", ctx, selector).Return(reportertypes.Selection{Reporter: reporterA}, nil)
+	rk.On("GetSelectorForStake", ctx, selector).Return(unlockedSelection(reporterA), nil)
+	rk.On("ReporterAtHeight", ctx, selector, blockNum).Return(reporterA, true, nil)
+	rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).Return(math.NewInt(100), nil)
+	rk.On("ReporterSelfDemoted", ctx, reporterA).Return(true, nil)
+
+	moved, err := k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_AGAINST, nil, reporterA)
+	require.NoError(err)
+	require.Equal(math.NewInt(100), moved)
+	require.Equal(types.VoteCounts{Support: 100, Against: 100}, s.reporterVoteCounts(disputeID))
+
+	owner, err := k.Voter.Get(ctx, collections.Join(disputeID, reporterA.Bytes()))
+	require.NoError(err)
+	require.Equal(math.NewInt(100), owner.ReporterPower)
+}
+
+func (s *KeeperTestSuite) TestSelectorStakeFollowsReporterAtDisputeHeight() {
+	require := s.Require()
+	k := s.disputeKeeper
+	rk := s.reporterKeeper
+	ctx := s.ctx
+	disputeID := uint64(44)
+	blockNum := uint64(500)
+	selector := sample.AccAddressBytes()
+	oldReporter := sample.AccAddressBytes()
+	newReporter := sample.AccAddressBytes()
+
+	rk.On("Delegation", ctx, selector).Return(reportertypes.Selection{Reporter: newReporter}, nil)
+	rk.On("GetSelectorForStake", ctx, selector).Return(unlockedSelection(newReporter), nil)
+	rk.On("ReporterAtHeight", ctx, selector, blockNum).Return(oldReporter, false, nil)
+	rk.On("GetDelegatorTokensFromReporterAtBlock", ctx, selector.Bytes(), oldReporter.Bytes(), blockNum).
+		Return(math.NewInt(100), nil)
+
+	moved, err := k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_AGAINST, nil, newReporter)
+	require.NoError(err)
+	require.Equal(math.NewInt(100), moved)
+	require.Equal(types.VoteCounts{Against: 100}, s.reporterVoteCounts(disputeID))
+
+	reserved, err := k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(oldReporter.Bytes(), disputeID))
+	require.NoError(err)
+	require.Equal(math.NewInt(100), reserved)
+
+	hasNew, err := k.Voter.Has(ctx, collections.Join(disputeID, newReporter.Bytes()))
+	require.NoError(err)
+	require.False(hasNew)
+}

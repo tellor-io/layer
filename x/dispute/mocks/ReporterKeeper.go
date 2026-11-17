@@ -360,6 +360,65 @@ func (_m *ReporterKeeper) UpdateJailedUntilOnFailedDispute(ctx context.Context, 
 	return r0
 }
 
+// expectationSet reports whether a test registered an On for method.
+// History lookups default to "live selection is accurate" and "not self-demoted"
+// so existing vote tests keep the pre-history behavior without a new expectation.
+func (_m *ReporterKeeper) expectationSet(method string) bool {
+	for _, call := range _m.ExpectedCalls {
+		if call.Method == method {
+			return true
+		}
+	}
+	return false
+}
+
+// ReporterAtHeight provides a mock function with given fields: ctx, selector, blockHeight.
+// With no expectation, live data is treated as accurate.
+func (_m *ReporterKeeper) ReporterAtHeight(ctx context.Context, selector types.AccAddress, blockHeight uint64) (types.AccAddress, bool, error) {
+	if !_m.expectationSet("ReporterAtHeight") {
+		return nil, true, nil
+	}
+	ret := _m.Called(ctx, selector, blockHeight)
+
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64) (types.AccAddress, bool, error)); ok {
+		return rf(ctx, selector, blockHeight)
+	}
+	var r0 types.AccAddress
+	if ret.Get(0) != nil {
+		r0 = ret.Get(0).(types.AccAddress)
+	}
+	r1, _ := ret.Get(1).(bool)
+	return r0, r1, ret.Error(2)
+}
+
+// PruneSelectorSwitches provides a mock function with given fields: ctx, pruneHeight, limit.
+// With no expectation, pruning is a no-op so end-blocker tests do not have to expect it.
+func (_m *ReporterKeeper) PruneSelectorSwitches(ctx context.Context, pruneHeight uint64, limit int) error {
+	if !_m.expectationSet("PruneSelectorSwitches") {
+		return nil
+	}
+	ret := _m.Called(ctx, pruneHeight, limit)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, int) error); ok {
+		return rf(ctx, pruneHeight, limit)
+	}
+	return ret.Error(0)
+}
+
+// ReporterSelfDemoted provides a mock function with given fields: ctx, addr.
+// With no expectation, the address is treated as not self-demoted.
+func (_m *ReporterKeeper) ReporterSelfDemoted(ctx context.Context, addr types.AccAddress) (bool, error) {
+	if !_m.expectationSet("ReporterSelfDemoted") {
+		return false, nil
+	}
+	ret := _m.Called(ctx, addr)
+
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (bool, error)); ok {
+		return rf(ctx, addr)
+	}
+	r0, _ := ret.Get(0).(bool)
+	return r0, ret.Error(1)
+}
+
 type mockConstructorTestingTNewReporterKeeper interface {
 	mock.TestingT
 	Cleanup(func())

@@ -43,6 +43,10 @@ type (
 
 		// Deferred reporter switches: key (outgoing_reporter, selector) -> target + unlock height.
 		OutgoingPendingSwitches collections.Map[collections.Pair[[]byte, []byte], types.PendingSwitchEntry]
+		// One row per selector: reporter changes, newest first.
+		SelectorReporterSwitches collections.Map[[]byte, types.SelectorReporterSwitches]
+		// Resume point for the per-block switch-history prune. Empty means start at the first selector.
+		SelectorSwitchPruneCursor collections.Item[[]byte]
 		// Incoming index: key (incoming_reporter, selector) -> outgoing_reporter address bytes.
 		IncomingPendingSwitchIdx collections.Map[collections.Pair[[]byte, []byte], []byte]
 		// One row per reporter: counts + min unlock for O(1) checks in ReporterStake.
@@ -136,6 +140,17 @@ func NewKeeper(
 			"reporter_pending_switch_heads",
 			collections.BytesKey,
 			codec.CollValue[types.ReporterPendingSwitchHead](cdc),
+		),
+		SelectorReporterSwitches: collections.NewMap(sb,
+			types.SelectorReporterSwitchesPrefix,
+			"selector_reporter_switches",
+			collections.BytesKey,
+			types.SelectorReporterSwitchesValue,
+		),
+		SelectorSwitchPruneCursor: collections.NewItem(sb,
+			types.SelectorSwitchPruneCursorPrefix,
+			"selector_switch_prune_cursor",
+			collections.BytesValue,
 		),
 		SelectorDisputeLocks: collections.NewMap(sb,
 			types.SelectorDisputeLockPrefix,

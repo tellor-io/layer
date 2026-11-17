@@ -59,4 +59,14 @@ type ReporterKeeper interface {
 	FeeRefund(ctx context.Context, hashId []byte, payer sdk.AccAddress, amt math.Int) (math.Int, math.Int, error)
 	UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr sdk.AccAddress, reportBlockNumber uint64, disputeHashID []byte) error
 	GetSelectorForStake(ctx context.Context, selectorAddr sdk.AccAddress) (reportertypes.Selection, error)
+	// ReporterAtHeight returns the reporter this selector was on at blockHeight.
+	// liveAccurate is true when that reporter is already the live selection, which
+	// is the case when the newest switch completed at or before blockHeight.
+	ReporterAtHeight(ctx context.Context, selector sdk.AccAddress, blockHeight uint64) (sdk.AccAddress, bool, error)
+	// ReporterSelfDemoted reports whether addr's own selection points at someone else,
+	// so a later vote is only that address's own stake. Selectors may still point at addr.
+	ReporterSelfDemoted(ctx context.Context, addr sdk.AccAddress) (bool, error)
+	// PruneSelectorSwitches deletes completed switch rows no open dispute can query.
+	// pruneHeight is the oldest open dispute block, or the current block when none are open.
+	PruneSelectorSwitches(ctx context.Context, pruneHeight uint64, limit int) error
 }

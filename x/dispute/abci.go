@@ -33,6 +33,8 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 		return err
 	}
 	defer iter.Close()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	oldestBlock := uint64(sdkCtx.BlockHeight())
 	for ; iter.Valid(); iter.Next() {
 		key, err := iter.PrimaryKey()
 		if err != nil {
@@ -42,7 +44,9 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 		if err != nil {
 			return err
 		}
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		if dispute.BlockNumber < oldestBlock {
+			oldestBlock = dispute.BlockNumber
+		}
 		if dispute.BlockNumber == uint64(sdkCtx.BlockHeight()) {
 			err := k.SetBlockInfo(ctx, dispute.HashId)
 			if err != nil {
@@ -51,7 +55,9 @@ func EndBlocker(ctx context.Context, k keeper.Keeper) error {
 			k.Logger(ctx).Info("FOUND NEW OPEN DISPUTE AND SET BLOCK INFO")
 		}
 	}
-	return nil
+	// Completed switches at or before the oldest open dispute cannot change any
+	// remaining vote. With no open dispute, the current block is that bound.
+	return k.PruneSelectorSwitchHistory(ctx, oldestBlock)
 }
 
 // Checks for expired prevote disputes and sets them to failed if expired.

@@ -174,6 +174,11 @@ func (k Keeper) reporterVotePower(
 			return math.Int{}, err
 		}
 		reporterPower = reporterTokens
+		// First vote on the reporter path counted the group snapshot. Selectors may
+		// peel it. A later self-demotion does not clear this mark.
+		if err := k.ReporterGroupPowerVotes.Set(ctx, collections.Join(id, reporter.Bytes())); err != nil {
+			return math.Int{}, err
+		}
 	}
 	return reporterPower, k.AddReporterVoteCount(ctx, id, reporterPower.Uint64(), choice, oldVote)
 }
@@ -246,7 +251,7 @@ func (k Keeper) SetVoterReporterStake(
 		return math.ZeroInt(), nil
 	}
 
-	owner, tokens, err := k.selectorStakeAtBlock(ctx, voter, liveReporter, evidenceReporter, blockNumber)
+	owner, tokens, err := k.selectorStakeAtDispute(ctx, voter, liveReporter, evidenceReporter, blockNumber)
 	if err != nil {
 		return math.Int{}, err
 	}
@@ -259,12 +264,57 @@ func (k Keeper) SetVoterReporterStake(
 		return math.Int{}, err
 	}
 	if ownerVoted {
-		return k.peelSelectorFromOwner(ctx, id, owner, tokens, choice)
+		peel, err := k.selectorMayPeelOwner(ctx, id, owner)
+		if err != nil {
+			return math.Int{}, err
+		}
+		if peel {
+			return k.peelSelectorFromOwner(ctx, id, owner, tokens, choice)
+		}
 	}
 	if err := k.addReporterDelegatorTokensVoted(ctx, owner, id, tokens); err != nil {
 		return math.Int{}, err
 	}
 	return tokens, k.AddReporterVoteCount(ctx, id, tokens.Uint64(), choice, nil)
+}
+
+// selectorStakeAtDispute reads stake from the reporter the selector was on at the
+// dispute height when a switch completed after that height. Otherwise the live
+// selection is still that reporter and the evidence snapshot decides the owner.
+func (k Keeper) selectorStakeAtDispute(
+	ctx context.Context,
+	voter, liveReporter, evidenceReporter sdk.AccAddress,
+	blockNumber uint64,
+) (sdk.AccAddress, math.Int, error) {
+	atReporter, liveAccurate, err := k.reporterKeeper.ReporterAtHeight(ctx, voter, blockNumber)
+	if err != nil {
+		return nil, math.Int{}, err
+	}
+	if !liveAccurate && len(atReporter) > 0 {
+		tokens, err := k.reporterKeeper.GetDelegatorTokensFromReporterAtBlock(
+			ctx, voter.Bytes(), atReporter.Bytes(), blockNumber)
+		if err != nil {
+			return nil, math.Int{}, err
+		}
+		if tokens.IsPositive() {
+			return atReporter, tokens, nil
+		}
+	}
+	return k.selectorStakeAtBlock(ctx, voter, liveReporter, evidenceReporter, blockNumber)
+}
+
+// selectorMayPeelOwner is false when owner has finished a self-demotion and this
+// dispute has no group-power vote from them. Their voter row is only their own
+// stake, so selectors still pointing at them count their own stake directly.
+func (k Keeper) selectorMayPeelOwner(ctx context.Context, id uint64, owner sdk.AccAddress) (bool, error) {
+	demoted, err := k.reporterKeeper.ReporterSelfDemoted(ctx, owner)
+	if err != nil {
+		return false, err
+	}
+	if !demoted {
+		return true, nil
+	}
+	return k.ReporterGroupPowerVotes.Has(ctx, collections.Join(id, owner.Bytes()))
 }
 
 // addReporterDelegatorTokensVoted adds amount to the per-dispute reserve of selector

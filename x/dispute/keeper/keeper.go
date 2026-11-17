@@ -41,6 +41,8 @@ type (
 		// dust is extra tokens leftover after truncating decimals, stored as fixed256x12
 		Dust              collections.Item[math.Int]
 		VoteCountsByGroup collections.Map[uint64, types.StakeholderVoteCounts] // key: dispute id
+		// dispute id + reporter -> reporter voted with the group snapshot, not personal stake only
+		ReporterGroupPowerVotes collections.KeySet[collections.Pair[uint64, []byte]]
 	}
 )
 
@@ -88,6 +90,11 @@ func NewKeeper(
 		Dust: collections.NewItem(sb, types.DustKeyPrefix, "dust", sdk.IntValue),
 		// maps dispute id to voter groups' vote counts, used to tally votes
 		VoteCountsByGroup: collections.NewMap(sb, types.VoteCountsByGroupPrefix, "vote_counts_by_group", collections.Uint64Key, codec.CollValue[types.StakeholderVoteCounts](cdc)),
+		ReporterGroupPowerVotes: collections.NewKeySet(sb,
+			types.ReporterGroupPowerVotesPrefix,
+			"reporter_group_power_votes",
+			collections.PairKeyCodec(collections.Uint64Key, collections.BytesKey),
+		),
 	}
 }
 
