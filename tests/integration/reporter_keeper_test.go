@@ -10,6 +10,7 @@ import (
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
+	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
@@ -370,7 +371,7 @@ func (s *IntegrationTestSuite) TestGetBondedValidatorsByPower() {
 	s.Equal(expected, len(vals))
 }
 
-func (s *IntegrationTestSuite) TestEscrowReporterStakePartialRedelegationShortfallErrors() {
+func (s *IntegrationTestSuite) TestEscrowReporterStakePartialRedelegationStoresCollected() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	ctx := s.Setup.Ctx
 	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
@@ -409,12 +410,22 @@ func (s *IntegrationTestSuite) TestEscrowReporterStakePartialRedelegationShortfa
 	}))
 
 	intendedSlash := math.NewInt(1000)
+	disputeModule := s.Setup.Accountkeeper.GetModuleAddress(disputetypes.ModuleName)
+	before := s.Setup.Bankkeeper.GetBalance(ctx, disputeModule, s.Setup.Denom).Amount
 	err = s.Setup.Reporterkeeper.EscrowReporterStake(ctx, reporterAddr, 1, reportHeight, intendedSlash, []byte{}, hashId)
-	s.ErrorIs(err, reportertypes.ErrReporterSlashShortfall)
-
-	has, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Has(ctx, hashId)
 	s.NoError(err)
-	s.False(has, "a short collection must not be stored as a completed escrow")
+	received := s.Setup.Bankkeeper.GetBalance(ctx, disputeModule, s.Setup.Denom).Amount.Sub(before)
+
+	stored, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(ctx, hashId)
+	s.NoError(err)
+	s.Equal(delegated, received)
+	s.Equal(delegated, stored.Total)
+	s.True(stored.Total.LT(intendedSlash))
+	sum := math.ZeroInt()
+	for _, origin := range stored.TokenOrigins {
+		sum = sum.Add(origin.Amount)
+	}
+	s.Equal(stored.Total, sum)
 }
 
 func (s *IntegrationTestSuite) TestEscrowReporterStakeRedelegationBreadcrumbDoesNotSkipBulkStake() {

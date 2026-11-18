@@ -157,8 +157,9 @@ func (s *KeeperTestSuite) TestSetNewDispute() types.MsgProposeDispute {
 }
 
 // TestSetNewDisputeSlashShortfallDiscardsCache runs a fully funded dispute on a
-// cache. Escrow fails closed, the cache is dropped, and the parent store keeps
-// neither the dispute nor the fee payer. JailReporter does not run.
+// cache. Escrow collects nothing and returns ErrReporterSlashShortfall. The
+// cache is dropped, and the parent store keeps neither the dispute nor the fee
+// payer. JailReporter does not run.
 func (s *KeeperTestSuite) TestSetNewDisputeSlashShortfallDiscardsCache() {
 	s.ctx = s.ctx.WithBlockTime(time.Now())
 	rep := report(s.ctx)

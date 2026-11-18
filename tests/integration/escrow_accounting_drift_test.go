@@ -75,14 +75,18 @@ func (s *IntegrationTestSuite) escrowAgainstSkewedValidator(powers []uint64, del
 func (s *IntegrationTestSuite) TestEscrowSlashShortfallOnSkewedValidatorFullRemoval() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	hashId := []byte("drift-full-removal")
+	owed := math.NewInt(1_000_000)
 
-	_, _, _, _, err := s.escrowAgainstSkewedValidator(
-		[]uint64{100}, math.NewInt(1_000_000), math.NewInt(1_000_000), 1, hashId)
-	s.ErrorIs(err, reportertypes.ErrReporterSlashShortfall)
-
-	has, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Has(s.Setup.Ctx, hashId)
+	_, _, received, stored, err := s.escrowAgainstSkewedValidator(
+		[]uint64{100}, owed, owed, 1, hashId)
 	s.NoError(err)
-	s.False(has, "a short collection must not be stored as a completed escrow")
+	s.Equal(owed.Sub(math.OneInt()), received, "removing one validator token must collect one loya less than requested")
+	s.Equal(received, stored.Total)
+	sum := math.ZeroInt()
+	for _, origin := range stored.TokenOrigins {
+		sum = sum.Add(origin.Amount)
+	}
+	s.Equal(stored.Total, sum)
 }
 
 func (s *IntegrationTestSuite) TestEscrowReporterStakeZeroCollectedCacheDiscardLeavesParent() {
@@ -150,17 +154,21 @@ func (s *IntegrationTestSuite) TestEscrowReporterStakeZeroCollectedCacheDiscardL
 func (s *IntegrationTestSuite) TestEscrowSlashShortfallOnSkewedValidatorPartialDeduction() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	hashId := []byte("drift-partial-deduction")
+	owed := math.NewInt(1_000_000)
 
-	selector, val1, _, _, err := s.escrowAgainstSkewedValidator(
-		[]uint64{100}, math.NewInt(2_000_000), math.NewInt(1_000_000), 1, hashId)
-	s.ErrorIs(err, reportertypes.ErrReporterSlashShortfall)
+	selector, val1, received, stored, err := s.escrowAgainstSkewedValidator(
+		[]uint64{100}, math.NewInt(2_000_000), owed, 1, hashId)
+	s.NoError(err)
+	s.Equal(owed.Sub(math.OneInt()), received, "removing one validator token must collect one loya less than requested")
+	s.Equal(received, stored.Total)
+	sum := math.ZeroInt()
+	for _, origin := range stored.TokenOrigins {
+		sum = sum.Add(origin.Amount)
+	}
+	s.Equal(stored.Total, sum)
 
 	_, err = s.Setup.Stakingkeeper.GetDelegation(s.Setup.Ctx, selector, val1)
 	s.NoError(err, "partial deduction must leave the remainder of the delegation in place")
-
-	has, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Has(s.Setup.Ctx, hashId)
-	s.NoError(err)
-	s.False(has, "a short collection must not be stored as a completed escrow")
 }
 
 func (s *IntegrationTestSuite) TestFeeFromReporterStakeOriginsSumExceedsTotal() {

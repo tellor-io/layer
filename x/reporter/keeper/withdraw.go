@@ -282,10 +282,12 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 		}
 	}
 
-	// A positive slash that cannot be collected must not be recorded as a
-	// completed escrow. The caller rolls the dispute transaction back.
-	// A zero request still stores whatever was collected (nothing).
-	if amt.IsPositive() && collected.LT(amt) {
+	// A zero request stores an empty collection.
+	// A positive request that collects nothing is not an escrow. Any positive
+	// collection, including a one-loya shortfall, stores the origins and total
+	// that were actually taken. A failed call does not roll back unbonding
+	// itself; the dispute transaction cache does that.
+	if amt.IsPositive() && collected.IsZero() {
 		return fmt.Errorf("%w: collected %s of requested %s", types.ErrReporterSlashShortfall, collected, amt)
 	}
 	return k.DisputedDelegationAmounts.Set(ctx, hashId, types.DelegationsAmounts{TokenOrigins: disputeTokens, Total: collected})
