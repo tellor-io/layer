@@ -370,7 +370,7 @@ func (s *IntegrationTestSuite) TestGetBondedValidatorsByPower() {
 	s.Equal(expected, len(vals))
 }
 
-func (s *IntegrationTestSuite) TestEscrowReporterStakePartialRedelegationCollectionStoresCollectedTotal() {
+func (s *IntegrationTestSuite) TestEscrowReporterStakePartialRedelegationShortfallErrors() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	ctx := s.Setup.Ctx
 	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
@@ -409,18 +409,12 @@ func (s *IntegrationTestSuite) TestEscrowReporterStakePartialRedelegationCollect
 	}))
 
 	intendedSlash := math.NewInt(1000)
-	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, reporterAddr, 1, reportHeight, intendedSlash, []byte{}, hashId))
+	err = s.Setup.Reporterkeeper.EscrowReporterStake(ctx, reporterAddr, 1, reportHeight, intendedSlash, []byte{}, hashId)
+	s.ErrorIs(err, reportertypes.ErrReporterSlashShortfall)
 
-	stored, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(ctx, hashId)
+	has, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Has(ctx, hashId)
 	s.NoError(err)
-	s.Equal(delegated, stored.Total)
-	s.True(stored.Total.LT(intendedSlash))
-
-	sum := math.ZeroInt()
-	for _, origin := range stored.TokenOrigins {
-		sum = sum.Add(origin.Amount)
-	}
-	s.Equal(stored.Total, sum)
+	s.False(has, "a short collection must not be stored as a completed escrow")
 }
 
 func (s *IntegrationTestSuite) TestEscrowReporterStakeRedelegationBreadcrumbDoesNotSkipBulkStake() {
