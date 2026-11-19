@@ -98,8 +98,11 @@ func (s *TestSuite) TestEndBlocker() {
 	ctx = ctx.WithBlockHeight(10)
 	ctx = ctx.WithBlockTime(time.Now())
 
+	s.reporterKeeper.On("PruneSelectorSwitches", mock.Anything, uint64(10), 100).Return(nil).Once()
+
 	err := dispute.EndBlocker(ctx, k)
 	require.NoError(err)
+	s.reporterKeeper.AssertExpectations(s.T())
 }
 
 func (s *TestSuite) TestEndBlockerPrunesSwitchHistoryToOldestOpenDispute() {

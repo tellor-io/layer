@@ -116,8 +116,9 @@ func (k Keeper) SetVoterTips(ctx context.Context, id uint64, voter sdk.AccAddres
 	return math.ZeroInt(), nil
 }
 
-// selectorStakeAtBlock resolves who owns the selector's dispute-block tokens.
-// Prefer the evidence reporter's snapshot when it still holds the stake after a switch.
+// selectorStakeAtBlock resolves stake for a voter with no switch history, where
+// the live selection is still the dispute-height selection. When the evidence
+// reporter's snapshot still holds the tokens, that reporter owns them.
 func (k Keeper) selectorStakeAtBlock(
 	ctx context.Context,
 	voter, liveReporter, evidenceReporter sdk.AccAddress,
@@ -174,13 +175,37 @@ func (k Keeper) reporterVotePower(
 			return math.Int{}, err
 		}
 		reporterPower = reporterTokens
-		// First vote on the reporter path counted the group snapshot. Selectors may
-		// peel it. A later self-demotion does not clear this mark.
-		if err := k.ReporterGroupPowerVotes.Set(ctx, collections.Join(id, reporter.Bytes())); err != nil {
-			return math.Int{}, err
-		}
 	}
 	return reporterPower, k.AddReporterVoteCount(ctx, id, reporterPower.Uint64(), choice, oldVote)
+}
+
+// disputeHeightSelection is who addr's Selection pointed at when the dispute
+// opened, and whether a switch was still unfinished at that height.
+// Group is true when addr was selected to itself and no switch was unfinished.
+// The reporter route and the peel decision both use Group.
+type disputeHeightSelection struct {
+	selected    sdk.AccAddress
+	fromHistory bool
+	unfinished  bool
+	group       bool
+}
+
+func (k Keeper) selectionAtDisputeHeight(ctx context.Context, addr sdk.AccAddress, blockHeight uint64) (disputeHeightSelection, error) {
+	at, liveAccurate, err := k.reporterKeeper.ReporterAtHeight(ctx, addr, blockHeight)
+	if err != nil {
+		return disputeHeightSelection{}, err
+	}
+	unfinished, err := k.reporterKeeper.SelectorSwitchUnfinishedAt(ctx, addr, blockHeight)
+	if err != nil {
+		return disputeHeightSelection{}, err
+	}
+	sel := disputeHeightSelection{
+		selected:    at,
+		fromHistory: !liveAccurate,
+		unfinished:  unfinished,
+	}
+	sel.group = len(sel.selected) > 0 && bytes.Equal(sel.selected, addr) && !sel.unfinished
+	return sel, nil
 }
 
 func (k Keeper) peelSelectorFromOwner(
@@ -227,10 +252,14 @@ func (k Keeper) SetVoterReporterStake(
 		}
 		return math.Int{}, err
 	}
-	liveReporter := sdk.AccAddress(delegation.Reporter)
 
-	if bytes.Equal(voter, liveReporter) {
-		return k.reporterVotePower(ctx, id, liveReporter, blockNumber, choice, oldVote)
+	// blockNumber is the dispute open height. Group and peel both read it here.
+	voterAtHeight, err := k.selectionAtDisputeHeight(ctx, voter, blockNumber)
+	if err != nil {
+		return math.Int{}, err
+	}
+	if voterAtHeight.group {
+		return k.reporterVotePower(ctx, id, voter, blockNumber, choice, oldVote)
 	}
 
 	selector, err := k.reporterKeeper.GetSelectorForStake(ctx, voter)
@@ -240,81 +269,74 @@ func (k Keeper) SetVoterReporterStake(
 		}
 		return math.ZeroInt(), nil
 	}
-	// Revote of already-counted stake must run even while dispute-/switch-locked.
-	// Lock only blocks first acquisition of reporter stake into the tally; skipping
-	// a counted revote (and letting MsgVote store ReporterPower=0) orphans power in
-	// the old bucket and makes a later unlock look like a first vote (double-peel).
+	// Revote of already-counted stake must run even while dispute-/switch-locked
+	// or while a switch was unfinished at the dispute height. Lock and an open
+	// switch only block the first acquisition of reporter stake.
 	if oldVote != nil && !oldVote.ReporterPower.IsNil() && oldVote.ReporterPower.IsPositive() {
 		return oldVote.ReporterPower, k.AddReporterVoteCount(ctx, id, oldVote.ReporterPower.Uint64(), choice, oldVote)
+	}
+	if voterAtHeight.unfinished {
+		return math.ZeroInt(), nil
 	}
 	if reportertypes.SelectorStakeLocked(selector, sdk.UnwrapSDKContext(ctx).BlockTime()) {
 		return math.ZeroInt(), nil
 	}
 
-	owner, tokens, err := k.selectorStakeAtDispute(ctx, voter, liveReporter, evidenceReporter, blockNumber)
+	owner, tokens, err := k.selectorStakeForVote(ctx, voter, voterAtHeight, sdk.AccAddress(delegation.Reporter), evidenceReporter, blockNumber)
 	if err != nil {
 		return math.Int{}, err
 	}
-	if !tokens.IsPositive() {
+	if tokens.IsNil() || !tokens.IsPositive() {
 		return math.ZeroInt(), nil
 	}
 
-	ownerVoted, err := k.Voter.Has(ctx, collections.Join(id, owner.Bytes()))
+	// Peel uses the same dispute-height group decision as the owner's own vote.
+	ownerAtHeight, err := k.selectionAtDisputeHeight(ctx, owner, blockNumber)
 	if err != nil {
 		return math.Int{}, err
 	}
-	if ownerVoted {
-		peel, err := k.selectorMayPeelOwner(ctx, id, owner)
+	if ownerAtHeight.group {
+		ownerVoted, err := k.Voter.Has(ctx, collections.Join(id, owner.Bytes()))
 		if err != nil {
 			return math.Int{}, err
 		}
-		if peel {
+		if ownerVoted {
 			return k.peelSelectorFromOwner(ctx, id, owner, tokens, choice)
 		}
-	}
-	if err := k.addReporterDelegatorTokensVoted(ctx, owner, id, tokens); err != nil {
-		return math.Int{}, err
+		if err := k.addReporterDelegatorTokensVoted(ctx, owner, id, tokens); err != nil {
+			return math.Int{}, err
+		}
 	}
 	return tokens, k.AddReporterVoteCount(ctx, id, tokens.Uint64(), choice, nil)
 }
 
-// selectorStakeAtDispute reads stake from the reporter the selector was on at the
-// dispute height when a switch completed after that height. Otherwise the live
-// selection is still that reporter and the evidence snapshot decides the owner.
-func (k Keeper) selectorStakeAtDispute(
+// selectorStakeForVote returns the selector's tokens in the reporter they were
+// on at the dispute height. A resolved history row is final: a zero snapshot
+// there is zero power. selectorStakeAtBlock remains for voters with no switch
+// history, where the live selection is still the dispute-height selection.
+func (k Keeper) selectorStakeForVote(
 	ctx context.Context,
-	voter, liveReporter, evidenceReporter sdk.AccAddress,
+	voter sdk.AccAddress,
+	at disputeHeightSelection,
+	liveReporter, evidenceReporter sdk.AccAddress,
 	blockNumber uint64,
 ) (sdk.AccAddress, math.Int, error) {
-	atReporter, liveAccurate, err := k.reporterKeeper.ReporterAtHeight(ctx, voter, blockNumber)
-	if err != nil {
-		return nil, math.Int{}, err
-	}
-	if !liveAccurate && len(atReporter) > 0 {
+	if at.fromHistory {
+		if len(at.selected) == 0 {
+			return nil, math.ZeroInt(), nil
+		}
 		tokens, err := k.reporterKeeper.GetDelegatorTokensFromReporterAtBlock(
-			ctx, voter.Bytes(), atReporter.Bytes(), blockNumber)
+			ctx, voter.Bytes(), at.selected.Bytes(), blockNumber)
 		if err != nil {
 			return nil, math.Int{}, err
 		}
-		if tokens.IsPositive() {
-			return atReporter, tokens, nil
-		}
+		return at.selected, tokens, nil
 	}
-	return k.selectorStakeAtBlock(ctx, voter, liveReporter, evidenceReporter, blockNumber)
-}
-
-// selectorMayPeelOwner is false when owner has finished a self-demotion and this
-// dispute has no group-power vote from them. Their voter row is only their own
-// stake, so selectors still pointing at them count their own stake directly.
-func (k Keeper) selectorMayPeelOwner(ctx context.Context, id uint64, owner sdk.AccAddress) (bool, error) {
-	demoted, err := k.reporterKeeper.ReporterSelfDemoted(ctx, owner)
-	if err != nil {
-		return false, err
+	live := at.selected
+	if len(live) == 0 {
+		live = liveReporter
 	}
-	if !demoted {
-		return true, nil
-	}
-	return k.ReporterGroupPowerVotes.Has(ctx, collections.Join(id, owner.Bytes()))
+	return k.selectorStakeAtBlock(ctx, voter, live, evidenceReporter, blockNumber)
 }
 
 // addReporterDelegatorTokensVoted adds amount to the per-dispute reserve of selector

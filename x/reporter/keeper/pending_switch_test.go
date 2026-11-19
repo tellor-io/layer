@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
+	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/mocks"
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -15,7 +16,67 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
+
+const (
+	// openSwitchBegan is inside the seeded open row. Cancelling later keeps that
+	// row, so a height before the cancel still sees the switch as unfinished.
+	openSwitchBegan = uint64(40)
+	olderSwitchDone = uint64(20)
+)
+
+func seedOpenSwitchWithOlderRow(t *testing.T, k keeper.Keeper, ctx sdk.Context, selector, openOriginal, olderOriginal []byte) {
+	t.Helper()
+	require.NoError(t, k.SelectorReporterSwitches.Set(ctx, selector, types.SelectorReporterSwitches{
+		Switches: []types.SelectorReporterSwitch{
+			{OriginalReporter: append([]byte(nil), openOriginal...), BeganHeight: openSwitchBegan, CompletedHeight: 0},
+			{OriginalReporter: append([]byte(nil), olderOriginal...), BeganHeight: 10, CompletedHeight: olderSwitchDone},
+		},
+	}))
+}
+
+func requireOpenSwitchAborted(t *testing.T, k keeper.Keeper, ctx sdk.Context, selector, olderOriginal sdk.AccAddress) {
+	t.Helper()
+	history, err := k.SelectorReporterSwitches.Get(ctx, selector.Bytes())
+	require.NoError(t, err)
+	require.Len(t, history.Switches, 2)
+	require.Equal(t, openSwitchBegan, history.Switches[0].BeganHeight)
+	require.Zero(t, history.Switches[0].CompletedHeight)
+	require.Equal(t, uint64(ctx.BlockHeight()), history.Switches[0].CancelledHeight)
+	require.Equal(t, olderOriginal.Bytes(), []byte(history.Switches[1].OriginalReporter))
+	require.Equal(t, olderSwitchDone, history.Switches[1].CompletedHeight)
+	require.Zero(t, history.Switches[1].CancelledHeight)
+	unfinished, err := k.SelectorSwitchUnfinishedAt(ctx, selector, openSwitchBegan+10)
+	require.NoError(t, err)
+	require.True(t, unfinished)
+	unfinished, err = k.SelectorSwitchUnfinishedAt(ctx, selector, uint64(ctx.BlockHeight()))
+	require.NoError(t, err)
+	require.False(t, unfinished)
+}
+
+func mockSelectorBonded(sk *mocks.StakingKeeper, selector sdk.AccAddress) {
+	validatorSet := new(mocks.ValidatorSet)
+	sk.On("GetValidatorSet").Return(validatorSet).Maybe()
+	validatorSet.On("MaxValidators", mock.Anything).Return(uint32(100), nil).Maybe()
+	val := stakingtypes.Validator{
+		OperatorAddress: sdk.ValAddress(selector).String(),
+		Status:          stakingtypes.Bonded,
+		Tokens:          math.NewInt(1_000_000),
+		DelegatorShares: math.LegacyNewDec(1_000),
+	}
+	sk.On("GetValidator", mock.Anything, sdk.ValAddress(selector)).Return(val, nil).Maybe()
+	sk.On("IterateDelegatorDelegations", mock.Anything, selector, mock.AnythingOfType("func(types.Delegation) bool")).
+		Return(nil).
+		Run(func(args mock.Arguments) {
+			fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+			fn(stakingtypes.Delegation{
+				DelegatorAddress: selector.String(),
+				ValidatorAddress: sdk.ValAddress(selector).String(),
+				Shares:           math.LegacyNewDec(1000),
+			})
+		}).Maybe()
+}
 
 func TestFinalizePendingSwitchCleansOrphanWhenSelectorMissing(t *testing.T) {
 	k, _, _, _, _, ctx, _ := setupKeeper(t)
@@ -40,6 +101,8 @@ func TestFinalizePendingSwitchCleansOrphanWhenSelectorMissing(t *testing.T) {
 		IncomingCount:     1,
 		IncomingMinUnlock: 1,
 	}))
+	older := sample.AccAddressBytes()
+	seedOpenSwitchWithOlderRow(t, k, ctx, selector.Bytes(), outgoing.Bytes(), older.Bytes())
 
 	_, err := k.ReporterStake(ctx, incoming, []byte{})
 	require.NoError(t, err)
@@ -56,6 +119,10 @@ func TestFinalizePendingSwitchCleansOrphanWhenSelectorMissing(t *testing.T) {
 	require.ErrorIs(t, err, collections.ErrNotFound)
 	_, err = k.ReporterPendingSwitchHeads.Get(ctx, incoming.Bytes())
 	require.ErrorIs(t, err, collections.ErrNotFound)
+
+	_, err = k.Selectors.Get(ctx, selector.Bytes())
+	require.ErrorIs(t, err, collections.ErrNotFound, "missing selector must not be created on the abandoned target")
+	requireOpenSwitchAborted(t, k, ctx, selector, older)
 }
 
 func TestGetReporterStakeFinalizesReadyPendingSwitches(t *testing.T) {
@@ -204,6 +271,8 @@ func TestFinalizePendingSwitchDropsWhenTargetSelfDemoting(t *testing.T) {
 		IncomingCount:     1,
 		IncomingMinUnlock: 50,
 	}))
+	older := sample.AccAddressBytes()
+	seedOpenSwitchWithOlderRow(t, k, ctx, selector.Bytes(), source.Bytes(), older.Bytes())
 
 	validatorSet := new(mocks.ValidatorSet)
 	sk.On("GetValidatorSet").Return(validatorSet)
@@ -228,6 +297,8 @@ func TestFinalizePendingSwitchDropsWhenTargetSelfDemoting(t *testing.T) {
 	hasDemoting, err := k.Reporters.Has(ctx, demoting.Bytes())
 	require.NoError(t, err)
 	require.True(t, hasDemoting)
+	require.False(t, bytes.Equal(selAfter.Reporter, demoting.Bytes()))
+	requireOpenSwitchAborted(t, k, ctx, selector, older)
 }
 
 func TestFinalizePendingSwitchClearsLockWhenTargetGone(t *testing.T) {
@@ -250,6 +321,8 @@ func TestFinalizePendingSwitchClearsLockWhenTargetGone(t *testing.T) {
 		OutgoingCount:     1,
 		OutgoingMinUnlock: 50,
 	}))
+	older := sample.AccAddressBytes()
+	seedOpenSwitchWithOlderRow(t, k, ctx, selector.Bytes(), source.Bytes(), older.Bytes())
 
 	validatorSet := new(mocks.ValidatorSet)
 	sk.On("GetValidatorSet").Return(validatorSet)
@@ -262,7 +335,9 @@ func TestFinalizePendingSwitchClearsLockWhenTargetGone(t *testing.T) {
 	selAfter, err := k.Selectors.Get(ctx, selector.Bytes())
 	require.NoError(t, err)
 	require.True(t, bytes.Equal(selAfter.Reporter, source.Bytes()))
+	require.False(t, bytes.Equal(selAfter.Reporter, missing.Bytes()))
 	require.Equal(t, uint64(0), selAfter.SwitchOutLockedUntilBlock)
+	requireOpenSwitchAborted(t, k, ctx, selector, older)
 }
 
 func TestSelfDemotionCancelsIncomingPendingSwitches(t *testing.T) {
@@ -310,6 +385,16 @@ func TestSelfDemotionCancelsIncomingPendingSwitches(t *testing.T) {
 	require.NoError(t, k.ReporterPendingSwitchHeads.Set(ctx, source.Bytes(), types.ReporterPendingSwitchHead{
 		OutgoingCount:     1,
 		OutgoingMinUnlock: 50,
+	}))
+	older := sample.AccAddressBytes()
+	prior := sample.AccAddressBytes()
+	seedOpenSwitchWithOlderRow(t, k, ctx, selector.Bytes(), source.Bytes(), older.Bytes())
+	// The demotion itself is open. An older completed row must survive the cancel of incoming switches.
+	require.NoError(t, k.SelectorReporterSwitches.Set(ctx, demoting.Bytes(), types.SelectorReporterSwitches{
+		Switches: []types.SelectorReporterSwitch{
+			{OriginalReporter: demoting.Bytes(), BeganHeight: 30, CompletedHeight: 0},
+			{OriginalReporter: prior.Bytes(), BeganHeight: 10, CompletedHeight: olderSwitchDone},
+		},
 	}))
 
 	agent := sample.AccAddressBytes()
@@ -373,6 +458,153 @@ func TestSelfDemotionCancelsIncomingPendingSwitches(t *testing.T) {
 		found = true
 	}
 	require.True(t, found, "expected pending_switch_canceled_self_demotion event")
+
+	require.False(t, bytes.Equal(selAfter.Reporter, demoting.Bytes()))
+	requireOpenSwitchAborted(t, k, ctx, selector, older)
+
+	demotingHistory, err := k.SelectorReporterSwitches.Get(ctx, demoting.Bytes())
+	require.NoError(t, err)
+	require.Len(t, demotingHistory.Switches, 2)
+	require.Equal(t, demoting.Bytes(), []byte(demotingHistory.Switches[0].OriginalReporter))
+	require.Equal(t, uint64(100), demotingHistory.Switches[0].CompletedHeight)
+	require.Equal(t, prior.Bytes(), []byte(demotingHistory.Switches[1].OriginalReporter))
+	require.Equal(t, olderSwitchDone, demotingHistory.Switches[1].CompletedHeight)
+}
+
+func TestFinalizePendingSwitchCancelsHistoryWhenSelectionReporterChanged(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(100)
+
+	from, target, elsewhere, selector := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	older := sample.AccAddressBytes()
+	rep := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "r")
+	require.NoError(t, k.Reporters.Set(ctx, from.Bytes(), rep))
+	require.NoError(t, k.Reporters.Set(ctx, target.Bytes(), rep))
+	// Selection already points somewhere other than the pending switch's from reporter.
+	require.NoError(t, k.Selectors.Set(ctx, selector.Bytes(), types.NewSelection(elsewhere, 1)))
+
+	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(from.Bytes(), selector.Bytes()), types.PendingSwitchEntry{
+		ToReporter:  target.Bytes(),
+		UnlockBlock: 1,
+	}))
+	require.NoError(t, k.IncomingPendingSwitchIdx.Set(ctx, collections.Join(target.Bytes(), selector.Bytes()), from.Bytes()))
+	require.NoError(t, k.ReporterPendingSwitchHeads.Set(ctx, from.Bytes(), types.ReporterPendingSwitchHead{
+		OutgoingCount:     1,
+		OutgoingMinUnlock: 1,
+	}))
+	require.NoError(t, k.ReporterPendingSwitchHeads.Set(ctx, target.Bytes(), types.ReporterPendingSwitchHead{
+		IncomingCount:     1,
+		IncomingMinUnlock: 1,
+	}))
+	seedOpenSwitchWithOlderRow(t, k, ctx, selector.Bytes(), from.Bytes(), older.Bytes())
+
+	_, err := k.ReporterStake(ctx, from, []byte{})
+	require.NoError(t, err)
+
+	selAfter, err := k.Selectors.Get(ctx, selector.Bytes())
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(selAfter.Reporter, elsewhere.Bytes()))
+	require.False(t, bytes.Equal(selAfter.Reporter, target.Bytes()))
+
+	hasOut, err := k.OutgoingPendingSwitches.Has(ctx, collections.Join(from.Bytes(), selector.Bytes()))
+	require.NoError(t, err)
+	require.False(t, hasOut)
+	hasIn, err := k.IncomingPendingSwitchIdx.Has(ctx, collections.Join(target.Bytes(), selector.Bytes()))
+	require.NoError(t, err)
+	require.False(t, hasIn)
+	requireOpenSwitchAborted(t, k, ctx, selector, older)
+}
+
+func TestSwitchReporterScheduleAndFinalizeWritesHistory(t *testing.T) {
+	k, sk, _, _, _, ms, ctx := setupMsgServer(t)
+	scheduleHeight := int64(20)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(scheduleHeight)
+
+	from, to, selector := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	rep := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "r")
+	require.NoError(t, k.Reporters.Set(ctx, from.Bytes(), rep))
+	require.NoError(t, k.Reporters.Set(ctx, to.Bytes(), rep))
+	require.NoError(t, k.Selectors.Set(ctx, selector.Bytes(), types.NewSelection(from, 1)))
+	mockSelectorBonded(sk, selector)
+
+	_, err := ms.SwitchReporter(ctx, &types.MsgSwitchReporter{
+		SelectorAddress: selector.String(),
+		ReporterAddress: to.String(),
+	})
+	require.NoError(t, err)
+
+	selPending, err := k.Selectors.Get(ctx, selector.Bytes())
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(selPending.Reporter, from.Bytes()))
+
+	finalizeHeight := scheduleHeight + 1
+	ctx = ctx.WithBlockHeight(finalizeHeight)
+	_, err = k.ReporterStake(ctx, to, []byte{})
+	require.NoError(t, err)
+
+	history, err := k.SelectorReporterSwitches.Get(ctx, selector.Bytes())
+	require.NoError(t, err)
+	require.Len(t, history.Switches, 1)
+	require.Equal(t, from.Bytes(), []byte(history.Switches[0].OriginalReporter))
+	require.Equal(t, uint64(scheduleHeight), history.Switches[0].BeganHeight)
+	require.Equal(t, uint64(finalizeHeight), history.Switches[0].CompletedHeight)
+
+	selFinal, err := k.Selectors.Get(ctx, selector.Bytes())
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(selFinal.Reporter, to.Bytes()))
+
+	got, live, err := k.ReporterAtHeight(ctx, selector, uint64(scheduleHeight))
+	require.NoError(t, err)
+	require.False(t, live)
+	require.True(t, bytes.Equal(got, from))
+
+	got, live, err = k.ReporterAtHeight(ctx, selector, uint64(finalizeHeight))
+	require.NoError(t, err)
+	require.True(t, live)
+	require.True(t, bytes.Equal(got, to))
+}
+
+func TestFinalizePendingSwitchWithoutHistoryLeavesNoRow(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(100)
+
+	from, to, selector := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	rep := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "r")
+	require.NoError(t, k.Reporters.Set(ctx, from.Bytes(), rep))
+	require.NoError(t, k.Reporters.Set(ctx, to.Bytes(), rep))
+	require.NoError(t, k.Selectors.Set(ctx, selector.Bytes(), types.NewSelection(from, 1)))
+	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(from.Bytes(), selector.Bytes()), types.PendingSwitchEntry{
+		ToReporter:  to.Bytes(),
+		UnlockBlock: 1,
+	}))
+	require.NoError(t, k.IncomingPendingSwitchIdx.Set(ctx, collections.Join(to.Bytes(), selector.Bytes()), from.Bytes()))
+	require.NoError(t, k.ReporterPendingSwitchHeads.Set(ctx, from.Bytes(), types.ReporterPendingSwitchHead{
+		OutgoingCount:     1,
+		OutgoingMinUnlock: 1,
+	}))
+	require.NoError(t, k.ReporterPendingSwitchHeads.Set(ctx, to.Bytes(), types.ReporterPendingSwitchHead{
+		IncomingCount:     1,
+		IncomingMinUnlock: 1,
+	}))
+	mockSelectorBonded(sk, selector)
+
+	_, err := k.ReporterStake(ctx, to, []byte{})
+	require.NoError(t, err)
+
+	selAfter, err := k.Selectors.Get(ctx, selector.Bytes())
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(selAfter.Reporter, to.Bytes()))
+
+	hasOut, err := k.OutgoingPendingSwitches.Has(ctx, collections.Join(from.Bytes(), selector.Bytes()))
+	require.NoError(t, err)
+	require.False(t, hasOut)
+	hasIn, err := k.IncomingPendingSwitchIdx.Has(ctx, collections.Join(to.Bytes(), selector.Bytes()))
+	require.NoError(t, err)
+	require.False(t, hasIn)
+
+	hasHistory, err := k.SelectorReporterSwitches.Has(ctx, selector.Bytes())
+	require.NoError(t, err)
+	require.False(t, hasHistory)
 }
 
 func TestNormalPendingSwitchKeepsTwoBitRegistration(t *testing.T) {

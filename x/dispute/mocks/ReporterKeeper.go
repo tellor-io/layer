@@ -3,6 +3,7 @@
 package mocks
 
 import (
+	"bytes"
 	context "context"
 
 	math "cosmossdk.io/math"
@@ -361,8 +362,9 @@ func (_m *ReporterKeeper) UpdateJailedUntilOnFailedDispute(ctx context.Context, 
 }
 
 // expectationSet reports whether a test registered an On for method.
-// History lookups default to "live selection is accurate" and "not self-demoted"
-// so existing vote tests keep the pre-history behavior without a new expectation.
+// History lookups default to "live selection is accurate" and "no switch was
+// unfinished" so existing vote tests keep the pre-history behavior without a
+// new expectation.
 func (_m *ReporterKeeper) expectationSet(method string) bool {
 	for _, call := range _m.ExpectedCalls {
 		if call.Method == method {
@@ -372,11 +374,39 @@ func (_m *ReporterKeeper) expectationSet(method string) bool {
 	return false
 }
 
+// delegatedReporter returns the reporter from a Delegation expectation for selector.
+func (_m *ReporterKeeper) delegatedReporter(selector types.AccAddress) (types.AccAddress, bool) {
+	for i := len(_m.ExpectedCalls) - 1; i >= 0; i-- {
+		call := _m.ExpectedCalls[i]
+		if call.Method != "Delegation" || len(call.Arguments) < 2 {
+			continue
+		}
+		arg, ok := call.Arguments.Get(1).(types.AccAddress)
+		if !ok || !bytes.Equal(arg, selector) {
+			continue
+		}
+		if len(call.ReturnArguments) == 0 || call.ReturnArguments.Get(0) == nil {
+			continue
+		}
+		sel, ok := call.ReturnArguments.Get(0).(reportertypes.Selection)
+		if !ok || len(sel.Reporter) == 0 {
+			continue
+		}
+		return append(types.AccAddress(nil), sel.Reporter...), true
+	}
+	return nil, false
+}
+
 // ReporterAtHeight provides a mock function with given fields: ctx, selector, blockHeight.
-// With no expectation, live data is treated as accurate.
+// With no expectation, the selector's Delegation reporter is the dispute-height
+// selection and live data is accurate. An address with no Delegation expectation
+// is treated as selected to itself, so a reporter owner still votes the group.
 func (_m *ReporterKeeper) ReporterAtHeight(ctx context.Context, selector types.AccAddress, blockHeight uint64) (types.AccAddress, bool, error) {
 	if !_m.expectationSet("ReporterAtHeight") {
-		return nil, true, nil
+		if rep, ok := _m.delegatedReporter(selector); ok {
+			return rep, true, nil
+		}
+		return append(types.AccAddress(nil), selector...), true, nil
 	}
 	ret := _m.Called(ctx, selector, blockHeight)
 
@@ -404,16 +434,16 @@ func (_m *ReporterKeeper) PruneSelectorSwitches(ctx context.Context, pruneHeight
 	return ret.Error(0)
 }
 
-// ReporterSelfDemoted provides a mock function with given fields: ctx, addr.
-// With no expectation, the address is treated as not self-demoted.
-func (_m *ReporterKeeper) ReporterSelfDemoted(ctx context.Context, addr types.AccAddress) (bool, error) {
-	if !_m.expectationSet("ReporterSelfDemoted") {
+// SelectorSwitchUnfinishedAt provides a mock function with given fields: ctx, selector, blockHeight.
+// With no expectation, no switch was unfinished at blockHeight.
+func (_m *ReporterKeeper) SelectorSwitchUnfinishedAt(ctx context.Context, selector types.AccAddress, blockHeight uint64) (bool, error) {
+	if !_m.expectationSet("SelectorSwitchUnfinishedAt") {
 		return false, nil
 	}
-	ret := _m.Called(ctx, addr)
+	ret := _m.Called(ctx, selector, blockHeight)
 
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (bool, error)); ok {
-		return rf(ctx, addr)
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64) (bool, error)); ok {
+		return rf(ctx, selector, blockHeight)
 	}
 	r0, _ := ret.Get(0).(bool)
 	return r0, ret.Error(1)

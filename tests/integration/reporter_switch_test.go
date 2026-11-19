@@ -1308,3 +1308,317 @@ func (s *IntegrationTestSuite) TestDisputeVoteSkipsLockedSelectorPendingSwitch()
 		s.True(repP.IsPositive(), "unlocked selector must contribute reporter-group stake")
 	})
 }
+
+func (s *IntegrationTestSuite) requireSwitchAtHeight(selector, want sdk.AccAddress, block uint64, liveAccurate, unfinished bool) {
+	s.T().Helper()
+	got, live, err := s.Setup.Reporterkeeper.ReporterAtHeight(s.Setup.Ctx, selector, block)
+	s.NoError(err)
+	s.True(bytes.Equal(got, want), "reporter at height %d", block)
+	s.Equal(liveAccurate, live)
+	open, err := s.Setup.Reporterkeeper.SelectorSwitchUnfinishedAt(s.Setup.Ctx, selector, block)
+	s.NoError(err)
+	s.Equal(unfinished, open)
+}
+
+func (s *IntegrationTestSuite) openDisputeAt(block uint64) uint64 {
+	s.T().Helper()
+	const id = uint64(1)
+	s.NoError(s.Setup.Disputekeeper.Disputes.Set(s.Setup.Ctx, id, disputetypes.Dispute{
+		DisputeId:   id,
+		Open:        true,
+		BlockNumber: block,
+	}))
+	return id
+}
+
+func (s *IntegrationTestSuite) requireNoReserve(reporter sdk.AccAddress, disputeID uint64) {
+	s.T().Helper()
+	_, err := s.Setup.Disputekeeper.ReportersWithDelegatorsVotedBefore.Get(s.Setup.Ctx, collections.Join(reporter.Bytes(), disputeID))
+	s.ErrorIs(err, collections.ErrNotFound)
+}
+
+func (s *IntegrationTestSuite) requireNoVoter(voter sdk.AccAddress, disputeID uint64) {
+	s.T().Helper()
+	has, err := s.Setup.Disputekeeper.Voter.Has(s.Setup.Ctx, collections.Join(disputeID, voter.Bytes()))
+	s.NoError(err)
+	s.False(has)
+}
+
+func (s *IntegrationTestSuite) storeCountedVote(disputeID uint64, voter sdk.AccAddress, power math.Int, choice disputetypes.VoteEnum) {
+	s.T().Helper()
+	s.NoError(s.Setup.Disputekeeper.Voter.Set(s.Setup.Ctx, collections.Join(disputeID, voter.Bytes()), disputetypes.Voter{
+		Vote:          choice,
+		VoterPower:    power,
+		ReporterPower: power,
+	}))
+}
+
+// TestDisputeVoteReadsSelectorSwitchHistory votes through the real reporter and
+// dispute keepers. Power comes from the switch history those keepers wrote.
+func (s *IntegrationTestSuite) TestDisputeVoteReadsSelectorSwitchHistory() {
+	s.Run("switch_after_open_peels_reporter_at_open", func() {
+		s.SetupTest()
+		reporterA, reporterB, _, selector, bridgeQueryData, queryID := s.reporterSwitchFixture()
+		msgServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
+
+		reportHeight := int64(10)
+		s.submitBridgeReport(reporterA, bridgeQueryData, reportHeight)
+		disputeBlock := uint64(reportHeight)
+		group, err := s.Setup.Reporterkeeper.GetReporterTokensAtBlock(s.Setup.Ctx, reporterA.Bytes(), disputeBlock)
+		s.NoError(err)
+		selectorTokens, err := s.Setup.Reporterkeeper.GetDelegatorTokensFromReporterAtBlock(
+			s.Setup.Ctx, selector.Bytes(), reporterA.Bytes(), disputeBlock)
+		s.NoError(err)
+		s.True(selectorTokens.IsPositive())
+		s.True(group.GT(selectorTokens))
+
+		maxCommit, err := s.Setup.Oraclekeeper.GetMaxOpenCommitmentForReporter(s.Setup.Ctx, reporterA.Bytes())
+		s.NoError(err)
+		s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(reportHeight + 1)
+		_, err = msgServer.SwitchReporter(s.Setup.Ctx, &reportertypes.MsgSwitchReporter{
+			SelectorAddress: selector.String(),
+			ReporterAddress: reporterB.String(),
+		})
+		s.NoError(err)
+		s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(int64(maxCommit) + 1)
+		_, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterB, queryID)
+		s.NoError(err)
+
+		s.requireSwitchAtHeight(selector, reporterA, disputeBlock, false, false)
+		s.requireSwitchAtHeight(reporterA, reporterA, disputeBlock, true, false)
+
+		disputeID := s.openDisputeAt(disputeBlock)
+		power, err := s.Setup.Disputekeeper.SetVoterReporterStake(
+			s.Setup.Ctx, disputeID, reporterA, disputeBlock, disputetypes.VoteEnum_VOTE_SUPPORT, nil, nil)
+		s.NoError(err)
+		s.True(power.Equal(group))
+		s.storeCountedVote(disputeID, reporterA, power, disputetypes.VoteEnum_VOTE_SUPPORT)
+
+		selectorPower, err := s.Setup.Disputekeeper.SetVoterReporterStake(
+			s.Setup.Ctx, disputeID, selector, disputeBlock, disputetypes.VoteEnum_VOTE_AGAINST, nil, nil)
+		s.NoError(err)
+		s.True(selectorPower.Equal(selectorTokens))
+
+		owner, err := s.Setup.Disputekeeper.Voter.Get(s.Setup.Ctx, collections.Join(disputeID, reporterA.Bytes()))
+		s.NoError(err)
+		s.True(owner.ReporterPower.Equal(group.Sub(selectorTokens)))
+		s.requireNoVoter(reporterB, disputeID)
+		s.requireNoReserve(reporterA, disputeID)
+		s.requireNoReserve(reporterB, disputeID)
+	})
+
+	s.Run("unfinished_at_open_stays_zero_after_finalize", func() {
+		s.SetupTest()
+		reporterA, reporterB, _, selector, bridgeQueryData, queryID := s.reporterSwitchFixture()
+		msgServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
+
+		s.submitBridgeReport(reporterA, bridgeQueryData, 10)
+		s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(11)
+		_, err := msgServer.SwitchReporter(s.Setup.Ctx, &reportertypes.MsgSwitchReporter{
+			SelectorAddress: selector.String(),
+			ReporterAddress: reporterB.String(),
+		})
+		s.NoError(err)
+		disputeBlock := uint64(12)
+		maxCommit, err := s.Setup.Oraclekeeper.GetMaxOpenCommitmentForReporter(s.Setup.Ctx, reporterA.Bytes())
+		s.NoError(err)
+		s.True(maxCommit > disputeBlock)
+		s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(int64(maxCommit) + 1)
+		_, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterB, queryID)
+		s.NoError(err)
+
+		sel, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, selector.Bytes())
+		s.NoError(err)
+		s.Equal(uint64(0), sel.SwitchOutLockedUntilBlock)
+		s.False(reportertypes.SelectorStakeLocked(sel, s.Setup.Ctx.BlockTime()))
+		s.True(bytes.Equal(sel.Reporter, reporterB.Bytes()))
+		s.requireSwitchAtHeight(selector, reporterA, disputeBlock, false, true)
+
+		counted, err := s.Setup.Reporterkeeper.GetDelegatorTokensFromReporterAtBlock(
+			s.Setup.Ctx, selector.Bytes(), reporterA.Bytes(), disputeBlock)
+		s.NoError(err)
+		s.True(counted.IsPositive())
+
+		disputeID := s.openDisputeAt(disputeBlock)
+		power, err := s.Setup.Disputekeeper.SetVoterReporterStake(
+			s.Setup.Ctx, disputeID, selector, disputeBlock, disputetypes.VoteEnum_VOTE_SUPPORT, nil, nil)
+		s.NoError(err)
+		s.True(power.IsZero())
+		_, err = s.Setup.Disputekeeper.VoteCountsByGroup.Get(s.Setup.Ctx, disputeID)
+		s.ErrorIs(err, collections.ErrNotFound)
+		s.requireNoVoter(selector, disputeID)
+		s.requireNoVoter(reporterA, disputeID)
+		s.requireNoVoter(reporterB, disputeID)
+		s.requireNoReserve(reporterA, disputeID)
+		s.requireNoReserve(reporterB, disputeID)
+
+		s.NoError(s.Setup.Disputekeeper.VoteCountsByGroup.Set(s.Setup.Ctx, disputeID, disputetypes.StakeholderVoteCounts{
+			Reporters: disputetypes.VoteCounts{Support: counted.Uint64()},
+		}))
+		old := disputetypes.Voter{
+			Vote:          disputetypes.VoteEnum_VOTE_SUPPORT,
+			VoterPower:    counted,
+			ReporterPower: counted,
+		}
+		s.storeCountedVote(disputeID, selector, counted, disputetypes.VoteEnum_VOTE_SUPPORT)
+		moved, err := s.Setup.Disputekeeper.SetVoterReporterStake(
+			s.Setup.Ctx, disputeID, selector, disputeBlock, disputetypes.VoteEnum_VOTE_INVALID, &old, nil)
+		s.NoError(err)
+		s.True(moved.Equal(counted))
+		tally, err := s.Setup.Disputekeeper.VoteCountsByGroup.Get(s.Setup.Ctx, disputeID)
+		s.NoError(err)
+		s.Equal(disputetypes.VoteCounts{Invalid: counted.Uint64()}, tally.Reporters)
+		s.requireNoReserve(reporterA, disputeID)
+		s.requireNoReserve(reporterB, disputeID)
+	})
+
+	s.Run("self_demotion_after_open_still_votes_group", func() {
+		s.SetupTest()
+		reporterA, reporterB, reporterC, selector, bridgeQueryData, queryID := s.reporterSwitchFixture()
+		msgServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
+
+		reportHeight := int64(10)
+		s.submitBridgeReport(reporterA, bridgeQueryData, reportHeight)
+		disputeBlock := uint64(reportHeight)
+		group, err := s.Setup.Reporterkeeper.GetReporterTokensAtBlock(s.Setup.Ctx, reporterA.Bytes(), disputeBlock)
+		s.NoError(err)
+		selectorTokens, err := s.Setup.Reporterkeeper.GetDelegatorTokensFromReporterAtBlock(
+			s.Setup.Ctx, selector.Bytes(), reporterA.Bytes(), disputeBlock)
+		s.NoError(err)
+		s.True(group.GT(selectorTokens))
+
+		maxCommit, err := s.Setup.Oraclekeeper.GetMaxOpenCommitmentForReporter(s.Setup.Ctx, reporterA.Bytes())
+		s.NoError(err)
+		s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(reportHeight + 1)
+		_, err = msgServer.SwitchReporter(s.Setup.Ctx, &reportertypes.MsgSwitchReporter{
+			SelectorAddress: selector.String(),
+			ReporterAddress: reporterB.String(),
+		})
+		s.NoError(err)
+		s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(int64(maxCommit) + 1)
+		_, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterB, queryID)
+		s.NoError(err)
+
+		_, err = msgServer.SwitchReporter(s.Setup.Ctx, &reportertypes.MsgSwitchReporter{
+			SelectorAddress: reporterA.String(),
+			ReporterAddress: reporterC.String(),
+		})
+		s.NoError(err)
+		_, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterC, queryID)
+		s.NoError(err)
+
+		selA, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, reporterA.Bytes())
+		s.NoError(err)
+		s.True(bytes.Equal(selA.Reporter, reporterC.Bytes()))
+		s.requireSwitchAtHeight(reporterA, reporterA, disputeBlock, false, false)
+		s.requireSwitchAtHeight(selector, reporterA, disputeBlock, false, false)
+
+		disputeID := s.openDisputeAt(disputeBlock)
+		power, err := s.Setup.Disputekeeper.SetVoterReporterStake(
+			s.Setup.Ctx, disputeID, reporterA, disputeBlock, disputetypes.VoteEnum_VOTE_SUPPORT, nil, nil)
+		s.NoError(err)
+		s.True(power.Equal(group))
+		s.storeCountedVote(disputeID, reporterA, power, disputetypes.VoteEnum_VOTE_SUPPORT)
+
+		selectorPower, err := s.Setup.Disputekeeper.SetVoterReporterStake(
+			s.Setup.Ctx, disputeID, selector, disputeBlock, disputetypes.VoteEnum_VOTE_AGAINST, nil, nil)
+		s.NoError(err)
+		s.True(selectorPower.Equal(selectorTokens))
+		owner, err := s.Setup.Disputekeeper.Voter.Get(s.Setup.Ctx, collections.Join(disputeID, reporterA.Bytes()))
+		s.NoError(err)
+		s.True(owner.ReporterPower.Equal(group.Sub(selectorTokens)))
+		s.requireNoReserve(reporterA, disputeID)
+		s.requireNoVoter(reporterC, disputeID)
+		s.requireNoReserve(reporterC, disputeID)
+	})
+
+	s.Run("reselect_after_leaving_votes_own_stake", func() {
+		s.SetupTest()
+		reporterA, reporterB, _, selector, bridgeQueryData, queryID := s.reporterSwitchFixture()
+		msgServer := reporterkeeper.NewMsgServerImpl(s.Setup.Reporterkeeper)
+
+		s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(5).WithBlockTime(time.Now())
+		_, err := msgServer.SwitchReporter(s.Setup.Ctx, &reportertypes.MsgSwitchReporter{
+			SelectorAddress: reporterA.String(),
+			ReporterAddress: reporterB.String(),
+		})
+		s.NoError(err)
+		s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(6)
+		_, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterB, queryID)
+		s.NoError(err)
+
+		disputeHeight := int64(20)
+		s.submitBridgeReport(reporterB, bridgeQueryData, disputeHeight)
+		disputeBlock := uint64(disputeHeight)
+		own, err := s.Setup.Reporterkeeper.GetDelegatorTokensFromReporterAtBlock(
+			s.Setup.Ctx, reporterA.Bytes(), reporterB.Bytes(), disputeBlock)
+		s.NoError(err)
+		s.True(own.IsPositive())
+
+		// A demoted before reporting, so there is no report snapshot of the selector on A.
+		// Seed that open-height stake. The switch rows themselves come from SwitchReporter and CreateReporter.
+		selectorTokens := math.NewInt(7)
+		s.NoError(s.Setup.Reporterkeeper.ReportByBlock.Set(
+			s.Setup.Ctx,
+			collections.Join3(reporterA.Bytes(), disputeBlock, []byte("open-height")),
+			reportertypes.DelegationsAmounts{
+				TokenOrigins: []*reportertypes.TokenOriginInfo{{
+					DelegatorAddress: selector.Bytes(),
+					ValidatorAddress: sdk.ValAddress(reporterA).Bytes(),
+					Amount:           selectorTokens,
+				}},
+				Total: selectorTokens,
+			},
+		))
+
+		maxCommit, err := s.Setup.Oraclekeeper.GetMaxOpenCommitmentForReporter(s.Setup.Ctx, reporterB.Bytes())
+		s.NoError(err)
+		s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(int64(maxCommit) + 1)
+		_, err = msgServer.CreateReporter(s.Setup.Ctx, &reportertypes.MsgCreateReporter{
+			ReporterAddress:   reporterA.String(),
+			CommissionRate:    reportertypes.DefaultMinCommissionRate,
+			MinTokensRequired: math.NewIntWithDecimal(1, 6),
+			Moniker:           "reselect",
+		})
+		s.NoError(err)
+		_, err = s.Setup.Reporterkeeper.ReporterStake(s.Setup.Ctx, reporterA, queryID)
+		s.NoError(err)
+
+		selA, err := s.Setup.Reporterkeeper.Selectors.Get(s.Setup.Ctx, reporterA.Bytes())
+		s.NoError(err)
+		s.True(bytes.Equal(selA.Reporter, reporterA.Bytes()))
+		s.requireSwitchAtHeight(reporterA, reporterB, disputeBlock, false, false)
+		s.requireSwitchAtHeight(selector, reporterA, disputeBlock, true, false)
+
+		groupSnap, err := s.Setup.Reporterkeeper.GetReporterTokensAtBlock(s.Setup.Ctx, reporterA.Bytes(), disputeBlock)
+		s.NoError(err)
+		s.True(groupSnap.Equal(selectorTokens))
+		s.False(own.Equal(groupSnap))
+
+		disputeID := s.openDisputeAt(disputeBlock)
+		power, err := s.Setup.Disputekeeper.SetVoterReporterStake(
+			s.Setup.Ctx, disputeID, reporterA, disputeBlock, disputetypes.VoteEnum_VOTE_SUPPORT, nil, nil)
+		s.NoError(err)
+		s.True(power.Equal(own))
+		s.storeCountedVote(disputeID, reporterA, power, disputetypes.VoteEnum_VOTE_SUPPORT)
+		reserved, err := s.Setup.Disputekeeper.ReportersWithDelegatorsVotedBefore.Get(
+			s.Setup.Ctx, collections.Join(reporterB.Bytes(), disputeID))
+		s.NoError(err)
+		s.True(reserved.Equal(own))
+		s.requireNoReserve(reporterA, disputeID)
+
+		selectorPower, err := s.Setup.Disputekeeper.SetVoterReporterStake(
+			s.Setup.Ctx, disputeID, selector, disputeBlock, disputetypes.VoteEnum_VOTE_AGAINST, nil, nil)
+		s.NoError(err)
+		s.True(selectorPower.Equal(selectorTokens))
+		owner, err := s.Setup.Disputekeeper.Voter.Get(s.Setup.Ctx, collections.Join(disputeID, reporterA.Bytes()))
+		s.NoError(err)
+		s.True(owner.ReporterPower.Equal(power))
+		s.Equal(disputetypes.VoteEnum_VOTE_SUPPORT, owner.Vote)
+		s.requireNoReserve(reporterA, disputeID)
+		tally, err := s.Setup.Disputekeeper.VoteCountsByGroup.Get(s.Setup.Ctx, disputeID)
+		s.NoError(err)
+		s.Equal(own.Uint64(), tally.Reporters.Support)
+		s.Equal(selectorTokens.Uint64(), tally.Reporters.Against)
+	})
+}

@@ -180,6 +180,126 @@ func TestReporterSelfDemotedWhenLaterSwitchOutlivesSelfSwitch(t *testing.T) {
 	require.True(t, demoted)
 }
 
+func TestSelectorSwitchUnfinishedAt(t *testing.T) {
+	selector := sample.AccAddressBytes()
+	original := sample.AccAddressBytes()
+	next := sample.AccAddressBytes()
+
+	t.Run("no history", func(t *testing.T) {
+		k, ctx := newSwitchTestKeeper(t)
+		require.NoError(t, k.Selectors.Set(ctx, selector.Bytes(), types.NewSelection(original, 1)))
+		unfinished, err := k.SelectorSwitchUnfinishedAt(ctx, selector, 100)
+		require.NoError(t, err)
+		require.False(t, unfinished)
+	})
+
+	t.Run("open switch including self-demotion", func(t *testing.T) {
+		k, ctx := newSwitchTestKeeper(t)
+		require.NoError(t, k.Selectors.Set(ctx, selector.Bytes(), types.NewSelection(selector, 1)))
+		require.NoError(t, k.SelectorReporterSwitches.Set(ctx, selector.Bytes(), types.SelectorReporterSwitches{
+			Switches: []types.SelectorReporterSwitch{{
+				OriginalReporter: selector.Bytes(),
+				BeganHeight:      100,
+				CompletedHeight:  0,
+			}},
+		}))
+
+		got, _, err := k.ReporterAtHeight(ctx, selector, 150)
+		require.NoError(t, err)
+		require.True(t, bytes.Equal(got, selector), "an open self-demotion still resolves to self")
+
+		unfinished, err := k.SelectorSwitchUnfinishedAt(ctx, selector, 150)
+		require.NoError(t, err)
+		require.True(t, unfinished)
+		unfinished, err = k.SelectorSwitchUnfinishedAt(ctx, selector, 100)
+		require.NoError(t, err)
+		require.True(t, unfinished)
+		unfinished, err = k.SelectorSwitchUnfinishedAt(ctx, selector, 99)
+		require.NoError(t, err)
+		require.False(t, unfinished)
+	})
+
+	t.Run("completed after the height and already begun", func(t *testing.T) {
+		k, ctx := newSwitchTestKeeper(t)
+		require.NoError(t, k.Selectors.Set(ctx, selector.Bytes(), types.NewSelection(next, 1)))
+		require.NoError(t, k.SelectorReporterSwitches.Set(ctx, selector.Bytes(), types.SelectorReporterSwitches{
+			Switches: []types.SelectorReporterSwitch{{
+				OriginalReporter: original.Bytes(),
+				BeganHeight:      100,
+				CompletedHeight:  200,
+			}},
+		}))
+
+		unfinished, err := k.SelectorSwitchUnfinishedAt(ctx, selector, 150)
+		require.NoError(t, err)
+		require.True(t, unfinished)
+		unfinished, err = k.SelectorSwitchUnfinishedAt(ctx, selector, 200)
+		require.NoError(t, err)
+		require.False(t, unfinished)
+		unfinished, err = k.SelectorSwitchUnfinishedAt(ctx, selector, 201)
+		require.NoError(t, err)
+		require.False(t, unfinished)
+	})
+
+	t.Run("newer switch began after the height", func(t *testing.T) {
+		k, ctx := newSwitchTestKeeper(t)
+		require.NoError(t, k.Selectors.Set(ctx, selector.Bytes(), types.NewSelection(next, 1)))
+		require.NoError(t, k.SelectorReporterSwitches.Set(ctx, selector.Bytes(), types.SelectorReporterSwitches{
+			Switches: []types.SelectorReporterSwitch{
+				{OriginalReporter: original.Bytes(), BeganHeight: 300, CompletedHeight: 400},
+				{OriginalReporter: next.Bytes(), BeganHeight: 100, CompletedHeight: 200},
+			},
+		}))
+
+		// At 250 the later switch had not begun. The earlier one had finished.
+		unfinished, err := k.SelectorSwitchUnfinishedAt(ctx, selector, 250)
+		require.NoError(t, err)
+		require.False(t, unfinished)
+
+		got, live, err := k.ReporterAtHeight(ctx, selector, 250)
+		require.NoError(t, err)
+		require.False(t, live)
+		require.True(t, bytes.Equal(got, original))
+	})
+}
+
+func TestReporterAtHeightRoundTripPreservesOpenHeight(t *testing.T) {
+	k, ctx := newSwitchTestKeeper(t)
+	reporter := sample.AccAddressBytes()
+	other := sample.AccAddressBytes()
+	require.NoError(t, k.Selectors.Set(ctx, reporter.Bytes(), types.NewSelection(reporter, 1)))
+	// Left self at 200-250, then selected self again at 300-400.
+	require.NoError(t, k.SelectorReporterSwitches.Set(ctx, reporter.Bytes(), types.SelectorReporterSwitches{
+		Switches: []types.SelectorReporterSwitch{
+			{OriginalReporter: other.Bytes(), BeganHeight: 300, CompletedHeight: 400},
+			{OriginalReporter: reporter.Bytes(), BeganHeight: 200, CompletedHeight: 250},
+		},
+	}))
+
+	got, live, err := k.ReporterAtHeight(ctx, reporter, 100)
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(got, reporter))
+	require.True(t, live)
+	unfinished, err := k.SelectorSwitchUnfinishedAt(ctx, reporter, 100)
+	require.NoError(t, err)
+	require.False(t, unfinished, "idle self-selection at the open height stays idle after a later round trip")
+
+	got, _, err = k.ReporterAtHeight(ctx, reporter, 220)
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(got, reporter))
+	unfinished, err = k.SelectorSwitchUnfinishedAt(ctx, reporter, 220)
+	require.NoError(t, err)
+	require.True(t, unfinished, "the demotion was unfinished at 220 even though selection was still self")
+
+	got, live, err = k.ReporterAtHeight(ctx, reporter, 260)
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(got, other))
+	require.False(t, live)
+	unfinished, err = k.SelectorSwitchUnfinishedAt(ctx, reporter, 260)
+	require.NoError(t, err)
+	require.False(t, unfinished)
+}
+
 func TestCancelOpenSelectorSwitchDropsOnlyTheOpenRow(t *testing.T) {
 	k, ctx := newSwitchTestKeeper(t)
 	selector := sample.AccAddressBytes()
@@ -193,12 +313,62 @@ func TestCancelOpenSelectorSwitchDropsOnlyTheOpenRow(t *testing.T) {
 	ctx = ctx.WithBlockHeight(7)
 	require.NoError(t, k.recordSelectorSwitchBegan(ctx, selector.Bytes(), r1.Bytes()))
 
+	const cancelHeight int64 = 9
+	ctx = ctx.WithBlockHeight(cancelHeight)
 	require.NoError(t, k.cancelOpenSelectorSwitch(ctx, selector.Bytes(), r1.Bytes()))
 	switches, err := k.SelectorSwitchesNewestFirst(ctx, selector)
 	require.NoError(t, err)
+	require.Len(t, switches, 2)
+	require.Equal(t, r1.Bytes(), []byte(switches[0].OriginalReporter))
+	require.Equal(t, uint64(7), switches[0].BeganHeight)
+	require.Zero(t, switches[0].CompletedHeight)
+	require.Equal(t, uint64(cancelHeight), switches[0].CancelledHeight)
+	require.Equal(t, r0.Bytes(), []byte(switches[1].OriginalReporter))
+	require.Equal(t, uint64(5), switches[1].BeganHeight)
+	require.Equal(t, uint64(6), switches[1].CompletedHeight)
+	require.Zero(t, switches[1].CancelledHeight)
+
+	unfinished, err := k.SelectorSwitchUnfinishedAt(ctx, selector, uint64(cancelHeight-1))
+	require.NoError(t, err)
+	require.True(t, unfinished)
+	unfinished, err = k.SelectorSwitchUnfinishedAt(ctx, selector, uint64(cancelHeight))
+	require.NoError(t, err)
+	require.False(t, unfinished)
+
+	require.NoError(t, k.recordSelectorSwitchCompleted(ctx, selector.Bytes(), r1.Bytes()))
+	switches, err = k.SelectorSwitchesNewestFirst(ctx, selector)
+	require.NoError(t, err)
+	require.Zero(t, switches[0].CompletedHeight)
+	require.Equal(t, uint64(cancelHeight), switches[0].CancelledHeight)
+
+	ctx = ctx.WithBlockHeight(12)
+	require.NoError(t, k.recordSelectorSwitchBegan(ctx, selector.Bytes(), r1.Bytes()))
+	switches, err = k.SelectorSwitchesNewestFirst(ctx, selector)
+	require.NoError(t, err)
+	require.Len(t, switches, 3)
+	require.Equal(t, r1.Bytes(), []byte(switches[0].OriginalReporter))
+	require.Equal(t, uint64(12), switches[0].BeganHeight)
+	require.Zero(t, switches[0].CompletedHeight)
+	require.Zero(t, switches[0].CancelledHeight)
+	require.Equal(t, uint64(cancelHeight), switches[1].CancelledHeight)
+	require.Zero(t, switches[1].CompletedHeight)
+	require.Equal(t, uint64(6), switches[2].CompletedHeight)
+
+	require.NoError(t, k.PruneSelectorSwitches(ctx, uint64(cancelHeight-1), 10))
+	switches, err = k.SelectorSwitchesNewestFirst(ctx, selector)
+	require.NoError(t, err)
+	require.Len(t, switches, 2)
+	require.Zero(t, switches[0].CancelledHeight)
+	require.Equal(t, uint64(12), switches[0].BeganHeight)
+	require.Equal(t, uint64(cancelHeight), switches[1].CancelledHeight)
+
+	require.NoError(t, k.PruneSelectorSwitches(ctx, uint64(cancelHeight), 10))
+	switches, err = k.SelectorSwitchesNewestFirst(ctx, selector)
+	require.NoError(t, err)
 	require.Len(t, switches, 1)
-	require.Equal(t, uint64(6), switches[0].CompletedHeight)
-	require.Equal(t, r0.Bytes(), []byte(switches[0].OriginalReporter))
+	require.Equal(t, uint64(12), switches[0].BeganHeight)
+	require.Zero(t, switches[0].CompletedHeight)
+	require.Zero(t, switches[0].CancelledHeight)
 }
 
 func TestFinalizePendingSwitchCompletesSelectorHistory(t *testing.T) {
@@ -313,6 +483,52 @@ func TestPruneSelectorSwitchesResumesAndWraps(t *testing.T) {
 	})
 	require.NoError(t, err)
 	hasCursor, err := k.SelectorSwitchPruneCursor.Has(ctx)
+	require.NoError(t, err)
+	require.False(t, hasCursor)
+
+	// An unchanged open row still consumes a visit. The cursor must move past it
+	// or the next batch retries the open selector and skips the one after it.
+	first := testSelector(1)
+	open := testSelector(2)
+	last := testSelector(3)
+	for _, selector := range [][]byte{first, last} {
+		require.NoError(t, k.SelectorReporterSwitches.Set(ctx, selector, types.SelectorReporterSwitches{
+			Switches: []types.SelectorReporterSwitch{{
+				OriginalReporter: selector,
+				BeganHeight:      1,
+				CompletedHeight:  10,
+			}},
+		}))
+	}
+	require.NoError(t, k.SelectorReporterSwitches.Set(ctx, open, types.SelectorReporterSwitches{
+		Switches: []types.SelectorReporterSwitch{{
+			OriginalReporter: open,
+			BeganHeight:      1,
+			CompletedHeight:  0,
+		}},
+	}))
+
+	require.NoError(t, k.PruneSelectorSwitches(ctx, 10, 2))
+	hasFirst, err := k.SelectorReporterSwitches.Has(ctx, first)
+	require.NoError(t, err)
+	require.False(t, hasFirst)
+	openHistory, err := k.SelectorReporterSwitches.Get(ctx, open)
+	require.NoError(t, err)
+	require.Len(t, openHistory.Switches, 1)
+	require.Zero(t, openHistory.Switches[0].CompletedHeight)
+	cursor, err = k.SelectorSwitchPruneCursor.Get(ctx)
+	require.NoError(t, err)
+	require.Equal(t, open, []byte(cursor))
+
+	require.NoError(t, k.PruneSelectorSwitches(ctx, 10, 2))
+	hasLast, err := k.SelectorReporterSwitches.Has(ctx, last)
+	require.NoError(t, err)
+	require.False(t, hasLast)
+	openHistory, err = k.SelectorReporterSwitches.Get(ctx, open)
+	require.NoError(t, err)
+	require.Len(t, openHistory.Switches, 1)
+	require.Zero(t, openHistory.Switches[0].CompletedHeight)
+	hasCursor, err = k.SelectorSwitchPruneCursor.Has(ctx)
 	require.NoError(t, err)
 	require.False(t, hasCursor)
 }

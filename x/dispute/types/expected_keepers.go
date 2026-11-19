@@ -62,10 +62,12 @@ type ReporterKeeper interface {
 	// ReporterAtHeight returns the reporter this selector was on at blockHeight.
 	// liveAccurate is true when that reporter is already the live selection, which
 	// is the case when the newest switch completed at or before blockHeight.
+	// An open switch still resolves to the original reporter. It does not by itself
+	// mean a switch was unfinished; use SelectorSwitchUnfinishedAt for that.
 	ReporterAtHeight(ctx context.Context, selector sdk.AccAddress, blockHeight uint64) (sdk.AccAddress, bool, error)
-	// ReporterSelfDemoted reports whether addr's own selection points at someone else,
-	// so a later vote is only that address's own stake. Selectors may still point at addr.
-	ReporterSelfDemoted(ctx context.Context, addr sdk.AccAddress) (bool, error)
+	// SelectorSwitchUnfinishedAt reports whether a switch was in progress at blockHeight:
+	// it began at or before blockHeight and had not completed by then.
+	SelectorSwitchUnfinishedAt(ctx context.Context, selector sdk.AccAddress, blockHeight uint64) (bool, error)
 	// PruneSelectorSwitches deletes completed switch rows no open dispute can query.
 	// pruneHeight is the oldest open dispute block, or the current block when none are open.
 	PruneSelectorSwitches(ctx context.Context, pruneHeight uint64, limit int) error

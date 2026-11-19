@@ -39,8 +39,6 @@ var (
 	DustKeyPrefix                            = collections.NewPrefix(16)
 	VoteCountsByGroupPrefix                  = collections.NewPrefix(17)
 	PendingExecutionIndexPrefix              = collections.NewPrefix(18)
-	// ReporterGroupPowerVotesPrefix marks reporters who voted with group snapshot power.
-	ReporterGroupPowerVotesPrefix = collections.NewPrefix(19)
 )
 
 func KeyPrefix(p string) []byte {

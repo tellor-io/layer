@@ -51,7 +51,6 @@ var (
 	TipUnlockQueuePrefix = collections.NewPrefix(37)
 	// TipUnlockIDPrefix is the next unlock id sequence.
 	TipUnlockIDPrefix = collections.NewPrefix(38)
-<<<<<<< HEAD
 	// TwoBitAgentToReporterPrefix maps a 2bit agent account to the reporter it reports for.
 	TwoBitAgentToReporterPrefix = collections.NewPrefix(39)
 	// TwoBitReporterToAgentPrefix maps a reporter to its current 2bit agent account.
