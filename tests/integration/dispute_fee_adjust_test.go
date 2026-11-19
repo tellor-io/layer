@@ -1,6 +1,7 @@
 package integration_test
 
 import (
+	"encoding/binary"
 	"encoding/hex"
 	"strconv"
 	"time"
@@ -329,7 +330,7 @@ func (s *IntegrationTestSuite) fundSplitMajor() (fx reportedStake, major dispute
 
 	tracked, err := s.Setup.Reporterkeeper.FeePaidFromStakeByPayer(s.Setup.Ctx, major.HashId, bondPayer)
 	s.NoError(err)
-	s.True(bondKept.Sub(tracked.Total).Abs().LTE(math.OneInt()))
+	s.Equal(bondInfo.Amount, tracked.Total)
 	originSum := math.ZeroInt()
 	for _, origin := range tracked.TokenOrigins {
 		originSum = originSum.Add(origin.Amount)
@@ -457,4 +458,214 @@ func (s *IntegrationTestSuite) TestFromBondExcessAtMaxUnbondingEntriesBondsPastC
 	s.NoError(err)
 	s.Equal(int(maxEntries), len(ubd.Entries))
 	s.True(delegationBefore.Sub(s.delegationTokens(bondPayer, bondVal)).Sub(bondKept).Abs().LTE(math.OneInt()))
+}
+
+func feePaidFromStakePayerKey(hashId []byte, payer sdk.AccAddress) []byte {
+	const prefix = "fee-paid-from-stake-payer\x00"
+	key := make([]byte, 0, len(prefix)+4+len(hashId)+len(payer))
+	key = append(key, prefix...)
+	key = binary.BigEndian.AppendUint32(key, uint32(len(hashId)))
+	key = append(key, hashId...)
+	key = append(key, payer...)
+	return key
+}
+
+func (s *IntegrationTestSuite) stakeBalance(del sdk.AccAddress, val sdk.ValAddress) math.Int {
+	delegated := math.ZeroInt()
+	ctx := s.Setup.Ctx
+	delegation, err := s.Setup.Stakingkeeper.GetDelegation(ctx, del, val)
+	if err == nil {
+		validator, valErr := s.Setup.Stakingkeeper.GetValidator(ctx, val)
+		s.NoError(valErr)
+		delegated = validator.TokensFromShares(delegation.Shares).TruncateInt()
+	} else {
+		s.ErrorIs(err, stakingtypes.ErrNoDelegation)
+	}
+	return delegated.Add(s.unbondingBalance(del))
+}
+
+func (s *IntegrationTestSuite) adjustFromBondTracker(hashId []byte, payer sdk.AccAddress, delta math.Int) reportertypes.DelegationsAmounts {
+	tracked, err := s.Setup.Reporterkeeper.FeePaidFromStakeByPayer(s.Setup.Ctx, hashId, payer)
+	s.NoError(err)
+	s.NotEmpty(tracked.TokenOrigins)
+	origin := tracked.TokenOrigins[0]
+	updated := origin.Amount.Add(delta)
+	s.True(updated.IsPositive())
+	tracked.TokenOrigins[0] = &reportertypes.TokenOriginInfo{
+		DelegatorAddress: origin.DelegatorAddress,
+		ValidatorAddress: origin.ValidatorAddress,
+		Amount:           updated,
+	}
+	tracked.Total = tracked.Total.Add(delta)
+	s.NoError(s.Setup.Reporterkeeper.FeePaidFromStake.Set(s.Setup.Ctx, feePaidFromStakePayerKey(hashId, payer), tracked))
+	got, err := s.Setup.Reporterkeeper.FeePaidFromStakeByPayer(s.Setup.Ctx, hashId, payer)
+	s.NoError(err)
+	s.Equal(tracked.Total, got.Total)
+	return got
+}
+
+func (s *IntegrationTestSuite) adjustDisputeModuleBalance(delta math.Int) {
+	coins := sdk.NewCoins(sdk.NewCoin(s.Setup.Denom, delta.Abs()))
+	sink := sample.AccAddressBytes()
+	if delta.IsNegative() {
+		s.NoError(s.Setup.Bankkeeper.SendCoinsFromModuleToAccount(s.Setup.Ctx, disputetypes.ModuleName, sink, coins))
+		return
+	}
+	s.Setup.MintTokens(sink, delta)
+	s.NoError(s.Setup.Bankkeeper.SendCoinsFromAccountToModule(s.Setup.Ctx, sink, disputetypes.ModuleName, coins))
+}
+
+func (s *IntegrationTestSuite) leaveReporterSlashable(fx reportedStake, left math.Int) {
+	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	_, err := stakingMsgServer.Undelegate(s.Setup.Ctx, stakingtypes.NewMsgUndelegate(
+		fx.reporter.String(),
+		fx.val.String(),
+		sdk.NewCoin(s.Setup.Denom, fx.stake.Sub(left)),
+	))
+	s.NoError(err)
+	ubd, err := s.Setup.Stakingkeeper.GetUnbondingDelegation(s.Setup.Ctx, fx.reporter, fx.val)
+	s.NoError(err)
+	s.NoError(s.Setup.Stakingkeeper.RemoveUnbondingDelegation(s.Setup.Ctx, ubd))
+	s.True(s.delegationTokens(fx.reporter, fx.val).LTE(left))
+	s.True(s.delegationTokens(fx.reporter, fx.val).IsPositive())
+}
+
+func (s *IntegrationTestSuite) TestFromBondTrackerShortfallStillRefunds() {
+	fx := s.newReportedStake()
+	accountPayer := sample.AccAddressBytes()
+	s.Setup.MintTokens(accountPayer, math.NewInt(300_000_000))
+	_, quote := s.fundMinorThenMajor(fx, accountPayer)
+
+	bondVal := fx.vals[1]
+	bondPayer := sample.AccAddressBytes()
+	s.delegate(bondPayer, bondVal, math.NewInt(50_000_000))
+	s.registerSelfReporter(bondPayer)
+
+	bondShare := math.NewInt(20_000_000)
+	partial := s.proposeDispute(fx.report, disputetypes.Major, bondPayer, bondShare, true)
+	s.Equal(disputetypes.Prevote, partial.DisputeStatus)
+
+	dust := math.NewInt(2)
+	available := s.adjustFromBondTracker(partial.HashId, bondPayer, dust.Neg())
+	s.adjustDisputeModuleBalance(dust.Neg())
+
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	_, err := msgServer.AddFeeToDispute(s.Setup.Ctx, &disputetypes.MsgAddFeeToDispute{
+		Creator:     accountPayer.String(),
+		DisputeId:   partial.DisputeId,
+		Amount:      sdk.NewCoin(s.Setup.Denom, quote.Sub(bondShare)),
+		PayFromBond: false,
+	})
+	s.NoError(err)
+
+	major, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, partial.DisputeId)
+	s.NoError(err)
+	snap, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(s.Setup.Ctx, major.HashId)
+	s.NoError(err)
+	collected := snap.Total
+	s.True(collected.LT(quote))
+	s.Equal(collected, major.SlashAmount)
+	s.Equal(collected, major.DisputeFee)
+	s.Equal(disputetypes.Voting, major.DisputeStatus)
+
+	bondInfo := s.payerInfo(major.DisputeId, bondPayer)
+	s.True(bondInfo.FromBond)
+	tracked, err := s.Setup.Reporterkeeper.FeePaidFromStakeByPayer(s.Setup.Ctx, major.HashId, bondPayer)
+	s.NoError(err)
+	s.Equal(bondInfo.Amount, tracked.Total)
+	refund := available.Total.Sub(bondInfo.Amount)
+	s.True(refund.IsPositive())
+	accountInfo := s.payerInfo(major.DisputeId, accountPayer)
+	s.requireAdjustedEvent(major.DisputeId, quote, collected, major.BurnAmount, map[string]math.Int{
+		accountPayer.String(): quote.Sub(bondShare).Sub(accountInfo.Amount),
+		bondPayer.String():    refund,
+	})
+	s.Equal(collected, bondInfo.Amount.Add(accountInfo.Amount))
+}
+
+func (s *IntegrationTestSuite) TestFromBondTrackerSurplusRoundsToZeroAndReturns() {
+	fx := s.newReportedStake()
+	s.leaveReporterSlashable(fx, math.NewInt(5_000))
+	accountPayer := sample.AccAddressBytes()
+	s.Setup.MintTokens(accountPayer, math.NewInt(300_000_000))
+	quote, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, fx.report, disputetypes.Major)
+	s.NoError(err)
+
+	bondVal := fx.vals[1]
+	bondPayer := sample.AccAddressBytes()
+	s.delegate(bondPayer, bondVal, math.NewInt(50_000_000))
+	s.registerSelfReporter(bondPayer)
+	bankBefore := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, bondPayer, s.Setup.Denom).Amount
+
+	opening := quote.Sub(math.NewInt(2_000))
+	partial := s.proposeDispute(fx.report, disputetypes.Major, accountPayer, opening, false)
+	s.Equal(disputetypes.Prevote, partial.DisputeStatus)
+
+	bondShare := math.NewInt(1_000)
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	_, err = msgServer.AddFeeToDispute(s.Setup.Ctx, &disputetypes.MsgAddFeeToDispute{
+		Creator:     bondPayer.String(),
+		DisputeId:   partial.DisputeId,
+		Amount:      sdk.NewCoin(s.Setup.Denom, bondShare),
+		PayFromBond: true,
+	})
+	s.NoError(err)
+	open, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, partial.DisputeId)
+	s.NoError(err)
+	s.Equal(disputetypes.Prevote, open.DisputeStatus)
+
+	stakeAfterPay := s.stakeBalance(bondPayer, bondVal)
+	dust := math.NewInt(2)
+	available := s.adjustFromBondTracker(partial.HashId, bondPayer, dust)
+	s.adjustDisputeModuleBalance(dust)
+
+	_, err = msgServer.AddFeeToDispute(s.Setup.Ctx, &disputetypes.MsgAddFeeToDispute{
+		Creator:     accountPayer.String(),
+		DisputeId:   partial.DisputeId,
+		Amount:      sdk.NewCoin(s.Setup.Denom, math.NewInt(1_000)),
+		PayFromBond: false,
+	})
+	s.NoError(err)
+
+	major, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, partial.DisputeId)
+	s.NoError(err)
+	snap, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(s.Setup.Ctx, major.HashId)
+	s.NoError(err)
+	collected := snap.Total
+	s.True(collected.IsPositive())
+	s.True(collected.LT(quote))
+	s.Equal(collected, major.SlashAmount)
+	s.Equal(collected, major.DisputeFee)
+	s.Equal(disputetypes.Voting, major.DisputeStatus)
+
+	_, err = s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(major.DisputeId, bondPayer.Bytes()))
+	s.Error(err)
+	_, err = s.Setup.Reporterkeeper.FeePaidFromStakeByPayer(s.Setup.Ctx, major.HashId, bondPayer)
+	s.Error(err)
+	s.Equal(bankBefore, s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, bondPayer, s.Setup.Denom).Amount)
+	s.True(s.stakeBalance(bondPayer, bondVal).Sub(stakeAfterPay.Add(available.Total)).Abs().LTE(math.OneInt()))
+	s.Equal(collected, s.payerInfo(major.DisputeId, accountPayer).Amount)
+}
+
+func (s *IntegrationTestSuite) TestAdjustedFeeInvalidVoteDrainsModule() {
+	fx, invalidDispute, _, collected, invalidMinorHeld, invalidAccount, invalidBond, _ := s.fundSplitMajor()
+	reporterBefore := s.stakeBalance(fx.reporter, fx.val)
+	s.executeVote(invalidDispute, disputetypes.VoteResult_INVALID)
+	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
+	_, err := msgServer.WithdrawFeeRefund(s.Setup.Ctx, &disputetypes.MsgWithdrawFeeRefund{
+		CallerAddress: invalidAccount.String(),
+		PayerAddress:  invalidAccount.String(),
+		Id:            invalidDispute.DisputeId,
+	})
+	s.NoError(err)
+	_, err = msgServer.WithdrawFeeRefund(s.Setup.Ctx, &disputetypes.MsgWithdrawFeeRefund{
+		CallerAddress: invalidBond.String(),
+		PayerAddress:  invalidBond.String(),
+		Id:            invalidDispute.DisputeId,
+	})
+	s.NoError(err)
+	s.True(s.stakeBalance(fx.reporter, fx.val).Sub(reporterBefore.Add(collected)).Abs().LTE(math.OneInt()))
+	invalidLeft := s.moduleBalance().Sub(invalidMinorHeld)
+	s.True(!invalidLeft.IsNegative())
+	s.True(invalidLeft.LTE(math.NewInt(2)), "invalid settlement left %s above the earlier dispute", invalidLeft)
 }

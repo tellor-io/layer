@@ -372,13 +372,19 @@ func (k Keeper) FeePaidFromStakeTotalByPayer(ctx context.Context, hashId []byte,
 	return trackedFees.Total, nil
 }
 
-// ReturnFeeExcess puts back only the excess of a round-1 from-bond fee and
+// ReturnFeeExcess puts back the excess of a round-1 from-bond fee and
 // rewrites that payer's tracker to the share still at risk. kept is that share.
-// The tracker stays in place unless nothing remains and kept is zero, because a
-// later claim still reads it. FeeRefund cannot be used here: it deletes the tracker.
-// The legacy hash-id-only tracker is not consulted.
+// The refund is capped by the coins actually unbonded. A few loya of share
+// rounding does not fail the call: a short tracker refunds what it holds, and a
+// kept share of zero returns the whole tracker, including a surplus of a few loya.
+// Nothing left at risk removes the tracker. FeeRefund cannot be used here: it
+// deletes the tracker even when a share remains. The legacy hash-id-only tracker
+// is not consulted.
 func (k Keeper) ReturnFeeExcess(ctx context.Context, hashId []byte, payer sdk.AccAddress, excess, kept math.Int) (math.Int, math.Int, error) {
-	if excess.IsNil() || !excess.IsPositive() {
+	if excess.IsNil() || kept.IsNil() || excess.IsNegative() || kept.IsNegative() {
+		return math.ZeroInt(), math.ZeroInt(), fmt.Errorf("fee excess refund amounts must be nonnegative")
+	}
+	if !excess.IsPositive() {
 		return math.ZeroInt(), math.ZeroInt(), nil
 	}
 
@@ -390,8 +396,8 @@ func (k Keeper) ReturnFeeExcess(ctx context.Context, hashId []byte, payer sdk.Ac
 		}
 		return math.ZeroInt(), math.ZeroInt(), err
 	}
-	if tracked.Total.IsNil() || tracked.Total.LT(excess) {
-		return math.ZeroInt(), math.ZeroInt(), fmt.Errorf("from-bond fee tracker cannot cover excess refund (payer %s, excess %s, tracked %s)", payer.String(), excess, tracked.Total)
+	if tracked.Total.IsNil() || tracked.Total.IsNegative() {
+		return math.ZeroInt(), math.ZeroInt(), fmt.Errorf("from-bond fee tracker total is negative for payer %s", payer.String())
 	}
 
 	originTotal := math.ZeroInt()
@@ -407,9 +413,28 @@ func (k Keeper) ReturnFeeExcess(ctx context.Context, hashId []byte, payer sdk.Ac
 			fmt.Errorf("%w (hashId %x, payer %s, total %s, originTotal %s)", types.ErrMalformedDelegationSnapshot, hashId, payer.String(), tracked.Total, originTotal)
 	}
 
-	// excess is already at most the tracker total. Returning that amount, not the
-	// whole tracker, leaves the kept share at risk.
+	// Share rounding makes the tracker a few loya off the amount the dispute
+	// module asked to refund. Refund every coin when nothing stays at risk,
+	// including a surplus. Otherwise keep the requested share when the tracker
+	// can hold it, and never refund more than the tracker holds.
 	returnAmt := excess
+	if !kept.IsPositive() {
+		returnAmt = tracked.Total
+	} else if returnAmt.GT(tracked.Total) {
+		if tracked.Total.GT(kept) {
+			returnAmt = tracked.Total.Sub(kept)
+		} else {
+			returnAmt = math.ZeroInt()
+		}
+	}
+	if !returnAmt.IsPositive() {
+		if !kept.IsPositive() {
+			if err := k.FeePaidFromStake.Remove(ctx, payerKey); err != nil {
+				return math.ZeroInt(), math.ZeroInt(), err
+			}
+		}
+		return math.ZeroInt(), math.ZeroInt(), nil
+	}
 	amounts := originReturnAmounts(tracked.TokenOrigins, tracked.Total, returnAmt)
 	if len(amounts) != len(tracked.TokenOrigins) {
 		return math.ZeroInt(), math.ZeroInt(), fmt.Errorf("fee excess return split does not match tracker origins")
@@ -436,7 +461,7 @@ func (k Keeper) ReturnFeeExcess(ctx context.Context, hashId []byte, payer sdk.Ac
 		})
 	}
 	remaining := tracked.Total.Sub(returnAmt)
-	if !remaining.IsPositive() && (kept.IsNil() || !kept.IsPositive()) {
+	if !remaining.IsPositive() {
 		if err := k.FeePaidFromStake.Remove(ctx, payerKey); err != nil {
 			return math.ZeroInt(), math.ZeroInt(), err
 		}

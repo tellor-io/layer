@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"encoding/binary"
 	"testing"
 	"time"
 
@@ -397,4 +398,60 @@ func TestAddAmountToStake(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, amt, bondedReturn)
 	require.True(t, unbondedReturn.IsZero())
+}
+
+func feePaidFromStakePayerKey(hashId []byte, payer sdk.AccAddress) []byte {
+	const prefix = "fee-paid-from-stake-payer\x00"
+	key := make([]byte, 0, len(prefix)+4+len(hashId)+len(payer))
+	key = append(key, prefix...)
+	key = binary.BigEndian.AppendUint32(key, uint32(len(hashId)))
+	key = append(key, hashId...)
+	key = append(key, payer...)
+	return key
+}
+
+func TestReturnFeeExcessRounding(t *testing.T) {
+	cases := []struct {
+		name       string
+		tracked    int64
+		excess     int64
+		kept       int64
+		wantRefund int64
+	}{
+		{name: "full refund removes tracker", tracked: 100, excess: 100, kept: 0, wantRefund: 100},
+		{name: "kept zero refunds surplus", tracked: 102, excess: 100, kept: 0, wantRefund: 102},
+		{name: "refund of the actual total does not error", tracked: 98, excess: 98, kept: 0, wantRefund: 98},
+		{name: "short tracker does not error", tracked: 98, excess: 100, kept: 0, wantRefund: 98},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			k, sk, _, _, _, ctx, _ := setupKeeper(t)
+			disablePowerCaps(t, k, ctx)
+			payer := sample.AccAddressBytes()
+			valAddr := sdk.ValAddress(sample.AccAddressBytes())
+			hashId := []byte("hash")
+			key := feePaidFromStakePayerKey(hashId, payer)
+			require.NoError(t, k.FeePaidFromStake.Set(ctx, key, types.DelegationsAmounts{
+				TokenOrigins: []*types.TokenOriginInfo{{
+					DelegatorAddress: payer,
+					ValidatorAddress: valAddr,
+					Amount:           math.NewInt(tc.tracked),
+				}},
+				Total: math.NewInt(tc.tracked),
+			}))
+			validator := stakingtypes.Validator{OperatorAddress: valAddr.String(), Status: stakingtypes.Bonded}
+			refund := math.NewInt(tc.wantRefund)
+			sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
+			sk.On("Delegate", ctx, payer, refund, stakingtypes.Bonded, validator, false).Return(math.LegacyZeroDec(), nil)
+
+			bonded, unbonded, err := k.ReturnFeeExcess(ctx, hashId, payer, math.NewInt(tc.excess), math.NewInt(tc.kept))
+			require.NoError(t, err)
+			require.Equal(t, refund, bonded)
+			require.True(t, unbonded.IsZero())
+			has, hasErr := k.FeePaidFromStake.Has(ctx, key)
+			require.NoError(t, hasErr)
+			require.False(t, has)
+			sk.AssertExpectations(t)
+		})
+	}
 }
