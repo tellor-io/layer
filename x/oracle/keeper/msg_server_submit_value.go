@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 	"errors"
+	"strings"
 
 	"github.com/tellor-io/layer/lib/metrics"
 	layertypes "github.com/tellor-io/layer/types"
@@ -18,6 +19,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
+
+// TwoBitAgenticQueryType is the prefix of every query type an aliased 2bit agent
+// may report. The reporting window is part of the type, so 2bitAgentic,
+// 2bitAgentic90, and 2bitAgentic500 are distinct queries that share this prefix.
+const TwoBitAgenticQueryType = "2bitAgentic"
 
 // SubmitValue: allow a reporter to submit a value for a query.
 // accepts QueryData (bytes), Value (string)
@@ -57,10 +63,24 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 		return nil, err
 	}
 	queryId := utils.QueryIDFromData(msg.QueryData)
-	// get reporter
+	// get reporter. A signer with no reporter row can still report a query whose
+	// type starts with 2bitAgentic when that address was registered as another
+	// reporter's agent. The stored report uses the registered reporter, including
+	// that reporter's power and jail state.
 	reporterStake, err := k.keeper.reporterKeeper.ReporterStake(ctx, reporterAddr, queryId)
 	if err != nil {
-		return nil, err
+		if !errors.Is(err, collections.ErrNotFound) {
+			return nil, err
+		}
+		resolved, resolveErr := k.twoBitReporter(ctx, reporterAddr, msg.QueryData)
+		if resolveErr != nil {
+			return nil, err
+		}
+		reporterAddr = resolved
+		reporterStake, err = k.keeper.reporterKeeper.ReporterStake(ctx, reporterAddr, queryId)
+		if err != nil {
+			return nil, err
+		}
 	}
 	params, err := k.keeper.Params.Get(ctx)
 	if err != nil {
@@ -151,4 +171,27 @@ func validateSubmitValue(msg *types.MsgSubmitValue) error {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be empty")
 	}
 	return nil
+}
+
+// twoBitReporter resolves a signer that is not a reporter to the reporter that
+// registered it, and only for a query type that starts with 2bitAgentic. Any
+// other case returns an error so the caller keeps the original reporter-not-found result.
+func (k msgServer) twoBitReporter(ctx context.Context, signer sdk.AccAddress, queryData []byte) (sdk.AccAddress, error) {
+	queryType, _, err := registrytypes.DecodeQueryType(queryData)
+	if err != nil {
+		return nil, err
+	}
+	if !hasTwoBitAgenticPrefix(queryType) {
+		return nil, collections.ErrNotFound
+	}
+	return k.keeper.reporterKeeper.TwoBitReporter(ctx, signer)
+}
+
+// hasTwoBitAgenticPrefix reports whether queryType is 2bitAgentic or a
+// window-specific variant such as 2bitAgentic500. Matching ignores case.
+func hasTwoBitAgenticPrefix(queryType string) bool {
+	if len(queryType) < len(TwoBitAgenticQueryType) {
+		return false
+	}
+	return strings.EqualFold(queryType[:len(TwoBitAgenticQueryType)], TwoBitAgenticQueryType)
 }

@@ -8657,6 +8657,1686 @@ func (x *fastReflection_MsgEditReporterResponse) ProtoMethods() *protoiface.Meth
 	}
 }
 
+var (
+	md_MsgRegisterTwoBitReporter                  protoreflect.MessageDescriptor
+	fd_MsgRegisterTwoBitReporter_reporter_address protoreflect.FieldDescriptor
+	fd_MsgRegisterTwoBitReporter_two_bit_address  protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_reporter_tx_proto_init()
+	md_MsgRegisterTwoBitReporter = File_layer_reporter_tx_proto.Messages().ByName("MsgRegisterTwoBitReporter")
+	fd_MsgRegisterTwoBitReporter_reporter_address = md_MsgRegisterTwoBitReporter.Fields().ByName("reporter_address")
+	fd_MsgRegisterTwoBitReporter_two_bit_address = md_MsgRegisterTwoBitReporter.Fields().ByName("two_bit_address")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgRegisterTwoBitReporter)(nil)
+
+type fastReflection_MsgRegisterTwoBitReporter MsgRegisterTwoBitReporter
+
+func (x *MsgRegisterTwoBitReporter) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgRegisterTwoBitReporter)(x)
+}
+
+func (x *MsgRegisterTwoBitReporter) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_reporter_tx_proto_msgTypes[20]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgRegisterTwoBitReporter_messageType fastReflection_MsgRegisterTwoBitReporter_messageType
+var _ protoreflect.MessageType = fastReflection_MsgRegisterTwoBitReporter_messageType{}
+
+type fastReflection_MsgRegisterTwoBitReporter_messageType struct{}
+
+func (x fastReflection_MsgRegisterTwoBitReporter_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgRegisterTwoBitReporter)(nil)
+}
+func (x fastReflection_MsgRegisterTwoBitReporter_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgRegisterTwoBitReporter)
+}
+func (x fastReflection_MsgRegisterTwoBitReporter_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgRegisterTwoBitReporter
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgRegisterTwoBitReporter) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgRegisterTwoBitReporter
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgRegisterTwoBitReporter) Type() protoreflect.MessageType {
+	return _fastReflection_MsgRegisterTwoBitReporter_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgRegisterTwoBitReporter) New() protoreflect.Message {
+	return new(fastReflection_MsgRegisterTwoBitReporter)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgRegisterTwoBitReporter) Interface() protoreflect.ProtoMessage {
+	return (*MsgRegisterTwoBitReporter)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgRegisterTwoBitReporter) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.ReporterAddress != "" {
+		value := protoreflect.ValueOfString(x.ReporterAddress)
+		if !f(fd_MsgRegisterTwoBitReporter_reporter_address, value) {
+			return
+		}
+	}
+	if x.TwoBitAddress != "" {
+		value := protoreflect.ValueOfString(x.TwoBitAddress)
+		if !f(fd_MsgRegisterTwoBitReporter_two_bit_address, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgRegisterTwoBitReporter) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.reporter.MsgRegisterTwoBitReporter.reporter_address":
+		return x.ReporterAddress != ""
+	case "layer.reporter.MsgRegisterTwoBitReporter.two_bit_address":
+		return x.TwoBitAddress != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgRegisterTwoBitReporter"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgRegisterTwoBitReporter does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgRegisterTwoBitReporter) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.reporter.MsgRegisterTwoBitReporter.reporter_address":
+		x.ReporterAddress = ""
+	case "layer.reporter.MsgRegisterTwoBitReporter.two_bit_address":
+		x.TwoBitAddress = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgRegisterTwoBitReporter"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgRegisterTwoBitReporter does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgRegisterTwoBitReporter) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.reporter.MsgRegisterTwoBitReporter.reporter_address":
+		value := x.ReporterAddress
+		return protoreflect.ValueOfString(value)
+	case "layer.reporter.MsgRegisterTwoBitReporter.two_bit_address":
+		value := x.TwoBitAddress
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgRegisterTwoBitReporter"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgRegisterTwoBitReporter does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgRegisterTwoBitReporter) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.reporter.MsgRegisterTwoBitReporter.reporter_address":
+		x.ReporterAddress = value.Interface().(string)
+	case "layer.reporter.MsgRegisterTwoBitReporter.two_bit_address":
+		x.TwoBitAddress = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgRegisterTwoBitReporter"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgRegisterTwoBitReporter does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgRegisterTwoBitReporter) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.reporter.MsgRegisterTwoBitReporter.reporter_address":
+		panic(fmt.Errorf("field reporter_address of message layer.reporter.MsgRegisterTwoBitReporter is not mutable"))
+	case "layer.reporter.MsgRegisterTwoBitReporter.two_bit_address":
+		panic(fmt.Errorf("field two_bit_address of message layer.reporter.MsgRegisterTwoBitReporter is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgRegisterTwoBitReporter"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgRegisterTwoBitReporter does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgRegisterTwoBitReporter) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.reporter.MsgRegisterTwoBitReporter.reporter_address":
+		return protoreflect.ValueOfString("")
+	case "layer.reporter.MsgRegisterTwoBitReporter.two_bit_address":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgRegisterTwoBitReporter"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgRegisterTwoBitReporter does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgRegisterTwoBitReporter) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.reporter.MsgRegisterTwoBitReporter", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgRegisterTwoBitReporter) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgRegisterTwoBitReporter) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgRegisterTwoBitReporter) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgRegisterTwoBitReporter) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgRegisterTwoBitReporter)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.ReporterAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.TwoBitAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgRegisterTwoBitReporter)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.TwoBitAddress) > 0 {
+			i -= len(x.TwoBitAddress)
+			copy(dAtA[i:], x.TwoBitAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.TwoBitAddress)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.ReporterAddress) > 0 {
+			i -= len(x.ReporterAddress)
+			copy(dAtA[i:], x.ReporterAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ReporterAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgRegisterTwoBitReporter)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgRegisterTwoBitReporter: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgRegisterTwoBitReporter: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ReporterAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ReporterAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TwoBitAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.TwoBitAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgRegisterTwoBitReporterResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_layer_reporter_tx_proto_init()
+	md_MsgRegisterTwoBitReporterResponse = File_layer_reporter_tx_proto.Messages().ByName("MsgRegisterTwoBitReporterResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgRegisterTwoBitReporterResponse)(nil)
+
+type fastReflection_MsgRegisterTwoBitReporterResponse MsgRegisterTwoBitReporterResponse
+
+func (x *MsgRegisterTwoBitReporterResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgRegisterTwoBitReporterResponse)(x)
+}
+
+func (x *MsgRegisterTwoBitReporterResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_reporter_tx_proto_msgTypes[21]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgRegisterTwoBitReporterResponse_messageType fastReflection_MsgRegisterTwoBitReporterResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgRegisterTwoBitReporterResponse_messageType{}
+
+type fastReflection_MsgRegisterTwoBitReporterResponse_messageType struct{}
+
+func (x fastReflection_MsgRegisterTwoBitReporterResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgRegisterTwoBitReporterResponse)(nil)
+}
+func (x fastReflection_MsgRegisterTwoBitReporterResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgRegisterTwoBitReporterResponse)
+}
+func (x fastReflection_MsgRegisterTwoBitReporterResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgRegisterTwoBitReporterResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgRegisterTwoBitReporterResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgRegisterTwoBitReporterResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgRegisterTwoBitReporterResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgRegisterTwoBitReporterResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgRegisterTwoBitReporterResponse"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgRegisterTwoBitReporterResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgRegisterTwoBitReporterResponse"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgRegisterTwoBitReporterResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgRegisterTwoBitReporterResponse"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgRegisterTwoBitReporterResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgRegisterTwoBitReporterResponse"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgRegisterTwoBitReporterResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgRegisterTwoBitReporterResponse"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgRegisterTwoBitReporterResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgRegisterTwoBitReporterResponse"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgRegisterTwoBitReporterResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.reporter.MsgRegisterTwoBitReporterResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgRegisterTwoBitReporterResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgRegisterTwoBitReporterResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgRegisterTwoBitReporterResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgRegisterTwoBitReporterResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgRegisterTwoBitReporterResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgRegisterTwoBitReporterResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgAcceptTwoBitRegistration                  protoreflect.MessageDescriptor
+	fd_MsgAcceptTwoBitRegistration_two_bit_address  protoreflect.FieldDescriptor
+	fd_MsgAcceptTwoBitRegistration_reporter_address protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_reporter_tx_proto_init()
+	md_MsgAcceptTwoBitRegistration = File_layer_reporter_tx_proto.Messages().ByName("MsgAcceptTwoBitRegistration")
+	fd_MsgAcceptTwoBitRegistration_two_bit_address = md_MsgAcceptTwoBitRegistration.Fields().ByName("two_bit_address")
+	fd_MsgAcceptTwoBitRegistration_reporter_address = md_MsgAcceptTwoBitRegistration.Fields().ByName("reporter_address")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgAcceptTwoBitRegistration)(nil)
+
+type fastReflection_MsgAcceptTwoBitRegistration MsgAcceptTwoBitRegistration
+
+func (x *MsgAcceptTwoBitRegistration) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgAcceptTwoBitRegistration)(x)
+}
+
+func (x *MsgAcceptTwoBitRegistration) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_reporter_tx_proto_msgTypes[22]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgAcceptTwoBitRegistration_messageType fastReflection_MsgAcceptTwoBitRegistration_messageType
+var _ protoreflect.MessageType = fastReflection_MsgAcceptTwoBitRegistration_messageType{}
+
+type fastReflection_MsgAcceptTwoBitRegistration_messageType struct{}
+
+func (x fastReflection_MsgAcceptTwoBitRegistration_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgAcceptTwoBitRegistration)(nil)
+}
+func (x fastReflection_MsgAcceptTwoBitRegistration_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgAcceptTwoBitRegistration)
+}
+func (x fastReflection_MsgAcceptTwoBitRegistration_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgAcceptTwoBitRegistration
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgAcceptTwoBitRegistration
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) Type() protoreflect.MessageType {
+	return _fastReflection_MsgAcceptTwoBitRegistration_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) New() protoreflect.Message {
+	return new(fastReflection_MsgAcceptTwoBitRegistration)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) Interface() protoreflect.ProtoMessage {
+	return (*MsgAcceptTwoBitRegistration)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.TwoBitAddress != "" {
+		value := protoreflect.ValueOfString(x.TwoBitAddress)
+		if !f(fd_MsgAcceptTwoBitRegistration_two_bit_address, value) {
+			return
+		}
+	}
+	if x.ReporterAddress != "" {
+		value := protoreflect.ValueOfString(x.ReporterAddress)
+		if !f(fd_MsgAcceptTwoBitRegistration_reporter_address, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.reporter.MsgAcceptTwoBitRegistration.two_bit_address":
+		return x.TwoBitAddress != ""
+	case "layer.reporter.MsgAcceptTwoBitRegistration.reporter_address":
+		return x.ReporterAddress != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgAcceptTwoBitRegistration"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgAcceptTwoBitRegistration does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.reporter.MsgAcceptTwoBitRegistration.two_bit_address":
+		x.TwoBitAddress = ""
+	case "layer.reporter.MsgAcceptTwoBitRegistration.reporter_address":
+		x.ReporterAddress = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgAcceptTwoBitRegistration"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgAcceptTwoBitRegistration does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.reporter.MsgAcceptTwoBitRegistration.two_bit_address":
+		value := x.TwoBitAddress
+		return protoreflect.ValueOfString(value)
+	case "layer.reporter.MsgAcceptTwoBitRegistration.reporter_address":
+		value := x.ReporterAddress
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgAcceptTwoBitRegistration"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgAcceptTwoBitRegistration does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.reporter.MsgAcceptTwoBitRegistration.two_bit_address":
+		x.TwoBitAddress = value.Interface().(string)
+	case "layer.reporter.MsgAcceptTwoBitRegistration.reporter_address":
+		x.ReporterAddress = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgAcceptTwoBitRegistration"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgAcceptTwoBitRegistration does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.reporter.MsgAcceptTwoBitRegistration.two_bit_address":
+		panic(fmt.Errorf("field two_bit_address of message layer.reporter.MsgAcceptTwoBitRegistration is not mutable"))
+	case "layer.reporter.MsgAcceptTwoBitRegistration.reporter_address":
+		panic(fmt.Errorf("field reporter_address of message layer.reporter.MsgAcceptTwoBitRegistration is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgAcceptTwoBitRegistration"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgAcceptTwoBitRegistration does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.reporter.MsgAcceptTwoBitRegistration.two_bit_address":
+		return protoreflect.ValueOfString("")
+	case "layer.reporter.MsgAcceptTwoBitRegistration.reporter_address":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgAcceptTwoBitRegistration"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgAcceptTwoBitRegistration does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.reporter.MsgAcceptTwoBitRegistration", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgAcceptTwoBitRegistration) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgAcceptTwoBitRegistration)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.TwoBitAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.ReporterAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgAcceptTwoBitRegistration)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.ReporterAddress) > 0 {
+			i -= len(x.ReporterAddress)
+			copy(dAtA[i:], x.ReporterAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ReporterAddress)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.TwoBitAddress) > 0 {
+			i -= len(x.TwoBitAddress)
+			copy(dAtA[i:], x.TwoBitAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.TwoBitAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgAcceptTwoBitRegistration)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAcceptTwoBitRegistration: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAcceptTwoBitRegistration: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TwoBitAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.TwoBitAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ReporterAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ReporterAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgAcceptTwoBitRegistrationResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_layer_reporter_tx_proto_init()
+	md_MsgAcceptTwoBitRegistrationResponse = File_layer_reporter_tx_proto.Messages().ByName("MsgAcceptTwoBitRegistrationResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgAcceptTwoBitRegistrationResponse)(nil)
+
+type fastReflection_MsgAcceptTwoBitRegistrationResponse MsgAcceptTwoBitRegistrationResponse
+
+func (x *MsgAcceptTwoBitRegistrationResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgAcceptTwoBitRegistrationResponse)(x)
+}
+
+func (x *MsgAcceptTwoBitRegistrationResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_reporter_tx_proto_msgTypes[23]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgAcceptTwoBitRegistrationResponse_messageType fastReflection_MsgAcceptTwoBitRegistrationResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgAcceptTwoBitRegistrationResponse_messageType{}
+
+type fastReflection_MsgAcceptTwoBitRegistrationResponse_messageType struct{}
+
+func (x fastReflection_MsgAcceptTwoBitRegistrationResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgAcceptTwoBitRegistrationResponse)(nil)
+}
+func (x fastReflection_MsgAcceptTwoBitRegistrationResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgAcceptTwoBitRegistrationResponse)
+}
+func (x fastReflection_MsgAcceptTwoBitRegistrationResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgAcceptTwoBitRegistrationResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgAcceptTwoBitRegistrationResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgAcceptTwoBitRegistrationResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgAcceptTwoBitRegistrationResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgAcceptTwoBitRegistrationResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgAcceptTwoBitRegistrationResponse"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgAcceptTwoBitRegistrationResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgAcceptTwoBitRegistrationResponse"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgAcceptTwoBitRegistrationResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgAcceptTwoBitRegistrationResponse"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgAcceptTwoBitRegistrationResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgAcceptTwoBitRegistrationResponse"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgAcceptTwoBitRegistrationResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgAcceptTwoBitRegistrationResponse"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgAcceptTwoBitRegistrationResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.MsgAcceptTwoBitRegistrationResponse"))
+		}
+		panic(fmt.Errorf("message layer.reporter.MsgAcceptTwoBitRegistrationResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.reporter.MsgAcceptTwoBitRegistrationResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgAcceptTwoBitRegistrationResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgAcceptTwoBitRegistrationResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgAcceptTwoBitRegistrationResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgAcceptTwoBitRegistrationResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAcceptTwoBitRegistrationResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAcceptTwoBitRegistrationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -9429,6 +11109,152 @@ func (*MsgEditReporterResponse) Descriptor() ([]byte, []int) {
 	return file_layer_reporter_tx_proto_rawDescGZIP(), []int{19}
 }
 
+// MsgRegisterTwoBitReporter defines the Msg/RegisterTwoBitReporter request type.
+type MsgRegisterTwoBitReporter struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// reporter_address is the reporter requesting the agent account.
+	ReporterAddress string `protobuf:"bytes,1,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
+	// two_bit_address is the agent account. The reporter's own address clears the registration.
+	TwoBitAddress string `protobuf:"bytes,2,opt,name=two_bit_address,json=twoBitAddress,proto3" json:"two_bit_address,omitempty"`
+}
+
+func (x *MsgRegisterTwoBitReporter) Reset() {
+	*x = MsgRegisterTwoBitReporter{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_reporter_tx_proto_msgTypes[20]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgRegisterTwoBitReporter) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgRegisterTwoBitReporter) ProtoMessage() {}
+
+// Deprecated: Use MsgRegisterTwoBitReporter.ProtoReflect.Descriptor instead.
+func (*MsgRegisterTwoBitReporter) Descriptor() ([]byte, []int) {
+	return file_layer_reporter_tx_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *MsgRegisterTwoBitReporter) GetReporterAddress() string {
+	if x != nil {
+		return x.ReporterAddress
+	}
+	return ""
+}
+
+func (x *MsgRegisterTwoBitReporter) GetTwoBitAddress() string {
+	if x != nil {
+		return x.TwoBitAddress
+	}
+	return ""
+}
+
+// MsgRegisterTwoBitReporterResponse defines the Msg/RegisterTwoBitReporter response type.
+type MsgRegisterTwoBitReporterResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgRegisterTwoBitReporterResponse) Reset() {
+	*x = MsgRegisterTwoBitReporterResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_reporter_tx_proto_msgTypes[21]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgRegisterTwoBitReporterResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgRegisterTwoBitReporterResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgRegisterTwoBitReporterResponse.ProtoReflect.Descriptor instead.
+func (*MsgRegisterTwoBitReporterResponse) Descriptor() ([]byte, []int) {
+	return file_layer_reporter_tx_proto_rawDescGZIP(), []int{21}
+}
+
+// MsgAcceptTwoBitRegistration defines the Msg/AcceptTwoBitRegistration request type.
+type MsgAcceptTwoBitRegistration struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// two_bit_address is the agent account accepting the request.
+	TwoBitAddress string `protobuf:"bytes,1,opt,name=two_bit_address,json=twoBitAddress,proto3" json:"two_bit_address,omitempty"`
+	// reporter_address is the reporter whose request is being accepted.
+	ReporterAddress string `protobuf:"bytes,2,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
+}
+
+func (x *MsgAcceptTwoBitRegistration) Reset() {
+	*x = MsgAcceptTwoBitRegistration{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_reporter_tx_proto_msgTypes[22]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgAcceptTwoBitRegistration) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgAcceptTwoBitRegistration) ProtoMessage() {}
+
+// Deprecated: Use MsgAcceptTwoBitRegistration.ProtoReflect.Descriptor instead.
+func (*MsgAcceptTwoBitRegistration) Descriptor() ([]byte, []int) {
+	return file_layer_reporter_tx_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *MsgAcceptTwoBitRegistration) GetTwoBitAddress() string {
+	if x != nil {
+		return x.TwoBitAddress
+	}
+	return ""
+}
+
+func (x *MsgAcceptTwoBitRegistration) GetReporterAddress() string {
+	if x != nil {
+		return x.ReporterAddress
+	}
+	return ""
+}
+
+// MsgAcceptTwoBitRegistrationResponse defines the Msg/AcceptTwoBitRegistration response type.
+type MsgAcceptTwoBitRegistrationResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgAcceptTwoBitRegistrationResponse) Reset() {
+	*x = MsgAcceptTwoBitRegistrationResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_reporter_tx_proto_msgTypes[23]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgAcceptTwoBitRegistrationResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgAcceptTwoBitRegistrationResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgAcceptTwoBitRegistrationResponse.ProtoReflect.Descriptor instead.
+func (*MsgAcceptTwoBitRegistrationResponse) Descriptor() ([]byte, []int) {
+	return file_layer_reporter_tx_proto_rawDescGZIP(), []int{23}
+}
+
 var File_layer_reporter_tx_proto protoreflect.FileDescriptor
 
 var file_layer_reporter_tx_proto_rawDesc = []byte{
@@ -9593,79 +11419,122 @@ var file_layer_reporter_tx_proto_rawDesc = []byte{
 	0x65, 0x72, 0x3a, 0x15, 0x82, 0xe7, 0xb0, 0x2a, 0x10, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65,
 	0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x19, 0x0a, 0x17, 0x4d, 0x73, 0x67,
 	0x45, 0x64, 0x69, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x32, 0xcc, 0x07, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x58, 0x0a, 0x0c,
-	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x1f, 0x2e, 0x6c,
-	0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73,
-	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x27, 0x2e,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0xb9, 0x01, 0x0a, 0x19, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x67, 0x69,
+	0x73, 0x74, 0x65, 0x72, 0x54, 0x77, 0x6f, 0x42, 0x69, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74,
+	0x65, 0x72, 0x12, 0x43, 0x0a, 0x10, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5f, 0x61,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
+	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x40, 0x0a, 0x0f, 0x74, 0x77, 0x6f, 0x5f, 0x62,
+	0x69, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0d, 0x74, 0x77, 0x6f, 0x42,
+	0x69, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x3a, 0x15, 0x82, 0xe7, 0xb0, 0x2a, 0x10,
+	0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x22, 0x23, 0x0a, 0x21, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x54,
+	0x77, 0x6f, 0x42, 0x69, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xba, 0x01, 0x0a, 0x1b, 0x4d, 0x73, 0x67, 0x41, 0x63, 0x63,
+	0x65, 0x70, 0x74, 0x54, 0x77, 0x6f, 0x42, 0x69, 0x74, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x40, 0x0a, 0x0f, 0x74, 0x77, 0x6f, 0x5f, 0x62, 0x69, 0x74,
+	0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
+	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0d, 0x74, 0x77, 0x6f, 0x42, 0x69, 0x74,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x43, 0x0a, 0x10, 0x72, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0f, 0x72, 0x65, 0x70,
+	0x6f, 0x72, 0x74, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x3a, 0x14, 0x82, 0xe7,
+	0xb0, 0x2a, 0x0f, 0x74, 0x77, 0x6f, 0x5f, 0x62, 0x69, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x22, 0x25, 0x0a, 0x23, 0x4d, 0x73, 0x67, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, 0x54,
+	0x77, 0x6f, 0x42, 0x69, 0x74, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xc2, 0x09, 0x0a, 0x03, 0x4d, 0x73,
+	0x67, 0x12, 0x58, 0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d,
+	0x73, 0x12, 0x1f, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74,
+	0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61,
+	0x6d, 0x73, 0x1a, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72,
+	0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0e, 0x43,
+	0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x21, 0x2e,
 	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d,
-	0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
-	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x21, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65,
-	0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x1a, 0x29, 0x2e, 0x6c, 0x61,
+	0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
+	0x1a, 0x29, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65,
+	0x72, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0e, 0x53,
+	0x65, 0x6c, 0x65, 0x63, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x21, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d,
+	0x73, 0x67, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
+	0x1a, 0x29, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65,
+	0x72, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0e, 0x53,
+	0x77, 0x69, 0x74, 0x63, 0x68, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x21, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d,
+	0x73, 0x67, 0x53, 0x77, 0x69, 0x74, 0x63, 0x68, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
+	0x1a, 0x29, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65,
+	0x72, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x69, 0x74, 0x63, 0x68, 0x52, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0e, 0x52,
+	0x65, 0x6d, 0x6f, 0x76, 0x65, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x12, 0x21, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d,
+	0x73, 0x67, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72,
+	0x1a, 0x29, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65,
+	0x72, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x53, 0x65, 0x6c, 0x65, 0x63,
+	0x74, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0e, 0x55,
+	0x6e, 0x6a, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x21, 0x2e,
+	0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d,
+	0x73, 0x67, 0x55, 0x6e, 0x6a, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
+	0x1a, 0x29, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65,
+	0x72, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x6e, 0x6a, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x55, 0x0a, 0x0b, 0x57,
+	0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x69, 0x70, 0x12, 0x1e, 0x2e, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x57,
+	0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x69, 0x70, 0x1a, 0x26, 0x2e, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x57,
+	0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x69, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x70, 0x0a, 0x14, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x69,
+	0x70, 0x54, 0x6f, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x12, 0x27, 0x2e, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x57,
+	0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x69, 0x70, 0x54, 0x6f, 0x42, 0x61, 0x6c, 0x61,
+	0x6e, 0x63, 0x65, 0x1a, 0x2f, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f,
+	0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77,
+	0x54, 0x69, 0x70, 0x54, 0x6f, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x61, 0x0a, 0x0f, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x54, 0x69,
+	0x70, 0x55, 0x6e, 0x6c, 0x6f, 0x63, 0x6b, 0x12, 0x22, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63,
+	0x65, 0x6c, 0x54, 0x69, 0x70, 0x55, 0x6e, 0x6c, 0x6f, 0x63, 0x6b, 0x1a, 0x2a, 0x2e, 0x6c, 0x61,
 	0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67,
-	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0e, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74,
-	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x21, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x65, 0x6c,
-	0x65, 0x63, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x1a, 0x29, 0x2e, 0x6c, 0x61,
+	0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x54, 0x69, 0x70, 0x55, 0x6e, 0x6c, 0x6f, 0x63, 0x6b, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x58, 0x0a, 0x0c, 0x45, 0x64, 0x69, 0x74, 0x52,
+	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x1f, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e,
+	0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x64, 0x69, 0x74,
+	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x1a, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x64, 0x69,
+	0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x76, 0x0a, 0x16, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x54, 0x77, 0x6f,
+	0x42, 0x69, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x29, 0x2e, 0x6c, 0x61,
 	0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67,
-	0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0e, 0x53, 0x77, 0x69, 0x74, 0x63, 0x68,
-	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x21, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x69,
-	0x74, 0x63, 0x68, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x1a, 0x29, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67,
-	0x53, 0x77, 0x69, 0x74, 0x63, 0x68, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0e, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65,
-	0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x12, 0x21, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x6d,
-	0x6f, 0x76, 0x65, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x1a, 0x29, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67,
-	0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x0e, 0x55, 0x6e, 0x6a, 0x61, 0x69, 0x6c,
-	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x21, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x6e, 0x6a,
-	0x61, 0x69, 0x6c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x1a, 0x29, 0x2e, 0x6c, 0x61,
-	0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67,
-	0x55, 0x6e, 0x6a, 0x61, 0x69, 0x6c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x55, 0x0a, 0x0b, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72,
-	0x61, 0x77, 0x54, 0x69, 0x70, 0x12, 0x1e, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65,
-	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72,
-	0x61, 0x77, 0x54, 0x69, 0x70, 0x1a, 0x26, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65,
-	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72,
-	0x61, 0x77, 0x54, 0x69, 0x70, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x70, 0x0a,
-	0x14, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x69, 0x70, 0x54, 0x6f, 0x42, 0x61,
-	0x6c, 0x61, 0x6e, 0x63, 0x65, 0x12, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65,
-	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72,
-	0x61, 0x77, 0x54, 0x69, 0x70, 0x54, 0x6f, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x1a, 0x2f,
-	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e,
-	0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x54, 0x69, 0x70, 0x54, 0x6f,
-	0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x61, 0x0a, 0x0f, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x54, 0x69, 0x70, 0x55, 0x6e, 0x6c, 0x6f,
-	0x63, 0x6b, 0x12, 0x22, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72,
-	0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x54, 0x69, 0x70,
-	0x55, 0x6e, 0x6c, 0x6f, 0x63, 0x6b, 0x1a, 0x2a, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72,
-	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x61, 0x6e, 0x63, 0x65,
-	0x6c, 0x54, 0x69, 0x70, 0x55, 0x6e, 0x6c, 0x6f, 0x63, 0x6b, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x58, 0x0a, 0x0c, 0x45, 0x64, 0x69, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74,
-	0x65, 0x72, 0x12, 0x1f, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72,
-	0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x64, 0x69, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72,
-	0x74, 0x65, 0x72, 0x1a, 0x27, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f,
-	0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x64, 0x69, 0x74, 0x52, 0x65, 0x70, 0x6f,
-	0x72, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7,
-	0xb0, 0x2a, 0x01, 0x42, 0xa5, 0x01, 0x0a, 0x12, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72,
-	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
-	0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x70, 0x6f,
-	0x72, 0x74, 0x65, 0x72, 0xa2, 0x02, 0x03, 0x4c, 0x52, 0x58, 0xaa, 0x02, 0x0e, 0x4c, 0x61, 0x79,
-	0x65, 0x72, 0x2e, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xca, 0x02, 0x0e, 0x4c, 0x61,
-	0x79, 0x65, 0x72, 0x5c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xe2, 0x02, 0x1a, 0x4c,
-	0x61, 0x79, 0x65, 0x72, 0x5c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5c, 0x47, 0x50,
-	0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x4c, 0x61, 0x79, 0x65,
-	0x72, 0x3a, 0x3a, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x54, 0x77, 0x6f, 0x42, 0x69, 0x74, 0x52, 0x65,
+	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x1a, 0x31, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72,
+	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x52, 0x65, 0x67, 0x69, 0x73,
+	0x74, 0x65, 0x72, 0x54, 0x77, 0x6f, 0x42, 0x69, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65,
+	0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x7c, 0x0a, 0x18, 0x41, 0x63, 0x63,
+	0x65, 0x70, 0x74, 0x54, 0x77, 0x6f, 0x42, 0x69, 0x74, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72,
+	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x2b, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65,
+	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74,
+	0x54, 0x77, 0x6f, 0x42, 0x69, 0x74, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x61, 0x74, 0x69,
+	0x6f, 0x6e, 0x1a, 0x33, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, 0x54, 0x77, 0x6f,
+	0x42, 0x69, 0x74, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xa5,
+	0x01, 0x0a, 0x12, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70,
+	0x6f, 0x72, 0x74, 0x65, 0x72, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
+	0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c,
+	0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69,
+	0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xa2,
+	0x02, 0x03, 0x4c, 0x52, 0x58, 0xaa, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x52, 0x65,
+	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xca, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x52,
+	0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xe2, 0x02, 0x1a, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c,
+	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x52, 0x65,
+	0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -9680,32 +11549,36 @@ func file_layer_reporter_tx_proto_rawDescGZIP() []byte {
 	return file_layer_reporter_tx_proto_rawDescData
 }
 
-var file_layer_reporter_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_layer_reporter_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_layer_reporter_tx_proto_goTypes = []interface{}{
-	(*MsgUpdateParams)(nil),                 // 0: layer.reporter.MsgUpdateParams
-	(*MsgUpdateParamsResponse)(nil),         // 1: layer.reporter.MsgUpdateParamsResponse
-	(*MsgCreateReporter)(nil),               // 2: layer.reporter.MsgCreateReporter
-	(*MsgCreateReporterResponse)(nil),       // 3: layer.reporter.MsgCreateReporterResponse
-	(*MsgSelectReporter)(nil),               // 4: layer.reporter.MsgSelectReporter
-	(*MsgSelectReporterResponse)(nil),       // 5: layer.reporter.MsgSelectReporterResponse
-	(*MsgSwitchReporter)(nil),               // 6: layer.reporter.MsgSwitchReporter
-	(*MsgSwitchReporterResponse)(nil),       // 7: layer.reporter.MsgSwitchReporterResponse
-	(*MsgRemoveSelector)(nil),               // 8: layer.reporter.MsgRemoveSelector
-	(*MsgRemoveSelectorResponse)(nil),       // 9: layer.reporter.MsgRemoveSelectorResponse
-	(*MsgUnjailReporter)(nil),               // 10: layer.reporter.MsgUnjailReporter
-	(*MsgUnjailReporterResponse)(nil),       // 11: layer.reporter.MsgUnjailReporterResponse
-	(*MsgWithdrawTip)(nil),                  // 12: layer.reporter.MsgWithdrawTip
-	(*MsgWithdrawTipResponse)(nil),          // 13: layer.reporter.MsgWithdrawTipResponse
-	(*MsgWithdrawTipToBalance)(nil),         // 14: layer.reporter.MsgWithdrawTipToBalance
-	(*MsgWithdrawTipToBalanceResponse)(nil), // 15: layer.reporter.MsgWithdrawTipToBalanceResponse
-	(*MsgCancelTipUnlock)(nil),              // 16: layer.reporter.MsgCancelTipUnlock
-	(*MsgCancelTipUnlockResponse)(nil),      // 17: layer.reporter.MsgCancelTipUnlockResponse
-	(*MsgEditReporter)(nil),                 // 18: layer.reporter.MsgEditReporter
-	(*MsgEditReporterResponse)(nil),         // 19: layer.reporter.MsgEditReporterResponse
-	(*Params)(nil),                          // 20: layer.reporter.Params
+	(*MsgUpdateParams)(nil),                     // 0: layer.reporter.MsgUpdateParams
+	(*MsgUpdateParamsResponse)(nil),             // 1: layer.reporter.MsgUpdateParamsResponse
+	(*MsgCreateReporter)(nil),                   // 2: layer.reporter.MsgCreateReporter
+	(*MsgCreateReporterResponse)(nil),           // 3: layer.reporter.MsgCreateReporterResponse
+	(*MsgSelectReporter)(nil),                   // 4: layer.reporter.MsgSelectReporter
+	(*MsgSelectReporterResponse)(nil),           // 5: layer.reporter.MsgSelectReporterResponse
+	(*MsgSwitchReporter)(nil),                   // 6: layer.reporter.MsgSwitchReporter
+	(*MsgSwitchReporterResponse)(nil),           // 7: layer.reporter.MsgSwitchReporterResponse
+	(*MsgRemoveSelector)(nil),                   // 8: layer.reporter.MsgRemoveSelector
+	(*MsgRemoveSelectorResponse)(nil),           // 9: layer.reporter.MsgRemoveSelectorResponse
+	(*MsgUnjailReporter)(nil),                   // 10: layer.reporter.MsgUnjailReporter
+	(*MsgUnjailReporterResponse)(nil),           // 11: layer.reporter.MsgUnjailReporterResponse
+	(*MsgWithdrawTip)(nil),                      // 12: layer.reporter.MsgWithdrawTip
+	(*MsgWithdrawTipResponse)(nil),              // 13: layer.reporter.MsgWithdrawTipResponse
+	(*MsgWithdrawTipToBalance)(nil),             // 14: layer.reporter.MsgWithdrawTipToBalance
+	(*MsgWithdrawTipToBalanceResponse)(nil),     // 15: layer.reporter.MsgWithdrawTipToBalanceResponse
+	(*MsgCancelTipUnlock)(nil),                  // 16: layer.reporter.MsgCancelTipUnlock
+	(*MsgCancelTipUnlockResponse)(nil),          // 17: layer.reporter.MsgCancelTipUnlockResponse
+	(*MsgEditReporter)(nil),                     // 18: layer.reporter.MsgEditReporter
+	(*MsgEditReporterResponse)(nil),             // 19: layer.reporter.MsgEditReporterResponse
+	(*MsgRegisterTwoBitReporter)(nil),           // 20: layer.reporter.MsgRegisterTwoBitReporter
+	(*MsgRegisterTwoBitReporterResponse)(nil),   // 21: layer.reporter.MsgRegisterTwoBitReporterResponse
+	(*MsgAcceptTwoBitRegistration)(nil),         // 22: layer.reporter.MsgAcceptTwoBitRegistration
+	(*MsgAcceptTwoBitRegistrationResponse)(nil), // 23: layer.reporter.MsgAcceptTwoBitRegistrationResponse
+	(*Params)(nil),                              // 24: layer.reporter.Params
 }
 var file_layer_reporter_tx_proto_depIdxs = []int32{
-	20, // 0: layer.reporter.MsgUpdateParams.params:type_name -> layer.reporter.Params
+	24, // 0: layer.reporter.MsgUpdateParams.params:type_name -> layer.reporter.Params
 	0,  // 1: layer.reporter.Msg.UpdateParams:input_type -> layer.reporter.MsgUpdateParams
 	2,  // 2: layer.reporter.Msg.CreateReporter:input_type -> layer.reporter.MsgCreateReporter
 	4,  // 3: layer.reporter.Msg.SelectReporter:input_type -> layer.reporter.MsgSelectReporter
@@ -9716,18 +11589,22 @@ var file_layer_reporter_tx_proto_depIdxs = []int32{
 	14, // 8: layer.reporter.Msg.WithdrawTipToBalance:input_type -> layer.reporter.MsgWithdrawTipToBalance
 	16, // 9: layer.reporter.Msg.CancelTipUnlock:input_type -> layer.reporter.MsgCancelTipUnlock
 	18, // 10: layer.reporter.Msg.EditReporter:input_type -> layer.reporter.MsgEditReporter
-	1,  // 11: layer.reporter.Msg.UpdateParams:output_type -> layer.reporter.MsgUpdateParamsResponse
-	3,  // 12: layer.reporter.Msg.CreateReporter:output_type -> layer.reporter.MsgCreateReporterResponse
-	5,  // 13: layer.reporter.Msg.SelectReporter:output_type -> layer.reporter.MsgSelectReporterResponse
-	7,  // 14: layer.reporter.Msg.SwitchReporter:output_type -> layer.reporter.MsgSwitchReporterResponse
-	9,  // 15: layer.reporter.Msg.RemoveSelector:output_type -> layer.reporter.MsgRemoveSelectorResponse
-	11, // 16: layer.reporter.Msg.UnjailReporter:output_type -> layer.reporter.MsgUnjailReporterResponse
-	13, // 17: layer.reporter.Msg.WithdrawTip:output_type -> layer.reporter.MsgWithdrawTipResponse
-	15, // 18: layer.reporter.Msg.WithdrawTipToBalance:output_type -> layer.reporter.MsgWithdrawTipToBalanceResponse
-	17, // 19: layer.reporter.Msg.CancelTipUnlock:output_type -> layer.reporter.MsgCancelTipUnlockResponse
-	19, // 20: layer.reporter.Msg.EditReporter:output_type -> layer.reporter.MsgEditReporterResponse
-	11, // [11:21] is the sub-list for method output_type
-	1,  // [1:11] is the sub-list for method input_type
+	20, // 11: layer.reporter.Msg.RegisterTwoBitReporter:input_type -> layer.reporter.MsgRegisterTwoBitReporter
+	22, // 12: layer.reporter.Msg.AcceptTwoBitRegistration:input_type -> layer.reporter.MsgAcceptTwoBitRegistration
+	1,  // 13: layer.reporter.Msg.UpdateParams:output_type -> layer.reporter.MsgUpdateParamsResponse
+	3,  // 14: layer.reporter.Msg.CreateReporter:output_type -> layer.reporter.MsgCreateReporterResponse
+	5,  // 15: layer.reporter.Msg.SelectReporter:output_type -> layer.reporter.MsgSelectReporterResponse
+	7,  // 16: layer.reporter.Msg.SwitchReporter:output_type -> layer.reporter.MsgSwitchReporterResponse
+	9,  // 17: layer.reporter.Msg.RemoveSelector:output_type -> layer.reporter.MsgRemoveSelectorResponse
+	11, // 18: layer.reporter.Msg.UnjailReporter:output_type -> layer.reporter.MsgUnjailReporterResponse
+	13, // 19: layer.reporter.Msg.WithdrawTip:output_type -> layer.reporter.MsgWithdrawTipResponse
+	15, // 20: layer.reporter.Msg.WithdrawTipToBalance:output_type -> layer.reporter.MsgWithdrawTipToBalanceResponse
+	17, // 21: layer.reporter.Msg.CancelTipUnlock:output_type -> layer.reporter.MsgCancelTipUnlockResponse
+	19, // 22: layer.reporter.Msg.EditReporter:output_type -> layer.reporter.MsgEditReporterResponse
+	21, // 23: layer.reporter.Msg.RegisterTwoBitReporter:output_type -> layer.reporter.MsgRegisterTwoBitReporterResponse
+	23, // 24: layer.reporter.Msg.AcceptTwoBitRegistration:output_type -> layer.reporter.MsgAcceptTwoBitRegistrationResponse
+	13, // [13:25] is the sub-list for method output_type
+	1,  // [1:13] is the sub-list for method input_type
 	1,  // [1:1] is the sub-list for extension type_name
 	1,  // [1:1] is the sub-list for extension extendee
 	0,  // [0:1] is the sub-list for field type_name
@@ -9981,6 +11858,54 @@ func file_layer_reporter_tx_proto_init() {
 				return nil
 			}
 		}
+		file_layer_reporter_tx_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgRegisterTwoBitReporter); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_reporter_tx_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgRegisterTwoBitReporterResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_reporter_tx_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgAcceptTwoBitRegistration); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_reporter_tx_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgAcceptTwoBitRegistrationResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -9988,7 +11913,7 @@ func file_layer_reporter_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_reporter_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   20,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -33,6 +33,7 @@ func TestGenesis(t *testing.T) {
 	genesisState.SelectorTips = append(genesisState.SelectorTips, &types.SelectorTipsStateEntry{SelectorAddress: []byte("selector"), Tips: math.LegacyMustNewDecFromStr("20000")})
 	genesisState.DisputedDelegationAmounts = append(genesisState.DisputedDelegationAmounts, &types.DisputedDelegationAmountStateEntry{HashId: []byte("hash id"), DelegationAmount: &types.DelegationsAmounts{TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: []byte("delegator"), ValidatorAddress: []byte("val"), Amount: math.NewInt(1_000_000)}}, Total: math.NewInt(1_000_000)}})
 	genesisState.FeePaidFromStake = append(genesisState.FeePaidFromStake, &types.FeePaidFromStakeStateEntry{HashId: []byte("hash id"), DelegationAmount: &types.DelegationsAmounts{TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: []byte("delegator"), ValidatorAddress: []byte("val"), Amount: math.NewInt(1_000_000)}}, Total: math.NewInt(1_000_000)}})
+	genesisState.TwoBitReporters = append(genesisState.TwoBitReporters, &types.TwoBitReporterStateEntry{AgentAddress: []byte("agent"), ReporterAddress: []byte("reporter")})
 
 	k, _, _, _, _, ctx, _ = keepertest.ReporterKeeper(t)
 	ctx = ctx.WithBlockHeight(1134000 + 100)
@@ -43,6 +44,7 @@ func TestGenesis(t *testing.T) {
 	require.Equal(t, genesisState.SelectorTips, got2.SelectorTips)
 	require.Equal(t, genesisState.DisputedDelegationAmounts, got2.DisputedDelegationAmounts)
 	require.Equal(t, genesisState.FeePaidFromStake, got2.FeePaidFromStake)
+	require.Equal(t, genesisState.TwoBitReporters, got2.TwoBitReporters)
 
 	err := os.Remove("reporter_module_state.json")
 	require.NoError(t, err)
