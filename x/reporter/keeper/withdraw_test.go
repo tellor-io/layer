@@ -275,11 +275,8 @@ func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
 	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 3000, uint64(ctx.BlockHeight()), math.NewIntWithDecimal(1500, 6), []byte{}, []byte("hashId")))
 }
 
-// TestEscrowReporterStakePartialCollection asserts that when the redelegation
-// chase collects less than the intended slash, DisputedDelegationAmounts.Total
-// equals the coins actually escrowed (sum of appended origin amounts) and is
-// strictly less than `amt`. ReturnSlashedTokens relies on Total == coins-held so
-// it never scales an under-collected snapshot up into dispute-fee funds.
+// TestEscrowReporterStakePartialCollection asserts that a positive slash which
+// collects less than requested stores the coins actually taken.
 func TestEscrowReporterStakePartialCollection(t *testing.T) {
 	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
 	reporterAddr := sample.AccAddressBytes()
@@ -324,17 +321,198 @@ func TestEscrowReporterStakePartialCollection(t *testing.T) {
 	sk.On("GetUnbondingDelegation", ctx, reporterAddr, sdk.ValAddress(valAddr2)).Return(stakingtypes.UnbondingDelegation{}, stakingtypes.ErrNoUnbondingDelegation)
 	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(400)))).Return(nil)
 
-	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 1, uint64(ctx.BlockHeight()), amt, []byte{}, []byte("hashId")))
+	err := k.EscrowReporterStake(ctx, reporterAddr, 1, uint64(ctx.BlockHeight()), amt, []byte{}, []byte("hashId"))
+	require.NoError(t, err)
 
 	stored, err := k.DisputedDelegationAmounts.Get(ctx, []byte("hashId"))
 	require.NoError(t, err)
-	require.True(t, stored.Total.LT(amt), "Total (%s) must be less than intended slash amt (%s)", stored.Total, amt)
 	require.Equal(t, math.NewInt(400), stored.Total)
-	sum := math.ZeroInt()
-	for _, o := range stored.TokenOrigins {
-		sum = sum.Add(o.Amount)
+	require.True(t, stored.Total.LT(amt))
+	require.Len(t, stored.TokenOrigins, 1)
+	require.Equal(t, math.NewInt(400), stored.TokenOrigins[0].Amount)
+	require.Equal(t, sdk.ValAddress(valAddr2).Bytes(), stored.TokenOrigins[0].ValidatorAddress)
+}
+
+// TestEscrowReporterStakeOneLoyaShortfallStoresCollected asserts that a large
+// slash which comes back one loya short still stores that smaller total.
+func TestEscrowReporterStakeOneLoyaShortfallStoresCollected(t *testing.T) {
+	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
+	reporterAddr := sample.AccAddressBytes()
+	valAddr := sdk.ValAddress(sample.AccAddressBytes())
+	requested := sdk.DefaultPowerReduction.MulRaw(1_000_000)
+	collected := requested.Sub(math.OneInt())
+	hashID := []byte("one-loya-shortfall")
+
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporterAddr.Bytes(), uint64(ctx.BlockHeight()))), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{{
+			DelegatorAddress: reporterAddr.Bytes(),
+			ValidatorAddress: valAddr.Bytes(),
+			Amount:           requested,
+		}},
+		Total: requested,
+	}))
+
+	validator := stakingtypes.Validator{
+		OperatorAddress: valAddr.String(),
+		Status:          stakingtypes.Bonded,
+		Tokens:          requested,
+		DelegatorShares: requested.ToLegacyDec(),
 	}
-	require.Equal(t, stored.Total, sum, "Total must equal sum of appended origin amounts")
+	delegation := stakingtypes.Delegation{
+		DelegatorAddress: reporterAddr.String(),
+		ValidatorAddress: valAddr.String(),
+		Shares:           requested.ToLegacyDec(),
+	}
+	shares, err := validator.SharesFromTokens(requested)
+	require.NoError(t, err)
+	sk.On("GetDelegation", ctx, reporterAddr, valAddr).Return(delegation, nil)
+	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
+	sk.On("Unbond", ctx, reporterAddr, valAddr, shares).Return(collected, nil)
+	sk.On("GetUnbondingDelegation", ctx, reporterAddr, valAddr).Return(stakingtypes.UnbondingDelegation{}, stakingtypes.ErrNoUnbondingDelegation)
+	sk.On("IterateDelegatorRedelegations", ctx, reporterAddr, mock.AnythingOfType("func(types.Redelegation) bool")).Return(nil)
+	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", collected))).Return(nil)
+
+	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 1, uint64(ctx.BlockHeight()), requested, []byte{}, hashID))
+
+	stored, err := k.DisputedDelegationAmounts.Get(ctx, hashID)
+	require.NoError(t, err)
+	require.Equal(t, collected, stored.Total)
+	require.True(t, stored.Total.Equal(requested.Sub(math.OneInt())))
+	require.Len(t, stored.TokenOrigins, 1)
+	require.Equal(t, collected, stored.TokenOrigins[0].Amount)
+	require.Equal(t, valAddr.Bytes(), stored.TokenOrigins[0].ValidatorAddress)
+}
+
+func TestEscrowReporterStakeZeroAmountStoresEmptyCollection(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporterAddr := sample.AccAddressBytes()
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporterAddr.Bytes(), uint64(ctx.BlockHeight()))), types.DelegationsAmounts{
+		Total: math.ZeroInt(),
+	}))
+
+	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 0, uint64(ctx.BlockHeight()), math.ZeroInt(), []byte{}, []byte("hash-zero")))
+
+	stored, err := k.DisputedDelegationAmounts.Get(ctx, []byte("hash-zero"))
+	require.NoError(t, err)
+	require.True(t, stored.Total.IsZero())
+	require.Empty(t, stored.TokenOrigins)
+}
+
+// TestEscrowReporterStakeZeroCollected asserts a positive slash against a
+// snapshot validator that has no delegation, unbonding entry, or redelegation
+// fails and stores nothing.
+func TestEscrowReporterStakeZeroCollected(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	reporterAddr := sample.AccAddressBytes()
+	valA := sdk.ValAddress(sample.AccAddressBytes())
+	origin := math.NewInt(1_000)
+	hashID := []byte("zero-collected")
+
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporterAddr.Bytes(), uint64(ctx.BlockHeight()))), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{{
+			DelegatorAddress: reporterAddr.Bytes(),
+			ValidatorAddress: valA.Bytes(),
+			Amount:           origin,
+		}},
+		Total: origin,
+	}))
+
+	sk.On("GetDelegation", ctx, reporterAddr, valA).Return(stakingtypes.Delegation{}, stakingtypes.ErrNoDelegation)
+	sk.On("GetUnbondingDelegation", ctx, reporterAddr, valA).Return(stakingtypes.UnbondingDelegation{}, stakingtypes.ErrNoUnbondingDelegation)
+	sk.On("IterateDelegatorRedelegations", ctx, reporterAddr, mock.AnythingOfType("func(types.Redelegation) bool")).Return(nil)
+
+	err := k.EscrowReporterStake(ctx, reporterAddr, 1, uint64(ctx.BlockHeight()), origin, []byte{}, hashID)
+	require.ErrorIs(t, err, types.ErrReporterSlashShortfall)
+
+	has, err := k.DisputedDelegationAmounts.Has(ctx, hashID)
+	require.NoError(t, err)
+	require.False(t, has)
+}
+
+// TestEscrowReporterStakePartialOriginStoresCollected asserts that collecting the
+// full allocation from one origin and nothing from the next stores only the
+// coins taken from the first origin.
+func TestEscrowReporterStakePartialOriginStoresCollected(t *testing.T) {
+	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
+	reporterAddr := sample.AccAddressBytes()
+	valA := sdk.ValAddress(sample.AccAddressBytes())
+	valB := sdk.ValAddress(sample.AccAddressBytes())
+	first := math.NewInt(600)
+	second := math.NewInt(400)
+	requested := first.Add(second)
+	hashID := []byte("partial-origin-shortfall")
+
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte{}, collections.Join(reporterAddr.Bytes(), uint64(ctx.BlockHeight()))), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{
+			{DelegatorAddress: reporterAddr.Bytes(), ValidatorAddress: valA.Bytes(), Amount: first},
+			{DelegatorAddress: reporterAddr.Bytes(), ValidatorAddress: valB.Bytes(), Amount: second},
+		},
+		Total: requested,
+	}))
+
+	validatorA := stakingtypes.Validator{
+		OperatorAddress: valA.String(),
+		Status:          stakingtypes.Bonded,
+		Tokens:          first,
+		DelegatorShares: first.ToLegacyDec(),
+	}
+	delegationA := stakingtypes.Delegation{
+		DelegatorAddress: reporterAddr.String(),
+		ValidatorAddress: valA.String(),
+		Shares:           first.ToLegacyDec(),
+	}
+	sharesA, err := validatorA.SharesFromTokens(first)
+	require.NoError(t, err)
+	sk.On("GetDelegation", ctx, reporterAddr, valA).Return(delegationA, nil)
+	sk.On("GetValidator", ctx, valA).Return(validatorA, nil)
+	sk.On("Unbond", ctx, reporterAddr, valA, sharesA).Return(first, nil)
+	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", first))).Return(nil)
+
+	sk.On("GetDelegation", ctx, reporterAddr, valB).Return(stakingtypes.Delegation{}, stakingtypes.ErrNoDelegation)
+	sk.On("GetUnbondingDelegation", ctx, reporterAddr, valB).Return(stakingtypes.UnbondingDelegation{}, stakingtypes.ErrNoUnbondingDelegation)
+	sk.On("IterateDelegatorRedelegations", ctx, reporterAddr, mock.AnythingOfType("func(types.Redelegation) bool")).Return(nil)
+
+	err = k.EscrowReporterStake(ctx, reporterAddr, 1, uint64(ctx.BlockHeight()), requested, []byte{}, hashID)
+	require.NoError(t, err)
+
+	stored, err := k.DisputedDelegationAmounts.Get(ctx, hashID)
+	require.NoError(t, err)
+	require.Equal(t, first, stored.Total)
+	require.True(t, stored.Total.LT(requested))
+	require.Len(t, stored.TokenOrigins, 1)
+	require.Equal(t, first, stored.TokenOrigins[0].Amount)
+	require.Equal(t, valA.Bytes(), stored.TokenOrigins[0].ValidatorAddress)
+	sk.AssertCalled(t, "Unbond", ctx, reporterAddr, valA, sharesA)
+	sk.AssertNotCalled(t, "Unbond", mock.Anything, reporterAddr, valB, mock.Anything)
+}
+
+// TestEscrowReporterStakeZeroAmountWithPositiveOrigin stores a zero total for
+// a real origin without reading or moving that delegation.
+func TestEscrowReporterStakeZeroAmountWithPositiveOrigin(t *testing.T) {
+	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
+	reporterAddr := sample.AccAddressBytes()
+	valA := sdk.ValAddress(sample.AccAddressBytes())
+	origin := math.NewInt(1_000)
+	hashID := []byte("hash-zero-origin")
+
+	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("q"), collections.Join(reporterAddr.Bytes(), uint64(ctx.BlockHeight()))), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{{
+			DelegatorAddress: reporterAddr.Bytes(),
+			ValidatorAddress: valA.Bytes(),
+			Amount:           origin,
+		}},
+		Total: origin,
+	}))
+
+	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 1, uint64(ctx.BlockHeight()), math.ZeroInt(), []byte("q"), hashID))
+
+	stored, err := k.DisputedDelegationAmounts.Get(ctx, hashID)
+	require.NoError(t, err)
+	require.True(t, stored.Total.IsZero())
+	require.Empty(t, stored.TokenOrigins)
+	sk.AssertNotCalled(t, "GetDelegation", mock.Anything, mock.Anything, mock.Anything)
+	sk.AssertNotCalled(t, "Unbond", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	bk.AssertNotCalled(t, "SendCoinsFromModuleToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 }
 
 func TestEscrowReporterStakeNeverCollectsMoreThanRequestedFromTruncatedPower(t *testing.T) {

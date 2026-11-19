@@ -239,48 +239,71 @@ func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, b
 }
 
 func (k Keeper) GetDelegationsAmount(ctx context.Context, reporter []byte, blockNumber uint64) (delAmounts types.DelegationsAmounts, err error) {
+	_, delAmounts, _, err = k.delegationSnapshot(ctx, reporter, blockNumber)
+	return delAmounts, err
+}
+
+// delegationSnapshot is the row GetDelegationsAmount returns. foundNew is set
+// when that row is in ReportByBlock; the key bytes are copied so they stay
+// valid after the iterator closes. The legacy Report collection has no
+// ReportByBlock key, so foundNew is false and key is zero.
+func (k Keeper) delegationSnapshot(ctx context.Context, reporter []byte, blockNumber uint64) (key collections.Triple[[]byte, uint64, []byte], amounts types.DelegationsAmounts, foundNew bool, err error) {
 	start := collections.Join(reporter, uint64(0))
 	end := collections.Join(reporter, blockNumber+1)
 	pc := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
 	startBuffer := make([]byte, pc.Size(start))
 	endBuffer := make([]byte, pc.Size(end))
-	_, err = pc.Encode(startBuffer, start)
-	if err != nil {
-		return delAmounts, err
+	if _, err = pc.Encode(startBuffer, start); err != nil {
+		return key, amounts, false, err
 	}
-	_, err = pc.Encode(endBuffer, end)
-	if err != nil {
-		return delAmounts, err
+	if _, err = pc.Encode(endBuffer, end); err != nil {
+		return key, amounts, false, err
 	}
 
-	// Check new collection first
+	// Check new collection first. Descending order yields the greatest
+	// (height, queryId) at or below blockNumber.
 	newIter, err := k.ReportByBlock.IterateRaw(ctx, startBuffer, endBuffer, collections.OrderDescending)
 	if err != nil {
-		return delAmounts, err
+		return key, amounts, false, err
 	}
-	defer newIter.Close()
 	if newIter.Valid() {
-		val, err := newIter.Value()
+		key, err = newIter.Key()
 		if err != nil {
-			return delAmounts, err
+			_ = newIter.Close()
+			return collections.Triple[[]byte, uint64, []byte]{}, amounts, false, err
 		}
-		return val, nil
+		amounts, err = newIter.Value()
+		closeErr := newIter.Close()
+		if err != nil {
+			return collections.Triple[[]byte, uint64, []byte]{}, amounts, false, err
+		}
+		if closeErr != nil {
+			return collections.Triple[[]byte, uint64, []byte]{}, amounts, false, closeErr
+		}
+		return collections.Join3(bytes.Clone(key.K1()), key.K2(), bytes.Clone(key.K3())), amounts, true, nil
+	}
+	if err = newIter.Close(); err != nil {
+		return key, amounts, false, err
 	}
 
 	// Fallback to old collection only if new collection had nothing
 	oldIter, err := k.Report.Indexes.BlockNumber.IterateRaw(ctx, startBuffer, endBuffer, collections.OrderDescending)
 	if err != nil {
-		return delAmounts, err
+		return key, amounts, false, err
 	}
 	defer oldIter.Close()
 	if oldIter.Valid() {
-		key, err := oldIter.Key()
+		oldKey, err := oldIter.Key()
 		if err != nil {
-			return delAmounts, err
+			return key, amounts, false, err
 		}
-		return k.Report.Get(ctx, collections.Join(key.K2(), collections.Join(key.K1().K1(), key.K1().K2())))
+		amounts, err = k.Report.Get(ctx, collections.Join(oldKey.K2(), collections.Join(oldKey.K1().K1(), oldKey.K1().K2())))
+		if err != nil {
+			return key, amounts, false, err
+		}
+		return key, amounts, false, nil
 	}
-	return delAmounts, nil
+	return key, amounts, false, nil
 }
 
 // tracks total bonded tokens and sets an expiration of 12 hours from last update

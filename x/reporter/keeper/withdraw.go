@@ -282,7 +282,14 @@ func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAdd
 		}
 	}
 
-	// Total is coins actually escrowed, not the intended slash amount.
+	// A zero request stores an empty collection.
+	// A positive request that collects nothing is not an escrow. Any positive
+	// collection, including a one-loya shortfall, stores the origins and total
+	// that were actually taken. A failed call does not roll back unbonding
+	// itself; the dispute transaction cache does that.
+	if amt.IsPositive() && collected.IsZero() {
+		return fmt.Errorf("%w: collected %s of requested %s", types.ErrReporterSlashShortfall, collected, amt)
+	}
 	return k.DisputedDelegationAmounts.Set(ctx, hashId, types.DelegationsAmounts{TokenOrigins: disputeTokens, Total: collected})
 }
 
@@ -308,7 +315,13 @@ func reporterSlashAmounts(report types.DelegationsAmounts, amt math.Int) ([]math
 		return nil, fmt.Errorf("%w: cannot allocate positive slash from empty reporter snapshot", types.ErrMalformedDelegationSnapshot)
 	}
 	if amt.IsZero() {
-		return make([]math.Int, len(report.TokenOrigins)), nil
+		// make would leave nil math.Int values, and deductFromDelegation
+		// panics when it calls IsPositive on one of them.
+		allocations := make([]math.Int, len(report.TokenOrigins))
+		for i := range allocations {
+			allocations[i] = math.ZeroInt()
+		}
+		return allocations, nil
 	}
 
 	// Same largest-remainder allocation as stake returns.
