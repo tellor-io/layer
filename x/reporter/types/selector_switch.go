@@ -12,13 +12,13 @@ import (
 // SelectorReporterSwitch is one reporter change for a selector.
 // Switches are stored newest first. CompletedHeight is 0 until the pending
 // switch finalizes and Selection.Reporter actually moves. CancelledHeight is 0
-// when the switch was not cancelled. A cancelled row keeps CompletedHeight at 0
+// when the switch was not canceled. A canceled row keeps CompletedHeight at 0
 // and stays until prune. An open row has both heights at 0.
 type SelectorReporterSwitch struct {
 	OriginalReporter []byte `json:"original_reporter"`
 	BeganHeight      uint64 `json:"began_height"`
 	CompletedHeight  uint64 `json:"completed_height"`
-	CancelledHeight  uint64 `json:"cancelled_height"`
+	CancelledHeight  uint64 `json:"canceled_height"`
 }
 
 // SelectorReporterSwitches is the full history for one selector, newest first.
@@ -76,21 +76,21 @@ func (selectorSwitchesCodec) Decode(b []byte) (SelectorReporterSwitches, error) 
 		if _, err := reader.Read(addr); err != nil {
 			return SelectorReporterSwitches{}, err
 		}
-		var began, completed, cancelled uint64
+		var began, completed, canceled uint64
 		if err := binary.Read(reader, binary.BigEndian, &began); err != nil {
 			return SelectorReporterSwitches{}, err
 		}
 		if err := binary.Read(reader, binary.BigEndian, &completed); err != nil {
 			return SelectorReporterSwitches{}, err
 		}
-		if err := binary.Read(reader, binary.BigEndian, &cancelled); err != nil {
+		if err := binary.Read(reader, binary.BigEndian, &canceled); err != nil {
 			return SelectorReporterSwitches{}, err
 		}
 		out.Switches = append(out.Switches, SelectorReporterSwitch{
 			OriginalReporter: addr,
 			BeganHeight:      began,
 			CompletedHeight:  completed,
-			CancelledHeight:  cancelled,
+			CancelledHeight:  canceled,
 		})
 	}
 	return out, nil

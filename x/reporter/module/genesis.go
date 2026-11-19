@@ -86,6 +86,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 				OriginalReporter: append([]byte(nil), sw.OriginalReporter...),
 				BeganHeight:      sw.BeganHeight,
 				CompletedHeight:  sw.CompletedHeight,
+				CancelledHeight:  sw.CancelledHeight,
 			}
 		}
 		err = k.SelectorReporterSwitches.Set(ctx, data.SelectorAddress, types.SelectorReporterSwitches{Switches: switches})
@@ -201,6 +202,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 				OriginalReporter: append([]byte(nil), sw.OriginalReporter...),
 				BeganHeight:      sw.BeganHeight,
 				CompletedHeight:  sw.CompletedHeight,
+				CancelledHeight:  sw.CancelledHeight,
 			}
 		}
 		genesis.SelectorReporterSwitches = append(genesis.SelectorReporterSwitches, &types.SelectorReporterSwitchStateEntry{

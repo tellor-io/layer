@@ -421,7 +421,7 @@ func TestSwitchReporterReplacesPendingTargetKeepsUnlock(t *testing.T) {
 	latest, ok, err := k.LatestSelectorSwitch(ctx, sel)
 	require.NoError(t, err)
 	require.True(t, ok)
-	require.Equal(t, r1.Bytes(), []byte(latest.OriginalReporter))
+	require.Equal(t, r1.Bytes(), latest.OriginalReporter)
 	require.Equal(t, uint64(10), latest.BeganHeight)
 	require.Zero(t, latest.CompletedHeight)
 	pk := collections.Join(r1.Bytes(), sel.Bytes())
@@ -446,7 +446,7 @@ func TestSwitchReporterReplacesPendingTargetKeepsUnlock(t *testing.T) {
 	switches, err := k.SelectorSwitchesNewestFirst(ctx, sel)
 	require.NoError(t, err)
 	require.Len(t, switches, 1)
-	require.Equal(t, r1.Bytes(), []byte(switches[0].OriginalReporter))
+	require.Equal(t, r1.Bytes(), switches[0].OriginalReporter)
 	require.Equal(t, uint64(10), switches[0].BeganHeight)
 	require.Zero(t, switches[0].CompletedHeight)
 }

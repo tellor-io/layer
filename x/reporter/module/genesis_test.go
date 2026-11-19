@@ -59,10 +59,13 @@ func TestSelectorSwitchHistoryGenesisRoundTrip(t *testing.T) {
 	selector := testAcc(1)
 	openOriginal := testAcc(2)
 	olderOriginal := testAcc(3)
+	cancelledOriginal := testAcc(4)
+	const cancelHeight = uint64(450)
 	require.NoError(t, k.Selectors.Set(ctx, selector.Bytes(), types.NewSelection(openOriginal, 1)))
 	history := types.SelectorReporterSwitches{
 		Switches: []types.SelectorReporterSwitch{
-			{OriginalReporter: openOriginal.Bytes(), BeganHeight: 300, CompletedHeight: 0},
+			{OriginalReporter: openOriginal.Bytes(), BeganHeight: 600, CompletedHeight: 0},
+			{OriginalReporter: cancelledOriginal.Bytes(), BeganHeight: 400, CompletedHeight: 0, CancelledHeight: cancelHeight},
 			{OriginalReporter: olderOriginal.Bytes(), BeganHeight: 100, CompletedHeight: 200},
 		},
 	}
@@ -74,22 +77,39 @@ func TestSelectorSwitchHistoryGenesisRoundTrip(t *testing.T) {
 		live       bool
 		unfinished bool
 	}
-	heights := []uint64{50, 150, 250, 350}
+	// 420 is before the cancel. 450 and 500 are at and after it, and before the
+	// later open switch, so a dropped CancelledHeight would look still open.
+	heights := []uint64{50, 150, 250, 350, 420, 450, 500, 650}
+	wantUnfinished := map[uint64]bool{
+		50:  false,
+		150: true,
+		250: false,
+		350: false,
+		420: true,
+		450: false,
+		500: false,
+		650: true,
+	}
 	before := make([]heightAnswer, len(heights))
 	for i, h := range heights {
 		got, live, err := k.ReporterAtHeight(ctx, selector, h)
 		require.NoError(t, err)
 		unfinished, err := k.SelectorSwitchUnfinishedAt(ctx, selector, h)
 		require.NoError(t, err)
+		require.Equal(t, wantUnfinished[h], unfinished)
 		before[i] = heightAnswer{reporter: got, live: live, unfinished: unfinished}
 	}
 
 	exported := reporter.ExportGenesis(ctx, k)
 	require.Len(t, exported.SelectorReporterSwitches, 1)
 	require.Equal(t, selector.Bytes(), exported.SelectorReporterSwitches[0].SelectorAddress)
-	require.Len(t, exported.SelectorReporterSwitches[0].Switches, 2)
+	require.Len(t, exported.SelectorReporterSwitches[0].Switches, 3)
 	require.Zero(t, exported.SelectorReporterSwitches[0].Switches[0].CompletedHeight)
-	require.Equal(t, uint64(200), exported.SelectorReporterSwitches[0].Switches[1].CompletedHeight)
+	require.Zero(t, exported.SelectorReporterSwitches[0].Switches[0].CancelledHeight)
+	require.Zero(t, exported.SelectorReporterSwitches[0].Switches[1].CompletedHeight)
+	require.Equal(t, cancelHeight, exported.SelectorReporterSwitches[0].Switches[1].CancelledHeight)
+	require.Equal(t, uint64(200), exported.SelectorReporterSwitches[0].Switches[2].CompletedHeight)
+	require.Zero(t, exported.SelectorReporterSwitches[0].Switches[2].CancelledHeight)
 
 	k2, _, _, _, _, ctx2, _ := keepertest.ReporterKeeper(t)
 	require.NoError(t, k2.Selectors.Set(ctx2, selector.Bytes(), types.NewSelection(openOriginal, 1)))

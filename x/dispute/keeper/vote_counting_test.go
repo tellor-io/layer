@@ -445,6 +445,71 @@ func (s *KeeperTestSuite) TestLiveReporterVotedEvidenceSnapshotStillHoldsTokens(
 		"live reporter must not be peeled when tokens sit on evidence snapshot")
 }
 
+// TestPositiveLiveSnapshotPeelsLiveReporterNotEvidence attributes a selector to
+// the live reporter when that snapshot is positive, even if the evidence
+// snapshot is also positive. The live reporter is peeled. The evidence reporter
+// is not.
+func (s *KeeperTestSuite) TestPositiveLiveSnapshotPeelsLiveReporterNotEvidence() {
+	require := s.Require()
+	k := s.disputeKeeper
+	rk := s.reporterKeeper
+	ctx := s.ctx.WithBlockHeight(10)
+	s.ctx = ctx
+
+	disputeID := uint64(24)
+	blockNum := uint64(10)
+	evidenceReporter := sample.AccAddressBytes()
+	liveReporter := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	const liveTokens = int64(30)
+	const evidenceTokens = int64(45)
+	const livePower = int64(80)
+	const evidencePower = int64(100)
+
+	require.NoError(k.VoteCountsByGroup.Set(ctx, disputeID, types.StakeholderVoteCounts{
+		Reporters: types.VoteCounts{
+			Support: uint64(livePower),
+			Against: uint64(evidencePower),
+		},
+	}))
+	require.NoError(k.Voter.Set(ctx, collections.Join(disputeID, liveReporter.Bytes()), types.Voter{
+		Vote:          types.VoteEnum_VOTE_SUPPORT,
+		VoterPower:    math.NewInt(livePower),
+		ReporterPower: math.NewInt(livePower),
+	}))
+	require.NoError(k.Voter.Set(ctx, collections.Join(disputeID, evidenceReporter.Bytes()), types.Voter{
+		Vote:          types.VoteEnum_VOTE_AGAINST,
+		VoterPower:    math.NewInt(evidencePower),
+		ReporterPower: math.NewInt(evidencePower),
+	}))
+
+	rk.On("Delegation", ctx, selector).Return(reportertypes.Selection{Reporter: liveReporter}, nil)
+	rk.On("GetSelectorForStake", ctx, selector).Return(unlockedSelection(liveReporter), nil)
+	rk.On("GetDelegatorTokensAtBlock", ctx, selector.Bytes(), blockNum).Return(math.NewInt(liveTokens), nil)
+	rk.On("GetDelegatorTokensFromReporterAtBlock", ctx, selector.Bytes(), evidenceReporter.Bytes(), blockNum).
+		Return(math.NewInt(evidenceTokens), nil).Maybe()
+
+	moved, err := k.SetVoterReporterStake(ctx, disputeID, selector, blockNum, types.VoteEnum_VOTE_INVALID, nil, evidenceReporter)
+	require.NoError(err)
+	require.Equal(math.NewInt(liveTokens), moved)
+
+	final := s.reporterVoteCounts(disputeID)
+	require.Equal(types.VoteCounts{
+		Support: uint64(livePower - liveTokens),
+		Against: uint64(evidencePower),
+		Invalid: uint64(liveTokens),
+	}, final, "must peel the live reporter, not the evidence reporter")
+
+	liveRow, err := k.Voter.Get(ctx, collections.Join(disputeID, liveReporter.Bytes()))
+	require.NoError(err)
+	require.Equal(math.NewInt(livePower-liveTokens), liveRow.ReporterPower)
+
+	evidenceRow, err := k.Voter.Get(ctx, collections.Join(disputeID, evidenceReporter.Bytes()))
+	require.NoError(err)
+	require.Equal(math.NewInt(evidencePower), evidenceRow.ReporterPower,
+		"evidence reporter must not be peeled when the live snapshot is positive")
+}
+
 func (s *KeeperTestSuite) reporterVoteCountsAt(ctx sdk.Context, disputeID uint64) types.VoteCounts {
 	counts, err := s.disputeKeeper.VoteCountsByGroup.Get(ctx, disputeID)
 	s.Require().NoError(err)

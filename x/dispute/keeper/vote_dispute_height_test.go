@@ -23,7 +23,7 @@ const (
 
 // expectDisputeHeight stubs who addr was selected to at the dispute open height.
 // liveAccurate is false when that reporter is a resolved history row.
-func (s *KeeperTestSuite) expectDisputeHeight(addr sdk.AccAddress, selected sdk.AccAddress, liveAccurate, unfinished bool) {
+func (s *KeeperTestSuite) expectDisputeHeight(addr, selected sdk.AccAddress, liveAccurate, unfinished bool) {
 	s.reporterKeeper.On("ReporterAtHeight", mock.Anything, addr, disputeOpenHeight).
 		Return(selected, liveAccurate, nil)
 	s.reporterKeeper.On("SelectorSwitchUnfinishedAt", mock.Anything, addr, disputeOpenHeight).

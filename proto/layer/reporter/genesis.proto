@@ -68,11 +68,13 @@ message SelectorReporterSwitchStateEntry {
   repeated SelectorReporterSwitchRecord switches = 2 [(gogoproto.nullable) = false];
 }
 
-// SelectorReporterSwitchRecord is one reporter change. Completed height is 0 while the switch is open.
+// SelectorReporterSwitchRecord is one reporter change. Completed height is 0 while the switch is open,
+// and a cancelled row keeps completed height at 0 and sets cancelled height.
 message SelectorReporterSwitchRecord {
   bytes original_reporter = 1;
   uint64 began_height = 2;
   uint64 completed_height = 3;
+  uint64 cancelled_height = 4;
 }
 
 

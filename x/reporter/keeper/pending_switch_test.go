@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	// openSwitchBegan is inside the seeded open row. Cancelling later keeps that
+	// openSwitchBegan is inside the seeded open row. Canceling later keeps that
 	// row, so a height before the cancel still sees the switch as unfinished.
 	openSwitchBegan = uint64(40)
 	olderSwitchDone = uint64(20)
@@ -44,7 +44,7 @@ func requireOpenSwitchAborted(t *testing.T, k keeper.Keeper, ctx sdk.Context, se
 	require.Equal(t, openSwitchBegan, history.Switches[0].BeganHeight)
 	require.Zero(t, history.Switches[0].CompletedHeight)
 	require.Equal(t, uint64(ctx.BlockHeight()), history.Switches[0].CancelledHeight)
-	require.Equal(t, olderOriginal.Bytes(), []byte(history.Switches[1].OriginalReporter))
+	require.Equal(t, olderOriginal.Bytes(), history.Switches[1].OriginalReporter)
 	require.Equal(t, olderSwitchDone, history.Switches[1].CompletedHeight)
 	require.Zero(t, history.Switches[1].CancelledHeight)
 	unfinished, err := k.SelectorSwitchUnfinishedAt(ctx, selector, openSwitchBegan+10)
@@ -465,9 +465,9 @@ func TestSelfDemotionCancelsIncomingPendingSwitches(t *testing.T) {
 	demotingHistory, err := k.SelectorReporterSwitches.Get(ctx, demoting.Bytes())
 	require.NoError(t, err)
 	require.Len(t, demotingHistory.Switches, 2)
-	require.Equal(t, demoting.Bytes(), []byte(demotingHistory.Switches[0].OriginalReporter))
+	require.Equal(t, demoting.Bytes(), demotingHistory.Switches[0].OriginalReporter)
 	require.Equal(t, uint64(100), demotingHistory.Switches[0].CompletedHeight)
-	require.Equal(t, prior.Bytes(), []byte(demotingHistory.Switches[1].OriginalReporter))
+	require.Equal(t, prior.Bytes(), demotingHistory.Switches[1].OriginalReporter)
 	require.Equal(t, olderSwitchDone, demotingHistory.Switches[1].CompletedHeight)
 }
 
@@ -545,7 +545,7 @@ func TestSwitchReporterScheduleAndFinalizeWritesHistory(t *testing.T) {
 	history, err := k.SelectorReporterSwitches.Get(ctx, selector.Bytes())
 	require.NoError(t, err)
 	require.Len(t, history.Switches, 1)
-	require.Equal(t, from.Bytes(), []byte(history.Switches[0].OriginalReporter))
+	require.Equal(t, from.Bytes(), history.Switches[0].OriginalReporter)
 	require.Equal(t, uint64(scheduleHeight), history.Switches[0].BeganHeight)
 	require.Equal(t, uint64(finalizeHeight), history.Switches[0].CompletedHeight)
 

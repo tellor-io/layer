@@ -59,7 +59,7 @@ func (k Keeper) recordSelectorSwitchBegan(ctx context.Context, selector, origina
 // recordSelectorSwitchCompleted closes the open switch away from originalReporter.
 // Missing history (a switch scheduled before this index existed) is a no-op.
 // A row that already has CancelledHeight set is left alone, so a later finalize
-// cannot close the cancelled switch.
+// cannot close the canceled switch.
 func (k Keeper) recordSelectorSwitchCompleted(ctx context.Context, selector, originalReporter []byte) error {
 	history, err := k.selectorSwitchHistory(ctx, selector)
 	if err != nil {
@@ -195,7 +195,7 @@ func (k Keeper) ReporterSelfDemoted(ctx context.Context, addr sdk.AccAddress) (b
 }
 
 // pruneSwitchHistory drops completed switches that finished at or before pruneHeight
-// and cancelled switches whose CancelledHeight is at or before pruneHeight.
+// and canceled switches whose CancelledHeight is at or before pruneHeight.
 // An open switch is kept. For every height >= pruneHeight the walk still resolves,
 // because a newer switch's original reporter is who they were from the deleted
 // switch's completion until that newer switch completed.
@@ -219,7 +219,7 @@ func pruneSwitchHistory(history types.SelectorReporterSwitches, pruneHeight uint
 	return types.SelectorReporterSwitches{Switches: kept}, true
 }
 
-// PruneSelectorSwitches removes completed and cancelled switch history that no
+// PruneSelectorSwitches removes completed and canceled switch history that no
 // longer affects ReporterAtHeight or SelectorSwitchUnfinishedAt for any height
 // >= pruneHeight. It visits at most limit selectors per call and resumes on the
 // next call, so end block can bound the work.

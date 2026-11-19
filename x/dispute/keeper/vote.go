@@ -117,8 +117,9 @@ func (k Keeper) SetVoterTips(ctx context.Context, id uint64, voter sdk.AccAddres
 }
 
 // selectorStakeAtBlock resolves stake for a voter with no switch history, where
-// the live selection is still the dispute-height selection. When the evidence
-// reporter's snapshot still holds the tokens, that reporter owns them.
+// the live selection is still the dispute-height selection. A positive live
+// snapshot belongs to the live reporter. A zero live amount still falls through,
+// so the evidence reporter owns the tokens when their snapshot still holds them.
 func (k Keeper) selectorStakeAtBlock(
 	ctx context.Context,
 	voter, liveReporter, evidenceReporter sdk.AccAddress,
@@ -127,6 +128,9 @@ func (k Keeper) selectorStakeAtBlock(
 	liveTokens, err := k.reporterKeeper.GetDelegatorTokensAtBlock(ctx, voter, blockNumber)
 	if err != nil {
 		return nil, math.Int{}, err
+	}
+	if !liveTokens.IsNil() && liveTokens.IsPositive() {
+		return liveReporter, liveTokens, nil
 	}
 	if len(evidenceReporter) == 0 || bytes.Equal(evidenceReporter, liveReporter) {
 		return liveReporter, liveTokens, nil

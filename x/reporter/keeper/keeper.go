@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -241,7 +242,12 @@ func (k Keeper) GetDelegatorTokensFromReporterAtBlock(ctx context.Context, deleg
 	return delegatorTokens, nil
 }
 
-// GetReporterTokensAtBlock returns the total amount of tokens a reporter when reporting to the nearest given block Number.
+// GetReporterTokensAtBlock returns the reporter's nearest stake-snapshot total at
+// or before blockNumber. An origin is removed only when that delegator was on a
+// different reporter at blockNumber and that other reporter's snapshot already
+// lists a positive amount for them. Until then this snapshot is the only copy
+// and the origin stays. A delegator still on this reporter, or one ReporterAtHeight
+// cannot find, leaves Total unchanged.
 func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber uint64) (math.Int, error) {
 	rep, err := k.GetDelegationsAmount(ctx, reporter, blockNumber)
 	if err != nil {
@@ -250,7 +256,34 @@ func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, b
 	if rep.Total.IsNil() {
 		return math.ZeroInt(), nil
 	}
-	return rep.Total, nil
+	total := rep.Total
+	for _, origin := range rep.TokenOrigins {
+		if origin == nil || origin.Amount.IsNil() {
+			continue
+		}
+		at, _, err := k.ReporterAtHeight(ctx, origin.DelegatorAddress, blockNumber)
+		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				continue
+			}
+			return math.Int{}, err
+		}
+		if bytes.Equal(at, reporter) {
+			continue
+		}
+		other, err := k.GetDelegatorTokensFromReporterAtBlock(ctx, origin.DelegatorAddress, at, blockNumber)
+		if err != nil {
+			return math.Int{}, err
+		}
+		if other.IsNil() || !other.IsPositive() {
+			continue
+		}
+		total, err = total.SafeSub(origin.Amount)
+		if err != nil {
+			return math.Int{}, err
+		}
+	}
+	return total, nil
 }
 
 func (k Keeper) GetDelegationsAmount(ctx context.Context, reporter []byte, blockNumber uint64) (delAmounts types.DelegationsAmounts, err error) {

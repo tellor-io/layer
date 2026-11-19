@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/e2e"
 	layerutil "github.com/tellor-io/layer/testutil"
+	layertypes "github.com/tellor-io/layer/types"
 
 	"cosmossdk.io/math"
 
@@ -84,12 +85,91 @@ func fetchReporterTally(ctx context.Context, node *cosmos.ChainNode, disputeID s
 }
 
 func execDisputeVote(ctx context.Context, node *cosmos.ChainNode, voterAddr, disputeID, choice string) error {
-	_, err := node.ExecTx(ctx, voterAddr, "dispute", "vote", disputeID, choice,
+	_, err := execDisputeVoteTx(ctx, node, voterAddr, disputeID, choice)
+	return err
+}
+
+func execDisputeVoteTx(ctx context.Context, node *cosmos.ChainNode, voterAddr, disputeID, choice string) (string, error) {
+	return node.ExecTx(ctx, voterAddr, "dispute", "vote", disputeID, choice,
 		"--keyring-dir", node.HomeDir(),
 		"--gas", peelRevoteVoteGas,
 		"--fees", peelRevoteVoteFees,
 	)
-	return err
+}
+
+// reportTokenFloor is the largest multiple of PowerReduction that report power can represent.
+// The stored snapshot total is in [floor, floor+PowerReduction).
+func reportTokenFloor(reportPower uint64) uint64 {
+	return math.NewIntFromUint64(reportPower).Mul(layertypes.PowerReduction).Uint64()
+}
+
+// requireNearTokens allows PowerReduction truncation plus 1% for reward accrual between the snapshot and the query.
+func requireNearTokens(t *testing.T, got, want uint64, what string) {
+	t.Helper()
+	slack := layertypes.PowerReduction.Uint64()
+	if want/100 > slack {
+		slack = want / 100
+	}
+	require.InDeltaf(t, float64(want), float64(got), float64(slack), "%s: got %d want %d", what, got, want)
+}
+
+type txEventAttr struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+type txEvent struct {
+	Type       string        `json:"type"`
+	Attributes []txEventAttr `json:"attributes"`
+}
+
+func voteTxReporterPower(t *testing.T, ctx context.Context, node *cosmos.ChainNode, txHash string) uint64 {
+	t.Helper()
+	require := require.New(t)
+	res, _, err := e2e.QueryWithTimeout(ctx, node, "tx", txHash)
+	require.NoError(err)
+
+	var body struct {
+		Events []txEvent `json:"events"`
+		Logs   []struct {
+			Events []txEvent `json:"events"`
+		} `json:"logs"`
+		TxResponse *struct {
+			Events []txEvent `json:"events"`
+			Logs   []struct {
+				Events []txEvent `json:"events"`
+			} `json:"logs"`
+		} `json:"tx_response"`
+	}
+	require.NoError(json.Unmarshal(res, &body))
+	events := body.Events
+	logs := body.Logs
+	if body.TxResponse != nil {
+		if len(body.TxResponse.Events) > 0 {
+			events = body.TxResponse.Events
+		}
+		if len(body.TxResponse.Logs) > 0 {
+			logs = body.TxResponse.Logs
+		}
+	}
+	for _, lg := range logs {
+		events = append(events, lg.Events...)
+	}
+	for _, ev := range events {
+		if ev.Type != "voted_on_dispute" {
+			continue
+		}
+		for _, attr := range ev.Attributes {
+			if attr.Key != "voter_power" {
+				continue
+			}
+			power, err := strconv.ParseUint(attr.Value, 10, 64)
+			require.NoError(err)
+			return power
+		}
+	}
+	require.Failf("missing vote power", "voted_on_dispute voter_power not in tx %s: %s", txHash, string(res))
+	return 0
 }
 
 func queryDelegationAmount(ctx context.Context, chain *cosmos.CosmosChain, delegator, validator string) (math.Int, error) {
@@ -256,10 +336,9 @@ func tipSelector(t *testing.T, ctx context.Context, val e2e.ValidatorInfo, selec
 	require.NoError(testutil.WaitForBlocks(ctx, 2, val.Node))
 }
 
-func finalizeSwitchToReporter(t *testing.T, ctx context.Context, val0, val1 e2e.ValidatorInfo, selectorAddr string) {
+func beginSwitchToReporter(t *testing.T, ctx context.Context, val0, val1 e2e.ValidatorInfo, selectorAddr string) {
 	t.Helper()
 	require := require.New(t)
-	tip := sdk.NewCoin("loya", peelRevoteTipAmt)
 
 	_, err := val0.Node.ExecTx(ctx, selectorAddr, "reporter", "switch-reporter", val1.AccAddr,
 		"--keyring-dir", val0.Node.HomeDir(), "--fees", "5loya")
@@ -271,14 +350,25 @@ func finalizeSwitchToReporter(t *testing.T, ctx context.Context, val0, val1 e2e.
 	var selectorPending e2e.QuerySelectorReporterResponse
 	require.NoError(json.Unmarshal(resPending, &selectorPending))
 	require.Equal(val0.AccAddr, selectorPending.Reporter, "switch must stay pending until val1 reports")
+}
 
-	submitSpotPriceReport(t, ctx, val1, xrpQData, tip)
+func completeSwitchToReporter(t *testing.T, ctx context.Context, val0, val1 e2e.ValidatorInfo, selectorAddr string) {
+	t.Helper()
+	require := require.New(t)
+
+	submitSpotPriceReport(t, ctx, val1, xrpQData, sdk.NewCoin("loya", peelRevoteTipAmt))
 
 	res, _, err := e2e.QueryWithTimeout(ctx, val0.Node, "reporter", "selector-reporter", selectorAddr)
 	require.NoError(err)
 	var selectorRes e2e.QuerySelectorReporterResponse
 	require.NoError(json.Unmarshal(res, &selectorRes))
 	require.Equal(val1.AccAddr, selectorRes.Reporter, "val1 SpotPrice report must finalize the pending switch")
+}
+
+func finalizeSwitchToReporter(t *testing.T, ctx context.Context, val0, val1 e2e.ValidatorInfo, selectorAddr string) {
+	t.Helper()
+	beginSwitchToReporter(t, ctx, val0, val1, selectorAddr)
+	completeSwitchToReporter(t, ctx, val0, val1, selectorAddr)
 }
 
 // TestDisputeVotePeelRevoteE2E runs reporter vote → selector peel → reporter revote on a live chain
@@ -342,9 +432,10 @@ func TestDisputeVotePeelRevoteE2E(t *testing.T) {
 	requireDisputeVoting(t, ctx, val0.Node, disputeID)
 }
 
-// TestDisputeVotePeelRevoteSwitchLockE2E covers pending switch finalization, dispute-lock on the
-// selector, a locked first vote funded by tips only, unlock, then selector revote that must peel
-// reporter stake instead of wrapping buckets.
+// TestDisputeVotePeelRevoteSwitchLockE2E covers a switch that finishes before the dispute
+// opens. The selector's first vote is dispute-locked and funded by tips only. After unlock,
+// the dispute height already sees the selector on the new reporter, so the evidence reporter's
+// vote excludes them and the revote adds their stake on the new reporter.
 func TestDisputeVotePeelRevoteSwitchLockE2E(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping switch/lock peel/revote e2e in short mode")
@@ -362,8 +453,15 @@ func TestDisputeVotePeelRevoteSwitchLockE2E(t *testing.T) {
 
 	submitSpotPriceReport(t, ctx, val0, bnbQData, tip)
 	disputedReport := latestReporterReport(t, ctx, val0.Node, val0.AccAddr)
+	reportPower, err := strconv.ParseUint(disputedReport.Power, 10, 64)
+	require.NoError(err)
+	selectorAtReport, err := queryDelegationAmount(ctx, chain, selectorAddr, val0.ValAddr)
+	require.NoError(err)
+	require.True(selectorAtReport.IsPositive())
 
 	finalizeSwitchToReporter(t, ctx, val0, val1, selectorAddr)
+	selectorOnNewReporter, err := queryDelegationAmount(ctx, chain, selectorAddr, val0.ValAddr)
+	require.NoError(err)
 
 	// Tip before opening the dispute so user-group power is available at the dispute block.
 	tipSelector(t, ctx, val0, selectorAddr, bnbQData, tip)
@@ -375,8 +473,12 @@ func TestDisputeVotePeelRevoteSwitchLockE2E(t *testing.T) {
 
 	afterReporter, err := fetchReporterTally(ctx, val0.Node, disputeID)
 	require.NoError(err)
-	require.Greater(afterReporter.totalPowerVoted, uint64(0))
 	require.Greater(afterReporter.againstPct, 0.0)
+	reportTokens := reportTokenFloor(reportPower)
+	require.Less(afterReporter.totalPowerVoted, reportTokens,
+		"val0 vote must exclude selector stake that val1 already held at the dispute height")
+	requireNearTokens(t, reportTokens-afterReporter.totalPowerVoted, selectorAtReport.Uint64(),
+		"excluded amount should be the selector stake from val0's report")
 
 	userPowerBeforeLock, err := fetchUserTallyPowerVoted(ctx, val0.Node, disputeID)
 	require.NoError(err)
@@ -420,14 +522,14 @@ func TestDisputeVotePeelRevoteSwitchLockE2E(t *testing.T) {
 
 	final, err := fetchReporterTally(ctx, val0.Node, disputeID)
 	require.NoError(err)
-	// Authoritative check: without peeling from the evidence reporter, unlock would
-	// ADD current-selection stake and inflate TotalPowerVoted by ~selector tokens.
-	require.Equal(afterReporter.totalPowerVoted, final.totalPowerVoted,
-		"post-unlock selector revote must conserve reporter-group token totals")
+	require.Greater(final.totalPowerVoted, afterReporter.totalPowerVoted,
+		"unlocked revote must add the selector stake on the new reporter")
+	requireNearTokens(t, final.totalPowerVoted-afterReporter.totalPowerVoted, selectorOnNewReporter.Uint64(),
+		"added reporter power should be the selector stake on val1 at the dispute height")
+	require.InDelta(afterReporter.againstPct, final.againstPct, 0.001,
+		"evidence reporter AGAINST bucket must not shrink")
 	require.Less(final.supportPct, 0.01,
-		"ReporterPower=0 on locked first vote must not leave phantom SUPPORT after peel revote")
-	// %-display uses (choice / TotalReporterPower) * 100/3; a ~1e9 peel can round to
-	// 0.00% and is covered by conservation above plus keeper unit Finding2b.
+		"locked first vote must not leave phantom SUPPORT")
 
 	requireDisputeVoting(t, ctx, val0.Node, disputeID)
 }
@@ -488,6 +590,177 @@ func TestDisputeVoteThenSwitchThenRevoteE2E(t *testing.T) {
 	// %-display uses (choice / TotalReporterPower) * 100/3; a ~1e9 peel can round
 	// to 0.00% in both AGAINST and INVALID, so bucket movement is covered by
 	// conservation above plus keeper TestVoteThenSwitchThenRevote / MsgVote twin.
+
+	requireDisputeVoting(t, ctx, val0.Node, disputeID)
+}
+
+// TestDisputeVoteSwitchAfterOpenPeelsE2E opens the dispute before the selector's switch
+// finalizes. The reporter's vote is the full open-height group, and the selector peels
+// that reporter instead of adding stake to the reporter they moved to.
+func TestDisputeVoteSwitchAfterOpenPeelsE2E(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping switch-after-open e2e in short mode")
+	}
+
+	require := require.New(t)
+	cosmos.SetSDKConfig("tellor")
+
+	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	defer ic.Close()
+
+	val0, val1 := setupPeelRevoteValidators(t, ctx, chain)
+	selectorAddr := fundSelectorOnReporter(t, ctx, val0)
+	tip := sdk.NewCoin("loya", peelRevoteTipAmt)
+
+	submitSpotPriceReport(t, ctx, val0, bnbQData, tip)
+	disputedReport := latestReporterReport(t, ctx, val0.Node, val0.AccAddr)
+	reportPower, err := strconv.ParseUint(disputedReport.Power, 10, 64)
+	require.NoError(err)
+	selectorStake, err := queryDelegationAmount(ctx, chain, selectorAddr, val0.ValAddr)
+	require.NoError(err)
+
+	disputeID := proposeFullDispute(t, ctx, val0.Node, val0.AccAddr, disputedReport, "warning", warningDisputeFeeFromReportPower)
+	finalizeSwitchToReporter(t, ctx, val0, val1, selectorAddr)
+
+	require.NoError(execDisputeVote(ctx, val0.Node, val0.AccAddr, disputeID, "vote-support"))
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	afterReporter, err := fetchReporterTally(ctx, val0.Node, disputeID)
+	require.NoError(err)
+	floor := reportTokenFloor(reportPower)
+	require.GreaterOrEqual(afterReporter.totalPowerVoted, floor,
+		"reporter vote must include the open-height group, selector included")
+	require.Less(afterReporter.totalPowerVoted, floor+layertypes.PowerReduction.Uint64(),
+		"reporter vote must be the open-height report snapshot")
+
+	txHash, err := execDisputeVoteTx(ctx, val0.Node, selectorAddr, disputeID, "vote-against")
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	afterPeel, err := fetchReporterTally(ctx, val0.Node, disputeID)
+	require.NoError(err)
+	require.Equal(afterReporter.totalPowerVoted, afterPeel.totalPowerVoted,
+		"selector peel must not add stake to the reporter they switched to")
+	requireNearTokens(t, voteTxReporterPower(t, ctx, val0.Node, txHash), selectorStake.Uint64(),
+		"selector reporter power should be their stake on val0 at the dispute height")
+
+	requireDisputeVoting(t, ctx, val0.Node, disputeID)
+}
+
+// TestDisputeVoteUnfinishedSwitchStaysZeroE2E opens the dispute while a switch is still
+// pending, then finalizes it. The selector's reporter power stays zero, including on a
+// revote after the switch completes.
+func TestDisputeVoteUnfinishedSwitchStaysZeroE2E(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping unfinished-switch e2e in short mode")
+	}
+
+	require := require.New(t)
+	cosmos.SetSDKConfig("tellor")
+
+	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	defer ic.Close()
+
+	val0, val1 := setupPeelRevoteValidators(t, ctx, chain)
+	selectorAddr := fundSelectorOnReporter(t, ctx, val0)
+	tip := sdk.NewCoin("loya", peelRevoteTipAmt)
+
+	submitSpotPriceReport(t, ctx, val0, bnbQData, tip)
+	disputedReport := latestReporterReport(t, ctx, val0.Node, val0.AccAddr)
+
+	beginSwitchToReporter(t, ctx, val0, val1, selectorAddr)
+	// Tip before the dispute so the selector's first vote is not rejected for zero total power.
+	tipSelector(t, ctx, val0, selectorAddr, bnbQData, tip)
+	disputeID := proposeFullDispute(t, ctx, val0.Node, val0.AccAddr, disputedReport, "warning", warningDisputeFeeFromReportPower)
+
+	require.NoError(execDisputeVote(ctx, val0.Node, selectorAddr, disputeID, "vote-support"))
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	afterOpen, err := fetchReporterTally(ctx, val0.Node, disputeID)
+	require.NoError(err)
+	require.Zero(afterOpen.totalPowerVoted, "unfinished switch must contribute zero reporter power")
+	userPower, err := fetchUserTallyPowerVoted(ctx, val0.Node, disputeID)
+	require.NoError(err)
+	require.Greater(userPower, uint64(0), "selector tip must still count while the switch is unfinished")
+
+	completeSwitchToReporter(t, ctx, val0, val1, selectorAddr)
+
+	require.NoError(execDisputeVote(ctx, val0.Node, selectorAddr, disputeID, "vote-invalid"))
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	afterFinalize, err := fetchReporterTally(ctx, val0.Node, disputeID)
+	require.NoError(err)
+	require.Zero(afterFinalize.totalPowerVoted, "finalizing the switch must not grant reporter power for the open height")
+	userPowerAfter, err := fetchUserTallyPowerVoted(ctx, val0.Node, disputeID)
+	require.NoError(err)
+	require.Equal(userPower, userPowerAfter, "revote must keep the same tip power")
+
+	requireDisputeVoting(t, ctx, val0.Node, disputeID)
+}
+
+// TestDisputeVoteSelfDemotionAfterOpenE2E demotes the evidence reporter after the dispute
+// opens. Their vote is still the full open-height group, and a selector who was on them
+// peels that original reporter.
+//
+// A reporter who still has another selector cannot self-demote until 21 days after their
+// last aggregate. The selector therefore leaves after the dispute opens, which keeps them
+// on val0 at the dispute height, and only then does val0 demote.
+func TestDisputeVoteSelfDemotionAfterOpenE2E(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping self-demotion-after-open e2e in short mode")
+	}
+
+	require := require.New(t)
+	cosmos.SetSDKConfig("tellor")
+
+	chain, ic, ctx := e2e.SetupChain(t, 2, 0)
+	defer ic.Close()
+
+	val0, val1 := setupPeelRevoteValidators(t, ctx, chain)
+	selectorAddr := fundSelectorOnReporter(t, ctx, val0)
+	tip := sdk.NewCoin("loya", peelRevoteTipAmt)
+
+	submitSpotPriceReport(t, ctx, val0, bnbQData, tip)
+	disputedReport := latestReporterReport(t, ctx, val0.Node, val0.AccAddr)
+	reportPower, err := strconv.ParseUint(disputedReport.Power, 10, 64)
+	require.NoError(err)
+	selectorStake, err := queryDelegationAmount(ctx, chain, selectorAddr, val0.ValAddr)
+	require.NoError(err)
+
+	disputeID := proposeFullDispute(t, ctx, val0.Node, val0.AccAddr, disputedReport, "warning", warningDisputeFeeFromReportPower)
+	finalizeSwitchToReporter(t, ctx, val0, val1, selectorAddr)
+
+	// SpotPrice's report window is 2. The selector switch already waited past it.
+	require.NoError(testutil.WaitForBlocks(ctx, 3, val0.Node))
+	beginSwitchToReporter(t, ctx, val0, val1, val0.AccAddr)
+	submitSpotPriceReport(t, ctx, val1, solQData, tip)
+	res, _, err := e2e.QueryWithTimeout(ctx, val0.Node, "reporter", "selector-reporter", val0.AccAddr)
+	require.NoError(err)
+	var demoted e2e.QuerySelectorReporterResponse
+	require.NoError(json.Unmarshal(res, &demoted))
+	require.Equal(val1.AccAddr, demoted.Reporter, "val1 SOL report must finalize val0's self-demotion")
+
+	require.NoError(execDisputeVote(ctx, val0.Node, val0.AccAddr, disputeID, "vote-support"))
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	afterReporter, err := fetchReporterTally(ctx, val0.Node, disputeID)
+	require.NoError(err)
+	floor := reportTokenFloor(reportPower)
+	require.GreaterOrEqual(afterReporter.totalPowerVoted, floor,
+		"demoted reporter must still vote the full open-height group")
+	require.Less(afterReporter.totalPowerVoted, floor+layertypes.PowerReduction.Uint64(),
+		"demoted reporter vote must be the open-height report snapshot")
+
+	txHash, err := execDisputeVoteTx(ctx, val0.Node, selectorAddr, disputeID, "vote-against")
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	afterPeel, err := fetchReporterTally(ctx, val0.Node, disputeID)
+	require.NoError(err)
+	require.Equal(afterReporter.totalPowerVoted, afterPeel.totalPowerVoted,
+		"selector must peel the original reporter, not the reporter they demoted onto")
+	requireNearTokens(t, voteTxReporterPower(t, ctx, val0.Node, txHash), selectorStake.Uint64(),
+		"selector reporter power should be their stake on the original reporter at the dispute height")
 
 	requireDisputeVoting(t, ctx, val0.Node, disputeID)
 }
