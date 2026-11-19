@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 
 	"github.com/tellor-io/layer/x/reporter/types"
@@ -98,8 +99,8 @@ func (k Keeper) ReporterStakeWithSnapshot(ctx context.Context, repAddr sdk.AccAd
 	if err != nil {
 		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
-	// Nothing changed and a snapshot is on record, so the newest one still matches.
-	if !changed && hasLatest {
+	// Reuse the newest snapshot only if it still names the same validators and amounts.
+	if !changed && hasLatest && sameTokenOrigins(latest.TokenOrigins, delegates) {
 		return totalTokens, latestRef, nil
 	}
 
@@ -117,6 +118,36 @@ func (k Keeper) ReporterStakeWithSnapshot(ctx context.Context, repAddr sdk.AccAd
 		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
 	return totalTokens, ref, nil
+}
+
+// sameTokenOrigins reports whether two lists hold the same delegator, validator and amount entries, in any order.
+func sameTokenOrigins(a, b []*types.TokenOriginInfo) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	counts := make(map[string]int, len(a))
+	for _, origin := range a {
+		if origin == nil || origin.Amount.IsNil() {
+			return false
+		}
+		counts[tokenOriginKey(origin)]++
+	}
+	for _, origin := range b {
+		if origin == nil || origin.Amount.IsNil() {
+			return false
+		}
+		key := tokenOriginKey(origin)
+		if counts[key] == 0 {
+			return false
+		}
+		counts[key]--
+	}
+	return true
+}
+
+// tokenOriginKey turns one entry into text so equal entries match.
+func tokenOriginKey(origin *types.TokenOriginInfo) string {
+	return hex.EncodeToString(origin.DelegatorAddress) + "/" + hex.EncodeToString(origin.ValidatorAddress) + "/" + origin.Amount.String()
 }
 
 // needsStakeRecalc checks if a reporter's stake needs to be recalculated
