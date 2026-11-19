@@ -14,6 +14,7 @@ import (
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -90,7 +91,7 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 	s.ctx = s.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
 	ctx := s.ctx.WithBlockHeight(18)
 
-	rk.On("ReporterStake", ctx, addr, queryId).Return(math.NewInt(1_000_000), errors.New("error")).Once()
+	rk.On("ReporterStakeWithSnapshot", ctx, addr).Return(math.NewInt(1_000_000), reportertypes.StakeSnapshotRef{}, errors.New("error")).Once()
 	_, err = s.msgServer.SubmitValue(ctx, &submitreq)
 	require.Error(err)
 
@@ -98,12 +99,12 @@ func (s *KeeperTestSuite) TestSubmitValue() (sdk.AccAddress, []byte) {
 	params, err := k.Params.Get(ctx)
 	require.NoError(err)
 	minStakeAmt := params.MinStakeAmount
-	rk.On("ReporterStake", s.ctx, addr, queryId).Return(minStakeAmt.Sub(math.NewInt(100)), nil).Once()
+	rk.On("ReporterStakeWithSnapshot", s.ctx, addr).Return(minStakeAmt.Sub(math.NewInt(100)), reportertypes.StakeSnapshotRef{}, nil).Once()
 	_, err = s.msgServer.SubmitValue(s.ctx, &submitreq)
 	require.Error(err)
 
 	//  good submit
-	rk.On("ReporterStake", s.ctx, addr, queryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
+	rk.On("ReporterStakeWithSnapshot", s.ctx, addr).Return(minStakeAmt.Add(math.NewInt(100)), reportertypes.StakeSnapshotRef{}, nil).Once()
 	_ = s.registryKeeper.On("GetSpec", s.ctx, "SpotPrice").Return(spotSpec, nil).Once()
 	res, err := s.msgServer.SubmitValue(s.ctx, &submitreq)
 	require.NoError(err)
@@ -250,7 +251,8 @@ func (s *KeeperTestSuite) TestSubmitValueDirectReveal() {
 	params, err := k.Params.Get(ctx)
 	require.NoError(err)
 	minStakeAmt := params.MinStakeAmount
-	repk.On("ReporterStake", ctx, reporter, utils.QueryIDFromData(currentQuery)).Return(minStakeAmt.Add(math.NewInt(1*1e6)), nil).Once()
+	stakeSnapshot := reportertypes.StakeSnapshotRef{Block: 7, Version: 3}
+	repk.On("ReporterStakeWithSnapshot", ctx, reporter).Return(minStakeAmt.Add(math.NewInt(1*1e6)), stakeSnapshot, nil).Once()
 	err = k.QueryDataLimit.Set(ctx, types.QueryDataLimit{Limit: types.InitialQueryDataLimit()})
 	require.NoError(err)
 
@@ -271,6 +273,9 @@ func (s *KeeperTestSuite) TestSubmitValueDirectReveal() {
 	require.Equal(microReport.Reporter, reporter.String())
 	require.Equal(microReport.Timestamp, ctx.BlockTime())
 	require.Equal(microReport.Value, value)
+	// The report remembers which stake snapshot backed it.
+	require.Equal(stakeSnapshot.Block, microReport.StakeSnapshotBlock)
+	require.Equal(stakeSnapshot.Version, microReport.StakeSnapshotVersion)
 }
 
 func (s *KeeperTestSuite) TestDirectReveal() {
@@ -299,7 +304,7 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	votingPower := uint64(sdk.TokensToConsensusPower(math.NewInt(1_000_000), layertypes.PowerReduction))
 	isBridgeDeposit := true
 	ctx = ctx.WithBlockHeight(15)
-	err = k.DirectReveal(ctx, query, qDataBz, value, reporter, votingPower, !isBridgeDeposit)
+	err = k.DirectReveal(ctx, query, qDataBz, value, reporter, votingPower, reportertypes.StakeSnapshotRef{}, !isBridgeDeposit)
 	require.ErrorContains(err, types.ErrNoTipsNotInCycle.Error())
 
 	bridgeQueryDataStr := "00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000b5452424272696467655632000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001"
@@ -316,7 +321,7 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	}
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
 	regK.On("GetSpec", ctx, "TRBBridgeV2").Return(bridgeSpec, nil).Once()
-	err = k.DirectReveal(ctx, bridgeQuery, bridgeQDataBz, bridgeDepositValue, reporter, votingPower, isBridgeDeposit)
+	err = k.DirectReveal(ctx, bridgeQuery, bridgeQDataBz, bridgeDepositValue, reporter, votingPower, reportertypes.StakeSnapshotRef{}, isBridgeDeposit)
 	require.NoError(err)
 	microReport, err := k.Reports.Get(ctx, collections.Join3(bridgeQueryId, reporter.Bytes(), uint64(1)))
 	require.NoError(err)
@@ -335,7 +340,7 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	query.Id = 4
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
 	regK.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil).Once()
-	err = k.DirectReveal(ctx, query, qDataBz, value, reporter, votingPower, !isBridgeDeposit)
+	err = k.DirectReveal(ctx, query, qDataBz, value, reporter, votingPower, reportertypes.StakeSnapshotRef{}, !isBridgeDeposit)
 	require.ErrorContains(err, "submission window expired")
 
 	bridgeQuery.Amount = math.NewInt(1)
@@ -344,7 +349,7 @@ func (s *KeeperTestSuite) TestDirectReveal() {
 	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(time.Hour))
 	ctx = ctx.WithBlockHeight(15)
 	regK.On("GetSpec", ctx, "TRBBridgeV2").Return(bridgeSpec, nil).Once()
-	err = k.DirectReveal(ctx, bridgeQuery, bridgeQDataBz, bridgeDepositValue, reporter, votingPower, isBridgeDeposit)
+	err = k.DirectReveal(ctx, bridgeQuery, bridgeQDataBz, bridgeDepositValue, reporter, votingPower, reportertypes.StakeSnapshotRef{}, isBridgeDeposit)
 	require.NoError(err)
 	microReport, err = k.Reports.Get(ctx, collections.Join3(bridgeQueryId, reporter.Bytes(), uint64(4)))
 	require.NoError(err)
@@ -414,7 +419,7 @@ func BenchmarkSubmitValue(b *testing.B) {
 			require.NoError(b, err)
 
 			// Setup expectations for each iteration
-			rk.On("ReporterStake", iterCtx, addr, queryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
+			rk.On("ReporterStakeWithSnapshot", iterCtx, addr).Return(minStakeAmt.Add(math.NewInt(100)), reportertypes.StakeSnapshotRef{}, nil).Once()
 			regk.On("GetSpec", iterCtx, "SpotPrice").Return(spotSpec, nil).Once()
 
 			// Run the actual operation we're benchmarking

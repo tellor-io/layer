@@ -3,6 +3,7 @@ package keeper
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -31,6 +32,8 @@ type (
 		FeePaidFromStake          collections.Map[[]byte, types.DelegationsAmounts]                                                                                         // key: dispute hashId
 		Report                    *collections.IndexedMap[collections.Pair[[]byte, collections.Pair[[]byte, uint64]], types.DelegationsAmounts, ReporterBlockNumberIndexes] // key: queryId, (reporter AccAddress, blockNumber)
 		ReportByBlock             *collections.IndexedMap[collections.Triple[[]byte, uint64, []byte], types.DelegationsAmounts, ReportByBlockIndexes]                       // key: reporter AccAddress, blockNumber, queryId
+		StakeSnapshots            collections.Map[collections.Triple[[]byte, uint64, uint64], types.DelegationsAmounts]                                                     // key: reporter AccAddress, blockNumber, version
+		StakeSnapshotVersion      collections.Sequence                                                                                                                      // numbers each saved stake snapshot, so later ones sort after earlier ones
 
 		// Distribution queue collections
 		ReporterPeriodData       collections.Map[[]byte, types.PeriodRewardData]      // key: reporter AccAddress -> current period data
@@ -105,6 +108,12 @@ func NewKeeper(
 			collections.TripleKeyCodec(collections.BytesKey, collections.Uint64Key, collections.BytesKey),
 			codec.CollValue[types.DelegationsAmounts](cdc), newReportByBlockIndexes(sb),
 		),
+		StakeSnapshots: collections.NewMap(
+			sb, types.StakeSnapshotPrefix, "stake_snapshots",
+			collections.TripleKeyCodec(collections.BytesKey, collections.Uint64Key, collections.Uint64Key),
+			codec.CollValue[types.DelegationsAmounts](cdc),
+		),
+		StakeSnapshotVersion:     collections.NewSequence(sb, types.StakeSnapshotVersionPrefix, "stake_snapshot_version"),
 		ReporterPeriodData:       collections.NewMap(sb, types.ReporterPeriodDataPrefix, "reporter_period_data", collections.BytesKey, codec.CollValue[types.PeriodRewardData](cdc)),
 		DistributionQueue:        collections.NewMap(sb, types.DistributionQueuePrefix, "distribution_queue", collections.Uint64Key, codec.CollValue[types.DistributionQueueItem](cdc)),
 		DistributionQueueCounter: collections.NewItem(sb, types.DistributionQueueCounterPrefix, "distribution_queue_counter", codec.CollValue[types.DistributionQueueCounter](cdc)),
@@ -212,7 +221,55 @@ func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, b
 	return rep.Total, nil
 }
 
+// latestStakeSnapshot returns the newest versioned stake snapshot saved at or before a block.
+func (k Keeper) latestStakeSnapshot(ctx context.Context, reporter []byte, upToBlock uint64) (types.StakeSnapshotRef, types.DelegationsAmounts, bool, error) {
+	rng := new(collections.Range[collections.Triple[[]byte, uint64, uint64]]).
+		StartInclusive(collections.Join3(reporter, uint64(0), uint64(0)))
+	if upToBlock == ^uint64(0) {
+		rng = rng.EndInclusive(collections.Join3(reporter, upToBlock, ^uint64(0)))
+	} else {
+		rng = rng.EndExclusive(collections.Join3(reporter, upToBlock+1, uint64(0)))
+	}
+	iter, err := k.StakeSnapshots.Iterate(ctx, rng.Descending())
+	if err != nil {
+		return types.StakeSnapshotRef{}, types.DelegationsAmounts{}, false, err
+	}
+	defer iter.Close()
+	if !iter.Valid() {
+		return types.StakeSnapshotRef{}, types.DelegationsAmounts{}, false, nil
+	}
+	kv, err := iter.KeyValue()
+	if err != nil {
+		return types.StakeSnapshotRef{}, types.DelegationsAmounts{}, false, err
+	}
+	return types.StakeSnapshotRef{Block: kv.Key.K2(), Version: kv.Key.K3()}, kv.Value, true, nil
+}
+
+// GetReportStakeSnapshot returns the stake snapshot that backed one specific report.
+func (k Keeper) GetReportStakeSnapshot(ctx context.Context, reporter []byte, reportBlock uint64, ref types.StakeSnapshotRef) (types.DelegationsAmounts, error) {
+	if ref.IsSet() {
+		snap, err := k.StakeSnapshots.Get(ctx, collections.Join3(reporter, ref.Block, ref.Version))
+		if err == nil {
+			return snap, nil
+		}
+		if !errors.Is(err, collections.ErrNotFound) {
+			return types.DelegationsAmounts{}, err
+		}
+	}
+	// Reports made before versions existed fall back to the nearest snapshot by block.
+	return k.GetDelegationsAmount(ctx, reporter, reportBlock)
+}
+
 func (k Keeper) GetDelegationsAmount(ctx context.Context, reporter []byte, blockNumber uint64) (delAmounts types.DelegationsAmounts, err error) {
+	// The newest versioned snapshot wins; older storage is only read when there is none.
+	_, versioned, found, err := k.latestStakeSnapshot(ctx, reporter, blockNumber)
+	if err != nil {
+		return delAmounts, err
+	}
+	if found {
+		return versioned, nil
+	}
+
 	start := collections.Join(reporter, uint64(0))
 	end := collections.Join(reporter, blockNumber+1)
 	pc := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
@@ -299,6 +356,13 @@ func (k *Keeper) SetOracleKeeper(ok types.OracleKeeper) {
 // gets the block number of the last report for a reporter
 func (k Keeper) GetLastReportedAtBlock(ctx context.Context, reporter []byte) (uint64, error) {
 	currentBlock := sdk.UnwrapSDKContext(ctx).BlockHeight()
+	ref, _, found, err := k.latestStakeSnapshot(ctx, reporter, uint64(currentBlock))
+	if err != nil {
+		return 0, err
+	}
+	if found {
+		return ref.Block, nil
+	}
 	pc := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
 	start := collections.Join(reporter, uint64(0))
 	end := collections.Join(reporter, uint64(currentBlock+1))
@@ -343,15 +407,8 @@ func (k Keeper) GetLastReportedAtBlock(ctx context.Context, reporter []byte) (ui
 // It keeps at least one entry per reporter so dispute voting always has
 // a snapshot to read historical power from.
 func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
-	if k.oracleKeeper == nil {
-		return nil
-	}
-
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	cutoff := sdkCtx.BlockTime().Add(-30 * 24 * time.Hour)
-
-	cutoffBlock, err := k.oracleKeeper.GetBlockHeightFromTimestamp(ctx, cutoff)
-	if err != nil {
+	cutoffBlock, ok := k.reportCutoffBlock(ctx)
+	if !ok {
 		return nil
 	}
 
@@ -435,4 +492,60 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 	}
 
 	return nil
+}
+
+// MaxStakeSnapshotCleanup is how many old snapshots a reporter clears each time it saves a new one.
+const MaxStakeSnapshotCleanup = 10
+
+// reportCutoffBlock returns the block from 30 days ago, or false when it can't be worked out yet.
+func (k Keeper) reportCutoffBlock(ctx context.Context) (uint64, bool) {
+	if k.oracleKeeper == nil {
+		return 0, false
+	}
+	cutoff := sdk.UnwrapSDKContext(ctx).BlockTime().Add(-30 * 24 * time.Hour)
+	cutoffBlock, err := k.oracleKeeper.GetBlockHeightFromTimestamp(ctx, cutoff)
+	if err != nil {
+		return 0, false
+	}
+	return cutoffBlock, true
+}
+
+// cleanupOldStakeSnapshots removes a few of a reporter's snapshots older than 30 days, keeping its newest one from before then.
+func (k Keeper) cleanupOldStakeSnapshots(ctx context.Context, reporter []byte) error {
+	cutoffBlock, ok := k.reportCutoffBlock(ctx)
+	if !ok {
+		return nil
+	}
+	old, err := k.oldStakeSnapshotKeys(ctx, reporter, cutoffBlock, MaxStakeSnapshotCleanup+1)
+	if err != nil {
+		return err
+	}
+	// The last one found stays: it is either the newest before the cutoff or is left for next time.
+	for i := 0; i+1 < len(old); i++ {
+		if err := k.StakeSnapshots.Remove(ctx, old[i]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// oldStakeSnapshotKeys lists up to limit of a reporter's snapshots saved before the cutoff, oldest first.
+func (k Keeper) oldStakeSnapshotKeys(ctx context.Context, reporter []byte, cutoffBlock uint64, limit int) ([]collections.Triple[[]byte, uint64, uint64], error) {
+	iter, err := k.StakeSnapshots.Iterate(ctx, collections.NewPrefixedTripleRange[[]byte, uint64, uint64](reporter))
+	if err != nil {
+		return nil, err
+	}
+	defer iter.Close()
+	keys := make([]collections.Triple[[]byte, uint64, uint64], 0, limit)
+	for ; iter.Valid() && len(keys) < limit; iter.Next() {
+		key, err := iter.Key()
+		if err != nil {
+			return nil, err
+		}
+		if key.K2() >= cutoffBlock {
+			break
+		}
+		keys = append(keys, key)
+	}
+	return keys, nil
 }

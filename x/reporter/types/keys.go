@@ -51,6 +51,10 @@ var (
 	TipUnlockQueuePrefix = collections.NewPrefix(37)
 	// TipUnlockIDPrefix is the next unlock id sequence.
 	TipUnlockIDPrefix = collections.NewPrefix(38)
+	// StakeSnapshotPrefix stores stake snapshots keyed by (reporter, block, version).
+	StakeSnapshotPrefix = collections.NewPrefix(39)
+	// StakeSnapshotVersionPrefix is the counter that numbers every saved stake snapshot.
+	StakeSnapshotVersionPrefix = collections.NewPrefix(40)
 )
 
 // ReporterJailDisputeLockKey keys selector dispute locks copied from OracleReporter.JailedUntil

@@ -53,54 +53,70 @@ func (k Keeper) HasMin(ctx context.Context, addr sdk.AccAddress, minRequired mat
 // It also tracks period data for reward distribution - when delegation state changes,
 // the previous period is queued for distribution.
 // Ready pending reporter switches involving this reporter are finalized first (same entry path as MsgSubmitValue).
-func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, queryId []byte) (math.Int, error) {
+func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, _ []byte) (math.Int, error) {
+	stake, _, err := k.ReporterStakeWithSnapshot(ctx, repAddr)
+	return stake, err
+}
+
+// ReporterStakeWithSnapshot works like ReporterStake and also says which saved snapshot backs the total.
+func (k Keeper) ReporterStakeWithSnapshot(ctx context.Context, repAddr sdk.AccAddress) (math.Int, types.StakeSnapshotRef, error) {
 	if err := k.errIfPendingSelfDemotion(ctx, repAddr); err != nil {
-		return math.Int{}, err
+		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
 	if err := k.applyReadyPendingSwitchesForReporter(ctx, repAddr); err != nil {
-		return math.Int{}, err
+		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
 
 	needsRecalc, err := k.needsStakeRecalc(ctx, repAddr)
 	if err != nil {
-		return math.Int{}, err
+		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
 
-	if !needsRecalc {
-		// Stake hasn't changed, fetch cached total from last Report entry
-		cached, err := k.GetDelegationsAmount(ctx, repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))
-		if err != nil {
-			return math.Int{}, err
-		}
-		if !cached.Total.IsNil() && cached.Total.IsPositive() {
-			return cached.Total, nil
-		}
-		// if it ain't positive, just recalculate
+	height := uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())
+	latestRef, latest, hasLatest, err := k.latestStakeSnapshot(ctx, repAddr.Bytes(), height)
+	if err != nil {
+		return math.Int{}, types.StakeSnapshotRef{}, err
+	}
+
+	// Stake hasn't changed, so reuse the newest saved snapshot.
+	if !needsRecalc && hasLatest && !latest.Total.IsNil() && latest.Total.IsPositive() {
+		return latest.Total, latestRef, nil
 	}
 
 	totalTokens, delegates, selectorShares, hash, err := k.GetReporterStake(ctx, repAddr)
 	if err != nil {
-		return math.Int{}, err
+		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
 
 	// Clear stake recalc flag after recalculation
 	if err := k.StakeRecalcFlag.Remove(ctx, repAddr.Bytes()); err != nil {
-		return math.Int{}, err
+		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
 
 	// Handle period tracking for reward distribution
 	changed, err := k.handlePeriodTracking(ctx, repAddr, selectorShares, totalTokens, hash)
 	if err != nil {
-		return math.Int{}, err
+		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
-	if changed {
-		// Store per-report snapshot for disputes
-		err = k.ReportByBlock.Set(ctx, collections.Join3(repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()), queryId), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
-		if err != nil {
-			return math.Int{}, err
-		}
+	// Nothing changed and a snapshot is on record, so the newest one still matches.
+	if !changed && hasLatest {
+		return totalTokens, latestRef, nil
 	}
-	return totalTokens, nil
+
+	next, err := k.StakeSnapshotVersion.Next(ctx)
+	if err != nil {
+		return math.Int{}, types.StakeSnapshotRef{}, err
+	}
+	// Version zero is kept to mean "made before versions existed".
+	ref := types.StakeSnapshotRef{Block: height, Version: next + 1}
+	snapshot := types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens}
+	if err := k.StakeSnapshots.Set(ctx, collections.Join3(repAddr.Bytes(), ref.Block, ref.Version), snapshot); err != nil {
+		return math.Int{}, types.StakeSnapshotRef{}, err
+	}
+	if err := k.cleanupOldStakeSnapshots(ctx, repAddr.Bytes()); err != nil {
+		return math.Int{}, types.StakeSnapshotRef{}, err
+	}
+	return totalTokens, ref, nil
 }
 
 // needsStakeRecalc checks if a reporter's stake needs to be recalculated

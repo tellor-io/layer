@@ -409,7 +409,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStakePartialRedelegationCollect
 	}))
 
 	intendedSlash := math.NewInt(1000)
-	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, reporterAddr, 1, reportHeight, intendedSlash, []byte{}, hashId))
+	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, reporterAddr, 1, reportHeight, intendedSlash, reportertypes.StakeSnapshotRef{}, hashId))
 
 	stored, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(ctx, hashId)
 	s.NoError(err)
@@ -493,7 +493,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStakeRedelegationBreadcrumbDoes
 
 	disputeBefore := s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress("dispute"), s.Setup.Denom)
 
-	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, selector, 1, reportHeight, bulk, []byte{}, hashId))
+	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, selector, 1, reportHeight, bulk, reportertypes.StakeSnapshotRef{}, hashId))
 
 	stored, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(ctx, hashId)
 	s.NoError(err)
@@ -749,7 +749,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake() {
 
 	err = rk.EscrowReporterStake(
 		ctx, reporterAddr, uint64(sdk.TokensToConsensusPower(math.NewIntWithDecimal(3000, 6), sdk.DefaultPowerReduction)),
-		uint64(blockHeightAtFullPower), math.NewIntWithDecimal(1500, 6), []byte{}, []byte("hashId"))
+		uint64(blockHeightAtFullPower), math.NewIntWithDecimal(1500, 6), reportertypes.StakeSnapshotRef{}, []byte("hashId"))
 	s.NoError(err)
 	// tokens are moved to dispute module
 	disputeBal = s.Setup.Bankkeeper.GetBalance(ctx, s.Setup.Accountkeeper.GetModuleAddress("dispute"), s.Setup.Denom)
@@ -794,7 +794,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake2() {
 	s.NoError(err)
 	s.Equal(math.NewInt(2_800_000_000), reporterStake)
 	// -------------------------------------------------
-	err = rk.EscrowReporterStake(ctx, reporter, math.NewInt(2_800_000_000).Quo(layertypes.PowerReduction).Uint64(), height, math.NewInt(800), []byte("queryid1"), []byte("hashId"))
+	err = rk.EscrowReporterStake(ctx, reporter, math.NewInt(2_800_000_000).Quo(layertypes.PowerReduction).Uint64(), height, math.NewInt(800), reportertypes.StakeSnapshotRef{}, []byte("hashId"))
 	s.NoError(err)
 
 	reporterStake, err = rk.ReporterStake(ctx, reporter, []byte("queryid2"))
@@ -802,7 +802,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake2() {
 	stakeleft := 2_800_000_000 - 800
 	s.Equal(math.NewInt(int64(stakeleft)), reporterStake)
 	// -------------------------------------------------
-	err = rk.EscrowReporterStake(ctx, reporter, reporterStake.Quo(layertypes.PowerReduction).Uint64(), height, math.NewInt(8000), []byte("queryid2"), []byte("hashId2"))
+	err = rk.EscrowReporterStake(ctx, reporter, reporterStake.Quo(layertypes.PowerReduction).Uint64(), height, math.NewInt(8000), reportertypes.StakeSnapshotRef{}, []byte("hashId2"))
 	s.NoError(err)
 
 	reporterStake, err = rk.ReporterStake(ctx, reporter, []byte("queryid3"))
@@ -810,7 +810,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake2() {
 	stakeleft -= 8000
 	s.Equal(math.NewInt(int64(stakeleft)), reporterStake)
 	// -------------------------------------------------
-	err = rk.EscrowReporterStake(ctx, reporter, reporterStake.Quo(layertypes.PowerReduction).Uint64(), height, math.NewInt(1234), []byte("queryid3"), []byte("hashId3"))
+	err = rk.EscrowReporterStake(ctx, reporter, reporterStake.Quo(layertypes.PowerReduction).Uint64(), height, math.NewInt(1234), reportertypes.StakeSnapshotRef{}, []byte("hashId3"))
 	s.NoError(err)
 
 	reporterStake, err = rk.ReporterStake(ctx, reporter, []byte("queryid4"))
@@ -818,7 +818,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake2() {
 	stakeleft -= 1234
 	s.Equal(math.NewInt(int64(stakeleft)), reporterStake)
 	// -------------------------------------------------
-	err = rk.EscrowReporterStake(ctx, reporter, reporterStake.Quo(layertypes.PowerReduction).Uint64(), height, math.NewInt(85023), []byte("queryid4"), []byte("hashId4"))
+	err = rk.EscrowReporterStake(ctx, reporter, reporterStake.Quo(layertypes.PowerReduction).Uint64(), height, math.NewInt(85023), reportertypes.StakeSnapshotRef{}, []byte("hashId4"))
 	s.NoError(err)
 
 	reporterStake, err = rk.ReporterStake(ctx, reporter, []byte("queryid5"))
@@ -827,7 +827,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStake2() {
 	s.Equal(math.NewInt(int64(stakeleft)), reporterStake)
 	// -------------------------------------------------
 	rPower := reporterStake.Quo(layertypes.PowerReduction)
-	err = rk.EscrowReporterStake(ctx, reporter, rPower.Uint64(), height, rPower.Mul(layertypes.PowerReduction), []byte("queryid5"), []byte("hashId5"))
+	err = rk.EscrowReporterStake(ctx, reporter, rPower.Uint64(), height, rPower.Mul(layertypes.PowerReduction), reportertypes.StakeSnapshotRef{}, []byte("hashId5"))
 	s.NoError(err)
 
 	reporterStake, err = rk.ReporterStake(ctx, reporter, []byte("queryid6"))

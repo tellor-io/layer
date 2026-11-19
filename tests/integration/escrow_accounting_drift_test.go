@@ -59,7 +59,7 @@ func (s *IntegrationTestSuite) escrowAgainstSkewedValidator(powers []uint64, del
 	before := s.Setup.Bankkeeper.GetBalance(ctx, disputeModule, s.Setup.Denom).Amount
 	s.True(before.IsZero(), "precondition: dispute module account must start empty so the shortfall is observable")
 
-	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, selector, 1, reportHeight, owed, []byte{}, hashId))
+	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, selector, 1, reportHeight, owed, reportertypes.StakeSnapshotRef{}, hashId))
 
 	received := s.Setup.Bankkeeper.GetBalance(ctx, disputeModule, s.Setup.Denom).Amount.Sub(before)
 	stored, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(ctx, hashId)
@@ -260,7 +260,7 @@ func (s *IntegrationTestSuite) TestEscrowUnbondingExactEntryRemovalDoesNotLeaveZ
 
 	disputeModule := s.Setup.Accountkeeper.GetModuleAddress(disputetypes.ModuleName)
 	before := s.Setup.Bankkeeper.GetBalance(ctx, disputeModule, s.Setup.Denom).Amount
-	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, selector, 1, reportHeight, firstEntry, []byte{}, hashId))
+	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, selector, 1, reportHeight, firstEntry, reportertypes.StakeSnapshotRef{}, hashId))
 	received := s.Setup.Bankkeeper.GetBalance(ctx, disputeModule, s.Setup.Denom).Amount.Sub(before)
 	s.Equal(firstEntry, received)
 
@@ -457,7 +457,7 @@ func (s *IntegrationTestSuite) TestEscrowReporterStakeRedelegationFanOutCollects
 
 	disputeModule := s.Setup.Accountkeeper.GetModuleAddress(disputetypes.ModuleName)
 	before := s.Setup.Bankkeeper.GetBalance(ctx, disputeModule, s.Setup.Denom).Amount
-	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, selector, 1, reportHeight, total, []byte{}, hashId))
+	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, selector, 1, reportHeight, total, reportertypes.StakeSnapshotRef{}, hashId))
 	received := s.Setup.Bankkeeper.GetBalance(ctx, disputeModule, s.Setup.Denom).Amount.Sub(before)
 
 	stored, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(ctx, hashId)

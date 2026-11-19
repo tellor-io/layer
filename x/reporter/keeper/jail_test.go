@@ -28,7 +28,7 @@ func TestJailReporter(t *testing.T) {
 	ctx = ctx.WithBlockTime(updatedAt.Add(time.Second * 10))
 	jailedDuration := uint64(100)
 
-	err = k.JailReporter(ctx, addr, jailedDuration, 1, testDisputeHashID('a'))
+	err = k.JailReporter(ctx, addr, jailedDuration, 1, types.StakeSnapshotRef{}, testDisputeHashID('a'))
 	require.NoError(t, err)
 
 	ctx = ctx.WithBlockTime(updatedAt.Add(time.Second * 15))
@@ -53,7 +53,7 @@ func TestJailReporterZeroDurationFlagsOnly(t *testing.T) {
 		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selectorAddr}},
 	}))
 
-	require.NoError(t, k.JailReporter(ctx, reporterAddr, 0, reportBlock, testDisputeHashID('a')))
+	require.NoError(t, k.JailReporter(ctx, reporterAddr, 0, reportBlock, types.StakeSnapshotRef{}, testDisputeHashID('a')))
 
 	gotReporter, err := k.Reporters.Get(ctx, reporterAddr)
 	require.NoError(t, err)
@@ -141,10 +141,10 @@ func TestUpdateJailedUntilOnFailedDispute(t *testing.T) {
 
 	ctx = ctx.WithBlockTime(jailedAt)
 	disputeHash := testDisputeHashID('a')
-	require.NoError(t, k.JailReporter(ctx, reporterAddr, 600, reportBlock, disputeHash))
+	require.NoError(t, k.JailReporter(ctx, reporterAddr, 600, reportBlock, types.StakeSnapshotRef{}, disputeHash))
 
 	ctx = ctx.WithBlockTime(jailedAt.Add(time.Second * 50))
-	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, reportBlock, disputeHash))
+	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, reportBlock, types.StakeSnapshotRef{}, disputeHash))
 
 	selA, err := k.Selectors.Get(ctx, selectorA)
 	require.NoError(t, err)
@@ -178,8 +178,8 @@ func TestFailedDisputePreservesLegacyLockedUntilTime(t *testing.T) {
 	}))
 
 	disputeHash := testDisputeHashID('a')
-	require.NoError(t, k.JailReporter(ctx, reporterAddr, 600, reportBlock, disputeHash))
-	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, reportBlock, disputeHash))
+	require.NoError(t, k.JailReporter(ctx, reporterAddr, 600, reportBlock, types.StakeSnapshotRef{}, disputeHash))
+	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, reportBlock, types.StakeSnapshotRef{}, disputeHash))
 
 	sel, err := k.Selectors.Get(ctx, selector)
 	require.NoError(t, err)
@@ -203,7 +203,7 @@ func TestJailUsesReportByBlockNotReporterIndex(t *testing.T) {
 		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selectorA}},
 	}))
 
-	require.NoError(t, k.JailReporter(ctx, reporterR, 3600, reportBlock, testDisputeHashID('a')))
+	require.NoError(t, k.JailReporter(ctx, reporterR, 3600, reportBlock, types.StakeSnapshotRef{}, testDisputeHashID('a')))
 
 	selA, err := k.Selectors.Get(ctx, selectorA)
 	require.NoError(t, err)
@@ -232,7 +232,7 @@ func TestJailReporterLocksSnapshotDelegators(t *testing.T) {
 		},
 	}))
 
-	require.NoError(t, k.JailReporter(ctx, reporterR, 600, reportBlock, testDisputeHashID('a')))
+	require.NoError(t, k.JailReporter(ctx, reporterR, 600, reportBlock, types.StakeSnapshotRef{}, testDisputeHashID('a')))
 
 	for _, sel := range [][]byte{selectorA, selectorB} {
 		got, err := k.Selectors.Get(ctx, sel)
@@ -257,7 +257,7 @@ func TestJailSetsDisputeLockedUntilOnly(t *testing.T) {
 		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selector}},
 	}))
 
-	require.NoError(t, k.JailReporter(ctx, reporter, 3600, reportBlock, testDisputeHashID('a')))
+	require.NoError(t, k.JailReporter(ctx, reporter, 3600, reportBlock, types.StakeSnapshotRef{}, testDisputeHashID('a')))
 
 	got, err := k.Selectors.Get(ctx, selector)
 	require.NoError(t, err)
@@ -281,7 +281,7 @@ func TestJailUsesMaxDisputeLockTime(t *testing.T) {
 		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selector}},
 	}))
 
-	require.NoError(t, k.JailReporter(ctx, reporter, 7200, reportBlock, longHash))
+	require.NoError(t, k.JailReporter(ctx, reporter, 7200, reportBlock, types.StakeSnapshotRef{}, longHash))
 
 	got, err := k.Selectors.Get(ctx, selector)
 	require.NoError(t, err)
@@ -304,7 +304,7 @@ func TestJailDisputeLockSchedulesRecalc(t *testing.T) {
 		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selector}},
 	}))
 
-	require.NoError(t, k.JailReporter(ctx, reporterA, 3600, reportBlock, testDisputeHashID('a')))
+	require.NoError(t, k.JailReporter(ctx, reporterA, 3600, reportBlock, types.StakeSnapshotRef{}, testDisputeHashID('a')))
 
 	hasA, err := k.StakeRecalcFlag.Has(ctx, reporterA.Bytes())
 	require.NoError(t, err)
@@ -337,7 +337,7 @@ func TestJailReporterFlagsJailedReporterWhenSnapshotSelectorsMovedOn(t *testing.
 		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selector}},
 	}))
 
-	require.NoError(t, k.JailReporter(ctx, reporterA, 600, reportBlock, testDisputeHashID('a')))
+	require.NoError(t, k.JailReporter(ctx, reporterA, 600, reportBlock, types.StakeSnapshotRef{}, testDisputeHashID('a')))
 
 	hasA, err := k.StakeRecalcFlag.Has(ctx, reporterA.Bytes())
 	require.NoError(t, err)
@@ -463,15 +463,15 @@ func TestClearOneDisputeLockPreservesOther(t *testing.T) {
 		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: selector}},
 	}))
 
-	require.NoError(t, k.JailReporter(ctx, reporterAddr, 600, reportBlock, minorHash))
-	require.NoError(t, k.JailReporter(ctx, reporterAddr, 7200, reportBlock, majorHash))
+	require.NoError(t, k.JailReporter(ctx, reporterAddr, 600, reportBlock, types.StakeSnapshotRef{}, minorHash))
+	require.NoError(t, k.JailReporter(ctx, reporterAddr, 7200, reportBlock, types.StakeSnapshotRef{}, majorHash))
 
 	sel, err := k.Selectors.Get(ctx, selector)
 	require.NoError(t, err)
 	majorUntil := now.Add(7200 * time.Second).Truncate(time.Second)
 	require.True(t, sel.DisputeLockedUntil.Equal(majorUntil))
 
-	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, reportBlock, minorHash))
+	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, reportBlock, types.StakeSnapshotRef{}, minorHash))
 
 	sel, err = k.Selectors.Get(ctx, selector)
 	require.NoError(t, err)
@@ -483,7 +483,7 @@ func TestClearOneDisputeLockPreservesOther(t *testing.T) {
 	_, err = k.SelectorDisputeLocks.Get(ctx, collections.Join(selector.Bytes(), majorHash))
 	require.NoError(t, err)
 
-	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, reportBlock, majorHash))
+	require.NoError(t, k.UpdateJailedUntilOnFailedDispute(ctx, reporterAddr, reportBlock, types.StakeSnapshotRef{}, majorHash))
 	sel, err = k.Selectors.Get(ctx, selector)
 	require.NoError(t, err)
 	require.True(t, sel.DisputeLockedUntil.IsZero())

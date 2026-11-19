@@ -210,7 +210,7 @@ func TestEscrowReporterStake(t *testing.T) {
 	require.NoError(t, err)
 	sk.On("Unbond", ctx, reporterAddr, sdk.ValAddress(reporterAddr), delTokens).Return(stake, nil)
 	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", stake))).Return(nil)
-	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 100, uint64(ctx.BlockHeight()), stake, []byte{}, []byte("hashId")))
+	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 100, uint64(ctx.BlockHeight()), stake, types.StakeSnapshotRef{}, []byte("hashId")))
 }
 
 func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
@@ -272,7 +272,7 @@ func TestEscrowReporterStakeUnbondingdelegations(t *testing.T) {
 		},
 	})
 
-	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 3000, uint64(ctx.BlockHeight()), math.NewIntWithDecimal(1500, 6), []byte{}, []byte("hashId")))
+	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 3000, uint64(ctx.BlockHeight()), math.NewIntWithDecimal(1500, 6), types.StakeSnapshotRef{}, []byte("hashId")))
 }
 
 // TestEscrowReporterStakePartialCollection asserts that when the redelegation
@@ -324,7 +324,7 @@ func TestEscrowReporterStakePartialCollection(t *testing.T) {
 	sk.On("GetUnbondingDelegation", ctx, reporterAddr, sdk.ValAddress(valAddr2)).Return(stakingtypes.UnbondingDelegation{}, stakingtypes.ErrNoUnbondingDelegation)
 	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(400)))).Return(nil)
 
-	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 1, uint64(ctx.BlockHeight()), amt, []byte{}, []byte("hashId")))
+	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 1, uint64(ctx.BlockHeight()), amt, types.StakeSnapshotRef{}, []byte("hashId")))
 
 	stored, err := k.DisputedDelegationAmounts.Get(ctx, []byte("hashId"))
 	require.NoError(t, err)
@@ -407,7 +407,7 @@ func TestEscrowReporterStakeNeverCollectsMoreThanRequestedFromTruncatedPower(t *
 	sk.On("Unbond", ctx, selector2, valAddr2, sharesToUnbond2).Return(expectedOrigin2, nil).Once()
 	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", expectedOrigin2))).Return(nil).Once()
 
-	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, reportPower, uint64(ctx.BlockHeight()), requested, queryID, hashID))
+	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, reportPower, uint64(ctx.BlockHeight()), requested, types.StakeSnapshotRef{}, hashID))
 
 	stored, err := k.DisputedDelegationAmounts.Get(ctx, hashID)
 	require.NoError(t, err)
@@ -473,7 +473,7 @@ func TestEscrowReporterStakeMeasuredShortfallChasesSameValidatorUnbonding(t *tes
 	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", bondedCollected))).Return(nil)
 	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.NotBondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", unbondingDust))).Return(nil)
 
-	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 1, uint64(ctx.BlockHeight()), owed, []byte{}, []byte("hashId")))
+	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 1, uint64(ctx.BlockHeight()), owed, types.StakeSnapshotRef{}, []byte("hashId")))
 
 	stored, err := k.DisputedDelegationAmounts.Get(ctx, []byte("hashId"))
 	require.NoError(t, err)
@@ -552,7 +552,7 @@ func TestEscrowReporterStakeCollectsFromLastWideFanOutDestination(t *testing.T) 
 	sk.On("Unbond", ctx, delegatorAddr, last, sharesToUnbond).Return(requested, nil).Once()
 	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", requested))).Return(nil).Once()
 
-	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 1, uint64(ctx.BlockHeight()), requested, queryID, hashID))
+	require.NoError(t, k.EscrowReporterStake(ctx, reporterAddr, 1, uint64(ctx.BlockHeight()), requested, types.StakeSnapshotRef{}, hashID))
 
 	stored, err := k.DisputedDelegationAmounts.Get(ctx, hashID)
 	require.NoError(t, err)

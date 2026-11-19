@@ -9,6 +9,7 @@ import (
 	"github.com/tellor-io/layer/testutil/sample"
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -93,7 +94,7 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 		err = s.oracleKeeper.Query.Set(ctx, collections.Join(queryId, queryMeta.Id), queryMeta)
 		require.NoError(err)
 
-		s.reporterKeeper.On("ReporterStake", mock.Anything, addr, queryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
+		s.reporterKeeper.On("ReporterStakeWithSnapshot", mock.Anything, addr).Return(minStakeAmt.Add(math.NewInt(100)), reportertypes.StakeSnapshotRef{}, nil).Once()
 
 		submitreq := types.MsgSubmitValue{
 			Creator:   addr.String(),
@@ -164,7 +165,7 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	err = s.oracleKeeper.Query.Set(ctx, collections.Join(queryId, queryMeta.Id), queryMeta)
 	require.NoError(err)
 
-	s.reporterKeeper.On("ReporterStake", mock.Anything, addr2, queryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
+	s.reporterKeeper.On("ReporterStakeWithSnapshot", mock.Anything, addr2).Return(minStakeAmt.Add(math.NewInt(100)), reportertypes.StakeSnapshotRef{}, nil).Once()
 	_ = s.registryKeeper.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil).Once()
 
 	submitreq := types.MsgSubmitValue{
@@ -223,7 +224,7 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	err = s.oracleKeeper.Query.Set(ctx, collections.Join(bridgeQueryId, queryMeta.Id), queryMeta)
 	require.NoError(err)
 
-	s.reporterKeeper.On("ReporterStake", mock.Anything, addr, bridgeQueryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
+	s.reporterKeeper.On("ReporterStakeWithSnapshot", mock.Anything, addr).Return(minStakeAmt.Add(math.NewInt(100)), reportertypes.StakeSnapshotRef{}, nil).Once()
 
 	submitreq = types.MsgSubmitValue{
 		Creator:   addr.String(),
@@ -250,7 +251,7 @@ func (s *KeeperTestSuite) TestGetReportsByReporterPaginate() {
 	err = s.oracleKeeper.Query.Set(ctx, collections.Join(bridgeQueryId, queryMeta.Id), queryMeta)
 	require.NoError(err)
 
-	s.reporterKeeper.On("ReporterStake", mock.Anything, addr2, bridgeQueryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
+	s.reporterKeeper.On("ReporterStakeWithSnapshot", mock.Anything, addr2).Return(minStakeAmt.Add(math.NewInt(100)), reportertypes.StakeSnapshotRef{}, nil).Once()
 
 	submitreq = types.MsgSubmitValue{
 		Creator:   addr2.String(),
@@ -334,7 +335,7 @@ func (s *KeeperTestSuite) TestGetReportsByReporter_PaginationEdgeCases() {
 		err = s.oracleKeeper.Query.Set(ctx, collections.Join(queryId, queryMeta.Id), queryMeta)
 		require.NoError(err)
 
-		s.reporterKeeper.On("ReporterStake", mock.Anything, addr, queryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
+		s.reporterKeeper.On("ReporterStakeWithSnapshot", mock.Anything, addr).Return(minStakeAmt.Add(math.NewInt(100)), reportertypes.StakeSnapshotRef{}, nil).Once()
 
 		submitreq := types.MsgSubmitValue{
 			Creator:   addr.String(),
@@ -409,7 +410,7 @@ func (s *KeeperTestSuite) TestGetReportsByReporter_PaginationEdgeCases() {
 		err = s.oracleKeeper.Query.Set(ctx, collections.Join(queryId, queryMeta.Id), queryMeta)
 		require.NoError(err)
 
-		s.reporterKeeper.On("ReporterStake", mock.Anything, addr, queryId).Return(minStakeAmt.Add(math.NewInt(100)), nil).Once()
+		s.reporterKeeper.On("ReporterStakeWithSnapshot", mock.Anything, addr).Return(minStakeAmt.Add(math.NewInt(100)), reportertypes.StakeSnapshotRef{}, nil).Once()
 
 		submitreq := types.MsgSubmitValue{
 			Creator:   addr.String(),
