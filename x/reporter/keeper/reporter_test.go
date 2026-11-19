@@ -713,15 +713,15 @@ func TestCollectionsRemoveNonExistentKey(t *testing.T) {
 
 func bondedDelegation(selector sdk.AccAddress, val sdk.ValAddress, amount math.Int) (stakingtypes.Delegation, stakingtypes.Validator) {
 	return stakingtypes.Delegation{
-		DelegatorAddress: selector.String(),
-		ValidatorAddress: val.String(),
-		Shares:           amount.ToLegacyDec(),
-	}, stakingtypes.Validator{
-		OperatorAddress: val.String(),
-		Status:          stakingtypes.Bonded,
-		Tokens:          amount,
-		DelegatorShares: amount.ToLegacyDec(),
-	}
+			DelegatorAddress: selector.String(),
+			ValidatorAddress: val.String(),
+			Shares:           amount.ToLegacyDec(),
+		}, stakingtypes.Validator{
+			OperatorAddress: val.String(),
+			Status:          stakingtypes.Bonded,
+			Tokens:          amount,
+			DelegatorShares: amount.ToLegacyDec(),
+		}
 }
 
 func countReportByBlockRows(t *testing.T, k keeper.Keeper, ctx sdk.Context) int {
