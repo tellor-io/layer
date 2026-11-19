@@ -15,13 +15,19 @@ import (
 )
 
 type stakeReturnPolicy struct {
-	preserveUnbondedOriginal bool
-	enforceUBDMaxEntries     bool
+	preserveUnbondedOriginal      bool
+	enforceUBDMaxEntries          bool
+	bondOverflowWhenUnbondingFull bool
 }
 
 var (
 	slashReturnPolicy = stakeReturnPolicy{preserveUnbondedOriginal: true}
 	feeReturnPolicy   = stakeReturnPolicy{enforceUBDMaxEntries: true}
+	// feeExcessReturnPolicy is the round-1 fee excess. Caps still send the
+	// overflow to unbonding. A full unbonding queue bonds that overflow anyway:
+	// the funding transaction completes, and the tokens stay slashable instead
+	// of becoming liquid.
+	feeExcessReturnPolicy = stakeReturnPolicy{enforceUBDMaxEntries: true, bondOverflowWhenUnbondingFull: true}
 )
 
 type stakeReturnRequest struct {
@@ -69,14 +75,7 @@ func (k Keeper) returnOrigins(ctx context.Context, origins []*types.TokenOriginI
 		return math.ZeroInt(), math.ZeroInt(), err
 	}
 
-	returnAmounts := make([]math.Int, len(origins))
-	if returnAmt.Equal(total) {
-		for i, source := range origins {
-			returnAmounts[i] = source.Amount
-		}
-	} else {
-		returnAmounts = proportionalReturnAmounts(origins, total, returnAmt)
-	}
+	returnAmounts := originReturnAmounts(origins, total, returnAmt)
 
 	projectedBondedDelta := math.ZeroInt()
 	for i, source := range origins {
@@ -102,6 +101,19 @@ func (k Keeper) returnOrigins(ctx context.Context, origins []*types.TokenOriginI
 		projectedBondedDelta = nextProjected
 	}
 	return bonded, unbonded, nil
+}
+
+// originReturnAmounts is the per-origin split returnOrigins applies.
+// Callers that rewrite a stored tracker subtract these same amounts.
+func originReturnAmounts(origins []*types.TokenOriginInfo, total, returnAmt math.Int) []math.Int {
+	if returnAmt.Equal(total) {
+		out := make([]math.Int, len(origins))
+		for i, source := range origins {
+			out[i] = source.Amount
+		}
+		return out
+	}
+	return proportionalReturnAmounts(origins, total, returnAmt)
 }
 
 func proportionalReturnAmounts(origins []*types.TokenOriginInfo, total, returnTotal math.Int) []math.Int {
@@ -201,12 +213,53 @@ func (k Keeper) bondValidatorUpToHeadroom(
 		projected = projected.Add(headroom)
 	}
 	if overflow := req.amount.Sub(headroom); overflow.IsPositive() {
-		if err := k.returnViaUnbonding(ctx, req.delAddr, ubdKey, overflow, req.policy.enforceUBDMaxEntries); err != nil {
+		bondedOverflow, unbondedOverflow, err := k.returnOverflowAmount(ctx, req, validator, ubdKey, overflow)
+		if err != nil {
 			return math.ZeroInt(), math.ZeroInt(), math.Int{}, err
 		}
-		unbonded = overflow
+		bonded = bonded.Add(bondedOverflow)
+		unbonded = unbonded.Add(unbondedOverflow)
+		projected = projected.Add(bondedOverflow)
 	}
 	return bonded, unbonded, projected, nil
+}
+
+// returnOverflowAmount sends stake the caps would not bond to an unbonding
+// entry. When that queue is full and the policy allows it, the same amount is
+// bonded past the cap. The tokens stay in a delegation, where a later dispute
+// can slash them, and the caller does not receive them as a liquid balance.
+func (k Keeper) returnOverflowAmount(
+	ctx context.Context,
+	req stakeReturnRequest,
+	bondTarget stakingtypes.Validator,
+	ubdKey sdk.ValAddress,
+	amount math.Int,
+) (bonded, unbonded math.Int, err error) {
+	err = k.returnViaUnbonding(ctx, req.delAddr, ubdKey, amount, req.policy.enforceUBDMaxEntries)
+	if err == nil {
+		return math.ZeroInt(), amount, nil
+	}
+	if !req.policy.bondOverflowWhenUnbondingFull || !errors.Is(err, stakingtypes.ErrMaxUnbondingDelegationEntries) {
+		return math.Int{}, math.Int{}, err
+	}
+
+	ubdVal, getErr := k.stakingKeeper.GetValidator(ctx, ubdKey)
+	candidates := []stakingtypes.Validator{bondTarget}
+	if getErr == nil {
+		candidates = append([]stakingtypes.Validator{ubdVal}, candidates...)
+	} else if !errors.Is(getErr, stakingtypes.ErrNoValidatorFound) {
+		return math.Int{}, math.Int{}, getErr
+	}
+	for _, validator := range candidates {
+		if !validator.IsBonded() || hasInvalidExchangeRate(validator) {
+			continue
+		}
+		if _, delErr := k.delegateToStakeAndEmit(ctx, req.delAddr, amount, stakingtypes.Bonded, validator); delErr != nil {
+			return math.Int{}, math.Int{}, delErr
+		}
+		return amount, math.ZeroInt(), nil
+	}
+	return math.Int{}, math.Int{}, err
 }
 
 func (k Keeper) delegateBondedWithOverflow(ctx context.Context, req stakeReturnRequest) (bonded, unbonded, projected math.Int, err error) {
@@ -235,10 +288,15 @@ func (k Keeper) delegateBondedWithOverflow(ctx context.Context, req stakeReturnR
 	scan, err := k.scanBondedHeadroom(ctx, req)
 	if err != nil {
 		if errors.Is(err, types.ErrExceedsMaxValidatorPowerShare) && len(req.overflowValAddr) > 0 {
-			if err := k.returnViaUnbonding(ctx, req.delAddr, req.overflowValAddr, req.amount, req.policy.enforceUBDMaxEntries); err != nil {
-				return math.ZeroInt(), math.ZeroInt(), math.Int{}, err
+			validator, getErr := k.stakingKeeper.GetValidator(ctx, req.overflowValAddr)
+			if getErr != nil && !errors.Is(getErr, stakingtypes.ErrNoValidatorFound) {
+				return math.ZeroInt(), math.ZeroInt(), math.Int{}, getErr
 			}
-			return math.ZeroInt(), req.amount, projected, nil
+			bondedOverflow, unbondedOverflow, retErr := k.returnOverflowAmount(ctx, req, validator, req.overflowValAddr, req.amount)
+			if retErr != nil {
+				return math.ZeroInt(), math.ZeroInt(), math.Int{}, retErr
+			}
+			return bondedOverflow, unbondedOverflow, projected.Add(bondedOverflow), nil
 		}
 		return math.ZeroInt(), math.ZeroInt(), math.Int{}, err
 	}
@@ -312,6 +370,85 @@ func (k Keeper) FeePaidFromStakeTotalByPayer(ctx context.Context, hashId []byte,
 		return math.ZeroInt(), err
 	}
 	return trackedFees.Total, nil
+}
+
+// ReturnFeeExcess puts back only the excess of a round-1 from-bond fee and
+// rewrites that payer's tracker to the share still at risk. kept is that share.
+// The tracker stays in place unless nothing remains and kept is zero, because a
+// later claim still reads it. FeeRefund cannot be used here: it deletes the tracker.
+// The legacy hash-id-only tracker is not consulted.
+func (k Keeper) ReturnFeeExcess(ctx context.Context, hashId []byte, payer sdk.AccAddress, excess, kept math.Int) (math.Int, math.Int, error) {
+	if excess.IsNil() || !excess.IsPositive() {
+		return math.ZeroInt(), math.ZeroInt(), nil
+	}
+
+	payerKey := feePaidFromStakePayerKey(hashId, payer)
+	tracked, err := k.FeePaidFromStake.Get(ctx, payerKey)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return math.ZeroInt(), math.ZeroInt(), fmt.Errorf("from-bond fee tracker not found for payer %s", payer.String())
+		}
+		return math.ZeroInt(), math.ZeroInt(), err
+	}
+	if tracked.Total.IsNil() || tracked.Total.LT(excess) {
+		return math.ZeroInt(), math.ZeroInt(), fmt.Errorf("from-bond fee tracker cannot cover excess refund (payer %s, excess %s, tracked %s)", payer.String(), excess, tracked.Total)
+	}
+
+	originTotal := math.ZeroInt()
+	for _, origin := range tracked.TokenOrigins {
+		if origin == nil || origin.Amount.IsNil() || origin.Amount.IsNegative() {
+			return math.ZeroInt(), math.ZeroInt(),
+				fmt.Errorf("%w (hashId %x, payer %s)", types.ErrMalformedDelegationSnapshot, hashId, payer.String())
+		}
+		originTotal = originTotal.Add(origin.Amount)
+	}
+	if !originTotal.Equal(tracked.Total) {
+		return math.ZeroInt(), math.ZeroInt(),
+			fmt.Errorf("%w (hashId %x, payer %s, total %s, originTotal %s)", types.ErrMalformedDelegationSnapshot, hashId, payer.String(), tracked.Total, originTotal)
+	}
+
+	// excess is already at most the tracker total. Returning that amount, not the
+	// whole tracker, leaves the kept share at risk.
+	returnAmt := excess
+	amounts := originReturnAmounts(tracked.TokenOrigins, tracked.Total, returnAmt)
+	if len(amounts) != len(tracked.TokenOrigins) {
+		return math.ZeroInt(), math.ZeroInt(), fmt.Errorf("fee excess return split does not match tracker origins")
+	}
+
+	bondedReturn, unbondedReturn, err := k.returnOrigins(ctx, tracked.TokenOrigins, tracked.Total, returnAmt, feeExcessReturnPolicy)
+	if err != nil {
+		return math.ZeroInt(), math.ZeroInt(), err
+	}
+
+	remainingOrigins := make([]*types.TokenOriginInfo, 0, len(tracked.TokenOrigins))
+	for i, origin := range tracked.TokenOrigins {
+		left := origin.Amount.Sub(amounts[i])
+		if left.IsNegative() {
+			return math.ZeroInt(), math.ZeroInt(), fmt.Errorf("fee excess return exceeds origin amount")
+		}
+		if !left.IsPositive() {
+			continue
+		}
+		remainingOrigins = append(remainingOrigins, &types.TokenOriginInfo{
+			DelegatorAddress: origin.DelegatorAddress,
+			ValidatorAddress: origin.ValidatorAddress,
+			Amount:           left,
+		})
+	}
+	remaining := tracked.Total.Sub(returnAmt)
+	if !remaining.IsPositive() && (kept.IsNil() || !kept.IsPositive()) {
+		if err := k.FeePaidFromStake.Remove(ctx, payerKey); err != nil {
+			return math.ZeroInt(), math.ZeroInt(), err
+		}
+		return bondedReturn, unbondedReturn, nil
+	}
+	if err := k.FeePaidFromStake.Set(ctx, payerKey, types.DelegationsAmounts{
+		TokenOrigins: remainingOrigins,
+		Total:        remaining,
+	}); err != nil {
+		return math.ZeroInt(), math.ZeroInt(), err
+	}
+	return bondedReturn, unbondedReturn, nil
 }
 
 func (k Keeper) FeeRefund(ctx context.Context, hashId []byte, payer sdk.AccAddress, amt math.Int) (math.Int, math.Int, error) {

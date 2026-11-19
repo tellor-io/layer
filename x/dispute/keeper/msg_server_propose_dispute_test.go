@@ -45,6 +45,7 @@ func (s *KeeperTestSuite) TestMsgProposeDisputeFromAccount() (sdk.AccAddress, ty
 	}
 
 	s.reporterKeeper.On("EscrowReporterStake", s.ctx, addr, uint64(1), uint64(0), math.NewInt(10_000), reportertypes.StakeSnapshotRef{}, mock.Anything).Return(nil)
+	s.reporterKeeper.On("DisputedDelegationTotal", s.ctx, mock.Anything).Return(math.NewInt(10_000), nil)
 	s.reporterKeeper.On("TotalReporterPower", s.ctx).Return(math.NewInt(1), nil)
 	s.oracleKeeper.On("GetTotalTips", s.ctx).Return(math.NewInt(1), nil)
 	s.reporterKeeper.On("JailReporter", s.ctx, addr, uint64(0), mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -98,6 +99,7 @@ func BenchmarkMsgProposeDispute(b *testing.B) {
 	}
 	// mocks
 	rk.On("EscrowReporterStake", mock.Anything, addr, uint64(1), uint64(0), math.NewInt(10_000), reportertypes.StakeSnapshotRef{}, mock.Anything).Return(nil)
+	rk.On("DisputedDelegationTotal", mock.Anything, mock.Anything).Return(math.NewInt(10_000), nil)
 	rk.On("TotalReporterPower", mock.Anything).Return(math.NewInt(1), nil)
 	ok.On("GetTotalTips", mock.Anything).Return(math.NewInt(1), nil)
 	rk.On("JailReporter", mock.Anything, addr, uint64(0), mock.Anything, mock.Anything, mock.Anything).Return(nil)
