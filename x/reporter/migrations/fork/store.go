@@ -89,6 +89,11 @@ func MigrateFork(ctx context.Context, storeService store.KVStoreService, cdc cod
 		return err
 	}
 
+	// Older snapshots stop at the checksum. Newer ones include 2bit registrations.
+	if err := processTwoBitReportersSection(ctx, decoder, storeService); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -304,5 +309,52 @@ func processFeePaidFromStakeSection(ctx context.Context, decoder *json.Decoder, 
 		return err
 	}
 
+	return nil
+}
+
+type twoBitReporterStateEntry struct {
+	AgentAddress    []byte `json:"agent_address"`
+	ReporterAddress []byte `json:"reporter_address"`
+}
+
+// processTwoBitReportersSection imports agent -> reporter pairs when the section
+// is present. A following checksum, or the end of the object, is left unread.
+func processTwoBitReportersSection(ctx context.Context, decoder *json.Decoder, storeService store.KVStoreService) error {
+	if !decoder.More() {
+		return nil
+	}
+	t, err := decoder.Token()
+	if err != nil {
+		return err
+	}
+	name, ok := t.(string)
+	if !ok || name != "two_bit_reporters" {
+		return nil
+	}
+
+	if _, err := decoder.Token(); err != nil {
+		return err
+	}
+
+	sb := collections.NewSchemaBuilder(storeService)
+	agentToReporter := collections.NewMap(sb, types.TwoBitAgentToReporterPrefix, "two_bit_agent_to_reporter", collections.BytesKey, collections.BytesValue)
+	reporterToAgent := collections.NewMap(sb, types.TwoBitReporterToAgentPrefix, "two_bit_reporter_to_agent", collections.BytesKey, collections.BytesValue)
+
+	for decoder.More() {
+		var entry twoBitReporterStateEntry
+		if err := decoder.Decode(&entry); err != nil {
+			return err
+		}
+		if err := agentToReporter.Set(ctx, entry.AgentAddress, entry.ReporterAddress); err != nil {
+			return err
+		}
+		if err := reporterToAgent.Set(ctx, entry.ReporterAddress, entry.AgentAddress); err != nil {
+			return err
+		}
+	}
+
+	if _, err := decoder.Token(); err != nil {
+		return err
+	}
 	return nil
 }
