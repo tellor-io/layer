@@ -496,7 +496,7 @@ func (k Keeper) GetLastReportedAtBlock(ctx context.Context, reporter []byte) (ui
 	return 0, nil
 }
 
-// PruneOldReports removes Report entries older than 30 days.
+// PruneOldReports removes Report entries older than StakeSnapshotRetention (60 days).
 // It finds the cutoff block height with by calling the oracle using
 // ETH/USD aggregates, then iterates and deletes entries below that height.
 // It keeps at least one entry per reporter so dispute voting always has
@@ -592,12 +592,15 @@ func (k Keeper) PruneOldReports(ctx context.Context, maxBatchSize int) error {
 // MaxStakeSnapshotCleanup is how many old snapshots a reporter clears each time it saves a new one.
 const MaxStakeSnapshotCleanup = 10
 
-// reportCutoffBlock returns the block from 30 days ago, or false when it can't be worked out yet.
+// StakeSnapshotRetention is how long snapshots are kept; the slowest dispute needs 37 days, so this leaves room to spare.
+const StakeSnapshotRetention = 60 * 24 * time.Hour
+
+// reportCutoffBlock returns the block from StakeSnapshotRetention ago, or false when it can't be worked out yet.
 func (k Keeper) reportCutoffBlock(ctx context.Context) (uint64, bool) {
 	if k.oracleKeeper == nil {
 		return 0, false
 	}
-	cutoff := sdk.UnwrapSDKContext(ctx).BlockTime().Add(-30 * 24 * time.Hour)
+	cutoff := sdk.UnwrapSDKContext(ctx).BlockTime().Add(-StakeSnapshotRetention)
 	cutoffBlock, err := k.oracleKeeper.GetBlockHeightFromTimestamp(ctx, cutoff)
 	if err != nil {
 		return 0, false

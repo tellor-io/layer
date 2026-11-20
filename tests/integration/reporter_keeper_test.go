@@ -1104,7 +1104,7 @@ func (s *IntegrationTestSuite) TestPruneOldReports() {
 	require.NoError(err)
 
 	// Aggregate at startTime+80d with Height 350 (above block 300)
-	// Used when pruning at 120 days: cutoff=startTime+90d, nearest before is startTime+80d -> Height 350
+	// Used when pruning at 150 days: cutoff=startTime+90d, nearest before is startTime+80d -> Height 350
 	timestamp4 := uint64(startTime.Add(80 * 24 * time.Hour).UnixMilli())
 	err = ok.Aggregates.Set(ctx, collections.Join(ethUsdQueryId, timestamp4), oracletypes.Aggregate{
 		QueryId:           ethUsdQueryId,
@@ -1149,14 +1149,14 @@ func (s *IntegrationTestSuite) TestPruneOldReports() {
 	_, err = rk.Report.Get(ctx, collections.Join(queryId3, collections.Join(reporter.Bytes(), uint64(300))))
 	require.NoError(err, "Report at block 300 should still exist (20 days old)")
 
-	// Set context to 120 days from start - now block 200 and 300 reports should be old too
-	ctx = ctx.WithBlockTime(startTime.Add(120 * 24 * time.Hour))
+	// Set context to 150 days from start - now block 200 and 300 reports should be old too
+	ctx = ctx.WithBlockTime(startTime.Add(150 * 24 * time.Hour))
 	err = rk.PruneOldReports(ctx, 100)
 	require.NoError(err)
 
-	// Block 200 report is now 90 days old (120 - 30), should be deleted
+	// Block 200 report is now 120 days old (150 - 30), should be deleted
 	_, err = rk.Report.Get(ctx, collections.Join(queryId2, collections.Join(reporter.Bytes(), uint64(200))))
-	require.Error(err, "Report at block 200 should be deleted (90 days old)")
+	require.Error(err, "Report at block 200 should be deleted (120 days old)")
 
 	// Block 300 is the most recent old entry for this reporter so its kept so
 	// dispute voting always has a snapshot to read historical power from

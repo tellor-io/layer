@@ -523,7 +523,8 @@ func TestCleanupOldStakeSnapshots_Capped(t *testing.T) {
 		require.NoError(t, k.StakeSnapshots.Set(ctx, collections.Join3(reporter.Bytes(), uint64(i), uint64(i)), types.DelegationsAmounts{Total: math.OneInt()}))
 	}
 	oracleKeeper := mocks.NewOracleKeeper(t)
-	oracleKeeper.On("GetBlockHeightFromTimestamp", mock.Anything, mock.Anything).Return(uint64(250), nil)
+	// The cutoff must be asked for exactly the retention period back.
+	oracleKeeper.On("GetBlockHeightFromTimestamp", mock.Anything, ctx.BlockTime().Add(-keeper.StakeSnapshotRetention)).Return(uint64(250), nil)
 	k.SetOracleKeeper(oracleKeeper)
 
 	remaining := func() int {
@@ -543,6 +544,12 @@ func TestCleanupOldStakeSnapshots_Capped(t *testing.T) {
 	has, err := k.StakeSnapshots.Has(ctx, collections.Join3(reporter.Bytes(), uint64(oldCount), uint64(oldCount)))
 	require.NoError(t, err)
 	require.True(t, has)
+}
+
+// Snapshots must outlive the slowest dispute: 21 days to open it, 1 day to fund it, and 5 rounds of 3 days.
+func TestStakeSnapshotRetentionCoversSlowestDispute(t *testing.T) {
+	slowestDispute := (21 + 1 + 5*3) * 24 * time.Hour
+	require.Greater(t, keeper.StakeSnapshotRetention, slowestDispute)
 }
 
 func TestPruneOldReportsMaxIterations(t *testing.T) {
