@@ -56,6 +56,7 @@ func (k *KeeperTestSuite) TestMsgServerAddFeeToDispute() {
 	k.bankKeeper.On("HasBalance", k.ctx, creator, fee).Return(true)
 	k.bankKeeper.On("SendCoinsFromAccountToModule", k.ctx, creator, types.ModuleName, sdk.NewCoins(fee)).Return(nil)
 	k.reporterKeeper.On("EscrowReporterStake", k.ctx, sdk.MustAccAddressFromBech32(dispute.InitialEvidence.Reporter), dispute.InitialEvidence.Power, uint64(1), dispute.SlashAmount, keeper.StakeSnapshotOf(dispute.InitialEvidence), dispute.HashId).Return(nil)
+	k.reporterKeeper.On("DisputedDelegationTotal", k.ctx, dispute.HashId).Return(dispute.SlashAmount, nil)
 	// jail duration is 0
 	k.reporterKeeper.On("JailReporter", k.ctx, sdk.MustAccAddressFromBech32(dispute.InitialEvidence.Reporter), uint64(0), dispute.InitialEvidence.BlockNumber, keeper.StakeSnapshotOf(dispute.InitialEvidence), dispute.HashId).Return(nil)
 
@@ -129,6 +130,7 @@ func BenchmarkAddFeeToDispute(b *testing.B) {
 	rk.On("JailReporter", ctx,
 		sdk.MustAccAddressFromBech32(dispute.InitialEvidence.Reporter),
 		uint64(0), dispute.InitialEvidence.BlockNumber, keeper.StakeSnapshotOf(dispute.InitialEvidence), dispute.HashId).Return(nil).Maybe()
+	rk.On("DisputedDelegationTotal", ctx, dispute.HashId).Return(dispute.SlashAmount, nil).Maybe()
 
 	// reset timer before the benchmark loop
 	b.ResetTimer()

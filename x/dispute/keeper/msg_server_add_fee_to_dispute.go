@@ -92,6 +92,9 @@ func (k msgServer) AddFeeToDispute(goCtx context.Context,
 		if err := k.Keeper.SlashAndJailReporter(ctx, dispute.InitialEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
 			return nil, err
 		}
+		if err := k.Keeper.adjustDisputeFeeToCollectedSlash(ctx, &dispute); err != nil {
+			return nil, err
+		}
 		// begin voting immediately
 		dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
 		dispute.DisputeStatus = types.Voting
