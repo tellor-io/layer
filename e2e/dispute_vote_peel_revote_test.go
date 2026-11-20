@@ -764,3 +764,140 @@ func TestDisputeVoteSelfDemotionAfterOpenE2E(t *testing.T) {
 
 	requireDisputeVoting(t, ctx, val0.Node, disputeID)
 }
+
+// TestDisputeVoteSelfDemotionRemovedSelectorE2E is the missing-row case.
+// The evidence reporter votes the open-height group, self-demotes, unbonds below the
+// new reporter's minimum, and is removed with MsgRemoveSelector. The selector who was
+// on them at the dispute height still votes and peels that original vote.
+//
+// MaxSelectors is 2 so the demoted reporter fills the target. A fully funded warning
+// dispute escrows 1% of the report bond before the switch, so the target's minimum is
+// taken from the post-escrow self-bond. A small unbond then makes RemoveSelector legal.
+// The other selector cannot meet that minimum, so they move to a low-minimum reporter first.
+// That also clears the 21-day wait, which applies only while another selector remains.
+func TestDisputeVoteSelfDemotionRemovedSelectorE2E(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping self-demotion-removed-selector e2e in short mode")
+	}
+
+	require := require.New(t)
+	cosmos.SetSDKConfig("tellor")
+
+	genesis := append(e2e.CreateStandardGenesis(),
+		cosmos.NewGenesisKV("app_state.reporter.params.max_selectors", "2"),
+	)
+	config := e2e.DefaultSetupConfig()
+	config.NumValidators = 2
+	config.NumFullNodes = 0
+	config.ModifyGenesis = genesis
+	chain, ic, ctx := e2e.SetupChainWithCustomConfig(t, config)
+	defer ic.Close()
+
+	validators, err := e2e.GetValidators(ctx, chain)
+	require.NoError(err)
+	require.GreaterOrEqual(len(validators), 2)
+	val0, val1 := validators[0], validators[1]
+
+	require.NoError(e2e.TurnOnMinting(ctx, chain, val0.Node))
+	require.NoError(testutil.WaitForBlocks(ctx, 7, val0.Node))
+
+	_, err = val0.Node.ExecTx(ctx, val0.AccAddr, "reporter", "create-reporter", commissRate, "1000000",
+		"peel_revote_0", "--keyring-dir", val0.Node.HomeDir())
+	require.NoError(err)
+
+	homeFund := math.NewInt(5_000 * 1e6)
+	homeUser := interchaintest.GetAndFundTestUsers(t, ctx, "removed_row_home", homeFund, chain)[0]
+	homeAddr := homeUser.FormattedAddress()
+	_, err = val0.Node.ExecTx(ctx, homeAddr, "staking", "delegate", val0.ValAddr, sdk.NewCoin("loya", peelRevoteDelegateAmt).String(),
+		"--keyring-dir", val0.Node.HomeDir(), "--fees", "10loya")
+	require.NoError(err)
+	_, err = val0.Node.ExecTx(ctx, homeAddr, "reporter", "create-reporter", commissRate, "1000000",
+		"removed_row_home", "--keyring-dir", val0.Node.HomeDir(), "--fees", "5loya")
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+	home := e2e.ValidatorInfo{Node: val0.Node, AccAddr: homeAddr}
+
+	selectorAddr := fundSelectorOnReporter(t, ctx, val0)
+	tip := sdk.NewCoin("loya", peelRevoteTipAmt)
+
+	submitSpotPriceReport(t, ctx, val0, bnbQData, tip)
+	disputedReport := latestReporterReport(t, ctx, val0.Node, val0.AccAddr)
+	reportPower, err := strconv.ParseUint(disputedReport.Power, 10, 64)
+	require.NoError(err)
+	selectorStake, err := queryDelegationAmount(ctx, chain, selectorAddr, val0.ValAddr)
+	require.NoError(err)
+
+	disputeID := proposeFullDispute(t, ctx, val0.Node, val0.AccAddr, disputedReport, "warning", warningDisputeFeeFromReportPower)
+
+	// The escrow already reduced val0's bonded stake. val1's minimum has to sit under
+	// that remaining bond, or the self-demotion fails the min check.
+	val0Stake, err := queryDelegationAmount(ctx, chain, val0.AccAddr, val0.ValAddr)
+	require.NoError(err)
+	// Unbonding this much later drops val0 below val1's minimum without unbonding the validator.
+	cushion := math.NewInt(1_000 * 1e6)
+	require.True(val0Stake.GT(cushion))
+	val1Min := val0Stake.Sub(cushion)
+	_, err = val1.Node.ExecTx(ctx, val1.AccAddr, "reporter", "create-reporter", commissRate, val1Min.String(),
+		"peel_revote_1", "--keyring-dir", val1.Node.HomeDir())
+	require.NoError(err)
+
+	// The selector leaves before the self-demotion. Their home reporter reports so the
+	// switch finalizes without val0 opening another commitment.
+	beginSwitchToReporter(t, ctx, val0, home, selectorAddr)
+	require.NoError(testutil.WaitForBlocks(ctx, 3, val0.Node))
+	submitSpotPriceReport(t, ctx, home, xrpQData, tip)
+	res, _, err := e2e.QueryWithTimeout(ctx, val0.Node, "reporter", "selector-reporter", selectorAddr)
+	require.NoError(err)
+	var moved e2e.QuerySelectorReporterResponse
+	require.NoError(json.Unmarshal(res, &moved))
+	require.Equal(homeAddr, moved.Reporter, "home report must finalize the selector switch")
+
+	require.NoError(testutil.WaitForBlocks(ctx, 3, val0.Node))
+	beginSwitchToReporter(t, ctx, val0, val1, val0.AccAddr)
+	submitSpotPriceReport(t, ctx, val1, solQData, tip)
+	res, _, err = e2e.QueryWithTimeout(ctx, val0.Node, "reporter", "selector-reporter", val0.AccAddr)
+	require.NoError(err)
+	var demoted e2e.QuerySelectorReporterResponse
+	require.NoError(json.Unmarshal(res, &demoted))
+	require.Equal(val1.AccAddr, demoted.Reporter, "val1 SOL report must finalize val0's self-demotion")
+
+	require.NoError(execDisputeVote(ctx, val0.Node, val0.AccAddr, disputeID, "vote-support"))
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	afterReporter, err := fetchReporterTally(ctx, val0.Node, disputeID)
+	require.NoError(err)
+	floor := reportTokenFloor(reportPower)
+	require.GreaterOrEqual(afterReporter.totalPowerVoted, floor,
+		"demoted reporter must still vote the full open-height group")
+	require.Less(afterReporter.totalPowerVoted, floor+layertypes.PowerReduction.Uint64(),
+		"demoted reporter vote must be the open-height report snapshot")
+
+	stakeNow, err := queryDelegationAmount(ctx, chain, val0.AccAddr, val0.ValAddr)
+	require.NoError(err)
+	require.True(stakeNow.GT(val1Min), "val0 must meet val1's minimum until the unbond")
+	unbond := stakeNow.Sub(val1Min).Add(math.NewInt(1_000_000))
+	_, err = val0.Node.ExecTx(ctx, val0.AccAddr, "staking", "unbond", val0.ValAddr, unbond.String()+"loya",
+		"--keyring-dir", val0.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	_, err = val1.Node.ExecTx(ctx, val1.AccAddr, "reporter", "remove-selector", val0.AccAddr,
+		"--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+	_, _, err = e2e.QueryWithTimeout(ctx, val0.Node, "reporter", "selector-reporter", val0.AccAddr)
+	require.Error(err, "val0's selection row must be gone before the selector votes")
+
+	txHash, err := execDisputeVoteTx(ctx, val0.Node, selectorAddr, disputeID, "vote-against")
+	require.NoError(err)
+	require.NoError(testutil.WaitForBlocks(ctx, 2, val0.Node))
+
+	afterPeel, err := fetchReporterTally(ctx, val0.Node, disputeID)
+	require.NoError(err)
+	require.Equal(afterReporter.totalPowerVoted, afterPeel.totalPowerVoted,
+		"selector must peel the original reporter after that reporter's selection row is removed")
+	requireNearTokens(t, voteTxReporterPower(t, ctx, val0.Node, txHash), selectorStake.Uint64(),
+		"selector reporter power should be their stake on the original reporter at the dispute height")
+
+	requireDisputeVoting(t, ctx, val0.Node, disputeID)
+}

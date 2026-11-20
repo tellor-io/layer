@@ -197,6 +197,11 @@ type disputeHeightSelection struct {
 func (k Keeper) selectionAtDisputeHeight(ctx context.Context, addr sdk.AccAddress, blockHeight uint64) (disputeHeightSelection, error) {
 	at, liveAccurate, err := k.reporterKeeper.ReporterAtHeight(ctx, addr, blockHeight)
 	if err != nil {
+		// The row is gone and history cannot name the live reporter. Every open
+		// dispute is past the switch that moved them, so they were not a group.
+		if errors.Is(err, collections.ErrNotFound) {
+			return disputeHeightSelection{}, nil
+		}
 		return disputeHeightSelection{}, err
 	}
 	unfinished, err := k.reporterKeeper.SelectorSwitchUnfinishedAt(ctx, addr, blockHeight)

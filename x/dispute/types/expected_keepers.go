@@ -64,6 +64,9 @@ type ReporterKeeper interface {
 	// is the case when the newest switch completed at or before blockHeight.
 	// An open switch still resolves to the original reporter. It does not by itself
 	// mean a switch was unfinished; use SelectorSwitchUnfinishedAt for that.
+	// A missing selection row still resolves from history when blockHeight is before
+	// the newest completion. Otherwise it returns collections.ErrNotFound: the answer
+	// would be the deleted live reporter.
 	ReporterAtHeight(ctx context.Context, selector sdk.AccAddress, blockHeight uint64) (sdk.AccAddress, bool, error)
 	// SelectorSwitchUnfinishedAt reports whether a switch was in progress at blockHeight:
 	// it began at or before blockHeight and had not completed by then.

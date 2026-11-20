@@ -505,3 +505,71 @@ func (s *KeeperTestSuite) TestDisputeHeight_CountedRevoteWhileUnfinishedMovesSto
 	require.Equal(math.NewInt(selectorSnapshot), moved)
 	require.Equal(types.VoteCounts{Invalid: uint64(selectorSnapshot)}, s.reporterVoteCountsAt(ctx, disputeID))
 }
+
+// TestDisputeHeight_MissingOwnerRowStillVotes is a reporter who voted the group,
+// then self-demoted, then had their own selection row removed. Selectors still
+// vote. History that names them as a group peels. History that cannot name the
+// live reporter counts the selector's own snapshot.
+func (s *KeeperTestSuite) TestDisputeHeight_MissingOwnerRowStillVotes() {
+	s.Run("history cannot name the live reporter", func() {
+		s.SetupTest()
+		require := s.Require()
+		k := s.disputeKeeper
+		rk := s.reporterKeeper
+		ctx := s.voteCtx()
+		disputeID := uint64(14)
+		reporter := sample.AccAddressBytes()
+		selector := sample.AccAddressBytes()
+
+		s.seedCountedReporterVote(ctx, disputeID, reporter, groupSnapshot, types.VoteEnum_VOTE_SUPPORT)
+		rk.On("Delegation", mock.Anything, selector).Return(reportertypes.Selection{Reporter: reporter}, nil)
+		rk.On("GetSelectorForStake", mock.Anything, selector).Return(unlockedSelection(reporter), nil)
+		s.expectDisputeHeight(selector, reporter, true, false)
+		rk.On("ReporterAtHeight", mock.Anything, reporter, disputeOpenHeight).
+			Return(nil, false, collections.ErrNotFound)
+		rk.On("GetDelegatorTokensAtBlock", mock.Anything, selector.Bytes(), disputeOpenHeight).
+			Return(math.NewInt(selectorSnapshot), nil)
+
+		power, err := k.SetVoterReporterStake(ctx, disputeID, selector, disputeOpenHeight, types.VoteEnum_VOTE_AGAINST, nil, nil)
+		require.NoError(err)
+		require.Equal(math.NewInt(selectorSnapshot), power)
+		require.Equal(types.VoteCounts{Support: uint64(groupSnapshot), Against: uint64(selectorSnapshot)}, s.reporterVoteCountsAt(ctx, disputeID))
+
+		owner, err := k.Voter.Get(ctx, collections.Join(disputeID, reporter.Bytes()))
+		require.NoError(err)
+		require.Equal(math.NewInt(groupSnapshot), owner.ReporterPower)
+		_, err = k.ReportersWithDelegatorsVotedBefore.Get(ctx, collections.Join(reporter.Bytes(), disputeID))
+		require.ErrorIs(err, collections.ErrNotFound)
+	})
+
+	s.Run("history still shows a group at the open height", func() {
+		s.SetupTest()
+		require := s.Require()
+		k := s.disputeKeeper
+		rk := s.reporterKeeper
+		ctx := s.voteCtx()
+		disputeID := uint64(15)
+		reporter := sample.AccAddressBytes()
+		selector := sample.AccAddressBytes()
+
+		s.seedCountedReporterVote(ctx, disputeID, reporter, groupSnapshot, types.VoteEnum_VOTE_SUPPORT)
+		rk.On("Delegation", mock.Anything, selector).Return(reportertypes.Selection{Reporter: reporter}, nil)
+		rk.On("GetSelectorForStake", mock.Anything, selector).Return(unlockedSelection(reporter), nil)
+		s.expectDisputeHeight(selector, reporter, true, false)
+		s.expectDisputeHeight(reporter, reporter, false, false)
+		rk.On("GetDelegatorTokensAtBlock", mock.Anything, selector.Bytes(), disputeOpenHeight).
+			Return(math.NewInt(selectorSnapshot), nil)
+
+		power, err := k.SetVoterReporterStake(ctx, disputeID, selector, disputeOpenHeight, types.VoteEnum_VOTE_AGAINST, nil, nil)
+		require.NoError(err)
+		require.Equal(math.NewInt(selectorSnapshot), power)
+		require.Equal(types.VoteCounts{
+			Support: uint64(groupSnapshot - selectorSnapshot),
+			Against: uint64(selectorSnapshot),
+		}, s.reporterVoteCountsAt(ctx, disputeID))
+
+		owner, err := k.Voter.Get(ctx, collections.Join(disputeID, reporter.Bytes()))
+		require.NoError(err)
+		require.Equal(math.NewInt(groupSnapshot-selectorSnapshot), owner.ReporterPower)
+	})
+}

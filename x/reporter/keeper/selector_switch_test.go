@@ -300,6 +300,67 @@ func TestReporterAtHeightRoundTripPreservesOpenHeight(t *testing.T) {
 	require.False(t, unfinished)
 }
 
+// TestReporterAtHeightMissingSelectionUsesHistory is a selection row removed after
+// a switch. Heights before the newest completion still resolve from history. The
+// live reporter is unknown once that completion is at or before the height.
+func TestReporterAtHeightMissingSelectionUsesHistory(t *testing.T) {
+	k, ctx := newSwitchTestKeeper(t)
+	reporter := sample.AccAddressBytes()
+	next := sample.AccAddressBytes()
+
+	require.NoError(t, k.SelectorReporterSwitches.Set(ctx, reporter.Bytes(), types.SelectorReporterSwitches{
+		Switches: []types.SelectorReporterSwitch{{
+			OriginalReporter: reporter.Bytes(),
+			BeganHeight:      150,
+			CompletedHeight:  160,
+		}},
+	}))
+
+	got, live, err := k.ReporterAtHeight(ctx, reporter, 100)
+	require.NoError(t, err)
+	require.False(t, live)
+	require.True(t, bytes.Equal(got, reporter))
+	unfinished, err := k.SelectorSwitchUnfinishedAt(ctx, reporter, 100)
+	require.NoError(t, err)
+	require.False(t, unfinished, "the demotion had not started, so this height was still a group")
+
+	got, live, err = k.ReporterAtHeight(ctx, reporter, 155)
+	require.NoError(t, err)
+	require.False(t, live)
+	require.True(t, bytes.Equal(got, reporter))
+	unfinished, err = k.SelectorSwitchUnfinishedAt(ctx, reporter, 155)
+	require.NoError(t, err)
+	require.True(t, unfinished)
+
+	_, _, err = k.ReporterAtHeight(ctx, reporter, 160)
+	require.ErrorIs(t, err, collections.ErrNotFound)
+	_, _, err = k.ReporterAtHeight(ctx, reporter, 200)
+	require.ErrorIs(t, err, collections.ErrNotFound)
+
+	// Height 200 sits after the self-demotion and before the next completion,
+	// so the answer is the intermediate reporter, not the deleted live row.
+	require.NoError(t, k.SelectorReporterSwitches.Set(ctx, reporter.Bytes(), types.SelectorReporterSwitches{
+		Switches: []types.SelectorReporterSwitch{
+			{OriginalReporter: next.Bytes(), BeganHeight: 250, CompletedHeight: 300},
+			{OriginalReporter: reporter.Bytes(), BeganHeight: 150, CompletedHeight: 160},
+		},
+	}))
+	got, live, err = k.ReporterAtHeight(ctx, reporter, 100)
+	require.NoError(t, err)
+	require.False(t, live)
+	require.True(t, bytes.Equal(got, reporter))
+	got, live, err = k.ReporterAtHeight(ctx, reporter, 200)
+	require.NoError(t, err)
+	require.False(t, live)
+	require.True(t, bytes.Equal(got, next))
+	_, _, err = k.ReporterAtHeight(ctx, reporter, 300)
+	require.ErrorIs(t, err, collections.ErrNotFound)
+
+	gone := sample.AccAddressBytes()
+	_, _, err = k.ReporterAtHeight(ctx, gone, 100)
+	require.ErrorIs(t, err, collections.ErrNotFound)
+}
+
 func TestCancelOpenSelectorSwitchDropsOnlyTheOpenRow(t *testing.T) {
 	k, ctx := newSwitchTestKeeper(t)
 	selector := sample.AccAddressBytes()

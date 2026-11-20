@@ -150,33 +150,42 @@ func (k Keeper) SelectorSwitchUnfinishedAt(ctx context.Context, selector sdk.Acc
 // liveAccurate is true when the live selection is already that reporter: no history,
 // or the newest switch completed at or before blockHeight. An open switch has not
 // moved Selection, so the walk continues into older rows when blockHeight is before
-// a prior completion. SelectorSwitchUnfinishedAt reports whether that switch was
-// still unfinished.
+// a prior completion. A missing selection row is answered from switch history when
+// blockHeight is before the newest completion. The answer would otherwise be the
+// deleted live reporter, and the call returns collections.ErrNotFound.
+// SelectorSwitchUnfinishedAt reports whether that switch was still unfinished.
 func (k Keeper) ReporterAtHeight(ctx context.Context, selector sdk.AccAddress, blockHeight uint64) (sdk.AccAddress, bool, error) {
 	sel, err := k.Selectors.Get(ctx, selector.Bytes())
-	if err != nil {
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return nil, false, err
 	}
-	live := append(sdk.AccAddress(nil), sel.Reporter...)
+	hasLive := err == nil
+	var live sdk.AccAddress
+	if hasLive {
+		live = append(sdk.AccAddress(nil), sel.Reporter...)
+	}
 	history, err := k.selectorSwitchHistory(ctx, selector.Bytes())
 	if err != nil {
 		return nil, false, err
 	}
-	if len(history.Switches) == 0 {
-		return live, true, nil
-	}
-	latest := history.Switches[0]
-	if latest.CompletedHeight != 0 && latest.CompletedHeight <= blockHeight {
+	// No switch, or the newest one finished at or before blockHeight: the answer
+	// is whoever Selection points at now.
+	answerIsLive := len(history.Switches) == 0 ||
+		(history.Switches[0].CompletedHeight != 0 && history.Switches[0].CompletedHeight <= blockHeight)
+	if answerIsLive {
+		if !hasLive {
+			return nil, false, collections.ErrNotFound
+		}
 		return live, true, nil
 	}
 	current := live
 	for _, sw := range history.Switches {
 		if sw.CompletedHeight != 0 && sw.CompletedHeight <= blockHeight {
-			return current, bytes.Equal(current, live), nil
+			return current, hasLive && bytes.Equal(current, live), nil
 		}
 		current = append(sdk.AccAddress(nil), sw.OriginalReporter...)
 	}
-	return current, bytes.Equal(current, live), nil
+	return current, hasLive && bytes.Equal(current, live), nil
 }
 
 // ReporterSelfDemoted reports whether addr's own selection points at someone else.
