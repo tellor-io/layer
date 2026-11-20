@@ -455,3 +455,176 @@ func TestReturnFeeExcessRounding(t *testing.T) {
 		})
 	}
 }
+
+func TestReturnFeeExcessPartialKeepRewritesTracker(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	disablePowerCaps(t, k, ctx)
+	payer := sample.AccAddressBytes()
+	valAddr := sdk.ValAddress(sample.AccAddressBytes())
+	hashId := []byte("hash")
+	key := feePaidFromStakePayerKey(hashId, payer)
+	require.NoError(t, k.FeePaidFromStake.Set(ctx, key, types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{origin(payer, valAddr, 100)},
+		Total:        math.NewInt(100),
+	}))
+	validator := bondedVal(valAddr, 100)
+	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
+	sk.On("Delegate", ctx, payer, math.NewInt(40), stakingtypes.Bonded, validator, false).Return(math.LegacyZeroDec(), nil)
+
+	bonded, unbonded, err := k.ReturnFeeExcess(ctx, hashId, payer, math.NewInt(40), math.NewInt(60))
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(40), bonded)
+	require.True(t, unbonded.IsZero())
+
+	kept, err := k.FeePaidFromStake.Get(ctx, key)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(60), kept.Total)
+	require.Len(t, kept.TokenOrigins, 1)
+	require.Equal(t, math.NewInt(60), kept.TokenOrigins[0].Amount)
+	sk.AssertExpectations(t)
+}
+
+func TestReturnFeeExcessPartialKeepSplitsOrigins(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	disablePowerCaps(t, k, ctx)
+	payer := sample.AccAddressBytes()
+	valA := sdk.ValAddress(sample.AccAddressBytes())
+	valB := sdk.ValAddress(sample.AccAddressBytes())
+	hashId := []byte("hash")
+	key := feePaidFromStakePayerKey(hashId, payer)
+	require.NoError(t, k.FeePaidFromStake.Set(ctx, key, types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{origin(payer, valA, 60), origin(payer, valB, 40)},
+		Total:        math.NewInt(100),
+	}))
+	validatorA := bondedVal(valA, 60)
+	validatorB := bondedVal(valB, 40)
+	sk.On("GetValidator", ctx, valA).Return(validatorA, nil)
+	sk.On("GetValidator", ctx, valB).Return(validatorB, nil)
+	sk.On("Delegate", ctx, payer, math.NewInt(24), stakingtypes.Bonded, validatorA, false).Return(math.LegacyZeroDec(), nil)
+	sk.On("Delegate", ctx, payer, math.NewInt(16), stakingtypes.Bonded, validatorB, false).Return(math.LegacyZeroDec(), nil)
+
+	bonded, unbonded, err := k.ReturnFeeExcess(ctx, hashId, payer, math.NewInt(40), math.NewInt(60))
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(40), bonded)
+	require.True(t, unbonded.IsZero())
+
+	kept, err := k.FeePaidFromStake.Get(ctx, key)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(60), kept.Total)
+	require.Len(t, kept.TokenOrigins, 2)
+	require.Equal(t, math.NewInt(36), kept.TokenOrigins[0].Amount)
+	require.Equal(t, math.NewInt(24), kept.TokenOrigins[1].Amount)
+	originSum := kept.TokenOrigins[0].Amount.Add(kept.TokenOrigins[1].Amount)
+	require.Equal(t, kept.Total, originSum)
+	sk.AssertExpectations(t)
+}
+
+func TestReturnFeeExcessShortTrackerWithKeptShareRefundsNothing(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	payer := sample.AccAddressBytes()
+	valAddr := sdk.ValAddress(sample.AccAddressBytes())
+	hashId := []byte("hash")
+	key := feePaidFromStakePayerKey(hashId, payer)
+	require.NoError(t, k.FeePaidFromStake.Set(ctx, key, types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{origin(payer, valAddr, 40)},
+		Total:        math.NewInt(40),
+	}))
+
+	// The tracker cannot fund both the refund and the share that stays at risk.
+	bonded, unbonded, err := k.ReturnFeeExcess(ctx, hashId, payer, math.NewInt(100), math.NewInt(50))
+	require.NoError(t, err)
+	require.True(t, bonded.IsZero())
+	require.True(t, unbonded.IsZero())
+	kept, err := k.FeePaidFromStake.Get(ctx, key)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(40), kept.Total)
+}
+
+func TestReturnFeeExcessRejectsMalformedSnapshot(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	payer := sample.AccAddressBytes()
+	valAddr := sdk.ValAddress(sample.AccAddressBytes())
+	hashId := []byte("hash")
+	key := feePaidFromStakePayerKey(hashId, payer)
+	require.NoError(t, k.FeePaidFromStake.Set(ctx, key, types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{origin(payer, valAddr, 100)},
+		Total:        math.NewInt(90),
+	}))
+
+	_, _, err := k.ReturnFeeExcess(ctx, hashId, payer, math.NewInt(10), math.NewInt(80))
+	require.ErrorIs(t, err, types.ErrMalformedDelegationSnapshot)
+	kept, getErr := k.FeePaidFromStake.Get(ctx, key)
+	require.NoError(t, getErr)
+	require.Equal(t, math.NewInt(90), kept.Total)
+	require.Equal(t, math.NewInt(100), kept.TokenOrigins[0].Amount)
+}
+
+func TestReturnFeeExcessDelegateErrorAfterFullQueueLeavesTracker(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	params := types.DefaultParams()
+	params.MaxValidatorPowerShare = math.LegacyNewDecWithPrec(1, 6)
+	params.MaxReporterPowerShare = math.LegacyNewDecWithPrec(1, 6)
+	require.NoError(t, k.Params.Set(ctx, params))
+
+	payer := sample.AccAddressBytes()
+	valAddr := sdk.ValAddress(sample.AccAddressBytes())
+	hashId := []byte("hash")
+	key := feePaidFromStakePayerKey(hashId, payer)
+	require.NoError(t, k.FeePaidFromStake.Set(ctx, key, types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{origin(payer, valAddr, 80)},
+		Total:        math.NewInt(80),
+	}))
+	validator := bondedVal(valAddr, 50)
+	sk.On("GetValidator", ctx, valAddr).Return(validator, nil)
+	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100), nil)
+	sk.On("GetBondedValidatorsByPower", ctx).Return([]stakingtypes.Validator{validator}, nil)
+	sk.On("IterateDelegatorDelegations", ctx, payer, mock.Anything).Return(nil)
+	sk.On("HasMaxUnbondingDelegationEntries", ctx, payer, valAddr).Return(true, nil)
+	sk.On("Delegate", ctx, payer, math.NewInt(30), stakingtypes.Bonded, validator, false).Return(math.LegacyZeroDec(), stakingtypes.ErrNoDelegation)
+
+	_, _, err := k.ReturnFeeExcess(ctx, hashId, payer, math.NewInt(30), math.NewInt(50))
+	require.ErrorIs(t, err, stakingtypes.ErrNoDelegation)
+	kept, getErr := k.FeePaidFromStake.Get(ctx, key)
+	require.NoError(t, getErr)
+	require.Equal(t, math.NewInt(80), kept.Total)
+	require.Equal(t, math.NewInt(80), kept.TokenOrigins[0].Amount)
+}
+
+func TestReturnFeeExcessFullQueueBondsOntoADifferentValidator(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	params := types.DefaultParams()
+	params.MaxValidatorPowerShare = math.LegacyNewDecWithPrec(1, 6)
+	params.MaxReporterPowerShare = math.LegacyNewDecWithPrec(1, 6)
+	require.NoError(t, k.Params.Set(ctx, params))
+
+	payer := sample.AccAddressBytes()
+	originVal := sdk.ValAddress(sample.AccAddressBytes())
+	otherVal := sdk.ValAddress(sample.AccAddressBytes())
+	hashId := []byte("hash")
+	key := feePaidFromStakePayerKey(hashId, payer)
+	amount := math.NewInt(50)
+	require.NoError(t, k.FeePaidFromStake.Set(ctx, key, types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{origin(payer, originVal, 50)},
+		Total:        amount,
+	}))
+
+	unbondedOrigin := bondedVal(originVal, 10)
+	unbondedOrigin.Status = stakingtypes.Unbonded
+	other := bondedVal(otherVal, 50)
+	sk.On("GetValidator", ctx, originVal).Return(unbondedOrigin, nil)
+	sk.On("TotalBondedTokens", ctx).Return(math.NewInt(100), nil)
+	sk.On("GetBondedValidatorsByPower", ctx).Return([]stakingtypes.Validator{other}, nil)
+	sk.On("IterateDelegatorDelegations", ctx, payer, mock.Anything).Return(nil)
+	sk.On("HasMaxUnbondingDelegationEntries", ctx, payer, originVal).Return(true, nil)
+	sk.On("Delegate", ctx, payer, amount, stakingtypes.Bonded, other, false).Return(math.LegacyZeroDec(), nil)
+
+	bonded, unbonded, err := k.ReturnFeeExcess(ctx, hashId, payer, amount, math.ZeroInt())
+	require.NoError(t, err)
+	require.Equal(t, amount, bonded)
+	require.True(t, unbonded.IsZero())
+	has, hasErr := k.FeePaidFromStake.Has(ctx, key)
+	require.NoError(t, hasErr)
+	require.False(t, has)
+	sk.AssertNotCalled(t, "SetUnbondingDelegationEntry", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	sk.AssertExpectations(t)
+}
