@@ -44,6 +44,16 @@ func (k msgServer) CreateReporter(goCtx context.Context, msg *types.MsgCreateRep
 	if err != nil {
 		return nil, err
 	}
+	// An accepted agent account only pays gas for 2bitAgentic reports. It cannot also be a
+	// reporter, or submit would use this row and never follow the alias. A pending request
+	// does not lock the address.
+	isTwoBitAgent, err := k.Keeper.TwoBitAgentToReporter.Has(goCtx, addr.Bytes())
+	if err != nil {
+		return nil, err
+	}
+	if isTwoBitAgent {
+		return nil, types.ErrAddressIsTwoBitAgent.Wrapf("%s is registered as a 2bit agent", addr.String())
+	}
 	// check if reporter has min bonded tokens
 	params, err := k.Keeper.Params.Get(goCtx)
 	if err != nil {
@@ -805,4 +815,58 @@ func validateEditReporter(msg *types.MsgEditReporter) (reporter sdk.AccAddress, 
 	}
 
 	return reporter, nil
+}
+
+// Msg: RegisterTwoBitReporter asks an account to submit 2bitAgentic reports for
+// this reporter. Passing the reporter's own address clears the registration.
+func (k msgServer) RegisterTwoBitReporter(goCtx context.Context, msg *types.MsgRegisterTwoBitReporter) (*types.MsgRegisterTwoBitReporterResponse, error) {
+	reporter, err := sdk.AccAddressFromBech32(msg.ReporterAddress)
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid reporter address (%s)", err)
+	}
+	agent, err := sdk.AccAddressFromBech32(msg.TwoBitAddress)
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid 2bit address (%s)", err)
+	}
+	if err := k.SetTwoBitReporter(goCtx, reporter, agent); err != nil {
+		return nil, err
+	}
+
+	eventType := "two_bit_registration_requested"
+	attributes := []sdk.Attribute{
+		sdk.NewAttribute("reporter", reporter.String()),
+		sdk.NewAttribute("two_bit_address", agent.String()),
+	}
+	if bytes.Equal(reporter.Bytes(), agent.Bytes()) {
+		eventType = "two_bit_reporter_cleared"
+	} else {
+		pending, err := k.TwoBitPendingRequests.Get(goCtx, reporter.Bytes())
+		if err != nil {
+			return nil, err
+		}
+		attributes = append(attributes, sdk.NewAttribute("expiry_height", strconv.FormatUint(pending.ExpiryHeight, 10)))
+	}
+	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvent(sdk.NewEvent(eventType, attributes...))
+	return &types.MsgRegisterTwoBitReporterResponse{}, nil
+}
+
+// Msg: AcceptTwoBitRegistration accepts a reporter's request and creates the 2bit mapping.
+func (k msgServer) AcceptTwoBitRegistration(goCtx context.Context, msg *types.MsgAcceptTwoBitRegistration) (*types.MsgAcceptTwoBitRegistrationResponse, error) {
+	agent, err := sdk.AccAddressFromBech32(msg.TwoBitAddress)
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid 2bit address (%s)", err)
+	}
+	reporter, err := sdk.AccAddressFromBech32(msg.ReporterAddress)
+	if err != nil {
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid reporter address (%s)", err)
+	}
+	if err := k.Keeper.AcceptTwoBitRegistration(goCtx, reporter, agent); err != nil {
+		return nil, err
+	}
+	sdk.UnwrapSDKContext(goCtx).EventManager().EmitEvent(sdk.NewEvent(
+		"two_bit_reporter_registered",
+		sdk.NewAttribute("reporter", reporter.String()),
+		sdk.NewAttribute("two_bit_address", agent.String()),
+	))
+	return &types.MsgAcceptTwoBitRegistrationResponse{}, nil
 }

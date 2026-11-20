@@ -312,6 +312,12 @@ func TestSelfDemotionCancelsIncomingPendingSwitches(t *testing.T) {
 		OutgoingMinUnlock: 50,
 	}))
 
+	agent := sample.AccAddressBytes()
+	require.NoError(t, k.TwoBitAgentToReporter.Set(ctx, agent.Bytes(), demoting.Bytes()))
+	require.NoError(t, k.TwoBitReporterToAgent.Set(ctx, demoting.Bytes(), agent.Bytes()))
+	pendingAgent := sample.AccAddressBytes()
+	require.NoError(t, k.SetTwoBitReporter(ctx, demoting, pendingAgent))
+
 	// After finalize, demoting becomes a selector of target — stake iteration needs staking mocks.
 	validatorSet := new(mocks.ValidatorSet)
 	sk.On("GetValidatorSet").Return(validatorSet)
@@ -342,6 +348,15 @@ func TestSelfDemotionCancelsIncomingPendingSwitches(t *testing.T) {
 	_, err = k.ReporterPeriodData.Get(ctx, demoting)
 	require.ErrorIs(t, err, collections.ErrNotFound)
 
+	hasAgent, err := k.TwoBitAgentToReporter.Has(ctx, agent.Bytes())
+	require.NoError(t, err)
+	require.False(t, hasAgent)
+	hasTwoBit, err := k.TwoBitReporterToAgent.Has(ctx, demoting.Bytes())
+	require.NoError(t, err)
+	require.False(t, hasTwoBit)
+	_, err = k.TwoBitPendingRequests.Get(ctx, demoting.Bytes())
+	require.ErrorIs(t, err, collections.ErrNotFound)
+
 	found := false
 	for _, ev := range ctx.EventManager().Events() {
 		if ev.Type != "pending_switch_canceled_self_demotion" {
@@ -358,4 +373,65 @@ func TestSelfDemotionCancelsIncomingPendingSwitches(t *testing.T) {
 		found = true
 	}
 	require.True(t, found, "expected pending_switch_canceled_self_demotion event")
+}
+
+func TestNormalPendingSwitchKeepsTwoBitRegistration(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(100)
+
+	outgoing, incoming, selector := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
+	outgoingAgent, incomingAgent := sample.AccAddressBytes(), sample.AccAddressBytes()
+	rep := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "r")
+	require.NoError(t, k.Reporters.Set(ctx, outgoing.Bytes(), rep))
+	require.NoError(t, k.Reporters.Set(ctx, incoming.Bytes(), rep))
+	require.NoError(t, k.Selectors.Set(ctx, selector.Bytes(), types.NewSelection(outgoing.Bytes(), 1)))
+	require.NoError(t, k.SetTwoBitMapping(ctx, outgoing.Bytes(), outgoingAgent.Bytes()))
+	require.NoError(t, k.SetTwoBitMapping(ctx, incoming.Bytes(), incomingAgent.Bytes()))
+
+	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(outgoing.Bytes(), selector.Bytes()), types.PendingSwitchEntry{
+		ToReporter:  incoming.Bytes(),
+		UnlockBlock: 1,
+	}))
+	require.NoError(t, k.IncomingPendingSwitchIdx.Set(ctx, collections.Join(incoming.Bytes(), selector.Bytes()), outgoing.Bytes()))
+	require.NoError(t, k.ReporterPendingSwitchHeads.Set(ctx, outgoing.Bytes(), types.ReporterPendingSwitchHead{
+		OutgoingCount:     1,
+		OutgoingMinUnlock: 1,
+	}))
+	require.NoError(t, k.ReporterPendingSwitchHeads.Set(ctx, incoming.Bytes(), types.ReporterPendingSwitchHead{
+		IncomingCount:     1,
+		IncomingMinUnlock: 1,
+	}))
+
+	validatorSet := new(mocks.ValidatorSet)
+	sk.On("GetValidatorSet").Return(validatorSet)
+	validatorSet.On("MaxValidators", mock.Anything).Return(uint32(100), nil)
+	sk.On("IterateDelegatorDelegations", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+	_, err := k.ReporterStake(ctx, incoming, []byte("qid"))
+	require.NoError(t, err)
+
+	selAfter, err := k.Selectors.Get(ctx, selector.Bytes())
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(incoming.Bytes(), selAfter.Reporter))
+
+	hasOutgoing, err := k.Reporters.Has(ctx, outgoing.Bytes())
+	require.NoError(t, err)
+	require.True(t, hasOutgoing)
+	hasIncoming, err := k.Reporters.Has(ctx, incoming.Bytes())
+	require.NoError(t, err)
+	require.True(t, hasIncoming)
+
+	got, err := k.TwoBitReporter(ctx, outgoingAgent)
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(outgoing.Bytes(), got.Bytes()))
+	got, err = k.TwoBitReporter(ctx, incomingAgent)
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(incoming.Bytes(), got.Bytes()))
+
+	stored, err := k.TwoBitReporterToAgent.Get(ctx, outgoing.Bytes())
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(outgoingAgent.Bytes(), stored))
+	stored, err = k.TwoBitReporterToAgent.Get(ctx, incoming.Bytes())
+	require.NoError(t, err)
+	require.True(t, bytes.Equal(incomingAgent.Bytes(), stored))
 }

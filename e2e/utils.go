@@ -245,9 +245,10 @@ type Aggregate struct {
 }
 
 type Reporter struct {
-	Address  string          `json:"address"`
-	Metadata *OracleReporter `json:"metadata"`
-	Power    string          `json:"power"`
+	Address       string          `json:"address"`
+	Metadata      *OracleReporter `json:"metadata"`
+	Power         string          `json:"power"`
+	TwoBitAddress string          `json:"two_bit_address,omitempty"`
 }
 
 type OracleReporter struct {

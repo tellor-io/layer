@@ -187,7 +187,7 @@ func (k Keeper) finalizePendingSwitch(ctx context.Context, from, selector []byte
 		if err := k.SettleReporter(ctx, sdk.AccAddress(from)); err != nil {
 			return err
 		}
-		if err := k.Reporters.Remove(ctx, from); err != nil && !errors.Is(err, collections.ErrNotFound) {
+		if err := k.removeReporter(ctx, from); err != nil {
 			return err
 		}
 		if err := k.ReporterPeriodData.Remove(ctx, from); err != nil && !errors.Is(err, collections.ErrNotFound) {
