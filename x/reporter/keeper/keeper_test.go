@@ -18,6 +18,7 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 func setupKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.BankKeeper, *mocks.RegistryKeeper, *mocks.AccountKeeper, sdk.Context, store.KVStoreService) {
@@ -452,6 +453,103 @@ func TestPruneOldReports(t *testing.T) {
 
 	_, err = k.Report.Get(ctx, collections.Join([]byte("queryid1"), collections.Join(reporter1.Bytes(), uint64(400))))
 	require.NoError(t, err)
+}
+
+// Saving a new snapshot clears the reporter's own old ones but keeps its newest one before the cutoff.
+func TestReporterStake_SavingSnapshotCleansUpOldOnes(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(500)
+	reporter := sample.AccAddressBytes()
+	otherReporter := sample.AccAddressBytes()
+	valAddr := sdk.ValAddress(sample.AccAddressBytes())
+
+	require.NoError(t, k.Reporters.Set(ctx, reporter, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")))
+	require.NoError(t, k.Selectors.Set(ctx, reporter, types.NewSelection(reporter, 1)))
+	validatorSet := new(mocks.ValidatorSet)
+	sk.On("GetValidatorSet").Return(validatorSet)
+	validatorSet.On("MaxValidators", mock.Anything).Return(uint32(10), nil)
+	sk.On("GetValidator", mock.Anything, valAddr).Return(stakingtypes.Validator{
+		OperatorAddress: valAddr.String(), DelegatorShares: math.LegacyNewDec(1000), Status: stakingtypes.Bonded, Tokens: math.NewInt(1000),
+	}, nil)
+	sk.On("IterateDelegatorDelegations", mock.Anything, reporter, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		fn(stakingtypes.Delegation{ValidatorAddress: valAddr.String(), Shares: math.LegacyNewDec(1000)})
+	})
+
+	key := func(rep sdk.AccAddress, block, version uint64) collections.Triple[[]byte, uint64, uint64] {
+		return collections.Join3(rep.Bytes(), block, version)
+	}
+	snap := types.DelegationsAmounts{Total: math.OneInt()}
+	require.NoError(t, k.StakeSnapshots.Set(ctx, key(reporter, 100, 101), snap))
+	require.NoError(t, k.StakeSnapshots.Set(ctx, key(reporter, 200, 102), snap))
+	require.NoError(t, k.StakeSnapshots.Set(ctx, key(reporter, 200, 103), snap))
+	require.NoError(t, k.StakeSnapshots.Set(ctx, key(reporter, 300, 104), snap))
+	require.NoError(t, k.StakeSnapshots.Set(ctx, key(otherReporter, 100, 105), snap))
+
+	// Block 250 is 30 days back.
+	oracleKeeper := mocks.NewOracleKeeper(t)
+	oracleKeeper.On("GetBlockHeightFromTimestamp", mock.Anything, mock.Anything).Return(uint64(250), nil)
+	k.SetOracleKeeper(oracleKeeper)
+
+	require.NoError(t, k.FlagStakeRecalc(ctx, reporter))
+	_, ref, err := k.ReporterStakeWithSnapshot(ctx, reporter)
+	require.NoError(t, err)
+	require.Equal(t, uint64(500), ref.Block)
+
+	exists := func(rep sdk.AccAddress, block, version uint64) bool {
+		has, err := k.StakeSnapshots.Has(ctx, key(rep, block, version))
+		require.NoError(t, err)
+		return has
+	}
+	// Older snapshots before the cutoff are removed.
+	require.False(t, exists(reporter, 100, 101))
+	require.False(t, exists(reporter, 200, 102))
+	// The newest one before the cutoff stays, since reports just after the cutoff may still use it.
+	require.True(t, exists(reporter, 200, 103))
+	// Recent snapshots, the new one, and other reporters' snapshots are untouched.
+	require.True(t, exists(reporter, 300, 104))
+	require.True(t, exists(reporter, ref.Block, ref.Version))
+	require.True(t, exists(otherReporter, 100, 105))
+}
+
+// Each cleanup removes at most the cap, so the work per report stays small.
+func TestCleanupOldStakeSnapshots_Capped(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	ctx = ctx.WithBlockTime(time.Now()).WithBlockHeight(500)
+	reporter := sample.AccAddressBytes()
+
+	oldCount := keeper.MaxStakeSnapshotCleanup + 5
+	for i := 1; i <= oldCount; i++ {
+		require.NoError(t, k.StakeSnapshots.Set(ctx, collections.Join3(reporter.Bytes(), uint64(i), uint64(i)), types.DelegationsAmounts{Total: math.OneInt()}))
+	}
+	oracleKeeper := mocks.NewOracleKeeper(t)
+	// The cutoff must be asked for exactly the retention period back.
+	oracleKeeper.On("GetBlockHeightFromTimestamp", mock.Anything, ctx.BlockTime().Add(-keeper.StakeSnapshotRetention)).Return(uint64(250), nil)
+	k.SetOracleKeeper(oracleKeeper)
+
+	remaining := func() int {
+		iter, err := k.StakeSnapshots.Iterate(ctx, nil)
+		require.NoError(t, err)
+		keys, err := iter.Keys()
+		require.NoError(t, err)
+		return len(keys)
+	}
+
+	require.NoError(t, k.CleanupOldStakeSnapshotsExported(ctx, reporter.Bytes()))
+	require.Equal(t, oldCount-keeper.MaxStakeSnapshotCleanup, remaining())
+
+	// The next cleanup finishes the job but keeps the newest one before the cutoff.
+	require.NoError(t, k.CleanupOldStakeSnapshotsExported(ctx, reporter.Bytes()))
+	require.Equal(t, 1, remaining())
+	has, err := k.StakeSnapshots.Has(ctx, collections.Join3(reporter.Bytes(), uint64(oldCount), uint64(oldCount)))
+	require.NoError(t, err)
+	require.True(t, has)
+}
+
+// Snapshots must outlive the slowest dispute: 21 days to open it, 1 day to fund it, and 5 rounds of 3 days.
+func TestStakeSnapshotRetentionCoversSlowestDispute(t *testing.T) {
+	slowestDispute := (21 + 1 + 5*3) * 24 * time.Hour
+	require.Greater(t, keeper.StakeSnapshotRetention, slowestDispute)
 }
 
 func TestPruneOldReportsMaxIterations(t *testing.T) {

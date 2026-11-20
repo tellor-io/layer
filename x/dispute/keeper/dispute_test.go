@@ -187,7 +187,7 @@ func (s *KeeperTestSuite) TestSetNewDisputeSlashShortfallDiscardsCache() {
 		rep.Power,
 		rep.BlockNumber,
 		math.NewInt(10_000),
-		rep.QueryId,
+		keeper.StakeSnapshotOf(rep),
 		mock.Anything,
 	).Return(reportertypes.ErrReporterSlashShortfall)
 
@@ -206,18 +206,21 @@ func (s *KeeperTestSuite) TestSetNewDisputeSlashShortfallDiscardsCache() {
 func (s *KeeperTestSuite) TestSlashAndJailReporter() {
 	s.ctx = s.ctx.WithBlockTime(time.Unix(1696516597, 0))
 	report := report(s.ctx)
+	// The report says which stake snapshot backed it, and slashing must use exactly that one.
+	report.StakeSnapshotBlock, report.StakeSnapshotVersion = 1, 9
 	dispute := s.dispute(s.ctx)
 	reporterAcc := sdk.MustAccAddressFromBech32(report.Reporter)
-	s.reporterKeeper.On("EscrowReporterStake", s.ctx, reporterAcc, report.Power, uint64(1), math.NewInt(10000), dispute.InitialEvidence.QueryId, dispute.HashId).Return(nil)
-	s.reporterKeeper.On("JailReporter", s.ctx, reporterAcc, uint64(0), report.BlockNumber, dispute.HashId).Return(nil)
+	backing := reportertypes.StakeSnapshotRef{Block: 1, Version: 9}
+	s.reporterKeeper.On("EscrowReporterStake", s.ctx, reporterAcc, report.Power, uint64(1), math.NewInt(10000), backing, dispute.HashId).Return(nil)
+	s.reporterKeeper.On("JailReporter", s.ctx, reporterAcc, uint64(0), report.BlockNumber, backing, dispute.HashId).Return(nil)
 	s.oracleKeeper.On("FlagAggregateReport", s.ctx, report).Return(nil)
 	s.NoError(s.disputeKeeper.SlashAndJailReporter(s.ctx, report, dispute.DisputeCategory, dispute.HashId))
 }
 
 func (s *KeeperTestSuite) TestJailReporter() {
 	reporterAcc := sample.AccAddressBytes()
-	s.reporterKeeper.On("JailReporter", s.ctx, reporterAcc, uint64(0), uint64(0), mock.Anything).Return(nil)
-	s.NoError(s.disputeKeeper.JailReporter(s.ctx, reporterAcc, uint64(0), uint64(0), nil))
+	s.reporterKeeper.On("JailReporter", s.ctx, reporterAcc, uint64(0), uint64(0), mock.Anything, mock.Anything).Return(nil)
+	s.NoError(s.disputeKeeper.JailReporter(s.ctx, reporterAcc, uint64(0), uint64(0), reportertypes.StakeSnapshotRef{}, nil))
 }
 
 func (s *KeeperTestSuite) TestGetSlashPercentageAndJailDuration() {

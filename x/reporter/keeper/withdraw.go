@@ -220,8 +220,8 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 }
 
 // EscrowReporterStake moves tokens from the reporter's stake (from staking module) to the dispute module
-func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height uint64, amt math.Int, queryId, hashId []byte) error {
-	report, err := k.GetDelegationsAmount(ctx, reporterAddr, height)
+func (k Keeper) EscrowReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, power, height uint64, amt math.Int, snapshot types.StakeSnapshotRef, hashId []byte) error {
+	report, err := k.GetReportStakeSnapshot(ctx, reporterAddr, height, snapshot)
 	if err != nil {
 		return err
 	}

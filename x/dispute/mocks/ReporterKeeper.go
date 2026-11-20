@@ -75,13 +75,13 @@ func (_m *ReporterKeeper) Delegation(ctx context.Context, delegator types.AccAdd
 	return r0, r1
 }
 
-// EscrowReporterStake provides a mock function with given fields: ctx, reporterAddr, power, height, amt, queryId, hashId
-func (_m *ReporterKeeper) EscrowReporterStake(ctx context.Context, reporterAddr types.AccAddress, power uint64, height uint64, amt math.Int, queryId []byte, hashId []byte) error {
-	ret := _m.Called(ctx, reporterAddr, power, height, amt, queryId, hashId)
+// EscrowReporterStake provides a mock function with given fields: ctx, reporterAddr, power, height, amt, snapshot, hashId
+func (_m *ReporterKeeper) EscrowReporterStake(ctx context.Context, reporterAddr types.AccAddress, power uint64, height uint64, amt math.Int, snapshot reportertypes.StakeSnapshotRef, hashId []byte) error {
+	ret := _m.Called(ctx, reporterAddr, power, height, amt, snapshot, hashId)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64, uint64, math.Int, []byte, []byte) error); ok {
-		r0 = rf(ctx, reporterAddr, power, height, amt, queryId, hashId)
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64, uint64, math.Int, reportertypes.StakeSnapshotRef, []byte) error); ok {
+		r0 = rf(ctx, reporterAddr, power, height, amt, snapshot, hashId)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -278,13 +278,13 @@ func (_m *ReporterKeeper) GetSelectorForStake(ctx context.Context, selectorAddr 
 	return r0, r1
 }
 
-// JailReporter provides a mock function with given fields: ctx, reporterAddr, jailDuration, reportBlockNumber, disputeHashID
-func (_m *ReporterKeeper) JailReporter(ctx context.Context, reporterAddr types.AccAddress, jailDuration uint64, reportBlockNumber uint64, disputeHashID []byte) error {
-	ret := _m.Called(ctx, reporterAddr, jailDuration, reportBlockNumber, disputeHashID)
+// JailReporter provides a mock function with given fields: ctx, reporterAddr, jailDuration, reportBlockNumber, snapshot, disputeHashID
+func (_m *ReporterKeeper) JailReporter(ctx context.Context, reporterAddr types.AccAddress, jailDuration uint64, reportBlockNumber uint64, snapshot reportertypes.StakeSnapshotRef, disputeHashID []byte) error {
+	ret := _m.Called(ctx, reporterAddr, jailDuration, reportBlockNumber, snapshot, disputeHashID)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64, uint64, []byte) error); ok {
-		r0 = rf(ctx, reporterAddr, jailDuration, reportBlockNumber, disputeHashID)
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64, uint64, reportertypes.StakeSnapshotRef, []byte) error); ok {
+		r0 = rf(ctx, reporterAddr, jailDuration, reportBlockNumber, snapshot, disputeHashID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -347,13 +347,13 @@ func (_m *ReporterKeeper) TotalReporterPower(ctx context.Context) (math.Int, err
 	return r0, r1
 }
 
-// UpdateJailedUntilOnFailedDispute provides a mock function with given fields: ctx, reporterAddr, reportBlockNumber, disputeHashID
-func (_m *ReporterKeeper) UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr types.AccAddress, reportBlockNumber uint64, disputeHashID []byte) error {
-	ret := _m.Called(ctx, reporterAddr, reportBlockNumber, disputeHashID)
+// UpdateJailedUntilOnFailedDispute provides a mock function with given fields: ctx, reporterAddr, reportBlockNumber, snapshot, disputeHashID
+func (_m *ReporterKeeper) UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr types.AccAddress, reportBlockNumber uint64, snapshot reportertypes.StakeSnapshotRef, disputeHashID []byte) error {
+	ret := _m.Called(ctx, reporterAddr, reportBlockNumber, snapshot, disputeHashID)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64, []byte) error); ok {
-		r0 = rf(ctx, reporterAddr, reportBlockNumber, disputeHashID)
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, uint64, reportertypes.StakeSnapshotRef, []byte) error); ok {
+		r0 = rf(ctx, reporterAddr, reportBlockNumber, snapshot, disputeHashID)
 	} else {
 		r0 = ret.Error(0)
 	}

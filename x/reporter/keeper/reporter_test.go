@@ -207,7 +207,6 @@ func TestReporterStakeSnapshotTotalIsSelectedReporterStake(t *testing.T) {
 	valAddr := sdk.ValAddress(sample.AccAddressBytes())
 	selectedStake := math.NewInt(100_999_999)
 	networkStake := math.NewInt(1_000_000_000)
-	queryID := []byte("selected-stake-snapshot")
 
 	reporter := types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")
 	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, reporter))
@@ -237,11 +236,11 @@ func TestReporterStakeSnapshotTotalIsSelectedReporterStake(t *testing.T) {
 	}).Once()
 	sk.On("GetValidator", ctx, valAddr).Return(validator, nil).Once()
 
-	stake, err := k.ReporterStake(ctx, reporterAddr, queryID)
+	stake, ref, err := k.ReporterStakeWithSnapshot(ctx, reporterAddr)
 	require.NoError(t, err)
 	require.Equal(t, selectedStake, stake)
 
-	snapshot, err := k.ReportByBlock.Get(ctx, collections.Join3(reporterAddr.Bytes(), uint64(ctx.BlockHeight()), queryID))
+	snapshot, err := k.StakeSnapshots.Get(ctx, collections.Join3(reporterAddr.Bytes(), ref.Block, ref.Version))
 	require.NoError(t, err)
 	require.Equal(t, selectedStake, snapshot.Total)
 	require.Len(t, snapshot.TokenOrigins, 1)
@@ -358,8 +357,8 @@ func TestReporterStake_CacheHit(t *testing.T) {
 	reporterAddr := sample.AccAddressBytes()
 	ctx = ctx.WithBlockHeight(10)
 
-	// Set up cached Report entry at block 5
-	require.NoError(t, k.Report.Set(ctx, collections.Join([]byte("queryid1"), collections.Join(reporterAddr.Bytes(), uint64(5))), types.DelegationsAmounts{
+	// Set up a saved versioned snapshot at block 5
+	require.NoError(t, k.StakeSnapshots.Set(ctx, collections.Join3(reporterAddr.Bytes(), uint64(5), uint64(7)), types.DelegationsAmounts{
 		Total: math.NewInt(1000),
 		TokenOrigins: []*types.TokenOriginInfo{
 			{DelegatorAddress: reporterAddr, ValidatorAddress: reporterAddr, Amount: math.NewInt(1000)},
@@ -378,9 +377,127 @@ func TestReporterStake_CacheHit(t *testing.T) {
 	require.False(t, has)
 
 	// Call ReporterStake - should return cached value without calling staking keeper
-	stake, err := k.ReporterStake(ctx, reporterAddr, []byte("queryid2"))
+	stake, ref, err := k.ReporterStakeWithSnapshot(ctx, reporterAddr)
 	require.NoError(t, err)
 	require.Equal(t, math.NewInt(1000), stake)
+	require.Equal(t, types.StakeSnapshotRef{Block: 5, Version: 7}, ref)
+}
+
+// A selector that starts leaving must not be counted again by a later report in the same block.
+func TestReporterStake_VersionedSnapshotsInSameBlock(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	ctx = ctx.WithBlockHeight(10)
+
+	reporterAddr := sample.AccAddressBytes()
+	leavingSelector := sample.AccAddressBytes()
+	newReporter := sample.AccAddressBytes()
+	valAddr := sdk.ValAddress(sample.AccAddressBytes())
+
+	require.NoError(t, k.LastValSetUpdateHeight.Set(ctx, uint64(3)))
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")))
+	require.NoError(t, k.Selectors.Set(ctx, reporterAddr, types.NewSelection(reporterAddr, 1)))
+	require.NoError(t, k.Selectors.Set(ctx, leavingSelector, types.NewSelection(reporterAddr, 1)))
+
+	validatorSet := new(mocks.ValidatorSet)
+	sk.On("GetValidatorSet").Return(validatorSet)
+	validatorSet.On("MaxValidators", mock.Anything).Return(uint32(10), nil)
+	validator := stakingtypes.Validator{
+		OperatorAddress: valAddr.String(),
+		DelegatorShares: math.LegacyNewDec(1500),
+		Status:          stakingtypes.Bonded,
+		Tokens:          math.NewInt(1500),
+	}
+	sk.On("GetValidator", mock.Anything, valAddr).Return(validator, nil)
+	delegate := func(selector sdk.AccAddress, shares int64) {
+		sk.On("IterateDelegatorDelegations", mock.Anything, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+			fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+			fn(stakingtypes.Delegation{ValidatorAddress: valAddr.String(), Shares: math.LegacyNewDec(shares)})
+		})
+	}
+	delegate(reporterAddr, 1000)
+	delegate(leavingSelector, 500)
+
+	// First report counts both selectors.
+	require.NoError(t, k.FlagStakeRecalc(ctx, reporterAddr))
+	stake, firstRef, err := k.ReporterStakeWithSnapshot(ctx, reporterAddr)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(1500), stake)
+
+	// The second selector starts moving to another reporter.
+	require.NoError(t, k.OutgoingPendingSwitches.Set(ctx, collections.Join(reporterAddr.Bytes(), leavingSelector.Bytes()), types.PendingSwitchEntry{ToReporter: newReporter, UnlockBlock: 11}))
+	require.NoError(t, k.FlagStakeRecalc(ctx, reporterAddr))
+
+	// A filler report recalculates without the leaving selector and saves a newer version.
+	stake, fillerRef, err := k.ReporterStakeWithSnapshot(ctx, reporterAddr)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(1000), stake)
+	require.Equal(t, firstRef.Block, fillerRef.Block)
+	require.Greater(t, fillerRef.Version, firstRef.Version)
+
+	// The next report reuses the newest snapshot and must not bring the leaving selector back.
+	stake, lastRef, err := k.ReporterStakeWithSnapshot(ctx, reporterAddr)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(1000), stake)
+	require.Equal(t, fillerRef, lastRef)
+
+	// A dispute on each report sees exactly the stake that report used.
+	firstSnap, err := k.GetReportStakeSnapshot(ctx, reporterAddr, 10, firstRef)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(1500), firstSnap.Total)
+	lastSnap, err := k.GetReportStakeSnapshot(ctx, reporterAddr, 10, lastRef)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(1000), lastSnap.Total)
+	for _, origin := range lastSnap.TokenOrigins {
+		require.NotEqual(t, leavingSelector.Bytes(), origin.DelegatorAddress)
+	}
+
+	// Looking up the stake as of a block returns the last snapshot saved in it, now and later.
+	asOfBlock, err := k.GetDelegationsAmount(ctx, reporterAddr, 10)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(1000), asOfBlock.Total)
+	asOfLater, err := k.GetDelegationsAmount(ctx, reporterAddr, 11)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(1000), asOfLater.Total)
+
+	// Jailing over the last report locks only the selectors behind it.
+	lastHash, firstHash := []byte("dispute-on-last-report"), []byte("dispute-on-first-report")
+	require.NoError(t, k.JailReporter(ctx, reporterAddr, 600, 10, lastRef, lastHash))
+	locked, err := k.SelectorDisputeLocks.Has(ctx, collections.Join(leavingSelector.Bytes(), lastHash))
+	require.NoError(t, err)
+	require.False(t, locked)
+	locked, err = k.SelectorDisputeLocks.Has(ctx, collections.Join(reporterAddr.Bytes(), lastHash))
+	require.NoError(t, err)
+	require.True(t, locked)
+
+	// Jailing over the first report still catches the selector that was behind it.
+	require.NoError(t, k.JailReporter(ctx, reporterAddr, 600, 10, firstRef, firstHash))
+	locked, err = k.SelectorDisputeLocks.Has(ctx, collections.Join(leavingSelector.Bytes(), firstHash))
+	require.NoError(t, err)
+	require.True(t, locked)
+}
+
+// Reports made before versions existed still find their stake through the old storage.
+func TestGetReportStakeSnapshot_FallsBackForOldReports(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	reporterAddr := sample.AccAddressBytes()
+	legacy := types.DelegationsAmounts{
+		Total:        math.NewInt(700),
+		TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: reporterAddr, ValidatorAddress: reporterAddr, Amount: math.NewInt(700)}},
+	}
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(reporterAddr.Bytes(), uint64(5), []byte("old-query")), legacy))
+
+	snap, err := k.GetReportStakeSnapshot(ctx, reporterAddr, 6, types.StakeSnapshotRef{})
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(700), snap.Total)
+
+	// A versioned snapshot saved later takes over for later blocks only.
+	require.NoError(t, k.StakeSnapshots.Set(ctx, collections.Join3(reporterAddr.Bytes(), uint64(8), uint64(1)), types.DelegationsAmounts{Total: math.NewInt(900)}))
+	snap, err = k.GetDelegationsAmount(ctx, reporterAddr, 6)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(700), snap.Total)
+	snap, err = k.GetDelegationsAmount(ctx, reporterAddr, 9)
+	require.NoError(t, err)
+	require.Equal(t, math.NewInt(900), snap.Total)
 }
 
 // Test that ReporterStake recalculates when validator set updated
@@ -724,10 +841,10 @@ func bondedDelegation(selector sdk.AccAddress, val sdk.ValAddress, amount math.I
 		}
 }
 
-func countReportByBlockRows(t *testing.T, k keeper.Keeper, ctx sdk.Context) int {
+func countStakeSnapshots(t *testing.T, k keeper.Keeper, ctx sdk.Context) int {
 	t.Helper()
 	n := 0
-	err := k.ReportByBlock.Walk(ctx, nil, func(collections.Triple[[]byte, uint64, []byte], types.DelegationsAmounts) (bool, error) {
+	err := k.StakeSnapshots.Walk(ctx, nil, func(collections.Triple[[]byte, uint64, uint64], types.DelegationsAmounts) (bool, error) {
 		n++
 		return false, nil
 	})
@@ -807,7 +924,7 @@ func TestReporterStakeValidatorMoveUpdatesDisputeSnapshot(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, valA.Bytes(), original.TokenOrigins[0].ValidatorAddress)
 
-	rowsAfterMove := countReportByBlockRows(t, k, ctx)
+	rowsAfterMove := countStakeSnapshots(t, k, ctx)
 	require.Equal(t, 2, rowsAfterMove)
 
 	require.NoError(t, k.FlagStakeRecalc(ctx, reporterAddr))
@@ -815,20 +932,14 @@ func TestReporterStakeValidatorMoveUpdatesDisputeSnapshot(t *testing.T) {
 	stake, err = k.ReporterStake(ctx30, reporterAddr, queryC)
 	require.NoError(t, err)
 	require.Equal(t, amount, stake)
-	require.Equal(t, rowsAfterMove, countReportByBlockRows(t, k, ctx), "the same origin multiset must not write another snapshot")
-
-	hasNewRow, err := k.ReportByBlock.Has(ctx, collections.Join3(reporterAddr.Bytes(), uint64(30), queryC))
-	require.NoError(t, err)
-	require.False(t, hasNewRow)
+	require.Equal(t, rowsAfterMove, countStakeSnapshots(t, k, ctx), "the same origin multiset must not write another snapshot")
 	stillB, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), 30)
 	require.NoError(t, err)
 	require.Equal(t, valB.Bytes(), stillB.TokenOrigins[0].ValidatorAddress)
 }
 
-// TestReporterStakeSameHeightReplacesVisibleSnapshot updates the row the
-// dispute lookup actually returns when a lower query id would sort behind an
-// older row at the same height.
-func TestReporterStakeSameHeightReplacesVisibleSnapshot(t *testing.T) {
+// A move within one block saves a newer snapshot, and the earlier report keeps its own.
+func TestReporterStakeSameHeightMoveSavesNewerSnapshot(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 	ctx = ctx.WithBlockHeight(15)
 
@@ -837,8 +948,6 @@ func TestReporterStakeSameHeightReplacesVisibleSnapshot(t *testing.T) {
 	valA := sdk.ValAddress(sample.AccAddressBytes())
 	valB := sdk.ValAddress(sample.AccAddressBytes())
 	amount := math.NewInt(1000)
-	highQuery := []byte{0xff}
-	lowQuery := []byte{0x01}
 
 	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")))
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 1)))
@@ -862,7 +971,7 @@ func TestReporterStakeSameHeightReplacesVisibleSnapshot(t *testing.T) {
 		fn(delB)
 	})
 
-	stake, err := k.ReporterStake(ctx, reporterAddr, highQuery)
+	stake, firstRef, err := k.ReporterStakeWithSnapshot(ctx, reporterAddr)
 	require.NoError(t, err)
 	require.Equal(t, amount, stake)
 
@@ -874,7 +983,7 @@ func TestReporterStakeSameHeightReplacesVisibleSnapshot(t *testing.T) {
 	require.NoError(t, k.LastValSetUpdateHeight.Set(ctx, uint64(1)))
 
 	require.NoError(t, k.FlagStakeRecalc(ctx, reporterAddr))
-	stake, err = k.ReporterStake(ctx, reporterAddr, lowQuery)
+	stake, movedRef, err := k.ReporterStakeWithSnapshot(ctx, reporterAddr)
 	require.NoError(t, err)
 	require.Equal(t, amount, stake)
 
@@ -886,23 +995,31 @@ func TestReporterStakeSameHeightReplacesVisibleSnapshot(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, queued)
 
-	visible, err := k.ReportByBlock.Get(ctx, collections.Join3(reporterAddr.Bytes(), uint64(15), highQuery))
-	require.NoError(t, err)
-	require.Equal(t, valB.Bytes(), visible.TokenOrigins[0].ValidatorAddress)
-	hasLow, err := k.ReportByBlock.Has(ctx, collections.Join3(reporterAddr.Bytes(), uint64(15), lowQuery))
-	require.NoError(t, err)
-	require.False(t, hasLow, "a lower query id must not hide behind the row the lookup returns")
-	require.Equal(t, 1, countReportByBlockRows(t, k, ctx))
+	// Both snapshots are in this block, and the newer one comes after the older one.
+	require.Equal(t, firstRef.Block, movedRef.Block)
+	require.Greater(t, movedRef.Version, firstRef.Version)
+	require.Equal(t, 2, countStakeSnapshots(t, k, ctx))
 
+	// The earlier report still points at validator A, the later one at B.
+	first, err := k.GetReportStakeSnapshot(ctx, reporterAddr, 15, firstRef)
+	require.NoError(t, err)
+	require.Equal(t, valA.Bytes(), first.TokenOrigins[0].ValidatorAddress)
+	moved, err := k.GetReportStakeSnapshot(ctx, reporterAddr, 15, movedRef)
+	require.NoError(t, err)
+	require.Equal(t, valB.Bytes(), moved.TokenOrigins[0].ValidatorAddress)
+
+	// Looking up the block returns the newest snapshot.
 	loaded, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), 15)
 	require.NoError(t, err)
 	require.Equal(t, valB.Bytes(), loaded.TokenOrigins[0].ValidatorAddress)
 
+	// Recalculating again with the same stake saves nothing new.
 	require.NoError(t, k.FlagStakeRecalc(ctx, reporterAddr))
-	stake, err = k.ReporterStake(ctx, reporterAddr, []byte{0x00})
+	stake, againRef, err := k.ReporterStakeWithSnapshot(ctx, reporterAddr)
 	require.NoError(t, err)
 	require.Equal(t, amount, stake)
-	require.Equal(t, 1, countReportByBlockRows(t, k, ctx))
+	require.Equal(t, movedRef, againRef)
+	require.Equal(t, 2, countStakeSnapshots(t, k, ctx))
 }
 
 // TestReporterStakeOriginOrderDoesNotWriteSnapshot treats a reordering of the
@@ -916,7 +1033,6 @@ func TestReporterStakeOriginOrderDoesNotWriteSnapshot(t *testing.T) {
 	valB := sdk.ValAddress(sample.AccAddressBytes())
 	amountA := math.NewInt(400)
 	amountB := math.NewInt(600)
-	queryID := []byte("ordered-origins")
 
 	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")))
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 2)))
@@ -936,16 +1052,16 @@ func TestReporterStakeOriginOrderDoesNotWriteSnapshot(t *testing.T) {
 	})
 
 	ctx10 := ctx.WithBlockHeight(10)
-	stake, err := k.ReporterStake(ctx10, reporterAddr, queryID)
+	stake, ref, err := k.ReporterStakeWithSnapshot(ctx10, reporterAddr)
 	require.NoError(t, err)
 	require.Equal(t, amountA.Add(amountB), stake)
 
-	key := collections.Join3(reporterAddr.Bytes(), uint64(10), queryID)
-	stored, err := k.ReportByBlock.Get(ctx, key)
+	key := collections.Join3(reporterAddr.Bytes(), ref.Block, ref.Version)
+	stored, err := k.StakeSnapshots.Get(ctx, key)
 	require.NoError(t, err)
 	require.Len(t, stored.TokenOrigins, 2)
 	stored.TokenOrigins[0], stored.TokenOrigins[1] = stored.TokenOrigins[1], stored.TokenOrigins[0]
-	require.NoError(t, k.ReportByBlock.Set(ctx, key, stored))
+	require.NoError(t, k.StakeSnapshots.Set(ctx, key, stored))
 
 	period, err := k.ReporterPeriodData.Get(ctx, reporterAddr)
 	require.NoError(t, err)
@@ -961,7 +1077,7 @@ func TestReporterStakeOriginOrderDoesNotWriteSnapshot(t *testing.T) {
 	period, err = k.ReporterPeriodData.Get(ctx, reporterAddr)
 	require.NoError(t, err)
 	require.Equal(t, hashBefore, period.Hash)
-	require.Equal(t, 1, countReportByBlockRows(t, k, ctx))
+	require.Equal(t, 1, countStakeSnapshots(t, k, ctx))
 
 	loaded, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), 20)
 	require.NoError(t, err)
@@ -980,7 +1096,6 @@ func TestReporterStakeValidatorMoveSlashUsesNewOrigin(t *testing.T) {
 	valB := sdk.ValAddress(sample.AccAddressBytes())
 	amount := math.NewInt(1000)
 	queryA := []byte("query-a")
-	queryB := []byte("query-b")
 	hashID := []byte("slash-moved")
 
 	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")))
@@ -1012,7 +1127,7 @@ func TestReporterStakeValidatorMoveSlashUsesNewOrigin(t *testing.T) {
 	require.NoError(t, k.FlagStakeRecalc(ctx, reporterAddr))
 
 	ctx20 := ctx.WithBlockHeight(20)
-	stake, err = k.ReporterStake(ctx20, reporterAddr, queryB)
+	stake, movedRef, err := k.ReporterStakeWithSnapshot(ctx20, reporterAddr)
 	require.NoError(t, err)
 	require.Equal(t, amount, stake)
 
@@ -1022,7 +1137,7 @@ func TestReporterStakeValidatorMoveSlashUsesNewOrigin(t *testing.T) {
 	sk.On("Unbond", ctx20, selector, valB, sharesB).Return(amount, nil)
 	bk.On("SendCoinsFromModuleToModule", ctx20, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", amount))).Return(nil)
 
-	require.NoError(t, k.EscrowReporterStake(ctx20, reporterAddr, 1, 20, amount, queryB, hashID))
+	require.NoError(t, k.EscrowReporterStake(ctx20, reporterAddr, 1, 20, amount, movedRef, hashID))
 
 	sk.AssertCalled(t, "Unbond", ctx20, selector, valB, sharesB)
 	sk.AssertNotCalled(t, "Unbond", mock.Anything, selector, valA, mock.Anything)
@@ -1193,10 +1308,8 @@ func hasOrigin(origins []*types.TokenOriginInfo, del sdk.AccAddress, val sdk.Val
 	return false
 }
 
-// TestReporterStakeLegacyReportRecalcInsertsReportByBlock reads a snapshot that
-// exists only in the legacy Report collection, writes validator B into
-// ReportByBlock, and leaves the legacy row for the old height.
-func TestReporterStakeLegacyReportRecalcInsertsReportByBlock(t *testing.T) {
+// A reporter whose only snapshot is in the oldest storage gets a numbered one, and the old one stays for its block.
+func TestReporterStakeLegacyReportRecalcSavesVersionedSnapshot(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 
 	reporterAddr := sample.AccAddressBytes()
@@ -1205,7 +1318,6 @@ func TestReporterStakeLegacyReportRecalcInsertsReportByBlock(t *testing.T) {
 	valB := sdk.ValAddress(sample.AccAddressBytes())
 	amount := math.NewInt(1000)
 	legacyQuery := []byte("legacy-query")
-	newQuery := []byte("recalc-query")
 
 	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")))
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 1)))
@@ -1217,7 +1329,7 @@ func TestReporterStakeLegacyReportRecalcInsertsReportByBlock(t *testing.T) {
 		}},
 		Total: amount,
 	}))
-	require.Equal(t, 0, countReportByBlockRows(t, k, ctx))
+	require.Equal(t, 0, countStakeSnapshots(t, k, ctx))
 
 	delB, validatorB := bondedDelegation(selector, valB, amount)
 
@@ -1231,17 +1343,17 @@ func TestReporterStakeLegacyReportRecalcInsertsReportByBlock(t *testing.T) {
 	})
 
 	ctx20 := ctx.WithBlockHeight(20)
-	stake, err := k.ReporterStake(ctx20, reporterAddr, newQuery)
+	stake, ref, err := k.ReporterStakeWithSnapshot(ctx20, reporterAddr)
 	require.NoError(t, err)
 	require.Equal(t, amount, stake)
 
-	fromNew, err := k.ReportByBlock.Get(ctx, collections.Join3(reporterAddr.Bytes(), uint64(20), newQuery))
+	fromNew, err := k.StakeSnapshots.Get(ctx, collections.Join3(reporterAddr.Bytes(), ref.Block, ref.Version))
 	require.NoError(t, err)
 	require.Equal(t, valB.Bytes(), fromNew.TokenOrigins[0].ValidatorAddress)
 	loaded, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), 20)
 	require.NoError(t, err)
 	require.Equal(t, valB.Bytes(), loaded.TokenOrigins[0].ValidatorAddress)
-	require.Equal(t, 1, countReportByBlockRows(t, k, ctx))
+	require.Equal(t, 1, countStakeSnapshots(t, k, ctx))
 
 	legacy, err := k.Report.Get(ctx, collections.Join(legacyQuery, collections.Join(reporterAddr.Bytes(), uint64(10))))
 	require.NoError(t, err)
@@ -1250,15 +1362,12 @@ func TestReporterStakeLegacyReportRecalcInsertsReportByBlock(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, valA.Bytes(), oldLoaded.TokenOrigins[0].ValidatorAddress)
 
-	rowsAfterInsert := countReportByBlockRows(t, k, ctx)
 	ctx30 := ctx.WithBlockHeight(30)
-	stake, err = k.ReporterStake(ctx30, reporterAddr, []byte("recalc-again"))
+	stake, againRef, err := k.ReporterStakeWithSnapshot(ctx30, reporterAddr)
 	require.NoError(t, err)
 	require.Equal(t, amount, stake)
-	require.Equal(t, rowsAfterInsert, countReportByBlockRows(t, k, ctx))
-	hasAgain, err := k.ReportByBlock.Has(ctx, collections.Join3(reporterAddr.Bytes(), uint64(30), []byte("recalc-again")))
-	require.NoError(t, err)
-	require.False(t, hasAgain)
+	require.Equal(t, ref, againRef)
+	require.Equal(t, 1, countStakeSnapshots(t, k, ctx))
 }
 
 // TestReporterStakeCacheHitIgnoresSameTotalMove returns the cached validator
@@ -1275,7 +1384,7 @@ func TestReporterStakeCacheHitIgnoresSameTotalMove(t *testing.T) {
 
 	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")))
 	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 1)))
-	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(reporterAddr.Bytes(), uint64(10), []byte("cached")), types.DelegationsAmounts{
+	require.NoError(t, k.StakeSnapshots.Set(ctx, collections.Join3(reporterAddr.Bytes(), uint64(10), uint64(1)), types.DelegationsAmounts{
 		TokenOrigins: []*types.TokenOriginInfo{{
 			DelegatorAddress: selector.Bytes(),
 			ValidatorAddress: valA.Bytes(),
@@ -1300,7 +1409,7 @@ func TestReporterStakeCacheHitIgnoresSameTotalMove(t *testing.T) {
 		fn(delB)
 	})
 
-	rowsBefore := countReportByBlockRows(t, k, ctx)
+	rowsBefore := countStakeSnapshots(t, k, ctx)
 	require.Equal(t, 1, rowsBefore)
 
 	stake, err := k.ReporterStake(ctx, reporterAddr, []byte("cache-hit"))
@@ -1310,6 +1419,6 @@ func TestReporterStakeCacheHitIgnoresSameTotalMove(t *testing.T) {
 	loaded, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), uint64(ctx.BlockHeight()))
 	require.NoError(t, err)
 	require.Equal(t, valA.Bytes(), loaded.TokenOrigins[0].ValidatorAddress)
-	require.Equal(t, rowsBefore, countReportByBlockRows(t, k, ctx))
+	require.Equal(t, rowsBefore, countStakeSnapshots(t, k, ctx))
 	sk.AssertNotCalled(t, "IterateDelegatorDelegations", mock.Anything, selector, mock.Anything)
 }

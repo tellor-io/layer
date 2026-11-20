@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/tellor-io/layer/x/oracle/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/math"
 
@@ -47,6 +48,7 @@ func (k Keeper) HandleBridgeDepositDirectReveal(
 	reporterAcc sdk.AccAddress,
 	value string,
 	voterPower uint64,
+	stakeSnapshot reportertypes.StakeSnapshotRef,
 ) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := sdkCtx.BlockHeight()
@@ -71,7 +73,7 @@ func (k Keeper) HandleBridgeDepositDirectReveal(
 		return err
 	}
 
-	return k.SetValue(ctx, reporterAcc, query, value, querydata, voterPower, true)
+	return k.SetValue(ctx, reporterAcc, query, value, querydata, voterPower, stakeSnapshot, true)
 }
 
 // this is a simpler version of DecodeDepositReportValue in x/bridge/keeper
