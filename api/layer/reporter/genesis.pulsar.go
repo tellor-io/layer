@@ -270,6 +270,57 @@ func (x *_GenesisState_7_list) IsValid() bool {
 	return x.list != nil
 }
 
+var _ protoreflect.List = (*_GenesisState_8_list)(nil)
+
+type _GenesisState_8_list struct {
+	list *[]*SelectorReporterSwitchStateEntry
+}
+
+func (x *_GenesisState_8_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_GenesisState_8_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_GenesisState_8_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*SelectorReporterSwitchStateEntry)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_GenesisState_8_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*SelectorReporterSwitchStateEntry)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_GenesisState_8_list) AppendMutable() protoreflect.Value {
+	v := new(SelectorReporterSwitchStateEntry)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_8_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_GenesisState_8_list) NewElement() protoreflect.Value {
+	v := new(SelectorReporterSwitchStateEntry)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_GenesisState_8_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
 	md_GenesisState                             protoreflect.MessageDescriptor
 	fd_GenesisState_params                      protoreflect.FieldDescriptor
@@ -279,6 +330,7 @@ var (
 	fd_GenesisState_tip_unlocks                 protoreflect.FieldDescriptor
 	fd_GenesisState_tip_unlock_id               protoreflect.FieldDescriptor
 	fd_GenesisState_two_bit_reporters           protoreflect.FieldDescriptor
+	fd_GenesisState_selector_reporter_switches  protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -291,6 +343,7 @@ func init() {
 	fd_GenesisState_tip_unlocks = md_GenesisState.Fields().ByName("tip_unlocks")
 	fd_GenesisState_tip_unlock_id = md_GenesisState.Fields().ByName("tip_unlock_id")
 	fd_GenesisState_two_bit_reporters = md_GenesisState.Fields().ByName("two_bit_reporters")
+	fd_GenesisState_selector_reporter_switches = md_GenesisState.Fields().ByName("selector_reporter_switches")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -400,6 +453,12 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
+	if len(x.SelectorReporterSwitches) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_8_list{list: &x.SelectorReporterSwitches})
+		if !f(fd_GenesisState_selector_reporter_switches, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -429,6 +488,8 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return x.TipUnlockId != uint64(0)
 	case "layer.reporter.GenesisState.two_bit_reporters":
 		return len(x.TwoBitReporters) != 0
+	case "layer.reporter.GenesisState.selector_reporter_switches":
+		return len(x.SelectorReporterSwitches) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.GenesisState"))
@@ -459,6 +520,8 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.TipUnlockId = uint64(0)
 	case "layer.reporter.GenesisState.two_bit_reporters":
 		x.TwoBitReporters = nil
+	case "layer.reporter.GenesisState.selector_reporter_switches":
+		x.SelectorReporterSwitches = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.GenesisState"))
@@ -511,6 +574,12 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 		}
 		listValue := &_GenesisState_7_list{list: &x.TwoBitReporters}
 		return protoreflect.ValueOfList(listValue)
+	case "layer.reporter.GenesisState.selector_reporter_switches":
+		if len(x.SelectorReporterSwitches) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_8_list{})
+		}
+		listValue := &_GenesisState_8_list{list: &x.SelectorReporterSwitches}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.GenesisState"))
@@ -555,6 +624,10 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		lv := value.List()
 		clv := lv.(*_GenesisState_7_list)
 		x.TwoBitReporters = *clv.list
+	case "layer.reporter.GenesisState.selector_reporter_switches":
+		lv := value.List()
+		clv := lv.(*_GenesisState_8_list)
+		x.SelectorReporterSwitches = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.GenesisState"))
@@ -610,6 +683,12 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		}
 		value := &_GenesisState_7_list{list: &x.TwoBitReporters}
 		return protoreflect.ValueOfList(value)
+	case "layer.reporter.GenesisState.selector_reporter_switches":
+		if x.SelectorReporterSwitches == nil {
+			x.SelectorReporterSwitches = []*SelectorReporterSwitchStateEntry{}
+		}
+		value := &_GenesisState_8_list{list: &x.SelectorReporterSwitches}
+		return protoreflect.ValueOfList(value)
 	case "layer.reporter.GenesisState.tip_unlock_id":
 		panic(fmt.Errorf("field tip_unlock_id of message layer.reporter.GenesisState is not mutable"))
 	default:
@@ -645,6 +724,9 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "layer.reporter.GenesisState.two_bit_reporters":
 		list := []*TwoBitReporterStateEntry{}
 		return protoreflect.ValueOfList(&_GenesisState_7_list{list: &list})
+	case "layer.reporter.GenesisState.selector_reporter_switches":
+		list := []*SelectorReporterSwitchStateEntry{}
+		return protoreflect.ValueOfList(&_GenesisState_8_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.GenesisState"))
@@ -751,6 +833,12 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
+		if len(x.SelectorReporterSwitches) > 0 {
+			for _, e := range x.SelectorReporterSwitches {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -779,6 +867,22 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.SelectorReporterSwitches) > 0 {
+			for iNdEx := len(x.SelectorReporterSwitches) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.SelectorReporterSwitches[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x42
+			}
 		}
 		if len(x.TwoBitReporters) > 0 {
 			for iNdEx := len(x.TwoBitReporters) - 1; iNdEx >= 0; iNdEx-- {
@@ -1150,6 +1254,40 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				}
 				x.TwoBitReporters = append(x.TwoBitReporters, &TwoBitReporterStateEntry{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.TwoBitReporters[len(x.TwoBitReporters)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 8:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SelectorReporterSwitches", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.SelectorReporterSwitches = append(x.SelectorReporterSwitches, &SelectorReporterSwitchStateEntry{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.SelectorReporterSwitches[len(x.SelectorReporterSwitches)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -3713,6 +3851,1132 @@ func (x *fastReflection_FeePaidFromStakeStateEntry) ProtoMethods() *protoiface.M
 	}
 }
 
+var _ protoreflect.List = (*_SelectorReporterSwitchStateEntry_2_list)(nil)
+
+type _SelectorReporterSwitchStateEntry_2_list struct {
+	list *[]*SelectorReporterSwitchRecord
+}
+
+func (x *_SelectorReporterSwitchStateEntry_2_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_SelectorReporterSwitchStateEntry_2_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_SelectorReporterSwitchStateEntry_2_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*SelectorReporterSwitchRecord)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_SelectorReporterSwitchStateEntry_2_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*SelectorReporterSwitchRecord)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_SelectorReporterSwitchStateEntry_2_list) AppendMutable() protoreflect.Value {
+	v := new(SelectorReporterSwitchRecord)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_SelectorReporterSwitchStateEntry_2_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_SelectorReporterSwitchStateEntry_2_list) NewElement() protoreflect.Value {
+	v := new(SelectorReporterSwitchRecord)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_SelectorReporterSwitchStateEntry_2_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_SelectorReporterSwitchStateEntry                  protoreflect.MessageDescriptor
+	fd_SelectorReporterSwitchStateEntry_selector_address protoreflect.FieldDescriptor
+	fd_SelectorReporterSwitchStateEntry_switches         protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_reporter_genesis_proto_init()
+	md_SelectorReporterSwitchStateEntry = File_layer_reporter_genesis_proto.Messages().ByName("SelectorReporterSwitchStateEntry")
+	fd_SelectorReporterSwitchStateEntry_selector_address = md_SelectorReporterSwitchStateEntry.Fields().ByName("selector_address")
+	fd_SelectorReporterSwitchStateEntry_switches = md_SelectorReporterSwitchStateEntry.Fields().ByName("switches")
+}
+
+var _ protoreflect.Message = (*fastReflection_SelectorReporterSwitchStateEntry)(nil)
+
+type fastReflection_SelectorReporterSwitchStateEntry SelectorReporterSwitchStateEntry
+
+func (x *SelectorReporterSwitchStateEntry) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_SelectorReporterSwitchStateEntry)(x)
+}
+
+func (x *SelectorReporterSwitchStateEntry) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_reporter_genesis_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_SelectorReporterSwitchStateEntry_messageType fastReflection_SelectorReporterSwitchStateEntry_messageType
+var _ protoreflect.MessageType = fastReflection_SelectorReporterSwitchStateEntry_messageType{}
+
+type fastReflection_SelectorReporterSwitchStateEntry_messageType struct{}
+
+func (x fastReflection_SelectorReporterSwitchStateEntry_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_SelectorReporterSwitchStateEntry)(nil)
+}
+func (x fastReflection_SelectorReporterSwitchStateEntry_messageType) New() protoreflect.Message {
+	return new(fastReflection_SelectorReporterSwitchStateEntry)
+}
+func (x fastReflection_SelectorReporterSwitchStateEntry_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_SelectorReporterSwitchStateEntry
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) Descriptor() protoreflect.MessageDescriptor {
+	return md_SelectorReporterSwitchStateEntry
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) Type() protoreflect.MessageType {
+	return _fastReflection_SelectorReporterSwitchStateEntry_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) New() protoreflect.Message {
+	return new(fastReflection_SelectorReporterSwitchStateEntry)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) Interface() protoreflect.ProtoMessage {
+	return (*SelectorReporterSwitchStateEntry)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.SelectorAddress) != 0 {
+		value := protoreflect.ValueOfBytes(x.SelectorAddress)
+		if !f(fd_SelectorReporterSwitchStateEntry_selector_address, value) {
+			return
+		}
+	}
+	if len(x.Switches) != 0 {
+		value := protoreflect.ValueOfList(&_SelectorReporterSwitchStateEntry_2_list{list: &x.Switches})
+		if !f(fd_SelectorReporterSwitchStateEntry_switches, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.reporter.SelectorReporterSwitchStateEntry.selector_address":
+		return len(x.SelectorAddress) != 0
+	case "layer.reporter.SelectorReporterSwitchStateEntry.switches":
+		return len(x.Switches) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.SelectorReporterSwitchStateEntry"))
+		}
+		panic(fmt.Errorf("message layer.reporter.SelectorReporterSwitchStateEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.reporter.SelectorReporterSwitchStateEntry.selector_address":
+		x.SelectorAddress = nil
+	case "layer.reporter.SelectorReporterSwitchStateEntry.switches":
+		x.Switches = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.SelectorReporterSwitchStateEntry"))
+		}
+		panic(fmt.Errorf("message layer.reporter.SelectorReporterSwitchStateEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.reporter.SelectorReporterSwitchStateEntry.selector_address":
+		value := x.SelectorAddress
+		return protoreflect.ValueOfBytes(value)
+	case "layer.reporter.SelectorReporterSwitchStateEntry.switches":
+		if len(x.Switches) == 0 {
+			return protoreflect.ValueOfList(&_SelectorReporterSwitchStateEntry_2_list{})
+		}
+		listValue := &_SelectorReporterSwitchStateEntry_2_list{list: &x.Switches}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.SelectorReporterSwitchStateEntry"))
+		}
+		panic(fmt.Errorf("message layer.reporter.SelectorReporterSwitchStateEntry does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.reporter.SelectorReporterSwitchStateEntry.selector_address":
+		x.SelectorAddress = value.Bytes()
+	case "layer.reporter.SelectorReporterSwitchStateEntry.switches":
+		lv := value.List()
+		clv := lv.(*_SelectorReporterSwitchStateEntry_2_list)
+		x.Switches = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.SelectorReporterSwitchStateEntry"))
+		}
+		panic(fmt.Errorf("message layer.reporter.SelectorReporterSwitchStateEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.reporter.SelectorReporterSwitchStateEntry.switches":
+		if x.Switches == nil {
+			x.Switches = []*SelectorReporterSwitchRecord{}
+		}
+		value := &_SelectorReporterSwitchStateEntry_2_list{list: &x.Switches}
+		return protoreflect.ValueOfList(value)
+	case "layer.reporter.SelectorReporterSwitchStateEntry.selector_address":
+		panic(fmt.Errorf("field selector_address of message layer.reporter.SelectorReporterSwitchStateEntry is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.SelectorReporterSwitchStateEntry"))
+		}
+		panic(fmt.Errorf("message layer.reporter.SelectorReporterSwitchStateEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.reporter.SelectorReporterSwitchStateEntry.selector_address":
+		return protoreflect.ValueOfBytes(nil)
+	case "layer.reporter.SelectorReporterSwitchStateEntry.switches":
+		list := []*SelectorReporterSwitchRecord{}
+		return protoreflect.ValueOfList(&_SelectorReporterSwitchStateEntry_2_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.SelectorReporterSwitchStateEntry"))
+		}
+		panic(fmt.Errorf("message layer.reporter.SelectorReporterSwitchStateEntry does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.reporter.SelectorReporterSwitchStateEntry", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_SelectorReporterSwitchStateEntry) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*SelectorReporterSwitchStateEntry)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.SelectorAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if len(x.Switches) > 0 {
+			for _, e := range x.Switches {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*SelectorReporterSwitchStateEntry)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Switches) > 0 {
+			for iNdEx := len(x.Switches) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.Switches[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x12
+			}
+		}
+		if len(x.SelectorAddress) > 0 {
+			i -= len(x.SelectorAddress)
+			copy(dAtA[i:], x.SelectorAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.SelectorAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*SelectorReporterSwitchStateEntry)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: SelectorReporterSwitchStateEntry: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: SelectorReporterSwitchStateEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SelectorAddress", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.SelectorAddress = append(x.SelectorAddress[:0], dAtA[iNdEx:postIndex]...)
+				if x.SelectorAddress == nil {
+					x.SelectorAddress = []byte{}
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Switches", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Switches = append(x.Switches, &SelectorReporterSwitchRecord{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Switches[len(x.Switches)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_SelectorReporterSwitchRecord                   protoreflect.MessageDescriptor
+	fd_SelectorReporterSwitchRecord_original_reporter protoreflect.FieldDescriptor
+	fd_SelectorReporterSwitchRecord_began_height      protoreflect.FieldDescriptor
+	fd_SelectorReporterSwitchRecord_completed_height  protoreflect.FieldDescriptor
+	fd_SelectorReporterSwitchRecord_cancelled_height  protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_layer_reporter_genesis_proto_init()
+	md_SelectorReporterSwitchRecord = File_layer_reporter_genesis_proto.Messages().ByName("SelectorReporterSwitchRecord")
+	fd_SelectorReporterSwitchRecord_original_reporter = md_SelectorReporterSwitchRecord.Fields().ByName("original_reporter")
+	fd_SelectorReporterSwitchRecord_began_height = md_SelectorReporterSwitchRecord.Fields().ByName("began_height")
+	fd_SelectorReporterSwitchRecord_completed_height = md_SelectorReporterSwitchRecord.Fields().ByName("completed_height")
+	fd_SelectorReporterSwitchRecord_cancelled_height = md_SelectorReporterSwitchRecord.Fields().ByName("cancelled_height")
+}
+
+var _ protoreflect.Message = (*fastReflection_SelectorReporterSwitchRecord)(nil)
+
+type fastReflection_SelectorReporterSwitchRecord SelectorReporterSwitchRecord
+
+func (x *SelectorReporterSwitchRecord) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_SelectorReporterSwitchRecord)(x)
+}
+
+func (x *SelectorReporterSwitchRecord) slowProtoReflect() protoreflect.Message {
+	mi := &file_layer_reporter_genesis_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_SelectorReporterSwitchRecord_messageType fastReflection_SelectorReporterSwitchRecord_messageType
+var _ protoreflect.MessageType = fastReflection_SelectorReporterSwitchRecord_messageType{}
+
+type fastReflection_SelectorReporterSwitchRecord_messageType struct{}
+
+func (x fastReflection_SelectorReporterSwitchRecord_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_SelectorReporterSwitchRecord)(nil)
+}
+func (x fastReflection_SelectorReporterSwitchRecord_messageType) New() protoreflect.Message {
+	return new(fastReflection_SelectorReporterSwitchRecord)
+}
+func (x fastReflection_SelectorReporterSwitchRecord_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_SelectorReporterSwitchRecord
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_SelectorReporterSwitchRecord) Descriptor() protoreflect.MessageDescriptor {
+	return md_SelectorReporterSwitchRecord
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_SelectorReporterSwitchRecord) Type() protoreflect.MessageType {
+	return _fastReflection_SelectorReporterSwitchRecord_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_SelectorReporterSwitchRecord) New() protoreflect.Message {
+	return new(fastReflection_SelectorReporterSwitchRecord)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_SelectorReporterSwitchRecord) Interface() protoreflect.ProtoMessage {
+	return (*SelectorReporterSwitchRecord)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_SelectorReporterSwitchRecord) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.OriginalReporter) != 0 {
+		value := protoreflect.ValueOfBytes(x.OriginalReporter)
+		if !f(fd_SelectorReporterSwitchRecord_original_reporter, value) {
+			return
+		}
+	}
+	if x.BeganHeight != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.BeganHeight)
+		if !f(fd_SelectorReporterSwitchRecord_began_height, value) {
+			return
+		}
+	}
+	if x.CompletedHeight != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.CompletedHeight)
+		if !f(fd_SelectorReporterSwitchRecord_completed_height, value) {
+			return
+		}
+	}
+	if x.CancelledHeight != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.CancelledHeight)
+		if !f(fd_SelectorReporterSwitchRecord_cancelled_height, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_SelectorReporterSwitchRecord) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "layer.reporter.SelectorReporterSwitchRecord.original_reporter":
+		return len(x.OriginalReporter) != 0
+	case "layer.reporter.SelectorReporterSwitchRecord.began_height":
+		return x.BeganHeight != uint64(0)
+	case "layer.reporter.SelectorReporterSwitchRecord.completed_height":
+		return x.CompletedHeight != uint64(0)
+	case "layer.reporter.SelectorReporterSwitchRecord.cancelled_height":
+		return x.CancelledHeight != uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.SelectorReporterSwitchRecord"))
+		}
+		panic(fmt.Errorf("message layer.reporter.SelectorReporterSwitchRecord does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_SelectorReporterSwitchRecord) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "layer.reporter.SelectorReporterSwitchRecord.original_reporter":
+		x.OriginalReporter = nil
+	case "layer.reporter.SelectorReporterSwitchRecord.began_height":
+		x.BeganHeight = uint64(0)
+	case "layer.reporter.SelectorReporterSwitchRecord.completed_height":
+		x.CompletedHeight = uint64(0)
+	case "layer.reporter.SelectorReporterSwitchRecord.cancelled_height":
+		x.CancelledHeight = uint64(0)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.SelectorReporterSwitchRecord"))
+		}
+		panic(fmt.Errorf("message layer.reporter.SelectorReporterSwitchRecord does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_SelectorReporterSwitchRecord) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "layer.reporter.SelectorReporterSwitchRecord.original_reporter":
+		value := x.OriginalReporter
+		return protoreflect.ValueOfBytes(value)
+	case "layer.reporter.SelectorReporterSwitchRecord.began_height":
+		value := x.BeganHeight
+		return protoreflect.ValueOfUint64(value)
+	case "layer.reporter.SelectorReporterSwitchRecord.completed_height":
+		value := x.CompletedHeight
+		return protoreflect.ValueOfUint64(value)
+	case "layer.reporter.SelectorReporterSwitchRecord.cancelled_height":
+		value := x.CancelledHeight
+		return protoreflect.ValueOfUint64(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.SelectorReporterSwitchRecord"))
+		}
+		panic(fmt.Errorf("message layer.reporter.SelectorReporterSwitchRecord does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_SelectorReporterSwitchRecord) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "layer.reporter.SelectorReporterSwitchRecord.original_reporter":
+		x.OriginalReporter = value.Bytes()
+	case "layer.reporter.SelectorReporterSwitchRecord.began_height":
+		x.BeganHeight = value.Uint()
+	case "layer.reporter.SelectorReporterSwitchRecord.completed_height":
+		x.CompletedHeight = value.Uint()
+	case "layer.reporter.SelectorReporterSwitchRecord.cancelled_height":
+		x.CancelledHeight = value.Uint()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.SelectorReporterSwitchRecord"))
+		}
+		panic(fmt.Errorf("message layer.reporter.SelectorReporterSwitchRecord does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_SelectorReporterSwitchRecord) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.reporter.SelectorReporterSwitchRecord.original_reporter":
+		panic(fmt.Errorf("field original_reporter of message layer.reporter.SelectorReporterSwitchRecord is not mutable"))
+	case "layer.reporter.SelectorReporterSwitchRecord.began_height":
+		panic(fmt.Errorf("field began_height of message layer.reporter.SelectorReporterSwitchRecord is not mutable"))
+	case "layer.reporter.SelectorReporterSwitchRecord.completed_height":
+		panic(fmt.Errorf("field completed_height of message layer.reporter.SelectorReporterSwitchRecord is not mutable"))
+	case "layer.reporter.SelectorReporterSwitchRecord.cancelled_height":
+		panic(fmt.Errorf("field cancelled_height of message layer.reporter.SelectorReporterSwitchRecord is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.SelectorReporterSwitchRecord"))
+		}
+		panic(fmt.Errorf("message layer.reporter.SelectorReporterSwitchRecord does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_SelectorReporterSwitchRecord) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "layer.reporter.SelectorReporterSwitchRecord.original_reporter":
+		return protoreflect.ValueOfBytes(nil)
+	case "layer.reporter.SelectorReporterSwitchRecord.began_height":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.reporter.SelectorReporterSwitchRecord.completed_height":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "layer.reporter.SelectorReporterSwitchRecord.cancelled_height":
+		return protoreflect.ValueOfUint64(uint64(0))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: layer.reporter.SelectorReporterSwitchRecord"))
+		}
+		panic(fmt.Errorf("message layer.reporter.SelectorReporterSwitchRecord does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_SelectorReporterSwitchRecord) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in layer.reporter.SelectorReporterSwitchRecord", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_SelectorReporterSwitchRecord) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_SelectorReporterSwitchRecord) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_SelectorReporterSwitchRecord) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_SelectorReporterSwitchRecord) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*SelectorReporterSwitchRecord)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.OriginalReporter)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.BeganHeight != 0 {
+			n += 1 + runtime.Sov(uint64(x.BeganHeight))
+		}
+		if x.CompletedHeight != 0 {
+			n += 1 + runtime.Sov(uint64(x.CompletedHeight))
+		}
+		if x.CancelledHeight != 0 {
+			n += 1 + runtime.Sov(uint64(x.CancelledHeight))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*SelectorReporterSwitchRecord)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.CancelledHeight != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.CancelledHeight))
+			i--
+			dAtA[i] = 0x20
+		}
+		if x.CompletedHeight != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.CompletedHeight))
+			i--
+			dAtA[i] = 0x18
+		}
+		if x.BeganHeight != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.BeganHeight))
+			i--
+			dAtA[i] = 0x10
+		}
+		if len(x.OriginalReporter) > 0 {
+			i -= len(x.OriginalReporter)
+			copy(dAtA[i:], x.OriginalReporter)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OriginalReporter)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*SelectorReporterSwitchRecord)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: SelectorReporterSwitchRecord: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: SelectorReporterSwitchRecord: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OriginalReporter", wireType)
+				}
+				var byteLen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					byteLen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if byteLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + byteLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.OriginalReporter = append(x.OriginalReporter[:0], dAtA[iNdEx:postIndex]...)
+				if x.OriginalReporter == nil {
+					x.OriginalReporter = []byte{}
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BeganHeight", wireType)
+				}
+				x.BeganHeight = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.BeganHeight |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CompletedHeight", wireType)
+				}
+				x.CompletedHeight = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.CompletedHeight |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 4:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CancelledHeight", wireType)
+				}
+				x.CancelledHeight = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.CancelledHeight |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -3742,6 +5006,9 @@ type GenesisState struct {
 	TipUnlockId uint64 `protobuf:"varint,6,opt,name=tip_unlock_id,json=tipUnlockId,proto3" json:"tip_unlock_id,omitempty"`
 	// two_bit_reporters maps an agent account to the reporter it reports for.
 	TwoBitReporters []*TwoBitReporterStateEntry `protobuf:"bytes,7,rep,name=two_bit_reporters,json=twoBitReporters,proto3" json:"two_bit_reporters,omitempty"`
+	// selector_reporter_switches is per-selector reporter switch history, newest first.
+	// The prune cursor is not genesis state; a restart starts that scan over.
+	SelectorReporterSwitches []*SelectorReporterSwitchStateEntry `protobuf:"bytes,8,rep,name=selector_reporter_switches,json=selectorReporterSwitches,proto3" json:"selector_reporter_switches,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -3809,6 +5076,13 @@ func (x *GenesisState) GetTipUnlockId() uint64 {
 func (x *GenesisState) GetTwoBitReporters() []*TwoBitReporterStateEntry {
 	if x != nil {
 		return x.TwoBitReporters
+	}
+	return nil
+}
+
+func (x *GenesisState) GetSelectorReporterSwitches() []*SelectorReporterSwitchStateEntry {
+	if x != nil {
+		return x.SelectorReporterSwitches
 	}
 	return nil
 }
@@ -4036,6 +5310,111 @@ func (x *FeePaidFromStakeStateEntry) GetDelegationAmount() *DelegationsAmounts {
 	return nil
 }
 
+// SelectorReporterSwitchStateEntry is one selector's switch history in genesis.
+type SelectorReporterSwitchStateEntry struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	SelectorAddress []byte                          `protobuf:"bytes,1,opt,name=selector_address,json=selectorAddress,proto3" json:"selector_address,omitempty"`
+	Switches        []*SelectorReporterSwitchRecord `protobuf:"bytes,2,rep,name=switches,proto3" json:"switches,omitempty"`
+}
+
+func (x *SelectorReporterSwitchStateEntry) Reset() {
+	*x = SelectorReporterSwitchStateEntry{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_reporter_genesis_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SelectorReporterSwitchStateEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SelectorReporterSwitchStateEntry) ProtoMessage() {}
+
+// Deprecated: Use SelectorReporterSwitchStateEntry.ProtoReflect.Descriptor instead.
+func (*SelectorReporterSwitchStateEntry) Descriptor() ([]byte, []int) {
+	return file_layer_reporter_genesis_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *SelectorReporterSwitchStateEntry) GetSelectorAddress() []byte {
+	if x != nil {
+		return x.SelectorAddress
+	}
+	return nil
+}
+
+func (x *SelectorReporterSwitchStateEntry) GetSwitches() []*SelectorReporterSwitchRecord {
+	if x != nil {
+		return x.Switches
+	}
+	return nil
+}
+
+// SelectorReporterSwitchRecord is one reporter change. Completed height is 0 while the switch is open,
+// and a cancelled row keeps completed height at 0 and sets cancelled height.
+type SelectorReporterSwitchRecord struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	OriginalReporter []byte `protobuf:"bytes,1,opt,name=original_reporter,json=originalReporter,proto3" json:"original_reporter,omitempty"`
+	BeganHeight      uint64 `protobuf:"varint,2,opt,name=began_height,json=beganHeight,proto3" json:"began_height,omitempty"`
+	CompletedHeight  uint64 `protobuf:"varint,3,opt,name=completed_height,json=completedHeight,proto3" json:"completed_height,omitempty"`
+	CancelledHeight  uint64 `protobuf:"varint,4,opt,name=cancelled_height,json=cancelledHeight,proto3" json:"cancelled_height,omitempty"`
+}
+
+func (x *SelectorReporterSwitchRecord) Reset() {
+	*x = SelectorReporterSwitchRecord{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_layer_reporter_genesis_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SelectorReporterSwitchRecord) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SelectorReporterSwitchRecord) ProtoMessage() {}
+
+// Deprecated: Use SelectorReporterSwitchRecord.ProtoReflect.Descriptor instead.
+func (*SelectorReporterSwitchRecord) Descriptor() ([]byte, []int) {
+	return file_layer_reporter_genesis_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *SelectorReporterSwitchRecord) GetOriginalReporter() []byte {
+	if x != nil {
+		return x.OriginalReporter
+	}
+	return nil
+}
+
+func (x *SelectorReporterSwitchRecord) GetBeganHeight() uint64 {
+	if x != nil {
+		return x.BeganHeight
+	}
+	return 0
+}
+
+func (x *SelectorReporterSwitchRecord) GetCompletedHeight() uint64 {
+	if x != nil {
+		return x.CompletedHeight
+	}
+	return 0
+}
+
+func (x *SelectorReporterSwitchRecord) GetCancelledHeight() uint64 {
+	if x != nil {
+		return x.CancelledHeight
+	}
+	return 0
+}
+
 var File_layer_reporter_genesis_proto protoreflect.FileDescriptor
 
 var file_layer_reporter_genesis_proto_rawDesc = []byte{
@@ -4054,7 +5433,7 @@ var file_layer_reporter_genesis_proto_rawDesc = []byte{
 	0x74, 0x69, 0x70, 0x5f, 0x75, 0x6e, 0x6c, 0x6f, 0x63, 0x6b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x1a, 0x21, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
 	0x2f, 0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x5f, 0x6f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0xa4, 0x04, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53,
+	0x6f, 0x74, 0x6f, 0x22, 0x94, 0x05, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53,
 	0x74, 0x61, 0x74, 0x65, 0x12, 0x39, 0x0a, 0x06, 0x70, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x18, 0x01,
 	0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70,
 	0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x42, 0x09, 0xc8, 0xde,
@@ -4088,7 +5467,14 @@ var file_layer_reporter_genesis_proto_rawDesc = []byte{
 	0x28, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
 	0x2e, 0x54, 0x77, 0x6f, 0x42, 0x69, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x53,
 	0x74, 0x61, 0x74, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x0f, 0x74, 0x77, 0x6f, 0x42, 0x69,
-	0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x22, 0x6a, 0x0a, 0x18, 0x54, 0x77,
+	0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x73, 0x12, 0x6e, 0x0a, 0x1a, 0x73, 0x65,
+	0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x5f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5f,
+	0x73, 0x77, 0x69, 0x74, 0x63, 0x68, 0x65, 0x73, 0x18, 0x08, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x30,
+	0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e,
+	0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72,
+	0x53, 0x77, 0x69, 0x74, 0x63, 0x68, 0x53, 0x74, 0x61, 0x74, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79,
+	0x52, 0x18, 0x73, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74,
+	0x65, 0x72, 0x53, 0x77, 0x69, 0x74, 0x63, 0x68, 0x65, 0x73, 0x22, 0x6a, 0x0a, 0x18, 0x54, 0x77,
 	0x6f, 0x42, 0x69, 0x74, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x53, 0x74, 0x61, 0x74,
 	0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x23, 0x0a, 0x0d, 0x61, 0x67, 0x65, 0x6e, 0x74, 0x5f,
 	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0c, 0x61,
@@ -4131,19 +5517,41 @@ var file_layer_reporter_genesis_proto_rawDesc = []byte{
 	0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x22, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72,
 	0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x67, 0x61,
 	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x73, 0x52, 0x10, 0x64, 0x65,
-	0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0xaa,
-	0x01, 0x0a, 0x12, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70,
-	0x6f, 0x72, 0x74, 0x65, 0x72, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72,
-	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
-	0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d, 0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65,
-	0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x72, 0x65, 0x70, 0x6f,
-	0x72, 0x74, 0x65, 0x72, 0xa2, 0x02, 0x03, 0x4c, 0x52, 0x58, 0xaa, 0x02, 0x0e, 0x4c, 0x61, 0x79,
-	0x65, 0x72, 0x2e, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xca, 0x02, 0x0e, 0x4c, 0x61,
-	0x79, 0x65, 0x72, 0x5c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xe2, 0x02, 0x1a, 0x4c,
-	0x61, 0x79, 0x65, 0x72, 0x5c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x5c, 0x47, 0x50,
-	0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x0f, 0x4c, 0x61, 0x79, 0x65,
-	0x72, 0x3a, 0x3a, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x6c, 0x65, 0x67, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x9d,
+	0x01, 0x0a, 0x20, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x53, 0x77, 0x69, 0x74, 0x63, 0x68, 0x53, 0x74, 0x61, 0x74, 0x65, 0x45, 0x6e,
+	0x74, 0x72, 0x79, 0x12, 0x29, 0x0a, 0x10, 0x73, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x5f,
+	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x0f, 0x73,
+	0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x4e,
+	0x0a, 0x08, 0x73, 0x77, 0x69, 0x74, 0x63, 0x68, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x2c, 0x2e, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65,
+	0x72, 0x2e, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74,
+	0x65, 0x72, 0x53, 0x77, 0x69, 0x74, 0x63, 0x68, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x42, 0x04,
+	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x08, 0x73, 0x77, 0x69, 0x74, 0x63, 0x68, 0x65, 0x73, 0x22, 0xc4,
+	0x01, 0x0a, 0x1c, 0x53, 0x65, 0x6c, 0x65, 0x63, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0x53, 0x77, 0x69, 0x74, 0x63, 0x68, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x12,
+	0x2b, 0x0a, 0x11, 0x6f, 0x72, 0x69, 0x67, 0x69, 0x6e, 0x61, 0x6c, 0x5f, 0x72, 0x65, 0x70, 0x6f,
+	0x72, 0x74, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x10, 0x6f, 0x72, 0x69, 0x67,
+	0x69, 0x6e, 0x61, 0x6c, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x12, 0x21, 0x0a, 0x0c,
+	0x62, 0x65, 0x67, 0x61, 0x6e, 0x5f, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x04, 0x52, 0x0b, 0x62, 0x65, 0x67, 0x61, 0x6e, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12,
+	0x29, 0x0a, 0x10, 0x63, 0x6f, 0x6d, 0x70, 0x6c, 0x65, 0x74, 0x65, 0x64, 0x5f, 0x68, 0x65, 0x69,
+	0x67, 0x68, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0f, 0x63, 0x6f, 0x6d, 0x70, 0x6c,
+	0x65, 0x74, 0x65, 0x64, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x29, 0x0a, 0x10, 0x63, 0x61,
+	0x6e, 0x63, 0x65, 0x6c, 0x6c, 0x65, 0x64, 0x5f, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x04, 0x52, 0x0f, 0x63, 0x61, 0x6e, 0x63, 0x65, 0x6c, 0x6c, 0x65, 0x64, 0x48,
+	0x65, 0x69, 0x67, 0x68, 0x74, 0x42, 0xaa, 0x01, 0x0a, 0x12, 0x63, 0x6f, 0x6d, 0x2e, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x2e, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0x42, 0x0c, 0x47, 0x65,
+	0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2d, 0x67, 0x69,
+	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x74, 0x65, 0x6c, 0x6c, 0x6f, 0x72, 0x2d,
+	0x69, 0x6f, 0x2f, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x2f, 0x72, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x65, 0x72, 0xa2, 0x02, 0x03, 0x4c, 0x52,
+	0x58, 0xaa, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x2e, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74,
+	0x65, 0x72, 0xca, 0x02, 0x0e, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x52, 0x65, 0x70, 0x6f, 0x72,
+	0x74, 0x65, 0x72, 0xe2, 0x02, 0x1a, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x5c, 0x52, 0x65, 0x70, 0x6f,
+	0x72, 0x74, 0x65, 0x72, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0xea, 0x02, 0x0f, 0x4c, 0x61, 0x79, 0x65, 0x72, 0x3a, 0x3a, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74,
+	0x65, 0x72, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -4158,7 +5566,7 @@ func file_layer_reporter_genesis_proto_rawDescGZIP() []byte {
 	return file_layer_reporter_genesis_proto_rawDescData
 }
 
-var file_layer_reporter_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_layer_reporter_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_layer_reporter_genesis_proto_goTypes = []interface{}{
 	(*GenesisState)(nil),                       // 0: layer.reporter.GenesisState
 	(*TwoBitReporterStateEntry)(nil),           // 1: layer.reporter.TwoBitReporterStateEntry
@@ -4166,25 +5574,29 @@ var file_layer_reporter_genesis_proto_goTypes = []interface{}{
 	(*SelectorTipsStateEntry)(nil),             // 3: layer.reporter.SelectorTipsStateEntry
 	(*DisputedDelegationAmountStateEntry)(nil), // 4: layer.reporter.DisputedDelegationAmountStateEntry
 	(*FeePaidFromStakeStateEntry)(nil),         // 5: layer.reporter.FeePaidFromStakeStateEntry
-	(*Params)(nil),                             // 6: layer.reporter.Params
-	(*TipUnlockEntry)(nil),                     // 7: layer.reporter.TipUnlockEntry
-	(*DelegationsAmounts)(nil),                 // 8: layer.reporter.DelegationsAmounts
+	(*SelectorReporterSwitchStateEntry)(nil),   // 6: layer.reporter.SelectorReporterSwitchStateEntry
+	(*SelectorReporterSwitchRecord)(nil),       // 7: layer.reporter.SelectorReporterSwitchRecord
+	(*Params)(nil),                             // 8: layer.reporter.Params
+	(*TipUnlockEntry)(nil),                     // 9: layer.reporter.TipUnlockEntry
+	(*DelegationsAmounts)(nil),                 // 10: layer.reporter.DelegationsAmounts
 }
 var file_layer_reporter_genesis_proto_depIdxs = []int32{
-	6, // 0: layer.reporter.GenesisState.params:type_name -> layer.reporter.Params
-	3, // 1: layer.reporter.GenesisState.selectorTips:type_name -> layer.reporter.SelectorTipsStateEntry
-	4, // 2: layer.reporter.GenesisState.disputed_delegation_amounts:type_name -> layer.reporter.DisputedDelegationAmountStateEntry
-	5, // 3: layer.reporter.GenesisState.fee_paid_from_stake:type_name -> layer.reporter.FeePaidFromStakeStateEntry
-	2, // 4: layer.reporter.GenesisState.tip_unlocks:type_name -> layer.reporter.TipUnlockStateEntry
-	1, // 5: layer.reporter.GenesisState.two_bit_reporters:type_name -> layer.reporter.TwoBitReporterStateEntry
-	7, // 6: layer.reporter.TipUnlockStateEntry.entry:type_name -> layer.reporter.TipUnlockEntry
-	8, // 7: layer.reporter.DisputedDelegationAmountStateEntry.delegation_amount:type_name -> layer.reporter.DelegationsAmounts
-	8, // 8: layer.reporter.FeePaidFromStakeStateEntry.delegation_amount:type_name -> layer.reporter.DelegationsAmounts
-	9, // [9:9] is the sub-list for method output_type
-	9, // [9:9] is the sub-list for method input_type
-	9, // [9:9] is the sub-list for extension type_name
-	9, // [9:9] is the sub-list for extension extendee
-	0, // [0:9] is the sub-list for field type_name
+	8,  // 0: layer.reporter.GenesisState.params:type_name -> layer.reporter.Params
+	3,  // 1: layer.reporter.GenesisState.selectorTips:type_name -> layer.reporter.SelectorTipsStateEntry
+	4,  // 2: layer.reporter.GenesisState.disputed_delegation_amounts:type_name -> layer.reporter.DisputedDelegationAmountStateEntry
+	5,  // 3: layer.reporter.GenesisState.fee_paid_from_stake:type_name -> layer.reporter.FeePaidFromStakeStateEntry
+	2,  // 4: layer.reporter.GenesisState.tip_unlocks:type_name -> layer.reporter.TipUnlockStateEntry
+	1,  // 5: layer.reporter.GenesisState.two_bit_reporters:type_name -> layer.reporter.TwoBitReporterStateEntry
+	6,  // 6: layer.reporter.GenesisState.selector_reporter_switches:type_name -> layer.reporter.SelectorReporterSwitchStateEntry
+	9,  // 7: layer.reporter.TipUnlockStateEntry.entry:type_name -> layer.reporter.TipUnlockEntry
+	10, // 8: layer.reporter.DisputedDelegationAmountStateEntry.delegation_amount:type_name -> layer.reporter.DelegationsAmounts
+	10, // 9: layer.reporter.FeePaidFromStakeStateEntry.delegation_amount:type_name -> layer.reporter.DelegationsAmounts
+	7,  // 10: layer.reporter.SelectorReporterSwitchStateEntry.switches:type_name -> layer.reporter.SelectorReporterSwitchRecord
+	11, // [11:11] is the sub-list for method output_type
+	11, // [11:11] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_layer_reporter_genesis_proto_init() }
@@ -4269,6 +5681,30 @@ func file_layer_reporter_genesis_proto_init() {
 				return nil
 			}
 		}
+		file_layer_reporter_genesis_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SelectorReporterSwitchStateEntry); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_layer_reporter_genesis_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SelectorReporterSwitchRecord); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -4276,7 +5712,7 @@ func file_layer_reporter_genesis_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_layer_reporter_genesis_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

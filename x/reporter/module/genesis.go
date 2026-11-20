@@ -77,6 +77,23 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			panic(err)
 		}
 	}
+
+	// Selector switch history. The prune cursor is not restored.
+	for _, data := range genState.SelectorReporterSwitches {
+		switches := make([]types.SelectorReporterSwitch, len(data.Switches))
+		for i, sw := range data.Switches {
+			switches[i] = types.SelectorReporterSwitch{
+				OriginalReporter: append([]byte(nil), sw.OriginalReporter...),
+				BeganHeight:      sw.BeganHeight,
+				CompletedHeight:  sw.CompletedHeight,
+				CancelledHeight:  sw.CancelledHeight,
+			}
+		}
+		err = k.SelectorReporterSwitches.Set(ctx, data.SelectorAddress, types.SelectorReporterSwitches{Switches: switches})
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -175,6 +192,26 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		})
 		return false, nil
 	}); err != nil {
+		panic(err)
+	}
+
+	err = k.SelectorReporterSwitches.Walk(ctx, nil, func(selector []byte, history types.SelectorReporterSwitches) (bool, error) {
+		switches := make([]types.SelectorReporterSwitchRecord, len(history.Switches))
+		for i, sw := range history.Switches {
+			switches[i] = types.SelectorReporterSwitchRecord{
+				OriginalReporter: append([]byte(nil), sw.OriginalReporter...),
+				BeganHeight:      sw.BeganHeight,
+				CompletedHeight:  sw.CompletedHeight,
+				CancelledHeight:  sw.CancelledHeight,
+			}
+		}
+		genesis.SelectorReporterSwitches = append(genesis.SelectorReporterSwitches, &types.SelectorReporterSwitchStateEntry{
+			SelectorAddress: append([]byte(nil), selector...),
+			Switches:        switches,
+		})
+		return false, nil
+	})
+	if err != nil {
 		panic(err)
 	}
 
