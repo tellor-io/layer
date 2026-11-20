@@ -57,6 +57,10 @@ var (
 	TwoBitReporterToAgentPrefix = collections.NewPrefix(40)
 	// TwoBitPendingRequestPrefix maps a reporter to the agent that has not yet accepted.
 	TwoBitPendingRequestPrefix = collections.NewPrefix(41)
+	// SelectorReporterSwitchesPrefix stores one newest-first switch history per selector.
+	SelectorReporterSwitchesPrefix = collections.NewPrefix(42)
+	// SelectorSwitchPruneCursorPrefix is the next selector address for the batched history prune.
+	SelectorSwitchPruneCursorPrefix = collections.NewPrefix(43)
 )
 
 // ReporterJailDisputeLockKey keys selector dispute locks copied from OracleReporter.JailedUntil
