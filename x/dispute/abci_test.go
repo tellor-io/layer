@@ -98,8 +98,36 @@ func (s *TestSuite) TestEndBlocker() {
 	ctx = ctx.WithBlockHeight(10)
 	ctx = ctx.WithBlockTime(time.Now())
 
+	s.reporterKeeper.On("PruneSelectorSwitches", mock.Anything, uint64(10), 100).Return(nil).Once()
+
 	err := dispute.EndBlocker(ctx, k)
 	require.NoError(err)
+	s.reporterKeeper.AssertExpectations(s.T())
+}
+
+func (s *TestSuite) TestEndBlockerPrunesSwitchHistoryToOldestOpenDispute() {
+	require := require.New(s.T())
+	k := s.disputeKeeper
+	ctx := s.ctx.WithBlockHeight(500)
+
+	require.NoError(k.Disputes.Set(ctx, 1, types.Dispute{
+		DisputeId:   1,
+		Open:        true,
+		BlockNumber: 120,
+	}))
+	require.NoError(k.Disputes.Set(ctx, 2, types.Dispute{
+		DisputeId:   2,
+		Open:        true,
+		BlockNumber: 80,
+	}))
+	require.NoError(k.Disputes.Set(ctx, 3, types.Dispute{
+		DisputeId:   3,
+		Open:        false,
+		BlockNumber: 10,
+	}))
+	s.reporterKeeper.On("PruneSelectorSwitches", mock.Anything, uint64(80), 100).Return(nil).Once()
+
+	require.NoError(dispute.EndBlocker(ctx, k))
 }
 
 func BenchmarkDisputeEndBlocker(b *testing.B) {
