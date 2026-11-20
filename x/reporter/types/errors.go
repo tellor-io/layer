@@ -37,4 +37,5 @@ var (
 	ErrAddressIsTwoBitAgent          = sdkerrors.Register(ModuleName, 1126, "address is registered as a 2bit agent")
 	ErrTwoBitRegistrationNotFound    = sdkerrors.Register(ModuleName, 1127, "2bit registration request not found")
 	ErrTwoBitRegistrationExpired     = sdkerrors.Register(ModuleName, 1128, "2bit registration request expired")
+	ErrReporterSlashShortfall        = sdkerrors.Register(ModuleName, 1129, "collected reporter stake is short of the requested slash")
 )
