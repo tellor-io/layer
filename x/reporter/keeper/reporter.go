@@ -94,7 +94,8 @@ func (k Keeper) ReporterStakeWithSnapshot(ctx context.Context, repAddr sdk.AccAd
 		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
 
-	// Handle period tracking for reward distribution
+	// Handle period tracking for reward distribution. The hash is per selector,
+	// so a move between validators does not start a new reward period.
 	changed, err := k.handlePeriodTracking(ctx, repAddr, selectorShares, totalTokens, hash)
 	if err != nil {
 		return math.Int{}, types.StakeSnapshotRef{}, err

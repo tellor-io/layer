@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
+	"github.com/tellor-io/layer/x/reporter/keeper"
 	"github.com/tellor-io/layer/x/reporter/mocks"
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -825,4 +826,599 @@ func TestCollectionsRemoveNonExistentKey(t *testing.T) {
 	// Remove from StakeRecalcFlag when key was never set — should not error
 	err = k.StakeRecalcFlag.Remove(ctx, nonExistentAddr.Bytes())
 	require.NoError(t, err)
+}
+
+func bondedDelegation(selector sdk.AccAddress, val sdk.ValAddress, amount math.Int) (stakingtypes.Delegation, stakingtypes.Validator) {
+	return stakingtypes.Delegation{
+			DelegatorAddress: selector.String(),
+			ValidatorAddress: val.String(),
+			Shares:           amount.ToLegacyDec(),
+		}, stakingtypes.Validator{
+			OperatorAddress: val.String(),
+			Status:          stakingtypes.Bonded,
+			Tokens:          amount,
+			DelegatorShares: amount.ToLegacyDec(),
+		}
+}
+
+func countStakeSnapshots(t *testing.T, k keeper.Keeper, ctx sdk.Context) int {
+	t.Helper()
+	n := 0
+	err := k.StakeSnapshots.Walk(ctx, nil, func(collections.Triple[[]byte, uint64, uint64], types.DelegationsAmounts) (bool, error) {
+		n++
+		return false, nil
+	})
+	require.NoError(t, err)
+	return n
+}
+
+// TestReporterStakeValidatorMoveUpdatesDisputeSnapshot keeps the reward-period
+// hash when selector totals are unchanged, and still stores the validator that
+// holds the stake so a later slash does not look up the old one.
+func TestReporterStakeValidatorMoveUpdatesDisputeSnapshot(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+
+	reporterAddr := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	valA := sdk.ValAddress(sample.AccAddressBytes())
+	valB := sdk.ValAddress(sample.AccAddressBytes())
+	amount := math.NewInt(1000)
+	queryA := []byte("query-a")
+	queryB := []byte("query-b")
+	queryC := []byte("query-c")
+
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")))
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 1)))
+
+	delA, validatorA := bondedDelegation(selector, valA, amount)
+	delB, validatorB := bondedDelegation(selector, valB, amount)
+
+	validatorSet := new(mocks.ValidatorSet)
+	sk.On("GetValidatorSet").Return(validatorSet)
+	validatorSet.On("MaxValidators", mock.Anything).Return(uint32(100), nil)
+	sk.On("GetValidator", mock.Anything, valA).Return(validatorA, nil)
+	sk.On("GetValidator", mock.Anything, valB).Return(validatorB, nil)
+	sk.On("IterateDelegatorDelegations", mock.Anything, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		switch args.Get(0).(sdk.Context).BlockHeight() {
+		case 20, 30:
+			fn(delB)
+		default:
+			fn(delA)
+		}
+	})
+
+	ctx10 := ctx.WithBlockHeight(10)
+	stake, err := k.ReporterStake(ctx10, reporterAddr, queryA)
+	require.NoError(t, err)
+	require.Equal(t, amount, stake)
+
+	period, err := k.ReporterPeriodData.Get(ctx, reporterAddr)
+	require.NoError(t, err)
+	hashBefore := append([]byte(nil), period.Hash...)
+	period.RewardAmount = math.LegacyNewDec(25)
+	require.NoError(t, k.ReporterPeriodData.Set(ctx, reporterAddr, period))
+	require.NoError(t, k.LastValSetUpdateHeight.Set(ctx, uint64(1)))
+
+	require.NoError(t, k.FlagStakeRecalc(ctx, reporterAddr))
+	ctx20 := ctx.WithBlockHeight(20)
+	stake, err = k.ReporterStake(ctx20, reporterAddr, queryB)
+	require.NoError(t, err)
+	require.Equal(t, amount, stake)
+
+	period, err = k.ReporterPeriodData.Get(ctx, reporterAddr)
+	require.NoError(t, err)
+	require.Equal(t, hashBefore, period.Hash)
+	require.True(t, period.RewardAmount.Equal(math.LegacyNewDec(25)), "an unchanged selector total must not queue a new reward period")
+	queued, err := k.DistributionQueue.Has(ctx, 0)
+	require.NoError(t, err)
+	require.False(t, queued)
+
+	moved, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), 20)
+	require.NoError(t, err)
+	require.Equal(t, amount, moved.Total)
+	require.Len(t, moved.TokenOrigins, 1)
+	require.Equal(t, valB.Bytes(), moved.TokenOrigins[0].ValidatorAddress)
+
+	original, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), 10)
+	require.NoError(t, err)
+	require.Equal(t, valA.Bytes(), original.TokenOrigins[0].ValidatorAddress)
+
+	rowsAfterMove := countStakeSnapshots(t, k, ctx)
+	require.Equal(t, 2, rowsAfterMove)
+
+	require.NoError(t, k.FlagStakeRecalc(ctx, reporterAddr))
+	ctx30 := ctx.WithBlockHeight(30)
+	stake, err = k.ReporterStake(ctx30, reporterAddr, queryC)
+	require.NoError(t, err)
+	require.Equal(t, amount, stake)
+	require.Equal(t, rowsAfterMove, countStakeSnapshots(t, k, ctx), "the same origin multiset must not write another snapshot")
+	stillB, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), 30)
+	require.NoError(t, err)
+	require.Equal(t, valB.Bytes(), stillB.TokenOrigins[0].ValidatorAddress)
+}
+
+// A move within one block saves a newer snapshot, and the earlier report keeps its own.
+func TestReporterStakeSameHeightMoveSavesNewerSnapshot(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+	ctx = ctx.WithBlockHeight(15)
+
+	reporterAddr := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	valA := sdk.ValAddress(sample.AccAddressBytes())
+	valB := sdk.ValAddress(sample.AccAddressBytes())
+	amount := math.NewInt(1000)
+
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")))
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 1)))
+
+	delA, validatorA := bondedDelegation(selector, valA, amount)
+	delB, validatorB := bondedDelegation(selector, valB, amount)
+	call := 0
+
+	validatorSet := new(mocks.ValidatorSet)
+	sk.On("GetValidatorSet").Return(validatorSet)
+	validatorSet.On("MaxValidators", mock.Anything).Return(uint32(100), nil)
+	sk.On("GetValidator", mock.Anything, valA).Return(validatorA, nil)
+	sk.On("GetValidator", mock.Anything, valB).Return(validatorB, nil)
+	sk.On("IterateDelegatorDelegations", mock.Anything, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		call++
+		if call == 1 {
+			fn(delA)
+			return
+		}
+		fn(delB)
+	})
+
+	stake, firstRef, err := k.ReporterStakeWithSnapshot(ctx, reporterAddr)
+	require.NoError(t, err)
+	require.Equal(t, amount, stake)
+
+	period, err := k.ReporterPeriodData.Get(ctx, reporterAddr)
+	require.NoError(t, err)
+	hashBefore := append([]byte(nil), period.Hash...)
+	period.RewardAmount = math.LegacyNewDec(25)
+	require.NoError(t, k.ReporterPeriodData.Set(ctx, reporterAddr, period))
+	require.NoError(t, k.LastValSetUpdateHeight.Set(ctx, uint64(1)))
+
+	require.NoError(t, k.FlagStakeRecalc(ctx, reporterAddr))
+	stake, movedRef, err := k.ReporterStakeWithSnapshot(ctx, reporterAddr)
+	require.NoError(t, err)
+	require.Equal(t, amount, stake)
+
+	period, err = k.ReporterPeriodData.Get(ctx, reporterAddr)
+	require.NoError(t, err)
+	require.Equal(t, hashBefore, period.Hash)
+	require.True(t, period.RewardAmount.Equal(math.LegacyNewDec(25)))
+	queued, err := k.DistributionQueue.Has(ctx, 0)
+	require.NoError(t, err)
+	require.False(t, queued)
+
+	// Both snapshots are in this block, and the newer one comes after the older one.
+	require.Equal(t, firstRef.Block, movedRef.Block)
+	require.Greater(t, movedRef.Version, firstRef.Version)
+	require.Equal(t, 2, countStakeSnapshots(t, k, ctx))
+
+	// The earlier report still points at validator A, the later one at B.
+	first, err := k.GetReportStakeSnapshot(ctx, reporterAddr, 15, firstRef)
+	require.NoError(t, err)
+	require.Equal(t, valA.Bytes(), first.TokenOrigins[0].ValidatorAddress)
+	moved, err := k.GetReportStakeSnapshot(ctx, reporterAddr, 15, movedRef)
+	require.NoError(t, err)
+	require.Equal(t, valB.Bytes(), moved.TokenOrigins[0].ValidatorAddress)
+
+	// Looking up the block returns the newest snapshot.
+	loaded, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), 15)
+	require.NoError(t, err)
+	require.Equal(t, valB.Bytes(), loaded.TokenOrigins[0].ValidatorAddress)
+
+	// Recalculating again with the same stake saves nothing new.
+	require.NoError(t, k.FlagStakeRecalc(ctx, reporterAddr))
+	stake, againRef, err := k.ReporterStakeWithSnapshot(ctx, reporterAddr)
+	require.NoError(t, err)
+	require.Equal(t, amount, stake)
+	require.Equal(t, movedRef, againRef)
+	require.Equal(t, 2, countStakeSnapshots(t, k, ctx))
+}
+
+// TestReporterStakeOriginOrderDoesNotWriteSnapshot treats a reordering of the
+// same delegator, validator, and amount triples as unchanged.
+func TestReporterStakeOriginOrderDoesNotWriteSnapshot(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+
+	reporterAddr := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	valA := sdk.ValAddress(sample.AccAddressBytes())
+	valB := sdk.ValAddress(sample.AccAddressBytes())
+	amountA := math.NewInt(400)
+	amountB := math.NewInt(600)
+
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")))
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 2)))
+
+	delA, validatorA := bondedDelegation(selector, valA, amountA)
+	delB, validatorB := bondedDelegation(selector, valB, amountB)
+
+	validatorSet := new(mocks.ValidatorSet)
+	sk.On("GetValidatorSet").Return(validatorSet)
+	validatorSet.On("MaxValidators", mock.Anything).Return(uint32(100), nil)
+	sk.On("GetValidator", mock.Anything, valA).Return(validatorA, nil)
+	sk.On("GetValidator", mock.Anything, valB).Return(validatorB, nil)
+	sk.On("IterateDelegatorDelegations", mock.Anything, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		fn(delA)
+		fn(delB)
+	})
+
+	ctx10 := ctx.WithBlockHeight(10)
+	stake, ref, err := k.ReporterStakeWithSnapshot(ctx10, reporterAddr)
+	require.NoError(t, err)
+	require.Equal(t, amountA.Add(amountB), stake)
+
+	key := collections.Join3(reporterAddr.Bytes(), ref.Block, ref.Version)
+	stored, err := k.StakeSnapshots.Get(ctx, key)
+	require.NoError(t, err)
+	require.Len(t, stored.TokenOrigins, 2)
+	stored.TokenOrigins[0], stored.TokenOrigins[1] = stored.TokenOrigins[1], stored.TokenOrigins[0]
+	require.NoError(t, k.StakeSnapshots.Set(ctx, key, stored))
+
+	period, err := k.ReporterPeriodData.Get(ctx, reporterAddr)
+	require.NoError(t, err)
+	hashBefore := append([]byte(nil), period.Hash...)
+	require.NoError(t, k.LastValSetUpdateHeight.Set(ctx, uint64(1)))
+	require.NoError(t, k.FlagStakeRecalc(ctx, reporterAddr))
+
+	ctx20 := ctx.WithBlockHeight(20)
+	stake, err = k.ReporterStake(ctx20, reporterAddr, []byte("ordered-origins-again"))
+	require.NoError(t, err)
+	require.Equal(t, amountA.Add(amountB), stake)
+
+	period, err = k.ReporterPeriodData.Get(ctx, reporterAddr)
+	require.NoError(t, err)
+	require.Equal(t, hashBefore, period.Hash)
+	require.Equal(t, 1, countStakeSnapshots(t, k, ctx))
+
+	loaded, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), 20)
+	require.NoError(t, err)
+	require.Equal(t, stored.TokenOrigins[0].ValidatorAddress, loaded.TokenOrigins[0].ValidatorAddress)
+	require.Equal(t, stored.TokenOrigins[1].ValidatorAddress, loaded.TokenOrigins[1].ValidatorAddress)
+}
+
+// TestReporterStakeValidatorMoveSlashUsesNewOrigin slashes the validator that
+// holds the stake after a same-total move, and leaves the earlier snapshot on A.
+func TestReporterStakeValidatorMoveSlashUsesNewOrigin(t *testing.T) {
+	k, sk, bk, _, _, ctx, _ := setupKeeper(t)
+
+	reporterAddr := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	valA := sdk.ValAddress(sample.AccAddressBytes())
+	valB := sdk.ValAddress(sample.AccAddressBytes())
+	amount := math.NewInt(1000)
+	queryA := []byte("query-a")
+	hashID := []byte("slash-moved")
+
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")))
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 1)))
+
+	delA, validatorA := bondedDelegation(selector, valA, amount)
+	delB, validatorB := bondedDelegation(selector, valB, amount)
+
+	validatorSet := new(mocks.ValidatorSet)
+	sk.On("GetValidatorSet").Return(validatorSet)
+	validatorSet.On("MaxValidators", mock.Anything).Return(uint32(100), nil)
+	sk.On("GetValidator", mock.Anything, valA).Return(validatorA, nil)
+	sk.On("GetValidator", mock.Anything, valB).Return(validatorB, nil)
+	sk.On("IterateDelegatorDelegations", mock.Anything, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		if args.Get(0).(sdk.Context).BlockHeight() == 20 {
+			fn(delB)
+			return
+		}
+		fn(delA)
+	})
+
+	ctx10 := ctx.WithBlockHeight(10)
+	stake, err := k.ReporterStake(ctx10, reporterAddr, queryA)
+	require.NoError(t, err)
+	require.Equal(t, amount, stake)
+
+	require.NoError(t, k.LastValSetUpdateHeight.Set(ctx, uint64(1)))
+	require.NoError(t, k.FlagStakeRecalc(ctx, reporterAddr))
+
+	ctx20 := ctx.WithBlockHeight(20)
+	stake, movedRef, err := k.ReporterStakeWithSnapshot(ctx20, reporterAddr)
+	require.NoError(t, err)
+	require.Equal(t, amount, stake)
+
+	sharesB, err := validatorB.SharesFromTokens(amount)
+	require.NoError(t, err)
+	sk.On("GetDelegation", ctx20, selector, valB).Return(delB, nil)
+	sk.On("Unbond", ctx20, selector, valB, sharesB).Return(amount, nil)
+	bk.On("SendCoinsFromModuleToModule", ctx20, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", amount))).Return(nil)
+
+	require.NoError(t, k.EscrowReporterStake(ctx20, reporterAddr, 1, 20, amount, movedRef, hashID))
+
+	sk.AssertCalled(t, "Unbond", ctx20, selector, valB, sharesB)
+	sk.AssertNotCalled(t, "Unbond", mock.Anything, selector, valA, mock.Anything)
+	bk.AssertCalled(t, "SendCoinsFromModuleToModule", ctx20, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", amount)))
+	bk.AssertNumberOfCalls(t, "SendCoinsFromModuleToModule", 1)
+
+	stored, err := k.DisputedDelegationAmounts.Get(ctx, hashID)
+	require.NoError(t, err)
+	require.Equal(t, amount, stored.Total)
+	require.Len(t, stored.TokenOrigins, 1)
+	require.Equal(t, valB.Bytes(), stored.TokenOrigins[0].ValidatorAddress)
+	require.Equal(t, amount, stored.TokenOrigins[0].Amount)
+
+	original, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), 10)
+	require.NoError(t, err)
+	require.Equal(t, valA.Bytes(), original.TokenOrigins[0].ValidatorAddress)
+}
+
+// TestReporterStakeHookMovesSameTotal flags the reporter through the delegation
+// hook, then stores validator B without changing the reward-period hash.
+func TestReporterStakeHookMovesSameTotal(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+
+	reporterAddr := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	valA := sdk.ValAddress(sample.AccAddressBytes())
+	valB := sdk.ValAddress(sample.AccAddressBytes())
+	amount := math.NewInt(1000)
+
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")))
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 1)))
+
+	delA, validatorA := bondedDelegation(selector, valA, amount)
+	delB, validatorB := bondedDelegation(selector, valB, amount)
+
+	validatorSet := new(mocks.ValidatorSet)
+	sk.On("GetValidatorSet").Return(validatorSet)
+	validatorSet.On("MaxValidators", mock.Anything).Return(uint32(100), nil)
+	sk.On("GetValidator", mock.Anything, valA).Return(validatorA, nil)
+	sk.On("GetValidator", mock.Anything, valB).Return(validatorB, nil)
+	sk.On("IterateDelegatorDelegations", mock.Anything, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		if args.Get(0).(sdk.Context).BlockHeight() == 20 {
+			fn(delB)
+			return
+		}
+		fn(delA)
+	})
+
+	ctx10 := ctx.WithBlockHeight(10)
+	stake, err := k.ReporterStake(ctx10, reporterAddr, []byte("query-a"))
+	require.NoError(t, err)
+	require.Equal(t, amount, stake)
+
+	period, err := k.ReporterPeriodData.Get(ctx, reporterAddr)
+	require.NoError(t, err)
+	hashBefore := append([]byte(nil), period.Hash...)
+	require.NoError(t, k.LastValSetUpdateHeight.Set(ctx, uint64(1)))
+	_, err = k.RecalcAtTime.Get(ctx, reporterAddr.Bytes())
+	require.Error(t, err)
+
+	ctx20 := ctx.WithBlockHeight(20)
+	require.NoError(t, k.Hooks().AfterDelegationModified(ctx20, selector, valB))
+	flagged, err := k.StakeRecalcFlag.Has(ctx, reporterAddr.Bytes())
+	require.NoError(t, err)
+	require.True(t, flagged)
+
+	stake, err = k.ReporterStake(ctx20, reporterAddr, []byte("query-b"))
+	require.NoError(t, err)
+	require.Equal(t, amount, stake)
+
+	flagged, err = k.StakeRecalcFlag.Has(ctx, reporterAddr.Bytes())
+	require.NoError(t, err)
+	require.False(t, flagged, "the delegation hook's flag is what caused the recalculation")
+
+	period, err = k.ReporterPeriodData.Get(ctx, reporterAddr)
+	require.NoError(t, err)
+	require.Equal(t, hashBefore, period.Hash)
+
+	moved, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), 20)
+	require.NoError(t, err)
+	require.Equal(t, valB.Bytes(), moved.TokenOrigins[0].ValidatorAddress)
+}
+
+// TestReporterStakeOneOfTwoSelectorsMoved keeps both origins when only the
+// first selector changes validator and the selector totals stay the same.
+func TestReporterStakeOneOfTwoSelectorsMoved(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+
+	reporterAddr := sample.AccAddressBytes()
+	selector1 := sample.AccAddressBytes()
+	selector2 := sample.AccAddressBytes()
+	valA := sdk.ValAddress(sample.AccAddressBytes())
+	valB := sdk.ValAddress(sample.AccAddressBytes())
+	valC := sdk.ValAddress(sample.AccAddressBytes())
+	amount1 := math.NewInt(400)
+	amount2 := math.NewInt(600)
+
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")))
+	require.NoError(t, k.Selectors.Set(ctx, selector1, types.NewSelection(reporterAddr, 1)))
+	require.NoError(t, k.Selectors.Set(ctx, selector2, types.NewSelection(reporterAddr, 1)))
+
+	del1A, validatorA := bondedDelegation(selector1, valA, amount1)
+	del1B, validatorB := bondedDelegation(selector1, valB, amount1)
+	del2, validatorC := bondedDelegation(selector2, valC, amount2)
+
+	validatorSet := new(mocks.ValidatorSet)
+	sk.On("GetValidatorSet").Return(validatorSet)
+	validatorSet.On("MaxValidators", mock.Anything).Return(uint32(100), nil)
+	sk.On("GetValidator", mock.Anything, valA).Return(validatorA, nil)
+	sk.On("GetValidator", mock.Anything, valB).Return(validatorB, nil)
+	sk.On("GetValidator", mock.Anything, valC).Return(validatorC, nil)
+	sk.On("IterateDelegatorDelegations", mock.Anything, selector1, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		if args.Get(0).(sdk.Context).BlockHeight() == 20 {
+			fn(del1B)
+			return
+		}
+		fn(del1A)
+	})
+	sk.On("IterateDelegatorDelegations", mock.Anything, selector2, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		fn(del2)
+	})
+
+	ctx10 := ctx.WithBlockHeight(10)
+	stake, err := k.ReporterStake(ctx10, reporterAddr, []byte("two-selectors"))
+	require.NoError(t, err)
+	require.Equal(t, amount1.Add(amount2), stake)
+
+	period, err := k.ReporterPeriodData.Get(ctx, reporterAddr)
+	require.NoError(t, err)
+	period.RewardAmount = math.LegacyNewDec(25)
+	require.NoError(t, k.ReporterPeriodData.Set(ctx, reporterAddr, period))
+	require.NoError(t, k.LastValSetUpdateHeight.Set(ctx, uint64(1)))
+	require.NoError(t, k.FlagStakeRecalc(ctx, reporterAddr))
+
+	ctx20 := ctx.WithBlockHeight(20)
+	stake, err = k.ReporterStake(ctx20, reporterAddr, []byte("two-selectors-moved"))
+	require.NoError(t, err)
+	require.Equal(t, amount1.Add(amount2), stake)
+
+	period, err = k.ReporterPeriodData.Get(ctx, reporterAddr)
+	require.NoError(t, err)
+	require.True(t, period.RewardAmount.Equal(math.LegacyNewDec(25)))
+	queued, err := k.DistributionQueue.Has(ctx, 0)
+	require.NoError(t, err)
+	require.False(t, queued)
+
+	moved, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), 20)
+	require.NoError(t, err)
+	require.Len(t, moved.TokenOrigins, 2)
+	require.True(t, hasOrigin(moved.TokenOrigins, selector1, valB, amount1), "moved origin must be validator B")
+	require.True(t, hasOrigin(moved.TokenOrigins, selector2, valC, amount2), "unmoved origin must stay in the snapshot")
+}
+
+func hasOrigin(origins []*types.TokenOriginInfo, del sdk.AccAddress, val sdk.ValAddress, amount math.Int) bool {
+	for _, origin := range origins {
+		if origin == nil {
+			continue
+		}
+		if sdk.AccAddress(origin.DelegatorAddress).Equals(del) &&
+			sdk.ValAddress(origin.ValidatorAddress).Equals(val) &&
+			origin.Amount.Equal(amount) {
+			return true
+		}
+	}
+	return false
+}
+
+// A reporter whose only snapshot is in the oldest storage gets a numbered one, and the old one stays for its block.
+func TestReporterStakeLegacyReportRecalcSavesVersionedSnapshot(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+
+	reporterAddr := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	valA := sdk.ValAddress(sample.AccAddressBytes())
+	valB := sdk.ValAddress(sample.AccAddressBytes())
+	amount := math.NewInt(1000)
+	legacyQuery := []byte("legacy-query")
+
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")))
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 1)))
+	require.NoError(t, k.Report.Set(ctx, collections.Join(legacyQuery, collections.Join(reporterAddr.Bytes(), uint64(10))), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{{
+			DelegatorAddress: selector.Bytes(),
+			ValidatorAddress: valA.Bytes(),
+			Amount:           amount,
+		}},
+		Total: amount,
+	}))
+	require.Equal(t, 0, countStakeSnapshots(t, k, ctx))
+
+	delB, validatorB := bondedDelegation(selector, valB, amount)
+
+	validatorSet := new(mocks.ValidatorSet)
+	sk.On("GetValidatorSet").Return(validatorSet)
+	validatorSet.On("MaxValidators", mock.Anything).Return(uint32(100), nil)
+	sk.On("GetValidator", mock.Anything, valB).Return(validatorB, nil)
+	sk.On("IterateDelegatorDelegations", mock.Anything, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		fn(delB)
+	})
+
+	ctx20 := ctx.WithBlockHeight(20)
+	stake, ref, err := k.ReporterStakeWithSnapshot(ctx20, reporterAddr)
+	require.NoError(t, err)
+	require.Equal(t, amount, stake)
+
+	fromNew, err := k.StakeSnapshots.Get(ctx, collections.Join3(reporterAddr.Bytes(), ref.Block, ref.Version))
+	require.NoError(t, err)
+	require.Equal(t, valB.Bytes(), fromNew.TokenOrigins[0].ValidatorAddress)
+	loaded, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), 20)
+	require.NoError(t, err)
+	require.Equal(t, valB.Bytes(), loaded.TokenOrigins[0].ValidatorAddress)
+	require.Equal(t, 1, countStakeSnapshots(t, k, ctx))
+
+	legacy, err := k.Report.Get(ctx, collections.Join(legacyQuery, collections.Join(reporterAddr.Bytes(), uint64(10))))
+	require.NoError(t, err)
+	require.Equal(t, valA.Bytes(), legacy.TokenOrigins[0].ValidatorAddress)
+	oldLoaded, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), 10)
+	require.NoError(t, err)
+	require.Equal(t, valA.Bytes(), oldLoaded.TokenOrigins[0].ValidatorAddress)
+
+	ctx30 := ctx.WithBlockHeight(30)
+	stake, againRef, err := k.ReporterStakeWithSnapshot(ctx30, reporterAddr)
+	require.NoError(t, err)
+	require.Equal(t, amount, stake)
+	require.Equal(t, ref, againRef)
+	require.Equal(t, 1, countStakeSnapshots(t, k, ctx))
+}
+
+// TestReporterStakeCacheHitIgnoresSameTotalMove returns the cached validator
+// when nothing has flagged a recalculation, even if live stake sits on B.
+func TestReporterStakeCacheHitIgnoresSameTotalMove(t *testing.T) {
+	k, sk, _, _, _, ctx, _ := setupKeeper(t)
+
+	reporterAddr := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	valA := sdk.ValAddress(sample.AccAddressBytes())
+	valB := sdk.ValAddress(sample.AccAddressBytes())
+	amount := math.NewInt(1000)
+	ctx = ctx.WithBlockHeight(20)
+
+	require.NoError(t, k.Reporters.Set(ctx, reporterAddr, types.NewReporter(types.DefaultMinCommissionRate, types.DefaultMinLoya, "reporter")))
+	require.NoError(t, k.Selectors.Set(ctx, selector, types.NewSelection(reporterAddr, 1)))
+	require.NoError(t, k.StakeSnapshots.Set(ctx, collections.Join3(reporterAddr.Bytes(), uint64(10), uint64(1)), types.DelegationsAmounts{
+		TokenOrigins: []*types.TokenOriginInfo{{
+			DelegatorAddress: selector.Bytes(),
+			ValidatorAddress: valA.Bytes(),
+			Amount:           amount,
+		}},
+		Total: amount,
+	}))
+	require.NoError(t, k.LastValSetUpdateHeight.Set(ctx, uint64(3)))
+	flagged, err := k.StakeRecalcFlag.Has(ctx, reporterAddr.Bytes())
+	require.NoError(t, err)
+	require.False(t, flagged)
+	_, err = k.RecalcAtTime.Get(ctx, reporterAddr.Bytes())
+	require.Error(t, err)
+
+	delB, validatorB := bondedDelegation(selector, valB, amount)
+	validatorSet := new(mocks.ValidatorSet)
+	sk.On("GetValidatorSet").Return(validatorSet)
+	validatorSet.On("MaxValidators", mock.Anything).Return(uint32(100), nil)
+	sk.On("GetValidator", mock.Anything, valB).Return(validatorB, nil)
+	sk.On("IterateDelegatorDelegations", mock.Anything, selector, mock.AnythingOfType("func(types.Delegation) bool")).Return(nil).Run(func(args mock.Arguments) {
+		fn := args.Get(2).(func(stakingtypes.Delegation) bool)
+		fn(delB)
+	})
+
+	rowsBefore := countStakeSnapshots(t, k, ctx)
+	require.Equal(t, 1, rowsBefore)
+
+	stake, err := k.ReporterStake(ctx, reporterAddr, []byte("cache-hit"))
+	require.NoError(t, err)
+	require.Equal(t, amount, stake)
+
+	loaded, err := k.GetDelegationsAmount(ctx, reporterAddr.Bytes(), uint64(ctx.BlockHeight()))
+	require.NoError(t, err)
+	require.Equal(t, valA.Bytes(), loaded.TokenOrigins[0].ValidatorAddress)
+	require.Equal(t, rowsBefore, countStakeSnapshots(t, k, ctx))
+	sk.AssertNotCalled(t, "IterateDelegatorDelegations", mock.Anything, selector, mock.Anything)
 }

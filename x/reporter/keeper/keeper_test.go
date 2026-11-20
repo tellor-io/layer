@@ -100,6 +100,82 @@ func TestGetReporterTokensAtBlock(t *testing.T) {
 	require.Equal(t, math.OneInt(), tokens)
 }
 
+// TestGetReporterTokensAtBlockAfterCompletedSelectorSwitch covers a selector
+// whose switch finished before the dispute block. The old reporter's snapshot
+// still lists them until that reporter reports again. Those origins stay in the
+// old total until the new reporter's snapshot lists them, then they come out.
+func TestGetReporterTokensAtBlockAfterCompletedSelectorSwitch(t *testing.T) {
+	k, _, _, _, _, ctx, _ := setupKeeper(t)
+	oldReporter := sample.AccAddressBytes()
+	newReporter := sample.AccAddressBytes()
+	selector := sample.AccAddressBytes()
+	unknown := sample.AccAddressBytes()
+	val1 := sdk.ValAddress(sample.AccAddressBytes())
+	val2 := sdk.ValAddress(sample.AccAddressBytes())
+	block := uint64(40)
+
+	selectorOnVal1 := math.NewInt(12)
+	selectorOnVal2 := math.NewInt(13)
+	unknownAmount := math.NewInt(5)
+	reporterOwn := math.NewInt(70)
+	total := math.NewInt(100)
+
+	require.NoError(t, k.Selectors.Set(ctx, oldReporter.Bytes(), types.NewSelection(oldReporter, 1)))
+	require.NoError(t, k.Selectors.Set(ctx, selector.Bytes(), types.NewSelection(newReporter, 1)))
+	require.NoError(t, k.SelectorReporterSwitches.Set(ctx, selector.Bytes(), types.SelectorReporterSwitches{
+		Switches: []types.SelectorReporterSwitch{
+			{OriginalReporter: oldReporter.Bytes(), BeganHeight: 10, CompletedHeight: 20},
+		},
+	}))
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(oldReporter.Bytes(), uint64(15), []byte("q")), types.DelegationsAmounts{
+		Total: total,
+		TokenOrigins: []*types.TokenOriginInfo{
+			{DelegatorAddress: selector, ValidatorAddress: val1, Amount: selectorOnVal1},
+			{DelegatorAddress: selector, ValidatorAddress: val2, Amount: selectorOnVal2},
+			// Nil amount must not panic, and it is not part of Total.
+			{DelegatorAddress: selector, ValidatorAddress: val1, Amount: math.Int{}},
+			{DelegatorAddress: unknown, ValidatorAddress: val1, Amount: unknownAmount},
+			{DelegatorAddress: oldReporter, ValidatorAddress: val1, Amount: reporterOwn},
+		},
+	}))
+
+	got, err := k.GetReporterTokensAtBlock(ctx, oldReporter.Bytes(), block)
+	require.NoError(t, err)
+	require.Equal(t, total, got, "no snapshot on the new reporter: the old total still includes the selector")
+
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(newReporter.Bytes(), uint64(30), []byte("q")), types.DelegationsAmounts{
+		Total: selectorOnVal1.Add(selectorOnVal2),
+		TokenOrigins: []*types.TokenOriginInfo{
+			{DelegatorAddress: selector, ValidatorAddress: val1, Amount: selectorOnVal1},
+			{DelegatorAddress: selector, ValidatorAddress: val2, Amount: selectorOnVal2},
+		},
+	}))
+	got, err = k.GetReporterTokensAtBlock(ctx, oldReporter.Bytes(), block)
+	require.NoError(t, err)
+	require.Equal(t, reporterOwn.Add(unknownAmount), got, "new snapshot lists the selector, so the old total drops both of that selector's origins")
+
+	// A later snapshot whose delegator is still on this reporter returns that total
+	// even when the other reporter's snapshot also lists them.
+	still := sample.AccAddressBytes()
+	stillTotal := math.NewInt(40)
+	require.NoError(t, k.Selectors.Set(ctx, still.Bytes(), types.NewSelection(oldReporter, 1)))
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(oldReporter.Bytes(), uint64(16), []byte("still")), types.DelegationsAmounts{
+		Total: stillTotal,
+		TokenOrigins: []*types.TokenOriginInfo{
+			{DelegatorAddress: still, ValidatorAddress: val1, Amount: stillTotal},
+		},
+	}))
+	require.NoError(t, k.ReportByBlock.Set(ctx, collections.Join3(newReporter.Bytes(), uint64(31), []byte("still")), types.DelegationsAmounts{
+		Total: stillTotal,
+		TokenOrigins: []*types.TokenOriginInfo{
+			{DelegatorAddress: still, ValidatorAddress: val1, Amount: stillTotal},
+		},
+	}))
+	got, err = k.GetReporterTokensAtBlock(ctx, oldReporter.Bytes(), block)
+	require.NoError(t, err)
+	require.Equal(t, stillTotal, got)
+}
+
 func TestTrackStakeChange(t *testing.T) {
 	k, sk, _, _, _, ctx, _ := setupKeeper(t)
 	expiration := ctx.BlockTime().Add(1)

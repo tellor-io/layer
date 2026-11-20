@@ -36,6 +36,11 @@ type GenesisState struct {
 	TipUnlocks                []*TipUnlockStateEntry                `protobuf:"bytes,5,rep,name=tip_unlocks,json=tipUnlocks,proto3" json:"tip_unlocks,omitempty"`
 	// tip_unlock_id is the next unlock id to allocate (TipUnlockID sequence peek value).
 	TipUnlockId uint64 `protobuf:"varint,6,opt,name=tip_unlock_id,json=tipUnlockId,proto3" json:"tip_unlock_id,omitempty"`
+	// two_bit_reporters maps an agent account to the reporter it reports for.
+	TwoBitReporters []*TwoBitReporterStateEntry `protobuf:"bytes,7,rep,name=two_bit_reporters,json=twoBitReporters,proto3" json:"two_bit_reporters,omitempty"`
+	// selector_reporter_switches is per-selector reporter switch history, newest first.
+	// The prune cursor is not genesis state; a restart starts that scan over.
+	SelectorReporterSwitches []*SelectorReporterSwitchStateEntry `protobuf:"bytes,8,rep,name=selector_reporter_switches,json=selectorReporterSwitches,proto3" json:"selector_reporter_switches,omitempty"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -113,6 +118,72 @@ func (m *GenesisState) GetTipUnlockId() uint64 {
 	return 0
 }
 
+func (m *GenesisState) GetTwoBitReporters() []*TwoBitReporterStateEntry {
+	if m != nil {
+		return m.TwoBitReporters
+	}
+	return nil
+}
+
+func (m *GenesisState) GetSelectorReporterSwitches() []*SelectorReporterSwitchStateEntry {
+	if m != nil {
+		return m.SelectorReporterSwitches
+	}
+	return nil
+}
+
+type TwoBitReporterStateEntry struct {
+	AgentAddress    []byte `protobuf:"bytes,1,opt,name=agent_address,json=agentAddress,proto3" json:"agent_address,omitempty"`
+	ReporterAddress []byte `protobuf:"bytes,2,opt,name=reporter_address,json=reporterAddress,proto3" json:"reporter_address,omitempty"`
+}
+
+func (m *TwoBitReporterStateEntry) Reset()         { *m = TwoBitReporterStateEntry{} }
+func (m *TwoBitReporterStateEntry) String() string { return proto.CompactTextString(m) }
+func (*TwoBitReporterStateEntry) ProtoMessage()    {}
+func (*TwoBitReporterStateEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1affa61e846a6c93, []int{1}
+}
+func (m *TwoBitReporterStateEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *TwoBitReporterStateEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_TwoBitReporterStateEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *TwoBitReporterStateEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TwoBitReporterStateEntry.Merge(m, src)
+}
+func (m *TwoBitReporterStateEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *TwoBitReporterStateEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_TwoBitReporterStateEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TwoBitReporterStateEntry proto.InternalMessageInfo
+
+func (m *TwoBitReporterStateEntry) GetAgentAddress() []byte {
+	if m != nil {
+		return m.AgentAddress
+	}
+	return nil
+}
+
+func (m *TwoBitReporterStateEntry) GetReporterAddress() []byte {
+	if m != nil {
+		return m.ReporterAddress
+	}
+	return nil
+}
+
 type TipUnlockStateEntry struct {
 	SelectorAddress []byte         `protobuf:"bytes,1,opt,name=selector_address,json=selectorAddress,proto3" json:"selector_address,omitempty"`
 	UnlockId        uint64         `protobuf:"varint,2,opt,name=unlock_id,json=unlockId,proto3" json:"unlock_id,omitempty"`
@@ -123,7 +194,7 @@ func (m *TipUnlockStateEntry) Reset()         { *m = TipUnlockStateEntry{} }
 func (m *TipUnlockStateEntry) String() string { return proto.CompactTextString(m) }
 func (*TipUnlockStateEntry) ProtoMessage()    {}
 func (*TipUnlockStateEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1affa61e846a6c93, []int{1}
+	return fileDescriptor_1affa61e846a6c93, []int{2}
 }
 func (m *TipUnlockStateEntry) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -182,7 +253,7 @@ func (m *SelectorTipsStateEntry) Reset()         { *m = SelectorTipsStateEntry{}
 func (m *SelectorTipsStateEntry) String() string { return proto.CompactTextString(m) }
 func (*SelectorTipsStateEntry) ProtoMessage()    {}
 func (*SelectorTipsStateEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1affa61e846a6c93, []int{2}
+	return fileDescriptor_1affa61e846a6c93, []int{3}
 }
 func (m *SelectorTipsStateEntry) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -227,7 +298,7 @@ func (m *DisputedDelegationAmountStateEntry) Reset()         { *m = DisputedDele
 func (m *DisputedDelegationAmountStateEntry) String() string { return proto.CompactTextString(m) }
 func (*DisputedDelegationAmountStateEntry) ProtoMessage()    {}
 func (*DisputedDelegationAmountStateEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1affa61e846a6c93, []int{3}
+	return fileDescriptor_1affa61e846a6c93, []int{4}
 }
 func (m *DisputedDelegationAmountStateEntry) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -279,7 +350,7 @@ func (m *FeePaidFromStakeStateEntry) Reset()         { *m = FeePaidFromStakeStat
 func (m *FeePaidFromStakeStateEntry) String() string { return proto.CompactTextString(m) }
 func (*FeePaidFromStakeStateEntry) ProtoMessage()    {}
 func (*FeePaidFromStakeStateEntry) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1affa61e846a6c93, []int{4}
+	return fileDescriptor_1affa61e846a6c93, []int{5}
 }
 func (m *FeePaidFromStakeStateEntry) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -322,57 +393,196 @@ func (m *FeePaidFromStakeStateEntry) GetDelegationAmount() *DelegationsAmounts {
 	return nil
 }
 
+// SelectorReporterSwitchStateEntry is one selector's switch history in genesis.
+type SelectorReporterSwitchStateEntry struct {
+	SelectorAddress []byte                         `protobuf:"bytes,1,opt,name=selector_address,json=selectorAddress,proto3" json:"selector_address,omitempty"`
+	Switches        []SelectorReporterSwitchRecord `protobuf:"bytes,2,rep,name=switches,proto3" json:"switches"`
+}
+
+func (m *SelectorReporterSwitchStateEntry) Reset()         { *m = SelectorReporterSwitchStateEntry{} }
+func (m *SelectorReporterSwitchStateEntry) String() string { return proto.CompactTextString(m) }
+func (*SelectorReporterSwitchStateEntry) ProtoMessage()    {}
+func (*SelectorReporterSwitchStateEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1affa61e846a6c93, []int{6}
+}
+func (m *SelectorReporterSwitchStateEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SelectorReporterSwitchStateEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SelectorReporterSwitchStateEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SelectorReporterSwitchStateEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SelectorReporterSwitchStateEntry.Merge(m, src)
+}
+func (m *SelectorReporterSwitchStateEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *SelectorReporterSwitchStateEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_SelectorReporterSwitchStateEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SelectorReporterSwitchStateEntry proto.InternalMessageInfo
+
+func (m *SelectorReporterSwitchStateEntry) GetSelectorAddress() []byte {
+	if m != nil {
+		return m.SelectorAddress
+	}
+	return nil
+}
+
+func (m *SelectorReporterSwitchStateEntry) GetSwitches() []SelectorReporterSwitchRecord {
+	if m != nil {
+		return m.Switches
+	}
+	return nil
+}
+
+// SelectorReporterSwitchRecord is one reporter change. Completed height is 0 while the switch is open,
+// and a cancelled row keeps completed height at 0 and sets cancelled height.
+type SelectorReporterSwitchRecord struct {
+	OriginalReporter []byte `protobuf:"bytes,1,opt,name=original_reporter,json=originalReporter,proto3" json:"original_reporter,omitempty"`
+	BeganHeight      uint64 `protobuf:"varint,2,opt,name=began_height,json=beganHeight,proto3" json:"began_height,omitempty"`
+	CompletedHeight  uint64 `protobuf:"varint,3,opt,name=completed_height,json=completedHeight,proto3" json:"completed_height,omitempty"`
+	CancelledHeight  uint64 `protobuf:"varint,4,opt,name=cancelled_height,json=cancelledHeight,proto3" json:"cancelled_height,omitempty"`
+}
+
+func (m *SelectorReporterSwitchRecord) Reset()         { *m = SelectorReporterSwitchRecord{} }
+func (m *SelectorReporterSwitchRecord) String() string { return proto.CompactTextString(m) }
+func (*SelectorReporterSwitchRecord) ProtoMessage()    {}
+func (*SelectorReporterSwitchRecord) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1affa61e846a6c93, []int{7}
+}
+func (m *SelectorReporterSwitchRecord) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SelectorReporterSwitchRecord) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SelectorReporterSwitchRecord.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SelectorReporterSwitchRecord) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SelectorReporterSwitchRecord.Merge(m, src)
+}
+func (m *SelectorReporterSwitchRecord) XXX_Size() int {
+	return m.Size()
+}
+func (m *SelectorReporterSwitchRecord) XXX_DiscardUnknown() {
+	xxx_messageInfo_SelectorReporterSwitchRecord.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SelectorReporterSwitchRecord proto.InternalMessageInfo
+
+func (m *SelectorReporterSwitchRecord) GetOriginalReporter() []byte {
+	if m != nil {
+		return m.OriginalReporter
+	}
+	return nil
+}
+
+func (m *SelectorReporterSwitchRecord) GetBeganHeight() uint64 {
+	if m != nil {
+		return m.BeganHeight
+	}
+	return 0
+}
+
+func (m *SelectorReporterSwitchRecord) GetCompletedHeight() uint64 {
+	if m != nil {
+		return m.CompletedHeight
+	}
+	return 0
+}
+
+func (m *SelectorReporterSwitchRecord) GetCancelledHeight() uint64 {
+	if m != nil {
+		return m.CancelledHeight
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*GenesisState)(nil), "layer.reporter.GenesisState")
+	proto.RegisterType((*TwoBitReporterStateEntry)(nil), "layer.reporter.TwoBitReporterStateEntry")
 	proto.RegisterType((*TipUnlockStateEntry)(nil), "layer.reporter.TipUnlockStateEntry")
 	proto.RegisterType((*SelectorTipsStateEntry)(nil), "layer.reporter.SelectorTipsStateEntry")
 	proto.RegisterType((*DisputedDelegationAmountStateEntry)(nil), "layer.reporter.DisputedDelegationAmountStateEntry")
 	proto.RegisterType((*FeePaidFromStakeStateEntry)(nil), "layer.reporter.FeePaidFromStakeStateEntry")
+	proto.RegisterType((*SelectorReporterSwitchStateEntry)(nil), "layer.reporter.SelectorReporterSwitchStateEntry")
+	proto.RegisterType((*SelectorReporterSwitchRecord)(nil), "layer.reporter.SelectorReporterSwitchRecord")
 }
 
 func init() { proto.RegisterFile("layer/reporter/genesis.proto", fileDescriptor_1affa61e846a6c93) }
 
 var fileDescriptor_1affa61e846a6c93 = []byte{
-	// 621 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x54, 0x41, 0x4f, 0x13, 0x41,
-	0x18, 0xed, 0xd2, 0x52, 0x65, 0x8a, 0x0a, 0x83, 0xc1, 0x85, 0x9a, 0x05, 0xd7, 0xc4, 0x54, 0x0c,
-	0xbb, 0x49, 0x4d, 0x4c, 0xf4, 0x46, 0x53, 0x30, 0x10, 0x13, 0x49, 0xc1, 0x83, 0x5e, 0x36, 0xc3,
-	0xce, 0xc7, 0x76, 0xd2, 0xee, 0xce, 0x66, 0x66, 0x9a, 0xd8, 0x3f, 0xe0, 0x51, 0xbd, 0xfa, 0x0f,
-	0x3c, 0x7a, 0xf0, 0x47, 0x70, 0x32, 0xc4, 0x93, 0xf1, 0x40, 0x0c, 0x1c, 0xfc, 0x1b, 0x66, 0x67,
-	0xb6, 0x50, 0x16, 0x88, 0xf1, 0xe2, 0xa5, 0xe9, 0x7c, 0xef, 0x7d, 0xef, 0x7d, 0xb3, 0xf3, 0x66,
-	0xd0, 0xdd, 0x3e, 0x19, 0x82, 0xf0, 0x05, 0xa4, 0x5c, 0x28, 0x10, 0x7e, 0x04, 0x09, 0x48, 0x26,
-	0xbd, 0x54, 0x70, 0xc5, 0xf1, 0x4d, 0x8d, 0x7a, 0x23, 0x74, 0x71, 0x96, 0xc4, 0x2c, 0xe1, 0xbe,
-	0xfe, 0x35, 0x94, 0xc5, 0x85, 0x90, 0xcb, 0x98, 0xcb, 0x40, 0xaf, 0x7c, 0xb3, 0xc8, 0xa1, 0xdb,
-	0x11, 0x8f, 0xb8, 0xa9, 0x67, 0xff, 0xf2, 0x6a, 0xbd, 0xe0, 0x98, 0x12, 0x41, 0xe2, 0x51, 0x8b,
-	0x53, 0x00, 0x25, 0xf4, 0x21, 0x54, 0x8c, 0x27, 0x39, 0xbe, 0x54, 0xc0, 0x15, 0x4b, 0x83, 0x41,
-	0xd2, 0xe7, 0x61, 0x2f, 0x27, 0xdc, 0x2b, 0x12, 0x78, 0x0f, 0x92, 0x80, 0x0b, 0x16, 0xb1, 0x5c,
-	0xc3, 0xfd, 0x56, 0x46, 0xd3, 0xcf, 0xcd, 0x36, 0x77, 0x14, 0x51, 0x80, 0x9f, 0xa2, 0xaa, 0x19,
-	0xc2, 0xb6, 0x96, 0xad, 0x46, 0xad, 0x39, 0xef, 0x9d, 0xdf, 0xb6, 0xb7, 0xad, 0xd1, 0xd6, 0xd4,
-	0xc1, 0xd1, 0x52, 0xe9, 0xf3, 0xef, 0x2f, 0x2b, 0x56, 0x27, 0x6f, 0xc0, 0x5b, 0x68, 0xda, 0x8c,
-	0xc8, 0xc5, 0x2e, 0x4b, 0xa5, 0x3d, 0xb1, 0x5c, 0x6e, 0xd4, 0x9a, 0x0f, 0x8a, 0x02, 0x3b, 0x63,
-	0x1c, 0xed, 0xb9, 0x9e, 0x28, 0x31, 0xec, 0x9c, 0xeb, 0xc5, 0x02, 0xd5, 0x29, 0x93, 0xe9, 0x40,
-	0x01, 0x0d, 0x28, 0xf4, 0x21, 0x22, 0xd9, 0xc6, 0x03, 0x12, 0xf3, 0x41, 0xa2, 0xa4, 0x5d, 0xd6,
-	0xd2, 0xcd, 0xa2, 0x74, 0x3b, 0x6f, 0x69, 0x9f, 0x76, 0xac, 0xe9, 0x86, 0x31, 0x9b, 0x05, 0x7a,
-	0x05, 0x47, 0xe2, 0xd7, 0x68, 0x6e, 0x1f, 0x20, 0x48, 0x09, 0xa3, 0xc1, 0xbe, 0xe0, 0x71, 0x20,
-	0x15, 0xe9, 0x81, 0x5d, 0xd1, 0x5e, 0x2b, 0x45, 0xaf, 0x0d, 0x80, 0x6d, 0xc2, 0xe8, 0x86, 0xe0,
-	0xf1, 0x4e, 0xc6, 0x1b, 0xf3, 0x98, 0xd9, 0x2f, 0x60, 0xb8, 0x8d, 0x6a, 0x67, 0xa7, 0x23, 0xed,
-	0x49, 0x2d, 0x79, 0xbf, 0x28, 0xb9, 0xcb, 0xd2, 0x57, 0x9a, 0x31, 0xa6, 0x85, 0xd4, 0xa8, 0x28,
-	0xb1, 0x8b, 0x6e, 0x9c, 0xa9, 0x04, 0x8c, 0xda, 0xd5, 0x65, 0xab, 0x51, 0xe9, 0xd4, 0x4e, 0x29,
-	0x9b, 0xd4, 0xfd, 0x64, 0xa1, 0xb9, 0x4b, 0x74, 0xf0, 0x43, 0x34, 0x33, 0xfa, 0xc0, 0x01, 0xa1,
-	0x54, 0x80, 0x34, 0x27, 0x3c, 0xdd, 0xb9, 0x35, 0xaa, 0xaf, 0x99, 0x32, 0xae, 0xa3, 0xa9, 0x33,
-	0x8b, 0x09, 0x6d, 0x71, 0x7d, 0x90, 0xeb, 0xe3, 0x67, 0x68, 0x12, 0x32, 0x41, 0xbb, 0xac, 0xe3,
-	0xe1, 0x5c, 0xb9, 0x07, 0x6d, 0xdb, 0xaa, 0x64, 0x31, 0xe9, 0x98, 0x16, 0xf7, 0x83, 0x85, 0xe6,
-	0x2f, 0x3f, 0xfd, 0x7f, 0x19, 0x6f, 0x0b, 0x55, 0x94, 0x89, 0x97, 0xd5, 0x98, 0x6a, 0x3d, 0xc9,
-	0x0c, 0x7e, 0x1e, 0x2d, 0xd5, 0xcd, 0x6d, 0x93, 0xb4, 0xe7, 0x31, 0xee, 0xc7, 0x44, 0x75, 0xbd,
-	0x17, 0x10, 0x91, 0x70, 0xd8, 0x86, 0xf0, 0xfb, 0xd7, 0x55, 0x94, 0x5f, 0xc6, 0x36, 0x84, 0x26,
-	0xb4, 0x5a, 0xc3, 0x7d, 0x6f, 0x21, 0xf7, 0xef, 0xa1, 0xc1, 0x77, 0xd0, 0xb5, 0x2e, 0x91, 0xdd,
-	0xec, 0x7b, 0x98, 0xa1, 0xaa, 0xd9, 0x72, 0x93, 0xe2, 0x97, 0x68, 0xf6, 0x42, 0x3a, 0xf5, 0x60,
-	0xb5, 0xa6, 0x7b, 0x21, 0x9c, 0xa7, 0x44, 0x99, 0x27, 0xae, 0x33, 0x43, 0x0b, 0x9e, 0xee, 0x3b,
-	0x0b, 0x2d, 0x5e, 0x9d, 0xac, 0xff, 0x37, 0x48, 0x6b, 0xfd, 0xe0, 0xd8, 0xb1, 0x0e, 0x8f, 0x1d,
-	0xeb, 0xd7, 0xb1, 0x63, 0x7d, 0x3c, 0x71, 0x4a, 0x87, 0x27, 0x4e, 0xe9, 0xc7, 0x89, 0x53, 0x7a,
-	0xf3, 0x28, 0x62, 0xaa, 0x3b, 0xd8, 0xf3, 0x42, 0x1e, 0xfb, 0x0a, 0xfa, 0x7d, 0x2e, 0x56, 0x19,
-	0xf7, 0xcd, 0x53, 0xf3, 0x76, 0xec, 0xb1, 0x19, 0xa6, 0x20, 0xf7, 0xaa, 0xfa, 0x99, 0x79, 0xfc,
-	0x27, 0x00, 0x00, 0xff, 0xff, 0x32, 0x97, 0x85, 0xeb, 0x5b, 0x05, 0x00, 0x00,
+	// 825 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x55, 0x41, 0x8f, 0xdb, 0x44,
+	0x14, 0x8e, 0x37, 0xd9, 0x74, 0x77, 0x92, 0x92, 0xc4, 0x45, 0xc5, 0x4d, 0x2a, 0x6f, 0xea, 0x4a,
+	0x28, 0xb4, 0x34, 0x41, 0x41, 0x42, 0x82, 0x5b, 0xa3, 0xb4, 0xd0, 0x0a, 0x41, 0xe5, 0x5d, 0x0e,
+	0x70, 0xb1, 0x26, 0xf6, 0x5b, 0x67, 0x88, 0xed, 0xb1, 0x3c, 0x13, 0x2d, 0xf9, 0x03, 0x1c, 0x81,
+	0x03, 0x17, 0x0e, 0xdc, 0x39, 0x72, 0xe0, 0x27, 0x70, 0xe8, 0xb1, 0xe2, 0x84, 0x38, 0xac, 0xd0,
+	0xee, 0x81, 0xbf, 0x81, 0x3c, 0x33, 0x76, 0x1c, 0xef, 0x86, 0x65, 0x2f, 0xbd, 0x44, 0x99, 0xf7,
+	0xbe, 0xf7, 0x7d, 0x6f, 0xfc, 0xe6, 0x9b, 0x41, 0x77, 0x03, 0xbc, 0x82, 0x64, 0x94, 0x40, 0x4c,
+	0x13, 0x0e, 0xc9, 0xc8, 0x87, 0x08, 0x18, 0x61, 0xc3, 0x38, 0xa1, 0x9c, 0xea, 0x6f, 0x88, 0xec,
+	0x30, 0xcb, 0x76, 0x3b, 0x38, 0x24, 0x11, 0x1d, 0x89, 0x5f, 0x09, 0xe9, 0xde, 0x71, 0x29, 0x0b,
+	0x29, 0x73, 0xc4, 0x6a, 0x24, 0x17, 0x2a, 0xf5, 0xa6, 0x4f, 0x7d, 0x2a, 0xe3, 0xe9, 0x3f, 0x15,
+	0xed, 0x95, 0x14, 0x63, 0x9c, 0xe0, 0x30, 0x2b, 0x31, 0x4b, 0x49, 0x06, 0x01, 0xb8, 0x9c, 0xd0,
+	0x48, 0xe5, 0x0f, 0x4a, 0x79, 0x4e, 0x62, 0x67, 0x19, 0x05, 0xd4, 0x5d, 0x28, 0xc0, 0xbd, 0x32,
+	0x80, 0x2e, 0x20, 0x72, 0x68, 0x42, 0x7c, 0xa2, 0x38, 0xac, 0x1f, 0x77, 0x51, 0xf3, 0x63, 0xb9,
+	0xcd, 0x43, 0x8e, 0x39, 0xe8, 0x1f, 0xa2, 0xba, 0x6c, 0xc2, 0xd0, 0xfa, 0xda, 0xa0, 0x31, 0xbe,
+	0x3d, 0xdc, 0xdc, 0xf6, 0xf0, 0x85, 0xc8, 0x4e, 0xf6, 0x5f, 0x9e, 0x1e, 0x54, 0x7e, 0xf9, 0xe7,
+	0xd7, 0x07, 0x9a, 0xad, 0x0a, 0xf4, 0xe7, 0xa8, 0x29, 0x5b, 0xa4, 0xc9, 0x11, 0x89, 0x99, 0xb1,
+	0xd3, 0xaf, 0x0e, 0x1a, 0xe3, 0xb7, 0xcb, 0x04, 0x87, 0x05, 0x8c, 0xd0, 0x7c, 0x12, 0xf1, 0x64,
+	0x65, 0x6f, 0xd4, 0xea, 0x09, 0xea, 0x79, 0x84, 0xc5, 0x4b, 0x0e, 0x9e, 0xe3, 0x41, 0x00, 0x3e,
+	0x4e, 0x37, 0xee, 0xe0, 0x90, 0x2e, 0x23, 0xce, 0x8c, 0xaa, 0xa0, 0x1e, 0x97, 0xa9, 0xa7, 0xaa,
+	0x64, 0x9a, 0x57, 0x3c, 0x16, 0x05, 0x05, 0x99, 0x3b, 0xde, 0x16, 0x0c, 0xd3, 0xbf, 0x44, 0xb7,
+	0x8e, 0x01, 0x9c, 0x18, 0x13, 0xcf, 0x39, 0x4e, 0x68, 0xe8, 0x30, 0x8e, 0x17, 0x60, 0xd4, 0x84,
+	0xd6, 0x83, 0xb2, 0xd6, 0x53, 0x80, 0x17, 0x98, 0x78, 0x4f, 0x13, 0x1a, 0x1e, 0xa6, 0xb8, 0x82,
+	0x46, 0xfb, 0xb8, 0x94, 0xd3, 0xa7, 0xa8, 0xb1, 0x9e, 0x0e, 0x33, 0x76, 0x05, 0xe5, 0xfd, 0x32,
+	0xe5, 0x11, 0x89, 0xbf, 0x10, 0x88, 0x02, 0x17, 0xe2, 0x59, 0x90, 0xe9, 0x16, 0xba, 0xb9, 0x66,
+	0x71, 0x88, 0x67, 0xd4, 0xfb, 0xda, 0xa0, 0x66, 0x37, 0x72, 0xc8, 0x33, 0x4f, 0x3f, 0x42, 0x1d,
+	0x7e, 0x42, 0x9d, 0x19, 0xe1, 0x4e, 0xc6, 0xcb, 0x8c, 0x1b, 0x42, 0x6f, 0x70, 0x41, 0xef, 0x84,
+	0x4e, 0x08, 0xb7, 0xd5, 0xb2, 0x20, 0xda, 0xe2, 0x1b, 0x19, 0xa6, 0x47, 0xa8, 0x9b, 0x8d, 0x27,
+	0xa7, 0x75, 0xd8, 0x09, 0xe1, 0xee, 0x1c, 0x98, 0xb1, 0x27, 0xe8, 0xdf, 0xdb, 0x36, 0xe8, 0x5c,
+	0x40, 0xe0, 0x0b, 0x32, 0x06, 0xbb, 0x14, 0x01, 0xcc, 0xfa, 0x1a, 0x19, 0xdb, 0x9a, 0xd3, 0xef,
+	0xa3, 0x9b, 0xd8, 0x87, 0x88, 0x3b, 0xd8, 0xf3, 0x12, 0x60, 0xf2, 0xa0, 0x36, 0xed, 0xa6, 0x08,
+	0x3e, 0x96, 0x31, 0xfd, 0x1d, 0xd4, 0xce, 0xfb, 0xcc, 0x70, 0x3b, 0x02, 0xd7, 0xca, 0xe2, 0x0a,
+	0x6a, 0xfd, 0xa4, 0xa1, 0x5b, 0x97, 0x7c, 0xf9, 0x94, 0x22, 0xdf, 0xf3, 0xa6, 0x54, 0x2b, 0x8b,
+	0x67, 0x6a, 0x3d, 0xb4, 0xbf, 0x1e, 0xca, 0x8e, 0x18, 0xca, 0xde, 0x32, 0x9b, 0xc8, 0x47, 0x68,
+	0x17, 0x52, 0x42, 0xa3, 0x2a, 0x0c, 0x65, 0x6e, 0x9d, 0xba, 0x90, 0x9d, 0xd4, 0x52, 0x63, 0xd9,
+	0xb2, 0xc4, 0xfa, 0x5e, 0x43, 0xb7, 0x2f, 0xf7, 0xcb, 0x75, 0xda, 0x7b, 0x8e, 0x6a, 0x5c, 0x1a,
+	0x52, 0x1b, 0xec, 0x4f, 0x3e, 0x48, 0x05, 0xfe, 0x3a, 0x3d, 0xe8, 0xc9, 0xfb, 0x89, 0x79, 0x8b,
+	0x21, 0xa1, 0xa3, 0x10, 0xf3, 0xf9, 0xf0, 0x53, 0xf0, 0xb1, 0xbb, 0x9a, 0x82, 0xfb, 0xc7, 0x6f,
+	0x8f, 0x90, 0xba, 0xbe, 0xa6, 0xe0, 0x4a, 0x9b, 0x0b, 0x0e, 0xeb, 0x3b, 0x0d, 0x59, 0x57, 0xdb,
+	0x4c, 0x7f, 0x0b, 0xdd, 0x98, 0x63, 0x36, 0x4f, 0xbf, 0x87, 0x6c, 0xaa, 0x9e, 0x2e, 0x9f, 0x79,
+	0xfa, 0xe7, 0xa8, 0x73, 0xc1, 0xcf, 0xa2, 0xb1, 0xc6, 0xd8, 0xba, 0x60, 0xe7, 0x1c, 0xc8, 0x94,
+	0x47, 0xed, 0xb6, 0x57, 0xd2, 0xb4, 0xbe, 0xd5, 0x50, 0x77, 0xbb, 0x17, 0x5f, 0x63, 0x23, 0x3f,
+	0x6b, 0xa8, 0x7f, 0xd5, 0x91, 0xbf, 0xce, 0xd4, 0x3e, 0x43, 0x7b, 0xb9, 0xc3, 0xe4, 0x55, 0xfa,
+	0xee, 0xff, 0x73, 0x98, 0x0d, 0x2e, 0x4d, 0x3c, 0x75, 0x90, 0x72, 0x0e, 0xeb, 0x77, 0x0d, 0xdd,
+	0xfd, 0xaf, 0x02, 0xfd, 0x21, 0xea, 0xc8, 0xb7, 0x01, 0x07, 0xb9, 0xc9, 0x55, 0x73, 0xed, 0x2c,
+	0x91, 0x15, 0xea, 0xf7, 0x50, 0x73, 0x06, 0x3e, 0x8e, 0x9c, 0x39, 0x10, 0x7f, 0xce, 0xd5, 0xa9,
+	0x6f, 0x88, 0xd8, 0x27, 0x22, 0x94, 0xee, 0xd5, 0xa5, 0x61, 0x1c, 0x40, 0x7a, 0x89, 0x2b, 0x58,
+	0x55, 0xc0, 0x5a, 0x79, 0xbc, 0x00, 0xc5, 0x91, 0x0b, 0x41, 0xb0, 0x86, 0xd6, 0x14, 0x34, 0x8b,
+	0x4b, 0xe8, 0xe4, 0xc9, 0xcb, 0x33, 0x53, 0x7b, 0x75, 0x66, 0x6a, 0x7f, 0x9f, 0x99, 0xda, 0x0f,
+	0xe7, 0x66, 0xe5, 0xd5, 0xb9, 0x59, 0xf9, 0xf3, 0xdc, 0xac, 0x7c, 0xf5, 0xd0, 0x27, 0x7c, 0xbe,
+	0x9c, 0x0d, 0x5d, 0x1a, 0x8e, 0x38, 0x04, 0x01, 0x4d, 0x1e, 0x11, 0x3a, 0x92, 0x6f, 0xe0, 0x37,
+	0x85, 0x57, 0x70, 0x15, 0x03, 0x9b, 0xd5, 0xc5, 0xfb, 0xf7, 0xfe, 0xbf, 0x01, 0x00, 0x00, 0xff,
+	0xff, 0x54, 0x6b, 0xbc, 0x1b, 0xf4, 0x07, 0x00, 0x00,
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -395,6 +605,34 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.SelectorReporterSwitches) > 0 {
+		for iNdEx := len(m.SelectorReporterSwitches) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.SelectorReporterSwitches[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x42
+		}
+	}
+	if len(m.TwoBitReporters) > 0 {
+		for iNdEx := len(m.TwoBitReporters) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.TwoBitReporters[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x3a
+		}
+	}
 	if m.TipUnlockId != 0 {
 		i = encodeVarintGenesis(dAtA, i, uint64(m.TipUnlockId))
 		i--
@@ -466,6 +704,43 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *TwoBitReporterStateEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *TwoBitReporterStateEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *TwoBitReporterStateEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.ReporterAddress) > 0 {
+		i -= len(m.ReporterAddress)
+		copy(dAtA[i:], m.ReporterAddress)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.ReporterAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.AgentAddress) > 0 {
+		i -= len(m.AgentAddress)
+		copy(dAtA[i:], m.AgentAddress)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.AgentAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -638,6 +913,95 @@ func (m *FeePaidFromStakeStateEntry) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
+func (m *SelectorReporterSwitchStateEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SelectorReporterSwitchStateEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SelectorReporterSwitchStateEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Switches) > 0 {
+		for iNdEx := len(m.Switches) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Switches[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if len(m.SelectorAddress) > 0 {
+		i -= len(m.SelectorAddress)
+		copy(dAtA[i:], m.SelectorAddress)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.SelectorAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SelectorReporterSwitchRecord) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SelectorReporterSwitchRecord) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SelectorReporterSwitchRecord) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.CancelledHeight != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.CancelledHeight))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.CompletedHeight != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.CompletedHeight))
+		i--
+		dAtA[i] = 0x18
+	}
+	if m.BeganHeight != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.BeganHeight))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.OriginalReporter) > 0 {
+		i -= len(m.OriginalReporter)
+		copy(dAtA[i:], m.OriginalReporter)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.OriginalReporter)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintGenesis(dAtA []byte, offset int, v uint64) int {
 	offset -= sovGenesis(v)
 	base := offset
@@ -683,6 +1047,35 @@ func (m *GenesisState) Size() (n int) {
 	}
 	if m.TipUnlockId != 0 {
 		n += 1 + sovGenesis(uint64(m.TipUnlockId))
+	}
+	if len(m.TwoBitReporters) > 0 {
+		for _, e := range m.TwoBitReporters {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	if len(m.SelectorReporterSwitches) > 0 {
+		for _, e := range m.SelectorReporterSwitches {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *TwoBitReporterStateEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.AgentAddress)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	l = len(m.ReporterAddress)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
 	}
 	return n
 }
@@ -750,6 +1143,47 @@ func (m *FeePaidFromStakeStateEntry) Size() (n int) {
 	if m.DelegationAmount != nil {
 		l = m.DelegationAmount.Size()
 		n += 1 + l + sovGenesis(uint64(l))
+	}
+	return n
+}
+
+func (m *SelectorReporterSwitchStateEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.SelectorAddress)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if len(m.Switches) > 0 {
+		for _, e := range m.Switches {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *SelectorReporterSwitchRecord) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.OriginalReporter)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	if m.BeganHeight != 0 {
+		n += 1 + sovGenesis(uint64(m.BeganHeight))
+	}
+	if m.CompletedHeight != 0 {
+		n += 1 + sovGenesis(uint64(m.CompletedHeight))
+	}
+	if m.CancelledHeight != 0 {
+		n += 1 + sovGenesis(uint64(m.CancelledHeight))
 	}
 	return n
 }
@@ -977,6 +1411,192 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 					break
 				}
 			}
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TwoBitReporters", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.TwoBitReporters = append(m.TwoBitReporters, &TwoBitReporterStateEntry{})
+			if err := m.TwoBitReporters[len(m.TwoBitReporters)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SelectorReporterSwitches", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SelectorReporterSwitches = append(m.SelectorReporterSwitches, &SelectorReporterSwitchStateEntry{})
+			if err := m.SelectorReporterSwitches[len(m.SelectorReporterSwitches)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *TwoBitReporterStateEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: TwoBitReporterStateEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: TwoBitReporterStateEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AgentAddress", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AgentAddress = append(m.AgentAddress[:0], dAtA[iNdEx:postIndex]...)
+			if m.AgentAddress == nil {
+				m.AgentAddress = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ReporterAddress", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ReporterAddress = append(m.ReporterAddress[:0], dAtA[iNdEx:postIndex]...)
+			if m.ReporterAddress == nil {
+				m.ReporterAddress = []byte{}
+			}
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGenesis(dAtA[iNdEx:])
@@ -1471,6 +2091,265 @@ func (m *FeePaidFromStakeStateEntry) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SelectorReporterSwitchStateEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SelectorReporterSwitchStateEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SelectorReporterSwitchStateEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SelectorAddress", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.SelectorAddress = append(m.SelectorAddress[:0], dAtA[iNdEx:postIndex]...)
+			if m.SelectorAddress == nil {
+				m.SelectorAddress = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Switches", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Switches = append(m.Switches, SelectorReporterSwitchRecord{})
+			if err := m.Switches[len(m.Switches)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SelectorReporterSwitchRecord) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SelectorReporterSwitchRecord: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SelectorReporterSwitchRecord: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field OriginalReporter", wireType)
+			}
+			var byteLen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				byteLen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if byteLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + byteLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.OriginalReporter = append(m.OriginalReporter[:0], dAtA[iNdEx:postIndex]...)
+			if m.OriginalReporter == nil {
+				m.OriginalReporter = []byte{}
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BeganHeight", wireType)
+			}
+			m.BeganHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BeganHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CompletedHeight", wireType)
+			}
+			m.CompletedHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CompletedHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CancelledHeight", wireType)
+			}
+			m.CancelledHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.CancelledHeight |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipGenesis(dAtA[iNdEx:])

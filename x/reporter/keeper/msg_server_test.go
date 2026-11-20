@@ -418,6 +418,12 @@ func TestSwitchReporterReplacesPendingTargetKeepsUnlock(t *testing.T) {
 
 	_, err := ms.SwitchReporter(ctx, &types.MsgSwitchReporter{SelectorAddress: sel.String(), ReporterAddress: r2.String()})
 	require.NoError(t, err)
+	latest, ok, err := k.LatestSelectorSwitch(ctx, sel)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.Equal(t, r1.Bytes(), latest.OriginalReporter)
+	require.Equal(t, uint64(10), latest.BeganHeight)
+	require.Zero(t, latest.CompletedHeight)
 	pk := collections.Join(r1.Bytes(), sel.Bytes())
 	ent1, err := k.OutgoingPendingSwitches.Get(ctx, pk)
 	require.NoError(t, err)
@@ -436,6 +442,13 @@ func TestSwitchReporterReplacesPendingTargetKeepsUnlock(t *testing.T) {
 	hasNew, err := k.IncomingPendingSwitchIdx.Has(ctx, collections.Join(r3.Bytes(), sel.Bytes()))
 	require.NoError(t, err)
 	require.True(t, hasNew)
+	// Replacing the target is the same departure, so the open history row stays one entry.
+	switches, err := k.SelectorSwitchesNewestFirst(ctx, sel)
+	require.NoError(t, err)
+	require.Len(t, switches, 1)
+	require.Equal(t, r1.Bytes(), switches[0].OriginalReporter)
+	require.Equal(t, uint64(10), switches[0].BeganHeight)
+	require.Zero(t, switches[0].CompletedHeight)
 }
 
 func TestSwitchReporterRejectsSelfSwitchAfterSelectingAndCreatingReporter(t *testing.T) {

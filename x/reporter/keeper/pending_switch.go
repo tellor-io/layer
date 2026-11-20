@@ -134,11 +134,17 @@ func (k Keeper) finalizePendingSwitch(ctx context.Context, from, selector []byte
 	sel, err := k.Selectors.Get(ctx, selector)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
+			if err := k.cancelOpenSelectorSwitch(ctx, selector, from); err != nil {
+				return err
+			}
 			return k.removeOutgoingPendingSwitch(ctx, from, selector, to)
 		}
 		return err
 	}
 	if !bytes.Equal(sel.Reporter, from) {
+		if err := k.cancelOpenSelectorSwitch(ctx, selector, from); err != nil {
+			return err
+		}
 		return k.removeOutgoingPendingSwitch(ctx, from, selector, to)
 	}
 
@@ -165,6 +171,9 @@ func (k Keeper) finalizePendingSwitch(ctx context.Context, from, selector []byte
 	if err := k.Selectors.Set(ctx, selector, sel); err != nil {
 		return err
 	}
+	if err := k.recordSelectorSwitchCompleted(ctx, selector, from); err != nil {
+		return err
+	}
 	if err := k.OutgoingPendingSwitches.Remove(ctx, outK); err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
@@ -187,7 +196,7 @@ func (k Keeper) finalizePendingSwitch(ctx context.Context, from, selector []byte
 		if err := k.SettleReporter(ctx, sdk.AccAddress(from)); err != nil {
 			return err
 		}
-		if err := k.Reporters.Remove(ctx, from); err != nil && !errors.Is(err, collections.ErrNotFound) {
+		if err := k.removeReporter(ctx, from); err != nil {
 			return err
 		}
 		if err := k.ReporterPeriodData.Remove(ctx, from); err != nil && !errors.Is(err, collections.ErrNotFound) {
@@ -244,6 +253,9 @@ func (k Keeper) cancelIncomingPendingSwitchesOnSelfDemotion(ctx context.Context,
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, c := range cancels {
+		if err := k.cancelOpenSelectorSwitch(ctx, c.selector, c.from); err != nil {
+			return err
+		}
 		if err := k.removeOutgoingPendingSwitch(ctx, c.from, c.selector, demoting); err != nil {
 			return err
 		}
@@ -279,6 +291,9 @@ func (k Keeper) cancelIncomingPendingSwitchesOnSelfDemotion(ctx context.Context,
 // cleared and from is flagged for stake recalc so the selector's power counts
 // toward the outgoing reporter again.
 func (k Keeper) dropPendingSwitchLeaveSelection(ctx context.Context, from, selector, to []byte, sel types.Selection) error {
+	if err := k.cancelOpenSelectorSwitch(ctx, selector, from); err != nil {
+		return err
+	}
 	if err := k.removeOutgoingPendingSwitch(ctx, from, selector, to); err != nil {
 		return err
 	}
@@ -455,6 +470,12 @@ func (k Keeper) scheduleReporterSwitch(
 	selection.SwitchOutLockedUntilBlock = unlockBlock
 	if err := k.Selectors.Set(ctx, selectorAddr.Bytes(), *selection); err != nil {
 		return err
+	}
+	// A replaced target is the same departure: keep the open history row.
+	if !wasReplace {
+		if err := k.recordSelectorSwitchBegan(ctx, selectorAddr.Bytes(), prevReporter.Bytes()); err != nil {
+			return err
+		}
 	}
 	if wasReplace {
 		return k.FlagStakeRecalc(ctx, sdk.AccAddress(existing.ToReporter))

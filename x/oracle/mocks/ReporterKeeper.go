@@ -88,6 +88,32 @@ func (_m *ReporterKeeper) ReporterStakeWithSnapshot(ctx context.Context, repAddr
 	return r0, r1, r2
 }
 
+// TwoBitReporter provides a mock function with given fields: ctx, agent
+func (_m *ReporterKeeper) TwoBitReporter(ctx context.Context, agent types.AccAddress) (types.AccAddress, error) {
+	ret := _m.Called(ctx, agent)
+
+	var r0 types.AccAddress
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (types.AccAddress, error)); ok {
+		return rf(ctx, agent)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) types.AccAddress); ok {
+		r0 = rf(ctx, agent)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(types.AccAddress)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, types.AccAddress) error); ok {
+		r1 = rf(ctx, agent)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type mockConstructorTestingTNewReporterKeeper interface {
 	mock.TestingT
 	Cleanup(func())

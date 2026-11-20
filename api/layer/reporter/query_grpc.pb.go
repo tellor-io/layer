@@ -31,6 +31,7 @@ const (
 	Query_SelectionsTo_FullMethodName             = "/layer.reporter.Query/SelectionsTo"
 	Query_JailedReporters_FullMethodName          = "/layer.reporter.Query/JailedReporters"
 	Query_TipUnlocks_FullMethodName               = "/layer.reporter.Query/TipUnlocks"
+	Query_TwoBitPendingRequests_FullMethodName    = "/layer.reporter.Query/TwoBitPendingRequests"
 )
 
 // QueryClient is the client API for Query service.
@@ -62,6 +63,10 @@ type QueryClient interface {
 	JailedReporters(ctx context.Context, in *QueryJailedReportersRequest, opts ...grpc.CallOption) (*QueryJailedReportersResponse, error)
 	// TipUnlocks queries pending tip unlocks (escrowed withdraw-to-balance) for a selector.
 	TipUnlocks(ctx context.Context, in *QueryTipUnlocksRequest, opts ...grpc.CallOption) (*QueryTipUnlocksResponse, error)
+	// TwoBitPendingRequests queries outstanding 2bit registration requests.
+	// Omit both addresses to list every request. Set reporter_address for the
+	// request from that reporter, or two_bit_address for every request to that agent.
+	TwoBitPendingRequests(ctx context.Context, in *QueryTwoBitPendingRequestsRequest, opts ...grpc.CallOption) (*QueryTwoBitPendingRequestsResponse, error)
 }
 
 type queryClient struct {
@@ -192,6 +197,16 @@ func (c *queryClient) TipUnlocks(ctx context.Context, in *QueryTipUnlocksRequest
 	return out, nil
 }
 
+func (c *queryClient) TwoBitPendingRequests(ctx context.Context, in *QueryTwoBitPendingRequestsRequest, opts ...grpc.CallOption) (*QueryTwoBitPendingRequestsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryTwoBitPendingRequestsResponse)
+	err := c.cc.Invoke(ctx, Query_TwoBitPendingRequests_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility.
@@ -221,6 +236,10 @@ type QueryServer interface {
 	JailedReporters(context.Context, *QueryJailedReportersRequest) (*QueryJailedReportersResponse, error)
 	// TipUnlocks queries pending tip unlocks (escrowed withdraw-to-balance) for a selector.
 	TipUnlocks(context.Context, *QueryTipUnlocksRequest) (*QueryTipUnlocksResponse, error)
+	// TwoBitPendingRequests queries outstanding 2bit registration requests.
+	// Omit both addresses to list every request. Set reporter_address for the
+	// request from that reporter, or two_bit_address for every request to that agent.
+	TwoBitPendingRequests(context.Context, *QueryTwoBitPendingRequestsRequest) (*QueryTwoBitPendingRequestsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -266,6 +285,9 @@ func (UnimplementedQueryServer) JailedReporters(context.Context, *QueryJailedRep
 }
 func (UnimplementedQueryServer) TipUnlocks(context.Context, *QueryTipUnlocksRequest) (*QueryTipUnlocksResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TipUnlocks not implemented")
+}
+func (UnimplementedQueryServer) TwoBitPendingRequests(context.Context, *QueryTwoBitPendingRequestsRequest) (*QueryTwoBitPendingRequestsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TwoBitPendingRequests not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 func (UnimplementedQueryServer) testEmbeddedByValue()               {}
@@ -504,6 +526,24 @@ func _Query_TipUnlocks_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_TwoBitPendingRequests_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryTwoBitPendingRequestsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).TwoBitPendingRequests(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_TwoBitPendingRequests_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).TwoBitPendingRequests(ctx, req.(*QueryTwoBitPendingRequestsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -558,6 +598,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TipUnlocks",
 			Handler:    _Query_TipUnlocks_Handler,
+		},
+		{
+			MethodName: "TwoBitPendingRequests",
+			Handler:    _Query_TwoBitPendingRequests_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

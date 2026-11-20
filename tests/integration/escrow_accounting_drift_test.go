@@ -23,7 +23,7 @@ import (
 
 // escrowAgainstSkewedValidator escrows against a validator whose exchange rate
 // is off 1.0 (tokens removed, shares unchanged).
-func (s *IntegrationTestSuite) escrowAgainstSkewedValidator(powers []uint64, delegation, owed math.Int, removeTokens int64, hashId []byte) (sdk.AccAddress, sdk.ValAddress, math.Int, reportertypes.DelegationsAmounts) {
+func (s *IntegrationTestSuite) escrowAgainstSkewedValidator(powers []uint64, delegation, owed math.Int, removeTokens int64, hashId []byte) (sdk.AccAddress, sdk.ValAddress, math.Int, reportertypes.DelegationsAmounts, error) {
 	ctx := s.Setup.Ctx
 	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
 	_, valAddrs, _ := s.createValidatorAccs(powers)
@@ -38,10 +38,12 @@ func (s *IntegrationTestSuite) escrowAgainstSkewedValidator(powers []uint64, del
 	))
 	s.NoError(err)
 
-	val, err := s.Setup.Stakingkeeper.GetValidator(ctx, val1)
-	s.NoError(err)
-	_, err = s.Setup.Stakingkeeper.RemoveValidatorTokens(ctx, val, math.NewInt(removeTokens))
-	s.NoError(err)
+	if removeTokens != 0 {
+		val, err := s.Setup.Stakingkeeper.GetValidator(ctx, val1)
+		s.NoError(err)
+		_, err = s.Setup.Stakingkeeper.RemoveValidatorTokens(ctx, val, math.NewInt(removeTokens))
+		s.NoError(err)
+	}
 
 	reportHeight := uint64(ctx.BlockHeight())
 	s.NoError(s.Setup.Reporterkeeper.Report.Set(ctx, collections.Join([]byte{}, collections.Join(selector.Bytes(), reportHeight)), reportertypes.DelegationsAmounts{
@@ -59,43 +61,114 @@ func (s *IntegrationTestSuite) escrowAgainstSkewedValidator(powers []uint64, del
 	before := s.Setup.Bankkeeper.GetBalance(ctx, disputeModule, s.Setup.Denom).Amount
 	s.True(before.IsZero(), "precondition: dispute module account must start empty so the shortfall is observable")
 
-	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, selector, 1, reportHeight, owed, reportertypes.StakeSnapshotRef{}, hashId))
+	err = s.Setup.Reporterkeeper.EscrowReporterStake(ctx, selector, 1, reportHeight, owed, reportertypes.StakeSnapshotRef{}, hashId)
 
 	received := s.Setup.Bankkeeper.GetBalance(ctx, disputeModule, s.Setup.Denom).Amount.Sub(before)
+	if err != nil {
+		return selector, val1, received, reportertypes.DelegationsAmounts{}, err
+	}
 	stored, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(ctx, hashId)
 	s.NoError(err)
-	return selector, val1, received, stored
+	return selector, val1, received, stored, nil
 }
 
-func (s *IntegrationTestSuite) TestEscrowRecordedTotalExceedsCoinsReceivedFullRemoval() {
+func (s *IntegrationTestSuite) TestEscrowSlashShortfallOnSkewedValidatorFullRemoval() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	hashId := []byte("drift-full-removal")
+	owed := math.NewInt(1_000_000)
 
-	_, _, received, stored := s.escrowAgainstSkewedValidator(
-		[]uint64{100}, math.NewInt(1_000_000), math.NewInt(1_000_000), 1, hashId)
-
+	_, _, received, stored, err := s.escrowAgainstSkewedValidator(
+		[]uint64{100}, owed, owed, 1, hashId)
+	s.NoError(err)
+	s.Equal(owed.Sub(math.OneInt()), received, "removing one validator token must collect one loya less than requested")
+	s.Equal(received, stored.Total)
 	sum := math.ZeroInt()
 	for _, origin := range stored.TokenOrigins {
 		sum = sum.Add(origin.Amount)
 	}
-	s.Equal(stored.Total, sum, "origins must sum to Total")
-
-	s.Equal(stored.Total, received,
-		"DisputedDelegationAmounts.Total must equal the coins the dispute module actually received")
+	s.Equal(stored.Total, sum)
 }
 
-func (s *IntegrationTestSuite) TestEscrowRecordedTotalExceedsCoinsReceivedPartialDeduction() {
+func (s *IntegrationTestSuite) TestEscrowReporterStakeZeroCollectedCacheDiscardLeavesParent() {
+	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
+	ctx := s.Setup.Ctx
+	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
+	_, valAddrs, _ := s.createValidatorAccs([]uint64{100, 100})
+	snapshotVal := valAddrs[0]
+	liveVal := valAddrs[1]
+
+	selector := sample.AccAddressBytes()
+	delegation := math.NewInt(1_000_000)
+	s.Setup.MintTokens(selector, delegation)
+	_, err := stakingMsgServer.Delegate(ctx, stakingtypes.NewMsgDelegate(
+		selector.String(),
+		liveVal.String(),
+		sdk.NewCoin(s.Setup.Denom, delegation),
+	))
+	s.NoError(err)
+
+	_, err = s.Setup.Stakingkeeper.GetDelegation(ctx, selector, snapshotVal)
+	s.ErrorIs(err, stakingtypes.ErrNoDelegation)
+	_, err = s.Setup.Stakingkeeper.GetUnbondingDelegation(ctx, selector, snapshotVal)
+	s.ErrorIs(err, stakingtypes.ErrNoUnbondingDelegation)
+	var redelegations []stakingtypes.Redelegation
+	s.NoError(s.Setup.Stakingkeeper.IterateDelegatorRedelegations(ctx, selector, func(red stakingtypes.Redelegation) bool {
+		redelegations = append(redelegations, red)
+		return false
+	}))
+	s.Empty(redelegations)
+
+	beforeDel, err := s.Setup.Stakingkeeper.GetDelegation(ctx, selector, liveVal)
+	s.NoError(err)
+
+	reportHeight := uint64(ctx.BlockHeight())
+	hashId := []byte("zero-collected-cache")
+	owed := math.NewInt(1_000)
+	s.NoError(s.Setup.Reporterkeeper.Report.Set(ctx, collections.Join([]byte{}, collections.Join(selector.Bytes(), reportHeight)), reportertypes.DelegationsAmounts{
+		TokenOrigins: []*reportertypes.TokenOriginInfo{{
+			DelegatorAddress: selector.Bytes(),
+			ValidatorAddress: snapshotVal,
+			Amount:           layertypes.PowerReduction,
+		}},
+		Total: layertypes.PowerReduction,
+	}))
+
+	disputeModule := s.Setup.Accountkeeper.GetModuleAddress(disputetypes.ModuleName)
+	beforeBalance := s.Setup.Bankkeeper.GetBalance(ctx, disputeModule, s.Setup.Denom).Amount
+
+	cacheCtx, _ := ctx.CacheContext()
+	err = s.Setup.Reporterkeeper.EscrowReporterStake(cacheCtx, selector, 1, reportHeight, owed, reportertypes.StakeSnapshotRef{}, hashId)
+	s.ErrorIs(err, reportertypes.ErrReporterSlashShortfall)
+
+	afterDel, err := s.Setup.Stakingkeeper.GetDelegation(s.Setup.Ctx, selector, liveVal)
+	s.NoError(err)
+	s.True(afterDel.Shares.Equal(beforeDel.Shares))
+	afterBalance := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, disputeModule, s.Setup.Denom).Amount
+	s.True(afterBalance.Equal(beforeBalance))
+
+	has, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Has(s.Setup.Ctx, hashId)
+	s.NoError(err)
+	s.False(has)
+}
+
+func (s *IntegrationTestSuite) TestEscrowSlashShortfallOnSkewedValidatorPartialDeduction() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	hashId := []byte("drift-partial-deduction")
+	owed := math.NewInt(1_000_000)
 
-	selector, val1, received, stored := s.escrowAgainstSkewedValidator(
-		[]uint64{100}, math.NewInt(2_000_000), math.NewInt(1_000_000), 1, hashId)
+	selector, val1, received, stored, err := s.escrowAgainstSkewedValidator(
+		[]uint64{100}, math.NewInt(2_000_000), owed, 1, hashId)
+	s.NoError(err)
+	s.Equal(owed.Sub(math.OneInt()), received, "removing one validator token must collect one loya less than requested")
+	s.Equal(received, stored.Total)
+	sum := math.ZeroInt()
+	for _, origin := range stored.TokenOrigins {
+		sum = sum.Add(origin.Amount)
+	}
+	s.Equal(stored.Total, sum)
 
-	_, err := s.Setup.Stakingkeeper.GetDelegation(s.Setup.Ctx, selector, val1)
+	_, err = s.Setup.Stakingkeeper.GetDelegation(s.Setup.Ctx, selector, val1)
 	s.NoError(err, "partial deduction must leave the remainder of the delegation in place")
-
-	s.Equal(stored.Total, received,
-		"DisputedDelegationAmounts.Total must equal the coins the dispute module actually received")
 }
 
 func (s *IntegrationTestSuite) TestFeeFromReporterStakeOriginsSumExceedsTotal() {
@@ -148,11 +221,13 @@ func (s *IntegrationTestSuite) TestInvalidVoteReturnSucceedsAgainstHonestSnapsho
 	hashId := []byte("drift-invalid-vote-return")
 
 	// Extra validators keep val1 under the validator power cap during return.
-	_, _, received, stored := s.escrowAgainstSkewedValidator(
-		[]uint64{100, 300, 300}, math.NewInt(1_000_000), math.NewInt(1_000_000), 1, hashId)
+	// No exchange-rate skew: a short collection is no longer stored as a completed escrow.
+	_, _, received, stored, err := s.escrowAgainstSkewedValidator(
+		[]uint64{100, 300, 300}, math.NewInt(1_000_000), math.NewInt(1_000_000), 0, hashId)
+	s.NoError(err)
 	s.Equal(stored.Total, received, "precondition: snapshot must match the module's holdings")
 
-	err := s.Setup.Disputekeeper.ReturnSlashedTokens(s.Setup.Ctx, disputetypes.Dispute{HashId: hashId}, math.ZeroInt())
+	err = s.Setup.Disputekeeper.ReturnSlashedTokens(s.Setup.Ctx, disputetypes.Dispute{HashId: hashId}, math.ZeroInt())
 	s.NoError(err,
 		"returning slashed tokens for an invalid dispute must succeed against an honest snapshot")
 }
@@ -162,8 +237,9 @@ func (s *IntegrationTestSuite) TestPendingExecutionCompletesAgainstHonestSnapsho
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1).WithBlockTime(blockTime)
 	hashId := []byte("drift-pending-execution")
 
-	selector, _, received, stored := s.escrowAgainstSkewedValidator(
-		[]uint64{100, 300, 300}, math.NewInt(1_000_000), math.NewInt(1_000_000), 1, hashId)
+	selector, _, received, stored, err := s.escrowAgainstSkewedValidator(
+		[]uint64{100, 300, 300}, math.NewInt(1_000_000), math.NewInt(1_000_000), 0, hashId)
+	s.NoError(err)
 	s.Equal(stored.Total, received, "precondition: snapshot must match the module's holdings")
 
 	const disputeId = uint64(1)
@@ -357,10 +433,21 @@ func (s *IntegrationTestSuite) TestSupportFeeRefundRewardsActualEscrowedReporter
 	hashId := []byte("support-actual-reporter-bond")
 	intendedSlash := math.NewInt(1_000_000)
 
-	_, _, received, stored := s.escrowAgainstSkewedValidator(
-		[]uint64{100, 300, 300}, math.NewInt(1_000_000), intendedSlash, 1, hashId)
-	s.Equal(stored.Total, received)
-	s.Equal(math.NewInt(999_999), received, "precondition: skewed validator must create a one-loya measured shortfall")
+	// Escrow no longer records a short collection. Seed the coins and the snapshot
+	// the refund path reads, so this still checks that support rewards use the
+	// collected bond rather than the larger intended slash.
+	received := math.NewInt(999_999)
+	funder := sample.AccAddressBytes()
+	s.Setup.MintTokens(funder, received)
+	s.NoError(s.Setup.Bankkeeper.SendCoinsFromAccountToModule(ctx, funder, disputetypes.ModuleName, sdk.NewCoins(sdk.NewCoin(s.Setup.Denom, received))))
+	s.NoError(s.Setup.Reporterkeeper.DisputedDelegationAmounts.Set(ctx, hashId, reportertypes.DelegationsAmounts{
+		TokenOrigins: []*reportertypes.TokenOriginInfo{{
+			DelegatorAddress: funder.Bytes(),
+			ValidatorAddress: sdk.ValAddress(funder).Bytes(),
+			Amount:           received,
+		}},
+		Total: received,
+	}))
 
 	feePayer := sample.AccAddressBytes()
 	s.Setup.MintTokens(feePayer, intendedSlash)

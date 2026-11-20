@@ -207,24 +207,18 @@ func TestManyDisputesAtOnce(t *testing.T) {
 	tipAmt := math.NewInt(1 * 1e6)
 	tip := sdk.NewCoin("loya", tipAmt)
 	for i, query := range queryDataList {
-		// wait 1 block
-		require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
-		// tip 1 trb
-		_, _, err := val1.Node.Exec(ctx, val1.Node.TxCommand(val1.AccAddr, "oracle", "tip", query.QueryData, tip.String(), "--keyring-dir", val1.Node.HomeDir()), val1.Node.Chain.Config().Env)
+		// ExecTx waits until the tx is in a block. TxCommand + Exec only waits for
+		// CheckTx, so the next tx from val1 can be signed with the same sequence.
+		txHash, err := val1.Node.ExecTx(ctx, val1.AccAddr, "oracle", "tip", query.QueryData, tip.String(), "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
-		fmt.Println("val1 tipped ", query.QueryID)
-		// wait 1 block
-		require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
+		fmt.Println("TX HASH (val1 tipped ", query.QueryID, "): ", txHash)
 		// report with 1000 reporting power
-		txHash, _, err := val1.Node.Exec(ctx, val1.Node.TxCommand(reporters[i].Addr, "oracle", "submit-value", query.QueryData, value, "--keyring-dir", val1.Node.HomeDir()), val1.Node.Chain.Config().Env)
+		txHash, err = val1.Node.ExecTx(ctx, reporters[i].Addr, "oracle", "submit-value", query.QueryData, value, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		fmt.Println("TX HASH (", reporters[i].Keyname, " reported): ", txHash)
 		require.NoError(err)
-		// wait 1 block
-		require.NoError(testutil.WaitForBlocks(ctx, 1, val1.Node))
 
 		// wait for query to expire and dispute
 		require.NoError(testutil.WaitForBlocks(ctx, 2, val1.Node))
-		require.NoError(err)
 		microreport, _, err := e2e.QueryWithTimeout(ctx, val1.Node, "oracle", "get-reportsby-reporter", reporters[i].Addr, "--page-limit", "1")
 		require.NoError(err)
 		var microReports e2e.ReportsResponse
@@ -283,13 +277,14 @@ func TestManyDisputesAtOnce(t *testing.T) {
 	for i := 0; i < len(queryDataList); i++ {
 		disputeId := strconv.Itoa(i + 1)
 		// vote from val1 (all tipping power)
-		txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.Node.HomeDir())
+		txHash, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (val1 votes on dispute ", i+1, "): ", txHash)
 
 		// vote from val2 (0 power error)
-		_, err = val2.Node.ExecTx(ctx, val2.AccAddr, "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val2.Node.HomeDir())
+		_, err = val2.Node.ExecTx(ctx, val2.AccAddr, "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val2.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.Error(err)
+		require.NotContains(err.Error(), "account sequence mismatch")
 
 		// check dispute status
 		// should still be open bc only 33% of power has voted
@@ -300,7 +295,7 @@ func TestManyDisputesAtOnce(t *testing.T) {
 		require.Equal(disputes.Disputes[i].Metadata.DisputeStatus, "DISPUTE_STATUS_VOTING") // not resolved yet
 
 		// vote from team (should be at least 66% voting power after (33% from team, 33% from having one tip from val1))
-		txHash, err = val1.Node.ExecTx(ctx, "team", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.Node.HomeDir())
+		txHash, err = val1.Node.ExecTx(ctx, "team", "dispute", "vote", disputeId, "vote-support", "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.NoError(err)
 		fmt.Println("TX HASH (team votes on dispute ", disputeId, "): ", txHash)
 
@@ -359,12 +354,16 @@ func TestManyDisputesAtOnce(t *testing.T) {
 		require.Less(disputerBalAfterRewardClaim.Int64(), disputerBalBeforeRewardClaim.Add(expectedVoterReward).Int64())
 		fmt.Println("disputer balance after reward claim: ", disputerBalAfterRewardClaim)
 
-		// try to claim reward again - should fail
+		// try to claim reward again - should fail in the message handler.
+		// A sequence mismatch here is a broadcast race, and require.Error would hide it
+		// until the next val1 vote.
 		_, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "claim-reward", disputeId, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.Error(err)
+		require.NotContains(err.Error(), "account sequence mismatch")
 		// try to claim fee refund again - should fail
 		_, err = val1.Node.ExecTx(ctx, val1.AccAddr, "dispute", "withdraw-fee-refund", val1.AccAddr, disputeId, "--keyring-dir", val1.Node.HomeDir(), "--gas", "500000", "--fees", "50loya")
 		require.Error(err)
+		require.NotContains(err.Error(), "account sequence mismatch")
 	}
 }
 

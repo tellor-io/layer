@@ -86,6 +86,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Query a specific reporter by address",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
 				},
+				{
+					RpcMethod: "TwoBitPendingRequests",
+					Use:       "two-bit-pending-requests",
+					Short:     "Query outstanding 2bit registration requests",
+					Long:      "Lists requests that have not been accepted yet, including the last height at which each can be accepted. Use --reporter-address for the request from one reporter, --two-bit-address for every request to one agent, or neither to list them all.",
+				},
 				// this line is used by ignite scaffolding # autocli/query
 			},
 		},
@@ -158,6 +164,18 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:            "edit-reporter [commission-rate] [min-tokens-required] [moniker]",
 					Short:          "edit commission rate, moniker, and MinTokensRequired for your reporter",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "commission_rate"}, {ProtoField: "min_tokens_required"}, {ProtoField: "moniker"}},
+				},
+				{
+					RpcMethod:      "RegisterTwoBitReporter",
+					Use:            "register-two-bit-reporter [two-bit-address]",
+					Short:          "Ask an account to submit 2bitAgentic reports for you. That account must accept within 2000 blocks. Pass your own reporter address to clear.",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "two_bit_address"}},
+				},
+				{
+					RpcMethod:      "AcceptTwoBitRegistration",
+					Use:            "accept-two-bit-registration [reporter-address]",
+					Short:          "Accept a reporter's request to submit 2bitAgentic reports for them. The request expires 2000 blocks after it was made.",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "reporter_address"}},
 				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},

@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
-// Upgrade to v6.1.10: stake snapshots are numbered so the newest always wins, and each report records which one backed it.
+// Upgrade to v6.2.0: stake snapshots are numbered so the newest always wins, and each report records which one backed it.
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,

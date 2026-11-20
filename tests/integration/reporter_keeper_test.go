@@ -10,6 +10,7 @@ import (
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
+	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	oraclekeeper "github.com/tellor-io/layer/x/oracle/keeper"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
@@ -370,7 +371,7 @@ func (s *IntegrationTestSuite) TestGetBondedValidatorsByPower() {
 	s.Equal(expected, len(vals))
 }
 
-func (s *IntegrationTestSuite) TestEscrowReporterStakePartialRedelegationCollectionStoresCollectedTotal() {
+func (s *IntegrationTestSuite) TestEscrowReporterStakePartialRedelegationStoresCollected() {
 	s.Setup.Ctx = s.Setup.Ctx.WithBlockHeight(1)
 	ctx := s.Setup.Ctx
 	stakingMsgServer := stakingkeeper.NewMsgServerImpl(s.Setup.Stakingkeeper)
@@ -409,13 +410,17 @@ func (s *IntegrationTestSuite) TestEscrowReporterStakePartialRedelegationCollect
 	}))
 
 	intendedSlash := math.NewInt(1000)
-	s.NoError(s.Setup.Reporterkeeper.EscrowReporterStake(ctx, reporterAddr, 1, reportHeight, intendedSlash, reportertypes.StakeSnapshotRef{}, hashId))
+	disputeModule := s.Setup.Accountkeeper.GetModuleAddress(disputetypes.ModuleName)
+	before := s.Setup.Bankkeeper.GetBalance(ctx, disputeModule, s.Setup.Denom).Amount
+	err = s.Setup.Reporterkeeper.EscrowReporterStake(ctx, reporterAddr, 1, reportHeight, intendedSlash, reportertypes.StakeSnapshotRef{}, hashId)
+	s.NoError(err)
+	received := s.Setup.Bankkeeper.GetBalance(ctx, disputeModule, s.Setup.Denom).Amount.Sub(before)
 
 	stored, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(ctx, hashId)
 	s.NoError(err)
+	s.Equal(delegated, received)
 	s.Equal(delegated, stored.Total)
 	s.True(stored.Total.LT(intendedSlash))
-
 	sum := math.ZeroInt()
 	for _, origin := range stored.TokenOrigins {
 		sum = sum.Add(origin.Amount)

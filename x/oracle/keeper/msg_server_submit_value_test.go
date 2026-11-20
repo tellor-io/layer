@@ -8,10 +8,12 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/utils"
+	"github.com/tellor-io/layer/x/oracle/keeper"
 	"github.com/tellor-io/layer/x/oracle/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
@@ -427,4 +429,99 @@ func BenchmarkSubmitValue(b *testing.B) {
 			require.NoError(b, err)
 		}
 	})
+}
+
+func (s *KeeperTestSuite) TestSubmitValueTwoBitAgent() {
+	require := s.Require()
+	k := s.oracleKeeper
+	rk := s.reporterKeeper
+	s.ctx = s.ctx.WithBlockGasMeter(storetypes.NewInfiniteGasMeter())
+	ctx := s.ctx
+
+	// Longer than the 2bitAgentic prefix, so this fails if matching becomes exact.
+	queryType := keeper.TwoBitAgenticQueryType + "5000"
+	queryData := mustQueryData(s.T(), queryType)
+	queryId := utils.QueryIDFromData(queryData)
+	query := types.QueryMeta{
+		Id:         1,
+		Amount:     math.NewInt(100_000),
+		Expiration: uint64(ctx.BlockHeight()) + 50,
+		QueryData:  queryData,
+		QueryType:  queryType,
+		CycleList:  true,
+	}
+	require.NoError(k.Query.Set(ctx, collections.Join(queryId, query.Id), query))
+	require.NoError(k.QueryDataLimit.Set(ctx, types.QueryDataLimit{Limit: types.InitialQueryDataLimit()}))
+
+	params, err := k.Params.Get(ctx)
+	require.NoError(err)
+	agent := sample.AccAddressBytes()
+	owner := sample.AccAddressBytes()
+	stake := params.MinStakeAmount
+	spec := registrytypes.DataSpec{
+		ResponseValueType: "uint256",
+		AggregationMethod: "weighted-median",
+		QueryType:         queryType,
+	}
+	msg := &types.MsgSubmitValue{Creator: agent.String(), QueryData: queryData, Value: value}
+
+	// A missing reporter on any other query type does not consult the alias map.
+	spotData, err := utils.QueryBytesFromString(qData)
+	require.NoError(err)
+	rk.On("ReporterStakeWithSnapshot", ctx, agent).Return(math.Int{}, reportertypes.StakeSnapshotRef{}, collections.ErrNotFound).Once()
+	_, err = s.msgServer.SubmitValue(ctx, &types.MsgSubmitValue{Creator: agent.String(), QueryData: spotData, Value: value})
+	require.ErrorIs(err, collections.ErrNotFound)
+	rk.AssertNotCalled(s.T(), "TwoBitReporter", mock.Anything, mock.Anything)
+
+	// No registration.
+	rk.On("ReporterStakeWithSnapshot", ctx, agent).Return(math.Int{}, reportertypes.StakeSnapshotRef{}, collections.ErrNotFound).Once()
+	rk.On("TwoBitReporter", ctx, agent).Return(sdk.AccAddress(nil), collections.ErrNotFound).Once()
+	_, err = s.msgServer.SubmitValue(ctx, msg)
+	require.ErrorIs(err, collections.ErrNotFound)
+
+	// A stake error that is not "reporter missing" is returned as-is.
+	rk.On("ReporterStakeWithSnapshot", ctx, agent).Return(math.Int{}, reportertypes.StakeSnapshotRef{}, errors.New("stake failed")).Once()
+	_, err = s.msgServer.SubmitValue(ctx, msg)
+	require.ErrorContains(err, "stake failed")
+
+	// Jailed and under-staked reporters fail through the agent with the real reporter's status.
+	rk.On("ReporterStakeWithSnapshot", ctx, agent).Return(math.Int{}, reportertypes.StakeSnapshotRef{}, collections.ErrNotFound).Once()
+	rk.On("TwoBitReporter", ctx, agent).Return(owner, nil).Once()
+	rk.On("ReporterStakeWithSnapshot", ctx, owner).Return(math.Int{}, reportertypes.StakeSnapshotRef{}, reportertypes.ErrReporterJailed).Once()
+	_, err = s.msgServer.SubmitValue(ctx, msg)
+	require.ErrorIs(err, reportertypes.ErrReporterJailed)
+
+	rk.On("ReporterStakeWithSnapshot", ctx, agent).Return(math.Int{}, reportertypes.StakeSnapshotRef{}, collections.ErrNotFound).Once()
+	rk.On("TwoBitReporter", ctx, agent).Return(owner, nil).Once()
+	rk.On("ReporterStakeWithSnapshot", ctx, owner).Return(stake.Sub(math.NewInt(1)), reportertypes.StakeSnapshotRef{}, nil).Once()
+	_, err = s.msgServer.SubmitValue(ctx, msg)
+	require.ErrorContains(err, "not enough stake")
+
+	// A registered agent report is stored as the real reporter, with that reporter's power.
+	rk.On("ReporterStakeWithSnapshot", ctx, agent).Return(math.Int{}, reportertypes.StakeSnapshotRef{}, collections.ErrNotFound).Once()
+	rk.On("TwoBitReporter", ctx, agent).Return(owner, nil).Once()
+	rk.On("ReporterStakeWithSnapshot", ctx, owner).Return(stake, reportertypes.StakeSnapshotRef{}, nil).Once()
+	s.registryKeeper.On("GetSpec", ctx, queryType).Return(spec, nil).Once()
+	res, err := s.msgServer.SubmitValue(ctx, msg)
+	require.NoError(err)
+	require.Equal(&types.MsgSubmitValueResponse{Id: query.Id}, res)
+
+	report, err := k.Reports.Get(ctx, collections.Join3(queryId, owner.Bytes(), query.Id))
+	require.NoError(err)
+	require.Equal(owner.String(), report.Reporter)
+	require.Equal(stake.Quo(layertypes.PowerReduction).Uint64(), report.Power)
+	require.Equal(queryType, report.QueryType)
+	_, err = k.Reports.Get(ctx, collections.Join3(queryId, agent.Bytes(), query.Id))
+	require.ErrorIs(err, collections.ErrNotFound)
+}
+
+func mustQueryData(t *testing.T, queryType string) []byte {
+	t.Helper()
+	stringType, err := abi.NewType("string", "", nil)
+	require.NoError(t, err)
+	bytesType, err := abi.NewType("bytes", "", nil)
+	require.NoError(t, err)
+	encoded, err := abi.Arguments{{Type: stringType}, {Type: bytesType}}.Pack(queryType, []byte{})
+	require.NoError(t, err)
+	return encoded
 }

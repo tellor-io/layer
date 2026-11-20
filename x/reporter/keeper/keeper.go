@@ -46,6 +46,10 @@ type (
 
 		// Deferred reporter switches: key (outgoing_reporter, selector) -> target + unlock height.
 		OutgoingPendingSwitches collections.Map[collections.Pair[[]byte, []byte], types.PendingSwitchEntry]
+		// One row per selector: reporter changes, newest first.
+		SelectorReporterSwitches collections.Map[[]byte, types.SelectorReporterSwitches]
+		// Resume point for the per-block switch-history prune. Empty means start at the first selector.
+		SelectorSwitchPruneCursor collections.Item[[]byte]
 		// Incoming index: key (incoming_reporter, selector) -> outgoing_reporter address bytes.
 		IncomingPendingSwitchIdx collections.Map[collections.Pair[[]byte, []byte], []byte]
 		// One row per reporter: counts + min unlock for O(1) checks in ReporterStake.
@@ -57,6 +61,14 @@ type (
 		TipUnlocks     collections.Map[collections.Pair[[]byte, uint64], types.TipUnlockEntry] // (selector, unlock_id)
 		TipUnlockQueue collections.Map[collections.Pair[int64, uint64], []byte]                // (completion_unix, unlock_id) -> selector
 		TipUnlockID    collections.Sequence
+
+		// 2bit agent account -> reporter it reports as. Submit only reads this map.
+		// A pending request is not written here until the agent accepts.
+		TwoBitAgentToReporter collections.Map[[]byte, []byte]
+		// reporter -> its current 2bit agent, so accepting a new agent can delete the previous key.
+		TwoBitReporterToAgent collections.Map[[]byte, []byte]
+		// reporter -> the one agent that has been asked to accept, and the height through which that request can be accepted.
+		TwoBitPendingRequests collections.Map[[]byte, types.TwoBitPendingRequest]
 
 		Schema collections.Schema
 		logger log.Logger
@@ -138,6 +150,17 @@ func NewKeeper(
 			collections.BytesKey,
 			codec.CollValue[types.ReporterPendingSwitchHead](cdc),
 		),
+		SelectorReporterSwitches: collections.NewMap(sb,
+			types.SelectorReporterSwitchesPrefix,
+			"selector_reporter_switches",
+			collections.BytesKey,
+			types.SelectorReporterSwitchesValue,
+		),
+		SelectorSwitchPruneCursor: collections.NewItem(sb,
+			types.SelectorSwitchPruneCursorPrefix,
+			"selector_switch_prune_cursor",
+			collections.BytesValue,
+		),
 		SelectorDisputeLocks: collections.NewMap(sb,
 			types.SelectorDisputeLockPrefix,
 			"selector_dispute_locks",
@@ -156,7 +179,25 @@ func NewKeeper(
 			collections.PairKeyCodec(collections.Int64Key, collections.Uint64Key),
 			collections.BytesValue,
 		),
-		TipUnlockID:    collections.NewSequence(sb, types.TipUnlockIDPrefix, "tip_unlock_id"),
+		TipUnlockID: collections.NewSequence(sb, types.TipUnlockIDPrefix, "tip_unlock_id"),
+		TwoBitAgentToReporter: collections.NewMap(sb,
+			types.TwoBitAgentToReporterPrefix,
+			"two_bit_agent_to_reporter",
+			collections.BytesKey,
+			collections.BytesValue,
+		),
+		TwoBitReporterToAgent: collections.NewMap(sb,
+			types.TwoBitReporterToAgentPrefix,
+			"two_bit_reporter_to_agent",
+			collections.BytesKey,
+			collections.BytesValue,
+		),
+		TwoBitPendingRequests: collections.NewMap(sb,
+			types.TwoBitPendingRequestPrefix,
+			"two_bit_pending_request",
+			collections.BytesKey,
+			types.TwoBitPendingRequestValue,
+		),
 		authority:      authority,
 		logger:         logger,
 		accountKeeper:  accountKeeper,
@@ -209,7 +250,12 @@ func (k Keeper) GetDelegatorTokensFromReporterAtBlock(ctx context.Context, deleg
 	return delegatorTokens, nil
 }
 
-// GetReporterTokensAtBlock returns the total amount of tokens a reporter when reporting to the nearest given block Number.
+// GetReporterTokensAtBlock returns the reporter's nearest stake-snapshot total at
+// or before blockNumber. An origin is removed only when that delegator was on a
+// different reporter at blockNumber and that other reporter's snapshot already
+// lists a positive amount for them. Until then this snapshot is the only copy
+// and the origin stays. A delegator still on this reporter, or one ReporterAtHeight
+// cannot find, leaves Total unchanged.
 func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, blockNumber uint64) (math.Int, error) {
 	rep, err := k.GetDelegationsAmount(ctx, reporter, blockNumber)
 	if err != nil {
@@ -218,7 +264,34 @@ func (k Keeper) GetReporterTokensAtBlock(ctx context.Context, reporter []byte, b
 	if rep.Total.IsNil() {
 		return math.ZeroInt(), nil
 	}
-	return rep.Total, nil
+	total := rep.Total
+	for _, origin := range rep.TokenOrigins {
+		if origin == nil || origin.Amount.IsNil() {
+			continue
+		}
+		at, _, err := k.ReporterAtHeight(ctx, origin.DelegatorAddress, blockNumber)
+		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				continue
+			}
+			return math.Int{}, err
+		}
+		if bytes.Equal(at, reporter) {
+			continue
+		}
+		other, err := k.GetDelegatorTokensFromReporterAtBlock(ctx, origin.DelegatorAddress, at, blockNumber)
+		if err != nil {
+			return math.Int{}, err
+		}
+		if other.IsNil() || !other.IsPositive() {
+			continue
+		}
+		total, err = total.SafeSub(origin.Amount)
+		if err != nil {
+			return math.Int{}, err
+		}
+	}
+	return total, nil
 }
 
 // latestStakeSnapshot returns the newest versioned stake snapshot saved at or before a block.
@@ -269,49 +342,71 @@ func (k Keeper) GetDelegationsAmount(ctx context.Context, reporter []byte, block
 	if found {
 		return versioned, nil
 	}
+	_, delAmounts, _, err = k.delegationSnapshot(ctx, reporter, blockNumber)
+	return delAmounts, err
+}
 
+// delegationSnapshot is the row GetDelegationsAmount returns. foundNew is set
+// when that row is in ReportByBlock; the key bytes are copied so they stay
+// valid after the iterator closes. The legacy Report collection has no
+// ReportByBlock key, so foundNew is false and key is zero.
+func (k Keeper) delegationSnapshot(ctx context.Context, reporter []byte, blockNumber uint64) (key collections.Triple[[]byte, uint64, []byte], amounts types.DelegationsAmounts, foundNew bool, err error) {
 	start := collections.Join(reporter, uint64(0))
 	end := collections.Join(reporter, blockNumber+1)
 	pc := collections.PairKeyCodec(collections.BytesKey, collections.Uint64Key)
 	startBuffer := make([]byte, pc.Size(start))
 	endBuffer := make([]byte, pc.Size(end))
-	_, err = pc.Encode(startBuffer, start)
-	if err != nil {
-		return delAmounts, err
+	if _, err = pc.Encode(startBuffer, start); err != nil {
+		return key, amounts, false, err
 	}
-	_, err = pc.Encode(endBuffer, end)
-	if err != nil {
-		return delAmounts, err
+	if _, err = pc.Encode(endBuffer, end); err != nil {
+		return key, amounts, false, err
 	}
 
-	// Check new collection first
+	// Check new collection first. Descending order yields the greatest
+	// (height, queryId) at or below blockNumber.
 	newIter, err := k.ReportByBlock.IterateRaw(ctx, startBuffer, endBuffer, collections.OrderDescending)
 	if err != nil {
-		return delAmounts, err
+		return key, amounts, false, err
 	}
-	defer newIter.Close()
 	if newIter.Valid() {
-		val, err := newIter.Value()
+		key, err = newIter.Key()
 		if err != nil {
-			return delAmounts, err
+			_ = newIter.Close()
+			return collections.Triple[[]byte, uint64, []byte]{}, amounts, false, err
 		}
-		return val, nil
+		amounts, err = newIter.Value()
+		closeErr := newIter.Close()
+		if err != nil {
+			return collections.Triple[[]byte, uint64, []byte]{}, amounts, false, err
+		}
+		if closeErr != nil {
+			return collections.Triple[[]byte, uint64, []byte]{}, amounts, false, closeErr
+		}
+		return collections.Join3(bytes.Clone(key.K1()), key.K2(), bytes.Clone(key.K3())), amounts, true, nil
+	}
+	if err = newIter.Close(); err != nil {
+		return key, amounts, false, err
 	}
 
 	// Fallback to old collection only if new collection had nothing
 	oldIter, err := k.Report.Indexes.BlockNumber.IterateRaw(ctx, startBuffer, endBuffer, collections.OrderDescending)
 	if err != nil {
-		return delAmounts, err
+		return key, amounts, false, err
 	}
 	defer oldIter.Close()
 	if oldIter.Valid() {
-		key, err := oldIter.Key()
+		oldKey, err := oldIter.Key()
 		if err != nil {
-			return delAmounts, err
+			return key, amounts, false, err
 		}
-		return k.Report.Get(ctx, collections.Join(key.K2(), collections.Join(key.K1().K1(), key.K1().K2())))
+		amounts, err = k.Report.Get(ctx, collections.Join(oldKey.K2(), collections.Join(oldKey.K1().K1(), oldKey.K1().K2())))
+		if err != nil {
+			return key, amounts, false, err
+		}
+		return key, amounts, false, nil
 	}
-	return delAmounts, nil
+	return key, amounts, false, nil
 }
 
 // tracks total bonded tokens and sets an expiration of 12 hours from last update

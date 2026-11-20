@@ -51,10 +51,20 @@ var (
 	TipUnlockQueuePrefix = collections.NewPrefix(37)
 	// TipUnlockIDPrefix is the next unlock id sequence.
 	TipUnlockIDPrefix = collections.NewPrefix(38)
+	// TwoBitAgentToReporterPrefix maps a 2bit agent account to the reporter it reports for.
+	TwoBitAgentToReporterPrefix = collections.NewPrefix(39)
+	// TwoBitReporterToAgentPrefix maps a reporter to its current 2bit agent account.
+	TwoBitReporterToAgentPrefix = collections.NewPrefix(40)
+	// TwoBitPendingRequestPrefix maps a reporter to the agent that has not yet accepted.
+	TwoBitPendingRequestPrefix = collections.NewPrefix(41)
+	// SelectorReporterSwitchesPrefix stores one newest-first switch history per selector.
+	SelectorReporterSwitchesPrefix = collections.NewPrefix(42)
+	// SelectorSwitchPruneCursorPrefix is the next selector address for the batched history prune.
+	SelectorSwitchPruneCursorPrefix = collections.NewPrefix(43)
 	// StakeSnapshotPrefix stores stake snapshots keyed by (reporter, block, version).
-	StakeSnapshotPrefix = collections.NewPrefix(39)
+	StakeSnapshotPrefix = collections.NewPrefix(44)
 	// StakeSnapshotVersionPrefix is the counter that numbers every saved stake snapshot.
-	StakeSnapshotVersionPrefix = collections.NewPrefix(40)
+	StakeSnapshotVersionPrefix = collections.NewPrefix(45)
 )
 
 // ReporterJailDisputeLockKey keys selector dispute locks copied from OracleReporter.JailedUntil

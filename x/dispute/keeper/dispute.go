@@ -323,6 +323,16 @@ func (k Keeper) SetBlockInfo(ctx context.Context, hashId []byte) error {
 	return k.BlockInfo.Set(ctx, hashId, blockInfo)
 }
 
+// selectorSwitchPruneBatch bounds how many selector histories one block rewrites.
+const selectorSwitchPruneBatch = 100
+
+// PruneSelectorSwitchHistory drops completed selector switches that finished at
+// or before pruneHeight. Open disputes still read power at their own block, so
+// the caller passes the oldest open dispute block.
+func (k Keeper) PruneSelectorSwitchHistory(ctx context.Context, pruneHeight uint64) error {
+	return k.reporterKeeper.PruneSelectorSwitches(ctx, pruneHeight, selectorSwitchPruneBatch)
+}
+
 // close dispute by id
 func (k Keeper) CloseDispute(ctx context.Context, id uint64) error {
 	dispute, err := k.Disputes.Get(ctx, id)

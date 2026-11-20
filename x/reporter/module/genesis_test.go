@@ -11,6 +11,8 @@ import (
 	"github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestGenesis(t *testing.T) {
@@ -33,6 +35,7 @@ func TestGenesis(t *testing.T) {
 	genesisState.SelectorTips = append(genesisState.SelectorTips, &types.SelectorTipsStateEntry{SelectorAddress: []byte("selector"), Tips: math.LegacyMustNewDecFromStr("20000")})
 	genesisState.DisputedDelegationAmounts = append(genesisState.DisputedDelegationAmounts, &types.DisputedDelegationAmountStateEntry{HashId: []byte("hash id"), DelegationAmount: &types.DelegationsAmounts{TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: []byte("delegator"), ValidatorAddress: []byte("val"), Amount: math.NewInt(1_000_000)}}, Total: math.NewInt(1_000_000)}})
 	genesisState.FeePaidFromStake = append(genesisState.FeePaidFromStake, &types.FeePaidFromStakeStateEntry{HashId: []byte("hash id"), DelegationAmount: &types.DelegationsAmounts{TokenOrigins: []*types.TokenOriginInfo{{DelegatorAddress: []byte("delegator"), ValidatorAddress: []byte("val"), Amount: math.NewInt(1_000_000)}}, Total: math.NewInt(1_000_000)}})
+	genesisState.TwoBitReporters = append(genesisState.TwoBitReporters, &types.TwoBitReporterStateEntry{AgentAddress: []byte("agent"), ReporterAddress: []byte("reporter")})
 
 	k, _, _, _, _, ctx, _ = keepertest.ReporterKeeper(t)
 	ctx = ctx.WithBlockHeight(1134000 + 100)
@@ -43,9 +46,98 @@ func TestGenesis(t *testing.T) {
 	require.Equal(t, genesisState.SelectorTips, got2.SelectorTips)
 	require.Equal(t, genesisState.DisputedDelegationAmounts, got2.DisputedDelegationAmounts)
 	require.Equal(t, genesisState.FeePaidFromStake, got2.FeePaidFromStake)
+	require.Equal(t, genesisState.TwoBitReporters, got2.TwoBitReporters)
 
 	err := os.Remove("reporter_module_state.json")
 	require.NoError(t, err)
 
 	// this line is used by starport scaffolding # genesis/test/assert
+}
+
+func TestSelectorSwitchHistoryGenesisRoundTrip(t *testing.T) {
+	k, _, _, _, _, ctx, _ := keepertest.ReporterKeeper(t)
+	selector := testAcc(1)
+	openOriginal := testAcc(2)
+	olderOriginal := testAcc(3)
+	cancelledOriginal := testAcc(4)
+	const cancelHeight = uint64(450)
+	require.NoError(t, k.Selectors.Set(ctx, selector.Bytes(), types.NewSelection(openOriginal, 1)))
+	history := types.SelectorReporterSwitches{
+		Switches: []types.SelectorReporterSwitch{
+			{OriginalReporter: openOriginal.Bytes(), BeganHeight: 600, CompletedHeight: 0},
+			{OriginalReporter: cancelledOriginal.Bytes(), BeganHeight: 400, CompletedHeight: 0, CancelledHeight: cancelHeight},
+			{OriginalReporter: olderOriginal.Bytes(), BeganHeight: 100, CompletedHeight: 200},
+		},
+	}
+	require.NoError(t, k.SelectorReporterSwitches.Set(ctx, selector.Bytes(), history))
+	require.NoError(t, k.SelectorSwitchPruneCursor.Set(ctx, selector.Bytes()))
+
+	type heightAnswer struct {
+		reporter   sdk.AccAddress
+		live       bool
+		unfinished bool
+	}
+	// 420 is before the cancel. 450 and 500 are at and after it, and before the
+	// later open switch, so a dropped CancelledHeight would look still open.
+	heights := []uint64{50, 150, 250, 350, 420, 450, 500, 650}
+	wantUnfinished := map[uint64]bool{
+		50:  false,
+		150: true,
+		250: false,
+		350: false,
+		420: true,
+		450: false,
+		500: false,
+		650: true,
+	}
+	before := make([]heightAnswer, len(heights))
+	for i, h := range heights {
+		got, live, err := k.ReporterAtHeight(ctx, selector, h)
+		require.NoError(t, err)
+		unfinished, err := k.SelectorSwitchUnfinishedAt(ctx, selector, h)
+		require.NoError(t, err)
+		require.Equal(t, wantUnfinished[h], unfinished)
+		before[i] = heightAnswer{reporter: got, live: live, unfinished: unfinished}
+	}
+
+	exported := reporter.ExportGenesis(ctx, k)
+	require.Len(t, exported.SelectorReporterSwitches, 1)
+	require.Equal(t, selector.Bytes(), exported.SelectorReporterSwitches[0].SelectorAddress)
+	require.Len(t, exported.SelectorReporterSwitches[0].Switches, 3)
+	require.Zero(t, exported.SelectorReporterSwitches[0].Switches[0].CompletedHeight)
+	require.Zero(t, exported.SelectorReporterSwitches[0].Switches[0].CancelledHeight)
+	require.Zero(t, exported.SelectorReporterSwitches[0].Switches[1].CompletedHeight)
+	require.Equal(t, cancelHeight, exported.SelectorReporterSwitches[0].Switches[1].CancelledHeight)
+	require.Equal(t, uint64(200), exported.SelectorReporterSwitches[0].Switches[2].CompletedHeight)
+	require.Zero(t, exported.SelectorReporterSwitches[0].Switches[2].CancelledHeight)
+
+	k2, _, _, _, _, ctx2, _ := keepertest.ReporterKeeper(t)
+	require.NoError(t, k2.Selectors.Set(ctx2, selector.Bytes(), types.NewSelection(openOriginal, 1)))
+	require.NotPanics(t, func() { reporter.InitGenesis(ctx2, k2, *exported) })
+
+	imported, err := k2.SelectorReporterSwitches.Get(ctx2, selector.Bytes())
+	require.NoError(t, err)
+	require.Equal(t, history.Switches, imported.Switches)
+	hasCursor, err := k2.SelectorSwitchPruneCursor.Has(ctx2)
+	require.NoError(t, err)
+	require.False(t, hasCursor)
+
+	for i, h := range heights {
+		got, live, err := k2.ReporterAtHeight(ctx2, selector, h)
+		require.NoError(t, err)
+		unfinished, err := k2.SelectorSwitchUnfinishedAt(ctx2, selector, h)
+		require.NoError(t, err)
+		require.Equal(t, []byte(before[i].reporter), []byte(got))
+		require.Equal(t, before[i].live, live)
+		require.Equal(t, before[i].unfinished, unfinished)
+	}
+
+	err = os.Remove("reporter_module_state.json")
+	require.NoError(t, err)
+}
+
+func testAcc(last byte) sdk.AccAddress {
+	addr := make([]byte, 20)
+	addr[19] = last
+	return addr
 }

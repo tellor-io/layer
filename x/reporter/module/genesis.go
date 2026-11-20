@@ -71,6 +71,29 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			panic(err)
 		}
 	}
+
+	for _, entry := range genState.TwoBitReporters {
+		if err := k.SetTwoBitMapping(ctx, entry.ReporterAddress, entry.AgentAddress); err != nil {
+			panic(err)
+		}
+	}
+
+	// Selector switch history. The prune cursor is not restored.
+	for _, data := range genState.SelectorReporterSwitches {
+		switches := make([]types.SelectorReporterSwitch, len(data.Switches))
+		for i, sw := range data.Switches {
+			switches[i] = types.SelectorReporterSwitch{
+				OriginalReporter: append([]byte(nil), sw.OriginalReporter...),
+				BeganHeight:      sw.BeganHeight,
+				CompletedHeight:  sw.CompletedHeight,
+				CancelledHeight:  sw.CancelledHeight,
+			}
+		}
+		err = k.SelectorReporterSwitches.Set(ctx, data.SelectorAddress, types.SelectorReporterSwitches{Switches: switches})
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 // ExportGenesis returns the module's exported genesis.
@@ -161,6 +184,36 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 		panic(err)
 	}
 	genesis.TipUnlockId = nextUnlockID
+
+	if err := k.TwoBitAgentToReporter.Walk(ctx, nil, func(agent, reporter []byte) (bool, error) {
+		genesis.TwoBitReporters = append(genesis.TwoBitReporters, &types.TwoBitReporterStateEntry{
+			AgentAddress:    append([]byte(nil), agent...),
+			ReporterAddress: append([]byte(nil), reporter...),
+		})
+		return false, nil
+	}); err != nil {
+		panic(err)
+	}
+
+	err = k.SelectorReporterSwitches.Walk(ctx, nil, func(selector []byte, history types.SelectorReporterSwitches) (bool, error) {
+		switches := make([]types.SelectorReporterSwitchRecord, len(history.Switches))
+		for i, sw := range history.Switches {
+			switches[i] = types.SelectorReporterSwitchRecord{
+				OriginalReporter: append([]byte(nil), sw.OriginalReporter...),
+				BeganHeight:      sw.BeganHeight,
+				CompletedHeight:  sw.CompletedHeight,
+				CancelledHeight:  sw.CancelledHeight,
+			}
+		}
+		genesis.SelectorReporterSwitches = append(genesis.SelectorReporterSwitches, &types.SelectorReporterSwitchStateEntry{
+			SelectorAddress: append([]byte(nil), selector...),
+			Switches:        switches,
+		})
+		return false, nil
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	exportModuleData(ctx, k)
 	// this line is used by starport scaffolding # genesis/module/export
@@ -352,6 +405,29 @@ func exportModuleData(ctx sdk.Context, k keeper.Keeper) {
 		numFeePaidFromStake++
 	}
 	err = writer.EndArraySection(numFeePaidFromStake)
+	if err != nil {
+		panic(err)
+	}
+
+	err = writer.StartArraySection("two_bit_reporters", false)
+	if err != nil {
+		panic(err)
+	}
+	numTwoBit := 0
+	err = k.TwoBitAgentToReporter.Walk(ctx, nil, func(agent, reporter []byte) (bool, error) {
+		if err := writer.WriteArrayItem(types.TwoBitReporterStateEntry{
+			AgentAddress:    append([]byte(nil), agent...),
+			ReporterAddress: append([]byte(nil), reporter...),
+		}); err != nil {
+			return true, err
+		}
+		numTwoBit++
+		return false, nil
+	})
+	if err != nil {
+		panic(err)
+	}
+	err = writer.EndArraySection(numTwoBit)
 	if err != nil {
 		panic(err)
 	}

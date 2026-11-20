@@ -13,6 +13,7 @@ import (
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
 	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -153,6 +154,53 @@ func (s *KeeperTestSuite) TestSetNewDispute() types.MsgProposeDispute {
 	s.NoError(s.disputeKeeper.SetNewDispute(s.ctx, creator, disputeMsg, &report))
 
 	return disputeMsg
+}
+
+// TestSetNewDisputeSlashShortfallDiscardsCache runs a fully funded dispute on a
+// cache. Escrow collects nothing and returns ErrReporterSlashShortfall. The
+// cache is dropped, and the parent store keeps neither the dispute nor the fee
+// payer. JailReporter does not run.
+func (s *KeeperTestSuite) TestSetNewDisputeSlashShortfallDiscardsCache() {
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+	rep := report(s.ctx)
+	creator := sample.AccAddressBytes()
+	reporterAcc := sdk.MustAccAddressFromBech32(rep.Reporter)
+	fee := sdk.NewCoin("loya", math.NewInt(10_000))
+	disputeMsg := types.MsgProposeDispute{
+		Creator:          creator.String(),
+		DisputedReporter: rep.Reporter,
+		ReportMetaId:     rep.MetaId,
+		ReportQueryId:    hex.EncodeToString(rep.QueryId),
+		DisputeCategory:  types.Warning,
+		Fee:              fee,
+		PayFromBond:      false,
+	}
+
+	cacheCtx, _ := s.ctx.CacheContext()
+	s.bankKeeper.On("HasBalance", cacheCtx, creator, fee).Return(true)
+	s.bankKeeper.On("SendCoinsFromAccountToModule", cacheCtx, creator, types.ModuleName, sdk.NewCoins(fee)).Return(nil)
+	s.oracleKeeper.On("FlagAggregateReport", cacheCtx, rep).Return(nil)
+	s.reporterKeeper.On(
+		"EscrowReporterStake",
+		cacheCtx,
+		reporterAcc,
+		rep.Power,
+		rep.BlockNumber,
+		math.NewInt(10_000),
+		keeper.StakeSnapshotOf(rep),
+		mock.Anything,
+	).Return(reportertypes.ErrReporterSlashShortfall)
+
+	err := s.disputeKeeper.SetNewDispute(cacheCtx, creator, disputeMsg, &rep)
+	s.ErrorIs(err, reportertypes.ErrReporterSlashShortfall)
+
+	has, err := s.disputeKeeper.Disputes.Has(s.ctx, 1)
+	s.NoError(err)
+	s.False(has)
+	has, err = s.disputeKeeper.DisputeFeePayer.Has(s.ctx, collections.Join(uint64(1), creator.Bytes()))
+	s.NoError(err)
+	s.False(has)
+	s.reporterKeeper.AssertNotCalled(s.T(), "JailReporter", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 }
 
 func (s *KeeperTestSuite) TestSlashAndJailReporter() {
