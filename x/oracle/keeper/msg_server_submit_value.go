@@ -11,6 +11,7 @@ import (
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	registrytypes "github.com/tellor-io/layer/x/registry/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
 	errorsmod "cosmossdk.io/errors"
@@ -67,7 +68,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 	// type starts with 2bitAgentic when that address was registered as another
 	// reporter's agent. The stored report uses the registered reporter, including
 	// that reporter's power and jail state.
-	reporterStake, err := k.keeper.reporterKeeper.ReporterStake(ctx, reporterAddr, queryId)
+	reporterStake, stakeSnapshot, err := k.keeper.reporterKeeper.ReporterStakeWithSnapshot(ctx, reporterAddr)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return nil, err
@@ -77,7 +78,7 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 			return nil, err
 		}
 		reporterAddr = resolved
-		reporterStake, err = k.keeper.reporterKeeper.ReporterStake(ctx, reporterAddr, queryId)
+		reporterStake, stakeSnapshot, err = k.keeper.reporterKeeper.ReporterStakeWithSnapshot(ctx, reporterAddr)
 		if err != nil {
 			return nil, err
 		}
@@ -115,14 +116,14 @@ func (k msgServer) SubmitValue(ctx context.Context, msg *types.MsgSubmitValue) (
 		if err != nil {
 			return nil, err
 		}
-		err = k.keeper.HandleBridgeDepositDirectReveal(ctx, query, msg.QueryData, reporterAddr, msg.Value, reportingPower)
+		err = k.keeper.HandleBridgeDepositDirectReveal(ctx, query, msg.QueryData, reporterAddr, msg.Value, reportingPower, stakeSnapshot)
 		if err != nil {
 			return nil, err
 		}
 		return &types.MsgSubmitValueResponse{}, nil
 	}
 
-	err = k.keeper.DirectReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, reportingPower, isTokenBridgeDeposit)
+	err = k.keeper.DirectReveal(ctx, query, msg.QueryData, msg.Value, reporterAddr, reportingPower, stakeSnapshot, isTokenBridgeDeposit)
 	if err != nil {
 		return nil, err
 	}
@@ -136,13 +137,14 @@ func (k Keeper) DirectReveal(ctx context.Context,
 	value string,
 	reporterAddr sdk.AccAddress,
 	votingPower uint64,
+	stakeSnapshot reportertypes.StakeSnapshotRef,
 	bridgeDeposit bool,
 ) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockHeight := sdkCtx.BlockHeight()
 
 	if bridgeDeposit {
-		return k.HandleBridgeDepositDirectReveal(ctx, query, qDataBytes, reporterAddr, value, votingPower)
+		return k.HandleBridgeDepositDirectReveal(ctx, query, qDataBytes, reporterAddr, value, votingPower, stakeSnapshot)
 	}
 
 	if query.Amount.IsZero() && !query.CycleList {
@@ -153,7 +155,7 @@ func (k Keeper) DirectReveal(ctx context.Context,
 		return types.ErrSubmissionWindowExpired
 	}
 
-	return k.SetValue(ctx, reporterAddr, query, value, qDataBytes, votingPower, query.CycleList)
+	return k.SetValue(ctx, reporterAddr, query, value, qDataBytes, votingPower, stakeSnapshot, query.CycleList)
 }
 
 // replacement for ValidateBasic

@@ -66,6 +66,7 @@ func TestSubmitValueTwoBitAgentUsesRealReporter(t *testing.T) {
 	)
 	commitmentKeeper := new(reportermocks.OracleKeeper)
 	commitmentKeeper.On("GetMaxOpenCommitmentForReporter", mock.Anything, mock.Anything).Return(uint64(0), nil).Maybe()
+	commitmentKeeper.On("GetBlockHeightFromTimestamp", mock.Anything, mock.Anything).Return(uint64(0), collections.ErrNotFound).Maybe()
 	reporterKeeper.SetOracleKeeper(commitmentKeeper)
 
 	registryKeeper := new(oraclemocks.RegistryKeeper)

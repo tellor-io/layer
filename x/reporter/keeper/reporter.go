@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
 	"errors"
-	"sort"
 
 	"github.com/tellor-io/layer/x/reporter/types"
 
@@ -54,129 +54,101 @@ func (k Keeper) HasMin(ctx context.Context, addr sdk.AccAddress, minRequired mat
 // It also tracks period data for reward distribution - when delegation state changes,
 // the previous period is queued for distribution.
 // Ready pending reporter switches involving this reporter are finalized first (same entry path as MsgSubmitValue).
-func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, queryId []byte) (math.Int, error) {
+func (k Keeper) ReporterStake(ctx context.Context, repAddr sdk.AccAddress, _ []byte) (math.Int, error) {
+	stake, _, err := k.ReporterStakeWithSnapshot(ctx, repAddr)
+	return stake, err
+}
+
+// ReporterStakeWithSnapshot works like ReporterStake and also says which saved snapshot backs the total.
+func (k Keeper) ReporterStakeWithSnapshot(ctx context.Context, repAddr sdk.AccAddress) (math.Int, types.StakeSnapshotRef, error) {
 	if err := k.errIfPendingSelfDemotion(ctx, repAddr); err != nil {
-		return math.Int{}, err
+		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
 	if err := k.applyReadyPendingSwitchesForReporter(ctx, repAddr); err != nil {
-		return math.Int{}, err
+		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
 
 	needsRecalc, err := k.needsStakeRecalc(ctx, repAddr)
 	if err != nil {
-		return math.Int{}, err
+		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
 
-	if !needsRecalc {
-		// Stake hasn't changed, fetch cached total from last Report entry
-		cached, err := k.GetDelegationsAmount(ctx, repAddr.Bytes(), uint64(sdk.UnwrapSDKContext(ctx).BlockHeight()))
-		if err != nil {
-			return math.Int{}, err
-		}
-		if !cached.Total.IsNil() && cached.Total.IsPositive() {
-			return cached.Total, nil
-		}
-		// if it ain't positive, just recalculate
+	height := uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())
+	latestRef, latest, hasLatest, err := k.latestStakeSnapshot(ctx, repAddr.Bytes(), height)
+	if err != nil {
+		return math.Int{}, types.StakeSnapshotRef{}, err
+	}
+
+	// Stake hasn't changed, so reuse the newest saved snapshot.
+	if !needsRecalc && hasLatest && !latest.Total.IsNil() && latest.Total.IsPositive() {
+		return latest.Total, latestRef, nil
 	}
 
 	totalTokens, delegates, selectorShares, hash, err := k.GetReporterStake(ctx, repAddr)
 	if err != nil {
-		return math.Int{}, err
+		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
 
 	// Clear stake recalc flag after recalculation
 	if err := k.StakeRecalcFlag.Remove(ctx, repAddr.Bytes()); err != nil {
-		return math.Int{}, err
+		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
 
 	// Handle period tracking for reward distribution. The hash is per selector,
 	// so a move between validators does not start a new reward period.
 	changed, err := k.handlePeriodTracking(ctx, repAddr, selectorShares, totalTokens, hash)
 	if err != nil {
-		return math.Int{}, err
+		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
-	height := uint64(sdk.UnwrapSDKContext(ctx).BlockHeight())
-	if changed {
-		// Store per-report snapshot for disputes
-		err = k.ReportByBlock.Set(ctx, collections.Join3(repAddr.Bytes(), height, queryId), types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens})
-		if err != nil {
-			return math.Int{}, err
-		}
+	// Reuse the newest snapshot only if it still names the same validators and amounts.
+	if !changed && hasLatest && sameTokenOrigins(latest.TokenOrigins, delegates) {
+		return totalTokens, latestRef, nil
 	}
-	// A redelegation that keeps selector totals leaves changed false and would
-	// otherwise keep the previous validator in the dispute snapshot.
-	if err := k.syncDisputeSnapshot(ctx, repAddr, height, queryId, delegates, totalTokens); err != nil {
-		return math.Int{}, err
-	}
-	return totalTokens, nil
-}
 
-// syncDisputeSnapshot writes freshly computed origins when they differ from the
-// snapshot a dispute would load at this height. Comparison is a multiset:
-// delegator, then validator, then amount. The lookup returns the greatest key
-// at this height, so a new query id can sort below an older row and stay
-// invisible. Replace that visible row when it is already at this height;
-// otherwise insert a row here so later heights see the new validators and
-// earlier heights keep the snapshot they had.
-func (k Keeper) syncDisputeSnapshot(ctx context.Context, repAddr sdk.AccAddress, height uint64, queryId []byte, delegates []*types.TokenOriginInfo, totalTokens math.Int) error {
-	key, current, foundNew, err := k.delegationSnapshot(ctx, repAddr.Bytes(), height)
+	next, err := k.StakeSnapshotVersion.Next(ctx)
 	if err != nil {
-		return err
+		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
-	if sameTokenOriginMultiset(current.TokenOrigins, delegates) {
-		return nil
+	// Version zero is kept to mean "made before versions existed".
+	ref := types.StakeSnapshotRef{Block: height, Version: next + 1}
+	snapshot := types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens}
+	if err := k.StakeSnapshots.Set(ctx, collections.Join3(repAddr.Bytes(), ref.Block, ref.Version), snapshot); err != nil {
+		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
-	updated := types.DelegationsAmounts{TokenOrigins: delegates, Total: totalTokens}
-	if foundNew && key.K2() == height {
-		return k.ReportByBlock.Set(ctx, key, updated)
+	if err := k.cleanupOldStakeSnapshots(ctx, repAddr.Bytes()); err != nil {
+		return math.Int{}, types.StakeSnapshotRef{}, err
 	}
-	return k.ReportByBlock.Set(ctx, collections.Join3(repAddr.Bytes(), height, queryId), updated)
+	return totalTokens, ref, nil
 }
 
-// sameTokenOriginMultiset reports whether both slices contain the same
-// delegator, validator, and amount triples, ignoring order.
-func sameTokenOriginMultiset(a, b []*types.TokenOriginInfo) bool {
+// sameTokenOrigins reports whether two lists hold the same delegator, validator and amount entries, in any order.
+func sameTokenOrigins(a, b []*types.TokenOriginInfo) bool {
 	if len(a) != len(b) {
 		return false
 	}
-	if len(a) == 0 {
-		return true
-	}
-	left := canonicalTokenOrigins(a)
-	right := canonicalTokenOrigins(b)
-	if left == nil || right == nil {
-		return false
-	}
-	for i := range left {
-		if !bytes.Equal(left[i].DelegatorAddress, right[i].DelegatorAddress) ||
-			!bytes.Equal(left[i].ValidatorAddress, right[i].ValidatorAddress) ||
-			!left[i].Amount.Equal(right[i].Amount) {
+	counts := make(map[string]int, len(a))
+	for _, origin := range a {
+		if origin == nil || origin.Amount.IsNil() {
 			return false
 		}
+		counts[tokenOriginKey(origin)]++
+	}
+	for _, origin := range b {
+		if origin == nil || origin.Amount.IsNil() {
+			return false
+		}
+		key := tokenOriginKey(origin)
+		if counts[key] == 0 {
+			return false
+		}
+		counts[key]--
 	}
 	return true
 }
 
-// canonicalTokenOrigins sorts a copy by delegator, validator, then amount.
-// It returns nil when an element cannot be ordered.
-func canonicalTokenOrigins(in []*types.TokenOriginInfo) []*types.TokenOriginInfo {
-	out := make([]*types.TokenOriginInfo, len(in))
-	for i, origin := range in {
-		if origin == nil || origin.Amount.IsNil() {
-			return nil
-		}
-		out[i] = origin
-	}
-	sort.Slice(out, func(i, j int) bool {
-		if c := bytes.Compare(out[i].DelegatorAddress, out[j].DelegatorAddress); c != 0 {
-			return c < 0
-		}
-		if c := bytes.Compare(out[i].ValidatorAddress, out[j].ValidatorAddress); c != 0 {
-			return c < 0
-		}
-		return out[i].Amount.LT(out[j].Amount)
-	})
-	return out
+// tokenOriginKey turns one entry into text so equal entries match.
+func tokenOriginKey(origin *types.TokenOriginInfo) string {
+	return hex.EncodeToString(origin.DelegatorAddress) + "/" + hex.EncodeToString(origin.ValidatorAddress) + "/" + origin.Amount.String()
 }
 
 // needsStakeRecalc checks if a reporter's stake needs to be recalculated

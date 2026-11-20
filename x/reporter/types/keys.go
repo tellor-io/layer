@@ -61,6 +61,10 @@ var (
 	SelectorReporterSwitchesPrefix = collections.NewPrefix(42)
 	// SelectorSwitchPruneCursorPrefix is the next selector address for the batched history prune.
 	SelectorSwitchPruneCursorPrefix = collections.NewPrefix(43)
+	// StakeSnapshotPrefix stores stake snapshots keyed by (reporter, block, version).
+	StakeSnapshotPrefix = collections.NewPrefix(44)
+	// StakeSnapshotVersionPrefix is the counter that numbers every saved stake snapshot.
+	StakeSnapshotVersionPrefix = collections.NewPrefix(45)
 )
 
 // ReporterJailDisputeLockKey keys selector dispute locks copied from OracleReporter.JailedUntil

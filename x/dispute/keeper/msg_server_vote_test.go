@@ -113,10 +113,10 @@ func BenchmarkMsgVote(b *testing.B) {
 	}
 
 	// Setup mock expectations for dispute creation
-	reporterKeeper.On("EscrowReporterStake", mock.Anything, addr, uint64(1), uint64(0), math.NewInt(10_000), qId, mock.Anything).Return(nil)
+	reporterKeeper.On("EscrowReporterStake", mock.Anything, addr, uint64(1), uint64(0), math.NewInt(10_000), reportertypes.StakeSnapshotRef{}, mock.Anything).Return(nil)
 	reporterKeeper.On("TotalReporterPower", mock.Anything).Return(math.NewInt(1), nil)
 	oracleKeeper.On("GetTotalTips", mock.Anything).Return(math.NewInt(1), nil)
-	reporterKeeper.On("JailReporter", mock.Anything, addr, uint64(0), mock.Anything, mock.Anything).Return(nil)
+	reporterKeeper.On("JailReporter", mock.Anything, addr, uint64(0), mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	bankKeeper.On("HasBalance", mock.Anything, addr, fee).Return(true)
 	bankKeeper.On("SendCoinsFromAccountToModule", mock.Anything, addr, mock.Anything, sdk.NewCoins(fee)).Return(nil)
 	oracleKeeper.On("FlagAggregateReport", mock.Anything, report).Return(nil)
