@@ -805,7 +805,7 @@ func (s *IntegrationTestSuite) TestFullCollectionSkipsTrackerShortfall() {
 	s.True(left.LTE(math.NewInt(2)), "full-collection settlement left %s", left)
 }
 
-func (s *IntegrationTestSuite) TestZeroCollectedSlashStillOpensVoting() {
+func (s *IntegrationTestSuite) TestZeroCollectedSlashRejectsDispute() {
 	fx := s.newReportedStake()
 	s.removeAllReporterStake(fx)
 	payer := sample.AccAddressBytes()
@@ -813,46 +813,32 @@ func (s *IntegrationTestSuite) TestZeroCollectedSlashStillOpensVoting() {
 	s.Setup.MintTokens(payer, quote)
 	balanceBefore := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, payer, s.Setup.Denom).Amount
 	moduleBefore := s.moduleBalance()
+	disputeID := s.Setup.Disputekeeper.NextDisputeId(s.Setup.Ctx)
 
-	major := s.proposeDispute(fx.report, disputetypes.Major, payer, quote, false)
-	s.Equal(disputetypes.Voting, major.DisputeStatus)
-	s.True(major.SlashAmount.IsZero())
-	s.True(major.DisputeFee.IsZero())
-	s.True(major.FeeTotal.IsZero())
-	s.True(major.BurnAmount.IsZero())
-	_, err := s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(major.DisputeId, payer.Bytes()))
+	// Escrow rejects a slash that collects nothing. BaseApp drops that cache,
+	// so the fee payment and the dispute must not survive.
+	cacheCtx, _ := s.Setup.Ctx.CacheContext()
+	_, err := keeper.NewMsgServerImpl(s.Setup.Disputekeeper).ProposeDispute(cacheCtx, &disputetypes.MsgProposeDispute{
+		Creator:          payer.String(),
+		DisputedReporter: fx.report.Reporter,
+		ReportMetaId:     fx.report.MetaId,
+		ReportQueryId:    hex.EncodeToString(fx.report.QueryId),
+		DisputeCategory:  disputetypes.Major,
+		Fee:              sdk.NewCoin(s.Setup.Denom, quote),
+		PayFromBond:      false,
+	})
+	s.ErrorIs(err, reportertypes.ErrReporterSlashShortfall)
+
+	_, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, disputeID)
+	s.Error(err)
+	_, err = s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(disputeID, payer.Bytes()))
 	s.Error(err)
 	s.Equal(balanceBefore, s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, payer, s.Setup.Denom).Amount)
 	s.Equal(moduleBefore, s.moduleBalance())
 
 	reporter, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, fx.reporter)
 	s.NoError(err)
-	s.True(reporter.Jailed)
-	s.True(reporter.JailedUntil.After(s.Setup.Ctx.BlockTime().Add(1000 * time.Hour)))
-
-	major.DisputeStatus = disputetypes.Unresolved
-	s.NoError(s.Setup.Disputekeeper.Disputes.Set(s.Setup.Ctx, major.DisputeId, major))
-	round := s.proposeDispute(fx.report, disputetypes.Major, payer, quote, false)
-	s.Equal(uint64(2), round.DisputeRound)
-	s.True(round.FeeTotal.IsZero())
-	s.True(round.BurnAmount.IsZero())
-	s.Equal(moduleBefore, s.moduleBalance())
-
-	s.NoError(s.Setup.Disputekeeper.VoteCountsByGroup.Set(s.Setup.Ctx, round.DisputeId, disputetypes.StakeholderVoteCounts{
-		Reporters: disputetypes.VoteCounts{Support: 1},
-	}))
-	s.NoError(s.Setup.Disputekeeper.Voter.Set(s.Setup.Ctx, collections.Join(round.DisputeId, payer.Bytes()), disputetypes.Voter{
-		Vote:          disputetypes.VoteEnum_VOTE_SUPPORT,
-		VoterPower:    math.ZeroInt(),
-		ReporterPower: math.NewInt(1),
-	}))
-	s.executeVote(round, disputetypes.VoteResult_SUPPORT)
-	_, err = keeper.NewMsgServerImpl(s.Setup.Disputekeeper).ClaimReward(s.Setup.Ctx, &disputetypes.MsgClaimReward{
-		CallerAddress: payer.String(),
-		DisputeId:     round.DisputeId,
-	})
-	s.EqualError(err, "reward is zero")
-	s.Equal(moduleBefore, s.moduleBalance())
+	s.False(reporter.Jailed)
 }
 
 func (s *IntegrationTestSuite) TestCollectedSlashUnderTwentyHasNoBurnOrRoundFee() {
