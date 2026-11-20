@@ -174,7 +174,7 @@ func (s *IntegrationTestSuite) disputeEventAttr(eventType string, disputeID uint
 	return "", false
 }
 
-func (s *IntegrationTestSuite) fundMinorThenMajor(fx reportedStake, payer sdk.AccAddress) (minorHeld math.Int, quote math.Int) {
+func (s *IntegrationTestSuite) fundMinorThenMajor(fx reportedStake, payer sdk.AccAddress) (minorHeld, quote math.Int) {
 	minorFee, err := s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, fx.report, disputetypes.Minor)
 	s.NoError(err)
 	quote, err = s.Setup.Disputekeeper.GetDisputeFee(s.Setup.Ctx, fx.report, disputetypes.Major)
