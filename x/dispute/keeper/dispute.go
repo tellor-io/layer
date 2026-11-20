@@ -12,6 +12,7 @@ import (
 	layertypes "github.com/tellor-io/layer/types"
 	"github.com/tellor-io/layer/x/dispute/types"
 	oracletypes "github.com/tellor-io/layer/x/oracle/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -171,15 +172,20 @@ func (k Keeper) SlashAndJailReporter(ctx sdk.Context, report oracletypes.MicroRe
 	slashPercentageFixed6Dec := math.LegacyNewDecFromInt(slashPercentageFixed6)
 	slashAmountFixed6Dec := reportPowerFixed6Dec.Mul(slashPercentageFixed6Dec).Quo(powerReductionDec)
 	slashAmountFixed6 := slashAmountFixed6Dec.TruncateInt()
-	err = k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, report.Power, report.BlockNumber, slashAmountFixed6, report.QueryId, hashId)
+	err = k.reporterKeeper.EscrowReporterStake(ctx, reporterAddr, report.Power, report.BlockNumber, slashAmountFixed6, StakeSnapshotOf(report), hashId)
 	if err != nil {
 		return err
 	}
-	return k.reporterKeeper.JailReporter(ctx, reporterAddr, jailDuration, report.BlockNumber, hashId)
+	return k.reporterKeeper.JailReporter(ctx, reporterAddr, jailDuration, report.BlockNumber, StakeSnapshotOf(report), hashId)
 }
 
-func (k Keeper) JailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDuration, reportBlockNumber uint64, disputeHashID []byte) error {
-	return k.reporterKeeper.JailReporter(ctx, repAddr, jailDuration, reportBlockNumber, disputeHashID)
+func (k Keeper) JailReporter(ctx context.Context, repAddr sdk.AccAddress, jailDuration, reportBlockNumber uint64, snapshot reportertypes.StakeSnapshotRef, disputeHashID []byte) error {
+	return k.reporterKeeper.JailReporter(ctx, repAddr, jailDuration, reportBlockNumber, snapshot, disputeHashID)
+}
+
+// StakeSnapshotOf returns which saved stake snapshot backed a report.
+func StakeSnapshotOf(report oracletypes.MicroReport) reportertypes.StakeSnapshotRef {
+	return reportertypes.StakeSnapshotRef{Block: report.StakeSnapshotBlock, Version: report.StakeSnapshotVersion}
 }
 
 // Get percentage of slash amount based on category, returned as fixed6

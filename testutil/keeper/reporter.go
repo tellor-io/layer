@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"testing"
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -56,6 +57,7 @@ func ReporterKeeper(tb testing.TB) (keeper.Keeper, *mocks.StakingKeeper, *mocks.
 	// Wire up a default OracleKeeper mock: no deferred switch lock from oracle.
 	ok := new(mocks.OracleKeeper)
 	ok.On("GetMaxOpenCommitmentForReporter", mock.Anything, mock.Anything).Return(uint64(0), nil).Maybe()
+	ok.On("GetBlockHeightFromTimestamp", mock.Anything, mock.Anything).Return(uint64(0), errors.New("no cutoff block in tests")).Maybe()
 	k.SetOracleKeeper(ok)
 
 	ctx := sdk.NewContext(stateStore, cmtproto.Header{}, false, log.NewNopLogger())

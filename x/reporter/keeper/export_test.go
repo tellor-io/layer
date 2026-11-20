@@ -24,6 +24,10 @@ func (k Keeper) GetRedelegationPathExported(ctx context.Context, delAddr sdk.Acc
 	return k.getRedelegationPath(ctx, delAddr, valAddr)
 }
 
+func (k Keeper) CleanupOldStakeSnapshotsExported(ctx context.Context, reporter []byte) error {
+	return k.cleanupOldStakeSnapshots(ctx, reporter)
+}
+
 func (k Keeper) RemoveReporterForTest(ctx context.Context, reporter []byte) error {
 	return k.removeReporter(ctx, reporter)
 }

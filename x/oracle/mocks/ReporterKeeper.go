@@ -57,55 +57,35 @@ func (_m *ReporterKeeper) GetLastReportedAtBlock(ctx context.Context, reporter [
 	return r0, r1
 }
 
-// GetReporterStake provides a mock function with given fields: ctx, repAddr
-func (_m *ReporterKeeper) GetReporterStake(ctx context.Context, repAddr types.AccAddress) (math.Int, []*reportertypes.TokenOriginInfo, []*reportertypes.SelectorShare, []byte, error) {
-	ret := _m.Called(ctx, repAddr)
+// ReporterStakeWithSnapshot provides a mock function with given fields: ctx, repAddress
+func (_m *ReporterKeeper) ReporterStakeWithSnapshot(ctx context.Context, repAddress types.AccAddress) (math.Int, reportertypes.StakeSnapshotRef, error) {
+	ret := _m.Called(ctx, repAddress)
 
 	var r0 math.Int
-	var r1 []*reportertypes.TokenOriginInfo
-	var r2 []*reportertypes.SelectorShare
-	var r3 []byte
-	var r4 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (math.Int, []*reportertypes.TokenOriginInfo, []*reportertypes.SelectorShare, []byte, error)); ok {
-		return rf(ctx, repAddr)
+	var r1 reportertypes.StakeSnapshotRef
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) (math.Int, reportertypes.StakeSnapshotRef, error)); ok {
+		return rf(ctx, repAddress)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress) math.Int); ok {
-		r0 = rf(ctx, repAddr)
+		r0 = rf(ctx, repAddress)
 	} else {
 		r0 = ret.Get(0).(math.Int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, types.AccAddress) []*reportertypes.TokenOriginInfo); ok {
-		r1 = rf(ctx, repAddr)
+	if rf, ok := ret.Get(1).(func(context.Context, types.AccAddress) reportertypes.StakeSnapshotRef); ok {
+		r1 = rf(ctx, repAddress)
 	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).([]*reportertypes.TokenOriginInfo)
-		}
+		r1 = ret.Get(1).(reportertypes.StakeSnapshotRef)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, types.AccAddress) []*reportertypes.SelectorShare); ok {
-		r2 = rf(ctx, repAddr)
+	if rf, ok := ret.Get(2).(func(context.Context, types.AccAddress) error); ok {
+		r2 = rf(ctx, repAddress)
 	} else {
-		if ret.Get(2) != nil {
-			r2 = ret.Get(2).([]*reportertypes.SelectorShare)
-		}
+		r2 = ret.Error(2)
 	}
 
-	if rf, ok := ret.Get(3).(func(context.Context, types.AccAddress) []byte); ok {
-		r3 = rf(ctx, repAddr)
-	} else {
-		if ret.Get(3) != nil {
-			r3 = ret.Get(3).([]byte)
-		}
-	}
-
-	if rf, ok := ret.Get(4).(func(context.Context, types.AccAddress) error); ok {
-		r4 = rf(ctx, repAddr)
-	} else {
-		r4 = ret.Error(4)
-	}
-
-	return r0, r1, r2, r3, r4
+	return r0, r1, r2
 }
 
 // TwoBitReporter provides a mock function with given fields: ctx, agent
@@ -132,44 +112,6 @@ func (_m *ReporterKeeper) TwoBitReporter(ctx context.Context, agent types.AccAdd
 	}
 
 	return r0, r1
-}
-
-// ReporterStake provides a mock function with given fields: ctx, repAddress, queryId
-func (_m *ReporterKeeper) ReporterStake(ctx context.Context, repAddress types.AccAddress, queryId []byte) (math.Int, error) {
-	ret := _m.Called(ctx, repAddress, queryId)
-
-	var r0 math.Int
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, []byte) (math.Int, error)); ok {
-		return rf(ctx, repAddress, queryId)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, []byte) math.Int); ok {
-		r0 = rf(ctx, repAddress, queryId)
-	} else {
-		r0 = ret.Get(0).(math.Int)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, types.AccAddress, []byte) error); ok {
-		r1 = rf(ctx, repAddress, queryId)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// SetReporterStakeByQueryId provides a mock function with given fields: ctx, repAddr, delegates, totalTokens, queryId
-func (_m *ReporterKeeper) SetReporterStakeByQueryId(ctx context.Context, repAddr types.AccAddress, delegates []*reportertypes.TokenOriginInfo, totalTokens math.Int, queryId []byte) error {
-	ret := _m.Called(ctx, repAddr, delegates, totalTokens, queryId)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, types.AccAddress, []*reportertypes.TokenOriginInfo, math.Int, []byte) error); ok {
-		r0 = rf(ctx, repAddr, delegates, totalTokens, queryId)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
 }
 
 type mockConstructorTestingTNewReporterKeeper interface {

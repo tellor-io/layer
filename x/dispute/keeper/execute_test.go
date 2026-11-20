@@ -5,6 +5,7 @@ import (
 
 	"github.com/tellor-io/layer/testutil/sample"
 	layertypes "github.com/tellor-io/layer/types"
+	"github.com/tellor-io/layer/x/dispute/keeper"
 	"github.com/tellor-io/layer/x/dispute/types"
 
 	"cosmossdk.io/collections"
@@ -286,7 +287,7 @@ func (k *KeeperTestSuite) TestExecuteVoteAgainst() {
 
 	k.reporterKeeper.On("ReturnSlashedTokens", k.ctx, dispute.HashId, extraReturn).Return(bondedReturn, math.ZeroInt(), nil).Once()
 	k.bankKeeper.On("SendCoinsFromModuleToModule", k.ctx, types.ModuleName, "bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", bondedReturn))).Return(nil).Once()
-	k.reporterKeeper.On("UpdateJailedUntilOnFailedDispute", k.ctx, reporterAddr, dispute.InitialEvidence.BlockNumber, dispute.HashId).Return(nil).Once()
+	k.reporterKeeper.On("UpdateJailedUntilOnFailedDispute", k.ctx, reporterAddr, dispute.InitialEvidence.BlockNumber, keeper.StakeSnapshotOf(dispute.InitialEvidence), dispute.HashId).Return(nil).Once()
 
 	k.NoError(k.disputeKeeper.ExecuteVote(k.ctx, dispute.DisputeId))
 

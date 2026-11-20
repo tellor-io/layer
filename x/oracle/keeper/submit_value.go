@@ -12,6 +12,7 @@ import (
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	regTypes "github.com/tellor-io/layer/x/registry/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -31,7 +32,7 @@ import (
 // 7. Check if the new value changes the aggregate value and update it if needed
 // 7. Emit a new_report event
 // 8. Set the micro report in the store
-func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query types.QueryMeta, val string, queryData []byte, power uint64, incycle bool) error {
+func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query types.QueryMeta, val string, queryData []byte, power uint64, stakeSnapshot reportertypes.StakeSnapshotRef, incycle bool) error {
 	queryId := utils.QueryIDFromData(queryData)
 	alreadyReported, err := k.Reports.Has(ctx, collections.Join3(queryId, reporter.Bytes(), query.Id))
 	if err != nil {
@@ -68,6 +69,9 @@ func (k Keeper) SetValue(ctx context.Context, reporter sdk.AccAddress, query typ
 		Cyclelist:       incycle,
 		BlockNumber:     uint64(sdkCtx.BlockHeight()),
 		MetaId:          query.Id,
+		// Remember which stake snapshot backed this report so a dispute slashes the right stake.
+		StakeSnapshotBlock:   stakeSnapshot.Block,
+		StakeSnapshotVersion: stakeSnapshot.Version,
 	}
 
 	query.HasRevealedReports = true

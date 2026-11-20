@@ -224,10 +224,11 @@ func (k Keeper) jailSelectorsFromReportSnapshot(
 	ctx context.Context,
 	reporter []byte,
 	reportBlockNumber uint64,
+	snapshot types.StakeSnapshotRef,
 	disputeHashID []byte,
 	until time.Time,
 ) error {
-	snap, err := k.GetDelegationsAmount(ctx, reporter, reportBlockNumber)
+	snap, err := k.GetReportStakeSnapshot(ctx, reporter, reportBlockNumber, snapshot)
 	if err != nil {
 		return err
 	}
@@ -263,9 +264,10 @@ func (k Keeper) clearSelectorLocksFromReportSnapshot(
 	ctx context.Context,
 	reporter []byte,
 	reportBlockNumber uint64,
+	snapshot types.StakeSnapshotRef,
 	disputeHashID []byte,
 ) error {
-	snap, err := k.GetDelegationsAmount(ctx, reporter, reportBlockNumber)
+	snap, err := k.GetReportStakeSnapshot(ctx, reporter, reportBlockNumber, snapshot)
 	if err != nil {
 		return err
 	}
@@ -293,7 +295,7 @@ func (k Keeper) copyReporterJailToSelection(ctx context.Context, addr sdk.AccAdd
 // JailReporter jails the reporter row (if present) and every selector in the report snapshot.
 // Warning disputes use jailDuration 0: until is block time, so the reporter is jailed but may
 // unjail immediately; JailedUntil is only bumped when it is already before block time.
-func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration, reportBlockNumber uint64, disputeHashID []byte) error {
+func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, jailDuration, reportBlockNumber uint64, snapshot types.StakeSnapshotRef, disputeHashID []byte) error {
 	until, err := k.jailUntil(ctx, jailDuration)
 	if err != nil {
 		return err
@@ -327,7 +329,7 @@ func (k Keeper) JailReporter(ctx context.Context, reporterAddr sdk.AccAddress, j
 		return err
 	}
 
-	return k.jailSelectorsFromReportSnapshot(ctx, reporterAddr.Bytes(), reportBlockNumber, disputeHashID, until)
+	return k.jailSelectorsFromReportSnapshot(ctx, reporterAddr.Bytes(), reportBlockNumber, snapshot, disputeHashID, until)
 }
 
 // thirdPartyUnjailDelay is how long after self-unjail eligibility a third party may unjail.
@@ -409,7 +411,7 @@ func (k Keeper) UnjailReporter(ctx context.Context, callerAddr, reporterAddr sdk
 	return nil
 }
 
-func (k Keeper) UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr sdk.AccAddress, reportBlockNumber uint64, disputeHashID []byte) error {
+func (k Keeper) UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAddr sdk.AccAddress, reportBlockNumber uint64, snapshot types.StakeSnapshotRef, disputeHashID []byte) error {
 	reporter, err := k.Reporters.Get(ctx, reporterAddr)
 	if err == nil && reporter.Jailed {
 		sdkctx := sdk.UnwrapSDKContext(ctx)
@@ -420,5 +422,5 @@ func (k Keeper) UpdateJailedUntilOnFailedDispute(ctx context.Context, reporterAd
 	} else if err != nil && !errors.Is(err, collections.ErrNotFound) {
 		return err
 	}
-	return k.clearSelectorLocksFromReportSnapshot(ctx, reporterAddr.Bytes(), reportBlockNumber, disputeHashID)
+	return k.clearSelectorLocksFromReportSnapshot(ctx, reporterAddr.Bytes(), reportBlockNumber, snapshot, disputeHashID)
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/tellor-io/layer/utils"
 	"github.com/tellor-io/layer/x/oracle/types"
 	regtypes "github.com/tellor-io/layer/x/registry/types"
+	reportertypes "github.com/tellor-io/layer/x/reporter/types"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
@@ -36,7 +37,7 @@ func (s *KeeperTestSuite) TestSetValue() {
 	queryBytes, err := utils.QueryBytesFromString(queryData)
 	require.NoError(err)
 	regK.On("GetSpec", ctx, "SpotPrice").Return(spotSpec, nil)
-	err = k.SetValue(ctx, reporter, query, "0x0000000000000000000000000000000000000000000000000000000000000009", queryBytes, 1, true)
+	err = k.SetValue(ctx, reporter, query, "0x0000000000000000000000000000000000000000000000000000000000000009", queryBytes, 1, reportertypes.StakeSnapshotRef{}, true)
 	require.NoError(err)
 
 	report, err := k.Reports.Get(ctx, collections.Join3(queryId, reporter.Bytes(), uint64(1)))

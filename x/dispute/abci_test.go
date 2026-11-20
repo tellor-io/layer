@@ -225,7 +225,7 @@ func (s *TestSuite) TestCheckClosedDisputesForExecutionCompletesViaUnbondedRetur
 	s.bankKeeper.On("BurnCoins", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 	s.reporterKeeper.On("ReturnSlashedTokens", mock.Anything, disp.HashId, math.ZeroInt()).Return(math.ZeroInt(), unbondedReturn, nil).Once()
 	s.bankKeeper.On("SendCoinsFromModuleToModule", mock.Anything, types.ModuleName, "not_bonded_tokens_pool", sdk.NewCoins(sdk.NewCoin("loya", unbondedReturn))).Return(nil).Once()
-	s.reporterKeeper.On("UpdateJailedUntilOnFailedDispute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+	s.reporterKeeper.On("UpdateJailedUntilOnFailedDispute", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 	require.NoError(dispute.CheckClosedDisputesForExecution(ctx, k))
 
@@ -331,7 +331,7 @@ func BenchmarkDisputeBeginBlocker(b *testing.B) {
 	bk.On("BurnCoins", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 	rk.On("ReturnSlashedTokens", mock.Anything, mock.Anything, mock.Anything).Return(math.ZeroInt(), math.ZeroInt(), nil)
 	bk.On("SendCoinsFromModuleToModule", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-	rk.On("UpdateJailedUntilOnFailedDispute", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	rk.On("UpdateJailedUntilOnFailedDispute", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	// run benchmarks
 	for _, tc := range testCases {
