@@ -29,6 +29,7 @@ Ref: https://keepachangelog.com/en/1.0.0/ and https://github.com/cosmos/cosmos-s
 
 ### State Machine Breaking
 
+* (x/dispute, x/reporter) #1101 Credit actual dispute fee receipts, bound new payer rows, keep fee-excess returns within staking caps, and conserve appeal and settlement fees.
 * (x/oracle) Persist the live cycle-list query data so `GetCurrentQueryInCycleList` no longer indexes `GetCyclelist()[Peek()]`. Oracle consensus version 6 backfills prefix 47. Fixes halt after `MsgUpdateCyclelist` shrinks the list (v6.1.8).
 * (x/oracle) Remove `MsgBatchSubmitValue`, `SubmitValueItem`, and `MsgUpdateMaxBatchSize`. Oracle consensus version 5 deletes leftover `MaxBatchSize` store bytes. Reporters submit values with `MsgSubmitValue` only (v6.1.7).
 

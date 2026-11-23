@@ -86,7 +86,17 @@ Checks if a dispute has been opened at the current block height and sets the blo
 | added_dispute_round | AddDisputeRound |
 | dispute_executed | ExecuteVote |
 | fee_added_to_dispute | AddFeeToDispute |
+| dispute_fee_adjusted | Round-one fee adjustment summary |
+| dispute_fee_payer_adjusted | Round-one fee adjustment, one record per payer |
 | voted_on_dispute | Vote |
 | team_address_updated | UpdateTeam |
+
+`new_dispute.fee_paid` and `fee_added_to_dispute.amount` are coins received
+before any immediate refund, not the nominal request. `new_dispute.total_fee`
+is the quote before full funding and the retained fee after any resize.
+
+Use `dispute_id` to join the adjustment summary (`quote`, `collected`,
+`retained_fee`, `burn_amount`) with individual payer records (`payer`, `refund`,
+`retained_fee`). Do not read payer refunds from repeated keys on the summary.
 
 
