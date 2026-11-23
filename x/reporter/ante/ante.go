@@ -328,9 +328,11 @@ func (t TrackStakeChangesDecorator) processMessage(ctx sdk.Context, msg sdk.Msg,
 }
 
 func isDirectStakeAcquisitionMessage(msg sdk.Msg) bool {
-	// Keeper-path claims; ante cannot project the eventual amount.
+	// Keeper-path claims and dispute funding can bond stake in the handler.
+	// Funding may refund an earlier payer, even when this message pays in cash.
 	switch msg.(type) {
-	case *types.MsgWithdrawTip, *disputetypes.MsgWithdrawFeeRefund:
+	case *types.MsgWithdrawTip, *disputetypes.MsgWithdrawFeeRefund,
+		*disputetypes.MsgProposeDispute, *disputetypes.MsgAddFeeToDispute:
 		return true
 	default:
 		return false
