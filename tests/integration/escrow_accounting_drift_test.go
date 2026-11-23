@@ -200,9 +200,11 @@ func (s *IntegrationTestSuite) TestFeeFromReporterStakeOriginsSumExceedsTotal() 
 
 	fee := math.NewInt(1_000_000)
 	hashId := []byte("drift-fee-tracker")
-	s.NoError(s.Setup.Reporterkeeper.FeefromReporterStake(ctx, reporter, fee, hashId, true))
+	escrowed, err := s.Setup.Reporterkeeper.FeefromReporterStake(ctx, reporter, fee, hashId, true)
+	s.NoError(err)
 
 	received := s.Setup.Bankkeeper.GetBalance(ctx, disputeModule, s.Setup.Denom).Amount.Sub(before)
+	s.Equal(received, escrowed, "returned receipt must equal coins the dispute module received")
 	tracked, err := s.Setup.Reporterkeeper.FeePaidFromStakeByPayer(ctx, hashId, reporter)
 	s.NoError(err)
 

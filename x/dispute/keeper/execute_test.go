@@ -262,6 +262,9 @@ func (k *KeeperTestSuite) TestExecuteVoteAgainst() {
 	k.ctx = k.ctx.WithBlockTime(time.Now())
 	dispute := k.dispute(k.ctx)
 	dispute.DisputeFee = math.NewInt(10000)
+	dispute.FeeTotal = dispute.DisputeFee
+	feePayer := sample.AccAddressBytes()
+	k.NoError(k.disputeKeeper.DisputeFeePayer.Set(k.ctx, collections.Join(dispute.DisputeId, feePayer.Bytes()), types.PayerInfo{Amount: dispute.DisputeFee}))
 	dispute.DisputeEndTime = k.ctx.BlockTime().Add(-1 * time.Hour)
 	dispute.DisputeStatus = types.Resolved
 	dispute.Open = false

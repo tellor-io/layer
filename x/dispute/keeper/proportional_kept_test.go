@@ -42,16 +42,16 @@ func TestProportionalKeptAmountsRemainder(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			paid := make([]math.Int, len(tc.paid))
+			payers := make([]roundPayer, len(tc.paid))
 			total := math.ZeroInt()
 			for i, amount := range tc.paid {
-				paid[i] = math.NewInt(amount)
-				total = total.Add(paid[i])
+				payers[i].received = math.NewInt(amount)
+				total = total.Add(payers[i].received)
 			}
-			got := proportionalKeptAmounts(paid, total, math.NewInt(tc.collected))
+			got := proportionalKeptAmounts(payers, total, math.NewInt(tc.collected))
 			sum := math.ZeroInt()
 			for i, share := range got {
-				require.False(t, share.GT(paid[i]), "kept %s exceeds paid %s", share, paid[i])
+				require.False(t, share.GT(payers[i].received), "kept %s exceeds paid %s", share, payers[i].received)
 				require.Equal(t, math.NewInt(tc.want[i]), share)
 				sum = sum.Add(share)
 			}

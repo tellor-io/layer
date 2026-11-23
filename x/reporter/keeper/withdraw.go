@@ -10,6 +10,7 @@ import (
 	disputetypes "github.com/tellor-io/layer/x/dispute/types"
 	"github.com/tellor-io/layer/x/reporter/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 
@@ -57,14 +58,18 @@ func (k Keeper) DisputedDelegationTotal(ctx context.Context, hashId []byte) (mat
 
 // FeefromReporterStake enables a reporter to pay a dispute fee from their stake power.
 // hashId is the dispute identifier, needed in the case where a reporter's fee is returned when a dispute is invalid.
-func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte, isFirstRound bool) error {
+// It returns the amount of coins actually unbonded and escrowed to the dispute module by this call, which can be less than amt due to rounding.
+func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAddress, amt math.Int, hashId []byte, isFirstRound bool) (math.Int, error) {
+	if !amt.IsPositive() {
+		return math.ZeroInt(), errors.New("fee amount must be positive")
+	}
 	reporterTotalTokens := math.LegacyZeroDec()
 	fee := math.LegacyNewDecFromInt(amt)
 
 	// Get all selectors for the reporter
 	iter, err := k.Selectors.Indexes.Reporter.MatchExact(ctx, reporterAddr)
 	if err != nil {
-		return err
+		return math.ZeroInt(), err
 	}
 	defer iter.Close()
 
@@ -73,7 +78,7 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 	for ; iter.Valid(); iter.Next() {
 		selectorKey, err := iter.PrimaryKey()
 		if err != nil {
-			return err
+			return math.ZeroInt(), err
 		}
 		selectorAddr := sdk.AccAddress(selectorKey)
 		// Initialize variables for the current selector
@@ -99,7 +104,7 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 			return false
 		})
 		if err != nil {
-			return err
+			return math.ZeroInt(), err
 		}
 
 		// Accumulate total tokens for the reporter
@@ -113,16 +118,20 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 
 	// Check if reporter has enough stake to cover the fee
 	if fee.GT(reporterTotalTokens) {
-		return errors.New("insufficient stake to pay fee")
+		return math.ZeroInt(), errors.New("insufficient stake to pay fee")
 	}
 
-	feeTracker := make([]*types.TokenOriginInfo, 0)
+	var feeTracker []*types.TokenOriginInfo
 	totalTrackedAmount := math.ZeroInt()
 
 	// Process fee payment by unbonding shares from selectors' stake
 	// undelegate a proportional amount of tokens from each selector
 	for _, selectors := range selectorsList {
 		feeShareAmt := selectors.selectorTotalTokens.Quo(reporterTotalTokens).Mul(fee)
+		if !feeShareAmt.TruncateInt().IsPositive() {
+			// nothing unbondable from this selector's share
+			continue
+		}
 		unbondAmt := feeShareAmt
 
 		for _, info := range selectors.selectorInfo {
@@ -132,12 +141,15 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 			if stakeWithValidator.GTE(unbondAmt) {
 				sharesToUnbond, err := info.validator.SharesFromTokens(unbondAmt.TruncateInt())
 				if err != nil {
-					return err
+					return math.ZeroInt(), err
+				}
+				if sharesToUnbond.IsZero() {
+					break
 				}
 				// Unbond and move tokens out of validator
 				escrowedAmt, err := k.stakingKeeper.Unbond(ctx, selectors.delAddr, info.valAddr, sharesToUnbond)
 				if err != nil {
-					return err
+					return math.ZeroInt(), err
 				}
 				sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
 					sdk.NewEvent(
@@ -148,19 +160,26 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 						sdk.NewAttribute("amount", escrowedAmt.String()),
 					),
 				})
-				feeTracker = append(feeTracker, &types.TokenOriginInfo{
-					DelegatorAddress: selectors.delAddr.Bytes(),
-					ValidatorAddress: info.valAddr.Bytes(),
-					Amount:           escrowedAmt,
-				})
-				totalTrackedAmount = totalTrackedAmount.Add(escrowedAmt)
+				if escrowedAmt.IsPositive() {
+					totalTrackedAmount = totalTrackedAmount.Add(escrowedAmt)
+					if isFirstRound {
+						feeTracker = append(feeTracker, &types.TokenOriginInfo{
+							DelegatorAddress: selectors.delAddr.Bytes(),
+							ValidatorAddress: info.valAddr.Bytes(),
+							Amount:           escrowedAmt,
+						})
+					}
+				}
 				break
 			} else {
+				if info.shares.IsZero() {
+					continue
+				}
 				// Unbond all shares if not enough stake with the current validator then move to the next validator
 				unbondAmt = unbondAmt.Sub(stakeWithValidator)
 				escrowedAmt, err := k.stakingKeeper.Unbond(ctx, selectors.delAddr, info.valAddr, info.shares)
 				if err != nil {
-					return err
+					return math.ZeroInt(), err
 				}
 				sdk.UnwrapSDKContext(ctx).EventManager().EmitEvents(sdk.Events{
 					sdk.NewEvent(
@@ -171,12 +190,16 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 						sdk.NewAttribute("amount", escrowedAmt.String()),
 					),
 				})
-				feeTracker = append(feeTracker, &types.TokenOriginInfo{
-					DelegatorAddress: selectors.delAddr.Bytes(),
-					ValidatorAddress: info.valAddr.Bytes(),
-					Amount:           escrowedAmt,
-				})
-				totalTrackedAmount = totalTrackedAmount.Add(escrowedAmt)
+				if escrowedAmt.IsPositive() {
+					totalTrackedAmount = totalTrackedAmount.Add(escrowedAmt)
+					if isFirstRound {
+						feeTracker = append(feeTracker, &types.TokenOriginInfo{
+							DelegatorAddress: selectors.delAddr.Bytes(),
+							ValidatorAddress: info.valAddr.Bytes(),
+							Amount:           escrowedAmt,
+						})
+					}
+				}
 
 				if unbondAmt.IsZero() {
 					break
@@ -186,37 +209,37 @@ func (k Keeper) FeefromReporterStake(ctx context.Context, reporterAddr sdk.AccAd
 		}
 
 	}
-	prevTotal := math.ZeroInt()
-	trackerKey := feePaidFromStakePayerKey(hashId, reporterAddr)
-	if isFirstRound {
-		hasPaid, err := k.FeePaidFromStake.Has(ctx, trackerKey)
-		if err != nil {
-			return err
-		}
-		if hasPaid {
-			prevFeeTracker, err := k.FeePaidFromStake.Get(ctx, trackerKey)
-			if err != nil {
-				return err
-			}
-			feeTracker = append(feeTracker, prevFeeTracker.TokenOrigins...)
-			prevTotal = prevFeeTracker.Total
-		}
+	// a receipt must be a positive amount of coins and can never exceed the capped request
+	if !totalTrackedAmount.IsPositive() {
+		return math.ZeroInt(), errors.New("no stake was escrowed to pay fee")
 	}
-
+	if totalTrackedAmount.GT(amt) {
+		return math.ZeroInt(), fmt.Errorf("escrowed amount %s exceeds requested fee %s", totalTrackedAmount, amt)
+	}
 	// move the tokens from the bonded pool (in staking module) to the dispute module
 	if err := k.tokensToDispute(ctx, stakingtypes.BondedPoolName, totalTrackedAmount); err != nil {
-		return err
+		return math.ZeroInt(), err
 	}
 	// Only track the fee if this is round 1
 	if isFirstRound {
+		trackerKey := feePaidFromStakePayerKey(hashId, reporterAddr)
+		trackedTotal := totalTrackedAmount
+		prev, err := k.FeePaidFromStake.Get(ctx, trackerKey)
+		switch {
+		case err == nil:
+			feeTracker = append(feeTracker, prev.TokenOrigins...)
+			trackedTotal = trackedTotal.Add(prev.Total)
+		case !errors.Is(err, collections.ErrNotFound):
+			return math.ZeroInt(), err
+		}
 		if err := k.FeePaidFromStake.Set(ctx, trackerKey, types.DelegationsAmounts{
 			TokenOrigins: feeTracker,
-			Total:        totalTrackedAmount.Add(prevTotal),
+			Total:        trackedTotal,
 		}); err != nil {
-			return err
+			return math.ZeroInt(), err
 		}
 	}
-	return nil
+	return totalTrackedAmount, nil
 }
 
 // EscrowReporterStake moves tokens from the reporter's stake (from staking module) to the dispute module

@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	gomath "math"
-	"math/big"
 	"strconv"
 
 	layertypes "github.com/tellor-io/layer/types"
@@ -87,9 +86,10 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 	if msg.Fee.Amount.GT(disputeFee) {
 		msg.Fee.Amount = disputeFee
 	}
-	disputeFeeDec := math.LegacyNewDecFromInt(disputeFee)
-	fivePercentDec := disputeFeeDec.Mul(math.LegacyNewDec(1)).Quo(math.LegacyNewDec(20))
-	fivePercent := fivePercentDec.TruncateInt()
+	received, err := k.payDisputeFee(ctx, sender, msg.Fee, msg.PayFromBond, hashId[:], true)
+	if err != nil {
+		return err
+	}
 	dispute := types.Dispute{
 		HashId:            hashId[:],
 		DisputeId:         disputeId,
@@ -101,39 +101,22 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 		DisputeRound:      1,
 		SlashAmount:       disputeFee,
 		// burn amount is calculated as 5% of dispute fee
-		BurnAmount:      fivePercent,
+		BurnAmount:      disputeFee.QuoRaw(20),
 		DisputeFee:      disputeFee,
 		InitialEvidence: *report,
-		FeeTotal:        msg.Fee.Amount,
+		FeeTotal:        received,
 		PrevDisputeIds:  []uint64{disputeId},
 		Open:            true,
 		BlockNumber:     uint64(ctx.BlockHeight()),
 	}
 	if err := k.DisputeFeePayer.Set(ctx, collections.Join(dispute.DisputeId, sender.Bytes()), types.PayerInfo{
-		Amount:   msg.Fee.Amount,
+		Amount:   received,
 		FromBond: msg.PayFromBond,
 	}); err != nil {
 		return err
 	}
-	// Pay the dispute fee
-	if err := k.PayDisputeFee(ctx, sender, msg.Fee, msg.PayFromBond, dispute.HashId, true); err != nil {
+	if err := k.startRoundOneIfFunded(ctx, &dispute); err != nil {
 		return err
-	}
-
-	// if the paid fee is equal to the slash amount, then slash validator and jail
-	if dispute.FeeTotal.Equal(dispute.SlashAmount) {
-		if err := k.SlashAndJailReporter(ctx, dispute.InitialEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
-			return err
-		}
-		if err := k.adjustDisputeFeeToCollectedSlash(ctx, &dispute); err != nil {
-			return err
-		}
-		// extend dispute end time by 3 days, 2 for voting and 1 to allow for more rounds
-		dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
-		dispute.DisputeStatus = types.Voting
-		if err := k.SetStartVote(ctx, dispute.DisputeId); err != nil { // starting voting immediately
-			return err
-		}
 	}
 
 	ctx.EventManager().EmitEvents(sdk.Events{
@@ -143,7 +126,7 @@ func (k Keeper) SetNewDispute(ctx sdk.Context, sender sdk.AccAddress, msg types.
 			sdk.NewAttribute("reporter", msg.DisputedReporter),
 			sdk.NewAttribute("dispute_category", msg.DisputeCategory.String()),
 			sdk.NewAttribute("total_fee", dispute.DisputeFee.String()),
-			sdk.NewAttribute("fee_paid", msg.Fee.Amount.String()),
+			sdk.NewAttribute("fee_paid", received.String()),
 			sdk.NewAttribute("pay_from_bond", strconv.FormatBool(msg.PayFromBond)),
 			sdk.NewAttribute("dispute_id", strconv.FormatUint(disputeId, 10)),
 			sdk.NewAttribute("value", report.Value),
@@ -244,19 +227,15 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 		return fmt.Errorf("this dispute is expired, can't start new round %d", dispute.DisputeId)
 	}
 
-	if dispute.DisputeRound == 5 {
+	if dispute.DisputeRound >= 5 {
 		return fmt.Errorf("can't start a new round for this dispute %d; max dispute rounds has been reached %d", dispute.DisputeId, dispute.DisputeRound)
 	}
-	// fee calculates a fee by scaling a base amount (fivePercent) exponentially based on the given round,
-	// doubling for each successive round.
-	fee := func(fivePercent math.Int, round int64) math.Int {
-		base := new(big.Int).Exp(big.NewInt(2), big.NewInt(round), nil)
-		return fivePercent.Mul(math.NewIntFromBigInt(base))
+	// Scale before truncating to whole loya. A positive slash always costs
+	// at least one loya to appeal, even when the percentage rounds to zero.
+	roundFee := dispute.SlashAmount.MulRaw(1 << dispute.DisputeRound).QuoRaw(20)
+	if roundFee.IsZero() && dispute.SlashAmount.IsPositive() {
+		roundFee = math.OneInt()
 	}
-	disputeSlashAmountDec := math.LegacyNewDecFromInt(dispute.SlashAmount)
-	fivePercentDec := disputeSlashAmountDec.Mul(math.LegacyNewDec(1)).Quo(math.LegacyNewDec(20))
-	fivePercent := fivePercentDec.TruncateInt()
-	roundFee := fee(fivePercent, int64(dispute.DisputeRound))
 	if roundFee.GT(dispute.SlashAmount) {
 		roundFee = dispute.SlashAmount
 	}
@@ -269,8 +248,12 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 
 	// Pay the dispute fee. Later-round fees are fully consumed (never refunded), so they
 	// must not be tracked as refundable first-round stake.
-	if err := k.PayDisputeFee(ctx, sender, msg.Fee, msg.PayFromBond, dispute.HashId, false); err != nil {
+	received, err := k.payDisputeFee(ctx, sender, msg.Fee, msg.PayFromBond, dispute.HashId, false)
+	if err != nil {
 		return err
+	}
+	if !received.Equal(roundFee) {
+		return fmt.Errorf("appeal requires %s loya, stake payment yielded %s; pay from an account balance", roundFee, received)
 	}
 
 	if err := k.CloseDispute(ctx, dispute.DisputeId); err != nil {
@@ -279,8 +262,8 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 
 	prevDisputeId := dispute.DisputeId
 	dispute.BurnAmount = dispute.BurnAmount.Add(roundFee)
-	// FeeTotal is informationl only, tracks total fees paid across rounds.
-	dispute.FeeTotal = dispute.FeeTotal.Add(msg.Fee.Amount)
+	// FeeTotal tracks the retained fee and fees paid across later rounds.
+	dispute.FeeTotal = dispute.FeeTotal.Add(received)
 	disputeId := k.NextDisputeId(ctx)
 	dispute.DisputeId = disputeId
 	dispute.DisputeStatus = types.Voting // starting voting immediately
@@ -291,8 +274,7 @@ func (k Keeper) AddDisputeRound(ctx sdk.Context, sender sdk.AccAddress, dispute 
 	dispute.DisputeRound++
 	dispute.PrevDisputeIds = append(dispute.PrevDisputeIds, disputeId)
 
-	err := k.Disputes.Set(ctx, dispute.DisputeId, dispute)
-	if err != nil {
+	if err := k.Disputes.Set(ctx, dispute.DisputeId, dispute); err != nil {
 		return err
 	}
 	// re-snapshot the vote denominator for the new round (BlockInfo is keyed by HashId)

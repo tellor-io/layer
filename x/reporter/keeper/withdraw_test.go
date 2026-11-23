@@ -41,8 +41,9 @@ func TestFeefromReporterStake(t *testing.T) {
 	fee := math.NewIntWithDecimal(100, 6)
 	reporterAddr, selector1, selector2, selector3 := sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes(), sample.AccAddressBytes()
 
-	err := k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
+	got, err := k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
 	require.ErrorContains(t, err, "insufficient stake to pay fee")
+	require.True(t, got.IsZero())
 
 	require.NoError(t, k.Selectors.Set(ctx, selector1, types.NewSelection(reporterAddr, 1)))
 	require.NoError(t, k.Selectors.Set(ctx, selector2, types.NewSelection(reporterAddr, 1)))
@@ -91,8 +92,9 @@ func TestFeefromReporterStake(t *testing.T) {
 	sk.On("Unbond", ctx, selector3, sdk.ValAddress(reporterAddr), feeShare3).Return(tokenShare3.TruncateInt(), nil)
 
 	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", math.NewInt(99_999_999)))).Return(nil)
-	err = k.FeefromReporterStake(ctx, reporterAddr, math.NewIntWithDecimal(100, 6), []byte("hashId"), true)
+	got, err = k.FeefromReporterStake(ctx, reporterAddr, math.NewIntWithDecimal(100, 6), []byte("hashId"), true)
 	require.NoError(t, err)
+	require.Equal(t, math.NewInt(99_999_999), got)
 
 	feefromstake, err := k.FeePaidFromStakeByPayer(ctx, []byte("hashId"), reporterAddr)
 	require.NoError(t, err)
@@ -132,7 +134,9 @@ func TestFeefromReporterStakeFullyCoveredRecordsActualUnbondAmount(t *testing.T)
 	sk.On("Unbond", ctx, selector, valAddr, sharesToUnbond).Return(escrowedAmt, nil)
 	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", escrowedAmt))).Return(nil)
 
-	require.NoError(t, k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true))
+	got, err := k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
+	require.NoError(t, err)
+	require.Equal(t, escrowedAmt, got)
 
 	tracker, err := k.FeePaidFromStakeByPayer(ctx, []byte("hashId"), reporterAddr)
 	require.NoError(t, err)
@@ -175,16 +179,19 @@ func TestFeefromReporterStakeMultiplevalidators(t *testing.T) {
 	})
 
 	bk.On("SendCoinsFromModuleToModule", ctx, stakingtypes.BondedPoolName, "dispute", sdk.NewCoins(sdk.NewCoin("loya", fee))).Return(nil)
-	err := k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
+	got, err := k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
 	require.NoError(t, err)
+	require.Equal(t, fee, got)
 
 	feefromstake, err := k.FeePaidFromStakeByPayer(ctx, []byte("hashId"), reporterAddr)
 	require.NoError(t, err)
 	expected := fee
 	require.Equal(t, expected, feefromstake.Total)
 
-	err = k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
+	got, err = k.FeefromReporterStake(ctx, reporterAddr, fee, []byte("hashId"), true)
 	require.NoError(t, err)
+	// the receipt is this call's escrow, not the combined tracker total
+	require.Equal(t, fee, got)
 
 	feefromstake, err = k.FeePaidFromStakeByPayer(ctx, []byte("hashId"), reporterAddr)
 	require.NoError(t, err)

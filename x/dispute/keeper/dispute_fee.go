@@ -1,9 +1,11 @@
 package keeper
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strconv"
 
 	layertypes "github.com/tellor-io/layer/types"
@@ -16,37 +18,18 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// Pay fee from account
-func (k Keeper) PayFromAccount(ctx sdk.Context, addr sdk.AccAddress, fee sdk.Coin) error {
-	if !k.bankKeeper.HasBalance(ctx, addr, fee) {
-		return types.INSUFFICIENT_BALANCE
-	}
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, addr, types.ModuleName, sdk.NewCoins(fee)); err != nil {
-		return fmt.Errorf("fee payment failed: %w", err)
-	}
-	return nil
-}
-
-// Pay fee from validator's bond can only be called by the validator itself
-func (k Keeper) PayFromBond(ctx sdk.Context, reporterAddr sdk.AccAddress, fee sdk.Coin, hashId []byte, isFirstRound bool) error {
-	return k.reporterKeeper.FeefromReporterStake(ctx, reporterAddr, fee.Amount, hashId, isFirstRound)
-}
-
-// Pay dispute fee
-func (k Keeper) PayDisputeFee(ctx sdk.Context, proposer sdk.AccAddress, fee sdk.Coin, fromBond bool, hashId []byte, isFirstRound bool) error {
+// payDisputeFee returns the coins transferred, not the requested amount.
+func (k Keeper) payDisputeFee(ctx sdk.Context, payer sdk.AccAddress, fee sdk.Coin, fromBond bool, hashId []byte, isFirstRound bool) (math.Int, error) {
 	if fromBond {
-		// pay fee from given validator
-		err := k.PayFromBond(ctx, proposer, fee, hashId, isFirstRound)
-		if err != nil {
-			return err
-		}
-	} else {
-		err := k.PayFromAccount(ctx, proposer, fee)
-		if err != nil {
-			return err
-		}
+		return k.reporterKeeper.FeefromReporterStake(ctx, payer, fee.Amount, hashId, isFirstRound)
 	}
-	return nil
+	if !k.bankKeeper.HasBalance(ctx, payer, fee) {
+		return math.Int{}, types.INSUFFICIENT_BALANCE
+	}
+	if err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, payer, types.ModuleName, sdk.NewCoins(fee)); err != nil {
+		return math.Int{}, fmt.Errorf("fee payment failed: %w", err)
+	}
+	return fee.Amount, nil
 }
 
 // return slashed tokens when reporter either wins dispute or dispute is invalid
@@ -74,115 +57,101 @@ func (k Keeper) sendStakeReturnsToPools(ctx context.Context, bondedAmt, unbonded
 }
 
 type roundPayer struct {
-	addr sdk.AccAddress
-	info types.PayerInfo
+	addr     sdk.AccAddress
+	info     types.PayerInfo
+	received math.Int
 }
 
-// feeRoundingDust is the largest gap between escrowed slash and fee coins on
-// hand that share rounding can explain. One unbond truncates by at most a
-// loya; this covers a payer whose fee came from many delegations.
-const feeRoundingDust int64 = 100
+func (k Keeper) startRoundOneIfFunded(ctx sdk.Context, dispute *types.Dispute) error {
+	quote := dispute.SlashAmount
+	if dispute.FeeTotal.LT(quote) {
+		return nil
+	}
 
-// adjustDisputeFeeToCollectedSlash runs after round-1 escrow. When the coins
-// actually escrowed are below the quote, the dispute is rewritten to the coins
-// that can back that slash and each round-1 payer's excess is returned in this
-// transaction. From-bond payers are scaled on the coins actually unbonded, so a
-// few loya of share rounding does not fail the dispute. A collected total at or
-// above the quote leaves the quoted fee unchanged.
-func (k Keeper) adjustDisputeFeeToCollectedSlash(ctx sdk.Context, dispute *types.Dispute) error {
+	// Pre-upgrade Prevote disputes can show the quote paid even though the
+	// reporter module received less. Reopen the difference before any slash.
+	payers, paid, err := k.roundOneReceipts(ctx, dispute.DisputeId, dispute.HashId, true)
+	if err != nil {
+		return err
+	}
+	dispute.FeeTotal = paid
+	if paid.LT(quote) {
+		return k.applyRoundOneReceipts(ctx, dispute, payers, paid, paid)
+	}
+
+	if err := k.SlashAndJailReporter(ctx, dispute.InitialEvidence, dispute.DisputeCategory, dispute.HashId); err != nil {
+		return err
+	}
 	collected, err := k.reporterKeeper.DisputedDelegationTotal(ctx, dispute.HashId)
 	if err != nil {
 		return err
 	}
-	// Equal is the usual escrow result. Return before loading payers or refunding.
-	// A collected total above the quote keeps the quoted fee too.
-	if collected.IsNil() || collected.Equal(dispute.SlashAmount) || collected.GT(dispute.SlashAmount) {
-		return nil
-	}
-
-	quote := dispute.SlashAmount
-	payers, err := k.roundOnePayers(ctx, dispute.DisputeId)
-	if err != nil {
+	retain := math.MinInt(quote, collected)
+	if err := k.applyRoundOneReceipts(ctx, dispute, payers, paid, retain); err != nil {
 		return err
 	}
-	available := make([]math.Int, len(payers))
-	availableTotal := math.ZeroInt()
-	for i, payer := range payers {
-		have, err := k.roundPayerAvailable(ctx, dispute.HashId, payer)
-		if err != nil {
-			return err
-		}
-		available[i] = have
-		availableTotal = availableTotal.Add(have)
+	burn := retain.QuoRaw(20)
+	if !retain.Equal(quote) || paid.GT(retain) {
+		ctx.EventManager().EmitEvent(sdk.NewEvent("dispute_fee_adjusted",
+			sdk.NewAttribute("dispute_id", strconv.FormatUint(dispute.DisputeId, 10)),
+			sdk.NewAttribute("quote", quote.String()),
+			sdk.NewAttribute("collected", collected.String()),
+			sdk.NewAttribute("retained_fee", retain.String()),
+			sdk.NewAttribute("burn_amount", burn.String()),
+		))
 	}
-	if !availableTotal.IsPositive() {
-		return fmt.Errorf("collected slash %s cannot be scaled across round-1 fees %s", collected, availableTotal)
-	}
-
-	// The slash can only be matched by coins the module actually received.
-	// A shortfall of a few loya is share rounding: keep every fee coin and size
-	// the dispute to that. The escrow snapshot stays at the real collected total.
-	retain := collected
-	if !collected.LT(availableTotal) {
-		shortfall := collected.Sub(availableTotal)
-		if shortfall.GT(math.NewInt(feeRoundingDust)) {
-			return fmt.Errorf("collected slash %s exceeds round-1 fees on hand %s", collected, availableTotal)
-		}
-		retain = availableTotal
-	}
-	keptShares := available
-	if retain.LT(availableTotal) {
-		keptShares = proportionalKeptAmounts(available, availableTotal, retain)
-	}
-	burn := math.LegacyNewDecFromInt(retain).Mul(math.LegacyNewDec(1)).Quo(math.LegacyNewDec(20)).TruncateInt()
 	dispute.SlashAmount = retain
 	dispute.DisputeFee = retain
 	dispute.FeeTotal = retain
 	dispute.BurnAmount = burn
+	dispute.DisputeEndTime = ctx.BlockTime().Add(THREE_DAYS)
+	dispute.DisputeStatus = types.Voting
+	return k.SetStartVote(ctx, dispute.DisputeId)
+}
 
-	attrs := []sdk.Attribute{
-		sdk.NewAttribute("dispute_id", strconv.FormatUint(dispute.DisputeId, 10)),
-		sdk.NewAttribute("quote", quote.String()),
-		sdk.NewAttribute("collected", collected.String()),
-		sdk.NewAttribute("burn_amount", burn.String()),
+// applyRoundOneReceipts reconciles credits and returns any surplus over the
+// retained fee. When funding is still short, retain is the full receipt total.
+func (k Keeper) applyRoundOneReceipts(ctx sdk.Context, dispute *types.Dispute, payers []roundPayer, paid, retain math.Int) error {
+	var keptShares []math.Int
+	var disputeID string
+	if retain.LT(paid) {
+		keptShares = proportionalKeptAmounts(payers, paid, retain)
+		disputeID = strconv.FormatUint(dispute.DisputeId, 10)
 	}
+
 	for i, payer := range payers {
-		kept := keptShares[i]
-		have := available[i]
-		if kept.GT(have) {
-			return fmt.Errorf("scaled dispute fee share %s exceeds payer coins %s", kept, have)
+		kept := payer.received
+		if keptShares != nil {
+			kept = keptShares[i]
 		}
-		excess := have.Sub(kept)
-		refunded := excess
-		if excess.IsPositive() {
-			if payer.info.FromBond {
-				bondedAmt, unbondedAmt, err := k.reporterKeeper.ReturnFeeExcess(ctx, dispute.HashId, payer.addr, excess, kept)
-				if err != nil {
-					return err
-				}
-				if err := k.sendStakeReturnsToPools(ctx, bondedAmt, unbondedAmt); err != nil {
-					return err
-				}
-				remaining, err := k.reporterKeeper.FeePaidFromStakeByPayer(ctx, dispute.HashId, payer.addr)
-				if err != nil {
-					if !errors.Is(err, collections.ErrNotFound) {
-						return err
-					}
-					kept = math.ZeroInt()
-				} else if remaining.Total.IsNil() || !remaining.Total.IsPositive() {
-					kept = math.ZeroInt()
-				} else {
-					kept = remaining.Total
-				}
-				refunded = have.Sub(kept)
-			} else if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, payer.addr, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, excess))); err != nil {
+		if kept.IsPositive() && keptShares == nil && kept.Equal(payer.info.Amount) {
+			continue
+		}
+		excess := payer.received.Sub(kept)
+		if payer.info.FromBond && (excess.IsPositive() || kept.IsZero()) {
+			bonded, unbonded, err := k.reporterKeeper.ReturnFeeExcess(ctx, dispute.HashId, payer.addr, excess, kept)
+			if err != nil {
+				return err
+			}
+			if err := k.sendStakeReturnsToPools(ctx, bonded, unbonded); err != nil {
+				return err
+			}
+		} else if excess.IsPositive() {
+			if err := k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, payer.addr, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, excess))); err != nil {
 				return err
 			}
 		}
-		attrs = append(attrs,
-			sdk.NewAttribute("payer", payer.addr.String()),
-			sdk.NewAttribute("refund", refunded.String()),
-		)
+		if keptShares != nil {
+			ctx.EventManager().EmitEvent(sdk.NewEvent("dispute_fee_payer_adjusted",
+				sdk.NewAttribute("dispute_id", disputeID),
+				sdk.NewAttribute("payer", payer.addr.String()),
+				sdk.NewAttribute("refund", excess.String()),
+				sdk.NewAttribute("retained_fee", kept.String()),
+			))
+		}
+		if kept.IsPositive() && kept.Equal(payer.info.Amount) {
+			continue
+		}
 		payerKey := collections.Join(dispute.DisputeId, payer.addr.Bytes())
 		if !kept.IsPositive() {
 			if err := k.DisputeFeePayer.Remove(ctx, payerKey); err != nil {
@@ -195,95 +164,112 @@ func (k Keeper) adjustDisputeFeeToCollectedSlash(ctx sdk.Context, dispute *types
 			return err
 		}
 	}
-
-	ctx.EventManager().EmitEvent(sdk.NewEvent("dispute_fee_adjusted", attrs...))
 	return nil
 }
 
-// roundPayerAvailable is the coins a round-1 payer actually put in the module.
-// An account payment is exact. A from-bond payment is the unbonded tracker, which
-// can differ by a few loya from the amount recorded on the payer.
-func (k Keeper) roundPayerAvailable(ctx sdk.Context, hashId []byte, payer roundPayer) (math.Int, error) {
-	if !payer.info.FromBond {
-		if payer.info.Amount.IsNil() || payer.info.Amount.IsNegative() {
-			return math.Int{}, fmt.Errorf("round-1 fee payer %s has a negative amount", payer.addr)
-		}
-		return payer.info.Amount, nil
-	}
-	tracked, err := k.reporterKeeper.FeePaidFromStakeByPayer(ctx, hashId, payer.addr)
-	if err != nil {
-		return math.Int{}, err
-	}
-	if tracked.Total.IsNil() || tracked.Total.IsNegative() {
-		return math.Int{}, fmt.Errorf("from-bond fee tracker for payer %s is negative", payer.addr)
-	}
-	return tracked.Total, nil
-}
-
-func (k Keeper) roundOnePayers(ctx sdk.Context, disputeID uint64) ([]roundPayer, error) {
+// roundOneReceipts attributes only coins held for this dispute. Funding
+// collects isolated payer receipts so it can rewrite them. Settlement needs
+// only the total and can read a hash-only tracker for a sole bonded payer.
+func (k Keeper) roundOneReceipts(ctx context.Context, disputeID uint64, hashId []byte, collectPayers bool) ([]roundPayer, math.Int, error) {
 	rng := collections.NewPrefixedPairRange[uint64, []byte](disputeID)
 	iter, err := k.DisputeFeePayer.Iterate(ctx, rng)
 	if err != nil {
-		return nil, err
+		return nil, math.Int{}, err
 	}
 	defer iter.Close()
+	if !iter.Valid() {
+		return nil, math.Int{}, fmt.Errorf("no round-one fee receipts for dispute %d", disputeID)
+	}
 
-	payers := make([]roundPayer, 0)
+	var payers []roundPayer
+	var hashOnlyPayer sdk.AccAddress
+	paid := math.ZeroInt()
+	bondPayers := 0
 	for ; iter.Valid(); iter.Next() {
 		key, err := iter.Key()
 		if err != nil {
-			return nil, err
+			return nil, math.Int{}, err
 		}
 		info, err := iter.Value()
 		if err != nil {
-			return nil, err
+			return nil, math.Int{}, err
 		}
-		addrBytes := make([]byte, len(key.K2()))
-		copy(addrBytes, key.K2())
-		payers = append(payers, roundPayer{addr: addrBytes, info: info})
+		addr := sdk.AccAddress(key.K2())
+		received := info.Amount
+		if info.FromBond {
+			bondPayers++
+			tracked, err := k.reporterKeeper.FeePaidFromStakeByPayer(ctx, hashId, addr)
+			if err != nil {
+				if collectPayers || hashOnlyPayer != nil || !errors.Is(err, collections.ErrNotFound) {
+					return nil, math.Int{}, fmt.Errorf("round-one stake receipt for dispute %d, payer %s: %w", disputeID, addr, err)
+				}
+				hashOnlyPayer = bytes.Clone(addr)
+				continue
+			}
+			received = tracked.Total
+		}
+		if received.IsNil() || received.IsNegative() {
+			return nil, math.Int{}, fmt.Errorf("invalid round-one fee receipt for dispute %d, payer %s", disputeID, addr)
+		}
+		paid = paid.Add(received)
+		if collectPayers {
+			// BytesKey decodes a view of the iterator key; retain it after Close.
+			payers = append(payers, roundPayer{addr: bytes.Clone(addr), info: info, received: received})
+		}
 	}
-	return payers, nil
+	if hashOnlyPayer != nil {
+		if bondPayers != 1 {
+			return nil, math.Int{}, fmt.Errorf("cannot attribute hash-only stake receipt for dispute %d with multiple bonded payers", disputeID)
+		}
+		received, err := k.reporterKeeper.FeePaidFromStakeTotalByPayer(ctx, hashId, hashOnlyPayer)
+		if err != nil {
+			return nil, math.Int{}, err
+		}
+		if received.IsNil() || received.IsNegative() {
+			return nil, math.Int{}, fmt.Errorf("invalid hash-only stake receipt for dispute %d", disputeID)
+		}
+		paid = paid.Add(received)
+	}
+	return payers, paid, nil
 }
 
 // proportionalKeptAmounts splits collected across payers in proportion to what
-// they paid. Largest-remainder rounding makes the kept shares sum to collected.
-func proportionalKeptAmounts(paid []math.Int, paidTotal, collected math.Int) []math.Int {
-	type share struct {
-		amount    math.Int
+// they paid. Largest-remainder rounding makes the kept shares sum to collected;
+// ties keep the payer's order in the store.
+func proportionalKeptAmounts(payers []roundPayer, paidTotal, collected math.Int) []math.Int {
+	type rankedShare struct {
+		index     int
 		remainder math.Int
 	}
-	shares := make([]share, len(paid))
+	out := make([]math.Int, len(payers))
+	ranked := make([]rankedShare, 0, len(payers))
 	distributed := math.ZeroInt()
-	for i, amount := range paid {
-		scaled := amount.Mul(collected)
-		shares[i] = share{
-			amount:    scaled.Quo(paidTotal),
-			remainder: scaled.Mod(paidTotal),
+	for i, payer := range payers {
+		scaled := payer.received.Mul(collected)
+		out[i] = scaled.Quo(paidTotal)
+		distributed = distributed.Add(out[i])
+		if remainder := scaled.Mod(paidTotal); remainder.IsPositive() {
+			ranked = append(ranked, rankedShare{index: i, remainder: remainder})
 		}
-		distributed = distributed.Add(shares[i].amount)
 	}
-
-	for dust := collected.Sub(distributed); dust.IsPositive(); dust = dust.Sub(math.OneInt()) {
-		best := -1
-		for i := range shares {
-			if !shares[i].remainder.IsPositive() {
-				continue
-			}
-			if best == -1 || shares[i].remainder.GT(shares[best].remainder) {
-				best = i
-			}
-		}
-		if best == -1 {
-			shares[0].amount = shares[0].amount.Add(dust)
-			break
-		}
-		shares[best].amount = shares[best].amount.Add(math.OneInt())
-		shares[best].remainder = math.ZeroInt()
+	dust := collected.Sub(distributed).Uint64()
+	if dust == 0 {
+		return out
 	}
-
-	out := make([]math.Int, len(shares))
-	for i, payerShare := range shares {
-		out[i] = payerShare.amount
+	slices.SortFunc(ranked, func(a, b rankedShare) int {
+		switch {
+		case a.remainder.GT(b.remainder):
+			return -1
+		case a.remainder.LT(b.remainder):
+			return 1
+		default:
+			return a.index - b.index
+		}
+	})
+	// Each positive remainder contributes less than one loya to dust, so
+	// there are enough distinct ranked payers to assign it without rescans.
+	for _, payer := range ranked[:dust] {
+		out[payer.index] = out[payer.index].AddRaw(1)
 	}
 	return out
 }

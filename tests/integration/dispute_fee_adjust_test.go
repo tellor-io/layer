@@ -119,40 +119,35 @@ func (s *IntegrationTestSuite) payerInfo(disputeID uint64, payer sdk.AccAddress)
 func (s *IntegrationTestSuite) requireAdjustedEvent(disputeID uint64, quote, collected, burn math.Int, refunds map[string]math.Int) {
 	disputeIDStr := strconv.FormatUint(disputeID, 10)
 	found := false
+	got := make(map[string]string, len(refunds))
 	for _, ev := range s.Setup.Ctx.EventManager().Events() {
-		if ev.Type != "dispute_fee_adjusted" {
+		if ev.Type != "dispute_fee_adjusted" && ev.Type != "dispute_fee_payer_adjusted" {
 			continue
 		}
-		attrs := map[string]string{}
-		var payers, refundVals []string
+		attrs := make(map[string]string, len(ev.Attributes))
 		for _, attr := range ev.Attributes {
-			switch attr.Key {
-			case "payer":
-				payers = append(payers, attr.Value)
-			case "refund":
-				refundVals = append(refundVals, attr.Value)
-			default:
-				attrs[attr.Key] = attr.Value
-			}
+			s.NotContains(attrs, attr.Key, "%s must survive consumer key deduplication", ev.Type)
+			attrs[attr.Key] = attr.Value
 		}
 		if attrs["dispute_id"] != disputeIDStr {
 			continue
 		}
+		if ev.Type == "dispute_fee_payer_adjusted" {
+			s.NotContains(got, attrs["payer"], "one event per payer")
+			got[attrs["payer"]] = attrs["refund"]
+			continue
+		}
+		s.False(found, "one summary per dispute")
 		found = true
 		s.Equal(quote.String(), attrs["quote"])
 		s.Equal(collected.String(), attrs["collected"])
 		s.Equal(burn.String(), attrs["burn_amount"])
-		s.Equal(len(refunds), len(payers))
-		s.Equal(len(payers), len(refundVals))
-		got := make(map[string]string, len(payers))
-		for i := range payers {
-			got[payers[i]] = refundVals[i]
-		}
-		for addr, amt := range refunds {
-			s.Equal(amt.String(), got[addr])
-		}
 	}
 	s.True(found, "missing dispute_fee_adjusted event")
+	s.Len(got, len(refunds))
+	for addr, amt := range refunds {
+		s.Equal(amt.String(), got[addr], "refund for %s", addr)
+	}
 }
 
 func (s *IntegrationTestSuite) disputeEventAttr(eventType string, disputeID uint64, key string) (string, bool) {
@@ -411,78 +406,6 @@ func (s *IntegrationTestSuite) TestAdjustedFeeReporterWinDrainsModule() {
 	s.True(winLeft.LTE(math.NewInt(2)), "reporter-win settlement left %s above the earlier dispute", winLeft)
 }
 
-func (s *IntegrationTestSuite) TestFromBondExcessAtMaxUnbondingEntriesBondsPastCap() {
-	fx := s.newReportedStake()
-	accountPayer := sample.AccAddressBytes()
-	s.Setup.MintTokens(accountPayer, math.NewInt(300_000_000))
-	_, quote := s.fundMinorThenMajor(fx, accountPayer)
-
-	bondVal := fx.vals[1]
-	bondPayer := sample.AccAddressBytes()
-	s.delegate(bondPayer, bondVal, math.NewInt(50_000_000))
-	s.registerSelfReporter(bondPayer)
-
-	params, err := s.Setup.Reporterkeeper.Params.Get(s.Setup.Ctx)
-	s.NoError(err)
-	params.MaxValidatorPowerShare = math.LegacyNewDecWithPrec(1, 6)
-	s.NoError(s.Setup.Reporterkeeper.Params.Set(s.Setup.Ctx, params))
-
-	maxEntries, err := s.Setup.Stakingkeeper.MaxEntries(s.Setup.Ctx)
-	s.NoError(err)
-	for i := uint32(0); i < maxEntries; i++ {
-		_, err = s.Setup.Stakingkeeper.SetUnbondingDelegationEntry(
-			s.Setup.Ctx,
-			bondPayer,
-			bondVal,
-			int64(i+1),
-			s.Setup.Ctx.BlockTime().Add(time.Duration(i+1)*time.Hour),
-			math.NewInt(1),
-		)
-		s.NoError(err)
-	}
-	hasMax, err := s.Setup.Stakingkeeper.HasMaxUnbondingDelegationEntries(s.Setup.Ctx, bondPayer, bondVal)
-	s.NoError(err)
-	s.True(hasMax)
-
-	accountShare := quote.MulRaw(60).QuoRaw(100)
-	bondShare := quote.Sub(accountShare)
-	partial := s.proposeDispute(fx.report, disputetypes.Major, accountPayer, accountShare, false)
-	s.Equal(disputetypes.Prevote, partial.DisputeStatus)
-
-	bankBefore := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, bondPayer, s.Setup.Denom).Amount
-	delegationBefore := s.delegationTokens(bondPayer, bondVal)
-	unbondingBefore := s.unbondingBalance(bondPayer)
-
-	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
-	_, err = msgServer.AddFeeToDispute(s.Setup.Ctx, &disputetypes.MsgAddFeeToDispute{
-		Creator:     bondPayer.String(),
-		DisputeId:   partial.DisputeId,
-		Amount:      sdk.NewCoin(s.Setup.Denom, bondShare),
-		PayFromBond: true,
-	})
-	s.NoError(err)
-
-	major, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, partial.DisputeId)
-	s.NoError(err)
-	snap, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(s.Setup.Ctx, major.HashId)
-	s.NoError(err)
-	collected := snap.Total
-	s.True(collected.LT(quote))
-	s.Equal(collected, major.SlashAmount)
-	s.Equal(collected, major.DisputeFee)
-	s.Equal(disputetypes.Voting, major.DisputeStatus)
-
-	bondKept := bondShare.Mul(collected).Quo(quote)
-	s.Equal(bondKept, s.payerInfo(major.DisputeId, bondPayer).Amount)
-	s.True(s.payerInfo(major.DisputeId, bondPayer).FromBond)
-	s.Equal(bankBefore, s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, bondPayer, s.Setup.Denom).Amount)
-	s.Equal(unbondingBefore, s.unbondingBalance(bondPayer))
-	ubd, err := s.Setup.Stakingkeeper.GetUnbondingDelegation(s.Setup.Ctx, bondPayer, bondVal)
-	s.NoError(err)
-	s.Equal(int(maxEntries), len(ubd.Entries))
-	s.True(delegationBefore.Sub(s.delegationTokens(bondPayer, bondVal)).Sub(bondKept).Abs().LTE(math.OneInt()))
-}
-
 func feePaidFromStakePayerKey(hashId []byte, payer sdk.AccAddress) []byte {
 	const prefix = "fee-paid-from-stake-payer\x00"
 	key := make([]byte, 0, len(prefix)+4+len(hashId)+len(payer))
@@ -551,64 +474,6 @@ func (s *IntegrationTestSuite) leaveReporterSlashable(fx reportedStake, left mat
 	s.NoError(s.Setup.Stakingkeeper.RemoveUnbondingDelegation(s.Setup.Ctx, ubd))
 	s.True(s.delegationTokens(fx.reporter, fx.val).LTE(left))
 	s.True(s.delegationTokens(fx.reporter, fx.val).IsPositive())
-}
-
-func (s *IntegrationTestSuite) TestFromBondTrackerShortfallStillRefunds() {
-	fx := s.newReportedStake()
-	accountPayer := sample.AccAddressBytes()
-	s.Setup.MintTokens(accountPayer, math.NewInt(300_000_000))
-	minorHeld, quote := s.fundMinorThenMajor(fx, accountPayer)
-
-	bondVal := fx.vals[1]
-	bondPayer := sample.AccAddressBytes()
-	s.delegate(bondPayer, bondVal, math.NewInt(50_000_000))
-	s.registerSelfReporter(bondPayer)
-
-	bondShare := math.NewInt(20_000_000)
-	partial := s.proposeDispute(fx.report, disputetypes.Major, bondPayer, bondShare, true)
-	s.Equal(disputetypes.Prevote, partial.DisputeStatus)
-
-	dust := math.NewInt(2)
-	available := s.adjustFromBondTracker(partial.HashId, bondPayer, dust.Neg())
-	s.adjustDisputeModuleBalance(dust.Neg())
-
-	msgServer := keeper.NewMsgServerImpl(s.Setup.Disputekeeper)
-	_, err := msgServer.AddFeeToDispute(s.Setup.Ctx, &disputetypes.MsgAddFeeToDispute{
-		Creator:     accountPayer.String(),
-		DisputeId:   partial.DisputeId,
-		Amount:      sdk.NewCoin(s.Setup.Denom, quote.Sub(bondShare)),
-		PayFromBond: false,
-	})
-	s.NoError(err)
-
-	major, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, partial.DisputeId)
-	s.NoError(err)
-	snap, err := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(s.Setup.Ctx, major.HashId)
-	s.NoError(err)
-	collected := snap.Total
-	s.True(collected.LT(quote))
-	s.Equal(collected, major.SlashAmount)
-	s.Equal(collected, major.DisputeFee)
-	s.Equal(disputetypes.Voting, major.DisputeStatus)
-
-	bondInfo := s.payerInfo(major.DisputeId, bondPayer)
-	s.True(bondInfo.FromBond)
-	tracked, err := s.Setup.Reporterkeeper.FeePaidFromStakeByPayer(s.Setup.Ctx, major.HashId, bondPayer)
-	s.NoError(err)
-	s.Equal(bondInfo.Amount, tracked.Total)
-	refund := available.Total.Sub(bondInfo.Amount)
-	s.True(refund.IsPositive())
-	accountInfo := s.payerInfo(major.DisputeId, accountPayer)
-	s.requireAdjustedEvent(major.DisputeId, quote, collected, major.BurnAmount, map[string]math.Int{
-		accountPayer.String(): quote.Sub(bondShare).Sub(accountInfo.Amount),
-		bondPayer.String():    refund,
-	})
-	s.Equal(collected, bondInfo.Amount.Add(accountInfo.Amount))
-
-	s.settleSupport(major, accountPayer, bondPayer)
-	left := s.moduleBalance().Sub(minorHeld)
-	s.True(!left.IsNegative())
-	s.True(left.LTE(math.NewInt(2)), "shortfall settlement left %s above the earlier dispute", left)
 }
 
 func (s *IntegrationTestSuite) TestFromBondTrackerSurplusRoundsToZeroAndReturns() {
@@ -710,101 +575,6 @@ func (s *IntegrationTestSuite) TestAdjustedFeeInvalidVoteDrainsModule() {
 	s.True(invalidLeft.LTE(math.NewInt(2)), "invalid settlement left %s above the earlier dispute", invalidLeft)
 }
 
-func (s *IntegrationTestSuite) TestFeeShortfallBeyondDustRevertsFunding() {
-	fx := s.newReportedStake()
-	quote := fx.stake
-	// Escrow comes in under the quote, so adjust does not take the full-collection
-	// early return, but it still exceeds the coins on hand by more than the dust limit.
-	s.leaveReporterSlashable(fx, quote.Sub(math.NewInt(80)))
-	bondPayer := sample.AccAddressBytes()
-	s.delegate(bondPayer, fx.vals[1], quote)
-	s.registerSelfReporter(bondPayer)
-	accountPayer := sample.AccAddressBytes()
-	remainder := math.NewInt(1_000)
-	s.Setup.MintTokens(accountPayer, remainder)
-
-	opening := quote.Sub(remainder)
-	partial := s.proposeDispute(fx.report, disputetypes.Major, bondPayer, opening, true)
-	s.Equal(disputetypes.Prevote, partial.DisputeStatus)
-
-	gap := math.NewInt(250)
-	s.adjustFromBondTracker(partial.HashId, bondPayer, gap.Neg())
-	s.adjustDisputeModuleBalance(gap.Neg())
-
-	moduleBefore := s.moduleBalance()
-	accountBefore := s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, accountPayer, s.Setup.Denom).Amount
-	_, snapErr := s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(s.Setup.Ctx, partial.HashId)
-	s.Error(snapErr)
-
-	// BaseApp drops the cache when the message returns an error. Discarding it here
-	// is that same rollback: slash and the completing fee must not survive.
-	cacheCtx, _ := s.Setup.Ctx.CacheContext()
-	_, err := keeper.NewMsgServerImpl(s.Setup.Disputekeeper).AddFeeToDispute(cacheCtx, &disputetypes.MsgAddFeeToDispute{
-		Creator:     accountPayer.String(),
-		DisputeId:   partial.DisputeId,
-		Amount:      sdk.NewCoin(s.Setup.Denom, remainder),
-		PayFromBond: false,
-	})
-	s.Error(err)
-	s.Contains(err.Error(), "exceeds round-1 fees on hand")
-
-	stored, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, partial.DisputeId)
-	s.NoError(err)
-	s.Equal(disputetypes.Prevote, stored.DisputeStatus)
-	s.Equal(opening, stored.FeeTotal)
-	s.Equal(quote, stored.SlashAmount)
-	_, snapErr = s.Setup.Reporterkeeper.DisputedDelegationAmounts.Get(s.Setup.Ctx, partial.HashId)
-	s.Error(snapErr)
-	_, payerErr := s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(partial.DisputeId, accountPayer.Bytes()))
-	s.Error(payerErr)
-	s.Equal(accountBefore, s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, accountPayer, s.Setup.Denom).Amount)
-	s.Equal(moduleBefore, s.moduleBalance())
-}
-
-func (s *IntegrationTestSuite) TestFullCollectionSkipsTrackerShortfall() {
-	fx := s.newReportedStake()
-	quote := fx.stake
-	moduleBefore := s.moduleBalance()
-	bondPayer := sample.AccAddressBytes()
-	s.delegate(bondPayer, fx.vals[1], quote)
-	s.registerSelfReporter(bondPayer)
-	accountPayer := sample.AccAddressBytes()
-	remainder := math.NewInt(1_000)
-	s.Setup.MintTokens(accountPayer, remainder)
-
-	opening := quote.Sub(remainder)
-	partial := s.proposeDispute(fx.report, disputetypes.Major, bondPayer, opening, true)
-	s.Equal(disputetypes.Prevote, partial.DisputeStatus)
-	// Larger than feeRoundingDust. Full escrow skips that check and leaves the
-	// payer record at the requested fee; withdraw uses the shorter tracker.
-	s.adjustFromBondTracker(partial.HashId, bondPayer, math.NewInt(-150))
-	s.adjustDisputeModuleBalance(math.NewInt(-150))
-
-	_, err := keeper.NewMsgServerImpl(s.Setup.Disputekeeper).AddFeeToDispute(s.Setup.Ctx, &disputetypes.MsgAddFeeToDispute{
-		Creator:     accountPayer.String(),
-		DisputeId:   partial.DisputeId,
-		Amount:      sdk.NewCoin(s.Setup.Denom, remainder),
-		PayFromBond: false,
-	})
-	s.NoError(err)
-
-	major, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, partial.DisputeId)
-	s.NoError(err)
-	s.Equal(disputetypes.Voting, major.DisputeStatus)
-	s.Equal(quote, major.SlashAmount)
-	s.Equal(quote, major.DisputeFee)
-	s.Equal(quote, major.FeeTotal)
-	s.Equal(opening, s.payerInfo(major.DisputeId, bondPayer).Amount)
-	tracked, err := s.Setup.Reporterkeeper.FeePaidFromStakeByPayer(s.Setup.Ctx, major.HashId, bondPayer)
-	s.NoError(err)
-	s.True(opening.Sub(tracked.Total).GT(math.NewInt(100)))
-
-	s.settleSupport(major, accountPayer, bondPayer)
-	left := s.moduleBalance().Sub(moduleBefore)
-	s.True(!left.IsNegative())
-	s.True(left.LTE(math.NewInt(2)), "full-collection settlement left %s", left)
-}
-
 func (s *IntegrationTestSuite) TestZeroCollectedSlashRejectsDispute() {
 	fx := s.newReportedStake()
 	s.removeAllReporterStake(fx)
@@ -815,55 +585,41 @@ func (s *IntegrationTestSuite) TestZeroCollectedSlashRejectsDispute() {
 	moduleBefore := s.moduleBalance()
 	disputeID := s.Setup.Disputekeeper.NextDisputeId(s.Setup.Ctx)
 
-	// Escrow rejects a slash that collects nothing. BaseApp drops that cache,
-	// so the fee payment and the dispute must not survive.
-	cacheCtx, _ := s.Setup.Ctx.CacheContext()
-	_, err := keeper.NewMsgServerImpl(s.Setup.Disputekeeper).ProposeDispute(cacheCtx, &disputetypes.MsgProposeDispute{
+	// Execute the message through BaseApp's actual finalize transaction path.
+	// The handler takes the fee before it discovers that no slash can be collected.
+	txConfig := s.Setup.NewTxConfig()
+	builder := txConfig.NewTxBuilder()
+	s.Require().NoError(builder.SetMsgs(&disputetypes.MsgProposeDispute{
 		Creator:          payer.String(),
 		DisputedReporter: fx.report.Reporter,
 		ReportMetaId:     fx.report.MetaId,
 		ReportQueryId:    hex.EncodeToString(fx.report.QueryId),
 		DisputeCategory:  disputetypes.Major,
 		Fee:              sdk.NewCoin(s.Setup.Denom, quote),
-		PayFromBond:      false,
-	})
-	s.ErrorIs(err, reportertypes.ErrReporterSlashShortfall)
+	}))
+	_, _, err := s.Setup.App.SimDeliver(txConfig.TxEncoder(), builder.GetTx())
+	s.Require().ErrorIs(err, reportertypes.ErrReporterSlashShortfall)
 
 	_, err = s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, disputeID)
-	s.Error(err)
+	s.ErrorIs(err, collections.ErrNotFound)
 	_, err = s.Setup.Disputekeeper.DisputeFeePayer.Get(s.Setup.Ctx, collections.Join(disputeID, payer.Bytes()))
-	s.Error(err)
+	s.ErrorIs(err, collections.ErrNotFound)
 	s.Equal(balanceBefore, s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, payer, s.Setup.Denom).Amount)
 	s.Equal(moduleBefore, s.moduleBalance())
 
 	reporter, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, fx.reporter)
 	s.NoError(err)
 	s.False(reporter.Jailed)
-}
 
-func (s *IntegrationTestSuite) TestCollectedSlashUnderTwentyHasNoBurnOrRoundFee() {
-	fx := s.newReportedStake()
-	s.leaveReporterSlashable(fx, math.NewInt(15))
-	payer := sample.AccAddressBytes()
-	quote := fx.stake
-	s.Setup.MintTokens(payer, quote.MulRaw(2))
-
-	major := s.proposeDispute(fx.report, disputetypes.Major, payer, quote, false)
-	s.True(major.SlashAmount.IsPositive())
-	s.True(major.SlashAmount.LT(math.NewInt(20)))
-	s.True(major.BurnAmount.IsZero())
-	s.Equal(disputetypes.Voting, major.DisputeStatus)
-	reporter, err := s.Setup.Reporterkeeper.Reporters.Get(s.Setup.Ctx, fx.reporter)
-	s.NoError(err)
-	s.True(reporter.Jailed)
-
-	major.DisputeStatus = disputetypes.Unresolved
-	s.NoError(s.Setup.Disputekeeper.Disputes.Set(s.Setup.Ctx, major.DisputeId, major))
-	round := s.proposeDispute(fx.report, disputetypes.Major, payer, quote, false)
-	s.Equal(uint64(2), round.DisputeRound)
-	s.Equal(major.SlashAmount, round.SlashAmount)
-	s.Equal(major.FeeTotal, round.FeeTotal)
-	s.True(round.BurnAmount.IsZero())
+	// The same path must commit a valid proposal after its stake is restored.
+	s.delegate(fx.reporter, fx.val, quote)
+	_, _, err = s.Setup.App.SimDeliver(txConfig.TxEncoder(), builder.GetTx())
+	s.Require().NoError(err)
+	dispute, err := s.Setup.Disputekeeper.Disputes.Get(s.Setup.Ctx, disputeID)
+	s.Require().NoError(err)
+	s.Equal(disputetypes.Voting, dispute.DisputeStatus)
+	s.True(s.Setup.Bankkeeper.GetBalance(s.Setup.Ctx, payer, s.Setup.Denom).Amount.IsZero(), "the accepted transaction charges the full quote")
+	s.Equal(moduleBefore.Add(quote.MulRaw(2)), s.moduleBalance())
 }
 
 func (s *IntegrationTestSuite) TestUnevenPayersDropRoundedOffPayer() {

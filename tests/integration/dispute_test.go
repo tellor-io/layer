@@ -1187,7 +1187,22 @@ func (s *IntegrationTestSuite) TestOpenDisputePrecision() {
 		BlockNumber:     report.MicroReports[0].BlockNumber,
 		MetaId:          report.MicroReports[0].MetaId,
 	}
+	id := s.Setup.Disputekeeper.NextDisputeId(ctx)
 	s.Setup.OpenDispute(ctx, annaAccAddr, disputeReport, disputetypes.Warning, disputeFeeTotal, true)
+	opened, err := s.Setup.Disputekeeper.Disputes.Get(ctx, id)
+	require.NoError(err)
+	tracked, err := s.Setup.Reporterkeeper.FeePaidFromStakeByPayer(ctx, opened.HashId, annaAccAddr)
+	require.NoError(err)
+	require.True(tracked.Total.Equal(opened.FeeTotal), "credit only the coins delivered by the bonded payment")
+	if remaining := disputeFeeTotal.Sub(opened.FeeTotal); remaining.IsPositive() {
+		require.Equal(disputetypes.Prevote, opened.DisputeStatus)
+		_, err := msgServerDispute.AddFeeToDispute(ctx, &disputetypes.MsgAddFeeToDispute{
+			Creator:   chrisAccAddr.String(),
+			DisputeId: id,
+			Amount:    sdk.NewCoin(s.Setup.Denom, remaining),
+		})
+		require.NoError(err)
+	}
 
 	_, err = s.Setup.App.EndBlocker(ctx)
 	require.NoError(err)
@@ -1211,11 +1226,8 @@ func (s *IntegrationTestSuite) TestOpenDisputePrecision() {
 	require.Equal(dispute.DisputeStatus, disputetypes.Voting)
 	require.Equal(dispute.DisputeCategory, disputetypes.Warning)
 	require.Equal(dispute.FeeTotal, disputeFeeTotal)
-	// disputeFee should be 95% of fee total, 5% is burned
-	disputeFee := disputeFeeTotal.Mul(math.NewInt(95)).Quo(math.NewInt(100))
 	require.Equal(dispute.DisputeFee, disputeFeeTotal)
-	disputeFeeBurn := disputeFeeTotal.Sub(disputeFee)
-	require.Equal(dispute.BurnAmount, disputeFeeBurn)
+	require.Equal(disputeFeeTotal.QuoRaw(20), dispute.BurnAmount)
 	require.Equal(dispute.BlockNumber, uint64(7))
 	// dispute ends in 3 days if fully paid
 	require.Equal(dispute.DisputeEndTime, disputeStartTime.Add(3*time.Hour*24))

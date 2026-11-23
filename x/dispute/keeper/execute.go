@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 
 	layertypes "github.com/tellor-io/layer/types"
@@ -47,30 +48,27 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 	if vote.Executed {
 		return errors.New("vote already executed")
 	}
+	if vote.VoteResult == types.VoteResult_AGAINST || vote.VoteResult == types.VoteResult_NO_QUORUM_MAJORITY_AGAINST {
+		if err := k.reconcileReporterWinFee(ctx, &dispute); err != nil {
+			return err
+		}
+	}
 
-	// the burnAmount is round 1's 5% of the dispute fee plus all later-round fees, half
-	// of which is burned and the other half is distributed to the voters
-	disputeBurnAmountDec := math.LegacyNewDecFromInt(dispute.BurnAmount)
-	halfBurnAmountDec := disputeBurnAmountDec.Quo(math.LegacyNewDec(2))
-	halfBurnAmount := halfBurnAmountDec.TruncateInt()
-	voterReward := halfBurnAmount
-	// only user and reporter votes can claim through CalculateReward; team votes decide
-	// outcomes but earn nothing, so they must not cause a voter reward to be reserved
+	// Only user and reporter votes earn rewards. Compute one share and burn
+	// the remainder so an odd allocation never leaves an unassigned loya.
 	totalVoterPower, err := k.GetSumOfUserAndReporterVotesAllRounds(ctx, id)
 	if err != nil {
 		return err
 	}
-	if totalVoterPower.IsZero() {
-		// if no claim-eligible voters, burn the entire burnAmount
-		halfBurnAmount = dispute.BurnAmount
-		// non voters get nothing
-		voterReward = math.ZeroInt()
+	voterReward := math.ZeroInt()
+	if totalVoterPower.IsPositive() {
+		voterReward = dispute.BurnAmount.QuoRaw(2)
 	}
+	burn := dispute.BurnAmount.Sub(voterReward)
 	switch vote.VoteResult {
 	case types.VoteResult_INVALID, types.VoteResult_NO_QUORUM_MAJORITY_INVALID:
-		// burn half the burnAmount
-		if !halfBurnAmount.IsZero() {
-			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, halfBurnAmount))); err != nil {
+		if burn.IsPositive() {
+			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, burn))); err != nil {
 				return err
 			}
 		}
@@ -90,9 +88,8 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			return err
 		}
 	case types.VoteResult_SUPPORT, types.VoteResult_NO_QUORUM_MAJORITY_SUPPORT:
-		// burn half the burnAmount
-		if !halfBurnAmount.IsZero() {
-			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, halfBurnAmount))); err != nil {
+		if burn.IsPositive() {
+			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, burn))); err != nil {
 				return err
 			}
 		}
@@ -101,15 +98,13 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			return err
 		}
 	case types.VoteResult_AGAINST, types.VoteResult_NO_QUORUM_MAJORITY_AGAINST:
-		// burn half the burnAmount
-		if !halfBurnAmount.IsZero() {
-			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, halfBurnAmount))); err != nil {
+		if burn.IsPositive() {
+			if err := k.bankKeeper.BurnCoins(ctx, types.ModuleName, sdk.NewCoins(sdk.NewCoin(layertypes.BondDenom, burn))); err != nil {
 				return err
 			}
 		}
-		// refund the reporter's escrowed bond plus the dispute fee minus its 5% burn
-		fivePercentDec := dispute.DisputeFee.ToLegacyDec().Quo(math.LegacyNewDec(20))
-		disputeFeeMinusFivePercent := dispute.DisputeFee.Sub(fivePercentDec.TruncateInt())
+		// Return the escrowed bond plus the backed first-round fee, less its allocation.
+		disputeFeeMinusFivePercent := dispute.DisputeFee.Sub(dispute.DisputeFee.QuoRaw(20))
 		if err := k.ReturnSlashedTokens(ctx, dispute, disputeFeeMinusFivePercent); err != nil {
 			return err
 		}
@@ -139,6 +134,34 @@ func (k Keeper) ExecuteVote(ctx context.Context, id uint64) error {
 			sdk.NewAttribute("vote_result", vote.VoteResult.String()),
 		),
 	})
+	return nil
+}
+
+// reconcileReporterWinFee replaces a legacy nominal round-one fee with its
+// backing before paying the reporter, burning, or reserving voter rewards.
+// The principal stays in the reporter escrow ledger; later fees are separate.
+func (k Keeper) reconcileReporterWinFee(ctx context.Context, dispute *types.Dispute) error {
+	if !dispute.DisputeFee.IsPositive() {
+		return nil
+	}
+	firstRoundID := dispute.DisputeId
+	if len(dispute.PrevDisputeIds) > 0 {
+		firstRoundID = dispute.PrevDisputeIds[0]
+	}
+	_, received, err := k.roundOneReceipts(ctx, firstRoundID, dispute.HashId, false)
+	if err != nil {
+		return err
+	}
+	if received.LT(dispute.DisputeFee) {
+		shortfall := dispute.DisputeFee.Sub(received)
+		allocationReduction := dispute.DisputeFee.QuoRaw(20).Sub(received.QuoRaw(20))
+		if dispute.BurnAmount.LT(allocationReduction) || dispute.FeeTotal.LT(shortfall) {
+			return fmt.Errorf("inconsistent nominal fee accounting for dispute %d", dispute.DisputeId)
+		}
+		dispute.BurnAmount = dispute.BurnAmount.Sub(allocationReduction)
+		dispute.FeeTotal = dispute.FeeTotal.Sub(shortfall)
+		dispute.DisputeFee = received
+	}
 	return nil
 }
 

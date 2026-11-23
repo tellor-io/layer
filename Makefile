@@ -217,54 +217,56 @@ bench-report: benchmark parse-benchmarks
 ###############################################################################
 ###                                MOCKS                                    ###
 ###############################################################################
+MOCKERY := go run github.com/vektra/mockery/v2
+mock_bridge := StakingKeeper AccountKeeper BankKeeper OracleKeeper ReporterKeeper
+mock_dispute := AccountKeeper BankKeeper OracleKeeper
+mock_mint := AccountKeeper BankKeeper
+mock_oracle := AccountKeeper BankKeeper BridgeKeeper RegistryKeeper ReporterKeeper
+mock_registry := AccountKeeper BankKeeper RegistryHooks
+mock_reporter := AccountKeeper BankKeeper StakingHooks RegistryKeeper OracleKeeper
+mock_app := StakingKeeper BridgeKeeper OracleKeeper VoteExtensionSigner
+
+mock_files = $(foreach name,$(2),$(1)/mocks/$(name).go)
+mock_gen_types = set -e; for name in $(3); do \
+	$(MOCKERY) --name="$$name" --dir="$(CURDIR)/$(1)" --recursive --output="./$(2)/mocks"; \
+done
+
+# Remove only mock-gen outputs, not handwritten or separately generated mocks.
 mock-clean-all:
-	@find . -type f -name "*.go" -path "*/mocks/*" -exec rm -f {} +
+	@rm -f $(call mock_files,x/bridge,$(mock_bridge)) \
+		$(call mock_files,x/dispute,$(mock_dispute) ReporterKeeper) \
+		$(call mock_files,x/mint,$(mock_mint)) \
+		$(call mock_files,x/oracle,$(mock_oracle)) \
+		$(call mock_files,x/registry,$(mock_registry)) \
+		$(call mock_files,x/reporter,$(mock_reporter) StakingKeeper) \
+		$(call mock_files,app,$(mock_app) Keyring)
 
 mock-gen-bridge:
-	@go run github.com/vektra/mockery/v2 --name=StakingKeeper --dir=$(CURDIR)/x/bridge/types --recursive --output=./x/bridge/mocks
-	@go run github.com/vektra/mockery/v2 --name=AccountKeeper --dir=$(CURDIR)/x/bridge/types --recursive --output=./x/bridge/mocks
-	@go run github.com/vektra/mockery/v2 --name=BankKeeper --dir=$(CURDIR)/x/bridge/types --recursive --output=./x/bridge/mocks
-	@go run github.com/vektra/mockery/v2 --name=OracleKeeper --dir=$(CURDIR)/x/bridge/types --recursive --output=./x/bridge/mocks
-	@go run github.com/vektra/mockery/v2 --name=ReporterKeeper --dir=$(CURDIR)/x/bridge/types --recursive --output=./x/bridge/mocks
+	@$(call mock_gen_types,x/bridge/types,x/bridge,$(mock_bridge))
 
 mock-gen-dispute:
-	@go run github.com/vektra/mockery/v2 --name=AccountKeeper --dir=$(CURDIR)/x/dispute/types --recursive --output=./x/dispute/mocks
-	@go run github.com/vektra/mockery/v2 --name=BankKeeper --dir=$(CURDIR)/x/dispute/types --recursive --output=./x/dispute/mocks
-	@go run github.com/vektra/mockery/v2 --name=OracleKeeper --dir=$(CURDIR)/x/dispute/types --recursive --output=./x/dispute/mocks
-	@go run github.com/vektra/mockery/v2 --name=ReporterKeeper --dir=$(CURDIR)/x/dispute/types --recursive --output=./x/dispute/mocks
+	@$(call mock_gen_types,x/dispute/types,x/dispute,$(mock_dispute))
+	@$(MOCKERY) --name=ReporterKeeper --dir="$(CURDIR)/x/dispute/types" --recursive --output=./x/dispute/mocks --structname=reporterKeeperMock --filename=ReporterKeeper.go
 
 mock-gen-mint:
-	@go run github.com/vektra/mockery/v2 --name=AccountKeeper --dir=$(CURDIR)/x/mint/types --recursive --output=./x/mint/mocks
-	@go run github.com/vektra/mockery/v2 --name=BankKeeper --dir=$(CURDIR)/x/mint/types --recursive --output=./x/mint/mocks
+	@$(call mock_gen_types,x/mint/types,x/mint,$(mock_mint))
 
 mock-gen-oracle:
-	@go run github.com/vektra/mockery/v2 --name=AccountKeeper --dir=$(CURDIR)/x/oracle/types --recursive --output=./x/oracle/mocks
-	@go run github.com/vektra/mockery/v2 --name=BankKeeper --dir=$(CURDIR)/x/oracle/types --recursive --output=./x/oracle/mocks
-	@go run github.com/vektra/mockery/v2 --name=BridgeKeeper --dir=$(CURDIR)/x/oracle/types --recursive --output=./x/oracle/mocks
-	@go run github.com/vektra/mockery/v2 --name=RegistryKeeper --dir=$(CURDIR)/x/oracle/types --recursive --output=./x/oracle/mocks
-	@go run github.com/vektra/mockery/v2 --name=ReporterKeeper --dir=$(CURDIR)/x/oracle/types --recursive --output=./x/oracle/mocks
+	@$(call mock_gen_types,x/oracle/types,x/oracle,$(mock_oracle))
 
 mock-gen-registry:
-	@go run github.com/vektra/mockery/v2 --name=AccountKeeper --dir=$(CURDIR)/x/registry/types --recursive --output=./x/registry/mocks
-	@go run github.com/vektra/mockery/v2 --name=BankKeeper --dir=$(CURDIR)/x/registry/types --recursive --output=./x/registry/mocks
-	@go run github.com/vektra/mockery/v2 --name=RegistryHooks --dir=$(CURDIR)/x/registry/types --recursive --output=./x/registry/mocks
+	@$(call mock_gen_types,x/registry/types,x/registry,$(mock_registry))
 
+# Mockery v2.23.1 cannot render the SDK iterator alias in StakingKeeper on Go 1.24.
 mock-gen-reporter:
-	@go run github.com/vektra/mockery/v2 --name=AccountKeeper --dir=$(CURDIR)/x/reporter/types --recursive --output=./x/reporter/mocks
-	@go run github.com/vektra/mockery/v2 --name=BankKeeper --dir=$(CURDIR)/x/reporter/types --recursive --output=./x/reporter/mocks
-	@go run github.com/vektra/mockery/v2 --name=StakingKeeper --dir=$(CURDIR)/x/reporter/types --recursive --output=./x/reporter/mocks
-	@go run github.com/vektra/mockery/v2 --name=StakingHooks --dir=$(CURDIR)/x/reporter/types --recursive --output=./x/reporter/mocks
-	@go run github.com/vektra/mockery/v2 --name=RegistryKeeper --dir=$(CURDIR)/x/reporter/types --recursive --output=./x/reporter/mocks
-	@go run github.com/vektra/mockery/v2 --name=OracleKeeper --dir=$(CURDIR)/x/reporter/types --recursive --output=./x/reporter/mocks
+	@$(call mock_gen_types,x/reporter/types,x/reporter,$(mock_reporter))
+	@MOCKERY_RESOLVE_TYPE_ALIAS=false go run github.com/vektra/mockery/v2@v2.53.5 --name=StakingKeeper --dir="$(CURDIR)/x/reporter/types" --recursive --output=./x/reporter/mocks
 
 COSMOS_LOG_VERSION=$(shell go list -m all | grep "cosmossdk.io/log" | awk '{print $$NF}')
 
 mock-gen-app:
-	@go run github.com/vektra/mockery/v2 --name=StakingKeeper --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
-	@go run github.com/vektra/mockery/v2 --name=BridgeKeeper --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
-	@go run github.com/vektra/mockery/v2 --name=OracleKeeper --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
-	@go run github.com/vektra/mockery/v2 --name=Keyring --dir=$(GOPATH)/pkg/mod/github.com/cosmos/cosmos-sdk@$(COSMOS_VERSION)/crypto/keyring --recursive --output=./app/mocks
-	@go run github.com/vektra/mockery/v2 --name=VoteExtensionSigner --dir=$(CURDIR)/app/ --recursive --output=./app/mocks
+	@$(call mock_gen_types,app,app,$(mock_app))
+	@$(MOCKERY) --name=Keyring --dir="$(GOPATH)/pkg/mod/github.com/cosmos/cosmos-sdk@$(COSMOS_VERSION)/crypto/keyring" --recursive --output=./app/mocks
 
 mock-gen:
 	$(MAKE) mock-gen-bridge
@@ -275,7 +277,7 @@ mock-gen:
 	$(MAKE) mock-gen-reporter
 	$(MAKE) mock-gen-app
 
-.PHONY: mock-gen mock-gen-app mock-gen-bridge mock-gen-dispute mock-gen-mint mock-gen-oracle mock-gen-registry mock-gen-reporter
+.PHONY: mock-clean-all mock-gen mock-gen-app mock-gen-bridge mock-gen-dispute mock-gen-mint mock-gen-oracle mock-gen-registry mock-gen-reporter
 
 # Docker image building targets
 docker-image:
