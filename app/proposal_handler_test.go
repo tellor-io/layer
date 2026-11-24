@@ -10,6 +10,7 @@ import (
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	cmtprotocrypto "github.com/cometbft/cometbft/proto/tendermint/crypto"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/mock"
@@ -390,6 +391,11 @@ func (s *ProposalHandlerTestSuite) TestProcessProposalHandler() {
 // prepareFixture wires mocks and returns a ctx + ExtendedCommitInfo suitable
 // for calling PrepareProposalHandler at height 3 (VE enabled at height 1).
 func (s *ProposalHandlerTestSuite) prepareFixture() (sdk.Context, abcitypes.ExtendedCommitInfo) {
+	return s.prepareFixtureWithAttestation([]byte("attestation"))
+}
+
+// prepareFixtureWithAttestation is prepareFixture with a chosen attestation, so a test can make the vote extension tx large.
+func (s *ProposalHandlerTestSuite) prepareFixtureWithAttestation(attestation []byte) (sdk.Context, abcitypes.ExtendedCommitInfo) {
 	require := s.Require()
 	bk := s.bridgeKeeper
 	sk := s.stakingKeeper
@@ -404,7 +410,7 @@ func (s *ProposalHandlerTestSuite) prepareFixture() (sdk.Context, abcitypes.Exte
 	ve := app.BridgeVoteExtension{
 		OracleAttestations: []app.OracleAttestation{
 			{
-				Attestation: []byte("attestation"),
+				Attestation: attestation,
 				Snapshot:    []byte("snapshot"),
 			},
 		},
@@ -476,7 +482,7 @@ func (s *ProposalHandlerTestSuite) prepareFixture() (sdk.Context, abcitypes.Exte
 
 // TestPrepareProposalTrimsFullMempool is the full-mempool chain-halt regression:
 // reaped tx bytes exceed MaxTxBytes, so the proposal must be trimmed and stay
-// inside CometBFT's own accounting (per-tx size + 4-byte envelope).
+// inside CometBFT's own size limit.
 func (s *ProposalHandlerTestSuite) TestPrepareProposalTrimsFullMempool() {
 	require := s.Require()
 
@@ -504,17 +510,54 @@ func (s *ProposalHandlerTestSuite) TestPrepareProposalTrimsFullMempool() {
 	var veTx app.VoteExtTx
 	require.NoError(json.Unmarshal(res.Txs[0], &veTx))
 
-	// CometBFT Txs.Validate accounting: len(tx) + per-tx proto envelope.
-	var total int64
-	for _, tx := range res.Txs {
-		total += int64(len(tx)) + 4
-	}
-	require.LessOrEqual(total, req.MaxTxBytes)
+	// The result must pass the same size check CometBFT runs on a proposal.
+	require.NoError(cmttypes.ToTxs(res.Txs).Validate(req.MaxTxBytes))
 
 	// Kept txs are an unmodified prefix of the reaped txs (no reordering).
 	for i, tx := range res.Txs[1:] {
 		require.Equal(fatTxs[i], tx)
 	}
+}
+
+// A vote extension tx of 2 MiB or more costs one more byte in a block than a smaller tx does.
+func (s *ProposalHandlerTestSuite) TestPrepareProposalLargeVETxStaysWithinLimit() {
+	require := s.Require()
+
+	ctx, localLastCommit := s.prepareFixtureWithAttestation(make([]byte, 800_000))
+
+	// Run once with plenty of room to learn how big the vote extension tx is.
+	res, err := s.proposalHandler.PrepareProposalHandler(ctx, &abcitypes.RequestPrepareProposal{
+		Height:          3,
+		MaxTxBytes:      100_000_000,
+		LocalLastCommit: localLastCommit,
+	})
+	require.NoError(err)
+	require.Len(res.Txs, 1)
+	require.GreaterOrEqual(len(res.Txs[0]), 2<<20)
+	veSize := cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{res.Txs[0]})
+
+	// Each of these txs is big enough that CometBFT counts exactly 4 extra bytes for it.
+	txs := [][]byte{make([]byte, 20_000), make([]byte, 20_000), make([]byte, 20_000)}
+	txsSize := cmttypes.ComputeProtoSizeForTxs(cmttypes.ToTxs(txs))
+
+	// With exactly enough room, every tx is kept.
+	req := abcitypes.RequestPrepareProposal{
+		Txs:             txs,
+		Height:          3,
+		MaxTxBytes:      veSize + txsSize,
+		LocalLastCommit: localLastCommit,
+	}
+	res, err = s.proposalHandler.PrepareProposalHandler(ctx, &req)
+	require.NoError(err)
+	require.Len(res.Txs, 4)
+	require.NoError(cmttypes.ToTxs(res.Txs).Validate(req.MaxTxBytes))
+
+	// One byte short, the last tx is dropped so the block still fits.
+	req.MaxTxBytes = veSize + txsSize - 1
+	res, err = s.proposalHandler.PrepareProposalHandler(ctx, &req)
+	require.NoError(err)
+	require.Len(res.Txs, 3)
+	require.NoError(cmttypes.ToTxs(res.Txs).Validate(req.MaxTxBytes))
 }
 
 // TestPrepareProposalKeepsVEWhenBudgetTooSmall: the VE tx is mandatory

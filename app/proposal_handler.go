@@ -9,6 +9,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/ethereum/go-ethereum/common"
 
 	"cosmossdk.io/log"
@@ -63,11 +64,10 @@ func NewProposalHandler(logger log.Logger, valStore baseapp.ValidatorStore, appC
 	}
 }
 
-// perTxOverhead mirrors the per-tx envelope CometBFT's Txs.Validate counts when
-// summing a block's tx bytes: each tx is encoded as a protobuf Data.txs repeated
-// bytes field (1 tag byte + uvarint length prefix). 4 bytes bounds any tx under
-// 256 MB, far above the 1 MB max_tx_bytes CheckTx limit.
-const perTxOverhead int64 = 4
+// txBlockSize returns how many bytes CometBFT counts for one tx in a block.
+func txBlockSize(tx []byte) int64 {
+	return cmttypes.ComputeProtoSizeForTxs([]cmttypes.Tx{tx})
+}
 
 // trimTxsToFit returns the longest prefix of txs whose summed size plus per-tx
 // envelope overhead stays within budget. A non-positive budget drops every tx.
@@ -76,7 +76,7 @@ const perTxOverhead int64 = 4
 func trimTxsToFit(txs [][]byte, budget int64) [][]byte {
 	var total int64
 	for i, tx := range txs {
-		total += int64(len(tx)) + perTxOverhead
+		total += txBlockSize(tx)
 		if total > budget {
 			return txs[:i]
 		}
@@ -146,7 +146,7 @@ func (h *ProposalHandler) PrepareProposalHandler(ctx sdk.Context, req *abci.Requ
 		// reaped txs from the back. Without this, a full mempool made the
 		// proposal oversized and CometBFT's Txs.Validate panicked receiveRoutine
 		// on every receiver (full-mempool chain halt).
-		veBudget := req.MaxTxBytes - int64(len(bz)) - perTxOverhead
+		veBudget := req.MaxTxBytes - txBlockSize(bz)
 		if veBudget <= 0 {
 			h.logger.Error("PrepareProposalHandler: injected VE tx alone exceeds MaxTxBytes",
 				"ve_size", len(bz), "max_tx_bytes", req.MaxTxBytes)
